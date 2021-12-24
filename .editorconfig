@@ -1,0 +1,16 @@
+﻿[*.{cs,vb}]
+
+# IDE0032: Use auto property
+dotnet_style_prefer_auto_properties = false:silent
+
+# CA1416: Validate platform compatibility
+dotnet_diagnostic.CA1416.severity = none
+
+# CA1806: Do not ignore method results
+dotnet_diagnostic.CA1806.severity = silent
+
+# CA2014: Do not use stackalloc in loops
+dotnet_diagnostic.CA2014.severity = warning
+
+# CS1573: Parameter has no matching param tag in the XML comment (but other parameters do)
+dotnet_diagnostic.CS1573.severity = warning

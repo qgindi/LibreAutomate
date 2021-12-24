@@ -1,0 +1,73 @@
+﻿<!--
+If this is NOT the default commands file, you can edit it to customize menu commands and toolbars. Then restart the program.
+	To add a command to a toolbar, add command's XML element to the toolbar's XML element.
+	To reset everything, delete this file. To reset some toolbars, delete all commands in their XML elements.
+
+Most command names are like default menu item text, with _ instead of space and without ....
+	For example, if text in menu is "Open file...", command is Open_file.
+	The program prints all available command names if this file contains unknown commands. The same for toolbar names.
+
+Command XML attributes:
+	color - text color. Value: .NET color name or #RRGGBB or #RGB.
+	text - menu item text and toolbar button text. Insert _ before Alt-underlined character.
+	image - icon name (see menu Tools -> Icons) or image file (xaml, png). See ImageUtil.LoadWpfImageElement.
+	keys - keyboard or/and mouse shortcut(s), like "Ctrl+E, Shift+M-click". See keys.more.parseHotkeyString.
+
+These attributes are used only for toolbar buttons:
+	separator - add separator before. Value: none.
+	hide - overflow mode. Value: always, never, asNeeded (default).
+	imageAt - show image + text; image at this side. Value: left, top, right, bottom. For submenu-items always left.
+	btext - button text. Use if it is different than menu item text.
+
+All attributes are optional. The Example command contains all.
+<Example color="green" text="Ab" image="*Material.Forum #A6C639" keys="Ctrl+H" separator="1" hide="1" imageAt="left" btext="Bc"/>
+-->
+<commands>
+	<!-- Customized commands that don't have a toolbar button. -->
+	<menu>
+		
+	</menu>
+	<!-- Toolbars. Commands added here will have a toolbar button. -->
+	<File>
+		<New />
+		<Properties />
+		<Rename />
+		<MultiSelect_files />
+		<Save_now />
+	</File>
+	<Run>
+		<Compile />
+		<Run_script />
+		<End_task />
+	</Run>
+	<Edit>
+		<Undo />
+		<Redo />
+		<Cut separator="" />
+		<Copy />
+		<Paste />
+		<Comment separator="" />
+		<Uncomment />
+		<Wrap_lines separator="" />
+		<Images_in_code />
+		<Find separator="" />
+	</Edit>
+	<Tools>
+		<Options />
+		<Icons />
+		<Input_recorder separator="" />
+		<wnd />
+		<elm />
+		<uiimage />
+		<Keys />
+	</Tools>
+	<Help>
+		
+	</Help>
+	<Custom1>
+
+	</Custom1>
+	<Custom2>
+
+	</Custom2>
+</commands>

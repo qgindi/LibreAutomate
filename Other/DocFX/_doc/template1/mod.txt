@@ -1,0 +1,13 @@
+Using 3 templates:
+template1 - modified "mathew" template. It is included in the DocFX "Templates" webpage. Downloaded from github. Mostly changes style.
+memberpage - from the DocFX "Templates" webpage. Splits class pages into member pages. Actually it is a pluging + template.
+template2 - styles to change in member pages after running memberpage. Copied from mathew and modified.
+
+Currently not using the affix. It is the dynamic links at the right.
+
+Note: after copy/paste in VS, undo autoformatting done by VS. It damages <pre>.
+
+Unsuccessfully tried to create a plugin.
+	Followed the tutorial, created the plugin, copied the output files to the plugins folder of template1.
+	Error when DocFX runs: Error:[ImportPlugins]Error when get composition container: Unable to load one or more of the requested types. Retrieve the LoaderExceptions property for more information., loader exceptions: Could not load file
+

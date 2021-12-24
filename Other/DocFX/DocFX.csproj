@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Au.DocFX</AssemblyName>
+    <RootNamespace>Au.DocFX</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\Au.snk</AssemblyOriginatorKeyFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <OutDir>bin</OutDir>
+	  <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="_doc\**" />
+    <Compile Remove="_doc\**" />
+    <EmbeddedResource Remove="_doc\**" />
+    <None Include="_doc\**" />
+    <None Remove="_doc\_site\**" />
+    <None Remove="_doc\_exported_templates\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="memberpage" Version="2.58.9" />
+    <PackageReference Include="SSH.NET" Version="2020.0.0-beta1" />
+    <PackageReference Include="YamlDotNet" Version="8.0.0-emit-default-values0565" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Au\Au.csproj" />
+  </ItemGroup>
+
+</Project>

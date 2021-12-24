@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This file is compatible with Silverlight-->
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="svg14" Width="16" Height="16">
+  <Canvas.RenderTransform>
+    <TranslateTransform X="0" Y="0"/>
+  </Canvas.RenderTransform>
+  <Canvas.Resources/>
+  <!--Unknown tag: metadata-->
+  <!--Unknown tag: sodipodi:namedview-->
+  <Canvas Name="outline">
+    <Canvas.RenderTransform>
+      <TranslateTransform X="-8.9491525" Y="-8"/>
+    </Canvas.RenderTransform>
+    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path4" Fill="#FFF6F6F6" Data="M 6.414 4 9 1.414 V 0 H 3.382 L 0 6.764 V 8 h 2.382 l -2 4 H 2.914 L 9.5 5.414 V 4 Z M 9 16 9.005 12.016 c 0 0 -0.225 -3.984 3.589 -3.984 1.532 0 3.406 0.967 3.406 3.976 V 16 Z"/>
+    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path6" Fill="#FFF0EFF1" Data="m 13 14 h -1 v -0.959 h 1 z"/>
+  </Canvas>
+  <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="color_x5F_importance" Fill="#FFC27D1A" Data="m -4.9491525 -3 3.99999996 -4 H -4.9491525 l -3 6 h 3.018 l -2.018 4 h 0.518 l 5.99999996 -6 z"/>
+  <Canvas Name="not_x5F_bg">
+    <Canvas.RenderTransform>
+      <TranslateTransform X="-8.9491525" Y="-8"/>
+    </Canvas.RenderTransform>
+    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path10" Fill="#FF424242" Data="m 11.019 11.563 c 0.059 -0.729 0.334 -1.541 1.575 -1.541 1.249 0 1.391 0.795 1.404 1.541 h 0.966 c -0.085 -1.119 -0.144 -2.531 -2.37 -2.531 -2.396 0 -2.445 1.406 -2.576 2.531 z M 14 12 h -4 v 3 h 5 v -3 z m -1 2 h -1 v -1 h 1 z"/>
+  </Canvas>
+  <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="not_x5F_fg" Fill="#FFF0EFF1" Data="m 3.0508475 5 h 1 v 1 h -1 z"/>
+</Canvas>

@@ -1,0 +1,22 @@
+﻿apiRules:
+- exclude:
+      uidRegex: ^System\.Object$
+      type: Type
+- exclude:
+      uidRegex: ^System\.ValueType$
+      type: Type
+- exclude:
+      uidRegex: ^System\.Attribute$
+      type: Type
+- exclude:
+      uidRegex: ^System\.Collections\.IEnumerable$
+      type: Type
+- exclude:
+    hasAttribute:
+      uid: Au.Types.NoDoc
+- exclude:
+      uidRegex: ^Au\.Types\.NoDoc$
+      type: Type
+- exclude:
+      uidRegex: \.Finalize$
+      type: Method

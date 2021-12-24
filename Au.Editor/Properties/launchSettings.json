@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Au.Editor": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

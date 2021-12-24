@@ -1,0 +1,279 @@
+/* Clickability fix for selector on sm devices */
+@media (min-width: 768px) and (max-width: 991px) {
+  article h1:first-of-type:before {
+    height: 0;
+    margin-top: 0;
+  }  
+}
+
+.sidetoc,
+body .toc,
+.sidefilter,
+.sidetoggle { 
+  background-color: #e5ead3; 
+}
+.toc .nav > li > a {
+    color: #444;
+}
+
+.sidenav,
+.toc-toggle {
+  padding: 0;
+}
+
+article h4 {
+  border-bottom: none;
+}
+
+@media (min-width: 768px) {
+  .sidetoc, .sidefilter {
+    margin-left: -15px;
+  }
+}
+
+@media (max-width: 767px) {
+  .navbar-collapse {
+    text-align: center !important;
+  }
+
+  .navbar-collapse li .active {
+    border-radius: 20px;
+  }
+}
+
+
+/* Navbar Hamburger
+   ------------------------------------------------------- */
+.icon-bar {
+    transition: 0.4s;
+}
+
+/* Rotate first bar */
+.change .icon-bar:nth-of-type(2) {
+    transform: rotate(-45deg) translate(-4px, 5px) ;
+}
+
+/* Fade out the second bar */
+.change .icon-bar:nth-of-type(3) {
+    opacity: 0;
+}
+
+/* Rotate last bar */
+.change .icon-bar:nth-of-type(4) {
+    transform: rotate(45deg) translate(-4px, -5px) ;
+}
+
+
+/* Au
+   ------------------------------------------------------- */
+
+.sidefilter,
+.sidetoggle {
+    top: 40px;
+}
+.sidetoc {
+    top: 94px;
+}
+.sidetoc.shiftup {
+    bottom: 0;
+}
+.toc {
+    margin-bottom: 10px;
+}
+
+.toc-filter > .filter-icon {
+    top: 6px;
+}
+.toc-filter {
+    border-radius: 2px;
+    padding: 0px 2px 2px 2px;
+    min-height: 24px;
+}
+
+.article {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+.article.grid-right {
+    margin-left: 260px;
+	margin-right: 0px;
+}
+@media only screen and (max-width: 768px) {
+  .article.grid-right {
+    margin-top: 0 !important;
+    margin-bottom: 20px;
+    margin-left: 0;
+  }
+}
+
+article h1 {
+    margin-top: 14px;
+    margin-bottom: 16px;
+	border-bottom: 1px solid #eaecef;
+	padding-bottom: 8px;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+article h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+	border-bottom: 1px solid #eaecef;
+	padding-bottom: 4px;
+}
+
+article h3 {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+article h4 {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+article h5 {
+    border-bottom: none;
+    font-weight: bold;
+    margin-top: 14px;
+    margin-bottom: 7px;
+}
+
+/* See namespace.tmpl.partial. Initially the links were <h3>, but does not look good after changing <h3> style. */
+h5.ns {
+    margin-top: 10px;
+    margin-bottom: 2px;
+}
+
+/* See collection.tmpl.partial. Before each overload we insert a tall <hr> and <h2>Overload</h2>, but hide the first. */
+hr.overload {
+	margin-top: 50px;
+}
+hr.overload:first-of-type,h2.overload:first-of-type {
+	display: none;
+}
+
+/* break adjacent lines like in XML comments */
+p { white-space: pre-wrap }
+
+td p { margin-bottom: 10px; }
+
+td > p:last-child, td > div > p:last-child, td > ul:last-child, td > ol:last-child, td > div > ul:last-child, td > div > ol:last-child {
+  margin-bottom: 0;
+}
+
+/* in 2-column tables let the first column have width 25% */
+tr td:first-child+td:last-child {
+	width: 75%;
+}
+
+div.codewrapper pre { background-color: #ffffe7 }
+
+code {
+    color: #208020;
+    background-color: #f8f8f8;
+    border: 1px solid #eee;
+    border-radius: 2px;
+    padding: 1px 4px;
+}
+pre code {
+    color: black;
+    border: none;
+	tab-size: 4;
+	-moz-tab-size: 4;
+}
+
+.hljs-comment{color:#008000}
+.hljs-string{color:#a04020}
+.hljs-keyword,.hljs-literal{color:#0000ff}
+.hljs-title{color:#000000}
+
+span.parametername {
+    font-style: italic;
+    font-weight: bold;
+}
+
+.toc ul {
+    font-size: inherit;
+}
+.nav.level3 {
+    margin-left: 14px;
+}
+
+.navbar-inverse {
+    background-color: #175499;
+    border-color: #083868;
+}
+.navbar {
+    min-height: 40px;
+}
+.navbar-nav > li > a {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.navbar-inverse .navbar-nav > li > a, .navbar-inverse .navbar-text {
+    color: #e0f0e8;
+    font-size: 16px;
+}
+.navbar-inverse .navbar-nav > .active > a, .navbar-inverse .navbar-nav > .active > a:focus, .navbar-inverse .navbar-nav > .active > a:hover {
+    color: #fff;
+    background-color: #3770b1;
+}
+.navbar-inverse .navbar-toggle:focus {
+    background-color: inherit;
+}
+.navbar-inverse .navbar-toggle:hover {
+    background-color: #3770b1;
+}
+@media (min-width:768px){
+.navbar-form {
+    margin-bottom: 0;
+}
+}
+@media (max-width:767px){
+.navbar-form {
+    border-top: 0;
+    margin-top: 0;
+}
+}
+
+.googleButton {
+    padding: 1px 10px 2px 10px;
+    background-color: #3770b1;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #e0f0e8;
+}
+.googleButton:hover {
+    color: #fff;
+    background-color: #4784cb;
+    border-color: #333;
+}
+.googleEdit {
+    border:none;
+    border-radius: 2px;
+	padding-bottom: 2px;
+	min-height: 23px;
+}
+
+.alert {
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+/* remove table striping */
+.table-striped>tbody>tr:nth-of-type(odd){background-color:#ffffff}
+
+.collapse.in, .collapsing {
+    text-align: left;
+}
+
+.table-bordered > thead > tr > th {
+  background-color: #f0f0f0;
+  border-bottom-width: 1px;
+}
+
+/* after upgrading DocFX, don't know who modifies default docfx.css and makes Parameters etc gray. Change it. */
+.decalaration, .fieldValue, .parameters, .returns, .exceptions {
+    color: #333;
+}
