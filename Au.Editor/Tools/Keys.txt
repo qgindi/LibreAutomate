@@ -1,0 +1,13 @@
+﻿<b>Modifier:<><mono>  {Alt}  {Ctrl}  {Shift}  {Win}  {right ▾}<>
+<b>Navigate:<><mono>   {End}  {Home}  {PgDn}  {PgUp}  {Down}  {Left}  {Right}  {Up}<>
+<b>Other:<><mono>   {Back}  {Del}  {Enter}  {Esc}  {Space}  {Tab}<>
+<b>Function:<><mono>   {F1}  {F2}  {F3}  {F4}  {F5}  {F6}  {F7}  {F8}  {F9}  {F10}  {F11}  {F12}<>
+<b>Letter:<><mono>   {A} {B} {C} {D} {E} {F} {G} {H} {I} {J} {K} {L} {M} {N} {O} {P} {Q} {R} {S} {T} {U} {V} {W} {X} {Y} {Z}<>
+<b>Number:<><mono>   {1!}  {2@}  {3#}  {4$}  {5%}  {6^}  {7&}  {8*}  {9(}  {0)}<>
+<b>Punctuation etc:<><mono>   {`~}  {-_}  {=+}  {[{}  {]}}  {\|}  {;:}  {'"}  {,<}  {.>}  {/?}<>
+<b>Numpad:<><mono>   {#1} {#2} {#3} {#4} {#5} {#6} {#7} {#8} {#9} {#0} {#/} {#*} {#-} {#+} {#.}<>
+<b>Rare:<><mono>   {Apps}  {Ins}  {Pause}  {PrtSc}  {lock ▾}  {other ▾}  <+a VK>code<><>
+<b>Operator:<><mono>   <+a *>*nTimes<>  {*down}  {*up}  <+a +>+key<>  <+a +(%)>+(keys)<>  <+a _>_char<>  <+a ^>^chars<><>
+<b>Argument:<><mono>   {text}  {html}  {sleepMs}  {keyCode}  {scanCode}  {action}<>
+
+<help keys.send>Help<>    Example:  <code>keys.send("Ctrl+A Del Tab*3", "!text", 100, "Enter");</code>

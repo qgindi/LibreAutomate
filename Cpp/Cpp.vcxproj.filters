@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\excluded">
+      <UniqueIdentifier>{f751c698-699c-468e-b313-9e671a759bce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{37c1e08a-2650-49cc-8f21-56b63486efaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\inactive">
+      <UniqueIdentifier>{99af6249-7074-418b-8e33-94bba38046d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\inactive">
+      <UniqueIdentifier>{062f0cb8-52f1-4605-83c6-de88a08c42ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Acc">
+      <UniqueIdentifier>{2173271c-7256-4ff0-8dd2-a9016fd326db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\other">
+      <UniqueIdentifier>{e8318082-67dd-44f1-8bfd-e6fc6d1f1758}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test Uia.cpp">
+      <Filter>Source Files\excluded</Filter>
+    </ClCompile>
+    <ClCompile Include="rejected.cpp">
+      <Filter>Source Files\excluded</Filter>
+    </ClCompile>
+    <ClCompile Include="in-proc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Header Files\inactive</Filter>
+    </ClCompile>
+    <ClCompile Include="str.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="acc bridge.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc find.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc func.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc get.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc java.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc uia.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc web.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="other.cpp">
+      <Filter>Source Files\other</Filter>
+    </ClCompile>
+    <ClCompile Include="acc workaround.cpp">
+      <Filter>Source Files\other</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Cpp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="str.h">
+      <Filter>Source Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Source Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="JAB.h">
+      <Filter>Source Files\Acc</Filter>
+    </ClInclude>
+    <ClInclude Include="acc.h">
+      <Filter>Source Files\Acc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Cpp.def">
+      <Filter>Header Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

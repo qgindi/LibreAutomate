@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWpf>true</UseWpf>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyName>Au</AssemblyName>
+    <RootNamespace>Au</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Au.xml</DocumentationFile>
+    <Deterministic>false</Deterministic>
+    <NoWarn>419</NoWarn>
+	<LangVersion>preview</LangVersion>
+	<ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
+	<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+	<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants></DefineConstants>
+  </PropertyGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
+  </Target>
+
+  <ItemGroup>
+    <None Remove="resources\red_cross_cursor.cur" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="resources\red_cross_cursor.cur" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="32\sqlite3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="64\sqlite3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

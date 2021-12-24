@@ -1,0 +1,57 @@
+﻿<!--
+The layout is a tree with 3 main types of nodes: stack, tab and leaf. Leaf has 3 subtypes: panel, toolbar and document.
+All nodes can be docked (default), floating or hidden. Stacks are hidden only implicitly, when there are no more docked nodes.
+Tags:
+stack - stack. Contains 2 or more nodes (stack, tab, leaf) and implicit splitters between them.
+tab - container for 1 or more leaf nodes displayed one at a time, with buttons to select the active node.
+panel - container for a control that often has child controls. Has caption with text, unless is in a tab.
+toolbar - container for a toolbar. Like panel, but caption is small without text, and behavior is slightly different.
+document - placeholder for real document nodes that are added/removed later. Like panel, but caption is small without text, and behavior is slightly different.
+Attributes:
+o - stack orientation: v vertical, h horizontal.
+z - node size (width in horizontal stack or height in vertical). Star-sized if like "100*". Default for toolbar and stack: auto-sized. For others must be specified, cannot be auto.
+s - splitter size. Default 4. Min 1. Every node in stack except the first has a splitter before it.
+captionAt - Left, Top, Right, Bottom. Default Left.
+state - flags: 1 floating, 2 hidden.
+flags - misc flags: 1 - splitter resizes the nearest node at each side instead of all star-sized nodes.
+active - 0-based index of active node in tab. Default 0.
+Attributes valid in:
+o - stack.
+z, s - any. Not used if in tab.
+captionAt - any except stack. Not used if in tab.
+state, flags - any.
+active - tab.
+-->
+<stack o="v">
+	<stack o="h">
+		<toolbar name="Menu" />
+		<toolbar name="Help" z="200" />
+		<toolbar name="Tools" />
+		<toolbar name="Custom1" z="100*" />
+	</stack>
+	<stack o="h" z="600*" s="1">
+		<stack o="v" z="200">
+			<toolbar name="File" />
+			<panel name="Files" z="320*" s="1" captionAt="Top" />
+			<panel name="Open" z="50" />
+			<panel name="Tasks" z="50" />
+			<panel name="Find" z="160" captionAt="Top" />
+		</stack>
+		<stack o="v" z="600*">
+			<stack o="h">
+				<toolbar name="Run" />
+				<toolbar name="Edit" />
+				<toolbar name="Custom2" z="100*" />
+			</stack>
+			<document name="documents" z="400*" s="1" captionAt="Right" />
+			<!--<tab z="400*" s="1" captionAt="Top">
+				<document name="documents" />
+			</tab>-->
+			<tab z="160">
+				<panel name="Output" />
+				<panel name="Mouse" />
+				<panel name="Found" />
+			</tab>
+		</stack>
+	</stack>
+</stack>

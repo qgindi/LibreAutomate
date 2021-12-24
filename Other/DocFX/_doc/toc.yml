@@ -1,0 +1,9 @@
+- name: Library
+  href: api/
+  homepage: api/index.md
+- name: Articles
+  href: articles/
+  homepage: articles/index.md
+- name: Editor
+  href: editor/
+  homepage: editor/Autepad.md

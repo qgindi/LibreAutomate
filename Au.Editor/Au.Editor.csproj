@@ -1,0 +1,189 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<OutDir>$(SolutionDir)_</OutDir>
+		<LangVersion>preview</LangVersion>
+		<NoWin32Manifest>true</NoWin32Manifest>
+		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE</DefineConstants>
+		<Deterministic>False</Deterministic>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants></DefineConstants>
+		<Deterministic>False</Deterministic>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Default\Commands.xml" />
+		<None Remove="Default\Layout.xml" />
+		<None Remove="Default\Snippets.xml" />
+		<None Remove="Default\Snippets2.xml" />
+		<None Remove="Tools\Keys.txt" />
+		<None Remove="Tools\Regex.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Page Remove="resources\ci\Class.xaml" />
+		<Page Remove="resources\ci\Constant.xaml" />
+		<Page Remove="resources\ci\Delegate.xaml" />
+		<Page Remove="resources\ci\Enum.xaml" />
+		<Page Remove="resources\ci\EnumMember.xaml" />
+		<Page Remove="resources\ci\Event.xaml" />
+		<Page Remove="resources\ci\ExtensionMethod.xaml" />
+		<Page Remove="resources\ci\Field.xaml" />
+		<Page Remove="resources\ci\GroupBy.xaml" />
+		<Page Remove="resources\ci\Interface.xaml" />
+		<Page Remove="resources\ci\Keyword.xaml" />
+		<Page Remove="resources\ci\Label.xaml" />
+		<Page Remove="resources\ci\LocalVariable.xaml" />
+		<Page Remove="resources\ci\Method.xaml" />
+		<Page Remove="resources\ci\Namespace.xaml" />
+		<Page Remove="resources\ci\Operator.xaml" />
+		<Page Remove="resources\ci\OverlayAbstract.xaml" />
+		<Page Remove="resources\ci\OverlayInternal.xaml" />
+		<Page Remove="resources\ci\OverlayPrivate.xaml" />
+		<Page Remove="resources\ci\OverlayProtected.xaml" />
+		<Page Remove="resources\ci\OverlayStatic.xaml" />
+		<Page Remove="resources\ci\Property.xaml" />
+		<Page Remove="resources\ci\Snippet.xaml" />
+		<Page Remove="resources\ci\Structure.xaml" />
+		<Page Remove="resources\ci\TypeParameter.xaml" />
+		<Page Remove="resources\Images\ExpandDown_16x.xaml" />
+		<Page Remove="resources\Images\ExpandRight_16x.xaml" />
+		<Page Remove="resources\Images\SettingsGroup_16x.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Au\Resources\global.cs" Link="resources\global.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Default\Commands.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Default\Layout.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<SubType>Designer</SubType>
+		</Content>
+		<Content Include="Default\Snippets.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Default\Snippets2.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="resources\ci\Class.xaml" />
+		<Resource Include="resources\ci\Constant.xaml" />
+		<Resource Include="resources\ci\Delegate.xaml" />
+		<Resource Include="resources\ci\Enum.xaml" />
+		<Resource Include="resources\ci\EnumMember.xaml" />
+		<Resource Include="resources\ci\Event.xaml" />
+		<Resource Include="resources\ci\ExtensionMethod.xaml" />
+		<Resource Include="resources\ci\Field.xaml" />
+		<Resource Include="resources\ci\GroupBy.xaml" />
+		<Resource Include="resources\ci\Interface.xaml" />
+		<Resource Include="resources\ci\Keyword.xaml" />
+		<Resource Include="resources\ci\Label.xaml" />
+		<Resource Include="resources\ci\LocalVariable.xaml" />
+		<Resource Include="resources\ci\Method.xaml" />
+		<Resource Include="resources\ci\Namespace.xaml" />
+		<Resource Include="resources\ci\Operator.xaml" />
+		<Resource Include="resources\ci\OverlayAbstract.xaml" />
+		<Resource Include="resources\ci\OverlayInternal.xaml" />
+		<Resource Include="resources\ci\OverlayPrivate.xaml" />
+		<Resource Include="resources\ci\OverlayProtected.xaml" />
+		<Resource Include="resources\ci\OverlayStatic.xaml" />
+		<Resource Include="resources\ci\Property.xaml" />
+		<Resource Include="resources\ci\Snippet.xaml" />
+		<Resource Include="resources\ci\Structure.xaml" />
+		<Resource Include="resources\ci\TypeParameter.xaml" />
+		<Resource Include="resources\Images\ExpandDown_16x.xaml">
+			<Generator></Generator>
+		</Resource>
+		<Resource Include="resources\Images\ExpandRight_16x.xaml">
+			<Generator></Generator>
+		</Resource>
+		<Resource Include="resources\Images\SettingsGroup_16x.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
+		<ProjectReference Include="..\Au\Au.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="Microsoft.CodeAnalysis">
+			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.dll</HintPath>
+			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		</Reference>
+		<Reference Include="Microsoft.CodeAnalysis.CSharp">
+			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		</Reference>
+		<Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
+			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		</Reference>
+		<Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
+			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		</Reference>
+		<Reference Include="Microsoft.CodeAnalysis.Features">
+			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Features.dll</HintPath>
+			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		</Reference>
+		<Reference Include="Microsoft.CodeAnalysis.Workspaces">
+			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Tools\Keys.txt" />
+		<Resource Include="Tools\Regex.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Edit\ModifyCode.cs" />
+		<Compile Update="Edit\PanelEdit.cs" />
+		<Compile Update="Edit\SciCode.cs" />
+		<Compile Update="Files\PanelFiles.cs" />
+		<Compile Update="Panels\PanelFound.cs" />
+		<Compile Update="Panels\PanelMouse.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Panels\PanelOutput.cs" />
+		<Compile Update="Panels\PanelRunning.cs" />
+	</ItemGroup>
+
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
+	</Target>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\ResourceHacker.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
+	</Target>
+
+	<ProjectExtensions>
+		<VisualStudio>
+			<UserProperties />
+		</VisualStudio>
+	</ProjectExtensions>
+
+</Project>

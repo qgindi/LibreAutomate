@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This file is compatible with Silverlight-->
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="svg11" Width="16" Height="16">
+  <Canvas.RenderTransform>
+    <TranslateTransform X="0" Y="0"/>
+  </Canvas.RenderTransform>
+  <Canvas.Resources/>
+  <!--Unknown tag: metadata-->
+  <!--Unknown tag: sodipodi:namedview-->
+  <TextBlock xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" FontSize="9.33333302" FontWeight="Normal" FontFamily="Verdana" FontStyle="normal" Foreground="#FF0046FD" Canvas.Left="7.3898301" Canvas.Top="-3.2" Name="text18">
+    <Span FontSize="9.33333302">s</Span>
+  </TextBlock>
+</Canvas>

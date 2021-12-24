@@ -1,0 +1,91 @@
+﻿<!-- note: don't use local types (clr-namespace). Then VS compiles project 2 times. -->
+<Application x:Class="Au.Editor.WpfApp"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             >
+    <Application.Resources>
+        <Style TargetType="{x:Type Paragraph}">
+            <Setter Property="Margin" Value="4,6,4,6"/>
+        </Style>
+        <Style x:Key="type" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#088" />
+        </Style>
+        <Style x:Key="keyword" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#00f" />
+        </Style>
+        <Style x:Key="string" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#a74" />
+        </Style>
+        <Style x:Key="number" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#a40" />
+        </Style>
+        <Style x:Key="namespace" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#777" />
+        </Style>
+        <Style x:Key="comment" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#080" />
+        </Style>
+        <Style x:Key="dot" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#ccc" />
+        </Style>
+        <Style x:Key="dotSelected" TargetType="{x:Type Run}">
+            <Setter Property="Foreground" Value="#c0f" />
+        </Style>
+        <Style x:Key="codeSpan" TargetType="{x:Type Span}">
+            <Setter Property="Background" Value="#f0f0f0" />
+            <Setter Property="FontFamily" Value="Consolas" />
+        </Style>
+        <Style x:Key="codeBlock" TargetType="{x:Type Paragraph}">
+            <Setter Property="Background" Value="#f0f0f0" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="Margin" Value="2,6,2,6"/>
+            <Setter Property="Padding" Value="2,3,2,3"/>
+        </Style>
+        <Style x:Key="hilite" TargetType="{x:Type Span}">
+            <Setter Property="Background" Value="#fca" />
+        </Style>
+        <Style x:Key="div" TargetType="{x:Type Paragraph}">
+            <Setter Property="Margin" Value="4,0,4,0"/>
+        </Style>
+        <Style x:Key="header" TargetType="{x:Type Paragraph}">
+            <Setter Property="Margin" Value="4,8,4,4"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <LinearGradientBrush x:Key="overflowGradient" StartPoint="0.5,0" EndPoint="0.5,1">
+            <GradientStop Color="#fffff0"/>
+            <GradientStop Color="#fffcd0" Offset="1"/>
+        </LinearGradientBrush>
+        <Style x:Key="overload" TargetType="{x:Type Paragraph}">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="4,1,4,2"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#ccc" />
+            <Setter Property="Background" Value="{StaticResource overflowGradient}" />
+        </Style>
+        <Style x:Key="overloadSelected" TargetType="{x:Type Paragraph}" BasedOn="{StaticResource overload}">
+            <Setter Property="Background" Value="#f8f0a0" />
+        </Style>
+        <Style x:Key="parameter" TargetType="{x:Type Paragraph}">
+            <Setter Property="Background" Value="#dec" />
+            <Setter Property="Margin" Value="2,0,2,0"/>
+            <Setter Property="Padding" Value="2,0,2,2"/>
+        </Style>
+        <Style TargetType="{x:Type Hyperlink}">
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+        <Style x:Key="divLink" TargetType="{x:Type Hyperlink}">
+            <Setter Property="TextDecorations" Value="" />
+            <Setter Property="Foreground" Value="#000" />
+            <Setter Property="Focusable" Value="False" />
+        </Style>
+
+        <Style TargetType="Viewbox">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.3" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Application.Resources>
+</Application>

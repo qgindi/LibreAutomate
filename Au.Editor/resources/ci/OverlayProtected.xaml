@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This file is compatible with Silverlight-->
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="svg11" Width="16" Height="16">
+  <Canvas.RenderTransform>
+    <TranslateTransform X="0" Y="0"/>
+  </Canvas.RenderTransform>
+  <Canvas.Resources/>
+  <!--Unknown tag: metadata-->
+  <!--Unknown tag: sodipodi:namedview-->
+  <Canvas Name="outline">
+    <Canvas.RenderTransform>
+      <MatrixTransform Matrix="1.2 0 0 1.2 -10.740369 -10.713749"/>
+    </Canvas.RenderTransform>
+    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path4" Fill="#FFF6F6F6" Opacity="0" Data="M 0 0 H 16 V 16 H 0 Z"/>
+    <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path6" Fill="#FFF6F6F6" Data="M 6.414 4 9 1.414 V 0 H 3.382 L 0 6.764 V 8 h 2.382 l -2 4 H 2.914 L 9.5 5.414 V 4 Z M 14.607 13.545 16 12.5 V 11 h -2.156 l -0.6 -2 h -1.488 l -0.6 2 H 9 v 1.5 L 10.393 13.545 9.656 16 h 1.677 L 12.5 15.125 13.667 16 h 1.677 z"/>
+  </Canvas>
+  <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="color_x5F_importance" Fill="#FFC27D1A" StrokeThickness="1.20000005" Data="m -5.0331559 -4.1491525 4.79999997 -4.8 H -5.0331559 l -3.6 7.2 h 3.6216 l -2.4216 4.8 h 0.6216 l 7.19999997 -7.2 z"/>
+  <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="not_x5F_bg" Fill="#FF424242" StrokeThickness="1.20000005" Data="m 5.3676135 5.024414 1.8612 -1.3956 H 4.9488136 l -0.72 -2.4 -0.72 2.4 h -2.28 l 1.8612 1.3956 -0.6612 2.2044 1.8 -1.35 1.7999999 1.35 z"/>
+</Canvas>
