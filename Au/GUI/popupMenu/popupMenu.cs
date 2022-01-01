@@ -430,7 +430,7 @@ namespace Au
 
 			int R = 0;
 
-			WindowsHook hKey = null;
+			WindowsHook hKey = null, hMouse = null;
 			timer timer = null;
 			try {
 				var wFore = wnd.active;
@@ -442,7 +442,7 @@ namespace Au
 					int ms = _GetMouseState();
 					bool clicked = ms != mouseState;
 					mouseState = ms;
-					if (clicked) _CloseIfClickedNotMenu(wnd.fromMouse());
+					if (clicked) _CloseIfClickedNotMenu(wnd.fromMouse(WXYFlags.Raw));
 					else if (wnd.active != wFore) Close();
 				});
 				timer.Every(30);
@@ -457,39 +457,66 @@ namespace Au
 
 				void _CloseIfClickedNotMenu(wnd w) {
 					//if(!w.Get.Owners(andThisWindow: true).Contains(_w)) Close(); //no, user may want nested root menus, although it is rare
-					if (w != _w && !w.ClassNameIs("Au.popupMenu")) Close();
+					if (!_IsMenuWindow(w)) Close();
 				}
+
+				bool _IsMenuWindow(wnd w) => w == _w || w.ClassNameIs("Au.popupMenu");
 
 				if (!foreground) {
 					//never mind: hooks don't work if active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
-					hKey = WindowsHook.Keyboard(g => {
-						if (KeyboardHook != null && !g.IsUp) {
-							switch (KeyboardHook(this, g)) {
+					hKey = WindowsHook.Keyboard(h => {
+						if (KeyboardHook != null && !h.IsUp) {
+							switch (KeyboardHook(this, h)) {
 							case MKHook.None: return;
 							case MKHook.Close: _w.Post(Api.WM_CLOSE); return;
 							}
 						}
 #if true
-						var k = g.Key;
+						var k = h.Key;
 						if (!_IsCancelKey(k)) {
 							if (_IsPassKey(k)) return;
-							g.BlockEvent();
+							h.BlockEvent();
 						}
-						if (!g.IsUp) _w.Post(Api.WM_KEYDOWN, (int)k, 0); //else _w.Post(Api.WM_KEYUP, (int)k, 0xC0000001);
+						if (!h.IsUp) _w.Post(Api.WM_KEYDOWN, (int)k, 0); //else _w.Post(Api.WM_KEYUP, (int)k, 0xC0000001);
 #else //unfinished. The idea was to call TranslateMessage, and if then PeekMessage gets wm_char...
-					var k = g.Key;
-					if(_IsCancelKey(k)) {
-						_w.Post(Api.WM_CLOSE);
-						return;
-					}
-					if (!g.IsUp) {
-						var ok=Api.TranslateMessage(new() { hwnd = _w, message = Api.WM_KEYDOWN, wParam = (int)k });
-						//print.it(ok);
-						if(Api.PeekMessage(out var v, _w, Api.WM_CHAR, Api.WM_CHAR, Api.PM_NOREMOVE)) print.it("peek", v);
-					}
-					
+						var k = h.Key;
+						if(_IsCancelKey(k)) {
+							_w.Post(Api.WM_CLOSE);
+							return;
+						}
+						if (!h.IsUp) {
+							var ok=Api.TranslateMessage(new() { hwnd = _w, message = Api.WM_KEYDOWN, wParam = (int)k });
+							//print.it(ok);
+							if(Api.PeekMessage(out var v, _w, Api.WM_CHAR, Api.WM_CHAR, Api.PM_NOREMOVE)) print.it("peek", v);
+						}
 #endif
 					});
+
+					//If the active app is showing a menu, it captures the mouse.
+					//	If this menu is there, a click goes to that app instead of this menu.
+					//	Workaround: mouse hook. We cannot SetCapture in this background thread.
+					if (_IsCapturingMouse()) {
+						hMouse = WindowsHook.Mouse(h => {
+							if (h.IsInjected) return;
+							if (!_IsCapturingMouse()) {
+								h.hook.Unhook();
+								return;
+							}
+							//tested: mouse move and wheel works without this.
+							if (h.IsButton && h.Button is MButton.Left or MButton.Right or MButton.Middle) {
+								var p = mouse.xy;
+								var w = wnd.fromXY(p, WXYFlags.Raw);
+								if (!_IsMenuWindow(w)) return;
+								h.BlockEvent();
+								int m = h.Button switch { MButton.Left => Api.WM_LBUTTONDOWN, MButton.Right => Api.WM_RBUTTONDOWN, _ => Api.WM_MBUTTONDOWN };
+								if (h.IsButtonUp) m++;
+								w.MapScreenToClient(ref p);
+								w.Post(m, 0, Math2.MakeLparam(p));
+							}
+						});
+					}
+
+					static bool _IsCapturingMouse() => miscInfo.getGUIThreadInfo(out var g) && !g.hwndCapture.Is0;
 				}
 
 				//var pmo = new PrintMsgOptions(Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, Api.WM_PAINT, 0x138a /*SC_WORK_IDLE*/, Api.WM_USER, int.MinValue) { WindowProperties = true };
@@ -529,6 +556,7 @@ namespace Au
 			}
 			finally {
 				hKey?.Dispose();
+				hMouse?.Dispose();
 				timer?.Stop();
 				if (!_w.Is0) Api.DestroyWindow(_w);
 			}

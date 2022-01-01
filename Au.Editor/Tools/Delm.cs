@@ -21,8 +21,6 @@ using System.Linq;
 //	If now WebInvoke, and role not web:, and after executing action does not change window title for eg 5 s, suggest to stop waiting and use Invoke.
 //	Or just add pseudo action Auto. If "web:", use WebInvoke, else if has action, use Invoke, else MouseClick.
 
-//TODO: add ".Activate()" if the window was active while capturing. Or always, except if looks like a "no activate" style.
-
 namespace Au.Tools;
 
 class Delm : KDialogWindow
@@ -33,6 +31,7 @@ class Delm : KDialogWindow
 	elm _elm;
 	wnd _wnd, _con;
 	bool _useCon;
+	bool _wndNoActivate;
 	string _wndName;
 	string _screenshot;
 
@@ -227,6 +226,7 @@ class Delm : KDialogWindow
 		_wnd = w;
 		_con = con == w ? default : con;
 		_useCon = useCon && !_con.Is0;
+		_wndNoActivate = w.IsNoActivateStyle_();
 		using var nevc = new _NoeventValueChanged(this);
 		_cControl.IsChecked = _useCon; _cControl.IsEnabled = !_con.Is0;
 	}
@@ -697,7 +697,7 @@ class Delm : KDialogWindow
 			//	This code is similar to the C++ code in _FromPoint_GetLink, but covers more cases.
 			//	Cannot show menu in this thread. Pass e2 and strings to the UI thread, let it show menu if e2 not null.
 			elm e2 = null; string tt1 = null, tt2 = null;
-			if (!e.MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java)) {//TODO: UIA too
+			if (!e.MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java)) { //SHOULDDO: UIA too
 				if (!_IsInteractive(e, true, out bool stop1) && !stop1) {
 					bool found = false;
 					tt1 = "This element probably does not support Invoke or Focus";
@@ -779,6 +779,9 @@ class Delm : KDialogWindow
 		if (_close && !hotkey) {
 			base.Close();
 		} else if (_code.zText.NullIfEmpty_() is string s) {
+			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_ActionIsFinder) {
+				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
+			}
 			if (!_Opt.Has(_EOptions.NoScope)) {
 				string newline = _ActionIsAction ? null : "\r\n"; //if no action, add empty line
 				s = "{\r\n" + s + newline + "\r\n}";
@@ -869,7 +872,7 @@ class Delm : KDialogWindow
 			if (testAction) {
 				string aCode = _ActionGetCode(test: true);
 				if (aCode != null) {
-					Api.AllowSetForegroundWindow(elmFound.WndTopLevel.ProcessId);
+					Api.AllowSetForegroundWindow();
 #if true
 					var re = _RunElmTask(2000, (elmFound, aCode), static m => TUtil.RunTestAction(m.elmFound, m.aCode));
 					if (re != null) {
@@ -1283,18 +1286,25 @@ class Delm : KDialogWindow
 		("Select and focus", "Focus(true)"),
 		(null, null),
 		("Check", ""),
-		("Check (invoke)", "Check(true)"),
+		("Check", "Check(true)"),
 		("Check (keys)", "Check(true, \"\")"),
 		("Check (click)", "Check(true, e => e.MouseClick(%))"),
 		("Check (post)", "Check(true, e => e.PostClick(%))"),
 		("", null),
-		("Uncheck (invoke)", "Check(false)"),
+		("Uncheck", "Check(false)"),
 		("Uncheck (keys)", "Check(false, \"\")"),
 		("Uncheck (click)", "Check(false, e => e.MouseClick(%))"),
 		("Uncheck (post)", "Check(false, e => e.PostClick(%))"),
 		(null, null),
+		("ComboSelect", ""),
+		("ComboSelect", "ComboSelect(^)"),
+		("ComboSelect (invoke)", "ComboSelect(^, \"i\")"),
+		("ComboSelect (keys)", "ComboSelect(^, \"k\")"),
+		("ComboSelect (mouse)", "ComboSelect(^, \"m\")"),
+		("Item...", "#cs"),
+		(null, null),
 		("Expand", ""),
-		("Expand (invoke)", "Expand(true)"),
+		("Expand", "Expand(true)"),
 		("Expand (keys)", "Expand(true, \"\")"),
 		("Expand (click)", "Expand(true, e => e.MouseClick(%))"),
 		("Expand (2*click)", "Expand(true, e => e.MouseClickD(%))"),
@@ -1302,7 +1312,7 @@ class Delm : KDialogWindow
 		("Expand (2*post)", "Expand(true, e => e.PostClickD(%))"),
 		("Path...", "#ep"),
 		("", null),
-		("Collapse (invoke)", "Expand(false)"),
+		("Collapse", "Expand(false)"),
 		("Collapse (keys)", "Expand(false, \"\")"),
 		("Collapse (click)", "Expand(false, e => e.MouseClick(%))"),
 		("Collapse (2*click)", "Expand(false, e => e.MouseClickD(%))"),
@@ -1343,15 +1353,11 @@ class Delm : KDialogWindow
 
 		if (!test) _testedAction = 0;
 
-		switch (s_actions[ia].code) {
-		case "#ep":
-			if (!dialog.showInput(out string epath,
-				"Expand path", "Path for Expand actions.\nExample: Folder1|Folder2|Folder3\nPath parts are wildcard expressions.",
-				editText: _actionExpandPath, owner: this)) return 0;
-			_actionExpandPath = epath.NullIfEmpty_();
-			//set action "Expand (invoke)", unless was an Expand action 
-			ia = s_actions[_ActionIndex].name.Starts("Expand") ? _ActionIndex : _ActionFind("Expand (invoke)");
-			break;
+		if (s_actions[ia].code is string s1 && s1.Starts('#')) {
+			if (!_ActionInputStringArg(s1, out string selectAction)) return 0;
+			//select the first action in this submenu, but don't change if was selected an action in this submenu
+			ia = s_actions[_ActionIndex].name.Starts(selectAction) ? _ActionIndex : _ActionFind(selectAction);
+			if (test && ia == _testedAction) _FormatCode();
 		}
 
 		if (!test) {
@@ -1407,12 +1413,42 @@ class Delm : KDialogWindow
 					if (scroll) s = s.Insert(j, "scroll: 50");
 				}
 			}
-			if (_actionExpandPath != null && s.Starts("Expand(true")) s = s.ReplaceAt(7, 4, _actionExpandPath.Escape(quote: true));
+
+			if (s.Starts("Expand(true")) {
+				if (_actionExpandPath != null) s = s.ReplaceAt(7, 4, _actionExpandPath.Escape(quote: true));
+			} else if (s.Starts("ComboSelect(^")) {
+				if (test) {
+					if (_actionComboSelectItem == null || popupMenu.showSimple(new(_actionComboSelectItem, "8492 Other...")) == 8492) {
+						if (!_ActionInputStringArg("#cs", out _) || _actionComboSelectItem == null) return null;
+						_FormatCode();
+					}
+				}
+				s = s.ReplaceAt(12, 1, (_actionComboSelectItem ?? "Item").Escape(quote: true));
+			}
 		}
 		return s;
 	}
 	int _testedAction;
-	string _actionExpandPath;
+	string _actionExpandPath, _actionComboSelectItem;
+
+	bool _ActionInputStringArg(string what, out string selectAction) {
+		selectAction = null;
+		switch (what) {
+		case "#cs":
+			selectAction = "ComboSelect";
+			return _Dialog(ref _actionComboSelectItem, "ComboSelect item", "Combo box item name. Wildcard expression.");
+		case "#ep":
+			selectAction = "Expand";
+			return _Dialog(ref _actionExpandPath, "Expand path", "Tree node path for Expand actions.\nExample: Folder1|Folder2|Folder3\nPath parts are wildcard expressions.");
+		}
+		return false; //impossible
+
+		bool _Dialog(ref string r, string text1, string text2) {
+			if (!dialog.showInput(out string s, text1, text2, editText: r, owner: this)) return false;
+			r = s.NullIfEmpty_();
+			return true;
+		}
+	}
 
 	void _ActionSetControlsVisibility() {
 		int i = _ActionIndex;
@@ -1431,8 +1467,9 @@ class Delm : KDialogWindow
 	void _ToolSettings() {
 		var m = new popupMenu();
 		var cAT = m.AddCheck("Auto test find", _Opt.Has(_EOptions.AutoTest)); cAT.Tooltip = "Test find when captured";
+		var cWA = m.AddCheck(".Activate()", _Opt.Has(_EOptions.Activate)); cWA.Tooltip = "Append .Activate() to wnd.find(...), unless the window looks like does not like to be activated";
 		//var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cNS.Tooltip = "Insert code without { } and don't use elm e with action";
-		var cNS = m.AddCheck("No { }", _Opt.Has(_EOptions.NoScope)); cNS.Tooltip = "Insert code without { }";
+		var cNS = m.AddCheck("No { }", _Opt.Has(_EOptions.NoScope)); cNS.Tooltip = "Insert the code without { }";
 		m.Separator();
 		m["Save action"] = _ => {
 			App.Settings.delm.actionn = s_actions[_iAction].name;
@@ -1448,6 +1485,7 @@ class Delm : KDialogWindow
 		//bool format = _SetOpt(_EOptions.Compact, cCC.IsChecked);
 		//if (format) _FormatCode();
 		_SetOpt(_EOptions.NoScope, cNS.IsChecked);
+		_SetOpt(_EOptions.Activate, cWA.IsChecked);
 	}
 
 	[Flags]
@@ -1458,6 +1496,7 @@ class Delm : KDialogWindow
 		MouseXY = 1 << 2,
 		NoWait = 1 << 3,
 		MouseScroll = 1 << 4,
+		Activate = 1 << 5,
 		//and don't save autotestaction, autoinsert
 	}
 

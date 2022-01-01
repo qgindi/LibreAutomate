@@ -7,10 +7,8 @@ using Au.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
-
-//TODO: don't show black/unfolded text before Roslyn is ready.
-//	Then user can't work anyway, and waits until colored/folded, and the black text is annoying.
-//	Bad things happen if user tries to edit while not ready.
+using System.Windows;
+using Microsoft.CodeAnalysis.Completion;
 
 static class CodeInfo
 {
@@ -34,8 +32,14 @@ static class CodeInfo
 	static RECT _sciRect;
 
 	public static void UiLoaded() {
-		//warm up
-		//Task.Delay(100).ContinueWith(_1 => {
+		//This code warms up Roslyn. It can take several s.
+		//	During that time the window is visible (except document) but disabled.
+
+		perf.next('u');
+		App.Hmain.Enable(false); //don't allow users to make any changes until Roslyn loaded. It can be dangerous.
+		var doc = Panels.Editor.ZActiveDoc;
+		if (doc != null) doc.Visibility = Visibility.Hidden; //hide document window. The black unfolded text is distracting. Does not have sense to show it.
+
 		Task.Run(() => {
 			//using var p1 = perf.local();
 			try {
@@ -51,28 +55,44 @@ static class CodeInfo
 					.AddDocument(documentId, "f.cs", code);
 				var document = sol.GetDocument(documentId);
 				//p1.Next();
+
 				var semo = document.GetSemanticModelAsync().Result;
-				//p1.Next();
+				//p1.Next('s');
+
+				//let the coloring and folding in editor start working immediately
 				Microsoft.CodeAnalysis.Classification.Classifier.GetClassifiedSpans(semo, new TextSpan(0, code.Length), ws);
-				//p1.Next();
+				//p1.Next('c');
+
 				App.Dispatcher.InvokeAsync(() => {
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
 					Panels.Editor.ZActiveDocChanged += Stop;
 					App.Timer025sWhenVisible += _Timer025sWhenVisible;
+					_Finally();
 				});
 				//p1.Next();
-				//1000.ms();
+
+				500.ms();
 				//p1.Next();
-				//Compiler.Warmup(document); //don't need. Later fast enough. Now just uses more memory and CPU at startup.
-				//p1.NW('w');
+				var compl = CompletionService.GetService(document);
+				compl.GetCompletionsAsync(document, code.IndexOf(".it") + 1); //not necessary, but without it sometimes the first completion list is too slow if the user types fast
+				//p1.Next('C');
+
+				Compiler.Warmup(document); //not necessary, but it's better when the first compilation is 200 ms instead of 500
 
 				//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
 			}
 			catch (Exception ex) {
-				Debug_.Print(ex);
+				print.it(ex);
+				App.Dispatcher.InvokeAsync(_Finally);
 			}
 		});
+
+		void _Finally() {
+			if (doc != null) doc.Visibility = Visibility.Visible;
+			App.Hmain.Enable(true);
+			perf.nw('R');
+		}
 	}
 
 	/// <summary>
@@ -273,7 +293,7 @@ static class CodeInfo
 		int pos16 = doc.zPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
-		if(doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.zText) return; //changed while awaiting
+		if (doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.zText) return; //changed while awaiting
 
 		if (diag == null && quick == null) {
 			HideTextPopup();
@@ -356,7 +376,8 @@ static class CodeInfo
 				}
 			}
 			catch (Exception ex) {
-				Debug_.Print(ex);
+				//Debug_.Print(ex);
+				print.it(ex);
 				return false;
 			}
 

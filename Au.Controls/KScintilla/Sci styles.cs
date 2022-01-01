@@ -221,9 +221,9 @@ namespace Au.Controls
 
 			//if (codeBackColor != null) for (int i = 0; i < STYLE_DEFAULT; i++) zStyleBackColor(i, codeBackColor.Value);
 
-			const int colorComment = 0x8000;
+			const int colorComment = 0x60B000;
 			const int colorString = 0xA07040;
-			const int colorNumber = 0xA04000;
+			const int colorNumber = 0x804000;
 			const int colorDoc = 0x606060;
 			zStyleForeColor((int)LexCppStyles.SCE_C_COMMENT, colorComment); //  /*...*/
 			zStyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINE, colorComment); //  //...
@@ -233,7 +233,7 @@ namespace Au.Controls
 			zStyleForeColor((int)LexCppStyles.SCE_C_NUMBER, colorNumber);
 			zStyleForeColor((int)LexCppStyles.SCE_C_STRING, colorString);
 			zStyleForeColor((int)LexCppStyles.SCE_C_VERBATIM, colorString); //@"string"
-			zStyleForeColor((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, 0xC0C0C0);
+			zStyleForeColor((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, 0xB776FB);
 			//zStyleForeColor((int)LexCppStyles.SCE_C_OPERATOR, 0x80); //+,;( etc. Let it be black.
 			zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSOR, 0xFF8000);
 			zStyleForeColor((int)LexCppStyles.SCE_C_WORD, 0xFF); //keywords

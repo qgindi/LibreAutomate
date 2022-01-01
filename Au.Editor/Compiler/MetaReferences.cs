@@ -187,8 +187,9 @@ namespace Au.Compiler
 			return true;
 
 			void _AddRef(int iCache) {
-				var r = s_cache[iCache];
-				Refs.Add(r.Ref);
+				var r = s_cache[iCache].Ref;
+				if (!Refs.Contains(r))
+					Refs.Add(r);
 			}
 
 			bool _PropEq(_MR u, string alias, bool isCOM) {

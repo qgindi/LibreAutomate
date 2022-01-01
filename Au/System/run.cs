@@ -158,7 +158,7 @@ namespace Au
 			}
 
 			try {
-				Api.AllowSetForegroundWindow(Api.ASFW_ANY);
+				Api.AllowSetForegroundWindow();
 
 				if (x.lpVerb != null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
 					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.

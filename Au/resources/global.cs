@@ -35,11 +35,11 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Autepad C#")]
-[assembly: AssemblyCopyright("Copyright 2021 Gintaras Didžgalvis")]
+[assembly: AssemblyCopyright("Copyright 2022 Gintaras Didžgalvis")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.3.0")]
+[assembly: AssemblyVersion("0.3.1")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

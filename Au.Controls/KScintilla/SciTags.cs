@@ -323,7 +323,7 @@ namespace Au.Controls
 
 				var tag = s;
 
-				//end tag. Support <> and </tag>, but don't care what tag it is. The </tag> form can be used just to make the code more readable.
+				//end tag. Support <> and </tag>, but don't care what tag it is.
 				if (s[0] == '/') {
 					s++;
 					ch = *s; if (ch == '+' || ch == '.') s++;
@@ -350,6 +350,7 @@ namespace Au.Controls
 					_stack.RemoveAt(n);
 					continue;
 				}
+				//SHOULDDO: ignore unclosed tags, like in string "ab <b>cd".
 
 				//multi-message separator
 				if (s[0] == 0x15 && s[1] == 0 && s[2] == 4 && (s - s0 == 1 || s[-2] == 10)) {

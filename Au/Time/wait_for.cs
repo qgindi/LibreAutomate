@@ -149,14 +149,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits for a user-defined condition.
+		/// Waits for a user-defined condition. This overload waits ontil the callback function returns true.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on <i>options</i>.</param>
+		/// <param name="condition">Callback function (eg lambda).</param>
 		/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <remarks>More info: <see cref="wait"/>.</remarks>
+		/// <remarks>
+		/// Calls the <i>condition</i> function repeatedly, until it returns true or non-default (the T overload). The calling period depends on <i>options</i>.
+		///  
+		/// More info: <see cref="wait"/>.
+		/// </remarks>
 		/// <example>See <see cref="wait"/>.</example>
 		public static bool forCondition(double secondsTimeout, Func<bool> condition, OWait options = null) {
 			var to = new Loop(secondsTimeout, options);
@@ -165,7 +169,21 @@ namespace Au
 				if (!to.Sleep()) return false;
 			}
 		}
-		//TODO: generic to return any type.
+
+		/// <summary>
+		/// Waits for a user-defined condition. This overload waits ontil the callback function returns a value other than <c>default(T)</c>, and then returns that value.
+		/// </summary>
+		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <inheritdoc cref="forCondition(double, Func{bool}, OWait)"/>
+		public static T forCondition<T>(double secondsTimeout, Func<T> condition, OWait options = null) {
+			var to = new Loop(secondsTimeout, options);
+			for (; ; ) {
+				var r = condition();
+				if (!EqualityComparer<T>.Default.Equals(r, default(T))) return r;
+				if (!to.Sleep()) return r;
+			}
+		}
+		//This could be used for bool too, but then not so easy to understand the purpose and how to use, and therefore probably would be rarely used.
 
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).

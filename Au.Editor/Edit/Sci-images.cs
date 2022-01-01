@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿//#define SMALLER_SCREENSHOTS //smaller if /*image:...*/
+
+using System.Linq;
 using static Au.Controls.Sci;
 using System.Drawing;
 using Microsoft.CodeAnalysis.Classification;
@@ -13,6 +15,7 @@ partial class SciCode
 	{
 		public Bitmap image;
 		public bool isImage; //draw frame; else icon, draw without frame
+		public bool isComment; /*image:...*/
 	}
 
 	//fields for drawing images in margin
@@ -39,12 +42,13 @@ partial class SciCode
 		int maxWidth = 0;
 		int nextLineStart = 0;
 
-		//SHOULDDO: prefer /*image:...*/. Now, if before is eg "https:...", displays web icon.
+		//CONSIDER: prefer /*image:...*/? Now, if before is eg "file path", displays file icon. Or draw both somehow.
 
 		for (int i = 0; i < a.Length; i++) {
 			if (a[i].TextSpan.Start < nextLineStart) continue; //max 1 image/line
 			string s;
 			ImageType imType = 0;
+			bool isComment = false;
 			if (_IsString(a[i], out var sr)) {
 				imType = _ImageTypeFromString(code.AsSpan(sr.start, sr.Length));
 				if (imType == 0) continue;
@@ -64,6 +68,7 @@ partial class SciCode
 #endif
 				s = code[j..k];
 				imType = ImageType.Base64Image;
+				isComment = true;
 			}
 			if (imType == 0) continue;
 			Bitmap b;
@@ -84,12 +89,13 @@ partial class SciCode
 
 			int start = a[i].TextSpan.Start;
 			int line = zLineFromPos(true, start), vi = Call(SCI_VISIBLEFROMDOCLINE, line);
-			if (vi >= vr.vlineFrom && vi < vr.vlineTo && 0 != Call(SCI_GETLINEVISIBLE, line)) maxWidth = Math.Max(maxWidth, b.Width);
+			if (vi >= vr.vlineFrom && vi < vr.vlineTo && 0 != Call(SCI_GETLINEVISIBLE, line))
+				maxWidth = Math.Max(maxWidth, _ImageDisplaySize(b, isComment).Width);
 
 			if (_im.a == null) {
 				_im.a = new();
 				Call(SCI_INDICSETSTYLE, c_indicImages, INDIC_HIDDEN);
-				int descent = 17 - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT);
+				int descent = 16 - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT);
 				if (descent > 0) {
 					bool caretVisible = Hwnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, zCurrentPos8));
 					Call(SCI_SETEXTRADESCENT, descent); //note: later don't set = 0 when no visible images. Then bad scrolling and can start to repeat.
@@ -101,7 +107,7 @@ partial class SciCode
 			var ab = _im.a;
 			int ii;
 			for (ii = 0; ii < ab.Count; ii++) if (ab[ii].image == b) break;
-			if (ii == ab.Count) ab.Add(new() { image = b, isImage = isImage });
+			if (ii == ab.Count) ab.Add(new() { image = b, isImage = isImage, isComment = isComment });
 			//print.it(ii, s);
 
 			zIndicatorAdd(true, c_indicImages, start..(start + 1), ii + 1);
@@ -204,7 +210,8 @@ partial class SciCode
 				}
 			} else if (pathname.isUrl(s)) {
 				//display icon only if it is a known frequently used protocol that can be used with run.it(). Avoid non-protocol prefixes such as "web:LINK".
-				if (!(s.Starts("http:") || s.Starts("https:") || s.Starts("mailto:") || s.Starts("shell:"))) return default;
+				//if (!(s.Starts("http:") || s.Starts("https:") || s.Starts("mailto:") || s.Starts("shell:"))) return default;
+				if (!s.Starts("shell:")) return default; //don't display http etc, it's not useful
 			} else if (!s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return default;
 
 			return ImageType.ShellIcon;
@@ -232,18 +239,29 @@ partial class SciCode
 
 				//print.it(pos, i, line);
 				var v = _im.a[i];
+#if SMALLER_SCREENSHOTS
+				bool smaller = v.isComment;
+				var z = _ImageDisplaySize(v.image, smaller);
+#else
 				var z = v.image.Size;
+#endif
 				maxWidth = Math.Max(maxWidth, z.Width);
 				int x = c.rect.CenterX - z.Width / 2;
 				int y = (Call(SCI_VISIBLEFROMDOCLINE, line) - topVisibleLine) * lineH;
 
 				RECT r = new(x, y, z.Width, z.Height);
 				if (!c.rect.IntersectsWith(r)) continue;
-				g ??= Graphics.FromHdc(c.hdc);
+				if (g == null) {
+					g = Graphics.FromHdc(c.hdc);
+					g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+				}
 
 				g.IntersectClip(c.rect); //limit image width, because not clipped
 
 				if (v.isImage) g.DrawRectangleInset(Color.Green, 1, r, outset: true);
+#if SMALLER_SCREENSHOTS
+				if (smaller) g.DrawImage(v.image, r); else
+#endif
 				g.DrawImageUnscaled(v.image, x, y);
 			}
 		}
@@ -279,5 +297,13 @@ partial class SciCode
 		} else {
 			if (this == Panels.Editor.ZActiveDoc) CodeInfo._styling.Update();
 		}
+	}
+
+	static Size _ImageDisplaySize(Bitmap b, bool smaller) {
+		var z = b.Size;
+#if SMALLER_SCREENSHOTS
+		if (smaller) return new(z.Width * 3 / 4, z.Height * 3 / 4);
+#endif
+		return z;
 	}
 }

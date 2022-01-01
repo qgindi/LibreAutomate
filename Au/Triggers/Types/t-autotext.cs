@@ -311,7 +311,7 @@ namespace Au.Triggers
 			}
 			_singlePK = false;
 
-			//TODO: use KeyToTextConverter.
+			//SHOULDDO: use KeyToTextConverter.
 			if (k.IsAlt && 0 == (thc.Mod & (KMod.Ctrl | KMod.Shift))) goto gReset; //Alt+key without other modifiers. Info: AltGr can add Ctrl, therefore we process it. Info: still not menu mode. Tested: never types a character, except Alt+numpad numbers.
 
 			var vk = k.vkCode;
@@ -703,11 +703,16 @@ namespace Au.Triggers
 
 			var k = new keys(opt.key);
 			var optk = k.Options;
-			bool uwp = 0 != this.Window.Window.IsUwpApp;//TODO: test WinUI (cn "WinUIDesktopWin32WindowClass")
+
+			//UWP is very slow. If text is long and fast: 1. Often does not display part of it until next key. 2. Starts to display with a long delay.
+			//	WinUI3 even slower, and has problem 2 but not 1. Because of 2 it's better to send text slower.
+			wnd ww = this.Window.Window;
+			bool uwp = 0 != ww.IsUwpApp || ww.IsWinUI_;
+			//bool uwp = keys.isScrollLock;
 			if (uwp) {
-				optk.KeySpeed = Math.Clamp(optk.KeySpeed * 2, 20, 100); //default 2
-				optk.KeySpeedClipboard = Math.Clamp(optk.KeySpeedClipboard * 2, 20, 100);
-				optk.TextSpeed = Math.Clamp(optk.TextSpeed * 2, 10, 50); //default 0
+				optk.TextSpeed = Math.Max(optk.TextSpeed, 10); //default 0
+				optk.KeySpeed = Math.Max(optk.KeySpeed, 20); //default 2
+				optk.KeySpeedClipboard = Math.Max(optk.KeySpeedClipboard, 30); //default 5
 				int n1 = optk.PasteLength - 100; if (n1 > 0) optk.PasteLength = 100 + n1 / 5; //default 200 -> 120
 			} else {
 				optk.KeySpeed = Math.Clamp(optk.KeySpeed, 2, 20);

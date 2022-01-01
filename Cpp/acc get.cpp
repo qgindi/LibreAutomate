@@ -62,12 +62,19 @@ void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref BYTE& role, boo
 		case 0: case ROLE_CUSTOM: case ROLE_SYSTEM_GROUPING: case ROLE_SYSTEM_GRAPHIC:
 			break;
 		default:
-			if(!isUIA && ao::IsStatic(role, a)) {
-				long cc = 0;
-				useParent = 0 == parent->get_accChildCount(&cc) && cc == 1; //can be very slow if UIA, eg in Firefox big pages
-				if(useParent) {
-					Bstr bn;
-					useParent = (0 == parent->get_accName(ao::VE(elem), &bn)) && bn && bn.Length() > 0;
+			if(!isUIA || role2 == ROLE_SYSTEM_LISTITEM || role2 == ROLE_SYSTEM_OUTLINEITEM || role2 == ROLE_SYSTEM_MENUITEM) {
+				if(ao::IsStatic(role, a)) {
+					long cc = 0;
+					//Perf.First();
+					//get_accChildCount can be very slow if UIA, eg in Firefox big pages.
+					//	SHOULDDO: if UIA, try something faster, eg get next/previous sibling of a. See UIAccessible::accNavigate.
+					useParent = 0 == parent->get_accChildCount(&cc) && cc == 1;
+					//Perf.NW();
+					if(useParent) {
+						Bstr bn;
+						useParent = (0 == parent->get_accName(ao::VE(elem), &bn)) && bn && bn.Length() > 0;
+					}
+
 				}
 			}
 			break;

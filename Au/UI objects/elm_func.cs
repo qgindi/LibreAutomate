@@ -22,6 +22,10 @@ namespace Au
 			}
 		}
 
+		/// <summary>
+		/// Low-level version of <see cref="WndContainer"/>. Does not call ThrowIfDisposed_ and _Hresult (lastError).
+		/// </summary>
+		/// <returns>HRESULT</returns>
 		int _GetWnd(out wnd w) {
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
 			GC.KeepAlive(this);
@@ -385,6 +389,9 @@ namespace Au
 			_Invoke();
 		}
 
+		/// <summary>
+		/// Calls <b>_InvokeL</b>, with <b>ButtonPostClickWorkaround_</b> if need. Exception if fails.
+		/// </summary>
 		void _Invoke(char action = 'a', string param = null, string errMsg = null) {
 			int hr;
 			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt is ERole.BUTTON or ERole.SPLITBUTTON or ERole.CHECKBOX or ERole.RADIOBUTTON) {
@@ -397,6 +404,10 @@ namespace Au
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
 
+		/// <summary>
+		/// Calls EnableActivate(-1) and Cpp_AccAction.
+		/// </summary>
+		/// <returns>HRESULT</returns>
 		int _InvokeL(char action = 'a', string param = null) {
 			//UIA bug: if window inactive, in some cases tries to activate, and waits ~10 s if fails.
 			//	Eg ExpandCollapse pattern (always) and Invoke/Toggle patterns (buttons/checkboxes, not always).
@@ -612,7 +623,7 @@ namespace Au
 		/// <summary>
 		/// Selects or deselects.
 		/// </summary>
-		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>ESelect.TAKEFOCUS | ESelect.TAKESELECTION</c>.</param>
+		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>ESelect.TAKEFOCUS | ESelect.TAKESELECTION</c>. With flag <b>TAKEFOCUS</b> activates the window like <see cref="Focus(bool)"/>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
@@ -625,7 +636,10 @@ namespace Au
 
 			//Workaround for Windows controls bugs, part 1.
 			wnd w = default, wTL = default; bool focusingControl = false;
-			if (how.Has(ESelect.TAKEFOCUS) && 0 == _GetWnd(out w)) {
+			if (how.Has(ESelect.TAKEFOCUS)) {
+				//Always activate/focus the window, because used by functions that then will send keys etc.
+				//CONSIDER: option TAKEFOCUSNOACTIVATE to focus without activate/focus the window.
+				w = WndContainer;
 				//if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail //rejected. In some cases the UI element may be focusable although window disabled, eg KTreeView.
 				wTL = w.Window;
 				wTL.Activate();
@@ -676,12 +690,12 @@ namespace Au
 		/// <summary>
 		/// Makes this UI element focused for keyboard input.
 		/// </summary>
-		/// <param name="andSelect">Add flag TAKESELECTION. Note: it is for selecting a list item, not for selecting text in a text box.</param>
+		/// <param name="andSelect">Add flag <b>TAKESELECTION</b>. Note: it is for selecting a list item, not for selecting text in a text box.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
-		/// Calls <see cref="Select"/> with flag TAKEFOCUS and optionally TAKESELECTION.
-		/// Not all UI elements support this action and not all work correctly. More info in Select documentation.
+		/// Calls <see cref="Select"/> with flag <b>TAKEFOCUS</b> and optionally <b>TAKESELECTION</b>.
+		/// Not all UI elements support this action and not all work correctly. More info in <b>Select</b> documentation.
 		/// </remarks>
 		public void Focus(bool andSelect = false) {
 			var how = ESelect.TAKEFOCUS;
@@ -976,7 +990,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Failed to get container window (<see cref="WndContainer"/>), or it was closed while waiting.</exception>
 		public bool WaitFor(double secondsTimeout, Func<elm, bool> condition) {
-			var w = WndContainer;
+			var w = WndContainer; //calls ThrowIfDisposed_
 			var to = new wait.Loop(secondsTimeout);
 			for (; ; ) {
 				w.ThrowIfInvalid();
@@ -1052,12 +1066,19 @@ namespace Au
 
 			if (!GetRect(out var r)) throw new AuException(0, "*get UI element rectangle");
 			if (r.NoArea) throw new AuException(IsOffscreen ? "The UI element is offscreen. Try scroll." : "The UI element rectangle is empty");
-			var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
+			var w = WndContainer; //need window for mouse functions, else could click another window etc
+			bool retry = false; var r0 = r;
+			g1:
 			if (!w.GetRect(out var rw)) throw new AuException(0, "*get container window");
-			if (!r.Intersect(rw)) throw new AuException("The UI element rectangle is not in the container window. Try scroll.");
+			if (!r.Intersect(rw)) {
+				if (!retry && scroll != 0) { //workaround for: WndContainer of a popup item may be the popup's owner. Eg WPF combobox.
+					w = w.Window.Get.EnabledOwned();
+					if (retry = !w.Is0) { r = r0; goto g1; }
+				}
+				throw new AuException("The UI element rectangle is not in the container window." + (scroll != 0 ? null : " Try scroll."));
+			}
 			if (!w.MapScreenToClient(ref r)) throw new AuException(0);
 			return (w, r);
-
 		}
 
 		//rejected: automatically scroll if need.
@@ -1187,7 +1208,7 @@ namespace Au
 		/// 
 		/// Does not work with 3-state checkboxes and with elements that never have CHECKED state.
 		/// </remarks>
-		public void Check(bool check, [ParamString(PSFormat.keys)] string keys = null) {
+		public void Check(bool check = true, [ParamString(PSFormat.keys)] string keys = null) {
 			if (!_CheckNeedToggle(check)) return;
 			if (keys != null) {
 				SendKeys(keys.Length == 0 ? "Space" : keys);
@@ -1219,6 +1240,7 @@ namespace Au
 		/// <param name="expand">true to expand, false to collapse.</param>
 		/// <param name="keys">If not null, makes this element focused and presses these keys. See <see cref="keys.send"/>. If "", uses keys commonly used for that UI element type, for example Right/Left for treeitem, Alt+Down for combobox. If null, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> "".</param>
 		/// <param name="waitS">If not 0, waits for new expanded/collapsed state max this number of seconds; on timeout throws exception, unless negative.</param>
+		/// <param name="ignoreState">Ignore initial EXPANDED/COLLAPSED state and always perform the expand/collapse action. Can be useful when <see cref="State"/> EXPANDED/COLLAPSED is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
 		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if &gt; 0).</exception>
 		/// <remarks>
@@ -1226,22 +1248,23 @@ namespace Au
 		/// 
 		/// Works with UI elements that have <see cref="State"/> EXPANDED when expanded and COLLAPSED when collapsed. Also with UI elements that have state CHECKED or PRESSED when expanded and don't have this state when collapsed.
 		/// </remarks>
-		public void Expand(bool expand, [ParamString(PSFormat.keys)] string keys = null, double waitS = 1) {
-			_Expand(expand, keys, null, waitS);
+		public void Expand(bool expand = true, [ParamString(PSFormat.keys)] string keys = null, double waitS = 1, bool ignoreState = false) {
+			_Expand(expand, keys, null, waitS, ignoreState);
 		}
 
-		/// <inheritdoc cref="Expand(bool, string, double)"/>
+		/// <inheritdoc cref="Expand(bool, string, double, bool)"/>
 		/// <param name="expand"></param>
 		/// <param name="action">Callback function that should expand or collapse this UI element. Its parameter is this variable.</param>
 		/// <param name="waitS"></param>
+		/// <param name="ignoreState"></param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <exception cref="TimeoutException"/>
 		/// <remarks></remarks>
-		public void Expand(bool expand, Action<elm> action, double waitS = 1) {
-			_Expand(expand, null, action, waitS);
+		public void Expand(bool expand, Action<elm> action, double waitS = 1, bool ignoreState = false) {
+			_Expand(expand, null, action, waitS, ignoreState);
 		}
 
-		void _Expand(bool expand, string keys, Action<elm> action, double waitS) {
+		void _Expand(bool expand, string keys, Action<elm> action, double waitS, bool ignoreState) {
 			ThrowIfDisposed_();
 
 			bool _NeedToggle(bool expand) {
@@ -1251,7 +1274,7 @@ namespace Au
 				bool isExpanded = !state.Has(EState.COLLAPSED) && state.HasAny(EState.EXPANDED | EState.CHECKED | EState.PRESSED);
 				return isExpanded != expand;
 			}
-			if (!_NeedToggle(expand)) return;
+			if (!ignoreState) if (!_NeedToggle(expand)) return;
 
 			int how = action != null ? 2 : keys != null ? 1 : 0;
 			if (how == 0) {
@@ -1275,8 +1298,7 @@ namespace Au
 							//	Let users choose another overload.
 						}
 					} else if (RoleInt == ERole.COMBOBOX) { //classic combobox?
-						var w = WndContainer;
-						if (w.CommonControlType == WControlType.Combobox) {
+						if (0 == _GetWnd(out wnd w) && w.CommonControlType == WControlType.Combobox) {
 							w.SendNotify(0x014F, expand ? 1 : 0); //CB_SHOWDROPDOWN
 							how = 0;
 						}
@@ -1308,8 +1330,7 @@ namespace Au
 
 			bool _ClassicTreeview() {
 				if (Item == 0 || RoleInt != ERole.TREEITEM) return false;
-				var w = WndContainer;
-				if (w.CommonControlType != WControlType.Treeview) return false;
+				if (0 != _GetWnd(out wnd w) || w.CommonControlType != WControlType.Treeview) return false;
 				if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) return false; //cannot get 64-bit HTREEITEM
 				nint hi = w.Send(TVM_MAPACCIDTOHTREEITEM, Item); if (hi == 0) return false;
 				_Expand_ClassicTreeview(w, hi, expand);
@@ -1343,7 +1364,7 @@ namespace Au
 		/// String or array consisting of names (<see cref="Name"/>) of treeitem elements, like <c>"One|Two|Three"</c> or <c>new string[] { "One", "Two", "Three" }</c>.
 		/// Name string format: [](xref:wildcard_expression).
 		/// </param>
-		/// <param name="keys">null or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double)"/>.</param>
+		/// <param name="keys">null or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double, bool)"/>.</param>
 		/// <param name="waitS">If not 0, after expanding each element waits for expanded state max this number of seconds; on timeout throws exception, unless negative. Also waits for each element this number of seconds; always exception if not found.</param>
 		/// <returns><b>elm</b> of the last element specified in <i>path</i>.</returns>
 		/// <exception cref="ArgumentException"><i>path</i> contains an invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
@@ -1357,8 +1378,8 @@ namespace Au
 		/// 
 		/// Does not work if all TREEITEM elements in the TREE control are its direct children, unless it's the standard Windows treeview control.
 		/// </remarks>
-		public elm Expand(Strings path, [ParamString(PSFormat.keys)] string keys = null, double waitS = 5) {
-			return _Expand(path, keys, null, waitS);
+		public elm Expand(Strings path, [ParamString(PSFormat.keys)] string keys = null, double waitS = 3) {
+			return _ExpandPath(path, keys, null, waitS);
 		}
 
 		/// <inheritdoc cref="Expand(Strings, string, double)"/>
@@ -1372,16 +1393,16 @@ namespace Au
 		/// <exception cref="NotSupportedException"/>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <remarks></remarks>
-		public elm Expand(Strings path, Action<elm> action, double waitS = 5) {
-			return _Expand(path, null, action, waitS);
+		public elm Expand(Strings path, Action<elm> action, double waitS = 3) {
+			return _ExpandPath(path, null, action, waitS);
 		}
 
-		elm _Expand(Strings path, string keys, Action<elm> action, double waitS) {
+		elm _ExpandPath(Strings path, string keys, Action<elm> action, double waitS) {
 			ThrowIfDisposed_();
 			var a = path.ToArray();
 			var e = this;
 			//for classic treeview controls need special code if not UIA, because the MSAA tree is flat
-			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && WndContainer is wnd w && w.CommonControlType == WControlType.Treeview) {
+			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && 0 == _GetWnd(out wnd w) && w.CommonControlType == WControlType.Treeview) {
 				if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) throw new NotSupportedException("32-bit process."); //cannot get 64-bit HTREEITEM
 
 				nint hi = 0;
@@ -1417,7 +1438,7 @@ namespace Au
 				void _ExpandIfNeed(elm e, nint hi) {
 					if (_IsExpanded(w, hi)) return;
 
-					if (keys != null) e.SendKeys(keys);
+					if (keys != null) e.SendKeys(keys.Length > 0 ? keys : "Right");
 					else if (action != null) action(e);
 					else _Expand_ClassicTreeview(w, hi, true);
 					//p1.Next();
@@ -1429,18 +1450,251 @@ namespace Au
 				static bool _IsExpanded(wnd w, nint hi) => 0 != ((int)w.Send(TVM_GETITEMSTATE, hi, TVIS_EXPANDED) & TVIS_EXPANDED);
 			} else {
 				if (State.Has(EState.COLLAPSED))
-					_Expand(true, keys, action, waitS);
+					_Expand(true, keys, action, waitS, ignoreState: true);
 
 				foreach (var name in a) {
 					int level = e.Level;
 					e = e.Elm[null, name, "level=0", also: o => o.State.HasAny(EState.EXPANDED | EState.COLLAPSED)].Find(-(Math.Abs(waitS) + .01));
 					if (e == null) throw new NotFoundException("Not found elm expand path part: " + name);
 					e.Level = level + 1;
-					e._Expand(true, keys, action, waitS);
+					e._Expand(true, keys, action, waitS, ignoreState: false);
 				}
 			}
 			return e;
 		}
+
+		/// <summary>
+		/// Finds and selects an item in the drop-down list of this combo box or drop-down button.
+		/// </summary>
+		/// <param name="item">
+		/// Item name (<see cref="Name"/>).
+		/// String format: [](xref:wildcard_expression).
+		/// </param>
+		/// <param name="how">
+		/// Try this parameter if the function fails to select the item etc.
+		/// 
+		/// In the string can be used these characters to specify how to select the item and close the drop-down list:
+		/// - i - call <see cref="Invoke"/>.
+		/// - s - call <see cref="Select"/>.
+		/// - c - close the list with <see cref="Expand"/>.
+		/// - m - call <see cref="MouseClick"/>; often can't be used because fails to get correct rectangle or to scroll.
+		/// - k - call <see cref="Focus"/> and <see cref="keys.send"/> (Home, Down, Enter).
+		/// - space - nothing.
+		/// 
+		/// If the string is null (default) or "" or does not contain these characters, the function tries to detect and use what usually works for this UI element type, but it's impossible to detect always.
+		/// 
+		/// Usually need just a single character (string like "i" or "m"). If there are more characters, the functions are called in the specified order.
+		/// 
+		/// The string also can contain sleep times. For example "300m" will wait 300 ms and click; the first sleep will be between expanding and finding.
+		/// 
+		/// If the string starts with ~, the function does not expand the drop-down list (it should be already expanded).
+		/// 
+		/// If the string isn't null/empty but does not contain characters iscmk (for example is " " or "~ " or "200 "), the function does not select/close. For example these codes do the same: <c>e.ComboSelect("Red", "i");</c> and <c>e.ComboSelect("Red", " ").Invoke();</c>.
+		/// </param>
+		/// <param name="waitS">Seconds to wait for expanded state (if not 0) and for the item. Can be negative to avoid timeout exceptions.</param>
+		/// <returns>The item.</returns>
+		/// <exception cref="ArgumentException">Error in <i>item</i> string (wildex options or regex) or <i>how</i>.</exception>
+		/// <exception cref="NotFoundException">Item not found.</exception>
+		/// <exception cref="Exception">Exceptions of used functions.</exception>
+		/// <remarks>
+		/// The function at first calls <see cref="Expand(bool, string, double, bool)"/> to show the drop-down list, unless <i>how</i> starts with ~. Then finds the item by name, selects it and closes the drop-down list.
+		/// </remarks>
+		public elm ComboSelect(string item, string how = null, double waitS = 3) {
+			//Works with most tested combobox types: native, web, WPF, UWP, ribbon, Office, Qt, Java, JavaFX.
+			//	Does not work with OpenOffice: can't expand, need Invoke() but it isn't called because there is no DefaultAction. Didn't try to select items. Never mind, anyway no API in dialogs, only in main window.
+			//	Not tested GTK. Don't have apps with working API.
+			//Problems in Chrome:
+			//	Select() does not work. Use Invoke(); it also collapses.
+			//Problems in Firefox:
+			//	Standard <select> CB don't change EXPANDED state. Eg in MyBB forum search.
+			//	With some CB Select() does not work, and Invoke() works. With others vice versa.
+			//	With some CB Invoke() collapses, with others not.
+			//Problems in Chrome and Firefox:
+			//	CB items may be not attached to the CB in the tree. Etc. More info below in _FindWebNotCOMBOBOX.
+			//	With standard CB MouseClick() does not work, because gives item rect same as CB rect.
+			//	With some CB selects but it does not work like when clicked. Eg does not refresh the page (eg aruodas).
+			//		In FF can't click because of bad rect, but may work together with Select(). Sometimes Enter works.
+
+			ThrowIfDisposed_();
+
+			elm e = null;
+			bool auto = how.NE() || how.FindNot("-1234567890") < 0;
+			int h = how.NE() ? -1 : 0; //index in how
+			bool invoke = false;
+
+			#region detect window type
+			int iw = 0; //1 Chrome, 2 Firefox, 3 ribbon, 4 Qt5, 10 Java, 11 JavaFX
+			wnd w = default;
+			if (MiscFlags.Has(EMiscFlags.Java)) {
+				iw = 10;
+			} else if (0 == _GetWnd(out w)) {
+				if (MiscFlags.Has(EMiscFlags.UIA)) {
+					if (w.ClassNameIs("GlassWndClass*")) iw = 11;
+				} else {
+					iw = w.ClassNameIs("Chrome*", "Mozilla*", "NetUIHWND"/*ribbon*/, "Qt5QWindow*");
+					invoke = iw is 1 or 3;
+				}
+			}
+			#endregion
+
+			#region activate/focus if need
+			if (!auto) {
+				if (how.Contains('k')) {
+					Focus();
+				} else if (how.Contains('m')) {
+					if (iw == 10) _GetWnd(out w);
+					w.Window.Activate();
+				}
+			} else if (iw is 4 or 10) { //Qt, Java
+				Focus();
+			}
+			#endregion
+
+			#region expand
+			bool noExpand = false, noState = false;
+			if (RoleInt == ERole.COMBOBOX) {
+				var state = State;
+				noExpand = state.Has(EState.EXPANDED);
+				noState = !state.HasAny(EState.COLLAPSED | EState.EXPANDED); //eg ribbon
+			}
+			if (h == 0 && how[h] == '~') {
+				h++;
+			} else if (!noExpand) {
+				Expand(true, waitS: iw == 2 || noState ? -.1 : waitS);
+				if (h == 0) _Sleep(); else 10.ms();
+			}
+			#endregion
+
+			#region find item
+			waitS = -Math.Abs(waitS);
+			var f = Elm[null, item, flags: EFFlags.HiddenToo]; //usually CB item role is LISTITEM, sometimes MENUITEM, Java "label"; let's support any. May need HiddenToo for offscreen items, eg Java.
+			if (iw is 1 or 2 && RoleInt is not ERole.COMBOBOX) {
+				_FindWebNotCOMBOBOX();
+			} else {
+				var to = new wait.Loop(waitS);
+				for (; ; ) {
+					e = f.Find();
+					if (e == null) {
+						if (iw == 11) { //JavaFX drop-down list isn't connected to the CB
+							var wp = w.Get.EnabledOwned();
+							//SHOULDDO: now unreliable. Can detect a wrong window, eg a random tooltip.
+							//	Try to detect more reliably. Eg must have certain styles and rect, contain LIST or MENUPOPUP, etc.
+							//	Then could use with any window, not only JavaFX.
+							//	Also then could detect expanded state even when there is no EXPANDED state.
+							//	EnabledOwned isn't reliable in other places too.
+							if (!wp.Is0) e = wp.Elm["LISTITEM", item, flags: EFFlags.UIA].Find();
+						} else if (RoleInt != ERole.COMBOBOX && ChildCount == 0) { //eg ribbon dropdown button
+							e = f.In(Parent).Find();
+						}
+					}
+					if (e != null) break;
+					if (!to.Sleep()) break;
+				}
+			}
+			if (e == null) throw new NotFoundException($"Can't find combo box item \"{item}\".");
+			#endregion
+
+			#region select and collapse
+			if (!auto) {
+				for (; h < how.Length; h++) {
+					bool hasSelect = false;
+					switch (how[h]) {
+					case 's':
+						e.Select();
+						hasSelect = true;
+						break;
+					case 'i':
+						e.Invoke();
+						break;
+					case 'm':
+						if (iw == 2 && !hasSelect) e.Select(); //if bad rect, with this usually works anyway in FF
+						e.MouseClick(scroll: iw == 2 ? 0 : 10);
+						//FF bug: if scroll!=0, scrolls the combo (entire page), not the dropdown list item. Good: Select() scrolls.
+						//note: WPF CB item rect changes because of dropdown animation
+						break;
+					case 'k':
+						_Keys();
+						break;
+					case 'c':
+						Expand(!true, waitS: -0.01, ignoreState: true);
+						break;
+					case ' ':
+						break;
+					default:
+						_Sleep();
+						continue;
+					}
+				}
+			} else if (invoke) {
+				e.Invoke();
+			} else if (iw is 4 or 10) { //Qt, Java
+				_Keys(); //nothing else works, only mouse if don't need to scroll
+			} else {
+				bool ignoreState = noState || (iw == 2 && !State.Has(EState.EXPANDED)); //standard <select> CB in FF does not change state
+				e.Select();
+				Expand(!true, waitS: -0.01, ignoreState: ignoreState);
+			}
+			#endregion
+			return e;
+
+			void _Keys() {
+				var a = e.Parent.Elm[e.Role, prop: "level=0", flags: EFFlags.HiddenToo].FindAll(); //these are slow, but much faster than keys.send
+				wildex wild = item;
+				int i = Array.FindIndex(a, o => wild.Match(o.Name));
+				if (i < 0) throw new AuException();
+				Au.keys.send($"Home PgUp*{a.Length / 4} Down*{i} Enter"); //Home doesn't work with editable CB; PgUp may not work with some CB
+			}
+
+			void _Sleep() {
+				if (!how[h].IsAsciiDigit()) { if (e == null) return; throw new ArgumentException("Invalid character " + how[h], "how"); }
+				if (!how.ToInt(out int ms, h, out h)) throw new ArgumentException("Invalid number", "how");
+				ms.ms();
+			}
+
+			void _FindWebNotCOMBOBOX() {
+				//Web pages have multiple CB types. Sometimes the dropdown list isn't a descendant of the CB.
+				//	In Google Advanced Search it is LIST with 2 children: MENUITEM and LISTITEM with same name (the selected).
+				//		The list is a MENUPOPUP/MENUITEM near the bottom of the document. It may not contain the selected item.
+				//	In Github profile Stars it is BUTTON with 0 children.
+				//		The list is a MENUPOPUP/MENUITEM in its parent.
+
+				elm pa = null, doc = null;
+				var to = new wait.Loop(waitS);
+				for (; ; ) {
+					e = f.Find(); //if the item is already selected, the dropdown list may not contain it, and this finds it
+					if (e != null) break;
+					pa ??= Parent; if (pa == null) break;
+					var mp = pa.Elm["MENUPOPUP"].Find();
+					if (mp != null) {
+						e = mp.Elm["MENUITEM", item].Find();
+					} else {
+						if (doc == null) {
+							for (var p = pa; p != null; p = p.Parent) if (p.RoleInt == ERole.DOCUMENT) { doc = p; break; }
+						}
+						if (doc != null) {
+							e = doc.Elm["MENUPOPUP", flags: EFFlags.Reverse].Find()?.Elm["MENUITEM", item].Find();
+						}
+					}
+					if (e != null) {
+						invoke = true; //selects and closes in FF too; else difficult/unreliable.
+						break;
+					}
+					if (!to.Sleep()) break;
+				}
+			}
+		}
+
+		//wnd _GetOwnedPopupWindow(wnd w, RECT? r = null) {
+		//	var p = w.Window.Get.EnabledOwned();
+		//	if (!p.Is0) {
+		//		var k = r ?? Rect;
+		//		int i = k.Height / 2;
+		//		k.Inflate(i, i);
+		//		var pr = p.Rect;
+		//		if (!pr.IntersectsWith(k) || pr.Height < k.Height * 2) p = default;
+		//	}
+		//	return p;
+		//}
 
 		const int TVM_MAPACCIDTOHTREEITEM = 0x112A;
 		const int TVM_GETNEXTITEM = 0x110A;
@@ -1463,12 +1717,13 @@ namespace Au
 
 	}
 }
-//TODO: add functions:
-//	SelectDropdownItem(string|int|array) - like QM2 CbSelect. Can select/unselect multiple, all. Option to use mouse.
-//		Always invoke dropdown at first. Maybe the app populates the list on dropdown, or maybe elms unavailable while collapsed.
-//		Maybe FindDropdownItem(string).
-//	SelectMenuItem(path) - click, wait for popup menu, find/click, wait for another popup, .... Can check/uncheck. But maybe better let use keys.
-//	ContextMenu.
+
+//rejected:
+//	MenuSelect(path) - click, wait for popup menu, find/click, wait for another popup, .... Can check/uncheck.
+//		Much easier and better to use keys.
+//	ContextMenuSelect(path).
+//		Let use MouseClickR and keys.
+
 //TEST:
 //	IUIAutomationScrollPattern: Scroll, SetScrollPercent.
 //	IUIAutomationWindowPattern: Close, WaitForInputIdle, CurrentIsModal, CurrentWindowInteractionState.

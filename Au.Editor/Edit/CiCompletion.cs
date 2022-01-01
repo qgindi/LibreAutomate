@@ -16,8 +16,6 @@ using Microsoft.CodeAnalysis.Options;
 //PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
 //	Even on Ctrl+Space does not select the enum in list. And does not add enum members like "Enum.Member".
 
-//TODO: now no auto list when added { } like new TYPE {  }
-
 partial class CiCompletion
 {
 	CiPopupList _popupList;
@@ -204,8 +202,8 @@ partial class CiCompletion
 					canGroup = true;
 					//is it member access?
 					if (node is InitializerExpressionSyntax) {
-						//if only properties, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
-						isDot = !r1.Items.Any(o => o.Symbols?[0] is not IPropertySymbol);
+						//if only properties and/or fields, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
+						isDot = !r1.Items.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));
 						if (!isDot && ch == '{') return null; //eg 'new int[] {'
 					} else {
 #if true

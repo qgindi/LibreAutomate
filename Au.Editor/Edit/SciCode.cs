@@ -470,35 +470,47 @@ partial class SciCode : KScintilla
 	/// Caller must not insert text, and must not pass the event to Scintilla.
 	/// </summary>
 	public void ZPaste() {
-		var s = clipboard.text;
-		if (s.NE()) return;
-		//string s0 = s;
-		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
+		var s1 = clipboard.text; if (s1.NE()) return;
 
-		if (s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) {
-			bool isClass = s[3] == 'c';
-			s = s[m.End..];
-			var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
-
+		var (isFC, text, name, isClass) = ZIsForumCode(s1, false);
+		if (isFC) {
 			string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
 				? "1 Create new file|0 Cancel"
 				: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
 			switch (dialog.show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
 			case 1: //Create new file
-				App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, s));
+				_NewFileFromForumCode(text, name, isClass);
 				break;
 			case 2: //Replace all text
-				zSetText(s);
+				zSetText(text);
 				break;
 			case 3: //Paste
 				CodeInfo.Pasting(this);
-				zReplaceSel(s);
+				zReplaceSel(text);
 				break;
 			} //rejected: option to rename this file
 		} else {
 			CodeInfo.Pasting(this);
 			Call(SCI_PASTE); //not zReplaceSel, because can be SCI_SETMULTIPASTE etc
 		}
+	}
+
+	internal static (bool yes, string text, string filename, bool isClass) ZIsForumCode(string s, bool newFile) {
+		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
+		if (!s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return default;
+
+		bool isClass = s[3] == 'c';
+		s = s[m.End..];
+		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
+
+		if (newFile && dialog.showOkCancel("Import C# file from clipboard?", "Source file: " + name, owner: App.Hmain))
+			_NewFileFromForumCode(s, name, isClass);
+
+		return (true, s, name, isClass);
+	}
+
+	static void _NewFileFromForumCode(string text, string name, bool isClass) {
+		App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, text));
 	}
 
 	#endregion

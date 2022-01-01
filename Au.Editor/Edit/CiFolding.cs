@@ -2,8 +2,6 @@
 //#define PRINT
 //#endif
 
-//TODO: folding stops working after #if #else #endif. See InputRecorder.cs.
-
 using System.Linq;
 using static Au.Controls.Sci;
 
@@ -51,7 +49,7 @@ class CiFolding
 
 		var nodes = root.DescendantNodes(o => {
 			//don't descend into functions etc. Much faster.
-			if (o is MemberDeclarationSyntax) return o is NamespaceDeclarationSyntax or TypeDeclarationSyntax;
+			if (o is MemberDeclarationSyntax) return o is BaseNamespaceDeclarationSyntax or TypeDeclarationSyntax;
 			return o is CompilationUnitSyntax;
 		});
 		SyntaxNode prevNode = null;

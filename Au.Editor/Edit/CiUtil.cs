@@ -202,6 +202,8 @@ static class CiUtil
 		else if (kind == SyntaxKind.InterpolatedStringText) parent = node.Parent.Parent;
 		else return PSFormat.None;
 
+		while (parent is BinaryExpressionSyntax && parent.IsKind(SyntaxKind.AddExpression)) parent = parent.Parent; //"string"+"string"+...
+
 		PSFormat format = PSFormat.None;
 		if (parent is ArgumentSyntax asy && parent.Parent is ArgumentListSyntax alis) {
 			switch (alis.Parent) {

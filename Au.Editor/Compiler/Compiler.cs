@@ -164,6 +164,7 @@ namespace Au.Compiler
 						code2 = code2.Insert(i, "\r\n{}\r\n");
 						compilation = compilation.ReplaceSyntaxTree(st, st.WithChangedText(SourceText.From(code2, Encoding.UTF8)) as CSharpSyntaxTree);
 					}
+					p1.Next('d');
 				}
 
 				//Create debug info always. It is used for run-time error links.
@@ -302,15 +303,16 @@ namespace Au.Compiler
 			//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.
 		}
 
-		//public static void Warmup(Document document)
-		//{
-		//	var compilation = document.Project.GetCompilationAsync().Result;
-		//	//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
-		//	var asmStream = new MemoryStream(4096);
-		//	compilation.Emit(asmStream);
-		//	//compilation.Emit(asmStream, null, options: eOpt); //somehow makes slower later
-		//	//compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
-		//}
+		public static void Warmup(Microsoft.CodeAnalysis.Document document) {
+			//using var p1 = perf.local();
+			var compilation = document.Project.GetCompilationAsync().Result;
+			//compilation.GetDiagnostics(); //just makes Emit faster, and does not make the real GetDiagnostics faster first time
+			//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
+			var asmStream = new MemoryStream(16000);
+			compilation.Emit(asmStream);
+			//compilation.Emit(asmStream, null, options: eOpt); //somehow makes slower later
+			//compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
+		}
 
 		/// <summary>
 		/// Adds some module/assembly attributes. Also adds module initializer for role exeProgram.

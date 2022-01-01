@@ -116,8 +116,10 @@ class CiErrors
 		//using var p1 = perf.local();
 		_stringErrors.Clear();
 		var code = cd.code;
+		ArgumentListSyntax keysArgs = null;
 		foreach (var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
+			//print.it(format);
 			if (format == PSFormat.None || format == PSFormat.regexpReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
 			if (s.Length == 0) continue;
@@ -134,16 +136,38 @@ class CiErrors
 					if (s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg wnd.Child("***elmName ...")
 					new wildex(s);
 					break;
-				case PSFormat.keys when s[0] is not ('!' or '%'):
-					//TODO: warning if ")"
-					new keys(null)
-						.AddKey(KKey.A) //to avoid warning when eg "*5"
-						.AddKeys(s);
+				case PSFormat.keys:
+					if (s[0] is '!' or '%') break;
+
+					//if keys.send("arg1", "arg2"), use single keys instance to validate all args.
+					//	Else possible false positives such as if second arg is ")".
+					var args = node.GetAncestor<ArgumentListSyntax>();
+					if (args == null || args == keysArgs) break;
+					keysArgs = args;
+
+					var k = new keys(null);
+					foreach (var nk in args.DescendantNodes()) {
+						if (CiUtil.GetParameterStringFormat(nk, semo, false) != PSFormat.keys) continue;
+						s = nk.GetFirstToken().ValueText;
+						if (s.Length == 0 || s[0] is '!' or '%') continue; //never mind: can be "keys"+"!keys"
+						try { k.AddKeys(s); }
+						catch (ArgumentException ex) {
+							var e = ex.Message;
+							//print.it(e); CiUtil.PrintNode(nk); CiUtil.PrintNode(nk.Parent);
+							//detect some common valid cases like "keys*"+x or $"keys*{x}"
+							if (((s.Ends('*') || s.Starts('*')) && e.Contains("<<<*")) || (s.Ends('_') && e.Contains("<<<_>>>"))) {
+								if (nk.Parent is not ArgumentSyntax) continue; //eg like "Tab*"+5 or $"Tab*{5}"
+							}
+							_AddError(nk, e);
+						}
+					}
 					break;
 				}
 			}
 			catch (ArgumentException ex) { es = ex.Message; }
-			if (es != null) {
+			if (es != null) _AddError(node, es);
+
+			void _AddError(SyntaxNode node, string es) {
 				var span = node.Span;
 				_stringErrors.Add((span.Start, span.End, es));
 			}
