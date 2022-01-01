@@ -191,11 +191,11 @@ namespace Au.Types
 		CURSOR = -9,
 		ALERT = -10,
 		SOUND = -11,
-		/// <summary>Not uses with <see cref="elm.fromWindow"/>.</summary>
+		/// <summary>Not used with <see cref="elm.fromWindow"/>.</summary>
 		QUERYCLASSNAMEIDX = -12,
-		/// <summary>Not uses with <see cref="elm.fromWindow"/>.</summary>
+		/// <summary>Not used with <see cref="elm.fromWindow"/>.</summary>
 		NATIVEOM = -16,
-		/// <summary>Not uses with <see cref="elm.fromWindow"/>.</summary>
+		/// <summary>Not used with <see cref="elm.fromWindow"/>.</summary>
 		UiaRootObjectId = -25,
 
 		//ours

@@ -278,10 +278,11 @@ public partial struct wnd
 		/// </summary>
 		/// <param name="orThis">Return this window if there are no enabled owned windows. If false, then returns default(wnd).</param>
 		/// <remarks>
-		/// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP).
-		/// Supports <see cref="lastError"/>.
+		/// This window should be top-level, not child; see <see cref="wnd.Window"/>.
+		/// 
+		/// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP). Supports <see cref="lastError"/>.
 		/// </remarks>
-		public wnd EnabledOwned(bool orThis) {
+		public wnd EnabledOwned(bool orThis = false) {
 			var r = Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
 			if (orThis) {
 				if (r.Is0) r = _w;
@@ -289,7 +290,7 @@ public partial struct wnd
 				if (r == _w) r = default;
 			}
 			return r;
-			//MSDN documentation is incorrect. It says returns this window if there are no owned. But returns 0.
+			//MSDN doc says it returns this window if there are no owned, but actually returns 0.
 		}
 
 		/// <summary>

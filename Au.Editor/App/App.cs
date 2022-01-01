@@ -61,7 +61,7 @@ static class App
 		PrintServer.Start();
 #if TRACE
 		print.qm2.use = !true;
-		timer.after(1, _ => perf.nw());
+		//timer.after(1, _ => perf.nw());
 #endif
 
 		perf.next('o');

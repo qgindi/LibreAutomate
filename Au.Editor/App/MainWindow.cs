@@ -185,6 +185,7 @@ partial class MainWindow : Window
 	//	}
 	//}
 
+	//Used to make faster, but now with tiered JIS makes faster only by ~100 ms.
 	static void _StartProfileOptimization() {
 #if !DEBUG
 		var fProfile = folders.ThisAppDataLocal + "ProfileOptimization";

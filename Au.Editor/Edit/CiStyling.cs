@@ -429,7 +429,8 @@ partial class CiStyling
 		public int BackgroundColor = 0xffffff;
 
 		public TStyle None; //black
-		public TStyle Comment = 0x408000; //green like in VS but towards yellow
+							//public TStyle Comment = 0x408000; //green like in VS but towards yellow
+		public TStyle Comment = 0x60B000; //light green, towards yellow
 		public TStyle String = 0xA07040; //brown, more green
 										 //0xc0c0c0; //good contrast with 0xA07040, but maybe not with white background
 										 //0xc0e000; //light yellow-green. Too vivid.
@@ -446,13 +447,13 @@ partial class CiStyling
 		public TStyle Label = 0xff00ff; //magenta
 		public TStyle Preprocessor = 0xff8000; //orange
 		public TStyle Excluded = 0x808080; //gray
-		public TStyle XmlDocText = 0x408000; //green like comment
+		public TStyle XmlDocText = 0x408000; //green
 		public TStyle XmlDocTag = 0x808080; //gray
 
-		public TStyle Image = new(0xf0f0f0, false, true); //hidden
-														  //public TStyle Image = 0xffffff; //visible only when selected or if dark theme
-														  //public TStyle Image = 0xf0f0f0; //barely visible, unless selected or if dark theme
-														  //public TStyle Image = 0xe0e0e0;
+		//public TStyle Image = new(0xf0f0f0, false, true); //hidden
+		//public TStyle Image = 0xe0e0e0;
+		public TStyle Image = 0xffffff; //visible only when selected or if dark theme
+		//public TStyle Image = 0xf8f8f8; //barely visible, unless selected or if dark theme
 
 		public TStyle LineNumber = 0x808080;
 

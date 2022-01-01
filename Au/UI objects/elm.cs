@@ -1,5 +1,3 @@
-//TODO: warn if an elm function called when InSendMessageEx returns ISMEX_SEND.
-
 namespace Au
 {
 	/// <summary>
@@ -272,7 +270,19 @@ namespace Au
 
 		internal void ThrowIfDisposed_() {
 			if (_Disposed) throw new ObjectDisposedException(nameof(elm));
+			WarnInSendMessage_();
 		}
+
+		internal static void WarnInSendMessage_() {
+			if (Api.InSendMessageBlocked) { //as fast as TickCount64
+				long t = Environment.TickCount64;
+				if (t - s_wismTime > 500) {
+					s_wismTime = t;
+					print.warning("elm functions may not work here. This code is called by another thread through SendMessage or is a low-level hook. Try workarounds: call ReplyMessage (Windows API); use an asynchronous way to call the elm function (timer, Dispatcher.InvokeAsync, etc); let that thread instead of SendMessage use an asynchronous function such as PostMessage.");
+				}
+			}
+		}
+		static long s_wismTime;
 
 		/// <summary>
 		/// Gets UI element of window or control. Or some its standard part - client area, titlebar etc.
@@ -287,6 +297,8 @@ namespace Au
 		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
 		/// </remarks>
 		public static elm fromWindow(wnd w, EObjid objid = EObjid.WINDOW, EWFlags flags = 0) {
+			WarnInSendMessage_();
+
 			bool spec = false;
 			switch (objid) {
 			case EObjid.QUERYCLASSNAMEIDX: //use WM_GETOBJECT
@@ -338,6 +350,8 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static elm fromXY(POINT p, EXYFlags flags = 0) {
+			WarnInSendMessage_();
+
 			int hr = Cpp.Cpp_AccFromPoint(p, flags, (flags, wFP, wTL) => {
 				if (osVersion.minWin8_1 ? !flags.Has(EXYFlags.NotInProc) : flags.Has(EXYFlags.UIA)) {
 					bool dpiV = Dpi.IsWindowVirtualized(wTL);
@@ -373,6 +387,8 @@ namespace Au
 		/// More info: <see cref="EFFlags.UIA"/>.
 		/// </param>
 		public static elm focused(bool useUIAutomation = false) {
+			WarnInSendMessage_();
+
 			var w = wnd.focused;
 			g1:
 			if (w.Is0) return null;

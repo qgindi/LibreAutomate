@@ -8,6 +8,9 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
+//SHOULDDO: Ctrl+; in top-level statements: sometimes jumps to a ; somewhere in next statement.
+//	But when tried to fix it, could not reproduce.
+
 //SHOULDDO: decrease indent when typing }.
 
 //SHOULDDO: menu command "Exit statement on Enter" and toolbar check-button [;].

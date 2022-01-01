@@ -211,7 +211,7 @@ namespace Au.Types
 		internal const int ASFW_ANY = -1;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AllowSetForegroundWindow(int dwProcessId);
+		internal static extern bool AllowSetForegroundWindow(int dwProcessId = ASFW_ANY);
 
 		internal const uint LSFW_LOCK = 1;
 		internal const uint LSFW_UNLOCK = 2;
@@ -1557,7 +1557,13 @@ namespace Au.Types
 		//[DllImport("user32.dll")]
 		//internal static extern bool CloseDesktop(IntPtr hDesktop);
 
+		internal const uint ISMEX_SEND = 0x1;
+		internal const uint ISMEX_REPLIED = 0x8;
 
+		[DllImport("user32.dll")]
+		internal static extern uint InSendMessageEx(nint lpReserved = 0);
+
+		public static bool InSendMessageBlocked => (InSendMessageEx() & (ISMEX_SEND | ISMEX_REPLIED)) == ISMEX_SEND;
 
 	}
 

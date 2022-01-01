@@ -1,7 +1,5 @@
 ﻿//CONSIDER: disable hotkeys when editor hidden.
 
-//TODO: when capturing a classic menu in QM2, this menu disappears on mouse button down. No command invoked. On up invoked QM2 menu item.
-
 namespace Au.Tools
 {
 	static class QuickCapture

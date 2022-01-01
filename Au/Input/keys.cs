@@ -135,6 +135,7 @@ namespace Au
 		_KParsingState _pstate; //parsing state
 		_KSendingState _sstate; //sending state
 		bool _sending; //while sending, don't allow to add or send
+		bool? _antiCapsLock;
 
 		/// <summary>
 		/// Adds keystrokes to the internal collection. They will be sent by <see cref="SendIt"/>.
@@ -318,19 +319,25 @@ namespace Au
 		/// </summary>
 		/// <param name="onlyUp">Send only 'up' events.</param>
 		internal unsafe void SendBlocked_(bool onlyUp) {
-			g1:
-			int n = 0;
-			var a = new Api.INPUTK[_a.Count];
-			for (int i = 0; i < _a.Count; i++) {
-				var k = _a[i];
-				if (onlyUp && !k.IsUp) continue;
-				a[n++].Set(k.vk, k.scan, (uint)k.SIFlags);
+			for (int ii = 0; ii < 5; ii++) {
+				int n = 0;
+				var a = new Api.INPUTK[_a.Count];
+				for (int i = 0; i < _a.Count; i++) {
+					var k = _a[i];
+					if (onlyUp && !k.IsUp) continue;
+					a[n++].Set(k.vk, k.scan, (uint)k.SIFlags);
+				}
+				_a.Clear();
+				if (n == 0) return;
+				fixed (Api.INPUTK* p = a) Api.SendInput(p, n);
+				//wait.doEvents(); //sometimes catches one more event, but not necessary
+
+				if (_a.Count == 0) break;
+				Debug_.PrintIf(ii == 4, "loop?");
+				//The hook proc is called while in SendInput. If we don't retry, new blocked keys are lost.
+				//	But don't retry forever, because in some cases OS injects keys and the hook recives them not marked as injected,
+				//		eg on Shift if it is set to turn off CapsLock.
 			}
-			_a.Clear();
-			if (n == 0) return;
-			fixed (Api.INPUTK* p = a) Api.SendInput(p, n);
-			//wait.doEvents(); //sometimes catches one more event, but not necessary
-			if (_a.Count > 0) goto g1; //the hook proc is called while in SendInput. If we don't retry, new blocked keys are lost.
 		}
 
 		/// <summary>
@@ -515,13 +522,13 @@ namespace Au
 
 			//perf.first();
 			int sleepFinally = 0;
-			bool restoreCapsLock = false;
 			var bi = new inputBlocker() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
+				_antiCapsLock = Options.NoCapsOff || !isCapsLock ? false : null;
 				//print.it("{");
 				if (!Options.NoBlockInput) bi.Start(BIEvents.Keys);
-				restoreCapsLock = Internal_.ReleaseModAndCapsLock(Options);
+				if (!Options.NoModOff) Internal_.ReleaseModAndDisableModMenu();
 				//perf.next();
 				for (int i = 0; i < _a.Count; i++) {
 					var k = _a[i];
@@ -551,7 +558,8 @@ namespace Au
 				sleepFinally += GetOptionsAndWndFocused_(getWndAlways: false).optk.SleepFinally;
 			}
 			finally {
-				if (restoreCapsLock) Internal_.SendKey(KKey.CapsLock);
+				if (_antiCapsLock == true && !isCapsLock) Internal_.SendKey(KKey.CapsLock);
+				_antiCapsLock = null;
 				_sending = false;
 				bi.Dispose();
 				//perf.nw();
@@ -585,6 +593,12 @@ namespace Au
 				var hkl = Api.GetKeyboardLayout(wFocus.ThreadId); //most layouts have the same standard scancodes, but eg dvorak different
 				k.scan = Internal_.VkToSc(k.vk, hkl);
 			}
+
+			if (_antiCapsLock == null
+				&& !k.SIFlags.Has(_KFlags.Unicode)
+				&& k.vk is (>= KKey.A and <= KKey.Z) or (>= KKey.D0 and <= KKey.D9) or (>= KKey.OemSemicolon and <= KKey.OemTilde) or (>= KKey.OemOpenBrackets and <= KKey.OemQuotes)
+				//CONSIDER: not if with a modifier
+				) _AntiCapsLock();
 
 			bool isLast = i == _a.Count - 1;
 			_SendKey2(k, isLast ? default : _a[i + 1], isLast, optk);
@@ -645,8 +659,8 @@ namespace Au
 		unsafe void _SendChar(_KEvent ke, int i) {
 			var (optk, wFocus) = GetOptionsAndWndFocused_(getWndAlways: true, requireFocus: true);
 			nint hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
-			int count = 1;
-			if (i < _a.Count - 1 && _a[i + 1].IsRepeat) count = _a[i + 1].repeat;
+			if (_antiCapsLock == null) _AntiCapsLock();
+			int count = 1; if (i < _a.Count - 1 && _a[i + 1].IsRepeat) count = _a[i + 1].repeat;
 			int speed = optk.KeySpeed; if (count > 4) speed = Math.Min(speed, optk.TextSpeed + 2);
 			KMod prevMod = 0;
 			try {
@@ -757,6 +771,8 @@ namespace Au
 				return;
 			}
 
+			if (_antiCapsLock == null && textHow is OKeyText.KeysOrChar or OKeyText.KeysOrPaste) _AntiCapsLock();
+
 			KMod prevMod = 0;
 			int sleep = 0 != (flags & 0x40) ? optk.KeySpeed : optk.TextSpeed; //0x40 if ^text
 
@@ -776,6 +792,50 @@ namespace Au
 			//rejected: throw if changed the focused window.
 			//	Possible false positives, because everything is async.
 		}
+
+		void _AntiCapsLock(/*OKey optk*/) {
+			//if (/*&& !optk.NoCapsOff*/) {
+			if (!isCapsLock) {
+				_antiCapsLock = false;
+				return;
+			}
+			if (isPressed(KKey.CapsLock)) Internal_.SendKey(KKey.CapsLock, false); //never mind: in this case later may not restore CapsLock because of auto-repeat
+			Internal_.SendKey(KKey.CapsLock, true);
+			bool ok = isPressed(KKey.CapsLock); //the send can fail because of UAC or the Windows setting
+			Internal_.SendKey(KKey.CapsLock, false);
+			//note: don't call isCapsLock again here. It is unreliable because GetKeyState is sync.
+			//	Eg in some cases ignores the new key state until this UI thread removes all messages from queue.
+			if (!ok && IsCapsLockShiftOff_()) {
+				//Shift is set to turn off CapsLock in Settings -> Time & Language -> Language -> Keyboard -> Input method -> Hot keys.
+				WindowsHook.IgnoreLShiftCaps_(2000);
+				Internal_.SendKey(KKey.Shift);
+				WindowsHook.IgnoreLShiftCaps_(0);
+
+				//note: need IgnoreLShiftCaps_, because when we send Shift, the BlockInput hook receives these events:
+				//Left Shift down, not injected //!!
+				//Caps Lock down, not injected
+				//Caps Lock up, not injected
+				//Left Shift up, injected
+
+				//speed: often ~15 ms. Without Shift max 5 ms.
+			}
+			_antiCapsLock = true;
+			//}
+
+			//note: don't make _restoreCapsLock false if still isCapsLock true, because isCapsLock unreliable.
+			//	If SendKey(CapsLock) did not work now, it probably will not work afterwards.
+
+			//CONSIDER: remove this feature, or set non-default.
+			//	Instead, when sending text as keys, if CapsLock, invert Shift. Eg PAD uses this.
+			//	But what then should do when sending keys (not text)? Probably should ignore CapsLock.
+			//	Probably safer with CapsLock off. Eg some target apps may interpret text differently when with an unexpected Shift.
+		}
+
+		/// <summary>
+		/// Returns true if Shift is set to turn off CapsLock (system setting).
+		/// </summary>
+		internal static bool IsCapsLockShiftOff_() => s_isCapsLockShiftOff ??= Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Keyboard Layout", "Attributes", 0) is int r1 && 0 != (r1 & 0x10000);
+		static bool? s_isCapsLockShiftOff;
 
 		/// <summary>
 		/// Before pasting text through clipboard.

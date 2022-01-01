@@ -143,7 +143,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// On Windows 10 and later returns non-zero if this is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+		/// On Windows 10 and later returns non-zero if this top-level window is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
 		/// <seealso cref="WndUtil.GetWindowsStoreAppId"/>
 		public int IsUwpApp {
@@ -152,6 +152,18 @@ namespace Au
 				if (!HasExStyle(WSE.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better
+			}
+		}
+
+		//This is too litle tested to be public. Tested only with WinUI 3 Controls Gallery. Also WinUI3 is still kinda experimental and rare (2021).
+		/// <summary>
+		/// On Windows 10 and later returns true if this top-level window is a WinUI app window (class name "WinUIDesktopWin32WindowClass").
+		/// </summary>
+		internal bool IsWinUI_ {
+			get {
+				if (!osVersion.minWin10) return false;
+				//if (!HasExStyle(WSE.NOREDIRECTIONBITMAP)) return 0; //only the control (cn "Microsoft.UI.Content.ContentWindowSiteBridge") has this style
+				return ClassNameIs("WinUIDesktopWin32WindowClass");
 			}
 		}
 

@@ -888,7 +888,17 @@ class InputRecorder : Window
 		if (slow) b.Append("using(opt.scope.all()) ");
 		b.AppendLine("{ //recorded");
 		if (slow) b.AppendLine("opt.mouse.MoveSpeed = 20; opt.key.KeySpeed = 20;");
+		//bool addEmptyLine = false;
 		for (int i = 0, n = _a.Count; i < n; i++) {
+			////rejected: if mouse button with screenshot, add empty lines before and after, and add comment and screenshot before. Better just add empty line after.
+			//if(_a[i] is _RecoMouseButton mb0 && mb0.image != null) {
+			//	b.AppendLine().Append(mb0.comment, 1, mb0.comment.Length - 1).AppendLine(mb0.image);
+			//	addEmptyLine = true;
+			//} else if (addEmptyLine) {
+			//	if (_a[i] is not _RecoSleep) b.AppendLine();
+			//	addEmptyLine = false;
+			//}
+
 			switch (_a[i]) {
 			case _RecoWin r: //and _RecoWinFind
 				b.Append(r.code);
@@ -911,8 +921,10 @@ class InputRecorder : Window
 				}
 				r.FormatCode(b);
 				g1:
+				//if (r is _RecoMouseButton mbb && mbb.image == null) b.Append(mbb.comment);
 				if (r is _RecoMouseButton mbb) {
-					b.Append(mbb.comment).Append(mbb.image);
+					b.Append(mbb.comment);
+					if (mbb.image != null) b.AppendLine(mbb.image);
 				}
 				break;
 			case _RecoKey or _RecoChar:

@@ -1024,8 +1024,15 @@ partial class FilesModel
 			_MultiCopyMove(!_clipboard.cut, _clipboard.items, target, pos);
 			Uncut();
 		} else {
-			var a = clipboardData.getFiles();
-			if (a != null) _DroppedOrPasted(null, a, false, target, pos);
+			using (new clipboard.OpenClipboard_(false)) {
+				var h = Api.GetClipboardData(Api.CF_HDROP);
+				if (h != default) {
+					var a = clipboardData.HdropToFiles_(h);
+					_DroppedOrPasted(null, a, false, target, pos);
+				} else if (clipboardData.GetText_(0) is string s && s.Length > 0) {
+					SciCode.ZIsForumCode(s, newFile: true);
+				}
+			}
 		}
 	}
 

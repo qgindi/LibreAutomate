@@ -172,9 +172,20 @@ namespace Au
 			//}
 
 			if (ResendBlockedKeys && Environment.TickCount64 - _startTime < c_maxResendTime) {
-				_blockedKeys ??= new keys(opt.init.key);
-				//print.it("blocked", x.vkCode, !x.IsUp);
-				_blockedKeys.AddRaw_(x.vkCode, (ushort)x.scanCode, x.SendInputFlags_);
+				//If Shift is set to turn off CapsLock, on Shift the hook receives LShift down and CapsLock down/up with no 'injected' flag, even if the Shift was pressed by a script.
+				//If we resend them, the hook catches the resent keys, and the resent LShift creates an infinite loop (actually for 10 s, see c_maxResendTime).
+				//Workaround: don't resend these keys if isCapsLock and the system setting is active.
+				//Also SendBlocked_ prevents such infinite loop in any case.
+				bool no = false;
+				if (x.vkCode == KKey.CapsLock || (x.vkCode == KKey.LShift && !x.IsUp)) {
+					no = keys.isCapsLock && keys.IsCapsLockShiftOff_();
+				}
+
+				if (!no) {
+					_blockedKeys ??= new keys(opt.init.key);
+					//print.it("blocked", x.vkCode, !x.IsUp, x.IsInjected);
+					_blockedKeys.AddRaw_(x.vkCode, (ushort)x.scanCode, x.SendInputFlags_);
+				}
 			}
 			x.BlockEvent();
 		}

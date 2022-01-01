@@ -266,11 +266,11 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 		IMarshal* m = null;
 		if(0 == a.acc->QueryInterface(&m)) m->Release();
 		else hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
-		//ao::PrintAcc(a.acc, a.elem);
+		//ao::PrintAcc(a.acc, a.elem); Print((DWORD)hr);
 		if(hr) {
 			//Firefox fails to marshal all TEXT AO when multi-processs.
 			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
-			//	With new Firefox we have to use this for all Firefox AOs.
+			//	With new Firefox we have to use this for all AOs.
 #if true
 			HRESULT hr1 = hr;
 			auto wrap = new AccessibleMarshalWrapper(a.acc);

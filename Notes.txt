@@ -8,6 +8,7 @@ The program version format is major.minor.build, like 1.20.5.
 To update version info of dll files (Au, Au.Editor, Au.Controls):
 	Open global.cs and edit AssemblyVersion attribute. Single global.cs is used by all these projects.
 	It's important to update Au version info whenever something changed in Au or its dependencies (AuCpp etc).
+	Also may need to update year in AssemblyCopyright attribute (it's displayed in About info).
 To update version info of the setup file:
 	Open the .iss file in Inno Script Studio and edit MyAppVersion.
 Also update version, date, filesize and used .NET version info in index.md. It is part of the help website.
@@ -28,9 +29,9 @@ May need to delete test code, eg in Tests.cs.
 
 Change version info (see above).
 
-Build solution in config Release/AnyCPU. Compile in config Release/x86.
+Build solution in config Release/AnyCPU. Build in config Release/x86.
 
-Review menu Help -> About. May need to update year, used libraries.
+Review menu Help -> About. May need to update used libraries.
 
 Run the DocFX script just to catch XML documentation errors and test how it works with current C# and .NET versions etc.
 	Don't upload. Fix errors if need. More info in DocFX.cs.

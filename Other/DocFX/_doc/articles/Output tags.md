@@ -20,7 +20,7 @@ Tags can be nested, like `<b><c green>text<><>` or `<b>text <c green>text<> text
 
 ```csharp
 print.it("<>Text <i>italic<>, <c green>color<>, <link http://www.example.com>Link<>.");
-print.it("<>Code example:\r\n<code>Mouse.Click(10, 20); //comments</code>");
+print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 ```
 
 #### Simple formatting tags

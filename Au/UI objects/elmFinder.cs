@@ -344,6 +344,8 @@ public unsafe class elmFinder
 			aParent = default;
 		}
 
+		elm.WarnInSendMessage_();
+
 		bool inProc = !flags.Has(EFFlags.NotInProc);
 
 		_ClearResult();

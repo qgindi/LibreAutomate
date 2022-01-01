@@ -130,7 +130,7 @@ namespace Au.Types
 		/// <summary>
 		/// Fraction value.
 		/// </summary>
-		public unsafe float FractionValue { get { int i = Value; return *(float*)&i; } }
+		public unsafe float FractionValue => BitConverter.Int32BitsToSingle((int)_v);
 
 		/// <summary>
 		/// Returns true if Type == None (no value assigned).
@@ -154,7 +154,7 @@ namespace Au.Types
 		/// <summary>
 		/// Creates <b>Coord</b> of <b>Fraction</b> type.
 		/// </summary>
-		public static implicit operator Coord(float v) => Fraction(v);
+		public static implicit operator Coord(float v) => new(CoordType.Fraction, BitConverter.SingleToInt32Bits(v));
 
 		//these would create Fraction
 		///
@@ -180,16 +180,13 @@ namespace Au.Types
 		/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and &gt;=1.0 are outside of the rectangle.
 		/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
 		/// </summary>
-		public static unsafe Coord Fraction(double v) {
-			float f = (float)v;
-			return new(CoordType.Fraction, *(int*)&f);
-		}
+		public static unsafe Coord Fraction(double v) => (float)v;
 
 		/// <summary>
 		/// Returns <c>Fraction(0.5)</c>.
 		/// </summary>
 		/// <seealso cref="Fraction"/>
-		public static Coord Center => Fraction(0.5);
+		public static Coord Center => .5f;
 
 		/// <summary>
 		/// Returns <c>Reverse(0)</c>. Same as <c>^0</c>.

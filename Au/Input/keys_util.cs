@@ -1,4 +1,4 @@
-namespace Au
+﻿namespace Au
 {
 	public partial class keys
 	{
@@ -209,7 +209,7 @@ namespace Au
 
 		static ArgumentException _ArgumentException_ErrorInKeysString(string keys_, int i, int len) {
 			int end = i + len;
-			return new ArgumentException($"Error in keys string: {keys_[..i]}<<<{keys_[i..end]}>>>{keys_[end..]}");
+			return new ArgumentException($"Error in keys string: {keys_[..i]}║{keys_[i..end]}║{keys_[end..]}");
 		}
 
 		/// <summary>
@@ -249,9 +249,14 @@ namespace Au
 			/// Gets scan code from virtual-key code.
 			/// </summary>
 			/// <param name="vk"></param>
-			/// <param name="hkl">Keyboard layout. If 0, uses of current thread.</param>
+			/// <param name="hkl">Keyboard layout. If 0, uses of current thread. If -1, uses current focus/active thread.</param>
 			internal static ushort VkToSc(KKey vk, nint hkl = 0) {
-				if (hkl == default) hkl = Api.GetKeyboardLayout(0);
+				if (hkl == 0) hkl = Api.GetKeyboardLayout(0);
+				else if (hkl == -1) {
+					var w = wnd.focused; if (w.Is0) w = wnd.active;
+					hkl = Api.GetKeyboardLayout(w.ThreadId);
+				}
+
 				uint sc = Api.MapVirtualKeyEx((uint)vk, 0, hkl); //MAPVK_VK_TO_VSC
 
 				//fix Windows bugs
@@ -267,26 +272,21 @@ namespace Au
 			/// Sends one key event.
 			/// Just calls API SendInput with raw parameters.
 			/// </summary>
-			internal static unsafe void SendKeyEventRaw(KKey vk, ushort scan, uint flags) {
+			internal static unsafe void SendKeyEventRaw(KKey vk, ushort scan, uint flags, int? extra = null) {
 				var ki = new Api.INPUTK(vk, scan, flags);
+				if (extra != null) ki.dwExtraInfo = extra.Value;
 				Api.SendInput(&ki);
 			}
 
-			/// <summary>
-			/// Sends key.
-			/// Not used for keys whose scancode can depend on keyboard layout. To get scancode, uses keyboard layout of current thread.
-			/// </summary>
-			/// <param name="k"></param>
-			/// <param name="downUp">1 down, 2 up, 0 down-up.</param>
-			internal static void SendKey(KKey k, int downUp = 0) {
+			/// <inheritdoc cref="more.sendKey(KKey, bool?, nint, int?)"/>
+			internal static void SendKey(KKey k, bool? down = null, nint hkl = 0, int? extra = null) {
 				uint f = 0;
 				if (KeyTypes_.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
-				ushort scan = VkToSc(k);
+				ushort scan = VkToSc(k, hkl);
 
-				if (0 == (downUp & 2)) SendKeyEventRaw(k, scan, f);
-				if (0 == (downUp & 1)) SendKeyEventRaw(k, scan, f | Api.KEYEVENTF_KEYUP);
+				if (down != false) SendKeyEventRaw(k, scan, f, extra);
+				if (down != true) SendKeyEventRaw(k, scan, f | Api.KEYEVENTF_KEYUP, extra);
 			}
-			//TODO: public: keys.more.SendKey(KKey k, bool? down=null, int? extra=null)
 
 			internal static void SendCtrl(bool down) => SendKeyEventRaw(KKey.Ctrl, 0x1D, down ? 0 : Api.KEYEVENTF_KEYUP);
 			internal static void SendAlt(bool down) => SendKeyEventRaw(KKey.Alt, 0x38, down ? 0 : Api.KEYEVENTF_KEYUP);
@@ -311,57 +311,6 @@ namespace Au
 				if (0 != (mod & KMod.Win)) a[n++].Set(KKey.Win, 0x5B, f);
 				Api.SendInput(a, n);
 			}
-
-			/// <summary>
-			/// Releases modifier keys if pressed and no option NoModOff. Turns off CapsLock if toggled and no option NoCapsOff.
-			/// When releasing modifiers, if pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
-			/// Returns true if turned off CapsLock.
-			/// Does not sleep, blockinput, etc.
-			/// </summary>
-			internal static bool ReleaseModAndCapsLock(OKey optk) {
-				//note: don't call Hook here, it does not make sense.
-
-				bool R = !optk.NoCapsOff && isCapsLock;
-				if (R) {
-					if (isPressed(KKey.CapsLock)) SendKey(KKey.CapsLock, 2); //never mind: in this case later may not restore CapsLock because of auto-repeat
-					SendKey(KKey.CapsLock, 1);
-					bool ok = isPressed(KKey.CapsLock); //the send can fail because of UAC or the Windows setting
-					SendKey(KKey.CapsLock, 2);
-					//note: don't call isCapsLock again here. It is unreliable because GetKeyState is sync.
-					//	Eg in some cases ignores the new key state until this UI thread removes all messages from queue.
-					if (!ok && Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Keyboard Layout", "Attributes", 0) is int r1 && 0 != (r1 & 0x10000)) {
-						//Shift is set to turn off CapsLock in Settings -> Time & Language -> Language -> Keyboard -> Input method -> Hot keys.
-						WindowsHook.IgnoreLShiftCaps_(2000);
-						SendKey(KKey.Shift);
-						WindowsHook.IgnoreLShiftCaps_(0);
-
-						//note: need IgnoreLShiftCaps_, because when we send Shift, the BlockInput hook receives these events:
-						//Left Shift down, not injected //!!
-						//Caps Lock down, not injected
-						//Caps Lock up, not injected
-						//Left Shift up, injected
-
-						//speed: often ~15 ms. Without Shift max 5 ms.
-					}
-					//note: don't make R false if still isCapsLock true, because isCapsLock unreliable.
-					//	If SendKey(CapsLock) did not work now, it probably will not work afterwards.
-					
-					//TODO: CONSIDER: remove this feature, or set non-default. Now turns off even when don't need.
-					//	Instead, when sending alpha char keys, if CapsLock, invert Shift.
-					//CONSIDER: turn off CapsLock only if there is text as keys.
-					//	bool? CapsOff = null.
-					//	true - always, false - never, null - if need.
-				}
-
-				if (!optk.NoModOff) ReleaseModAndDisableModMenu();
-
-				return R;
-			}
-
-			/*
-			//TODO: if optk.NoCapsOff and is CapsLock and Shift is set to turn off CapsLock, on sent Shift key hangs for ~10 s.
-			//	Spy++ shows that after sending all keys [re]sends hundreds of WM_KEYUP(VK_CAPITAL).
-			*/
 
 			/// <summary>
 			/// Releases modifier keys if pressed.
@@ -398,8 +347,8 @@ namespace Au
 				if (0 != (m & 0x10)) SendRShiftUp();
 				if (0 != (m & 4)) SendAlt(false);
 				if (0 != (m & 0x40)) SendRAltUp();
-				if (0 != (m & 8)) SendKey(KKey.Win, 2);
-				if (0 != (m & 0x80)) SendKey(KKey.RWin, 2);
+				if (0 != (m & 8)) SendKey(KKey.Win, false);
+				if (0 != (m & 0x80)) SendKey(KKey.RWin, false);
 			}
 
 			/// <summary>
