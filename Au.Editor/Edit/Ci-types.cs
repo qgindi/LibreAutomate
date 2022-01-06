@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Completion;
 
 class CiComplItem : ITreeViewItem
 {
-	public CompletionItem ci;
+	CompletionItem _ci;
 	public readonly CiItemKind kind;
 	public readonly CiItemAccess access;
 	readonly CiComplProvider _provider;
@@ -18,6 +18,14 @@ class CiComplItem : ITreeViewItem
 	public int commentOffset;
 	string _dtext;
 	object _symbols; //ISymbol or List<ISymbol> or IReadonlyList<ISymbol> or null
+
+	public CompletionItem ci {
+		get => _ci;
+		set {
+			_ci = value;
+			_ci.Attach = this;
+		}
+	}
 
 	public CiComplItem(CiComplProvider provider, CompletionItem ci) {
 		_provider = provider;
@@ -40,7 +48,7 @@ class CiComplItem : ITreeViewItem
 		this.kind = kind;
 		this.access = access;
 		ci = CompletionItem.Create(name);
-		ci.Span = span;
+		_ci.Span = span;
 	}
 
 	internal void AddOverload(ISymbol sym) {
@@ -70,7 +78,7 @@ class CiComplItem : ITreeViewItem
 	/// Gets displayed text without prefix, suffix (eg geric) and green comments (group or inline description).
 	/// In most cases it is simple name, but in some cases can be eg "Namespace.Name", "Name(parameters)", etc.
 	/// </summary>
-	public string Text => ci.DisplayText;
+	public string Text => _ci.DisplayText;
 
 	public CiComplProvider Provider => _provider;
 
@@ -82,13 +90,13 @@ class CiComplItem : ITreeViewItem
 	#endregion
 
 	public void SetDisplayText(string comment) {
-		var desc = ci.InlineDescription; if (desc.NE()) desc = comment;
+		var desc = _ci.InlineDescription; if (desc.NE()) desc = comment;
 		bool isComment = !desc.NE();
 		if (_dtext != null && !isComment && commentOffset == 0) return;
-		_dtext = this.Text + ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
-		if (!ci.DisplayTextPrefix.NE()) {
-			_dtext = ci.DisplayTextPrefix + _dtext;
-			Debug_.PrintIf(ci.DisplayTextPrefix != "(", $"{_dtext}, {ci.DisplayTextPrefix}"); //seen only of casts, eg "(" + "int" + ")"
+		_dtext = this.Text + _ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
+		if (!_ci.DisplayTextPrefix.NE()) {
+			_dtext = _ci.DisplayTextPrefix + _dtext;
+			Debug_.PrintIf(_ci.DisplayTextPrefix != "(", $"{_dtext}, {_ci.DisplayTextPrefix}"); //seen only of casts, eg "(" + "int" + ")"
 		}
 		commentOffset = isComment ? _dtext.Length - desc.Length - 6 : 0;
 	}

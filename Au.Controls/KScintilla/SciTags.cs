@@ -567,47 +567,46 @@ namespace Au.Controls
 			if (codes != null) {
 				//info: tested various ways to add code coloured by a lexer, and only this way works. And it is good. Fast etc.
 				//	At first need to add non-styled text (SCI_COLOURISE does not work if the text is already styled).
-				//	Then set lexer and call SCI_COLOURISE for each code range.
-				//	Then remove lexer, but don't clear style, keywords etc.
+				//	Then set lexer (once) and call SCI_COLOURISE for each code range.
 				//	Then call SCI_STARTSTYLING/SCI_SETSTYLINGEX for each non-code range.
 				//	In any case, adding text is much slower than styling it. Appending is faster than adding, but only when don't need to scroll.
-				//	Scrolling is very slow. //CONSIDER: try to scroll async (SCI_GOTOPOS); but no, will not need it when output will be buffered.
-				//	//FUTURE: see maybe it's possible to get styling from lexers without attaching them to Scintilla control. Creating a hidden control for it is not good, eg because setting text is much slower.
+				//	Scrolling is very slow. Could try to scroll async (SCI_GOTOPOS), but don't need it when output is buffered.
+				//	FUTURE: see maybe it's possible to get styling from lexers without attaching them to Scintilla control.
+				//		Creating a hidden control for it is not good, eg because setting text is much slower.
+				//		We have an ILexer5*, but probably cannot call its Lex() because need an IDocument*.
 
 				//perf.next();
-				_SetLexer(LexLanguage.SCLEX_CPP);
+				_SetLexer("C#");
 				//perf.next();
 
-				//Problem: SCI_COLOURISE does not work when appending if previous text contains styles.
-				//See code in:
-				//	LexerCPP::Lex: StyleContext sc(startPos, length, initStyle, styler);
-				//	LexInterface::Colourise: styleStart = pdoc->StyleAt(start - 1);
-				//Workaround: temporarily set previous char style = 0. Fast.
-				//SHOULDDO: try to set lexer once. It's quite slow. Previously I did not know this workaround.
+				//SCI_COLOURISE does not work when appending if previous text contains styles.
+				//	See code in:
+				//		LexerCPP::Lex: StyleContext sc(startPos, length, initStyle, styler);
+				//		LexInterface::Colourise: styleStart = pdoc->StyleAt(start - 1);
+				//	Workaround: temporarily set previous char style = 0. Fast.
 				int prevStyle = prevLen > 0 ? _c.Call(SCI_GETSTYLEAT, prevLen - 1) : 0;
 				if (prevStyle != 0) _StyleChar(prevLen - 1, 0);
 
 				for (int i = 0; i < codes.Count; i++) {
 					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
 				}
-				//perf.next();
-				_SetLexer(LexLanguage.SCLEX_NULL);
-				//perf.next();
 
 				if (prevStyle != 0) _StyleChar(prevLen - 1, prevStyle); //part 2 of the workaround
 
+				//perf.next();
 				for (int i = 0; i < codes.Count; i++) {
-					_StyleRange(codes[i].x);
+					_StyleRangeTo(codes[i].x);
 					endStyled = codes[i].y;
 				}
+				
+				if (endStyled == len) _c.zSetStyled(); //without this would be bad if new text ends with code
 			}
-			_StyleRange(len);
+			_StyleRangeTo(len);
 			//perf.next();
-			////perf.write();
 			//print.qm2.write(perf.ToString());
 
 
-			void _StyleRange(int to) {
+			void _StyleRangeTo(int to) {
 				if (endStyled < to) {
 					_c.Call(SCI_STARTSTYLING, endStyled + prevLen);
 					_c.Call(SCI_SETSTYLINGEX, to - endStyled, r0 + endStyled);
@@ -653,24 +652,25 @@ namespace Au.Controls
 			return (byte)i;
 		}
 
-		void _SetLexer(LexLanguage lang) {
+		/// <summary>
+		/// Sets lexer if <i>lang</i> is different than current. See <see cref="KScintilla.zSetLexer(string)"/>.
+		/// </summary>
+		/// <param name="lang">Lexer name or null. For C# use "C#".</param>
+		void _SetLexer(string lang) {
 			if (lang == _currentLexer) return;
-			_currentLexer = lang;
-			if (lang != LexLanguage.SCLEX_NULL) _c.zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
-			_c.Call(SCI_SETLEXER, (int)lang);
-
-			//for(int i=0; i< STYLE_DEFAULT; i++) { //creates problems
-			//	_c.zStyleBackColor(i, 0xffffff);
-			//	_c.zStyleEolFilled(i, true);
-			//}
-
-			switch (lang) {
-			case LexLanguage.SCLEX_CPP:
-				_c.zSetLexerCpp(noClear: true/*, codeBackColor: 0xF0F0F0*/);
-				break;
+			if (lang == "C#") {
+				_c.zSetLexerCsharp(/*codeBackColor: 0xF0F0F0*/);
+			} else {
+				if (!_c.zSetLexer(lang)) return;
 			}
+			_currentLexer = lang;
+
+			//switch (lang) {
+			//case "...":
+			//	break;
+			//}
 		}
-		LexLanguage _currentLexer;
+		string _currentLexer;
 
 		/// <summary>
 		/// Called on SCN_HOTSPOTRELEASECLICK.

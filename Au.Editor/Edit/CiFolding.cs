@@ -366,7 +366,7 @@ class CiFolding
 
 		doc.Call(SCI_SETMARGINCURSORN, foldMargin, SC_CURSORARROW);
 
-		doc.zSetMarginWidth(foldMargin, 14);
+		doc.zSetMarginWidth(foldMargin, 12);
 
 		//separator lines below functions, types and namespaces
 		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);

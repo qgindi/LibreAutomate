@@ -50,22 +50,18 @@ partial class SciCode
 			ImageType imType = 0;
 			bool isComment = false;
 			if (_IsString(a[i], out var sr)) {
-				imType = _ImageTypeFromString(code.AsSpan(sr.start, sr.Length));
+				imType = _ImageTypeFromString(false, code.AsSpan(sr.start, sr.Length));
 				if (imType == 0) continue;
 				s = sr.ToString();
 			} else if (null != (s = _IsFolders(a[i], ref i))) {
-				imType = _ImageTypeFromString(s);
+				imType = _ImageTypeFromString(true, s);
 			} else if (i < a.Length && a[i].ClassificationType == ClassificationTypeNames.Comment) {
 				var ts = a[i].TextSpan;
-#if !true
-				int j = code.Find("/*image:", ts.Start..ts.End) + 2; if (j < 2) continue;
-				int k = code.Find("*/", j..ts.End); if (k <= j) continue;
-#else
 				if (!code.Eq(ts.Start, "/*")) continue;
-				int j = ts.Start + 2; while (j < ts.End && code[j] <= ' ') j++;
+				int j = ts.Start + 2;
+				while (j < ts.End && code[j] <= ' ') j++;
 				if (!code.Eq(j, "image:")) continue;
 				int k = code.Find("*/", j..ts.End); if (k <= j) continue;
-#endif
 				s = code[j..k];
 				imType = ImageType.Base64Image;
 				isComment = true;
@@ -160,7 +156,7 @@ partial class SciCode
 			return null;
 		}
 
-		static ImageType _ImageTypeFromString(ReadOnlySpan<char> s/*, out int prefixLength*/) {
+		static ImageType _ImageTypeFromString(bool folders, ReadOnlySpan<char> s/*, out int prefixLength*/) {
 			//prefixLength = 0;
 			if (s.Length < 2) return default;
 
@@ -168,8 +164,9 @@ partial class SciCode
 			switch (s[0]) {
 			case 'i' when s.StartsWith("image:"):
 				//prefixLength = 6;
-				return s.Length >= 10 ? ImageType.Base64Image : default;
+				return !folders && s.Length >= 10 ? ImageType.Base64Image : default;
 			case 'i' when s.StartsWith("imagefile:"):
+				if (folders) return default;
 				s = s[10..];
 				//prefixLength = 10;
 				break;
@@ -306,4 +303,46 @@ partial class SciCode
 #endif
 		return z;
 	}
+
+	/// <summary>
+	/// Finds all /*image:Base64*/ and @"image:Base64" in scintilla text range from8..to8 (UTF-8) and sets style STYLE_HIDDEN for the Base64.
+	/// If <i>styles</i> != null, writes STYLE_HIDDEN in <i>styles</i>, else uses SCI_STARTSTYLING/SCI_SETSTYLING.
+	/// </summary>
+	/// <remarks>
+	/// Called on SCN_STYLENEEDED (to avoid bad things like briefly visible and added horizontal scrollbar) and then by CiStyling._Work (async).
+	/// </remarks>
+	internal unsafe void HideImages_(int from8, int to8, byte[] styles = null) {
+		if (styles == null) from8 = zLineStartFromPos(false, from8);
+		if (to8 - from8 < 40) return;
+		//print.it("HI", from8, to8, styles != null);
+		int from0 = from8; from8 += 2;
+		Call(SCI_SETSEARCHFLAGS, SCFIND_MATCHCASE | SCFIND_WORDSTART); //with SCFIND_REGEXP|SCFIND_CXX11REGEX simpler but slow, 3000 mcs/SCI_SEARCHINTARGET
+		for (int j = 0; from8 < to8; from8 = j) {
+			Call(SCI_SETTARGETRANGE, from8, to8);
+			long li = 0x3A6567616D69; //print.it((ulong)BitConverter.ToInt64(Encoding.UTF8.GetBytes("image:\0\0")));
+			int i = Call(SCI_SEARCHINTARGET, 6, &li);
+			if (i < 0) break;
+			j = i + 6;
+			var dr = new Au.Controls.SciDirectRange(this, i - 2, to8);
+			char c1 = dr[i - 1], c2 = dr[i - 2];
+			if (!((c1 == '*' && c2 == '/') || (c1 == '\"' && c2 == '@'))) continue;
+			for (int j2 = to8 - (c1 == '\"' ? 1 : 2); j < j2; j++) {
+				if (dr[j] is not ((>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '+' or '/' or '=')) break;
+			}
+			if (j - i < 40 || dr[j] != c1 || (c1 == '*' && '/' != dr[j + 1])) continue;
+			if (c1 == '\"') i += 6; else { i -= 2; j += 2; }
+			if (styles != null) {
+				styles.AsSpan(i - from0, j - i).Fill(STYLE_HIDDEN);
+			} else {
+				Call(SCI_STARTSTYLING, i);
+				Call(SCI_SETSTYLING, j - i, STYLE_HIDDEN);
+			}
+		}
+	}
+	//Not easy to use hidden style because:
+	//	1. Scintilla bug: in wrap mode sometimes draws as many lines as with big font. Even caret is large and spans all lines.
+	//		Plus other anomalies, eg when scrolling.
+	//		Workaround: at first hide all on SCN_STYLENEEDED.
+	//	2. User cannot delete text containing hidden text.
+	//		Workaround: modify scintilla source in Editor::RangeContainsProtected.
 }

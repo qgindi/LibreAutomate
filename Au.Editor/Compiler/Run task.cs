@@ -475,7 +475,7 @@ class RunningTasks
 			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
 
-			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)folders.Workspace, f.IdString);
+			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)folders.Workspace, f.IdString, process.thisProcessId);
 			wrPipeName = null;
 
 			//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
@@ -582,6 +582,7 @@ class RunningTasks
 			//	Normally Au.Editor runs as admin in admin user account, and don't need to go through this.
 		} else {
 			var ps = new ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
+			ps.si.dwX = -1446812571; ps.si.dwY = process.thisProcessId; //for script.ExitWhenEditorDies_ when role exeProgram
 			var need = ProcessStarter_.Result.Need.WaitHandle;
 			var psr = uac == _SpUac.userFromAdmin ? ps.StartUserIL(need) : ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 			return (psr.pid, psr.waitHandle);

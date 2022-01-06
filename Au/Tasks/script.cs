@@ -379,6 +379,8 @@ namespace Au
 						process.ThisThreadSetComApartment_(ApartmentState.STA); //1.6 ms
 					}
 				}
+
+				ExitWhenEditorDies_();
 			}
 		}
 		static bool s_appModuleInit;
@@ -575,6 +577,31 @@ namespace Au
 		/// Class name of <see cref="WndMsg_"/> window.
 		/// </summary>
 		internal const string c_msgWndClassName = "Au.Editor.m3gVxcTJN02pDrHiQ00aSQ";
+
+		/// <summary>
+		/// Starts new thread that waits and ends this process when editor crashed or terminated.
+		/// </summary>
+		/// <remarks>
+		/// When editor closed normally, it ends task processes.
+		/// This overload is used directly if role miniProgram. Editor pid is passed through pipe.
+		/// </remarks>
+		internal static void ExitWhenEditorDies_(int editorPid) {
+			var t = new Thread(editorPid => {
+				Thread.Sleep(1000);
+				if (0 == Api.WaitForSingleObject(Handle_.OpenProcess((int)editorPid, Api.SYNCHRONIZE), -1)) Environment.Exit(1);
+			}) { IsBackground = true };
+			t.Start(editorPid);
+		}
+
+		//This overload is used if role exeProgram.
+		internal static void ExitWhenEditorDies_() {
+			//never mind: no startupinfo if UAC elevated (nonadmin parent starts admin child). It's rare and not so important.
+			//	I don't know a better way to pass this info to the child process. Cannot use command line parameters.
+			Api.GetStartupInfo(out var x);
+			if (x.dwX == -1446812571 && 0 == (x.dwFlags & 4)) { //STARTF_USEPOSITION
+				ExitWhenEditorDies_(x.dwY);
+			}
+		}
 
 		/// <summary>
 		/// Contains static functions to interact with the script editor, if available.

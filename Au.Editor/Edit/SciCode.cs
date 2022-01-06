@@ -72,7 +72,6 @@ partial class SciCode : KScintilla
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
-		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
 
 		zSetMarginType(c_marginFold, SC_MARGIN_SYMBOL);
 		zSetMarginType(c_marginImages, SC_MARGIN_SYMBOL);
@@ -253,7 +252,12 @@ partial class SciCode : KScintilla
 			break;
 		case NOTIF.SCN_STYLENEEDED:
 			//print.it("SCN_STYLENEEDED");
-			zSetStyled();
+			if (_fn.IsCodeFile) {
+				HideImages_(Call(SCI_GETENDSTYLED), n.position);
+				Call(SCI_STARTSTYLING, n.position); //need this even if would not hide images
+			} else {
+				zSetStyled();
+			}
 			break;
 			//case NOTIF.SCN_PAINTED:
 			//	_Paint(true);

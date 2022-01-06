@@ -137,6 +137,8 @@ namespace Au.More
 				folders.Workspace = new FolderPath(a[5]);
 				s_scriptId = a[6];
 				//p1.Next();
+
+				script.ExitWhenEditorDies_(a[7]);
 			}
 			//p1.Next();
 

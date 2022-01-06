@@ -32,18 +32,7 @@ partial class CiCompletion
 		public string filterText;
 		public SciCode.ITempRange tempRange;
 		public bool noAutoSelect;
-		Dictionary<CompletionItem, CiComplItem> _map;
 		public CiWinapi winapi;
-
-		public Dictionary<CompletionItem, CiComplItem> Map {
-			get {
-				if (_map == null) {
-					_map = new Dictionary<CompletionItem, CiComplItem>(items.Count);
-					foreach (var v in items) _map.Add(v.ci, v);
-				}
-				return _map;
-			}
-		}
 	}
 
 	public bool IsVisibleUI => _data != null;
@@ -813,7 +802,7 @@ partial class CiCompletion
 		return -1;
 	}
 
-	public void SelectBestMatch(IEnumerable<CompletionItem> listItems) {
+	public void SelectBestMatch(IEnumerable<CompletionItem> listItems, bool grouped) {
 		CiComplItem ci = null;
 		var filterText = _data.filterText;
 		if (!(/*_data.noAutoSelect ||*/ filterText == "_")) { //noAutoSelect when lambda argument
@@ -834,7 +823,23 @@ partial class CiCompletion
 				//print.it(visible.Length, fi.Length);
 				if (!fi.IsDefaultOrEmpty) {
 					if (fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) {
-						ci = _data.Map[fi[0]];
+						ci = fi[0].Attach as CiComplItem;
+
+						//rejected. Not sure it's better.
+						//For normal priority items should ignore group and select by alphabet.
+						//	Else often selects eg an Au or System namespace item instead of keyword. Probably it is not what users like.
+						//if (grouped && fi.Length > 1 && filterText.Length > 1 && ci.ci.SortText.Starts(filterText[0])) {
+						//	for(int i = 1; i < fi.Length; i++) {
+						//		var v = fi[i].Attach as CiComplItem;
+						//		if (v.moveDown != 0) break;
+						//		if (v.group == ci.group) continue;
+						//		string s1 = v.ci.SortText, s2 = ci.ci.SortText;
+						//		if (s1.NE() || s2.NE() || s1[0] != s2[0]) continue;
+						//		if (string.CompareOrdinal(s1, s2) < 0) ci = v;
+						//	}
+						//	//foreach(var v in fi) print.it(v, v.Rules.MatchPriority, v.Rules.SelectionBehavior); //all 0, Default
+						//}
+
 						if (_data.noAutoSelect && ci.kind != CiItemKind.Enum) ci = null;
 					}
 				}

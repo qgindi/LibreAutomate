@@ -8,7 +8,7 @@
 //using System.Windows.Input;
 
 //using Au.Controls;
-//using static Au.Controls.Sci;
+using static Au.Controls.Sci;
 using Au.Compiler;
 //using System.Windows.Forms;
 
@@ -57,7 +57,13 @@ static unsafe class Test
 
 
 		//Au.Compiler.MetaReferences.DebugPrintCachedRefs();
-		
+
+		//doc.zSetString(SCI_EOLANNOTATIONSETTEXT, 9, "Annotation");
+		//doc.Call(SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM);
+
+		//doc.zReplaceRange(true, 0, 0, "//");
+		//int i = doc.zCurrentPos8 - 4;
+		//doc.zSelect(false, i, i + 2);
 
 	}
 

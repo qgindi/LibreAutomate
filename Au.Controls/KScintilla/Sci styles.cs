@@ -215,13 +215,34 @@ namespace Au.Controls
 
 		#region lexer
 
-		public void zSetLexerCpp(bool noClear = false/*, ColorInt? codeBackColor = null*/) {
-			if (!noClear) zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
-			Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_CPP);
+		/// <summary>
+		/// Sets lexer for a language.
+		/// Does not set keywords, options etc. Just creates (or gets cached) and sets lexer object, and clears styles 0-31.
+		/// For C# instead use <see cref="zSetLexerCsharp"/> (it sets keywords etc).
+		/// Does not check whether already using that lexer.
+		/// </summary>
+		/// <param name="lang">Language. See SCI_GETLEXERLANGUAGE doc. Use null for no lexer.</param>
+		/// <returns>false if <i>lang</i> unknown.</returns>
+		public bool zSetLexer(string lang) {
+			nint il = 0;
+			if (lang != null) {
+				//note: cannot cache lexer objects. It seems Scintilla deletes old object, eg when sets new; with old object crashes. Not too slow.
+				il = Sci_CreateLexer(Convert2.Utf8Encode(lang)); //FUTURE: test other languages
+				if (il == 0) { print.it("There is no lexer for " + lang); return false; }
+			}
+			zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
+			Call(SCI_SETILEXER, 0, il);
+			return true;
+		}
+
+		public void zSetLexerCsharp(/*ColorInt? codeBackColor = null*/) {
+			//There is no C# lexer, but can use the "cpp" lexer.
+			//	Use separate lexer objects for C# and other C-like languages, because keywords and options etc are different.
+			zSetLexer("cpp");
 
 			//if (codeBackColor != null) for (int i = 0; i < STYLE_DEFAULT; i++) zStyleBackColor(i, codeBackColor.Value);
 
-			const int colorComment = 0x60B000;
+			const int colorComment = 0x60A000;
 			const int colorString = 0xA07040;
 			const int colorNumber = 0x804000;
 			const int colorDoc = 0x606060;

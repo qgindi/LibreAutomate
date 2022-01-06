@@ -133,7 +133,12 @@ class DOptions : KDialogWindow
 
 	void _Font() {
 		var b = _Page("Font", WBPanelType.Dock);
-		b.Add(out KScintilla sciStyles).Width(150); sciStyles.ZInitBorder = true; sciStyles.Name = "styles";
+
+		b.Add(out KScintilla sciStyles).Width(150);
+		sciStyles.ZInitBorder = true;
+		sciStyles.Name = "styles";
+		//note: not readonly. Eg users may want to paste and see any character in multiple fonts.
+
 		b.StartGrid().Columns(-1).Margin(20);
 		b.R.StartGrid();
 		var pFont = b.Panel as Grid;
