@@ -1,11 +1,5 @@
 //Code colors. Also calls functions of folding, images, errors.
 
-//#if TRACE
-//#define PRINT
-//#endif
-
-//#define HIDE_IMAGE_STRING
-
 using System.Linq;
 using Au.Controls;
 using static Au.Controls.Sci;
@@ -35,7 +29,6 @@ partial class CiStyling
 		} else { //at program startup
 			CodeInfo.ReadyForStyling += () => { if (!doc.Hwnd.Is0) _DocChanged(doc, true); };
 		}
-		doc.zSetStyled();
 	}
 
 	/// <summary>
@@ -100,7 +93,6 @@ partial class CiStyling
 		_modStart = Math.Min(_modStart, n.position);
 		_modFromEnd = Math.Min(_modFromEnd, doc.zLen8 - n.FinalPosition);
 		_folded = false;
-		doc.zSetStyled();
 		//using var p1 = perf.local();
 #if true
 		_modTimer ??= new timer(_ModifiedTimer);
@@ -108,6 +100,14 @@ partial class CiStyling
 #else
 		_StylingAndFolding(doc, doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
 #endif
+		//workaround for:
+		//	On Undo, if the undo text contains hidden text, Scintilla it seems tries to show that unstyled text before styleneeded notification.
+		//	If the hidden text is long, it adds horz scrollbar and scrolls.
+		//	Not if the undo text ends with newline.
+		if (n.modificationType.Has(MOD.SC_LASTSTEPINUNDOREDO | MOD.SC_MOD_INSERTTEXT)) {
+			doc.HideImages_(n.position, doc.zLineEndFromPos(false, n.position + n.length));
+			doc.zSetStyled();
+		}
 	}
 
 	void _ModifiedTimer(timer t) {
@@ -115,7 +115,7 @@ partial class CiStyling
 		var doc = t.Tag as SciCode;
 		if (doc != Panels.Editor.ZActiveDoc) return;
 		if (_cancelTS != null) return;
-		_Work(doc, _modStart, doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
+		_Work(doc, doc.zLineStartFromPos(false, _modStart), doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
 		//p1.NW('a'); //we return without waiting for the async task to complete
 	}
 
@@ -138,6 +138,7 @@ partial class CiStyling
 		var cd = new CodeInfo.Context(0);
 		if (!cd.GetDocument()) return;
 		var document = cd.document;
+		var code = cd.code;
 		_PN('d');
 		try {
 			Sci_GetVisibleRange(doc.ZSciPtr, out var vr);
@@ -151,7 +152,7 @@ partial class CiStyling
 			await Task.Run(async () => {
 				root = await document.GetSyntaxRootAsync(cancelToken).ConfigureAwait(false);
 				_PN('s');
-				if (needFolding) af = CiFolding.GetFoldPoints(root, cd.code, cancelToken);
+				if (needFolding) af = CiFolding.GetFoldPoints(root, code, cancelToken);
 			});
 			if (_Cancelled()) return;
 			_PN('p');
@@ -218,7 +219,7 @@ partial class CiStyling
 
 			foreach (var (a, r) in ar) {
 				foreach (var v in a) {
-					//print.it(v.ClassificationType, cd.code[v.TextSpan.Start..v.TextSpan.End]);
+					//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
 					EToken style = v.ClassificationType switch {
 						#region
 						ClassificationTypeNames.ClassName => EToken.Type,
@@ -300,30 +301,13 @@ partial class CiStyling
 					void _SetStyleRange(byte style) {
 						for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
 					}
-
-					//hide image Base64. Actually currently only changes color. Can't hide because of scintilla bugs.
-					if (v.TextSpan.Length > 10) {
-						//note: hide only @"image:string" and /*image:comment*/, but not "image:string" and //... /*image:comment*/.
-						//	It simplifies code and allows user to unhide if wants.
-						//	Where need some other comment before /*image:comment*/, use /*other comment*/ /*image:comment*/.
-						switch (style) {
-						case EToken.Comment when cd.code.AsSpan(v.TextSpan.Start).StartsWith("/*image:"):
-						case EToken.String when cd.code.AsSpan(v.TextSpan.Start).StartsWith("@\"image:"):
-#if HIDE_IMAGE_STRING //if hidden style would work
-							spanStart8 += 7; spanEnd8 -= style == EToken.String ? 1 : 2;
-#else
-							if (style == EToken.String) { spanStart8 += 2; spanEnd8 -= 1; }
-#endif
-							_SetStyleRange((byte)EToken.Image);
-							break;
-						}
-					}
 				}
 			}
+			doc.HideImages_(start8, end8, b);
 			_PN();
 			doc.Call(SCI_STARTSTYLING, start8);
 			unsafe { fixed (byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
-			doc.zSetStyled();
+			doc.zSetStyled(minimal ? int.MaxValue : end8);
 
 			_modStart = _modFromEnd = int.MaxValue;
 			_visibleLines = minimal ? default : vr;
@@ -400,26 +384,17 @@ partial class CiStyling
 		LineNumber = 33, //STYLE_LINENUMBER
 	}
 
-#pragma warning disable CS0660, CS0661 // Type defines operator == or operator != but does not override Object.Equals(object o)
 	public struct TStyle
-#pragma warning restore
 	{
 		public int color;
 		public bool bold;
-		public bool hidden;
-		//public bool small;
 
-		public TStyle(int color, bool bold, bool hidden = false) {
+		public TStyle(int color, bool bold) {
 			this.color = color;
 			this.bold = bold;
-			this.hidden = hidden;
-			//this.small = small;
 		}
 
 		public static implicit operator TStyle(int color) => new(color, false);
-
-		public static bool operator ==(TStyle a, TStyle b) => a.color == b.color && a.bold == b.bold;
-		public static bool operator !=(TStyle a, TStyle b) => !(a == b);
 	}
 
 	public record TStyles //note: must be record, because uses synthesized ==
@@ -429,11 +404,8 @@ partial class CiStyling
 		public int BackgroundColor = 0xffffff;
 
 		public TStyle None; //black
-							//public TStyle Comment = 0x408000; //green like in VS but towards yellow
-		public TStyle Comment = 0x60B000; //light green, towards yellow
+		public TStyle Comment = 0x60A000; //light green, towards yellow
 		public TStyle String = 0xA07040; //brown, more green
-										 //0xc0c0c0; //good contrast with 0xA07040, but maybe not with white background
-										 //0xc0e000; //light yellow-green. Too vivid.
 		public TStyle StringEscape = 0xB776FB; //pink-purple like in VS
 		public TStyle Number = 0x804000; //brown, more red
 		public TStyle Punctuation; //black
@@ -449,11 +421,6 @@ partial class CiStyling
 		public TStyle Excluded = 0x808080; //gray
 		public TStyle XmlDocText = 0x408000; //green
 		public TStyle XmlDocTag = 0x808080; //gray
-
-		//public TStyle Image = new(0xf0f0f0, false, true); //hidden
-		//public TStyle Image = 0xe0e0e0;
-		public TStyle Image = 0xffffff; //visible only when selected or if dark theme
-		//public TStyle Image = 0xf8f8f8; //barely visible, unless selected or if dark theme
 
 		public TStyle LineNumber = 0x808080;
 
@@ -588,20 +555,6 @@ partial class CiStyling
 			void _Set(EToken tok, TStyle sty) {
 				sci.zStyleForeColor((int)tok, sty.color);
 				if (sty.bold) sci.zStyleBold((int)tok, true);
-#if HIDE_IMAGE_STRING
-				//cannot use hidden style or small font because of scintilla bug:
-				//	1. In wrap mode draws as many lines as with big font. Even caret is large and spans all lines.
-				//		Plus other anomalies, eg when scrolling.
-				//		I could not find a workaround. Tried SCI_SETLAYOUTCACHE, SCI_SETPOSITIONCACHE, SCI_SETHOTSPOTSINGLELINE, etc.
-				//		//TODO: update scintilla. Fixed several bugs similar to this.
-				//	2. User cannot delete text containing hidden text.
-				//		Need to modify scintilla source; maybe just simply modify IsProtected() in Style.h.
-				//if (sty.hidden) sci.zStyleHidden((int)tok, true);
-				//if (sty.small) { sci.zStyleFont((int)tok, "Gabriola", 1); sci.Call(SCI_STYLESETCASE, (int)tok, 2); } //smallest font available on Win7 too
-
-				if (sty.hidden) { sci.zStyleHidden((int)tok, true); }
-				//if (sty.hidden) { /*sci.zStyleHidden((int)tok, true);*/ sci.zStyleHotspot((int)tok, true); }
-#endif
 			}
 
 			_Set(EToken.None, None);
@@ -622,8 +575,6 @@ partial class CiStyling
 			_Set(EToken.Excluded, Excluded);
 			_Set(EToken.XmlDocText, XmlDocText);
 			_Set(EToken.XmlDocTag, XmlDocTag);
-
-			_Set(EToken.Image, Image);
 
 			_Set((EToken)STYLE_LINENUMBER, LineNumber);
 		}
@@ -677,6 +628,28 @@ partial class CiStyling
 		//	case EToken.LineNumber: LineNumber = style; break;
 		//	}
 		//}
+	}
+
+	/// <summary>
+	/// Returns true if character at pos8 is in a hidden text.
+	/// </summary>
+	public static bool IsProtected(KScintilla sci, int pos8) => sci.Call(Sci.SCI_GETSTYLEAT, pos8) == STYLE_HIDDEN;
+
+	/// <summary>
+	/// Returns true if range from8..to8 intersects a hidden text, except when it is greater or equal than the hidden text range.
+	/// It means the range should not be selected or modified.
+	/// </summary>
+	public static bool IsProtected(KScintilla sci, int from8, int to8) {
+		bool p1 = IsProtected(sci, from8);
+		if (to8 <= from8) return p1 && IsProtected(sci, from8 - 1);
+		if (p1) return IsProtected(sci, from8 - 1) || (IsProtected(sci, to8 - 1) && IsProtected(sci, to8));
+		if (IsProtected(sci, to8 - 1)) return IsProtected(sci, to8);
+		return false;
+	}
+
+	public static int SkipProtected(KScintilla sci, int pos8) {
+		while (IsProtected(sci, pos8)) pos8++;
+		return pos8;
 	}
 }
 

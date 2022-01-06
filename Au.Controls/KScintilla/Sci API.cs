@@ -17,13 +17,13 @@ namespace Au.Controls
 
 		public const int MK_SCI_NOFOCUS = 0x10000;
 
-		[DllImport("SciLexer", EntryPoint = "Scintilla_DirectFunction")]
+		[DllImport("Scintilla", EntryPoint = "Scintilla_DirectFunction")]
 		public static extern nint Sci_Call(nint sci, int message, nint wParam = 0, nint lParam = 0);
 
-		[DllImport("SciLexer")]
+		[DllImport("Scintilla")]
 		public static extern int Sci_Range(nint sci, int start8, int end8, out byte* p1, out byte* p2, int* length = null);
 
-		[DllImport("SciLexer")]
+		[DllImport("Scintilla")]
 		public static extern void Sci_SetFoldLevels(nint sci, int line, int lastLine, int len, int* a);
 
 		public record struct Sci_VisibleRange
@@ -34,8 +34,11 @@ namespace Au.Controls
 		/// <summary>
 		/// flags: 1 need pos
 		/// </summary>
-		[DllImport("SciLexer")]
+		[DllImport("Scintilla")]
 		public static extern void Sci_GetVisibleRange(nint sci, out Sci_VisibleRange r);
+
+		[DllImport("Lexilla", EntryPoint = "CreateLexer")]
+		public static extern nint Sci_CreateLexer(byte[] lexer);
 
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData
@@ -67,6 +70,8 @@ namespace Au.Controls
 		public const int STYLE_HIDDEN = 31; //DEFAULT-1
 
 		#endregion
+
+		public delegate nint SciFnDirectStatus(nint ptr, int iMessage, nint wParam, nint lParam, out int pStatus);
 
 		public const int INVALID_POSITION = -1;
 		public const int SCI_START = 2000;
@@ -127,6 +132,8 @@ namespace Au.Controls
 		public const int SCI_GETNEXTTABSTOP = 2677;
 		public const int SC_CP_UTF8 = 65001;
 		public const int SCI_SETCODEPAGE = 2037;
+		public const int SCI_SETFONTLOCALE = 2760;
+		public const int SCI_GETFONTLOCALE = 2761;
 		public const int SC_IME_WINDOWED = 0;
 		public const int SC_IME_INLINE = 1;
 		public const int SCI_GETIMEINTERACTION = 2678;
@@ -178,6 +185,10 @@ namespace Au.Controls
 		public const int SCI_MARKERSETFORE = 2041;
 		public const int SCI_MARKERSETBACK = 2042;
 		public const int SCI_MARKERSETBACKSELECTED = 2292;
+		public const int SCI_MARKERSETFORETRANSLUCENT = 2294;
+		public const int SCI_MARKERSETBACKTRANSLUCENT = 2295;
+		public const int SCI_MARKERSETBACKSELECTEDTRANSLUCENT = 2296;
+		public const int SCI_MARKERSETSTROKEWIDTH = 2297;
 		public const int SCI_MARKERENABLEHIGHLIGHT = 2293;
 		public const int SCI_MARKERADD = 2043;
 		public const int SCI_MARKERDELETE = 2044;
@@ -188,6 +199,8 @@ namespace Au.Controls
 		public const int SCI_MARKERDEFINEPIXMAP = 2049;
 		public const int SCI_MARKERADDSET = 2466;
 		public const int SCI_MARKERSETALPHA = 2476;
+		public const int SCI_MARKERGETLAYER = 2734;
+		public const int SCI_MARKERSETLAYER = 2735;
 		public const int SC_MAX_MARGIN = 4;
 		public const int SC_MARGIN_SYMBOL = 0;
 		public const int SC_MARGIN_NUMBER = 1;
@@ -280,12 +293,50 @@ namespace Au.Controls
 		public const int SCI_STYLEGETWEIGHT = 2064;
 		public const int SCI_STYLESETCHARACTERSET = 2066;
 		public const int SCI_STYLESETHOTSPOT = 2409;
+		public const int SCI_STYLESETCHECKMONOSPACED = 2254;
+		public const int SCI_STYLEGETCHECKMONOSPACED = 2255;
+		public const int SC_ELEMENT_LIST = 0;
+		public const int SC_ELEMENT_LIST_BACK = 1;
+		public const int SC_ELEMENT_LIST_SELECTED = 2;
+		public const int SC_ELEMENT_LIST_SELECTED_BACK = 3;
+		public const int SC_ELEMENT_SELECTION_TEXT = 10;
+		public const int SC_ELEMENT_SELECTION_BACK = 11;
+		public const int SC_ELEMENT_SELECTION_ADDITIONAL_TEXT = 12;
+		public const int SC_ELEMENT_SELECTION_ADDITIONAL_BACK = 13;
+		public const int SC_ELEMENT_SELECTION_SECONDARY_TEXT = 14;
+		public const int SC_ELEMENT_SELECTION_SECONDARY_BACK = 15;
+		public const int SC_ELEMENT_SELECTION_INACTIVE_TEXT = 16;
+		public const int SC_ELEMENT_SELECTION_INACTIVE_BACK = 17;
+		public const int SC_ELEMENT_CARET = 40;
+		public const int SC_ELEMENT_CARET_ADDITIONAL = 41;
+		public const int SC_ELEMENT_CARET_LINE_BACK = 50;
+		public const int SC_ELEMENT_WHITE_SPACE = 60;
+		public const int SC_ELEMENT_WHITE_SPACE_BACK = 61;
+		public const int SC_ELEMENT_HOT_SPOT_ACTIVE = 70;
+		public const int SC_ELEMENT_HOT_SPOT_ACTIVE_BACK = 71;
+		public const int SC_ELEMENT_FOLD_LINE = 80;
+		public const int SC_ELEMENT_HIDDEN_LINE = 81;
+		public const int SCI_SETELEMENTCOLOUR = 2753;
+		public const int SCI_GETELEMENTCOLOUR = 2754;
+		public const int SCI_RESETELEMENTCOLOUR = 2755;
+		public const int SCI_GETELEMENTISSET = 2756;
+		public const int SCI_GETELEMENTALLOWSTRANSLUCENT = 2757;
+		public const int SCI_GETELEMENTBASECOLOUR = 2758;
 		public const int SCI_SETSELFORE = 2067;
 		public const int SCI_SETSELBACK = 2068;
 		public const int SCI_GETSELALPHA = 2477;
 		public const int SCI_SETSELALPHA = 2478;
 		public const int SCI_GETSELEOLFILLED = 2479;
 		public const int SCI_SETSELEOLFILLED = 2480;
+		public const int SC_LAYER_BASE = 0;
+		public const int SC_LAYER_UNDER_TEXT = 1;
+		public const int SC_LAYER_OVER_TEXT = 2;
+		public const int SCI_GETSELECTIONLAYER = 2762;
+		public const int SCI_SETSELECTIONLAYER = 2763;
+		public const int SCI_GETCARETLINELAYER = 2764;
+		public const int SCI_SETCARETLINELAYER = 2765;
+		public const int SCI_GETCARETLINEHIGHLIGHTSUBLINE = 2773;
+		public const int SCI_SETCARETLINEHIGHLIGHTSUBLINE = 2774;
 		public const int SCI_SETCARETFORE = 2069;
 		public const int SCI_ASSIGNCMDKEY = 2070;
 		public const int SCI_CLEARCMDKEY = 2071;
@@ -340,9 +391,12 @@ namespace Au.Controls
 		public const int SCI_INDICGETHOVERFORE = 2683;
 		public const int SC_INDICVALUEBIT = 0x1000000;
 		public const int SC_INDICVALUEMASK = 0xFFFFFF;
+		public const int SC_INDICFLAG_NONE = 0;
 		public const int SC_INDICFLAG_VALUEFORE = 1;
 		public const int SCI_INDICSETFLAGS = 2684;
 		public const int SCI_INDICGETFLAGS = 2685;
+		public const int SCI_INDICSETSTROKEWIDTH = 2751;
+		public const int SCI_INDICGETSTROKEWIDTH = 2752;
 		public const int SCI_SETWHITESPACEFORE = 2084;
 		public const int SCI_SETWHITESPACEBACK = 2085;
 		public const int SCI_SETWHITESPACESIZE = 2086;
@@ -378,6 +432,10 @@ namespace Au.Controls
 		public const int SCI_USERLISTSHOW = 2117;
 		public const int SCI_AUTOCSETAUTOHIDE = 2118;
 		public const int SCI_AUTOCGETAUTOHIDE = 2119;
+		public const int SC_AUTOCOMPLETE_NORMAL = 0;
+		public const int SC_AUTOCOMPLETE_FIXED_SIZE = 1;
+		public const int SCI_AUTOCSETOPTIONS = 2638;
+		public const int SCI_AUTOCGETOPTIONS = 2639;
 		public const int SCI_AUTOCSETDROPRESTOFWORD = 2270;
 		public const int SCI_AUTOCGETDROPRESTOFWORD = 2271;
 		public const int SCI_REGISTERIMAGE = 2405;
@@ -439,6 +497,7 @@ namespace Au.Controls
 		public const int SCI_GETFIRSTVISIBLELINE = 2152;
 		public const int SCI_GETLINE = 2153;
 		public const int SCI_GETLINECOUNT = 2154;
+		public const int SCI_ALLOCATELINES = 2089;
 		public const int SCI_SETMARGINLEFT = 2155;
 		public const int SCI_GETMARGINLEFT = 2156;
 		public const int SCI_SETMARGINRIGHT = 2157;
@@ -470,6 +529,7 @@ namespace Au.Controls
 		public const int SCI_GETTEXT = 2182;
 		public const int SCI_GETTEXTLENGTH = 2183;
 		public const int SCI_GETDIRECTFUNCTION = 2184;
+		public const int SCI_GETDIRECTSTATUSFUNCTION = 2772;
 		public const int SCI_GETDIRECTPOINTER = 2185;
 		public const int SCI_SETOVERTYPE = 2186;
 		public const int SCI_GETOVERTYPE = 2187;
@@ -502,6 +562,7 @@ namespace Au.Controls
 		public const int SCI_VISIBLEFROMDOCLINE = 2220;
 		public const int SCI_DOCLINEFROMVISIBLE = 2221;
 		public const int SCI_WRAPCOUNT = 2235;
+		public const int SC_FOLDLEVELNONE = 0x0;
 		public const int SC_FOLDLEVELBASE = 0x400;
 		public const int SC_FOLDLEVELWHITEFLAG = 0x1000;
 		public const int SC_FOLDLEVELHEADERFLAG = 0x2000;
@@ -533,11 +594,13 @@ namespace Au.Controls
 		public const int SCI_EXPANDCHILDREN = 2239;
 		public const int SCI_FOLDALL = 2662;
 		public const int SCI_ENSUREVISIBLE = 2232;
+		public const int SC_AUTOMATICFOLD_NONE = 0x0000;
 		public const int SC_AUTOMATICFOLD_SHOW = 0x0001;
 		public const int SC_AUTOMATICFOLD_CLICK = 0x0002;
 		public const int SC_AUTOMATICFOLD_CHANGE = 0x0004;
 		public const int SCI_SETAUTOMATICFOLD = 2663;
 		public const int SCI_GETAUTOMATICFOLD = 2664;
+		public const int SC_FOLDFLAG_NONE = 0x0000;
 		public const int SC_FOLDFLAG_LINEBEFORE_EXPANDED = 0x0002;
 		public const int SC_FOLDFLAG_LINEBEFORE_CONTRACTED = 0x0004;
 		public const int SC_FOLDFLAG_LINEAFTER_EXPANDED = 0x0008;
@@ -696,6 +759,7 @@ namespace Au.Controls
 		public const int SCI_BRACEBADLIGHT = 2352;
 		public const int SCI_BRACEBADLIGHTINDICATOR = 2499;
 		public const int SCI_BRACEMATCH = 2353;
+		public const int SCI_BRACEMATCHNEXT = 2369;
 		public const int SCI_GETVIEWEOL = 2355;
 		public const int SCI_SETVIEWEOL = 2356;
 		public const int SCI_GETDOCPOINTER = 2357;
@@ -713,6 +777,7 @@ namespace Au.Controls
 		public const int SCI_SETEDGECOLOUR = 2365;
 		public const int SCI_MULTIEDGEADDLINE = 2694;
 		public const int SCI_MULTIEDGECLEARALL = 2695;
+		public const int SCI_GETMULTIEDGECOLUMN = 2749;
 		public const int SCI_SEARCHANCHOR = 2366;
 		public const int SCI_SEARCHNEXT = 2367;
 		public const int SCI_SEARCHPREV = 2368;
@@ -853,6 +918,7 @@ namespace Au.Controls
 		public const int SCI_TOGGLECARETSTICKY = 2459;
 		public const int SCI_SETPASTECONVERTENDINGS = 2467;
 		public const int SCI_GETPASTECONVERTENDINGS = 2468;
+		public const int SCI_REPLACERECTANGULAR = 2771;
 		public const int SCI_SELECTIONDUPLICATE = 2469;
 		public const int SC_ALPHA_TRANSPARENT = 0;
 		public const int SC_ALPHA_OPAQUE = 255;
@@ -864,6 +930,7 @@ namespace Au.Controls
 		public const int CARETSTYLE_BLOCK = 2;
 		public const int CARETSTYLE_OVERSTRIKE_BAR = 0;
 		public const int CARETSTYLE_OVERSTRIKE_BLOCK = 16;
+		public const int CARETSTYLE_CURSES = 0x20;
 		public const int CARETSTYLE_INS_MASK = 0xF;
 		public const int SCI_SETCARETSTYLE = 2512;
 		public const int SCI_GETCARETSTYLE = 2513;
@@ -1022,16 +1089,57 @@ namespace Au.Controls
 		public const int SCI_SETREPRESENTATION = 2665;
 		public const int SCI_GETREPRESENTATION = 2666;
 		public const int SCI_CLEARREPRESENTATION = 2667;
+		public const int SCI_CLEARALLREPRESENTATIONS = 2770;
+		public const int SC_REPRESENTATION_PLAIN = 0;
+		public const int SC_REPRESENTATION_BLOB = 1;
+		public const int SC_REPRESENTATION_COLOUR = 0x10;
+		public const int SCI_SETREPRESENTATIONAPPEARANCE = 2766;
+		public const int SCI_GETREPRESENTATIONAPPEARANCE = 2767;
+		public const int SCI_SETREPRESENTATIONCOLOUR = 2768;
+		public const int SCI_GETREPRESENTATIONCOLOUR = 2769;
+		public const int SCI_EOLANNOTATIONSETTEXT = 2740;
+		public const int SCI_EOLANNOTATIONGETTEXT = 2741;
+		public const int SCI_EOLANNOTATIONSETSTYLE = 2742;
+		public const int SCI_EOLANNOTATIONGETSTYLE = 2743;
+		public const int SCI_EOLANNOTATIONCLEARALL = 2744;
+		public const int EOLANNOTATION_HIDDEN = 0x0;
+		public const int EOLANNOTATION_STANDARD = 0x1;
+		public const int EOLANNOTATION_BOXED = 0x2;
+		public const int EOLANNOTATION_STADIUM = 0x100;
+		public const int EOLANNOTATION_FLAT_CIRCLE = 0x101;
+		public const int EOLANNOTATION_ANGLE_CIRCLE = 0x102;
+		public const int EOLANNOTATION_CIRCLE_FLAT = 0x110;
+		public const int EOLANNOTATION_FLATS = 0x111;
+		public const int EOLANNOTATION_ANGLE_FLAT = 0x112;
+		public const int EOLANNOTATION_CIRCLE_ANGLE = 0x120;
+		public const int EOLANNOTATION_FLAT_ANGLE = 0x121;
+		public const int EOLANNOTATION_ANGLES = 0x122;
+		public const int SCI_EOLANNOTATIONSETVISIBLE = 2745;
+		public const int SCI_EOLANNOTATIONGETVISIBLE = 2746;
+		public const int SCI_EOLANNOTATIONSETSTYLEOFFSET = 2747;
+		public const int SCI_EOLANNOTATIONGETSTYLEOFFSET = 2748;
+		public const int SC_SUPPORTS_LINE_DRAWS_FINAL = 0;
+		public const int SC_SUPPORTS_PIXEL_DIVISIONS = 1;
+		public const int SC_SUPPORTS_FRACTIONAL_STROKE_WIDTH = 2;
+		public const int SC_SUPPORTS_TRANSLUCENT_STROKE = 3;
+		public const int SC_SUPPORTS_PIXEL_MODIFICATION = 4;
+		public const int SCI_SUPPORTSFEATURE = 2750;
+		public const int SC_LINECHARACTERINDEX_NONE = 0;
+		public const int SC_LINECHARACTERINDEX_UTF32 = 1;
+		public const int SC_LINECHARACTERINDEX_UTF16 = 2;
+		public const int SCI_GETLINECHARACTERINDEX = 2710;
+		public const int SCI_ALLOCATELINECHARACTERINDEX = 2711;
+		public const int SCI_RELEASELINECHARACTERINDEX = 2712;
+		public const int SCI_LINEFROMINDEXPOSITION = 2713;
+		public const int SCI_INDEXPOSITIONFROMLINE = 2714;
 		public const int SCI_STARTRECORD = 3001;
 		public const int SCI_STOPRECORD = 3002;
-		public const int SCI_SETLEXER = 4001;
+		public const int SCI_SETILEXER = 4033;
 		public const int SCI_GETLEXER = 4002;
 		public const int SCI_COLOURISE = 4003;
 		public const int SCI_SETPROPERTY = 4004;
 		public const int KEYWORDSET_MAX = 8;
 		public const int SCI_SETKEYWORDS = 4005;
-		public const int SCI_SETLEXERLANGUAGE = 4006;
-		public const int SCI_LOADLEXERLIBRARY = 4007;
 		public const int SCI_GETPROPERTY = 4008;
 		public const int SCI_GETPROPERTYEXPANDED = 4009;
 		public const int SCI_GETPROPERTYINT = 4010;
@@ -1083,8 +1191,10 @@ namespace Au.Controls
 			SC_MOD_LEXERSTATE = 0x80000,
 			SC_MOD_INSERTCHECK = 0x100000,
 			SC_MOD_CHANGETABSTOPS = 0x200000,
-			SC_MODEVENTMASKALL = 0x3FFFFF,
+			SC_MOD_CHANGEEOLANNOTATION = 0x400000,
+			SC_MODEVENTMASKALL = 0x7FFFFF,
 		}
+		public const int SC_UPDATE_NONE = 0x0;
 		public const int SC_UPDATE_CONTENT = 0x1;
 		public const int SC_UPDATE_SELECTION = 0x2;
 		public const int SC_UPDATE_V_SCROLL = 0x4;
@@ -1163,14 +1273,6 @@ namespace Au.Controls
 		public const int SC_BIDIRECTIONAL_R2L = 2;
 		public const int SCI_GETBIDIRECTIONAL = 2708;
 		public const int SCI_SETBIDIRECTIONAL = 2709;
-		public const int SC_LINECHARACTERINDEX_NONE = 0;
-		public const int SC_LINECHARACTERINDEX_UTF32 = 1;
-		public const int SC_LINECHARACTERINDEX_UTF16 = 2;
-		public const int SCI_GETLINECHARACTERINDEX = 2710;
-		public const int SCI_ALLOCATELINECHARACTERINDEX = 2711;
-		public const int SCI_RELEASELINECHARACTERINDEX = 2712;
-		public const int SCI_LINEFROMINDEXPOSITION = 2713;
-		public const int SCI_INDEXPOSITIONFROMLINE = 2714;
 
 		public struct Sci_CharacterRange
 		{
@@ -1276,24 +1378,7 @@ namespace Au.Controls
 			}
 		}
 
-		//from SciLexer.h
-
-		public enum LexLanguage
-		{
-			SCLEX_CONTAINER = 0,
-			SCLEX_NULL = 1,
-			SCLEX_PYTHON = 2,
-			SCLEX_CPP = 3,
-			SCLEX_HTML = 4,
-			SCLEX_XML = 5,
-			SCLEX_SQL = 7,
-			SCLEX_VB = 8,
-			SCLEX_CSS = 38,
-			SCLEX_YAML = 48,
-			SCLEX_POWERSHELL = 88,
-			SCLEX_MARKDOWN = 98,
-			SCLEX_JSON = 120,
-		}
+		//from Scintilla.h
 
 		public enum LexCppStyles
 		{

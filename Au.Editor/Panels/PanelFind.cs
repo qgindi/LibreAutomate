@@ -400,6 +400,7 @@ class PanelFind : UserControl
 		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: searching from start.");
 		int to = doc.zPos8(i + len);
 		i = doc.zPos8(i);
+
 		if (replace && i == from8 && to == doc.zSelectionEnd8) {
 			var repl = f.replaceText;
 			if (rm != null) if (!_TryExpandRegexReplacement(rm, repl, out repl)) return;
@@ -407,6 +408,14 @@ class PanelFind : UserControl
 			doc.zReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
+			if (CiStyling.IsProtected(doc, i, to)) {
+				//print.it("hidden");
+				//if (1 != dialog.show("Select hidden text?", "The found text is in a hidden text range. Do you want to select it?", "Yes|No", owner: this, defaultButton: 2)) {
+				doc.zGoToPos(false, CiStyling.SkipProtected(doc, to));
+				return;
+				//}
+			}
+
 			doc.zSelect(false, i, to, true);
 		}
 	}
@@ -425,10 +434,10 @@ class PanelFind : UserControl
 		if (f.rx != null) {
 			if (f.rx.FindAll(text, out var ma)) {
 				using var undo = new KScintilla.UndoAction(doc);
-				for (int i = ma.Length - 1; i >= 0; i--) {
+				for (int i = ma.Length; --i >= 0;) {
 					var m = ma[i];
 					if (!_TryExpandRegexReplacement(m, repl, out var r)) return;
-					doc.zReplaceRange(true, m.Start, m.End, r);
+					_ReplaceRange(m.Start, m.End, r);
 				}
 			}
 		} else {
@@ -436,12 +445,19 @@ class PanelFind : UserControl
 			_FindAllInString(text, f, a);
 			if (a.Count > 0) {
 				using var undo = new KScintilla.UndoAction(doc);
-				for (int i = a.Count - 1; i >= 0; i--) {
+				for (int i = a.Count; --i >= 0;) {
 					var v = a[i];
-					doc.zReplaceRange(true, v.Start.Value, v.End.Value, repl);
+					_ReplaceRange(v.Start.Value, v.End.Value, repl);
 				}
 			}
 		}
+
+		void _ReplaceRange(int from, int to, string s) {
+			doc.zNormalizeRange(true, ref from, ref to);
+			if (CiStyling.IsProtected(doc, from, to)) return;
+			doc.zReplaceRange(false, from, to, s);
+		}
+
 		//Easier/faster would be to create new text and call zSetText. But then all non-text data is lost: markers, folds, caret position...
 	}
 

@@ -18,7 +18,7 @@ namespace Au.Controls
 
 			zSetMarginWidth(1, 0);
 			//zStyleFont(Sci.STYLE_DEFAULT, );
-			zSetLexerCpp();
+			zSetLexerCsharp();
 			zIsReadonly = true;
 		}
 

@@ -137,7 +137,9 @@ namespace CompilerDlls
 //1. Open Features\Core\Portable\Completion\CompletionItem.cs in project Microsoft.CodeAnalysis.Features.
 //2. Find method private CompletionItem With(...). In it find: return new CompletionItem...{
 //3. In the { } add line: Symbols = Symbols, //au
-//4. Below the method add property: internal System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; set; } //au
+//4. Below the method add properties:
+//		internal System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; set; } //au
+//		internal object Attach { get; set; } //au
 //5. Open Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs.
 //6. In method CreateWorker find statement that starts with: var item = CommonCompletionItem.Create(
 //7. Below that statement add: item.Symbols = symbols; //au

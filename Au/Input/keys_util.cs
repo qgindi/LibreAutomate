@@ -209,7 +209,8 @@
 
 		static ArgumentException _ArgumentException_ErrorInKeysString(string keys_, int i, int len) {
 			int end = i + len;
-			return new ArgumentException($"Error in keys string: {keys_[..i]}║{keys_[i..end]}║{keys_[end..]}");
+			return new ArgumentException($"Error in keys string: {keys_[..i]}■{keys_[i..end]}■{keys_[end..]}");
+			//tested: all fonts on Win7 have ■.
 		}
 
 		/// <summary>

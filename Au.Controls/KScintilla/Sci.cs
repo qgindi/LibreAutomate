@@ -1006,7 +1006,7 @@ namespace Au.Controls
 			using (new _NoReadonly(this)) {
 				int fromEnd = !moveCurrentPos || reverse ? 0 : zLen8 - to;
 				Call(SCI_SETTARGETRANGE, from, to);
-				zSetString(SCI_REPLACETARGET, 0, s ??= "", true);
+				zSetString(SCI_REPLACETARGET, 0, s ?? "", true);
 				if (moveCurrentPos) zCurrentPos8 = reverse ? from : zLen8 - fromEnd;
 			}
 		}
@@ -1263,6 +1263,7 @@ namespace Au.Controls
 				return false;
 			}
 
+#if true
 			/// <summary>
 			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="filesystem.save"/>.
 			/// </summary>
@@ -1306,6 +1307,48 @@ namespace Au.Controls
 				//print.it("file", File.ReadAllBytes(file));
 			}
 		}
+#else
+			/// <summary>
+			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="filesystem.save"/>.
+			/// </summary>
+			/// <param name="text"></param>
+			/// <param name="file">To pass to filesystem.save.</param>
+			/// <param name="tempDirectory">To pass to filesystem.save.</param>
+			/// <exception cref="Exception">Exceptions of filesystem.save.</exception>
+			/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
+			public unsafe void Save(string text, string file, string tempDirectory = null) {
+				if (_enc == _Encoding.Binary) throw new InvalidOperationException();
+
+				//_enc = _Encoding.; //test
+
+				Encoding e = _NetEncoding();
+
+				int bom = (int)_enc >> 4; //BOM length
+				uint bomm = 0; //BOM memory
+				if (e != null) {
+					bomm = _enc switch {
+						_Encoding.Utf16BOM or _Encoding.Utf32BOM => 0xFEFF,
+						_Encoding.Utf16BE => 0xFFFE,
+						_Encoding.Utf32BE => 0xFFFE0000,
+						_ => 0
+					};
+				} else {
+					if (bom == 3) bomm = 0xBFBBEF; //UTF8; else bom 0
+					e = Encoding.UTF8;
+				}
+
+				//print.it(_enc, bom, bomm, e);
+
+				filesystem.save(file, temp => {
+					using var fs = File.OpenWrite(temp);
+					if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
+					fs.Write(e.GetBytes(text));
+				}, tempDirectory: tempDirectory);
+
+				//print.it("file", File.ReadAllBytes(file));
+			}
+		}
+#endif
 
 		/// <summary>
 		/// Gets text and offsets of lines containing selection.
@@ -1429,15 +1472,13 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Sets scintilla's "end-styled position" = int.MaxValue, to avoid SCN_STYLENEEDED notifications.
+		/// Sets scintilla's "end-styled position" = to (default int.MaxValue), to avoid SCN_STYLENEEDED notifications.
 		/// Fast, just sets a field in scintilla.
 		/// </summary>
 		/// <remarks>
-		/// Scintilla sends SCN_STYLENEEDED even if lexer type is SCLEX_NULL. In some cases 1 or several, in some cases many, in some cases every 500 ms.
-		/// Old documentation and behavior: sends notifications when SCLEX_CONTAINER. No styling and notifications if SCLEX_NULL.
-		/// New documentation does not mention SCLEX_CONTAINER, SCLEX_NULL and even SCI_SETLEXER (replaced by SCI_SETILEXER?). But they are defined and used in scintilla.
+		/// Scintilla sends SCN_STYLENEEDED, unless a lexer is set. In some cases 1 or several, in some cases many, in some cases every 500 ms.
 		/// </remarks>
-		public void zSetStyled() => Call(SCI_STARTSTYLING, int.MaxValue);
+		public void zSetStyled(int to = int.MaxValue) => Call(SCI_STARTSTYLING, to);
 	}
 
 	/// <summary>
@@ -1461,5 +1502,42 @@ namespace Au.Controls
 		/// NoUndo | NoNotify.
 		/// </summary>
 		NoUndoNoNotify = 3,
+	}
+
+	/// <summary>
+	/// Provides fast direct access to a range of UTF-8 characters in Scintilla internal text.
+	/// Uses SCI_GETRANGEPOINTER. See <see cref="KScintilla.zRangePointer"/>.
+	/// Ensures that the gap is not moved (it could be slow if frequently).
+	/// </summary>
+	unsafe struct SciDirectRange
+	{
+		int _from, _to, _gap;
+		byte* _p1, _p2; //before and after gap
+
+		public SciDirectRange(KScintilla sci, int from8, int to8) {
+			_from = from8;
+			_to = to8;
+			_gap = sci.Call(SCI_GETGAPPOSITION);
+			//print.it(_from, _to, _gap);
+			if (_gap > _from && _gap < _to) {
+				_p1 = sci.zRangePointer(_from, _gap);
+				_p2 = sci.zRangePointer(_gap, _to);
+			} else {
+				_p1 = sci.zRangePointer(_from, _to);
+				_p2 = null;
+			}
+		}
+
+		/// <summary>
+		/// Returns character at position <i>i</i> in entire text (not from the start of the range).
+		/// </summary>
+		/// <exception cref="IndexOutOfRangeException"></exception>
+		public char this[int i] {
+			get {
+				if (i < _from || i >= _to) throw new IndexOutOfRangeException();
+				if (_p2 == null || i < _gap) return (char)_p1[i - _from];
+				return (char)_p2[i - _gap];
+			}
+		}
 	}
 }

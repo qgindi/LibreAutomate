@@ -28,8 +28,9 @@ namespace Au.Controls
 #endif
 
 		static KScintilla() {
-			//if (default == Api.GetModuleHandle("SciLexer.dll"))
-			filesystem.more.loadDll64or32Bit("SciLexer.dll");
+			//if (default == Api.GetModuleHandle("Scintilla.dll"))
+			filesystem.more.loadDll64or32Bit("Scintilla.dll");
+			filesystem.more.loadDll64or32Bit("Lexilla.dll");
 		}
 
 		public nint ZSciPtr => _sciPtr;
@@ -105,7 +106,6 @@ namespace Au.Controls
 			if (ZInitReadOnlyAlways) {
 				Call(SCI_SETREADONLY, 1);
 				Call(SCI_SETUNDOCOLLECTION);
-				Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //don't need style-needed notification, we'll set styles for whole text
 			} //else if (_isReadOnly) Call(SCI_SETREADONLY, 1);
 		}
 

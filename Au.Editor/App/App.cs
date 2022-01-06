@@ -4,8 +4,6 @@ using System.Windows.Threading;
 
 //TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
 
-//TODO: task processes must exit when editor crashed.
-
 static class App
 {
 	public const string
