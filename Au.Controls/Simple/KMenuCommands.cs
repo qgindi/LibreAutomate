@@ -580,6 +580,16 @@ namespace Au.Controls
 			/// </summary>
 			public ButtonBase FindButtonInToolbar(ToolBar tb) => tb.Items.OfType<ButtonBase>().FirstOrDefault(o => o.Command == this);
 
+			/// <summary>
+			/// Finds and returns toolbar menu-button that has this command. Returns null if not found.
+			/// </summary>
+			public MenuItem FindMenuButtonInToolbar(ToolBar tb) {
+				foreach(var e in tb.Items) {
+					if (e is Decorator d && d.Child is Menu m && m.Items[0] is MenuItem mi && mi.Command == this) return mi;
+				}
+				return null;
+			}
+
 			//public void Test() {
 			//	foreach (var v in CanExecuteChanged.GetInvocationList()) {
 			//		print.it(v.Target);

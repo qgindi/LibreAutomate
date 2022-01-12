@@ -620,7 +620,7 @@ namespace Au.Types
 			return R;
 		}
 
-		static readonly System.Collections.Concurrent.ConcurrentDictionary<int, Encoding> s_textEncoding = new();
+		static readonly ConcurrentDictionary<int, Encoding> s_textEncoding = new();
 
 		/// <summary>
 		/// Gets text encoding for format.

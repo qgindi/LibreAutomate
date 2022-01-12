@@ -220,65 +220,7 @@ partial class CiStyling
 			foreach (var (a, r) in ar) {
 				foreach (var v in a) {
 					//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
-					EToken style = v.ClassificationType switch {
-						#region
-						ClassificationTypeNames.ClassName => EToken.Type,
-						ClassificationTypeNames.Comment => EToken.Comment,
-						ClassificationTypeNames.ConstantName => EToken.Constant,
-						ClassificationTypeNames.ControlKeyword => EToken.Keyword,
-						ClassificationTypeNames.DelegateName => EToken.Type,
-						ClassificationTypeNames.EnumMemberName => EToken.Constant,
-						ClassificationTypeNames.EnumName => EToken.Type,
-						ClassificationTypeNames.EventName => EToken.Function,
-						ClassificationTypeNames.ExcludedCode => EToken.Excluded,
-						ClassificationTypeNames.ExtensionMethodName => EToken.Function,
-						ClassificationTypeNames.FieldName => EToken.Variable,
-						ClassificationTypeNames.Identifier => _TryResolveMethod(),
-						ClassificationTypeNames.InterfaceName => EToken.Type,
-						ClassificationTypeNames.Keyword => EToken.Keyword,
-						ClassificationTypeNames.LabelName => EToken.Label,
-						ClassificationTypeNames.LocalName => EToken.Variable,
-						ClassificationTypeNames.MethodName => EToken.Function,
-						ClassificationTypeNames.NamespaceName => EToken.Namespace,
-						ClassificationTypeNames.NumericLiteral => EToken.Number,
-						ClassificationTypeNames.Operator => EToken.Operator,
-						ClassificationTypeNames.OperatorOverloaded => EToken.Function,
-						ClassificationTypeNames.ParameterName => EToken.Variable,
-						ClassificationTypeNames.PreprocessorKeyword => EToken.Preprocessor,
-						//ClassificationTypeNames.PreprocessorText => EStyle.None,
-						ClassificationTypeNames.PropertyName => EToken.Function,
-						ClassificationTypeNames.Punctuation => EToken.Punctuation,
-						ClassificationTypeNames.RecordClassName or ClassificationTypeNames.RecordStructName => EToken.Type,
-						ClassificationTypeNames.StringEscapeCharacter => EToken.StringEscape,
-						ClassificationTypeNames.StringLiteral => EToken.String,
-						ClassificationTypeNames.StructName => EToken.Type,
-						//ClassificationTypeNames.Text => EStyle.None,
-						ClassificationTypeNames.VerbatimStringLiteral => EToken.String,
-						ClassificationTypeNames.TypeParameterName => EToken.Type,
-						//ClassificationTypeNames.WhiteSpace => EStyle.None,
-
-						ClassificationTypeNames.XmlDocCommentText => EToken.XmlDocText,
-						ClassificationTypeNames.XmlDocCommentAttributeName => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentAttributeQuotes => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentAttributeValue => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentCDataSection => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentComment => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentDelimiter => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentEntityReference => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentName => EToken.XmlDocTag,
-						ClassificationTypeNames.XmlDocCommentProcessingInstruction => EToken.XmlDocTag,
-
-						//FUTURE: Regex. But how to apply it to regexp?
-						//ClassificationTypeNames. => EStyle.,
-						_ => EToken.None
-						#endregion
-					};
-
-					EToken _TryResolveMethod() { //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
-						var node = semo.Root.FindNode(v.TextSpan);
-						if (node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EToken.Function; //not too slow
-						return EToken.None;
-					}
+					EToken style = StyleFromClassifiedSpan(v, semo);
 
 					if (style == EToken.None) {
 #if DEBUG
@@ -349,6 +291,66 @@ partial class CiStyling
 #if TRACE
 	//static bool s_debugPerf;
 #endif
+
+	public static EToken StyleFromClassifiedSpan(ClassifiedSpan cs, SemanticModel semo) {
+		return cs.ClassificationType switch {
+			ClassificationTypeNames.ClassName => EToken.Type,
+			ClassificationTypeNames.Comment => EToken.Comment,
+			ClassificationTypeNames.ConstantName => EToken.Constant,
+			ClassificationTypeNames.ControlKeyword => EToken.Keyword,
+			ClassificationTypeNames.DelegateName => EToken.Type,
+			ClassificationTypeNames.EnumMemberName => EToken.Constant,
+			ClassificationTypeNames.EnumName => EToken.Type,
+			ClassificationTypeNames.EventName => EToken.Function,
+			ClassificationTypeNames.ExcludedCode => EToken.Excluded,
+			ClassificationTypeNames.ExtensionMethodName => EToken.Function,
+			ClassificationTypeNames.FieldName => EToken.Variable,
+			ClassificationTypeNames.Identifier => _TryResolveMethod(),
+			ClassificationTypeNames.InterfaceName => EToken.Type,
+			ClassificationTypeNames.Keyword => EToken.Keyword,
+			ClassificationTypeNames.LabelName => EToken.Label,
+			ClassificationTypeNames.LocalName => EToken.Variable,
+			ClassificationTypeNames.MethodName => EToken.Function,
+			ClassificationTypeNames.NamespaceName => EToken.Namespace,
+			ClassificationTypeNames.NumericLiteral => EToken.Number,
+			ClassificationTypeNames.Operator => EToken.Operator,
+			ClassificationTypeNames.OperatorOverloaded => EToken.Function,
+			ClassificationTypeNames.ParameterName => EToken.Variable,
+			ClassificationTypeNames.PreprocessorKeyword => EToken.Preprocessor,
+			//ClassificationTypeNames.PreprocessorText => EStyle.None,
+			ClassificationTypeNames.PropertyName => EToken.Function,
+			ClassificationTypeNames.Punctuation => EToken.Punctuation,
+			ClassificationTypeNames.RecordClassName or ClassificationTypeNames.RecordStructName => EToken.Type,
+			ClassificationTypeNames.StringEscapeCharacter => EToken.StringEscape,
+			ClassificationTypeNames.StringLiteral => EToken.String,
+			ClassificationTypeNames.StructName => EToken.Type,
+			//ClassificationTypeNames.Text => EStyle.None,
+			ClassificationTypeNames.VerbatimStringLiteral => EToken.String,
+			ClassificationTypeNames.TypeParameterName => EToken.Type,
+			//ClassificationTypeNames.WhiteSpace => EStyle.None,
+
+			ClassificationTypeNames.XmlDocCommentText => EToken.XmlDocText,
+			ClassificationTypeNames.XmlDocCommentAttributeName => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentAttributeQuotes => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentAttributeValue => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentCDataSection => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentComment => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentDelimiter => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentEntityReference => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentName => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentProcessingInstruction => EToken.XmlDocTag,
+
+			//FUTURE: Regex. But how to apply it to regexp?
+			//ClassificationTypeNames. => EStyle.,
+			_ => EToken.None
+		};
+
+		EToken _TryResolveMethod() { //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
+			var node = semo.Root.FindNode(cs.TextSpan);
+			if (node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EToken.Function; //not too slow
+			return EToken.None;
+		}
+	}
 
 	/// <summary>
 	/// Scintilla style indices of token types.
@@ -546,15 +548,17 @@ partial class CiStyling
 			LineNumber = _Get(EToken.LineNumber);
 		}
 
-		public void ToScintilla(KScintilla sci) {
-			sci.zStyleFont(STYLE_DEFAULT, FontName, FontSize);
+		/// <param name="multiFont">Set font only for code styles.</param>
+		public void ToScintilla(KScintilla sci, bool multiFont = false) {
+			if (!multiFont) sci.zStyleFont(STYLE_DEFAULT, FontName, FontSize);
 			sci.zStyleBackColor(STYLE_DEFAULT, BackgroundColor);
 			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
-			sci.zStyleClearAll();
+			sci.zStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
 
 			void _Set(EToken tok, TStyle sty) {
 				sci.zStyleForeColor((int)tok, sty.color);
 				if (sty.bold) sci.zStyleBold((int)tok, true);
+				if (multiFont) sci.zStyleFont((int)tok, FontName, FontSize);
 			}
 
 			_Set(EToken.None, None);

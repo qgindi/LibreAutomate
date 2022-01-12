@@ -32,7 +32,9 @@ namespace Au.Controls
 				};
 				tc.ContextMenuOpening += _CaptionContextMenu;
 				tc.PreviewMouseDown += _OnMouseDown;
-				tc.SelectionChanged += (_, e) => {
+				tc.SelectionChanged += (o, e) => {
+					if (e.Source != o) return; //eg a descendant ComboBox
+					e.Handled = true;
 					if (e.AddedItems.Count == 0) return;
 					var v = (e.AddedItems[0] as TabItem).Tag as _Node;
 					v.TabSelected?.Invoke(v, EventArgs.Empty);

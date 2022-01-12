@@ -335,33 +335,33 @@ namespace Au.Controls
 		/// Parses tags if need. Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
-		/// <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
+		/// <param name="andRN">Also append "\r\n". Ignores (uses true) if parses tags.</param>
+		/// <param name="scroll">Move current position and scroll to the end.</param>
 		/// <param name="ignoreTags">Don't parse tags, regardless of ZInitTagsStyle.</param>
 		public void zAppendText(string s, bool andRN, bool scroll, bool ignoreTags = false) {
 			s ??= "";
 			if (!ignoreTags && _CanParseTags(s)) {
-				ZTags.AddText(s, true, ZInitTagsStyle == ZTagsStyle.AutoWithPrefix);
-				return;
+				ZTags.AddText(s, true, ZInitTagsStyle == ZTagsStyle.AutoWithPrefix, scroll);
+			} else {
+				var a = Convert2.Utf8Encode(s, andRN ? "\r\n" : "");
+				using (new _NoReadonly(this))
+					fixed (byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
+
+				if (scroll) Call(SCI_GOTOPOS, zLen8);
 			}
 
-			var a = Convert2.Utf8Encode(s, andRN ? "\r\n" : "");
-			using (new _NoReadonly(this))
-				fixed (byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
-
-			if (scroll) Call(SCI_GOTOPOS, zLen8);
 		}
 
 		/// <summary>
-		/// Sets or appends UTF-8 text of specified length.
-		/// Does not parse tags. Moves current position and scrolls to the end.
+		/// Sets or appends UTF-8 text of specified length. Does not parse tags.
+		/// If <i>scroll</i>, moves current position and scrolls to the end (SCI_GOTOPOS).
 		/// </summary>
-		internal void zAddText_(bool append, byte* s, int lenToAppend) {
+		internal void zAddText_(bool append, bool scroll, byte* s, int lenToAppend) {
 			using (new _NoReadonly(this))
 				if (append) Call(SCI_APPENDTEXT, lenToAppend, s);
 				else Call(SCI_SETTEXT, 0, s);
 
-			if (append) Call(SCI_GOTOPOS, zLen8);
+			if (scroll) Call(SCI_GOTOPOS, zLen8);
 		}
 
 		//not used now

@@ -84,7 +84,7 @@ partial class SciCode : KScintilla
 
 		_InicatorsInit();
 
-		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap);
+		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
 		Call(SCI_ASSIGNCMDKEY, Math2.MakeLparam(SCK_RETURN, SCMOD_CTRL | SCMOD_SHIFT), SCI_NEWLINE);
 
 		if (_fn.IsCodeFile) {
@@ -572,7 +572,7 @@ partial class SciCode : KScintilla
 	internal static void ZToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			App.Settings.edit_wrap ^= true;
-			foreach (var v in Panels.Editor.ZOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap);
+			foreach (var v in Panels.Editor.ZOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
 		}
 		if (what.Has(EView.Images)) {
 			App.Settings.edit_noImages ^= true;

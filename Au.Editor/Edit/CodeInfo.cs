@@ -36,7 +36,15 @@ static class CodeInfo
 		//	During that time the window is visible (except document) but disabled.
 
 		perf.next('u');
-		App.Hmain.Enable(false); //don't allow users to make any changes until Roslyn loaded. It can be dangerous.
+		//don't allow users to make any changes until Roslyn loaded. It can be dangerous.
+		App.Hmain.Enable(false);
+		wnd[] aEnable = null;
+		App.Dispatcher.InvokeAsync(() => { //disable floating panels too
+			aEnable = wnd.getwnd.threadWindows(process.thisThreadId, onlyVisible: true);
+			//print.it(aEnable);
+			for (int i = 0; i < aEnable.Length; i++)
+				if (aEnable[i].IsEnabled()) aEnable[i].Enable(false); else aEnable[i] = default;
+		});
 		var doc = Panels.Editor.ZActiveDoc;
 		if (doc != null) doc.Visibility = Visibility.Hidden; //hide document window. The black unfolded text is distracting. Does not have sense to show it.
 
@@ -76,7 +84,7 @@ static class CodeInfo
 				//p1.Next();
 				var compl = CompletionService.GetService(document);
 				compl.GetCompletionsAsync(document, code.IndexOf(".it") + 1); //not necessary, but without it sometimes the first completion list is too slow if the user types fast
-				//p1.Next('C');
+																			  //p1.Next('C');
 
 				Compiler.Warmup(document); //not necessary, but it's better when the first compilation is 200 ms instead of 500
 
@@ -91,6 +99,10 @@ static class CodeInfo
 		void _Finally() {
 			if (doc != null) doc.Visibility = Visibility.Visible;
 			App.Hmain.Enable(true);
+			if (aEnable != null) {
+				for (int i = 0; i < aEnable.Length; i++)
+					if (!aEnable[i].Is0) aEnable[i].Enable(true);
+			}
 			perf.nw('R');
 		}
 	}
@@ -223,6 +235,7 @@ static class CodeInfo
 		_compl.SciModified(doc, in n);
 		_styling.SciModified(doc, in n);
 		_diag.SciModified(doc, in n);
+		Panels.Outline.SciModified();
 	}
 
 	public static void SciCharAdded(SciCode doc, char ch) {
@@ -527,7 +540,10 @@ static class CodeInfo
 
 	private static void _Timer025sWhenVisible() {
 		var doc = Panels.Editor.ZActiveDoc;
-		if (!_CanWork(doc)) return;
+		if (!_CanWork(doc)) {
+			Panels.Outline.Clear();
+			return;
+		}
 
 		//cancel if changed the screen rectangle of the document window
 		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _tpVisible) {
@@ -544,6 +560,7 @@ static class CodeInfo
 		}
 
 		_styling.Timer250msWhenVisibleAndWarm(doc);
+		Panels.Outline.Timer025sWhenVisible();
 	}
 
 	static CiPopupText _textPopup;

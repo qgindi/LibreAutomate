@@ -121,6 +121,7 @@ class CiComplItem : ITreeViewItem
 		CiItemKind.Snippet => "resources/ci/snippet.xaml",
 		CiItemKind.Structure => "resources/ci/structure.xaml",
 		CiItemKind.TypeParameter => "resources/ci/typeparameter.xaml",
+		CiItemKind.Region => "resources/ci/region.xaml",
 		_ => null
 	};
 
@@ -202,6 +203,8 @@ enum CiItemKind : sbyte
 	Field, LocalVariable, Constant, EnumMember,
 	//other
 	Namespace, Keyword, Label, Snippet, TypeParameter,
+	//not in autocomplete. Not in CiUtil.ItemKindNames.
+	Region,
 	None
 }
 

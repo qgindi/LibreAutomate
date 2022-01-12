@@ -795,13 +795,13 @@ class CiText
 		return x.Result;
 	}
 
-	public static FlowDocumentControl CreateControl() {
+	public static FlowDocumentControl CreateControl(int colorRGB = 0xfffff0) {
 		var d = new FlowDocument {
 			//FontFamily = App.Wmain.FontFamily,
 			//FontSize = App.Wmain.FontSize,
 			FontFamily = new FontFamily("Calibri"),
 			FontSize = App.Wmain.FontSize + 2,
-			Background = ColorInt.WpfBrush_(0xfffff0),
+			Background = ColorInt.WpfBrush_(colorRGB),
 			PagePadding = default,
 			TextAlignment = TextAlignment.Left,
 		};

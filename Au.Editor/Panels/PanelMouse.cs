@@ -15,9 +15,9 @@ class PanelMouse : Grid
 		//this.UiaSetName("Mouse panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
 
 		_sci = new KScintilla {
+			Name = "Mouse_info",
 			ZInitReadOnlyAlways = true,
-			ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways,
-			Name = "Mouse_info"
+			ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways
 		};
 		_sci.ZHandleCreated += _sci_ZHandleCreated;
 		this.Children.Add(_sci);

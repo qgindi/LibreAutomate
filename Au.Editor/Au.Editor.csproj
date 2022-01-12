@@ -59,6 +59,7 @@
 		<Page Remove="resources\ci\OverlayProtected.xaml" />
 		<Page Remove="resources\ci\OverlayStatic.xaml" />
 		<Page Remove="resources\ci\Property.xaml" />
+		<Page Remove="resources\ci\Region.xaml" />
 		<Page Remove="resources\ci\Snippet.xaml" />
 		<Page Remove="resources\ci\Structure.xaml" />
 		<Page Remove="resources\ci\TypeParameter.xaml" />
@@ -110,6 +111,7 @@
 		<Resource Include="resources\ci\OverlayProtected.xaml" />
 		<Resource Include="resources\ci\OverlayStatic.xaml" />
 		<Resource Include="resources\ci\Property.xaml" />
+		<Resource Include="resources\ci\Region.xaml" />
 		<Resource Include="resources\ci\Snippet.xaml" />
 		<Resource Include="resources\ci\Structure.xaml" />
 		<Resource Include="resources\ci\TypeParameter.xaml" />

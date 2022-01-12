@@ -31,10 +31,10 @@ DIFFERENT SYNTAX:
 	Link tag attribute parts now are separated with "|". In QM2 was " /".
 
 OTHER CHANGES:
-	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
+	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
 	These link tags are not implemented by this class, but you can provide delegates of functions that implement them:
 		<open>, <script>.
-	<help> by default calls Au.More.HelpUtil.AuHelp, which opens a topic in web browser. You can override it with SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
+	<help> by default calls Au.More.HelpUtil.AuHelp, which opens a topic in web browser. You can override it with SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
 	<code> attributes are not used. Currently supports only C# code; for it uses the C++ lexer.
 
 CHANGES IN <image>:
@@ -264,43 +264,31 @@ namespace Au.Controls
 		/// Sets or appends styled text.
 		/// </summary>
 		/// <param name="text">Text with tags (optionally).</param>
-		/// <param name="appendLine">Append. Also appends "\r\n". Sets caret and scrolls to the end. If false, replaces control text.</param>
+		/// <param name="append">Append. Also appends "\r\n". If false, replaces control text.</param>
 		/// <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
-		public void AddText(string text, bool appendLine, bool skipLTGT) {
+		/// <param name="scroll">Set caret and scroll to the end. If null, does it if <i>append</i> true.</param>
+		public void AddText(string text, bool append, bool skipLTGT, bool? scroll = null) {
 			//perf.first();
 			if (text.NE() || (skipLTGT && text == "<>")) {
-				if (appendLine) _c.zAppendText("", true, true, true); else _c.zClearText();
+				if (append) _c.zAppendText("", true, true, true); else _c.zClearText();
 				return;
 			}
 
-			//int len = Convert2.Utf8LengthFromString(text);
-			//byte* buffer = (byte*)MemoryUtil.Alloc(len * 2 + 4), s = buffer;
-			//try {
-			//	Convert2.Utf8FromString(text, s, len + 1);
-			//	if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
-			//	if(skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
-			//	s[len] = s[len + 1] = 0;
-			//	_AddText(s, len, appendLine);
-			//}
-			//finally {
-			//	MemoryUtil.Free(buffer);
-			//}
-
 			int len = Encoding.UTF8.GetByteCount(text);
-			byte* buffer = MemoryUtil.Alloc(len * 2 + 4), s = buffer;
+			byte* buffer = MemoryUtil.Alloc(len * 2 + 8), s = buffer;
 			try {
 				Encoding.UTF8.GetBytes(text, new Span<byte>(buffer, len));
-				if (appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
+				if (append) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
 				if (skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
 				s[len] = s[len + 1] = 0;
-				_AddText(s, len, appendLine);
+				_AddText(s, len, append, scroll);
 			}
 			finally {
 				MemoryUtil.Free(buffer);
 			}
 		}
 
-		void _AddText(byte* s, int len, bool append) {
+		void _AddText(byte* s, int len, bool append, bool? scroll) {
 			//perf.next();
 			byte* s0 = s, sEnd = s + len; //source text
 			byte* t = s0; //destination text, ie without some tags
@@ -514,10 +502,7 @@ namespace Au.Controls
 				}
 
 				if (hideTag) {
-					bool isSingleQuote = attr != null && attr[-1] == '\'';
-					if (isSingleQuote) attr[-1] = attr[attrLen] = (byte)'\"';
 					for (var h = tag - 1; h < s; h++) _Write(*h, STYLE_HIDDEN);
-					if (isSingleQuote) attr[-1] = attr[attrLen] = (byte)'\'';
 				}
 
 				hasTags = true;
@@ -547,10 +532,15 @@ namespace Au.Controls
 			if (_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
 			//perf.next();
-			_c.zAddText_(append, s0, len);
-			if (!hasTags) return;
+			int prevLen = append ? _c.zLen8 : 0;
+			_c.zAddText_(append, scroll ?? append, s0, len);
+			if (!hasTags) {
+				_c.Call(SCI_STARTSTYLING, prevLen);
+				_c.Call(SCI_SETSTYLING, len, STYLE_DEFAULT);
+				return;
+			}
 
-			int endStyled = 0, prevLen = append ? _c.zLen8 - len : 0;
+			int endStyled = 0;
 
 			if (folds != null) {
 				for (int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
@@ -576,7 +566,7 @@ namespace Au.Controls
 				//		We have an ILexer5*, but probably cannot call its Lex() because need an IDocument*.
 
 				//perf.next();
-				_SetLexer("C#");
+				SetLexer("C#");
 				//perf.next();
 
 				//SCI_COLOURISE does not work when appending if previous text contains styles.
@@ -598,7 +588,7 @@ namespace Au.Controls
 					_StyleRangeTo(codes[i].x);
 					endStyled = codes[i].y;
 				}
-				
+
 				if (endStyled == len) _c.zSetStyled(); //without this would be bad if new text ends with code
 			}
 			_StyleRangeTo(len);
@@ -656,7 +646,7 @@ namespace Au.Controls
 		/// Sets lexer if <i>lang</i> is different than current. See <see cref="KScintilla.zSetLexer(string)"/>.
 		/// </summary>
 		/// <param name="lang">Lexer name or null. For C# use "C#".</param>
-		void _SetLexer(string lang) {
+		public void SetLexer(string lang) {
 			if (lang == _currentLexer) return;
 			if (lang == "C#") {
 				_c.zSetLexerCsharp(/*codeBackColor: 0xF0F0F0*/);
@@ -707,9 +697,9 @@ namespace Au.Controls
 				return false;
 			}
 			//get tag, attribute and text
-			if (!s.RxMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return false;
-			tag = m[1].Value; attr = m[2].Value ?? m[3].Value ?? m[4].Value;
-			//print.it($"'{tag}'  '{attr}'  '{m[4].Value}'");
+			if (!s.RxMatch(@"(?s)^<(\+?\w+)(?| '([^']*)'| ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return false;
+			tag = m[1].Value; attr = m[2].Value ?? m[3].Value;
+			//print.it($"'{tag}'  '{attr}'");
 
 			return true;
 		}
@@ -743,7 +733,7 @@ namespace Au.Controls
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if (opt.warnings.Verbose) dialog.showWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.");
+				if (opt.warnings.Verbose) dialog.showWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
 		}

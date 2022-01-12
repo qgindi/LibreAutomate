@@ -251,7 +251,7 @@ namespace Au.Triggers
 				bool canRun = true;
 				bool single = opt1.flags.Has(TOFlags.Single);
 				if (single) {
-					_d ??= new System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object>();
+					_d ??= new();
 					if (_d.TryGetValue(trigger, out var tt)) {
 						switch (tt) {
 						case Thread thread:
@@ -305,7 +305,7 @@ namespace Au.Triggers
 		}
 
 		List<_Thread> _a = new();
-		System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object> _d;
+		ConcurrentDictionary<ActionTrigger, object> _d;
 
 		class _Thread
 		{

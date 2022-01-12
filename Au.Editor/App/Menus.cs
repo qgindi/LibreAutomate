@@ -12,7 +12,7 @@ static class Menus
 		{
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
-			[Command('s', keys = "Ctrl+N", keysText = "Ctrl+N", image = FileNode.c_imageScript)]
+			[Command('s', keys = "Ctrl+N", image = FileNode.c_imageScript)]
 			public static void New_script() { _New("Script.cs"); }
 
 			[Command('c', image = FileNode.c_imageClass)]

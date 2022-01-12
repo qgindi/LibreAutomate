@@ -92,8 +92,10 @@ namespace Au.Controls
 		/// Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
 		/// Then also sets some special styles, eg STYLE_HIDDEN and hotspot color.
 		/// </summary>
-		public void zStyleClearAll() {
-			Call(SCI_STYLECLEARALL);
+		/// <param name="belowDefault">Clear only styles 0..STYLE_DEFAULT.</param>
+		public void zStyleClearAll(bool belowDefault = false) {
+			if (belowDefault) zStyleClearRange(0, STYLE_DEFAULT);
+			else Call(SCI_STYLECLEARALL);
 			zStyleHidden(STYLE_HIDDEN, true);
 			Call(SCI_SETHOTSPOTACTIVEFORE, true, 0xFF0080); //inactive 0x0080FF
 
@@ -123,20 +125,21 @@ namespace Au.Controls
 
 		#region spec styles
 
-		public void zSelectionForeColor(bool use, ColorInt color) {
-			Call(SCI_SETSELFORE, use, color.ToBGR());
-		}
+		//these SCI_ are deprecated. Instead use 
+		//public void zSelectionForeColor(bool use, ColorInt color) {
+		//	Call(SCI_SETSELFORE, use, color.ToBGR());
+		//}
 
-		public void zSelectionBackColor(bool use, ColorInt color, int alpha = 256) {
-			Call(SCI_SETSELBACK, use, color.ToBGR());
-			Call(SCI_SETSELALPHA, alpha);
-		}
+		//public void zSelectionBackColor(bool use, ColorInt color, int alpha = 256) {
+		//	Call(SCI_SETSELBACK, use, color.ToBGR());
+		//	Call(SCI_SETSELALPHA, alpha);
+		//}
 
-		public void zCaretLineColor(bool use, ColorInt color, int alpha = 256) {
-			Call(SCI_SETCARETLINEBACK, color.ToBGR());
-			Call(SCI_SETCARETLINEBACKALPHA, alpha);
-			Call(SCI_SETCARETLINEVISIBLE, use);
-		}
+		//public void zCaretLineColor(bool use, ColorInt color, int alpha = 256) {
+		//	Call(SCI_SETCARETLINEBACK, color.ToBGR());
+		//	Call(SCI_SETCARETLINEBACKALPHA, alpha);
+		//	Call(SCI_SETCARETLINEVISIBLE, use);
+		//}
 
 		//we set it in ctor and don't need to change
 		//public void zCaretWidth(int value)
