@@ -126,7 +126,7 @@ namespace Au.Controls
 				foreach (var x in added) {
 					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
 					rootStack.Add(x);
-					print.it($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can right-click caption and move it to a better place.");
+					print.it($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can right-click its caption and move it to a better place.");
 				}
 			}
 			//print.it(rootStack);

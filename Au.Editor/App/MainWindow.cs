@@ -27,6 +27,9 @@ partial class MainWindow : Window
 		var bRun = App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun);
 		if (bRun != null) { bRun.Width = 50; bRun.Margin = new(10, 0, 10, 0); } //make Run button bigger //SHOULDDO: bad if vertical toolbar
 
+		var bNew = App.Commands[nameof(Menus.File.New)].FindMenuButtonInToolbar(Panels.TFile);
+		if (bNew != null) bNew.MouseDoubleClick += (_, e) => { e.Handled = true; Menus.File.New.New_script(); };
+
 		Panels.CreatePanels();
 
 		App.Commands.BindKeysTarget(this, "");

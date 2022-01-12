@@ -9,12 +9,15 @@ static class Panels
 	//panels
 	public static PanelEdit Editor;
 	public static PanelFiles Files;
+	public static PanelOutline Outline;
+	public static PanelCookbook Cookbook;
 	public static PanelOpen Open;
 	public static PanelTasks Tasks;
 	public static PanelOutput Output;
 	public static PanelFind Find;
 	public static PanelFound Found;
 	public static PanelMouse Mouse;
+	public static PanelRecipe Recipe;
 	//menu and toolbars
 	public static Menu Menu;
 	//public static ToolBar[] Toolbars;
@@ -23,17 +26,25 @@ static class Panels
 	public static void LoadAndCreateToolbars() {
 		var pm = PanelManager = new KPanels();
 
-		//FUTURE: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
-		var s1 = AppSettings.DirBS + "Layout.xml";
-		if (filesystem.exists(s1).isFile) {
-			var s2 = filesystem.loadText(s1);
-			//print.it(s2);
-			if (s2.RxIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) filesystem.delete(s1);
+		//FUTURE: later remove this code. Now may need to delete old custom Layout.xml.
+		var customLayoutPath = AppSettings.DirBS + "Layout.xml";
+		if (filesystem.exists(customLayoutPath).isFile) {
+			try {
+				var s2 = filesystem.loadText(customLayoutPath);
+				//print.it(s2);
+				if (!s2.Contains("<panel name=\"Outline\"")) { //one app version added several new panels etc, and users would not know the best place for them, or even how to move
+					filesystem.delete(customLayoutPath, tryRecycleBin: true);
+					bool silent = s2.RxIsMatch(@"<document name=""documents"" ?/>\s*</tab>"); //very old and incompatible
+					if (!silent) print.it("Info: The window layout has been reset, because several new panels have been added in this app version.\r\n\tIf you want to undo it: 1. Exit the program. 2. Restore file Layout.xml from the Recycle Bin (replace the existing file). 3. Run the program. 4. Move panels from the bottom of the window to a better place.");
+					//rejected: show Yes/No dialog. Let users at first see the new default layout, then they can undo.
+				}
+			}
+			catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
 		}
 
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;
 		//pm.Load(folders.ThisAppBS + @"Default\Layout.xml", null);
-		pm.Load(folders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
+		pm.Load(folders.ThisAppBS + @"Default\Layout.xml", customLayoutPath);
 
 		pm["Menu"].Content = Menu = new Menu();
 		TFile = _TB("File");
@@ -72,15 +83,20 @@ static class Panels
 	public static void CreatePanels() {
 		var pm = PanelManager;
 
-		pm["Files"].Content = Files = new PanelFiles();
-		pm["Open"].Content = Open = new PanelOpen();
-		pm["Tasks"].Content = Tasks = new PanelTasks();
-		pm["Find"].Content = Find = new PanelFind();
-		pm["Output"].Content = Output = new PanelOutput();
-		pm["Mouse"].Content = Mouse = new PanelMouse();
-		pm["Found"].Content = Found = new PanelFound();
+		pm["Files"].Content = Files = new();
+		pm["Outline"].Content = Outline = new();
+		pm["Cookbook"].Content = Cookbook = new();
+		pm["Open"].Content = Open = new();
+		pm["Tasks"].Content = Tasks = new();
+		pm["Find"].Content = Find = new();
+		pm["Output"].Content = Output = new();
+		pm["Mouse"].Content = Mouse = new();
+		pm["Found"].Content = Found = new();
+		pm["Recipe"].Content = Recipe = new();
 
-		pm["documents"].Content = Editor = new PanelEdit();
+		pm["documents"].Content = Editor = new();
 		//DocPlaceholder_ = pm["documents"];
+
+		var ti1 = Panels.PanelManager[Panels.Files].Parent.TabItem; if (ti1 != null) ti1.MinWidth = 56; //make Files tabitem wider
 	}
 }

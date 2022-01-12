@@ -492,18 +492,21 @@
 		/// Returns <see cref="string.Length"/>. Returns 0 if this string is null.
 		/// </summary>
 		/// <param name="t">This string.</param>
+		[DebuggerStepThrough]
 		public static int Lenn(this string t) => t?.Length ?? 0;
 
 		/// <summary>
 		/// Returns true if this string is null or empty ("").
 		/// </summary>
 		/// <param name="t">This string.</param>
+		[DebuggerStepThrough]
 		public static bool NE(this string t) => t == null || t.Length == 0;
 
 		/// <summary>
 		/// Returns this string, or null if it is "" or null.
 		/// </summary>
 		/// <param name="t">This string.</param>
+		[DebuggerStepThrough]
 		internal static string NullIfEmpty_(this string t) => t.NE() ? null : t;
 		//not public because probably too rarely used.
 

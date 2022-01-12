@@ -2,7 +2,9 @@
 using System.Windows;
 using System.Windows.Threading;
 
-//TODO: need some learning stuff. Now users install the app, open the window first time, and don't know what to do.
+//TODO: consider: let default script template be empty.
+//	Add top menu item "Insert" with items "Add script.setup", "Add description", "Add try/catch (surround selected code)", etc.
+//	Maybe in Options -> Templates add more templates to choose from (one with script.setup).
 
 static class App
 {

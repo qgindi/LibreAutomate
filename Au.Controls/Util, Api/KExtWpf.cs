@@ -277,13 +277,20 @@ namespace Au.Tools
 		/// <summary>
 		/// Adds Border with standard thickness/color and an element in it.
 		/// </summary>
-		/// <param name="b"></param>
-		/// <param name="var"></param>
-		/// <param name="margin"></param>
 		public static Border xAddInBorder<T>(this wpfBuilder b, out T var, string margin = null) where T : FrameworkElement, new() {
 			b.Add(out Border c).Border();
 			if (margin != null) b.Margin(margin);
 			b.Add(out var, flags: WBAdd.ChildOfLast);
+			return c;
+		}
+
+		/// <summary>
+		/// Adds Border with standard thickness/color and an element in it.
+		/// </summary>
+		public static Border xAddInBorder(this wpfBuilder b, FrameworkElement e, string margin = null) {
+			b.Add(out Border c).Border();
+			if (margin != null) b.Margin(margin);
+			b.Add(e, flags: WBAdd.ChildOfLast);
 			return c;
 		}
 

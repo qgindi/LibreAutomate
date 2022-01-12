@@ -8,12 +8,17 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
-//SHOULDDO: Ctrl+; in top-level statements: sometimes jumps to a ; somewhere in next statement.
-//	But when tried to fix it, could not reproduce.
+//SHOULDDO: Roslyn bugs in top-level statemens:
+//	1. Ctrl+Enter sometimes does not add ;.
+//	2. Ctrl+; sometimes jumps to a ; somewhere in next statement.
+//	To reproduce both, press the hotkey in the string in this code:
+//		var s="aaa bbb"
+//		char c = 'a';
+//	Syntax Visualizer shows that the second statement isn't recognized as statement.
 
 //SHOULDDO: decrease indent when typing }.
 
-//SHOULDDO: menu command "Exit statement on Enter" and toolbar check-button [;].
+//CONSIDER: menu command "Exit statement on Enter" and toolbar check-button [;].
 //	Would complete from anywhere in statement, eg in string or at the end of line.
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
@@ -291,31 +296,20 @@ class CiAutocorrect
 		else c.ignoreChar = true;
 	}
 
+	//anywhere true when Ctrl+Enter or Shift+Enter or Ctrl+;.
 	static bool _OnEnterOrSemicolon(bool anywhere, bool onSemicolon, out BeforeCharContext bcc) {
 		bcc = null; //need to return it only if onSemicolon==true and anywhere==false and returns true
 		bool onEnterWithoutMod = !(onSemicolon | anywhere);
 
-		//g1:
 		if (!CodeInfo.GetContextWithoutDocument(out var cd)) return false;
 		var doc = cd.sciDoc;
 		var code = cd.code;
 		int pos = cd.pos16;
 		if (pos < 1) return false;
-		if (!anywhere && doc.zIsSelection) return false;
-		if (pos == code.Length) {
-			return false;
-			//SHOULDDO: the comment line below is incorrect if top-level statements. But maybe not useful.
-			//This code now not useful, because normally file ends with } or }\r\n.
-			//if(code[pos - 1] == '\n') return false;
-			////if text does not end with '\n' and we are at the end, add empty line at the end after pos.
-			////	Else difficult because FindToken then finds the end of text token and its parent is the compilation unit and not the node before.
-			//cd.sciDoc.zInsertText(true, pos, "\r\n");
-			//cd.sciDoc.zCurrentPos16 = pos; //don't need, but
-			//goto g1;
-		}
+		if (pos == code.Length) return false;
 
-		bool canCorrect = true, canAutoindent = onEnterWithoutMod; //note: complResult is never Complex here
-		if (!anywhere) {
+		bool canCorrect = true, canAutoindent = onEnterWithoutMod, isSelection = doc.zIsSelection; //note: complResult is never Complex here
+		if (!anywhere && !isSelection) {
 			char ch = code[pos];
 			canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
 			if (!(canCorrect | canAutoindent)) return false;
@@ -329,13 +323,22 @@ class CiAutocorrect
 		var tok1 = root.FindToken(pos);
 
 		//CiUtil.PrintNode(tok1, printErrors: true);
-		if (!anywhere && canCorrect) {
-			var tokKind = tok1.Kind();
-			canCorrect = (tokKind == SyntaxKind.CloseParenToken || tokKind == SyntaxKind.CloseBracketToken) && tok1.SpanStart == pos;
-			if (!(canCorrect | canAutoindent)) return false;
-		}
+		if (!anywhere) {
+			if (canCorrect && !isSelection) {
+				var tokKind = tok1.Kind();
+				canCorrect = (tokKind == SyntaxKind.CloseParenToken || tokKind == SyntaxKind.CloseBracketToken) && tok1.SpanStart == pos;
+				if (!(canCorrect | canAutoindent)) return false;
+			}
 
-		if (!anywhere && _InNonblankTriviaOrStringOrChar(out bool suppress, cd, tok1, onSemicolon)) return suppress;
+			int r = _InNonblankTriviaOrStringOrChar(cd, tok1, isSelection);
+			if (r == 1) return true; //yes and corrected
+			if (r == 2) return false; //yes and not corrected
+			if (isSelection) return false;
+			if (r == 3) { //string or char. Let's complete statement.
+				anywhere = canCorrect = true;
+				canAutoindent = onEnterWithoutMod = false;
+			}
+		}
 
 		SyntaxNode nodeFromPos = tok1.Parent;
 		//CiUtil.PrintNode(nodeFromPos, printErrors: true);
@@ -381,7 +384,7 @@ class CiAutocorrect
 					token = k.CloseParenToken;
 					if (canExitBlock = block != null) {
 						block = k;
-					} else if(token.IsMissing && k.OpenParenToken.IsMissing && k.Expression is CastExpressionSyntax ce) {
+					} else if (token.IsMissing && k.OpenParenToken.IsMissing && k.Expression is CastExpressionSyntax ce) {
 						//switch (...) without block is interpreted as switch castexpression
 						token = ce.CloseParenToken;
 					}
@@ -667,7 +670,7 @@ class CiAutocorrect
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 					case UsingStatementSyntax k4 when k4.Parent is UsingStatementSyntax: //don't indent multiple using()
 					case FixedStatementSyntax k5 when k5.Parent is FixedStatementSyntax: //don't indent multiple fixed()
-						//print.it("-" + v.GetType().Name, v.Span, pos);
+																						 //print.it("-" + v.GetType().Name, v.Span, pos);
 						continue;
 					case ExpressionSyntax:
 					case BaseArgumentListSyntax:
@@ -765,19 +768,24 @@ class CiAutocorrect
 		return true;
 	}
 
-	static bool _InNonblankTriviaOrStringOrChar(out bool suppress, CodeInfo.Context cd, in SyntaxToken token, bool onSemicolon) {
-		suppress = false;
-
-		string prefix = null, suffix = null; bool newlineLast = false;
+	/// <returns>0 no, 1 yes and corrected, 2 yes and not corrected, 3 string or char. Returns 0 if isSelection and string/char.</returns>
+	static int _InNonblankTriviaOrStringOrChar(CodeInfo.Context cd, SyntaxToken token, bool isSelection) {
+		string /*prefix = null,*/ suffix = null; bool newlineLast = false;
 		int indent = 0;
-		int pos = cd.pos16;
+		int pos = cd.pos16, posStart = pos, posEnd = pos;
 		var span = token.Span;
 		if (pos < span.Start || pos > span.End) {
+			if (isSelection) {
+				posStart = cd.sciDoc.zSelectionStart16;
+				posEnd = cd.sciDoc.zSelectionEnd16;
+			}
 			var trivia = token.Parent.FindTrivia(pos);
 			//CiUtil.PrintNode(trivia, pos);
 			span = trivia.Span;
-			if (pos <= span.Start || pos > span.End) return false;
-			switch (trivia.Kind()) {
+			if (posStart < span.Start || posEnd > span.End) return 0;
+			var kind = trivia.Kind();
+			if (posStart == span.Start && kind != SyntaxKind.MultiLineDocumentationCommentTrivia) return 0; //info: /** span starts after /**
+			switch (kind) {
 			case SyntaxKind.MultiLineCommentTrivia:
 			case SyntaxKind.MultiLineDocumentationCommentTrivia:
 				break;
@@ -786,47 +794,24 @@ class CiAutocorrect
 				break;
 			case SyntaxKind.SingleLineDocumentationCommentTrivia:
 				suffix = "/// ";
-				newlineLast = cd.code.RxIsMatch(@"[ \t]*///", RXFlags.ANCHORED, pos..);
+				newlineLast = !isSelection && cd.code.RxIsMatch(@"[ \t]*///", RXFlags.ANCHORED, pos..);
 				break;
-			default: return false;
+			default: return 0;
+			}
+			if (suffix != null && !isSelection) { //trim spaces
+				while (posStart > span.Start && cd.code[posStart - 1] == ' ') posStart--;
+				while (posEnd < span.End && cd.code[posEnd] == ' ') posEnd++;
 			}
 		} else {
-			//CiUtil.PrintNode(token, pos);
-			if (pos == span.End) return false;
-			bool atStart = pos == span.Start;
-			//bool interpol = false;
+			//if (posStart < pos) token = token.Parent.FindTokenOnLeftOfPosition(pos);
+			//var st = CiUtil.GetStringType(token, posStart, posEnd, cd.code);
+			if (isSelection) return 0;
+			var st = CiUtil.GetStringType(token, pos, pos, cd.code);
+			return st switch { CiUtil.SType.None => 0, CiUtil.SType.Verbatim or CiUtil.SType.InterVerbatim => 2, _ => 3 };
 
-			var node = token.Parent;
-			if (node.Parent is InterpolatedStringExpressionSyntax ise) {
-				switch (token.Kind()) {
-				case SyntaxKind.InterpolatedStringTextToken:
-				case SyntaxKind.OpenBraceToken when atStart:
-					break;
-				default:
-					return false;
-				}
-				//interpol = true;
-				node = ise;
-			} else {
-				switch (token.Kind()) {
-				case SyntaxKind.StringLiteralToken when !atStart:
-					break;
-				case SyntaxKind.InterpolatedStringEndToken when atStart:
-					//interpol = true;
-					break;
-				case SyntaxKind.CharacterLiteralToken when !atStart:
-					suppress = !onSemicolon;
-					return true;
-				default:
-					return false;
-				}
-			}
-			if (onSemicolon) return true;
-
-			//rejected: split string into "abc" + "" or "abc\r\n" + "". Rarely used. Now simply break line, and then user can insert @ before the string.
-			return true;
+			//rejected: split string into "abc" + "" or "abc\r\n" + "". Rarely used. Better complete statement.
 			//span = node.Span;
-			//if (0 != cd.code.Eq(span.Start, false, "@", "$@", "@$")) return true;
+			//if (0 != cd.code.Eq(span.Start, false, "@", "$@", "@$")) return 3;
 			//prefix = App.Settings.ci_breakString == 0 ? @"\r\n"" +" : "\" +"; //"A\r\n" + "B" (default) or "A" + "B" (like in VS)
 			//suffix = interpol ? "$\"" : "\"";
 			////indent more, unless line starts with "
@@ -835,19 +820,19 @@ class CiAutocorrect
 		}
 
 		var doc = cd.sciDoc;
-		indent += doc.zLineIndentationFromPos(true, pos);
-		if (indent < 1 && prefix == null && suffix == null) return true;
+		indent += doc.zLineIndentationFromPos(true, posStart);
+		if (indent < 1 /*&& prefix == null*/ && suffix == null) return 2;
 
 		var b = new StringBuilder();
-		b.Append(prefix);
+		//b.Append(prefix);
 		if (!newlineLast) b.AppendLine();
 		b.Append('\t', indent).Append(suffix);
 		if (newlineLast) b.AppendLine();
 
 		var s = b.ToString();
-		doc.zReplaceRange(true, pos, pos, s, moveCurrentPos: true);
+		doc.zReplaceRange(true, posStart, posEnd, s, moveCurrentPos: true);
 
-		return suppress = true;
+		return 1;
 	}
 
 	static bool _OnBackspaceOrDelete(SciCode doc, bool back) {

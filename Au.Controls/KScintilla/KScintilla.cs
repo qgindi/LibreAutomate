@@ -74,6 +74,13 @@ namespace Au.Controls
 			Call(SCI_SETSCROLLWIDTH, 1); //SHOULDDO: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
 			if (!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
 			Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
+
+			//Need to set selection colors or layer, because the default inactive selection color is darker than active.
+			//	It is 0x3F808080, but it seems alpha is ignored if SC_LAYER_BASE (default).
+			Call(SCI_SETSELECTIONLAYER, SC_LAYER_UNDER_TEXT);
+			Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, unchecked((int)0xA0A0A0A0)); //use alpha to mix with indicators
+			Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_INACTIVE_BACK, 0x60A0A0A0);
+
 			if (ZInitWrapVisuals) {
 				Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
 				Call(SCI_SETWRAPVISUALFLAGSLOCATION, SC_WRAPVISUALFLAGLOC_END_BY_TEXT);
@@ -450,7 +457,7 @@ namespace Au.Controls
 			set {
 				if (value != _wrapLines) {
 					_wrapLines = value;
-					if (!_w.Is0) Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : SC_WRAP_NONE);
+					if (!_w.Is0) Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
 				}
 			}
 		}

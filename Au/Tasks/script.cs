@@ -480,7 +480,7 @@ namespace Au
 					}
 					if (canEdit) m["Open script\tClick"] = _ => editor.OpenAndGoToLine(f_, 0);
 					m["End task\tM-click" + (sleepExit ? ", Sleep" : null) + (lockExit ? ", Win+L, Ctrl+Alt+Delete" : null)] = _ => Environment.Exit(2);
-					if (canEdit) m["End and edit"] = _ => { editor.OpenAndGoToLine(f_, 0); Environment.Exit(2); };
+					if (canEdit) m["End and open"] = _ => { editor.OpenAndGoToLine(f_, 0); Environment.Exit(2); };
 					m.Show(MSFlags.AlignCenterH | MSFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
 				};
 				ti.Visible = true;

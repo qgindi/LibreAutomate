@@ -1012,7 +1012,7 @@ namespace Au
 		public static void addReplaceFunc(string name, Func<RXMatch, int, string, string> replFunc) {
 			s_userReplFuncs[name] = replFunc;
 		}
-		static System.Collections.Concurrent.ConcurrentDictionary<string, Func<RXMatch, int, string, string>> s_userReplFuncs = new();
+		static ConcurrentDictionary<string, Func<RXMatch, int, string, string>> s_userReplFuncs = new();
 
 		//rejected: use pcre2_substitute. Not useful because: we cannot implement RXMatch.ExpandReplacement with it; we have addReplaceFunc.
 

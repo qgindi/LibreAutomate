@@ -95,6 +95,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 
 		b.StartStack<Expander>("Other actions");
 		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
+		//SHOULDDO: clear when app version changes.
 		b.End();
 
 		//b.StartGrid<Expander>("List display options");

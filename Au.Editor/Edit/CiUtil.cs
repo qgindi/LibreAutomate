@@ -300,6 +300,41 @@ static class CiUtil
 		static bool _NoClosingQuote(SyntaxNode n) => n.ContainsDiagnostics && n.GetDiagnostics().Any(o => o.Id == "CS1010"); //Newline in constant
 	}
 
+	/// <summary>
+	/// If range start..end is inside a string literal or char literal or text part of an interpolated string, returns literal type.
+	/// Else if inside the prefix (@" or $@" etc), returns Prefix.
+	/// Else returns None.
+	/// The start and end of the literal are considered not inside.
+	/// </summary>
+	public static SType GetStringType(in SyntaxToken t, int start, int end, string code) {
+		//PrintNode(t);
+		var span = t.Span;
+		if (start < span.Start || end > span.End) return 0;
+		var kind = t.Kind();
+		if (kind is SyntaxKind.StringLiteralToken or SyntaxKind.CharacterLiteralToken or SyntaxKind.InterpolatedStringStartToken or SyntaxKind.InterpolatedVerbatimStringStartToken) {
+			if (start <= span.Start || end >= span.End) return 0; //assume the closing " isn't missing
+			switch (kind) {
+			case SyntaxKind.StringLiteralToken:
+				if (code[span.Start] == '@') return start > span.Start + 1 ? SType.Verbatim : SType.Prefix;
+				return SType.Simple;
+			case SyntaxKind.CharacterLiteralToken:
+				return SType.Char;
+			default:
+				return SType.Prefix;
+			}
+		} else {
+			switch (kind) {
+			case SyntaxKind.InterpolatedStringTextToken:
+			case SyntaxKind.InterpolatedStringEndToken when end < span.End:
+			case SyntaxKind.OpenBraceToken when end < span.End && t.Parent is InterpolationSyntax:
+				return code.Eq(t.Parent.Parent.SpanStart, "$\"") ? SType.Interpolated : SType.InterVerbatim;
+			}
+		}
+		return 0;
+	}
+
+	public enum SType { None, Simple, Verbatim, Interpolated, InterVerbatim, Char, Prefix }
+
 	//FUTURE: remove if unused
 	/// <summary>
 	/// Gets syntax node at position.
@@ -379,6 +414,99 @@ static class CiUtil
 		return default;
 	}
 
+	/// <summary>
+	/// From C# code creates a Roslyn workspace+project+document for code analysis.
+	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
+	/// </summary>
+	public static Document CreateRoslynDocument(string code, bool needSemantic) {
+		ProjectId projectId = ProjectId.CreateNewId();
+		DocumentId documentId = DocumentId.CreateNewId(projectId);
+		var ws = new AdhocWorkspace();
+		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
+			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
+			new CSharpParseOptions(LanguageVersion.Preview),
+			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
+			);
+		var sol = ws.CurrentSolution.AddProject(pi);
+		if (needSemantic) {
+			string code2 = @"global using Au;
+global using Au.Types;
+global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+global using System.Collections.Concurrent;
+global using System.Diagnostics;
+global using System.Globalization;
+global using System.IO;
+global using System.IO.Compression;
+global using System.Media;
+global using System.Runtime.CompilerServices;
+global using System.Runtime.InteropServices;
+global using System.Text;
+global using System.Text.RegularExpressions;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using Microsoft.Win32;
+global using Au.More;
+";
+			sol = sol.AddDocument(DocumentId.CreateNewId(projectId), "g.cs", code2);
+		}
+		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
+	}
+
+//	/// <summary>
+//	/// From C# code creates a Roslyn workspace+project+document for syntax and semantic analysis.
+//	/// If needSemantic adds default usings (same as in default global.cs; prepends to code) and references.
+//	/// </summary>
+//	public static Document CreateRoslynDocument(ref string code, bool needSemantic) {
+//		if (needSemantic) code = @"using Au;
+//using Au.Types;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Collections.Concurrent;
+//using System.Diagnostics;
+//using System.Globalization;
+//using System.IO;
+//using System.IO.Compression;
+//using System.Media;
+//using System.Runtime.CompilerServices;
+//using System.Runtime.InteropServices;
+//using System.Text;
+//using System.Text.RegularExpressions;
+//using System.Threading;
+//using System.Threading.Tasks;
+//using Microsoft.Win32;
+//using Au.More;
+//" + code;
+//		ProjectId projectId = ProjectId.CreateNewId();
+//		DocumentId documentId = DocumentId.CreateNewId(projectId);
+//		var ws = new AdhocWorkspace();
+//		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
+//			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
+//			new CSharpParseOptions(LanguageVersion.Preview),
+//			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
+//			);
+//		return ws.CurrentSolution.AddProject(pi).AddDocument(documentId, "l.cs", code).GetDocument(documentId);
+//	}
+
+	/// <summary>
+	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
+	/// </summary>
+	public static bool IsScript(string code) {
+		ProjectId projectId = ProjectId.CreateNewId();
+		DocumentId documentId = DocumentId.CreateNewId(projectId);
+		using var ws = new AdhocWorkspace();
+		var sol = ws.CurrentSolution.AddProject(projectId, "p", "p", LanguageNames.CSharp).AddDocument(documentId, "f.cs", code);
+		var document = sol.GetDocument(documentId);
+		var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		var f = cu.Members.FirstOrDefault();
+		if (f is GlobalStatementSyntax or null) return true;
+		if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
+		if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault().Identifier.Text == "Main") return true;
+		return false;
+	}
+
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }
@@ -404,6 +532,26 @@ static class CiUtil
 
 	public static void HiliteRange(TextSpan span) => HiliteRange(span.Start, span.End);
 #endif
+
+	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {
+		return m switch {
+			ClassDeclarationSyntax => CiItemKind.Class,
+			StructDeclarationSyntax => CiItemKind.Structure,
+			RecordDeclarationSyntax rd => rd.IsKind(SyntaxKind.RecordStructDeclaration) ? CiItemKind.Structure : CiItemKind.Class,
+			EnumDeclarationSyntax => CiItemKind.Enum,
+			DelegateDeclarationSyntax => CiItemKind.Delegate,
+			InterfaceDeclarationSyntax => CiItemKind.Interface,
+			OperatorDeclarationSyntax or ConversionOperatorDeclarationSyntax or IndexerDeclarationSyntax => CiItemKind.Operator,
+			BaseMethodDeclarationSyntax => CiItemKind.Method,
+			// => CiItemKind.ExtensionMethod,
+			PropertyDeclarationSyntax => CiItemKind.Property,
+			EventDeclarationSyntax or EventFieldDeclarationSyntax => CiItemKind.Event,
+			FieldDeclarationSyntax f => f.Modifiers.Any(o => o.Text == "const") ? CiItemKind.Constant : CiItemKind.Field,
+			EnumMemberDeclarationSyntax => CiItemKind.EnumMember,
+			BaseNamespaceDeclarationSyntax => CiItemKind.Namespace,
+			_ => CiItemKind.None
+		};
+	}
 
 	public static void TagsToKindAndAccess(ImmutableArray<string> tags, out CiItemKind kind, out CiItemAccess access) {
 		kind = CiItemKind.None;

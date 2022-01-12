@@ -599,6 +599,7 @@ partial class FilesModel
 	#region rename, delete, open/close (menu commands), properties
 
 	public void RenameSelected(bool newFile = false) {
+		Panels.PanelManager[Panels.Files].Visible = true; //exception if not visible
 		TreeControl.EditLabel(ended: newFile ? ok => { if (ok && Keyboard.IsKeyDown(Key.Enter)) Panels.Editor.ZActiveDoc?.Focus(); } : null);
 	}
 

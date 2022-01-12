@@ -43,6 +43,8 @@ record AppSettings : JSettings
 	public bool ci_complGroup = true, ci_unexpandPath = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 
+	public byte outline_flags;
+
 	public record delm_t
 	{
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools

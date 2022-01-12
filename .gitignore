@@ -217,12 +217,9 @@ ModelManifest.xml
 /Other/Api/
 
 /_/*
-!/_/Templates/
 !/_/Default/
-
-/_/Templates/*
-!/_/Templates/files/
-!/_/Templates/files.xml
+!/_/Templates/
+!/_/Cookbook/
 
 /_/Default/*
 !/_/Default/Workspace/
@@ -231,6 +228,14 @@ ModelManifest.xml
 !/_/Default/Workspace/files/
 !/_/Default/Workspace/files.xml
 !/_/Default/Workspace/state.db
+
+/_/Templates/*
+!/_/Templates/files/
+!/_/Templates/files.xml
+
+/_/Cookbook/*
+!/_/Cookbook/files/
+!/_/Cookbook/files.xml
 
 
 # To delete files or folders from git:

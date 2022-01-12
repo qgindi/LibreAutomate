@@ -39,6 +39,13 @@ using Roslyn.Utilities;
 static unsafe class Test
 {
 	public static void FromMenubar() {
+
+		//perf.first();
+		//var d=CiUtil.CreateRoslynDocument("using System; Console.Write(1);");
+		//perf.next();
+		//var tree = d.GetSyntaxTreeAsync().Result;
+		//perf.nw();
+
 		//EdDatabases.CreateRefAndDoc();
 		//EdDatabases.CreateWinapi();
 
@@ -65,6 +72,11 @@ static unsafe class Test
 		//int i = doc.zCurrentPos8 - 4;
 		//doc.zSelect(false, i, i + 2);
 
+		//print.it(CiUtil.IsScript(doc.zText));
+
+//var s="aaa bbb"
+//char c = 'a'
+
 	}
 
 	//static void TestScripting() {
@@ -76,7 +88,11 @@ static unsafe class Test
 	//		print.it(c.errors);
 	//	}
 	//}
-
+/*
+Aaa
+bbb
+ccc
+*/
 
 	class TestGC
 	{

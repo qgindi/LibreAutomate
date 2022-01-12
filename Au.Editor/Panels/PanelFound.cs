@@ -10,10 +10,12 @@ class PanelFound : DockPanel
 	public PanelFound() {
 		//this.UiaSetName("Found panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
 
-		_c = new _KScintilla { Name = "Found_list" };
-		_c.ZInitReadOnlyAlways = true;
-		_c.ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways;
-		_c.ZAcceptsEnter = true;
+		_c = new _KScintilla {
+			Name = "Found_list",
+			ZInitReadOnlyAlways = true,
+			ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways,
+			ZAcceptsEnter = true
+		};
 		_c.ZHandleCreated += _c_ZHandleCreated;
 
 		this.Children.Add(_c);

@@ -8,6 +8,7 @@ panel - container for a control that often has child controls. Has caption with 
 toolbar - container for a toolbar. Like panel, but caption is small without text, and behavior is slightly different.
 document - placeholder for real document nodes that are added/removed later. Like panel, but caption is small without text, and behavior is slightly different.
 Attributes:
+name - panel/toolbar/document name. Also panel caption or tab header text.
 o - stack orientation: v vertical, h horizontal.
 z - node size (width in horizontal stack or height in vertical). Star-sized if like "100*". Default for toolbar and stack: auto-sized. For others must be specified, cannot be auto.
 s - splitter size. Default 4. Min 1. Every node in stack except the first has a splitter before it.
@@ -25,17 +26,21 @@ active - tab.
 <stack o="v">
 	<stack o="h">
 		<toolbar name="Menu" />
-		<toolbar name="Help" z="200" />
+		<toolbar name="Help" z="100" />
 		<toolbar name="Tools" />
 		<toolbar name="Custom1" z="100*" />
 	</stack>
 	<stack o="h" z="600*" s="1">
 		<stack o="v" z="200">
 			<toolbar name="File" />
-			<panel name="Files" z="320*" s="1" captionAt="Top" />
+			<tab z="320*" s="1" captionAt="Top">
+				<panel name="Files" captionAt="Top" />
+				<panel name="Outline" captionAt="Top" />
+				<panel name="Cookbook" captionAt="Top" />
+			</tab>
 			<panel name="Open" z="50" />
 			<panel name="Tasks" z="50" />
-			<panel name="Find" z="160" captionAt="Top" />
+			<panel name="Find" z="150" captionAt="Top" />
 		</stack>
 		<stack o="v" z="600*">
 			<stack o="h">
@@ -47,10 +52,11 @@ active - tab.
 			<!--<tab z="400*" s="1" captionAt="Top">
 				<document name="documents" />
 			</tab>-->
-			<tab z="160">
+			<tab z="150">
 				<panel name="Output" />
 				<panel name="Mouse" />
 				<panel name="Found" />
+				<panel name="Recipe" />
 			</tab>
 		</stack>
 	</stack>

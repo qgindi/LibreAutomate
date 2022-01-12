@@ -67,8 +67,8 @@ namespace Au
 			/// <summary>Gets item action.</summary>
 			public Action<MenuItem> Clicked => base.clicked as Action<MenuItem>;
 
-			/// <summary>Gets menu item id.</summary>
-			public int Id { get; init; }
+			/// <summary>Gets or sets menu item id.</summary>
+			public int Id { get; set; }
 
 			/// <summary>true if is a submenu-item.</summary>
 			public bool IsSubmenu { get; init; }
