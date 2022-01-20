@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
@@ -45,16 +46,16 @@ class PanelOutline : DockPanel
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return false;
 		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
 
-		var root = new _Item(null);
+		var root = new _Item();
 
 		//at first get regions
 		if (cu.ContainsDirectives) {
 			_Item regions = null;
 			for (var d = cu.GetFirstDirective(); d != null; d = d.GetNextDirective()) {
-				if (!d.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.RegionDirectiveTrivia) || !d.IsActive) continue;
+				if (!d.IsKind(SyntaxKind.RegionDirectiveTrivia) || !d.IsActive) continue;
 				var s = d.EndOfDirectiveToken.LeadingTrivia.ToString(); if (s.NE()) continue;
-				if (regions == null) root.AddChild(regions = new("#region", 0));
-				regions.AddChild(new(s, d.SpanStart));
+				if (regions == null) root.AddChild(regions = new("#region", CiItemKind.Region, 0));
+				regions.AddChild(new(s, CiItemKind.Region, d.SpanStart));
 			}
 		}
 
@@ -73,17 +74,24 @@ class PanelOutline : DockPanel
 		void _Members(_Item parent, SyntaxList<MemberDeclarationSyntax> members, int level) {
 			int sort = App.Settings.outline_flags & 3;
 			List<_Item> a = sort != 0 ? new() : null;
+			_Item locals = null;
 			foreach (var m in members) {
-				if (level == 0 && m is GlobalStatementSyntax) continue;
-				var k = new _Item(m);
-				if (a != null) a.Add(k); else parent.AddChild(k);
-				switch (m) {
-				case BaseNamespaceDeclarationSyntax d:
-					_Members(k, d.Members, level + 1);
-					break;
-				case TypeDeclarationSyntax d:
-					_Members(k, d.Members, level + 1);
-					break;
+				if (level == 0 && m is GlobalStatementSyntax g) {
+					if (g.Statement is not LocalFunctionStatementSyntax d) continue;
+					if (locals == null) parent.AddChild(locals = new("Local functions", CiItemKind.LocalMethod, 0));
+					var k = new _Item(d);
+					locals.AddChild(k);
+				} else {
+					var k = new _Item(m);
+					if (a != null) a.Add(k); else parent.AddChild(k);
+					switch (m) {
+					case BaseNamespaceDeclarationSyntax d:
+						_Members(k, d.Members, level + 1);
+						break;
+					case TypeDeclarationSyntax d:
+						_Members(k, d.Members, level + 1);
+						break;
+					}
 				}
 			}
 			if (a != null) {
@@ -223,20 +231,22 @@ class PanelOutline : DockPanel
 		}
 	}
 
-	class _Item : TreeBase<_Item>, ITreeViewItem {
+	class _Item : TreeBase<_Item>, ITreeViewItem
+	{
 		internal string _text;
 		internal int _pos;
 		internal CiItemKind _kind;
 		internal bool _isExpanded = true;
 
-		public _Item(string text, int pos) {
+		public _Item() { } //root
+
+		public _Item(string text, CiItemKind kind, int pos) {
 			_text = text;
 			_pos = pos;
-			_kind = CiItemKind.Region;
+			_kind = kind;
 		}
 
 		public _Item(MemberDeclarationSyntax m) {
-			if (m == null) return;
 			//CiUtil.PrintNode(m);
 			string name;
 			if (m is BaseFieldDeclarationSyntax fd) { //field, event
@@ -272,6 +282,12 @@ class PanelOutline : DockPanel
 
 			_text = name;
 			_kind = CiUtil.MemberDeclarationToKind(m);
+			_pos = m.SpanStart;
+		}
+
+		public _Item(LocalFunctionStatementSyntax m) {
+			_text = m.Identifier.Text;
+			_kind = CiItemKind.Method;
 			_pos = m.SpanStart;
 		}
 

@@ -6,13 +6,10 @@
 	[DebuggerStepThrough]
 	public static partial class print
 	{
-		//note: This library does not redirect Console.WriteLine, unless user calls print.redirectConsoleOutput.
-
 		/// <summary>
 		/// Returns true if this is a console process.
 		/// </summary>
-		public static bool isConsoleProcess => _isConsole;
-		static readonly bool _isConsole = Console.OpenStandardInput(1) != Stream.Null;
+		public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //fast, don't cache
 
 		/// <summary>
 		/// Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="writer"/> is not changed.
@@ -37,7 +34,7 @@
 		static bool? _isVisibleConsole;
 
 		/// <summary>
-		/// If true, Write and related functions in console process don't use the console window. Then everything is like in non-console process.
+		/// If true, <b>Write</b> and related functions in console process don't use the console window. Then everything is like in non-console process.
 		/// </summary>
 		/// <seealso cref="redirectConsoleOutput"/>
 		/// <seealso cref="redirectDebugOutput"/>
@@ -50,12 +47,19 @@
 			if (logFile != null) {
 				_ClearToLogFile();
 			} else if (isWritingToConsole) {
-				try { Console.Clear(); } catch { } //exception if redirected, it is documented
+				_ConsoleClear();
 			} else if (qm2.use) {
 				qm2.clear();
 			} else {
 				_ClearToServer();
 			}
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
+		static void _ConsoleClear() {
+			//exception if redirected, it is documented
+			//if (!Console.IsOutputRedirected) Console.Clear(); //no, Clear does something more than if(IsOutputRedirected)
+			try { Console.Clear(); } catch { }
 		}
 
 		/// <summary>
@@ -199,15 +203,13 @@
 		/// <example>
 		/// <code><![CDATA[
 		/// [STAThread]
-		/// static void Main()
-		/// {
+		/// static void Main() {
 		/// 	print.writer = new TestOutputWriter();
 		/// 
 		/// 	print.it("test");
 		/// }
 		/// 
-		/// class TestOutputWriter :TextWriter
-		/// {
+		/// class TestOutputWriter :TextWriter {
 		/// 	public override void WriteLine(string value) { print.directly("redirected: " + value); }
 		/// 	public override Encoding Encoding => Encoding.Unicode;
 		/// }
@@ -234,10 +236,13 @@
 			//qm2.write($"'{value}'");
 
 			if (logFile != null) _WriteToLogFile(value);
-			else if (isWritingToConsole) Console.WriteLine(value);
+			else if (isWritingToConsole) _ConsoleWriteLine(value);
 			else if (qm2.use) qm2.write(value);
 			else _WriteToServer(value);
 		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
+		static void _ConsoleWriteLine(string value) => Console.WriteLine(value);
 
 		/// <summary>
 		/// Writes warning text to the output.
@@ -277,6 +282,8 @@
 		/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
 		/// </summary>
 		/// <remarks>
+		/// The default value is true in non-console scripts with role miniProgram (default) that use <see cref="Console"/> functions.
+		/// 
 		/// If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
 		/// 
 		/// <b>Console.Clear</b> will not clear output; it will throw exception.
@@ -295,6 +302,7 @@
 			get => _prevConsoleOut != null;
 		}
 		static TextWriter _prevConsoleOut;
+		//note: don't call this before AllocConsole. Then can't restore, and IsOutputRedirected always returns true.
 
 		/// <summary>
 		/// Let <b>Debug.Write</b>, <b>Trace.Write</b> and similar methods also write to the same destination as <see cref="it"/>.

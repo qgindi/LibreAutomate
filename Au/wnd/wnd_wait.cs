@@ -205,7 +205,7 @@ namespace Au
 		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name, bool not = false) {
-			wildex x = name; //ArgumentNullException
+			wildex x = name; //ArgumentNullException, ArgumentException
 			return WaitFor(secondsTimeout, t => x.Match(t.Name) != not);
 		}
 

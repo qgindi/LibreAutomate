@@ -322,7 +322,7 @@ static class CommandLine
 		if (file.Starts('*')) {
 			file = file[1..];
 			mode |= 1;
-			if ((default != api.GetStdHandle(api.STD_OUTPUT_HANDLE)) //redirected stdout
+			if ((default != Api.GetStdHandle(Api.STD_OUTPUT_HANDLE)) //redirected stdout
 				|| api.AttachConsole(api.ATTACH_PARENT_PROCESS) //parent process is console
 				) mode |= 2;
 			//note: in cmd execute this to change cmd console code page to UTF-8: chcp 65001
@@ -360,11 +360,6 @@ static class CommandLine
 		internal const uint MB_TOPMOST = 0x40000;
 		internal const uint MB_SETFOREGROUND = 0x10000;
 #endif
-
-		[DllImport("kernel32.dll")]
-		internal static extern IntPtr GetStdHandle(uint nStdHandle);
-
-		internal const uint STD_OUTPUT_HANDLE = 0xFFFFFFF5;
 
 		[DllImport("kernel32.dll")]
 		internal static extern bool AttachConsole(uint dwProcessId);

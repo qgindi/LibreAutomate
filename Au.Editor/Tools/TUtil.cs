@@ -9,8 +9,7 @@ using System.Windows.Threading;
 
 namespace Au.Tools;
 
-static class TUtil
-{
+static class TUtil {
 	#region text
 
 	/// <summary>
@@ -142,7 +141,7 @@ static class TUtil
 			if (tbValue[0] == '$') return false;
 			tbValue = tbValue[2..^1].Replace("\"\"", "\"");
 		}
-		wildex x = tbValue;
+		var x = new wildex(tbValue, noException: true);
 		return !x.Match(newRawValue);
 	}
 
@@ -164,8 +163,7 @@ static class TUtil
 
 	#region formatters
 
-	public record WindowFindCodeFormatter
-	{
+	public record WindowFindCodeFormatter {
 		public string nameW, classW, programW, containsW, alsoW, waitW, orRunW;
 		public bool hiddenTooW, cloakedTooW, programNotStringW;
 		public string idC, nameC, classC, alsoC, skipC, nameC_comments, classC_comments;
@@ -418,8 +416,7 @@ static class TUtil
 	/// Supports ":: ITEMIDLIST".
 	/// Can get path from window.
 	/// </summary>
-	public class PathInfo
-	{
+	public class PathInfo {
 		public readonly string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
 		readonly string _name, _name2, _args;
 
@@ -585,8 +582,7 @@ static class TUtil
 	/// <summary>
 	/// Common code for tools that capture UI objects with F3.
 	/// </summary>
-	public class CapturingWithHotkey
-	{
+	public class CapturingWithHotkey {
 		readonly KCheckBox _captureCheckbox;
 		readonly Func<POINT, (RECT? r, string s)> _dGetRect;
 		readonly (string hotkey, Action a) _dCapture, _dInsert;
@@ -952,8 +948,7 @@ obj.{code};
 	/// <summary>
 	/// Can be used by tool dialogs to display common info in <see cref="KSciInfoBox"/> control.
 	/// </summary>
-	public class CommonInfos
-	{
+	public class CommonInfos {
 		KSciInfoBox _control;
 		RegexWindow _regexWindow;
 

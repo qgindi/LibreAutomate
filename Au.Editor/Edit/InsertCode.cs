@@ -232,6 +232,7 @@ static class InsertCode
 			node = node.Parent;
 			if (node is not MemberDeclarationSyntax || node.SpanStart != start) return;
 		}
+		if (node is GlobalStatementSyntax) return;
 
 		//already has doc comment?
 		foreach (var v in node.GetLeadingTrivia()) {

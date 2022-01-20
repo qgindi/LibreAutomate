@@ -147,8 +147,7 @@
 		/// }
 		/// _Test("after");
 		/// 
-		/// void _Test(string name)
-		/// {
+		/// void _Test(string name) {
 		/// 	print.it(name);
 		/// 	perf.first();
 		/// 	for(int i = 0; i < 8; i++) { Thread.Sleep(1); perf.next(); }

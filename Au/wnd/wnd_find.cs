@@ -585,7 +585,7 @@ namespace Au.Types
 		/// Gets program name or process id or thread id or owner window.
 		/// Other variables will be null/0.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value is "" or 0 or contains characters \ or /.</exception>
+		/// <exception cref="ArgumentException">The value is "" or 0 or contains characters \ or / or is invalid wildcard expression.</exception>
 		public void GetValue(out wildex program, out int pid, out int tid, out wnd owner) {
 			program = null; pid = 0; tid = 0; owner = default;
 			switch (_what) {

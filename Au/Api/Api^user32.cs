@@ -1,9 +1,7 @@
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
-namespace Au.Types
-{
-	static unsafe partial class Api
-	{
+namespace Au.Types {
+	static unsafe partial class Api {
 		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
 		internal static extern nint SendMessage(wnd hWnd, int msg, nint wParam, nint lParam);
 
@@ -102,8 +100,7 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "FindWindowExW", SetLastError = true)]
 		internal static extern wnd FindWindowEx(wnd hWndParent, wnd hWndChildAfter, string lpszClass, string lpszWindow);
 
-		internal struct WNDCLASSEX
-		{
+		internal struct WNDCLASSEX {
 			public int cbSize;
 			public uint style;
 			public IntPtr lpfnWndProc; //not WNDPROC to avoid auto-marshaling where don't need. Use Marshal.GetFunctionPointerForDelegate/GetDelegateForFunctionPointer.
@@ -231,8 +228,7 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern wnd GetActiveWindow();
 
-		internal struct WINDOWPOS
-		{
+		internal struct WINDOWPOS {
 			public wnd hwnd;
 			public wnd hwndInsertAfter;
 			public int x;
@@ -245,8 +241,7 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SetWindowPos(wnd hWnd, wnd hWndInsertAfter, int X, int Y, int cx, int cy, SWPFlags swpFlags);
 
-		internal struct FLASHWINFO
-		{
+		internal struct FLASHWINFO {
 			public int cbSize;
 			public wnd hwnd;
 			public uint dwFlags;
@@ -327,8 +322,7 @@ namespace Au.Types
 		internal const uint WPF_RESTORETOMAXIMIZED = 0x2;
 		internal const uint WPF_ASYNCWINDOWPLACEMENT = 0x4;
 
-		internal struct WINDOWPLACEMENT
-		{
+		internal struct WINDOWPLACEMENT {
 			public int length;
 			/// <summary> WPF_ </summary>
 			public uint flags;
@@ -344,8 +338,7 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SetWindowPlacement(wnd hWnd, in WINDOWPLACEMENT lpwndpl);
 
-		internal struct WINDOWINFO
-		{
+		internal struct WINDOWINFO {
 			public int cbSize;
 			public RECT rcWindow;
 			public RECT rcClient;
@@ -437,8 +430,7 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern IntPtr MonitorFromWindow(wnd hwnd, SODefault dwFlags);
 
-		internal struct MONITORINFO
-		{
+		internal struct MONITORINFO {
 			public int cbSize;
 			public RECT rcMonitor;
 			public RECT rcWork;
@@ -820,8 +812,7 @@ namespace Au.Types
 		internal const uint KEYEVENTF_UNICODE = 0x4;
 		internal const uint KEYEVENTF_SCANCODE = 0x8;
 
-		internal struct INPUTK
-		{
+		internal struct INPUTK {
 			nint _type;
 			public ushort wVk;
 			public ushort wScan;
@@ -853,8 +844,7 @@ namespace Au.Types
 		}
 
 		[Flags]
-		internal enum IMFlags : uint
-		{
+		internal enum IMFlags : uint {
 			Move = 1,
 			LeftDown = 2, LeftUp = 4,
 			RightDown = 8, RightUp = 16,
@@ -869,8 +859,7 @@ namespace Au.Types
 			X2 = 0x2000000,
 		};
 
-		internal struct INPUTM
-		{
+		internal struct INPUTM {
 			nint _type;
 			public int dx;
 			public int dy;
@@ -1033,8 +1022,7 @@ namespace Au.Types
 		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int wsprintfW(char* lpOut1024, string lpFmt, __arglist);
 
-		internal struct PAINTSTRUCT
-		{
+		internal struct PAINTSTRUCT {
 			public IntPtr hdc;
 			public bool fErase;
 			public RECT rcPaint;
@@ -1117,8 +1105,7 @@ namespace Au.Types
 
 		internal const uint CURSOR_SHOWING = 0x1;
 
-		internal struct CURSORINFO
-		{
+		internal struct CURSORINFO {
 			public int cbSize;
 			public uint flags;
 			public IntPtr hCursor;
@@ -1128,8 +1115,7 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetCursorInfo(ref CURSORINFO pci);
 
-		internal struct ICONINFO : IDisposable
-		{
+		internal struct ICONINFO : IDisposable {
 			public bool fIcon;
 			public int xHotspot;
 			public int yHotspot;
@@ -1151,8 +1137,7 @@ namespace Au.Types
 		internal static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
 		//tested: GetIconInfoEx gets resource info only for icons loaded from a module loaded in this process.
 
-		internal struct BITMAP
-		{
+		internal struct BITMAP {
 			public int bmType;
 			public int bmWidth;
 			public int bmHeight;
@@ -1192,8 +1177,7 @@ namespace Au.Types
 		internal const uint LLKHF_ALTDOWN = 0x20;
 		internal const uint LLKHF_UP = 0x80;
 
-		internal struct KBDLLHOOKSTRUCT
-		{
+		internal struct KBDLLHOOKSTRUCT {
 			public uint vkCode;
 			public uint scanCode;
 			public uint flags;
@@ -1225,8 +1209,7 @@ namespace Au.Types
 
 		internal const uint LLMHF_INJECTED = 0x1;
 
-		internal struct MSLLHOOKSTRUCT
-		{
+		internal struct MSLLHOOKSTRUCT {
 			public POINT pt;
 			public uint mouseData;
 			public uint flags;
@@ -1264,8 +1247,7 @@ namespace Au.Types
 		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
 		[Flags]
-		internal enum AnimationFlags : uint
-		{
+		internal enum AnimationFlags : uint {
 			Roll = 0x0000, // Uses a roll animation.
 			HorizontalPositive = 0x00001, // Animates the window from left to right. This flag can be used with roll or slide animation.
 			HorizontalNegative = 0x00002, // Animates the window from right to left. This flag can be used with roll or slide animation.
@@ -1311,9 +1293,10 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern int FrameRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
 
-		internal const uint RDW_FRAME = 0x400;
 		internal const uint RDW_INVALIDATE = 0x1;
+		internal const uint RDW_ERASE = 0x4;
 		internal const uint RDW_ALLCHILDREN = 0x80;
+		internal const uint RDW_FRAME = 0x400;
 
 		[DllImport("user32.dll")]
 		internal static extern bool RedrawWindow(wnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);
@@ -1328,8 +1311,7 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern int GetMenuItemID(IntPtr hMenu, int nPos);
 
-		internal struct MENUITEMINFO
-		{
+		internal struct MENUITEMINFO {
 			public int cbSize;
 			public uint fMask;
 			public uint fType;
@@ -1378,8 +1360,7 @@ namespace Au.Types
 		//internal const int SB_CTL = 2;
 		internal const int SB_BOTH = 3;
 
-		internal struct SCROLLINFO
-		{
+		internal struct SCROLLINFO {
 			public int cbSize;
 			public uint fMask;
 			public int nMin;
@@ -1522,8 +1503,7 @@ namespace Au.Types
 		internal const int TTM_RELAYEVENT = 0x407;
 		//internal const uint TTF_SUBCLASS = 0x10;
 
-		internal struct TTTOOLINFO
-		{
+		internal struct TTTOOLINFO {
 			public int cbSize;
 			public uint uFlags;
 			public wnd hwnd;

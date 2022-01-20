@@ -38,6 +38,7 @@ class PanelOutput : DockPanel
 		if (ZWrapLines) ZWrapLines = true;
 		if (ZWhiteSpace) ZWhiteSpace = true;
 		if (ZTopmost) App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = true; //see also OnParentChanged, below
+		_c.ZNoMouseSetFocus = MButtons.Middle;
 		_inInitSettings = false;
 		_leaf.FloatingChanged += (_, floating) => _SetTopmost(floating ? 1 : 0);
 	}

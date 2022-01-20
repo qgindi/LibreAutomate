@@ -23,10 +23,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
 
-class CiAutocorrect
-{
-	public class BeforeCharContext
-	{
+class CiAutocorrect {
+	public class BeforeCharContext {
 		public int oldPosUtf8, newPosUtf8;
 		public bool dontSuppress;
 	}
@@ -40,8 +38,7 @@ class CiAutocorrect
 		else r.OwnerData = "ac";
 	}
 
-	public enum EBrackets
-	{
+	public enum EBrackets {
 		/// <summary>
 		/// The same as when the user types '(' etc and is auto-added ')' etc. The user can overtype the ')' with the same character or delete '()' with Backspace.
 		/// </summary>
@@ -309,12 +306,14 @@ class CiAutocorrect
 		if (pos == code.Length) return false;
 
 		bool canCorrect = true, canAutoindent = onEnterWithoutMod, isSelection = doc.zIsSelection; //note: complResult is never Complex here
-		if (!anywhere && !isSelection) {
-			char ch = code[pos];
-			canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
-			if (!(canCorrect | canAutoindent)) return false;
-			//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
-			//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timer.after(1, _=>{print.it(1)); (user cannot ype ';' after "print.it(1)".
+		if (!anywhere) {
+			if (!isSelection) {
+				char ch = code[pos];
+				canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
+				if (!(canCorrect | canAutoindent)) return false;
+				//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
+				//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timer.after(1, _=>{print.it(1)); (user cannot ype ';' after "print.it(1)".
+			} else if (onSemicolon) return false;
 		}
 
 		if (!cd.GetDocument()) return false;
@@ -331,6 +330,7 @@ class CiAutocorrect
 			}
 
 			int r = _InNonblankTriviaOrStringOrChar(cd, tok1, isSelection);
+			//print.it(r);
 			if (r == 1) return true; //yes and corrected
 			if (r == 2) return false; //yes and not corrected
 			if (isSelection) return false;
@@ -344,7 +344,7 @@ class CiAutocorrect
 		//CiUtil.PrintNode(nodeFromPos, printErrors: true);
 
 		SyntaxNode node = null, indentNode = null;
-		bool needSemicolon = false, needBlock = false, canExitBlock = false, dontIndent = false;
+		bool needSemicolon = false, needBlock = false, canExitBlock = false, dontIndent = false, isCase = false;
 		SyntaxToken token = default; _Block block = null;
 		foreach (var v in nodeFromPos.AncestorsAndSelf()) {
 			//print.it(v.GetType().Name);
@@ -445,7 +445,7 @@ class CiAutocorrect
 				case EventDeclarationSyntax k:
 					block = k.AccessorList;
 					break;
-				default: //field, event field, delegate
+				default: //field, event field, delegate, GlobalStatementSyntax
 					needSemicolon = true;
 					break;
 				}
@@ -482,8 +482,12 @@ class CiAutocorrect
 					}
 					canCorrect2 = true;
 					break;
-				case SwitchSectionSyntax:
-					canCorrect = false;
+				case SwitchSectionSyntax sss:
+					isCase = true;
+					if (canCorrect) {
+						token = sss.Labels[^1].ColonToken;
+						if (token.IsMissing) needSemicolon = true;
+					}
 					if (!onSemicolon) canAutoindent = true;
 					break;
 				case AccessorListSyntax k:
@@ -509,15 +513,15 @@ class CiAutocorrect
 				canAutoindent = true;
 				canExitBlock = anywhere && node == nodeFromPos && tok1.IsKind(SyntaxKind.CloseBraceToken) && pos <= tok1.SpanStart;
 			}
-			//print.it(canCorrect, canAutoindent, canExitBlock);
+			//print.it(canCorrect, canAutoindent, canExitBlock, needSemicolon);
 
 			if (canCorrect) {
 				if (needSemicolon) {
 					token = node.GetLastToken();
-					needSemicolon = !token.IsKind(SyntaxKind.SemicolonToken);
+					if (!isCase) needSemicolon = !token.IsKind(SyntaxKind.SemicolonToken);
 				} else if (block != null) {
 					token = block.OpenBraceToken;
-				} else {
+				} else if (!isCase) {
 					needBlock = true;
 					if (token == default || token.IsMissing) token = node.GetLastToken();
 				}
@@ -557,17 +561,17 @@ class CiAutocorrect
 			if (onSemicolon) {
 				if (anywhere) {
 					doc.zGoToPos(true, (needSemicolon || endOfSpan > pos) ? endOfSpan : endOfFullSpan);
-					if (needSemicolon) doc.zReplaceSel(";");
+					if (needSemicolon) doc.zReplaceSel(isCase ? ":" : ";");
 				} else {
 					bcc = new BeforeCharContext { oldPosUtf8 = doc.zPos8(pos), newPosUtf8 = doc.zPos8(endOfSpan), dontSuppress = needSemicolon };
 				}
 			} else {
 				int indent = doc.zLineIndentationFromPos(true, (indentNode ?? node).SpanStart);
-				if (needBlock || block != null) indent++;
+				if (needBlock || block != null || isCase) indent++;
 				bool indentNext = indent > 0 && code[endOfFullSpan - 1] != '\n' && endOfFullSpan < code.Length; //indent next statement (or whatever) that was in the same line
 
 				var b = new StringBuilder();
-				if (needBlock) b.Append(" {"); else if (needSemicolon) b.Append(';');
+				if (needBlock) b.Append(" {"); else if (needSemicolon) b.Append(isCase ? ':' : ';');
 
 				int replaceLen = endOfFullSpan - endOfSpan;
 				int endOfFullTrimmed = endOfFullSpan; while (code[endOfFullTrimmed - 1] <= ' ') endOfFullTrimmed--; //remove newline and spaces
@@ -690,7 +694,7 @@ class CiAutocorrect
 				//print.it(v.GetType().Name, v.Span, pos);
 				indent++;
 			}
-			endLoop1:
+		endLoop1:
 
 			//maybe need to add 1 line when breaking line inside '{  }', add tabs in current line, decrement indent in '}' line, etc
 			int iOB = 0, iCB = 0;
@@ -852,8 +856,7 @@ class CiAutocorrect
 
 	#region util
 
-	class _Block
-	{
+	class _Block {
 		SyntaxNode _b;
 
 		public static implicit operator _Block(BlockSyntax n) => _New(n);

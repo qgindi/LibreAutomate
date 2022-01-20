@@ -11,8 +11,7 @@ using Microsoft.CodeAnalysis.Classification;
 //using Microsoft.CodeAnalysis.CSharp.Extensions;
 using EToken = CiStyling.EToken;
 
-class PanelRecipe : DockPanel
-{
+class PanelRecipe : DockPanel {
 	KScintilla _c;
 
 	//public KScintilla ZControl => _c;
@@ -41,6 +40,10 @@ class PanelRecipe : DockPanel
 		styles.ToScintilla(_c, multiFont: true);
 
 		_c.ZTags.AddLinkTag("+see", _SeeLinkClicked);
+		//_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
+		_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + ", C# reference")));
+		//_c.ZTags.AddLinkTag("+guide", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
+		_c.ZTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
 
 		_AutoRenderCurrentRecipeScript();
 	}
@@ -53,15 +56,21 @@ class PanelRecipe : DockPanel
 	void _SetText(string code) {
 		_c.zClearText();
 
+		//rejected:
+		//	1. Ignore code before the first ///. Not really useful, just forces to always start with ///.
+		//	2. Use {  } for scopes of variables. Its' better to use unique names.
+		//	3. Use if(...) {  } to enclose code examples to select which code to test.
+		//		Can accidentally damage real 'if' code. I didn't use it; it's better to test codes in other script.
+
 		var ac = new List<(string code, int offset8)>();
 		int iCode = 0;
 		foreach (var m in code.RxFindAll(@"(?ms)^(?:///(?!=/)\N*\R*)+|^/\*\*.+?\*/\R*")) {
 			//print.it(m);
-			if (iCode > 0) _Code(iCode, m.Start);
+			_Code(iCode, m.Start);
 			iCode = m.End;
 			_Text(m.Start, m.End);
 		}
-		if (iCode < code.Length) _Code(iCode, code.Length);
+		_Code(iCode, code.Length);
 
 		void _Text(int start, int end) {
 			while (code[end - 1] <= ' ') end--;
@@ -80,14 +89,7 @@ class PanelRecipe : DockPanel
 		void _Code(int start, int end) {
 			while (end > start && code[end - 1] <= ' ') end--;
 			if (end == start) return;
-			bool isIf = false;
-			if (code[end - 1] == '}' && (code[start] == '{' || (isIf = code.Eq(start, "if ") || code.Eq(start, "if(")))) {
-				if (isIf) start = code.IndexOf('{', start);
-				while (++start < end) if (code[start] > ' ') break;
-				while (--end > start) if (code[end - 1] > ' ') break;
-			}
 			var s = code[start..end];
-			if (isIf) s = s.Replace("\n\t", "\n");
 			//print.it("CODE"); print.it(s);
 
 			int n1 = _c.zLineCount, offset8 = _c.zLen8 + 2;
@@ -154,7 +156,7 @@ class PanelRecipe : DockPanel
 	//}
 
 	[Conditional("DEBUG")]
-	void _AutoRenderCurrentRecipeScript() {
+	unsafe void _AutoRenderCurrentRecipeScript() {
 		string prevText = null;
 		SciCode prevDoc = null;
 		App.Timer1sWhenVisible += () => {
@@ -167,9 +169,18 @@ class PanelRecipe : DockPanel
 			prevText = text;
 			//print.it("update");
 
-			int n1 = _c.Call(SCI_GETFIRSTVISIBLELINE);
+			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
+			if (n1 > 0) _c.Hwnd.Send(Api.WM_SETREDRAW);
 			_SetText(text);
-			if (doc == prevDoc) _c.Call(SCI_SETFIRSTVISIBLELINE, n1); else prevDoc = doc;
+			if (doc == prevDoc) {
+				if (n1 > 0)
+					//_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
+					timer.after(1, _ => {
+						_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
+						_c.Hwnd.Send(Api.WM_SETREDRAW, 1);
+						Api.RedrawWindow(_c.Hwnd, flags: Api.RDW_ERASE | Api.RDW_FRAME | Api.RDW_INVALIDATE);
+					});
+			} else prevDoc = doc;
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
 		};
 	}

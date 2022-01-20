@@ -1,6 +1,8 @@
 ﻿using Au.Controls;
-using Microsoft.Win32;
 using Au.Tools;
+
+//CONSIDER: Add top menu item "Insert". Move there the "Add ..." items from the "Code" menu.
+//	Also add "Add script.setup", "Add try/catch (surround selected code)", etc.
 
 static class Menus
 {
@@ -221,19 +223,19 @@ static class Menus
 		[Command(underlined: 'r', image = "*Material.RecordCircleOutline #FF6640")]
 		public static void Input_recorder() { InputRecorder.ShowRecorder(); }
 
-		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #4060C0")]
+		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #008EEE")]
 		public static void wnd() { Dwnd.Dialog(); }
 
-		[Command("Find UI _element", image = "*Material.CheckBoxOutline #4060C0")]
+		[Command("Find UI _element", image = "*Material.CheckBoxOutline #008EEE")]
 		public static void elm() { Delm.Dialog(); }
 
-		[Command("Find _image", image = "*Material.ImageSearchOutline #4060C0")]
+		[Command("Find _image", image = "*Material.ImageSearchOutline #008EEE")]
 		public static void uiimage() { Duiimage.Dialog(); }
 
 		[Command("Quick capturing info")]
 		public static void Quick_capture() { QuickCapture.Info(); }
 
-		[Command(separator = true, keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #4060C0")]
+		[Command(separator = true, keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #008EEE")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 
 		[Command(underlined: 'x', keysText = "Ctrl+Space in string")]
@@ -407,7 +409,7 @@ This program is still unfinished. It can be used, but some classes/functions/etc
 	}
 
 #if TRACE
-	[Command]
+	[Command(keys = "F11", target = "")]
 	public static void TEST() { Test.FromMenubar(); }
 
 	[Command]
