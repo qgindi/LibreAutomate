@@ -1,14 +1,12 @@
 ﻿//CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Contains static functions to work with script tasks: run, get properties.
 	/// A script task is a running script, except if role editorExtension. Each script task is a separate process.
 	/// </summary>
 	/// <seealso cref="process"/>
-	public static class script
-	{
+	public static class script {
 		/// <summary>
 		/// In a process of a script with role miniProgram (defaut) returns script file name without extension.
 		/// In other processes returns <see cref="AppDomain.FriendlyName"/>, like "MainAssemblyName".
@@ -155,8 +153,7 @@ namespace Au
 			return pid;
 		}
 
-		internal enum RunResult_
-		{
+		internal enum RunResult_ {
 			//errors returned by sendmessage(wm_copydata)
 			failed = -1, //script contains errors, or cannot run because of ifRunning, or sendmessage(wm_copydata) failed
 			notFound = -2, //script not found
@@ -170,8 +167,7 @@ namespace Au
 			cannotWaitGetResult = -8,
 		}
 
-		unsafe struct _TaskResults : IDisposable
-		{
+		unsafe struct _TaskResults : IDisposable {
 			Handle_ _hPipe;
 			public string pipeName;
 			string _s;
@@ -302,7 +298,7 @@ namespace Au
 		/// Adds various features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
 		/// Tip: in Options -> Templates you can set default code for new scripts.
 		/// </summary>
-		/// <param name="trayIcon">Add standard tray icon. See <see cref="trayIcon"/>.</param>
+		/// <param name="trayIcon">Add tray icon. See <see cref="trayIcon"/>.</param>
 		/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
 		/// <param name="lockExit">
 		/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, etc, except UAC consent).
@@ -311,14 +307,14 @@ namespace Au
 		/// </param>
 		/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/>(usePrint: true).</param>
 		/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
-		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via the tray icon.</param>
+		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via tray icon.</param>
 		/// <exception cref="InvalidOperationException">Already called.</exception>
 		/// <remarks>
 		/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread, unhandled exception action).
 		/// 
 		/// Does nothing if role editorExtension.
 		/// </remarks>
-		public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
+		public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print, [CallerFilePath] string f_ = null) {
 			if (role == SRole.EditorExtension) return;
 			if (s_setup) throw new InvalidOperationException("script.setup already called");
 			s_setup = true;
@@ -348,11 +344,15 @@ namespace Au
 		[ThreadStatic] static WNDPROC t_eocWP;
 
 		/// <summary>
-		/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>Setup</b>.
+		/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>script.setup</b>.
 		/// </summary>
 		[EditorBrowsable(EditorBrowsableState.Never), NoDoc]
 		public static void AppModuleInit_() {
 			s_appModuleInit = true;
+
+			Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
+			//SEM_NOGPFAULTERRORBOX disables WER. //CONSIDER: add setup parameter enableWER.
+			//SEM_FAILCRITICALERRORS disables some error message boxes, eg when removable media not found; MSDN recommends too.
 
 			//#if !DEBUG
 			process.thisProcessCultureIsInvariant = true;
@@ -367,7 +367,7 @@ namespace Au
 				s_unhandledException = e;
 				if (s_setupException.Has(UExcept.Print)) print.it(e);
 				if (s_setupException.Has(UExcept.Dialog)) dialog.showError("Task failed", e.ToStringWithoutStack(), flags: DFlags.Wider, expandedText: e.ToString());
-				if (s_setupException.Has(UExcept.Exit)) Environment.Exit(-1);
+
 				//if (s_setupException.Has(UExcept.DisableWER)) Api.WerAddExcludedApplication(process.thisExePath, false);
 				//info: setup32.dll disables WER for Au.Task.exe.
 			};
@@ -384,7 +384,7 @@ namespace Au
 			}
 		}
 		static bool s_appModuleInit;
-		static UExcept s_setupException = UExcept.Print | UExcept.Exit;
+		static UExcept s_setupException = UExcept.Print;
 		internal static Exception s_unhandledException; //for process.thisProcessExit
 
 		internal static bool Exiting_ { get; private set; }
@@ -606,8 +606,7 @@ namespace Au
 		/// <summary>
 		/// Contains static functions to interact with the script editor, if available.
 		/// </summary>
-		public static class editor
-		{
+		public static class editor {
 			/// <summary>
 			/// Returns true if editor is running.
 			/// </summary>
@@ -654,13 +653,11 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// <see cref="script.role"/>.
 	/// </summary>
-	public enum SRole
-	{
+	public enum SRole {
 		/// <summary>
 		/// The task runs as normal .exe program.
 		/// It can be started from editor or not. It can run on computers where editor not installed.
@@ -680,11 +677,10 @@ namespace Au.Types
 
 	/// <summary>
 	/// Flags for <see cref="script.setup"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
-	/// Default flags is <b>Print</b> and <b>Exit</b>, even if <b>Setup</b> not called (with default compiler only).
+	/// Default is <b>Print</b>, even if <b>script.setup</b> not called (with default compiler only).
 	/// </summary>
 	[Flags]
-	public enum UExcept
-	{
+	public enum UExcept {
 		/// <summary>
 		/// Display exception info in output.
 		/// </summary>
@@ -694,34 +690,12 @@ namespace Au.Types
 		/// Show dialog with exception info.
 		/// </summary>
 		Dialog = 2,
-
-		/// <summary>
-		/// Call <see cref="Environment.Exit"/>. It prevents slow exit (Windows error reporting, writing events to the Windows event log, etc).
-		/// Note: then instead of <see cref="AppDomain.UnhandledException"/> event is <see cref="AppDomain.ProcessExit"/> event. But <see cref="process.thisProcessExit"/> indicates exception as usually.
-		/// Info: the editor setup program disables Windows error reporting for tasks with role miniProgram (default). See <msdn>WerAddExcludedApplication</msdn>.
-		/// </summary>
-		Exit = 4,
-
-		/// <summary>
-		/// Display exception info in output, show dialog with exception info, and call <see cref="Environment.Exit"/>.
-		/// Same as <c>UExcept.Print | UExcept.Dialog | UExcept.Exit</c>.
-		/// </summary>
-		PrintDialogExit = Print | Dialog | Exit,
-
-		//rejected. Setup disables for miniProgram tasks.
-		///// <summary>
-		///// Disable Windows error reporting for this program.
-		///// Note: calls <msdn>WerAddExcludedApplication</msdn>, which saves this setting for this program in the registry. To undo it, call <msdn>WerRemoveExcludedApplication</msdn>.
-		///// Not used with flag <b>Exit</b>.
-		///// </summary>
-		//DisableWER = 8,
 	}
 
 	/// <summary>
 	/// For <see cref="script.editor.GetIcon"/>.
 	/// </summary>
-	public enum EGetIcon
-	{
+	public enum EGetIcon {
 		/// <summary>
 		/// Input is a file or folder in current workspace. Can be relative path in workspace (like @"\Folder\File.cs") or full path or filename.
 		/// Output must be icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. See menu -> Tools -> Icons.
@@ -748,8 +722,7 @@ namespace Au.Types
 	/// The default compiler adds this attribute to the main assembly if role is miniProgram or exeProgram.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
-	public sealed class PathInWorkspaceAttribute : Attribute
-	{
+	public sealed class PathInWorkspaceAttribute : Attribute {
 		/// <summary>Path of main file in workspace.</summary>
 		public readonly string Path;
 
@@ -761,8 +734,7 @@ namespace Au.Types
 	/// The default compiler adds this attribute to the main assembly if using non-default references (meta r) that aren't in editor's folder or its subfolder "Libraries". Allows to find them at run time. Only if role miniProgram (default).
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
-	public sealed class RefPathsAttribute : Attribute
-	{
+	public sealed class RefPathsAttribute : Attribute {
 		/// <summary>Dll paths separated with |.</summary>
 		public readonly string Paths;
 

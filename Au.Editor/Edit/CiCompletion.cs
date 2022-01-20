@@ -210,6 +210,9 @@ partial class CiCompletion
 								case MemberAccessExpressionSyntax s1: // . or ->
 									node = s1.Expression;
 									break;
+								case MemberBindingExpressionSyntax s1: // ?.
+									node = s1;
+									break;
 								case QualifiedNameSyntax s1: // eg . outside functions
 									node = s1.Left;
 									break;

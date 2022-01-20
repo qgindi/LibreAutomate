@@ -39,18 +39,15 @@ print.it(perf.ms-Int64.Parse(args[0]));
 
 //FUTURE: option to start without preloading.
 
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
 	/// </summary>
-	static unsafe class MiniProgram_
-	{
+	static unsafe class MiniProgram_ {
 		//static long s_started;
 		internal static string s_scriptId;
 
-		struct _TaskInit
-		{
+		struct _TaskInit {
 			public IntPtr asmFile;
 			public IntPtr* args;
 			public int nArgs;
@@ -146,7 +143,13 @@ namespace Au.More
 
 			if (0 != (flags & EFlags.MTA)) process.ThisThreadSetComApartment_(ApartmentState.MTA);
 
-			if (0 != (flags & EFlags.Console)) Api.AllocConsole();
+			if (0 != (flags & EFlags.Console)) {
+				Api.AllocConsole();
+			} else {
+				if (0 != (flags & EFlags.RedirectConsole)) print.redirectConsoleOutput = true;
+				//Compiler adds this flag if the script uses System.Console assembly.
+				//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
+			}
 
 			//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
 			//	var config = asmFile + ".config";
@@ -174,8 +177,7 @@ namespace Au.More
 		static string[] s_refPaths;
 
 		[Flags]
-		public enum EFlags
-		{
+		public enum EFlags {
 			/// <summary>Has [RefPaths] attribute. It is when some meta r paths cannot be automatically resolved.</summary>
 			RefPaths = 1,
 
@@ -184,6 +186,9 @@ namespace Au.More
 
 			/// <summary>Has meta console true.</summary>
 			Console = 4,
+
+			/// <summary>Uses System.Console assembly.</summary>
+			RedirectConsole = 8,
 
 			//Config = 256, //meta hasConfig
 		}

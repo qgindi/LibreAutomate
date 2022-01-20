@@ -53,7 +53,7 @@ namespace Au.Controls
 							if (!private1 && p.wName != null) {
 								//if window name changed and does not match the name in code, change it in code
 								var name = w.NameTL_;
-								if (name != null && !new wildex(p.wName).Match(name)) {
+								if (name != null && !new wildex(p.wName, noException: true).Match(name)) {
 									var s = TUtil.EscapeWindowName(name, true);
 									if (!(TUtil.IsVerbatim(s, out _) || TUtil.MakeVerbatim(ref s))) s = s.Escape(quote: true);
 									sCode = sCode.ReplaceAt(p.wNameStart, p.wNameEnd - p.wNameStart, s);

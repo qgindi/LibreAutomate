@@ -2,6 +2,8 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+//TODO: need a similar window for hotkey triggers. Or at least show the Keys tool automatically.
+
 namespace Au.Tools
 {
 	class KeysWindow : InfoWindow //KPopup

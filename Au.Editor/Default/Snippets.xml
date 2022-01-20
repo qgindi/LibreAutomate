@@ -368,6 +368,13 @@ if (!b.ShowDialog()) return;
 //print.it(text1.Text, combo1.SelectedIndex, c1.True());]]>
 		</snippet>
 
+		<snippet name="ssScriptSetupSnippet" info="Set run-time options such as tray icon and emergency exit ways.">
+			<![CDATA[//.
+script.setup(trayIcon: true, sleepExit: true);
+//..
+]]>
+		</snippet>
+
 	</group>
 	<!-- end of Function -->
 

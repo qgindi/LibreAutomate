@@ -8,13 +8,11 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Au.Compiler
-{
+namespace Au.Compiler {
 	/// <summary>
 	/// Compiles C# files.
 	/// </summary>
-	static partial class Compiler
-	{
+	static partial class Compiler {
 		/// <summary>
 		/// Compiles C# file or project if need.
 		/// Returns false if fails (C# errors etc).
@@ -64,8 +62,7 @@ namespace Au.Compiler
 		}
 
 		/// <summary>_Compile() output assembly info.</summary>
-		public record CompResults
-		{
+		public record CompResults {
 			/// <summary>C# file name without ".cs".</summary>
 			public string name;
 
@@ -220,7 +217,7 @@ namespace Au.Compiler
 
 				//create assembly file
 				p1.Next();
-				gSave:
+			gSave:
 #if true
 				var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, default, Api.CREATE_ALWAYS);
 				if (hf.Is0) {
@@ -274,6 +271,17 @@ namespace Au.Compiler
 					//} else if(filesystem.exists(configFile, true).isFile) {
 					//	filesystem.delete(configFile);
 					//}
+				} else if (!m.Console) {
+					//if using assembly System.Console in miniProgram script, let it redirect Console.Write etc to print.it.
+					//	Don't redirect always, it's slow. Console.Write etc rarely used when there is print.it.
+					//Speed of this code: 50 mcs.
+					asmStream.Position = 0;
+					using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
+					var mr = pr.GetMetadataReader();
+					foreach (var handle in mr.AssemblyReferences) {
+						var name = mr.GetString(mr.GetAssemblyReference(handle).Name);
+						if (name == "System.Console") { r.flags |= MiniProgram_.EFlags.RedirectConsole; break; }
+					}
 				}
 			}
 
@@ -734,7 +742,7 @@ namespace Au.Compiler
 				if (Api.MoveFileEx(file, renamed, Api.MOVEFILE_REPLACE_EXISTING)) goto g1;
 			}
 			return false;
-			g1:
+		g1:
 			if (notInCache) {
 				if (s_renamedFiles == null) {
 					s_renamedFiles = new List<string>();
@@ -761,8 +769,7 @@ namespace Au.Compiler
 
 	public enum ECompReason { Run, CompileAlways, CompileIfNeed }
 
-	public static class InternalsVisible
-	{
+	public static class InternalsVisible {
 		static ConcurrentDictionary<string, string[]> _d = new();
 
 		static InternalsVisible() {

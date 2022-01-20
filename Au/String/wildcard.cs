@@ -1,8 +1,6 @@
-﻿
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Parses and compares [](xref:wildcard_expression).
 	/// </summary>
@@ -13,15 +11,13 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// //This version does not support wildcard expressions.
-	/// Document Find1(string name, string date)
-	/// {
+	/// Document Find1(string name, string date) {
 	/// 	return Documents.Find(x => x.Name.Eqi(name) && x.Date.Eqi(date));
 	/// }
 	/// 
 	/// //This version supports wildcard expressions.
 	/// //null-string arguments are not compared.
-	/// Document Find2(string name, string date)
-	/// {
+	/// Document Find2(string name, string date) {
 	/// 	wildex n = name, d = date; //null if the string is null
 	/// 	return Documents.Find(x => (n == null || n.Match(x.Name)) && (d == null || d.Match(x.Date)));
 	/// }
@@ -31,11 +27,10 @@ namespace Au
 	/// var item = x.Find2("example", "2017-*");
 	/// ]]></code>
 	/// </example>
-	public class wildex
-	{
+	public class wildex {
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
 
-		readonly object _o; //string, regexp, Regex or wildex[]. Tested: getting string etc with '_obj as string' is fast.
+		readonly object _o; //string, regexp, Regex or wildex[]. Tested: getting string etc with '_o as string' is fast.
 		readonly WXType _type;
 		readonly bool _ignoreCase;
 		readonly bool _not;
@@ -46,57 +41,60 @@ namespace Au
 		/// "" will match "".
 		/// </param>
 		/// <param name="matchCase">Case-sensitive even if there is no **c.</param>
+		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return false.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression, bool matchCase = false) {
-			var w = wildcardExpression;
-			if (w == null) throw new ArgumentNullException();
-			_type = WXType.Wildcard;
-			_ignoreCase = !matchCase;
-			string[] split = null;
+		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression, bool matchCase = false, bool noException = false) {
+			var w = wildcardExpression ?? throw new ArgumentNullException();
+			try {
+				_type = WXType.Wildcard;
+				_ignoreCase = !matchCase;
+				string[] split = null;
 
-			if (w.Length >= 3 && w[0] == '*' && w[1] == '*') {
-				for (int i = 2, j; i < w.Length; i++) {
-					switch (w[i]) {
-					case 't': _type = WXType.Text; break;
-					case 'r': _type = WXType.RegexPcre; break;
-					case 'R': _type = WXType.RegexNet; break;
-					case 'm': _type = WXType.Multi; break;
-					case 'c': _ignoreCase = false; break;
-					case 'n': _not = true; break;
-					case ' ': w = w[(i + 1)..]; goto g1;
-					case '(':
-						if (w[i - 1] != 'm') goto ge;
-						for (j = ++i; j < w.Length; j++) if (w[j] == ')') break;
-						if (j >= w.Length || j == i) goto ge;
-						split = new string[] { w[i..j] };
-						i = j;
-						break;
-					default: goto ge;
+				if (w.Length >= 3 && w[0] == '*' && w[1] == '*') {
+					for (int i = 2, j; i < w.Length; i++) {
+						switch (w[i]) {
+						case 't': _type = WXType.Text; break;
+						case 'r': _type = WXType.RegexPcre; break;
+						case 'R': _type = WXType.RegexNet; break;
+						case 'm': _type = WXType.Multi; break;
+						case 'c': _ignoreCase = false; break;
+						case 'n': _not = true; break;
+						case ' ': w = w[(i + 1)..]; goto g1;
+						case '(':
+							if (w[i - 1] != 'm') goto ge;
+							for (j = ++i; j < w.Length; j++) if (w[j] == ')') break;
+							if (j >= w.Length || j == i) goto ge;
+							split = new string[] { w[i..j] };
+							i = j;
+							break;
+						default: goto ge;
+						}
+					}
+				ge:
+					throw new ArgumentException("Invalid \"**options \" in wildcard expression.");
+				g1:
+					switch (_type) {
+					case WXType.RegexNet:
+						var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
+						_o = new Regex(w, ro);
+						return;
+					case WXType.RegexPcre:
+						_o = new regexp(w, _ignoreCase ? RXFlags.CASELESS : 0);
+						return;
+					case WXType.Multi:
+						var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
+						var multi = new wildex[a.Length];
+						for (int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
+						_o = multi;
+						return;
 					}
 				}
-				ge:
-				throw new ArgumentException("Invalid \"**options \" in wildcard expression.");
-				g1:
-				switch (_type) {
-				case WXType.RegexNet:
-					var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
-					_o = new Regex(w, ro);
-					return;
-				case WXType.RegexPcre:
-					_o = new regexp(w);
-					return;
-				case WXType.Multi:
-					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
-					var multi = new wildex[a.Length];
-					for (int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
-					_o = multi;
-					return;
-				}
-			}
 
-			if (_type == WXType.Wildcard && !hasWildcardChars(w)) _type = WXType.Text;
-			_o = w;
+				if (_type == WXType.Wildcard && !hasWildcardChars(w)) _type = WXType.Text;
+				_o = w;
+			}
+			catch when (noException) { _type = WXType.Error; }
 		}
 		static readonly string[] _splitMulti = { "||" };
 
@@ -108,11 +106,6 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
 		public static implicit operator wildex([ParamString(PSFormat.wildex)] string wildcardExpression) {
 			if (wildcardExpression == null) return null;
-
-			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of wnd.find and wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
-			///// If the string is "", calls <see cref="print.warning"/>. To match "", use "**empty" instead.
-			//	if(wildcardExpression.Length == 0) print.warning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
-
 			return new wildex(wildcardExpression);
 		}
 
@@ -132,8 +125,7 @@ namespace Au
 				R = s.Like(_o as string, _ignoreCase);
 				break;
 			case WXType.Text:
-				var t = _o as string;
-				R = s.Eq(t, _ignoreCase);
+				R = s.Eq(_o as string, _ignoreCase);
 				break;
 			case WXType.RegexPcre:
 				R = (_o as regexp).IsMatch(s);
@@ -160,31 +152,33 @@ namespace Au
 					if (!v.Not && v.Match(s)) return !_not;
 				}
 				break;
+			default: //Error
+				return false;
 			}
 			return R ^ _not;
 		}
 
 		/// <summary>
-		/// Gets the wildcard or simple text.
-		/// null if TextType is Regex or Multi.
+		/// Returns the text or wildcard string.
+		/// null if <b>TextType</b> is not <b>Text</b> or <b>Wildcard</b>.
 		/// </summary>
 		public string Text => _o as string;
 
 		/// <summary>
-		/// Gets the Regex object created from regular expression string.
-		/// null if TextType is not RegexPcre (no option r).
+		/// Returns the <b>regexp</b> object created from regular expression string.
+		/// null if <b>TextType</b> is not <b>RegexPcre</b> (no option r).
 		/// </summary>
-		public Regex RegexPcre => _o as Regex;
+		public regexp RegexPcre => _o as regexp;
 
 		/// <summary>
-		/// Gets the Regex object created from regular expression string.
-		/// null if TextType is not RegexNet (no option R).
+		/// Gets the <b>Regex</b> object created from regular expression string.
+		/// null if <b>TextType</b> is not <b>RegexNet</b> (no option R).
 		/// </summary>
 		public Regex RegexNet => _o as Regex;
 
 		/// <summary>
 		/// Array of <b>wildex</b> variables, one for each part in multi-part text.
-		/// null if TextType is not Multi (no option m).
+		/// null if <b>TextType</b> is not <b>Multi</b> (no option m).
 		/// </summary>
 		public wildex[] MultiArray => _o as wildex[];
 
@@ -205,7 +199,7 @@ namespace Au
 
 		///
 		public override string ToString() {
-			return _o.ToString();
+			return _o?.ToString();
 		}
 
 		/// <summary>
@@ -219,10 +213,8 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
-	public static unsafe partial class ExtString
-	{
+namespace Au.Types {
+	public static unsafe partial class ExtString {
 		#region Like
 
 		/// <summary>
@@ -313,7 +305,7 @@ namespace Au.Types
 			}
 			if (w == we) return s == se; //w ended?
 			goto gr; //s ended
-			g1:
+		g1:
 
 			//find '*' from end. Makes "*text" much faster.
 			for (; we > w && se > s; we--, se--) {
@@ -327,7 +319,7 @@ namespace Au.Types
 			//Changes: supports '\0' in string; case-sensitive or not; restructured, in many cases faster.
 
 			int i = 0;
-			gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
+		gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
 			w += i + 1;
 			if (w == we) return true;
 			s += i;
@@ -341,7 +333,7 @@ namespace Au.Types
 			}
 
 			w += i;
-			gr:
+		gr:
 			while (w < we && *w == '*') w++;
 			return w == we;
 
@@ -383,8 +375,7 @@ namespace Au.Types
 	/// <summary>
 	/// The type of text (wildcard expression) of a <see cref="wildex"/> variable.
 	/// </summary>
-	public enum WXType : byte
-	{
+	public enum WXType : byte {
 		/// <summary>
 		/// Simple text (option t, or no *? characters and no t r R options).
 		/// </summary>
@@ -414,5 +405,10 @@ namespace Au.Types
 		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
 		/// </summary>
 		Multi,
+
+		/// <summary>
+		/// The regular expression was invalid, and parameter <i>noException</i> true.
+		/// </summary>
+		Error,
 	}
 }

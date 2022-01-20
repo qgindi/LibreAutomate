@@ -1,11 +1,11 @@
 ﻿//using System.Linq;
 //using System.Xml.Linq;
 
-//using System.Windows;
+using System.Windows;
 //using System.Windows.Controls;
 //using System.Windows.Media;
 //using System.Windows.Interop;
-//using System.Windows.Input;
+using System.Windows.Input;
 
 //using Au.Controls;
 using static Au.Controls.Sci;
@@ -74,8 +74,8 @@ static unsafe class Test
 
 		//print.it(CiUtil.IsScript(doc.zText));
 
-//var s="aaa bbb"
-//char c = 'a'
+		//var s="aaa bbb"
+		//char c = 'a'
 
 	}
 
@@ -88,11 +88,11 @@ static unsafe class Test
 	//		print.it(c.errors);
 	//	}
 	//}
-/*
-Aaa
-bbb
-ccc
-*/
+	/*
+	Aaa
+	bbb
+	ccc
+	*/
 
 	class TestGC
 	{

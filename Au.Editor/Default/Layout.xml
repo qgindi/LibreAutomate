@@ -17,6 +17,7 @@ state - flags: 1 floating, 2 hidden.
 flags - misc flags: 1 - splitter resizes the nearest node at each side instead of all star-sized nodes.
 active - 0-based index of active node in tab. Default 0.
 Attributes valid in:
+name - panel, toolbar, document.
 o - stack.
 z, s - any. Not used if in tab.
 captionAt - any except stack. Not used if in tab.

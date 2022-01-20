@@ -49,6 +49,7 @@
 		<Page Remove="resources\ci\Interface.xaml" />
 		<Page Remove="resources\ci\Keyword.xaml" />
 		<Page Remove="resources\ci\Label.xaml" />
+		<Page Remove="resources\ci\LocalMethod.xaml" />
 		<Page Remove="resources\ci\LocalVariable.xaml" />
 		<Page Remove="resources\ci\Method.xaml" />
 		<Page Remove="resources\ci\Namespace.xaml" />
@@ -101,6 +102,7 @@
 		<Resource Include="resources\ci\Interface.xaml" />
 		<Resource Include="resources\ci\Keyword.xaml" />
 		<Resource Include="resources\ci\Label.xaml" />
+		<Resource Include="resources\ci\LocalMethod.xaml" />
 		<Resource Include="resources\ci\LocalVariable.xaml" />
 		<Resource Include="resources\ci\Method.xaml" />
 		<Resource Include="resources\ci\Namespace.xaml" />

@@ -56,9 +56,6 @@ All attributes are optional. The Example command contains all.
 		<Options />
 		<Icons />
 		<Input_recorder separator="" />
-		<wnd />
-		<elm />
-		<uiimage />
 		<Keys />
 	</Tools>
 	<Help>

@@ -39,8 +39,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// public static bool WaitForMouseLeftButtonDown(double secondsTimeout)
-		/// {
+		/// public static bool WaitForMouseLeftButtonDown(double secondsTimeout) {
 		/// 	var x = new wait.Loop(secondsTimeout);
 		/// 	for(; ; ) {
 		/// 		if(mouse.isPressed(MButtons.Left)) return true;
@@ -50,8 +49,7 @@ namespace Au
 		/// ]]></code>
 		/// The same with wait.forCondition.
 		/// <code><![CDATA[
-		/// static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
-		/// {
+		/// static bool WaitForMouseLeftButtonDown2(double secondsTimeout) {
 		/// 	return wait.forCondition(secondsTimeout, () => mouse.isPressed(MButtons.Left));
 		/// }
 		/// ]]></code>

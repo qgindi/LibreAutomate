@@ -39,12 +39,12 @@ To hide the list without inserting item text you can press Esc or click somewher
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or tab just leaves the enclosed area. Also then Backspace erases both characters.
 
 #### Statement completion
-When you press Enter inside a function argument list before the last `)`, editor adds missing `;` or `{  }`, adds new line and moves the text cursor there. Does not add new line if you type `;` instead of Enter.
+When you press Enter inside a function argument list before the last `)`, editor adds missing `;` or `{  }`, adds new line and moves the text cursor there. To avoid it, press Esc+Enter. To complete statement without new line, use `;` instead of Enter.
 
-Ctrl+Enter and Ctrl+; will complete statement when the text cursor is anywhere in it, for example in a string.
+Ctrl+Enter, Shift+Enter and Ctrl+; will complete statement when the text cursor is anywhere in it.
 
 #### Auto indentation
-When you press Enter, editor adds new line with correct number of tabs (indentation). The same with Ctrl+Enter.
+When you press Enter, editor adds new line with correct number of tabs (indentation). The same with Ctrl+Enter. To avoid it, press Esc+Enter.
 
 #### Parameter info
 When you type a function name and `(`, editor shows a tooltip-like window with info about the function and current parameter. To show the window from anywhere in an argument list, press Ctrl+Shift+Space. You can select oveloads with arrow keys or the mouse.

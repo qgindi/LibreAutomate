@@ -78,7 +78,7 @@ Right-click - context menu. Middle-click - clear.
 Mouse x y, window name/class/program, control id/class/name, menu item id.
 
 #### Outline
-Helps to find types, functions (except local), fields, namespaces and regions declared in current C# code file.
+Helps to find types, functions, fields, namespaces and regions in current C# code file.
 
 #### Cookbook
 Teaches how to cook scripts.

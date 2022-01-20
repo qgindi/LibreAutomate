@@ -2,19 +2,28 @@ using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 using System.Xml.Linq;
+using System.Linq;
 
-//CONSIDER: Cookbook is a bit too long if tab. Need a shorter name, eg Howto or Guide.
-//	It seems "howto" is used for something long and detailed. Maybe "guide" too.
-//	Cookbook maybe better, because recipes often are short. But it is often used for **specific** problems, not for learning of language basics.
+//CONSIDER: Name "Cookbook" is a bit too long if tab. Need a shorter name, eg Howto.
 
-class PanelCookbook : DockPanel
-{
+//CONSIDER: Add a menu-button. Menu:
+//	Item "Request a recipe for this search query (uses internet)".
+//	Checkbox "Auto-update the cookbook (uses internet)".
+
+class PanelCookbook : DockPanel {
 	KTreeView _tv;
+	TextBox _search;
+	_Item _root;
 	bool _loaded;
 	string _cookbookPath;
 
 	public PanelCookbook() {
 		//this.UiaSetName("Cookbook panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+
+		_search = new TextBox { Margin = new(2), ToolTip = "Part of recipe name, or wildcard expression" };
+		this.Children.Add(_search);
+		SetDock(_search, Dock.Top);
+		_search.TextChanged += _search_TextChanged;
 
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
 		this.Children.Add(_tv);
@@ -46,8 +55,8 @@ class PanelCookbook : DockPanel
 			_cookbookPath = folders.ThisAppBS + "Cookbook\\files";
 			var xr = XmlUtil.LoadElem(_cookbookPath + ".xml");
 
-			var root = new _Item(null, true);
-			_AddItems(xr, root);
+			_root = new _Item(null, true);
+			_AddItems(xr, _root);
 
 			static void _AddItems(XElement xp, _Item ip) {
 				foreach (var x in xp.Elements()) {
@@ -61,7 +70,7 @@ class PanelCookbook : DockPanel
 				}
 			}
 
-			_tv.SetItems(root.Children());
+			_tv.SetItems(_root.Children());
 		}
 		catch { }
 	}
@@ -86,11 +95,43 @@ class PanelCookbook : DockPanel
 		catch { }
 	}
 
-	class _Item : TreeBase<_Item>, ITreeViewItem
-	{
+	private void _search_TextChanged(object sender, TextChangedEventArgs e) {
+		var s = _search.Text;
+		if (s.Length < 2) {
+			_tv.SetItems(_root.Children());
+			return;
+		}
+
+		var wild = wildex.hasWildcardChars(s) ? new wildex(s, noException: true) : null;
+		bool allMatch = true;
+		var root2 = _Search(_root);
+		if (root2 != null && allMatch) root2 = _root; //eg ** matches all
+
+		_Item _Search(_Item parent) {
+			_Item R = null;
+			for (var n = parent.FirstChild; n != null; n = n.Next) {
+				_Item r;
+				if (n.dir) {
+					r = _Search(n);
+				} else {
+					if (!n.text.Contains(s, StringComparison.OrdinalIgnoreCase))
+						if (wild == null || !wild.Match(n.text)) { allMatch = false; continue; }
+					r = new _Item(n.text, false);
+				}
+				if (r == null) continue;
+				R ??= new _Item(parent.text, true) { isExpanded = true };
+				R.AddChild(r);
+			}
+			return R;
+		}
+
+		_tv.SetItems(root2?.Children());
+	}
+
+	class _Item : TreeBase<_Item>, ITreeViewItem {
 		internal readonly string text;
 		internal readonly bool dir;
-		bool _isExpanded;
+		internal bool isExpanded;
 
 		public _Item(string text, bool dir) {
 			this.text = text;
@@ -101,11 +142,11 @@ class PanelCookbook : DockPanel
 
 		string ITreeViewItem.DisplayText => text;
 
-		string ITreeViewItem.ImageSource => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
+		string ITreeViewItem.ImageSource => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
 
-		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
+		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 
-		bool ITreeViewItem.IsExpanded => _isExpanded;
+		bool ITreeViewItem.IsExpanded => isExpanded;
 
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 

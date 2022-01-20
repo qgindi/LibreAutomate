@@ -1,7 +1,5 @@
-namespace Au.Types
-{
-	static unsafe partial class Api
-	{
+namespace Au.Types {
+	static unsafe partial class Api {
 		[DllImport("kernel32.dll", SetLastError = true)] //note: without 'SetLastError = true' Marshal.GetLastWin32Error is unaware that we set the code to 0 etc and returns old captured error code
 		internal static extern void SetLastError(int errCode);
 
@@ -31,8 +29,7 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int GetTickCount();
 
-		internal struct SYSTEMTIME
-		{
+		internal struct SYSTEMTIME {
 			public ushort wYear;
 			public ushort wMonth;
 			public ushort wDayOfWeek;
@@ -251,8 +248,7 @@ namespace Au.Types
 		internal static extern bool SetFileAttributes(string lpFileName, System.IO.FileAttributes dwFileAttributes);
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
-		internal struct WIN32_FILE_ATTRIBUTE_DATA
-		{
+		internal struct WIN32_FILE_ATTRIBUTE_DATA {
 			public System.IO.FileAttributes dwFileAttributes;
 			public long ftCreationTime;
 			public long ftLastAccessTime;
@@ -287,6 +283,7 @@ namespace Au.Types
 		internal static extern bool SetSearchPathMode(uint Flags);
 
 		internal const uint SEM_FAILCRITICALERRORS = 0x1;
+		internal const uint SEM_NOGPFAULTERRORBOX = 0x2;
 
 		[DllImport("kernel32.dll")]
 		internal static extern uint SetErrorMode(uint uMode);
@@ -447,16 +444,14 @@ namespace Au.Types
 		//	fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);
 		//}
 
-		internal struct OVERLAPPED
-		{
+		internal struct OVERLAPPED {
 			nint _1, _2;
 			int _3, _4;
 			public IntPtr hEvent;
 		}
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
-		internal struct BY_HANDLE_FILE_INFORMATION
-		{
+		internal struct BY_HANDLE_FILE_INFORMATION {
 			public uint dwFileAttributes;
 			public long ftCreationTime;
 			public long ftLastAccessTime;
@@ -586,16 +581,14 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern int GetProcessId(IntPtr Process);
 
-		internal struct FILETIME
-		{
+		internal struct FILETIME {
 			public uint dwLowDateTime;
 			public uint dwHighDateTime;
 
 			public static implicit operator long(FILETIME ft) { return (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); } //in Release faster than *(long*)&ft
 		}
 
-		internal struct WIN32_FIND_DATA
-		{
+		internal struct WIN32_FIND_DATA {
 			public System.IO.FileAttributes dwFileAttributes;
 			public FILETIME ftCreationTime;
 			public FILETIME ftLastAccessTime;
@@ -710,8 +703,7 @@ namespace Au.Types
 		internal const int ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID = 0x004;
 		internal const int ACTCTX_FLAG_RESOURCE_NAME_VALID = 0x008;
 
-		internal struct ACTCTX
-		{
+		internal struct ACTCTX {
 			public int cbSize;
 			public uint dwFlags;
 			public string lpSource;
@@ -771,8 +763,7 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "GetStartupInfoW")]
 		internal static extern void GetStartupInfo(out STARTUPINFO lpStartupInfo);
 
-		internal struct STARTUPINFO
-		{
+		internal struct STARTUPINFO {
 			public int cb;
 			public IntPtr lpReserved;
 			public char* lpDesktop;
@@ -793,14 +784,12 @@ namespace Au.Types
 			public IntPtr hStdError;
 		}
 
-		internal struct STARTUPINFOEX
-		{
+		internal struct STARTUPINFOEX {
 			public STARTUPINFO StartupInfo;
 			public IntPtr lpAttributeList;
 		}
 
-		internal struct PROCESS_INFORMATION : IDisposable
-		{
+		internal struct PROCESS_INFORMATION : IDisposable {
 			public Handle_ hProcess;
 			public Handle_ hThread;
 			public int dwProcessId;
@@ -912,6 +901,11 @@ namespace Au.Types
 
 		internal const int RT_GROUP_ICON = 14;
 
+		internal const int STD_INPUT_HANDLE = -10;
+		internal const int STD_OUTPUT_HANDLE = -11;
+
+		[DllImport("kernel32.dll")]
+		internal static extern nint GetStdHandle(int nStdHandle);
 
 
 		#region undocumented

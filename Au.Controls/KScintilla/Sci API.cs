@@ -15,8 +15,6 @@ namespace Au.Controls
 		public const int SCI_ISXINMARGIN = 9506;
 		public const int SCI_DRAGDROP = 9507;
 
-		public const int MK_SCI_NOFOCUS = 0x10000;
-
 		[DllImport("Scintilla", EntryPoint = "Scintilla_DirectFunction")]
 		public static extern nint Sci_Call(nint sci, int message, nint wParam = 0, nint lParam = 0);
 
