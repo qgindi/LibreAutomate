@@ -289,9 +289,6 @@ partial class SciCode : KScintilla
 				}
 			}
 			break;
-		case Api.WM_KEYDOWN: //SHOULDDO: test, maybe move to TranslateAccelerator
-			if ((KKey)wparam == KKey.Insert) return true;
-			break;
 		case Api.WM_MBUTTONDOWN:
 			Api.SetFocus(w);
 			return true;

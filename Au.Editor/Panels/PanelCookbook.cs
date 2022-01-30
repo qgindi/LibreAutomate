@@ -25,6 +25,8 @@ class PanelCookbook : DockPanel {
 		SetDock(_search, Dock.Top);
 		_search.TextChanged += _search_TextChanged;
 
+		//TODO: _history menu-button
+
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
 		this.Children.Add(_tv);
 
@@ -45,7 +47,7 @@ class PanelCookbook : DockPanel {
 		if (!_loaded && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
 			_loaded = true;
 			_Load();
-			_tv.ItemActivated += _tv_ItemActivated;
+			_tv.ItemActivated += (_, e) => _OpenRecipe(e.Item as _Item);
 		}
 		base.OnPropertyChanged(e);
 	}
@@ -75,8 +77,7 @@ class PanelCookbook : DockPanel {
 		catch { }
 	}
 
-	private void _tv_ItemActivated(object sender, TVItemEventArgs e) {
-		var recipe = e.Item as _Item;
+	void _OpenRecipe(_Item recipe) {
 		if (recipe.dir) return;
 
 		//get file path
@@ -127,6 +128,16 @@ class PanelCookbook : DockPanel {
 
 		_tv.SetItems(root2?.Children());
 	}
+
+//	internal void RecipeLinkClicked(string s) {
+//#if DEBUG
+//		if (_root == null) Panels.PanelManager[this].Visible = true;
+//#endif
+//		var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.text.Like(s));
+//		_tv.EnsureVisible(v);
+//		_tv.Select(v);
+//		_OpenRecipe(v);
+//	}
 
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		internal readonly string text;

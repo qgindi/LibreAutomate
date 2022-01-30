@@ -1,10 +1,8 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Contains static functions to execute or open programs, files, folders, web pages, etc, start new threads.
 	/// </summary>
-	public static class run
-	{
+	public static class run {
 		/// <summary>
 		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
 		/// The returned <see cref="RResult"/> variable contains some process info - process id etc.
@@ -22,7 +20,7 @@ namespace Au
 		/// - <c>"file:///path"</c>
 		/// - <c>"mailto:a@b.c"</c>
 		/// - <c>":: ITEMIDLIST"</c>
-		/// - <c>@"::{CLSID}"</c>
+		/// - <c>@"shell:::{CLSID}"</c>
 		/// - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
 		/// More info in Remarks.
 		/// </param>
@@ -46,24 +44,33 @@ namespace Au
 		/// - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>folders.Documents</c>, <c>folders.System + "notepad.exe"</c>, <c>@"%folders.System%\notepad.exe"</c>.
 		/// - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="filesystem.searchPath"/>.
 		/// - Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-		/// - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
+		/// - URL. Examples: <c>"https://www.example.com"</c>, <c>"file:///path"</c>.
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
 		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
-		/// - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>. Can be used to open virtual folders and items like Control Panel.
-		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
+		/// - Shell object's parsing name, like <c>@"shell:::{CLSID}"</c> or <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use hotkey Ctrl+Shift+Q or function <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
 		/// 
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="pathname.expand"/>.
 		/// </remarks>
+		/// <seealso cref="wnd.find"/>
 		/// <seealso cref="wnd.findOrRun"/>
+		/// <seealso cref="wnd.runAndFind"/>
 		/// <example>
-		/// Run notepad and wait for its window.
+		/// Run Notepad and wait for an active Notepad window.
 		/// <code><![CDATA[
 		/// run.it("notepad.exe");
+		/// 1.s();
 		/// wnd w = wnd.wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
-		/// Run notepad or activate its window.
+		/// Run Notepad or activate a Notepad window.
 		/// <code><![CDATA[
 		/// wnd w = wnd.findOrRun("*- Notepad", run: () => run.it("notepad.exe"));
+		/// ]]></code>
+		/// Run File Explorer and wait for new folder window. Ignores matching windows that already existed.
+		/// <code><![CDATA[
+		/// var w = wnd.runAndFind(
+		/// 	() => run.it(@"explorer.exe"),
+		/// 	10, cn: "CabinetWClass");
 		/// ]]></code>
 		/// </example>
 		public static RResult it(string file, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
@@ -415,9 +422,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Opens parent folder in Explorer and selects the file.
-		/// Returns null if fails, for example if the file does not exist.
+		/// Opens parent folder in File Explorer (folder window) and selects the file.
 		/// </summary>
+		/// <returns>false if fails, for example if the file does not exist.</returns>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
 		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="pathname.expand"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
@@ -449,14 +456,12 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="run.it"/>.
 	/// </summary>
 	[Flags]
-	public enum RFlags
-	{
+	public enum RFlags {
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
 		/// Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="run.itSafe"/>.
@@ -504,8 +509,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Implicit conversion from <b>string</b> sets <see cref="CurrentDirectory"/>.
 	/// </remarks>
-	public class ROptions
-	{
+	public class ROptions {
 		/// <summary>
 		/// Sets <see cref="CurrentDirectory"/>.
 		/// </summary>
@@ -558,8 +562,7 @@ namespace Au.Types
 	/// <summary>
 	/// Results of <see cref="run.it"/>.
 	/// </summary>
-	public class RResult
-	{
+	public class RResult {
 		/// <summary>
 		/// The exit code of the process.
 		/// 0 if no flag <b>WaitForExit</b> or if cannot wait.

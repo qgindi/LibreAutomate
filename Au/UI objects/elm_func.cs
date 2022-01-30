@@ -67,7 +67,6 @@ namespace Au
 		/// </param>
 		/// <remarks>
 		/// Most but not all UI elements support this property.
-		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
 		public bool GetRect(out RECT r, bool raw = false) {
 			ThrowIfDisposed_();
@@ -116,7 +115,6 @@ namespace Au
 		/// <remarks>
 		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox; then returns <b>ERole.Custom</b>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
-		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public ERole RoleInt {
 			get {
@@ -136,7 +134,6 @@ namespace Au
 		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox.
 		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
-		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public string Role {
 			get {
@@ -179,9 +176,6 @@ namespace Au
 		/// Gets UI element state (flags).
 		/// </summary>
 		/// <returns>0 if failed. Supports <see cref="lastError"/>.</returns>
-		/// <remarks>
-		/// Uses <msdn>IAccessible.get_accState</msdn>.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// if(a.State.Has(EState.INVISIBLE)) print.it("has state INVISIBLE");
@@ -277,7 +271,6 @@ namespace Au
 		/// <returns>"" if name is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// UI element name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the UI element.
-		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </remarks>
 		public string Name {
 			get => _GetStringProp('n');
@@ -308,7 +301,6 @@ namespace Au
 		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the UI element reliably.
 		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Most UI elements don't support 'set'.
-		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
 		/// </remarks>
 		public string Value {
 			get => _GetStringProp('v');
@@ -322,9 +314,6 @@ namespace Au
 		/// Gets description.
 		/// </summary>
 		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
-		/// <remarks>
-		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
-		/// </remarks>
 		public string Description {
 			get => _GetStringProp('d');
 		}
@@ -333,9 +322,6 @@ namespace Au
 		/// Gets help text.
 		/// </summary>
 		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
-		/// <remarks>
-		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
-		/// </remarks>
 		public string Help {
 			get => _GetStringProp('h');
 		}
@@ -355,9 +341,6 @@ namespace Au
 		/// Gets keyboard shortcut.
 		/// </summary>
 		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
-		/// <remarks>
-		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
-		/// </remarks>
 		public string KeyboardShortcut {
 			get => _GetStringProp('k');
 		}
@@ -368,7 +351,6 @@ namespace Au
 		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// If this is a Java UI element, returns all actions that can be used with <see cref="JavaInvoke"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="Invoke"/>.
-		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// Note: the string is supposed to be localized, ie depends on UI language; except Java.
 		/// </remarks>
 		public string DefaultAction {
@@ -380,9 +362,8 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the UI element does not have a default action. Then you can use <see cref="MouseClick"/>, or try <see cref="PostClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
-		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (MouseClick etc).
-		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
+		/// Fails if the UI element does not have a default action. Then you can use <see cref="MouseClick"/>, or try <see cref="PostClick"/>, <see cref="Check"/>, <see cref="SendKeys"/>, other functions.
+		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (<b>MouseClick</b> etc).
 		/// </remarks>
 		public void Invoke() {
 			ThrowIfDisposed_();
@@ -627,7 +608,6 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
-		/// Uses <msdn>IAccessible.accSelect</msdn>.
 		/// Not all UI elements support it. Most UI elements support not all flags. It depends on <see cref="EState"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
 		/// Many UI elements have bugs, especially with flag TAKEFOCUS. More bugs when the UI element has been found with flag <see cref="EFFlags.NotInProc"/>.
 		/// </remarks>
@@ -725,9 +705,6 @@ namespace Au
 		/// <summary>
 		/// Gets the number of direct child UI elements.
 		/// </summary>
-		/// <remarks>
-		/// Uses <msdn>IAccessible.get_accChildCount</msdn>.
-		/// </remarks>
 		public int ChildCount {
 			get {
 				ThrowIfDisposed_();

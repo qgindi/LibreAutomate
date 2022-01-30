@@ -105,7 +105,7 @@ partial class SciCode
 					var a = Panels.Files.TreeControl.DragDropFiles;
 					if (a != null) {
 						foreach (var f in a) {
-							_AppendFile(f.ItemPath, f.Name, null, f);
+							_AppendFile("@\"" + f.ItemPath + "\"", f.Name, null, f);
 						}
 						s = b.ToString();
 					}
@@ -127,7 +127,7 @@ partial class SciCode
 						s = b.ToString();
 					}
 				} else if (_data.linkName != null) {
-					_AppendFile(_data.text, _GetLinkName(_data.linkName));
+					_AppendFile("\"" + _data.text + "\"", _GetLinkName(_data.linkName));
 					s = b.ToString();
 				}
 			}
@@ -158,12 +158,11 @@ partial class SciCode
 				} else {
 					name = name.Escape();
 					switch (what) {
-					case 1: case 2: case 11: b.Append("var s = "); break;
+					case 1: case 2: case 11: b.Append("string s = "); break; //not var s, because may be FolderPath
 					case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
 					}
-					if (what == 12 || what == 13) b.Append("run.it(");
-					if ((what == 11 || what == 12) && (path.Starts("\":: ") || path.Starts("folders.shell."))) b.AppendFormat("/* {0} */ ", name);
-					if (!path.Ends('\"')) path = "@\"" + path + "\"";
+					if (what is 12 or 13) b.Append("run.it(");
+					if (what is 11 or 12 && (path.Starts("\":: ") || path.Like("folders.shell.*\""))) b.AppendFormat("/* {0} */ ", name);
 					switch (what) {
 					case 1: b.AppendFormat("\"{0}\"", name); break;
 					case 2 or 11: b.Append(path); break;

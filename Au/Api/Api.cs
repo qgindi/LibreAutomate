@@ -2,11 +2,9 @@
 
 #pragma warning disable 649, 169 //field never assigned/used
 
-namespace Au.Types
-{
+namespace Au.Types {
 	[DebuggerStepThrough]
-	static unsafe partial class Api
-	{
+	static unsafe partial class Api {
 		#region util
 
 		/// <summary>
@@ -157,8 +155,7 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern bool StretchBlt(IntPtr hdcDest, int xDest, int yDest, int wDest, int hDest, IntPtr hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, uint rop);
 
-		internal struct BITMAPINFOHEADER
-		{
+		internal struct BITMAPINFOHEADER {
 			public int biSize;
 			public int biWidth;
 			public int biHeight;
@@ -175,8 +172,7 @@ namespace Au.Types
 		/// <summary>
 		/// BITMAPINFOHEADER members and 3 uints for color table etc.
 		/// </summary>
-		internal struct BITMAPINFO
-		{
+		internal struct BITMAPINFO {
 			public readonly int biSize;
 			public int biWidth;
 			public int biHeight;
@@ -261,8 +257,7 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern int IntersectClipRect(IntPtr hdc, int left, int top, int right, int bottom);
 
-		internal struct LOGFONT
-		{
+		internal struct LOGFONT {
 			public int lfHeight;
 			public int lfWidth;
 			public int lfEscapement;
@@ -279,8 +274,7 @@ namespace Au.Types
 			public fixed char lfFaceName[32];
 		}
 
-		internal struct NONCLIENTMETRICS
-		{
+		internal struct NONCLIENTMETRICS {
 			public int cbSize;
 			public int iBorderWidth;
 			public int iScrollWidth;
@@ -335,8 +329,7 @@ namespace Au.Types
 		[DllImport("advapi32.dll", SetLastError = true)]
 		internal static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out Handle_ TokenHandle);
 
-		internal enum TOKEN_INFORMATION_CLASS
-		{
+		internal enum TOKEN_INFORMATION_CLASS {
 			TokenUser = 1,
 			TokenGroups,
 			TokenPrivileges,
@@ -392,16 +385,14 @@ namespace Au.Types
 		[DllImport("advapi32.dll")]
 		internal static extern uint* GetSidSubAuthority(IntPtr pSid, uint nSubAuthority);
 
-		internal enum SECURITY_IMPERSONATION_LEVEL
-		{
+		internal enum SECURITY_IMPERSONATION_LEVEL {
 			SecurityAnonymous,
 			SecurityIdentification,
 			SecurityImpersonation,
 			SecurityDelegation
 		}
 
-		internal enum TOKEN_TYPE
-		{
+		internal enum TOKEN_TYPE {
 			TokenPrimary = 1,
 			TokenImpersonation
 		}
@@ -412,8 +403,7 @@ namespace Au.Types
 		[DllImport("advapi32.dll", SetLastError = true)]
 		internal static extern bool CreateProcessWithTokenW(IntPtr hToken, uint dwLogonFlags, string lpApplicationName, char[] lpCommandLine, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
-		internal struct LUID
-		{
+		internal struct LUID {
 			public uint LowPart;
 			public int HighPart;
 		}
@@ -422,14 +412,12 @@ namespace Au.Types
 		internal static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, out LUID lpLuid);
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
-		internal struct LUID_AND_ATTRIBUTES
-		{
+		internal struct LUID_AND_ATTRIBUTES {
 			public LUID Luid;
 			public uint Attributes;
 		}
 
-		internal struct TOKEN_PRIVILEGES
-		{
+		internal struct TOKEN_PRIVILEGES {
 			public int PrivilegeCount;
 			public LUID_AND_ATTRIBUTES Privileges; //[1]
 		}
@@ -438,8 +426,7 @@ namespace Au.Types
 		internal static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges, in TOKEN_PRIVILEGES NewState, uint BufferLength, [Out] TOKEN_PRIVILEGES[] PreviousState, IntPtr ReturnLength);
 
 		[StructLayout(LayoutKind.Sequential)]
-		internal sealed class SECURITY_ATTRIBUTES : IDisposable
-		{
+		internal sealed class SECURITY_ATTRIBUTES : IDisposable {
 			public int nLength;
 			public void* lpSecurityDescriptor;
 			public int bInheritHandle;
@@ -509,8 +496,7 @@ namespace Au.Types
 		internal const uint SHGFI_ADDOVERLAYS = 0x000000020;     // apply the appropriate overlays;
 		internal const uint SHGFI_OVERLAYINDEX = 0x000000040;     // Get the index of the overlay;
 
-		internal struct SHFILEINFO
-		{
+		internal struct SHFILEINFO {
 			public IntPtr hIcon;
 			public int iIcon;
 			public uint dwAttributes;
@@ -577,8 +563,7 @@ namespace Au.Types
 		internal const uint NIS_HIDDEN = 0x1;
 		internal const uint NIS_SHAREDICON = 0x2;
 
-		internal struct NOTIFYICONDATA
-		{
+		internal struct NOTIFYICONDATA {
 			/// <summary>
 			/// Sets cbSize, hWnd and uFlags.
 			/// </summary>
@@ -618,16 +603,14 @@ namespace Au.Types
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int Shell_NotifyIconGetRect(in NOTIFYICONIDENTIFIER identifier, out RECT iconLocation);
-		internal struct NOTIFYICONIDENTIFIER
-		{
+		internal struct NOTIFYICONIDENTIFIER {
 			public int cbSize;
 			public wnd hWnd;
 			public int uID;
 			public Guid guidItem;
 		}
 
-		internal struct SHSTOCKICONINFO
-		{
+		internal struct SHSTOCKICONINFO {
 			public int cbSize;
 			public IntPtr hIcon;
 			public int iSysImageIndex;
@@ -701,8 +684,7 @@ namespace Au.Types
 		//internal const uint SEE_MASK_WAITFORINPUTIDLE = 0x2000000;
 		internal const uint SEE_MASK_FLAG_LOG_USAGE = 0x4000000;
 
-		internal struct SHELLEXECUTEINFO
-		{
+		internal struct SHELLEXECUTEINFO {
 			public int cbSize;
 			public uint fMask;
 			public wnd hwnd;
@@ -755,8 +737,7 @@ namespace Au.Types
 		internal const uint FOF_NORECURSEREPARSE = 0x8000;
 		internal const uint FOF_NO_UI = 0x614;
 
-		internal struct SHFILEOPSTRUCT
-		{
+		internal struct SHFILEOPSTRUCT {
 			public wnd hwnd;
 			public uint wFunc;
 			public string pFrom;
@@ -823,6 +804,8 @@ namespace Au.Types
 		[DllImport("shell32.dll")]
 		internal static extern bool IsUserAnAdmin();
 
+		[DllImport("shell32.dll", PreserveSig = true, EntryPoint = "SHEmptyRecycleBinW")]
+		internal static extern int SHEmptyRecycleBin(wnd hwnd, string pszRootPath, int dwFlags);
 
 
 		#endregion
@@ -905,8 +888,7 @@ namespace Au.Types
 		internal const uint TME_NONCLIENT = 0x10;
 		internal const uint TME_CANCEL = 0x80000000;
 
-		internal struct TRACKMOUSEEVENT
-		{
+		internal struct TRACKMOUSEEVENT {
 			public int cbSize;
 			public uint dwFlags;
 			public wnd hwndTrack;
@@ -1002,8 +984,7 @@ namespace Au.Types
 		internal static extern void OleUninitialize();
 
 		[ComImport, Guid("00000122-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IDropTarget
-		{
+		internal interface IDropTarget {
 			void DragEnter(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect);
 			void DragOver(int grfKeyState, POINT pt, ref int effect);
 			void DragLeave();
@@ -1047,8 +1028,7 @@ namespace Au.Types
 		internal static extern int CreateStdAccessibleObject(wnd hwnd, EObjid idObject, in Guid riid, out IAccessible ppvObject);
 
 		[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
-		internal interface IAccessible
-		{
+		internal interface IAccessible {
 			IAccessible get_accParent();
 			int get_accChildCount();
 			[PreserveSig] int get_accChild(VarInt varChild, [MarshalAs(UnmanagedType.IDispatch)] out object ppdispChild);
@@ -1075,8 +1055,7 @@ namespace Au.Types
 		}
 
 #pragma warning disable 169
-		internal struct VarInt
-		{
+		internal struct VarInt {
 			ushort _vt, _1, _2, _3;
 			nint _int, _4;
 			public static implicit operator VarInt(int i) => new VarInt { _vt = 3, _int = i + 1 };
@@ -1204,10 +1183,41 @@ namespace Au.Types
 
 		#endregion
 
+		#region winmm
+
+		[DllImport("winmm.dll")]
+		internal static extern uint timeBeginPeriod(uint uPeriod);
+
+		[DllImport("winmm.dll")]
+		internal static extern uint timeEndPeriod(uint uPeriod);
+
+		[DllImport("winmm.dll")]
+		internal static extern uint waveOutSetVolume(IntPtr hwo, uint dwVolume);
+
+		[DllImport("winmm.dll")]
+		internal static extern uint waveOutGetVolume(IntPtr hwo, out uint pdwVolume);
+
+		[DllImport("winmm.dll", EntryPoint = "PlaySoundW")]
+		internal static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
+
+		internal const uint SND_FILENAME = 0x20000;
+		internal const uint SND_NODEFAULT = 0x2;
+		internal const uint SND_SYSTEM = 0x200000;
+		internal const uint SND_ASYNC = 0x1;
+		internal const uint SND_ALIAS = 0x10000;
+		internal const uint SND_APPLICATION = 0x80;
+
+		[DllImport("user32.dll")]
+		internal static extern bool MessageBeep(uint uType);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool Beep(int dwFreq, int dwDuration);
+
+		#endregion
+
 		#region dwmapi
 
-		internal enum DWMWA
-		{
+		internal enum DWMWA {
 			NCRENDERING_ENABLED = 1,
 			NCRENDERING_POLICY,
 			TRANSITIONS_FORCEDISABLED,
@@ -1243,8 +1253,7 @@ namespace Au.Types
 
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int GetThemePartSize(IntPtr hTheme, IntPtr hdc, int iPartId, int iStateId, RECT* prc, THEMESIZE eSize, out SIZE psz);
-		internal enum THEMESIZE
-		{
+		internal enum THEMESIZE {
 			TS_MIN,
 			TS_TRUE,
 			TS_DRAW
@@ -1268,15 +1277,13 @@ namespace Au.Types
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
 
-		internal enum BP_BUFFERFORMAT
-		{
+		internal enum BP_BUFFERFORMAT {
 			BPBF_COMPATIBLEBITMAP,
 			BPBF_DIB,
 			BPBF_TOPDOWNDIB,
 			BPBF_TOPDOWNMONODIB
 		}
-		internal struct BP_PAINTPARAMS
-		{
+		internal struct BP_PAINTPARAMS {
 			public int cbSize;
 			public uint dwFlags;
 			public RECT* prcExclude;
@@ -1304,8 +1311,7 @@ namespace Au.Types
 
 		#region ntdll
 
-		internal struct RTL_OSVERSIONINFOW
-		{
+		internal struct RTL_OSVERSIONINFOW {
 			public int dwOSVersionInfoSize;
 			public uint dwMajorVersion;
 			public uint dwMinorVersion;
@@ -1331,8 +1337,7 @@ namespace Au.Types
 		internal static extern void MD5Final(ref Hash.MD5Context context);
 
 #pragma warning disable 169
-		internal struct SYSTEM_PROCESS_INFORMATION
-		{
+		internal struct SYSTEM_PROCESS_INFORMATION {
 			internal uint NextEntryOffset;
 			internal uint NumberOfThreads;
 			long SpareLi1;
@@ -1374,14 +1379,6 @@ namespace Au.Types
 
 		#region other
 
-		[DllImport("winmm.dll")]
-		internal static extern uint timeBeginPeriod(uint uPeriod);
-
-		[DllImport("winmm.dll")]
-		internal static extern uint timeEndPeriod(uint uPeriod);
-
-
-
 		[DllImport("msi.dll", EntryPoint = "#217")]
 		internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
 
@@ -1396,16 +1393,14 @@ namespace Au.Types
 
 		#region struct
 
-		internal struct NEWHEADER
-		{
+		internal struct NEWHEADER {
 			public ushort wReserved;
 			public ushort wResType;
 			public ushort wResCount;
 		};
 
 		[StructLayout(LayoutKind.Sequential, Pack = 2)]
-		internal struct ICONDIRENTRY
-		{
+		internal struct ICONDIRENTRY {
 			public byte bWidth;
 			public byte bHeight;
 			public byte bColorCount;

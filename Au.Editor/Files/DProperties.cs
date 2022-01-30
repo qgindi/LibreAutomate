@@ -6,8 +6,7 @@ using Au.Controls;
 using Au.Compiler;
 using Microsoft.Win32;
 
-class DProperties : KDialogWindow
-{
+class DProperties : KDialogWindow {
 	readonly FileNode _f;
 	readonly MetaCommentsParser _meta;
 	readonly bool _isClass;
@@ -156,8 +155,8 @@ class DProperties : KDialogWindow
 		void _ChangedRole() {
 			_ShowHide(testScript, _role is Au.Compiler.ERole.classLibrary or Au.Compiler.ERole.classFile);
 			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon);
-			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary, outputPath, outputPathB, xmlDoc);
-			_ShowCollapse(_role == Au.Compiler.ERole.exeProgram, manifest, bit32);
+			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram, outputPath, outputPathB, manifest, bit32);
+			_ShowCollapse(_role == Au.Compiler.ERole.classLibrary, outputPath, outputPathB, xmlDoc);
 			_ShowCollapse(_role != Au.Compiler.ERole.classFile, gAssembly, gCompile);
 			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
 		}
@@ -309,13 +308,24 @@ class DProperties : KDialogWindow
 		}
 		if (a.Count == 0) { _ShowInfo_ListEmpty(button, sFind); return; }
 		a.Sort();
-		var p = new KPopupListBox { PlacementTarget = button };
-		p.Control.ItemsSource = a;
-		p.OK += o => {
-			metaList.Add(o as string);
-			_ShowInfo_Added(button, metaList);
-		};
-		p.IsOpen = true;
+
+		var m = new popupMenu();
+		foreach (var v in a) {
+			m[v.Limit(80, middle: true)] = o => {
+				metaList.Add(v);
+				_ShowInfo_Added(button, metaList);
+			};
+		}
+		m.Show();
+
+		//slow and with scrolling problems
+		//var p = new KPopupListBox { PlacementTarget = button };
+		//p.Control.ItemsSource = a;
+		//p.OK += o => {
+		//	metaList.Add(o as string);
+		//	_ShowInfo_Added(button, metaList);
+		//};
+		//p.IsOpen = true;
 	}
 
 	#region COM
@@ -342,7 +352,7 @@ class DProperties : KDialogWindow
 					if (verKey.GetValue("") is string description) {
 						if (rx.Match(description, 0, out RXGroup g)) description = description.Remove(g.Start);
 						if (sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
-						a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
+						a.Add(new _RegTypelib { guid = sGuid, text = description.Limit(80, middle: true) + ", " + sVer, version = sVer });
 					} //else print.it(sGuid); //some Microsoft typelibs. VS does not show these too.
 				}
 			}
@@ -350,12 +360,20 @@ class DProperties : KDialogWindow
 		if (a.Count == 0) { _ShowInfo_ListEmpty(e.Button, sFind); return; }
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
 
-		var p = new KPopupListBox { PlacementTarget = e.Button };
-		p.Control.ItemsSource = a;
-		p.OK += o => {
-			_ConvertTypeLibrary(o as _RegTypelib, e.Button);
-		};
-		p.IsOpen = true;
+		var m = new popupMenu();
+		foreach (var v in a) {
+			m[v.text] = o => _ConvertTypeLibrary(v, e.Button);
+		}
+		m.Show();
+
+		//slow and with scrolling problems
+		//	var p = new KPopupListBox { PlacementTarget = e.Button };
+		//	p.Control.ItemsSource = a;
+		//	p.OK += o => {
+		//		_ConvertTypeLibrary(o as _RegTypelib, e.Button);
+		//	};
+		//	p.IsOpen = true;
+		//}
 	}
 
 	//To convert a COM type library we use TypeLibConverter class. However .NET Core+ does not have it.
@@ -367,8 +385,7 @@ class DProperties : KDialogWindow
 	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
 	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core+ assemblies, and they don't have the class. Need exe.
 
-	class _RegTypelib
-	{
+	class _RegTypelib {
 		public string text, guid, version;
 
 		public override string ToString() => text;
@@ -621,7 +638,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 @"<b>xmlDoc</b> - create XML documentation file from /// XML comments of classes, functions, etc.
 Creates in the 'outputPath' folder.
 
-XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create online documentation or help file, for example with <google>Sandcastle Help File Builder<> or <google>DocFX<>.
+XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create HTML documentation.
 ");
 		info.ZAddElem(optimize,
 @"<b>optimize</b> - whether to make the compiled code as fast as possible.
@@ -731,7 +748,7 @@ Can be added only files that are in this workspace. Import files if need, for ex
 Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folder\File.png) or path in the workspace (examples: \File.png, \Folder\File.png).
 To remove this meta comment, edit the code.
 
-To load resources directly, use <help>Au.More.ResourceUtil<>, like <code>var s = Au.More.ResourceUtil.GetString(""file.txt"");</code>. Or <google>ResourceManager<>. To load WPF resources can be used ""pack:..."" URI.
+To load resources directly, use <help>Au.More.ResourceUtil<>, like <code>var s = Au.More.ResourceUtil.GetString(""file.txt"");</code>. Or <google>ResourceManager<>. To load WPF resources can be used ""pack:..."" URI; if role miniProgram, assembly name is like *ScriptName.
 To load embedded resources, use <google>Assembly.GetManifestResourceStream<>.
 Compiled names of non-embedded resource files are lowercase, like ""file.png"" or ""subfolder/file.png"".
 To browse .NET assembly resources, types, etc can be used for example <google>ILSpy<>.

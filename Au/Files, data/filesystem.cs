@@ -744,7 +744,7 @@ namespace Au
 		/// Does nothing if it does not exist (no exception).
 		/// </summary>
 		/// <param name="path">Full path.</param>
-		/// <param name="tryRecycleBin">
+		/// <param name="recycleBin">
 		/// Send to the Recycle Bin. If not possible, delete anyway.
 		/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
 		/// Note: it is much slower. To delete multiple, use <see cref="delete(IEnumerable{string}, bool)"/>.
@@ -761,9 +761,9 @@ namespace Au
 		/// 2. This process does not have security permissions to access or delete the file or directory or some of its descendants.
 		/// 3. The directory is (or contains) the "current directory" (in any process).
 		/// </remarks>
-		public static void delete(string path, bool tryRecycleBin = false) {
+		public static void delete(string path, bool recycleBin = false) {
 			path = _PreparePath(path);
-			_Delete(path, tryRecycleBin);
+			_Delete(path, recycleBin);
 		}
 
 		/// <summary>
@@ -771,11 +771,11 @@ namespace Au
 		/// The same as <see cref="delete(string, bool)"/>, but faster when using Recycle Bin.
 		/// </summary>
 		/// <param name="paths">string array, List or other collection. Full paths.</param>
-		/// <param name="tryRecycleBin"></param>
+		/// <param name="recycleBin"></param>
 		/// <exception cref="ArgumentException">path is not full path (see <see cref="pathname.isFullPath"/>).</exception>
 		/// <exception cref="AuException">Failed.</exception>
-		public static void delete(IEnumerable<string> paths, bool tryRecycleBin = false) {
-			if (tryRecycleBin) {
+		public static void delete(IEnumerable<string> paths, bool recycleBin = false) {
+			if (recycleBin) {
 				var a = new List<string>();
 				foreach (var v in paths) {
 					var s = _PreparePath(v);
@@ -791,12 +791,12 @@ namespace Au
 		/// <summary>
 		/// note: path must be normalized.
 		/// </summary>
-		static FileIs_ _Delete(string path, bool tryRecycleBin = false) {
+		static FileIs_ _Delete(string path, bool recycleBin = false) {
 			var type = ExistsAs_(path, true);
 			if (type == FileIs_.NotFound) return type;
 			if (type == FileIs_.AccessDenied) throw new AuException(0, $"*delete '{path}'");
 
-			if (tryRecycleBin) {
+			if (recycleBin) {
 				if (_DeleteShell(path, true)) return type;
 				Debug_.Print("_DeleteShell failed");
 			}

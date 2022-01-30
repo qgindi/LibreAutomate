@@ -618,14 +618,14 @@ partial class FilesModel
 		}
 	}
 
-	bool _Delete(FileNode f, bool dontDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false) {
+	bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true, bool canDeleteLinkTarget = false) {
 		var e = f.Descendants(true);
 
 		CloseFiles(e);
 		Uncut();
 
 		if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
-			if (!TryFileOperation(() => filesystem.delete(f.FilePath, tryRecycleBin), deletion: true)) return false;
+			if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin), deletion: true)) return false;
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		} else {
 			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
@@ -658,7 +658,7 @@ partial class FilesModel
 	//	COM wasn't used explicitly. Maybe because of Recycle Bin.
 	//	Then could not reproduce (after recompiling same code).
 
-	//bool _Delete(FileNode f, bool dontDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false) {
+	//bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true, bool canDeleteLinkTarget = false) {
 	//	print.qm2.clear();
 	//	var e = f.Descendants(true);
 
@@ -667,7 +667,7 @@ partial class FilesModel
 
 	//	if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
 	//		print.qm2.write("deleting files");
-	//		if (!TryFileOperation(() => filesystem.delete(f.FilePath, tryRecycleBin), deletion: true)) return false;
+	//		if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin), deletion: true)) return false;
 	//		print.qm2.write("ok");
 	//		//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 	//	} else {

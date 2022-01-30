@@ -483,7 +483,7 @@ namespace Au.Controls
 						//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at A.<>c.<_Main>b__1_0() ...".
 						linkTag = "";
 						userLinkTag = true;
-					} else if (ch == '.' && _userStyles != null && _userStyles.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style)) {
+					} else if (ch == '.' && (_userStyles?.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style) ?? false)) {
 						//userStyleTag = true;
 					} else goto ge;
 					break;

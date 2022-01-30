@@ -328,7 +328,7 @@ class PanelFind : UserControl
 		}
 		if (forReplace) f.replaceText = _tReplace.Text;
 
-		_AddToRecent(f, noRecent);
+		if (!noRecent) _AddToRecent(f);
 
 		if (forReplace && (Panels.Editor.ZActiveDoc?.zIsReadonly ?? true)) return false;
 		return true;
@@ -690,15 +690,13 @@ class PanelFind : UserControl
 		var (f, files, guid, _) = _lastFindAll;
 		if (guid != sGuid) return;
 		if (!_ValidateReplacement(f, files[0])) return; //avoid opening files when invalid regex replacement
-		f.replaceText = _tReplace.Text;
-		_AddToRecent(f, false, onlyRepl: true);
+		if (!_CanReplaceInFiles()) return;
 
 		if (1 != dialog.show("Replace text in files",
 			"Before replacing you may want to backup the workspace <a href=\"backup\">folder</a>.",
 			"Replace|Cancel",
 			owner: App.Hmain,
-			expandedText: @"Replaces text in all files displayed in find results.
-Uses the same options and 'find' text. Uses current 'replace' text.
+			expandedText: @"Replaces text in all files displayed in the Found panel.
 Opens files to enable Undo.",
 			onLinkClick: e => run.selectInExplorer(App.Model.WorkspaceDirectory))) return;
 
@@ -724,10 +722,23 @@ Opens files to enable Undo.",
 
 	//when clicked link "Replace all" in "find in files" results. The file is already open.
 	void _ReplaceAllInFile() {
+		if (!_CanReplaceInFiles()) return;
+		_ReplaceAllInEditor(_lastFindAll.f);
+	}
+
+	bool _CanReplaceInFiles() {
 		var f = _lastFindAll.f;
+		bool ok = f.findText == _tFind.Text
+			&& f.matchCase == _cCase.IsChecked
+			&& f.wholeWord == _cWord.IsChecked
+			&& (f.rx != null) == _cRegex.IsChecked;
+		if (!ok) {
+			dialog.show(null, "Please click 'In files' to update the Found panel.", owner: this);
+			return false;
+		}
 		f.replaceText = _tReplace.Text;
-		_AddToRecent(f, false, onlyRepl: true);
-		_ReplaceAllInEditor(f);
+		_AddToRecent(f, onlyRepl: true);
+		return true;
 	}
 
 	//struct _Perf : IDisposable
@@ -774,9 +785,7 @@ Opens files to enable Undo.",
 
 	//Not used when Name checked.
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
-	void _AddToRecent(_TextToFind f, bool temp, bool onlyRepl = false) {
-		if (temp) return; //not implemented. Was implemented but not perfect and probably not useful. Adds too many intermediate garbage, although filtered.
-
+	void _AddToRecent(_TextToFind f, bool onlyRepl = false) {
 		if (!onlyRepl) {
 			int k = f.matchCase ? 1 : 0; if (f.wholeWord) k |= 2; else if (f.rx != null) k |= 4;
 			if (f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);

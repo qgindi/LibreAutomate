@@ -907,6 +907,21 @@ namespace Au.Types {
 		[DllImport("kernel32.dll")]
 		internal static extern nint GetStdHandle(int nStdHandle);
 
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool SetSystemPowerState(bool fSuspend, bool fForce);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool ExitWindowsEx(int uFlags, uint dwReason);
+
+		[DllImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownW", SetLastError = true)]
+		internal static extern bool InitiateSystemShutdown(string lpMachineName, string lpMessage, int dwTimeout, bool bForceAppsClosed, bool bRebootAfterShutdown);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool LockWorkStation();
+
+
+
+
 
 		#region undocumented
 

@@ -118,18 +118,26 @@ namespace Au.Controls
 	{
 		/// <summary>Empty area at the left (indentation).</summary>
 		Left = 1,
+
 		/// <summary>Get checkbox rectangle.</summary>
 		Checkbox = 2,
+
 		/// <summary>Get left margin rectangle.</summary>
 		MarginLeft = 4,
+
 		/// <summary>Get image rectangle.</summary>
 		Image = 8,
-		/// <summary>Get text rectangle, including area to the right. Can be combined with <b>Image</b>.</summary>
+
+		/// <summary>Get text rectangle.</summary>
 		Text = 16,
-		/// <summary>Get left margin rectangle.</summary>
+
+		/// <summary>Get right margin rectangle.</summary>
 		MarginRight = 32,
+
 		/// <summary>Empty area at the right.</summary>
 		Right = 64,
+
+		//note: values must be increasing from left to right
 	}
 
 	/// <summary>

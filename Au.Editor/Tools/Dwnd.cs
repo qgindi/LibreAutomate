@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using Au.Controls;
 
+//FUTURE: findOrRun, runAndFind.
 //FUTURE: add UI to format code 'w = w.Get.Right();' etc.
 //FUTURE: init from code string.
 //SHOULDDO: try to find and select control in current tree when captured from same window. Like in Delm.
