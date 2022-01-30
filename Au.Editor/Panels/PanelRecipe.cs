@@ -12,14 +12,14 @@ using Microsoft.CodeAnalysis.Classification;
 using EToken = CiStyling.EToken;
 
 class PanelRecipe : DockPanel {
-	KScintilla _c;
+	_KScintilla _c;
 
 	//public KScintilla ZControl => _c;
 
 	public PanelRecipe() {
 		//this.UiaSetName("Recipe panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
 
-		_c = new KScintilla {
+		_c = new _KScintilla {
 			Name = "Recipe_text",
 			ZInitReadOnlyAlways = true,
 			ZInitTagsStyle = KScintilla.ZTagsStyle.User
@@ -39,6 +39,9 @@ class PanelRecipe : DockPanel {
 		var styles = new CiStyling.TStyles { FontSize = 8 };
 		styles.ToScintilla(_c, multiFont: true);
 
+		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
+
+		//_c.ZTags.AddLinkTag("+recipe", Panels.Cookbook.RecipeLinkClicked); //rejected because we don't have a Back button
 		_c.ZTags.AddLinkTag("+see", _SeeLinkClicked);
 		//_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
 		_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + ", C# reference")));
@@ -146,14 +149,31 @@ class PanelRecipe : DockPanel {
 		if (url != null) run.itSafe(url);
 	}
 
-	//class _KScintilla : KScintilla
-	//{
-	//	//protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-	//	//	switch (msg) {
-	//	//	}
-	//	//	return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
-	//	//}
-	//}
+	class _KScintilla : KScintilla {
+		bool _zoomMenu;
+
+		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+			switch (msg) {
+			case Api.WM_MOUSEWHEEL:
+				if (keys.gui.getMod() == KMod.Ctrl && !_zoomMenu) {
+					int zoom = Call(SCI_GETZOOM);
+					timer.after(1, _ => { //after WndProc SCI_GETZOOM returns old value
+						if (Call(SCI_GETZOOM) != zoom) {
+							_zoomMenu = true;
+							int i = popupMenu.showSimple("Save font size");
+							_zoomMenu = false;
+							if (i == 1) App.Settings.recipe_zoom = (sbyte)Call(SCI_GETZOOM);
+						}
+					});
+				}
+				break;
+			}
+
+			var R = base.WndProc(hwnd, msg, wParam, lParam, ref handled);
+
+			return R;
+		}
+	}
 
 	[Conditional("DEBUG")]
 	unsafe void _AutoRenderCurrentRecipeScript() {

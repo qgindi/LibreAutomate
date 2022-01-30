@@ -709,18 +709,18 @@ namespace Au.Compiler
 			_f = MainFile;
 
 			const EMSpecified c_spec1 = EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.bit32 | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
-			const string c_spec1S = "cannot use: ifRunning, uac, bit32, manifest, icon, console";
+			const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, bit32";
 
 			bool needOP = false;
 			switch (Role) {
 			case ERole.miniProgram:
-				if (Specified.HasAny(EMSpecified.outputPath | EMSpecified.bit32)) return _ErrorM("with role miniProgram cannot use: outputPath, bit32");
+				if (Specified.HasAny(EMSpecified.outputPath | EMSpecified.manifest | EMSpecified.bit32 | EMSpecified.xmlDoc)) return _ErrorM("with role miniProgram cannot use: outputPath, manifest, bit32, xmlDoc");
 				break;
 			case ERole.exeProgram:
 				needOP = true;
 				break;
 			case ERole.editorExtension:
-				if (Specified.HasAny(c_spec1 | EMSpecified.outputPath)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath");
+				if (Specified.HasAny(c_spec1 | EMSpecified.outputPath | EMSpecified.xmlDoc)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath, xmlDoc");
 				break;
 			case ERole.classLibrary:
 				if (Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);

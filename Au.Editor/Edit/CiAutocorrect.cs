@@ -23,6 +23,10 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
 
+//TODO: hide if typed nonalpha if auto-showed by typing nonalpha. VS hides.
+//	Example: var d2 = new DateTime(2022, 1)
+//	Auto-shows when typed space, because could be enum. Then if you type eg 1 for another overload, selects Int16.
+
 class CiAutocorrect {
 	public class BeforeCharContext {
 		public int oldPosUtf8, newPosUtf8;

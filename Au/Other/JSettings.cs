@@ -13,7 +13,7 @@ namespace Au.Types
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// MySettings sett = MySettings.Load(); //normally you probably would use a static field or property, but this example uses a local variable for simplicity
+	/// MySettings sett = MySettings.Load(); //in a class you would use a static field or property, but this example uses a local variable for simplicity
 	/// 
 	/// print.it(sett.i);
 	/// sett.i++;

@@ -1,7 +1,7 @@
-﻿namespace Au
-{
-	public unsafe partial struct wnd
-	{
+﻿using System.Linq;
+
+namespace Au {
+	public unsafe partial struct wnd {
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
 		/// </summary>
@@ -172,8 +172,7 @@
 			return Api.FindWindowEx(messageOnly ? SpecHWND.MESSAGE : default, wAfter, cn, name);
 		}
 
-		internal struct Cached_
-		{
+		internal struct Cached_ {
 			wnd _w;
 			long _time;
 
@@ -222,65 +221,78 @@
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			if (f.Exists()) {
 				w = f.Result;
+				if (activate) w.Activate();
 			} else {
 				run();
-				w = waitAny(waitS, false, f).w;
-				if (w.Is0) return w; //timeout without exception (waitS < 0)
-
-				//What to do if activate true and the window started inactive? Activate immediately or wait, and how long?
-				//	Possible cases:
-				//		Starts inactive, but soon becomes active naturally.
-				//		Occasionally starts inactive and never would become active naturally, for example if the user clicked another window after starting the process and therefore OS disabled setforegroundwindow in the new process.
-				//		Always starts inactive and never becomes active naturally.
-				//	This code waits max 1 s. It's better if the window becomes active naturally (case 1), but need to activate in cases 2 and 3.
-				//	Tested many windows. Most were active after 0-10 ms, few after 11-70 ms, PowerShell after 250 ms, dotPeek after 1000 ms.
-				//	Some windows start active but soon a dialog pops up.
-				//	Also tested what happens if we activate the "slow" window without waiting.
-				//		Some are OK (eg PowerShell). Anyway, many windows render content after showing/activating.
-				//		But some windows (eg dotPeek) then soon become inactive temporarily, because the app activates another window.
-				if (activate && !w.IsActive) w.WaitFor(-1, o => o.IsActive); //note: exception if closed while waiting, as well as if will fail to activate
+				if (!f.Exists(waitS)) return default;
+				w = f.Result;
+				if (activate) w._ActivateAfterRun();
 			}
-			if (activate) w.Activate();
 			return w;
 		}
+
+		//What to do if activate true and the window started inactive? Activate immediately or wait, and how long?
+		//	Possible cases:
+		//		Starts inactive, but soon becomes active naturally.
+		//		Occasionally starts inactive and never would become active naturally, for example if the user clicked another window after starting the process and therefore OS disabled setforegroundwindow in the new process.
+		//		Always starts inactive and never becomes active naturally.
+		//	This code waits max 1 s. It's better if the window becomes active naturally (case 1), but need to activate in cases 2 and 3.
+		//	Tested many windows. Most were active after 0-10 ms, few after 11-70 ms, PowerShell after 250 ms, dotPeek after 1000 ms.
+		//	Some windows start active but soon a dialog pops up.
+		//	Also tested what happens if we activate the "slow" window without waiting.
+		//		Some are OK (eg PowerShell). Anyway, many windows render content after showing/activating.
+		//		But some windows (eg dotPeek) then soon become inactive temporarily, because the app activates another window.
+		void _ActivateAfterRun() {
+			if (!IsActive && !WaitFor(-1, w => w.IsActive)) {
+				Activate();
+			}
+			//note: exception if closed while waiting. As well as if fails to activate.
+		}
+
+		/// <summary>
+		/// Opens and finds new window. Ignores old windows. Activates.
+		/// </summary>
+		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>waitS</i> &lt; 0 (else exception).</returns>
+		/// <param name="waitS">How long to wait for the window. Seconds. See <see cref="wait"/>.</param>
+		/// <param name="run">Callback function. Should open the window. See example.</param>
+		/// <param name="activate">Activate the window. Default: true.</param>
+		/// <exception cref="ArgumentException">See <see cref="find"/>.</exception>
+		/// <exception cref="TimeoutException"><i>waitS</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="AuWndException">Failed to activate.</exception>
+		/// <remarks>
+		/// This function isn't the same as just two statements <b>run.it</b> and <b>wnd.find</b>. It never returns a window that already existed before calling it.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = wnd.runAndFind(
+		/// 	() => run.it(folders.Windows + @"explorer.exe"),
+		/// 	10, cn: "CabinetWClass");
+		/// print.it(w);
+		/// ]]></code>
+		/// </example>
+		public static wnd runAndFind(Action run, double waitS,
+			[ParamString(PSFormat.wildex)] string name = null,
+			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.wildex)] WOwner of = default,
+			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
+			bool activate = true) {
+			var f = new wndFinder(name, cn);
+			var a = f.FindAll();
+
+			run();
+
+			var to = new wait.Loop(waitS);
+			while (to.Sleep()) {
+				var w = f.Find();
+				if (!w.Is0 && !a.Contains(w)) {
+					if (activate) w._ActivateAfterRun();
+					return w;
+				}
+			}
+			return default;
+		}
+
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-
-		//rejected: findOrRun -> find overload. Overload resolution OK, but makes code unclear.
-		//public static wnd find(
-		//	bool activate,
-		//	[ParamString(PSFormat.wildex)] string name = null,
-		//	[ParamString(PSFormat.wildex)] string cn = null,
-		//	[ParamString(PSFormat.wildex)] WOwner of = default,
-		//	WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
-		//	Action run = null, double waitS = 60d) {
-		//	wnd w;
-		//	var f = new wndFinder(name, cn, of, flags, also, contains);
-		//	if (f.Exists()) {
-		//		w = f.Result;
-		//	} else if (run != null) {
-		//		run();
-		//		w = waitAny(waitS, false, f).w;
-		//		if (w.Is0) return w; //timeout without exception (waitS < 0)
-
-		//		//What to do if activate true and the window started inactive? Activate immediately or wait, and how long?
-		//		//	Possible cases:
-		//		//		Starts inactive, but soon becomes active naturally.
-		//		//		Occasionally starts inactive and never would become active naturally, for example if the user clicked another window after starting the process and therefore OS disabled setforegroundwindow in the new process.
-		//		//		Always starts inactive and never becomes active naturally.
-		//		//	This code waits max 1 s. It's better if the window becomes active naturally (case 1), but need to activate in cases 2 and 3.
-		//		//	Tested many windows. Most were active after 0-10 ms, few after 11-70 ms, PowerShell after 250 ms, dotPeek after 1000 ms.
-		//		//	Some windows start active but soon a dialog pops up.
-		//		//	Also tested what happens if we activate the "slow" window without waiting.
-		//		//		Some are OK (eg PowerShell). Anyway, many windows render content after showing/activating.
-		//		//		But some windows (eg dotPeek) then soon become inactive temporarily, because the app activates another window.
-		//		if (activate && !w.IsActive) w.WaitFor(-1, o => o.IsActive); //note: exception if closed while waiting, as well as if will fail to activate
-		//	} else {
-		//		if (waitS < 0) return default;
-		//		throw new NotFoundException();
-		//	}
-		//	if (activate) w.Activate();
-		//	return w;
-		//}
 
 		/// <summary>
 		/// Compares window name and other properties like <see cref="find"/> does.
@@ -310,8 +322,7 @@
 		}
 
 
-		public partial struct getwnd
-		{
+		public partial struct getwnd {
 			/// <summary>
 			/// Gets top-level windows.
 			/// Returns array containing window handles as <b>wnd</b>.
@@ -397,8 +408,7 @@
 		/// <summary>
 		/// Internal static functions.
 		/// </summary>
-		internal static partial class Internal_
-		{
+		internal static partial class Internal_ {
 			internal enum EnumAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
 
 			internal static wnd[] EnumWindows(EnumAPI api,
@@ -479,8 +489,7 @@
 			}
 			static Api.WNDENUMPROC _wndEnumProc = (w, p) => ((_EnumData*)p)->Proc(w);
 
-			struct _EnumData
-			{
+			struct _EnumData {
 				public int* a;
 				public int len;
 				int _cap;
@@ -525,14 +534,12 @@
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags of <see cref="wnd.find"/> and similar functions.
 	/// </summary>
 	[Flags]
-	public enum WFlags
-	{
+	public enum WFlags {
 		/// <summary>
 		/// Can find invisible windows. See <see cref="wnd.IsVisible"/>.
 		/// Use this carefully. Always use <i>cn</i> (class name), not just <i>name</i>, to avoid finding a wrong window with the same name.
@@ -551,8 +558,7 @@ namespace Au.Types
 	/// Used with <see cref="wnd.find"/> and similar functions to specify an owner of the window.
 	/// Can be program name (like <c>"notepad.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>), owner window.
 	/// </summary>
-	public struct WOwner
-	{
+	public struct WOwner {
 		readonly string _s; //program
 		readonly int _i; //wnd, tid, pid
 		readonly byte _what; //0 _o, 1 owner, 2 tid, 3 pid
@@ -620,8 +626,7 @@ namespace Au.Types
 	/// The <i>contains</i> parameter of <see cref="wnd.find"/> and similar functions.
 	/// Specifies text, image or other object that must be in the window.
 	/// </summary>
-	public struct WContains
-	{
+	public struct WContains {
 		readonly object _o;
 		WContains(object o) => _o = o;
 
@@ -667,8 +672,7 @@ namespace Au.Types
 	/// <summary>
 	/// Can be used with <see cref="wndFinder.IsMatch"/>.
 	/// </summary>
-	public class WFCache
-	{
+	public class WFCache {
 		wnd _w;
 		long _time;
 		internal string Name, Class, Program;

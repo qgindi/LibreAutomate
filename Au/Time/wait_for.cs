@@ -359,7 +359,7 @@ namespace Au
 		/// Waits until a variable is set = true.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="variable">Stop waiting when this variable is set to true.</param>
+		/// <param name="variable">Stop waiting when this variable is true.</param>
 		/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>

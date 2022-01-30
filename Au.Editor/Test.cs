@@ -39,6 +39,7 @@ using Roslyn.Utilities;
 static unsafe class Test
 {
 	public static void FromMenubar() {
+		
 
 		//perf.first();
 		//var d=CiUtil.CreateRoslynDocument("using System; Console.Write(1);");
@@ -77,6 +78,7 @@ static unsafe class Test
 		//var s="aaa bbb"
 		//char c = 'a'
 
+		//Cpp.Cpp_Test();
 	}
 
 	//static void TestScripting() {

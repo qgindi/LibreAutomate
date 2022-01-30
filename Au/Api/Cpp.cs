@@ -155,6 +155,21 @@ namespace Au.Types
 		internal static extern void Cpp_Test();
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern IntPtr Cpp_Speak(string text, int flags, string voice, int rate, int volume);
+
+		///// <param name="what">
+		///// 0 - Release.
+		///// 1 - Pause.
+		///// 2 - Resume.
+		///// 3 - Skip value sentences.
+		///// 4 - Skip value ms.
+		///// 5 - Get SpeakCompleteEvent.
+		///// 6 - Get status.
+		///// </param>
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern nint Cpp_SpeakControl(IntPtr voice, int what, int value);
+
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern int* EnumWindowsEx(out int len, bool onlyVisible, int api);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

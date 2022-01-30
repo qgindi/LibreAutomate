@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "cpp.h"
 
+//#include <sphelper.h>
+
 #if _DEBUG
 //#if 1
 
@@ -234,7 +236,7 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 	Perf.Next();
 	LPBYTE ser = null; size_t serSize = 0;
 	pcre2_code* a[2] = { re,re };
-	rc = pcre2_serialize_encode((const pcre2_code_16 **)a, 2, &ser, &serSize, null);
+	rc = pcre2_serialize_encode((const pcre2_code_16**)a, 2, &ser, &serSize, null);
 	if(rc <= 0) {
 		Print(L"pcre2_serialize_encode error");
 		return;
@@ -687,8 +689,62 @@ void _TestIAccessibleImpl();
 //
 //}
 
+//EXPORT ISpVoice* Cpp_Speak(STR text, DWORD flags, STR voice, int rate, int volume) {
+//	//Beep(1000, 100);
+//
+//	CComPtr<ISpVoice> v;
+//	if(0 != v.CoCreateInstance(CLSID_SpVoice)) return nullptr;
+//
+//	CComPtr<ISpObjectToken> cpVoiceToken;
+//	if(voice != nullptr) {
+//		CComPtr<IEnumSpObjectTokens> cpEnum;
+//		if(0 == SpEnumTokens(SPCAT_VOICES, NULL, NULL, &cpEnum)) {
+//			while(0 == cpEnum->Next(1, &cpVoiceToken, null)) {
+//				PWSTR d = nullptr;
+//				if(0 == SpGetDescription(cpVoiceToken, &d)) {
+//					//Print(d);
+//					bool found = str::Like(d, str::Len(d), voice, str::Len(voice), true);
+//					CoTaskMemFree(d);
+//					if(found) {
+//						v->SetVoice(cpVoiceToken);
+//						break;
+//					}
+//				}
+//				cpVoiceToken.Release();
+//			}
+//		}
+//	}
+//
+//	if(rate != 0x80000000) v->SetRate(rate);
+//	if(volume != 0x80000000) v->SetVolume((USHORT)volume);
+//
+//	v->Speak(text, flags, nullptr);
+//
+//	if(0 == (1 & flags)) return nullptr;
+//	return v.Detach();
+//}
+//
+//EXPORT size_t Cpp_SpeakControl(ISpVoice* v, int what, int value) {
+//	switch(what) {
+//	case 0: v->Release(); break;
+//	case 1: v->Pause(); break;
+//	case 2: v->Resume(); break;
+//	case 3: v->Skip(L"sentence", value, nullptr); break;
+//	case 4: v->Skip(L"milliseconds", value, nullptr); break;
+//	case 5: return (size_t)v->SpeakCompleteEvent();
+//	case 6: {
+//		SPVOICESTATUS s = {};
+//		if(0 == v->GetStatus(&s, nullptr)) return s.dwRunningState;
+//	} break;
+//	//case 7: return v->GetNotifyEventHandle();
+//	case 100: v->Speak(L"a", (DWORD)value, nullptr); break;
+//	}
+//	return 0;
+//}
+
 EXPORT void Cpp_Test()
 {
+
 	//TestFileDialog();
 
 
@@ -925,7 +981,7 @@ public:
 	}
 #pragma region
 	// Inherited via IAccessible
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void ** ppvObject) override
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override
 	{
 		if(riid == IID_IUnknown || riid == IID_IDispatch || riid == IID_IAccessible) {
 			*ppvObject = this;
@@ -946,85 +1002,85 @@ public:
 		Printf(L"Release: %i", _ref);
 		return 1;
 	}
-	virtual HRESULT __stdcall GetTypeInfoCount(UINT * pctinfo) override
+	virtual HRESULT __stdcall GetTypeInfoCount(UINT* pctinfo) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo) override
+	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId) override
+	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr) override
+	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) override
 	{
 		return E_NOTIMPL;
 	}
 #pragma endregion
-	virtual HRESULT __stdcall get_accParent(IDispatch ** ppdispParent) override
+	virtual HRESULT __stdcall get_accParent(IDispatch** ppdispParent) override
 	{
 		//Print(__FUNCTION__);
 		return AccessibleObjectFromWindow(_w, 0, IID_IAccessible, (void**)ppdispParent);
 	}
-	virtual HRESULT __stdcall get_accChildCount(long * pcountChildren) override
+	virtual HRESULT __stdcall get_accChildCount(long* pcountChildren) override
 	{
 		//Print(__FUNCTION__);
 		*pcountChildren = 0;
 		return 0;
 	}
-	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch ** ppdispChild) override
+	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch** ppdispChild) override
 	{
 		//Print(__FUNCTION__);
 		*ppdispChild = 0;
 		if(varChild.vt != VT_I4)return E_INVALIDARG;
 		return S_FALSE;
 	}
-	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR * pszName) override
+	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR* pszName) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR * pszValue) override
+	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR* pszValue) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR * pszDescription) override
+	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR* pszDescription) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT * pvarRole) override
+	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT* pvarRole) override
 	{
 		//Print(__FUNCTION__);
 		pvarRole->vt = VT_I4; pvarRole->lVal = varChild.lVal == 0 ? ROLE_SYSTEM_LIST : ROLE_SYSTEM_LISTITEM;
 		return 0;
 	}
-	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT * pvarState) override
+	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT* pvarState) override
 	{
 		//Print(__FUNCTION__);
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR * pszHelp) override
+	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR* pszHelp) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accHelpTopic(BSTR * pszHelpFile, VARIANT varChild, long * pidTopic) override
+	virtual HRESULT __stdcall get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild, long* pidTopic) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR * pszKeyboardShortcut) override
+	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR* pszKeyboardShortcut) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accFocus(VARIANT * pvarChild) override
+	virtual HRESULT __stdcall get_accFocus(VARIANT* pvarChild) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accSelection(VARIANT * pvarChildren) override
+	virtual HRESULT __stdcall get_accSelection(VARIANT* pvarChildren) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR * pszDefaultAction) override
+	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR* pszDefaultAction) override
 	{
 		return E_NOTIMPL;
 	}
@@ -1032,7 +1088,7 @@ public:
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall accLocation(long * pxLeft, long * pyTop, long * pcxWidth, long * pcyHeight, VARIANT varChild) override
+	virtual HRESULT __stdcall accLocation(long* pxLeft, long* pyTop, long* pcxWidth, long* pcyHeight, VARIANT varChild) override
 	{
 		//Print(__FUNCTION__);
 		WINDOWINFO wi = { sizeof(WINDOWINFO) }; GetWindowInfo(_w, &wi);
@@ -1042,11 +1098,11 @@ public:
 		*pcyHeight = wi.rcClient.bottom - wi.rcClient.top;
 		return 0;
 	}
-	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT * pvarEndUpAt) override
+	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT* pvarEndUpAt) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT * pvarChild) override
+	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT* pvarChild) override
 	{
 		//Print(__FUNCTION__);
 		pvarChild->vt = VT_I4;

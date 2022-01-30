@@ -623,11 +623,11 @@ namespace Au
 		/// 
 		/// Dialogs with an input field cannot have a progress bar.
 		/// </remarks>
-		public void SetEditControl(DEdit editType, string editText = null, IEnumerable<string> comboItems = null) {
+		public void SetEditControl(DEdit editType, string editText = null, Strings comboItems = default) {
 			_controls ??= new DControls();
 			_controls.EditType = editType;
 			_controls.EditText = editText;
-			_controls.ComboboxValues = comboItems;
+			_controls.ComboItems = comboItems;
 			//will set other props later, because need to override user-set props
 		}
 
@@ -1248,8 +1248,8 @@ namespace Au
 			//Init the control.
 			_editWnd.SetText(_controls.EditText);
 			if (_controls.EditType == DEdit.Combo) {
-				if (_controls.ComboboxValues != null) {
-					foreach (var s in _controls.ComboboxValues) _editWnd.Send(Api.CB_INSERTSTRING, -1, s);
+				if (_controls.ComboItems.Value != null) {
+					foreach (var s in _controls.ComboItems.ToArray()) _editWnd.Send(Api.CB_INSERTSTRING, -1, s);
 				}
 				RECT cbr = _editWnd.Rect;
 				_editParent.ResizeL(cbr.Width, cbr.Height); //because ComboBox resizes itself
@@ -1375,7 +1375,7 @@ namespace Au
 		/// ]]></code>
 		/// 
 		/// <code><![CDATA[
-		/// var con = new DControls { Checkbox = "Check", RadioButtons = "1 One|2 Two|3 Three", EditType = DEdit.Combo, EditText = "zero", ComboboxValues = new string[] { "one", "two" } };
+		/// var con = new DControls { Checkbox = "Check", RadioButtons = "1 One|2 Two|3 Three", EditType = DEdit.Combo, EditText = "zero", ComboItems = new string[] { "one", "two" } };
 		/// var r = dialog.show("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", controls: con, secondsTimeout: 30);
 		/// print.it(r, con.IsChecked, con.RadioId, con.EditText);
 		/// switch(r) {
@@ -1402,8 +1402,8 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int showInfo(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
-			return show(text1, text2, buttons, flags, DIcon.Info, owner, expandedText);
+		public static int showInfo(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
+			return show(text1, text2, buttons, flags, DIcon.Info, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
@@ -1411,8 +1411,8 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int showWarning(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
-			return show(text1, text2, buttons, flags, DIcon.Warning, owner, expandedText);
+		public static int showWarning(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
+			return show(text1, text2, buttons, flags, DIcon.Warning, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
@@ -1420,8 +1420,8 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int showError(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
-			return show(text1, text2, buttons, flags, DIcon.Error, owner, expandedText);
+		public static int showError(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
+			return show(text1, text2, buttons, flags, DIcon.Error, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
@@ -1430,8 +1430,8 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool showOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null) {
-			return 1 == show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText);
+		public static bool showOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
+			return 1 == show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
@@ -1440,8 +1440,8 @@ namespace Au
 		/// Calls <see cref="show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool showYesNo(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null) {
-			return 1 == show(text1, text2, "Yes|No", flags, icon, owner, expandedText);
+		public static bool showYesNo(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
+			return 1 == show(text1, text2, "Yes|No", flags, icon, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 		//CONSIDER: add more parameters to all funcs like this.
 
@@ -1518,7 +1518,7 @@ namespace Au
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static bool showInput(out string s,
 			string text1 = null, string text2 = null,
-			DEdit editType = DEdit.Text, string editText = null, IEnumerable<string> comboItems = null,
+			DEdit editType = DEdit.Text, string editText = null, Strings comboItems = default,
 			DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
 			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
@@ -1564,7 +1564,7 @@ namespace Au
 			DFlags flags = 0, AnyWnd owner = default
 			) {
 			i = 0;
-			if (!showInput(out string s, text1, text2, DEdit.Number, editText?.ToString(), null, flags, owner)) return false;
+			if (!showInput(out string s, text1, text2, DEdit.Number, editText?.ToString(), default, flags, owner)) return false;
 			i = s.ToInt();
 			return true;
 		}
@@ -1859,9 +1859,9 @@ namespace Au.Types
 		public string EditText { get; set; }
 
 		/// <summary>
-		/// Sets combo box items used when <see cref="EditType"/> is Combo.
+		/// Sets combo box list items used when <see cref="EditType"/> is Combo.
 		/// </summary>
-		public IEnumerable<string> ComboboxValues { get; set; }
+		public Strings ComboItems { get; set; }
 	}
 
 	/// <summary>

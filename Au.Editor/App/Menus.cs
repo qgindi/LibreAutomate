@@ -4,14 +4,11 @@ using Au.Tools;
 //CONSIDER: Add top menu item "Insert". Move there the "Add ..." items from the "Code" menu.
 //	Also add "Add script.setup", "Add try/catch (surround selected code)", etc.
 
-static class Menus
-{
+static class Menus {
 	[Command(target = "Files")]
-	public static class File
-	{
+	public static class File {
 		[Command(target = "", image = "*Typicons.DocumentAdd #008EEE")]
-		public static class New
-		{
+		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
 			[Command('s', keys = "Ctrl+N", image = FileNode.c_imageScript)]
@@ -24,7 +21,7 @@ static class Menus
 			public static void New_folder() { _New(null); }
 		}
 
-		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #FF4040")]
+		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #404040")]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
 		[Command(keys = "F2", image = "*BoxIcons.RegularRename #008EEE")]
@@ -34,8 +31,7 @@ static class Menus
 		public static void Properties() { App.Model.Properties(); }
 
 		[Command("Copy, paste")]
-		public static class CopyPaste
-		{
+		public static class CopyPaste {
 			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo #99BF00", tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
 			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
 
@@ -59,8 +55,7 @@ static class Menus
 		}
 
 		[Command("Open, close")]
-		public static class OpenClose
-		{
+		public static class OpenClose {
 			[Command(keysText = "Enter")]
 			public static void Open() { App.Model.OpenSelected(1); }
 
@@ -97,8 +92,7 @@ static class Menus
 		//}
 
 		[Command("Export, import", separator = true)]
-		public static class ExportImport
-		{
+		public static class ExportImport {
 			[Command("Export as .zip...")]
 			public static void Export_as_zip() { App.Model.ExportSelected(zip: true); }
 
@@ -124,8 +118,7 @@ static class Menus
 		}
 
 		[Command(target = "")]
-		public static class Workspace
-		{
+		public static class Workspace {
 			[Command("...", separator = true)]
 			public static void Open_workspace() { FilesModel.OpenWorkspaceUI(); }
 
@@ -147,8 +140,7 @@ static class Menus
 	}
 
 	[Command(target = "Edit")]
-	public static class Edit
-	{
+	public static class Edit {
 		[Command(keysText = "Ctrl+Z", image = "*Ionicons.UndoiOS #9F5300")]
 		public static void Undo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_UNDO); }
 
@@ -183,8 +175,7 @@ static class Menus
 		public static void Go_to_definition() { CiGoTo.GoToSymbolFromPos(); }
 
 		[Command(separator = true)]
-		public static class Selection
-		{
+		public static class Selection {
 			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd #9F5300")]
 			public static void Comment() { Panels.Editor.ZActiveDoc.ZCommentLines(true); }
 
@@ -207,20 +198,27 @@ static class Menus
 		//}
 
 		[Command]
-		public static class View
-		{
+		public static class View {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #99BF00")]
 			public static void Wrap_lines() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
 			[Command(checkable = true, image = "*Material.TooltipImageOutline #99BF00")]
 			public static void Images_in_code() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
+
+		[Command]
+		public static class Insert {
+			[Command(image = "*Material.CommentEditOutline #9F5300")]
+			public static void Add_file_description() { InsertCode.AddFileDescription(); }
+
+			[Command(image = "*Codicons.SymbolClass #9F5300")]
+			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
+		}
 	}
 
 	[Command(target = "Edit")]
-	public static class Code
-	{
-		[Command(underlined: 'r', image = "*Material.RecordCircleOutline #FF6640")]
+	public static class Code {
+		[Command(underlined: 'r', image = "*Material.RecordCircleOutline #008EEE")]
 		public static void Input_recorder() { InputRecorder.ShowRecorder(); }
 
 		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #008EEE")]
@@ -243,17 +241,10 @@ static class Menus
 
 		[Command(underlined: 'A')]
 		public static void Windows_API() { new DWinapi().Show(); }
-
-		[Command(separator = true, image = "*Material.CommentEditOutline #9F5300")]
-		public static void Add_file_description() { InsertCode.AddFileDescription(); }
-
-		[Command(image = "*Codicons.SymbolClass #9F5300")]
-		public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 	}
 
 	[Command(target = "Edit")]
-	public static class Run
-	{
+	public static class Run {
 		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
@@ -291,8 +282,7 @@ static class Menus
 	}
 
 	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
-	public static class TT
-	{
+	public static class TT {
 		//[Command("...")]
 		//public static void Add_trigger() { TriggersAndToolbars.AddTrigger(); }
 
@@ -334,8 +324,7 @@ static class Menus
 	}
 
 	[Command(target = "")]
-	public static class Tools
-	{
+	public static class Tools {
 		[Command(image = "*PicolIcons.Settings #99BF00")]
 		public static void Options() { DOptions.ZShow(); }
 
@@ -343,8 +332,7 @@ static class Menus
 		public static void Icons() { DIcons.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
-		public static class Output
-		{
+		public static class Output {
 			[Command(keysText = "M-click")]
 			public static void Clear() { Panels.Output.ZClear(); }
 
@@ -369,8 +357,7 @@ static class Menus
 	}
 
 	[Command(target = "")]
-	public static class Help
-	{
+	public static class Help {
 		[Command(image = "*FontAwesome.QuestionCircleRegular #BB54FF")]
 		public static void Program_help() { HelpUtil.AuHelp(""); }
 

@@ -164,15 +164,11 @@ default: return;
 }]]>
 			</list>
 			<list item="&amp;Text input">if (!dialog.showInput(out string s, "$end$")) return;</list>
-			<list item="&amp;Number input">if (!dialog.showInputNumber(out int s, "$end$")) return;</list>
+			<list item="&amp;Number input">if (!dialog.showInputNumber(out int i, "$end$")) return;</list>
 		</snippet>
 
 		<snippet name="winFindSnippet" info="Find window." more="With non-negative waitS argument (0, ) throws exception if not found.">
 			<![CDATA[var w = wnd.find(0, "$end$*Name$end$");]]>
-		</snippet>
-
-		<snippet name="winWaitSnippet" info="Find window, wait." more="Throws exception on timeout, unless the wait time is negative.">
-			<![CDATA[var w = wnd.wait(10, true, "$end$*Name$end$");]]>
 		</snippet>
 
 		<snippet name="copySnippet" info="Get selected text using the clipboard and Ctrl+C.">

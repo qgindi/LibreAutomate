@@ -109,25 +109,35 @@ static class TUtil {
 
 	/// <summary>
 	/// If s has *? characters, prepends "**t ".
-	/// But if s has single * character, converts to "**r regex" that ignores it. Because single * often is used to indicate unsaved state.
-	/// If canMakeVerbatim, finally calls <see cref="MakeVerbatim"/>.
+	/// If <i>canMakeVerbatim</i>, finally calls <see cref="MakeVerbatim"/>.
 	/// s can be null.
 	/// </summary>
 	public static string EscapeWindowName(string s, bool canMakeVerbatim) {
-		if (s == null) return s;
-		if (wildex.hasWildcardChars(s)) {
-			int i = s.IndexOf('*');
-			if (i >= 0 && s.IndexOf('*', i + 1) < 0) {
-				s = "**r " + regexp.escapeQE(s[..i]) + @"\*?" + regexp.escapeQE(s[++i..]);
-			} else s = "**t " + s;
+		if (s != null) {
+			if (wildex.hasWildcardChars(s)) s = "**t " + s;
+			if (canMakeVerbatim) MakeVerbatim(ref s);
 		}
-		if (canMakeVerbatim) MakeVerbatim(ref s);
 		return s;
 	}
-	//CONSIDER: just remove *, and at run time find window with or without *.
-	//	Now 2 problems: 1. The code looks ugly. 2. If recorded without *, at run time will not find with *.
-	//	But then problem: what if user wants to find exactly what is specified?
-	//	But maybe currently is the best. Users will learn and later will insert this regex when recorded without *.
+	//rejected: if name has * at the start or end, make regex like @"**r \*?\QUntitled - Notepad\E", so that would find with or without *.
+	//	Ugly. Most users will not know what it is. Anyway in most cases need to replace the document part with *.
+	///// <summary>
+	///// If s has *? characters, prepends "**t ".
+	///// But if s has single * character, converts to "**r regex" that ignores it. Because single * often is used to indicate unsaved state.
+	///// If canMakeVerbatim, finally calls <see cref="MakeVerbatim"/>.
+	///// s can be null.
+	///// </summary>
+	//public static string EscapeWindowName(string s, bool canMakeVerbatim) {
+	//	if (s == null) return s;
+	//	if (wildex.hasWildcardChars(s)) {
+	//		int i = s.IndexOf('*');
+	//		if (i >= 0 && s.IndexOf('*', i + 1) < 0) {
+	//			s = "**r " + regexp.escapeQE(s[..i]) + @"\*?" + regexp.escapeQE(s[++i..]);
+	//		} else s = "**t " + s;
+	//	}
+	//	if (canMakeVerbatim) MakeVerbatim(ref s);
+	//	return s;
+	//}
 
 	/// <summary>
 	/// Returns true if newRawValue does not match wildex tbValue, unless contains is like $"..." or $@"...".

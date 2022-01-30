@@ -300,7 +300,7 @@ namespace Au.Controls
 							//cannot detect click/drag here with DragDropUtil etc because it captures mouse which closes parent Popup. Also then mouse events are not good.
 						} else {
 							//print.it("double", h.item);
-							if (b == MouseButton.Left && h.part == TVParts.Text && h.item.IsFolder) Expand(h.index, null);
+							if (b == MouseButton.Left && h.part >= TVParts.Text && h.item.IsFolder) Expand(h.index, null);
 							clickEvent = true;
 							activateEvent = !SingleClickActivate;
 						}
@@ -801,7 +801,7 @@ namespace Au.Controls
 			var r = GetRectPhysical(index, TVParts.Text, inScreen: true);
 			r.left -= _imageMarginX;
 			double f = 96d / _dpi;
-			_leTB = new TextBox { Height = r.Height * f, MinWidth = r.Width * f, Text = item.DisplayText };
+			_leTB = new TextBox { Height = r.Height * f, MinWidth = r.Width * f + 12, Text = item.DisplayText };
 			_leTB.Padding = osVersion.minWin8 ? new Thickness(0, -1, 0, 0) : new Thickness(-1, -2, 0, 0);
 			_leTB.SelectAll();
 			_leTB.KeyDown += (_, e) => {

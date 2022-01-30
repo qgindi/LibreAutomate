@@ -127,8 +127,16 @@ namespace Au.Compiler {
 			p1.Next('t');
 
 			string asmName = m.Name;
-			if (m.Role == ERole.editorExtension) //cannot load multiple assemblies with same name
-				asmName = asmName + "|" + Guid.NewGuid().ToString(); //use GUID, not counter, because may be loaded old assembly from cache with same counter value
+			if (m.Role == ERole.editorExtension) { //cannot load multiple assemblies with same name
+				asmName = asmName + "|" + Guid.NewGuid().ToString();
+				//use GUID, not counter, because may be loaded old assembly from cache with same counter value
+			} else if (m.Role == ERole.miniProgram) {
+				//workaround for: coreclr_execute_assembly and even AssemblyLoadContext.Default.LoadFromAssemblyPath fail
+				//	if asmName is the same as of a .NET or editor's assembly, including everything in Libraries and Roslyn folders.
+				//	It seems it at first ignores path and tries to find assembly by name.
+				//	But now need to be careful. It could break something. Eg with WPF resources use "pack:...*AssemblyName...".
+				asmName = "*" + asmName;
+			}
 
 			if (m.TestInternal is string[] testInternal) {
 				InternalsVisible.Add(asmName, testInternal);
@@ -169,9 +177,10 @@ namespace Au.Compiler {
 				//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error with .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
 				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 
-				if (m.XmlDoc) xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + m.Name + ".xml"));
+				if (m.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
+					xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + m.Name + ".xml"));
 
-				resMan = _CreateManagedResources(m);
+				resMan = _CreateManagedResources(m, asmName);
 				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
 				resNat = _CreateNativeResources(m, compilation);
@@ -332,12 +341,15 @@ namespace Au.Compiler {
 			//	//print.it(v.AttributeClass.Name);
 			//	if (v.AttributeClass.Name == "DefaultCharSetAttribute") { needDefaultCharset = false; break; }
 			//}
-			bool needTargetFramework = false;
+			bool needTargetFramework = false, needAssemblyTitle = false;
 			if (m.Role is ERole.exeProgram or ERole.classLibrary) {
-				needTargetFramework = true; //need [TargetFramework] for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
+				needTargetFramework = needAssemblyTitle = true;
 				foreach (var v in compilation.Assembly.GetAttributes()) {
 					//print.it(v.AttributeClass.Name);
-					if (v.AttributeClass.Name == "TargetFrameworkAttribute") { needTargetFramework = false; break; }
+					switch (v.AttributeClass.Name) {
+					case "TargetFrameworkAttribute": needTargetFramework = false; break; //need for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
+					case "AssemblyTitleAttribute": needAssemblyTitle = false; break; //displayed in various system UI as program description (else empty)
+					}
 				}
 			}
 
@@ -348,6 +360,7 @@ namespace Au.Compiler {
 				//if (needDefaultCharset) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
 
 				if (needTargetFramework) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
+				if (needAssemblyTitle) sb.AppendLine($"[assembly: System.Reflection.AssemblyTitle(\"{m.Name}\")]");
 
 				if (m.Role is ERole.miniProgram) {
 					var ta = folders.ThisAppBS;
@@ -396,13 +409,13 @@ namespace Au.Compiler {
 			}
 		}
 
-		static List<ResourceDescription> _CreateManagedResources(MetaComments m) {
+		static List<ResourceDescription> _CreateManagedResources(MetaComments m, string asmName) {
 			var a = m.Resources;
 			if (a.NE_()) return null;
 			var R = new List<ResourceDescription>();
 			ResourceWriter rw = null;
 			MemoryStream stream = null;
-			string resourcesName = m.Name + ".g.resources";
+			string resourcesName = asmName + ".g.resources";
 			FileNode curFile = null;
 
 			void _End() {
@@ -479,7 +492,7 @@ namespace Au.Compiler {
 
 		static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation) {
 #if true
-			if (m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
+			if (m.Role is ERole.exeProgram or ERole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
 				return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
 
 			if (m.IconFile != null) { //add only icon. No version, no manifest.

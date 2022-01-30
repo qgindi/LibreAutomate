@@ -145,7 +145,7 @@ namespace Au
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
 		/// <param name="dontThrowIfClosed">
 		/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
-		/// In such case the callback function must return false, like in the examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
+		/// In such case the callback function must return true, like in the examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
 		/// </param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>

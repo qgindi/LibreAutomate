@@ -143,7 +143,7 @@ public unsafe partial class KScintilla : HwndHost {
 			if (_inOnWmSetFocus) return 0;
 			break;
 		case Api.WM_GETOBJECT:
-			return (_acc ??= new _Accessible(this)).WmGetobject(wp, lp);
+			return (_acc ??= new _Accessible(this)).WmGetobject(wp, lp);//TODO: gets text as Name
 		}
 
 		var R = CallRetPtr(msg, wp, lp);
@@ -216,12 +216,16 @@ public unsafe partial class KScintilla : HwndHost {
 		var k = (KKey)msg.wParam;
 		//if (m == Api.WM_KEYDOWN) print.it(m, k);
 		if (m is Api.WM_KEYDOWN or Api.WM_KEYUP /*or Api.WM_SYSKEYDOWN or Api.WM_SYSKEYUP*/)
-			if (!modifiers.Has(ModifierKeys.Alt))
-				if (k == KKey.Left || k == KKey.Right || k == KKey.Up || k == KKey.Down
-					|| (!zIsReadonly && ((k == KKey.Enter && modifiers == 0) || (k == KKey.Tab && !modifiers.Has(ModifierKeys.Control))))) {
+			if (!modifiers.Has(ModifierKeys.Alt)) {
+				switch (k) {
+				case KKey.Left or KKey.Right or KKey.Up or KKey.Down:
+				case KKey.Enter when modifiers == 0 && !zIsReadonly:
+				case KKey.Tab when !modifiers.Has(ModifierKeys.Control) && !zIsReadonly:
 					Call(msg.message, msg.wParam, msg.lParam); //not DispatchMessage or Send
 					return true;
+				case KKey.Insert when modifiers == 0: return true;
 				}
+			}
 
 		return base.TranslateAcceleratorCore(ref msg, modifiers);
 	}

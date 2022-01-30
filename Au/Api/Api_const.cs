@@ -306,7 +306,7 @@ namespace Au.Types
 		//CBS_, CB_, CBN_
 		internal const uint CBS_SIMPLE = 1;
 		internal const uint CBS_DROPDOWN = 2;
-		//internal const uint CBS_DROPDOWNLIST = 3;
+		internal const uint CBS_DROPDOWNLIST = 3;
 		internal const uint CBS_AUTOHSCROLL = 0x40;
 
 		internal const int CB_INSERTSTRING = 330;
