@@ -439,7 +439,7 @@ partial class CiStyling
 
 		public TStyles() {
 			csvTable csv;
-			if (!filesystem.exists(s_settingsFile).isFile) return;
+			if (!filesystem.exists(s_settingsFile).File) return;
 			try { csv = csvTable.load(s_settingsFile); }
 			catch (Exception e1) { print.it(e1.ToStringWithoutStack()); return; }
 			if (csv.ColumnCount < 2) return;

@@ -257,9 +257,9 @@ namespace Au.Triggers
 		/// </remarks>
 		/// <exception cref="ArgumentException">Exceptions of <see cref="wndFinder"/> constructor.</exception>
 		public TriggerScope Window(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			Func<wnd, bool> also = null, WContains contains = default)
 			=> _Window(false, name, cn, of, also, contains);
 
@@ -273,9 +273,9 @@ namespace Au.Triggers
 		/// </remarks>
 		/// <exception cref="ArgumentException">Exceptions of <see cref="wndFinder"/> constructor.</exception>
 		public TriggerScope NotWindow(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			Func<wnd, bool> also = null, WContains contains = default)
 			=> _Window(true, name, cn, of, also, contains);
 

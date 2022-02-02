@@ -479,8 +479,8 @@
 		/// <summary>
 		/// Sets an int number field.
 		/// </summary>
-		/// <param name="row"><see cref="this[int, int]"/></param>
-		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <param name="row">See <see cref="this[int, int]"/>.</param>
+		/// <param name="column">See <see cref="this[int, int]"/>.</param>
 		/// <param name="value">The number.</param>
 		/// <param name="hex">Let the number be in hexadecimal format, like 0x3A.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -491,8 +491,8 @@
 		/// <summary>
 		/// Gets an int number field.
 		/// </summary>
-		/// <param name="row"><see cref="this[int, int]"/></param>
-		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <param name="row">See <see cref="this[int, int]"/>.</param>
+		/// <param name="column">See <see cref="this[int, int]"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public int GetInt(int row, int column) {
 			return this[row, column].ToInt();
@@ -501,8 +501,8 @@
 		/// <summary>
 		/// Sets a double number field.
 		/// </summary>
-		/// <param name="row"><see cref="this[int, int]"/></param>
-		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <param name="row">See <see cref="this[int, int]"/>.</param>
+		/// <param name="column">See <see cref="this[int, int]"/>.</param>
 		/// <param name="value">The number.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void SetDouble(int row, int column, double value) {
@@ -512,8 +512,8 @@
 		/// <summary>
 		/// Gets a double number field.
 		/// </summary>
-		/// <param name="row"><see cref="this[int, int]"/></param>
-		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <param name="row">See <see cref="this[int, int]"/>.</param>
+		/// <param name="column">See <see cref="this[int, int]"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public double GetDouble(int row, int column) {
 			this[row, column].ToNumber(out double R);

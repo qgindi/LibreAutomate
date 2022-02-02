@@ -76,9 +76,9 @@ namespace Au {
 		/// </code>
 		/// </example>
 		public static wnd find(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find();
 
@@ -96,9 +96,9 @@ namespace Au {
 		/// <inheritdoc cref="find"/>
 		public static wnd find(
 			double waitS,
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find(waitS);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -135,9 +135,9 @@ namespace Au {
 		/// <seealso cref="getwnd.mainWindows"/>
 		/// <seealso cref="getwnd.threadWindows"/>
 		public static wnd[] findAll(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			var a = f.FindAll();
@@ -212,9 +212,9 @@ namespace Au {
 		/// </example>
 		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)"/>
 		public static wnd findOrRun(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
 			Action run = null, double waitS = 60d, bool activate = true) {
 			wnd w = default;
@@ -271,9 +271,9 @@ namespace Au {
 		/// ]]></code>
 		/// </example>
 		public static wnd runAndFind(Action run, double waitS,
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
 			bool activate = true) {
 			var f = new wndFinder(name, cn);
@@ -313,9 +313,9 @@ namespace Au {
 		/// <seealso cref="ClassName"/>
 		/// <seealso cref="ClassNameIs"/>
 		/// <seealso cref="ProgramName"/>
-		public bool IsMatch([ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+		public bool IsMatch([ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			return f.IsMatch(this);
@@ -570,7 +570,7 @@ namespace Au.Types {
 		WOwner(int i, byte what) : this() { _i = i; _what = what; }
 
 		/// <summary>Program name like "notepad.exe", or null. See <see cref="wnd.ProgramName"/>.</summary>
-		public static implicit operator WOwner([ParamString(PSFormat.wildex)] string program) => new(program);
+		public static implicit operator WOwner([ParamString(PSFormat.Wildex)] string program) => new(program);
 
 		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
 		public static implicit operator WOwner(wnd ownerWindow) => new((int)ownerWindow, 1);

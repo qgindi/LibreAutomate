@@ -122,7 +122,7 @@ partial class FilesModel
 		try {
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 
-			if (s_isNewWorkspace = !filesystem.exists(xmlFile).isFile) {
+			if (s_isNewWorkspace = !filesystem.exists(xmlFile).File) {
 				filesystem.copy(folders.ThisAppBS + @"Default\Workspace", wsDir);
 			}
 
@@ -189,7 +189,7 @@ partial class FilesModel
 	public static void OpenWorkspaceUI() {
 		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Open workspace" };
 		if (!d.ShowOpen(out string s, App.Hmain, selectFolder: true)) return;
-		if (!filesystem.exists(s + @"\files.xml").isFile) dialog.showError("The folder must contain file files.xml");
+		if (!filesystem.exists(s + @"\files.xml").File) dialog.showError("The folder must contain file files.xml");
 		else LoadWorkspace(s);
 	}
 
@@ -1090,7 +1090,7 @@ partial class FilesModel
 	public void ImportWorkspace(string wsDirOrZip = null, (FileNode target, FNPosition pos)? where = null) {
 		try {
 			string wsDir, folderName;
-			bool isZip = wsDirOrZip.Ends(".zip") && filesystem.exists(wsDirOrZip).isFile, notWorkspace = false;
+			bool isZip = wsDirOrZip.Ends(".zip") && filesystem.exists(wsDirOrZip).File, notWorkspace = false;
 
 			if (isZip) {
 				folderName = pathname.getNameNoExt(wsDirOrZip);
@@ -1166,7 +1166,7 @@ partial class FilesModel
 			var fd = FilesDirectory;
 			if (!fromWorkspaceDir) {
 				if (s.Starts(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
-				else if (!dirsDropped) dirsDropped = filesystem.exists(s).isDir;
+				else if (!dirsDropped) dirsDropped = filesystem.exists(s).Dir;
 			}
 		}
 		int r;
@@ -1193,8 +1193,8 @@ partial class FilesModel
 
 			foreach (var path in a) {
 				var g = filesystem.exists(path, true);
-				if (!g.exists || g.isSymlink) continue;
-				bool isDir = g.isDir && r != 1;
+				if (!g.Exists || g.IsSymlink) continue;
+				bool isDir = g.Dir && r != 1;
 
 				if (fromWorkspaceDir) {
 					var relPath = path[FilesDirectory.Length..];
@@ -1259,7 +1259,7 @@ partial class FilesModel
 	public FileNode ImportFromWorkspaceFolder(string path, FileNode target, FNPosition pos) {
 		FileNode R = null;
 		try {
-			if (!filesystem.exists(path, true).isFile) return null;
+			if (!filesystem.exists(path, true).File) return null;
 
 			var relPath = path[FilesDirectory.Length..];
 			var fExists = this.Find(relPath);
@@ -1375,7 +1375,7 @@ partial class FilesModel
 	private void _watcher_Event(object sender, FileSystemEventArgs e) //in thread pool
 	{
 		//if(e.Name.Ends("~temp") || e.Name.Ends("~backup")) return; //no such events, because we use other directory for temp files
-		if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).isFile) return; //we receive 'directory changed' after every 'file changed' etc
+		if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).File) return; //we receive 'directory changed' after every 'file changed' etc
 
 		try { TreeControl?.Dispatcher.InvokeAsync(() => _watcher_Event2(e)); }
 		catch (Exception ex) { Debug_.Print(ex); }
@@ -1429,7 +1429,7 @@ partial class FilesModel
 		var ar = App.Settings.recentWS;
 		int j = 0, i = 0, n = ar?.Length ?? 0;
 		for (; i < n; i++) {
-			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).isDir) ar[i] = null;
+			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).Dir) ar[i] = null;
 			else _Add(ar[i], ++j);
 		}
 		if (j < i) App.Settings.recentWS = ar.Where(o => o != null).ToArray();
@@ -1560,7 +1560,7 @@ partial class FilesModel
 		switch (filesystem.exists(path)) {
 		case 2:
 			string xmlFile = path + @"\files.xml";
-			if (filesystem.exists(xmlFile).isFile && filesystem.exists(path + @"\files").isDir) {
+			if (filesystem.exists(xmlFile).File && filesystem.exists(path + @"\files").Dir) {
 				try { return XmlUtil.LoadElem(xmlFile).Name == "files"; } catch { }
 			}
 			break;

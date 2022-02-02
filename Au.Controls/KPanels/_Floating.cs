@@ -158,7 +158,7 @@ namespace Au.Controls
 					RECT r = w.Rect;
 					POINT offs = (p.x - r.left, p.y - r.top);
 					bool ok = WndUtil.DragLoop(w, MButtons.Left, d => {
-						if (d.Msg.message != Api.WM_MOUSEMOVE) return;
+						if (d.msg.message != Api.WM_MOUSEMOVE) return;
 
 						p = mouse.xy;
 						w.MoveL(p.x - offs.x, p.y - offs.y);

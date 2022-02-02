@@ -1595,7 +1595,7 @@ class Delm : KDialogWindow
 
 			//if(!allUsers) {
 			string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;
-			if (!filesystem.exists(jabswitch).isFile) return (false, "Cannot find jabswitch.exe.");
+			if (!filesystem.exists(jabswitch).File) return (false, "Cannot find jabswitch.exe.");
 			try {
 				run.console(out sout, jabswitch, enable ? "-enable" : "-disable");
 				sout = sout?.Trim();
@@ -1610,8 +1610,8 @@ class Delm : KDialogWindow
 			sout += "\r\nRestart Java apps to apply the new settings.";
 
 			string dll64 = folders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = folders.SystemX86 + "WindowsAccessBridge-32.dll";
-			if (!filesystem.exists(dll64).isFile) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use UI elements of Java apps. Install 64-bit Java too.";
-			if (!filesystem.exists(dll32).isFile) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use UI elements of Java apps. Install 32-bit Java too.";
+			if (!filesystem.exists(dll64).File) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use UI elements of Java apps. Install 64-bit Java too.";
+			if (!filesystem.exists(dll32).File) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use UI elements of Java apps. Install 32-bit Java too.";
 
 			return (true, sout);
 

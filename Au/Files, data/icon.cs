@@ -184,7 +184,7 @@ namespace Au
 				//Unregistered file type/protocol, no extension, folder, ::{CLSID}, shell:AppsFolder\WinStoreAppId, or no progId key in HKCR
 				//print.it(@"unregistered", file, progId);
 				if(progId != null) goto gr; //the file type is known, but no progid key in HKCR. Let shell API figure out. Rare.
-				if(isExt || (isPath && filesystem.exists(file).asFile)) return Stock(StockIcon.DOCNOASSOC, size);
+				if(isExt || (isPath && filesystem.exists(file).File)) return Stock(StockIcon.DOCNOASSOC, size);
 				goto gr;
 			}
 

@@ -44,7 +44,7 @@ namespace Au {
 		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return false.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public wildex([ParamString(PSFormat.wildex)] string wildcardExpression, bool matchCase = false, bool noException = false) {
+		public wildex([ParamString(PSFormat.Wildex)] string wildcardExpression, bool matchCase = false, bool noException = false) {
 			var w = wildcardExpression ?? throw new ArgumentNullException();
 			try {
 				_type = WXType.Wildcard;
@@ -104,7 +104,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public static implicit operator wildex([ParamString(PSFormat.wildex)] string wildcardExpression) {
+		public static implicit operator wildex([ParamString(PSFormat.Wildex)] string wildcardExpression) {
 			if (wildcardExpression == null) return null;
 			return new wildex(wildcardExpression);
 		}

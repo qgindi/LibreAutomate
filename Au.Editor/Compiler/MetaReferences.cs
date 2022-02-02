@@ -202,11 +202,11 @@ namespace Au.Compiler
 			if (re.NE()) return null;
 			bool isFull = pathname.isFullPathExpand(ref re);
 			if (!isFull && isCOM) { isFull = true; re = folders.Workspace + @".interop\" + re; }
-			if (isFull) return filesystem.exists(re).isFile ? re : null;
+			if (isFull) return filesystem.exists(re).File ? re : null;
 
 			if (!re.Ends(".dll", true)) re += ".dll";
 			re = folders.ThisAppBS + re;
-			return filesystem.exists(re).isFile ? re : null;
+			return filesystem.exists(re).File ? re : null;
 
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}

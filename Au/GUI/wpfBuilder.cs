@@ -562,13 +562,13 @@ namespace Au
 		/// <summary>
 		/// Changes various window properties.
 		/// </summary>
-		/// <param name="startLocation"><see cref="WindowStartupLocation"/></param>
-		/// <param name="resizeMode"><see cref="Window.ResizeMode"/></param>
-		/// <param name="showActivated"><see cref="Window.ShowActivated"/></param>
-		/// <param name="showInTaskbar"><see cref="Window.ShowInTaskbar"/></param>
-		/// <param name="topmost"><see cref="Window.Topmost"/></param>
-		/// <param name="state"><see cref="Window.WindowState"/></param>
-		/// <param name="style"><see cref="Window.WindowStyle"/></param>
+		/// <param name="startLocation"><see cref="WindowStartupLocation"/>.</param>
+		/// <param name="resizeMode"><see cref="Window.ResizeMode"/>.</param>
+		/// <param name="showActivated"><see cref="Window.ShowActivated"/>.</param>
+		/// <param name="showInTaskbar"><see cref="Window.ShowInTaskbar"/>.</param>
+		/// <param name="topmost"><see cref="Window.Topmost"/>.</param>
+		/// <param name="state"><see cref="Window.WindowState"/>.</param>
+		/// <param name="style"><see cref="Window.WindowStyle"/>.</param>
 		/// <param name="icon"><see cref="Window.Icon"/>. Example: <c>.WinProperties(icon: BitmapFrame.Create(new Uri(@"d:\icons\file.ico")))</c>.</param>
 		/// <param name="whiteBackground">Set background color = <b>SystemColors.WindowBrush</b> (normally white) if true or <b>SystemColors.ControlBrush</b> (dialog color) if false. See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
 		/// <exception cref="InvalidOperationException">

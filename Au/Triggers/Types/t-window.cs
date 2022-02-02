@@ -237,9 +237,9 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">See <see cref="wnd.find"/>.</exception>
 		/// <seealso cref="Last"/>
 		public Action<WindowTriggerArgs> this[TWEvent winEvent,
-				[ParamString(PSFormat.wildex)] string name = null,
-				[ParamString(PSFormat.wildex)] string cn = null,
-				[ParamString(PSFormat.wildex)] WOwner of = default,
+				[ParamString(PSFormat.Wildex)] string name = null,
+				[ParamString(PSFormat.Wildex)] string cn = null,
+				[ParamString(PSFormat.Wildex)] WOwner of = default,
 				Func<wnd, bool> also = null, WContains contains = default,
 				TWFlags flags = 0, TWLater later = 0,
 				[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0

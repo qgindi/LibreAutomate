@@ -660,8 +660,8 @@ namespace Au
 					try {
 						_Invalidate(_iClick = i);
 						ok = WndUtil.DragLoop(_w, MButtons.Left, d => {
-							if (d.Msg.message != Api.WM_MOUSEMOVE) return;
-							int j = _HitTest(Math2.NintToPOINT(d.Msg.lParam));
+							if (d.msg.message != Api.WM_MOUSEMOVE) return;
+							int j = _HitTest(Math2.NintToPOINT(d.msg.lParam));
 							if ((j == i) == _noHotClick) {
 								_noHotClick ^= true;
 								_Invalidate(i);

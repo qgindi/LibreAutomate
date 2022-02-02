@@ -589,7 +589,7 @@ namespace Au.Types {
 		}
 
 		internal struct WIN32_FIND_DATA {
-			public System.IO.FileAttributes dwFileAttributes;
+			public FileAttributes dwFileAttributes;
 			public FILETIME ftCreationTime;
 			public FILETIME ftLastAccessTime;
 			public FILETIME ftLastWriteTime;
@@ -611,6 +611,14 @@ namespace Au.Types {
 					}
 				}
 			}
+
+			/// <summary>
+			/// Returns nonzero if this is a NTFS link: 1 symlink, 2 mount, 3 other.
+			/// </summary>
+			internal int IsNtfsLink
+				=> dwFileAttributes.Has(FileAttributes.ReparsePoint) && 0 != (dwReserved0 & 0x20000000)
+				? dwReserved0 switch { 0xA000000C => 1, 0xA0000003 => 2, _ => 3 }
+				: 0;
 		}
 
 		[DllImport("kernel32.dll", EntryPoint = "FindFirstFileW", SetLastError = true)]

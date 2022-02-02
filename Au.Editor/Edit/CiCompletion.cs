@@ -304,9 +304,9 @@ partial class CiCompletion
 					if (CiUtil.IsInString(ref node, position)) {
 						stringSpan = node.Span;
 						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
-						if (stringFormat == PSFormat.wildex) { //is regex in wildex?
+						if (stringFormat == PSFormat.Wildex) { //is regex in wildex?
 							if (code.RxMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
-								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.regexp;
+								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.Regexp;
 						} else if (stringFormat == PSFormat.None) stringFormat = (PSFormat)100;
 					}
 				}
@@ -318,7 +318,7 @@ partial class CiCompletion
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
 					int i = popupMenu.showSimple("Regex|Keys", MSFlags.ByCaret);
-					stringFormat = i switch { 1 => PSFormat.regexp, 2 => PSFormat.keys, _ => default };
+					stringFormat = i switch { 1 => PSFormat.Regexp, 2 => PSFormat.Keys, _ => default };
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);
 				return;

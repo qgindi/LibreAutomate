@@ -249,7 +249,7 @@ namespace Au.Compiler
 
 			bool _Open() {
 				if (_data != null) return true;
-				if (!filesystem.exists(_file).isFile) return false;
+				if (!filesystem.exists(_file).File) return false;
 				string sData = filesystem.loadText(_file);
 				foreach (var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if (_data == null) {

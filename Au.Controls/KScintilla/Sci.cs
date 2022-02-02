@@ -1152,7 +1152,7 @@ namespace Au.Controls
 				_enc = _Encoding.Binary;
 				IsImage = false;
 				if (0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
-					if (!filesystem.exists(file).isFile) throw new FileNotFoundException($"Could not find file '{file}'.");
+					if (!filesystem.exists(file).File) throw new FileNotFoundException($"Could not find file '{file}'.");
 					IsImage = true;
 					return Encoding.UTF8.GetBytes($"<image \"{file}\">\0");
 				}

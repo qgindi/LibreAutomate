@@ -114,7 +114,7 @@ static class CiSnippets
 
 		if (s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
-			if (!filesystem.exists(CustomFile).isFile) {
+			if (!filesystem.exists(CustomFile).File) {
 				try { filesystem.copy(folders.ThisAppBS + @"Default\Snippets2.xml", CustomFile); }
 				catch { goto g1; }
 			}

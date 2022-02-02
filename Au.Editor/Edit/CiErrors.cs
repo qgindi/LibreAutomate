@@ -120,7 +120,7 @@ class CiErrors
 		foreach (var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
 			//print.it(format);
-			if (format == PSFormat.None || format == PSFormat.regexpReplacement) continue;
+			if (format == PSFormat.None || format == PSFormat.RegexpReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
 			if (s.Length == 0) continue;
 			string es = null;
@@ -129,14 +129,14 @@ class CiErrors
 				case PSFormat.NetRegex:
 					new System.Text.RegularExpressions.Regex(s); //never mind: may have 'options' argument, eg ECMAScript or Compiled
 					break;
-				case PSFormat.regexp:
+				case PSFormat.Regexp:
 					new regexp(s);
 					break;
-				case PSFormat.wildex:
+				case PSFormat.Wildex:
 					if (s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg wnd.Child("***elmName ...")
 					new wildex(s);
 					break;
-				case PSFormat.keys:
+				case PSFormat.Keys:
 					if (s[0] is '!' or '%') break;
 
 					//if keys.send("arg1", "arg2"), use single keys instance to validate all args.
@@ -147,7 +147,7 @@ class CiErrors
 
 					var k = new keys(null);
 					foreach (var nk in args.DescendantNodes()) {
-						if (CiUtil.GetParameterStringFormat(nk, semo, false) != PSFormat.keys) continue;
+						if (CiUtil.GetParameterStringFormat(nk, semo, false) != PSFormat.Keys) continue;
 						s = nk.GetFirstToken().ValueText;
 						if (s.Length == 0 || s[0] is '!' or '%') continue; //never mind: can be "keys"+"!keys"
 						try { k.AddKeys(s); }

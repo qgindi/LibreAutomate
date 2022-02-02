@@ -226,7 +226,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	///// </summary>
 	//void _GetAssemblyNameOfForwardedType() {
 	//	var path = folders.NetRuntimeBS + _assembly + ".dll";
-	//	if (!(filesystem.exists(path).isFile || filesystem.exists(path = folders.NetRuntimeDesktopBS + _assembly + ".dll").isFile)) return;
+	//	if (!(filesystem.exists(path).File || filesystem.exists(path = folders.NetRuntimeDesktopBS + _assembly + ".dll").File)) return;
 
 	//	var alc = new System.Runtime.Loader.AssemblyLoadContext(null, true);
 	//	try {

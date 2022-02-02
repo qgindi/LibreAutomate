@@ -31,7 +31,7 @@ namespace Au
 			_isl = new Api.ShellLink() as Api.IShellLink;
 			_ipf = _isl as Api.IPersistFile;
 			_lnkPath = lnkPath;
-			if (mode != Api.STGM_WRITE && (mode == Api.STGM_READ || filesystem.exists(_lnkPath).isFile)) {
+			if (mode != Api.STGM_WRITE && (mode == Api.STGM_READ || filesystem.exists(_lnkPath).File)) {
 				AuException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 				_isOpen = true;
 			}
@@ -76,7 +76,7 @@ namespace Au
 		/// Creates parent folder if need.
 		/// </remarks>
 		public void Save() {
-			if (_changedHotkey && !_isOpen && filesystem.exists(_lnkPath).isFile) _UnregisterHotkey(_lnkPath);
+			if (_changedHotkey && !_isOpen && filesystem.exists(_lnkPath).File) _UnregisterHotkey(_lnkPath);
 
 			filesystem.createDirectoryFor(_lnkPath);
 			AuException.ThrowIfHresultNot0(_ipf.Save(_lnkPath, true), "*save");
@@ -258,7 +258,7 @@ namespace Au
 		/// <exception cref="AuException">Failed to unregister hotkey.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="filesystem.delete(string, bool)"/>.</exception>
 		public static void delete(string lnkPath) {
-			if (!filesystem.exists(lnkPath).isFile) return;
+			if (!filesystem.exists(lnkPath).File) return;
 			_UnregisterHotkey(lnkPath);
 			filesystem.delete(lnkPath);
 		}
@@ -268,7 +268,7 @@ namespace Au
 
 		/// <exception cref="AuException">Failed to open or save.</exception>
 		static void _UnregisterHotkey(string lnkPath) {
-			Debug.Assert(filesystem.exists(lnkPath).isFile);
+			Debug.Assert(filesystem.exists(lnkPath).File);
 			using var x = openOrCreate(lnkPath);
 			var k = x.Hotkey;
 			if (k != 0) {

@@ -127,11 +127,11 @@ class CiTools
 
 	public void ShowForStringParameter(PSFormat stringFormat, CodeInfo.Context cd, TextSpan stringSpan, wnd dontCover = default) {
 		switch (stringFormat) {
-		case PSFormat.regexp:
-		case PSFormat.regexpReplacement:
-			RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, replace: stringFormat == PSFormat.regexpReplacement, dontCover);
+		case PSFormat.Regexp:
+		case PSFormat.RegexpReplacement:
+			RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
 			break;
-		case PSFormat.keys:
+		case PSFormat.Keys:
 			KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, dontCover);
 			break;
 		}

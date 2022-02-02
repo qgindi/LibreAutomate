@@ -127,7 +127,7 @@ namespace Au
 		/// 
 		/// Examples in class help: <see cref="regexp"/>.
 		/// </remarks>
-		public regexp([ParamString(PSFormat.regexp)] string rx, RXFlags flags = 0) {
+		public regexp([ParamString(PSFormat.Regexp)] string rx, RXFlags flags = 0) {
 			if (rx == null) throw new ArgumentNullException();
 			_matchFlags = (byte)((ulong)flags >> 56); flags = (RXFlags)((ulong)flags & 0xffffff_ffffffff);
 			_codeUnsafe = Cpp.Cpp_RegexCompile(rx, rx.Length, flags, out int codeSize, out BSTR errStr);
@@ -328,6 +328,9 @@ namespace Au
 		}
 		//Note: cannot use subject type ReadOnlySpan<char> with most functions, because need to store subject in RXGroup or RXMatch, which is not ref struct. And cannot use ReadOnlyMemory<char>.
 
+		//PROBLEM: DocFX does not inherit parameters, even if none specified. Inherits only exceptions.
+		//	But somehow works well with eg filesystem.copyTo.
+
 		/// <summary>
 		/// Returns true if string <i>s</i> matches this regular expression.
 		/// Gets match info as <see cref="RXMatch"/>.
@@ -339,14 +342,10 @@ namespace Au
 		/// <param name="result">Receives match info. Read more in Remarks.</param>
 		/// <param name="range">See <see cref="IsMatch"/>.</param>
 		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
 		/// If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
 		/// If no match, returns false, and <i>result</i> normally is null. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="RXMatch.Exists"/> (false) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
-		/// 
-		/// This function is similar to <see cref="Regex.Match(string)"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -355,6 +354,7 @@ namespace Au
 		/// if(x.Match(s, out var m)) print.it(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
+		/// <inheritdoc cref="IsMatch"/>
 		public bool Match(string s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0) {
 			result = null;
 			int start = _GetSpan(s, range, out var span);
@@ -764,7 +764,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public string Replace(string s,
-			[ParamString(PSFormat.regexpReplacement)] string repl = null,
+			[ParamString(PSFormat.RegexpReplacement)] string repl = null,
 			int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0) {
 			_Replace(s, out var R, repl, null, maxCount, range, matchFlags);
 			return R;
@@ -804,7 +804,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public int Replace(string s,
-			[ParamString(PSFormat.regexpReplacement)] string repl,
+			[ParamString(PSFormat.RegexpReplacement)] string repl,
 			out string result, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0) {
 			return _Replace(s, out result, repl, null, maxCount, range, matchFlags);
 		}
@@ -1180,7 +1180,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RxIsMatch(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
 			return x.IsMatch(t, range);
@@ -1201,7 +1201,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RxMatch(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			out RXMatch result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Match(t, out result, range);
@@ -1223,7 +1223,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RxMatch(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			int group, out string result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Match(t, group, out result, range);
@@ -1245,7 +1245,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RxMatch(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			int group, out RXGroup result, RXFlags flags = 0, Range? range = null) {
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Match(t, group, out result, range);
@@ -1265,7 +1265,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static IEnumerable<RXMatch> RxFindAll(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1287,7 +1287,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RxFindAll(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			out RXMatch[] result, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1309,7 +1309,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static IEnumerable<string> RxFindAll(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			int group, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1332,7 +1332,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RxFindAll(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			int group, out string[] result, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1384,8 +1384,8 @@ namespace Au.Types
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static string RxReplace(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
-			[ParamString(PSFormat.regexpReplacement)] string repl,
+			[ParamString(PSFormat.Regexp)] string rx,
+			[ParamString(PSFormat.RegexpReplacement)] string repl,
 			int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1414,8 +1414,8 @@ namespace Au.Types
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static int RxReplace(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
-			[ParamString(PSFormat.regexpReplacement)] string repl,
+			[ParamString(PSFormat.Regexp)] string rx,
+			[ParamString(PSFormat.RegexpReplacement)] string repl,
 			out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1443,7 +1443,7 @@ namespace Au.Types
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static string RxReplace(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1472,7 +1472,7 @@ namespace Au.Types
 		/// </exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static int RxReplace(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
@@ -1493,7 +1493,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static string[] RxSplit(this string t,
-			[ParamString(PSFormat.regexp)] string rx,
+			[ParamString(PSFormat.Regexp)] string rx,
 			int maxCount = 0, RXFlags flags = 0, Range? range = null) {
 			if (t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);

@@ -256,7 +256,7 @@ namespace Au.Controls
 					} else {
 						if (!pathname.isFullPathExpand(ref s)) return null;
 						s = pathname.normalize(s, folders.ThisAppImages);
-						if (!filesystem.exists(s).isFile) return null;
+						if (!filesystem.exists(s).File) return null;
 					}
 					break;
 				}
