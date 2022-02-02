@@ -277,7 +277,7 @@ namespace Au.Compiler {
 					//if(m.ConfigFile != null) {
 					//	r.hasConfig = true;
 					//	_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
-					//} else if(filesystem.exists(configFile, true).isFile) {
+					//} else if(filesystem.exists(configFile, true).File) {
 					//	filesystem.delete(configFile);
 					//}
 				} else if (!m.Console) {

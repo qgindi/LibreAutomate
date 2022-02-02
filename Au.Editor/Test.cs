@@ -36,10 +36,9 @@ using Roslyn.Utilities;
 #pragma warning disable 169
 
 
-static unsafe class Test
-{
+static unsafe class Test {
 	public static void FromMenubar() {
-		
+
 
 		//perf.first();
 		//var d=CiUtil.CreateRoslynDocument("using System; Console.Write(1);");
@@ -96,8 +95,7 @@ static unsafe class Test
 	ccc
 	*/
 
-	class TestGC
-	{
+	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
 			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;

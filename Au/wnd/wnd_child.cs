@@ -43,8 +43,8 @@
 		/// To create code for this function, use dialog "Find window or control".
 		/// </remarks>
 		public wnd Child(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
 			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
 			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this);
 
@@ -64,8 +64,8 @@
 		/// <exception cref="NotFoundException" />
 		public wnd Child(
 			double waitS,
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
 			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
 			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this, waitS);
 
@@ -81,8 +81,8 @@
 		/// </remarks>
 		/// <seealso cref="getwnd.Children"/>
 		public wnd[] ChildAll(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
 			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null) {
 			//ThrowIfInvalid(); //will be called later
 			var f = new wndChildFinder(name, cn, flags, id, also);
@@ -108,8 +108,8 @@
 		/// ]]></code>
 		/// </example>
 		public bool HasChild(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
 			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0) {
 			return default != Child(name, cn, flags, id, also, skip);
 		}
@@ -349,7 +349,7 @@
 		/// wnd.find("Options").ButtonClick("Cancel");
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick([ParamString(PSFormat.wildex)] string name, bool asControl = false, string roleCN = null) {
+		public void ButtonClick([ParamString(PSFormat.Wildex)] string name, bool asControl = false, string roleCN = null) {
 			if (asControl) {
 				mouse.postClick(this.Child(1, name, roleCN ?? "*Button*"));
 			} else {

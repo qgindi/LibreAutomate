@@ -3,11 +3,12 @@
         {
             "src": [
                 {
-                    //"src": "../../../Au/",
                     "src": "Q:/Temp/Au/DocFX/source/",
-                    "files": [
-                        "Au.csproj"
-                    ]
+                    //"src": "../../../_/",
+                  "files": [
+                    "Au.csproj"
+                    //"Au.dll" //DocFX bug: "Error extracting metadata for Q:/app/Au/_/Au.dll: System.ArgumentException: Illegal characters in path". Even if the XML file is almost empty.
+                  ]
                 }
             ],
             "dest": "api",

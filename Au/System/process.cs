@@ -258,7 +258,7 @@ namespace Au
 		/// - <i>processName</i> is "" or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
-		public static int[] getProcessIds([ParamString(PSFormat.wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
+		public static int[] getProcessIds([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
 			if (processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			GetProcessesByName_(ref a, processName, fullPath, ofThisSession);
@@ -271,7 +271,7 @@ namespace Au
 		/// More info: <see cref="getProcessIds"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException"/>
-		public static int getProcessId([ParamString(PSFormat.wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
+		public static int getProcessId([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
 			if (processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);

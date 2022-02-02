@@ -836,7 +836,7 @@ Opens files to enable Undo.",
 	//rejected: save recent find/replace strings in separate csv files, not in App.Settings
 	//static FRRecentItem[] _RecentLoad(bool replace) {
 	//	var file = _RecentFile(replace);
-	//	var x = filesystem.exists(file, true).isFile ? csvTable.load(file) : null;
+	//	var x = filesystem.exists(file, true).File ? csvTable.load(file) : null;
 	//	if (x == null) return null;
 	//	var a = new FRRecentItem[x.RowCount];
 	//	for (int i = 0; i < a.Length; i++) {

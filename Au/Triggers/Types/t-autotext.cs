@@ -657,7 +657,7 @@ namespace Au.Triggers
 		/// 
 		/// If used flag <see cref="TAFlags.Confirm"/>, for label can be used first argument with prefix "!!"; else displays all string arguments.
 		/// </remarks>
-		public void Replace2([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
+		public void Replace2([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 			_Replace(null, null, keysEtc ?? throw new ArgumentNullException());
 		}
 

@@ -69,7 +69,7 @@ public unsafe class elmFinder
 	/// </summary>
 	/// <inheritdoc cref="this" path="/param"/>
 	public elmFinder(string role = null,
-		[ParamString(PSFormat.wildex)] string name = null,
+		[ParamString(PSFormat.Wildex)] string name = null,
 		Strings prop = default, EFFlags flags = 0, Func<elm, bool> also = null,
 		int skip = 0, string navig = null
 		) {
@@ -183,7 +183,7 @@ public unsafe class elmFinder
 	/// <seealso cref="elm.path"/>
 	/// <seealso cref="Next"/>
 	public elmFinder this[string role = null,
-		[ParamString(PSFormat.wildex)] string name = null,
+		[ParamString(PSFormat.Wildex)] string name = null,
 		Strings prop = default, EFFlags flags = 0, Func<elm, bool> also = null,
 		int skip = 0, string navig = null
 		] {

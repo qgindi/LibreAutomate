@@ -25,7 +25,7 @@ partial class FilesModel
 
 			void _Browse(WBButtonClickArgs e) {
 				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") {
-					InitFolderNow = filesystem.exists(tLocation.Text).isDir ? tLocation.Text : folders.ThisAppDocuments,
+					InitFolderNow = filesystem.exists(tLocation.Text).Dir ? tLocation.Text : folders.ThisAppDocuments,
 				};
 				if (d.ShowOpen(out string s, this, selectFolder: true)) tLocation.Text = s;
 			}
@@ -33,7 +33,7 @@ partial class FilesModel
 			string _Validate(FrameworkElement e) {
 				var s = (e as TextBox).Text;
 				if (e == tLocation) {
-					if (!filesystem.exists(s).isDir) return "Folder does not exist";
+					if (!filesystem.exists(s).Dir) return "Folder does not exist";
 				} else {
 					if (pathname.isInvalidName(s)) return "Invalid filename";
 					ResultPath = pathname.combine(tLocation.Text, s); //validation is when OK clicked

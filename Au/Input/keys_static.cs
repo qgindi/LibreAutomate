@@ -761,7 +761,7 @@ namespace Au
 		/// if (!b.ShowDialog()) return;
 		/// ]]></code>
 		/// </example>
-		public static void send([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
+		public static void send([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 			new keys(opt.key).Add(keysEtc).SendIt();
 		}
 

@@ -82,9 +82,9 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">See <see cref="wnd.find"/>.</exception>
 		public wndFinder(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
 			_name = name;
 			if (cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("cn cannot be \"\". Use null.");

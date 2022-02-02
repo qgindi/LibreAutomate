@@ -1140,7 +1140,7 @@ namespace Au
 		/// </summary>
 		/// <param name="keysEtc">See <see cref="keys.send"/>.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Focus"/> and <see cref="keys.send"/>.</exception>
-		public void SendKeys([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
+		public void SendKeys([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 			bool andSelect = RoleInt is ERole.TREEITEM or ERole.LISTITEM;
 			Focus(andSelect);
 			keys.send(keysEtc);
@@ -1185,7 +1185,7 @@ namespace Au
 		/// 
 		/// Does not work with 3-state checkboxes and with elements that never have CHECKED state.
 		/// </remarks>
-		public void Check(bool check = true, [ParamString(PSFormat.keys)] string keys = null) {
+		public void Check(bool check = true, [ParamString(PSFormat.Keys)] string keys = null) {
 			if (!_CheckNeedToggle(check)) return;
 			if (keys != null) {
 				SendKeys(keys.Length == 0 ? "Space" : keys);
@@ -1225,7 +1225,7 @@ namespace Au
 		/// 
 		/// Works with UI elements that have <see cref="State"/> EXPANDED when expanded and COLLAPSED when collapsed. Also with UI elements that have state CHECKED or PRESSED when expanded and don't have this state when collapsed.
 		/// </remarks>
-		public void Expand(bool expand = true, [ParamString(PSFormat.keys)] string keys = null, double waitS = 1, bool ignoreState = false) {
+		public void Expand(bool expand = true, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, keys, null, waitS, ignoreState);
 		}
 
@@ -1355,7 +1355,7 @@ namespace Au
 		/// 
 		/// Does not work if all TREEITEM elements in the TREE control are its direct children, unless it's the standard Windows treeview control.
 		/// </remarks>
-		public elm Expand(Strings path, [ParamString(PSFormat.keys)] string keys = null, double waitS = 3) {
+		public elm Expand(Strings path, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 3) {
 			return _ExpandPath(path, keys, null, waitS);
 		}
 

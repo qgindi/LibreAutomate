@@ -48,22 +48,22 @@
 		/// <summary>
 		/// Keys. See <see cref="keys.send(KKeysEtc[])"/>.
 		/// </summary>
-		keys,
+		Keys,
 
 		/// <summary>
 		/// [Wildcard expression](xref:wildcard_expression).
 		/// </summary>
-		wildex,
+		Wildex,
 
 		/// <summary>
 		/// PCRE regular expression.
 		/// </summary>
-		regexp,
+		Regexp,
 
 		/// <summary>
 		/// PCRE regular expression replacement string.
 		/// </summary>
-		regexpReplacement,
+		RegexpReplacement,
 
 		/// <summary>
 		/// .NET regular expression.

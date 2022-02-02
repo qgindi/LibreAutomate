@@ -683,7 +683,7 @@ namespace Au.Controls
 			_customizedFile = xmlFileCustomized;
 			try {
 				var a = XmlUtil.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
-				if (xmlFileCustomized != null && filesystem.exists(xmlFileCustomized, true).isFile) {
+				if (xmlFileCustomized != null && filesystem.exists(xmlFileCustomized, true).File) {
 					try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
 						var ac = XmlUtil.LoadElem(xmlFileCustomized).Elements().ToArray();
 						for (int i = 0; i < a.Length; i++) {
@@ -733,7 +733,7 @@ namespace Au.Controls
 		}
 
 		void _Customize() {
-			if (!filesystem.exists(_customizedFile, true).isFile) filesystem.copy(_defaultFile, _customizedFile);
+			if (!filesystem.exists(_customizedFile, true).File) filesystem.copy(_defaultFile, _customizedFile);
 			run.selectInExplorer(_customizedFile);
 		}
 

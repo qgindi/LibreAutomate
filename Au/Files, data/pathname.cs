@@ -321,7 +321,7 @@ namespace Au
 		/// The sequence of actions:
 		/// 1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="expand"/>.
 		/// 2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
-		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with Expand(defaultParentDirectory).
+		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with <c>expand(defaultParentDirectory)</c>.
 		/// 4. If path is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
 		/// 6. If no flag DontExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.

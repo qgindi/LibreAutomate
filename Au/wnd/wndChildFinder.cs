@@ -37,8 +37,8 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">See <see cref="wnd.Child"/>.</exception>
 		public wndChildFinder(
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
 			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
 			) {
 			if (cn != null) {

@@ -46,7 +46,7 @@ namespace Au.Controls
 			string xmlFile = xmlFileCustomized; bool useDefaultXML = xmlFileCustomized == null;
 			gRetry:
 			if (useDefaultXML) xmlFile = xmlFileDefault;
-			else if (useDefaultXML = !filesystem.exists(xmlFile).isFile) goto gRetry;
+			else if (useDefaultXML = !filesystem.exists(xmlFile).File) goto gRetry;
 
 			try {
 				var x = XmlUtil.LoadElem(xmlFile);

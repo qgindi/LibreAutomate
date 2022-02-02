@@ -754,13 +754,13 @@ void _WmDeclTextToCode() {
 			var x = new WDLArgs();
 			for (; ; ) {
 				if (Api.GetCapture() != w) return false;
-				if (Api.GetMessage(out x.Msg) <= 0) {
-					if (x.Msg.message == Api.WM_QUIT) Api.PostQuitMessage((int)x.Msg.wParam);
+				if (Api.GetMessage(out x.msg) <= 0) {
+					if (x.msg.message == Api.WM_QUIT) Api.PostQuitMessage((int)x.msg.wParam);
 					break;
 				}
 
 				bool call = false;
-				int m = x.Msg.message;
+				int m = x.msg.message;
 				if (m >= Api.WM_MOUSEFIRST && m <= Api.WM_MOUSELAST) {
 					if (m == Api.WM_LBUTTONUP) {
 						if (R = mouseButton.Has(MButtons.Left)) break;
@@ -772,20 +772,20 @@ void _WmDeclTextToCode() {
 					call = true;
 				} else if (m == Api.WM_KEYDOWN || m == Api.WM_KEYUP || m == Api.WM_SYSKEYDOWN || m == Api.WM_SYSKEYUP) {
 					//on key down/up caller may want to update cursor when eg Ctrl pressed/released
-					if (x.Msg.wParam == (byte)KKey.Escape) break;
+					if (x.msg.wParam == (byte)KKey.Escape) break;
 					call = true;
 				}
 
 				if (call && onMouseKeyMessage != null) {
 					onMouseKeyMessage(x);
 					if (x._stopped) break;
-					if (x.Cursor != default) {
-						Api.SetCursor(x.Cursor);
-						x.Cursor = default;
+					if (x.cursor != default) {
+						Api.SetCursor(x.cursor);
+						x.cursor = default;
 					}
 				}
 
-				Api.DispatchMessage(x.Msg);
+				Api.DispatchMessage(x.msg);
 			}
 
 			Api.ReleaseCapture();
@@ -929,12 +929,12 @@ namespace Au.Types
 		/// Current message retrieved by API <msdn>GetMessage</msdn>.
 		/// API <msdn>MSG</msdn>.
 		/// </summary>
-		public MSG Msg;
+		public MSG msg;
 
 		/// <summary>
 		/// Native cursor handle. The callback function can set this to temporarily set cursor.
 		/// </summary>
-		public IntPtr Cursor;
+		public IntPtr cursor;
 
 		/// <summary>
 		/// The callback function can call this to end the operation.

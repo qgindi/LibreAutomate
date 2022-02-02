@@ -80,7 +80,7 @@ namespace Au
 			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if (!isSpec) {
 				file = pathname.normalize(file);
-				if (flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !filesystem.exists(file, true).isFile) filesystem.createDirectoryFor(file);
+				if (flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !filesystem.exists(file, true).File) filesystem.createDirectoryFor(file);
 			}
 			var r = SLApi.sqlite3_open_v2(Convert2.Utf8Encode(file), ref _db, flags, null);
 			if (r != 0) {

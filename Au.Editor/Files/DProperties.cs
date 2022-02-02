@@ -239,7 +239,7 @@ class DProperties : KDialogWindow {
 	}
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
-		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).isDir) dir = folders.ThisApp;
+		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).Dir) dir = folders.ThisApp;
 		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDB}") {
 			InitFolderNow = dir,
 			FileTypes = "Dll|*.dll|All files|*.*"
@@ -433,7 +433,7 @@ class DProperties : KDialogWindow {
 				locale = aloc[i - 1];
 			}
 			comDll = r.GetPath(locale);
-			if (comDll == null || !filesystem.exists(comDll).isFile) {
+			if (comDll == null || !filesystem.exists(comDll).File) {
 				dialog.showError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
 				return;
 			}

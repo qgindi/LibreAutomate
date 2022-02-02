@@ -86,7 +86,7 @@ class PanelCookbook : DockPanel {
 		for (var p = recipe.Parent; p.HasParent; p = p.Parent) stack.Push(p.text);
 		stack.Push(_cookbookPath);
 		var path = string.Join("\\", stack);
-		//print.it(path, filesystem.exists(path).isFile);
+		//print.it(path, filesystem.exists(path).File);
 
 		try {
 			var code = filesystem.loadText(path);

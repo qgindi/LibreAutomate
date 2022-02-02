@@ -28,7 +28,7 @@ static class Panels
 
 		//FUTURE: later remove this code. Now may need to delete old custom Layout.xml.
 		var customLayoutPath = AppSettings.DirBS + "Layout.xml";
-		if (filesystem.exists(customLayoutPath).isFile) {
+		if (filesystem.exists(customLayoutPath).File) {
 			try {
 				var s2 = filesystem.loadText(customLayoutPath);
 				//print.it(s2);

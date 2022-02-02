@@ -35,9 +35,9 @@ namespace Au
 		/// </example>
 		/// <inheritdoc cref="find"/>
 		public static wnd wait(double secondsTimeout, bool active,
-			[ParamString(PSFormat.wildex)] string name = null,
-			[ParamString(PSFormat.wildex)] string cn = null,
-			[ParamString(PSFormat.wildex)] WOwner of = default,
+			[ParamString(PSFormat.Wildex)] string name = null,
+			[ParamString(PSFormat.Wildex)] string cn = null,
+			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Wait(secondsTimeout, active);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -204,7 +204,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
-		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.wildex)] string name, bool not = false) {
+		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.Wildex)] string name, bool not = false) {
 			wildex x = name; //ArgumentNullException, ArgumentException
 			return WaitFor(secondsTimeout, t => x.Match(t.Name) != not);
 		}

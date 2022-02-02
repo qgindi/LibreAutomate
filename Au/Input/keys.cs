@@ -147,7 +147,7 @@ namespace Au
 		/// If has prefix "!" or "%", calls <see cref="AddText(string, string)"/>; use "!" for text, "%" for HTML.
 		/// </param>
 		/// <exception cref="ArgumentException">Error in <i>keys_</i> string, for example an unknown key name.</exception>
-		public keys AddKeys([ParamString(PSFormat.keys)] string keys_) {
+		public keys AddKeys([ParamString(PSFormat.Keys)] string keys_) {
 			_ThrowIfSending();
 			var k = keys_;
 			if (k.NE()) return this;
@@ -466,7 +466,7 @@ namespace Au
 		/// </summary>
 		/// <returns>This.</returns>
 		/// <param name="keysEtc">The same as with <see cref="send"/>.</param>
-		public keys Add([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
+		public keys Add([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 			_ThrowIfSending();
 			if (keysEtc != null) {
 				for (int i = 0; i < keysEtc.Length; i++) {

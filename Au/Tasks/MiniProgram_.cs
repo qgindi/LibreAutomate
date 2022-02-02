@@ -153,7 +153,7 @@ namespace Au.More {
 
 			//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
 			//	var config = asmFile + ".config";
-			//	if(filesystem.exists(config, true).isFile) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+			//	if(filesystem.exists(config, true).File) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
 			//}
 
 			if (s_hook == null) _Hook();
@@ -167,7 +167,7 @@ namespace Au.More {
 			foreach (var v in s_refPaths ??= Assembly.GetEntryAssembly().GetCustomAttribute<RefPathsAttribute>().Paths.Split('|')) {
 				int iName = v.Length - name.Length - 4;
 				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
-				if (!filesystem.exists(v).isFile) continue;
+				if (!filesystem.exists(v).File) continue;
 				//try {
 				return alc.LoadFromAssemblyPath(v);
 				//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }

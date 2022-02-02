@@ -230,7 +230,7 @@ namespace Au.Types
 		/// Closes all OSD windows of this process.
 		/// </summary>
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
-		public static void closeAll([ParamString(PSFormat.wildex)] string name = null) {
+		public static void closeAll([ParamString(PSFormat.Wildex)] string name = null) {
 			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Close(noWait: true);
 		}
 
@@ -766,15 +766,15 @@ namespace Au
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
 		/// </summary>
-		/// <param name="text"><see cref="Text"/></param>
-		/// <param name="secondsTimeout"><see cref="SecondsTimeout"/></param>
-		/// <param name="xy"><see cref="XY"/></param>
-		/// <param name="icon"><see cref="Icon"/></param>
-		/// <param name="textColor"><see cref="TextColor"/></param>
-		/// <param name="backColor"><see cref="BackColor"/></param>
+		/// <param name="text">See <see cref="Text"/>.</param>
+		/// <param name="secondsTimeout">See <see cref="SecondsTimeout"/>.</param>
+		/// <param name="xy">See <see cref="XY"/>.</param>
+		/// <param name="icon">See <see cref="Icon"/>.</param>
+		/// <param name="textColor">See <see cref="TextColor"/>.</param>
+		/// <param name="backColor">See <see cref="BackColor"/>.</param>
 		/// <param name="font">Font. If null, uses <see cref="defaultSmallFont"/>.</param>
-		/// <param name="name"><see cref="OsdWindow.Name"/></param>
-		/// <param name="showMode"><see cref="ShowMode"/></param>
+		/// <param name="name">See <see cref="OsdWindow.Name"/>.</param>
+		/// <param name="showMode">See <see cref="ShowMode"/>.</param>
 		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
 		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
@@ -805,13 +805,13 @@ namespace Au
 		/// <summary>
 		/// Shows a big-font text with transparent background.
 		/// </summary>
-		/// <param name="text"><see cref="Text"/></param>
-		/// <param name="secondsTimeout"><see cref="SecondsTimeout"/></param>
-		/// <param name="xy"><see cref="XY"/></param>
-		/// <param name="color"><see cref="TextColor"/>. Default: <see cref="defaultTransparentTextColor"/>.</param>
+		/// <param name="text">See <see cref="Text"/>.</param>
+		/// <param name="secondsTimeout">See <see cref="SecondsTimeout"/>.</param>
+		/// <param name="xy">See <see cref="XY"/>.</param>
+		/// <param name="color">See <see cref="TextColor"/>. Default: <see cref="defaultTransparentTextColor"/>.</param>
 		/// <param name="font">Font. If null, uses <see cref="defaultBigFont"/>.</param>
-		/// <param name="name"><see cref="OsdWindow.Name"/></param>
-		/// <param name="showMode"><see cref="ShowMode"/></param>
+		/// <param name="name">See <see cref="OsdWindow.Name"/>.</param>
+		/// <param name="showMode">See <see cref="ShowMode"/>.</param>
 		/// <param name="dontShow">See <see cref="showText"/>.</param>
 		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
@@ -839,11 +839,11 @@ namespace Au
 		/// <summary>
 		/// Shows on-screen image.
 		/// </summary>
-		/// <param name="image"><see cref="BackgroundImage"/></param>
-		/// <param name="secondsTimeout"><see cref="SecondsTimeout"/></param>
-		/// <param name="xy"><see cref="XY"/></param>
-		/// <param name="name"><see cref="OsdWindow.Name"/></param>
-		/// <param name="showMode"><see cref="ShowMode"/></param>
+		/// <param name="image">See <see cref="BackgroundImage"/>.</param>
+		/// <param name="secondsTimeout">See <see cref="SecondsTimeout"/>.</param>
+		/// <param name="xy">See <see cref="XY"/>.</param>
+		/// <param name="name">See <see cref="OsdWindow.Name"/>.</param>
+		/// <param name="showMode">See <see cref="ShowMode"/>.</param>
 		/// <param name="dontShow">See <see cref="showText"/>.</param>
 		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
