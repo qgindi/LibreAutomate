@@ -3,12 +3,12 @@ using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
 using Microsoft.CodeAnalysis;
-//using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Classification;
-//using Microsoft.CodeAnalysis.Shared.Extensions;
-//using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 using EToken = CiStyling.EToken;
 
 class PanelRecipe : DockPanel {
@@ -109,7 +109,7 @@ class PanelRecipe : DockPanel {
 			var b = new byte[code.Length];
 			var document = CiUtil.CreateRoslynDocument(code, needSemantic: true);
 			var semo = document.GetSemanticModelAsync().Result;
-			var a = Classifier.GetClassifiedSpans(semo, TextSpan.FromBounds(0, code.Length), document.Project.Solution.Workspace);
+			var a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, code.Length)).Result;
 			foreach (var v in a) {
 				//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
 				EToken style = CiStyling.StyleFromClassifiedSpan(v, semo);
@@ -138,15 +138,10 @@ class PanelRecipe : DockPanel {
 		var node = syn.FindToken(code.Length - 3 - s.Length, true).Parent.FirstAncestorOrSelf<CrefSyntax>();
 		if (node == null) return;
 		var semo = document.GetSemanticModelAsync().Result;
-		var si = semo.GetSymbolInfo(node);
-		var sym = si.Symbol;
-		//print.it(sym, si.CandidateSymbols);
-		if (sym == null) {
-			if (si.CandidateSymbols.IsDefaultOrEmpty) return;
-			sym = si.CandidateSymbols[0];
+		if (semo.GetSymbolInfo(node).GetAnySymbol() is ISymbol sym) {
+			var url = CiUtil.GetSymbolHelpUrl(sym);
+			if (url != null) run.itSafe(url);
 		}
-		var url = CiUtil.GetSymbolHelpUrl(sym);
-		if (url != null) run.itSafe(url);
 	}
 
 	class _KScintilla : KScintilla {

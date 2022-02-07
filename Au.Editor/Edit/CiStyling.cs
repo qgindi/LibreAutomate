@@ -206,7 +206,7 @@ partial class CiStyling
 				_PN('m');
 				for (int i = 0; i < ar8.Count; i++) {
 					var r = ar[i].r;
-					ar[i].a = Classifier.GetClassifiedSpans(semo, TextSpan.FromBounds(r.start, r.end), document.Project.Solution.Workspace, cancelToken);
+					ar[i].a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(r.start, r.end), cancelToken).Result;
 				}
 				//info: GetClassifiedSpansAsync calls GetSemanticModelAsync and GetClassifiedSpans, like here.
 				//GetSemanticModelAsync+GetClassifiedSpans are slow, ~ 90% of total time.
@@ -262,7 +262,8 @@ partial class CiStyling
 			}
 		}
 		catch (OperationCanceledException) { }
-		catch (Exception e1) { Debug_.Print(e1); return; } //InvalidOperationException when this code: wpfBuilder ... .Also(b=>b.Panel.for)
+		catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { }
+		catch (Exception e1) { Debug_.Print(e1); } //InvalidOperationException when this code: wpfBuilder ... .Also(b=>b.Panel.for)
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;

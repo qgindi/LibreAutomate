@@ -12,16 +12,12 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //using Microsoft.CodeAnalysis.FindSymbols;
 
-static class CiUtil
-{
+static class CiUtil {
 	//not used
 	//public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd) {
 	//	(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
 	//	return sym != null;
 	//}
-
-	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
-		=> t.Eq(span.Start..span.End, s, ignoreCase);
 
 	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd) {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) { cd = default; return default; }
@@ -38,9 +34,8 @@ static class CiUtil
 
 		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1])) position--;
 
-		var tree = document.GetSyntaxTreeAsync().Result;
-		var token = tree.GetTouchingTokenAsync(position, default, findInsideTrivia: true).Result;
-		if (token == default) return default;
+		var root = document.GetSyntaxRootAsync().Result;
+		if (!root.FindTouchingToken(out var token, position, findInsideTrivia: true)) return default;
 
 		var span = token.Span; string word = code[span.Start..span.End];
 		//PrintNode(token);
@@ -81,40 +76,33 @@ static class CiUtil
 				if (token.GetPreviousToken().IsKind(SyntaxKind.HashToken)) word = "#" + word;
 				return (null, word, HelpKind.PreprocKeyword, token);
 			}
-			switch (k) {
-			case SyntaxKind.StringLiteralToken:
-			case SyntaxKind.InterpolatedStringTextToken:
-			case SyntaxKind.InterpolatedStringEndToken:
-			case SyntaxKind.InterpolatedStringStartToken:
-				return (null, null, HelpKind.String, token);
+			switch (token.IsInString(position, code, out _)) {
+			case true: return (null, null, HelpKind.String, token);
+			case null: return default;
 			}
 		}
-		//note: don't pass contextual keywords to GetSemanticInfo. It may get info for something other, eg for 'new' gets the ctor method.
+		//note: don't pass contextual keywords to GetSymbolInfo. It may get info for something other, eg for 'new' gets the ctor method.
 
 		ISymbol symbol = null;
 		var model = document.GetSemanticModelAsync().Result;
 		//p1.Next();
 		bool preferGeneric = token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
-		var si = model.GetSemanticInfo(token, document.Project.Solution.Workspace, default); //works better than GetSymbolInfo, and slightly faster. Or could call GetSymbolInfo, and if its Symbol is null, use its CandidateSymbols; not tested here.
-		foreach (var v in si.GetSymbols(includeType: true)) {
-			bool gen = false;
-			switch (v) {
-			case IErrorTypeSymbol: continue;
-			case INamedTypeSymbol ints when ints.IsGenericType:
-			case IMethodSymbol ims when ims.IsGenericMethod:
-				gen = true;
-				break;
+
+		var sa = model.GetSymbolInfo(token).GetAllSymbols();
+		if (!sa.IsDefault) {
+			foreach (var v in sa) {
+				Debug_.PrintIf(v is IErrorTypeSymbol);
+				bool gen = v is INamedTypeSymbol { IsGenericType: true } or IMethodSymbol { IsGenericMethod: true };
+				//print.it(v, gen, v.Kind);
+				if (gen == preferGeneric) { symbol = v; break; }
+				symbol ??= v;
 			}
-			//print.it(v, gen, v.Kind);
-			if (gen == preferGeneric) { symbol = v; break; }
-			symbol ??= v;
 		}
 
 		return (symbol, null, default, token);
 	}
 
-	public enum HelpKind
-	{
+	public enum HelpKind {
 		None, ReservedKeyword, ContextualKeyword, AttributeTarget, PreprocKeyword, String
 	}
 
@@ -265,91 +253,6 @@ static class CiUtil
 		return format;
 	}
 
-	/// <summary>
-	/// Returns true if node is in a "string literal" between "" or in a text part of an $"interpolated string".
-	/// </summary>
-	/// <param name="node">Any node. If returns true, finally its kind is StringLiteralExpression or InterpolatedStringExpression.</param>
-	/// <param name="position"></param>
-	public static bool IsInString(ref SyntaxNode node, int position) {
-		if (node == null) return false;
-		var nk = node.Kind();
-		//print.it(nk, position, node.Span, node.GetType(), node);
-		switch (nk) {
-		case SyntaxKind.StringLiteralExpression:
-			//return true only if position is in the string value.
-			//false if <= the first " or >= the last ".
-			//true if position is at the end of span and the last " is missing (error CS1010).
-			var span = node.Span;
-			int i = position - span.Start;
-			if (i <= 0 || (i == 1 && node.ToString().Starts('@'))) return false;
-			i = position - span.End;
-			if (i > 0 || (i == 0 && !_NoClosingQuote(node))) return false;
-			return true;
-		case SyntaxKind.InterpolatedStringExpression:
-			int j = node.Span.End - position;
-			if (j != 1 && !(j == 0 && _NoClosingQuote(node))) return false;
-			return true;
-		case SyntaxKind.InterpolatedStringText:
-		case SyntaxKind.Interpolation when position == node.SpanStart:
-			node = node.Parent;
-			nk = node.Kind();
-			return nk == SyntaxKind.InterpolatedStringExpression;
-		}
-		return false;
-
-		static bool _NoClosingQuote(SyntaxNode n) => n.ContainsDiagnostics && n.GetDiagnostics().Any(o => o.Id == "CS1010"); //Newline in constant
-	}
-
-	/// <summary>
-	/// If range start..end is inside a string literal or char literal or text part of an interpolated string, returns literal type.
-	/// Else if inside the prefix (@" or $@" etc), returns Prefix.
-	/// Else returns None.
-	/// The start and end of the literal are considered not inside.
-	/// </summary>
-	public static SType GetStringType(in SyntaxToken t, int start, int end, string code) {
-		//PrintNode(t);
-		var span = t.Span;
-		if (start < span.Start || end > span.End) return 0;
-		var kind = t.Kind();
-		if (kind is SyntaxKind.StringLiteralToken or SyntaxKind.CharacterLiteralToken or SyntaxKind.InterpolatedStringStartToken or SyntaxKind.InterpolatedVerbatimStringStartToken) {
-			if (start <= span.Start || end >= span.End) return 0; //assume the closing " isn't missing
-			switch (kind) {
-			case SyntaxKind.StringLiteralToken:
-				if (code[span.Start] == '@') return start > span.Start + 1 ? SType.Verbatim : SType.Prefix;
-				return SType.Simple;
-			case SyntaxKind.CharacterLiteralToken:
-				return SType.Char;
-			default:
-				return SType.Prefix;
-			}
-		} else {
-			switch (kind) {
-			case SyntaxKind.InterpolatedStringTextToken:
-			case SyntaxKind.InterpolatedStringEndToken when end < span.End:
-			case SyntaxKind.OpenBraceToken when end < span.End && t.Parent is InterpolationSyntax:
-				return code.Eq(t.Parent.Parent.SpanStart, "$\"") ? SType.Interpolated : SType.InterVerbatim;
-			}
-		}
-		return 0;
-	}
-
-	public enum SType { None, Simple, Verbatim, Interpolated, InterVerbatim, Char, Prefix }
-
-	//FUTURE: remove if unused
-	/// <summary>
-	/// Gets syntax node at position.
-	/// If document==null, calls CodeInfo.GetDocument().
-	/// </summary>
-	public static SyntaxNode NodeAt(int position, Document document = null) {
-		if (document == null) {
-			if (!CodeInfo.GetContextAndDocument(out var cd, position)) return null; //returns false if position is in meta comments
-			document = cd.document;
-			position = cd.pos16;
-		}
-		var root = document.GetSyntaxRootAsync().Result;
-		return root.FindToken(position).Parent;
-	}
-
 	public static string GetTextWithoutUnusedUsingDirectives() {
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
 		var code = cd.code;
@@ -386,32 +289,6 @@ static class CiUtil
 				yield return u;
 			}
 		}
-	}
-
-	/// <summary>
-	/// Finds child trivia of this token. Returns default if <i>position</i> is not in child trivia of this token. Does not descend into structured trivia.
-	/// The code is from Roslyn source function FindTriviaByOffset. Roslyn has function to find trivia in SyntaxNode (recursive), but not in SyntaxToken.
-	/// </summary>
-	/// <param name="t"></param>
-	/// <param name="position">Position in whole code.</param>
-	public static SyntaxTrivia FindTrivia(in this SyntaxToken t, int position) {
-		int textOffset = position - t.Position;
-		if (textOffset >= 0) {
-			var leading = t.LeadingWidth;
-			if (textOffset < leading) {
-				foreach (var trivia in t.LeadingTrivia) {
-					if (textOffset < trivia.FullWidth) return trivia;
-					textOffset -= trivia.FullWidth;
-				}
-			} else if (textOffset >= leading + t.Width) {
-				textOffset -= leading + t.Width;
-				foreach (var trivia in t.TrailingTrivia) {
-					if (textOffset < trivia.FullWidth) return trivia;
-					textOffset -= trivia.FullWidth;
-				}
-			}
-		}
-		return default;
 	}
 
 	/// <summary>
@@ -454,41 +331,41 @@ global using Au.More;
 		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
 	}
 
-//	/// <summary>
-//	/// From C# code creates a Roslyn workspace+project+document for syntax and semantic analysis.
-//	/// If needSemantic adds default usings (same as in default global.cs; prepends to code) and references.
-//	/// </summary>
-//	public static Document CreateRoslynDocument(ref string code, bool needSemantic) {
-//		if (needSemantic) code = @"using Au;
-//using Au.Types;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Collections.Concurrent;
-//using System.Diagnostics;
-//using System.Globalization;
-//using System.IO;
-//using System.IO.Compression;
-//using System.Media;
-//using System.Runtime.CompilerServices;
-//using System.Runtime.InteropServices;
-//using System.Text;
-//using System.Text.RegularExpressions;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using Microsoft.Win32;
-//using Au.More;
-//" + code;
-//		ProjectId projectId = ProjectId.CreateNewId();
-//		DocumentId documentId = DocumentId.CreateNewId(projectId);
-//		var ws = new AdhocWorkspace();
-//		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
-//			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
-//			new CSharpParseOptions(LanguageVersion.Preview),
-//			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
-//			);
-//		return ws.CurrentSolution.AddProject(pi).AddDocument(documentId, "l.cs", code).GetDocument(documentId);
-//	}
+	//	/// <summary>
+	//	/// From C# code creates a Roslyn workspace+project+document for syntax and semantic analysis.
+	//	/// If needSemantic adds default usings (same as in default global.cs; prepends to code) and references.
+	//	/// </summary>
+	//	public static Document CreateRoslynDocument(ref string code, bool needSemantic) {
+	//		if (needSemantic) code = @"using Au;
+	//using Au.Types;
+	//using System;
+	//using System.Collections.Generic;
+	//using System.Linq;
+	//using System.Collections.Concurrent;
+	//using System.Diagnostics;
+	//using System.Globalization;
+	//using System.IO;
+	//using System.IO.Compression;
+	//using System.Media;
+	//using System.Runtime.CompilerServices;
+	//using System.Runtime.InteropServices;
+	//using System.Text;
+	//using System.Text.RegularExpressions;
+	//using System.Threading;
+	//using System.Threading.Tasks;
+	//using Microsoft.Win32;
+	//using Au.More;
+	//" + code;
+	//		ProjectId projectId = ProjectId.CreateNewId();
+	//		DocumentId documentId = DocumentId.CreateNewId(projectId);
+	//		var ws = new AdhocWorkspace();
+	//		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
+	//			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
+	//			new CSharpParseOptions(LanguageVersion.Preview),
+	//			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
+	//			);
+	//		return ws.CurrentSolution.AddProject(pi).AddDocument(documentId, "l.cs", code).GetDocument(documentId);
+	//	}
 
 	/// <summary>
 	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
@@ -733,46 +610,3 @@ global using Au.More;
 //	/// </summary>
 //	Method
 //}
-
-static class CiExt
-{
-	[Conditional("DEBUG")]
-	public static void DebugPrint(this CompletionItem t, string color = "blue") {
-		print.it($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
-		print.it(string.Join("\n", t.Properties));
-	}
-
-	[Conditional("DEBUG")]
-	public static void DebugPrintIf(this CompletionItem t, bool condition, string color = "blue") {
-		if (condition) DebugPrint(t, color);
-	}
-
-	public static string QualifiedName(this ISymbol t, bool onlyNamespace = false, bool noDirectName = false) {
-		var g = t_qnStack ??= new Stack<string>();
-		g.Clear();
-		if (noDirectName) t = t.ContainingType ?? t.ContainingNamespace as ISymbol;
-		if (!onlyNamespace) for (var k = t; k != null; k = k.ContainingType) g.Push(k.Name);
-		for (var n = t.ContainingNamespace; n != null && !n.IsGlobalNamespace; n = n.ContainingNamespace) g.Push(n.Name);
-		return string.Join(".", g);
-	}
-	[ThreadStatic] static Stack<string> t_qnStack;
-
-	/// <summary>
-	/// Cached, thread-safe.
-	/// </summary>
-	public static string QualifiedNameCached(this INamespaceSymbol t) { //only 2 times faster than QualifiedName, but no garbage. Same speed with Dictionary.
-																		//if (t.IsGlobalNamespace || t.ContainingNamespace.IsGlobalNamespace) return t.Name; //same speed. Few such namespaces.
-		if (!_namespaceNames.TryGetValue(t, out var s)) {
-			s = t.QualifiedName();
-			_namespaceNames.AddOrUpdate(t, s); //OrUpdate for thread safety
-											   //print.it(s);
-		}
-		return s;
-	}
-	static ConditionalWeakTable<INamespaceSymbol, string> _namespaceNames = new();
-
-	/// <summary>
-	/// <c>position &gt; t.Start &amp;&amp; position &lt; t.End;</c>
-	/// </summary>
-	public static bool ContainsInside(this TextSpan t, int position) => position > t.Start && position < t.End;
-}

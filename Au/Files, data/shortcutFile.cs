@@ -1,10 +1,8 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Creates shell shortcuts (.lnk files) and gets shortcut properties.
 	/// </summary>
-	public unsafe sealed class shortcutFile : IDisposable
-	{
+	public unsafe sealed class shortcutFile : IDisposable {
 		Api.IShellLink _isl;
 		Api.IPersistFile _ipf;
 		string _lnkPath;
@@ -208,18 +206,19 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets hotkey.
-		/// Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
 		/// </summary>
+		/// <exception cref="ArgumentException">The value for the 'set' function includes Win.</exception>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
-		public System.Windows.Forms.Keys Hotkey {
+		public (KMod, KKey) Hotkey {
 			get {
-				if (0 != _isl.GetHotkey(out ushort k2)) return 0;
+				if (0 != _isl.GetHotkey(out ushort k2)) return default;
 				uint k = k2;
-				return (System.Windows.Forms.Keys)((k & 0xFF) | ((k & 0x700) << 8));
+				return ((KMod)(k >> 8 & 7), (KKey)(k & 0xFF));
 			}
 			set {
-				uint k = (uint)value;
-				AuException.ThrowIfHresultNot0(_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8))));
+				var (m, k) = value;
+				if (0 != (m & ~(KMod.Ctrl | KMod.Alt | KMod.Shift))) throw new ArgumentException("Win not supported");
+				AuException.ThrowIfHresultNot0(_isl.SetHotkey(Math2.MakeWord((uint)k, (uint)m)));
 				_changedHotkey = true;
 			}
 		}
@@ -271,8 +270,8 @@ namespace Au
 			Debug.Assert(filesystem.exists(lnkPath).File);
 			using var x = openOrCreate(lnkPath);
 			var k = x.Hotkey;
-			if (k != 0) {
-				x.Hotkey = 0;
+			if (k != default) {
+				x.Hotkey = default;
 				x.Save();
 			}
 		}

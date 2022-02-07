@@ -261,17 +261,6 @@ class CiFolding
 #endif
 					}
 				}
-
-				//also fold @"image:\r\n..."
-				for (int i = 0; i < s.Length - 20;) {
-					i = s.IndexOf(i, "@\"image:\r\n"); if (i < 0) break;
-					int start = rangeStart + i;
-					var t = root.FindToken(start);
-					if (t.IsKind(SyntaxKind.StringLiteralToken) && t.SpanStart == start) {
-						i = t.FullSpan.End - rangeStart;
-						_AddFoldPoints(start, t.Span.End);
-					} else i += 10;
-				}
 			}
 			if (ir == nr) break;
 		}

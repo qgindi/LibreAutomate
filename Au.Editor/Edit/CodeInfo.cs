@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
 using System.Windows;
 using Microsoft.CodeAnalysis.Completion;
+//using Microsoft.CodeAnalysis.Options;
 
 static class CodeInfo
 {
@@ -68,7 +69,7 @@ static class CodeInfo
 				//p1.Next('s');
 
 				//let the coloring and folding in editor start working immediately
-				Microsoft.CodeAnalysis.Classification.Classifier.GetClassifiedSpans(semo, new TextSpan(0, code.Length), ws);
+				Microsoft.CodeAnalysis.Classification.Classifier.GetClassifiedSpansAsync(document, new TextSpan(0, code.Length)).Wait();
 				//p1.Next('c');
 
 				App.Dispatcher.InvokeAsync(() => {
@@ -469,21 +470,20 @@ static class CodeInfo
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
-	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1, bool metaToo = false) {
+	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1, bool metaToo = false, bool findInsideTrivia = false) {
 		if (!GetContextAndDocument(out r, position, metaToo)) { node = null; return false; }
-		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16).Parent;
+		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16, findInsideTrivia).Parent;
 		return true;
 	}
 
 	/// <summary>
-	/// Calls <see cref="GetContextAndDocument"/>, gets its syntax root and finds token and node.
+	/// Calls <see cref="GetContextAndDocument"/>, gets its syntax root and finds token.
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
-	public static bool GetDocumentAndFindNode(out Context r, out SyntaxToken token, out SyntaxNode node, int position = -1, bool metaToo = false) {
-		if (!GetContextAndDocument(out r, position, metaToo)) { token = default; node = null; return false; }
-		token = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16);
-		node = token.Parent;
+	public static bool GetDocumentAndFindToken(out Context r, out SyntaxToken token, int position = -1, bool metaToo = false, bool findInsideTrivia = false) {
+		if (!GetContextAndDocument(out r, position, metaToo)) { token = default; return false; }
+		token = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16, findInsideTrivia);
 		return true;
 	}
 
@@ -496,9 +496,12 @@ static class CodeInfo
 		InternalsVisible.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
 
-		var opt = CurrentWorkspace.Options
-			.WithChangedOption(Microsoft.CodeAnalysis.QuickInfo.QuickInfoOptions.ShowRemarksInQuickInfo, "C#", false);
-		CurrentWorkspace.SetOptions(opt);
+		//how to remove option "ShowRemarksInQuickInfo"? Never mind, our CiQuickInfo just skips it.
+		//var opt = CurrentWorkspace.Options
+		//	.WithChangedOption(Microsoft.CodeAnalysis.QuickInfo.QuickInfoOptions.ShowRemarksInQuickInfo, "C#", false); //used to work, but now the property is removed
+		//	.WithChangedOption(Microsoft.CodeAnalysis.QuickInfo.QuickInfoOptions.Metadata.ShowRemarksInQuickInfo, "C#", false); //now the property is in Metadata, but does not work
+		//	.WithChangedOption(new PerLanguageOption2<bool>("QuickInfoOptions", "ShowRemarksInQuickInfo", false), "C#", false); //does not work too
+		//CurrentWorkspace.SetOptions(opt);
 
 		_solution = CurrentWorkspace.CurrentSolution;
 		_projectId = _AddProject(f, true);

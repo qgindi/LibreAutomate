@@ -26,15 +26,10 @@ using System.IO;
 //	Edit AppHost.cpp, let it add subfolder Roslyn like it does for subfolder Libraries.
 //To get other dlls:
 //	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
-//	Compile. Copy these dlls from the bin folder to _\Roslyn:
-//		Microsoft.DiaSymReader.dll
-//		System.Composition.AttributedModel.dll
-//		System.Composition.Hosting.dll
-//		System.Composition.Runtime.dll
-//		System.Composition.TypedParts.dll
-//		Microsoft.VisualStudio.Debugger.Contracts.dll
-//		Also copy all other Roslyn dlls from there, although it seems works without.
-//		In the past also needed Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll, but now it is removed, and works without it.
+//	Compile. Copy all dlls from the bin folder to _\Roslyn.
+//	In the last Roslyn version also needed:
+//		C:\Users\G\.nuget\packages\microsoft.codeanalysis.elfie\1.0.0-rc14\lib\netstandard2.0\Microsoft.CodeAnalysis.Elfie.dll
+//		But why it wasnt in artifacts or anywhere in roslyn-main? Tried to restore <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>, but it did not help.
 //In Roslyn artifacts folder find xml doc files and copy to CompilerDlls. VS will copy it to _\Roslyn when building editor.
 
 namespace CompilerDlls
@@ -122,7 +117,7 @@ namespace CompilerDlls
 //Edit these manually, because either difficult to automate or Roslyn source in new version is very likely changed in that place.
 //Add only internal members. If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
 
-// - In all 6 projects (not in all projects!) .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
+// - In all 6 projects + Scripting .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
 
 // - Set Release config. Try to compile.
 
@@ -134,7 +129,7 @@ namespace CompilerDlls
 // - In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
 
 // - Add Symbols property to the CompletionItem class:
-//1. Open Features\Core\Portable\Completion\CompletionItem.cs in project Microsoft.CodeAnalysis.Features.
+//1. Open CompletionItem.cs in project Microsoft.CodeAnalysis.Features.
 //2. Find method private CompletionItem With(...). In it find: return new CompletionItem...{
 //3. In the { } add line: Symbols = Symbols, //au
 //4. Below the method add properties:
@@ -209,4 +204,7 @@ namespace CompilerDlls
 
         //    return (result != null) ? result.Keys : SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
         //}
+
+// - In SyntaxTreeExtensions.cs, function AtEndOfIncompleteStringOrCharLiteral, in the first 'for' loop add i++ if missing (bug).
+
 #endif

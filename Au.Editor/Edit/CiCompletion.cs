@@ -3,12 +3,13 @@
 using System.Linq;
 using Au.Controls;
 
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using Microsoft.CodeAnalysis.Options;
@@ -16,14 +17,12 @@ using Microsoft.CodeAnalysis.Options;
 //PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
 //	Even on Ctrl+Space does not select the enum in list. And does not add enum members like "Enum.Member".
 
-partial class CiCompletion
-{
+partial class CiCompletion {
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible
 	CancellationTokenSource _cancelTS;
 
-	class _Data
-	{
+	class _Data {
 		public CompletionService completionService;
 		public Document document;
 		public SemanticModel model;
@@ -31,7 +30,7 @@ partial class CiCompletion
 		public int codeLength;
 		public string filterText;
 		public SciCode.ITempRange tempRange;
-		public bool noAutoSelect;
+		public bool forced, noAutoSelect;
 		public CiWinapi winapi;
 	}
 
@@ -76,8 +75,7 @@ partial class CiCompletion
 	}
 
 	/// <summary>
-	/// Asynchronously shows popup list if need. If already showing, synchronously filters/selects items.
-	/// Called after <see cref="SciCharAdding_Commit"/> and <see cref="CiAutocorrect.SciCharAdded"/>.
+	/// Asynchronously shows popup list if need.
 	/// </summary>
 	public void SciCharAdded_ShowList(CodeInfo.CharContext c) {
 		if (_data == null) {
@@ -85,11 +83,20 @@ partial class CiCompletion
 		}
 	}
 
+	/// <summary>
+	/// If showing popup list, synchronously filters/selects items.
+	/// </summary>
 	public void SciModified(SciCode doc, in Sci.SCNotification n) {
 		if (_data != null) {
 			bool trValid = _data.tempRange.GetCurrentFromTo(out int from, out int to, utf8: true);
 			Debug.Assert(trValid); if (!trValid) { Cancel(); return; }
 			string s = doc.zRangeText(false, from, to);
+
+			//cancel if typed nonalpha if auto-showed by typing nonalpha (eg space in parameters or '(' after method name)
+			if (!_data.forced && _data.filterText.NE() && s.Length == 1 && !SyntaxFacts.IsIdentifierStartCharacter(s[0])) {
+				Cancel(); return;
+			}
+
 			foreach (var v in s) if (!SyntaxFacts.IsIdentifierPartCharacter(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
 			_data.filterText = s;
 			_FilterItems(_data);
@@ -97,8 +104,8 @@ partial class CiCompletion
 		}
 	}
 
-	public void ShowList() {
-		_ShowList(default);
+	public void ShowList(char ch = default) {
+		_ShowList(ch);
 	}
 
 	//static bool s_workaround1;
@@ -140,7 +147,8 @@ partial class CiCompletion
 		}
 
 		bool isDot = false, canGroup = false;
-		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
+		PSFormat stringFormat = PSFormat.None;
+		CiStringInfo stringInfo = default;
 		CompletionService completionService = null;
 		SemanticModel model = null;
 		CompilationUnitSyntax root = null;
@@ -159,34 +167,36 @@ partial class CiCompletion
 
 		try {
 			CompletionList r = await Task.Run(async () => { //info: actually GetCompletionsAsync etc are not async
-				completionService = CompletionService.GetService(document);
-				if (cancelToken.IsCancellationRequested) return null;
-
-				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too
+				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too. Same speed if only GetSyntaxRootAsync.
 				root = model.Root as CompilationUnitSyntax;
-				var node = root.FindToken(position).Parent;
-				var workspace = document.Project.Solution.Workspace;
-				syncon = CSharpSyntaxContext.CreateContext(workspace, model, position, cancelToken);
-				p1.Next('s');
+				var tok = root.FindToken(position, findInsideTrivia: true);
+				//CiUtil.PrintNode(tok);
 
-				//never mind: To make faster in some cases, could now return if in comments or non-regex etc string.
-				//	It is not so easy to check correctly. GetCompletionsAsync then not very fast and not too slow.
+				//return if in trivia, except if space in non-comments
+				if (!isCommand && !tok.Span.ContainsOrTouches(position)) {
+					bool good = false;
+					if (ch == ' ') good = tok.FindTrivia(position - 1).IsKind(SyntaxKind.WhitespaceTrivia);
+					if (ch == '<') good = tok.FindTrivia(position - 1).RawKind == 0; //in XML doc
+					if (!good) return null;
+				}
+				//print.it(1);
+
+				syncon = CSharpSyntaxContext.CreateContext(document, model, position, cancelToken);
+				var workspace = document.Project.Solution.Workspace;
+				var node = tok.Parent;
+				p1.Next('s');
 
 				//in some cases show list when typing a character where GetCompletionsAsync works only on command
 				if (ch == '[' && syncon.IsAttributeNameContext) ch = default;
 				if (ch == ' ' && syncon.IsObjectCreationTypeContext) ch = default;
 
-				//This was a temporary workaround for exception in one Roslyn version, in AbstractEmbeddedLanguageCompletionProvider.GetLanguageProviders().
-				//if (!s_workaround1 && ch != default) {
-				//	_ = completionService.GetCompletionsAsync(document, position).Result;
-				//	s_workaround1 = true;
-				//}
-
-				//print.it(syncon.IsGlobalStatementContext);
+				completionService = CompletionService.GetService(document);
+				if (cancelToken.IsCancellationRequested) return null;
 
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, null, _Options(workspace), cancelToken).ConfigureAwait(false);
 				p1.Next('C');
+				if (r1 != null && r1.Items.IsDefaultOrEmpty) r1 = null;
 				if (r1 != null) {
 					canGroup = true;
 					//is it member access?
@@ -195,7 +205,6 @@ partial class CiCompletion
 						isDot = !r1.Items.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));
 						if (!isDot && ch == '{') return null; //eg 'new int[] {'
 					} else {
-#if true
 						isDot = syncon.IsRightOfNameSeparator;
 						if (isDot) { //set canGroup = false if Namespace.X or alias::X
 							if (syncon.IsInImportsDirective) {
@@ -251,62 +260,15 @@ partial class CiCompletion
 								//print.it(canGroup);
 							}
 						}
-#else
-						//old code, before discovering CSharpSyntaxContext
-						int i = r1.Span.Start - 1;
-						if (i > 0) {
-							var token = root.FindToken(i); //fast
-							if (position >= token.Span.End) {
-								var tk = token.Kind();
-								//print.it(tk);
-								//CiUtil.PrintNode(node);
-								isDot = tk == SyntaxKind.DotToken || tk == SyntaxKind.MinusGreaterThanToken || tk == SyntaxKind.ColonColonToken;
-								if (isDot) {
-									node = token.Parent;
-									ExpressionSyntax nodeL = null; //node at left of . etc
-									bool canBeNamespace = false;
-									switch (node) {
-									case MemberAccessExpressionSyntax s1: // . or ->
-										nodeL = s1.Expression;
-										canBeNamespace = true;
-										break;
-									case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae:
-										// ?. //OperatorToken is '.', GetPreviousToken is '?'
-										//nodeL = cae.Expression;
-										break;
-									case QualifiedNameSyntax s1: // eg . outside functions
-										nodeL = s1.Left;
-										canBeNamespace = true;
-										break;
-									case AliasQualifiedNameSyntax s1: // ::
-										canGroup = false;
-										//nodeL = s1.Alias;
-										break;
-									case ExplicitInterfaceSpecifierSyntax s1:
-										//nodeL = s1.Name;
-										break;
-									default:
-										isDot = false;
-										Debug_.Print(node.GetType());
-										break;
-									}
-
-									if (canBeNamespace && tk == SyntaxKind.DotToken) {
-										if (model.GetSymbolInfo(nodeL).Symbol is INamespaceSymbol) canGroup = false;
-									}
-								}
-							}
-						}
-#endif
 					}
 					//p1.Next('M');
 				} else if (isCommand) {
-					if (CiUtil.IsInString(ref node, position)) {
-						stringSpan = node.Span;
-						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
+					if (tok.IsInString(position, code, out stringInfo) == true) {
+						var tspan = stringInfo.textSpan;
+						stringFormat = CiUtil.GetParameterStringFormat(stringInfo.stringNode, model, true);
 						if (stringFormat == PSFormat.Wildex) { //is regex in wildex?
-							if (code.RxMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
-								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.Regexp;
+							if (code.RxMatch(@"\G(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, 0, tspan.ToRange())
+								&& position >= tspan.Start + rg.Length) stringFormat = PSFormat.Regexp;
 						} else if (stringFormat == PSFormat.None) stringFormat = (PSFormat)100;
 					}
 				}
@@ -320,7 +282,7 @@ partial class CiCompletion
 					int i = popupMenu.showSimple("Regex|Keys", MSFlags.ByCaret);
 					stringFormat = i switch { 1 => PSFormat.Regexp, 2 => PSFormat.Keys, _ => default };
 				}
-				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);
+				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo);
 				return;
 			}
 
@@ -333,7 +295,7 @@ partial class CiCompletion
 			//print.it(provider, isDot, canGroup, r.Items[0].DisplayText);
 
 			var span = r.Span;
-			if (span.Length > 0 && provider == CiComplProvider.Regex) span = new TextSpan(position, 0);
+			if (span.Length > 0 && provider == CiComplProvider.EmbeddedLanguage) span = new TextSpan(position, 0);
 
 			var d = new _Data {
 				completionService = completionService,
@@ -342,6 +304,7 @@ partial class CiCompletion
 				codeLength = code.Length,
 				filterText = code.Substring(span.Start, span.Length),
 				items = new List<CiComplItem>(r.Items.Length),
+				forced = isCommand,
 				noAutoSelect = r.SuggestionModeItem != null,
 			};
 
@@ -675,6 +638,7 @@ partial class CiCompletion
 			_popupList.Show(doc, span.Start, _data.items, groupsList); //and calls SelectBestMatch
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; }
+		//catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
 		finally {
 			if (_data == null) {
 				p1.Next('z');
@@ -893,7 +857,7 @@ partial class CiCompletion
 	/// key == default if clicked or typed a character (except Tab and Enter). Does not include hotkey modifiers.
 	/// </summary>
 	CiComplResult _Commit(SciCode doc, CiComplItem item, char ch, KKey key) {
-		if (item.Provider == CiComplProvider.Regex) { //can complete only on click or Tab
+		if (item.Provider == CiComplProvider.EmbeddedLanguage) { //can complete only on click or Tab
 			if (ch != default || !(key == default || key == KKey.Tab)) return CiComplResult.None;
 		}
 
@@ -963,7 +927,7 @@ partial class CiCompletion
 				return CiComplResult.Complex;
 			}
 		}
-		Debug_.PrintIf(i != _data.tempRange.CurrentFrom && item.Provider != CiComplProvider.Regex, $"{_data.tempRange.CurrentFrom}, {i}");
+		Debug_.PrintIf(i != _data.tempRange.CurrentFrom && item.Provider != CiComplProvider.EmbeddedLanguage, $"{_data.tempRange.CurrentFrom}, {i}");
 		//ci.DebugPrint();
 
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
@@ -1091,7 +1055,9 @@ partial class CiCompletion
 			doc.zSetAndReplaceSel(true, i, i + len, s);
 			if (isComplex) {
 				if (positionBack > 0) doc.zCurrentPos16 = i + s.Length - positionBack;
-				if (bracketsFrom > 0) CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
+				if (bracketsFrom > 0) {
+					CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
+				}
 			}
 
 			return isComplex ? CiComplResult.Complex : CiComplResult.Simple;
@@ -1103,7 +1069,11 @@ partial class CiCompletion
 				case CiComplProvider.Winapi: _data.winapi.OnCommitInsertDeclaration(item); break;
 				}
 			}
-			if (isComplex) if (ch == '(' || ch == '<') CodeInfo._signature.SciCharAdded(doc, ch);
+			if (isComplex && ch is '(' or '<') {
+				CodeInfo._signature.SciCharAdded(doc, ch, methodCompletion: ch == '(' && item.kind is CiItemKind.Method or CiItemKind.ExtensionMethod);
+				bool methodCompletion = ch == '(' && item.kind is CiItemKind.Method or CiItemKind.ExtensionMethod; //may need to show enum list for the first method parameter, like when typed '('
+				CodeInfo._signature.SciCharAdded(doc, ch, methodCompletion);
+			}
 		}
 	}
 
@@ -1160,7 +1130,7 @@ partial class CiCompletion
 		if (s.Eq(i, "Keyword")) return CiComplProvider.Keyword;
 		if (s.Eq(i, "Cref")) return CiComplProvider.Cref;
 		if (s.Eq(i, "XmlDoc")) return CiComplProvider.XmlDoc;
-		if (s.Eq(i, "EmbeddedLanguage")) return CiComplProvider.Regex;
+		if (s.Find("EmbeddedLanguage", i) >= 0) return CiComplProvider.EmbeddedLanguage;
 		if (s.Eq(i, "Override")) return CiComplProvider.Override;
 		//if (s.Eq(i, "ExternAlias")) return CiComplProvider.ExternAlias;
 		//if (s.Eq(i, "ObjectAndWith")) return CiComplProvider.ObjectAndWithInitializer;
@@ -1173,8 +1143,8 @@ partial class CiCompletion
 		if (s_options == null) {
 			s_options = ws.Options;
 
-			//Disable option TriggerInArgumentLists (show completions when typed '(' or '[' or space in argument list). Then eg typing a number selects something containing it in the list (it seems in VS not).
-			s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.TriggerInArgumentLists, "C#"), false);
+			//error with new Roslyn.
+			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.TriggerInArgumentLists, "C#"), false);
 
 			//print.it(s_options.GetOption(new OptionKey(CompletionOptions.BlockForCompletionItems2, "C#")));
 			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.BlockForCompletionItems, "C#"), false); //?

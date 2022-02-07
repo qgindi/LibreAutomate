@@ -156,7 +156,7 @@ enum CiComplProvider : byte
 	Keyword,
 	Cref,
 	XmlDoc,
-	Regex,
+	EmbeddedLanguage, //Regex, DateTime format, maybe more
 	Override,
 	//ExternAlias,
 	//ObjectAndWithInitializer,
