@@ -255,7 +255,7 @@ namespace Au
 			/// This function is slow if the directory is large.
 			/// Don't use this function for files (throws exception) and drives (instead use <see cref="DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
 			/// </remarks>
-			public static long calculateDirectorySize(string path, FEFlags flags = FEFlags.AndSubdirectories | FEFlags.IgnoreInaccessible) {
+			public static long calculateDirectorySize(string path, FEFlags flags = FEFlags.AllDescendants | FEFlags.IgnoreInaccessible) {
 				return enumerate(path, flags).Sum(f => f.Size);
 			}
 

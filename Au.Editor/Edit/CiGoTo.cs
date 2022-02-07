@@ -240,11 +240,12 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 
 	public static void GoToSymbolFromPos() {
 		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out _);
+		print.it(helpKind);
 		if (sym != null) {
 			//print.it(sym);
 			var g = new CiGoTo(sym);
 			if (g.CanGoTo) g.GoTo();
-		} else if (helpKind == CiUtil.HelpKind.String && token.IsKind(SyntaxKind.StringLiteralToken)) {
+		} else if (helpKind == CiUtil.HelpKind.String && token.Parent.IsKind(SyntaxKind.StringLiteralExpression)) {
 			var s = token.ValueText;
 			if (s.Ends(".cs", true)) App.Model.OpenAndGoTo(s);
 		}

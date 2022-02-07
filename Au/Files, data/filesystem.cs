@@ -44,7 +44,7 @@ namespace Au {
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
 		/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DontThrow.</exception>
 		/// <remarks>
-		/// For symbolic links etc, gets properties of the link, not of its target.
+		/// For NTFS links, gets properties of the link, not of its target.
 		/// You can also get most of these properties with <see cref="enumerate"/>.
 		/// </remarks>
 		public static unsafe bool getProperties(string path, out FileProperties properties, FAFlags flags = 0) {
@@ -59,7 +59,7 @@ namespace Au {
 			properties.LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime);
 			properties.CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
 			properties.LastAccessTimeUtc = DateTime.FromFileTimeUtc(d.ftLastAccessTime);
-			if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsSymlink = 0 != _IsNtfsLink(path);
+			if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsNtfsLink = 0 != _IsNtfsLink(path);
 			return true;
 		}
 
@@ -74,7 +74,7 @@ namespace Au {
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
 		/// <exception cref="AuException">Failed. Not thrown if used flag DontThrow.</exception>
 		/// <remarks>
-		/// For symbolic links etc, gets properties of the link, not of its target.
+		/// For NTFS links, gets properties of the link, not of its target.
 		/// </remarks>
 		public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
 			attributes = 0;
@@ -86,8 +86,8 @@ namespace Au {
 			return true;
 		}
 
-		static unsafe bool _GetAttributesOnError(string path, FAFlags flags, out FileAttributes attr, out bool symLink, Api.WIN32_FILE_ATTRIBUTE_DATA* p = null) {
-			attr = 0; symLink = false;
+		static unsafe bool _GetAttributesOnError(string path, FAFlags flags, out FileAttributes attr, out bool ntfsLink, Api.WIN32_FILE_ATTRIBUTE_DATA* p = null) {
+			attr = 0; ntfsLink = false;
 			var ec = lastError.code;
 			switch (ec) {
 			case Api.ERROR_FILE_NOT_FOUND:
@@ -109,7 +109,7 @@ namespace Au {
 						p->ftLastAccessTime = d.ftLastAccessTime;
 						p->ftLastWriteTime = d.ftLastWriteTime;
 					}
-					symLink = 0 != d.IsNtfsLink;
+					ntfsLink = 0 != d.IsNtfsLink;
 					return true;
 				}
 				lastError.code = ec;
@@ -129,19 +129,19 @@ namespace Au {
 		/// Gets attributes.
 		/// Returns false if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
 		/// </summary>
-		static unsafe bool _GetAttributes(string path, out FileAttributes attr, out bool symLink, bool useRawPath) {
+		static unsafe bool _GetAttributes(string path, out FileAttributes attr, out bool ntfsLink, bool useRawPath) {
 			if (!useRawPath) path = pathname.NormalizeMinimally_(path, false);
 			_DisableDeviceNotReadyMessageBox();
 			attr = Api.GetFileAttributes(path);
-			if (attr != (FileAttributes)(-1)) symLink = attr.Has(FileAttributes.ReparsePoint) && 0 != _IsNtfsLink(path);
-			else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out symLink)) return false;
+			if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != _IsNtfsLink(path);
+			else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out ntfsLink)) return false;
 
 			if (!useRawPath && !pathname.isFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
 			return true;
 		}
 
 		/// <summary>
-		/// Calls <b>FindFirstFile</b> to determine whether <i>path</i> is a NTFS reparse point that is a link. Usually symbolic link or mount point, but possible others.
+		/// Calls <b>FindFirstFile</b> to determine whether <i>path</i> is a NTFS link, such as symbolic link or mounted folder.
 		/// </summary>
 		/// <param name="path">Raw path (does not normalize).</param>
 		/// <returns>-1 failed, 0 no, 1 symlink, 2 mount, 3 other.</returns>
@@ -154,31 +154,31 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, symbolic link, readonly, hidden, system. See examples.
+		/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, readonly, hidden, system, NTFS link. See examples.
 		/// </summary>
 		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="pathname.expand"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default), can't find the file; if useRawPath is true, searches in "current directory".
-		/// For symbolic links gets attributes of the link, not target; does not care whether its target exists.
+		/// For NTFS links gets attributes of the link, not of the target; does not care whether its target exists.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var path = @"C:\Test\test.txt";
 		/// if (filesystem.exists(path)) print.it("exists");
 		/// if (filesystem.exists(path).File) print.it("exists as file");
-		/// if (filesystem.exists(path).Dir) print.it("exists as directory");
+		/// if (filesystem.exists(path).Directory) print.it("exists as directory");
 		/// if (filesystem.exists(path) is FAttr { File: true, IsReadonly: false }) print.it("exists as file and isn't readonly");
 		/// switch (filesystem.exists(path)) {
 		/// case 0: print.it("doesn't exist"); break;
 		/// case 1: print.it("file"); break;
-		/// case 2: print.it("dir"); break;
+		/// case 2: print.it("directory"); break;
 		/// }
 		/// ]]></code>
 		/// </example>
 		public static FAttr exists(string path, bool useRawPath = false) {
-			if (_GetAttributes(path, out var a, out bool symLink, useRawPath)) return new(a, true, symLink);
+			if (_GetAttributes(path, out var a, out bool ntfsLink, useRawPath)) return new(a, true, ntfsLink);
 			return new(0, (a == (FileAttributes)(-1)) ? null : false, false);
 		}
 
@@ -194,11 +194,11 @@ namespace Au {
 		/// Always use full path. If path is not full: if <i>useRawPath</i> is false (default) returns <b>NotFound</b>; if <i>useRawPath</i> is true, searches in "current directory".
 		/// </remarks>
 		internal static unsafe FileIs_ ExistsAs_(string path, bool useRawPath = false) {
-			if (!_GetAttributes(path, out var a, out bool symLink, useRawPath)) {
+			if (!_GetAttributes(path, out var a, out bool ntfsLink, useRawPath)) {
 				return (a == (FileAttributes)(-1)) ? FileIs_.AccessDenied : FileIs_.NotFound;
 			}
 			var R = a.Has(FileAttributes.Directory) ? FileIs_.Directory : FileIs_.File;
-			if (symLink) R |= (FileIs_)4;
+			if (ntfsLink) R |= (FileIs_)4;
 			return R;
 		}
 
@@ -266,11 +266,11 @@ namespace Au {
 		/// </param>
 		/// <param name="dirFilter">
 		/// Callback function that is called for each subdirectory. Let it return flags: 1 - include the directory in results; 2 - include its children in results.
-		/// The return value overrides flags <see cref="FEFlags.OnlyFiles"/> and <see cref="FEFlags.AndSubdirectories"/>.
+		/// The return value overrides flags <see cref="FEFlags.OnlyFiles"/> and <see cref="FEFlags.AllDescendants"/>.
 		/// Example: <c>d => d.Name.Eqi("Debug") ? 0 : 3</c>.
 		/// </param>
 		/// <param name="errorHandler">
-		/// Callback function that is called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
+		/// Callback function that is called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AllDescendants"/>.
 		/// Receives the subdirectory path. Can call <see cref="lastError"/><b>.Code</b> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
 		/// If <i>errorHandler</i> not used, then <b>enumerate</b> throws exception. See also: flag <see cref="FEFlags.IgnoreInaccessible"/>.
 		/// </param>
@@ -280,14 +280,14 @@ namespace Au {
 		/// <remarks>
 		/// Uses API <msdn>FindFirstFile</msdn>.
 		/// 
-		/// By default gets only direct children. Use flag <see cref="FEFlags.AndSubdirectories"/> to get all descendants.
+		/// By default gets only direct children. Use flag <see cref="FEFlags.AllDescendants"/> to get all descendants.
 		/// 
 		/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), "..", DOS path etc. Paths longer than <see cref="pathname.maxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
 		/// 
 		/// For NTFS links (symbolic links, mounted folders) gets link info, not target info.
 		/// 
 		/// These errors are ignored:
-		/// 1. Missing target directory of a symbolic link or mounted folder.
+		/// 1. Missing target directory of a NTFS link.
 		/// 2. If used flag <see cref="FEFlags.IgnoreInaccessible"/> - access denied.
 		/// 
 		/// When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call <i>errorHandler</i>.
@@ -304,7 +304,7 @@ namespace Au {
 			//	It seems .NET uses undocumented API NtQueryDirectoryFile.
 			//rejected: in this func use .NET FileSystemEnumerable.
 			//	Good: faster; familiar types.
-			//	Bad: something we need is missing or difficult to return or need a workaround. Eg easily detect symlink, get relative path, prevent recursion to symlink target.
+			//	Bad: something we need is missing or difficult to return or need a workaround. Eg easily detect NTFS links, get relative path, prevent recursion to NTFS link target.
 
 			string path = directoryPath;
 			if (0 == (flags & FEFlags.UseRawPath)) path = pathname.normalize(path);
@@ -351,10 +351,10 @@ namespace Au {
 							case Api.ERROR_ACCESS_DENIED:
 								itsOK = 0 != (flags & FEFlags.IgnoreInaccessible);
 								break;
-							case Api.ERROR_PATH_NOT_FOUND: //the directory not found, or symlink target directory is missing
+							case Api.ERROR_PATH_NOT_FOUND: //the directory not found, or NTFS link target directory is missing
 							case Api.ERROR_DIRECTORY: //it is file, not directory. Error text is "The directory name is invalid".
 							case Api.ERROR_BAD_NETPATH: //eg \\COMPUTER\MissingFolder
-								if (stack.Count == 0 && !exists(path, true).Dir)
+								if (stack.Count == 0 && !exists(path, true).Directory)
 									throw new DirectoryNotFoundException($"Directory not found: '{path}'. {lastError.messageFor(ec)}");
 								//itsOK = (attr & Api.FILE_ATTRIBUTE_REPARSE_POINT) != 0;
 								itsOK = true; //or maybe the subdirectory was deleted after we retrieved it
@@ -413,10 +413,10 @@ namespace Au {
 					var r = new FEFile(name, fp2, d, stack.Count); //never mind, don't need for dirs if no dirFilter and is flag OnlyFiles
 
 					if (isDir) {
-						int inc = dirFilter != null ? dirFilter(r) : (flags.Has(FEFlags.OnlyFiles) ? 0 : 1) | (flags.Has(FEFlags.AndSubdirectories) ? 2 : 0);
+						int inc = dirFilter != null ? dirFilter(r) : (flags.Has(FEFlags.OnlyFiles) ? 0 : 1) | (flags.Has(FEFlags.AllDescendants) ? 2 : 0);
 						if (0 != (1 & inc)) yield return r;
 						if (0 == (2 & inc)) continue;
-						if (!flags.Has(FEFlags.AndSymbolicLinkSubdirectories) && 0 != d.IsNtfsLink) continue;
+						if (!flags.Has(FEFlags.RecurseNtfsLinks) && 0 != d.IsNtfsLink) continue;
 
 						stack.Push(new _EDStackEntry() { hfind = hfind, path = path });
 						hfind = default; path = fullPath;
@@ -440,27 +440,48 @@ namespace Au {
 		/// Gets names and other info of matching files in the specified directory.
 		/// </summary>
 		/// <param name="directoryPath">Full path of the directory.</param>
-		/// <param name="fileFilter">
+		/// <param name="pattern">
 		/// File name pattern. Format: [Wildcard expression](xref:wildcard_expression). Used only for files, not for subdirectories. Can be null.
 		/// Examples:
 		/// - "*.png" (only png files),
 		/// - "**m *.png||*.bmp" (only png and bmp files),
 		/// - "**nm *.png||*.bmp" (all files except png and bmp),
-		/// - "**r \.html?$" (regular expression that matches .htm and .html files).
+		/// - @"**r \.html?$" (regular expression that matches .htm and .html files).
 		/// </param>
 		/// <param name="flags">Flags. The function also adds flag <b>OnlyFiles</b>.</param>
 		/// <exception cref="ArgumentException">
 		/// <i>directoryPath</i> is invalid path or not full path.
-		/// Invalid <i>fileFilter</i> (<c>"**options "</c> or regular expression).
+		/// Invalid <i>pattern</i> (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
 		/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 		/// <inheritdoc cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>
-		public static IEnumerable<FEFile> enumerateFiles(string directoryPath, string fileFilter = null, FEFlags flags = 0) {
+		public static IEnumerable<FEFile> enumFiles(string directoryPath, string pattern = null, FEFlags flags = 0) {
 			flags |= FEFlags.OnlyFiles;
-			if (fileFilter == null) return enumerate(directoryPath, flags);
-			wildex w = fileFilter;
+			if (pattern == null) return enumerate(directoryPath, flags);
+			wildex w = pattern;
 			return enumerate(directoryPath, flags, f => w.Match(f.Name));
+		}
+
+		/// <summary>
+		/// Gets names and other info of matching subdirectories in the specified directory.
+		/// </summary>
+		/// <param name="directoryPath">Full path of the directory.</param>
+		/// <param name="pattern">
+		/// Directory name pattern. Format: [Wildcard expression](xref:wildcard_expression). Can be null.
+		/// </param>
+		/// <param name="flags"></param>
+		/// <exception cref="ArgumentException">
+		/// <i>directoryPath</i> is invalid path or not full path.
+		/// Invalid <i>pattern</i> (<c>"**options "</c> or regular expression).
+		/// </exception>
+		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
+		/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
+		/// <inheritdoc cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>
+		public static IEnumerable<FEFile> enumDirectories(string directoryPath, string pattern = null, FEFlags flags = 0) {
+			if (pattern == null) return enumerate(directoryPath, flags, _ => false);
+			wildex w = pattern;
+			return enumerate(directoryPath, flags, _ => false, d => !w.Match(d.Name) ? 0 : flags.Has(FEFlags.AllDescendants) ? 3 : 1);
 		}
 
 		#endregion
@@ -507,7 +528,7 @@ namespace Au {
 					//Delete, RenameExisting, MergeDirectory
 					//bool deleted = false;
 					var existsAs = ExistsAs_(path2, true);
-					bool existsAsDir = existsAs is FileIs_.Directory or FileIs_.SymLinkDirectory;
+					bool existsAsDir = existsAs is FileIs_.Directory or FileIs_.NtfsLinkDirectory;
 					switch (existsAs) {
 					case FileIs_.NotFound:
 						//deleted = true;
@@ -523,7 +544,7 @@ namespace Au {
 						} else if (ifExists == FIfExists.RenameNew) {
 							path2 = pathname.makeUnique(path2, existsAsDir);
 						} else if (ifExists == FIfExists.MergeDirectory && existsAsDir) {
-							if (type1 is FileIs_.Directory or FileIs_.SymLinkDirectory) {
+							if (type1 is FileIs_.Directory or FileIs_.NtfsLinkDirectory) {
 								//deleted = true;
 								mergeDirectory = true;
 								if (!copy) { copy = true; deleteSource = true; }
@@ -535,7 +556,7 @@ namespace Au {
 							//It also solves this problem: if we delete the directory now, need to ensure that it does not delete the source directory, which is quite difficult.
 						} else {
 							//deleted = 0 ==
-							_DeleteL(path2, existsAs == FileIs_.SymLinkDirectory);
+							_DeleteL(path2, existsAs == FileIs_.NtfsLinkDirectory);
 						}
 						break;
 					}
@@ -561,7 +582,7 @@ namespace Au {
 							throw new AuException($"*{opName} '{path1}' to '{path2}'", ex);
 						}
 					} else {
-						if (type1 == FileIs_.SymLinkDirectory)
+						if (type1 == FileIs_.NtfsLinkDirectory)
 							ok = Api.CreateDirectoryEx(path1, path2, default);
 						else
 							ok = Api.CopyFileEx(path1, path2, null, default, null, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
@@ -595,7 +616,7 @@ namespace Au {
 			//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to Enumerate which calls it when fails to enum.
 
 			//use intermediate array, and get it before creating path2 directory. It requires more memory, but is safer. Without it, eg bad things happen when copying a directory into itself.
-			var edFlags = FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths | FEFlags.UseRawPath | (FEFlags)copyFlags;
+			var edFlags = FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath | (FEFlags)copyFlags;
 			var a = enumerate(path1, edFlags, fileFilter, dirFilter).ToArray();
 
 			if (copyFlags.Has(FCFlags.NoEmptyDirectories)) {
@@ -635,12 +656,12 @@ namespace Au {
 
 				if (f.IsDirectory) {
 					if (merge) switch (exists(s2, true)) {
-						case 2: continue; //never mind: check symbolic link mismatch
+						case 2: continue; //never mind: check NTFS link mismatch
 						case 1: _DeleteL(s2, false); break;
 						}
 
 					ok = Api.CreateDirectoryEx(s1, s2, default);
-					if (!ok && !f.IsSymlink) ok = Api.CreateDirectory(s2, default);
+					if (!ok && !f.IsNtfsLink) ok = Api.CreateDirectory(s2, default);
 				} else {
 					if (merge && getAttributes(s2, out var attr, FAFlags.DontThrow | FAFlags.UseRawPath)) {
 						const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
@@ -652,11 +673,10 @@ namespace Au {
 					ok = Api.CopyFileEx(s1, s2, null, default, null, fl);
 				}
 				if (!ok) {
-					if (f.IsSymlink) {
-						//To create or copy symbolic links, need SeCreateSymbolicLinkPrivilege privilege.
+					if (f.IsNtfsLink) {
+						//To create or copy NTFS links, need SeCreateSymbolicLinkPrivilege privilege.
 						//Admins have it, else this process cannot get it.
-						//More info: MS technet -> "Create symbolic links".
-						//Debug_.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {lastError.messageFor()}");
+						//Debug_.Print($"failed to copy NTFS link '{s1}'. It's OK, skipped it. Error: {lastError.messageFor()}");
 						continue;
 					}
 					if (0 != (copyFlags & FCFlags.IgnoreInaccessible)) {
@@ -882,7 +902,7 @@ namespace Au {
 
 			int ec = 0;
 			if (type == FileIs_.Directory) {
-				var a = enumerate(path, FEFlags.AndSubdirectories | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible).ToArray();
+				var a = enumerate(path, FEFlags.AllDescendants | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible).ToArray();
 				//print.it(a);
 				for (int i = a.Length; --i >= 0;) { //directories always are before their files, and will be empty when deleting in reverse
 					var f = a[i];
@@ -900,7 +920,7 @@ namespace Au {
 				Debug_.Print("Using _DeleteShell.");
 				if (_DeleteShell(path, false)) return type;
 			} else {
-				ec = _DeleteL(path, type == FileIs_.SymLinkDirectory);
+				ec = _DeleteL(path, type == FileIs_.NtfsLinkDirectory);
 				if (ec == 0) return type;
 			}
 			if (exists(path, true)) throw new AuException(ec, $"*delete '{path}'");
@@ -1011,7 +1031,7 @@ namespace Au {
 		}
 
 		static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null) {
-			if (exists(path, pathIsPrepared).Dir) return false;
+			if (exists(path, pathIsPrepared).Directory) return false;
 			if (!pathIsPrepared) path = _PreparePath(path);
 			if (templateDirectory != null) templateDirectory = _PreparePath(templateDirectory);
 
@@ -1021,7 +1041,7 @@ namespace Au {
 				stack.Push(s);
 				s = _RemoveFilename(s, true);
 				if (s == null) throw new AuException($@"*create directory '{path}'. Drive not found.");
-			} while (!exists(s, true).Dir);
+			} while (!exists(s, true).Directory);
 
 			while (stack.Count > 0) {
 				s = stack.Pop();
@@ -1328,46 +1348,51 @@ namespace Au {
 namespace Au.Types {
 	//CONSIDER: remove. Use FAttr instead.
 	/// <summary>
-	/// File system entry type - file, directory, symbolic link, whether it exists and is accessible.
+	/// File system entry type - file, directory, NTFS link, whether it exists and is accessible.
 	/// The enum value NotFound is 0; AccessDenied is negative ((int)0x80000000); other values are greater than 0.
 	/// </summary>
 	internal enum FileIs_ {
 		/// <summary>Does not exist.</summary>
 		NotFound = 0,
-		/// <summary>Is file. Attributes: Directory no, ReparsePoint no.</summary>
+
+		/// <summary>Is file, and not NTFS link.</summary>
 		File = 1,
-		/// <summary>Is directory. Attributes: Directory yes, ReparsePoint no.</summary>
+
+		/// <summary>Is directory, and not NTFS link.</summary>
 		Directory = 2,
-		/// <summary>Is symbolic link to a file. Attributes: Directory no, ReparsePoint yes.</summary>
-		SymLinkFile = 5,
-		/// <summary>Is symbolic link to a directory, or is a mounted folder. Attributes: Directory yes, ReparsePoint yes.</summary>
-		SymLinkDirectory = 6,
+
+		/// <summary>Is NTFS link to file.</summary>
+		NtfsLinkFile = 5,
+
+		/// <summary>Is NTFS link to directory.</summary>
+		NtfsLinkDirectory = 6,
+
 		/// <summary>Exists but this process cannot access it and get attributes.</summary>
 		AccessDenied = int.MinValue,
 	}
 
 	/// <summary>
-	/// Contains file or directory attributes. Tells whether it exists, is directory, symbolic link, readonly, hidden, system.
+	/// Contains file or directory attributes. Tells whether it exists, is directory, readonly, hidden, system, NTFS link.
 	/// See <see cref="filesystem.exists"/>.
 	/// </summary>
 	public struct FAttr {
 		readonly FileAttributes _a;
-		readonly bool _exists, _unknown, _symLink;
+		readonly bool _exists, _unknown, _ntfsLink;
 
 		/// <param name="attributes">Attributes, or 0 if does not exist or can't get attributes.</param>
 		/// <param name="exists">True if exists and can get attributes. False if does not exist. null if exists but can't get attributes.</param>
-		/// <param name="symLink">Is a NTFS link, such as symbolic link or volume mount point.</param>
-		internal FAttr(FileAttributes attributes, bool? exists, bool symLink) {
+		/// <param name="ntfsLink">Is a NTFS link, such as symbolic link or mounted folder.</param>
+		internal FAttr(FileAttributes attributes, bool? exists, bool ntfsLink) {
 			_a = attributes;
 			_exists = exists == true;
 			_unknown = exists == null;
-			_symLink = symLink;
+			_ntfsLink = ntfsLink;
 		}
 
 		/// <summary>
 		/// Returns file or directory attributes. Returns 0 if <see cref="Exists"/> false.
 		/// </summary>
-		public FileAttributes Attr => _a;
+		public FileAttributes Attributes => _a;
 
 		/// <summary>
 		/// Returns <see cref="Exists"/>.
@@ -1375,13 +1400,13 @@ namespace Au.Types {
 		public static implicit operator bool(FAttr fa) => fa.Exists;
 
 		/// <summary>
-		/// Returns 0 if !<see cref="Exists"/>, 1 if <see cref="File"/>, 2 if <see cref="Dir"/>. Can be used with switch.
+		/// Returns 0 if !<see cref="Exists"/>, 1 if <see cref="File"/>, 2 if <see cref="Directory"/>. Can be used with switch.
 		/// </summary>
-		public static implicit operator int(FAttr fa) => !fa.Exists ? 0 : (fa.Dir ? 2 : 1);
+		public static implicit operator int(FAttr fa) => !fa.Exists ? 0 : (fa.Directory ? 2 : 1);
 
 		/// <summary>
 		/// Exists and is accessible (<see cref="Unknown"/> false).
-		/// See also <see cref="File"/>, <see cref="Dir"/>.
+		/// See also <see cref="File"/>, <see cref="Directory"/>.
 		/// </summary>
 		public bool Exists => _exists;
 
@@ -1391,20 +1416,20 @@ namespace Au.Types {
 		public bool Unknown => _unknown;
 
 		/// <summary>
-		/// Is file (not directory), or symbolic link to a file (if <see cref="IsSymlink"/> true).
+		/// Is file (not directory), or NTFS link to a file (if <see cref="IsNtfsLink"/> true).
 		/// </summary>
 		public bool File => 0 == (_a & FileAttributes.Directory) && _exists;
 
 		/// <summary>
-		/// Is directory, or symbolic link to a directory (if <see cref="IsSymlink"/> true).
+		/// Is directory, or NTFS link to a directory (if <see cref="IsNtfsLink"/> true).
 		/// </summary>
-		public bool Dir => 0 != (_a & FileAttributes.Directory);
+		public bool Directory => 0 != (_a & FileAttributes.Directory);
 
 		/// <summary>
-		/// It is a NTFS link, such as symbolic link or volume mount point. Don't confuse with shell links (shortcuts).
-		/// If <see cref="File"/> true, the target is a file. If <see cref="Dir"/> true, the target is a directory.
+		/// It is a NTFS link, such as symbolic link or mounted folder. Don't confuse with shell links (shortcuts).
+		/// If <see cref="File"/> true, the target is a file. If <see cref="Directory"/> true, the target is a directory.
 		/// </summary>
-		public bool IsSymlink => _symLink;
+		public bool IsNtfsLink => _ntfsLink;
 
 		/// <summary>
 		/// Has <see cref="FileAttributes.ReadOnly"/>.
@@ -1423,7 +1448,7 @@ namespace Au.Types {
 
 		///
 		public override string ToString() {
-			return Unknown ? "unknown" : (Exists ? $"{{ Dir={Dir}, IsSymlink={IsSymlink}, Attr={Attr} }}" : "doesn't exist");
+			return Unknown ? "unknown" : (Exists ? $"{{ Directory={Directory}, IsNtfsLink={IsNtfsLink}, Attributes={Attributes} }}" : "doesn't exist");
 		}
 	}
 
@@ -1463,9 +1488,9 @@ namespace Au.Types {
 		public DateTime LastAccessTimeUtc { get; set; }
 
 		/// <summary>
-		/// It is a NTFS link, such as symbolic link or volume mount point. Don't confuse with shell links (shortcuts).
+		/// It is a NTFS link, such as symbolic link or mounted folder. Don't confuse with shell links (shortcuts).
 		/// </summary>
-		public bool IsSymlink { get; set; }
+		public bool IsNtfsLink { get; set; }
 	}
 
 	/// <summary>
@@ -1474,22 +1499,22 @@ namespace Au.Types {
 	[Flags]
 	public enum FEFlags {
 		/// <summary>
-		/// Enumerate subdirectories too.
+		/// Enumerate all descendants, not only direct children. Also known as "recurse subdirectories".
 		/// </summary>
-		AndSubdirectories = 1,
+		AllDescendants = 1,
 
 		/// <summary>
-		/// Also enumerate symbolic link and mounted folder target directories. Use with AndSubdirectories.
+		/// Also enumerate target directories of NTFS links, such as symbolic links and mounted folders. Use with <b>AllDescendants</b>.
 		/// </summary>
-		AndSymbolicLinkSubdirectories = 2,
+		RecurseNtfsLinks = 2,
 
 		/// <summary>
-		/// Skip files and subdirectories that have Hidden attribute.
+		/// Skip files and subdirectories that have <b>Hidden</b> attribute.
 		/// </summary>
 		SkipHidden = 4,
 
 		/// <summary>
-		/// Skip files and subdirectories that have Hidden and System attributes (both).
+		/// Skip files and subdirectories that have <b>Hidden</b> and <b>System</b> attributes (both).
 		/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 		/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>"$Recycle.Bin"</c>, <c>"System Volume Information"</c>, <c>"Recovery"</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for D drive.
 		/// </summary>
@@ -1497,7 +1522,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// If fails to get contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
-		/// Without this flag then throws exception or calls errorHandler.
+		/// Without this flag then throws exception or calls <i>errorHandler</i>.
 		/// </summary>
 		IgnoreInaccessible = 0x10, //note: must match FCFlags
 
@@ -1575,6 +1600,9 @@ namespace Au.Types {
 		///
 		public string FullPath { get; }
 
+		///
+		public string Extension => IsDirectory ? "" : pathname.getExtension(Name); //note: if null for directory, then OrderBy throws exception
+
 		/// <summary>
 		/// Returns file size. For directories it is usually 0.
 		/// </summary>
@@ -1590,7 +1618,7 @@ namespace Au.Types {
 		public FileAttributes Attributes { get; }
 
 		/// <summary>
-		/// It is a directory. Or a NTFS link to a directory (see <see cref="IsSymlink"/>).
+		/// It is a directory. Or a NTFS link to a directory (see <see cref="IsNtfsLink"/>).
 		/// </summary>
 		public bool IsDirectory { get { return (Attributes & FileAttributes.Directory) != 0; } }
 
@@ -1608,9 +1636,9 @@ namespace Au.Types {
 		public uint ReparseTag { get; }
 
 		/// <summary>
-		/// It is a NTFS link, such as symbolic link or volume mount point. Don't confuse with shell links (shortcuts).
+		/// It is a NTFS link, such as symbolic link or mounted folder. Don't confuse with shell links (shortcuts).
 		/// </summary>
-		public bool IsSymlink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
+		public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
 
 		/// <summary>
 		/// Returns FullPath.

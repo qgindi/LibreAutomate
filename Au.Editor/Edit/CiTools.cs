@@ -7,8 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Controls;
 
-class CiTools
-{
+class CiTools {
 	//#if DEBUG
 	//	public static void RegexTest(int position)
 	//	{
@@ -29,14 +28,15 @@ class CiTools
 	RegexWindow _regexWindow;
 	string _regexTopic;
 
-	public void RegexWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, bool replace, wnd dontCover = default) {
-		int j = stringSpan.Start, vi = _StringPrefixLength(code, j);
+	public void RegexWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, bool replace, wnd dontCover = default) {
+		int j = si.textSpan.Start;
 
 		_regexWindow ??= new RegexWindow();
 		_ShowWindow(_regexWindow, doc, pos16, dontCover);
 
-		if (!replace && (vi == 0 || !(code[j] == '@' || code[j + 1] == '@')))
-			_regexWindow.CurrentTopic = "Note: The string should be like @\"text\", not like \"text\". This tool does not escape \\ characters.";
+		if (!replace && si.isClassic) {
+			doc.zInsertText(true, si.stringNode.SpanStart, "@");
+		}
 
 		var s = _regexWindow.CurrentTopic;
 		if (s == "replace") {
@@ -45,7 +45,7 @@ class CiTools
 			_regexTopic = s;
 			_regexWindow.CurrentTopic = "replace";
 		}
-		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _regexWindow.Close());
+		doc.ZTempRanges_Add(this, si.textSpan.Start, si.textSpan.End, onLeave: () => _regexWindow.Close());
 	}
 
 	//public bool RegexWindowIsVisible => _regexWindow?.Window.Visible ?? false;
@@ -56,20 +56,13 @@ class CiTools
 
 	KeysWindow _keysWindow;
 
-	public void KeysWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, wnd dontCover = default) {
+	public void KeysWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, wnd dontCover = default) {
 		_keysWindow ??= new KeysWindow();
 		_ShowWindow(_keysWindow, doc, pos16, dontCover);
-		int vi = _StringPrefixLength(code, stringSpan.Start);
-		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _keysWindow.Close());
+		doc.ZTempRanges_Add(this, si.textSpan.Start, si.textSpan.End, onLeave: () => _keysWindow.Close());
 	}
 
 	#endregion
-
-	static int _StringPrefixLength(string s, int j) {
-		int R = 0;
-		if (s[j] == '@') R = s[j + 1] == '$' ? 2 : 1; else if (s[j] == '$') R = s[j + 1] == '@' ? 2 : 1;
-		return R;
-	}
 
 	static void _ShowWindow(InfoWindow w, SciCode doc, int position, wnd dontCover) {
 		if (w.IsVisible) w.Hwnd.ZorderTop();
@@ -86,10 +79,12 @@ class CiTools
 
 	static void _ShowRegexOrKeysWindow(bool isRegex) {
 		bool retry = false;
-		g1:
-		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var token, out var node)) return;
+	g1:
+		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return;
 		var pos16 = cd.pos16;
-		if (!CiUtil.IsInString(ref node, pos16)) {
+		bool? inString = token.IsInString(pos16, cd.code, out var stri);
+		if (inString == null) return;
+		if (inString != true) {
 			if (isRegex || retry) {
 				var s2 = isRegex ? null : "The fastest way to insert 'send keys' code: type kk and press Enter (or Tab, Space, double-click). It shows completion list and selects kkKeysSendSnippet.";
 				dialog.showInfo("The text cursor must be in a string.", s2);
@@ -97,9 +92,10 @@ class CiTools
 			}
 
 			//is in keys.send argument list?
+			var node = token.Parent;
 			if (node is not ArgumentListSyntax && !node.Span.ContainsInside(pos16)) {
 				node = node.Parent;
-				if(node is ArgumentSyntax) node = node.Parent;
+				if (node is ArgumentSyntax) node = node.Parent;
 			}
 			if (node is ArgumentListSyntax && node.Parent is InvocationExpressionSyntax ie && ie.Expression.ToString() == "keys.send") {
 				SyntaxToken t1, t2;
@@ -109,7 +105,7 @@ class CiTools
 				SyntaxKind k1 = t1.Kind(), k2 = t2.Kind();
 				bool good1 = k1 is SyntaxKind.OpenParenToken or SyntaxKind.CommaToken, good2 = k2 is SyntaxKind.CloseParenToken or SyntaxKind.CommaToken;
 				string s;
-				if (good1 && good2) s = "\"%\""; else if(good1) s = "\"%\", "; else if(good2) s = ", \"%\""; else s = ", \"%\", ";
+				if (good1 && good2) s = "\"%\""; else if (good1) s = "\"%\", "; else if (good2) s = ", \"%\""; else s = ", \"%\", ";
 				InsertCode.TextSimply(s);
 			} else {
 				InsertCode.Statements("keys.send(\"%\");", goToPercent: true); //rejected. Eg could be keys.send("", here).
@@ -117,22 +113,20 @@ class CiTools
 			retry = true;
 			goto g1;
 		}
-		var doc = cd.sciDoc;
-		var stringSpan = node.Span;
 
 		var t = CodeInfo._tools;
-		if (isRegex) t.RegexWindowShow(doc, cd.code, pos16, stringSpan, replace: false);
-		else t.KeysWindowShow(doc, cd.code, pos16, stringSpan);
+		if (isRegex) t.RegexWindowShow(cd.sciDoc, cd.code, pos16, stri, replace: false);
+		else t.KeysWindowShow(cd.sciDoc, cd.code, pos16, stri);
 	}
 
-	public void ShowForStringParameter(PSFormat stringFormat, CodeInfo.Context cd, TextSpan stringSpan, wnd dontCover = default) {
+	public void ShowForStringParameter(PSFormat stringFormat, CodeInfo.Context cd, in CiStringInfo si, wnd dontCover = default) {
 		switch (stringFormat) {
 		case PSFormat.Regexp:
 		case PSFormat.RegexpReplacement:
-			RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
+			RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, si, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
 			break;
 		case PSFormat.Keys:
-			KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, dontCover);
+			KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, si, dontCover);
 			break;
 		}
 	}

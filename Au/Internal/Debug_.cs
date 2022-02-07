@@ -37,12 +37,12 @@ namespace Au.More
 		/// <summary>
 		/// If condition is true, calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
-		/// The 3 optional arguments are not used explicitly.
+		/// If <i>text</i> null, uses [CallerArgumentExpression("condition")]. Other optional parameters are not used explicitly.
 		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintIf(bool condition, object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
-			if (condition) _Print(text, f_, l_, m_);
+		public static void PrintIf(bool condition, object text = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null, [CallerArgumentExpression("condition")] string ae_ = null) {
+			if (condition) _Print(text ?? ae_, f_, l_, m_);
 		}
 
 		/// <summary>

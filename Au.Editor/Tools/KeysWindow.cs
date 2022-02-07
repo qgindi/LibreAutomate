@@ -28,19 +28,12 @@ namespace Au.Tools
 
 		void _Insert(string s) {
 			Debug.Assert(InsertInControl == Panels.Editor.ZActiveDoc);
-			if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
-			switch (node) {
-			case LiteralExpressionSyntax when node.Kind() == SyntaxKind.StringLiteralExpression: break;
-			case InterpolatedStringExpressionSyntax: break;
-			default: if ((node = node.Parent) is InterpolatedStringExpressionSyntax) break; return;
-			}
+			if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return;
+			if (true != token.IsInString(cd.pos16, cd.code, out var si)) return;
 			var code = cd.code;
 			var pos = cd.pos16;
 			var sci = cd.sciDoc;
-			var span = node.Span;
-			int from = span.Start, to = span.End;
-			while (code[from] is '@' or '$') from++; from++;
-			if (to > from && code[to - 1] == '\"') to--;
+			int from = si.textSpan.Start, to = si.textSpan.End;
 
 			switch (s) {
 			case "text": _AddArg(", \"!\b\""); return;
@@ -52,8 +45,9 @@ namespace Au.Tools
 			}
 
 			void _AddArg(string s) {
-				if (to == span.End) s = "\"" + s;
-				sci.zGoToPos(true, span.End);
+				int stringEnd = si.stringNode.Span.End;
+				if (to == stringEnd) s = "\"" + s;
+				sci.zGoToPos(true, stringEnd);
 				InsertCode.TextSimplyInControl(sci, s);
 			}
 

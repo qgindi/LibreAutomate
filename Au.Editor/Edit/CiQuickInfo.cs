@@ -3,8 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 using System.Windows.Documents;
 using Microsoft.CodeAnalysis;
 
-class CiQuickInfo
-{
+class CiQuickInfo {
 	public async Task<Section> GetTextAt(int pos16) {
 		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
@@ -31,8 +30,12 @@ class CiQuickInfo
 		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//print.it(se.Kind, se.Text);
+			if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) continue;
 			x.StartParagraph();
 
+			//if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) {
+			//	x.Append("More info in Remarks (click and press F1)."); //no, because the DB does not contain Au and .NET remarks; would show this info only for others (local, XML files).
+			//} else {
 			if (i == 0) { //image
 				CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
 				if (kind != CiItemKind.None) {
@@ -63,6 +66,7 @@ class CiQuickInfo
 			} else {
 				x.AppendTaggedParts(tp);
 			}
+			//}
 
 			x.EndParagraph();
 		}

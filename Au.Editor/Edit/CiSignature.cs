@@ -67,9 +67,9 @@ class CiSignature
 	}
 	bool _afterCharAdded;
 
-	public void SciCharAdded(SciCode doc, char ch) {
+	public void SciCharAdded(SciCode doc, char ch, bool methodCompletion = false) {
 		switch (ch) { case '(' or '[' or '<' or ')' or ']' or '>' or ',': break; default: return; }
-		_ShowSignature(doc, ch);
+		_ShowSignature(doc, ch, methodCompletion);
 		_afterCharAdded = true;
 	}
 
@@ -77,7 +77,7 @@ class CiSignature
 		_ShowSignature(doc, default);
 	}
 
-	async void _ShowSignature(SciCode doc, char ch) {
+	async void _ShowSignature(SciCode doc, char ch, bool methodCompletion = false) {
 		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos16 < 2) return; //returns false if position is in meta comments
 
@@ -103,7 +103,7 @@ class CiSignature
 				SignatureHelpItems r = null;
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
-					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, cancelToken).ConfigureAwait(false);
+					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
@@ -119,6 +119,7 @@ class CiSignature
 			});
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; } //never noticed
+		//catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
@@ -205,6 +206,7 @@ class CiSignature
 			CodeInfo.HideTextPopupAndTempWindows();
 			if (CodeInfo._compl.IsVisibleUI) //without this does not show completions with selected enum when typed Function( when first parameter is enum
 				CodeInfo._compl.Cancel();
+			if(methodCompletion) CodeInfo._compl.ShowList(ch); //when autocompletion added (); may need to show enum list 
 		}
 
 		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
@@ -214,10 +216,12 @@ class CiSignature
 		if (argNode is ArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
 			//print.it("string");
 			var semo = cd.document.GetSemanticModelAsync().Result;
-			argNode = root.FindToken(cd.pos16).Parent;
-			var stringFormat = CiUtil.GetParameterStringFormat(argNode, semo, false);
-			//print.it(stringFormat);
-			if (stringFormat != 0) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, argNode.Span, _textPopup.PopupWindow.Hwnd);
+			var token = root.FindToken(cd.pos16);
+			if(true == token.IsInString(cd.pos16, cd.code, out var stringInfo)) {
+				var stringFormat = CiUtil.GetParameterStringFormat(stringInfo.stringNode, semo, true);
+				if (stringFormat != 0)
+					CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo, _textPopup.PopupWindow.Hwnd);
+			}
 		}
 	}
 

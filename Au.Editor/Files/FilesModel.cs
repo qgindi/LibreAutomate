@@ -1166,7 +1166,7 @@ partial class FilesModel
 			var fd = FilesDirectory;
 			if (!fromWorkspaceDir) {
 				if (s.Starts(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
-				else if (!dirsDropped) dirsDropped = filesystem.exists(s).Dir;
+				else if (!dirsDropped) dirsDropped = filesystem.exists(s).Directory;
 			}
 		}
 		int r;
@@ -1193,8 +1193,8 @@ partial class FilesModel
 
 			foreach (var path in a) {
 				var g = filesystem.exists(path, true);
-				if (!g.Exists || g.IsSymlink) continue;
-				bool isDir = g.Dir && r != 1;
+				if (!g.Exists || g.IsNtfsLink) continue;
+				bool isDir = g.Directory && r != 1;
 
 				if (fromWorkspaceDir) {
 					var relPath = path[FilesDirectory.Length..];
@@ -1429,7 +1429,7 @@ partial class FilesModel
 		var ar = App.Settings.recentWS;
 		int j = 0, i = 0, n = ar?.Length ?? 0;
 		for (; i < n; i++) {
-			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).Dir) ar[i] = null;
+			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).Directory) ar[i] = null;
 			else _Add(ar[i], ++j);
 		}
 		if (j < i) App.Settings.recentWS = ar.Where(o => o != null).ToArray();
@@ -1560,7 +1560,7 @@ partial class FilesModel
 		switch (filesystem.exists(path)) {
 		case 2:
 			string xmlFile = path + @"\files.xml";
-			if (filesystem.exists(xmlFile).File && filesystem.exists(path + @"\files").Dir) {
+			if (filesystem.exists(xmlFile).File && filesystem.exists(path + @"\files").Directory) {
 				try { return XmlUtil.LoadElem(xmlFile).Name == "files"; } catch { }
 			}
 			break;

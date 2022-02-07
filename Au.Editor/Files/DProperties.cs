@@ -239,7 +239,7 @@ class DProperties : KDialogWindow {
 	}
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
-		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).Dir) dir = folders.ThisApp;
+		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).Directory) dir = folders.ThisApp;
 		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDB}") {
 			InitFolderNow = dir,
 			FileTypes = "Dll|*.dll|All files|*.*"

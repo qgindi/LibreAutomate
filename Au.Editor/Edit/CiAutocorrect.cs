@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 
 //SHOULDDO: Roslyn bugs in top-level statemens:
 //	1. Ctrl+Enter sometimes does not add ;.
@@ -22,10 +23,6 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 //	Would complete from anywhere in statement, eg in string or at the end of line.
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
-
-//TODO: hide if typed nonalpha if auto-showed by typing nonalpha. VS hides.
-//	Example: var d2 = new DateTime(2022, 1)
-//	Auto-shows when typed space, because could be enum. Then if you type eg 1 for another overload, selects Int16.
 
 class CiAutocorrect {
 	public class BeforeCharContext {
@@ -165,29 +162,34 @@ class CiAutocorrect {
 
 		if (ch == 's') { //when typed like 5s or 500ms, replace with 5.s(); or 500.ms();
 			if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
-			if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
-				var node = root.FindToken(pos - 1).Parent;
-				if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
-					//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
-					c.doc.zReplaceRange(true, pos, cd.pos16, replaceText, moveCurrentPos: true);
-					c.ignoreChar = true;
-				}
+			if (_IsNumericLiteralStatement(out _)) {
+				//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
+				c.doc.zReplaceRange(true, pos, cd.pos16, replaceText, moveCurrentPos: true);
+				c.ignoreChar = true;
 			}
 			return;
 		}
 		if (ch == 't') { //when typed like 5t, replace with for (int i = 0; i < 5; i++) {  }
+			if (_IsNumericLiteralStatement(out int spanStart)) {
+				var br = code.Eq(cd.pos16, '{') ? null : "{  }";
+				replaceText = $"for (int i = 0; i < {code[spanStart..pos]}; i++) {br}";
+				c.doc.zReplaceRange(true, spanStart, cd.pos16, replaceText);
+				c.doc.zCurrentPos16 = spanStart + replaceText.Length - (br == null ? 0 : 2);
+				c.ignoreChar = true;
+			}
+			return;
+		}
+		bool _IsNumericLiteralStatement(out int spanStart) {
 			if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
 				var node = root.FindToken(pos - 1).Parent;
 				if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
-					int i = node.SpanStart;
-					var br = code.Eq(cd.pos16, '{') ? null : "{  }";
-					replaceText = $"for (int i = 0; i < {code[i..pos]}; i++) {br}";
-					c.doc.zReplaceRange(true, i, cd.pos16, replaceText);
-					c.doc.zCurrentPos16 = i + replaceText.Length - (br == null ? 0 : 2);
-					c.ignoreChar = true;
+					var span = node.Span;
+					spanStart = span.Start;
+					return span.Contains(pos - 1);
 				}
 			}
-			return;
+			spanStart = 0;
+			return false;
 		}
 
 		int replaceLength = 0, tempRangeFrom = cd.pos16, tempRangeTo = cd.pos16, newPos = 0;
@@ -213,18 +215,19 @@ class CiAutocorrect {
 			if (span.Start > pos) return; // > if pos is in node's leading trivia, eg comments or #if-disabled block
 
 			//CiUtil.PrintNode(node);
+			//CiUtil.PrintNode(token);
 			//print.it("ALL");
 			//CiUtil.PrintNode(root, false);
 
-			if (ch == '\"' || ch == '\'') {
+			if (ch == '\'') {
+				if (kind != SyntaxKind.CharacterLiteralExpression || span.Start != pos) return;
+			} else if (ch == '\"') {
 				bool isVerbatim = false, isInterpolated = false;
 				switch (kind) {
-				case SyntaxKind.CharacterLiteralExpression when ch == '\'':
-					break;
-				case SyntaxKind.StringLiteralExpression when ch == '\"':
+				case SyntaxKind.StringLiteralExpression:
 					isVerbatim = code[span.Start] == '@';
 					break;
-				case SyntaxKind.InterpolatedStringExpression when ch == '\"':
+				case SyntaxKind.InterpolatedStringExpression:
 					isInterpolated = true;
 					isVerbatim = code[span.Start] == '@' || code[span.Start + 1] == '@';
 					break;
@@ -232,10 +235,18 @@ class CiAutocorrect {
 				}
 
 				if (span.Start != pos - (isVerbatim ? 1 : 0) - (isInterpolated ? 1 : 0)) {
-					if (!isVerbatim) return;
-					//inside verbatim string replace " with ""
-					cd.pos16--; //insert " before ", and let caret be after ""
-					tempRangeFrom = 0;
+					if (isVerbatim) {
+						//inside verbatim string replace " with ""
+						cd.pos16--; //insert " before ", and let caret be after ""
+						tempRangeFrom = 0;
+					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
+						int i = span.Start;
+						while (code[i] == '$') i++;
+						int iq = i;
+						while (i < pos) if (code[i++] != '\"') return;
+						if (!code.Eq(cd.pos16, '\"')) replaceText = code[iq..cd.pos16]; //add eg """ at """|, else add " at """"|"""
+						if (pos - iq >= 2) tempRangeFrom = 0; //don't add temp range, else next typed " would just skip one " instead of inserting ""
+					} else return;
 				}
 			} else {
 				//print.it(kind);
@@ -256,34 +267,41 @@ class CiAutocorrect {
 					return;
 				default:
 					if (_IsInNonblankTrivia(node, pos)) return;
-					if (ch == '{' && kind != SyntaxKind.Interpolation) {
-						replaceText = "  }";
-						if (pos > 0 && !char.IsWhiteSpace(code[pos - 1])) {
-							replaceText = " {  }";
-							tempRangeFrom++;
-							cd.pos16--; replaceLength = 1; //replace the '{' too
+					if (ch == '{') {
+						if (kind == SyntaxKind.Interpolation) { //add } or }} etc if need
+							int n = 0;
+							for (int i = pos; code[i] == '{'; i--) n++;
+							if (n > 1) tempRangeFrom = 0; //raw string like $$"""...{{
+							for (int i = cd.pos16; code.Eq(i, '}'); i++) n--;
+							if (n <= 0) return;
+							if (n > 1) replaceText = new('}', n);
+						} else {
+							replaceText = "  }";
+							if (pos > 0 && !char.IsWhiteSpace(code[pos - 1])) {
+								replaceText = " {  }";
+								tempRangeFrom++;
+								cd.pos16--; replaceLength = 1; //replace the '{' too
+							}
+							tempRangeTo = tempRangeFrom + 2;
+							newPos = tempRangeFrom + 1;
 						}
-						tempRangeTo = tempRangeFrom + 2;
-						newPos = tempRangeFrom + 1;
 					}
 					break;
 				}
 
 				bool _IsGenericLessThan() {
-					if (kind == SyntaxKind.TypeParameterList || kind == SyntaxKind.TypeArgumentList) return true;
+					if (kind is SyntaxKind.TypeParameterList or SyntaxKind.TypeArgumentList) return true;
 					if (kind != SyntaxKind.LessThanExpression) return false;
 					var tok2 = token.GetPreviousToken(); if (!tok2.IsKind(SyntaxKind.IdentifierToken)) return false;
 					var semo = cd.document.GetSemanticModelAsync().Result;
-					var si = semo.GetSemanticInfo(tok2, cd.document.Project.Solution.Workspace, default);
-					foreach (var v in si.GetSymbols(includeType: true)) {
-						//print.it(v);
-						switch (v) {
-						case INamedTypeSymbol ints when ints.IsGenericType:
-						case IMethodSymbol ims when ims.IsGenericMethod:
-							return true;
+					var sa = semo.GetSymbolInfo(tok2).GetAllSymbols();
+					if (!sa.IsEmpty) {
+						foreach (var v in sa) {
+							//print.it(v);
+							if (v is INamedTypeSymbol { IsGenericType: true } or IMethodSymbol { IsGenericMethod: true }) return true;
+							//bad: if eg IList and IList<T> are available, GetSymbolInfo gets only IList. Then no '>' completion. The same in VS.
+							//	OK if only IList<T> available. Methods OK.
 						}
-						//not perfect: if eg IList and IList<T> are available, GetSemanticInfo gets only IList. Then no '>' completion. The same in VS.
-						//	OK if only IList<T> available. Methods OK.
 					}
 					return false;
 				}
@@ -811,20 +829,14 @@ class CiAutocorrect {
 				while (posEnd < span.End && cd.code[posEnd] == ' ') posEnd++;
 			}
 		} else {
-			//if (posStart < pos) token = token.Parent.FindTokenOnLeftOfPosition(pos);
-			//var st = CiUtil.GetStringType(token, posStart, posEnd, cd.code);
 			if (isSelection) return 0;
-			var st = CiUtil.GetStringType(token, pos, pos, cd.code);
-			return st switch { CiUtil.SType.None => 0, CiUtil.SType.Verbatim or CiUtil.SType.InterVerbatim => 2, _ => 3 };
-
+			if (span.ContainsInside(pos) && token.IsKind(SyntaxKind.CharacterLiteralToken)) return 3;
+			bool? isString = token.IsInString(pos, cd.code, out var si);
+			if (isString == false) return 0;
+			if (si.isRawPrefixCenter) cd.sciDoc.zInsertText(true, pos, "\r\n"); //let Enter in raw string prefix like """|""" add extra newline
+			if (isString == null || !si.isClassic) return 2;
+			return 3;
 			//rejected: split string into "abc" + "" or "abc\r\n" + "". Rarely used. Better complete statement.
-			//span = node.Span;
-			//if (0 != cd.code.Eq(span.Start, false, "@", "$@", "@$")) return 3;
-			//prefix = App.Settings.ci_breakString == 0 ? @"\r\n"" +" : "\" +"; //"A\r\n" + "B" (default) or "A" + "B" (like in VS)
-			//suffix = interpol ? "$\"" : "\"";
-			////indent more, unless line starts with "
-			//int i = cd.sciDoc.zLineStartFromPos(true, pos);
-			//if (!cd.code.RxIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
 		}
 
 		var doc = cd.sciDoc;

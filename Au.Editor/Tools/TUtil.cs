@@ -477,7 +477,7 @@ static class TUtil {
 				////This is simpler but less reliable. Can't get eg Documents, because the address bar displays name, not path.
 				//var tb = w.Child(cn: "ToolbarWindow32", id: 1001); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
 				//if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg)
-				//	&& filesystem.exists(sa = rg.Value, useRawPath: true).Dir
+				//	&& filesystem.exists(sa = rg.Value, useRawPath: true).Directory
 				//	) path = sa;
 				//else {
 				if (WndUtil.GetExplorerFolderPath_(w) is string s) path = s;

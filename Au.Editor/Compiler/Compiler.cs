@@ -200,7 +200,7 @@ namespace Au.Compiler {
 			p1.Next('e');
 
 			var diag = emitResult.Diagnostics;
-			if (!diag.IsEmpty) {
+			if (!diag.IsDefaultOrEmpty) {
 				foreach (var d in diag) {
 					if (d.Severity == DiagnosticSeverity.Hidden) continue;
 					err.AddErrorOrWarning(d, f);

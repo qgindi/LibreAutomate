@@ -83,7 +83,7 @@ static class EdDatabases
 		string subdirRN = @"\ref\net" + version.RxReplace(@"^\d+\.\d+\K.+", @"\", 1);
 
 		var dir1 = dirCore + version + subdirRN;
-		if (!filesystem.exists(dir1, true).Dir) throw new DirectoryNotFoundException("Not found: " + dir1);
+		if (!filesystem.exists(dir1, true).Directory) throw new DirectoryNotFoundException("Not found: " + dir1);
 
 		//find WindowsDesktop folder. Must have same X.X.X version. Preview version may be different.
 		bool preview; int i = version.Find("-p", true);
@@ -97,7 +97,7 @@ static class EdDatabases
 		}
 		if (verDesktop == null) throw new DirectoryNotFoundException("Not found: WindowsDesktop SDK");
 		var dir2 = dirDesktop + verDesktop + subdirRN;
-		if (!filesystem.exists(dir2, true).Dir) throw new DirectoryNotFoundException("Not found: " + dir2);
+		if (!filesystem.exists(dir2, true).Directory) throw new DirectoryNotFoundException("Not found: " + dir2);
 
 		string dbRef, dbDoc;
 		if (all) {
