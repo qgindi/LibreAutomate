@@ -388,9 +388,10 @@ gNotinproc:
 	Cpp_Acc_Agent aAgent;
 	if(0 != (R = InjectDllAndGetAgent(wFP, out aAgent.acc))) {
 		switch((eError)R) {
-		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: flags |= eXYFlags::NotInProc; goto gNotinproc;
+		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
 		default: return R;
 		}
+		flags |= eXYFlags::NotInProc; goto gNotinproc;
 	}
 
 	InProcCall c;
@@ -414,42 +415,15 @@ gNotinproc:
 }
 } //namespace outproc
 
-//w - must be the focused control or window.
-//flags: 1 get UIA.
-EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
-{
-	aResult.Zero();
-
-	HWND wTL = GetAncestor(w, GA_ROOT);
-	//if(!wTL || wTL != GetForegroundWindow()) return 1; //return quickly, anyway would fail. No, does not work with some windows.
-	if(!wTL) return 1;
-
-	bool screenReader = false;
-	_ESpecWnd specWnd = _IsSpecWnd(wTL, w);
-	if(specWnd == _ESpecWnd::Java) {
-		auto ja = AccJavaFromWindow(w, true);
-		if(ja != null) {
-			aResult.acc = ja;
-			aResult.misc.flags = eAccMiscFlags::Java;
-			return 0;
-		}
-	} else if((specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) && !(WinFlags::Get(w) & eWinFlags::AccEnableMask)) {
-		if(specWnd == _ESpecWnd::Chrome) {
-			outproc::AccEnableChrome(w, false);
-		} else { //OpenOffice, LibreOffice
-			screenReader = true;
-			//OpenOffice bug: crashes. More info in Cpp_AccFromPoint.
-		}
-	}
-
-	if(flags & 1) { //UIA
-		ao::TempSetScreenReader tsr; if(screenReader) tsr.Set(w);
+HRESULT AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResult) {
+	if(!!(flags & eFocusedFlags::UIA)) {
 		HRESULT hr = AccUiaFocused(&aResult.acc);
 		if(hr != 0) return hr;
 		aResult.misc.flags = eAccMiscFlags::UIA;
 	} else {
 		Smart<IAccessible> aw;
-		HRESULT hr = ao::AccFromWindow(w, OBJID_CLIENT, &aw, screenReader); if(hr != 0) return hr;
+		HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aw);
+		if(hr != 0) return hr;
 
 		AccRaw a1(aw, 0), a2; bool isThis;
 		hr = a1.DescendantFocused(out a2, out isThis); if(hr != 0) return hr;
@@ -464,3 +438,56 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 	}
 	return 0;
 }
+
+namespace outproc
+{
+//w - must be the focused control or window.
+EXPORT HRESULT Cpp_AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResult)
+{
+	aResult.Zero();
+
+	HWND wTL = GetAncestor(w, GA_ROOT);
+	//if(!wTL || wTL != GetForegroundWindow()) return 1; //return quickly, anyway would fail. No, does not work with some windows.
+	if(!wTL) return 1;
+
+	ao::TempSetScreenReader tsr;
+	_ESpecWnd specWnd = _IsSpecWnd(wTL, w);
+	if(specWnd == _ESpecWnd::Java) {
+		auto ja = AccJavaFromWindow(w, true);
+		if(ja != null) {
+			aResult.acc = ja;
+			aResult.misc.flags = eAccMiscFlags::Java;
+			return 0;
+		}
+	} else if((specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) && !(WinFlags::Get(w) & eWinFlags::AccEnableMask)) {
+		if(specWnd == _ESpecWnd::Chrome) {
+			AccEnableChrome(w, false);
+		} else { //OpenOffice, LibreOffice
+			tsr.Set(wTL);
+			//OpenOffice bug: crashes. More info in Cpp_AccFromPoint.
+		}
+	}
+
+gNotinproc:
+	if(!!(flags & eFocusedFlags::NotInProc)) {
+		return AccGetFocused(w, flags, out aResult);
+	}
+
+	HRESULT R = 0;
+	Cpp_Acc_Agent aAgent;
+	if(0 != (R = InjectDllAndGetAgent(w, out aAgent.acc))) {
+		switch((eError)R) {
+		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
+		default: return R;
+		}
+		flags |= eFocusedFlags::NotInProc; goto gNotinproc;
+	}
+
+	InProcCall c;
+	auto x = (MarshalParams_AccFocused*)c.AllocParams(&aAgent, InProcAction::IPA_AccFocused, sizeof(MarshalParams_AccFocused));
+	x->hwnd = (int)(LPARAM)w;
+	x->flags = flags;
+	if(0 != (R = c.Call())) return R;
+	return c.ReadResultAcc(ref aResult);
+}
+} //namespace outproc

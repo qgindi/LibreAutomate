@@ -352,7 +352,7 @@ default: return;
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create dialog window." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Dialogs.">
+		<snippet name="wpfSnippet" info="Create dialog window." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Dialogs.">
 			<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
 b.R.Add("Combo", out ComboBox combo1).Items("Zero|One|Two");

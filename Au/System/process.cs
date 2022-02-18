@@ -1,5 +1,7 @@
 ﻿//#define USE_WTS
 
+//FUTURE: GetCpuUsage.
+
 namespace Au
 {
 	/// <summary>

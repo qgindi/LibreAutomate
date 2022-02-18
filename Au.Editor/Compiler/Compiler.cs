@@ -132,7 +132,7 @@ namespace Au.Compiler {
 				//use GUID, not counter, because may be loaded old assembly from cache with same counter value
 			} else if (m.Role == ERole.miniProgram) {
 				//workaround for: coreclr_execute_assembly and even AssemblyLoadContext.Default.LoadFromAssemblyPath fail
-				//	if asmName is the same as of a .NET or editor's assembly, including everything in Libraries and Roslyn folders.
+				//	if asmName is the same as of a .NET or folders.ThisApp assembly.
 				//	It seems it at first ignores path and tries to find assembly by name.
 				//	But now need to be careful. It could break something. Eg with WPF resources use "pack:...*AssemblyName...".
 				asmName = "*" + asmName;
@@ -154,9 +154,8 @@ namespace Au.Compiler {
 			EmitOptions eOpt = null;
 
 			if (needOutputFiles) {
-				_AddAttributesEtc(ref compilation, m, out bool refPaths);
+				r.flags |= _AddAttributesEtc(ref compilation, m);
 				p1.Next('a');
-				if (refPaths) r.flags |= MiniProgram_.EFlags.RefPaths;
 
 				//if empty script, error "no Main". Users would not understand why.
 				if (m.Role != ERole.classLibrary) {
@@ -334,8 +333,8 @@ namespace Au.Compiler {
 		/// <summary>
 		/// Adds some module/assembly attributes. Also adds module initializer for role exeProgram.
 		/// </summary>
-		static void _AddAttributesEtc(ref CSharpCompilation compilation, MetaComments m, out bool refPaths) {
-			refPaths = false;
+		static MiniProgram_.EFlags _AddAttributesEtc(ref CSharpCompilation compilation, MetaComments m) {
+			MiniProgram_.EFlags R = 0;
 			//bool needDefaultCharset = true;
 			//foreach (var v in compilation.SourceModule.GetAttributes()) {
 			//	//print.it(v.AttributeClass.Name);
@@ -362,21 +361,40 @@ namespace Au.Compiler {
 				if (needTargetFramework) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
 				if (needAssemblyTitle) sb.AppendLine($"[assembly: System.Reflection.AssemblyTitle(\"{m.Name}\")]");
 
-				if (m.Role is ERole.miniProgram) {
-					var ta = folders.ThisAppBS;
+				if (m.Role is ERole.miniProgram or ERole.editorExtension) {
+					//add RefPaths attribute to resolve paths of managed dlls at run time
+					//var ta = folders.ThisAppBS; //no, we don't use APP_PATHS
 					var refs = m.References.Refs;
 					for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
 						var path = refs[k].FilePath;
-						if (path.Starts(ta, true)) {
-							int i = ta.Length, j = path.IndexOf('\\', i);
-							if (j < 0) continue;
-							if (j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) continue;
-						}
+						//if (path.Starts(ta, true) && path.IndexOf('\\', ta.Length) < 0) continue;
 						if (!path.Ends(".dll", true)) continue;
-						sb.Append(refPaths ? "|" : $"[assembly: Au.Types.RefPaths(@\"").Append(path);
-						refPaths = true;
+						sb.Append(R.Has(MiniProgram_.EFlags.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"").Append(path);
+						R |= MiniProgram_.EFlags.RefPaths;
 					}
-					if (refPaths) sb.AppendLine("\")]");
+					if (R.Has(MiniProgram_.EFlags.RefPaths)) sb.AppendLine("\")]");
+
+					//add NativePaths attribute to resolve paths of native dlls at run time
+					var xn = m.NugetXmlRoot;
+					if (xn != null) {
+						foreach (var package in m.NugetPackages) {
+							var xp = xn.Elem("package", "path", package, true);
+							if (xp != null) {
+								foreach (var f in xp.Elements("f")) {
+									string path = f.Value;
+									if (!path.Ends(".dll", true)) continue;
+									if (path.Starts(@"\runtimes\win-x")) {
+										//if (!relPath.Eq(15, osVersion.is32BitProcess ? "86" : "64")) continue;
+										if (!path.Eq(15, "64")) continue;
+									}
+									//print.it(path);
+									sb.Append(R.Has(MiniProgram_.EFlags.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"").Append(path);
+									R |= MiniProgram_.EFlags.NativePaths;
+								}
+							}
+						}
+					}
+					if (R.Has(MiniProgram_.EFlags.NativePaths)) sb.AppendLine("\")]");
 				}
 
 				if (m.TestInternal != null) {
@@ -407,6 +425,7 @@ namespace Au.Compiler {
 				//compilation = compilation.AddSyntaxTrees(tree);
 				compilation = compilation.RemoveAllSyntaxTrees().AddSyntaxTrees(compilation.SyntaxTrees.Insert(0, tree));
 			}
+			return R;
 		}
 
 		static List<ResourceDescription> _CreateManagedResources(MetaComments m, string asmName) {
@@ -667,12 +686,30 @@ namespace Au.Compiler {
 				if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
 			}
 
+			//copy managed dlls, including those from nuget packages
 			var refs = m.References.Refs;
 			for (int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
 				var s1 = refs[i].FilePath;
 				var s2 = m.OutputPath + "\\" + pathname.getName(s1);
 				//print.it(s1, s2);
 				_CopyRefIfNeed(s1, s2);
+			}
+
+			//copy other files from nuget packages
+			var xn = m.NugetXmlRoot;
+			if (xn != null) {
+				foreach (var package in m.NugetPackages) {
+					var xp = xn.Elem("package", "path", package, true);
+					if (xp != null) {
+						foreach (var f in xp.Elements()) {
+							if (f.Name.LocalName is not ("r" or "f")) continue;
+							//include managed dlls too. Else would not copy dependencies that aren't referenced directly in the script.
+							//	If the dll is already copied by the above code, will just compare size/time and not copy.
+							string relPath = f.Value;
+							_CopyFileIfNeed(App.Model.NugetDirectoryBS + pathname.getDirectory(package) + relPath, m.OutputPath + relPath);
+						}
+					}
+				}
 			}
 
 			//copy unmanaged dlls

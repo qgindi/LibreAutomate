@@ -698,7 +698,7 @@ class PanelFind : UserControl
 			owner: App.Hmain,
 			expandedText: @"Replaces text in all files displayed in the Found panel.
 Opens files to enable Undo.",
-			onLinkClick: e => run.selectInExplorer(App.Model.WorkspaceDirectory))) return;
+			onLinkClick: e => run.selectInExplorer(folders.Workspace))) return;
 
 		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.Hmain);
 		try {

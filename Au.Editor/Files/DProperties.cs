@@ -18,7 +18,7 @@ class DProperties : KDialogWindow {
 	readonly TextBox testScript, outputPath, icon, manifest, sign, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
 	readonly KCheckBox bit32, xmlDoc, console, optimize;
 	readonly Expander gRun, gAssembly, gCompile;
-	readonly Button addAssembly, addComRegistry, addComBrowse, addProject, addClassFile, addResource, outputPathB;
+	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, outputPathB;
 
 	public DProperties(FileNode f) {
 		_f = f;
@@ -75,7 +75,8 @@ class DProperties : KDialogWindow {
 		b.End();
 		b.StartStack(vertical: true).Margin("L20"); //right column
 		b.StartGrid<GroupBox>("Add reference");
-		b.R.AddButton(out addAssembly, "Assembly...", _ButtonClick_addNet);
+		b.R.AddButton(out addLibrary, "Library...", _ButtonClick_addLibrary);
+		b.R.AddButton(out addNuget, "NuGet ▾", _ButtonClick_addNuget);
 		b.R.AddButton(out addComRegistry, "COM ▾", _bAddComRegistry_Click).AddButton(out addComBrowse, "...", _bAddComBrowse_Click).Width(30);
 		b.AddButton(out addProject, "Project ▾", _ButtonClick_addProject);
 		b.End();
@@ -109,11 +110,15 @@ class DProperties : KDialogWindow {
 		void _ButtonClick_outputPath(WBButtonClickArgs e) {
 			var m = new popupMenu();
 			m[_GetOutputPath(getDefault: true)] = o => outputPath.Text = o.ToString();
+			bool isLibrary = _role == Au.Compiler.ERole.classLibrary;
+			if (isLibrary) m[@"%folders.ThisApp%\Libraries"] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
-				var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDD}") {
-					InitFolderNow = _GetOutputPath(getDefault: false, expandEnvVar: true),
+				var initf = _GetOutputPath(getDefault: false, expandEnvVar: true);
+				filesystem.createDirectory(initf);
+				var d = new FileOpenSaveDialog(isLibrary ? "{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDD}" : "{4D1F3AFB-DA1A-45AC-8C12-51DDA5C51CDD}") {
+					InitFolderFirstTime = initf,
 				};
-				if (d.ShowOpen(out string s, this, selectFolder: true)) outputPath.Text = s;
+				if (d.ShowOpen(out string s, this, selectFolder: true)) outputPath.Text = folders.unexpandPath(s);
 			};
 			m.Show();
 		}
@@ -155,8 +160,9 @@ class DProperties : KDialogWindow {
 		void _ChangedRole() {
 			_ShowHide(testScript, _role is Au.Compiler.ERole.classLibrary or Au.Compiler.ERole.classFile);
 			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon);
-			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram, outputPath, outputPathB, manifest, bit32);
-			_ShowCollapse(_role == Au.Compiler.ERole.classLibrary, outputPath, outputPathB, xmlDoc);
+			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary, outputPath, outputPathB);
+			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram, manifest, bit32);
+			_ShowCollapse(_role == Au.Compiler.ERole.classLibrary, xmlDoc);
 			_ShowCollapse(_role != Au.Compiler.ERole.classFile, gAssembly, gCompile);
 			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
 		}
@@ -171,6 +177,8 @@ class DProperties : KDialogWindow {
 
 		b.OkApply += _OkApply;
 		_InitInfo();
+
+		App.Model.UnloadingWorkspaceEvent += () => Close();
 	}
 
 	void _GetMeta() {
@@ -210,40 +218,21 @@ class DProperties : KDialogWindow {
 		}
 	}
 
-	private void _OkApply(WBButtonClickArgs e) {
+	void _OkApply(WBButtonClickArgs e) {
 		if (App.Model.CurrentFile != _f && !App.Model.SetCurrentFile(_f)) return;
-
 		_GetMeta();
-
-		var doc = Panels.Editor.ZActiveDoc;
-		var code = doc.zText;
-		var meta = MetaComments.FindMetaComments(code);
-		string prepend = null, append = null;
-		if (meta.end == 0) {
-			if (code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*\*.*?\*/\R)+", 0, out RXGroup g)) { //description
-				meta = (g.End, g.End);
-				prepend = "\r\n";
-			}
-			append = (_f.IsScript && code.Eq(meta.end, "//.")) ? " " : "\r\n";
-		}
-		var s = _meta.Format(prepend, append);
-
-		if (s.Length == 0) {
-			if (meta.end == 0) return;
-			while (meta.end < code.Length && code[meta.end] <= ' ') meta.end++;
-		} else if (s.Length == meta.end - meta.start) {
-			if (s == doc.zRangeText(true, meta.start, meta.end)) return; //did not change
-		}
-
-		doc.zReplaceRange(true, meta.start, meta.end, s);
+		_meta.Apply();
 	}
 
-	private void _ButtonClick_addNet(WBButtonClickArgs e) {
-		var dir = folders.ThisApp + "Libraries"; if (!filesystem.exists(dir).Directory) dir = folders.ThisApp;
-		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDB}") {
-			InitFolderNow = dir,
+	void _ButtonClick_addLibrary(WBButtonClickArgs e) {
+		int indi = popupMenu.showSimple(@"%folders.Workspace%\dll|%folders.ThisApp%\Libraries|Last used folder", owner: this);
+		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-47AC-8C12-41DDA5C51CDB}") {
 			FileTypes = "Dll|*.dll|All files|*.*"
 		};
+		if (indi is > 0 and < 3) {
+			var s = indi == 1 ? App.Model.DllDirectory : folders.ThisAppBS + "Libraries";
+			if (_CreateDirectory(s)) d.InitFolderNow = s;
+		}
 		if (!d.ShowOpen(out string[] a, this)) return;
 
 		foreach (var v in a) {
@@ -252,22 +241,37 @@ class DProperties : KDialogWindow {
 			return;
 		}
 
-		//remove path and ext if need
-		var thisApp = folders.ThisAppBS;
-		if (a[0].Starts(thisApp, true)) {
-			for (int i = 0; i < a.Length; i++) a[i] = a[i][thisApp.Length..];
+		string appDir = folders.ThisAppBS, dllDir = App.Model.DllDirectoryBS;
+		if (a[0].Starts(appDir, true)) {
+			for (int i = 0; i < a.Length; i++) a[i] = a[i][appDir.Length..];
+		} else if (a[0].Starts(dllDir, true)) {
+			for (int i = 0; i < a.Length; i++) a[i] = @"%dll%\" + a[i][dllDir.Length..];
+		} else { //unexpand path
+			for (int i = 0; i < a.Length; i++) a[i] = folders.unexpandPath(a[i]);
 		}
 
 		_meta.r.AddRange(a);
 		_ShowInfo_Added(e.Button, _meta.r);
 	}
 
-	private void _ButtonClick_addProject(WBButtonClickArgs e)
+	void _ButtonClick_addNuget(WBButtonClickArgs e) {
+		var a = DNuget.GetInstalledPackages(); if (a == null) return;
+		var sFind = findInLists.Text;
+		if (!sFind.NE()) {
+			a = a.Where(s => s.Contains(sFind, StringComparison.OrdinalIgnoreCase)).ToArray();
+			if (!a.Any()) return;
+		}
+		int i = popupMenu.showSimple(a, owner: this) - 1; if (i < 0) return;
+		_meta.nuget.Add(a[i]);
+		_ShowInfo_Added(e.Button, _meta.nuget);
+	}
+
+	void _ButtonClick_addProject(WBButtonClickArgs e)
 		=> _AddFromWorkspace(
 			f => (f != _f && f.GetClassFileRole() == FileNode.EClassFileRole.Library) ? f : null,
 			_meta.pr, e.Button);
 
-	private void _ButtonClick_addClass(WBButtonClickArgs e) {
+	void _ButtonClick_addClass(WBButtonClickArgs e) {
 		FileNode prFolder1 = null;
 		if (_f.IsScript && _f.FindProject(out prFolder1, out var prMain1, ofAnyScript: true) && _f == prMain1) prFolder1 = null;
 
@@ -282,7 +286,7 @@ class DProperties : KDialogWindow {
 		_AddFromWorkspace(f => _Include(f) ? f : null, _meta.c, e.Button);
 	}
 
-	private void _ButtonClick_addResource(WBButtonClickArgs e) {
+	void _ButtonClick_addResource(WBButtonClickArgs e) {
 		_AddFromWorkspace(
 			f => {
 				if (f.IsCodeFile) return null;
@@ -330,14 +334,14 @@ class DProperties : KDialogWindow {
 
 	#region COM
 
-	private void _bAddComBrowse_Click(WBButtonClickArgs e) {
+	void _bAddComBrowse_Click(WBButtonClickArgs e) {
 		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDC}") {
 			FileTypes = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*"
 		};
 		if (d.ShowOpen(out string s, this)) _ConvertTypeLibrary(s, e.Button);
 	}
 
-	private void _bAddComRegistry_Click(WBButtonClickArgs e) {
+	void _bAddComRegistry_Click(WBButtonClickArgs e) {
 		//HKCU\TypeLib\typelibGuid\version\
 		var sFind = findInLists.Text;
 		var rx = new regexp(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
@@ -520,6 +524,11 @@ class DProperties : KDialogWindow {
 		return t.IsChecked;
 	}
 
+	static bool _CreateDirectory(string path) {
+		try { filesystem.createDirectory(path); return true; }
+		catch { return false; }
+	}
+
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
 		if (!getDefault && _Get(outputPath) is string r) {
 			if (expandEnvVar) r = pathname.expand(r);
@@ -596,7 +605,7 @@ This option is ignored when the task runs as .exe program started not from edito
 ");
 		info.ZAddElem(outputPath,
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
-Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%folders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%folders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
+Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%folders.Workspace%\exe\filename<>. Default if role classLibrary: <link>%folders.Workspace%\dll<>. The compiler creates the folder if does not exist.
 
 If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true (checked in Properties), creates both 64-bit and 32-bit versions. Else creates only 32-bit if bit32 true (checked in Properties) or 32-bit OS, else only 64-bit.
 If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
@@ -610,7 +619,7 @@ The icon will be added as a native resource and displayed in File Explorer etc. 
 If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
 ");
 		info.ZAddElem(manifest,
-@"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe or dll file.
+@"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
 The .manifest file must be in this workspace. Can be path relative to this file (examples: App.manifest, Folder\App.manifest, ..\Folder\App.manifest) or path in the workspace (examples: \App.manifest, \Folder\App.manifest).
 
 The manifest will be added as a native resource.
@@ -699,16 +708,19 @@ By default it receives full path of the output exe or dll file in args[0]. If ne
 @"<b>postBuild</b> - a script to run after compiling this code file successfully.
 Everything else is like with preBuild.
 ");
-		info.ZAddElem(addAssembly,
+		info.ZAddElem(addLibrary,
 @"<b>Assembly<> - add one or more .NET assemblies (.dll files) as references.
-Adds meta comment <c green>r FileName<>.
+Adds meta comment <c green>r DllFile<>.
 
 Don't need to add Au.dll and .NET runtime dlls.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
 To remove this meta comment, edit the code.
-
-If the file is in <link>%folders.ThisApp%<> or its subfolders, use file name or relative path, else need full path. If role of the script is not miniProgram, at run time the file must be directly in folders.ThisApp or folders.ThisApp\Libraries. If role is editorExtension, may need to restart editor.
+If script role is editorExtension, may need to restart editor.
 ");
+		info.ZAddElem(addNuget,
+@"<b>NuGet<> - add a .NET assembly (.dll file) installed by the NuGet tool (menu Tools -> NuGet).
+Adds meta comment <c green>r DllFile<>.");
+
 		const string c_com = @" COM component's type library to an <i>interop assembly<>.
 Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%folders.Workspace%\.interop<>.
 
@@ -721,8 +733,6 @@ To remove this meta comment, edit the code. Optionally delete unused interop ass
 		info.ZAddElem(addProject,
 @"<b>Project<> - add a reference to a class library created in this workspace.
 Adds meta comment <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
-
-The recommended outputPath of the library project is <link>%folders.ThisApp%\Libraries<>. Else may not find the dll at run time.
 
 To remove this meta comment, edit the code. Optionally delete unused dll files.
 ");

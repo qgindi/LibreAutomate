@@ -1,9 +1,10 @@
 ﻿using Au.Controls;
+using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
+using System.Linq;
 
-static class App
-{
+static class App {
 	public const string
 		AppName = "Autepad C#",
 		AppNameShort = "Autepad"; //must be without spaces etc
@@ -62,9 +63,12 @@ static class App
 
 		perf.next('o');
 		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls used in JSON deserialization.
-		//Debug_.PrintLoadedAssemblies(true, !true);
+									   //Debug_.PrintLoadedAssemblies(true, !true);
 		perf.next('s');
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
+
+		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
+		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
 
 		Tasks = new RunningTasks();
 		perf.next('t');
@@ -157,6 +161,38 @@ static class App
 #endif
 	}
 
+	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
+		var dlls = s_arDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
+			.ToDictionary(o => o.Name[..^4], o => o.FullPath);
+		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
+
+		//is it used by an editorExtension script?
+		var st = new StackTrace(); //never mind the slowness
+		for (int i = 2; i < 20; i++) {
+			var f = st.GetFrame(i);
+			var asm = f.GetMethod()?.DeclaringType?.Assembly;
+			if (asm.GetName().Name.Contains('|')) //ScriptName|GUID
+				return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
+		}
+
+		//print.qm2.write(an);
+		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
+	}
+	static Dictionary<string, string> s_arDlls;
+
+	private static IntPtr _UnmanagedDll_Resolving(Assembly refAssembly, string name) {
+		//is it used by an editorExtension script?
+		var st = new StackTrace(); //never mind the slowness
+		for (int i = 2; i < 20; i++) {
+			var f = st.GetFrame(i);
+			var asm = f.GetMethod()?.DeclaringType?.Assembly;
+			if (asm.GetName().Name.Contains('|')) //ScriptName|GUID
+				return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(refAssembly, name, asm);
+		}
+
+		return default;
+	}
+
 	/// <summary>
 	/// Timer with 1 s period.
 	/// </summary>
@@ -193,7 +229,7 @@ static class App
 		} else s_timerCounter = 0;
 		if (0 == (s_timerCounter & 3)) {
 			Timer1s?.Invoke();
-			if(needFast) Timer1sWhenVisible?.Invoke();
+			if (needFast) Timer1sWhenVisible?.Invoke();
 		}
 	}
 
@@ -228,8 +264,7 @@ static class App
 		return true;
 	}
 
-	internal static class TrayIcon
-	{
+	internal static class TrayIcon {
 		static IntPtr[] _icons;
 		static bool _disabled;
 		static wnd _wNotify;
@@ -335,8 +370,7 @@ static class App
 	}
 }
 
-enum EProgramState
-{
+enum EProgramState {
 	/// <summary>
 	/// Before the first workspace fully loaded.
 	/// </summary>
@@ -363,16 +397,13 @@ enum EProgramState
 	Unloaded,
 }
 
-enum ERegisteredHotkeyId
-{
+enum ERegisteredHotkeyId {
 	QuickCaptureMenu = 1,
 	QuickCaptureDwnd = 2,
 	QuickCaptureDelm = 3,
 }
 
-namespace Au.Editor
-{
-	partial class WpfApp : Application
-	{
+namespace Au.Editor {
+	partial class WpfApp : Application {
 	}
 }

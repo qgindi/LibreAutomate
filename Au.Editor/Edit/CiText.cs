@@ -622,7 +622,7 @@ class CiText
 	//public static IEnumerable<TaggedText> GetTaggedTextForXml(string xml, SemanticModel model, int position)
 	//{
 	//	if(xml == null) return Enumerable.Empty<TaggedText>();
-	//	return _Formatter.Format(xml, model, position, ISymbolExtensions2.CrefFormat); //error in new roslyn
+	//	return _Formatter.Format(xml, model, position, ISymbolExtensions2.CrefFormat); //error in new Roslyn
 	//}
 
 	static IDocumentationCommentFormattingService _Formatter => s_formatter ??= CodeInfo.CurrentWorkspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();

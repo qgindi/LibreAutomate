@@ -31,7 +31,7 @@ public:
 	bool FromAcc(IAccessible* iacc)
 	{
 		assert(_x == null);
-		return QueryService(iacc, out &_x);
+		return QueryService(iacc, out & _x);
 	}
 
 	BSTR GetAttribute(STR name)
@@ -162,6 +162,13 @@ public:
 			}
 		} else if(r.text) r.text.Empty();
 		return true;
+	}
+
+	BSTR GetTag()
+	{
+		NodeInfo x;
+		if(!GetNodeInfo(x, true)) return null;
+		return x.tag.Detach();
 	}
 
 	//Returns null if fails or has 0 attributes.
@@ -357,6 +364,16 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count)
 	return true;
 }
 
+int AccChromeHtmlEnabled(IAccessible* aDoc) {
+	FFNode ff;
+	if(!ff.FromAcc(aDoc)) return -1;
+	FFNode::NodeInfo x;
+	if(!ff.GetNodeInfo(x, true)) return -1;
+	BSTR b = x.tag.m_str;
+	if(b == nullptr || b[0] == 0) return 0;
+	return 1;
+}
+
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 {
 	//Perf.First();
@@ -365,6 +382,10 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 	//Perf.Next();
 	if(what[0] == '\'') {
 		switch(what[1]) {
+		case 't': //tag
+			if(bi.ff) sResult = bi.ff.GetTag();
+			else if(0 != bi.ie->get_tagName(&sResult)) return 1;
+			break;
 		case 'o': //outer HTML
 			if(bi.ff) sResult = bi.ff.GetOuterHTML();
 			else if(0 != bi.ie->get_outerHTML(&sResult)) return 1;
@@ -391,19 +412,6 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 		} break;
 		case 's': { //scroll
 			if(bi.ff) {
-				//Chrome 63 bug: ISimpleDOMNode::scrollTo does not work normally. Fixed in Chrome 65.
-				//Workaround:
-				//bool done = false; IAccessible2* ia2 = null; HWND w; RECT r;
-				//if(0 == bi.ff->QueryInterface(&ia2)) { //info: iacc->QI works with FF but not with Chrome (need QS)
-				//	if(0 == ia2->get_windowHandle(&w) && wn::ClassNameIs(w, L"Chrome_RenderWidgetHostHWND")) {
-				//		done = GetWindowRect(w, &r) && 0 == ia2->scrollToPoint(IA2CoordinateType::IA2_COORDTYPE_SCREEN_RELATIVE, r.left, r.top); //used to work, but now always scrolls to the very bottom-right
-				//		//Print(ia2->scrollTo(IA2ScrollType::IA2_SCROLL_TYPE_TOP_EDGE)); //does not work in Chrome. This and others work well in Firefox.
-				//		//Print(ia2->scrollToPoint(IA2CoordinateType::IA2_COORDTYPE_PARENT_RELATIVE, 20, 0)); //works, but: 1. Need to calculate. 2. Can stop working too.
-				//	}
-				//	ia2->Release();
-				//	if(done) break;
-				//}
-
 				if(0 != bi.ff->scrollTo(true)) return 1;
 			} else {
 				if(0 != bi.ie->scrollIntoView(_variant_t(true))) return 1;
@@ -421,11 +429,11 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 
 namespace outproc
 {
-//what - "'o" outer HTML, "'i" inner HTML, "'a" attributes, "'s" scroll, "attributeName".
+//what - "'t" tag, "'o" outer HTML, "'i" inner HTML, "'a" attributes, "'s" scroll, "attributeName".
 EXPORT HRESULT Cpp_AccWeb(Cpp_Acc a, STR what, out BSTR& sResult)
 {
 	sResult = null;
-	if(!(a.misc.flags&eAccMiscFlags::InProc)) return E_NOINTERFACE;
+	if(!(a.misc.flags & eAccMiscFlags::InProc)) return E_NOINTERFACE;
 	if(a.elem) return 1; //eg TEXT of LINK in IE. Let use the LINK instead.
 
 	InProcCall c;

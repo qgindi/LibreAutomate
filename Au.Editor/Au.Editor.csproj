@@ -163,19 +163,6 @@
 		<Resource Include="Tools\Regex.txt" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Compile Update="Edit\ModifyCode.cs" />
-		<Compile Update="Edit\PanelEdit.cs" />
-		<Compile Update="Edit\SciCode.cs" />
-		<Compile Update="Files\PanelFiles.cs" />
-		<Compile Update="Panels\PanelFound.cs" />
-		<Compile Update="Panels\PanelMouse.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="Panels\PanelOutput.cs" />
-		<Compile Update="Panels\PanelRunning.cs" />
-	</ItemGroup>
-
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
 		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
 	</Target>

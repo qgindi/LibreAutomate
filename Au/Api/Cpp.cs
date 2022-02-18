@@ -76,13 +76,11 @@ namespace Au.Types
 
 		internal delegate EXYFlags Cpp_AccFromPointCallbackT(EXYFlags flags, wnd wFP, wnd wTL);
 
-		//flags: 1 get UIA, 2 prefer LINK.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccFromPoint(POINT p, EXYFlags flags, Cpp_AccFromPointCallbackT callback, out Cpp_Acc aResult);
 
-		//flags: 1 get UIA.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccGetFocused(wnd w, int flags, out Cpp_Acc aResult);
+		internal static extern int Cpp_AccGetFocused(wnd w, EFocusedFlags flags, out Cpp_Acc aResult);
 
 		//These are called from elm class functions like Cpp.Cpp_Func(this, ...); GC.KeepAlive(this);.
 		//We can use 'this' because Cpp_Acc has an implicit conversion from elm operator.

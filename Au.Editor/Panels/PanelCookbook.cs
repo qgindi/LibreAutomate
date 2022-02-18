@@ -58,17 +58,17 @@ class PanelCookbook : DockPanel {
 			var xr = XmlUtil.LoadElem(_cookbookPath + ".xml");
 
 			_root = new _Item(null, true);
-			_AddItems(xr, _root);
+			_AddItems(xr, _root, 0);
 
-			static void _AddItems(XElement xp, _Item ip) {
+			static void _AddItems(XElement xp, _Item ip, int level) {
 				foreach (var x in xp.Elements()) {
 					var tag = x.Name.LocalName;
 					bool dir = tag == "d";
-					if (!dir && tag != "s") continue;
+					if (!dir) if (level == 0 || tag != "s") continue;
 					var name = x.Attr("n"); if (!dir) name = name[..^3];
 					var i = new _Item(name, dir);
 					ip.AddChild(i);
-					if (dir) _AddItems(x, i);
+					if (dir) _AddItems(x, i, level + 1);
 				}
 			}
 

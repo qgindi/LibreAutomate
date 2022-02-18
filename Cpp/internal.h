@@ -57,6 +57,7 @@ enum InProcAction : char {
 	IPA_AccFind = 1,
 	IPA_AccFromWindow,
 	IPA_AccFromPoint,
+	IPA_AccFocused,
 	IPA_AccNavigate,
 	IPA_AccGetProps,
 	IPA_AccGetWindow,
@@ -90,6 +91,14 @@ struct MarshalParams_AccFromPoint
 	eXYFlags flags;
 	int specWnd;
 	int wFP;
+};
+
+//Used for marshaling parameters of Cpp_AccFocused when calling the get_accHelpTopic hook function.
+struct MarshalParams_AccFocused
+{
+	MarshalParams_Header hdr;
+	int hwnd;
+	eFocusedFlags flags;
 };
 
 //Used for marshaling parameters of Cpp_AccNavigate, Cpp_AccGetProps, etc when calling the get_accHelpTopic hook function.

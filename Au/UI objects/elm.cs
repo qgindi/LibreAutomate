@@ -381,25 +381,19 @@ namespace Au
 		/// Gets the keyboard-focused UI element.
 		/// Returns null if fails.
 		/// </summary>
-		/// <param name="useUIAutomation">
-		/// Use UI Automation API.
-		/// Need this with windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
-		/// More info: <see cref="EFFlags.UIA"/>.
-		/// </param>
-		public static elm focused(bool useUIAutomation = false) {
+		public static elm focused(EFocusedFlags flags = 0) {
 			WarnInSendMessage_();
 
 			var w = wnd.focused;
 			g1:
 			if (w.Is0) return null;
-			int hr = Cpp.Cpp_AccGetFocused(w, useUIAutomation ? 1 : 0, out var a);
+			int hr = Cpp.Cpp_AccGetFocused(w, flags, out var a);
 			if (hr != 0) {
 				var w2 = wnd.focused;
 				if (w2 != w) { w = w2; goto g1; }
 				return null;
 			}
 			return new elm(a);
-			//FUTURE: wait, like FromXY.
 		}
 
 		/// <summary>

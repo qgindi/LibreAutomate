@@ -32,14 +32,35 @@ using Au.Compiler;
 
 
 static unsafe class Test {
-	public static void FromMenubar() {
-		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token, findInsideTrivia: keys.isScrollLock)) return;
-		//CiUtil.PrintNode(token);
 
-		var pos16 = cd.pos16;
-		bool? inString = token.IsInString(pos16, cd.code, out var x);
-		if (inString == true) print.it($"{pos16}, {x.textSpan}, {(x.isInterpolated ? "i" : "")}, {(x.isVerbatim ? "V" : x.isRaw ? "R" : "")}");
-		else print.it(inString);
+	static void V1(Architecture a) { }
+	static void V2(int i, Architecture a) { }
+
+//	static void TestMarkdig() {
+//		string markdown = @"List:
+//- one.
+//- two.
+
+//	";
+
+//		string html = Markdig.Markdown.ToHtml(markdown);
+//		print.it(html);
+//	}
+
+	public static void FromMenubar() {
+
+
+
+
+		//TestMarkdig();
+
+		//if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token, findInsideTrivia: keys.isScrollLock)) return;
+		////CiUtil.PrintNode(token);
+
+		//var pos16 = cd.pos16;
+		//bool? inString = token.IsInString(pos16, cd.code, out var x);
+		//if (inString == true) print.it($"{pos16}, {x.textSpan}, {(x.isInterpolated ? "i" : "")}, {(x.isVerbatim ? "V" : x.isRaw ? "R" : "")}");
+		//else print.it(inString);
 
 		//perf.first();
 		//var d=CiUtil.CreateRoslynDocument("using System; Console.Write(1);");

@@ -1,13 +1,14 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Xml.Linq;
 
 //CONSIDER: c https://..../file.cs
 //	Problem: security. These files could contain malicious code.
 //	It seems nuget supports source files, not only compiled assemblies: https://stackoverflow.com/questions/52880687/how-to-share-source-code-via-nuget-packages-for-use-in-net-core-projects
 
-namespace Au.Compiler
-{
+namespace Au.Compiler {
+	//This XML doc is outdated. Most info is in the Properties dialog.
 	/// <summary>
 	/// Extracts C# file/project settings, references, etc from meta comments in C# code.
 	/// </summary>
@@ -19,7 +20,7 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// Options and values must match case, except filenames/paths. No "enclosing", no escaping.
 	/// Some options can be several times with different values, for example to specify several references.
-	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource', 'com'.
+	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource', 'com', 'nuget'.
 	/// All available options are in the examples below. Here a|b|c means a or b or c. The //comments are not allowed in real meta comments.
 	/// </remarks>
 	/// <example>
@@ -111,7 +112,7 @@ namespace Au.Compiler
 	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
 	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for class files. More info below.
-	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %folders.Workspace%\bin\filename. Default for classLibrary: %folders.ThisApp%\Libraries.
+	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %folders.Workspace%\exe\filename. Default for classLibrary: %folders.Workspace%\dll.
 	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe file. Can be filename or relative path, like with 'c'.
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
@@ -138,8 +139,7 @@ namespace Au.Compiler
 	/// For scripts it is STA, and cannot be changed.
 	/// For apps it is STA if the Main function has [STAThread] attribute; or if role editorExtension. Else it is MTA.
 	/// </example>
-	class MetaComments
-	{
+	class MetaComments {
 		/// <summary>
 		/// Name of the main C# file, without ".cs".
 		/// </summary>
@@ -206,7 +206,7 @@ namespace Au.Compiler
 		public ErrBuilder Errors { get; private set; }
 
 		/// <summary>
-		/// Default references and unique references added through meta options 'r', 'com' and 'pr' in all C# files of this compilation.
+		/// Default references and unique references added through meta options 'r', 'com', 'nuget' and 'pr' in all C# files of this compilation.
 		/// Use References.<see cref="MetaReferences.Refs"/>.
 		/// </summary>
 		public MetaReferences References { get; private set; }
@@ -216,6 +216,17 @@ namespace Au.Compiler
 		/// null if none.
 		/// </summary>
 		public List<FileNode> ProjectReferences { get; private set; }
+
+		/// <summary>
+		/// Meta nuget, like @"-\PackageName".
+		/// </summary>
+		public List<string> NugetPackages { get; private set; }
+
+		/// <summary>
+		/// If there are meta nuget, returns the root element of the auto-loaded XML file that contains a list of installed NuGet packages and their files. Else null.
+		/// </summary>
+		public XElement NugetXmlRoot => _xnuget;
+		XElement _xnuget;
 
 		/// <summary>
 		/// All C# files of this compilation.
@@ -400,6 +411,7 @@ namespace Au.Compiler
 
 				CodeFiles = new();
 				References = new();
+				NugetPackages = new();
 			}
 
 			CodeFiles.Add(cf);
@@ -474,6 +486,29 @@ namespace Au.Compiler
 					_ErrorV("exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
 				}
 				return;
+			case "nuget":
+				if (!NugetPackages.Contains(value, StringComparer.OrdinalIgnoreCase)) {
+					NugetPackages.Add(value);
+					try {
+						_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
+						var xx = _xnuget?.Elem("package", "path", value, true);
+						if (xx == null) {
+							_ErrorV("nuget package not installed: " + value);
+							return;
+						}
+						var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(value);
+						foreach (var x in xx.Elements("r")) {
+							var r = dir + x.Value;
+							if (!References.Resolve(r, false)) {
+								_ErrorV("nuget file not found: " + r);
+							}
+						}
+					}
+					catch (Exception e) {
+						_ErrorV("exception: " + e.Message);
+					}
+				}
+				return;
 			case "c":
 				var ff = _GetFile(value, FNFind.Any);
 				if (ff != null) {
@@ -490,16 +525,16 @@ namespace Au.Compiler
 				//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
 				//} else
 				{
-					var fs1 = _GetFileAndString(value, FNFind.Any);
-					if (!forCodeInfo && fs1.f != null) {
-						Resources ??= new();
-						if (!Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) Resources.Add(fs1);
-					}
+				var fs1 = _GetFileAndString(value, FNFind.Any);
+				if (!forCodeInfo && fs1.f != null) {
+					Resources ??= new();
+					if (!Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) Resources.Add(fs1);
 				}
-				return;
+			}
+			return;
 			}
 			if (!_f.isMain) {
-				_ErrorN($"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {MainFile.f.Name}.");
+				_ErrorN($"in this file only these options can be used: 'r', 'com', 'nuget', 'c', 'resource'. Others only in the main file of the compilation - {MainFile.f.Name}.");
 				return;
 			}
 
@@ -727,7 +762,7 @@ namespace Au.Compiler
 				needOP = true;
 				break;
 			case ERole.classFile:
-				if (Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
+				if (Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, com, nuget, r, resource");
 				break;
 			}
 			if (needOP) OutputPath ??= GetDefaultOutputPath(_f.f, Role, withEnvVar: false);
@@ -745,8 +780,8 @@ namespace Au.Compiler
 		public static string GetDefaultOutputPath(FileNode f, ERole role, bool withEnvVar) {
 			Debug.Assert(role == ERole.exeProgram || role == ERole.classLibrary);
 			string r;
-			if (role == ERole.classLibrary) r = withEnvVar ? @"%folders.ThisApp%\Libraries" : folders.ThisApp + @"Libraries";
-			else r = (withEnvVar ? @"%folders.Workspace%\bin\" : folders.Workspace + @"bin\") + f.DisplayName;
+			if (role == ERole.classLibrary) r = withEnvVar ? @"%folders.Workspace%\dll" : App.Model.DllDirectory;
+			else r = (withEnvVar ? @"%folders.Workspace%\exe\" : App.Model.WorkspaceDirectory + @"\exe\") + f.DisplayName;
 			return r;
 		}
 
@@ -762,7 +797,6 @@ namespace Au.Compiler
 			   platform: Bit32 ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			   warningLevel: WarningLevel,
 			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(wa[0].IsAsciiDigit() ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
-			   //usings: new string[] { "Microsoft.Win32" /*test*/ }, //read below
 			   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
 			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider()
 			   //,metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
@@ -776,12 +810,6 @@ namespace Au.Compiler
 			//}
 			//But if using this code, code info has problems. Completion list contains internal/protected from all assemblies, and difficult to filter out. No signature info.
 			//We instead modify Roslyn code in 2 places. Look in project CompilerDlls here. Also add class Au.Compiler.InternalsVisible and use it in CodeInfo._CreateWorkspace and Compiler._Compile.
-
-			//When in editor, we need to add default usings for intellisense.
-			//	CSharpCompilationOptions ctor has parameter 'usings', but it is ignored if not script.
-			//	Tried to modify Roslyn source, and even successfully with classic C#.
-			//		In BinderFactoryVisitor.VisitCompilationUnit add: if (!inUsing) result = new InContainerBinder(container: null, next: result, imports: compilation.GlobalImports);
-			//		But does not work with top-level statements (TLS). Tried to add similar code after the "simple program" code; works with classic C#, but not with TLS.
 
 			//r = r.WithTopLevelBinderFlags(BinderFlags.SemanticModel); //should be used in editor? Tested a bit, it seems works the same.
 
@@ -846,8 +874,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// <see cref="EnumOptions"/>.
 		/// </summary>
-		public struct Token
-		{
+		public struct Token {
 			public int nameStart, nameLen, valueStart, valueLen;
 			public string code;
 
@@ -858,8 +885,7 @@ namespace Au.Compiler
 		}
 	}
 
-	struct MetaCodeFile
-	{
+	struct MetaCodeFile {
 		public FileNode f;
 		public string code;
 		public bool isMain;
@@ -872,8 +898,7 @@ namespace Au.Compiler
 		public override string ToString() => f.ToString();
 	}
 
-	struct MetaFileAndString
-	{
+	struct MetaFileAndString {
 		public FileNode f;
 		public string s;
 
@@ -890,8 +915,7 @@ namespace Au.Compiler
 	/// Flags for <see cref="MetaComments.Parse"/>
 	/// </summary>
 	[Flags]
-	enum EMPFlags
-	{
+	enum EMPFlags {
 		/// <summary>
 		/// Call <see cref="ErrBuilder.PrintAll"/>.
 		/// </summary>
@@ -910,8 +934,7 @@ namespace Au.Compiler
 	}
 
 	[Flags]
-	enum EMSpecified
-	{
+	enum EMSpecified {
 		ifRunning = 1,
 		uac = 1 << 1,
 		bit32 = 1 << 2,

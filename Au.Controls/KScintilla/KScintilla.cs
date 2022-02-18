@@ -19,6 +19,7 @@ using static Sci;
 public unsafe partial class KScintilla : HwndHost {
 	wnd _w;
 	WNDPROC _wndproc;
+	//Api.SUBCLASSPROC _wndproc2;
 	nint _sciPtr;
 	Sci_NotifyCallback _notifyCallback;
 	internal int _dpi;
@@ -58,7 +59,6 @@ public unsafe partial class KScintilla : HwndHost {
 		//size 0 0 is not the best, but it is a workaround for WPF bugs
 
 		_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
-		Api.SetWindowLongPtr(_w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndproc = _WndProc));
 		Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
 		bool hasTags = ZInitTagsStyle != ZTagsStyle.NoTags;
@@ -99,6 +99,14 @@ public unsafe partial class KScintilla : HwndHost {
 		ZOnHandleCreated();
 
 		if (!_text.NE()) zSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
+
+		Api.SetWindowLongPtr(_w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndproc = _WndProc));
+		//WPF will subclass this window.
+		//	It will respect the GWL.WNDPROC subclass, but break the SetWindowSubclass subclass, therefore call it async.
+		//Dispatcher.InvokeAsync(() => {
+		//	if (_w.Is0) return;
+		//	Api.SetWindowSubclass(_w, _wndproc2 = _WndProc2, 1);
+		//});
 
 		return new HandleRef(this, _w.Handle);
 	}
@@ -142,14 +150,24 @@ public unsafe partial class KScintilla : HwndHost {
 		case Api.WM_KILLFOCUS:
 			if (_inOnWmSetFocus) return 0;
 			break;
-		case Api.WM_GETOBJECT:
-			return (_acc ??= new _Accessible(this)).WmGetobject(wp, lp);//TODO: gets text as Name
 		}
 
 		var R = CallRetPtr(msg, wp, lp);
 
 		return R;
 	}
+
+	protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+		if (msg == Api.WM_GETOBJECT) { //WPF steals it from _WndProc
+			handled = true;
+			return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);
+		}
+		return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
+	}
+
+	//nint _WndProc2(wnd w, int msg, nint wp, nint lp, nint uIdSubclass, nint dwRefData) {
+	//	return Api.DefSubclassProc(w, msg, wp, lp);
+	//}
 
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {

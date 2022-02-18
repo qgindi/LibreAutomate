@@ -114,6 +114,13 @@ ENABLE_BITMASK_OPERATORS(eXYFlags);
 
 using Cpp_AccFromPointCallbackT = eXYFlags(__stdcall*)(eXYFlags flags, HWND wFP, HWND wTL);
 
+enum class eFocusedFlags
+{
+	NotInProc = 1,
+	UIA = 2,
+};
+ENABLE_BITMASK_OPERATORS(eFocusedFlags);
+
 enum class eError
 {
 	NotFound = 0x1001, //AO not found. With FindAll - no errors. This is actually not an error.

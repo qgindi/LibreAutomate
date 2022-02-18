@@ -9,13 +9,14 @@ class MetaCommentsParser
 	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, /*resFile,*/ sign, xmlDoc;
-	List<string> _r, _pr, _c, _resource, _com;
+	List<string> _pr, _r, _com, _nuget, _c, _resource;
 
-	public List<string> r => _r ??= new List<string>();
-	public List<string> pr => _pr ??= new List<string>();
-	public List<string> c => _c ??= new List<string>();
-	public List<string> resource => _resource ??= new List<string>();
-	public List<string> com => _com ??= new List<string>();
+	public List<string> pr => _pr ??= new();
+	public List<string> r => _r ??= new();
+	public List<string> com => _com ??= new();
+	public List<string> nuget => _nuget ??= new();
+	public List<string> c => _c ??= new();
+	public List<string> resource => _resource ??= new();
 
 	bool _multiline;
 
@@ -51,9 +52,10 @@ class MetaCommentsParser
 		//case "resFile": resFile = value; break;
 		case "sign": sign = value; break;
 		case "xmlDoc": xmlDoc = value; break;
+		case "pr": pr.Add(value); break;
 		case "r": r.Add(value); break;
 		case "com": com.Add(value); break;
-		case "pr": pr.Add(value); break;
+		case "nuget": nuget.Add(value); break;
 		case "c": c.Add(value); break;
 		case "resource": resource.Add(value); break;
 		}
@@ -96,9 +98,10 @@ class MetaCommentsParser
 		_Append("console", console);
 		_Append("xmlDoc", xmlDoc);
 
+		_AppendList("pr", _pr);
 		_AppendList("r", _r);
 		_AppendList("com", _com, true);
-		_AppendList("pr", _pr);
+		_AppendList("nuget", _nuget);
 		_AppendList("c", _c, true);
 		_AppendList("resource", _resource, true);
 
@@ -117,5 +120,30 @@ class MetaCommentsParser
 		void _AppendList(string name, List<string> a, bool relativePath = false) {
 			if (a != null) foreach (var v in a.Distinct()) _Append(name, v, relativePath);
 		}
+	}
+
+	public void Apply() {
+		var doc = Panels.Editor.ZActiveDoc;
+		var f = doc.ZFile;
+		var code = doc.zText;
+		var meta = MetaComments.FindMetaComments(code);
+		string prepend = null, append = null;
+		if (meta.end == 0) {
+			if (code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*\*.*?\*/\R)+", 0, out RXGroup g)) { //description
+				meta = (g.End, g.End);
+				prepend = "\r\n";
+			}
+			append = (f.IsScript && code.Eq(meta.end, "//.")) ? " " : "\r\n";
+		}
+		var s = Format(prepend, append);
+
+		if (s.Length == 0) {
+			if (meta.end == 0) return;
+			while (meta.end < code.Length && code[meta.end] <= ' ') meta.end++;
+		} else if (s.Length == meta.end - meta.start) {
+			if (s == doc.zRangeText(true, meta.start, meta.end)) return; //did not change
+		}
+
+		doc.zReplaceRange(true, meta.start, meta.end, s);
 	}
 }
