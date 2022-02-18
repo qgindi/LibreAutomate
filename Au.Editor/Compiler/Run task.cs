@@ -85,8 +85,7 @@ static class CompileRun
 				if (!_NewItem(out f2, @"New project\@Script")) return;
 				f.FileMove(f2, FNPosition.After);
 			} else { //create test script
-				s = "test " + pathname.getNameNoExt(f.Name);
-				if (!_NewItem(out f2, "Script.cs", s)) return;
+				if (!_NewItem(out f2, "Script.cs", "test " + f.Name)) return;
 				f.TestScript = f2;
 			}
 

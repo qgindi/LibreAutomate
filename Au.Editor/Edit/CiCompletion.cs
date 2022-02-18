@@ -182,7 +182,6 @@ partial class CiCompletion {
 				//print.it(1);
 
 				syncon = CSharpSyntaxContext.CreateContext(document, model, position, cancelToken);
-				var workspace = document.Project.Solution.Workspace;
 				var node = tok.Parent;
 				p1.Next('s');
 
@@ -194,7 +193,7 @@ partial class CiCompletion {
 				if (cancelToken.IsCancellationRequested) return null;
 
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, null, _Options(workspace), cancelToken).ConfigureAwait(false);
+				var r1 = await completionService.GetCompletionsAsync(document, position, s_options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if (r1 != null && r1.Items.IsDefaultOrEmpty) r1 = null;
 				if (r1 != null) {
@@ -1138,26 +1137,10 @@ partial class CiCompletion {
 		return CiComplProvider.Other;
 	}
 
-	static OptionSet s_options;
-	static OptionSet _Options(Workspace ws) {
-		if (s_options == null) {
-			s_options = ws.Options;
-
-			//error with new Roslyn.
-			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.TriggerInArgumentLists, "C#"), false);
-
-			//print.it(s_options.GetOption(new OptionKey(CompletionOptions.BlockForCompletionItems2, "C#")));
-			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.BlockForCompletionItems, "C#"), false); //?
-			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.BlockForCompletionItems2, "C#"), false); //?
-
-			//s_options = s_options.WithChangedOption(new OptionKey(CompletionOptions.ShowItemsFromUnimportedNamespaces, "C#"), true); //does not work automatically
-
-			//foreach(var v in CompletionOptions.GetDev15CompletionOptions()) {
-			//	print.it(v);
-			//}
-		}
-		return s_options;
-	}
+	static CompletionOptions s_options = CompletionOptions.Default with {
+		TriggerInArgumentLists = false,
+		ShowNameSuggestions = false,
+		};
 }
 
 //Debug_.NoGcRegion can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms. Tested with some old Roslyn version.

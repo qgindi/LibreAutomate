@@ -367,9 +367,6 @@ namespace Au {
 				s_unhandledException = e;
 				if (s_setupException.Has(UExcept.Print)) print.it(e);
 				if (s_setupException.Has(UExcept.Dialog)) dialog.showError("Task failed", e.ToStringWithoutStack(), flags: DFlags.Wider, expandedText: e.ToString());
-
-				//if (s_setupException.Has(UExcept.DisableWER)) Api.WerAddExcludedApplication(process.thisExePath, false);
-				//info: setup32.dll disables WER for Au.Task.exe.
 			};
 
 			if (role == SRole.ExeProgram) {
@@ -731,7 +728,7 @@ namespace Au.Types {
 	}
 
 	/// <summary>
-	/// The default compiler adds this attribute to the main assembly if using non-default references (meta r) that aren't in editor's folder or its subfolder "Libraries". Allows to find them at run time. Only if role miniProgram (default).
+	/// The default compiler adds this attribute to the main assembly if using non-default references (meta r or nuget). Allows to find them at run time. Only if role miniProgram (default) or editorExtension.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class RefPathsAttribute : Attribute {
@@ -740,5 +737,17 @@ namespace Au.Types {
 
 		/// <param name="paths">Dll paths separated with |.</param>
 		public RefPathsAttribute(string paths) { Paths = paths; }
+	}
+
+	/// <summary>
+	/// The default compiler adds this attribute to the main assembly if using nuget packages with native dlls. Allows to find the dlls at run time. Only if role miniProgram (default) or editorExtension.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	public sealed class NativePathsAttribute : Attribute {
+		/// <summary>Dll paths separated with |.</summary>
+		public readonly string Paths;
+
+		/// <param name="paths">Dll paths separated with |.</param>
+		public NativePathsAttribute(string paths) { Paths = paths; }
 	}
 }

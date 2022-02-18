@@ -331,6 +331,9 @@ static class Menus {
 		[Command(image = "*FontAwesome.IconsSolid #99BF00")]
 		public static void Icons() { DIcons.ZShow(); }
 
+		[Command(image = "*SimpleIcons.NuGet #99BF00")]
+		public static void NuGet() { DNuget.ZShow(); }
+
 		[Command(separator = true, target = "Output")]
 		public static class Output {
 			[Command(keysText = "M-click")]

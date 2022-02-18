@@ -289,6 +289,19 @@ namespace Au.More
 			=> _Load(file, options, false) as XElement;
 
 		/// <summary>
+		/// If file exists, loads it (calls <see cref="LoadElem"/>), else creates new element or returns null.
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="elemName">Element name to use if file does not exist. If null, returns null if file does not exist.</param>
+		/// <param name="options"></param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="XElement.Load"/>.</exception>
+		public static XElement LoadElemIfExists(string file, string elemName = null, LoadOptions options = default) {
+			if (!filesystem.exists(file)) return elemName == null ? null : new(elemName);
+			return _Load(file, options, false) as XElement;
+		}
+
+		/// <summary>
 		/// Loads XML file in a safer way.
 		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
 		/// </summary>

@@ -9,10 +9,8 @@ using Microsoft.CodeAnalysis.Text;
 using System.Windows.Input;
 using System.Windows;
 using Microsoft.CodeAnalysis.Completion;
-//using Microsoft.CodeAnalysis.Options;
 
-static class CodeInfo
-{
+static class CodeInfo {
 	internal static readonly CiCompletion _compl = new();
 	internal static readonly CiSignature _signature = new();
 	internal static readonly CiAutocorrect _correct = new();
@@ -341,8 +339,7 @@ static class CodeInfo
 		_diag.Pasting(doc, silent);
 	}
 
-	public class Context
-	{
+	public class Context {
 		public Document document { get; private set; }
 		public readonly SciCode sciDoc;
 		public readonly string code;
@@ -496,13 +493,6 @@ static class CodeInfo
 		InternalsVisible.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
 
-		//how to remove option "ShowRemarksInQuickInfo"? Never mind, our CiQuickInfo just skips it.
-		//var opt = CurrentWorkspace.Options
-		//	.WithChangedOption(Microsoft.CodeAnalysis.QuickInfo.QuickInfoOptions.ShowRemarksInQuickInfo, "C#", false); //used to work, but now the property is removed
-		//	.WithChangedOption(Microsoft.CodeAnalysis.QuickInfo.QuickInfoOptions.Metadata.ShowRemarksInQuickInfo, "C#", false); //now the property is in Metadata, but does not work
-		//	.WithChangedOption(new PerLanguageOption2<bool>("QuickInfoOptions", "ShowRemarksInQuickInfo", false), "C#", false); //does not work too
-		//CurrentWorkspace.SetOptions(opt);
-
 		_solution = CurrentWorkspace.CurrentSolution;
 		_projectId = _AddProject(f, true);
 
@@ -602,8 +592,7 @@ static class CodeInfo
 		_tools.HideTempWindows();
 	}
 
-	public class CharContext : IDisposable
-	{
+	public class CharContext : IDisposable {
 		public readonly SciCode doc;
 		public char ch;
 		public bool ignoreChar;

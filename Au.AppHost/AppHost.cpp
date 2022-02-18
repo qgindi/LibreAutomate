@@ -73,6 +73,15 @@ int _ToUtf8(LPCWSTR w, size_t len, LPSTR utf8, size_t lenUtf8) {
 //	return MultiByteToWideChar(CP_UTF8, 0, utf8, lenUtf8, utf16, lenUtf16);
 //}
 
+bool _StrEqualI(const std::wstring& s1, LPCWSTR s2) {
+	int len = (int)s1.length();
+	return wcslen(s2) == len && 2 == CompareStringOrdinal(s1.c_str(), len, s2, len, 1);
+}
+//bool _StrEqualI(const std::wstring& s1, const std::wstring& s2) {
+//	int len = s1.length();
+//	return s2.length() == len && 2 == CompareStringOrdinal(s1.c_str(), len, s2.c_str(), len, 1);
+//}
+
 bool _FileExists(LPCWSTR path) {
 	return 0 == (FILE_ATTRIBUTE_DIRECTORY & GetFileAttributesW(path));
 }
@@ -237,6 +246,7 @@ bool GetPaths(PATHS& p) {
 			//SHGetSpecialFolderPathW //no, better don't use shell apis, it's not so important. Current .NET versions set the registry value. Dotnet apphost even uses literal "Program Files" etc string.
 		}
 		if(i > 0 && lenDotnet != 0) lenDotnet--;
+		if(lenDotnet > 1 && w[lenDotnet - 1] == '\\') lenDotnet--;
 		if(lenDotnet > 1 && lenDotnet < lenof(w) - 100 && _DirExists(w)) break;
 		if(i == 2) return false;
 	}
@@ -251,7 +261,7 @@ bool GetPaths(PATHS& p) {
 	return _FileExists(p.coreclrDll.c_str());
 }
 
-void BuildTpaList(const std::wstring& dir, std::string& tpaList)
+void BuildTpaList(const std::wstring& dir, std::string& tpaList, bool onlyAu = false)
 {
 	std::string dir8, name8; _ToUtf8(dir, dir8); dir8 += '\\';
 	std::wstring wild; _WstringFrom(wild, dir, L"\\*.dll", 6);
@@ -260,8 +270,11 @@ void BuildTpaList(const std::wstring& dir, std::string& tpaList)
 	if(h != INVALID_HANDLE_VALUE) {
 		do {
 			wchar_t* s = fd.cFileName;
-			if(s[0] == 'a' && s[1] == 'p' && s[2] == 'i' && s[3] == '-') continue; //api-ms-
-			//Print("%S", s);
+			if(onlyAu) {
+				if(!(s[0] == 'A' && s[1] == 'u' && s[2] == '.')) continue; //Au.dll, Au.Editor.dll, etc
+			} else {
+				if(s[0] == 'a' && s[1] == 'p' && s[2] == 'i' && s[3] == '-') continue; //api-ms-
+			}
 			tpaList += dir8;
 			_ToUtf8(s, name8); tpaList += name8;
 			tpaList += ';';
@@ -310,6 +323,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 	PATHS p;
 	bool pathsOK = GetPaths(p);
+	//Print("asmDll=%S", p.exeName.c_str());
 	//Print("exePath=%s", p.exePath.c_str());
 	//Print("asmDll=%s", p.asmDll.c_str());
 	//Print("appDir=%S", p.appDir.c_str());
@@ -339,25 +353,45 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	unsigned int domainId;
 	int hr;
 	{
+		bool noAppPaths = false;
 		std::string tpaList; tpaList.reserve(30000);
 		if(p.isPrivate) {
 			BuildTpaList(p.appDir, tpaList);
 		} else {
 			BuildTpaList(p.netDesktop, tpaList); //note: must be first, else eg WPF does not work because netCore dir contains WindowsBase too, and it is invalid
 			BuildTpaList(p.netCore, tpaList);
+
+			//workaround for AssemblyLoadContext.LoadFromAssemblyPath bug:
+			//	If an assembly with same name is in APP_PATHS directories, loads it instead of the specified. Then exception if it is an older version etc.
+			//	Workaround: don't use APP_PATHS for Au.Task.exe and Au.Editor.exe (for script roles miniProgram and editorExtension).
+			//		Add Au.* assemblies to the TPA list. For others use the assembly resolve event; including Roslyn.
+			//		For this reason we also don't add Roslyn to APP_PATHS.
+			noAppPaths = _StrEqualI(p.exeName, L"Au.Editor.exe") || _StrEqualI(p.exeName, L"Au.Task.exe");
+			if(noAppPaths) BuildTpaList(p.appDir, tpaList, true);
 		}
 
-		std::string appDir8, netDesktop8;
+		std::string appDir8, nd8;
+		//APP_PATHS
 		_ToUtf8(p.appDir, appDir8);
-		_ToUtf8(p.netDesktop, netDesktop8);
 		std::string ap(appDir8);
-		ap += ';'; ap += appDir8; ap += "\\Libraries";
-		ap += ';'; ap += appDir8; ap += "\\Roslyn";
-		std::string nd; _ToUtf8(p.netCore, nd); nd += ';'; nd += netDesktop8;
 		appDir8 += '\\';
+		//NATIVE_DLL_SEARCH_DIRECTORIES
+		std::wstring nd16; nd16.reserve(600);
+		if(!noAppPaths) {
+			nd16 += p.appDir;
+#if _WIN64
+			nd16 += L"\\runtimes\\win-x64\\native\\;";
+#else
+			nd16 += L"\\runtimes\\win-x86\\native\\;";
+#endif
+		}
+		nd16 += p.netDesktop; nd16 += L"\\;";
+		nd16 += p.netCore; nd16 += L"\\;";
+		_ToUtf8(nd16, nd8);
 
-		const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS", "NATIVE_DLL_SEARCH_DIRECTORIES", "APP_CONTEXT_BASE_DIRECTORY" };
-		const char* propertyValues[] = { tpaList.c_str(), ap.c_str(), nd.c_str(), appDir8.c_str() };
+		const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "NATIVE_DLL_SEARCH_DIRECTORIES", "APP_CONTEXT_BASE_DIRECTORY", "APP_PATHS" };
+		const char* propertyValues[] = { tpaList.c_str(), nd8.c_str(), appDir8.c_str(), ap.c_str() };
+		int nProp = noAppPaths ? 3 : 4;
 		//Print("TPA:"); Print("%s", propertyValues[0]);
 		//Print("APP:"); Print("%s", propertyValues[1]);
 		//Print("ND:"); Print("%s", propertyValues[2]);
@@ -367,13 +401,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 		//QueryPerformanceCounter(&t2); //all above code 6 ms cold, 3.6 hot
 
-		hr = coreclr_initialize(p.exePath.c_str(), "main", lenof(propertyKeys), propertyKeys, propertyValues, &hostHandle, &domainId);
+		hr = coreclr_initialize(p.exePath.c_str(), "main", nProp, propertyKeys, propertyValues, &hostHandle, &domainId);
 		if(hr < 0) {
 			return -3;
 		}
 
 		//QueryPerformanceCounter(&t3); //22 ms cold, 16 hot
-	} //free temp strings eg tpaList 30000
+		} //free temp strings eg tpaList 30000
 
 	unsigned int ec = 0;
 	if(0 == wcsncmp(pCmdLine, LR"(\\.\pipe\Au.Task-)", 17)) { //preloaded task process for a script with role miniProgram
@@ -405,4 +439,4 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	}
 	return ec;
 #endif
-}
+	}

@@ -11,12 +11,17 @@ partial class FilesModel
 	public readonly FileNode Root;
 	public readonly int WorkspaceSN; //sequence number of workspace open in this process: 1, 2...
 	static int s_workspaceSN;
-	public readonly string WorkspaceFile;
-	public readonly string WorkspaceDirectory;
 	public readonly string WorkspaceName;
-	public readonly string FilesDirectory;
-	public readonly string TempDirectory; //for any temporary files
-	public readonly string CacheDirectory; //for any cache files
+	public readonly string WorkspaceDirectory;
+	public readonly string WorkspaceFile; //.xml file containing the tree of .cs etc files
+	public readonly string FilesDirectory; //.cs etc files
+	//public readonly string CacheDirectory; //any cache files
+	public readonly string TempDirectory; //any temporary files
+	public readonly string NugetDirectory; //NuGet libraries
+	public readonly string NugetDirectoryBS; //NugetDirectory\
+	public readonly string DllDirectory; //user-created or downloaded libraries
+	public readonly string DllDirectoryBS; //LibrariesDirectory\
+	//public readonly string ExeDirectory; //user-created exe files
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	internal readonly Dictionary<string, object> _nameMap;
@@ -42,8 +47,13 @@ partial class FilesModel
 		WorkspaceDirectory = pathname.getDirectory(WorkspaceFile);
 		WorkspaceName = pathname.getName(WorkspaceDirectory);
 		FilesDirectory = WorkspaceDirectory + @"\files";
+		//CacheDirectory = WorkspaceDirectory + @"\.cache";
 		TempDirectory = WorkspaceDirectory + @"\.temp";
-		CacheDirectory = WorkspaceDirectory + @"\.cache";
+		NugetDirectory = WorkspaceDirectory + @"\.nuget";
+		NugetDirectoryBS = NugetDirectory + @"\";
+		DllDirectory = WorkspaceDirectory + @"\dll";
+		DllDirectoryBS = DllDirectory + @"\";
+		//ExeDirectory = WorkspaceDirectory + @"\exe";
 		if (!_importing) {
 			WorkspaceSN = ++s_workspaceSN;
 			filesystem.createDirectory(FilesDirectory);
@@ -70,6 +80,7 @@ partial class FilesModel
 			}
 
 			folders.Workspace = new FolderPath(WorkspaceDirectory);
+			Environment.SetEnvironmentVariable("dll", DllDirectory);
 		}
 		_initedFully = true;
 	}
@@ -435,11 +446,14 @@ partial class FilesModel
 	/// </summary>
 	public void UnloadingWorkspace() {
 		Save.AllNowIfNeed();
+		UnloadingWorkspaceEvent?.Invoke();
 		_currentFile = null;
 		Panels.Editor.ZCloseAll(saveTextIfNeed: false);
 		OpenFiles.Clear();
 		_UpdateOpenFiles(null);
 	}
+
+	public event Action UnloadingWorkspaceEvent;
 
 	/// <summary>
 	/// Gets the current file. It is open/active in the code editor.
@@ -835,7 +849,7 @@ partial class FilesModel
 	/// If folder and not null, adds descendants too; removes '!' from the start of template folder name.
 	/// </param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
-	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	public FileNode NewItem(string template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
 		XElement x = null;
 		if (template != null) {
@@ -851,7 +865,7 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="template">See <see cref="NewItem"/>.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
-	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	public FileNode NewItemL(string template, (FileNode target, FNPosition pos)? where = null, string name = null) {
 		XElement x = null;
 		if (template != null) {
@@ -866,7 +880,7 @@ partial class FilesModel
 	/// Calls <see cref="NewItemLX"/>.
 	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
-	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	/// </summary>
 	public FileNode NewItemX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
 		var f = NewItemLX(template, where, name);
@@ -915,7 +929,7 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
-	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	public FileNode NewItemLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null) {
 		var (target, pos) = where ?? _GetInsertPos();
 		FileNode newParent = (pos == FNPosition.Inside) ? target : target.Parent;
@@ -944,6 +958,7 @@ partial class FilesModel
 
 	FileNode _NewItem(FileNode target, FNPosition pos, XElement template, string name) {
 		var fileType = template == null ? EFileType.Folder : FileNode.XmlTagToFileType(template.Name.LocalName, canThrow: false);
+		Debug.Assert(fileType is not (EFileType.Script or EFileType.Class) || name.Ends(".cs"));
 
 		string text = null;
 		if (fileType != EFileType.Folder) {

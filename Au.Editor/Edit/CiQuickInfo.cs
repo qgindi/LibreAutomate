@@ -1,5 +1,5 @@
 using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.CSharp.QuickInfo;
+//using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 using System.Windows.Documents;
 using Microsoft.CodeAnalysis;
 
@@ -8,15 +8,17 @@ class CiQuickInfo {
 		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
 
+		//don't include <remarks>. Sometimes it takes too much space. Badly formatted if eg contains markdown.
+		var opt1 = QuickInfoOptions.Default with { ShowRemarksInQuickInfo = false, IncludeNavigationHintsInQuickInfo = false };
+		var opt2 = new Microsoft.CodeAnalysis.LanguageServices.SymbolDescriptionOptions(opt1, Microsoft.CodeAnalysis.Classification.ClassificationOptions.Default);
+
 		var service = QuickInfoService.GetService(cd.document);
-
-		//var o1=cd.document.Project.Solution.Options.Workspace.GetOption(QuickInfoOptions.IncludeNavigationHintsInQuickInfo); //default true. Not tested, but probably it adds "go to" info to the tagged text items; we currently don't use it.
-		//var o2=cd.document.Project.Solution.Workspace.Options.GetOption(QuickInfoOptions.ShowRemarksInQuickInfo, "C#"); //default true, but CodeInfo._CreateWorkspace sets false
-		//We don't include <remarks>. Sometimes it takes too much space. Badly formatted if eg contains markdown.
-
-		var r = await Task.Run(async () => await service.GetQuickInfoAsync(cd.document, pos16));
+		var r = await Task.Run(async () => await service.GetQuickInfoAsync(cd.document, pos16, opt2, default));
 		//p1.Next();
 		if (r == null) return null;
+		//this oveload is internal, but:
+		//	- The public overload does not have an options parameter. Used to set options for workspace, but it stopped working.
+		//	- Roslyn in Debug config asserts "don't use this function".
 
 		//print.it(r.Span, r.RelatedSpans);
 		//print.it(r.Tags);
@@ -30,7 +32,9 @@ class CiQuickInfo {
 		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//print.it(se.Kind, se.Text);
-			if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) continue;
+
+			//if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) continue;
+
 			x.StartParagraph();
 
 			//if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) {

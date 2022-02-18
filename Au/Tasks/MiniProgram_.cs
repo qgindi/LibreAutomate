@@ -139,9 +139,16 @@ namespace Au.More {
 			}
 			//p1.Next();
 
-			if (0 != (flags & EFlags.RefPaths)) AssemblyLoadContext.Default.Resolving += _ResolvingAssembly;
+			if (0 != (flags & EFlags.RefPaths))
+				AssemblyLoadContext.Default.Resolving += (alc, an)
+					=> ResolveAssemblyFromRefPathsAttribute_(alc, an, Assembly.GetEntryAssembly());
 
-			if (0 != (flags & EFlags.MTA)) process.ThisThreadSetComApartment_(ApartmentState.MTA);
+			if (0 != (flags & EFlags.NativePaths))
+				AssemblyLoadContext.Default.ResolvingUnmanagedDll += (asm, dll)
+					=> ResolveUnmanagedDllFromNativePathsAttribute_(asm, dll, Assembly.GetEntryAssembly());
+
+			if (0 != (flags & EFlags.MTA))
+				process.ThisThreadSetComApartment_(ApartmentState.MTA);
 
 			if (0 != (flags & EFlags.Console)) {
 				Api.AllocConsole();
@@ -162,23 +169,45 @@ namespace Au.More {
 			//print.TaskEvent_("TS", s_started);
 		}
 
-		static Assembly _ResolvingAssembly(AssemblyLoadContext alc, AssemblyName an) {
-			var name = an.Name;
-			foreach (var v in s_refPaths ??= Assembly.GetEntryAssembly().GetCustomAttribute<RefPathsAttribute>().Paths.Split('|')) {
-				int iName = v.Length - name.Length - 4;
-				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
-				if (!filesystem.exists(v).File) continue;
-				//try {
-				return alc.LoadFromAssemblyPath(v);
-				//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }
+		//also used by the editor for assemblies used in editorExtension scripts
+		internal static Assembly ResolveAssemblyFromRefPathsAttribute_(AssemblyLoadContext alc, AssemblyName an, Assembly scriptAssembly) {
+			//print.it(an);
+			//note: don't cache GetCustomAttribute/split results. It's many times faster than LoadFromAssemblyPath and JIT.
+			var attr = scriptAssembly.GetCustomAttribute<RefPathsAttribute>();
+			if (attr != null) {
+				string name = an.Name;
+				foreach (var v in attr.Paths.Split('|')) {
+					//print.it(v, name);
+					int iName = v.Length - name.Length - 4;
+					if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
+					if (!filesystem.exists(v).File) continue;
+					//try {
+					return alc.LoadFromAssemblyPath(v);
+					//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }
+				}
 			}
 			return null;
 		}
-		static string[] s_refPaths;
+
+		//also used by the editor for assemblies used in editorExtension scripts
+		internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(Assembly refAssembly, string name, Assembly scriptAssembly) {
+			var attr = scriptAssembly.GetCustomAttribute<NativePathsAttribute>();
+			if (attr != null) {
+				var dir = pathname.getDirectory(refAssembly.ManifestModule.FullyQualifiedName);
+				if (!name.Ends(".dll", true)) name += ".dll";
+				//print.it(dir, name);
+				foreach (var v in attr.Paths.Split('|')) {
+					if (!v.Ends(name, true) || !v.Eq(v.Length - name.Length - 1, '\\')) continue;
+					var h = Api.LoadLibrary(dir + v);
+					if (h != default) return h;
+				}
+			}
+			return default;
+		}
 
 		[Flags]
 		public enum EFlags {
-			/// <summary>Has [RefPaths] attribute. It is when some meta r paths cannot be automatically resolved.</summary>
+			/// <summary>Has [RefPaths] attribute. It is when using meta r or nuget.</summary>
 			RefPaths = 1,
 
 			/// <summary>Main() with [MTAThread].</summary>
@@ -189,6 +218,9 @@ namespace Au.More {
 
 			/// <summary>Uses System.Console assembly.</summary>
 			RedirectConsole = 8,
+
+			/// <summary>Has [NativePaths] attribute. It is when using nuget packages with native dlls.</summary>
+			NativePaths = 16,
 
 			//Config = 256, //meta hasConfig
 		}

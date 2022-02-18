@@ -205,6 +205,13 @@ namespace CompilerDlls
         //    return (result != null) ? result.Keys : SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
         //}
 
-// - In SyntaxTreeExtensions.cs, function AtEndOfIncompleteStringOrCharLiteral, in the first 'for' loop add i++ if missing (bug).
+// - (bug fix) In SyntaxTreeExtensions.cs, function AtEndOfIncompleteStringOrCharLiteral, in the first 'for' loop add i++.
+
+// - (bug fix) In SignatureHelpUtilities.cs, function GetSignatureHelpState, remove the 'if' block:
+            //au: bug fix. This code replaces correct ArgumentIndex with incorrect. Then another function throws exception. Editor could handle the exception, but then no parameter info.
+            //if (result is not null && parameterIndex >= 0)
+            //{
+            //    result.ArgumentIndex = parameterIndex;
+            //}
 
 #endif

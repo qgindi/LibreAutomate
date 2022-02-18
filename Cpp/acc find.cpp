@@ -5,6 +5,7 @@
 #pragma comment(lib, "oleacc.lib")
 
 bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count);
+int AccChromeHtmlEnabled(IAccessible* aDoc);
 
 class AccFinder
 {
@@ -680,7 +681,7 @@ private:
 			//	Then _FindDocumentSimple finds it. Also, the caller by default waits.
 
 		} else if(!!(_flags2 & eAF2::InChromePage)) {
-			return GetChromeDOCUMENT(w, ap, out ar);
+			return GetChromeDOCUMENT(w, ap, out ar, !(_flags2 & eAF2::NotInProc));
 		}
 
 		PRINTS(L"unknown browser, or failed Firefox accNavigate(0x1009). It's OK first time after Firefox starts.");
@@ -738,7 +739,7 @@ private:
 public:
 	//Finds Chrome DOCUMENT (web page) and enables its descendant AOs.
 	//Returns 0, NotFound or WaitChromeDisabled.
-	static HRESULT GetChromeDOCUMENT(HWND w, IAccessible* ap, out AccRaw& ar)
+	static HRESULT GetChromeDOCUMENT(HWND w, IAccessible* ap, out AccRaw& ar, bool inProc)
 	{
 		assert(ar.IsEmpty());
 
@@ -756,8 +757,12 @@ public:
 
 		//when Chrome web page AOs disabled, DOCUMENT has BUSY state, until enabling finished. Later never has BUSY state.
 		bool isEnabled = false; long state, cc;
+		//if(0 == ar.get_accState(out state)) Printf(L"busy: %i", state & STATE_SYSTEM_BUSY); else Print("can't get state");
 		if(0 == ar.get_accState(out state) && !(state & STATE_SYSTEM_BUSY)) isEnabled = true; //not BUSY
 		else if(0 == ar.acc->get_accChildCount(&cc) && cc) isEnabled = true; //or has children
+
+		//After enabling acc also need to wait for enabled HTML properties. Until then can't get even tag and acc action.
+		if(isEnabled && inProc) isEnabled = 0 != AccChromeHtmlEnabled(ar.acc);
 
 		WinFlags::Set(w, isEnabled ? eWinFlags::AccEnableYes : eWinFlags::AccEnableStarted, eWinFlags::AccEnableMask);
 
@@ -784,13 +789,13 @@ HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_A
 	return f.Find(w, aParent, &callback);
 }
 
-HRESULT GetChromeDOCUMENT(HWND w, IAccessible* aCLIENT, out IAccessible** ar)
-{
-	AccRaw a;
-	HRESULT hr = AccFinder::GetChromeDOCUMENT(w, aCLIENT, out a);
-	*ar = a.acc;
-	return hr;
-}
+//HRESULT GetChromeDOCUMENT(HWND w, IAccessible* aCLIENT, out IAccessible** ar)
+//{
+//	AccRaw a;
+//	HRESULT hr = AccFinder::GetChromeDOCUMENT(w, aCLIENT, out a);
+//	*ar = a.acc;
+//	return hr;
+//}
 
 namespace inproc
 {
@@ -801,7 +806,7 @@ HRESULT AccEnableChrome2(MarshalParams_AccElem* p)
 	HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aCLIENT);
 	if(hr) return hr;
 	AccDtorIfElem0 a;
-	return AccFinder::GetChromeDOCUMENT(w, aCLIENT, out a);
+	return AccFinder::GetChromeDOCUMENT(w, aCLIENT, out a, true);
 }
 }
 

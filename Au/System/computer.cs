@@ -1,5 +1,7 @@
 ﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
+//FUTURE: GetCpuUsage.
+
 namespace Au {
 	public static class computer {
 		/// <summary>

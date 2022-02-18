@@ -239,7 +239,7 @@ class CiAutocorrect {
 						//inside verbatim string replace " with ""
 						cd.pos16--; //insert " before ", and let caret be after ""
 						tempRangeFrom = 0;
-					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
+					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken && token.Parent.NoClosingQuote()) {
 						int i = span.Start;
 						while (code[i] == '$') i++;
 						int iq = i;

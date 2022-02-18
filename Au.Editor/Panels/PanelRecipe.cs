@@ -13,6 +13,7 @@ using EToken = CiStyling.EToken;
 
 class PanelRecipe : DockPanel {
 	_KScintilla _c;
+	string _usings;
 
 	//public KScintilla ZControl => _c;
 
@@ -65,6 +66,7 @@ class PanelRecipe : DockPanel {
 		//	3. Use if(...) {  } to enclose code examples to select which code to test.
 		//		Can accidentally damage real 'if' code. I didn't use it; it's better to test codes in other script.
 
+		StringBuilder usings = null;
 		var ac = new List<(string code, int offset8)>();
 		int iCode = 0;
 		foreach (var m in code.RxFindAll(@"(?ms)^(?:///(?!=/)\N*\R*)+|^/\*\*.+?\*/\R*")) {
@@ -74,6 +76,7 @@ class PanelRecipe : DockPanel {
 			_Text(m.Start, m.End);
 		}
 		_Code(iCode, code.Length);
+		_usings = usings?.ToString();
 
 		void _Text(int start, int end) {
 			while (code[end - 1] <= ' ') end--;
@@ -100,6 +103,10 @@ class PanelRecipe : DockPanel {
 			int n2 = _c.zLineCount - 2;
 			for (int i = n1; i < n2; i++) _c.Call(SCI_MARKERADD, i, 0);
 			ac.Add((s, offset8));
+
+			foreach(var m in s.RxFindAll(@"(?m)^using [\w\.]+;")) {
+				(usings ??= new()).AppendLine(m.Value);
+			}
 		}
 
 		//code styling
@@ -132,7 +139,7 @@ class PanelRecipe : DockPanel {
 
 	void _SeeLinkClicked(string s) {
 		//add same namespaces as in default global.cs. Don't include global.cs because it may be modified.
-		string code = $"///<see cref='{s}'/>";
+		string code = _usings + $"///<see cref='{s}'/>";
 		var document = CiUtil.CreateRoslynDocument(code, needSemantic: true);
 		var syn = document.GetSyntaxRootAsync().Result;
 		var node = syn.FindToken(code.Length - 3 - s.Length, true).Parent.FirstAncestorOrSelf<CrefSyntax>();
@@ -178,7 +185,7 @@ class PanelRecipe : DockPanel {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!this.IsVisible) return;
 			var doc = Panels.Editor.ZActiveDoc;
-			if (doc == null || !doc.ZFile.IsScript) return;
+			if (doc == null || !doc.ZFile.IsScript || doc.ZFile.Parent.Parent == null) return;
 			string text = doc.zText;
 			if (text == prevText) return;
 			prevText = text;

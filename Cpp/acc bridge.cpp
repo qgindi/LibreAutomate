@@ -4,6 +4,7 @@
 
 HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, eAF2 flags2, out BSTR& errStr);
 HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, int specWnd, out Cpp_Acc& aResult);
+HRESULT AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResult);
 HRESULT AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult);
 HRESULT AccGetProp(Cpp_Acc a, WCHAR what, out BSTR& sResult);
 
@@ -354,6 +355,14 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		//	Actually there are 2 proxies: one is created on WM_GETOBJECT, other by marshaling to the client process. Probably the first proxy would leak too.
 		//aResult.acc->Release(); aResult.acc->Release(); //somehow works even with this. But FromWindow() still works with 1 less Release.
 		//Printf(L"----- %i", aResult.acc->Release());//3
+		aResult.acc->Release();
+
+	} else if(action == InProcAction::IPA_AccFocused) {
+		auto x = (MarshalParams_AccFocused*)h;
+		Cpp_Acc aResult;
+		HRESULT hr = AccGetFocused((HWND)(LPARAM)x->hwnd, x->flags, out aResult);
+		if(hr != 0) return hr;
+		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
 		aResult.acc->Release();
 
 	} else { //IPA_AccFind

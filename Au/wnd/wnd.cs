@@ -835,7 +835,10 @@
 			if (flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = Window;
-				if (w != this) return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid);
+				if (w != this) {
+					if (!w.Is0) print.warning("Child windows can't be activated. You may want to call Focus() instead.");
+					return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid);
+				}
 			}
 
 			bool R, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
@@ -2329,6 +2332,8 @@
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
+
+		//FUTURE: GetConsoleText. See QM2.
 
 		internal void UacCheckAndThrow_(string prefix = null) {
 			if (!Is0 && UacAccessDenied) {

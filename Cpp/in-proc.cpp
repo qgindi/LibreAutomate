@@ -128,6 +128,7 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 				case InProcAction::IPA_AccFind:
 				case InProcAction::IPA_AccFromWindow:
 				case InProcAction::IPA_AccFromPoint:
+				case InProcAction::IPA_AccFocused:
 				case InProcAction::IPA_AccNavigate:
 					hr = AccFindOrGet(h, iacc, sResult);
 					break;

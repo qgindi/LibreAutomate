@@ -141,6 +141,28 @@ namespace Au.Types
 	}
 
 	/// <summary>
+	/// Flags for <see cref="elm.focused"/>.
+	/// </summary>
+	[Flags]
+	public enum EFocusedFlags
+	{
+		/// <summary>
+		/// Don't load dll into the target process.
+		/// More info: <see cref="EFFlags.NotInProc"/>.
+		/// </summary>
+		NotInProc = 1,
+
+		/// <summary>
+		/// Use UI Automation API.
+		/// Need this flag with some windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
+		/// More info: <see cref="EFFlags.UIA"/>.
+		/// </summary>
+		UIA = 2,
+
+		//note: don't change values. They are passed to the cpp function.
+	}
+
+	/// <summary>
 	/// Flags returned by <see cref="elm.MiscFlags"/>.
 	/// </summary>
 	[Flags]

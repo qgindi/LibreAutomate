@@ -9,14 +9,12 @@ using Microsoft.CodeAnalysis.CSharp;
 
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
-class CiSignature
-{
+class CiSignature {
 	CiPopupText _textPopup;
 	_Data _data; //not null while the popup window is visible
 	CancellationTokenSource _cancelTS;
 
-	class _Data
-	{
+	class _Data {
 		public SignatureHelpItems r;
 		public _Span span;
 		public int iSelected, iUserSelected, iRoslynSelected;
@@ -39,8 +37,7 @@ class CiSignature
 		}
 	}
 
-	struct _Span
-	{
+	struct _Span {
 		public int start, fromEnd;
 		public _Span(int start, int fromEnd) { this.start = start; this.fromEnd = fromEnd; }
 		public _Span(TextSpan span, string code) { this.start = span.Start; this.fromEnd = code.Length - span.End; }
@@ -103,6 +100,7 @@ class CiSignature
 				SignatureHelpItems r = null;
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
+					//print.it(p);
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
@@ -119,7 +117,7 @@ class CiSignature
 			});
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; } //never noticed
-		//catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
+																					 //catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
@@ -206,7 +204,7 @@ class CiSignature
 			CodeInfo.HideTextPopupAndTempWindows();
 			if (CodeInfo._compl.IsVisibleUI) //without this does not show completions with selected enum when typed Function( when first parameter is enum
 				CodeInfo._compl.Cancel();
-			if(methodCompletion) CodeInfo._compl.ShowList(ch); //when autocompletion added (); may need to show enum list 
+			if (methodCompletion) CodeInfo._compl.ShowList(ch); //when autocompletion added (); may need to show enum list 
 		}
 
 		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
@@ -217,7 +215,7 @@ class CiSignature
 			//print.it("string");
 			var semo = cd.document.GetSemanticModelAsync().Result;
 			var token = root.FindToken(cd.pos16);
-			if(true == token.IsInString(cd.pos16, cd.code, out var stringInfo)) {
+			if (true == token.IsInString(cd.pos16, cd.code, out var stringInfo)) {
 				var stringFormat = CiUtil.GetParameterStringFormat(stringInfo.stringNode, semo, true);
 				if (stringFormat != 0)
 					CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo, _textPopup.PopupWindow.Hwnd);

@@ -3,8 +3,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
 
-namespace Au.Compiler
-{
+namespace Au.Compiler {
 	/// <summary>
 	/// Resolves assembly metadata references (string to PortableExecutableReference).
 	/// For each compilation create a MetaReferences variable, call Resolve if need non-default references, then use Refs list.
@@ -18,13 +17,11 @@ namespace Au.Compiler
 	///		CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
 	/// MetaReferences variables can be created in different threads, but a variable must be used in a single thread.
 	/// </remarks>
-	class MetaReferences
-	{
+	class MetaReferences {
 		/// <summary>
 		/// Contains info used to load a PortableExecutableReference. Loads when need. Supports XML documentation.
 		/// </summary>
-		class _MR
-		{
+		class _MR {
 			public readonly string name, path;
 			readonly WeakReference<PortableExecutableReference> _wr = new(null);
 			PortableExecutableReference _refKeeper;
@@ -76,8 +73,7 @@ namespace Au.Compiler
 #endif
 		}
 
-		class _MR2 : _MR
-		{
+		class _MR2 : _MR {
 			readonly string _alias;
 			readonly bool _isCOM;
 
@@ -180,7 +176,7 @@ namespace Au.Compiler
 				if (isCOM || alias != null) k = new _MR2(reference, path, alias, isCOM);
 				else k = new _MR(reference, path);
 				a.Add(k);
-				g1:
+			g1:
 				_AddRef(i);
 			}
 
@@ -201,13 +197,9 @@ namespace Au.Compiler
 		static string _ResolvePath(string re, bool isCOM) {
 			if (re.NE()) return null;
 			bool isFull = pathname.isFullPathExpand(ref re);
-			if (!isFull && isCOM) { isFull = true; re = folders.Workspace + @".interop\" + re; }
-			if (isFull) return filesystem.exists(re).File ? re : null;
-
-			if (!re.Ends(".dll", true)) re += ".dll";
-			re = folders.ThisAppBS + re;
+			if (!isFull && isCOM) { isFull = true; re = App.Model.WorkspaceDirectory + @"\.interop\" + re; }
+			if (!isFull) re = folders.ThisAppBS + re;
 			return filesystem.exists(re).File ? re : null;
-
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
 
@@ -242,8 +234,7 @@ namespace Au.Compiler
 		/// Uses a 2-column SQLite database auto-created from XML file by <see cref="Create"/>.
 		/// Not XML file directly because it uses much memory. Unless the file is small or DB fails.
 		/// </summary>
-		class _DocumentationProvider : DocumentationProvider
-		{
+		class _DocumentationProvider : DocumentationProvider {
 			protected sqlite _db;
 			sqliteStatement _stat;
 
@@ -339,8 +330,7 @@ namespace Au.Compiler
 		/// Uses a 2-column SQLite database created from XML files by <see cref="EdDatabases.CreateRefAndDoc"/>.
 		/// Not XML files directly because it uses about 150 MB of memory.
 		/// </summary>
-		class _NetDocumentationProvider : _DocumentationProvider
-		{
+		class _NetDocumentationProvider : _DocumentationProvider {
 			HashSet<string> _refs;
 
 			public _NetDocumentationProvider() {
@@ -362,8 +352,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Gets XML documentation from XML file.
 		/// </summary>
-		sealed class _XmlFileDocumentationProvider : XmlDocumentationProvider
-		{
+		sealed class _XmlFileDocumentationProvider : XmlDocumentationProvider {
 			private readonly string _filePath;
 
 			public _XmlFileDocumentationProvider(string filePath) {
