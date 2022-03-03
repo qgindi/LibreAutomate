@@ -33,7 +33,7 @@ All attributes are optional. The Example command contains all.
 		<Properties />
 		<Rename />
 		<MultiSelect_files />
-		<!-- <Save_now /> -->
+		<Save_now />
 	</File>
 	<Run>
 		<Compile />

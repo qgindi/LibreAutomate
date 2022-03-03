@@ -401,8 +401,8 @@
 
 		/// <summary>
 		/// Removes specified characters from the start and end of this string.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
@@ -414,8 +414,8 @@
 
 		/// <summary>
 		/// Removes specified characters from the start of this string.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
@@ -427,8 +427,8 @@
 
 		/// <summary>
 		/// Removes specified characters from the end of this string.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
@@ -644,8 +644,8 @@
 
 		/// <summary>
 		/// Converts this string to lower case.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
 		/// <remarks>
 		/// Calls <see cref="string.ToLowerInvariant"/>.
@@ -654,8 +654,8 @@
 
 		/// <summary>
 		/// Converts this string to upper case.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
 		/// <remarks>
 		/// Calls <see cref="string.ToUpperInvariant"/>.
@@ -664,8 +664,8 @@
 
 		/// <summary>
 		/// Converts this string or only the first character to upper case or all words to title case.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
 		/// <param name="how"></param>
 		/// <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If null (default) uses invariant culture.</param>
@@ -1043,24 +1043,49 @@
 
 		/// <summary>
 		/// Replaces part of this string with other string.
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t">This string.</param>
-		/// <param name="startIndex">Offset in this string. Can be from end, like <c>^1</c>.</param>
-		/// <param name="count">Count of characters to replace. If 0, just inserts <i>s</i>.</param>
+		/// <param name="startIndex">Offset in this string.</param>
+		/// <param name="count">Count of characters to replace.</param>
 		/// <param name="s">The replacement string.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-		public static string ReplaceAt(this string t, Index startIndex, int count, string s) {
-			int i = startIndex.GetOffset(t.Length);
+		public static string ReplaceAt(this string t, int startIndex, int count, string s) {
+			int i = startIndex;
 			if (count == 0) return t.Insert(i, s);
 			return string.Concat(t.AsSpan(0, i), s, t.AsSpan(i + count));
+		}
+
+		/// <summary>
+		/// Replaces part of this string with other string.
+		/// </summary>
+		/// <returns>The result string.</returns>
+		/// <param name="t">This string.</param>
+		/// <param name="range">Part of this string to replace.</param>
+		/// <param name="s">The replacement string.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+		public static string ReplaceAt(this string t, Range range, string s) {
+			var (i, count) = range.GetOffsetAndLength(t.Length);
+			return ReplaceAt(t, i, count, s);
+		}
+
+		/// <summary>
+		/// Removes part of this string.
+		/// </summary>
+		/// <returns>The result string.</returns>
+		/// <param name="t">This string.</param>
+		/// <param name="range">Part of this string to remove.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>ranget</i>.</exception>
+		public static string Remove(this string t, Range range) {
+			var (i, count) = range.GetOffsetAndLength(t.Length);
+			return t.Remove(i, count);
 		}
 
 		//rejected. Use [..^count].
 		///// <summary>
 		///// Removes <i>count</i> characters from the end of this string.
-		///// Returns the result string.
 		///// </summary>
+		///// <returns>The result string.</returns>
 		///// <param name="t">This string.</param>
 		///// <param name="count">Count of characters to remove.</param>
 		///// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -1068,8 +1093,8 @@
 
 		/// <summary>
 		/// Removes <i>suffix</i> string from the end.
-		/// Returns the result string. Returns this string if does not end with <i>suffix</i>.
 		/// </summary>
+		/// <returns>The result string. Returns this string if does not end with <i>suffix</i>.</returns>
 		/// <param name="t">This string.</param>
 		/// <param name="suffix">Substring to remove.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
@@ -1081,8 +1106,8 @@
 
 		/// <summary>
 		/// Removes <i>suffix</i> character from the end.
-		/// Returns the result string. Returns this string if does not end with <i>suffix</i>.
 		/// </summary>
+		/// <returns>The result string. Returns this string if does not end with <i>suffix</i>.</returns>
 		/// <param name="t">This string.</param>
 		/// <param name="suffix">Character to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
@@ -1251,8 +1276,8 @@
 
 		/// <summary>
 		/// Reverses this string, like "Abc" -> "cbA".
-		/// Returns the result string.
 		/// </summary>
+		/// <returns>The result string.</returns>
 		/// <param name="t"></param>
 		/// <param name="raw">Ignore char sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
 		public static unsafe string ReverseString(this string t, bool raw) {

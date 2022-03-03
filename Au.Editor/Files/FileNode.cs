@@ -328,7 +328,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		if (_text != null) return _text;
 		string r = null, es = null, path = FilePath;
 		try {
-			using var sr = filesystem.waitIfLocked(() => new StreamReader(path, Encoding.UTF8));
+			using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
 			if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
 			else r = sr.ReadToEnd();
 		}

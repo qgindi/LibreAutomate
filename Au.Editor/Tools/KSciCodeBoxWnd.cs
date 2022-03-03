@@ -26,8 +26,8 @@ namespace Au.Controls
 				if (p?.wVar != null) {
 					void _Replace(int end, int argsStart, int argsEnd, int nameStart, bool orRun = false, bool orRunReplace = false, int funcNameEnd = 0) {
 						if (orRun && !orRunReplace) return;
-						s = s.ReplaceAt(argsEnd, end - argsEnd, ");"); //remove '.Activate()' etc. If orRun, removes run etc arguments.
-						s = s.ReplaceAt(argsStart, nameStart - argsStart, nameStart < argsEnd ? "0, " : "0"); //remove 'waitS, ' and add '0, ' (to throw NotFoundException)
+						s = s.ReplaceAt(argsEnd..end, ");"); //remove '.Activate()' etc. If orRun, removes run etc arguments.
+						s = s.ReplaceAt(argsStart..nameStart, nameStart < argsEnd ? "0, " : "0"); //remove 'waitS, ' and add '0, ' (to throw NotFoundException)
 						if (orRun) s = s.Remove(funcNameEnd - 5, 5); //findOrRun -> find
 					}
 					if (p.cVar != null) _Replace(p.cEnd, p.cArgsStart, p.cArgsEnd, p.cNameStart);
@@ -56,7 +56,7 @@ namespace Au.Controls
 								if (name != null && !new wildex(p.wName, noException: true).Match(name)) {
 									var s = TUtil.EscapeWindowName(name, true);
 									if (!(TUtil.IsVerbatim(s, out _) || TUtil.MakeVerbatim(ref s))) s = s.Escape(quote: true);
-									sCode = sCode.ReplaceAt(p.wNameStart, p.wNameEnd - p.wNameStart, s);
+									sCode = sCode.ReplaceAt(p.wNameStart..p.wNameEnd, s);
 								}
 							}
 							return (sCode, p.cVar ?? p.wVar);

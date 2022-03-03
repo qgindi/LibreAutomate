@@ -8,12 +8,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
-class CiErrors
-{
+class CiErrors {
 	SemanticModel _semo;
 	List<(Diagnostic d, int start, int end)> _codeDiag;
-	readonly List<(int from, int to, string s)> _metaErrors = new();
 	readonly List<(int from, int to, string s)> _stringErrors = new();
+	readonly List<(int from, int to, string s)> _metaErrors = new();
+	StartEnd _metaRange;
 
 	public void Indicators(int start16, int end16, bool pasting = false, bool pastingSilent = false) {
 		_semo = null;
@@ -77,10 +77,14 @@ class CiErrors
 			}
 		}
 		if (_metaErrors.Count > 0) {
+			int offs = 0; //!=0 if modified text before metacomments
+			if (cd.meta.end - cd.meta.start == _metaRange.end - _metaRange.start) offs = cd.meta.start - _metaRange.start;
+			
 			foreach (var v in _metaErrors) {
-				if (v.to <= start16 || v.from >= end16) continue;
+				int from = v.from + offs, to = v.to + offs;
+				if (to <= start16 || from >= end16) continue;
 				if (!has) doc.InicatorsDiag_(has = true);
-				doc.zIndicatorAdd(true, SciCode.c_indicError, v.from..v.to);
+				doc.zIndicatorAdd(true, SciCode.c_indicError, from..to);
 			}
 		}
 		_Strings(semo, cd, start16, end16);
@@ -176,7 +180,10 @@ class CiErrors
 
 	public void ClearMetaErrors() => _metaErrors.Clear();
 
-	public void AddMetaError(int from, int to, string s) => _metaErrors.Add((from, to > from ? to : from + 1, s));
+	public void AddMetaError(StartEnd metaRange, int from, int to, string s) {
+		_metaRange = metaRange;
+		_metaErrors.Add((from, to > from ? to : from + 1, s));
+	}
 
 	public void EraseIndicatorsInLine(SciCode doc, int pos8) {
 		var (_, start, end) = doc.zLineStartEndFromPos(false, pos8, withRN: true);
@@ -270,8 +277,7 @@ class CiErrors
 		return x.Result;
 	}
 
-	record _MissingUsingError
-	{
+	record _MissingUsingError {
 		public static bool IsMissingUsingError(ErrorCode ec, out bool extMethod) {
 			extMethod = false;
 			return ec switch {
@@ -353,7 +359,7 @@ class CiErrors
 						}
 						//p1.Next();
 					}
-					gNext:;
+				gNext:;
 
 					bool _AddNamespace(ISymbol sym) {
 						if (!sym.IsAccessibleWithin(compilation.Assembly)) return false;

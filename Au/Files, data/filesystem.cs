@@ -1193,18 +1193,15 @@ namespace Au {
 
 		/// <summary>
 		/// Loads text file in a safer way.
-		/// Uses <see cref="File.ReadAllText(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
+		/// Uses <see cref="File.ReadAllText"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
-		/// <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
+		/// <param name="encoding">Text encoding in file (if there is no BOM). Default UTF-8.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText"/>.</exception>
 		public static string loadText(string file, Encoding encoding = null) {
 			file = pathname.NormalizeForNET_(file);
-			return waitIfLocked(() => File.ReadAllText(file, encoding ?? Encoding.UTF8));
-			//FUTURE: why ReadAllText so slow when file contains 17_000_000 empty lines?
-			//	230 - 1600 ms. It seems makes so much garbage that triggers GC.
-			//	QM2 reads+converts to UTF16 in 55 ms.
+			return waitIfLocked(() => encoding == null ? File.ReadAllText(file) : File.ReadAllText(file, encoding));
 		}
 
 		/// <summary>

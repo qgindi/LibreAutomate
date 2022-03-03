@@ -332,10 +332,7 @@ namespace Au.Types {
 		internal static extern int MultiByteToWideChar(uint CodePage, uint dwFlags, byte* lpMultiByteStr, int cbMultiByte, char* lpWideCharStr, int cchWideChar);
 
 		[DllImport("kernel32.dll")]
-		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, string lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar, int* lpUsedDefaultChar);
-
-		[DllImport("kernel32.dll")]
-		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, char* lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar, int* lpUsedDefaultChar);
+		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, char* lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar = default, int* lpUsedDefaultChar = null);
 
 		internal const uint FILE_READ_DATA = 0x1;
 		internal const uint FILE_LIST_DIRECTORY = 0x1;

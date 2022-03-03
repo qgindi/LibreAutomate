@@ -361,7 +361,7 @@ b.R.AddButton("Button", _ => { print.it("Button clicked"); });
 b.R.AddOkCancel();
 b.End();
 if (!b.ShowDialog()) return;
-//print.it(text1.Text, combo1.SelectedIndex, c1.True());]]>
+//print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true);]]>
 		</snippet>
 
 		<snippet name="ssScriptSetupSnippet" info="Set run-time options such as tray icon and emergency exit ways.">
@@ -410,7 +410,7 @@ script.setup(trayIcon: true, sleepExit: true);
 			<![CDATA[run.it($end$folders.System + @"notepad.exe"$end$);]]>
 		</snippet>
 
-		<snippet name="srScripttRunSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">
+		<snippet name="srScriptRunSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">
 			<![CDATA[script.run(@"$end$\Folder\Script$end$.cs");]]>
 		</snippet>
 

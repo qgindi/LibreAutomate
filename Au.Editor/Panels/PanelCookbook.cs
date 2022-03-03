@@ -1,42 +1,43 @@
 using System.Windows;
 using System.Windows.Controls;
-using Au.Controls;
 using System.Xml.Linq;
 using System.Linq;
-
-//CONSIDER: Name "Cookbook" is a bit too long if tab. Need a shorter name, eg Howto.
+using Au.Controls;
+using Au.Tools;
 
 //CONSIDER: Add a menu-button. Menu:
 //	Item "Request a recipe for this search query (uses internet)".
 //	Checkbox "Auto-update the cookbook (uses internet)".
 
-class PanelCookbook : DockPanel {
+class PanelCookbook : UserControl {
 	KTreeView _tv;
 	TextBox _search;
 	_Item _root;
 	bool _loaded;
 	string _cookbookPath;
+	List<string> _history = new();
 
 	public PanelCookbook() {
-		//this.UiaSetName("Cookbook panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		this.UiaSetName("Cookbook panel");
 
-		_search = new TextBox { Margin = new(2), ToolTip = "Part of recipe name, or wildcard expression" };
-		this.Children.Add(_search);
-		SetDock(_search, Dock.Top);
+		var b = new wpfBuilder(this).Columns(-1, 0).Brush(SystemColors.ControlBrush);
+		b.R.Add(out _search).Tooltip("Part of recipe name, or wildcard expression");
+		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += _search_TextChanged;
-
-		//TODO: _history menu-button
-
+		b.xAddButtonIcon("*Material.History #EABB00", _ => _HistoryMenu(), "History"); b.Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
-		this.Children.Add(_tv);
+		b.Row(-1).Add(_tv);
+		b.End();
 
 #if DEBUG
 		_tv.ItemClick += (_, e) => {
 			if (e.MouseButton == System.Windows.Input.MouseButton.Right) {
-				int i = popupMenu.showSimple("1 Reload (debug)");
+				int i = popupMenu.showSimple("1 Reload (debug)|2 Check links");
 				if (i == 1) {
 					Menus.File.Workspace.Save_now();
 					_Load();
+				} else if (i == 2) {
+					_CheckLinks();
 				}
 			}
 		};
@@ -47,7 +48,7 @@ class PanelCookbook : DockPanel {
 		if (!_loaded && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
 			_loaded = true;
 			_Load();
-			_tv.ItemActivated += (_, e) => _OpenRecipe(e.Item as _Item);
+			_tv.ItemActivated += (_, e) => _OpenRecipe(e.Item as _Item, false);
 		}
 		base.OnPropertyChanged(e);
 	}
@@ -62,10 +63,14 @@ class PanelCookbook : DockPanel {
 
 			static void _AddItems(XElement xp, _Item ip, int level) {
 				foreach (var x in xp.Elements()) {
+					var name = x.Attr("n");
+					if (name[0] == '-') continue;
 					var tag = x.Name.LocalName;
 					bool dir = tag == "d";
-					if (!dir) if (level == 0 || tag != "s") continue;
-					var name = x.Attr("n"); if (!dir) name = name[..^3];
+					if (!dir) {
+						if (tag != "s") continue;
+						name = name[..^3];
+					}
 					var i = new _Item(name, dir);
 					ip.AddChild(i);
 					if (dir) _AddItems(x, i, level + 1);
@@ -77,9 +82,21 @@ class PanelCookbook : DockPanel {
 		catch { }
 	}
 
-	void _OpenRecipe(_Item recipe) {
-		if (recipe.dir) return;
+	void _OpenRecipe(_Item recipe, bool select) {
+		if (recipe == null || recipe.dir) return;
 
+		if (select) {
+			_tv.EnsureVisible(recipe);
+			_tv.Select(recipe);
+		}
+
+		if (_GetRecipeText(recipe) is string code) {
+			Panels.Recipe.Display(recipe.text, code);
+			AddToHistory(recipe.text);
+		}
+	}
+
+	string _GetRecipeText(_Item recipe) {
 		//get file path
 		var stack = new Stack<string>();
 		stack.Push(recipe.text + ".cs");
@@ -88,12 +105,7 @@ class PanelCookbook : DockPanel {
 		var path = string.Join("\\", stack);
 		//print.it(path, filesystem.exists(path).File);
 
-		try {
-			var code = filesystem.loadText(path);
-			//print.it(code);
-			Panels.Recipe.SetText(code);
-		}
-		catch { }
+		try { return filesystem.loadText(path); } catch { return null; }
 	}
 
 	private void _search_TextChanged(object sender, TextChangedEventArgs e) {
@@ -129,15 +141,48 @@ class PanelCookbook : DockPanel {
 		_tv.SetItems(root2?.Children());
 	}
 
-//	internal void RecipeLinkClicked(string s) {
-//#if DEBUG
-//		if (_root == null) Panels.PanelManager[this].Visible = true;
-//#endif
-//		var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.text.Like(s));
-//		_tv.EnsureVisible(v);
-//		_tv.Select(v);
-//		_OpenRecipe(v);
-//	}
+	internal void OpenRecipe(string s) {
+		Panels.PanelManager[this].Visible = true;
+		_OpenRecipe(_FindRecipe(s), true);
+	}
+
+	_Item _FindRecipe(string s) {
+		var d = _root.Descendants();
+		return d.FirstOrDefault(o => !o.dir && o.text.Like(s, true))
+			?? d.FirstOrDefault(o => !o.dir && o.text.Starts(s, true))
+			?? d.FirstOrDefault(o => !o.dir && o.text.Find(s, true) >= 0);
+	}
+
+	internal void AddToHistory(string recipe) {
+		_history.Remove(recipe);
+		_history.Add(recipe);
+		if (_history.Count > 20) _history.RemoveAt(0);
+	}
+
+	void _HistoryMenu() {
+		var m = new popupMenu();
+		for (int i = _history.Count - 1; --i >= 0;) m[_history[i]] = o => _Open(o.Text);
+		m.Show(owner: this);
+
+		void _Open(string name) {
+			var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.text == name);
+			_OpenRecipe(v, true);
+		}
+	}
+
+#if DEBUG
+	void _CheckLinks() {
+		foreach (var recipe in _root.Descendants().Where(o => !o.dir)) {
+			var text = _GetRecipeText(recipe);
+			if (text == null) { print.it("Failed to load the recipe. Probably renamed. Try to reload the tree."); return; }
+			foreach (var m in text.RxFindAll(@"<\+recipe>(.+?)<>")) {
+				var s = m[1].Value;
+				//print.it(s);
+				if (null == _FindRecipe(s)) print.it($"Invalid link '{s}' in {recipe.text}");
+			}
+		}
+	}
+#endif
 
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		internal readonly string text;
@@ -153,7 +198,7 @@ class PanelCookbook : DockPanel {
 
 		string ITreeViewItem.DisplayText => text;
 
-		string ITreeViewItem.ImageSource => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
+		string ITreeViewItem.ImageSource => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie #EABB00");
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 

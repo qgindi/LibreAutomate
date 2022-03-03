@@ -251,7 +251,7 @@ class Delm : KDialogWindow
 		}
 		_FormatCode();
 
-		if (p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_elm.MiscFlags.Has(EMiscFlags.Java) && !osVersion.is32BitOS) {
+		if (p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_elm.MiscFlags.Has(EMiscFlags.Java) /*&& !osVersion.is32BitOS*/) {
 			timer.after(50, _ => {
 				if (_info.ZElemsSuspended) { //eg showing test result
 					string s1 = c_infoJava, s2 = _info.zText; if (!s2.NE() && !s2.Ends('\n')) s1 = "\r\n" + s1;

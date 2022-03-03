@@ -28,7 +28,7 @@ namespace Au {
 		shortcutFile(string lnkPath, uint mode) {
 			_isl = new Api.ShellLink() as Api.IShellLink;
 			_ipf = _isl as Api.IPersistFile;
-			_lnkPath = lnkPath;
+			_lnkPath = pathname.normalize(lnkPath);
 			if (mode != Api.STGM_WRITE && (mode == Api.STGM_READ || filesystem.exists(_lnkPath).File)) {
 				AuException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 				_isOpen = true;
@@ -39,6 +39,7 @@ namespace Au {
 		/// Opens a shortcut file (.lnk) for getting shortcut properties.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="AuException">Failed to open .lnk file.</exception>
 		public static shortcutFile open(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_READ);
@@ -50,6 +51,7 @@ namespace Au {
 		/// If the shortcut file already exists, <b>Save</b> replaces it.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		public static shortcutFile create(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_WRITE);
 		}
@@ -61,6 +63,7 @@ namespace Au {
 		/// If the shortcut file already exists, <b>Save</b> updates it.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="AuException">Failed to open existing .lnk file.</exception>
 		public static shortcutFile openOrCreate(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_READWRITE);

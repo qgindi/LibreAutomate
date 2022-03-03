@@ -16,13 +16,14 @@ using Au.Tools;
 //Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
 
 class DNuget : KDialogWindow {
-	public static void ZShow() {
+	public static void ZShow(string package = null) {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
 		} else {
 			s_dialog.Activate();
 		}
+		if (package != null) s_dialog._tPackage.Text = package;
 	}
 	static DNuget s_dialog;
 
@@ -76,7 +77,10 @@ A script can use packages from multiple folders if they are compatible.");
 		cbiAddFolder.Selected += (_, e) => Dispatcher.InvokeAsync(_AddFolder);
 
 		void _Enabled_Install() { bInstall.IsEnabled = (uint)_cbFolder.SelectedIndex < _cbFolder.Items.Count - 1 && !_tPackage.Text.Trim().NE(); }
-		_tPackage.TextChanged += (_, e) => _Enabled_Install();
+		_tPackage.TextChanged += (_, e) => {
+			_Enabled_Install();
+			_SelectInTree();
+		};
 		_cbFolder.SelectionChanged += (_, e) => _Enabled_Install();
 
 		b.Add(out _cPrerelease, "Prerelease").Margin("L20").Tooltip("Install prerelease version, if available.\nNot used if package version is specified in the Package field.");
@@ -153,6 +157,9 @@ A script can use packages from multiple folders if they are compatible.");
 <Project Sdk=""Microsoft.NET.Sdk"">
 	<PropertyGroup>
 		<TargetFramework>net6.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<DebugType>none</DebugType>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
@@ -193,6 +200,32 @@ A script can use packages from multiple folders if they are compatible.");
 			var sBuild = $@"build ""{proj}"" --nologo --output ""{folderPath}""";
 			if (!await _RunDotnet(sBuild)) return false;
 
+			//Move managed dll+xml files from runtimes subdir to the root dir, replacing the invalid dlls there.
+			//	Also move native dlls from runtimes subdir to 64/32 subdir.
+			//	Or could use --runtime win-x64 --no-self-contained. Then all dlls are in folderPath.
+			//		But then native 32-bit dlls are missing. Need them for role exeProgram.
+			//			Need to build x86 too and get them from the output. Slow.
+			//			Or copy from nuget cache. Parse deps.json to get the package. Unreliable.
+			//			Tried all dotnet build and dotnet publish options. Nothing works as we need.
+			var feFlags = FEFlags.AllDescendants | FEFlags.SkipHidden | FEFlags.OnlyFiles | FEFlags.UseRawPath | FEFlags.NeedRelativePaths;
+			var rDir = folderPath + @"\runtimes";
+			if (filesystem.exists(rDir)) {
+				foreach (var f in filesystem.enumFiles(rDir, flags: feFlags)) {
+					var s = f.Name;
+					bool bit32 = false;
+					if (s.Starts(@"\win\lib\", true)) {
+						//print.it(s);
+						filesystem.moveTo(f.FullPath, folderPath, FIfExists.Delete);
+					} else if (s.Starts(@"\win-x64\native", true) || (bit32 = s.Starts(@"\win-x86\native", true))) {
+						//print.it("native", s);
+						var s2 = folderPath + (bit32 ? @"\32" : @"\64");
+						filesystem.createDirectory(s2);
+						filesystem.moveTo(f.FullPath, s2, FIfExists.Delete);
+					}
+				}
+				try { filesystem.delete(rDir); } catch { }
+			}
+
 			if (installing) {
 				//we need a list of installed files (managed dll, native dll, maybe more).
 				//	When compiling miniProgram or editorExtension, will need dll paths to resolve at run time.
@@ -225,21 +258,34 @@ A script can use packages from multiple folders if they are compatible.");
 				var xx = new XElement("package", new XAttribute("path", packagePath));
 				xn.AddFirst(xx);
 				string lastDll = null;
-				var flags = FEFlags.AllDescendants | FEFlags.SkipHidden | FEFlags.OnlyFiles | FEFlags.UseRawPath | FEFlags.NeedRelativePaths;
-				foreach (var f in filesystem.enumFiles(dirBin2, flags: flags)) {
+				HashSet<string> moved = null;
+				foreach (var f in filesystem.enumFiles(dirBin2, flags: feFlags)
+					.OrderBy(o => -o.Level) //if \File.dll and \runtimes\win\lib\net6.0\File.dll, use the one from runtimes
+					) {
 					var s = f.Name; //like @"\file" or @"\dir\file"
-					if (f.Level == 0) {
+					bool level0;
+					if (level0 = f.Level == 0) {
 						if (s.Starts(@"\~.")) continue;
-						if (s.Ends(".dll", true) && Au.Compiler.MetaReferences.IsNetAssembly(f.FullPath)) {
-							xx.Add(new XElement("r", s));
-							lastDll = s;
-							continue;
-						}
-						if (s.Ends(".xml", true) && Path.ChangeExtension(s, "dll").Eqi(lastDll)) continue; //XML doc
+						if (moved?.Contains(s) ?? false) continue; //replaced invalid dll
+					} else if (s.Starts(@"\runtimes\", true)) {
+						if (level0 = s.Eq(10, @"win\", true)) {
+							s = s[s.LastIndexOf('\\')..];
+							(moved ??= new(StringComparer.OrdinalIgnoreCase)).Add(s);
+						} else if (s.Eq(10, @"win-x64\", true)) {
+							s = s.ReplaceAt(0, s.LastIndexOf('\\'), @"\64");
+						} else if (s.Eq(10, @"win-x86\", true)) {
+							s = s.ReplaceAt(0, s.LastIndexOf('\\'), @"\32");
+						} else continue;
 					} else {
-						if (s.Starts(@"\runtimes\") && !s.Eq(10, "win-")) continue;
+						Debug_.Print(s);
 					}
-					xx.Add(new XElement("f", s));
+					if (s.Ends(".dll", true) && level0 && Au.Compiler.MetaReferences.IsNetAssembly(f.FullPath)) {
+						xx.Add(new XElement("r", s));
+						lastDll = s;
+					} else {
+						if (s.Ends(".xml", true) && s.Eq(..^4, lastDll.AsSpan(..^4), true)) continue; //XML doc
+						xx.Add(new XElement("f", s));
+					}
 				}
 				xn.SaveElem(npath, backup: true);
 
@@ -253,13 +299,6 @@ A script can use packages from multiple folders if they are compatible.");
 				foreach (var v in Directory.GetFiles(folderPath, "*.json")) filesystem.delete(v);
 				//filesystem.delete($@"{folderPath}\obj\Debug");
 				filesystem.delete($@"{folderPath}\obj");
-				filesystem.delete($@"{folderPath}\build");
-				var runtimes = folderPath + @"\runtimes";
-				if (Directory.Exists(runtimes)) {
-					//delete native libraries of linux etc. To prevent creating them, can be used dotnet build options, but then adds single file in same dir (need 64/32 bit files in runtimes dir).
-					foreach (var v in filesystem.enumDirectories(runtimes))
-						if (!v.Name.Starts("win-", true)) filesystem.delete(v.FullPath);
-				}
 			}
 			catch (Exception e1) { Debug_.Print(e1); }
 
@@ -381,29 +420,41 @@ A script can use packages from multiple folders if they are compatible.");
 
 	void _FillTree(string selectFolder = null, string selectPackage = null) {
 		_TreeItem select = null;
-		var root = new _TreeItem(true, null);
+		_tvroot = new _TreeItem(true, null);
 		foreach (var folder in _folders) {
 			var proj = _ProjPath(folder);
 			if (!File.Exists(proj)) continue;
 			XElement xr; try { xr = XElement.Load(proj); } catch { continue; }
-			bool findToSelect = selectFolder != null && folder == selectFolder;
 			var k = new _TreeItem(true, folder);
 			foreach (var x in xr.XPathSelectElements("/ItemGroup/PackageReference[@Include]")) {
 				var name = x.Attr("Include");
 				var t = new _TreeItem(false, name, x.Attr("Version"));
 				k.AddChild(t);
-				if (findToSelect && name == selectPackage) {
-					findToSelect = false;
-					selectFolder = null;
+				if (selectPackage != null && name == selectPackage && (selectFolder == null || folder == selectFolder)) {
+					selectPackage = null;
 					select = t;
 				}
 			}
-			if (k.HasChildren) root.AddChild(k);
+			if (k.HasChildren) _tvroot.AddChild(k);
 		}
-		_tv.SetItems(root.Children());
+		_tv.SetItems(_tvroot.Children());
 		if (select != null) _tv.SelectSingle(select, true);
 		else _panelManage.IsEnabled = false;
 	}
+
+	void _SelectInTree() {
+		_TreeItem select = null;
+		var s = _tPackage.Text;
+		if (s.Length > 1) {
+			s = s.RxReplace(@"^(?:(?:PM> )?Install-Package )?(\w\S+)( -Version .+)?$", "$1");
+			select = _tvroot.Descendants().Where(o => !o.IsFolder && o.Name.Find(s, true) >= 0).FirstOrDefault();
+		}
+
+		if (select != null) _tv.SelectSingle(select, true);
+		else _tv.UnselectAll();
+	}
+
+	_TreeItem _tvroot;
 
 	_TreeItem _Selected => _tv.SelectedItem as _TreeItem;
 

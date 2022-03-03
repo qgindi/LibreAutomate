@@ -157,11 +157,14 @@ namespace Au.Types
 			System.Windows.Automation.AutomationProperties.SetName(t, name);
 		}
 
+		//rejected, FBC. Looks not good. Better .IsChecked == true.
 		/// <summary>
-		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
+		/// Returns true if <c>IsChecked == true</c>.
 		/// </summary>
 		/// <param name="t"></param>
-		public static bool True(this CheckBox t) => t.IsChecked.GetValueOrDefault();
+		[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+		//[Obsolete("use code IsChecked == true")]
+		public static bool True(this CheckBox t) => t.IsChecked == true;
 
 #if true
 		static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {

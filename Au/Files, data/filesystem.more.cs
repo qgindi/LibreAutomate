@@ -1,15 +1,12 @@
 
 using System.Linq;
 
-namespace Au
-{
-	partial class filesystem
-	{
+namespace Au {
+	partial class filesystem {
 		/// <summary>
 		/// Miscellaneous rarely used file/directory functions.
 		/// </summary>
-		public static partial class more
-		{
+		public static partial class more {
 
 #if false //currently not used
 			/// <summary>
@@ -259,6 +256,15 @@ namespace Au
 				return enumerate(path, flags).Sum(f => f.Size);
 			}
 
+			/// <summary>
+			/// Empties the Recycle Bin.
+			/// </summary>
+			/// <param name="drive">If not null, empties the Recycle Bin on this drive only. Example: "D:".</param>
+			/// <param name="progressUI">Show progress dialog if slow. Default true.</param>
+			public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
+				Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
+			}
+
 			//rejected: unreliable. Uses registry, where many mimes are incorrect and nonconstant.
 			//	Use System.Web.MimeMapping.GetMimeMapping. It uses a hardcoded list, although too small.
 			///// <summary>
@@ -304,7 +310,7 @@ namespace Au
 			/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
 			/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
 			/// </remarks>
-			public static void loadDll64or32Bit(string fileName) {
+			internal static void loadDll64or32Bit_(string fileName) {
 				//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
 				string s = (osVersion.is32BitProcess ? @"32\" : @"64\") + fileName;
@@ -315,14 +321,11 @@ namespace Au
 				//if(default != Api.LoadLibrary(fileName)) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
 
 				throw new DllNotFoundException(fileName);
-
-				//or can try to set NATIVE_DLL_SEARCH_DIRECTORIES in apphost. But then this library cannot be use without our apphost.
 			}
 		}
 	}
 
-	namespace Types
-	{
+	namespace Types {
 #pragma warning disable CS1574 //VS bug: after converting this struct to simple record struct does not recognize getFileId
 		/// <summary>
 		/// Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="filesystem.more.getFileId"/>.

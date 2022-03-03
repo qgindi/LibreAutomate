@@ -570,7 +570,7 @@ namespace Au.Types
 		const string SQLITE_DLL = "sqlite3.dll";
 
 		static SLApi() {
-			filesystem.more.loadDll64or32Bit(SQLITE_DLL);
+			filesystem.more.loadDll64or32Bit_(SQLITE_DLL);
 		}
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]

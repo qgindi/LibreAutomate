@@ -30,7 +30,7 @@ class MetaCommentsParser
 		_multiline = code[meta.start..meta.end].Contains('\n');
 	}
 
-	public (int start, int end) MetaRange { get; private set; }
+	public StartEnd MetaRange { get; private set; }
 
 	void _ParseOption(string name, string value) {
 		switch (name) {
@@ -130,7 +130,7 @@ class MetaCommentsParser
 		string prepend = null, append = null;
 		if (meta.end == 0) {
 			if (code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*\*.*?\*/\R)+", 0, out RXGroup g)) { //description
-				meta = (g.End, g.End);
+				meta = new(g.End, g.End);
 				prepend = "\r\n";
 			}
 			append = (f.IsScript && code.Eq(meta.end, "//.")) ? " " : "\r\n";

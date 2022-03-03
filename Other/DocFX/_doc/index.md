@@ -2,7 +2,7 @@
 uid: index
 ---
 
-# Autepad C#
+# Automaticode C#
 
 The program consists of an automation library and a script editor.
 
@@ -27,14 +27,14 @@ Free, open-source.
 #### Where can run
 Editor and library can run on Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 
-Also need .NET 6 Desktop Runtime x64. Need only Runtime, not SDK.
+Also need .NET 6 Runtime (desktop x64). If want to use NuGet, install .NET 6 SDK instead.
 
 #### Unfinished
 Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc may be changed in the future.
 
 #### Links
-- [Download](https://www.quickmacros.com/au/AutepadSetup.exe) v0.3.1, 2021-12-25, 22 MB
-- [.NET 6 Runtime](https://dotnet.microsoft.com/download)
+- [Download](https://www.quickmacros.com/au/Automaticode.exe) v0.4.0, 2022-03-03, 23 MB
+- [.NET 6](https://dotnet.microsoft.com/download)
 - [Source code](https://github.com/qmgindi/Au)
 - [Changes](https://github.com/qmgindi/Au/blob/master/Other/DocFX/_doc/changes/)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)

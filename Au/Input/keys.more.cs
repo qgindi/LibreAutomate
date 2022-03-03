@@ -118,7 +118,7 @@ partial class keys
 				else if (v.Equals("Wheel", co)) mouse = System.Windows.Input.MouseAction.WheelClick;
 				if (mouse != default) {
 					if (i == 0) return true;
-					s = s.ReplaceAt(i, s.Length - i, "A");
+					s = s.ReplaceAt(i.., "A"); //replace the mouse word with a key name, else can't parse
 				}
 			}
 			if (!parseHotkeyString(s, out var m, out var k)) return false;

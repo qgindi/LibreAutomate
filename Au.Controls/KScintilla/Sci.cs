@@ -1,11 +1,9 @@
 //Functions to work with Scintilla control text, code, etc.
 
-namespace Au.Controls
-{
+namespace Au.Controls {
 	using static Sci;
 
-	public unsafe partial class KScintilla
-	{
+	public unsafe partial class KScintilla {
 		#region low level
 
 		/// <summary>
@@ -94,7 +92,7 @@ namespace Au.Controls
 			b[len] = 0;
 			Call(sciMessage, wParam, b.p);
 			Debug.Assert(b[len] == 0);
-			if (findLength) len = b.FindStringLengthAnsi();
+			if (findLength) len = b.FindByteStringLength();
 			print.it(len);
 			return Encoding.UTF8.GetString(b, len);
 		}
@@ -212,8 +210,7 @@ namespace Au.Controls
 		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 		int _ParamLine(int line) => line >= 0 ? line : throw new ArgumentOutOfRangeException();
 
-		struct _NoReadonly : IDisposable
-		{
+		struct _NoReadonly : IDisposable {
 			KScintilla _t;
 			bool _ro;
 
@@ -228,8 +225,7 @@ namespace Au.Controls
 			}
 		}
 
-		struct _NoUndoNotif : IDisposable
-		{
+		struct _NoUndoNotif : IDisposable {
 			KScintilla _t;
 			bool _noUndo, _noNotif;
 
@@ -505,7 +501,7 @@ namespace Au.Controls
 			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
 			int to8 = p2 == null ? textLen : gap;
 			int i8 = 0, i16 = 0;
-			g1:
+		g1:
 			int asciiStart8 = i8;
 			i8 = _SkipAscii(p, i8, to8);
 			i16 += i8 - asciiStart8;
@@ -538,7 +534,7 @@ namespace Au.Controls
 			_len8 = textLen;
 			_len16 = i16;
 			return;
-			ge:
+		ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
 			Debug_.Print("Invalid UTF-8 text");
@@ -554,8 +550,7 @@ namespace Au.Controls
 			return i;
 		}
 
-		struct _PosUtfRange
-		{
+		struct _PosUtfRange {
 			public int i8, i16, len16, charLen; //note: len16 is UTF-16 code units; if surrogate pairs, charLen is 2 (2 bytes for each UTF-16 code unit)
 			public _PosUtfRange(int i8, int i16, int len16, int charLen) {
 				this.i8 = i8; this.i16 = i16; this.len16 = len16; this.charLen = charLen;
@@ -929,8 +924,7 @@ namespace Au.Controls
 		/// If ctor detects that the line from <i>pos</i> is hidden because of folding, <b>Dispose</b> collapses its folding again.
 		/// Use when modifying text to prevent unfolding.
 		/// </summary>
-		public struct FoldingRestorer : IDisposable
-		{
+		public struct FoldingRestorer : IDisposable {
 			KScintilla _sci;
 			int _foldLine;
 			//tested: temp setting SCI_SETAUTOMATICFOLD does not work. If restoring async, does not expand, but draws incorrectly.
@@ -1129,8 +1123,7 @@ namespace Au.Controls
 		//}
 		//bool _isReadOnly;
 
-		public struct FileLoaderSaver
-		{
+		public struct FileLoaderSaver {
 			_Encoding _enc;
 
 			public bool IsBinary => _enc == _Encoding.Binary;
@@ -1173,14 +1166,20 @@ namespace Au.Controls
 					fr.Read(b, trySize, (int)fileSize - trySize);
 				}
 
-				Encoding e = _NetEncoding();
-				if (e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
+				if (_enc == _Encoding.Ansi) {
+					//Encoding.GetEncoding(Api.GetACP()) fails,
+					//	unless at first you call Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);. But I don't trust it.
+					b = _AnsiToUtf8(b);
+					_enc = _Encoding.Utf8NoBOM; //save as UTF-8 if will be edited
+				} else {
+					Encoding e = _EncodingEnumToObject();
+					if (e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
+				}
 				return b;
 			}
 
-			Encoding _NetEncoding() {
+			Encoding _EncodingEnumToObject() {
 				switch (_enc) {
-				case _Encoding.Ansi: return Encoding.Default;
 				case _Encoding.Utf16BOM or _Encoding.Utf16NoBOM: return Encoding.Unicode;
 				case _Encoding.Utf16BE: return Encoding.BigEndianUnicode;
 				case _Encoding.Utf32BOM: return Encoding.UTF32;
@@ -1209,12 +1208,11 @@ namespace Au.Controls
 				}
 				var u = (char*)s; len /= 2;
 				if (CharPtr_.Length(u, len) == len) //no '\0'
-					if (0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return _Encoding.Utf16NoBOM;
+					if (0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0)) return _Encoding.Utf16NoBOM;
 				return _Encoding.Binary;
 			}
 
-			enum _Encoding : byte
-			{
+			enum _Encoding : byte {
 				/// <summary>Not a text file, or loading failed, or not initialized.</summary>
 				Binary = 0, //must be 0
 
@@ -1247,6 +1245,16 @@ namespace Au.Controls
 				//Utf7BOM,
 			}
 
+			static unsafe byte[] _AnsiToUtf8(byte[] b) {
+				var c = new char[b.Length];
+				fixed (byte* pb = b) fixed (char* pc = c) {
+					int n = Api.MultiByteToWideChar(0, 0, pb, b.Length, pc, c.Length);
+					b = new byte[Api.WideCharToMultiByte(Api.CP_UTF8, 0, pc, n, null, 0)];
+					fixed (byte* p = b) Api.WideCharToMultiByte(Api.CP_UTF8, 0, pc, n, p, b.Length);
+				}
+				return b;
+			}
+
 			/// <summary>
 			/// Sets control text.
 			/// If the file is binary or too big, shows error message or image, makes the control read-only, and returns false. Else returns true.
@@ -1277,7 +1285,7 @@ namespace Au.Controls
 
 				//_enc = _Encoding.; //test
 
-				Encoding e = _NetEncoding();
+				Encoding e = _EncodingEnumToObject();
 
 				int bom = (int)_enc >> 4; //BOM length
 				uint bomm = 0; //BOM memory
@@ -1447,8 +1455,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Ctor calls SCI_BEGINUNDOACTION. Dispose() calls SCI_ENDUNDOACTION.
 		/// </summary>
-		public struct UndoAction : IDisposable
-		{
+		public struct UndoAction : IDisposable {
 			KScintilla _sci;
 
 			/// <summary>
@@ -1486,8 +1493,7 @@ namespace Au.Controls
 	/// Note: Ignores NoUndo and NoNotify if ZInitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
 	/// </summary>
 	[Flags]
-	public enum SciSetTextFlags
-	{
+	public enum SciSetTextFlags {
 		/// <summary>
 		/// Cannot be undone. Clear Undo buffer.
 		/// </summary>
@@ -1509,8 +1515,7 @@ namespace Au.Controls
 	/// Uses SCI_GETRANGEPOINTER. See <see cref="KScintilla.zRangePointer"/>.
 	/// Ensures that the gap is not moved (it could be slow if frequently).
 	/// </summary>
-	unsafe struct SciDirectRange
-	{
+	unsafe struct SciDirectRange {
 		int _from, _to, _gap;
 		byte* _p1, _p2; //before and after gap
 

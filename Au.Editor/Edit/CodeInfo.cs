@@ -102,7 +102,7 @@ static class CodeInfo {
 				for (int i = 0; i < aEnable.Length; i++)
 					if (!aEnable[i].Is0) aEnable[i].Enable(true);
 			}
-			perf.nw('R');
+			//perf.nw('R');
 		}
 	}
 
@@ -343,7 +343,7 @@ static class CodeInfo {
 		public Document document { get; private set; }
 		public readonly SciCode sciDoc;
 		public readonly string code;
-		public readonly (int start, int end) meta;
+		public readonly StartEnd meta;
 		public int pos16;
 		public readonly bool isCodeFile;
 
@@ -521,7 +521,7 @@ static class CodeInfo {
 				m.CreateCompilationOptions(),
 				m.CreateParseOptions(),
 				adi,
-				m.ProjectReferences?.Select(f1 => new ProjectReference(_AddProject(f1, false))),
+				m.ProjectReferences?.Select(f1 => new ProjectReference(_AddProject(f1.f, false))),
 				m.References.Refs);
 
 			_solution = _solution.AddProject(pi);

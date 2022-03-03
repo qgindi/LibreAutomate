@@ -215,7 +215,7 @@ namespace Au.Compiler {
 		/// Project main files added through meta option 'pr'.
 		/// null if none.
 		/// </summary>
-		public List<FileNode> ProjectReferences { get; private set; }
+		public List<(FileNode f, MetaComments m)> ProjectReferences { get; private set; }
 
 		/// <summary>
 		/// Meta nuget, like @"-\PackageName".
@@ -340,7 +340,7 @@ namespace Au.Compiler {
 		/// <summary>
 		/// If there is meta, gets character positions before the starting /*/ and after the ending /*/. Else default.
 		/// </summary>
-		public (int start, int end) MetaRange { get; private set; }
+		public StartEnd MetaRange { get; private set; }
 
 		EMPFlags _flags;
 
@@ -433,7 +433,7 @@ namespace Au.Compiler {
 				}
 			}
 
-			var meta = FindMetaComments(code);
+			var meta = _metaRange = FindMetaComments(code);
 			if (meta.end > 0) {
 				if (isMain) MetaRange = meta;
 				foreach (var t in EnumOptions(code, meta)) {
@@ -457,6 +457,7 @@ namespace Au.Compiler {
 		}
 
 		MetaCodeFile _f; //current
+		StartEnd _metaRange; //current
 
 		void _ParseOption(string name, string value, int iName, int iValue) {
 			//print.it(name, value);
@@ -520,21 +521,25 @@ namespace Au.Compiler {
 					}
 				}
 				return;
-			case "resource":
+			}
+			if (_flags.Has(EMPFlags.OnlyRef)) return;
+
+			if (name == "resource") {
 				//if (value.Ends(" /resources")) { //add following resources in value.resources instead of in AssemblyName.g.resources. //rejected. Rarely used. Would need more code, because meta resource can be in multiple files.
 				//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
 				//} else
 				{
-				var fs1 = _GetFileAndString(value, FNFind.Any);
-				if (!forCodeInfo && fs1.f != null) {
-					Resources ??= new();
-					if (!Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) Resources.Add(fs1);
+					var fs1 = _GetFileAndString(value, FNFind.Any);
+					if (!forCodeInfo && fs1.f != null) {
+						Resources ??= new();
+						if (!Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) Resources.Add(fs1);
+					}
 				}
+				return;
 			}
-			return;
-			}
+
 			if (!_f.isMain) {
-				_ErrorN($"in this file only these options can be used: 'r', 'com', 'nuget', 'c', 'resource'. Others only in the main file of the compilation - {MainFile.f.Name}.");
+				_ErrorN($"in this file only these options can be used: r, com, nuget, c, resource. Others only in the main file of the compilation - {MainFile.f.Name}.");
 				return;
 			}
 
@@ -636,7 +641,7 @@ namespace Au.Compiler {
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
 			} else if (_f.f == Panels.Editor.ZActiveDoc.ZFile) {
-				CodeInfo._diag.AddMetaError(from, to, s);
+				CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 			}
 			return false;
 		}
@@ -730,13 +735,16 @@ namespace Au.Compiler {
 			var f = _GetFile(value, FNFind.CodeFile); if (f == null) return false;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 			if (f == MainFile.f) return _ErrorV("circular reference");
+			MetaComments m = null;
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
-				if (!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
+				if (!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder, needMeta: true))
+					return _ErrorV("failed to compile library");
 				//print.it(r.role, r.file);
 				if (r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
 				value = r.file;
+				m = r.meta;
 			}
-			(ProjectReferences ??= new()).Add(f);
+			(ProjectReferences ??= new()).Add((f, m));
 			return true;
 		}
 
@@ -827,7 +835,7 @@ namespace Au.Compiler {
 		/// Returns (start, end) of metacomments "/*/ ... /*/" at the start of code (before can be comments, empty lines, spaces, tabs). Returns default if no metacomments.
 		/// </summary>
 		/// <param name="code">Code. Can be null.</param>
-		public static (int start, int end) FindMetaComments(string code) {
+		public static StartEnd FindMetaComments(string code) {
 			if (code != null) {
 				for (int i = 0; i <= code.Length - 6; i++) {
 					char c = code[i];
@@ -836,7 +844,7 @@ namespace Au.Compiler {
 						if (c == '*') {
 							int j = code.Find("*/", ++i);
 							if (j < 0) break;
-							if (code[i] == '/' && code[j - 1] == '/') return (i - 2, j + 2);
+							if (code[i] == '/' && code[j - 1] == '/') return new(i - 2, j + 2);
 							i = j + 1;
 						} else if (c == '/') {
 							i = code.IndexOf('\n', i);
@@ -853,7 +861,7 @@ namespace Au.Compiler {
 		/// </summary>
 		/// <param name="code">Code that starts with metacomments "/*/ ... /*/".</param>
 		/// <param name="meta">The range of metacomments, returned by <see cref="FindMetaComments"/>.</param>
-		public static IEnumerable<Token> EnumOptions(string code, (int start, int end) meta) {
+		public static IEnumerable<Token> EnumOptions(string code, StartEnd meta) {
 			for (int i = meta.start + 3, iEnd = meta.end - 3; i < iEnd; i++) {
 				Token t = default;
 				for (; i < iEnd; i++) if (code[i] > ' ') break; //find next option
@@ -926,6 +934,11 @@ namespace Au.Compiler {
 		/// Ignores meta such as run options (ifRunning etc) and non-code/reference files (resource etc).
 		/// </summary>
 		ForCodeInfo = 2,
+
+		/// <summary>
+		/// Need only references (r, pr, com, nuget).
+		/// </summary>
+		OnlyRef = 4,
 
 		///// <summary>
 		///// Used for file Properties dialog etc, not when compiling.

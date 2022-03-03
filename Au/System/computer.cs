@@ -92,15 +92,6 @@ namespace Au {
 			return Api.LockWorkStation();
 		}
 
-		/// <summary>
-		/// Empties the Recycle Bin.
-		/// </summary>
-		/// <param name="drive">If not null, empties the Recycle Bin on this drive only. Example: "D:".</param>
-		/// <param name="progressUI">Show progress dialog if slow. Default true.</param>
-		public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
-			Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
-		}
-
 		//FUTURE: events desktopSwitchEvent, sleepEvent. Like SystemEvents.
 		//public static event Action desktopSwitchEvent {
 		//	add {

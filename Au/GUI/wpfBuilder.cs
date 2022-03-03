@@ -52,7 +52,7 @@ namespace Au
 	/// 	.R.AddOkCancel() //finally add standard OK and Cancel buttons
 	/// 	.End();
 	/// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-	/// print.it(text1.Text, combo1.SelectedIndex, c1.True()); //get user input from control variables
+	/// print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
 	/// ]]></code>
 	/// Dialog window with TabControl (code from wpfSnippet).
 	/// <code><![CDATA[
