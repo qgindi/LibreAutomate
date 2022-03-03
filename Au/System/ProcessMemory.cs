@@ -119,7 +119,7 @@ namespace Au.More
 		/// </summary>
 		/// <param name="s">A string in this process.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		public bool WriteUnicodeString(string s, int offsetBytes = 0) {
+		public bool WriteCharString(string s, int offsetBytes = 0) {
 			if (Mem == default) return false;
 			if (s.NE()) return true;
 			fixed (char* p = s) {
@@ -129,16 +129,16 @@ namespace Au.More
 
 		/// <summary>
 		/// Copies a string from this process to the memory allocated in that process by the constructor.
-		/// In that process the string is written as '\0'-terminated ANSI string, in default or specified encoding.
+		/// In that process the string is written as '\0'-terminated byte string.
 		/// Returns false if fails.
 		/// </summary>
-		/// <param name="s">A string in this process. Normal C# string (UTF-16), not ANSI.</param>
+		/// <param name="s">A string in this process. Normal C# string (UTF-16).</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		/// <param name="enc">If null, uses system default ANSI encoding.</param>
-		public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null) {
+		/// <param name="enc">Encoding for converting char string to byte string. If null, uses <see cref="Encoding.Default"/> (UTF-8).</param>
+		public bool WriteByteString(string s, int offsetBytes = 0, Encoding enc = null) {
 			if (Mem == default) return false;
 			if (s.NE()) return true;
-			if (enc == null) enc = Encoding.Default;
+			enc ??= Encoding.Default;
 			var a = enc.GetBytes(s).InsertAt(-1);
 			fixed (byte* p = a) {
 				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, a.Length, null);
@@ -152,31 +152,32 @@ namespace Au.More
 			using FastBuffer<byte> b = new(n);
 			if (!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, b.p, n, null)) return null;
 			if (findLength) nChars = ansiString ? BytePtr_.Length(b.p, nChars) : CharPtr_.Length((char*)b.p, nChars);
+			enc ??= Encoding.Default;
 			return ansiString ? new((sbyte*)b.p, 0, nChars, enc) : new((char*)b.p, 0, nChars);
 		}
 
 		/// <summary>
 		/// Copies a string from the memory in that process allocated by the constructor to this process.
 		/// Returns the copied string, or null if fails.
-		/// In that process the string must be in Unicode UTF-16 format (ie not ANSI).
+		/// In that process the string must be in Unicode UTF-16 format.
 		/// </summary>
 		/// <param name="length">Number of characters to copy, not including the terminating '\0'. In both processes a character is 2 bytes.</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		/// <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
-		public string ReadUnicodeString(int length, int offsetBytes = 0, bool findLength = false) {
+		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range. If false, the returned string is of <i>length</i> length even if contains '\0' characters.</param>
+		public string ReadCharString(int length, int offsetBytes = 0, bool findLength = false) {
 			return _ReadString(false, length, offsetBytes, findLength);
 		}
 
 		/// <summary>
 		/// Copies a string from the memory in that process allocated by the constructor to this process.
 		/// Returns the copies string, or null if fails.
-		/// In that process the string must be in ANSI format (ie not Unicode UTF-16).
+		/// In that process the string must be array of bytes (ie not Unicode UTF-16).
 		/// </summary>
 		/// <param name="length">Number bytes to copy, not including the terminating '\0'. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
 		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		/// <param name="findLength">Find true string length by searching for '\0' character in nBytes range of the ANSI string.</param>
-		/// <param name="enc">If null, uses system default ANSI encoding.</param>
-		public string ReadAnsiString(int length, int offsetBytes = 0, bool findLength = false, Encoding enc = null) {
+		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range.</param>
+		/// <param name="enc">Encoding for converting byte string to char string. If null, uses <see cref="Encoding.Default"/> (UTF-8).</param>
+		public string ReadByteString(int length, int offsetBytes = 0, bool findLength = false, Encoding enc = null) {
 			return _ReadString(true, length, offsetBytes, findLength, enc);
 		}
 

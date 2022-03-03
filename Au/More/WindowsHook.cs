@@ -20,6 +20,7 @@ namespace Au.More
 	/// 
 	/// Exists an alternative way to monitor keyboard or mouse events - raw input API. Good: less overhead; can detect from which device the input event came. Bad: cannot block events; incompatible with low-level keyboard hooks. This library does not have functions to make the API easier to use.
 	/// </remarks>
+	[DebuggerStepThrough]
 	public class WindowsHook : IDisposable
 	{
 		IntPtr _hh; //HHOOK

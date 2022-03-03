@@ -42,23 +42,28 @@ class PanelRecipe : DockPanel {
 
 		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 
-		//_c.ZTags.AddLinkTag("+recipe", Panels.Cookbook.RecipeLinkClicked); //rejected because we don't have a Back button
+		_c.ZTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 		_c.ZTags.AddLinkTag("+see", _SeeLinkClicked);
 		//_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
 		_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + ", C# reference")));
 		//_c.ZTags.AddLinkTag("+guide", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
+		_c.ZTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + " site:docs.microsoft.com")));
+		_c.ZTags.AddLinkTag("+nuget", s => DNuget.ZShow(s));
 		_c.ZTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
 
+#if DEBUG
 		_AutoRenderCurrentRecipeScript();
+#endif
 	}
 
-	public void SetText(string code) {
+	public void Display(string name, string code) {
 		Panels.PanelManager[this].Visible = true;
-		_SetText(code);
+		_SetText(name, code);
 	}
 
-	void _SetText(string code) {
+	void _SetText(string name, string code) {
 		_c.zClearText();
+		if (!name.NE() && !code.Starts("/// <Z")) code = $"/// <Z YellowGreen><b>{name}</b><>\r\n\r\n{code}";
 
 		//rejected:
 		//	1. Ignore code before the first ///. Not really useful, just forces to always start with ///.
@@ -104,7 +109,7 @@ class PanelRecipe : DockPanel {
 			for (int i = n1; i < n2; i++) _c.Call(SCI_MARKERADD, i, 0);
 			ac.Add((s, offset8));
 
-			foreach(var m in s.RxFindAll(@"(?m)^using [\w\.]+;")) {
+			foreach (var m in s.RxFindAll(@"(?m)^using [\w\.]+;")) {
 				(usings ??= new()).AppendLine(m.Value);
 			}
 		}
@@ -177,7 +182,7 @@ class PanelRecipe : DockPanel {
 		}
 	}
 
-	[Conditional("DEBUG")]
+#if DEBUG
 	unsafe void _AutoRenderCurrentRecipeScript() {
 		string prevText = null;
 		SciCode prevDoc = null;
@@ -185,7 +190,7 @@ class PanelRecipe : DockPanel {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!this.IsVisible) return;
 			var doc = Panels.Editor.ZActiveDoc;
-			if (doc == null || !doc.ZFile.IsScript || doc.ZFile.Parent.Parent == null) return;
+			if (doc == null || !doc.ZFile.IsScript || doc.ZFile.Parent.Name == "-") return;
 			string text = doc.zText;
 			if (text == prevText) return;
 			prevText = text;
@@ -193,7 +198,7 @@ class PanelRecipe : DockPanel {
 
 			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
 			if (n1 > 0) _c.Hwnd.Send(Api.WM_SETREDRAW);
-			_SetText(text);
+			_SetText(doc.ZFile.DisplayName, text);
 			if (doc == prevDoc) {
 				if (n1 > 0)
 					//_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
@@ -202,8 +207,12 @@ class PanelRecipe : DockPanel {
 						_c.Hwnd.Send(Api.WM_SETREDRAW, 1);
 						Api.RedrawWindow(_c.Hwnd, flags: Api.RDW_ERASE | Api.RDW_FRAME | Api.RDW_INVALIDATE);
 					});
-			} else prevDoc = doc;
+			} else {
+				prevDoc = doc;
+				Panels.Cookbook.AddToHistory(doc.ZFile.DisplayName);
+			}
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
 		};
 	}
+#endif
 }

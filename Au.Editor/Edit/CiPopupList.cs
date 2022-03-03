@@ -95,7 +95,7 @@ class CiPopupList
 			var v = _kindButtons[i];
 			if (v.IsVisible) {
 				kindsVisible |= 1 << i;
-				if (v.True()) kindsChecked |= 1 << i;
+				if (v.IsChecked == true) kindsChecked |= 1 << i;
 			}
 		}
 		if (kindsChecked == 0) kindsChecked = kindsVisible;
@@ -106,11 +106,11 @@ class CiPopupList
 	}
 
 	private void _GroupButton_Click(object sender, RoutedEventArgs e) {
-		_groupsEnabled = (sender as CheckBox).True() && _groups != null;
+		_groupsEnabled = (sender as CheckBox).IsChecked == true && _groups != null;
 		_SortAndSetControlItems();
 		this.SelectedItem = null;
 		_tv.Redraw(true);
-		App.Settings.ci_complGroup = _groupButton.True();
+		App.Settings.ci_complGroup = _groupButton.IsChecked == true;
 	}
 
 	//private void _Options_Click(object sender, RoutedEventArgs e) {
@@ -211,7 +211,7 @@ class CiPopupList
 
 		_a = a;
 		_groups = groups;
-		_groupsEnabled = _groups != null && _groupButton.True();
+		_groupsEnabled = _groups != null && _groupButton.IsChecked == true;
 		_doc = doc;
 
 		foreach (var v in _kindButtons) v.IsChecked = false;

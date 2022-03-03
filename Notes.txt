@@ -25,7 +25,8 @@ May need to test something. Eg some changes could break some main features.
 
 May need to undefine TRACE in some projects. Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
 
-May need to delete test code, eg in Tests.cs.
+May need to delete test code. Or use #if TRACE, like in Tests.cs.
+	Review perf.nw, perf.write, perf.local.
 
 Change version info (see above).
 
@@ -43,6 +44,7 @@ May need to update some info in README.md for github. Eg the screenshot and "how
 
 Open the .iss file in Inno Script Studio. Review, compile.
 	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.
+	May need to update the setup file size in the download webpage (index.md).
 
 Upload the setup file. For example with FileZilla.
 	May want to backup the old setup file at first.

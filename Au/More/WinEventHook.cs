@@ -23,6 +23,7 @@
 	/// //print.it("the end");
 	/// ]]></code>
 	/// </example>
+	[DebuggerStepThrough]
 	public class WinEventHook : IDisposable
 	{
 		IntPtr[] _a;

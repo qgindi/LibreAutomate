@@ -144,8 +144,8 @@ namespace Au.More {
 					=> ResolveAssemblyFromRefPathsAttribute_(alc, an, Assembly.GetEntryAssembly());
 
 			if (0 != (flags & EFlags.NativePaths))
-				AssemblyLoadContext.Default.ResolvingUnmanagedDll += (asm, dll)
-					=> ResolveUnmanagedDllFromNativePathsAttribute_(asm, dll, Assembly.GetEntryAssembly());
+				AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
+					=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, Assembly.GetEntryAssembly());
 
 			if (0 != (flags & EFlags.MTA))
 				process.ThisThreadSetComApartment_(ApartmentState.MTA);
@@ -169,15 +169,15 @@ namespace Au.More {
 			//print.TaskEvent_("TS", s_started);
 		}
 
-		//also used by the editor for assemblies used in editorExtension scripts
+		//for assemblies used in miniProgram and editorExtension scripts
 		internal static Assembly ResolveAssemblyFromRefPathsAttribute_(AssemblyLoadContext alc, AssemblyName an, Assembly scriptAssembly) {
-			//print.it(an);
+			//print.it("managed", an);
 			//note: don't cache GetCustomAttribute/split results. It's many times faster than LoadFromAssemblyPath and JIT.
 			var attr = scriptAssembly.GetCustomAttribute<RefPathsAttribute>();
 			if (attr != null) {
 				string name = an.Name;
 				foreach (var v in attr.Paths.Split('|')) {
-					//print.it(v, name);
+					//print.it(v);
 					int iName = v.Length - name.Length - 4;
 					if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
 					if (!filesystem.exists(v).File) continue;
@@ -189,16 +189,16 @@ namespace Au.More {
 			return null;
 		}
 
-		//also used by the editor for assemblies used in editorExtension scripts
-		internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(Assembly refAssembly, string name, Assembly scriptAssembly) {
+		//for assemblies used in miniProgram and editorExtension scripts
+		internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(string name, Assembly scriptAssembly) {
+			//print.it("native", name);
 			var attr = scriptAssembly.GetCustomAttribute<NativePathsAttribute>();
 			if (attr != null) {
-				var dir = pathname.getDirectory(refAssembly.ManifestModule.FullyQualifiedName);
 				if (!name.Ends(".dll", true)) name += ".dll";
-				//print.it(dir, name);
 				foreach (var v in attr.Paths.Split('|')) {
+					//print.it(v);
 					if (!v.Ends(name, true) || !v.Eq(v.Length - name.Length - 1, '\\')) continue;
-					var h = Api.LoadLibrary(dir + v);
+					var h = Api.LoadLibrary(v);
 					if (h != default) return h;
 				}
 			}

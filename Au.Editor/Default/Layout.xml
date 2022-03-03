@@ -36,8 +36,8 @@ active - tab.
 			<toolbar name="File" />
 			<tab z="320*" s="1" captionAt="Top">
 				<panel name="Files" captionAt="Top" />
-				<panel name="Outline" captionAt="Top" />
 				<panel name="Cookbook" captionAt="Top" />
+				<panel name="Outline" captionAt="Top" />
 			</tab>
 			<panel name="Open" z="50" />
 			<panel name="Tasks" z="50" />

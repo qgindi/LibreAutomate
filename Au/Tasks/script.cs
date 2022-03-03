@@ -564,6 +564,54 @@ namespace Au {
 #endif
 
 		/// <summary>
+		/// Waits for a .NET debugger attached to this process.
+		/// </summary>
+		/// <param name="showDialog">Show dialog with process name and id. If false, prints that info in the output pane.</param>
+		/// <remarks>
+		/// When debugger is attached, this function returns and the script continues to run. The step mode begins when the script encounters one of:
+		/// - <see cref="Debugger.Break"/> in code.
+		/// - breakpoint (set in debugger).
+		/// - exception (if debugger is configured to break on exception).
+		/// 
+		/// Best free programs that have a .NET debugger:
+		/// - Visual Studio (Community edition). It's the best, but huge (~10 GB).
+		/// - Visual Studio Code. It's much smaller.
+		/// 
+		/// Unlike <see cref="Debugger.Launch"/>, this function does not launch the Visual Studio debugger. It waits until you attach a debugger to this process. To attach:
+		/// - Visual Studio: menu Debug -> Attach to process. Then select the process (this function displays its name and id).
+		/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
+		/// 
+		/// <note>Script processes usually run as administrator, therefore the debugger process must run as administrator too.</note>
+		/// 
+		/// Visual Studio Code debugger setup:
+		/// - Install extension "C#".
+		/// - Open a folder where you want to save debugger settings.
+		/// - Click menu Run -> Add configuration. Select ".NET 5+ and .NET Core".
+		/// - Click "Add configuration" again and select ".NET attach to local...".
+		/// - Save.
+		/// </remarks>
+		[DebuggerStepThrough]
+		public static void debug(bool showDialog = false) {
+			if (!Debugger.IsAttached) {
+				if (showDialog) {
+					var d = new dialog("Waiting for debugger to attach", $"Process {process.thisExeName}  {process.thisProcessId}.");
+					d.Screen = screen.ofMouse;
+					d.ShowDialogNoWait();
+					wait.forCondition(0, () => Debugger.IsAttached);
+					d.Send.Close();
+				} else {
+					print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
+					wait.forCondition(0, () => Debugger.IsAttached);
+					print.it("Debugger attached.");
+				}
+			}
+			//note: don't add Debugger.Break(); here. It creates problems.
+		}
+
+		//[DebuggerStepThrough]
+		//public static void debugLaunchVS() => Debugger.Launch(); //not better than Debugger.Launch
+
+		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// Uses <see cref="wnd.Cached_"/>.
 		/// </summary>

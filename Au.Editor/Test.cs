@@ -36,19 +36,18 @@ static unsafe class Test {
 	static void V1(Architecture a) { }
 	static void V2(int i, Architecture a) { }
 
-//	static void TestMarkdig() {
-//		string markdown = @"List:
-//- one.
-//- two.
+	//	static void TestMarkdig() {
+	//		string markdown = @"List:
+	//- one.
+	//- two.
 
-//	";
+	//	";
 
-//		string html = Markdig.Markdown.ToHtml(markdown);
-//		print.it(html);
-//	}
+	//		string html = Markdig.Markdown.ToHtml(markdown);
+	//		print.it(html);
+	//	}
 
 	public static void FromMenubar() {
-
 
 
 

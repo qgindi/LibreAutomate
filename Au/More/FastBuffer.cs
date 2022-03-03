@@ -184,7 +184,7 @@
 		}
 
 		/// <summary>
-		/// Finds length of '\0'-terminated UTF-16 string in buffer.
+		/// Finds length of '\0'-terminated char string in buffer.
 		/// Returns <see cref="n"/> if there is no '\0' character.
 		/// </summary>
 		public int FindStringLength() {
@@ -193,10 +193,10 @@
 		}
 
 		/// <summary>
-		/// Finds length of '\0'-terminated ANSI string in buffer.
+		/// Finds length of '\0'-terminated byte string in buffer.
 		/// Returns <see cref="n"/> if there is no '\0' character.
 		/// </summary>
-		public int FindStringLengthAnsi() {
+		public int FindByteStringLength() {
 			if (sizeof(T) != 1) throw new InvalidOperationException();
 			return BytePtr_.Length((byte*)_p, _n);
 		}

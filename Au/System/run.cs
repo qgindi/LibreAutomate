@@ -271,8 +271,7 @@ namespace Au {
 		/// <remarks>
 		/// The console window is hidden. The text that would be displayed in it is redirected to this function.
 		/// 
-		/// Console programs have two output text streams - standard output and standard error. This function gets both.
-		/// Alternatively use <see cref="Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
+		/// Console programs have two output text streams - standard output and standard error. This function gets both. Alternatively use <see cref="Process.Start"/>; it gets the output and error streams separately, and some lines may be received in incorrect order in time.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

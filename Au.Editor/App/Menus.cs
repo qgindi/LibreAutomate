@@ -275,9 +275,15 @@ static class Menus {
 		public static void Recent() { RecentTT.Show(); }
 
 		[Command(separator = true)]
-		public static void Debug_break() {
-			//InsertCode.UsingDirective("System.Diagnostics"); //in global.cs. Or CiErrors will add.
-			InsertCode.Statements("if(Debugger.IsAttached) Debugger.Break(); else Debugger.Launch();");
+		public static class Debugger {
+			[Command("Insert script.debug (wait for debugger to attach)")]
+			public static void Debug_attach() { InsertCode.Statements("script.debug();\r\nDebugger.Break();"); }
+
+			[Command("Insert Debugger.Break (debugger step mode)")]
+			public static void Debug_break() { InsertCode.Statements("Debugger.Break();"); }
+
+			[Command("Insert Debugger.Launch (launch VS debugger)")]
+			public static void Debug_launch() { InsertCode.Statements("Debugger.Launch();"); }
 		}
 	}
 
@@ -290,27 +296,27 @@ static class Menus {
 		//public static void Add_toolbar() { TriggersAndToolbars.AddToolbar(); }
 
 		[Command('k'/*, separator = true*/)]
-		public static void Edit_hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
+		public static void Hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
 
-		[Command('a')]
-		public static void Edit_autotext_triggers() { TriggersAndToolbars.Edit(@"Triggers\Autotext triggers.cs"); }
+		[Command]
+		public static void Autotext_triggers() { TriggersAndToolbars.Edit(@"Triggers\Autotext triggers.cs"); }
 
-		[Command('m')]
-		public static void Edit_mouse_triggers() { TriggersAndToolbars.Edit(@"Triggers\Mouse triggers.cs"); }
+		[Command]
+		public static void Mouse_triggers() { TriggersAndToolbars.Edit(@"Triggers\Mouse triggers.cs"); }
 
-		[Command('w')]
-		public static void Edit_window_triggers() { TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs"); }
+		[Command]
+		public static void Window_triggers() { TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs"); }
 
 		[Command(separator = true)]
-		public static void Edit_common_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Common toolbars.cs"); }
+		public static void Common_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Common toolbars.cs"); }
 
-		[Command()]
-		public static void Edit_window_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Window toolbars.cs"); }
+		[Command]
+		public static void Window_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Window toolbars.cs"); }
 
 		[Command(separator = true)]
 		public static void Edit_TT_script() { TriggersAndToolbars.Edit(@"Triggers and toolbars.cs"); }
 
-		[Command()]
+		[Command]
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 
 		[Command(separator = true)]
@@ -321,6 +327,9 @@ static class Menus {
 
 		[Command("...")]
 		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }
+
+		[Command("...", separator = true)]
+		public static void Script_triggers() { DCommandline.ZShow(); }
 	}
 
 	[Command(target = "")]

@@ -1,5 +1,5 @@
-- name: Autepad C#
-  href: Autepad.md
+- name: Automaticode C#
+  href: Automaticode.md
 - name: Code editor
   href: Code editor.md
 - name: Command line
@@ -8,7 +8,5 @@
   href: Scripts.md
 - name: "Class files, projects"
   href: "Class files, projects.md"
-- name: Writing scripts
-  href: Writing scripts.md
 - name: Compared with QM2
   href: Compared with QM2.md

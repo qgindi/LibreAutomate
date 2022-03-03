@@ -196,7 +196,7 @@ y - res
 				}
 				if (!md.IsEmpty) b.Append("|p").Append(md.Hash.ToString());
 
-				if (m.ProjectReferences != null) foreach (var v in m.ProjectReferences) _AppendFile("|l", v); //ids of meta 'pr' files
+				if (m.ProjectReferences != null) foreach (var (v, _) in m.ProjectReferences) _AppendFile("|l", v); //ids of meta 'pr' files
 				if (m.Resources != null) foreach (var v in m.Resources) _AppendFile("|x", v.f); //ids of meta 'resource' files
 				_AppendFile("|k", m.IconFile);
 				_AppendFile("|m", m.ManifestFile);

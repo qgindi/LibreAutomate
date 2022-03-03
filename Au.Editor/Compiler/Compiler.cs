@@ -21,6 +21,7 @@ namespace Au.Compiler {
 		/// <param name="r">Results.</param>
 		/// <param name="f">C# file. If projFolder used, must be the main file of the project.</param>
 		/// <param name="projFolder">null or project folder.</param>
+		/// <param name="needMeta">Parse metacomments and set r.meta even if don't need to compile.</param>
 		/// <remarks>
 		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1).
 		/// 
@@ -30,19 +31,24 @@ namespace Au.Compiler {
 		///		If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
 		///		Else compiles but does not create output files.
 		/// </remarks>
-		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null) {
+		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false) {
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
 			var cache = XCompiled.OfWorkspace(f.Model);
-			bool isCompiled = reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder);
-
-			//print.it("isCompiled=" + isCompiled);
-
-			if (!isCompiled) {
-				bool ok = false;
+			if (reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder)) {
+				//print.it("cached");
+				if (needMeta) {
+					var m = new MetaComments();
+					if (!m.Parse(f, projFolder, EMPFlags.PrintErrors | EMPFlags.OnlyRef)) return false;
+					r.meta = m;
+					//FUTURE: save used dll etc paths in xcompiled, to avoid parsing meta of all pr.
+				}
+				return true;
+			} else {
+				//print.it("COMPILE");
 				Action aFinally = null;
 				try {
-					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder, out aFinally);
+					if (_Compile(reason == ECompReason.Run, f, out r, projFolder, out aFinally)) return true;
 				}
 				catch (Exception ex) {
 					//print.it($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
@@ -52,13 +58,9 @@ namespace Au.Compiler {
 					aFinally?.Invoke();
 				}
 
-				if (!ok) {
-					cache.Remove(f, false);
-					return false;
-				}
+				cache.Remove(f, false);
+				return false;
 			}
-
-			return true;
 		}
 
 		/// <summary>_Compile() output assembly info.</summary>
@@ -77,6 +79,9 @@ namespace Au.Compiler {
 
 			/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
 			public bool notInCache;
+
+			/// <summary>May be null if not explicitly requested.</summary>
+			public MetaComments meta;
 		}
 
 		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally) {
@@ -89,6 +94,7 @@ namespace Au.Compiler {
 			var m = new MetaComments();
 			if (!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
+			r.meta = m;
 			p1.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
@@ -120,8 +126,17 @@ namespace Au.Compiler {
 			var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
 			for (int i = 0; i < trees.Length; i++) {
 				var f1 = m.CodeFiles[i];
-				trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
-				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
+
+				//never mind: should use Encoding.UTF8 etc if the file is with BOM. Encoding.Default is UTF-8 without BOM.
+				//	Else, when debugging with VS or VS Code, they say "source code changed" and can't set breakpoints by default.
+				//	But they have an option to debug modified files anyway.
+				//	This program saves new files without BOM. It seems VS Code too. VS saves with BOM (maybe depends on its settings).
+				//	CONSIDER: use ParseText overload with SourceText, for which use StreamReader that detects BOM. Not tested.
+				var encoding = Encoding.Default;
+
+				trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, encoding) as CSharpSyntaxTree;
+
+				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), debuggers, etc.
 				//	Our print.Server.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 			}
 			p1.Next('t');
@@ -258,9 +273,8 @@ namespace Au.Compiler {
 				r.file = outFile;
 
 				if (m.Role == ERole.exeProgram) {
-					bool need32 = m.Bit32 || osVersion.is32BitOS;
-					bool need64 = !need32 || m.Optimize;
-					need32 |= m.Optimize;
+					bool need64 = !m.Bit32 || m.Optimize;
+					bool need32 = m.Bit32 || m.Optimize;
 
 					//copy app host template exe, add native resources, set assembly name, set console flag if need
 					if (need64) _AppHost(outFile, fileName, m, bit32: false);
@@ -334,7 +348,7 @@ namespace Au.Compiler {
 		/// Adds some module/assembly attributes. Also adds module initializer for role exeProgram.
 		/// </summary>
 		static MiniProgram_.EFlags _AddAttributesEtc(ref CSharpCompilation compilation, MetaComments m) {
-			MiniProgram_.EFlags R = 0;
+			MiniProgram_.EFlags rflags = 0;
 			//bool needDefaultCharset = true;
 			//foreach (var v in compilation.SourceModule.GetAttributes()) {
 			//	//print.it(v.AttributeClass.Name);
@@ -362,39 +376,23 @@ namespace Au.Compiler {
 				if (needAssemblyTitle) sb.AppendLine($"[assembly: System.Reflection.AssemblyTitle(\"{m.Name}\")]");
 
 				if (m.Role is ERole.miniProgram or ERole.editorExtension) {
-					//add RefPaths attribute to resolve paths of managed dlls at run time
-					//var ta = folders.ThisAppBS; //no, we don't use APP_PATHS
-					var refs = m.References.Refs;
-					for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
-						var path = refs[k].FilePath;
-						//if (path.Starts(ta, true) && path.IndexOf('\\', ta.Length) < 0) continue;
-						if (!path.Ends(".dll", true)) continue;
-						sb.Append(R.Has(MiniProgram_.EFlags.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"").Append(path);
-						R |= MiniProgram_.EFlags.RefPaths;
-					}
-					if (R.Has(MiniProgram_.EFlags.RefPaths)) sb.AppendLine("\")]");
-
-					//add NativePaths attribute to resolve paths of native dlls at run time
-					var xn = m.NugetXmlRoot;
-					if (xn != null) {
-						foreach (var package in m.NugetPackages) {
-							var xp = xn.Elem("package", "path", package, true);
-							if (xp != null) {
-								foreach (var f in xp.Elements("f")) {
-									string path = f.Value;
-									if (!path.Ends(".dll", true)) continue;
-									if (path.Starts(@"\runtimes\win-x")) {
-										//if (!relPath.Eq(15, osVersion.is32BitProcess ? "86" : "64")) continue;
-										if (!path.Eq(15, "64")) continue;
-									}
-									//print.it(path);
-									sb.Append(R.Has(MiniProgram_.EFlags.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"").Append(path);
-									R |= MiniProgram_.EFlags.NativePaths;
-								}
-							}
+					var (dr, dn) = _GetDllPaths(m);
+					if (dr != null) { //add RefPaths attribute to resolve paths of managed dlls at run time
+						foreach (var v in dr) {
+							sb.Append(rflags.Has(MiniProgram_.EFlags.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"");
+							sb.Append(v.Value);
+							rflags |= MiniProgram_.EFlags.RefPaths;
 						}
+						sb.AppendLine("\")]");
 					}
-					if (R.Has(MiniProgram_.EFlags.NativePaths)) sb.AppendLine("\")]");
+					if (dn != null) { //add NativePaths attribute to resolve paths of native dlls at run time
+						foreach (var v in dn) {
+							sb.Append(rflags.Has(MiniProgram_.EFlags.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"");
+							sb.Append(v.Value);
+							rflags |= MiniProgram_.EFlags.NativePaths;
+						}
+						sb.AppendLine("\")]");
+					}
 				}
 
 				if (m.TestInternal != null) {
@@ -425,7 +423,58 @@ namespace Au.Compiler {
 				//compilation = compilation.AddSyntaxTrees(tree);
 				compilation = compilation.RemoveAllSyntaxTrees().AddSyntaxTrees(compilation.SyntaxTrees.Insert(0, tree));
 			}
-			return R;
+			return rflags;
+		}
+
+		static (Dictionary<string, string> dr, Dictionary<string, string> dn) _GetDllPaths(MetaComments meta) {
+			Dictionary<string, string> dr = null, dn = null; //managed, native
+			_Project(meta);
+			void _Project(MetaComments m) {
+				//managed dlls from everywhere
+				var refs = m.References.Refs;
+				for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
+					var path = refs[k].FilePath;
+					_Add(ref dr, pathname.getName(path), path);
+				}
+
+				//native dlls from nuget
+				var xn = m.NugetXmlRoot;
+				if (xn != null) {
+					foreach (var package in m.NugetPackages) {
+						var xp = xn.Elem("package", "path", package, true);
+						if (xp != null) {
+							foreach (var f in xp.Elements("f")) {
+								string name = f.Value; // \64\name.dll or \32\name.dll
+								string skip = null;
+								if (meta.Role != ERole.exeProgram) skip = @"\32";
+								else if (meta.Bit32) skip = @"\64";
+								else if (!meta.Optimize) skip = @"\32";
+								if (skip != null && name.Starts(skip)) continue;
+
+								if (!name.Ends(".dll", true)) {
+									if (meta.Role != ERole.exeProgram) continue; //when creating exe, copy all files except XML doc
+									if (name.Ends(".xml", true) && (dr?.ContainsKey(pathname.getNameNoExt(name) + ".dll") ?? false)) continue; //XML doc
+								}
+								_Add(ref dn, name, App.Model.NugetDirectoryBS + pathname.getDirectory(package) + name);
+							}
+						}
+					}
+				}
+
+				void _Add(ref Dictionary<string, string> d, string name, string path) {
+					d ??= new(StringComparer.OrdinalIgnoreCase);
+					if (d.TryAdd(name, path)) return;
+					var existing = d[name]; if (existing.Eqi(path)) return;
+					if (filesystem.loadBytes(existing).AsSpan().SequenceEqual(filesystem.loadBytes(path))) return;
+					throw new InvalidOperationException($"Two different versions of file:\r\n\t{existing}\r\n\t{path}");
+					//CONSIDER: pick the newer version and show warning. But what if it is a completely different file?
+				}
+
+				var pr = m.ProjectReferences;
+				if (pr != null) foreach (var v in pr) _Project(v.m);
+			}
+
+			return (dr, dn);
 		}
 
 		static List<ResourceDescription> _CreateManagedResources(MetaComments m, string asmName) {
@@ -670,59 +719,49 @@ namespace Au.Compiler {
 
 		static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32) {
 			asmStream.Position = 0;
-			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
-			var mr = pr.GetMetadataReader();
-			var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
-			//print.it(usedRefs); print.it("---");
 
-			bool _CopyRefIfNeed(string sFrom, string sTo) {
-				if (!usedRefs.Contains(pathname.getNameNoExt(sFrom), StringComparer.OrdinalIgnoreCase)) return false;
-				_CopyFileIfNeed(sFrom, sTo);
-				return true;
+			//using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
+			//var mr = pr.GetMetadataReader();
+			//var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
+			//print.it(usedRefs.Contains(pathname.getNameNoExt(sFrom), StringComparer.OrdinalIgnoreCase));
+
+			_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", m.OutputPath + @"\Au.dll");
+			if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
+			if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
+
+			bool usesSqlite = _UsesSqlite(asmStream);
+
+			static bool _UsesSqlite(Stream asmStream) {
+				using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
+				var mr = pr.GetMetadataReader();
+				foreach (var handle in mr.TypeReferences) {
+					var tr = mr.GetTypeReference(handle);
+					//print.it(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
+					string type = mr.GetString(tr.Name);
+					if ((type.Starts("sqlite") && mr.GetString(tr.Namespace) == "Au")
+						|| (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) return true;
+				}
+				return false;
 			}
 
-			if (_CopyRefIfNeed(typeof(wnd).Assembly.Location, m.OutputPath + @"\Au.dll")) {
-				if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
-				if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
-			}
+			var (dr, dn) = _GetDllPaths(m);
+			if (dr != null) { //copy managed dlls, including those from nuget
+				foreach (var v in dr) {
+					_CopyFileIfNeed(v.Value, m.OutputPath + "\\" + v.Key);
 
-			//copy managed dlls, including those from nuget packages
-			var refs = m.References.Refs;
-			for (int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
-				var s1 = refs[i].FilePath;
-				var s2 = m.OutputPath + "\\" + pathname.getName(s1);
-				//print.it(s1, s2);
-				_CopyRefIfNeed(s1, s2);
-			}
-
-			//copy other files from nuget packages
-			var xn = m.NugetXmlRoot;
-			if (xn != null) {
-				foreach (var package in m.NugetPackages) {
-					var xp = xn.Elem("package", "path", package, true);
-					if (xp != null) {
-						foreach (var f in xp.Elements()) {
-							if (f.Name.LocalName is not ("r" or "f")) continue;
-							//include managed dlls too. Else would not copy dependencies that aren't referenced directly in the script.
-							//	If the dll is already copied by the above code, will just compare size/time and not copy.
-							string relPath = f.Value;
-							_CopyFileIfNeed(App.Model.NugetDirectoryBS + pathname.getDirectory(package) + relPath, m.OutputPath + relPath);
-						}
+					if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) {
+						using var fs = filesystem.loadStream(v.Value);
+						usesSqlite = _UsesSqlite(fs);
 					}
 				}
 			}
 
-			//copy unmanaged dlls
-			bool usesSqlite = false;
-			foreach (var handle in mr.TypeReferences) {
-				var tr = mr.GetTypeReference(handle);
-				//print.it(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
-				string type = mr.GetString(tr.Name);
-				if ((type.Starts("sqlite") && mr.GetString(tr.Namespace) == "Au") || (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) {
-					usesSqlite = true;
-					break;
+			if (dn != null) { //copy other files from nuget
+				foreach (var v in dn) {
+					_CopyFileIfNeed(v.Value, m.OutputPath + v.Key);
 				}
 			}
+
 			//print.it(usesSqlite);
 			if (usesSqlite) {
 				if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", m.OutputPath + @"\64\sqlite3.dll");
@@ -764,7 +803,7 @@ namespace Au.Compiler {
 				for (int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 			}
 
-			string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Bit32 || osVersion.is32BitOS) : outFile;
+			string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Bit32) : outFile;
 
 			bool ok = Compile(ECompReason.Run, out var r, x.f);
 			if (r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
@@ -779,7 +818,7 @@ namespace Au.Compiler {
 		/// Replaces ".dll" with "-32.exe" if bit32, else with ".exe".
 		/// </summary>
 		public static string DllNameToAppHostExeName(string dll, bool bit32)
-			=> dll.ReplaceAt(dll.Length - 4, 4, bit32 ? "-32.exe" : ".exe");
+			=> dll.ReplaceAt(^4.., bit32 ? "-32.exe" : ".exe");
 
 		static bool _RenameLockedFile(string file, bool notInCache) {
 			//If the assembly file is currently loaded, we get ERROR_SHARING_VIOLATION. But we can rename the file.

@@ -65,7 +65,7 @@ namespace Au
 		/// <param name="text">Text.</param>
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (CF_UNICODETEXT).
-		/// Text encoding (UTF-16, ANSI, etc) depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// Text encoding depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid format.</exception>
@@ -133,16 +133,6 @@ namespace Au
 		public clipboardData AddHtml(string html) {
 			return AddBinary(CreateHtmlFormatData_(html), ClipFormats.Html);
 			//note: don't support UTF-16 string of HTML format (starts with "Version:"). UTF8 conversion problems.
-		}
-
-		/// <summary>
-		/// Adds rich text (RTF). Uses clipboard format <see cref="ClipFormats.Rtf"/> ("Rich Text Format").
-		/// Returns this.
-		/// </summary>
-		/// <param name="rtf">Rich text. Simplest example: <c>@"{\rtf1 text\par}"</c>.</param>
-		/// <exception cref="ArgumentNullException"></exception>
-		public clipboardData AddRtf(string rtf) {
-			return AddText(rtf, ClipFormats.Rtf);
 		}
 
 		/// <summary>
@@ -366,7 +356,7 @@ EndFragment:0000000000
 
 				Encoding enc = ClipFormats.GetTextEncoding_(format, out bool unknown);
 				if (unknown) {
-					if ((len & 1) != 0 || BytePtr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
+					if ((len & 1) != 0 || BytePtr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect  //never mind: it is UTF-8, not ANSI. Rarely used, especially with non-ASCII text.
 				}
 
 				if (enc == null) {
@@ -399,7 +389,7 @@ EndFragment:0000000000
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (CF_UNICODETEXT).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
-		/// Text encoding (UTF-16, ANSI, etc) depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// Text encoding depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string getText(int format = ClipFormats.Text) {
@@ -506,15 +496,6 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets rich text (RTF) from the clipboard. Uses clipboard format <see cref="ClipFormats.Rtf"/> ("Rich Text Format").
-		/// Returns null if there is no data of this format.
-		/// </summary>
-		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
-		public static string getRtf() => getText(ClipFormats.Rtf);
-
-		//FUTURE: GetCsvTable
-
-		/// <summary>
 		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (CF_HDROP).
 		/// Returns null if there is no data of this format.
 		/// </summary>
@@ -590,9 +571,6 @@ namespace Au.Types
 		/// <summary>The HTML format. Registered, name "HTML Format". Used by <see cref="clipboardData"/> add/get HTML functions.</summary>
 		public static int Html { get; } = Api.RegisterClipboardFormat("HTML Format");
 
-		/// <summary>The RTF format. Registered, name "Rich Text Format". Used by <see cref="clipboardData"/> add/get RTF functions.</summary>
-		public static int Rtf { get; } = Api.RegisterClipboardFormat("Rich Text Format");
-
 		/// <summary>Registered "Shell IDList Array" format.</summary>
 		internal static int ShellIDListArray_ { get; } = Api.RegisterClipboardFormat("Shell IDList Array");
 
@@ -612,11 +590,11 @@ namespace Au.Types
 		/// Registers a clipboard format and returns its id. If already registered, just returns id.
 		/// </summary>
 		/// <param name="name">Format name.</param>
-		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/> or <see cref="Encoding.Default"/> (ANSI). If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
+		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
 		/// <remarks>Calls API <msdn>RegisterClipboardFormat</msdn>.</remarks>
 		public static int Register(string name, Encoding textEncoding = null) {
 			var R = Api.RegisterClipboardFormat(name);
-			if (textEncoding != null && R != 0 && R != Html && R != Rtf) s_textEncoding[R] = textEncoding;
+			if (textEncoding != null && R != 0 && R != Html) s_textEncoding[R] = textEncoding;
 			return R;
 		}
 
@@ -628,8 +606,8 @@ namespace Au.Types
 		/// </summary>
 		internal static Encoding GetTextEncoding_(int format, out bool unknown) {
 			unknown = false;
-			if (format == 0 || format == Api.CF_UNICODETEXT || format == Api.CF_HDROP) return null;
-			if (format == Rtf || format < Api.CF_MAX) return Encoding.Default;
+			if (format is 0 or Api.CF_UNICODETEXT or Api.CF_HDROP) return null;
+			if (format < Api.CF_MAX) return Encoding.Default; //never mind: it is UTF-8, not ANSI. Rarely used, especially with non-ASCII text.
 			if (format == Html) return Encoding.UTF8;
 			if (s_textEncoding.TryGetValue(format, out var enc)) return enc == Encoding.Unicode ? null : enc;
 			unknown = true;

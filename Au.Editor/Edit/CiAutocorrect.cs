@@ -236,9 +236,10 @@ class CiAutocorrect {
 
 				if (span.Start != pos - (isVerbatim ? 1 : 0) - (isInterpolated ? 1 : 0)) {
 					if (isVerbatim) {
-						//inside verbatim string replace " with ""
-						cd.pos16--; //insert " before ", and let caret be after ""
-						tempRangeFrom = 0;
+						//rejected: inside verbatim string replace " with "". Often more annoying than useful.
+						return;
+						//cd.pos16--; //insert " before ", and let caret be after ""
+						//tempRangeFrom = 0;
 					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken && token.Parent.NoClosingQuote()) {
 						int i = span.Start;
 						while (code[i] == '$') i++;

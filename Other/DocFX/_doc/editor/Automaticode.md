@@ -1,10 +1,10 @@
 ---
-uid: Autepad
+uid: Automaticode
 ---
 
-# Autepad C#
+# Automaticode C#
 
-Autepad C# is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
+Automaticode C# is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
 
 ![window](../images/window.png "Editor window")
 

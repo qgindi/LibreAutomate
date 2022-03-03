@@ -6,8 +6,8 @@ using System.Linq;
 
 static class App {
 	public const string
-		AppName = "Autepad C#",
-		AppNameShort = "Autepad"; //must be without spaces etc
+		AppName = "Automaticode C#",
+		AppNameShort = "Automaticode"; //must be without spaces etc
 
 	public static string UserGuid;
 	internal static print.Server PrintServer;
@@ -167,9 +167,9 @@ static class App {
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
 
 		//is it used by an editorExtension script?
-		var st = new StackTrace(); //never mind the slowness
-		for (int i = 2; i < 20; i++) {
-			var f = st.GetFrame(i);
+		var st = new StackTrace(2); //not too slow
+		for (int i = 0; ; i++) {
+			var f = st.GetFrame(i); if (f == null) break;
 			var asm = f.GetMethod()?.DeclaringType?.Assembly;
 			if (asm.GetName().Name.Contains('|')) //ScriptName|GUID
 				return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
@@ -180,14 +180,14 @@ static class App {
 	}
 	static Dictionary<string, string> s_arDlls;
 
-	private static IntPtr _UnmanagedDll_Resolving(Assembly refAssembly, string name) {
+	private static IntPtr _UnmanagedDll_Resolving(Assembly _, string name) {
 		//is it used by an editorExtension script?
-		var st = new StackTrace(); //never mind the slowness
-		for (int i = 2; i < 20; i++) {
-			var f = st.GetFrame(i);
+		var st = new StackTrace(2); //not too slow
+		for (int i = 0; ; i++) {
+			var f = st.GetFrame(i); if (f == null) break;
 			var asm = f.GetMethod()?.DeclaringType?.Assembly;
 			if (asm.GetName().Name.Contains('|')) //ScriptName|GUID
-				return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(refAssembly, name, asm);
+				return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
 		}
 
 		return default;

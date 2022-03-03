@@ -18,7 +18,7 @@ namespace Au.More
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		/// <remarks>
 		/// The result string length is 2 * data length.
-		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 eg for file names because it is case-sensitive. Both functions are fast.
+		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
 		/// </remarks>
 		public static string HexEncode(void* data, int size, bool upperCase = false) {
 			int u = (upperCase ? 'A' : 'a') - 10;
@@ -46,7 +46,7 @@ namespace Au.More
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		/// <remarks>
 		/// The result string length is 2 * data length.
-		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 eg for file names because it is case-sensitive. Both functions are fast.
+		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
 		/// </remarks>
 		public static string HexEncode(ReadOnlySpan<byte> data, bool upperCase = false) {
 			fixed (byte* p = data) {
@@ -61,7 +61,7 @@ namespace Au.More
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		/// <remarks>
 		/// The result string length is 2 * data length.
-		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 eg for file names because it is case-sensitive. Both functions are fast.
+		/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
 		/// </remarks>
 		public static string HexEncode<T>(T x, bool upperCase = false) where T : unmanaged
 			=> HexEncode(&x, sizeof(T), upperCase);

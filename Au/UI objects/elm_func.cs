@@ -1343,6 +1343,7 @@ namespace Au
 		/// </param>
 		/// <param name="keys">null or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double, bool)"/>.</param>
 		/// <param name="waitS">If not 0, after expanding each element waits for expanded state max this number of seconds; on timeout throws exception, unless negative. Also waits for each element this number of seconds; always exception if not found.</param>
+		/// <param name="notLast">Find but don't expand the last element specified in <i>path</i>. For example if it's not a folder, and therefore can't expand it, but you need to find it (this function returns it).</param>
 		/// <returns><b>elm</b> of the last element specified in <i>path</i>.</returns>
 		/// <exception cref="ArgumentException"><i>path</i> contains an invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
 		/// <exception cref="NotFoundException">Failed to find an element specified in <i>path</i>.</exception>
@@ -1355,14 +1356,15 @@ namespace Au
 		/// 
 		/// Does not work if all TREEITEM elements in the TREE control are its direct children, unless it's the standard Windows treeview control.
 		/// </remarks>
-		public elm Expand(Strings path, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 3) {
-			return _ExpandPath(path, keys, null, waitS);
+		public elm Expand(Strings path, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 3, bool notLast = false) {
+			return _ExpandPath(path, keys, null, waitS, notLast);
 		}
 
-		/// <inheritdoc cref="Expand(Strings, string, double)"/>
+		/// <inheritdoc cref="Expand(Strings, string, double, bool)"/>
 		/// <param name="path"></param>
 		/// <param name="action">Callback function that should expand UI elements.</param>
 		/// <param name="waitS"></param>
+		/// <param name="notLast"></param>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="NotFoundException"/>
 		/// <exception cref="AuException"/>
@@ -1370,11 +1372,11 @@ namespace Au
 		/// <exception cref="NotSupportedException"/>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <remarks></remarks>
-		public elm Expand(Strings path, Action<elm> action, double waitS = 3) {
-			return _ExpandPath(path, null, action, waitS);
+		public elm Expand(Strings path, Action<elm> action, double waitS = 3, bool notLast = false) {
+			return _ExpandPath(path, null, action, waitS, notLast);
 		}
 
-		elm _ExpandPath(Strings path, string keys, Action<elm> action, double waitS) {
+		elm _ExpandPath(Strings path, string keys, Action<elm> action, double waitS, bool notLast) {
 			ThrowIfDisposed_();
 			var a = path.ToArray();
 			var e = this;
@@ -1388,9 +1390,11 @@ namespace Au
 					_ExpandIfNeed(this, hi);
 				}
 
-				foreach (var name in a) {
+				for(int i = 0; i < a.Length; i++) {
+					var name = a[i];
 					bool ok = waitS == 0 ? _Find(name) : wait.forCondition(-Math.Abs(waitS), () => _Find(name));
 					if (!ok) throw new NotFoundException("Not found elm expand path part: " + name);
+					if (notLast && i == a.Length - 1) break;
 					_ExpandIfNeed(e, hi);
 				}
 

@@ -103,7 +103,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		////cBackground.SelectionChanged += (o, e) => _ChangeBackground();
 		//b.Add(out KCheckBox cCollection, "Collection");
 		//cCollection.CheckChanged += (_, _) => {
-		//	_withCollection = cCollection.True();
+		//	_withCollection = cCollection.IsChecked == true;
 		//	tv.Redraw();
 		//};
 		//b.End();
@@ -219,7 +219,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			}
 
 			if (code != null) {
-				if (setClipboard.True()) clipboard.text = code;
+				if (setClipboard.IsChecked == true) clipboard.text = code;
 				else if (what is 0 or 1) InsertCode.Statements(code);
 				else InsertCode.TextSimply(code);
 			}

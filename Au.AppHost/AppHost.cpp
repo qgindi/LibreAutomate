@@ -380,9 +380,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		if(!noAppPaths) {
 			nd16 += p.appDir;
 #if _WIN64
-			nd16 += L"\\runtimes\\win-x64\\native\\;";
+			nd16 += L"\\64\\;";
 #else
-			nd16 += L"\\runtimes\\win-x86\\native\\;";
+			nd16 += L"\\32\\;";
 #endif
 		}
 		nd16 += p.netDesktop; nd16 += L"\\;";
