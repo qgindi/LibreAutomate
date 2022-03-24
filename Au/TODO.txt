@@ -1,19 +1,16 @@
 ﻿Add these functions and classes. All are in QM2.
 
 computer:
-	isLoggedOn. Maybe .NET has it.
+	isLoggedOn. Maybe .NET has it, eg Environment.UserName/UserInteractive.
 	getIpAddress. See https://stackoverflow.com/questions/6803073/get-local-ip-address
 	getCpuUsage, getDiskUsage.
 process:
-	getCpuUsage, getStartupTime.
-IntCheckConnection, IntGetFile, IntGoOnline, IntIsOnline.
-Ftp, if .NET does not have it.
-HtmlDoc.
-Email send/receive (iirc .NET can send only).
-WaitIdle, outb, _TempFile, DetectStringEncoding.
-ExcelSheet.
-Database, if .NET does not have it or too difficult.
-Services. Maybe use System.ServiceProcess.ServiceController from nuget.
-	Or can use commandline, eg "net start servicename", "sc config servicename start= disabled", "sc queryex type=service state=all".
+	getCpuUsage, getStartupTime (.NET Process has it?).
+IntCheckConnection, IntGetFile (now recipe exists).
+outb, DetectStringEncoding.
 
 Review functions/classes in QM2 Archive. Now reviewed all in qm.exe and System.
+
+CONSIDER
+TempFile class. Already created, in script "TempFile". Not sure is it so useful.
+WaitIdle, ResumeWhenIdle. But in my QM2 workspace used 0 times.

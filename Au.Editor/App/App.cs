@@ -6,7 +6,7 @@ using System.Linq;
 
 static class App {
 	public const string
-		AppName = "Automaticode C#",
+		AppNameLong = "Automaticode C#",
 		AppNameShort = "Automaticode"; //must be without spaces etc
 
 	public static string UserGuid;
@@ -47,10 +47,10 @@ static class App {
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
 		DebugTraceListener.Setup(usePrint: true);
-		folders.ThisAppDocuments = (FolderPath)(folders.Documents + AppNameShort);
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
+		_SetThisAppDocuments();
 
 		if (CommandLine.ProgramStarted2(args)) return;
 
@@ -193,6 +193,25 @@ static class App {
 		return default;
 	}
 
+	static void _SetThisAppDocuments() {
+		string thisAppDoc = folders.Documents + AppNameShort;
+
+		//The app name was changed several times during the preview period.
+		//	If was installed with an old name, rename the app doc directory instead of creating new.
+		//	It contains app settings and probably the workspace folder.
+		//	FUTURE: delete this code.
+		if (!filesystem.exists(thisAppDoc)) {
+			try {
+				string s;
+				if (filesystem.exists(s = folders.Documents + "Autepad")) filesystem.move(s, thisAppDoc);
+				else if (filesystem.exists(s = folders.Documents + "Derobotizer")) filesystem.move(s, thisAppDoc);
+			}
+			catch { }
+		}
+
+		folders.ThisAppDocuments = (FolderPath)thisAppDoc; //creates if does not exist
+	}
+
 	/// <summary>
 	/// Timer with 1 s period.
 	/// </summary>
@@ -250,7 +269,11 @@ static class App {
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		try {
+			string sesId = process.thisProcessSessionId.ToS();
+			args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
+
 			bool isAuHomePC = Api.EnvironmentVariableExists("Au.Home<PC>") && !folders.ThisAppBS.Starts(@"C:\Program Files", true);
+
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
 				isAuHomePC ? "_Au.Editor" : "Au.Editor", //in Q:\app\Au\_ or <installed path>
@@ -299,7 +322,7 @@ static class App {
 			var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_MESSAGE | Api.NIF_ICON | Api.NIF_TIP /*| Api.NIF_SHOWTIP*/) { //need NIF_SHOWTIP if called NIM_SETVERSION(NOTIFYICON_VERSION_4)
 				uCallbackMessage = c_msgNotify,
 				hIcon = _GetIcon(),
-				szTip = App.AppName
+				szTip = App.AppNameLong
 			};
 			if (Api.Shell_NotifyIcon(Api.NIM_ADD, d)) {
 				//d.uFlags = 0;

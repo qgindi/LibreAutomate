@@ -23,12 +23,29 @@ class CiQuickInfo {
 		//print.it(r.Span, r.RelatedSpans);
 		//print.it(r.Tags);
 
+		var a = r.Sections;
+		if (a.Length == 0) return null; //when cursor is on }. //SHOULDDO: display block start code, like in VS.
+
+		//don't show some useless quickinfos, eg for literals
+		if (r.Tags.Length == 2 && a.Length == 2 && a[1].Kind == QuickInfoSectionKinds.DocumentationComments) {
+			//print.it(r.Tags[0], a[1].Kind, a[1].Text);
+			var s = a[1].Text;
+			if (s.Starts("Represents ")) {
+				switch (r.Tags[0]) {
+				case "Class":
+					if (s == "Represents text as a sequence of UTF-16 code units.") return null;
+					break;
+				case "Structure":
+					if(s.RxIsMatch(@"^Represents a (\d+-bit u?n?signed integer|[\w+-]+ floating-point number)\.$")) return null;
+					break;
+				}
+			}
+		}
+
 		var x = new CiText();
 
 		//bool hasDocComm = false;
 		//QuickInfoSection descr = null;
-		var a = r.Sections;
-		if (a.Length == 0) return null; //when cursor is on }. //SHOULDDO: display block start code, like in VS.
 		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//print.it(se.Kind, se.Text);

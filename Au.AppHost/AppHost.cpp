@@ -332,13 +332,21 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	//Print("coreclrDll=%S", p.coreclrDll.c_str());
 
 	if(!pathsOK) {
+#define URL 
 		wchar_t w[200];
-		wsprintfW(w, L"To run this application, need .NET Runtime.\r\nPlease install .NET Desktop Runtime %i.%i x%s.\r\n\r\nDownload from\r\nhttps://dotnet.microsoft.com/download\r\n\r\nOpen the web page?", NETVERMAJOR, NETVERMINOR, is32bit ? L"86" : L"64");
+		wsprintfW(w, L"To run this application, need .NET Desktop Runtime %i.%i x%i.\r\n\r\n"
+			L"Would you like to download it now?", NETVERMAJOR, NETVERMINOR, is32bit ? 86 : 64);
 		if(IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
 			AllowSetForegroundWindow(ASFW_ANY);
-			int(__stdcall * ShellExecuteA)(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd);
-			(*(FARPROC*)(&ShellExecuteA)) = GetProcAddress(LoadLibraryW(L"shell32"), "ShellExecuteA");
-			ShellExecuteA(NULL, nullptr, "https://dotnet.microsoft.com/download", nullptr, nullptr, SW_SHOWNORMAL);
+			int(__stdcall * ShellExecuteW)(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);
+			(*(FARPROC*)(&ShellExecuteW)) = GetProcAddress(LoadLibraryW(L"shell32"), "ShellExecuteW");
+			wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
+			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
+
+			//The dotnet apphost opens another url:
+			//	https://aka.ms/dotnet-core-applaunch?framework=Microsoft.WindowsDesktop.App&framework_version=6.0.0&arch=x64&rid=win10-x64&gui=true
+			//	And it redirects to https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime?cid=getdotnetcore
+			//	Both undocumented. Not sure which should be used.
 		}
 		return -1;
 	}

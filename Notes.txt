@@ -79,4 +79,8 @@ Run EdDatabases.CreateRefAndDoc. Currently I do it from Tests.cs.
 
 Build/run the editor.
 
+Update .NET version in Setup32 project function Cpp_NeedDotnet and in the .iss file.
+
+Consider: Update .NET version in DNuget.cs in several places. Maybe later.
+
 Maybe more, don't remember.

@@ -124,7 +124,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMClick button, string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
+		public Action<MouseTriggerArgs> this[TMClick button, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_Add(value, TMKind.Click, (byte)button, modKeys, flags, default, button.ToString(), (f_, l_));
 			}
@@ -141,7 +141,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMWheel direction, string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
+		public Action<MouseTriggerArgs> this[TMWheel direction, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_Add(value, TMKind.Wheel, (byte)direction, modKeys, flags, default, direction.ToString(), (f_, l_));
 			}
@@ -163,7 +163,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
+		public Action<MouseTriggerArgs> this[TMEdge edge, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, TMScreen screen = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_Add(value, TMKind.Edge, (byte)edge, modKeys, flags, screen, edge.ToString(), (f_, l_));
 			}
@@ -181,7 +181,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
+		public Action<MouseTriggerArgs> this[TMMove move, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, TMScreen screen = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_Add(value, TMKind.Move, (byte)move, modKeys, flags, screen, move.ToString(), (f_, l_));
 			}
@@ -210,7 +210,7 @@ namespace Au.Triggers
 			if (noMod) {
 				if (flags.HasAny(kind == TMKind.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
-				if (!keys.more.ParseHotkeyTriggerString_(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if (!keys.more.parseTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
 			var t = new MouseTrigger(_triggers, f, kind, data, mod, modAny, flags, screen, ps, source);
 			t.DictAdd(_d, _DictKey(kind, data));

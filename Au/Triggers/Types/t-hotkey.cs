@@ -90,7 +90,7 @@ namespace Au.Triggers
 		/// Adds a hotkey trigger.
 		/// </summary>
 		/// <param name="hotkey">
-		/// A hotkey, like with the <see cref="keys.send"/> function.
+		/// A hotkey, like with <see cref="keys.send"/>.
 		/// Can contain 0 to 4 modifier keys (Ctrl, Shift, Alt, Win) and 1 non-modifier key.
 		/// Examples: "F11", "Ctrl+K", "Ctrl+Shift+Alt+Win+A".
 		/// To ignore modifiers: "?+K". Then the trigger works with any combination of modifiers.
@@ -102,7 +102,7 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">Invalid hotkey string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
-		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
+		public Action<HotkeyTriggerArgs> this[[ParamString(PSFormat.HotkeyTrigger)] string hotkey, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				//This could be used instead of [CallerX] parameters, but can be too slow if many triggers. Definitely too slow for menus and toolbars.
 				//perf.first();
@@ -117,7 +117,7 @@ namespace Au.Triggers
 				////print.it(us, ui);
 				////print.it(uu);
 
-				if (!keys.more.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
+				if (!keys.more.parseTriggerString(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
 				_Add(value, key, mod, modAny, flags, hotkey, (f_, l_));
 			}
 		}
@@ -127,7 +127,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="key"></param>
 		/// <param name="modKeys">
-		/// Modifier keys, like with the <see cref="keys.send"/> function.
+		/// Modifier keys, like with <see cref="keys.send"/>.
 		/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
 		/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
@@ -137,12 +137,12 @@ namespace Au.Triggers
 		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
+		public Action<HotkeyTriggerArgs> this[KKey key, [ParamString(PSFormat.TriggerMod)] string modKeys, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				var ps = key.ToString(); if (ps[0].IsAsciiDigit()) ps = "VK" + ps;
 				if (!modKeys.NE()) ps = modKeys + "+" + ps;
 
-				if (!keys.more.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if (!keys.more.parseTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps, (f_, l_));
 			}
 		}

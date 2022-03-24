@@ -1371,7 +1371,6 @@ partial class FilesModel
 				_watcher = new FileSystemWatcher(FilesDirectory) {
 					IncludeSubdirectories = true,
 					NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-					//,SynchronizingObject = _control //no, we call BeginInvoke eplicitly, for better performance etc
 				};
 				_watcher.Changed += _watcher_Event;
 				_watcher.Created += _watcher_Event;

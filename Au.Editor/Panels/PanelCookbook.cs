@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Xml.Linq;
 using System.Linq;
 using Au.Controls;
@@ -8,6 +9,7 @@ using Au.Tools;
 //CONSIDER: Add a menu-button. Menu:
 //	Item "Request a recipe for this search query (uses internet)".
 //	Checkbox "Auto-update the cookbook (uses internet)".
+//CONSIDER: option to show Recipe panel when Cookbook panel is really visible and hide when isn't.
 
 class PanelCookbook : UserControl {
 	KTreeView _tv;
@@ -21,9 +23,10 @@ class PanelCookbook : UserControl {
 		this.UiaSetName("Cookbook panel");
 
 		var b = new wpfBuilder(this).Columns(-1, 0).Brush(SystemColors.ControlBrush);
-		b.R.Add(out _search).Tooltip("Part of recipe name, or wildcard expression");
+		b.R.Add(out _search).Tooltip("Part of recipe name");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += _search_TextChanged;
+		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
 		b.xAddButtonIcon("*Material.History #EABB00", _ => _HistoryMenu(), "History"); b.Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
 		b.Row(-1).Add(_tv);
@@ -31,7 +34,7 @@ class PanelCookbook : UserControl {
 
 #if DEBUG
 		_tv.ItemClick += (_, e) => {
-			if (e.MouseButton == System.Windows.Input.MouseButton.Right) {
+			if (e.MouseButton == MouseButton.Right) {
 				int i = popupMenu.showSimple("1 Reload (debug)|2 Check links");
 				if (i == 1) {
 					Menus.File.Workspace.Save_now();
@@ -86,6 +89,7 @@ class PanelCookbook : UserControl {
 		if (recipe == null || recipe.dir) return;
 
 		if (select) {
+			_search.Text = "";
 			_tv.EnsureVisible(recipe);
 			_tv.Select(recipe);
 		}
@@ -115,10 +119,13 @@ class PanelCookbook : UserControl {
 			return;
 		}
 
-		var wild = wildex.hasWildcardChars(s) ? new wildex(s, noException: true) : null;
-		bool allMatch = true;
+		var stemmer = new Porter2Stemmer.EnglishPorter2Stemmer();
+		var sb = new StringBuilder();
+		foreach (var v in _root.Descendants()) if (!v.dir) v.stemmed ??= _Stem(v.text);
+		var stemmed = s.Length < 4 ? null : _Stem(s);
+
+		//print.clear();
 		var root2 = _Search(_root);
-		if (root2 != null && allMatch) root2 = _root; //eg ** matches all
 
 		_Item _Search(_Item parent) {
 			_Item R = null;
@@ -127,8 +134,12 @@ class PanelCookbook : UserControl {
 				if (n.dir) {
 					r = _Search(n);
 				} else {
-					if (!n.text.Contains(s, StringComparison.OrdinalIgnoreCase))
-						if (wild == null || !wild.Match(n.text)) { allMatch = false; continue; }
+					if (!n.text.Contains(s, StringComparison.OrdinalIgnoreCase)) {
+						if (stemmed == null) continue;
+						var z = FuzzySharp.Fuzz.PartialRatio(stemmed, n.stemmed, FuzzySharp.PreProcess.PreprocessMode.Full);
+						//if (z > 60) print.it(n.stemmed, z);
+						if (z < 75) continue;
+					}
 					r = new _Item(n.text, false);
 				}
 				if (r == null) continue;
@@ -136,9 +147,20 @@ class PanelCookbook : UserControl {
 				R.AddChild(r);
 			}
 			return R;
+
+			//CONSIDER: full-text search, including recipe text. Can be used SQLite FTS easily.
 		}
 
 		_tv.SetItems(root2?.Children());
+
+		string _Stem(string s) {
+			sb.Clear();
+			foreach (var t in s.Lower().Segments(SegSep.Word, SegFlags.NoEmpty)) {
+				if (sb.Length > 0) sb.Append(' ');
+				sb.Append(stemmer.Stem(s[t.Range]));
+			}
+			return sb.ToString();
+		}
 	}
 
 	internal void OpenRecipe(string s) {
@@ -188,6 +210,7 @@ class PanelCookbook : UserControl {
 		internal readonly string text;
 		internal readonly bool dir;
 		internal bool isExpanded;
+		internal string stemmed;
 
 		public _Item(string text, bool dir) {
 			this.text = text;

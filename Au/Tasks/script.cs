@@ -498,7 +498,7 @@ namespace Au {
 		/// Sets a hotkey that ends this process.
 		/// </summary>
 		/// <param name="hotkey">
-		/// See <see cref="keys.more.Hotkey.Register"/>.
+		/// See <see cref="RegisteredHotkey.Register"/>.
 		/// Good hotkeys are Pause, madia/browser/launch keys, Insert, Up, PageUp. Don't use F12, Shift+numpad, hotkeys with Space, Tab, Sleep. Don't use keys and modifiers used in script (<b>keys.send</b> etc).
 		/// </param>
 		/// <param name="exitCode">See <see cref="Environment.Exit"/>.</param>
@@ -513,7 +513,7 @@ namespace Au {
 		public static void exitHotkey(KHotkey hotkey, int exitCode = 0) {
 			if (Role == SRole.EditorExtension) return;
 			run.thread(() => {
-				var (mod, key) = keys.more.Hotkey.Normalize_(hotkey);
+				var (mod, key) = RegisteredHotkey.Normalize_(hotkey);
 				var atom = Api.GlobalAddAtom("Au.EndHotkey");
 
 #if true
@@ -673,7 +673,7 @@ namespace Au {
 			/// Gets icon string in specified format.
 			/// Returns null if editor isn't running or if file does not exist.
 			/// </summary>
-			/// <param name="file">File/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
+			/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
 			/// <param name="what">The format of input and output strings.</param>
 			public static string GetIcon(string file, EGetIcon what) {
 				var del = IconNameToXaml_;

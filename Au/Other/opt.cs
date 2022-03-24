@@ -485,7 +485,7 @@ namespace Au.Types
 		/// <remarks>
 		/// This option is used by these functions:
 		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):
-		/// <br/>false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
+		/// <br/>false - throw exception if cannot move the cursor to the specified x y. For example if the x y is not in screen.
 		/// <br/>true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
 		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):
 		/// <br/>false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
@@ -885,7 +885,8 @@ namespace Au.Types
 		/// </example>
 		public bool DoEvents { get; set; }
 
-		///
+		/// <param name="period">Sets <see cref="Period"/>.</param>
+		/// <param name="doEvents">Sets <see cref="DoEvents"/>.</param>
 		public OWait(int period = 10, bool doEvents = false) {
 			Period = period; DoEvents = doEvents;
 		}

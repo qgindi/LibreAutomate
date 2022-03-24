@@ -50,7 +50,7 @@ When you press Enter, editor adds new line with correct number of tabs (indentat
 When you type a function name and `(`, editor shows a tooltip-like window with info about the function and current parameter. To show the window from anywhere in an argument list, press Ctrl+Shift+Space. You can select oveloads with arrow keys or the mouse.
 
 #### Quick info
-While the Info panel is visible, whenever the mouse dwells on a symbol etc in the editor, the Info panel displays some info about the symbol, including documented exceptions the function may throw.
+Whenever the mouse dwells on a symbol etc in the editor, a tooltip displays some info about the symbol, including documented exceptions the function may throw.
 
 #### XML documentation comments
 Editor gets data for quick info, parameter info and other info about symbols from their assemblies and XML documentation comments. You can write XML documentation comments for your functions and types; look for how to on the internet. Documentation of the automation library and .NET is installed with the program. Documentation of other assemblies comes from their assembly.dll + assembly.xml files.
@@ -65,7 +65,7 @@ If the symbol is from the automation library, it opens the online documentation 
 #### Go to symbol definition (source code)
 Ctrl+click a symbol or press F12. Or click the "source code" link in the autocompletion item info or parameter info window.
 
-If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET runtime, it opens the source code web page.
+If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET runtime, it can help to find the source code online.
 
 #### Error info
 Errors are detected in editor, as well as when compiling the code. Code parts with errors have red squiggly underlines, warnings green. A tooltip shows error/warning description. Also can contain links to fix the error: add missing `using namespace` or Windows API declaration.
@@ -80,7 +80,7 @@ You can hide and show code regions like in a tree view control: click the minus 
 Editor draws horizontal lines at the end of each function and type definition.
 
 #### Images in code
-Whenever code contains a string or comment that looks like an image file path or image embedded in code (`image:...`), editor draws the image at the left. This feature can be enabled/disabled with the toolbar button.
+Whenever code contains a string or comment that looks like an image file path or image embedded in code (`image:...`, usually hidden text), editor draws the image at the left. This feature can be enabled/disabled with the toolbar button.
 
 #### Snippets
 Autocompletion lists also contain snippets. For example the outSnippet inserts code `print.it();` when you type `out` and space or Tab or Enter or click it.
@@ -91,10 +91,10 @@ Often you'll want to disable or enable one or more lines of code by converting t
 Press Tab or Shift+Tab to indent or unindent all selected lines. It adds or removes one tab character before each line.
 
 #### Drag and drop files to insert path
-You can drag and drop files from File Explorer etc to the code editor. It inserts code to run the file.
+You can drag and drop files from File Explorer etc to the code editor. It inserts code with file path.
 
 #### Find and replace
-Use the Find panel to find and replace text in editor. It marks all matches in editor with yellow. Also can find files by name and files containing text.
+Use the Find panel to find and replace text in editor. It marks all matches in editor with yellow. Also can find files by name and files containing text. Can replace text in multiple files.
 
 #### Code tools
 The Code menu contains dialogs and simple commands for creating code to find a window, UI element or image, for inserting parts of regular expression or keys string, and more.

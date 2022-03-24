@@ -33,8 +33,6 @@ using Au.Compiler;
 
 static unsafe class Test {
 
-	static void V1(Architecture a) { }
-	static void V2(int i, Architecture a) { }
 
 	//	static void TestMarkdig() {
 	//		string markdown = @"List:
@@ -48,7 +46,6 @@ static unsafe class Test {
 	//	}
 
 	public static void FromMenubar() {
-
 
 
 		//TestMarkdig();
@@ -72,7 +69,7 @@ static unsafe class Test {
 
 		//throw new AuException("test");
 
-		var doc = Panels.Editor.ZActiveDoc;
+		//var doc = Panels.Editor.ZActiveDoc;
 		//doc.test_ = true;
 		//print.it(doc.zCurrentPos16);
 

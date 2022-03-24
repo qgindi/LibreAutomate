@@ -520,10 +520,10 @@ namespace Au
 						//also let arrow keys move/resize by 1 pixel.
 						//	In active window Ctrl+arrow work automatically, but toolbars aren't active.
 						//	Never mind: does not work if active window has higher UAC IL. Even with Ctrl.
-						using var k1 = new keys.more.Hotkey(); k1.Register(100, KKey.Left, _w);
-						using var k2 = new keys.more.Hotkey(); k2.Register(101, KKey.Right, _w);
-						using var k3 = new keys.more.Hotkey(); k3.Register(102, KKey.Up, _w);
-						using var k4 = new keys.more.Hotkey(); k4.Register(103, KKey.Down, _w);
+						using var k1 = new RegisteredHotkey(); k1.Register(100, KKey.Left, _w);
+						using var k2 = new RegisteredHotkey(); k2.Register(101, KKey.Right, _w);
+						using var k3 = new RegisteredHotkey(); k3.Register(102, KKey.Up, _w);
+						using var k4 = new RegisteredHotkey(); k4.Register(103, KKey.Down, _w);
 
 						Api.DefWindowProc(w, msg, wParam, lParam);
 					}
@@ -539,7 +539,7 @@ namespace Au
 			case Api.WM_WINDOWPOSCHANGING:
 				_WmWindowPosChanging(ref *(Api.WINDOWPOS*)lParam);
 				break;
-			case keys.more.Hotkey.WM_HOTKEY:
+			case RegisteredHotkey.WM_HOTKEY:
 				int hkid = (int)wParam - 100;
 				if (hkid >= 0 && hkid <= 3) {
 					POINT p = mouse.xy;

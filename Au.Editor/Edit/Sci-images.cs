@@ -9,18 +9,15 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using static Au.Controls.KImageUtil;
 using System.Buffers;
 
-partial class SciCode
-{
-	struct _Image
-	{
+partial class SciCode {
+	struct _Image {
 		public Bitmap image;
 		public bool isImage; //draw frame; else icon, draw without frame
 		public bool isComment; /*image:...*/
 	}
 
 	//fields for drawing images in margin
-	struct _Images
-	{
+	struct _Images {
 		public List<_Image> a; //images retrieved by _ImagesGet on styling
 		public Dictionary<string, Bitmap> cache; //image cache of this document. Used only for non-icon images; for icons we use the common cache.
 		public Sci_MarginDrawCallback callback;
@@ -311,33 +308,34 @@ partial class SciCode
 	/// <remarks>
 	/// Called on SCN_STYLENEEDED (to avoid bad things like briefly visible and added horizontal scrollbar) and then by CiStyling._Work (async).
 	/// </remarks>
-	internal unsafe void HideImages_(int from8, int to8, byte[] styles = null) {
+	internal unsafe void HideImages_(int from8, int to8, byte[] styles = null, [CallerMemberName] string caller = null) {
 		if (styles == null) from8 = zLineStartFromPos(false, from8);
 		if (to8 - from8 < 40) return;
 		//print.it("HI", from8, to8, styles != null);
-		int from0 = from8; from8 += 2;
-		Call(SCI_SETSEARCHFLAGS, SCFIND_MATCHCASE | SCFIND_WORDSTART); //with SCFIND_REGEXP|SCFIND_CXX11REGEX simpler but slow, 3000 mcs/SCI_SEARCHINTARGET
-		for (int j = 0; from8 < to8; from8 = j) {
-			Call(SCI_SETTARGETRANGE, from8, to8);
-			long li = 0x3A6567616D69; //print.it((ulong)BitConverter.ToInt64(Encoding.UTF8.GetBytes("image:\0\0")));
-			int i = Call(SCI_SEARCHINTARGET, 6, &li);
-			if (i < 0) break;
+		var r = new Au.Controls.SciDirectRange(this, from8, to8);
+		for (int j = from8 + 2, to2 = to8 - 30; j <= to2;) {
+			int i = j;
+			for (; ; i++) {
+				if (i > to2) return;
+				if (r[i] == 'i' && r[i + 1] == 'm' && r[i + 2] == 'a' && r[i + 3] == 'g' && r[i + 4] == 'e' && r[i + 5] == ':') break;
+			}
 			j = i + 6;
-			var dr = new Au.Controls.SciDirectRange(this, i - 2, to8);
-			char c1 = dr[i - 1], c2 = dr[i - 2];
+			char c1 = r[i - 1], c2 = r[i - 2];
 			if (!((c1 == '*' && c2 == '/') || (c1 == '\"' && c2 == '@'))) continue;
 			for (int j2 = to8 - (c1 == '\"' ? 1 : 2); j < j2; j++) {
-				if (dr[j] is not ((>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '+' or '/' or '=')) break;
+				if (r[j] is not ((>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '+' or '/' or '=')) break;
 			}
-			if (j - i < 40 || dr[j] != c1 || (c1 == '*' && '/' != dr[j + 1])) continue;
+			if (j - i < 30 || r[j] != c1 || (c1 == '*' && '/' != r[j + 1])) continue;
 			if (c1 == '\"') i += 6; else { i -= 2; j += 2; }
 			if (styles != null) {
-				styles.AsSpan(i - from0, j - i).Fill(STYLE_HIDDEN);
+				styles.AsSpan(i - from8, j - i).Fill(STYLE_HIDDEN);
 			} else {
 				Call(SCI_STARTSTYLING, i);
 				Call(SCI_SETSTYLING, j - i, STYLE_HIDDEN);
 			}
 		}
+
+		//note: don't use SCI_SETTARGETRANGE here. In some cases scintilla does not work well with it. It may create bugs.
 	}
 	//Not easy to use hidden style because:
 	//	1. Scintilla bug: in wrap mode sometimes draws as many lines as with big font. Even caret is large and spans all lines.
@@ -345,4 +343,31 @@ partial class SciCode
 	//		Workaround: at first hide all on SCN_STYLENEEDED.
 	//	2. User cannot delete text containing hidden text.
 	//		Workaround: modify scintilla source in Editor::RangeContainsProtected.
+
+	bool _ImageDeleteKey(KKey key) {
+		if (key is KKey.Delete or KKey.Back && !base.zIsSelection) {
+			int pos = base.zCurrentPos8, to = pos;
+			if (key == KKey.Back) {
+				while (zGetStyleAt(pos - 1) == STYLE_HIDDEN) pos--;
+			} else {
+				while (zGetStyleAt(to) == STYLE_HIDDEN) to++;
+			}
+			if (to > pos) {
+				bool ok = s_imageDeleteAlways;
+				if (!ok) {
+					var s = base.zRangeText(false, pos, to).Limit(50);
+					var c = new DControls { Checkbox = "Remember" };
+					ok = 1 == dialog.show("Delete hidden text?", s, "OK|Cancel", controls: c, owner: this);
+					s_imageDeleteAlways = ok && c.IsChecked;
+				}
+				if (ok) {
+					zDeleteRange(false, pos, to);
+					zAddUndoPoint();
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	static bool s_imageDeleteAlways;
 }

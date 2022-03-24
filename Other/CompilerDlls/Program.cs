@@ -214,4 +214,9 @@ namespace CompilerDlls
             //    result.ArgumentIndex = parameterIndex;
             //}
 
+// - (bug fix) In AbstractCSharpSignatureHelpProvider.LightweightOverloadResolution.cs, function FindParameterIndexIfCompatibleMethod:
+                        //Au: bug fix. Would throw invalid index exception in eg dialog.show(x: 5,). Not perfect.
+                        //if (parameterIndex >= 0)
+                        if (parameterIndex == i)
+
 #endif

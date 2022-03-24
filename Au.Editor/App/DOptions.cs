@@ -61,7 +61,7 @@ class DOptions : KDialogWindow
 		var b = _Page("General").Columns(-1, -1);
 		//left column
 		b.StartStack(vertical: true);
-		b.Add(out KCheckBox startWithWin, "Start with Windows");
+		b.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, because used for the QM2 forum registration security question
 		b.Add(out KCheckBox startHidden, "Start hidden; hide when closing");
 		b.End();
 		//right column

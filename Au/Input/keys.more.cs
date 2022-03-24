@@ -128,11 +128,15 @@ partial class keys
 		}
 
 		/// <summary>
-		/// Used for parsing of hotkey triggers and mouse trigger modifiers.
+		/// Parses hotkey trigger string or mouse trigger modifiers string.
 		/// Like <see cref="parseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and <i>noKey</i>.
-		/// <i>noKey</i> - s can contain only modifiers, not key. If false, s must be "key" or "mod+key", else returns false. Else s must be "mod" or null/"", else returns false.
 		/// </summary>
-		internal static bool ParseHotkeyTriggerString_(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey) {
+		/// <param name="s"></param>
+		/// <param name="mod"></param>
+		/// <param name="modAny"></param>
+		/// <param name="key"></param>
+		/// <param name="noKey">Modifiers only. If true, s must be "modifiers" or null/"". If false, s must be "key" or "modifiers+key".</param>
+		public static bool parseTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey) {
 			key = 0; mod = 0; modAny = 0;
 			if (s.NE()) return noKey;
 			int i = 0; bool ignore = false;

@@ -1,7 +1,5 @@
-namespace Au
-{
-	public partial class keys
-	{
+namespace Au {
+	public partial class keys {
 		#region get key state
 
 		/// <summary>
@@ -23,8 +21,7 @@ namespace Au
 		/// 
 		/// Also there is API <msdn>GetKeyboardState</msdn>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
 		/// </remarks>
-		public static class gui
-		{
+		public static class gui {
 			//rejected: instead of class keys.gui add property keys.isUIThread. If true, let its functions work like now keys.gui.
 
 			/// <summary>
@@ -278,14 +275,14 @@ namespace Au
 		/// Registers a temporary hotkey and waits for it.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="hotkey">See <see cref="more.Hotkey.Register"/>.</param>
+		/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		/// <exception cref="AuException">Failed to register hotkey.</exception>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// Uses <see cref="more.Hotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
+		/// Uses <see cref="RegisteredHotkey"/> (API <msdn>RegisterHotKey</msdn>).
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 		/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 		/// </remarks>
@@ -300,9 +297,9 @@ namespace Au
 		/// if(!keys.waitForHotkey(-5, "Left")) print.it("timeout"); //returns false after 5 s
 		/// ]]></code>
 		/// </example>
-		public static bool waitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false) {
+		public static bool waitForHotkey(double secondsTimeout, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, bool waitModReleased = false) {
 			if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
-			using (more.Hotkey rhk = default) {
+			using (RegisteredHotkey rhk = default) {
 				if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
 				if (!wait.forPostedMessage(secondsTimeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 			}

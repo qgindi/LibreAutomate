@@ -13,9 +13,10 @@ namespace Au.Types
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing) {
 			if (_w.Is0) return;
-			_w.Close();
+			Api.ShowWindow(_w, 0);
 			_TopmostWorkaroundUndo();
-			_w = default;
+			var w = _w; _w = default;
+			if (!Api.DestroyWindow(w)) w.Post(Api.WM_CLOSE);
 		}
 
 		/// <summary>Destroys the OSD window.</summary>
@@ -167,6 +168,10 @@ namespace Au.Types
 		/// </summary>
 		protected virtual nint WndProc(wnd w, int message, nint wParam, nint lParam) {
 			switch (message) {
+			case Api.WM_NCDESTROY:
+				Api.PostMessage(default, 0, 0, 0); //stop waiting for a message. Never mind: not always need it.
+				_w = default;
+				break;
 			case Api.WM_ERASEBKGND:
 				return 0;
 			case Api.WM_PAINT:
@@ -231,7 +236,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void closeAll([ParamString(PSFormat.Wildex)] string name = null) {
-			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Close(noWait: true);
+			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Post(Api.WM_CLOSE);
 		}
 
 		#region topmost workaround
@@ -642,6 +647,7 @@ namespace Au
 			if (sync) {
 				if (t < 0) t = 0; else t = -t;
 				if (!wait.forMessagesAndCondition(t, () => !IsHandleCreated)) Close();
+				//if (!wait.forPostedMessage(t, (ref MSG m) => { print.it(IsHandleCreated, m); return !IsHandleCreated; })) Close();
 			} else if (t > 0) {
 				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
 				timer.after(t, _ => Close());

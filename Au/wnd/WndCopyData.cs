@@ -1,5 +1,4 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More {
 	/// <summary>
 	/// Send/receive data to/from other process using message <msdn>WM_COPYDATA</msdn>.
 	/// </summary>
@@ -9,8 +8,7 @@
 	/// </remarks>
 	/// <seealso cref="System.IO.MemoryMappedFiles.MemoryMappedFile"/>
 	/// <seealso cref="System.IO.Pipes.NamedPipeServerStream"/>
-	public unsafe struct WndCopyData
-	{
+	public unsafe struct WndCopyData {
 		//COPYDATASTRUCT fields
 		nint _dwData;
 		int _cbData;
@@ -177,14 +175,13 @@
 			}
 
 			//allocate memory in caller process
-			try {
-				using var pm = new ProcessMemory((int)wParam, length);
+			using var pm = new ProcessMemory((int)wParam, length, noException: true);
+			if (pm.ProcessHandle != default) { //fails if that process has higher UAC IL. Rare.
 				pm.Write(data, length);
 				*(long*)sm = (long)pm.Mem;
-				pm.ForgetMem();
+				pm.MemAllocated = default;
 				return -length;
 			}
-			catch { } //fails if that process has higher UAC IL. Rare.
 
 			//allocate new shared memory
 			try {

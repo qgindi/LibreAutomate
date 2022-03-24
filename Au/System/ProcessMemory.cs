@@ -1,25 +1,22 @@
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Allocates, writes and reads memory in other process.
 	/// </summary>
 	/// <remarks>
 	/// Must be disposed. Example: <c>using(var pm=new ProcessMemory(...)) { ... }</c>.
 	/// </remarks>
-	public unsafe class ProcessMemory : IDisposable
-	{
+	public unsafe class ProcessMemory : IDisposable {
 		Handle_ _hproc;
 		HandleRef _HprocHR => new(this, _hproc);
 
 		///
 		protected virtual void Dispose(bool disposing) {
 			if (_hproc.Is0) return;
-			if (Mem != default) {
-				var mem = Mem; Mem = default;
-				if (!_dontFree) {
-					if (!Api.VirtualFreeEx(_HprocHR, mem)) print.warning("Failed to free process memory. " + lastError.message);
-				}
+			if (MemAllocated != default) {
+				var mem = MemAllocated; MemAllocated = default;
+				if (!Api.VirtualFreeEx(_HprocHR, mem)) print.warning("Failed to free process memory. " + lastError.message);
 			}
+			Mem = default;
 			_hproc.Dispose();
 		}
 
@@ -39,86 +36,78 @@ namespace Au.More
 		public IntPtr ProcessHandle => _hproc;
 
 		/// <summary>
+		/// Address in that process used by the read and write functions.
+		/// </summary>
+		/// <remarks>
+		/// Most read/write functions of this class don't have a parameter "address in that process". Instead they use <b>Mem</b>, which initially is == <see cref="MemAllocated"/>. But you can set <b>Mem</b> = any valid address in that process; usually you do it when no memory is allocated by the constructor (<i>nBytes</i> 0).
+		/// The address is invalid in this process.
+		/// </remarks>
+		public IntPtr Mem { get; set; }
+
+		/// <summary>
 		/// Address of memory allocated in that process.
 		/// </summary>
 		/// <remarks>
+		/// The constructor allocates memory with API <msdn>VirtualAllocEx</msdn> if <i>nBytes</i> != 0. Finally <b>Dispose</b> will free it with API <msdn>VirtualFreeEx</msdn>.
+		/// The setter normally isn't used; if you set <c>MemAllocated = default</c>, <b>Dispose</b> will not free the memory.
 		/// The address is invalid in this process.
 		/// </remarks>
-		public IntPtr Mem { get; private set; }
+		public IntPtr MemAllocated { get; set; }
 
-		/// <summary>
-		/// Sets an address of memory in that process to be used by the read and write functions.
-		/// </summary>
-		/// <param name="mem">A memory address in that process.</param>
-		/// <param name="freeWhenDisposing">
-		/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
-		/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
-		/// <exception cref="InvalidOperationException">This variable already has <see cref="Mem"/> != default, unless it was set by this function with <i>freeWhenDisposing</i> = false.</exception>
-		/// <remarks>
-		/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <i>freeWhenDisposing</i> = true.
-		/// </remarks>
-		public void SetMem(IntPtr mem, bool freeWhenDisposing) {
-			if (Mem != default && !_dontFree) throw new InvalidOperationException();
-			_dontFree = !freeWhenDisposing;
-			Mem = mem;
-		}
-		bool _dontFree;
-
-		/// <summary>
-		/// Clears <see cref="Mem"/> but does not free the memory (and will not free later).
-		/// The memory must be freed with API <msdn>VirtualFreeEx</msdn> by this or target process, or with API <msdn>VirtualFree</msdn> by target process.
-		/// </summary>
-		public void ForgetMem() {
-			Mem = default;
-		}
-
-		void _Alloc(int pid, wnd w, int nBytes) {
+		void _Alloc(int pid, wnd w, int nBytes, bool noException) {
 			string err;
 			const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
 			_hproc = w.Is0 ? Handle_.OpenProcess(pid, fl) : Handle_.OpenProcess(w, fl);
 			if (_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
 
 			if (nBytes != 0) {
-				Mem = Api.VirtualAllocEx(_HprocHR, default, nBytes);
-				if (Mem == default) { err = "Failed to allocate process memory."; goto ge; }
+				Mem = MemAllocated = Api.VirtualAllocEx(_HprocHR, default, nBytes);
+				if (MemAllocated == default) { err = "Failed to allocate process memory."; goto ge; }
 			}
 			return;
-			ge:
-			var e = new AuException(0, err);
-			Dispose();
-			throw e;
+		ge:
+			if (noException) Dispose();
+			else {
+				var e = new AuException(0, err);
+				Dispose();
+				throw e;
+			}
 		}
 
 		/// <summary>
-		/// Opens window's process handle and optionally allocates memory in that process.
-		/// </summary>
-		/// <param name="w">A window in that process.</param>
-		/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-		/// <remarks>This is the preferred constructor when the process has windows. It works with windows of [](xref:uac) High integrity level when this process is Medium+uiAccess.</remarks>
-		/// <exception cref="AuWndException">w invalid.</exception>
-		/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
-		public ProcessMemory(wnd w, int nBytes) {
-			w.ThrowIfInvalid();
-			_Alloc(0, w, nBytes);
-		}
-
-		/// <summary>
-		/// Opens window's process handle and optionally allocates memory in that process.
+		/// Opens process handle and optionally allocates memory in that process.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
-		/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
+		/// <param name="nBytes">If not 0, allocates memory of this size in that process.</param>
+		/// <param name="noException">Don't throw exception if fails. If fails, <see cref="ProcessHandle"/> == default.</param>
 		/// <exception cref="AuException">Failed to open process handle (usually because of [](xref:uac)) or allocate memory.</exception>
-		public ProcessMemory(int processId, int nBytes) {
-			_Alloc(processId, default, nBytes);
+		public ProcessMemory(int processId, int nBytes, bool noException = false) {
+			_Alloc(processId, default, nBytes, noException);
 		}
 
 		/// <summary>
-		/// Copies a string from this process to the memory allocated in that process by the constructor.
-		/// In that process the string is written as '\0'-terminated UTF-16 string. For it is used (s.Length+1)*2 bytes of memory in that process (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
-		/// Returns false if fails.
+		/// Opens process handle and optionally allocates memory in that process.
 		/// </summary>
+		/// <param name="w">A window of that process.</param>
+		/// <param name="nBytes">If not 0, allocates memory of this size in that process.</param>
+		/// <param name="noException">Don't throw exception if fails. If fails, <see cref="ProcessHandle"/> == default.</param>
+		/// <exception cref="AuWndException">w invalid.</exception>
+		/// <exception cref="AuException">Failed to open process handle or allocate memory.</exception>
+		public ProcessMemory(wnd w, int nBytes, bool noException = false) {
+			if (!noException) w.ThrowIfInvalid();
+			_Alloc(0, w, nBytes, noException);
+		}
+
+		/// <summary>
+		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
+		/// In that process writes the string as '\0'-terminated char string (UTF-16).
+		/// </summary>
+		/// <returns>false if fails.</returns>
 		/// <param name="s">A string in this process.</param>
-		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
+		/// <remarks>
+		/// In that process is used (s.Length+1)*2 bytes of memory (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
+		/// </remarks>
 		public bool WriteCharString(string s, int offsetBytes = 0) {
 			if (Mem == default) return false;
 			if (s.NE()) return true;
@@ -128,12 +117,12 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Copies a string from this process to the memory allocated in that process by the constructor.
-		/// In that process the string is written as '\0'-terminated byte string.
-		/// Returns false if fails.
+		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
+		/// In that process writes the string as '\0'-terminated byte string.
 		/// </summary>
+		/// <returns>false if fails.</returns>
 		/// <param name="s">A string in this process. Normal C# string (UTF-16).</param>
-		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="enc">Encoding for converting char string to byte string. If null, uses <see cref="Encoding.Default"/> (UTF-8).</param>
 		public bool WriteByteString(string s, int offsetBytes = 0, Encoding enc = null) {
 			if (Mem == default) return false;
@@ -157,24 +146,24 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Copies a string from the memory in that process allocated by the constructor to this process.
-		/// Returns the copied string, or null if fails.
+		/// Copies a char string from that process (memory address <see cref="Mem"/>) to this process.
 		/// In that process the string must be in Unicode UTF-16 format.
 		/// </summary>
+		/// <returns>The copied string, or null if fails.</returns>
 		/// <param name="length">Number of characters to copy, not including the terminating '\0'. In both processes a character is 2 bytes.</param>
-		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range. If false, the returned string is of <i>length</i> length even if contains '\0' characters.</param>
 		public string ReadCharString(int length, int offsetBytes = 0, bool findLength = false) {
 			return _ReadString(false, length, offsetBytes, findLength);
 		}
 
 		/// <summary>
-		/// Copies a string from the memory in that process allocated by the constructor to this process.
-		/// Returns the copies string, or null if fails.
-		/// In that process the string must be array of bytes (ie not Unicode UTF-16).
+		/// Copies a byte string from that process (memory address <see cref="Mem"/>) to this process.
+		/// In that process the string must be array of bytes (not Unicode UTF-16).
 		/// </summary>
+		/// <returns>The copied string, or null if fails.</returns>
 		/// <param name="length">Number bytes to copy, not including the terminating '\0'. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
-		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range.</param>
 		/// <param name="enc">Encoding for converting byte string to char string. If null, uses <see cref="Encoding.Default"/> (UTF-8).</param>
 		public string ReadByteString(int length, int offsetBytes = 0, bool findLength = false, Encoding enc = null) {
@@ -182,51 +171,49 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Copies a value-type variable or other memory from this process to the memory in that process allocated by the constructor.
-		/// Returns false if fails.
+		/// Copies memory from this process to that process (memory address <see cref="Mem"/>).
 		/// </summary>
-		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+		/// <returns>false if fails.</returns>
+		/// <param name="ptrFrom">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
-		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		public bool Write(void* ptr, int nBytes, int offsetBytes = 0) {
+		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
+		public bool Write(void* ptrFrom, int nBytes, int offsetBytes = 0) {
 			if (Mem == default) return false;
-			return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
+			return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, ptrFrom, nBytes, null);
 		}
 
 		/// <summary>
-		/// Copies a value-type variable or other memory from this process to a known memory address in that process.
-		/// Returns false if fails.
+		/// Copies memory from this process to a known address in that process.
 		/// </summary>
-		/// <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
-		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+		/// <returns>false if fails.</returns>
+		/// <param name="ptrTo">Address of memory in that process.</param>
+		/// <param name="ptrFrom">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
-		/// <seealso cref="SetMem"/>
-		public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes) {
-			return Api.WriteProcessMemory(_HprocHR, ptrDestinationInThatProcess, ptr, nBytes, null);
+		public bool Write(IntPtr ptrTo, void* ptrFrom, int nBytes) {
+			return Api.WriteProcessMemory(_HprocHR, ptrTo, ptrFrom, nBytes, null);
 		}
 
 		/// <summary>
-		/// Copies from the memory in that process allocated by the constructor to a value-type variable or other memory in this process.
-		/// Returns false if fails.
+		/// Copies memory from that process (memory address <see cref="Mem"/>) to this process.
 		/// </summary>
-		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+		/// <returns>false if fails.</returns>
+		/// <param name="ptrTo">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
-		/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-		public bool Read(void* ptr, int nBytes, int offsetBytes = 0) {
+		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
+		public bool Read(void* ptrTo, int nBytes, int offsetBytes = 0) {
 			if (Mem == default) return false;
-			return Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
+			return Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, ptrTo, nBytes, null);
 		}
 
 		/// <summary>
-		/// Copies from a known memory address in that process to a value-type variable or other memory in this process.
-		/// Returns false if fails.
+		/// Copies memory from a known address in that process to this process.
 		/// </summary>
-		/// <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
-		/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+		/// <returns>false if fails.</returns>
+		/// <param name="ptrFrom">Address of memory in that process.</param>
+		/// <param name="ptrTo">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
-		/// <seealso cref="SetMem"/>
-		public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes) {
-			return Api.ReadProcessMemory(_HprocHR, ptrSourceInThatProcess, ptr, nBytes, null);
+		public bool Read(IntPtr ptrFrom, void* ptrTo, int nBytes) {
+			return Api.ReadProcessMemory(_HprocHR, ptrFrom, ptrTo, nBytes, null);
 		}
 	}
 }

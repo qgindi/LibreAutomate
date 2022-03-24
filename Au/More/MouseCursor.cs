@@ -65,7 +65,7 @@
 			var s = folders.Temp + Guid.NewGuid().ToString();
 			File.WriteAllBytes(s, cursorData);
 			try { return Load(s, size); }
-			finally { filesystem.delete(s); }
+			finally { filesystem.delete(s, canFail: true); }
 
 			//If want to avoid temp file, can use:
 			//	1. CreateIconFromResourceEx.

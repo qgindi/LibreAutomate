@@ -4,8 +4,7 @@
 //	3. Don't allow to set option to run at startup.
 //	4. Etc.
 
-static class CommandLine
-{
+static class CommandLine {
 	/// <summary>
 	/// Processes command line of this program. Called before any initialization.
 	/// Returns true if this instance must exit.
@@ -18,7 +17,7 @@ static class CommandLine
 			if (s.Starts('/')) {
 				switch (s) {
 				case "/s":
-					exitCode = _RunEditorAsAdmin(args);
+					exitCode = _RunEditorAsAdmin();
 					return true;
 				case "/dd":
 					UacDragDrop.NonAdminProcess.MainDD(args);
@@ -34,7 +33,9 @@ static class CommandLine
 
 	/// <summary>
 	/// Processes command line of this program. Called after partial initialization.
-	/// Returns true if this instance must exit: 1. If finds previous program instance; then sends the command line to it if need. 2. If incorrect command line.
+	/// Returns true if this instance must exit:
+	///		1. If finds previous program instance; then sends the command line to it if need.
+	///		2. If incorrect command line.
 	/// </summary>
 	public static bool ProgramStarted2(string[] args) {
 		string s = null;
@@ -229,8 +230,32 @@ static class CommandLine
 
 	//Called when command line starts with "/s". This process is running as SYSTEM in session 0.
 	//This process is started by the Task Scheduler task installed by the setup program. The task started by App._RestartAsAdmin.
-	static unsafe int _RunEditorAsAdmin(string[] args) {
-		int sesId = api.WTSGetActiveConsoleSessionId(); if (sesId < 1) return 1;
+	[MethodImpl(MethodImplOptions.NoOptimization)]
+	static unsafe int _RunEditorAsAdmin() {
+		var s1 = api.GetCommandLine();
+		//_MBox(new string(s1));
+		//Normally it is like "C:\...\Au.Editor.exe /s sessionId" or "C:\...\Au.Editor.exe /s sessionId arguments",
+		//	but if started from Task Scheduler it is "C:\...\Au.Editor.exe /s $(Arg0)".
+
+		int len = CharPtr_.Length(s1) + 1;
+		var span = new Span<char>(s1, len);
+		var s2 = span.ToArray();
+		int i = span.IndexOf("/s") + 1; //info: it's safe. Can't be "C:/s/..." because the scheduled task wasn't created like this.
+		s2[i++] = 'n'; // /n - don't try to restart as admin
+
+		//get session id
+		char* se = null;
+		int sesId = Api.strtoi(s1 + i, &se);
+		if (se != s1 + i) { //remove the session id argument
+			if (*se == 0) s2[i] = '\0'; //no more arguments
+			else for (int j = (int)(se - s1); j < len;) s2[i++] = s2[j++];
+		} else { //$(Arg0) not replaced. Probably started from Task Scheduler.
+			s2[i] = '\0';
+			sesId = api.WTSGetActiveConsoleSessionId();
+			if (sesId < 1) return 1;
+		}
+		//_MBox(new string(s2));
+
 		if (!api.WTSQueryUserToken(sesId, out var hToken)) return 2;
 		if (api.GetTokenInformation(hToken, Api.TOKEN_INFORMATION_CLASS.TokenLinkedToken, out var hToken2, sizeof(nint), out _)) { //fails if non-admin user or if UAC turned off
 			Api.CloseHandle(hToken);
@@ -256,12 +281,6 @@ static class CommandLine
 		var desktop = stackalloc char[] { 'w', 'i', 'n', 's', 't', 'a', '0', '\\', 'd', 'e', 'f', 'a', 'u', 'l', 't', '\0' }; //"winsta0\\default"
 		si.lpDesktop = desktop;
 
-		var s1 = api.GetCommandLine();
-		var s2 = new Span<char>(s1, CharPtr_.Length(s1) + 1).ToArray();
-		int i = s2.AsSpan().IndexOf("/s") + 1;
-		s2[i] = 'n'; // /n - don't try to restart as admin
-		if (args.Length > 1 && args[1] == "$(Arg0)") s2[++i] = '\0'; //if $(Arg0) not replaced, it means there are no command line arguments
-
 		if (!api.CreateProcessAsUser(hToken, null, s2, null, null, false, Api.CREATE_UNICODE_ENVIRONMENT, eb, null, si, out var pi)) {
 			_MBox("CreateProcessAsUserW: " + lastError.message);
 			return 4;
@@ -281,8 +300,9 @@ static class CommandLine
 	/// Shows message box in interactive session. Called from session 0.
 	/// </summary>
 	[Conditional("DEBUG")]
-	static void _MBox(string s) {
+	static void _MBox(object o) {
 #if DEBUG
+		var s = o.ToString();
 		var title = "Debug";
 		api.WTSSendMessage(default, api.WTSGetActiveConsoleSessionId(), title, title.Length * 2, s, s.Length * 2, api.MB_TOPMOST | api.MB_SETFOREGROUND, 0, out _, true);
 #endif
@@ -331,8 +351,7 @@ static class CommandLine
 		return script.RunCL_(w, mode, file, args, 0 != (mode & 2) ? (string o) => Console.Write(o) : null);
 	}
 
-	static unsafe class api
-	{
+	static unsafe class api {
 		[DllImport("kernel32.dll")]
 		internal static extern int WTSGetActiveConsoleSessionId();
 

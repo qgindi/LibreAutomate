@@ -557,6 +557,7 @@ class Dwnd : KDialogWindow
 						.Append(uac.IntegrityLevel.ToString())
 						.Append(", ").AppendLine(uac.Elevation.ToString());
 				}
+				b.Append("<i>CommandLine<>:    ").AppendLine(process.getCommandLine(pid));
 
 				//if control's process or thread is different...
 				if (!c.Is0) {

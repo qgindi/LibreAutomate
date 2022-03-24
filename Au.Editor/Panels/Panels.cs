@@ -32,7 +32,7 @@ static class Panels
 			try {
 				var s2 = filesystem.loadText(customLayoutPath);
 				//print.it(s2);
-				if (!s2.Contains("<panel name=\"Outline\"")) { //one app version added several new panels etc, and users would not know the best place for them, or even how to move
+				if (!s2.Contains("<panel name=\"Outline\"")) { //v0.4 added several new panels etc, and users would not know the best place for them, or even how to move
 					filesystem.delete(customLayoutPath, recycleBin: true);
 					bool silent = s2.RxIsMatch(@"<document name=""documents"" ?/>\s*</tab>"); //very old and incompatible
 					if (!silent) print.it("Info: The window layout has been reset, because several new panels have been added in this app version.\r\n\tIf you want to undo it: 1. Exit the program. 2. Restore file Layout.xml from the Recycle Bin (replace the existing file). 3. Run the program. 4. Move panels from the bottom of the window to a better place.");

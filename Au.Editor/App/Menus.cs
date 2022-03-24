@@ -7,7 +7,7 @@ using Au.Tools;
 static class Menus {
 	[Command(target = "Files")]
 	public static class File {
-		[Command(target = "", image = "*Typicons.DocumentAdd #008EEE")]
+		[Command(target = "", image = "*EvaIcons.FileAddOutline #008EEE")]
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
@@ -21,7 +21,7 @@ static class Menus {
 			public static void New_folder() { _New(null); }
 		}
 
-		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #404040")]
+		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #585858")]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
 		[Command(keys = "F2", image = "*BoxIcons.RegularRename #008EEE")]
@@ -125,7 +125,7 @@ static class Menus {
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 
-			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #404040")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #585858")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 
@@ -248,7 +248,7 @@ static class Menus {
 		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
-		[Command(image = "*PicolIcons.BadgeCancel #404040")]
+		[Command(image = "*FontAwesome.StopCircleRegular #585858")]
 		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {
@@ -395,7 +395,7 @@ static class Menus {
 
 		[Command]
 		public static void About() {
-			print.it($@"<>---- {App.AppName} ----
+			print.it($@"<>---- {App.AppNameLong} ----
 Version: {Assembly.GetExecutingAssembly().GetName().Version}
 Download: <link>https://www.quickmacros.com/au/help/<>
 Source code: <link>https://github.com/qmgindi/Au<>

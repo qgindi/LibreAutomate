@@ -3,44 +3,43 @@ using System.Windows.Controls;
 using System.Linq;
 using Au.Controls;
 
-namespace Au.Tools
-{
-	class DWinapi : KDialogWindow
-	{
-		sqlite _db;
-		TextBox tName;
-		KSciCodeBox code;
+namespace Au.Tools;
 
-		public DWinapi(string name = null) {
-			Title = "Find Windows API";
-			var doc = Panels.Editor.ZActiveDoc;
-			Owner = GetWindow(doc);
+class DWinapi : KDialogWindow {
+	sqlite _db;
+	TextBox tName;
+	KSciCodeBox code;
 
-			if (name == null) {
-				name = doc.zSelectedText();
-				if (!name.NE()) {
-					name = name.RxReplace(@"\W+", " ");
-				}
+	public DWinapi(string name = null) {
+		Title = "Find Windows API";
+		var doc = Panels.Editor.ZActiveDoc;
+		Owner = GetWindow(doc);
+
+		if (name == null) {
+			name = doc.zSelectedText();
+			if (!name.NE()) {
+				name = name.RxReplace(@"\W+", " ");
 			}
+		}
 
-			var b = new wpfBuilder(this).WinSize(800, 500);
-			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-			b.R.Add("Name", out tName, name);
-			b.Row(-1).Add(out code); code.ZInitBorder = true;
-			b.R.AddButton("?", _ => _Help());
-			b.AddOkCancel("OK, copy to clipboard");
-			b.End();
+		var b = new wpfBuilder(this).WinSize(800, 500);
+		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
+		b.R.Add("Name", out tName, name);
+		b.Row(-1).Add(out code); code.ZInitBorder = true;
+		b.R.AddButton("?", _ => _Help());
+		b.AddOkCancel("OK, copy to clipboard");
+		b.End();
 
-			b.OkApply += o => {
-				string s = code.zText;
-				if (s.NE()) return;
-				Clipboard.SetText(s);
-			};
+		b.OkApply += o => {
+			string s = code.zText;
+			if (s.NE()) return;
+			Clipboard.SetText(s);
+		};
 
-			tName.TextChanged += (_, _) => _TextChanged();
+		tName.TextChanged += (_, _) => _TextChanged();
 
-			void _Help() {
-				var s = @"/**
+		void _Help() {
+			var s = @"/**
 Here you can find Windows API declarations: function, struct, enum, interface, delegate, constant, GUID.
 Enter API name in the above field. Case-sensitive. Wildcard examples: Start*, *End, *Part*.
 Or multiple full names, like Name1 Name2 Name3.
@@ -54,49 +53,48 @@ and select from the list. It adds the declaration to the class, and more declara
 The database contains ~51000 declarations. They are not perfect. You can edit.
 If some really useful API are missing, tell about it: https://www.quickmacros.com/forum or support@quickmacros.com.
 */";
-				code.ZSetText(s);
-			}
-		}
-
-		protected override void OnSourceInitialized(EventArgs e) {
-			_db = EdDatabases.OpenWinapi();
-			if (!tName.Text.NE()) _TextChanged();
-
-			base.OnSourceInitialized(e);
-		}
-
-		protected override void OnClosed(EventArgs e) {
-			_db?.Dispose();
-			_db = null;
-			base.OnClosed(e);
-		}
-
-		void _TextChanged() {
-			string name = tName.Text;
-			var a = new List<(string name, string code)>();
-
-			int nWild = 0; for (int i = 0; i < name.Length; i++) { switch (name[i]) { case '*': case '?': nWild++; break; } }
-			if (name.Length > 0 && (nWild == 0 || name.Length - nWild >= 2)) {
-				string sql;
-				if (name.Contains(' ')) sql = $"in ('{string.Join("', '", name.RxFindAll(@"\b[A-Za-z_]\w\w+", (RXFlags)0))}')";
-				else if (name.FindAny("*?") >= 0) sql = $"GLOB '{name}'";
-				else sql = $"= '{name}'";
-				try {
-					using var stat = _db.Statement("SELECT name, code FROM api WHERE name " + sql);
-					//perf.first();
-					while (stat.Step()) a.Add((stat.GetText(0), stat.GetText(1)));
-					//perf.nw(); //30 ms cold, 10 ms warm. Without index.
-				}
-				catch (SLException ex) { Debug_.Print(ex.Message); }
-			}
-
-			string s = "";
-			if (a.Count != 0) {
-				s = a[0].code;
-				if (a.Count > 1) s = string.Join(s.Starts("internal const") ? "\r\n" : "\r\n\r\n", a.Select(o => o.code));
-				s += "\r\n";
-			}
 			code.ZSetText(s);
 		}
+	}
+
+	protected override void OnSourceInitialized(EventArgs e) {
+		_db = EdDatabases.OpenWinapi();
+		if (!tName.Text.NE()) _TextChanged();
+
+		base.OnSourceInitialized(e);
+	}
+
+	protected override void OnClosed(EventArgs e) {
+		_db?.Dispose();
+		_db = null;
+		base.OnClosed(e);
+	}
+
+	void _TextChanged() {
+		string name = tName.Text;
+		var a = new List<(string name, string code)>();
+
+		int nWild = 0; for (int i = 0; i < name.Length; i++) { switch (name[i]) { case '*': case '?': nWild++; break; } }
+		if (name.Length > 0 && (nWild == 0 || name.Length - nWild >= 2)) {
+			string sql;
+			if (name.Contains(' ')) sql = $"in ('{string.Join("', '", name.RxFindAll(@"\b[A-Za-z_]\w\w+", (RXFlags)0))}')";
+			else if (name.FindAny("*?") >= 0) sql = $"GLOB '{name}'";
+			else sql = $"= '{name}'";
+			try {
+				using var stat = _db.Statement("SELECT name, code FROM api WHERE name " + sql);
+				//perf.first();
+				while (stat.Step()) a.Add((stat.GetText(0), stat.GetText(1)));
+				//perf.nw(); //30 ms cold, 10 ms warm. Without index.
+			}
+			catch (SLException ex) { Debug_.Print(ex.Message); }
+		}
+
+		string s = "";
+		if (a.Count != 0) {
+			s = a[0].code;
+			if (a.Count > 1) s = string.Join(s.Starts("internal const") ? "\r\n" : "\r\n\r\n", a.Select(o => o.code));
+			s += "\r\n";
+		}
+		code.ZSetText(s);
 	}
 }

@@ -51,7 +51,10 @@
 			//IUIAutomation.FromPoint very slow. Getting window handle from it is not easy, > 0.5 ms.
 		}
 
-		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
+		/// <inheritdoc cref="fromXY(POINT, WXYFlags)"/>
+		public static wnd fromXY(int x, int y, WXYFlags flags = 0) => fromXY(new POINT(x, y), flags);
+
+		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense.
 
 		/// <summary>
 		/// Gets visible top-level window or control from mouse cursor position.

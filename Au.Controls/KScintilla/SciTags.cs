@@ -674,6 +674,7 @@ namespace Au.Controls
 
 		public bool GetLinkFromPos(int pos, out string tag, out string attr) {
 			tag = attr = null;
+			if (pos <= 0) return false;
 
 			int iTag, iText, k;
 			//to find the start of link text (after <tag>), search for STYLE_HIDDEN before

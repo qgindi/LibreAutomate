@@ -21,12 +21,12 @@ namespace Au.Controls
 			zStyleFontSize(style, size);
 		}
 
-		/// <remarks>Uses only font name and size. Not style etc.</remarks>
+		/// <summary>Uses only font name and size. Not style etc.</summary>
 		public void zStyleFont(int style, System.Windows.Controls.Control c) {
 			zStyleFont(style, c.FontFamily.ToString(), c.FontSize.ToInt() * 72 / 96);
 		}
 
-		/// <remarks>Segoe UI, 9.</remarks>
+		/// <summary>Segoe UI, 9.</summary>
 		public void zStyleFont(int style) {
 			zStyleFont(style, "Segoe UI", 9);
 		}

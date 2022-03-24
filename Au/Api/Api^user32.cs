@@ -366,10 +366,6 @@ namespace Au.Types {
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsWindowUnicode(wnd hWnd);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool IsWow64Process(IntPtr hProcess, out bool Wow64Process);
-
-
 		[DllImport("user32.dll", EntryPoint = "GetPropW", SetLastError = true)]
 		internal static extern nint GetProp(wnd hWnd, string lpString);
 

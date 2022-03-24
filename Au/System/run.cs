@@ -227,8 +227,8 @@ namespace Au {
 					//Process.Start supports long path prefix, except when the exe is .NET.
 					if (!runConsole) file = pathname.unprefixLongPath(file);
 
-					if (filesystem.more.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !filesystem.exists(file)) {
-						file = filesystem.more.DisableRedirection.GetNonRedirectedSystemPath(file);
+					if (FileSystemRedirection.IsSystem64PathIn32BitProcess(file) && !filesystem.exists(file)) {
+						file = FileSystemRedirection.GetNonRedirectedSystemPath(file);
 					}
 				} else if (!pathname.isUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.

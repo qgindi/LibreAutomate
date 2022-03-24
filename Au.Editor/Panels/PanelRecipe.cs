@@ -37,9 +37,13 @@ class PanelRecipe : DockPanel {
 		_c.Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
 		_c.Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
 
-		var styles = new CiStyling.TStyles { FontSize = 8 };
+		//_c.zStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
+		//_c.zStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
+		//_c.zStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
+		//_c.zStyleFont(STYLE_DEFAULT, "Calibri", 9); //too small
+		_c.zStyleFont(STYLE_DEFAULT, "Tahoma", 9);
+		var styles = new CiStyling.TStyles { FontSize = 9 };
 		styles.ToScintilla(_c, multiFont: true);
-
 		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 
 		_c.ZTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
