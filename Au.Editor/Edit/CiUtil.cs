@@ -32,7 +32,7 @@ static class CiUtil {
 		//var r = SymbolFinder.FindSymbolAtPositionAsync(document, position).Result;
 		//print.it(r);
 
-		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1])) position--;
+		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1]) && !code.Eq(position, '[')) position--;
 
 		var root = document.GetSyntaxRootAsync().Result;
 		if (!root.FindTouchingToken(out var token, position, findInsideTrivia: true)) return default;
@@ -40,7 +40,9 @@ static class CiUtil {
 		var span = token.Span; string word = code[span.Start..span.End];
 		//PrintNode(token);
 
-		if (token.IsKind(SyntaxKind.IdentifierToken)) {
+		SyntaxNode node = token.Parent;
+		var tkind = token.Kind();
+		if (tkind == SyntaxKind.IdentifierToken) {
 			switch (word) {
 			case "var":
 			case "dynamic":
@@ -48,6 +50,8 @@ static class CiUtil {
 			case "unmanaged": //tested cases
 				return (null, word, HelpKind.ContextualKeyword, token);
 			}
+		} else if (tkind == SyntaxKind.OpenBracketToken) { //indexer?
+			if(token.Parent is BracketedArgumentListSyntax bal && bal.Parent is ElementAccessExpressionSyntax es) node = es;
 		} else {
 			var k = token.Kind();
 
@@ -86,9 +90,9 @@ static class CiUtil {
 		ISymbol symbol = null;
 		var model = document.GetSemanticModelAsync().Result;
 		//p1.Next();
-		bool preferGeneric = token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
+		bool preferGeneric = tkind == SyntaxKind.IdentifierToken && token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
 
-		var sa = model.GetSymbolInfo(token).GetAllSymbols();
+		var sa = model.GetSymbolInfo(node).GetAllSymbols();
 		if (!sa.IsDefault) {
 			foreach (var v in sa) {
 				Debug_.PrintIf(v is IErrorTypeSymbol);
@@ -148,9 +152,13 @@ static class CiUtil {
 			bool au = metadata.Name == "Au.dll";
 			if (au && sym.IsEnumMember()) sym = sym.ContainingType;
 			query = sym.QualifiedName();
-			query = query.Replace("..ctor", au ? ".-ctor" : null);
+
+			if (query.Ends("..ctor")) query = query.ReplaceAt(^6.., au ? ".-ctor" : " constructor");
+			else if (query.Ends(".this[]")) query = query.ReplaceAt(^7.., ".Item");
+
 			if (au) return HelpUtil.AuHelpUrl(query);
 			if (metadata.Name.Starts("Au.")) return null;
+
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
 		} else if (!sym.IsInSource()) { //eg an operator of string etc
@@ -193,59 +201,69 @@ static class CiUtil {
 		while (parent is BinaryExpressionSyntax && parent.IsKind(SyntaxKind.AddExpression)) parent = parent.Parent; //"string"+"string"+...
 
 		PSFormat format = PSFormat.None;
-		if (parent is ArgumentSyntax asy && parent.Parent is ArgumentListSyntax alis) {
-			switch (alis.Parent) {
-			case ObjectCreationExpressionSyntax oce:
-				format = _GetFormat(oce);
-				if (format == PSFormat.None) {
-					switch (oce.Type.ToString()) { //fast if single word
-					case "Regex":
-					case "System.Text.RegularExpressions.Regex":
-					case "RegexCompilationInfo":
-					case "System.Text.RegularExpressions.RegexCompilationInfo":
-						if ((object)asy == alis.Arguments[0]) format = PSFormat.NetRegex;
-						break;
+		if (parent is ArgumentSyntax asy) {
+			if (parent.Parent is ArgumentListSyntax alis) {
+				switch (alis.Parent) {
+				case ObjectCreationExpressionSyntax oce:
+					format = _GetFormat(oce, alis);
+					if (format == PSFormat.None) {
+						switch (oce.Type.ToString()) { //fast if single word
+						case "Regex":
+						case "System.Text.RegularExpressions.Regex":
+						case "RegexCompilationInfo":
+						case "System.Text.RegularExpressions.RegexCompilationInfo":
+							if ((object)asy == alis.Arguments[0]) format = PSFormat.NetRegex;
+							break;
+						}
 					}
-				}
-				break;
-			case InvocationExpressionSyntax ies:
-				format = _GetFormat(ies);
-				if (format == PSFormat.None) {
-					switch (ies.Expression.ToString()) {
-					case "Regex.IsMatch":
-					case "Regex.Match":
-					case "Regex.Matches":
-					case "Regex.Replace":
-					case "Regex.Split":
-						var aa = alis.Arguments;
-						if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.NetRegex;
-						break;
+					break;
+				case InvocationExpressionSyntax ies:
+					format = _GetFormat(ies, alis);
+					if (format == PSFormat.None) {
+						switch (ies.Expression.ToString()) {
+						case "Regex.IsMatch":
+						case "Regex.Match":
+						case "Regex.Matches":
+						case "Regex.Replace":
+						case "Regex.Split":
+							var aa = alis.Arguments;
+							if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.NetRegex;
+							break;
+						}
 					}
+					break;
+					//default:
+					//	CiUtil.PrintNode(alis.Parent);
+					//	break;
 				}
-				break;
-				//default:
-				//	CiUtil.PrintNode(alis.Parent);
-				//	break;
+			} else if (parent.Parent is BracketedArgumentListSyntax balis && balis.Parent is ElementAccessExpressionSyntax eacc) {
+				if (semo.GetSymbolInfo(eacc).Symbol is IPropertySymbol ips && ips.IsIndexer) {
+					var ims = ips.SetMethod;
+					if (ims != null) format = _GetFormat2(ims, balis);
+				}
 			}
 
-			PSFormat _GetFormat(ExpressionSyntax es) {
-				if (semo.GetSymbolInfo(es).Symbol is IMethodSymbol ims) {
-					IParameterSymbol p = null;
-					var pa = ims.Parameters;
-					var nc = asy.NameColon;
-					if (nc != null) {
-						var name = nc.Name.Identifier.Text;
-						foreach (var v in pa) if (v.Name == name) { p = v; break; }
-					} else {
-						int i; var aa = alis.Arguments;
-						for (i = 0; i < aa.Count; i++) if ((object)aa[i] == asy) break;
-						if (i >= pa.Length && pa[^1].IsParams) i = pa.Length - 1;
-						if (i < pa.Length) p = pa[i];
-					}
-					if (p != null) {
-						var fa = p.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "ParamStringAttribute");
-						if (fa != null) return fa.GetConstructorArgument<PSFormat>(0, SpecialType.None);
-					}
+			PSFormat _GetFormat(ExpressionSyntax es, BaseArgumentListSyntax alis) {
+				if (semo.GetSymbolInfo(es).Symbol is IMethodSymbol ims) return _GetFormat2(ims, alis);
+				return PSFormat.None;
+			}
+
+			PSFormat _GetFormat2(IMethodSymbol ims, BaseArgumentListSyntax alis) {
+				IParameterSymbol p = null;
+				var pa = ims.Parameters;
+				var nc = asy.NameColon;
+				if (nc != null) {
+					var name = nc.Name.Identifier.Text;
+					foreach (var v in pa) if (v.Name == name) { p = v; break; }
+				} else {
+					int i; var aa = alis.Arguments;
+					for (i = 0; i < aa.Count; i++) if ((object)aa[i] == asy) break;
+					if (i >= pa.Length && pa[^1].IsParams) i = pa.Length - 1;
+					if (i < pa.Length) p = pa[i];
+				}
+				if (p != null) {
+					var fa = p.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "ParamStringAttribute");
+					if (fa != null) return fa.GetConstructorArgument<PSFormat>(0, SpecialType.None);
 				}
 				return PSFormat.None;
 			}

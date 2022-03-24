@@ -5,6 +5,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Au.Controls;
 
+namespace Au.Tools;
+
 class DCommandline : KDialogWindow {
 	wpfBuilder _b;
 	CheckBox _cEditorNoPath, _cScriptNoPath, _cWait;

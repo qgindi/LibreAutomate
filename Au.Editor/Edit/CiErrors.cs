@@ -79,7 +79,7 @@ class CiErrors {
 		if (_metaErrors.Count > 0) {
 			int offs = 0; //!=0 if modified text before metacomments
 			if (cd.meta.end - cd.meta.start == _metaRange.end - _metaRange.start) offs = cd.meta.start - _metaRange.start;
-			
+
 			foreach (var v in _metaErrors) {
 				int from = v.from + offs, to = v.to + offs;
 				if (to <= start16 || from >= end16) continue;
@@ -165,6 +165,18 @@ class CiErrors {
 							_AddError(nk, e);
 						}
 					}
+					break;
+				case PSFormat.Hotkey:
+					if (!keys.more.parseHotkeyString(s, out _, out _))
+						_AddError(node, "Invalid hotkey string.");
+					break;
+				case PSFormat.HotkeyTrigger:
+					if (!keys.more.parseTriggerString(s, out _, out _, out _, false))
+						_AddError(node, "Invalid hotkey string.");
+					break;
+				case PSFormat.TriggerMod:
+					if (!keys.more.parseTriggerString(s, out _, out _, out _, true))
+						_AddError(node, "Invalid modifiers string.");
 					break;
 				}
 			}

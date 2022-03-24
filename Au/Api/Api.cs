@@ -1337,6 +1337,31 @@ namespace Au.Types {
 		internal static extern void MD5Final(ref Hash.MD5Context context);
 
 #pragma warning disable 169
+		[DllImport("ntdll.dll")]
+		internal static extern int NtQueryInformationProcess(IntPtr ProcessHandle, int ProcessInformationClass, void* ProcessInformation, int ProcessInformationLength, out int ReturnLength);
+
+		//all structs are same in 64-bit and 32-bit processes
+
+		internal record struct PROCESS_BASIC_INFORMATION {
+			long Reserved1;
+			public long PebBaseAddress;
+			long Reserved2_0, Reserved2_1;
+			public long UniqueProcessId;
+			public long ParentProcessId;
+		}
+
+		internal struct RTL_USER_PROCESS_PARAMETERS {
+			fixed byte Reserved[96];
+			public UNICODE_STRING ImagePathName;
+			public UNICODE_STRING CommandLine;
+		}
+
+		internal struct UNICODE_STRING {
+			public ushort Length;
+			public ushort MaximumLength;
+			public char* Buffer;
+		}
+
 		internal struct SYSTEM_PROCESS_INFORMATION {
 			internal uint NextEntryOffset;
 			internal uint NumberOfThreads;

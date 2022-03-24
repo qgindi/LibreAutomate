@@ -21,7 +21,7 @@ unsafe class ColorQuantizer
 			var b = uiimage.capture(r);
 			var a = Quantize(b, 16);
 			var z = Convert2.BrotliCompress(a);
-			return " /*image:"
+			return "/*image:"
 				//+ "\r\n" //rejected
 				+ "WkJN" + Convert.ToBase64String(z) + "*/";
 		}

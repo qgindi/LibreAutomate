@@ -318,7 +318,7 @@ namespace Au {
 			bool isFirst = true;
 			FileAttributes attr = 0;
 			int basePathLength = path.Length;
-			//var redir = new more.DisableRedirection();
+			//var redir = new FileSystemRedirection();
 
 			try {
 				//if (0 != (flags & FEFlags.DisableRedirection)) redir.Disable();
@@ -844,10 +844,11 @@ namespace Au {
 		/// </summary>
 		/// <param name="path">Full path.</param>
 		/// <param name="recycleBin">
-		/// Send to the Recycle Bin. If not possible, delete anyway.
+		/// Send to the Recycle Bin. If not possible, delete anyway, unless <i>canFail</i> true.
 		/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
-		/// Note: it is much slower. To delete multiple, use <see cref="delete(IEnumerable{string}, bool)"/>.
+		/// Note: it is much slower. To delete multiple, use <see cref="delete(IEnumerable{string}, bool, bool)"/>.
 		/// </param>
+		/// <param name="canFail">If fails to delete, don't wait/retry and don't throw exception.</param>
 		/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -860,20 +861,21 @@ namespace Au {
 		/// 2. This process does not have security permissions to access or delete the file or directory or some of its descendants.
 		/// 3. The directory is (or contains) the "current directory" (in any process).
 		/// </remarks>
-		public static void delete(string path, bool recycleBin = false) {
+		public static void delete(string path, bool recycleBin = false, bool canFail = false) {
 			path = _PreparePath(path);
-			_Delete(path, recycleBin);
+			_Delete(path, recycleBin, canFail);
 		}
 
 		/// <summary>
 		/// Deletes multiple files or/and directories.
-		/// The same as <see cref="delete(string, bool)"/>, but faster when using Recycle Bin.
+		/// The same as <see cref="delete(string, bool, bool)"/>, but faster when using Recycle Bin.
 		/// </summary>
 		/// <param name="paths">string array, <b>List</b> or other collection. Full paths.</param>
 		/// <param name="recycleBin"></param>
+		/// <param name="canFail">If fails to delete, don't wait/retry and don't throw exception.</param>
 		/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
 		/// <exception cref="AuException">Failed.</exception>
-		public static void delete(IEnumerable<string> paths, bool recycleBin = false) {
+		public static void delete(IEnumerable<string> paths, bool recycleBin = false, bool canFail = false) {
 			if (recycleBin) {
 				var a = new List<string>();
 				foreach (var v in paths) {
@@ -881,22 +883,25 @@ namespace Au {
 					if (exists(s, true)) a.Add(s);
 				}
 				if (a.Count == 0) return;
-				if (_DeleteShell(null, true, a)) return;
+				if (_DeleteShell(null, true, a) || canFail) return;
 				Debug_.Print("_DeleteShell failed");
 			}
-			foreach (var v in paths) delete(v);
+			foreach (var v in paths) delete(v, false, canFail);
 		}
 
 		/// <summary>
 		/// note: path must be normalized.
 		/// </summary>
-		static FileIs_ _Delete(string path, bool recycleBin = false) {
+		static FileIs_ _Delete(string path, bool recycleBin = false, bool canFail = false) {
 			var type = ExistsAs_(path, true);
 			if (type == FileIs_.NotFound) return type;
-			if (type == FileIs_.AccessDenied) throw new AuException(0, $"*delete '{path}'");
+			if (type == FileIs_.AccessDenied) {
+				if (canFail) return type;
+				throw new AuException(0, $"*delete '{path}'");
+			}
 
 			if (recycleBin) {
-				if (_DeleteShell(path, true)) return type;
+				if (_DeleteShell(path, true) || canFail) return type;
 				Debug_.Print("_DeleteShell failed");
 			}
 
@@ -908,22 +913,24 @@ namespace Au {
 					var f = a[i];
 					var at = f.Attributes;
 					if (at.Has(FileAttributes.ReadOnly)) Api.SetFileAttributes(path, at & ~FileAttributes.ReadOnly);
-					_DeleteL(f.FullPath, f.IsDirectory); //delete as many as possible
+					_DeleteL(f.FullPath, f.IsDirectory, canFail); //delete as many as possible
 				}
-				ec = _DeleteL(path, true);
+				ec = _DeleteL(path, true, canFail);
 				if (ec == 0) {
 					//notify shell. Else, if it was open in Explorer, it shows an error message box.
 					//Info: .NET does not notify; SHFileOperation does.
 					ShellNotify_(Api.SHCNE_RMDIR, path);
 					return type;
 				}
-				Debug_.Print("Using _DeleteShell.");
-				if (_DeleteShell(path, false)) return type;
+				if (!canFail) {
+					Debug_.Print("Using _DeleteShell.");
+					if (_DeleteShell(path, false)) return type;
+				}
 			} else {
-				ec = _DeleteL(path, type == FileIs_.NtfsLinkDirectory);
+				ec = _DeleteL(path, type == FileIs_.NtfsLinkDirectory, canFail);
 				if (ec == 0) return type;
 			}
-			if (exists(path, true)) throw new AuException(ec, $"*delete '{path}'");
+			if (!canFail && exists(path, true)) throw new AuException(ec, $"*delete '{path}'");
 
 			//info:
 			//RemoveDirectory fails if not empty.
@@ -934,7 +941,7 @@ namespace Au {
 			return type;
 		}
 
-		static int _DeleteL(string path, bool dir) {
+		static int _DeleteL(string path, bool dir, bool canFail = false) {
 			//print.it(dir, path);
 			if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 			var ec = lastError.code;
@@ -946,13 +953,15 @@ namespace Au {
 					ec = lastError.code;
 				}
 			}
-			for (int i = 1; (ec == Api.ERROR_SHARING_VIOLATION || ec == Api.ERROR_LOCK_VIOLATION || ec == Api.ERROR_DIR_NOT_EMPTY) && i <= 50; i++) {
-				//ERROR_DIR_NOT_EMPTY: see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
-				string es = ec == Api.ERROR_DIR_NOT_EMPTY ? "ERROR_DIR_NOT_EMPTY when empty. Retry " : "ERROR_SHARING_VIOLATION. Retry ";
-				Debug_.PrintIf(i > 1, es + i.ToString());
-				Thread.Sleep(15);
-				if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
-				ec = lastError.code;
+			if (!canFail) {
+				for (int i = 1; (ec == Api.ERROR_SHARING_VIOLATION || ec == Api.ERROR_LOCK_VIOLATION || ec == Api.ERROR_DIR_NOT_EMPTY) && i <= 50; i++) {
+					//ERROR_DIR_NOT_EMPTY: see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
+					string es = ec == Api.ERROR_DIR_NOT_EMPTY ? "ERROR_DIR_NOT_EMPTY when empty. Retry " : "ERROR_SHARING_VIOLATION. Retry ";
+					Debug_.PrintIf(i > 1, es + i.ToString());
+					Thread.Sleep(15);
+					if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
+					ec = lastError.code;
+				}
 			}
 			if (ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
 			Debug_.Print("_DeleteL failed. " + lastError.messageFor(ec) + "  " + path
@@ -1539,7 +1548,7 @@ namespace Au.Types {
 		/// </summary>
 		NeedRelativePaths = 0x80,
 
-		//rejected. Rarely used. Can use filesystem.more.DisableRedirection, it's public.
+		//rejected. Rarely used. Can use FileSystemRedirection, it's public.
 		///// <summary>
 		///// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
 		///// Then you can enumerate the 64-bit System32 folder in your 32-bit process.

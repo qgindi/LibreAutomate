@@ -2,16 +2,14 @@
 
 //FUTURE: GetCpuUsage.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Contains static functions to work with processes (find, enumerate, get basic info, etc), current process (get info), current thread (get info).
 	/// </summary>
 	/// <seealso cref="run"/>
 	/// <seealso cref="script"/>
 	/// <seealso cref="Process"/>
-	public static unsafe class process
-	{
+	public static unsafe class process {
 		/// <summary>
 		/// Gets process executable file name (like "notepad.exe") or full path.
 		/// Returns null if fails.
@@ -51,14 +49,16 @@ namespace Au
 						}
 					}
 				}
-			} else if (!noSlowAPI && !fullPath) { //the slow way. Can get only names, not paths.
-				using (new _AllProcesses(out var p, out int n)) {
-					for (int i = 0; i < n; i++)
-						if (p[i].processID == processId) {
-							R = p[i].GetName(cannotOpen: true);
+			} else if (!noSlowAPI && !fullPath) {
+				//the slow way. Can get only names, not paths.
+				using (var p = new AllProcesses_(false)) {
+					for (int i = 0; i < p.Count; i++)
+						if (p.Id(i) == processId) {
+							R = p.Name(i, cannotOpen: true);
 							break;
 						}
 				}
+				//TEST: NtQueryInformationProcess, like in getCommandLine.
 			}
 
 			return R;
@@ -83,8 +83,7 @@ namespace Au
 			return R;
 		}
 
-		class _LastWndProps
-		{
+		class _LastWndProps {
 			wnd _w;
 			long _time;
 			internal string ProgramName, ProgramPath;
@@ -134,48 +133,52 @@ namespace Au
 			[DllImport("wtsapi32.dll", SetLastError = false)]
 			static extern void WTSFreeMemory(ProcessInfo_* memory);
 		}
-#else //the .NET Process class uses this. But it creates about 0.4 MB of garbage.
-		struct _AllProcesses : IDisposable
-		{
-			ProcessInfo_* _p;
+#else //the .NET Process class uses this. But it creates about 0.4 MB of garbage (last time tested was 0.2 MB).
+		internal unsafe struct AllProcesses_ : IDisposable {
+			readonly _ProcessInfo* _p;
+			readonly int _count;
+			static int s_bufferSize = 500_000;
 
-			public _AllProcesses(out ProcessInfo_* pi, out int count) {
-				_p = null;
+			public AllProcesses_(bool ofThisSession) {
+				int sessionId = ofThisSession ? thisProcessSessionId : 0;
 				Api.SYSTEM_PROCESS_INFORMATION* b = null;
 				try {
-					for (int na = 500_000; ;) {
+					for (int na = s_bufferSize; ;) {
 						MemoryUtil.FreeAlloc(ref b, na);
 						int status = Api.NtQuerySystemInformation(5, b, na, out na);
 						//print.it(na); //~300_000, Win10, year 2021
-						if (status == 0) break;
+						if (status == 0) { s_bufferSize = na + 100_000; break; }
 						if (status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
 					}
 
 					int nProcesses = 0, nbNames = 0;
 					for (var p = b; ; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
-						nProcesses++;
-						nbNames += p->NameLength; //bytes, not chars
+						if (!ofThisSession || p->SessionId == sessionId) {
+							nProcesses++;
+							nbNames += p->NameLength; //bytes, not chars
+						}
 						if (p->NextEntryOffset == 0) break;
 					}
-					count = nProcesses;
-					_p = (ProcessInfo_*)MemoryUtil.Alloc(nProcesses * sizeof(ProcessInfo_) + nbNames);
-					ProcessInfo_* r = _p;
+					_count = nProcesses;
+					_p = (_ProcessInfo*)MemoryUtil.Alloc(nProcesses * sizeof(_ProcessInfo) + nbNames);
+					_ProcessInfo* r = _p;
 					char* names = (char*)(_p + nProcesses);
-					for (var p = b; ; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
-						r->processID = (int)p->UniqueProcessId;
-						r->sessionID = (int)p->SessionId;
-						int len = p->NameLength / 2;
-						r->nameLen = len;
-						if (len > 0) {
-							//copy name to _p memory because it's in the huge buffer that will be released in this func
-							r->namePtr = names;
-							MemoryUtil.Copy((char*)p->NamePtr, names, len * 2);
-							names += len;
-						} else r->namePtr = null; //Idle
-
+					for (var p = b; ; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
+						if (!ofThisSession || p->SessionId == sessionId) {
+							r->processID = (int)p->UniqueProcessId;
+							r->sessionID = (int)p->SessionId;
+							int len = p->NameLength / 2;
+							r->nameLen = len;
+							if (len > 0) {
+								//copy name to _p memory because it's in the huge buffer that will be released in this func
+								r->nameOffset = (int)(names - (char*)_p);
+								MemoryUtil.Copy((char*)p->NamePtr, names, len * 2);
+								names += len;
+							} else r->nameOffset = 0; //Idle
+							r++;
+						}
 						if (p->NextEntryOffset == 0) break;
 					}
-					pi = _p;
 				}
 				finally { MemoryUtil.Free(b); }
 			}
@@ -183,43 +186,41 @@ namespace Au
 			public void Dispose() {
 				MemoryUtil.Free(_p);
 			}
-		}
-#endif
 
-		//Use ProcessInfo_ and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory.
-		//	AllProcesses() converts ProcessInfo_ to ProcessInfo where Name is string. Almost same speed.
-		internal unsafe struct ProcessInfo_
-		{
-#pragma warning disable 649 //never used
-			public int sessionID;
-			public int processID;
-			public char* namePtr;
-			public int nameLen;
-#if USE_WTS
-			public IntPtr userSid;
-#endif
-#pragma warning restore 649
+			public int Count => _count;
 
-			/// <summary>
-			/// Gets process executable file name (like "notepad.exe"). Not full path.
-			/// If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
-			/// Don't call multiple times, because always converts from raw char*.
-			/// </summary>
-			public string GetName(bool cannotOpen = false) {
-				if (namePtr == null) {
-					if (processID == 0) return "Idle";
-					return null;
-				}
-				string R = new(namePtr, 0, nameLen);
-				if (!cannotOpen && pathname.IsPossiblyDos_(R)) {
-					using var ph = Handle_.OpenProcess(processID);
-					if (!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
-						R = _GetFileName(pathname.ExpandDosPath_(s));
+			//public ProcessInfo this[int i] => new(ProcessName(i), _p[i].processID, _p[i].sessionID); //rejected, could be used where shouldn't, making code slower etc
+			public ProcessInfo Info(int i) => new(Name(i), _p[i].processID, _p[i].sessionID);
+
+			public int Id(int i) => (uint)i < _count ? _p[i].processID : throw new IndexOutOfRangeException();
+
+			public int SessionId(int i) => (uint)i < _count ? _p[i].sessionID : throw new IndexOutOfRangeException();
+
+			public string Name(int i, bool cannotOpen = false) => (uint)i < _count ? _p[i].GetName(_p, cannotOpen) : throw new IndexOutOfRangeException();
+
+			struct _ProcessInfo {
+				public int sessionID;
+				public int processID;
+				public int nameOffset;
+				public int nameLen;
+
+				public string GetName(void* p, bool cannotOpen) {
+					if (nameOffset == 0) {
+						if (processID == 0) return "Idle";
+						return null;
 					}
+					string R = new((char*)p + nameOffset, 0, nameLen);
+					if (!cannotOpen && pathname.IsPossiblyDos_(R)) {
+						using var ph = Handle_.OpenProcess(processID);
+						if (!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
+							R = _GetFileName(pathname.ExpandDosPath_(s));
+						}
+					}
+					return R;
 				}
-				return R;
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Gets basic info of all processes: name, id, session id.
@@ -227,18 +228,9 @@ namespace Au
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		/// <exception cref="AuException">Failed. Unlikely.</exception>
 		public static ProcessInfo[] allProcesses(bool ofThisSession = false) {
-			using (new _AllProcesses(out var p, out int n)) {
-				if (n == 0) throw new AuException();
-				int sessionId = 0, ns = n;
-				if (ofThisSession) {
-					sessionId = thisProcessSessionId;
-					for (int i = 0; i < n; i++) if (p[i].sessionID != sessionId) ns--;
-				}
-				var a = new ProcessInfo[ns];
-				for (int i = 0, j = 0; i < n; i++) {
-					if (ofThisSession && p[i].sessionID != sessionId) continue;
-					a[j++] = new ProcessInfo(p[i].GetName(), p[i].processID, p[i].sessionID);
-				}
+			using (var p = new AllProcesses_(ofThisSession)) {
+				var a = new ProcessInfo[p.Count];
+				for (int i = 0; i < a.Length; i++) a[i] = p.Info(i);
 				return a;
 			}
 		}
@@ -281,19 +273,14 @@ namespace Au
 
 		internal static int GetProcessesByName_(ref List<int> a, wildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false) {
 			a?.Clear();
-
-			int sessionId = ofThisSession ? thisProcessSessionId : 0;
-
-			using (new _AllProcesses(out var p, out int n)) {
-				for (int i = 0; i < n; i++) {
-					if (ofThisSession && p[i].sessionID != sessionId) continue;
-					string s = fullPath ? getName(p[i].processID, true) : p[i].GetName();
-					if (s == null) continue;
-
-					if (processName.Match(s)) {
-						if (first) return p[i].processID;
+			using (var p = new AllProcesses_(ofThisSession)) {
+				for (int i = 0; i < p.Count; i++) {
+					string s = fullPath ? getName(p.Id(i), true) : p.Name(i);
+					if (s != null && processName.Match(s)) {
+						int pid = p.Id(i);
+						if (first) return pid;
 						a ??= new List<int>();
-						a.Add(p[i].processID);
+						a.Add(pid);
 					}
 				}
 			}
@@ -348,6 +335,74 @@ namespace Au
 		//	if(pid == 0) return null;
 		//	return Process.GetProcessById(pid); //slow, makes much garbage, at first gets all processes just to throw exception if pid not found...
 		//}
+
+		/// <summary>
+		/// Gets user session id of a process (API <msdn>ProcessIdToSessionId</msdn>).
+		/// Returns -1 if failed. Supports <see cref="lastError"/>.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		public static int getSessionId(int processId) {
+			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
+			return R;
+		}
+
+		/// <summary>
+		/// Returns true if the process is 32-bit, false if 64-bit.
+		/// Also returns false if fails. Supports <see cref="lastError"/>.
+		/// </summary>
+		/// <remarks>
+		/// <note>If you know it is current process, instead use <see cref="osVersion"/> functions or <c>IntPtr.Size==4</c>. This function is much slower.</note>
+		/// </remarks>
+		public static bool is32Bit(int processId) {
+			bool is32bit = osVersion.is32BitOS;
+			if (!is32bit) {
+				using var ph = Handle_.OpenProcess(processId);
+				if (ph.Is0 || !Api.IsWow64Process(ph, out is32bit)) return false;
+			}
+			lastError.clear();
+			return is32bit;
+
+			//info: don't use Process.GetProcessById, it does not have a desiredAccess parameter and fails with higher IL processes.
+		}
+
+		/// <summary>
+		/// Returns true if the process is 32-bit, false if 64-bit.
+		/// Also returns false if fails. Supports <see cref="lastError"/>.
+		/// </summary>
+		public static bool is32Bit(IntPtr processHandle) {
+			bool is32bit = osVersion.is32BitOS;
+			if (!is32bit) {
+				if (!Api.IsWow64Process(processHandle, out is32bit)) return false;
+			}
+			lastError.clear();
+			return is32bit;
+		}
+
+		/// <summary>
+		/// Gets the command line string used to start the process. Returns null if fails.
+		/// </summary>
+		/// <remarks>
+		/// The string starts with program file path or name, often enclosed in "", and may be followed by arguments. Some processes may modify it; then this function gets the modified string.
+		/// Fails if the specified process is admin and this processs isn't. May fail with some system processes. Fails if this is a 32-bit process.
+		/// </remarks>
+		public static unsafe string getCommandLine(int processId) {
+			if (osVersion.is32BitProcess) return null; //can't get PEB address of 64-bit processes. Never mind 32-bit OS.
+			using var pm = new ProcessMemory(processId, 0, noException: true);
+			if (pm.ProcessHandle == default) return null;
+			Api.PROCESS_BASIC_INFORMATION pbi;
+			if (0 == Api.NtQueryInformationProcess(pm.ProcessHandle, 0, &pbi, sizeof(Api.PROCESS_BASIC_INFORMATION), out _)) {
+				long upp; Api.RTL_USER_PROCESS_PARAMETERS up;
+				if (pm.Read((IntPtr)pbi.PebBaseAddress + 32, &upp, 8) && pm.Read((IntPtr)upp, &up, sizeof(Api.RTL_USER_PROCESS_PARAMETERS))) {
+					pm.Mem = (IntPtr)up.CommandLine.Buffer;
+					return pm.ReadCharString(up.CommandLine.Length / 2)
+						?.Trim() //many end with space, usually when without commandline args
+						?.Replace('\0', ' '); //sometimes '\0' instead of spaces before args
+				}
+			}
+			return null;
+
+			//speed: ~25 mcs cold. WMI Win32_Process ~50 ms (2000 times slower).
+		}
 
 		/// <summary>
 		/// Terminates (ends) the specified process.
@@ -438,13 +493,107 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets user session id of a process (API <msdn>ProcessIdToSessionId</msdn>).
-		/// Returns -1 if failed. Supports <see cref="lastError"/>.
+		/// Waits until the process ends.
 		/// </summary>
-		/// <param name="processId">Process id.</param>
-		public static int getSessionId(int processId) {
-			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
-			return R;
+		/// <returns>true when the process ended. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="processId">Process id. If invalid but not 0, the function returns true and sets <c>exitCode = int.MinValue</c>; probably the process is already ended.</param>
+		/// <param name="exitCode">Receives the exit code.</param>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="ArgumentException"><i>processId</i> is 0.</exception>
+		public static bool waitForExit(double secondsTimeout, int processId, out int exitCode) {
+			if (processId == 0) throw new ArgumentException("processId 0", nameof(processId));
+			using var h = Handle_.OpenProcess(processId, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
+			if (h.Is0) {
+				var e = lastError.code;
+				if (e == Api.ERROR_INVALID_PARAMETER) { exitCode = int.MinValue; return true; };
+				throw new AuException(e);
+			}
+			exitCode = 0;
+			if (0 == wait.forHandle(secondsTimeout, 0, h)) return false;
+			Api.GetExitCodeProcess(h, out exitCode);
+			return true;
+		}
+
+		/// <summary>
+		/// Provides process started/ended triggers in foreach loop. See examples.
+		/// </summary>
+		/// <returns>
+		/// An object that retrieves process trigger info (started/ended, name, id, session id) when used with foreach.
+		/// If need more process properties, your code can call <see cref="process"/> class functions with the process id.
+		/// </returns>
+		/// <param name="started">Trigger events: true - started, false - ended, null (default) - both.</param>
+		/// <param name="processName">
+		/// Process executable file name, like "notepad.exe".
+		/// String format: [](xref:wildcard_expression).
+		/// null matches all.
+		/// </param>
+		/// <param name="ofThisSession">Watch processes only of this user session.</param>
+		/// <param name="period">
+		/// The period in milliseconds of retrieving the list of processes for detecting new and ended processes. Default 100, min 10, max 1000.
+		/// Smaller = smaller average delay and less missing triggers (when process lifetime is very short) but more CPU usage.
+		/// </param>
+		/// <exception cref="ArgumentException">Invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// //all started and ended processes
+		/// foreach (var v in process.triggers()) {
+		/// 	print.it(v);
+		/// }
+		/// 
+		/// //started notepad processes in current user session
+		/// foreach (var v in process.triggers(started: true, "notepad.exe", ofThisSession: true)) {
+		/// 	print.it(v);
+		/// }
+		/// ]]></code>
+		/// </example>
+		public static IEnumerable<ProcessTriggerInfo> triggers(bool? started = null, [ParamString(PSFormat.Wildex)] string processName = null, bool ofThisSession = false, int period = 100) {
+			wildex wild = processName;
+			period = Math.Clamp(period, 10, 1000) - 2;
+			var comparer = new _PiComparer();
+			var hs = new HashSet<ProcessInfo>(comparer);
+			var ap = allProcesses(ofThisSession);
+			for (; ; ) {
+				period.ms();
+				//Debug_.MemorySetAnchor_();
+				//perf.first();
+				using (var p = new AllProcesses_(ofThisSession)) {
+					//perf.next();
+					bool eq = p.Count == ap.Length;
+					if (eq) for (int i = 0; i < ap.Length; i++) if (!(eq = ap[i].Id == p.Id(i))) break;
+					if (!eq) {
+						var a = new ProcessInfo[p.Count];
+						for (int i = 0; i < a.Length; i++) a[i] = p.Info(i);
+						for (int i = 0; i < 2; i++) {
+							ProcessInfo[] a1, a2;
+							if (i == 0) {
+								if (started == true) continue;
+								a1 = a; a2 = ap;
+							} else {
+								if (started == false) continue;
+								a1 = ap; a2 = a;
+							}
+							hs.Clear(); hs.UnionWith(a1);
+							foreach (var v in a2) {
+								if (hs.Add(v)) {
+									if (wild == null || wild.Match(v.Name))
+										yield return new(i == 1, v.Name, v.Id, v.SessionId);
+								}
+							}
+						}
+						ap = a;
+					}
+				}
+				//perf.nw();
+				//Debug_.MemoryPrint_();
+			}
+		}
+
+		class _PiComparer : IEqualityComparer<ProcessInfo> {
+			//public bool Equals(ProcessInfo x, ProcessInfo y) => x.Id == y.Id;
+			public bool Equals(ProcessInfo x, ProcessInfo y) => x.Id == y.Id && x.Name == y.Name;
+			public int GetHashCode(ProcessInfo obj) => obj.Id;
 		}
 
 		#region this process
@@ -643,11 +792,15 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
-	/// Contains process name (like "notepad.exe"), id, name and user session id.
+	/// Contains process name (like "notepad.exe"), id and user session id.
 	/// </summary>
 	public record struct ProcessInfo(string Name, int Id, int SessionId);
 	//use record to auto-implement ==, eg for code like var a=process.allProcesses(); 5.s(); print.it(process.allProcesses().Except(a));
+
+	/// <summary>
+	/// Contains process trigger info retrieved by <see cref="process.triggers"/>.
+	/// </summary>
+	public record class ProcessTriggerInfo(bool Started, string Name, int Id, int SessionId);
 }

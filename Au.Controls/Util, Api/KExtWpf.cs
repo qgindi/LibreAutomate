@@ -299,7 +299,7 @@ namespace Au.Tools
 		/// </summary>
 		public static KCheckBox xAddCheckIcon(this wpfBuilder b, string icon, string tooltip) {
 			b.Add(out KCheckBox c, ImageUtil.LoadWpfImageElement(icon)).Tooltip(tooltip);
-			c.Style = Application.Current.FindResource(ToolBar.CheckBoxStyleKey) as Style;
+			c.Style = b.Panel.FindResource(ToolBar.CheckBoxStyleKey) as Style;
 			c.Focusable = false;
 			//var p = (c.Content as Viewbox).Child as System.Windows.Shapes.Path;
 			//c.Checked += (_, _) => p.Fill.Opacity = 1;
@@ -312,7 +312,7 @@ namespace Au.Tools
 		/// </summary>
 		public static Button xAddButtonIcon(this wpfBuilder b, string icon, Action<WBButtonClickArgs> click, string tooltip) {
 			b.AddButton(out Button c, ImageUtil.LoadWpfImageElement(icon), click).Tooltip(tooltip);
-			c.Style = Application.Current.FindResource(ToolBar.ButtonStyleKey) as Style;
+			c.Style = b.Panel.FindResource(ToolBar.ButtonStyleKey) as Style;
 			c.Focusable = false;
 			return c;
 		}

@@ -13,16 +13,14 @@ Automaticode is free and open-source. Its open-source automation library can be 
 
 Automaticode can run on Windows 7-11 with .NET runtime. More info [here](xref:index).
 
-The program and library are still unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
-
 QM (Quick Macros 2) will not have more features in the future. Only bug fixes. But it will be available and supported for long time.
 
 Let's compare QM and Automaticode C# code.
 
 A script in QM:
 ```csharp
-int w=win("- Mozilla Firefox" "MozillaWindowClass")
-act w
+int w=win("- Mozilla Firefox")
+act w ;;comment
 lef 331 115 w 1
 2
 key L "text" Y
@@ -34,11 +32,11 @@ for i 0 5
 
 The same script in Automaticode C#:
 ```csharp
-var w = wnd.find("*- Mozilla Firefox", "MozillaWindowClass");
-w.Activate();
+var w = wnd.find("*- Mozilla Firefox");
+w.Activate(); //comment
 mouse.click(w, 331, 115);
 2.s();
-keys.send("Left", "text", "Enter");
+keys.send("Left", "!text", "Enter");
 for(int i=0; i<5; i++) {
 	print.it(i);
 	print.it(i*i);
@@ -47,13 +45,13 @@ for(int i=0; i<5; i++) {
 
 As you see, C# code is longer, but usually it is easier to understand. The [code editor](xref:code_editor) can add `; () { }` automatically as you type, and has other code editing features that are much better than in QM.
 
-Automaticode has triggers to execute parts of a running script. Trigger types: hotkey, autotext, mouse, window; more in the future. Triggers also can be used to launch scripts, but differently than in QM.
+Automaticode has triggers to execute parts of a running script. Trigger types: hotkey, autotext, mouse, window, process, filesystem. Triggers also can be used to launch scripts, but differently than in QM.
 
-Automaticode does not have item types like "menu", "toolbar" and "autotext". Instead use classes popupMenu, floatingToolbar and AutotextTriggers.
+Automaticode does not have item types like "menu", "toolbar" and "autotext". Instead use classes **popupMenu**, **toolbar** and **AutotextTriggers**.
 
-To create dialogs now can be used class wpfBuilder and snippet wpfSnippet.
+To create dialogs now can be used class **wpfBuilder** and snippet wpfSnippet.
 
-Currently Automaticode has only the most important tools for creating code. They are in the Code menu: recorder, find window/element/image, keys, regex, Windows API. More in the future.
+Currently Automaticode has only the most important tools for creating code. They are in the Code menu: recorder, find window/element/image, keys, regex, Windows API.
 
 In Automaticode each script is a separate .cs file. [Read more](xref:Automaticode).
 
@@ -68,11 +66,10 @@ In the main Automaticode window you can resize and dock all panels and toolbars 
 Automaticode saves all settings in files, not in the Registry.
 
 #### Some important features missing
-- Dialog editor. Instead use class wpfBuilder.
+- Dialog editor. Instead use class **wpfBuilder**.
 - Automatic backup.
-- Triggers of types other than hotkey, autotext, mouse and window.
 - Debugger. To debug a script in step mode need Visual Studio or VS Code.
-- Multiple code editors.
+- Multiple code editor controls.
 
 Some of these will be added in the future.
 

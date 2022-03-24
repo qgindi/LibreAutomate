@@ -20,11 +20,13 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>TRACE</DefineConstants>
 		<Deterministic>False</Deterministic>
+		<NoWarn>1701;1702;8002</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants></DefineConstants>
 		<Deterministic>False</Deterministic>
+		<NoWarn>1701;1702;8002</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -87,6 +89,10 @@
 		<Content Include="Default\Snippets2.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="FuzzySharp" Version="2.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>

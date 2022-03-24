@@ -109,7 +109,8 @@ A script can use packages from multiple folders if they are compatible.");
 
 		b.End();
 
-		b.R.Add(out TextBlock infoSDK).Text("<b>Need to install .NET SDK. Click the [...] button for more info.").Hidden();
+		Action gotoSDK = () => run.it("https://dotnet.microsoft.com/en-us/download");
+		b.R.Add(out TextBlock infoSDK).Text("<b>Need to install .NET SDK x64, version 6.0 or later. ", "<a>Download", gotoSDK).Hidden();
 		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 
 		App.Model.UnloadingWorkspaceEvent += () => Close();
@@ -118,7 +119,7 @@ A script can use packages from multiple folders if they are compatible.");
 			_FillTree();
 
 			bool sdkOK = false;
-			await _RunDotnet("--list-sdks", s => { sdkOK = true; });
+			await _RunDotnet("--list-sdks", s => { if (!sdkOK) sdkOK = s.ToInt() >= 6; }); //"6.0.2 [path]"
 			if (!sdkOK) infoSDK.Visibility = Visibility.Visible;
 		};
 	}
@@ -190,15 +191,22 @@ A script can use packages from multiple folders if they are compatible.");
 		var folderPath = _FolderPath(folder);
 		var proj = _ProjPath(folder);
 		bool installing = package != null;
+		bool building = false;
 
 		this.IsEnabled = false;
 		try {
 			if (installing) {
 				if (!await _RunDotnet(sAdd)) return false;
 			}
+			building = true;
 
 			var sBuild = $@"build ""{proj}"" --nologo --output ""{folderPath}""";
 			if (!await _RunDotnet(sBuild)) return false;
+			//SHOULDDO: if fails, uninstall the package immediately.
+			//	Else in the future will fail to install any package.
+			//	Also may delete dll files and leave garbage.
+			//	But problem: may fail because of ANOTHER package. How to know which package is bad?
+			//	Now just prints info in the finally block.
 
 			//Move managed dll+xml files from runtimes subdir to the root dir, replacing the invalid dlls there.
 			//	Also move native dlls from runtimes subdir to 64/32 subdir.
@@ -302,11 +310,17 @@ A script can use packages from multiple folders if they are compatible.");
 			}
 			catch (Exception e1) { Debug_.Print(e1); }
 
-			_FillTree(folder, package);
-
 			if (installing) print.it("========== Finished ==========");
+			building = false;
 		}
-		finally { this.IsEnabled = true; }
+		finally {
+			_FillTree(folder, package); //on error too, else users can't see and uninstall the new package now
+			this.IsEnabled = true;
+			if (building) //failed to build
+				print.it($@"<><c red>IMPORTANT: Please uninstall the package that causes the error.
+	Until then will fail to install or use packages in this folder ({folder}).
+	If two packages can't coexist, try to move it to a new folder (see the combo box).<>");
+		}
 		return true;
 	}
 

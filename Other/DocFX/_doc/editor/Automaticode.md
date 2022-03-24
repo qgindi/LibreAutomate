@@ -28,7 +28,7 @@ Click an item to open in the code editor. Right-click to show context menu. Midd
 
 All changes are saved automatically.
 
-C# code files have .cs extension but it is hidden. Yellow background if the file is open in the code editor.
+C# code files have .cs extension, but it is hidden. Yellow background if the file is open in the code editor.
 
 Deleted files and folders are moved to the Recycle Bin if possible. To restore a file or folder, find it there and restore; then find in File Explorer and drag and drop to the Files panel.
 
@@ -49,7 +49,7 @@ The collection of files and folders is a *workspace*. It is a folder on disk. In
 - the **files.xml** file is the list of files and folders of the workspace.
 - the **settings.json** file contains workspace settings.
 - the **state.db** file contains code editor states for files, such as folding, markers and current position.
-- the **.xxx** folders are temporary cache folders used by the program.
+- the **.xxx** folders are created and used by the program for various purposes.
 
 #### Open
 List of files open in the code editor.
@@ -80,8 +80,8 @@ Mouse x y, window name/class/program, control id/class/name, menu item id.
 #### Outline
 Helps to find types, functions, fields, namespaces and regions in current C# code file.
 
-#### Cookbook
-Teaches how to cook scripts.
+#### Cookbook, Recipe
+Automation code examples and info.
 
 ### Menus
 

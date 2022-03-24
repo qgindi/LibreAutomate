@@ -1,7 +1,6 @@
 //SHOULDDO: winevents EEvent.SYSTEM_MENUSTART, EEvent.SYSTEM_MENUEND, EEvent.SYSTEM_MENUPOPUPSTART, EEvent.SYSTEM_MENUPOPUPEND
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Popup menu.
 	/// </summary>
@@ -40,16 +39,14 @@ namespace Au
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
-	public unsafe partial class popupMenu : MTBase
-	{
+	public unsafe partial class popupMenu : MTBase {
 		/// <summary>
 		/// Represents a menu item in <see cref="popupMenu"/>.
 		/// </summary>
 		/// <remarks>
 		/// Most properties cannot be changed while the menu is open. Can be changed <b>Tag</b>, <b>Tooltip</b>, <b>IsChecked</b> and <b>IsDisabled</b>.
 		/// </remarks>
-		public class MenuItem : MTItem
-		{
+		public class MenuItem : MTItem {
 			readonly popupMenu _m;
 			internal string hotkey;
 			internal byte checkType; //1 checkbox, 2 radio
@@ -93,7 +90,7 @@ namespace Au
 			/// <summary>
 			/// Gets or sets checked state.
 			/// </summary>
-			/// <exception cref="InvalidOperationException">The 'set' function throws if the item isn't checkable. Use <see cref="popupMenu.AddCheck"/> or <see cref="popupMenu.AddRadio"/>.</exception>
+			/// <exception cref="InvalidOperationException">The 'set' function throws this exception if the item isn't checkable. Use <see cref="popupMenu.AddCheck"/> or <see cref="popupMenu.AddRadio"/>.</exception>
 			public bool IsChecked {
 				get => _isChecked;
 				set {
@@ -354,6 +351,28 @@ namespace Au
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		public bool RawText { get; set; }
+
+		/// <summary>
+		/// Adds enum members as checkbox-items (if it's a [Flags] enum) or radio-items.
+		/// </summary>
+		/// <returns>Object for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</returns>
+		/// <param name="init">Initial value.</param>
+		/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, "text", "text|tooltip", "|tooltip".</param>
+		/// <example>
+		/// <code><![CDATA[
+		/// var m = new popupMenu();
+		/// var e1 = m.AddEnum<KMod>(KMod.Ctrl|KMod.Alt); //a [Flags] enum
+		/// m.Separator();
+		/// var e2 = m.AddEnum<DayOfWeek>(DateTime.Today.DayOfWeek); //a non-[Flags] enum
+		/// m.Show();
+		/// print.it(e1.Result);
+		/// print.it(e2.Result);
+		/// ]]></code>
+		/// </example>
+		/// <seealso cref="EnumUI{TEnum}"/>
+		public EnumUI<TEnum> AddEnum<TEnum>(TEnum init = default, (TEnum value, string text)[] items = null) where TEnum : unmanaged, Enum {
+			return new EnumUI<TEnum>(this, init, items);
+		}
 
 		#endregion
 
@@ -1058,8 +1077,7 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="popupMenu"/> <b>ShowX</b> methods.
 	/// </summary>
@@ -1067,8 +1085,7 @@ namespace Au.Types
 	/// Most flags are for API <msdn>TrackPopupMenuEx</msdn>.
 	/// </remarks>
 	[Flags]
-	public enum MSFlags
-	{
+	public enum MSFlags {
 		/// <summary>Show by caret (text cursor) position. If not possible, depends on flag <b>ScreenCenter</b> or parameter <i>xy</i>.</summary>
 		ByCaret = 0x1000000,
 
@@ -1089,18 +1106,17 @@ namespace Au.Types
 		/// <summary>Vertically align the menu so that the show position would be in its center.</summary>
 		AlignCenterV = 0x10,
 
-		/// <summary>Vertically align the menu so that the show position would at its bottom.</summary>
+		/// <summary>Vertically align the menu so that the show position would be at its bottom.</summary>
 		AlignBottom = 0x20,
 
-		/// <summary>Show at bottom or top of <i>excludeRect</i>, not at righ/left.</summary>
+		/// <summary>Show at the bottom or top of <i>excludeRect</i>, not at the righ/left.</summary>
 		AlignRectBottomTop = 0x40,
 	}
 
 	/// <summary>
 	/// Used with <see cref="popupMenu.KeyboardHook"/>.
 	/// </summary>
-	public enum MKHook
-	{
+	public enum MKHook {
 		/// <summary>Process the key event as usually.</summary>
 		Default,
 

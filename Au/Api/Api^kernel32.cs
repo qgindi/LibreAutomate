@@ -117,6 +117,9 @@ namespace Au.Types {
 		internal static extern void ExitProcess(int uExitCode);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool IsWow64Process(IntPtr hProcess, out bool Wow64Process);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern Handle_ CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
 		//[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]

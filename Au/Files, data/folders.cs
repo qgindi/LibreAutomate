@@ -259,7 +259,7 @@ namespace Au {
 
 		const string c_defaultAppSubDir = "Au";
 		//static string c_defaultAppSubDir = @"Au\" + script.name; //no. In a script app could create many folders. All these properties can be set.
-		//note: don't use Application.ProductName etc. It loads Forms, throws if dynamic assembly, etc.
+		//note: don't use Application.ProductName etc. It loads Forms, exception if dynamic assembly, etc.
 
 		#region set auto/once
 
@@ -437,7 +437,7 @@ namespace Au {
 		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (<c>@"C:\WINDOWS\system32"</c>), the OS in most cases redirects it to <c>@"C:\Windows\SysWOW64"</c>, which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
 		/// More info in class help.
 		/// </remarks>
-		/// <seealso cref="filesystem.more.DisableRedirection"/>
+		/// <seealso cref="FileSystemRedirection"/>
 		/// <seealso cref="osVersion.is32BitProcessAnd64BitOS"/>
 		public static FolderPath SystemX64 => new(__SystemX64 ??= osVersion.is32BitProcessAnd64BitOS ? Windows + "Sysnative" : System);
 		static string __SystemX64;

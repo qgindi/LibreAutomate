@@ -6,7 +6,7 @@ uid: command_line
 
 **/v** - show the main window when started, regarless of program settings.
 
-**/n** - don't auto-restart as administrator when started not as administrator. See [UAC](xref:uac). Note: can auto-restart as administrator only if installed with the setup program.
+**/n** - don't restart as administrator when started not as administrator. See [UAC](xref:uac). Note: can restart as administrator only if installed with the setup program.
 
 **"full path of a file or folder"** - import it into the current workspace (shows a dialog). Can be multiple files, like `"file1" "file2" "file3"`.
 

@@ -37,7 +37,7 @@ class PanelFind : UserControl
 
 		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
 		b.StartStack();
-		b.Add(out _cFolder, ImageUtil.LoadWpfImageElement(FileNode.c_imageFolder)).Padding(1, 0, 1, 1).Tooltip("Let 'In files' search only in current project or root folder");
+		b.Add(out _cFolder, ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline #99BF00")).Padding(1, 0, 1, 1).Tooltip("Let 'In files' search only in current project or root folder");
 		_cFolder.Style = cstyle;
 		b.AddButton(ImageUtil.LoadWpfImageElement("*EvaIcons.Options2 #99BF00"), _bOptions_Click).Tooltip("More options");
 		b.Last.Style = bstyle;

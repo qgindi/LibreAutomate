@@ -69,6 +69,21 @@
 		/// .NET regular expression.
 		/// </summary>
 		NetRegex,
+
+		/// <summary>
+		/// Hotkey, except triggers.
+		/// </summary>
+		Hotkey,
+
+		/// <summary>
+		/// Hotkey trigger.
+		/// </summary>
+		HotkeyTrigger,
+
+		/// <summary>
+		/// Trigger modifiers without key.
+		/// </summary>
+		TriggerMod,
 	}
 
 	/// <summary>

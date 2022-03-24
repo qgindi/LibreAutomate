@@ -93,7 +93,6 @@ namespace Au.Controls {
 			Call(sciMessage, wParam, b.p);
 			Debug.Assert(b[len] == 0);
 			if (findLength) len = b.FindByteStringLength();
-			print.it(len);
 			return Encoding.UTF8.GetString(b, len);
 		}
 

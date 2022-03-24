@@ -405,7 +405,7 @@
 			}
 
 			/// <summary>
-			/// Gets focused or active window. Waits for it max 20-40 ms (820 ms if <i>requireFocus</i>). On timeout returns default (throws if <i>requireFocus</i>).
+			/// Gets focused or active window. Waits for it max 20-40 ms (820 ms if <i>requireFocus</i>). On timeout returns default (throws exception if <i>requireFocus</i>).
 			/// </summary>
 			/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 			/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>

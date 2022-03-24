@@ -28,7 +28,7 @@ class CiTools {
 	RegexWindow _regexWindow;
 	string _regexTopic;
 
-	public void RegexWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, bool replace, wnd dontCover = default) {
+	void _RegexWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, bool replace, wnd dontCover = default) {
 		int j = si.textSpan.Start;
 
 		_regexWindow ??= new RegexWindow();
@@ -56,9 +56,10 @@ class CiTools {
 
 	KeysWindow _keysWindow;
 
-	public void KeysWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, wnd dontCover = default) {
+	void _KeysWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, PSFormat format, wnd dontCover = default) {
 		_keysWindow ??= new KeysWindow();
 		_ShowWindow(_keysWindow, doc, pos16, dontCover);
+		_keysWindow.SetFormat(format);
 		doc.ZTempRanges_Add(this, si.textSpan.Start, si.textSpan.End, onLeave: () => _keysWindow.Close());
 	}
 
@@ -115,18 +116,26 @@ class CiTools {
 		}
 
 		var t = CodeInfo._tools;
-		if (isRegex) t.RegexWindowShow(cd.sciDoc, cd.code, pos16, stri, replace: false);
-		else t.KeysWindowShow(cd.sciDoc, cd.code, pos16, stri);
+		if (isRegex) {
+			t._RegexWindowShow(cd.sciDoc, cd.code, pos16, stri, replace: false);
+		} else {
+			PSFormat format = PSFormat.Keys;
+			if (inString == true) {
+				var semo = cd.document.GetSemanticModelAsync().Result;
+				format = CiUtil.GetParameterStringFormat(token.Parent, semo, true);
+			}
+			t._KeysWindowShow(cd.sciDoc, cd.code, pos16, stri, format);
+		}
 	}
 
 	public void ShowForStringParameter(PSFormat stringFormat, CodeInfo.Context cd, in CiStringInfo si, wnd dontCover = default) {
 		switch (stringFormat) {
 		case PSFormat.Regexp:
 		case PSFormat.RegexpReplacement:
-			RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, si, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
+			_RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, si, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
 			break;
-		case PSFormat.Keys:
-			KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, si, dontCover);
+		case PSFormat.Keys or PSFormat.Hotkey or PSFormat.HotkeyTrigger or PSFormat.TriggerMod:
+			_KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, si, stringFormat, dontCover);
 			break;
 		}
 	}

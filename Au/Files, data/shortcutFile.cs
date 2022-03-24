@@ -258,7 +258,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="lnkPath">.lnk file path.</param>
 		/// <exception cref="AuException">Failed to unregister hotkey.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="filesystem.delete(string, bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="filesystem.delete(string, bool, bool)"/>.</exception>
 		public static void delete(string lnkPath) {
 			if (!filesystem.exists(lnkPath).File) return;
 			_UnregisterHotkey(lnkPath);

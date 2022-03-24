@@ -136,7 +136,7 @@
 		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
-		/// Don't need this for wait.SleepX and functions that use them (mouse.click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
+		/// Don't need this for wait.SleepX and functions that use them (mouse.click etc). They call <see cref="TempSet1"/> when the sleep time is 1-89 ms.
 		/// This does not change the minimal period of <see cref="timer"/> and System.Windows.Forms.Timer.
 		/// </remarks>
 		/// <example>
@@ -255,14 +255,16 @@
 			}
 			static SleepPrecision_ s_TS1_Obj;
 			static long s_TS1_EndTime;
-			//never mind: finalizer is not called on process exit. Not a problem, because OS clears our set value (tested). Or we could use process.thisProcessExit event.
+
+			//never mind: finalizer is not called on process exit.
+			//	Not a problem, because OS clears our set value (tested). Or we could use process.thisProcessExit event.
 
 			/// <summary>
-			/// Calls TempSet1 if sleepTimeMS is 1-99.
+			/// Calls TempSet1 if sleepTimeMS is 1-89.
 			/// </summary>
 			/// <param name="sleepTimeMS">milliseconds of the caller 'sleep' function.</param>
 			internal static void TempSet1_(int sleepTimeMS) {
-				if (sleepTimeMS < 100 && sleepTimeMS > 0) TempSet1(1111);
+				if (sleepTimeMS < 90 && sleepTimeMS > 0) TempSet1(1111);
 			}
 		}
 	}

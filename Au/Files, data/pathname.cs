@@ -3,8 +3,7 @@
 //	Support long paths and file streams.
 //	Faster, etc.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Contains static functions to work with file path strings. Parse, combine, make full, make unique, make valid, expand variables, etc.
 	/// </summary>
@@ -15,8 +14,7 @@ namespace Au
 	/// 
 	/// Also you can use .NET class <see cref="Path"/>. In its documentation you'll find more info about paths.
 	/// </remarks>
-	public static unsafe class pathname
-	{
+	public static unsafe class pathname {
 		/// <summary>
 		/// If path starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns path.
 		/// Also supports known folder names, like <c>"%folders.Documents%"</c>. More info in Remarks.
@@ -270,7 +268,7 @@ namespace Au
 				};
 				return prefixLongPathIfNeed(r);
 			}
-			ge:
+		ge:
 			if (noException) return null;
 			throw new ArgumentException("Empty filename or path.");
 		}
@@ -341,7 +339,7 @@ namespace Au
 			}
 
 			return Normalize_(path, flags, true);
-			ge:
+		ge:
 			throw new ArgumentException($"Not full path: '{path}'.");
 		}
 
@@ -373,7 +371,7 @@ namespace Au
 
 		/// <summary>
 		/// Prepares path for passing to API that support "..", DOS path etc.
-		/// Calls Expand, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
+		/// Calls Expand, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws exception if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
 		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath) {
@@ -770,13 +768,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c>.
+		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c> and does not start/end with whitespace.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		internal static bool IsExtension_(RStr s) {
 			if (s.Length < 2 || s[0] != '.') return false;
 			for (int i = 1; i < s.Length; i++) {
-				switch (s[i]) { case '.': case '\\': case '/': case ':': return false; }
+				switch (s[i]) {
+				case '.' or '\\' or '/' or ':': return false;
+				case <= ' ' when i == 1 || i == s.Length - 1: return false;
+				}
 			}
 			return true;
 		}
@@ -806,14 +807,12 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// flags for <see cref="pathname.normalize"/>.
 	/// </summary>
 	[Flags]
-	public enum PNFlags
-	{
+	public enum PNFlags {
 		/// <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
 		DontExpandDosPath = 1,
 

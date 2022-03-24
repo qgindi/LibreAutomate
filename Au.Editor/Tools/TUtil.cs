@@ -635,7 +635,7 @@ static class TUtil {
 					bool _RegisterHotkey(int id, string hotkey) {
 						string es = null;
 						try {
-							var (mod, key) = keys.more.Hotkey.Normalize_(hotkey);
+							var (mod, key) = RegisteredHotkey.Normalize_(hotkey);
 							if (Api.RegisterHotKey(wDialog, id, mod, key)) return true;
 							es = "Failed to register.";
 						}

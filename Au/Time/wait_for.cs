@@ -294,7 +294,7 @@ namespace Au
 					if (callback1(ref m)) { msgCallback = null; R = true; }
 					if (m.message == 0) continue;
 				}
-				if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return false; }
+				if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); break; }
 				Api.TranslateMessage(m);
 				Api.DispatchMessage(m);
 			}
@@ -332,7 +332,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits for a variable or other condition that is changed while processing messages or other events received by this thread.
+		/// Waits for a condition that is changed while processing messages or other events received by this thread.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>

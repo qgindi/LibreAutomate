@@ -170,7 +170,7 @@ class CiGoTo
 			b.End();
 			b.StartGrid<GroupBox>("Info");
 			b.Add(out TextBlock info).Text(@"This dialog creates and opens a Github search URL.
-Note: Github randomly skips some or all results. Reload the page.
+Note: Github results are random. Reload the page several times.
 Note: Github skips large source files.
 See also: ", "<a>source.dot.net", new Action(_Link1));
 			info.TextWrapping = TextWrapping.Wrap;
@@ -240,7 +240,6 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 
 	public static void GoToSymbolFromPos() {
 		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out _);
-		print.it(helpKind);
 		if (sym != null) {
 			//print.it(sym);
 			var g = new CiGoTo(sym);

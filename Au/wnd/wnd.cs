@@ -2294,21 +2294,9 @@
 		/// Also returns false if fails. Supports <see cref="lastError"/>.
 		/// </summary>
 		/// <remarks>
-		/// <note>If you know that the window belongs to current process, instead use <c>IntPtr.Size==4</c>. This function is much slower.</note>
+		/// <note>If you know that the window belongs to current process, instead use <see cref="osVersion"/> functions or <c>IntPtr.Size==4</c>. This function is much slower.</note>
 		/// </remarks>
-		public bool Is32Bit {
-			get {
-				bool is32bit = osVersion.is32BitOS;
-				if (!is32bit) {
-					using var ph = Handle_.OpenProcess(this);
-					if (ph.Is0 || !Api.IsWow64Process(ph, out is32bit)) return false;
-				}
-				lastError.clear();
-				return is32bit;
-
-				//info: don't use Process.GetProcessById, it does not have a desiredAccess parameter and fails with higher IL processes.
-			}
-		}
+		public bool Is32Bit => process.is32Bit(ProcessId);
 
 		/// <summary>
 		/// Returns true if thread of this window is considered hung (not responding).

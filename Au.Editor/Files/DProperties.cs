@@ -335,10 +335,24 @@ class DProperties : KDialogWindow {
 	#region COM
 
 	void _bAddComBrowse_Click(WBButtonClickArgs e) {
-		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDC}") {
-			FileTypes = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*"
+		var m = new popupMenu();
+		m["Select and convert a COM library..."] = _ => {
+			var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDC}") {
+				FileTypes = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*"
+			};
+			if (d.ShowOpen(out string s, this))
+				_ConvertTypeLibrary(s, e.Button);
 		};
-		if (d.ShowOpen(out string s, this)) _ConvertTypeLibrary(s, e.Button);
+		m.Submenu("Use converted", m => {
+			foreach (var f in filesystem.enumFiles(folders.Workspace + @".interop", "*.dll")) {
+				m[f.Name] = o => {
+					var s = o.Text;
+					if (!_meta.com.Contains(s)) _meta.com.Add(s);
+					_ShowInfo_Added(e.Button, _meta.com);
+				};
+			}
+		});
+		m.Show(owner: this);
 	}
 
 	void _bAddComRegistry_Click(WBButtonClickArgs e) {
@@ -405,8 +419,6 @@ class DProperties : KDialogWindow {
 		}
 	}
 
-	static string s_comConvertedDir;
-
 	async void _ConvertTypeLibrary(object tlDef, Button button) {
 		string comDll = null;
 		switch (tlDef) {
@@ -450,10 +462,8 @@ class DProperties : KDialogWindow {
 		this.IsEnabled = false;
 		try {
 			await Task.Run(() => {
-				if (s_comConvertedDir == null) {
-					s_comConvertedDir = folders.Workspace + @".interop\";
-					filesystem.createDirectory(s_comConvertedDir);
-				}
+				var dir = folders.Workspace + @".interop\";
+				filesystem.createDirectory(dir);
 				void _Callback(string s) {
 					print.it(s);
 					if (s.Starts("Converted: ")) {
@@ -461,7 +471,7 @@ class DProperties : KDialogWindow {
 						converted.Add(s);
 					}
 				}
-				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{s_comConvertedDir}|{comDll}\"", encoding: Encoding.UTF8);
+				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{dir}|{comDll}\"", encoding: Encoding.UTF8);
 			});
 		}
 		catch (Exception ex) { dialog.showError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }

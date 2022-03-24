@@ -16,8 +16,8 @@ public class KTextBox : TextBox {
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add<AdornerDecorator>().Add(out TextBox2 tPackage, flags: WBAdd.ChildOfLast);
-	/// tPackage.Watermark = "Search";
+	/// b.R.Add<AdornerDecorator>().Add(out KTextBox t, flags: WBAdd.ChildOfLast);
+	/// t.Watermark = "Search";
 	/// ]]></code>
 	/// </example>
 	public string Watermark {

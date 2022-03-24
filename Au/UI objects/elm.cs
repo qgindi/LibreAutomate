@@ -343,7 +343,7 @@ namespace Au
 		/// print.it(e);
 		/// ]]></code>
 		/// 
-		/// Get UI element at 50 from left and 100 from bottom of the work area.
+		/// Get UI element at 50 from left and 100 from the bottom edge of the work area.
 		/// <code><![CDATA[
 		/// var e = elm.fromXY(Coord.Normalize(50, ^100, workArea: true));
 		/// print.it(e);
@@ -363,7 +363,10 @@ namespace Au
 			return null;
 		}
 
-		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
+		/// <inheritdoc cref="fromXY(POINT, EXYFlags)"/>
+		public static elm fromXY(int x, int y, EXYFlags flags = 0) => fromXY(new POINT(x, y), flags);
+
+		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense.
 
 		/// <summary>
 		/// Gets UI element from mouse cursor (pointer) position.

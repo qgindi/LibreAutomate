@@ -104,7 +104,7 @@ namespace Au.Controls
 #endif
 			}
 
-			protected private void _OnMouseDown(object sender, MouseButtonEventArgs e) {
+			private protected void _OnMouseDown(object sender, MouseButtonEventArgs e) {
 				switch (e.ChangedButton) { case MouseButton.Left: case MouseButton.Middle: break; default: return; }
 				if (_IsGoodMouseEvent(sender, e, out var target)) target._OnMouseDown(e);
 			}

@@ -465,7 +465,7 @@ namespace Au.Types
 		public void Click(bool useElm = false) {
 			W.ThrowIfInvalid();
 			if (useElm) {
-				using var e = elm.fromWindow(W, EObjid.CLIENT); //throws if failed
+				using var e = elm.fromWindow(W, EObjid.CLIENT); //exception if failed
 				e.Invoke();
 			} else {
 				_PostBmClick(); //async if other thread, because may show a dialog.
@@ -516,7 +516,7 @@ namespace Au.Types
 			W.ThrowIfInvalid();
 			int id;
 			if (useElm || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
-				using var e = elm.fromWindow(W, EObjid.CLIENT); //throws if failed
+				using var e = elm.fromWindow(W, EObjid.CLIENT); //exception if failed
 				int k = _GetElmCheckState(e);
 				if (k == state) return;
 				if (useElm) e.Invoke(); else _PostBmClick();

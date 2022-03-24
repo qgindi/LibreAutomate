@@ -4,8 +4,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
 
-partial class SciCode : KScintilla
-{
+partial class SciCode : KScintilla {
 	readonly FileLoaderSaver _fls;
 	readonly FileNode _fn;
 
@@ -281,59 +280,59 @@ partial class SciCode : KScintilla
 			if (!_noModelEnsureCurrentSelected) App.Model.EnsureCurrentSelected();
 			break;
 		case Api.WM_CHAR: {
-				int c = (int)wparam;
-				if (c < 32) {
-					if (c is not (9 or 10 or 13)) return true;
-				} else {
-					if (CodeInfo.SciBeforeCharAdded(this, (char)c)) return true;
-				}
+			int c = (int)wparam;
+			if (c < 32) {
+				if (c is not (9 or 10 or 13)) return true;
+			} else {
+				if (CodeInfo.SciBeforeCharAdded(this, (char)c)) return true;
 			}
-			break;
+		}
+		break;
 		case Api.WM_MBUTTONDOWN:
 			Api.SetFocus(w);
 			return true;
 		case Api.WM_RBUTTONDOWN: {
-				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
-				POINT p = Math2.NintToPOINT(lparam);
-				int margin = zMarginFromPoint(p, false);
-				if (margin >= 0) {
-					var selStart = zSelectionStart8;
-					var (_, start, end) = zLineStartEndFromPos(false, zPosFromXY(false, p, false));
-					if (selStart >= start && selStart <= end) return true;
-					//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
-					if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
-						if (zSelectionEnd8 == start) zGoToPos(false, start); //clear selection above start
-					}
+			//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
+			POINT p = Math2.NintToPOINT(lparam);
+			int margin = zMarginFromPoint(p, false);
+			if (margin >= 0) {
+				var selStart = zSelectionStart8;
+				var (_, start, end) = zLineStartEndFromPos(false, zPosFromXY(false, p, false));
+				if (selStart >= start && selStart <= end) return true;
+				//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
+				if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
+					if (zSelectionEnd8 == start) zGoToPos(false, start); //clear selection above start
 				}
 			}
-			break;
+		}
+		break;
 		case Api.WM_CONTEXTMENU: {
-				bool kbd = (int)lparam == -1;
-				int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lparam), true);
-				switch (margin) {
-				case -1:
-					var m = new KWpfMenu();
-					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
-					m.Show(this, byCaret: kbd);
-					break;
-				case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
-					ZCommentLines(null, notSlashStar: true);
-					break;
-				case c_marginFold:
-					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful
-					if (fold >= 0) Call(SCI_FOLDALL, fold);
-					break;
-				}
-				return true;
+			bool kbd = (int)lparam == -1;
+			int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lparam), true);
+			switch (margin) {
+			case -1:
+				var m = new KWpfMenu();
+				App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
+				m.Show(this, byCaret: kbd);
+				break;
+			case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
+				ZCommentLines(null, notSlashStar: true);
+				break;
+			case c_marginFold:
+				int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful
+				if (fold >= 0) Call(SCI_FOLDALL, fold);
+				break;
 			}
-			//case Api.WM_PAINT:
-			//	_Paint(false);
-			//	break;
-			//case Api.WM_PAINT: {
-			//		using var p1 = perf.local();
-			//		Call(msg, wparam, lparam);
-			//		return true;
-			//	}
+			return true;
+		}
+		//case Api.WM_PAINT:
+		//	_Paint(false);
+		//	break;
+		//case Api.WM_PAINT: {
+		//		using var p1 = perf.local();
+		//		Call(msg, wparam, lparam);
+		//		return true;
+		//	}
 		}
 
 		//Call(msg, wparam, lparam);
@@ -379,6 +378,7 @@ partial class SciCode : KScintilla
 				Menus.Edit.Go_to_definition();
 				return true;
 			default:
+				if (_ImageDeleteKey(key)) return true;
 				if (CodeInfo.SciCmdKey(this, key, mod)) return true;
 				switch ((key, mod)) {
 				case (KKey.Enter, 0):
@@ -586,8 +586,7 @@ partial class SciCode : KScintilla
 	#region temp ranges
 
 	[Flags]
-	public enum ZTempRangeFlags
-	{
+	public enum ZTempRangeFlags {
 		/// <summary>
 		/// Call onLeave etc when current position != current end of range.
 		/// </summary>
@@ -604,8 +603,7 @@ partial class SciCode : KScintilla
 		NoDuplicate = 4,
 	}
 
-	public interface ITempRange
-	{
+	public interface ITempRange {
 		/// <summary>
 		/// Removes this range from the collection of ranges of the document.
 		/// Optional. Temp ranges are automatically removed sooner or later.
@@ -639,8 +637,7 @@ partial class SciCode : KScintilla
 		object OwnerData { get; set; }
 	}
 
-	class _TempRange : ITempRange
-	{
+	class _TempRange : ITempRange {
 		SciCode _doc;
 		readonly object _owner;
 		readonly int _fromUtf16;

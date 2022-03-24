@@ -887,7 +887,7 @@ class InputRecorder : Window
 		bool slow = _cSlow.IsChecked;
 		if (slow) b.Append("using(opt.scope.all()) ");
 		b.AppendLine("{ //recorded");
-		if (slow) b.AppendLine("opt.mouse.MoveSpeed = 20; opt.key.KeySpeed = 20;");
+		if (slow) b.AppendLine("opt.mouse.MoveSpeed = 20; opt.key.KeySpeed = 20; opt.key.TextSpeed = 10;");
 		//bool addEmptyLine = false;
 		for (int i = 0, n = _a.Count; i < n; i++) {
 			////rejected: if mouse button with screenshot, add empty lines before and after, and add comment and screenshot before. Better just add empty line after.
