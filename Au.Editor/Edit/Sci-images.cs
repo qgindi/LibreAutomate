@@ -370,4 +370,17 @@ partial class SciCode {
 		return false;
 	}
 	static bool s_imageDeleteAlways;
+
+	static string _ImageRemoveScreenshots(string s) {
+		return s.RxReplace(@"/\*image:[\w/+]{40,}=*\*/", "");
+	}
+
+	public void ImageRemoveScreenshots() {
+		if (zIsReadonly || !_fn.IsCodeFile) return;
+		bool isSel = zIsSelection;
+		string s = isSel ? zSelectedText() : zText;
+		var s2 = _ImageRemoveScreenshots(s);
+		if (s2 == s) return;
+		if (isSel) zReplaceSel(s2); else zText = s2;
+	}
 }

@@ -839,19 +839,15 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Deletes file or directory.
-		/// Does nothing if it does not exist (no exception).
+		/// Deletes file or directory if exists.
 		/// </summary>
+		/// <returns>true if deleted, false if failed (with flag <b>CanFail</b>), null if did not exist.</returns>
 		/// <param name="path">Full path.</param>
-		/// <param name="recycleBin">
-		/// Send to the Recycle Bin. If not possible, delete anyway, unless <i>canFail</i> true.
-		/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
-		/// Note: it is much slower. To delete multiple, use <see cref="delete(IEnumerable{string}, bool, bool)"/>.
-		/// </param>
-		/// <param name="canFail">If fails to delete, don't wait/retry and don't throw exception.</param>
+		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
+		/// Does nothing if it does not exist (no exception).
 		/// If directory, also deletes all its files and subdirectories. If fails to delete some, tries to delete as many as possible.
 		/// Deletes read-only files too.
 		/// Does not show any message boxes etc (confirmation, error, UAC consent, progress).
@@ -861,47 +857,67 @@ namespace Au {
 		/// 2. This process does not have security permissions to access or delete the file or directory or some of its descendants.
 		/// 3. The directory is (or contains) the "current directory" (in any process).
 		/// </remarks>
-		public static void delete(string path, bool recycleBin = false, bool canFail = false) {
-			path = _PreparePath(path);
-			_Delete(path, recycleBin, canFail);
-		}
+		public static bool? delete(string path, FDFlags flags = 0)
+			=> _Delete(_PreparePath(path), flags);
 
 		/// <summary>
 		/// Deletes multiple files or/and directories.
-		/// The same as <see cref="delete(string, bool, bool)"/>, but faster when using Recycle Bin.
 		/// </summary>
+		/// <returns>true if deleted all, false if failed to delete all or some (with flag <b>CanFail</b>), null if none existed.</returns>
 		/// <param name="paths">string array, <b>List</b> or other collection. Full paths.</param>
-		/// <param name="recycleBin"></param>
-		/// <param name="canFail">If fails to delete, don't wait/retry and don't throw exception.</param>
+		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
-		/// <exception cref="AuException">Failed.</exception>
-		public static void delete(IEnumerable<string> paths, bool recycleBin = false, bool canFail = false) {
-			if (recycleBin) {
+		/// <exception cref="AggregateException">Failed to delete all or some items. The <b>AggregateException</b> object contains <b>AuException</b> for each failed-to-delete item.</exception>
+		/// <remarks>
+		/// This overload is faster when using Recycle Bin.
+		/// If fails to delete some items specified in the list, deletes as many as possible.
+		/// </remarks>
+		public static bool? delete(IEnumerable<string> paths, FDFlags flags = 0) {
+			if (flags.Has(FDFlags.RecycleBin)) {
 				var a = new List<string>();
 				foreach (var v in paths) {
 					var s = _PreparePath(v);
 					if (exists(s, true)) a.Add(s);
 				}
-				if (a.Count == 0) return;
-				if (_DeleteShell(null, true, a) || canFail) return;
+				if (a.Count == 0) return null;
+				if (_DeleteShell(null, true, a)) return true;
 				Debug_.Print("_DeleteShell failed");
+				//if (flags.Has(FDFlags.CanFail)) return false; //no, the shell API does not try to delete other items if fails to delete some
+				//flags &= ~FDFlags.RecycleBin; //no
 			}
-			foreach (var v in paths) delete(v, false, canFail);
+
+			bool? R = null;
+			if (flags.Has(FDFlags.CanFail)) {
+				foreach (var v in paths) {
+					switch (delete(v, flags)) {
+					case true: R ??= true; break;
+					case false: R = false; break;
+					}
+				}
+				return R;
+			} else {
+				List<Exception> ae = null;
+				foreach (var v in paths) {
+					try { if (delete(v, flags) == true) R = true; }
+					catch (AuException e1) { (ae ??= new()).Add(e1); }
+				}
+				return ae == null ? R : throw new AggregateException("Failed to delete.", ae);
+			}
 		}
 
 		/// <summary>
 		/// note: path must be normalized.
 		/// </summary>
-		static FileIs_ _Delete(string path, bool recycleBin = false, bool canFail = false) {
-			var type = ExistsAs_(path, true);
-			if (type == FileIs_.NotFound) return type;
-			if (type == FileIs_.AccessDenied) {
-				if (canFail) return type;
-				throw new AuException(0, $"*delete '{path}'");
-			}
+		static bool? _Delete(string path, FDFlags flags = 0) {
+			bool canFail = flags.Has(FDFlags.CanFail);
 
-			if (recycleBin) {
-				if (_DeleteShell(path, true) || canFail) return type;
+			var type = ExistsAs_(path, true);
+			if (type == FileIs_.NotFound) return null;
+			if (type == FileIs_.AccessDenied) return canFail ? false : throw new AuException(0, $"*delete '{path}'");
+
+			if (flags.Has(FDFlags.RecycleBin)) {
+				if (_DeleteShell(path, true)) return true;
+				if (canFail) return false;
 				Debug_.Print("_DeleteShell failed");
 			}
 
@@ -920,17 +936,18 @@ namespace Au {
 					//notify shell. Else, if it was open in Explorer, it shows an error message box.
 					//Info: .NET does not notify; SHFileOperation does.
 					ShellNotify_(Api.SHCNE_RMDIR, path);
-					return type;
+					return true;
 				}
 				if (!canFail) {
 					Debug_.Print("Using _DeleteShell.");
-					if (_DeleteShell(path, false)) return type;
+					if (_DeleteShell(path, false)) return true;
 				}
 			} else {
 				ec = _DeleteL(path, type == FileIs_.NtfsLinkDirectory, canFail);
-				if (ec == 0) return type;
+				if (ec == 0) return true;
 			}
-			if (!canFail && exists(path, true)) throw new AuException(ec, $"*delete '{path}'");
+
+			if (exists(path, true)) return canFail ? false : throw new AuException(ec, $"*delete '{path}'");
 
 			//info:
 			//RemoveDirectory fails if not empty.
@@ -938,7 +955,7 @@ namespace Au {
 			//Also both fail if a [now deleted] subfolder containing files was open in Explorer. Workaround: sleep/retry.
 			//_DeleteShell usually does not have these problems. But it is very slow.
 			//But all fail if it is current directory in any process. If in current process, _DeleteShell succeeds; it makes current directory = its parent.
-			return type;
+			return true;
 		}
 
 		static int _DeleteL(string path, bool dir, bool canFail = false) {
@@ -1583,6 +1600,30 @@ namespace Au.Types {
 		/// Don't create subdirectories that after applying all filters would be empty.
 		/// </summary>
 		NoEmptyDirectories = 0x10000,
+	}
+
+	/// <summary>
+	/// flags for <see cref="filesystem.delete"/>.
+	/// </summary>
+	[Flags]
+	public enum FDFlags {
+		/// <summary>
+		/// Send to the Recycle Bin. If not possible, delete anyway, unless used <i>CanFail</i>.
+		/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
+		/// Note: it is much slower. To delete multiple, use <see cref="filesystem.delete(IEnumerable{string}, FDFlags)"/>.
+		/// </summary>
+		RecycleBin = 1,
+
+		/// <summary>
+		/// If fails to delete, don't wait/retry and don't throw exception.
+		/// </summary>
+		CanFail = 2,
+
+		//rejected. Rarely useful. Maybe in the future.
+		///// <summary>
+		///// Fail if has read-only attribute.
+		///// </summary>
+		//ReadonlyFail = 4,
 	}
 
 	/// <summary>

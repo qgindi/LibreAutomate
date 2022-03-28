@@ -154,7 +154,7 @@ class CiGoTo
 			AssemblySett se = null;
 			App.Settings.ci_gotoAsm?.TryGetValue(_assembly, out se);
 
-			var b = new wpfBuilder("Github search").WinSize(450).Columns(-1);
+			var b = new wpfBuilder("GitHub search").WinSize(450).Columns(-1);
 			b.StartGrid<GroupBox>("Query").Columns(70, -1);
 			b.R.Add("Type", out TextBox tType, _type);
 			b.R.Add("Member", out TextBox tMember, _member).Tooltip("A member of the type (method, property, etc), or any word in the file.\r\nCan be multiple, like M1 M2 M3, if all are in same file.");
@@ -169,9 +169,9 @@ class CiGoTo
 			b.R.Add("Path", out TextBox tPath, se?.path).Tooltip("Optional full or partial path without filename.\r\nExample: /src/libraries");
 			b.End();
 			b.StartGrid<GroupBox>("Info");
-			b.Add(out TextBlock info).Text(@"This dialog creates and opens a Github search URL.
-Note: Github results are random. Reload the page several times.
-Note: Github skips large source files.
+			b.Add(out TextBlock info).Text(@"This dialog creates and opens a GitHub search URL.
+Note: GitHub results are random. Reload the page several times.
+Note: GitHub skips large source files.
 See also: ", "<a>source.dot.net", new Action(_Link1));
 			info.TextWrapping = TextWrapping.Wrap;
 			b.End();

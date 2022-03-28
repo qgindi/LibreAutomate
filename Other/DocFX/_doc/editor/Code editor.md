@@ -63,7 +63,7 @@ To show symbol documentation if available, press F1 when the text cursor is in i
 If the symbol is from the automation library, it opens the online documentation page in your web browser. If the symbol is from .NET runtime or other assembly or unmanaged code (DllImport or ComImport), it opens the Google search page.
 
 #### Go to symbol definition (source code)
-Ctrl+click a symbol or press F12. Or click the "source code" link in the autocompletion item info or parameter info window.
+Click a symbol and press F12. Or click the "source code" link in the autocompletion item info or parameter info window.
 
 If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET runtime, it can help to find the source code online.
 

@@ -676,6 +676,8 @@ class Delm : KDialogWindow
 
 		return e;
 
+		//SHOULDDO: try to find smaller elms behind the captured. If found, show menu.
+
 		static (elm e, elm e2, string role1, string role2, string tt1, string tt2, RECT eRect, RECT eRect2)
 			_GetElm(POINT p, EXYFlags flags, bool ctor) {
 

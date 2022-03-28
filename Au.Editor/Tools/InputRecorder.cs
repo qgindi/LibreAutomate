@@ -16,8 +16,7 @@ using System.Linq;
 namespace Au.Tools;
 #endif
 
-class InputRecorder : Window
-{
+class InputRecorder : Window {
 	public static void ShowRecorder() {
 		if (s_showing) return;
 
@@ -40,7 +39,7 @@ class InputRecorder : Window
 	int _xyIn;
 	ListBox _list;
 	ScrollViewer _scroller;
-	KCheckBox _cSlow;
+	TextBox _tSpeed;
 
 	const string c_iconPause = "*Material.PauseCircleOutline #008EEE",
 		c_iconRetry = "*BoxIcons.RegularReset #FF6640",
@@ -66,7 +65,7 @@ class InputRecorder : Window
 		b.Add(out ComboBox cbIn).Items("Window|Control|Screen").Tooltip("Mouse position relative to").Margin("2");
 		cbIn.SelectionChanged += (_, _) => { _xyIn = cbIn.SelectedIndex; };
 		cbIn.SelectedIndex = Math.Clamp(App.Settings.recorder.xyIn, 0, 2);
-		b.Add(out _cSlow, "Slower").Tooltip("Add options to run the recorded code slower");
+		b.Add<Label>("Speed").And(34).Add(out _tSpeed, App.Settings.recorder.speed).Tooltip("If not empty, adds code that sets mouse/keys/text speed = this value");
 		b.Options(margin: new(2));
 
 		cKeys.CheckChanged += (_, _) => {
@@ -101,7 +100,6 @@ class InputRecorder : Window
 		if (App.Settings.recorder.wheel) cWheel.IsChecked = true;
 		if (App.Settings.recorder.drag) cDrag.IsChecked = true;
 		if (App.Settings.recorder.move) cMove.IsChecked = true;
-		if (App.Settings.recorder.slow) _cSlow.IsChecked = true;
 		this.Closing += (_, _) => {
 			App.Settings.recorder.keys = cKeys.IsChecked;
 			App.Settings.recorder.text = cText.IsChecked;
@@ -111,7 +109,7 @@ class InputRecorder : Window
 			App.Settings.recorder.drag = cDrag.IsChecked;
 			App.Settings.recorder.move = cMove.IsChecked;
 			App.Settings.recorder.xyIn = _xyIn;
-			App.Settings.recorder.slow = _cSlow.IsChecked;
+			App.Settings.recorder.speed = _tSpeed.Text;
 		};
 
 		b.Row(-1).StartStack();
@@ -183,14 +181,12 @@ class InputRecorder : Window
 
 	enum _Event { Key, MButton, MMove }
 
-	abstract record _Reco
-	{
+	abstract record _Reco {
 		public wnd w;
 		public int time;
 	}
 
-	record _RecoKey : _Reco
-	{
+	record _RecoKey : _Reco {
 		public KKey key;
 		public KMod mod;
 		public sbyte down; //1 down, -1 up, 0 down+up
@@ -206,8 +202,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoChar : _Reco
-	{
+	record _RecoChar : _Reco {
 		public char c;
 		public bool alt;
 		public int count;
@@ -260,8 +255,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoMouseButton : _RecoMouse
-	{
+	record _RecoMouseButton : _RecoMouse {
 		public MButton button;
 		public sbyte down; //1 down, -1 up, 0 down+up
 		public bool two, noXY, activated;
@@ -301,8 +295,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoMouseWheel : _RecoMouse
-	{
+	record _RecoMouseWheel : _RecoMouse {
 		public int ticks;
 		public bool move;
 
@@ -316,8 +309,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoMouseMoveBy : _RecoMouse
-	{
+	record _RecoMouseMoveBy : _RecoMouse {
 		//p - the last move coord
 		//a - all relative coords
 		public List<uint> a;
@@ -387,8 +379,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoWinFind : _RecoWin
-	{
+	record _RecoWinFind : _RecoWin {
 		public string name;
 
 		public void FormatCode(int ownerVar) {
@@ -408,8 +399,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoWinChild : _Reco
-	{
+	record _RecoWinChild : _Reco {
 		public string code;
 		public int varName, windowVarName;
 
@@ -428,8 +418,7 @@ class InputRecorder : Window
 		}
 	}
 
-	record _RecoSleep : _Reco
-	{
+	record _RecoSleep : _Reco {
 	}
 
 	WindowsHook _keyHook, _mouseHook;
@@ -884,10 +873,10 @@ class InputRecorder : Window
 		if (_Last is _RecoMouseMoveBy) _a.RemoveAt(_a.Count - 1);
 		if (!_a.Any()) return null;
 		var b = new StringBuilder();
-		bool slow = _cSlow.IsChecked;
-		if (slow) b.Append("using(opt.scope.all()) ");
+		string speed = _tSpeed.Text.NullIfEmpty_();
+		if (speed != null) b.Append("using(opt.scope.all()) ");
 		b.AppendLine("{ //recorded");
-		if (slow) b.AppendLine("opt.mouse.MoveSpeed = 20; opt.key.KeySpeed = 20; opt.key.TextSpeed = 10;");
+		if (speed != null) b.AppendLine($"opt.mouse.MoveSpeed = opt.key.KeySpeed = opt.key.TextSpeed = {speed};");
 		//bool addEmptyLine = false;
 		for (int i = 0, n = _a.Count; i < n; i++) {
 			////rejected: if mouse button with screenshot, add empty lines before and after, and add comment and screenshot before. Better just add empty line after.
@@ -920,7 +909,7 @@ class InputRecorder : Window
 					}
 				}
 				r.FormatCode(b);
-				g1:
+			g1:
 				//if (r is _RecoMouseButton mbb && mbb.image == null) b.Append(mbb.comment);
 				if (r is _RecoMouseButton mbb) {
 					b.Append(mbb.comment);
@@ -986,7 +975,7 @@ class InputRecorder : Window
 			}
 			if (i < n - 1) b.AppendLine();
 		}
-		if (slow) b.Replace("\n", "\n\t");
+		if (speed != null) b.Replace("\n", "\n\t");
 		b.Append("\r\n}");
 
 		return b.ToString();

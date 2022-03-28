@@ -276,11 +276,22 @@ namespace Au
 			/// print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
 			/// ]]></code>
 			/// </example>
-			public static UsingEndAction all(bool inherit = true) {
+			public static UsingEndAction all(bool inherit = true/*, int? speed = null*/) {
 				var o1 = _Mouse(inherit);
 				var o2 = _Key(inherit);
 				var o3 = _WaitFor(inherit);
 				var o4 = _Warnings(inherit);
+				//rejected
+				///// <param name="speed">If not null, sets <c>opt.mouse.MoveSpeed = speed; opt.key.KeySpeed = speed; opt.key.TextSpeed = speed;</c>. See <see cref="OMouse.MoveSpeed"/>, <see cref="OKey.KeySpeed"/>, <see cref="OKey.TextSpeed"/>.</param>
+				//if (speed != null) {
+				//	int i = speed.Value;
+				//	opt.mouse.MoveSpeed = i;
+				//	opt.key.KeySpeed = i;
+				//	opt.key.TextSpeed = i;
+				//	//if (i > 20) opt.mouse.ClickSpeed = i; //no, can be too big. Or neeed to clamp.
+				//	//if (i > 10) opt.mouse.ClickSleepFinally = i;
+				//	//if (i > 10) opt.key.SleepFinally = i;
+				//}
 				return new UsingEndAction(() => {
 					t_mouse = o1;
 					t_key = o2;
