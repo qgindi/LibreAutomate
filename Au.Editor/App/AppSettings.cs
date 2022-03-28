@@ -55,9 +55,9 @@ record AppSettings : JSettings
 
 	public record recorder_t
 	{
-		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move, slow;
+		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
 		public int xyIn;
-		public string wndPos;
+		public string speed = "10", wndPos;
 	}
 	public recorder_t recorder = new();
 

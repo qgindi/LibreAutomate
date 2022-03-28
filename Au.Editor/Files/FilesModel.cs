@@ -639,7 +639,7 @@ partial class FilesModel
 		Uncut();
 
 		if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
-			if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin), deletion: true)) return false;
+			if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin ? FDFlags.RecycleBin : 0), deletion: true)) return false;
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		} else {
 			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";

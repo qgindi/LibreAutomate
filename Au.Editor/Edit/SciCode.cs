@@ -347,17 +347,12 @@ partial class SciCode : KScintilla {
 			//Dispatcher.InvokeAsync(() => CodeInfo.SciKillFocus(this));//no, dangerous
 			CodeInfo.SciKillFocus(this);
 			break;
-		//case Api.WM_LBUTTONDOWN:
-		//	if (Keyboard.Modifiers == ModifierKeys.Control) {
-		//		//CiGoTo.GoToSymbolFromPos(onCtrlClick: true);
-		//		return true;
+		//case Api.WM_LBUTTONUP:
+		//	//rejected. Sometimes I accidentally Ctrl+click and then wonder why it shows eg the github search dialog.
+		//	if (Keyboard.Modifiers == ModifierKeys.Control && !zIsSelection) {
+		//		Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
 		//	}
 		//	break;
-		case Api.WM_LBUTTONUP:
-			if (Keyboard.Modifiers == ModifierKeys.Control && !zIsSelection) {
-				Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
-			}
-			break;
 		}
 
 		return false;
@@ -455,6 +450,7 @@ partial class SciCode : KScintilla {
 			}
 			b.AppendLine(isCS ? "[/cs]" : "[/code]");
 			s = b.ToString();
+			s = _ImageRemoveScreenshots(s);
 			new clipboardData().AddText(s).SetClipboard();
 		} else if (i2 != i1) {
 			if (!(isFragment || s_infoCopy)) {

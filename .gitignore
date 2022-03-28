@@ -243,3 +243,4 @@ ModelManifest.xml
 # Execute git rm. Example: git rm -r --cached "folder/subfolder/"
 # The -r means recursively. The --cached meand don't delete local files/folders. It's safer to delete them manually.
 # Then edit this .gitignore file if need to prevent adding again.
+/Libraries/sqlite/sqlite3.c

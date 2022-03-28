@@ -9,25 +9,33 @@ using Au.Tools;
 //CONSIDER: Add a menu-button. Menu:
 //	Item "Request a recipe for this search query (uses internet)".
 //	Checkbox "Auto-update the cookbook (uses internet)".
+
 //CONSIDER: option to show Recipe panel when Cookbook panel is really visible and hide when isn't.
+
+//SHOULDDO: add some synonyms:
+//	string text, folder directory, program app application, run open, email mail
+//	Use the debug context menu to print all words.
 
 class PanelCookbook : UserControl {
 	KTreeView _tv;
 	TextBox _search;
 	_Item _root;
 	bool _loaded;
-	string _cookbookPath;
 	List<string> _history = new();
+
+	static string s_cookbookPath;
 
 	public PanelCookbook() {
 		this.UiaSetName("Cookbook panel");
 
-		var b = new wpfBuilder(this).Columns(-1, 0).Brush(SystemColors.ControlBrush);
+		var b = new wpfBuilder(this).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
 		b.R.Add(out _search).Tooltip("Part of recipe name");
 		b.Options(modifyPadding: false, margin: new());
-		_search.TextChanged += _search_TextChanged;
+		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
-		b.xAddButtonIcon("*Material.History #EABB00", _ => _HistoryMenu(), "History"); b.Margin(right: 3);
+		b.xAddButtonIcon("*Material.TextSearch #EABB00", _ => _Search(true), "Find in recipe text");
+		b.xAddButtonIcon("*Material.History #EABB00", _ => _HistoryMenu(), "History");
+		b.Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
 		b.Row(-1).Add(_tv);
 		b.End();
@@ -35,13 +43,16 @@ class PanelCookbook : UserControl {
 #if DEBUG
 		_tv.ItemClick += (_, e) => {
 			if (e.MouseButton == MouseButton.Right) {
-				int i = popupMenu.showSimple("1 Reload (debug)|2 Check links");
-				if (i == 1) {
+				var m = new popupMenu();
+				m.Add("DEBUG", disable: true);
+				m["Reload"] = o => {
 					Menus.File.Workspace.Save_now();
 					_Load();
-				} else if (i == 2) {
-					_CheckLinks();
-				}
+				};
+				m["Check links"] = o => _DebugCheckLinks();
+				m["Print name words"] = o => _DebugGetWords(false);
+				m["Print body words"] = o => _DebugGetWords(true);
+				m.Show();
 			}
 		};
 #endif
@@ -58,8 +69,8 @@ class PanelCookbook : UserControl {
 
 	void _Load() {
 		try {
-			_cookbookPath = folders.ThisAppBS + "Cookbook\\files";
-			var xr = XmlUtil.LoadElem(_cookbookPath + ".xml");
+			s_cookbookPath = folders.ThisAppBS + "Cookbook\\files";
+			var xr = XmlUtil.LoadElem(s_cookbookPath + ".xml");
 
 			_root = new _Item(null, true);
 			_AddItems(xr, _root, 0);
@@ -94,74 +105,76 @@ class PanelCookbook : UserControl {
 			_tv.Select(recipe);
 		}
 
-		if (_GetRecipeText(recipe) is string code) {
-			Panels.Recipe.Display(recipe.text, code);
-			AddToHistory(recipe.text);
+		if (recipe.GetBodyText() is string code) {
+			Panels.Recipe.Display(recipe.name, code);
+			AddToHistory(recipe.name);
 		}
 	}
 
-	string _GetRecipeText(_Item recipe) {
-		//get file path
-		var stack = new Stack<string>();
-		stack.Push(recipe.text + ".cs");
-		for (var p = recipe.Parent; p.HasParent; p = p.Parent) stack.Push(p.text);
-		stack.Push(_cookbookPath);
-		var path = string.Join("\\", stack);
-		//print.it(path, filesystem.exists(path).File);
-
-		try { return filesystem.loadText(path); } catch { return null; }
-	}
-
-	private void _search_TextChanged(object sender, TextChangedEventArgs e) {
+	void _Search(bool inBody) {
 		var s = _search.Text;
 		if (s.Length < 2) {
 			_tv.SetItems(_root.Children());
 			return;
 		}
-
-		var stemmer = new Porter2Stemmer.EnglishPorter2Stemmer();
-		var sb = new StringBuilder();
-		foreach (var v in _root.Descendants()) if (!v.dir) v.stemmed ??= _Stem(v.text);
-		var stemmed = s.Length < 4 ? null : _Stem(s);
+		string stemmed = null;
 
 		//print.clear();
-		var root2 = _Search(_root);
 
-		_Item _Search(_Item parent) {
+		var root2 = _Search2(_root);
+
+		_Item _Search2(_Item parent) {
 			_Item R = null;
 			for (var n = parent.FirstChild; n != null; n = n.Next) {
 				_Item r;
 				if (n.dir) {
-					r = _Search(n);
+					r = _Search2(n);
+					if (r == null) continue;
 				} else {
-					if (!n.text.Contains(s, StringComparison.OrdinalIgnoreCase)) {
-						if (stemmed == null) continue;
-						var z = FuzzySharp.Fuzz.PartialRatio(stemmed, n.stemmed, FuzzySharp.PreProcess.PreprocessMode.Full);
-						//if (z > 60) print.it(n.stemmed, z);
-						if (z < 75) continue;
+					if (inBody) {
+						var t = n.GetBodyTextWithoutLinksEtc();
+						if (!t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
+
+						//rejected: use SQLite FTS5. Tried but didn't like.
+						//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
+					} else {
+						if (!n.name.Contains(s, StringComparison.OrdinalIgnoreCase)) {
+							if (s.Length < 4) continue;
+							stemmed ??= _Stem(s);
+							n.stemmedName ??= _Stem(n.name);
+							var z = FuzzySharp.Fuzz.PartialRatio(stemmed, n.stemmedName, FuzzySharp.PreProcess.PreprocessMode.Full);
+							//if (z > 60) print.it(n.stemmed, z);
+							if (z < 75) continue;
+						}
+
+						//never mind:
+						//	Eg if s is "file folder", does not find "File and folder dialogs".
+						//	Eg if s is "folder file", does not find "... file, folder ...".
+						//	Maybe in some cases it's good, but in most cases bad.
+						//	Try Sorted? But then probably bad eg "webpage" and "web page". Try Weighted?
 					}
-					r = new _Item(n.text, false);
+					r = new _Item(n.name, false);
 				}
-				if (r == null) continue;
-				R ??= new _Item(parent.text, true) { isExpanded = true };
+				R ??= new _Item(parent.name, true) { isExpanded = true };
 				R.AddChild(r);
 			}
 			return R;
-
-			//CONSIDER: full-text search, including recipe text. Can be used SQLite FTS easily.
 		}
 
 		_tv.SetItems(root2?.Children());
-
-		string _Stem(string s) {
-			sb.Clear();
-			foreach (var t in s.Lower().Segments(SegSep.Word, SegFlags.NoEmpty)) {
-				if (sb.Length > 0) sb.Append(' ');
-				sb.Append(stemmer.Stem(s[t.Range]));
-			}
-			return sb.ToString();
-		}
 	}
+
+	string _Stem(string s) {
+		if (_stem.stemmer == null) _stem = (new(), new());
+		var sb = _stem.sb;
+		sb.Clear();
+		foreach (var t in s.Lower().Segments(SegSep.Word, SegFlags.NoEmpty)) {
+			if (sb.Length > 0) sb.Append(' ');
+			sb.Append(_stem.stemmer.Stem(s[t.Range]));
+		}
+		return sb.ToString();
+	}
+	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, StringBuilder sb) _stem;
 
 	internal void OpenRecipe(string s) {
 		Panels.PanelManager[this].Visible = true;
@@ -170,9 +183,9 @@ class PanelCookbook : UserControl {
 
 	_Item _FindRecipe(string s) {
 		var d = _root.Descendants();
-		return d.FirstOrDefault(o => !o.dir && o.text.Like(s, true))
-			?? d.FirstOrDefault(o => !o.dir && o.text.Starts(s, true))
-			?? d.FirstOrDefault(o => !o.dir && o.text.Find(s, true) >= 0);
+		return d.FirstOrDefault(o => !o.dir && o.name.Like(s, true))
+			?? d.FirstOrDefault(o => !o.dir && o.name.Starts(s, true))
+			?? d.FirstOrDefault(o => !o.dir && o.name.Find(s, true) >= 0);
 	}
 
 	internal void AddToHistory(string recipe) {
@@ -187,39 +200,58 @@ class PanelCookbook : UserControl {
 		m.Show(owner: this);
 
 		void _Open(string name) {
-			var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.text == name);
+			var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.name == name);
 			_OpenRecipe(v, true);
 		}
 	}
 
 #if DEBUG
-	void _CheckLinks() {
+	void _DebugCheckLinks() {
+		print.clear();
 		foreach (var recipe in _root.Descendants().Where(o => !o.dir)) {
-			var text = _GetRecipeText(recipe);
+			var text = recipe.GetBodyText();
 			if (text == null) { print.it("Failed to load the recipe. Probably renamed. Try to reload the tree."); return; }
 			foreach (var m in text.RxFindAll(@"<\+recipe>(.+?)<>")) {
 				var s = m[1].Value;
 				//print.it(s);
-				if (null == _FindRecipe(s)) print.it($"Invalid link '{s}' in {recipe.text}");
+				if (null == _FindRecipe(s)) print.it($"Invalid link '{s}' in {recipe.name}");
 			}
 		}
+	}
+
+	void _DebugGetWords(bool body) {
+		print.clear();
+		var hs = new HashSet<string>();
+		foreach (var recipe in _root.Descendants().Where(o => !o.dir)) {
+			string text;
+			if (body) {
+				text = recipe.GetBodyTextWithoutLinksEtc();
+				if (text == null) { print.it("Failed to load the recipe. Probably renamed. Try to reload the tree."); return; }
+			} else {
+				text = recipe.name;
+			}
+			text = _Stem(text);
+			foreach (var seg in text.Segments(SegSep.Word, SegFlags.NoEmpty))
+				if (seg.Length > 2 && !text[seg.start].IsAsciiDigit()) hs.Add(text[seg.Range]);
+		}
+		print.it(hs.OrderBy(o => o));
 	}
 #endif
 
 	class _Item : TreeBase<_Item>, ITreeViewItem {
-		internal readonly string text;
+		internal readonly string name;
 		internal readonly bool dir;
 		internal bool isExpanded;
-		internal string stemmed;
+		internal string stemmedName;
 
-		public _Item(string text, bool dir) {
-			this.text = text;
+		public _Item(string name, bool dir) {
+			this.name = name;
 			this.dir = dir;
 		}
 
 		#region ITreeViewItem
 
-		string ITreeViewItem.DisplayText => text;
+		string ITreeViewItem.DisplayText => name;
 
 		string ITreeViewItem.ImageSource => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie #EABB00");
 
@@ -233,5 +265,34 @@ class PanelCookbook : UserControl {
 		bool _IsFolder => base.HasChildren;
 
 		#endregion
+
+		public string FullPath {
+			get {
+				if (_path == null && name != null) {
+					var stack = s_stack1;
+					stack.Clear();
+					stack.Push(name + ".cs");
+					for (var p = Parent; p != null && p.HasParent; p = p.Parent) stack.Push(p.name);
+					stack.Push(s_cookbookPath);
+					_path = string.Join("\\", stack);
+					//print.it(_path, filesystem.exists(_path).File);
+				}
+				return _path;
+			}
+		}
+		string _path;
+		static Stack<string> s_stack1 = new();
+
+		public string GetBodyText() {
+			try { return filesystem.loadText(FullPath); } catch { return null; }
+		}
+
+		public string GetBodyTextWithoutLinksEtc() {
+			var t = GetBodyText(); if (t == null) return null;
+			t = t.RxReplace(@"<see cref=""(.+?)""/>", "$1");
+			while (0 != t.RxReplace(@"<(\+?\w+)(?: [^>]+)?>(.+?)<(?:/\1|)>", "$2", out t)) { }
+			t = t.RxReplace(@"\bimage:[\w/+=]+", "");
+			return t;
+		}
 	}
 }

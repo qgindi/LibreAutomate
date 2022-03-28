@@ -171,7 +171,7 @@ static class Menus {
 		[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine #B340FF")]
 		public static void Parameter_info() { CodeInfo.ShowSignature(); }
 
-		[Command(keysText = "F12, Ctrl+click", image = "*RemixIcon.WalkFill #B340FF")]
+		[Command(keysText = "F12", image = "*RemixIcon.WalkFill #B340FF")]
 		public static void Go_to_definition() { CiGoTo.GoToSymbolFromPos(); }
 
 		[Command(separator = true)]
@@ -187,6 +187,9 @@ static class Menus {
 
 			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease #9F5300")]
 			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
+
+			[Command]
+			public static void Remove_screenshots() { Panels.Editor.ZActiveDoc.ImageRemoveScreenshots(); }
 
 			[Command(keysText = "Ctrl+A")]
 			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
@@ -399,7 +402,7 @@ static class Menus {
 Version: {Assembly.GetExecutingAssembly().GetName().Version}
 Download: <link>https://www.quickmacros.com/au/help/<>
 Source code: <link>https://github.com/qmgindi/Au<>
-Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.25.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, Wu's Color Quantizer, Cantatore wildcard.
+Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, Wu's Color Quantizer, Cantatore wildcard.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 This program is still unfinished. It can be used, but some classes/functions/etc may be changed in the future.
 {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
