@@ -29,13 +29,14 @@ class CiTools {
 	string _regexTopic;
 
 	void _RegexWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, bool replace, wnd dontCover = default) {
-		int j = si.textSpan.Start;
+		var (spanStart, spanEnd) = si.textSpan;
 
 		_regexWindow ??= new RegexWindow();
 		_ShowWindow(_regexWindow, doc, pos16, dontCover);
 
 		if (!replace && si.isClassic) {
 			doc.zInsertText(true, si.stringNode.SpanStart, "@");
+			spanStart++; spanEnd++;
 		}
 
 		var s = _regexWindow.CurrentTopic;
@@ -45,7 +46,7 @@ class CiTools {
 			_regexTopic = s;
 			_regexWindow.CurrentTopic = "replace";
 		}
-		doc.ZTempRanges_Add(this, si.textSpan.Start, si.textSpan.End, onLeave: () => _regexWindow.Close());
+		doc.ZTempRanges_Add(this, spanStart, spanEnd, onLeave: () => _regexWindow.Close());
 	}
 
 	//public bool RegexWindowIsVisible => _regexWindow?.Window.Visible ?? false;
@@ -94,7 +95,7 @@ class CiTools {
 
 			//is in keys.send argument list?
 			var node = token.Parent;
-			if (node is not ArgumentListSyntax && !node.Span.ContainsInside(pos16)) {
+			if (node != null && node is not ArgumentListSyntax && !node.Span.ContainsInside(pos16)) {
 				node = node.Parent;
 				if (node is ArgumentSyntax) node = node.Parent;
 			}

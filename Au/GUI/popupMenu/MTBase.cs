@@ -25,8 +25,7 @@ namespace Au.Types;
 /// 
 /// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 /// </remarks>
-public abstract partial class MTBase
-{
+public abstract partial class MTBase {
 	private protected readonly string _name;
 	private protected readonly string _sourceFile;
 	private protected readonly int _sourceLine;
@@ -207,8 +206,7 @@ public abstract partial class MTBase
 	/// <summary>
 	/// Base of <see cref="popupMenu.MenuItem"/> etc.
 	/// </summary>
-	public abstract class MTItem
-	{
+	public abstract class MTItem {
 		internal Delegate clicked;
 		internal object image;
 		/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
@@ -287,13 +285,29 @@ public abstract partial class MTBase
 		/// </summary>
 		internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_) {
 			if (!text.NE()) {
+				var mi = this as popupMenu.MenuItem;
+				bool rawText = mi?.rawText ?? false;
 				int i = text.IndexOf('\0');
+				if (i < 0 && !rawText) i = text.IndexOf('|');
 				if (i >= 0) {
-					int j = i + 1; if (text.Eq(j, ' ')) j++;
-					Tooltip = text[j..];
-					text = text[..i];
+					var v = _Split(text, i);
+					text = v.Item1;
+					Tooltip = v.Item2;
+				}
+				if (mi != null && !rawText && text.Lenn() >= 2) {
+					i = text.IndexOf('\t', 1);
+					if (i > 0) {
+						var v = _Split(text, i);
+						text = v.Item1;
+						mi.hotkey = v.Item2;
+					}
 				}
 				if (!text.NE()) Text = text;
+
+				static (string, string) _Split(string s, int i) {
+					int j = i + 1; if (s.Eq(j, ' ')) j++;
+					return (i > 0 ? s[..i] : null, j < s.Length ? s[j..] : null);
+				}
 			}
 
 			image = im.Value;
@@ -307,6 +321,9 @@ public abstract partial class MTBase
 			actionException = mt.ActionException;
 			pathInTooltip = mt.PathInTooltip;
 		}
+		//TODO: "*icon" will not work in exe.
+		//	On the dev computer may work because uses the same cache file.
+		//	For users the best would be to auto-embed the XAML when building exe. But difficult to implement.
 
 		///
 		public override string ToString() => Text;
@@ -321,8 +338,7 @@ public abstract partial class MTBase
 /// Has implicit conversions from string, <see cref="Image"/>, <see cref="icon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.
 /// More info: <see cref="MTBase"/>.
 /// </remarks>
-public struct MTImage
-{
+public struct MTImage {
 	readonly object _o;
 	MTImage(object o) { _o = o; }
 

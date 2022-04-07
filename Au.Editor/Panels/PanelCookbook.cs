@@ -13,8 +13,8 @@ using Au.Tools;
 //CONSIDER: option to show Recipe panel when Cookbook panel is really visible and hide when isn't.
 
 //SHOULDDO: add some synonyms:
-//	string text, folder directory, program app application, run open, email mail
-//	Use the debug context menu to print all words.
+//	string/text, folder/directory, program/app/application, run/open, email/mail, regular expression/regex
+//	See _DebugGetWords.
 
 class PanelCookbook : UserControl {
 	KTreeView _tv;
@@ -29,7 +29,7 @@ class PanelCookbook : UserControl {
 		this.UiaSetName("Cookbook panel");
 
 		var b = new wpfBuilder(this).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
-		b.R.Add(out _search).Tooltip("Part of recipe name");
+		b.R.Add(out _search).Tooltip("Part of recipe name.\nMiddle-click to clear.");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
@@ -112,69 +112,95 @@ class PanelCookbook : UserControl {
 	}
 
 	void _Search(bool inBody) {
-		var s = _search.Text;
+		var s = _search.Text.Trim();
 		if (s.Length < 2) {
 			_tv.SetItems(_root.Children());
 			return;
 		}
-		string stemmed = null;
 
 		//print.clear();
 
-		var root2 = _Search2(_root);
-
-		_Item _Search2(_Item parent) {
+		var root2 = _SearchContains(_root);
+		_Item _SearchContains(_Item parent) {
 			_Item R = null;
 			for (var n = parent.FirstChild; n != null; n = n.Next) {
 				_Item r;
 				if (n.dir) {
-					r = _Search2(n);
+					r = _SearchContains(n);
 					if (r == null) continue;
 				} else {
-					if (inBody) {
-						var t = n.GetBodyTextWithoutLinksEtc();
-						if (!t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
-
-						//rejected: use SQLite FTS5. Tried but didn't like.
-						//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
-					} else {
-						if (!n.name.Contains(s, StringComparison.OrdinalIgnoreCase)) {
-							if (s.Length < 4) continue;
-							stemmed ??= _Stem(s);
-							n.stemmedName ??= _Stem(n.name);
-							var z = FuzzySharp.Fuzz.PartialRatio(stemmed, n.stemmedName, FuzzySharp.PreProcess.PreprocessMode.Full);
-							//if (z > 60) print.it(n.stemmed, z);
-							if (z < 75) continue;
-						}
-
-						//never mind:
-						//	Eg if s is "file folder", does not find "File and folder dialogs".
-						//	Eg if s is "folder file", does not find "... file, folder ...".
-						//	Maybe in some cases it's good, but in most cases bad.
-						//	Try Sorted? But then probably bad eg "webpage" and "web page". Try Weighted?
-					}
+					var t = inBody ? n.GetBodyTextWithoutLinksEtc() : n.name;
+					if (!t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
 					r = new _Item(n.name, false);
 				}
 				R ??= new _Item(parent.name, true) { isExpanded = true };
 				R.AddChild(r);
 			}
 			return R;
+
+			//rejected: use SQLite FTS5. Tried but didn't like.
+			//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
 		}
+
+		//try stemmed fuzzy. Max Levenshtein distance 1 for a word.
+		//	rejected: use FuzzySharp. For max distance 1 don't need it.
+		if (root2 == null && !inBody && s.Length >= 3) {
+			var a1 = _Stem(s);
+			root2 = _SearchFuzzy(_root);
+			_Item _SearchFuzzy(_Item parent) {
+				_Item R = null;
+				for (var n = parent.FirstChild; n != null; n = n.Next) {
+					_Item r;
+					if (n.dir) {
+						r = _SearchFuzzy(n);
+						if (r == null) continue;
+					} else {
+						n.stemmedName ??= _Stem(n.name);
+						bool allFound = true;
+						foreach (var v1 in a1) {
+							bool found = false;
+							foreach (var v2 in n.stemmedName) {
+								if (found = _Match(v1, v2)) break;
+							}
+							if (!(allFound &= found)) break;
+						}
+						if (!allFound) continue;
+						r = new _Item(n.name, false);
+					}
+					R ??= new _Item(parent.name, true) { isExpanded = true };
+					R.AddChild(r);
+				}
+				return R;
+			}
+		}
+		//rejected: try joined words. Eg for "webpage" also find "web page" and "web-page".
+		//	Will find all after typing "web". Never mind fuzzy.
 
 		_tv.SetItems(root2?.Children());
+
+		static bool _Match(string s1, string s2) {
+			if (s1[0] != s2[0] || Math.Abs(s1.Length - s2.Length) > 1) return false; //the first char must match
+			if (s1.Length > s2.Length) Math2.Swap(ref s1, ref s2); //let s1 be the shorter
+
+			int ib = 0, ie1 = s1.Length, ie2 = s2.Length;
+			while (ib < s1.Length && s1[ib] == s2[ib]) ib++; //skip common prefix
+			while (ie1 > ib && s1[ie1 - 1] == s2[--ie2]) ie1--; //skip common suffix
+
+			int n = ie1 - ib;
+			if (n == 1) return s1.Length == s2.Length || ib == ie1;
+			return n == 0;
+		}
 	}
 
-	string _Stem(string s) {
+	string[] _Stem(string s) {
 		if (_stem.stemmer == null) _stem = (new(), new());
-		var sb = _stem.sb;
-		sb.Clear();
+		_stem.a.Clear();
 		foreach (var t in s.Lower().Segments(SegSep.Word, SegFlags.NoEmpty)) {
-			if (sb.Length > 0) sb.Append(' ');
-			sb.Append(_stem.stemmer.Stem(s[t.Range]));
+			_stem.a.Add(_stem.stemmer.Stem(s[t.Range]));
 		}
-		return sb.ToString();
+		return _stem.a.ToArray();
 	}
-	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, StringBuilder sb) _stem;
+	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a) _stem;
 
 	internal void OpenRecipe(string s) {
 		Panels.PanelManager[this].Visible = true;
@@ -230,9 +256,9 @@ class PanelCookbook : UserControl {
 			} else {
 				text = recipe.name;
 			}
-			text = _Stem(text);
-			foreach (var seg in text.Segments(SegSep.Word, SegFlags.NoEmpty))
-				if (seg.Length > 2 && !text[seg.start].IsAsciiDigit()) hs.Add(text[seg.Range]);
+			var a = _Stem(text);
+			foreach (var s in a)
+				if (s.Length > 2 && !s[0].IsAsciiDigit()) hs.Add(s);
 		}
 		print.it(hs.OrderBy(o => o));
 	}
@@ -242,7 +268,7 @@ class PanelCookbook : UserControl {
 		internal readonly string name;
 		internal readonly bool dir;
 		internal bool isExpanded;
-		internal string stemmedName;
+		internal string[] stemmedName;
 
 		public _Item(string name, bool dir) {
 			this.name = name;

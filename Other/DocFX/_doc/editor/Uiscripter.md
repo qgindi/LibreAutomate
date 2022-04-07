@@ -1,10 +1,10 @@
 ---
-uid: Automaticode
+uid: Uiscripter
 ---
 
-# Automaticode C#
+# C# Uiscripter
 
-Automaticode C# is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
+C# Uiscripter is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
 
 ![window](../images/window.png "Editor window")
 

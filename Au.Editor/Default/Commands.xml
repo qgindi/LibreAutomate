@@ -31,7 +31,6 @@ All attributes are optional. The Example command contains all.
 	<File>
 		<New />
 		<Properties />
-		<Rename />
 		<MultiSelect_files />
 		<Save_now />
 	</File>

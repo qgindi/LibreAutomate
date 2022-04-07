@@ -217,7 +217,7 @@ class PanelOutline : DockPanel
 		int flags = App.Settings.outline_flags, sort = flags & 3;
 		m.AddRadio("Don't sort", sort == 0).Id = 1;
 		m.AddRadio("Sort by name", sort == 1).Id = 2;
-		m.AddRadio("Sort by kind", sort == 2).Id = 3;
+		m.AddRadio("Sort by kind and name", sort == 2).Id = 3;
 		//m.AddRadio("Sort by kind and name", sort == 3).Id = 4; //sorting by kind+position probably not useful. Always sort by kind+name.
 		//m.Separator();
 		//m.AddCheck("Sync", 0 != (flags & 4), _ => App.Settings.outline_flags ^= 4);

@@ -516,7 +516,11 @@ namespace Au.Controls
 			bool _SetImage(string image, _CustomizeContext customizing = null) {
 				bool custom = customizing != null;
 				try {
+#if DEBUG
+					bool res = !(custom || image.Starts('*') || pathname.isFullPath(image));
+#else
 					bool res = !(custom || image.Starts('*'));
+#endif
 					var ie = res
 						? ResourceUtil.GetWpfImageElement(image)
 						: ImageUtil.LoadWpfImageElement(image);
@@ -556,7 +560,7 @@ namespace Au.Controls
 				set { if (value != _Mi.IsChecked) _mi.IsChecked = value; }
 			}
 
-			#region ICommand
+#region ICommand
 
 			bool ICommand.CanExecute(object parameter) => _enabled;
 
@@ -573,7 +577,7 @@ namespace Au.Controls
 			/// </summary>
 			public event EventHandler CanExecuteChanged;
 
-			#endregion
+#endregion
 
 			/// <summary>
 			/// Finds and returns toolbar button that has this command. Returns null if not found.

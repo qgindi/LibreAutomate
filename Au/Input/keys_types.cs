@@ -262,9 +262,8 @@ namespace Au.Types
 		readonly object _o;
 		KKeysEtc(object o) { _o = o; }
 
-		/// <summary>
-		/// Raw value.
-		/// </summary>
+		public KKeysEtc(Action a) { _o = a; } //allows 'new(() => {})' instead of 'new Action(() => {})'
+
 		public object Value => _o;
 
 		public static implicit operator KKeysEtc(string s) => new(s);

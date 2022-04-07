@@ -32,7 +32,7 @@ Change version info (see above).
 
 Build solution in config Release/AnyCPU. Build in config Release/x86.
 
-Review menu Help -> About. May need to update used libraries.
+Review menu Help -> About. May need to update used libraries, beta.
 
 Run the DocFX script just to catch XML documentation errors and test how it works with current C# and .NET versions etc.
 	Don't upload. Fix errors if need. More info in DocFX.cs.
@@ -71,7 +71,8 @@ Install new .NET version.
 
 Update .NET version in all C# project files.
 
-Update .NET version in the C++ apphost project. Build.
+Update .NET version in the C++ AppHost project. Build.
+	Note the .NET 6 bug workaround comment there.
 
 Build solution.
 

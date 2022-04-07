@@ -408,13 +408,11 @@ static class InsertCode
 	}
 
 	public static void AddClassProgram() {
-		//rejected: menu. Then need to think what to select.
-		//	Maybe in the future show input box with string remembered from previous time. Or let specify string in Options.
-		//var a = new string[] {
-		//	"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...",
-		//	"class Program { static void Main(string[] args) { //...",
-		//};
-		//int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
+		var a = new string[] {
+			"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...",
+			"class Program { static void Main(string[] args) { //...",
+		};
+		int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
 		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
@@ -452,9 +450,6 @@ static class InsertCode
 
 		using var undo = new KScintilla.UndoAction(cd.sciDoc);
 		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
-		//cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
-		string s = "class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...\r\n";
-		cd.sciDoc.zInsertText(true, start, s);
-		//if (s.RxMatch(@" =>.+args\)", 0, out RXGroup g)) cd.sciDoc.zSelect(true, start + g.Start, start + g.End); //then can simply press Delete to make it classic. No, it is rather distracting.
+		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
 	}
 }

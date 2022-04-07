@@ -395,7 +395,7 @@ class DProperties : KDialogWindow {
 	}
 
 	//To convert a COM type library we use TypeLibConverter class. However .NET Core+ does not have it.
-	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.8. We call it through run.console.
+	//Workaround: the code is in Au.Net4.exe. It uses .NET Framework 4.8. We call it through run.console.
 	//We don't use tlbimp.exe:
 	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in a Core+ app.
 	//	2. Does not tell what files created.
@@ -471,7 +471,7 @@ class DProperties : KDialogWindow {
 						converted.Add(s);
 					}
 				}
-				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{dir}|{comDll}\"", encoding: Encoding.UTF8);
+				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net4.exe", $"/typelib \"{dir}|{comDll}\"", encoding: Encoding.UTF8);
 			});
 		}
 		catch (Exception ex) { dialog.showError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }

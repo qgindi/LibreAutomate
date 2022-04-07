@@ -460,6 +460,8 @@ namespace Au {
 		/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>
 		/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
 		/// </description></item>
+		/// <item><description>char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator ^.
+		/// </description></item>
 		/// </list>
 		/// </param>
 		/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>

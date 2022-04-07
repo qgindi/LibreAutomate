@@ -121,7 +121,7 @@ namespace Au
 		/// Adds button.
 		/// Same as <see cref="this[string, MTImage, int]"/>.
 		/// </summary>
-		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
 		/// <param name="click">Action called when the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -138,7 +138,7 @@ namespace Au
 		/// Adds button.
 		/// Same as <see cref="Add(string, Action{ToolbarItem}, MTImage, int)"/>.
 		/// </summary>
-		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
 		/// <value>Action called when the button clicked.</value>
@@ -168,7 +168,7 @@ namespace Au
 		/// <summary>
 		/// Adds button with drop-down menu.
 		/// </summary>
-		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
 		/// <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -192,7 +192,7 @@ namespace Au
 		/// <summary>
 		/// Adds button with drop-down menu.
 		/// </summary>
-		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
 		/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -226,7 +226,7 @@ namespace Au
 		/// <summary>
 		/// Adds new horizontal separator, optionally with text.
 		/// </summary>
-		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
 		public ToolbarItem Group(string text = null) {
 			var item = new ToolbarItem { type = TBItemType.Group };
 			_Add(item, text, null, default, 0);

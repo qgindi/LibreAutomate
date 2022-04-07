@@ -12,7 +12,15 @@
 //SHOULDDO: somehow auto-update, else can forget this when updating .NET version of C# projects (<TargetFramework>...</TargetFramework>).
 #define NETVERMAJOR 6
 #define NETVERMINOR 0
+#define NETVERPATCH 2 //see the workaround comment below
 #define NETVER_SUPPORT_PREVIEW 0 //eg fails with 5.0.0 preview, MethodNotFound exception
+
+/*
+Workaround for .NET SDK 6.0.2+ bug: WPF and winforms apps can't start if installed older .NET 6 Runtime.
+https://github.com/dotnet/core/issues/7176
+The suggested workaround works, tested. But need to edit 4 project files, install the old SDK, build ref.db with the old SDK, maybe more.
+Instead let show a message box "please upgrade .NET".
+*/
 
 #if 0
 template<typename ... Args>
@@ -129,13 +137,14 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 #endif
 		//Print("%S", s);
 		int vMajor = wcstol(s, &s, 10); if(vMajor != NETVERMAJOR) continue;
-		if(*s++ != '.' || *s < '0' || *s>'9') continue;
+		if(*s++ != '.' || *s < '0' || *s > '9') continue;
 		int vMinor = wcstol(s, &s, 10); if(vMinor < NETVERMINOR) continue;
 		//if(desktop && vMinor != ver.vMinor) continue; //no, dotnet apphost eats it
-		if(*s++ != '.' || *s < '0' || *s>'9') continue;
+		if(*s++ != '.' || *s < '0' || *s > '9') continue;
+		int vPatch = wcstol(s, &s, 10); if(vPatch < NETVERPATCH) continue;
 		VERSTRUCT v;
 		v.vMinor = vMinor;
-		v.vPatch = wcstol(s, &s, 10);
+		v.vPatch = vPatch;
 		v.preview = s[0] == '-' && s[1] == 'p';
 		if(!NETVER_SUPPORT_PREVIEW && v.preview && vMinor == NETVERMINOR && v.vPatch == 0) continue;
 		v.dirName = _wcsdup(s0);
@@ -150,9 +159,9 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 	int n = (int)a.size();
 	if(n == 0) return false;
 
-	//get best match
+	//get the best match
 	//	https://docs.microsoft.com/en-us/dotnet/core/versions/selection
-	//	Like documented there, we roll forward to the nearest minor version and use highest patch version.
+	//	Like documented there, we roll forward to the nearest minor version and use the highest patch version.
 	//	But dotnet apphost doesn't, eg fails if need 3.1 but found 3.2, and even if need 3.1.2 but found 3.1.0. Only rolls forward patch version.
 	//		Tested long ago. Not tested with .NET 5. Maybe this was set in json by VS.
 	int iBest = -1, bestMinor = -1, bestPatch = -1;
@@ -332,10 +341,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	//Print("coreclrDll=%S", p.coreclrDll.c_str());
 
 	if(!pathsOK) {
-#define URL 
 		wchar_t w[200];
-		wsprintfW(w, L"To run this application, need .NET Desktop Runtime %i.%i x%i.\r\n\r\n"
-			L"Would you like to download it now?", NETVERMAJOR, NETVERMINOR, is32bit ? 86 : 64);
+		wsprintfW(w, L"To run this application, need to install or upgrade .NET %i Desktop Runtime x%i.\r\n\r\n"
+			L"Would you like to download it now?", NETVERMAJOR, is32bit ? 86 : 64);
 		if(IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
 			AllowSetForegroundWindow(ASFW_ANY);
 			int(__stdcall * ShellExecuteW)(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);

@@ -8,7 +8,7 @@ namespace Au {
 	/// Can be used everywhere: in automation scripts, WPF apps, other apps, etc.
 	/// Also can be used as a popup list and supports many items with scrollbar.
 	/// 
-	/// Menu item text can include hotkey after '\t' character and/or tooltip after '\0' character and optional space character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text\0 Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg 'A' in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="MSFlags"/>) and can be used to select the item with keyboard.
+	/// Menu item text can include hotkey after '\t' character and/or tooltip after '|' or '\0' character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text|Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg 'A' in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="MSFlags"/>) and can be used to select the item with keyboard.
 	/// 
 	/// Keyboard, mouse:
 	/// - Enter, Tab, Space - close the menu and execute the focused item. Or show the submenu.
@@ -155,18 +155,7 @@ namespace Au {
 		MenuItem _Add(MenuItem mi, string text, MTImage image, int l_, Delegate click = null) {
 			_ThreadTrap();
 			_OpenTrap("cannot add items while the menu is open. To add to submenu, use the submenu variable.");
-			if (!mi.IsSeparator) {
-				if (!mi.rawText && text.Lenn() >= 2) {
-					int i = text.IndexOf('\t', 1);
-					if (i > 0) {
-						var s = text;
-						text = s[..i];
-						if (s.Eq(++i, ' ')) i++;
-						mi.hotkey = s[i..];
-					}
-				}
-				mi.Set_(this, text, click, image, l_);
-			}
+			if (!mi.IsSeparator) mi.Set_(this, text, click, image, l_);
 			_a.Add(mi);
 			_addedNewItems = true;
 			Last = mi;
@@ -347,7 +336,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Don't use &amp; character for keyboard shortcut. Also don't use tab character for hotkey.
+		/// Don't use: &amp; character for keyboard shortcut; tab character for hotkey; | character for tooltip (but use \0).
 		/// This property is applied to items added afterwards; submenus inherit it.
 		/// </summary>
 		public bool RawText { get; set; }
