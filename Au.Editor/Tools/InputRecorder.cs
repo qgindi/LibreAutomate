@@ -60,8 +60,8 @@ class InputRecorder : Window {
 		b.Add(out KCheckBox cText2, "Text+").Margin("L16").Tooltip("Record Alt+Ctrl+key as text if possible");
 		b.Add(out KCheckBox cMouse, "Mouse").Tooltip("Record mouse clicks and optionally wheel and movements");
 		b.Add(out KCheckBox cWheel, "Wheel").Margin("L8").Tooltip("Record mouse wheel");
-		b.Add(out KCheckBox cDrag, "Drag").Margin("L8").Tooltip("Record mouse movements while the left, right or middle button is pressed");
-		b.Add(out KCheckBox cMove, "Move").Margin("L8").Tooltip("Record mouse movements while the left and right button aren't pressed");
+		b.Add(out KCheckBox cDrag, "Drag").Margin("L8").Tooltip("Record mouse movements while a button is pressed");
+		b.Add(out KCheckBox cMove, "Move").Margin("L8").Tooltip("Record mouse movements while buttons aren't pressed");
 		b.Add(out ComboBox cbIn).Items("Window|Control|Screen").Tooltip("Mouse position relative to").Margin("2");
 		cbIn.SelectionChanged += (_, _) => { _xyIn = cbIn.SelectedIndex; };
 		cbIn.SelectedIndex = Math.Clamp(App.Settings.recorder.xyIn, 0, 2);

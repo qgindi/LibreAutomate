@@ -221,7 +221,8 @@ static class Menus {
 
 	[Command(target = "Edit")]
 	public static class Code {
-		[Command(underlined: 'r', image = "*Material.RecordCircleOutline #008EEE")]
+		[Command(underlined: 'r', image = "*Material.RecordRec #008EEE")]
+		//[Command(underlined: 'r', image = "*BoxIcons.RegularVideoRecording #008EEE")]
 		public static void Input_recorder() { InputRecorder.ShowRecorder(); }
 
 		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #008EEE")]
@@ -271,7 +272,7 @@ static class Menus {
 		//[Command(image = "")]
 		//public static void Pause() { }
 
-		[Command(keys = "F7", image = "*VaadinIcons.Compile #008EEE")]
+		[Command(image = "*VaadinIcons.Compile #008EEE")]
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
 		[Command("...")]
@@ -399,14 +400,13 @@ static class Menus {
 		[Command]
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
-Version: {Assembly.GetExecutingAssembly().GetName().Version}
+Version: {Assembly.GetExecutingAssembly().GetName().Version}, beta.
 Download: <link>https://www.quickmacros.com/au/help/<>
-Source code: <link>https://github.com/qmgindi/Au<>
-Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, Wu's Color Quantizer, Cantatore wildcard.
+Source code: <link>https://github.com/qgindi/Au<>
+Uses libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, Wu's Color Quantizer, Cantatore wildcard.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
-This program is still unfinished. It can be used, but some classes/functions/etc may be changed in the future.
 {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
---------");
+-----------------------");
 		}
 	}
 

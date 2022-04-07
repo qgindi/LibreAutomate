@@ -151,18 +151,23 @@ class CiErrors {
 
 					var k = new keys(null);
 					foreach (var nk in args.DescendantNodes()) {
-						if (CiUtil.GetParameterStringFormat(nk, semo, false) != PSFormat.Keys) continue;
-						s = nk.GetFirstToken().ValueText;
-						if (s.Length == 0 || s[0] is '!' or '%') continue; //never mind: can be "keys"+"!keys"
-						try { k.AddKeys(s); }
-						catch (ArgumentException ex) {
-							var e = ex.Message;
-							//print.it(e); CiUtil.PrintNode(nk); CiUtil.PrintNode(nk.Parent);
-							//detect some common valid cases like "keys*"+x or $"keys*{x}"
-							if (((s.Ends('*') || s.Starts('*')) && e.Contains("<<<*")) || (s.Ends('_') && e.Contains("<<<_>>>"))) {
-								if (nk.Parent is not ArgumentSyntax) continue; //eg like "Tab*"+5 or $"Tab*{5}"
+						if (nk is ArgumentSyntax) continue;
+						if(nk is LiteralExpressionSyntax les && nk.Kind() == SyntaxKind.CharacterLiteralExpression) {
+							if(les.Token.Value is char c1) k.AddChar(c1);
+						} else {
+							if (CiUtil.GetParameterStringFormat(nk, semo, false) != PSFormat.Keys) continue;
+							s = nk.GetFirstToken().ValueText;
+							if (s.Length == 0 || s[0] is '!' or '%') continue; //never mind: can be "keys"+"!keys"
+							try { k.AddKeys(s); }
+							catch (ArgumentException ex) {
+								var e = ex.Message;
+								//print.it(e); CiUtil.PrintNode(nk); CiUtil.PrintNode(nk.Parent);
+								//detect some common valid cases like "keys*"+x or $"keys*{x}"
+								if (((s.Ends('*') || s.Starts('*')) && e.Contains("<<<*")) || (s.Ends('_') && e.Contains("<<<_>>>"))) {
+									if (nk.Parent is not ArgumentSyntax) continue; //eg like "Tab*"+5 or $"Tab*{5}"
+								}
+								_AddError(nk, e);
 							}
-							_AddError(nk, e);
 						}
 					}
 					break;

@@ -73,8 +73,9 @@ namespace Au.Controls
 					_SetColor(col, bgr: true);
 					_hlsChanging = false;
 				};
-				t.MouseWheel += (_, e) => {
+				t.MouseWheel += (o, e) => {
 					int d = e.Delta / 15; //+-8
+					if (o == tH) d /= 2; //hue is more sensitive; 8 would jump directly from box to box
 					int i = t.Text.ToInt() + d;
 					if (hls == 0) { if (i < 0) i += 240; else if (i > 240) i -= 240; }
 					int v = Math.Clamp(i, 0, 240);

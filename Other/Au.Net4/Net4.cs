@@ -15,7 +15,7 @@ using _TYPELIBATTR = System.Runtime.InteropServices.ComTypes.TYPELIBATTR;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
-unsafe class Net45
+unsafe class Net4
 {
 	[STAThread]
 	static int Main(string[] args)
@@ -34,7 +34,7 @@ unsafe class Net45
 
 		int hr = LoadTypeLibEx(comDll, 2, out var tl);
 		if(hr != 0) {
-			Print("Failed to load type library. " + new Win32Exception(hr).Message);
+			Print($"Failed to load type library '{comDll}'.\r\n\t{new Win32Exception(hr).Message}");
 			return -1;
 		}
 
@@ -42,7 +42,7 @@ unsafe class Net45
 			var c = new _TypelibConverter { saveDir = asmDir };
 			c.Convert(tl);
 		}
-		catch(Exception ex) { Print("Failed to convert type library. " + ex.Message); return -2; }
+		catch(Exception ex) { Print($"Failed to convert type library '{comDll}'.\r\n\t{ex.Message}"); return -2; }
 		return 0;
 	}
 

@@ -1,6 +1,6 @@
-# Automaticode C#
+# C# Uiscripter
 
-Automaticode C# is a free automation library and C# script editor/manager/launcher. In scripts you can use keys, mouse, window/webpage elements, files, internet, text processing, dialog windows, floating toolbars, hotkey/autotext/etc triggers, Windows API, .NET and zillion of programming libraries, as well as code examples and info from the internet. Can create programs and libraries, and not just for automation. You'll gradually learn C#, one of top 5 programming languages. Then creating automations with this code editor is faster than with no-code RPA apps, and less limitations.
+C# Uiscripter is a free automation library and C# script editor/manager/launcher. In scripts you can use keys, mouse, window/webpage elements, files, internet, text processing, dialog windows, floating toolbars, hotkey/autotext/etc triggers, Windows API, .NET and zillion of programming libraries, as well as code examples and info from the internet. Can create programs and libraries, and not just for automation. You'll gradually learn C#, one of top 5 programming languages. Then creating automations with this code editor is faster than with no-code RPA apps, and less limitations.
 
 The library contains functions to automate various tasks on Windows computers. Written mostly in C#, it is a .NET library. Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
 

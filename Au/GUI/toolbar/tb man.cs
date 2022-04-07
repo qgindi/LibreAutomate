@@ -1,12 +1,9 @@
 
 using System.Linq;
 
-namespace Au
-{
-	public partial class toolbar
-	{
-		class _OwnerWindow
-		{
+namespace Au {
+	public partial class toolbar {
+		class _OwnerWindow {
 			public readonly List<toolbar> a;
 			public readonly wnd w;
 			public bool visible;
@@ -68,8 +65,7 @@ namespace Au
 			public SIZE GetPrevSize(toolbar tb) => tb._followClientArea ? _prevClientSize : _prevSize;
 		}
 
-		class _OwnerControl
-		{
+		class _OwnerControl {
 			public readonly wnd c;
 			public readonly ITBOwnerObject oo;
 			public RECT cachedRect;
@@ -105,8 +101,7 @@ namespace Au
 			}
 		}
 
-		class _OwnerScreen
-		{
+		class _OwnerScreen {
 			public _OwnerScreen(toolbar tb, screen scrn) {
 				_tb = tb;
 				_scrn = (_isAuto = scrn.IsEmpty) ? screen.index(_tb._sett.screen) : scrn.Now;
@@ -150,8 +145,7 @@ namespace Au
 		[ThreadStatic] static _TBManager t_man;
 		static _TBManager _Manager => t_man ??= new _TBManager();
 
-		class _TBManager
-		{
+		class _TBManager {
 			internal readonly List<toolbar> _atb = new List<toolbar>();
 			readonly List<_OwnerWindow> _aow = new List<_OwnerWindow>();
 			timer _timer;
@@ -342,17 +336,17 @@ namespace Au
 			void _ManageFullScreen(toolbar tb = null) {
 				if (tb?.MiscFlags.Has(TBFlags.HideWhenFullScreen) ?? _atb.Any(o => o.MiscFlags.Has(TBFlags.HideWhenFullScreen))) {
 					var w = wnd.active;
-					w.IsFullScreen_(out var scrn);
-					if (tb != null) tb._ManageFullScreen(w, scrn);
-					else foreach (var v in _atb) if (v.MiscFlags.Has(TBFlags.HideWhenFullScreen)) v._ManageFullScreen(w, scrn);
+					bool isFS = w.IsFullScreen_(out var scrn);
+					if (tb != null) tb._ManageFullScreen(isFS, w, scrn);
+					else foreach (var v in _atb) if (v.MiscFlags.Has(TBFlags.HideWhenFullScreen)) v._ManageFullScreen(isFS, w, scrn);
 				}
 			}
 		}
 
-		void _ManageFullScreen(wnd wFore, screen scrn) {
+		void _ManageFullScreen(bool isFS, wnd wFore, screen scrn) {
 			if (_inMoveSize) return;
 			bool hide;
-			if (scrn.IsEmpty) hide = false;
+			if (!isFS) hide = false;
 			else if (IsOwned) hide = OwnerWindow == wFore;
 			else hide = screen.of(_w, SODefault.Zero) == scrn;
 
@@ -363,15 +357,26 @@ namespace Au
 			if (!IsOwned) {
 
 			} else if (_ow.visible) {
-				var wt = _w;
-				if (!_zorderedOnce || !wt.ZorderIsAbove(_ow.w)) {
-					bool ok = wt.ZorderAbove(_ow.w);
+				wnd wt = _w, wo = _ow.w;
+
+				//Some windows, eg UiPath, have an owned "shadow frame" window that may cover toolbar parts that aren't entirely inside the owner window's rect.
+				//	Toolbars should detect such windows and zorder above them. Can't just blindly zorder above the topmost owned.
+				//	But detecting can be difficult/slow/unreliable. Need to get all owned windows or all thread windows, etc.
+				//	Never mind. Let users don't move toolbars to such places where they may be covered.
+				//if (_zorderedOnce && wo.IsActive) {
+				//	var w2 = wo.Get.EnabledOwned(); //may be not that window, eg a tooltip
+				//	//print.it("eo", w2);
+				//	if (!w2.Is0 && w2.Rect.Contains(wo.Rect)) wo = w2;
+				//}
+				//print.it(wo);
+
+				if (!_zorderedOnce || !wt.ZorderIsAbove(wo)) {
+					bool ok = wt.ZorderAbove(wo);
 					if (!ok) {
 						var ec = lastError.code;
-						if (!wt.ZorderIsAbove(_ow.w)) { //if owner is win store app and this process isn't admin, zorders but returns false
-							var es = ec == Api.ERROR_ACCESS_DENIED && _ow.w.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : lastError.messageFor(ec);
+						if (!wt.ZorderIsAbove(wo)) { //if owner is win store app and this process isn't admin, zorders but returns false
+							var es = ec == Api.ERROR_ACCESS_DENIED && wo.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : lastError.messageFor(ec);
 							print.warning($"Failed to Z-order toolbar '{_name}' above owner window. {es}");
-							print.it(wt.ZorderIsAbove(_ow.w));
 						}
 					}
 					_zorderedOnce = true;
@@ -569,7 +574,7 @@ namespace Au
 				int i = 15, oldDpi = _dpi;
 				timer.every(1000, t => {
 					if (--i > 0 && _dpi == oldDpi && !_closed && !_hide.Has(TBHide.Owner)) {
-						if(screen.of(OwnerWindow).Dpi == oldDpi) return;
+						if (screen.of(OwnerWindow).Dpi == oldDpi) return;
 						//print.it("DPI changed", _dpi, Dpi.OfWindow(OwnerWindow, true));
 						_FollowRect();
 					}

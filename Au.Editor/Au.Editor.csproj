@@ -92,10 +92,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="FuzzySharp" Version="2.0.2" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Resource Include="resources\ci\Class.xaml" />
 		<Resource Include="resources\ci\Constant.xaml" />
 		<Resource Include="resources\ci\Delegate.xaml" />
@@ -176,11 +172,5 @@
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\ResourceHacker.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
 	</Target>
-
-	<ProjectExtensions>
-		<VisualStudio>
-			<UserProperties />
-		</VisualStudio>
-	</ProjectExtensions>
 
 </Project>

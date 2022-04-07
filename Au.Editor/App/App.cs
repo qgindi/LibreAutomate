@@ -6,8 +6,8 @@ using System.Linq;
 
 static class App {
 	public const string
-		AppNameLong = "Automaticode C#",
-		AppNameShort = "Automaticode"; //must be without spaces etc
+		AppNameLong = "C# Uiscripter",
+		AppNameShort = "Uiscripter"; //must be without spaces etc
 
 	public static string UserGuid;
 	internal static print.Server PrintServer;
@@ -62,7 +62,7 @@ static class App {
 #endif
 
 		perf.next('o');
-		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls used in JSON deserialization.
+		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls.
 									   //Debug_.PrintLoadedAssemblies(true, !true);
 		perf.next('s');
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
@@ -203,7 +203,8 @@ static class App {
 		if (!filesystem.exists(thisAppDoc)) {
 			try {
 				string s;
-				if (filesystem.exists(s = folders.Documents + "Autepad")) filesystem.move(s, thisAppDoc);
+				if (filesystem.exists(s = folders.Documents + "Automaticode")) filesystem.move(s, thisAppDoc);
+				else if (filesystem.exists(s = folders.Documents + "Autepad")) filesystem.move(s, thisAppDoc);
 				else if (filesystem.exists(s = folders.Documents + "Derobotizer")) filesystem.move(s, thisAppDoc);
 			}
 			catch { }
