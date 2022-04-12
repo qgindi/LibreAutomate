@@ -975,7 +975,8 @@ class InputRecorder : Window {
 			}
 			if (i < n - 1) b.AppendLine();
 		}
-		if (speed != null) b.Replace("\n", "\n\t");
+		//if (speed != null)
+			b.Replace("\n", "\n\t");
 		b.Append("\r\n}");
 
 		return b.ToString();

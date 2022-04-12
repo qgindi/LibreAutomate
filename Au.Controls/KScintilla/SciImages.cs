@@ -483,7 +483,7 @@ namespace Au.Controls
 
 			//info: maybe half of this code is to avoid SCI_GETTEXTRANGE when we can use n.textUTF8.
 			//	Eg can use n.textUTF8 when added all text or appended lines. These cases are the most important for good performance.
-			//	Cannot use n.textUTF8 eg when editing in a middle of a line, because we need whole line, not just the inserted part.
+			//	Cannot use n.textUTF8 eg when editing in the middle of a line, because we need whole line, not just the inserted part.
 
 			byte* s = null;
 			int from = n.position, to = from + (inserted ? n.length : 0), len = 0, firstLine = 0, textPos = 0;

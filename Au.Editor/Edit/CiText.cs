@@ -267,6 +267,7 @@ class CiText
 			case TextTags.Label:
 			case TextTags.ContainerStart:
 			case TextTags.ContainerEnd:
+			case TextTags.AnonymousTypeIndicator:
 			case TextTags.ErrorType:
 				break;
 			default:

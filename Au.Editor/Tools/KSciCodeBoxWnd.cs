@@ -158,7 +158,7 @@ class KSciCodeBoxWnd : KSciCodeBox {
 	static _WndFindParsing _ParseWndFind(string code, bool test) {
 		if (code.NE()) return null;
 		var p = new _WndFindParsing();
-		var parseOpt = new CSharpParseOptions(LanguageVersion.Latest);
+		var parseOpt = new CSharpParseOptions(LanguageVersion.Preview);
 		var cu = CSharpSyntaxTree.ParseText(code, parseOpt, "", Encoding.UTF8).GetRoot() as CompilationUnitSyntax; //fast
 		foreach (var g1 in cu.Members) {
 			if (g1 is not GlobalStatementSyntax g) break;

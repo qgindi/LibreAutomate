@@ -15,17 +15,21 @@ static class QuickCapture {
 	}
 
 	public static void RegisterHotkeys() {
-		_Register(ref _rk1, ERegisteredHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick);
-		_Register(ref _rk2, ERegisteredHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd);
-		_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm);
+		_Register(ref _rk1, ERegisteredHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing));
+		_Register(ref _rk2, ERegisteredHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd));
+		_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm));
 
-		void _Register(ref RegisteredHotkey rk, ERegisteredHotkeyId id, string keys) { //ref, not in!
-			if (keys.NE()) return;
-			try {
-				if (!rk.Register((int)id, keys, App.Hmain))
-					print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
+		static void _Register(ref RegisteredHotkey rk, ERegisteredHotkeyId id, string keys, string menu) { //ref, not in!
+			if (!keys.NE()) {
+				try {
+					if (!rk.Register((int)id, keys, App.Hmain)) {
+						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
+						keys = null;
+					}
+				}
+				catch (Exception ex) { print.it(ex); keys = null; }
 			}
-			catch (Exception ex) { print.it(ex); }
+			App.Commands[menu].MenuItem.InputGestureText = keys;
 		}
 	}
 
@@ -62,8 +66,8 @@ static class QuickCapture {
 			w.MapScreenToClient(ref p);
 			return $"\r\nmouse.click({v}, {p.x}, {p.y});{screenshot}";
 		}
-		m["Click window"] = _ => _Insert(_Wnd_Find(w, default) + _Click(w, "w"), enclose: true);
-		m["Click control"] = _ => _Insert(_Wnd_Find(w, c) + _Click(c, "c"), enclose: true);
+		m["Click window"] = _ => _Insert(_Wnd_Find(w, default) + _Click(w, "w"));
+		m["Click control"] = _ => _Insert(_Wnd_Find(w, c) + _Click(c, "c"));
 		m.Last.IsDisabled = c.Is0;
 		//CONSIDER: UI element
 		m["Click screen"] = _ => _Insert($"mouse.click({p.x}, {p.y});{screenshot}");
@@ -126,10 +130,9 @@ static class QuickCapture {
 		return f.Format();
 	}
 
-	static void _Insert(string s, bool enclose = false) {
+	static void _Insert(string s) {
 		//print.it(s);
-		if (enclose) s = "{\r\n" + s + "\r\n}";
-		InsertCode.Statements(s/*, fold: s.Contains("/*image:\r\n")*/);
+		InsertCode.Statements(s);
 	}
 
 	public static void ToolDwnd() {

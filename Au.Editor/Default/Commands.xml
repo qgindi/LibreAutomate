@@ -52,10 +52,13 @@ All attributes are optional. The Example command contains all.
 		<Find separator="" />
 	</Edit>
 	<Tools>
-		<Options />
-		<Icons />
-		<Input_recorder separator="" />
+		<Input_recorder />
+		<wnd />
+		<elm />
+		<uiimage />
 		<Keys />
+		<Icons separator="" />
+		<Options />
 	</Tools>
 	<Help>
 		

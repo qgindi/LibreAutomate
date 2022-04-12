@@ -7,6 +7,7 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// <i>image</i> argument of "add item" functions can be:
+/// - icon name, like "*Pack.Icon color" (you can get it from the Icons dialog). See <see cref="ImageUtil.LoadWpfImageElement"/>.
 /// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like ".txt", etc.
 /// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
 /// - string with prefix "image:" - Base64 encoded image file. Can be created with the "Find image..." dialog.
@@ -137,7 +138,7 @@ public abstract partial class MTBase {
 			catch (Exception e1) { _OnException(null, e1); }
 
 			void _OnException(string s, Exception e) {
-				print.it($"<>Failed to load image. {e?.ToStringWithoutStack() ?? s}. {_SourceLink(x, "Edit")}");
+				print.it($"<>Failed to load image. {e?.ToStringWithoutStack().TrimEnd('.') ?? s}. {_SourceLink(x, "Edit")}");
 			}
 			break;
 		case StockIcon si:
@@ -321,9 +322,6 @@ public abstract partial class MTBase {
 			actionException = mt.ActionException;
 			pathInTooltip = mt.PathInTooltip;
 		}
-		//TODO: "*icon" will not work in exe.
-		//	On the dev computer may work because uses the same cache file.
-		//	For users the best would be to auto-embed the XAML when building exe. But difficult to implement.
 
 		///
 		public override string ToString() => Text;

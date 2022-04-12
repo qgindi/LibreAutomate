@@ -784,10 +784,6 @@ class Delm : KDialogWindow
 			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_ActionIsFinder) {
 				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
 			}
-			if (!_Opt.Has(_EOptions.NoScope)) {
-				string newline = _ActionIsAction ? null : "\r\n"; //if no action, add empty line
-				s = "{\r\n" + s + newline + "\r\n}";
-			}
 			InsertCode.Statements(s);
 			if (!hotkey) {
 				_close = true;
@@ -1471,7 +1467,6 @@ class Delm : KDialogWindow
 		var cAT = m.AddCheck("Auto test find", _Opt.Has(_EOptions.AutoTest)); cAT.Tooltip = "Test find when captured";
 		var cWA = m.AddCheck(".Activate()", _Opt.Has(_EOptions.Activate)); cWA.Tooltip = "Append .Activate() to wnd.find(...), unless the window looks like does not like to be activated";
 		//var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cNS.Tooltip = "Insert code without { } and don't use elm e with action";
-		var cNS = m.AddCheck("No { }", _Opt.Has(_EOptions.NoScope)); cNS.Tooltip = "Insert the code without { }";
 		m.Separator();
 		m["Save action"] = _ => {
 			App.Settings.delm.actionn = s_actions[_iAction].name;
@@ -1486,7 +1481,6 @@ class Delm : KDialogWindow
 		_SetOpt(_EOptions.AutoTest, cAT.IsChecked);
 		//bool format = _SetOpt(_EOptions.Compact, cCC.IsChecked);
 		//if (format) _FormatCode();
-		_SetOpt(_EOptions.NoScope, cNS.IsChecked);
 		_SetOpt(_EOptions.Activate, cWA.IsChecked);
 	}
 
@@ -1494,7 +1488,7 @@ class Delm : KDialogWindow
 	enum _EOptions
 	{
 		AutoTest = 1,
-		NoScope = 1 << 1,
+		//NoScope = 1 << 1, //rejected
 		MouseXY = 1 << 2,
 		NoWait = 1 << 3,
 		MouseScroll = 1 << 4,

@@ -234,8 +234,8 @@ static class Menus {
 		[Command("Find _image", image = "*Material.ImageSearchOutline #008EEE")]
 		public static void uiimage() { Duiimage.Dialog(); }
 
-		[Command("Quick capturing info")]
-		public static void Quick_capture() { QuickCapture.Info(); }
+		[Command]
+		public static void Quick_capturing() { QuickCapture.Info(); }
 
 		[Command(separator = true, keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #008EEE")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }

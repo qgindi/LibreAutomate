@@ -18,6 +18,13 @@ using Au.Compiler;
 
 //using System.Drawing;
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
+
 
 /*
 
@@ -46,12 +53,24 @@ static unsafe class Test {
 	//	}
 
 	public static void FromMenubar() {
+		print.clear();
+		//		var s = @"var w = wnd.find(1, ""name"", ""class"");
+		//var w2 = w.Child(""name"");
+		//int args = 20;";
+		//		//s = @"var s = ""a""; var s = ""b"";";
+		//		InsertCode.Statements(s);
 
+		InsertCode.SetMenuToolbarItemIcon("*Unicons.Thunderstorm #0D84F2");
 
 		//TestMarkdig();
 
 		//if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token, findInsideTrivia: keys.isScrollLock)) return;
-		////CiUtil.PrintNode(token);
+		//////CiUtil.PrintNode(token);
+		//var node = token.Parent;
+		//print.it("---------");
+		//foreach (var v in node.AncestorsAndSelf()) CiUtil.PrintNode(v);
+		//print.it("---------");
+		//for(var v=node;v!=null; v=v.Parent) CiUtil.PrintNode(v);
 
 		//var pos16 = cd.pos16;
 		//bool? inString = token.IsInString(pos16, cd.code, out var x);

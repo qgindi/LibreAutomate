@@ -129,11 +129,11 @@ namespace Au.More
 		/// - resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="ResourceUtil.GetXamlObject"/> if ends with ".xaml", else <see cref="ResourceUtil.GetWpfImage"/>.
 		/// - Base64 encoded image string with prefix "image:"; uses<see cref="LoadImageStreamFromString"/>.
 		/// - XAML string that starts with "&lt;".
-		/// - XAML icon name like "*Pack.Icon color"; uses <see cref="script.editor.GetIcon"/>, unavailable if editor isn't running.
+		/// - XAML icon name, like "*Pack.Icon color" (you can get it from the Icons dialog); if literal string and using default compiler, the compiler adds XAML to the assembly as a string resource, else this function tries to get XAML from database and fails if editor isn't running.
 		/// </param>
 		/// <exception cref="Exception"></exception>
 		/// <remarks>
-		/// If <i>image</i> starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
+		/// If <i>image</i> is XAML icon name or starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
 		/// </remarks>
 		public static FrameworkElement LoadWpfImageElement(string image) {
 			if (image.Starts('*')) {

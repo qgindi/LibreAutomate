@@ -5,8 +5,7 @@ using System.Windows.Markup;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Gets managed resources from a .NET assembly.
 	/// </summary>
@@ -16,8 +15,7 @@ namespace Au.More
 	/// By default loads resources from the app entry assembly. In script with role miniProgram - from the script's assembly. To specify other loaded assembly, use name like "&lt;AssemblyName&gt;file.txt".
 	/// Does not use caching. Creates new object even when loading the resource not the first time.
 	/// </remarks>
-	public static class ResourceUtil
-	{
+	public static class ResourceUtil {
 		/// <summary>
 		/// Gets resource of any type.
 		/// </summary>
@@ -65,6 +63,8 @@ namespace Au.More
 			}
 			throw new InvalidOperationException($"Resource '{name}' is not string, byte[] or stream; it is {o.GetType().Name}.");
 		}
+
+		internal static string TryGetString_(string name) => _TryGetObject(ref name) as string;
 
 		/// <summary>
 		/// Gets byte[].
@@ -186,7 +186,11 @@ namespace Au.More
 			return _RS(ref name).GetObject(name) ?? throw new FileNotFoundException($"Cannot find resource '{name}'.");
 		}
 
-		static ResourceSet _RS(ref string name) {
+		static object _TryGetObject(ref string name) {
+			return _RS(ref name, true)?.GetObject(name);
+		}
+
+		static ResourceSet _RS(ref string name, bool noThrow = false) {
 			if (name.Starts("resource:")) name = name[9..];
 			string asmName = ""; int i;
 			if (name.Starts('<') && (i = name.IndexOf('>')) > 1) {
@@ -195,15 +199,20 @@ namespace Au.More
 			}
 			name = name.Lower(); //first time 15-40 ms, the slowest part. Just calls ToLowerInvariant.
 
-			return s_dict.GetOrAdd(asmName, k => {
-				var asm = k.Length == 0 ? Assembly.GetEntryAssembly() : _FindAssembly(k);
-				if (asm == null) throw new FileNotFoundException($"Cannot find loaded resource assembly '{asmName}'.");
-				var rm = new ResourceManager(asm.GetName().Name + ".g", asm);
-				return rm.GetResourceSet(CultureInfo.InvariantCulture, true, false) ?? throw new FileNotFoundException($"Cannot find resources in assembly '{asmName}'.");
-			});
+			lock (s_dict) {
+				if (!s_dict.TryGetValue(asmName, out var rs)) {
+					var asm = asmName.Length == 0 ? Assembly.GetEntryAssembly() : _FindAssembly(asmName);
+					if (asm == null) return noThrow ? null : throw new FileNotFoundException($"Cannot find loaded resource assembly '{asmName}'.");
+					var rm = new ResourceManager(asm.GetName().Name + ".g", asm);
+					rs = rm.GetResourceSet(CultureInfo.InvariantCulture, true, false);
+					if (rs == null) return noThrow ? null : throw new FileNotFoundException($"Cannot find resources in assembly '{asmName}'.");
+					s_dict.Add(asmName, rs);
+				}
+				return rs;
+			}
 		}
 
-		static ConcurrentDictionary<string, ResourceSet> s_dict = new(StringComparer.OrdinalIgnoreCase);
+		static readonly Dictionary<string, ResourceSet> s_dict = new(StringComparer.OrdinalIgnoreCase);
 
 		static Assembly _FindAssembly(string name) {
 			foreach (var v in AppDomain.CurrentDomain.GetAssemblies()) if (v.GetName().Name.Eqi(name)) return v;

@@ -671,13 +671,23 @@ namespace Au {
 
 			/// <summary>
 			/// Gets icon string in specified format.
-			/// Returns null if editor isn't running or if file does not exist.
 			/// </summary>
+			/// <returns>Returns null if editor isn't running or if file does not exist. Read more in Remarks.</returns>
 			/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
 			/// <param name="what">The format of input and output strings.</param>
+			/// <remarks>
+			/// If <i>what</i> is <b>IconNameToXaml</b> and <i>file</i> is literal string and using default compiler, the compiler adds XAML to assembly resources and this function gets it from there, not from editor, and this function works everywhere.
+			/// </remarks>
 			public static string GetIcon(string file, EGetIcon what) {
 				var del = IconNameToXaml_;
 				if (del != null) return del(file, what);
+
+				if(what == EGetIcon.IconNameToXaml && script.role != SRole.EditorExtension) {
+					if (file.Starts("*<")) file = file[1..]; //"*<library>*icon", else "*icon"
+					var rr = ResourceUtil.TryGetString_(file);
+					if (rr != null) return rr;
+					//our compiler (_CreateManagedResources) adds XAML of icons to resources, but only from literal strings
+				}
 
 				var w = WndMsg_; if (w.Is0) return null;
 				WndCopyData.SendReceive<char>(w, (int)Math2.MakeLparam(10, (int)what), file, out string r);
@@ -686,9 +696,6 @@ namespace Au {
 				//	Nothing good if the toolbar etc also uses XAML icons directly, eg for non-script items. And serializing is slow.
 				//	Now not actual because of cache.
 			}
-
-			//FUTURE: if editor isn't running, let GetIcon("icon name") try to get icon directly from database if available.
-			//public static string IconDatabasePath { get; set; }
 
 			/// <summary>
 			/// Editor sets this. Library uses it to avoid sendmessage.
@@ -743,7 +750,7 @@ namespace Au.Types {
 	public enum EGetIcon {
 		/// <summary>
 		/// Input is a file or folder in current workspace. Can be relative path in workspace (like @"\Folder\File.cs") or full path or filename.
-		/// Output must be icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. See menu -> Tools -> Icons.
+		/// Output must be icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. See menu Tools -> Icons.
 		/// </summary>
 		PathToIconName,
 
