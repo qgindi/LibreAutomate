@@ -440,7 +440,6 @@ class Duiimage : KDialogWindow
 			base.Close();
 		} else if (_code.zText.NullIfEmpty_() is string s) {
 			string newline = _cbAction.SelectedIndex is 0 or >= c_finder ? "\r\n" : null; //if no action, add empty line
-			s = "{\r\n" + s + newline + "\r\n}"; //separates multiline code blocks, and don't need unique variable names
 			InsertCode.Statements(s);
 			//if (_Opt.Has(_EOptions.InsertClose)) {
 			//	base.Close();

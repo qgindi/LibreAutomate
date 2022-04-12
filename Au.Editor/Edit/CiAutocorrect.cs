@@ -675,44 +675,26 @@ class CiAutocorrect {
 			}
 
 			//get indentation
-			bool prevBlock = false;
-			foreach (var v in node.AncestorsAndSelf()) {
+			for (var v = node; v != null; v = v.Parent) {
 				//CiUtil.PrintNode(v);
-				if (v is BlockSyntax) {
-					prevBlock = true;
-				} else {
-					if (prevBlock) { //don't indent block that is child of eg 'if' which adds indentation.
-									 //print.it("-");
-						prevBlock = false;
-						indent--;
-					}
-					switch (v) {
-					case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
-					case AccessorListSyntax:
-					case ElseClauseSyntax:
-					case CatchClauseSyntax or FinallyClauseSyntax:
-					case LabeledStatementSyntax:
-					case AttributeListSyntax:
-					case NamespaceDeclarationSyntax or FileScopedNamespaceDeclarationSyntax: //don't indent namespaces
-					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
-					case UsingStatementSyntax k4 when k4.Parent is UsingStatementSyntax: //don't indent multiple using()
-					case FixedStatementSyntax k5 when k5.Parent is FixedStatementSyntax: //don't indent multiple fixed()
-																						 //print.it("-" + v.GetType().Name, v.Span, pos);
-						continue;
-					case ExpressionSyntax:
-					case BaseArgumentListSyntax:
-					case ArgumentSyntax:
-					case EqualsValueClauseSyntax:
-					case VariableDeclaratorSyntax:
-					case VariableDeclarationSyntax:
-						//print.it("--" + v.GetType().Name, v.Span, pos);
-						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
-					case CompilationUnitSyntax:
-					case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //don't indent script class content
-					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //don't indent script constructor content
-					case GlobalStatementSyntax: //don't indent top-level statements
-						goto endLoop1;
-					}
+				switch (v) {
+				case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax): //don't indent block that is child of eg 'if' which adds indentation
+				case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
+				case ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax:
+				case LabeledStatementSyntax or AttributeListSyntax or AccessorListSyntax:
+				case NamespaceDeclarationSyntax or FileScopedNamespaceDeclarationSyntax: //don't indent namespaces
+				case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
+				case UsingStatementSyntax k4 when k4.Parent is UsingStatementSyntax: //don't indent multiple using()
+				case FixedStatementSyntax k5 when k5.Parent is FixedStatementSyntax: //don't indent multiple fixed()
+				case BaseArgumentListSyntax or ArgumentSyntax:
+				case ExpressionSyntax or EqualsValueClauseSyntax:
+				case VariableDeclaratorSyntax or VariableDeclarationSyntax:
+					//print.it("--" + v.GetType().Name, v.Span, pos);
+					continue; //these can be if we are in a lambda block. And maybe more, nevermind.
+				case GlobalStatementSyntax or CompilationUnitSyntax: //don't indent top-level statements
+				case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //don't indent script class content
+				case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //don't indent script constructor content
+					goto endLoop1;
 				}
 				//print.it(v.GetType().Name, v.Span, pos);
 				indent++;
@@ -780,7 +762,9 @@ class CiAutocorrect {
 					b.Append('\t', indent);
 				}
 				b.AppendLine();
-				if (indent > 0 && isBraceLine && !dontIndent) indent--;
+				if (indent > 0 && isBraceLine && !dontIndent)
+					//if(!(node is BlockSyntax && node.Parent is BlockSyntax))
+					indent--;
 			}
 			if (indent > 0) b.Append('\t', indent);
 

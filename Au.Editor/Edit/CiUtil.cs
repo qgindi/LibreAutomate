@@ -389,23 +389,18 @@ global using Au.More;
 	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
 	/// </summary>
 	public static bool IsScript(string code) {
-		ProjectId projectId = ProjectId.CreateNewId();
-		DocumentId documentId = DocumentId.CreateNewId(projectId);
-		using var ws = new AdhocWorkspace();
-		var sol = ws.CurrentSolution.AddProject(projectId, "p", "p", LanguageNames.CSharp).AddDocument(documentId, "f.cs", code);
-		var document = sol.GetDocument(documentId);
-		var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		var cu = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview), "", Encoding.UTF8).GetCompilationUnitRoot();
 		var f = cu.Members.FirstOrDefault();
 		if (f is GlobalStatementSyntax or null) return true;
 		if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
-		if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault().Identifier.Text == "Main") return true;
+		if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text == "Main") return true;
 		return false;
 	}
 
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{x}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString())}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 

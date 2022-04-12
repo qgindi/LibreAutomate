@@ -110,7 +110,7 @@ class CiTools {
 				if (good1 && good2) s = "\"%\""; else if (good1) s = "\"%\", "; else if (good2) s = ", \"%\""; else s = ", \"%\", ";
 				InsertCode.TextSimply(s);
 			} else {
-				InsertCode.Statements("keys.send(\"%\");", goToPercent: true); //rejected. Eg could be keys.send("", here).
+				InsertCode.Statements("keys.send(\"%\");", ICSFlags.GoToPercent); //rejected. Eg could be keys.send("", here).
 			}
 			retry = true;
 			goto g1;

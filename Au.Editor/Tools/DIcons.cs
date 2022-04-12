@@ -4,8 +4,7 @@ using System.Linq;
 using Au.Controls;
 using Au.Tools;
 
-class DIcons : KDialogWindow
-{
+class DIcons : KDialogWindow {
 	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>
 	public static void ZShow(bool fileIcon = false, string find = null) {
 		if (s_dialog == null) {
@@ -21,6 +20,17 @@ class DIcons : KDialogWindow
 	protected override void OnClosed(EventArgs e) {
 		s_dialog = null;
 		base.OnClosed(e);
+	}
+
+	enum _Action {
+		FileIcon = 1,
+		MenuIcon,
+		InsertXamlVar,
+		InsertXamlField,
+		CopyName,
+		CopyXaml,
+		ExportXaml,
+		ExportIcon,
 	}
 
 	List<_Item> _a;
@@ -65,31 +75,44 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.End();
 		b.AddSeparator().Margin("B20");
 
+		_Action lastAction = 0;
+		tv.ItemActivated += (o, e) => {
+			switch (lastAction) {
+			case 0: break;
+			case _Action.FileIcon: _SetIcon(tv); break;
+			default: _InsertCodeOrExport(tv, lastAction); break;
+			}
+		};
+
 		b.StartStack<Expander>(out var exp1, "Set icon of selected files");
-		b.AddButton(out var bThis, "This", _ => _SetIcon(tv)).Width(70).Disabled();
+		b.AddButton(out var bThis, "This", _ => { _SetIcon(tv); lastAction = _Action.FileIcon; }).Width(70).Disabled();
 		b.AddButton("Default", _ => _SetIcon(null)).Width(70);
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.AddButton("Show current", _ => _tName.Text = FilesModel.TreeControl.SelectedItems.FirstOrDefault()?.CustomIconName).Margin("L20");
 		b.End();
-		if(expandFileIcon) exp1.IsExpanded = true;
+		if (expandFileIcon) exp1.IsExpanded = true;
 
-		b.StartStack<Expander>("Insert code for menu/toolbar/etc icon", vertical: true);
-		b.Add(out KCheckBox setClipboard, "Clipboard");
+		b.StartGrid<Expander>("Insert code for menu/toolbar/etc icon");
+		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
-		b.Add<Label>("Line: ");
-		b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, 0)).Disabled();
-		b.AddButton(out var bCodeField, "Field = XAML", _ => _InsertCodeOrExport(tv, 1)).Disabled();
+		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled();
 		b.End();
+		b.R.Add<Label>("Insert line: ");
 		b.StartStack();
-		b.Add<Label>("Text: ");
-		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, 3)).Width(70).Disabled().Tooltip("Shorter string than XAML, but works only when editor is running.\nCan be used with custom menus and toolbars, editor menus and toolbars (edit Commands.xml), script.editor.GetIcon, IconImageCache, ImageUtil, output tag <image>.");
-		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, 2)).Width(70).Disabled();
+		b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, _Action.InsertXamlVar)).Disabled();
+		b.AddButton(out var bCodeField, "Field = XAML", _ => _InsertCodeOrExport(tv, _Action.InsertXamlField)).Disabled();
 		b.End();
+		b.R.Add<Label>("Copy text: ");
+		b.StartStack();
+		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, _Action.CopyName)).Width(70).Disabled().Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars, editor menus and toolbars (edit Commands.xml), script.editor.GetIcon, IconImageCache, ImageUtil, output tag <image>.");
+		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
+		b.End();
+		b.Add<Label>("Tip: double-clicking an icon clicks the same button.");
 		b.End();
 
 		b.StartStack<Expander>("Export to current workspace folder");
-		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, 10)).Width(70).Disabled();
-		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(tv, 11)).Width(70).Disabled();
+		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, _Action.ExportXaml)).Width(70).Disabled();
+		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(tv, _Action.ExportIcon)).Width(70).Disabled();
 		b.Add("sizes", out iconSizes, "16,24,32,48,64").Width(100);
 		b.End();
 
@@ -171,6 +194,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 
 		void _EnableControls(bool enable) {
 			bThis.IsEnabled = enable;
+			bMenuItem.IsEnabled = enable;
 			bCodeVar.IsEnabled = enable;
 			bCodeField.IsEnabled = enable;
 			bCodeXaml.IsEnabled = enable;
@@ -186,19 +210,22 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			}
 		}
 
-		void _InsertCodeOrExport(KTreeView tv, int what) {
+		void _InsertCodeOrExport(KTreeView tv, _Action what) {
+			lastAction = what;
 			if (tv.SelectedItem is not _Item k) return;
 			string code = null;
-			if (what == 3) {
+			if (what == _Action.MenuIcon) {
+				InsertCode.SetMenuToolbarItemIcon(_ColorName(k));
+			} else if (what == _Action.CopyName) {
 				code = _ColorName(k);
 			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {
 				xaml = xaml.Replace('\"', '\'').RxReplace(@"\R\s*", "");
 				switch (what) {
-				case 0: code = $"string icon{k._name} = \"{xaml}\";"; break;
-				case 1: code = $"public const string {k._name} = \"{xaml}\";"; break;
-				case 2: code = xaml; break;
-				case 10: _Export(false); break;
-				case 11: _Export(true); break;
+				case _Action.InsertXamlVar: code = $"string icon{k._name} = \"{xaml}\";"; break;
+				case _Action.InsertXamlField: code = $"public const string {k._name} = \"{xaml}\";"; break;
+				case _Action.CopyXaml: code = xaml; break;
+				case _Action.ExportXaml: _Export(false); break;
+				case _Action.ExportIcon: _Export(true); break;
 				}
 
 				void _Export(bool ico) {
@@ -219,8 +246,8 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			}
 
 			if (code != null) {
-				if (setClipboard.IsChecked == true) clipboard.text = code;
-				else if (what is 0 or 1) InsertCode.Statements(code);
+				if (what is _Action.CopyName or _Action.CopyXaml) clipboard.text = code;
+				else if (what is _Action.InsertXamlVar or _Action.InsertXamlField) InsertCode.Statements(code);
 				else InsertCode.TextSimply(code);
 			}
 		}
@@ -269,8 +296,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		base.OnDpiChanged(oldDpi, newDpi);
 	}
 
-	class _Item : ITreeViewItem
-	{
+	class _Item : ITreeViewItem {
 		public string _table, _name;
 		public int _color;
 

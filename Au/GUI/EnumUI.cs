@@ -32,7 +32,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </example>
 	/// <seealso cref="popupMenu.AddEnum{TEnum}"/>
 	public EnumUI(popupMenu m, TEnum init = default, (TEnum value, string text)[] items = null) {
-		//TODO: in all ctors add !! when compiler supports it.
+		//FUTURE: in all ctors add !! when compiler supports it.
 		_isFlags = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
 		bool cns = m.CheckDontClose; if (_isFlags) m.CheckDontClose = true;
 		_InitArray(items);

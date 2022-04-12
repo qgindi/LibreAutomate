@@ -2,8 +2,7 @@
 using System.Windows;
 using Au.Tools;
 
-partial class SciCode
-{
+partial class SciCode {
 	void _InitDragDrop() {
 		Api.RevokeDragDrop(Hwnd); //of Scintilla
 		Api.RegisterDragDrop(Hwnd, _dt = new _DragDrop(this));
@@ -12,8 +11,7 @@ partial class SciCode
 
 	_DragDrop _dt;
 
-	class _DragDrop : Api.IDropTarget
-	{
+	class _DragDrop : Api.IDropTarget {
 		readonly SciCode _sci;
 		DDData _data;
 		bool _canDrop, _justText;
@@ -81,7 +79,7 @@ partial class SciCode
 			_GetDropPos(ref xy, out int pos8);
 			string s = null;
 			var b = new StringBuilder();
-			int what = 0;
+			int what = 0, fileIndex = 0;
 
 			if (_justText) {
 				s = _data.text;
@@ -120,9 +118,8 @@ partial class SciCode
 					_GetShell(_data.shell, out var shells, out var names);
 					if (shells != null) {
 						for (int i = 0; i < shells.Length; i++) {
-							if (what == 0) { _AppendFile(shells[i], null); continue; }
-							var r = new TUtil.PathInfo(shells[i]).GetCode();
-							_AppendFile(r.path, names[i]);
+							if (what == 0) _AppendFile(shells[i], null);
+							else _AppendFile(new TUtil.PathInfo(shells[i]).GetCode().path, names[i]);
 						}
 						s = b.ToString();
 					}
@@ -134,13 +131,18 @@ partial class SciCode
 
 			if (!s.NE()) {
 				var z = new Sci_DragDropData { x = xy.x, y = xy.y };
-				var s8 = Encoding.UTF8.GetBytes(s);
-				fixed (byte* p8 = s8) {
-					z.text = p8;
-					z.len = s8.Length;
-					if (!_justText || 0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
-					CodeInfo.Pasting(_sci);
-					_sci.Call(SCI_DRAGDROP, 2, &z);
+				if (_justText) { //a simple drag-drop inside scintilla or text-only from outside
+					var s8 = Encoding.UTF8.GetBytes(s);
+					fixed (byte* p8 = s8) {
+						z.text = p8;
+						z.len = s8.Length;
+						if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
+						CodeInfo.Pasting(_sci);
+						_sci.Call(SCI_DRAGDROP, 2, &z);
+					}
+				} else { //file, script or URL
+					_sci.Call(SCI_DRAGDROP, 2, &z); //just hides the drag indicator and sets caret position
+					InsertCode.Statements(s, ICSFlags.NoFocus);
 				}
 				if (!_sci.IsFocused && _sci.Hwnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
 					_sci._noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
@@ -152,14 +154,18 @@ partial class SciCode
 			}
 
 			void _AppendFile(string path, string name, string args = null, FileNode fn = null) {
-				b.Append('\t', _sci.zLineIndentationFromPos(false, pos8));
+				if (b.Length > 0) b.AppendLine();
 				if (what == 0) {
 					b.Append(path);
 				} else {
 					name = name.Escape();
 					switch (what) {
-					case 1: case 2: case 11: b.Append("string s = "); break; //not var s, because may be FolderPath
-					case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
+					case 1: case 2: case 11:
+						b.AppendFormat("string s{0} = ", ++fileIndex); //not var s, because may be FolderPath
+						break;
+					case 4: case 13:
+						b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name);
+						break;
 					}
 					if (what is 12 or 13) b.Append("run.it(");
 					if (what is 11 or 12 && (path.Starts("\":: ") || path.Like("folders.shell.*\""))) b.AppendFormat("/* {0} */ ", name);
@@ -175,7 +181,6 @@ partial class SciCode
 					}
 					b.Append(';');
 				}
-				b.AppendLine();
 			}
 
 			static unsafe void _GetShell(byte[] b, out string[] shells, out string[] names) {

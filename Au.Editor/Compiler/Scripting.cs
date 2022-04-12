@@ -38,7 +38,7 @@ namespace Au.Compiler
 				//print.it(code);
 			}
 
-			var parseOpt = new CSharpParseOptions(LanguageVersion.Latest);
+			var parseOpt = new CSharpParseOptions(LanguageVersion.Preview);
 
 			SyntaxTree treeGlobal = null;
 			if (addGlobalCs) {

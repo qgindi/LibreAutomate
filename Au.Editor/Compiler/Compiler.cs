@@ -2,6 +2,7 @@ using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
 using System.Reflection.Metadata;
@@ -147,15 +148,22 @@ namespace Au.Compiler {
 				//use GUID, not counter, because may be loaded old assembly from cache with same counter value
 			} else if (m.Role == ERole.miniProgram) {
 				//workaround for: coreclr_execute_assembly and even AssemblyLoadContext.Default.LoadFromAssemblyPath fail
-				//	if asmName is the same as of a .NET or folders.ThisApp assembly.
+				//	if asmName is the same as of a .NET etc assembly.
 				//	It seems it at first ignores path and tries to find assembly by name.
-				//	But now need to be careful. It could break something. Eg with WPF resources use "pack:...*AssemblyName...".
-				asmName = "*" + asmName;
+				//	But be careful. It could break something. Eg with WPF resources use "pack:...~AssemblyName...".
+				asmName = "~" + asmName;
 			}
 
 			if (m.TestInternal is string[] testInternal) {
 				InternalsVisible.Add(asmName, testInternal);
 				aFinally += () => InternalsVisible.Remove(asmName); //this func is called from try/catch/finally which calls aFinally
+			}
+
+			List<ResourceDescription> resMan = null;
+			if (needOutputFiles) {
+				resMan = _CreateManagedResources(m, asmName, trees); //before creating compilation. May modify trees[] elements.
+				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
+				p1.Next('y');
 			}
 
 			var cOpt = m.CreateCompilationOptions();
@@ -165,7 +173,6 @@ namespace Au.Compiler {
 			string xdFile = null;
 			Stream xdStream = null;
 			Stream resNat = null;
-			List<ResourceDescription> resMan = null;
 			EmitOptions eOpt = null;
 
 			if (needOutputFiles) {
@@ -193,9 +200,6 @@ namespace Au.Compiler {
 
 				if (m.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
 					xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + m.Name + ".xml"));
-
-				resMan = _CreateManagedResources(m, asmName);
-				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
 				resNat = _CreateNativeResources(m, compilation);
 				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
@@ -477,69 +481,97 @@ namespace Au.Compiler {
 			return (dr, dn);
 		}
 
-		static List<ResourceDescription> _CreateManagedResources(MetaComments m, string asmName) {
-			var a = m.Resources;
-			if (a.NE_()) return null;
-			var R = new List<ResourceDescription>();
+		static List<ResourceDescription> _CreateManagedResources(MetaComments m, string asmName, CSharpSyntaxTree[] trees) {
+			List<ResourceDescription> R = null;
 			ResourceWriter rw = null;
 			MemoryStream stream = null;
-			string resourcesName = asmName + ".g.resources";
 			FileNode curFile = null;
 
-			void _End() {
-				curFile = null;
-				if (rw == null) return;
+			try {
+				var a = m.Resources;
+				if (!a.NE_()) {
+					R ??= new();
+					foreach (var v in a) {
+						//if (v.f == null) { // /resources //rejected
+						//	_End();
+						//	resourcesName = v.s + ".resources";
+						//} else
+						if (v.f.IsFolder) {
+							foreach (var des in v.f.Descendants()) if (!des.IsFolder) _Add(des, v.s, v.f);
+						} else {
+							_Add(v.f, v.s);
+						}
+					}
+					curFile = null;
+
+					void _Add(FileNode f, string resType, FileNode folder = null) {
+						curFile = f;
+						string name = f.Name, path = f.FilePath;
+						if (folder != null) for (var pa = f.Parent; pa != folder; pa = pa.Parent) name = pa.Name + "/" + name;
+						//print.it(f, resType, folder, name, path);
+						if (resType == "embedded") {
+							R.Add(new ResourceDescription(name, () => filesystem.loadStream(path), true));
+						} else {
+							name = name.Lower(); //else pack URI does not work
+							rw ??= new(stream = new());
+							switch (resType) {
+							case null:
+								//rw.AddResource(name, File.OpenRead(path), closeAfterWrite: true); //no, would not close on error
+								rw.AddResource(name, new MemoryStream(filesystem.loadBytes(path)));
+								break;
+							case "byte[]":
+								rw.AddResource(name, filesystem.loadBytes(path));
+								break;
+							case "string":
+								rw.AddResource(name, filesystem.loadText(path));
+								break;
+							case "strings":
+								var csv = csvTable.load(path);
+								if (csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
+								foreach (var row in csv.Rows) rw.AddResource(row[0], row[1]);
+								break;
+							default: throw new ArgumentException("error in meta: Incorrect /suffix");
+							}
+						}
+					}
+				}
+
+				//add XAML icons from strings like "*name #color"
+				if (m.Role != ERole.editorExtension) {
+					HashSet<string> hs = null;
+					for (int i = 0; i < trees.Length; i++) {
+						List<LiteralExpressionSyntax> ai = null;
+						var tree = trees[i];
+						var root = tree.GetCompilationUnitRoot();
+						foreach (var v in root.DescendantNodes()) {
+							if (v is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression)
+								&& les.Token.Value is string s && s.Length >= 10 && s[0] == '*'
+								&& DIcons.TryGetIconFromBigDB(s, out var xaml)) {
+								s = s.Lower();
+								if (!(hs ??= new()).Add(s)) continue;
+								R ??= new();
+								rw ??= new(stream = new());
+								rw.AddResource(s, xaml);
+								if (m.Role == ERole.classLibrary) (ai ??= new()).Add(les);
+							}
+						}
+						if (ai != null) { //in library need "*<asmName>*name #color"
+							var r2 = root.ReplaceNodes(ai, (n, _) => {
+								var s = n.Token.Value as string;
+								var tok = SyntaxFactory.Literal($"*<{asmName}>{s.Lower()}");
+								return SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, tok);
+							});
+							trees[i] = tree.WithRootAndOptions(r2, tree.Options) as CSharpSyntaxTree;
+						}
+					}
+				}
+
+				if (rw == null) return null;
 				rw.Generate();
 				var st = stream; stream = null; //to create new lambda delegate
 				st.Position = 0;
-				R.Add(new ResourceDescription(resourcesName, () => st, true));
+				R.Add(new ResourceDescription(asmName + ".g.resources", () => st, true));
 				rw = null;
-			}
-
-			void _Add(FileNode f, string resType, FileNode folder = null) {
-				curFile = f;
-				string name = f.Name, path = f.FilePath;
-				if (folder != null) for (var pa = f.Parent; pa != folder; pa = pa.Parent) name = pa.Name + "/" + name;
-				//print.it(f, resType, folder, name, path);
-				if (resType == "embedded") {
-					R.Add(new ResourceDescription(name, () => filesystem.loadStream(path), true));
-				} else {
-					name = name.Lower(); //else pack URI does not work
-					rw ??= new ResourceWriter(stream = new MemoryStream());
-					switch (resType) {
-					case null:
-						//rw.AddResource(name, File.OpenRead(path), closeAfterWrite: true); //no, would not close on error
-						rw.AddResource(name, new MemoryStream(filesystem.loadBytes(path)));
-						break;
-					case "byte[]":
-						rw.AddResource(name, filesystem.loadBytes(path));
-						break;
-					case "string":
-						rw.AddResource(name, filesystem.loadText(path));
-						break;
-					case "strings":
-						var csv = csvTable.load(path);
-						if (csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
-						foreach (var row in csv.Rows) rw.AddResource(row[0], row[1]);
-						break;
-					default: throw new ArgumentException("error in meta: Incorrect /suffix");
-					}
-				}
-			}
-
-			try {
-				foreach (var v in a) {
-					//if (v.f == null) { // /resources //rejected
-					//	_End();
-					//	resourcesName = v.s + ".resources";
-					//} else
-					if (v.f.IsFolder) {
-						foreach (var des in v.f.Descendants()) if (!des.IsFolder) _Add(des, v.s, v.f);
-					} else {
-						_Add(v.f, v.s);
-					}
-				}
-				_End();
 			}
 			catch (Exception e) {
 				rw?.Dispose();
@@ -547,6 +579,7 @@ namespace Au.Compiler {
 				return null;
 			}
 			//note: don't Close/Dispose rw. It closes stream. Compiler will close it. There is no other disposable data in rw.
+
 			return R;
 		}
 
