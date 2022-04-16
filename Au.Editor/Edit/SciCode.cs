@@ -89,6 +89,10 @@ partial class SciCode : KScintilla {
 		if (_fn.IsCodeFile) {
 			Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
 
+			Call(SCI_SETCARETLINEFRAME, 1);
+			Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_CARET_LINE_BACK, 0xe0e0e0);
+			Call(SCI_SETCARETLINEVISIBLEALWAYS, 1);
+
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
 			//	Scintilla and C++ lexer support it, but by default it is disabled.
 			//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
@@ -347,12 +351,12 @@ partial class SciCode : KScintilla {
 			//Dispatcher.InvokeAsync(() => CodeInfo.SciKillFocus(this));//no, dangerous
 			CodeInfo.SciKillFocus(this);
 			break;
-		//case Api.WM_LBUTTONUP:
-		//	//rejected. Sometimes I accidentally Ctrl+click and then wonder why it shows eg the github search dialog.
-		//	if (Keyboard.Modifiers == ModifierKeys.Control && !zIsSelection) {
-		//		Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
-		//	}
-		//	break;
+			//case Api.WM_LBUTTONUP:
+			//	//rejected. Sometimes I accidentally Ctrl+click and then wonder why it shows eg the github search dialog.
+			//	if (Keyboard.Modifiers == ModifierKeys.Control && !zIsSelection) {
+			//		Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
+			//	}
+			//	break;
 		}
 
 		return false;
@@ -453,14 +457,14 @@ partial class SciCode : KScintilla {
 			s = _ImageRemoveScreenshots(s);
 			new clipboardData().AddText(s).SetClipboard();
 		} else if (i2 != i1) {
-			if (!(isFragment || s_infoCopy)) {
-				s_infoCopy = true;
-				print.it("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
-			}
+			//if (!(isFragment || s_infoCopy)) {
+			//	s_infoCopy = true;
+			//	print.it("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
+			//}
 			Call(SCI_COPY);
 		}
 	}
-	static bool s_infoCopy;
+	//static bool s_infoCopy; //rejected. Often prints this info unnecessarily.
 
 	/// <summary>
 	/// Called when pasting (menu or Ctrl+V). Inserts text, possibly with processed forum bbcode etc.

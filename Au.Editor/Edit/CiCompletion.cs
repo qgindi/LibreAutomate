@@ -137,8 +137,7 @@ partial class CiCompletion {
 		//using var nogcr = keys.isScrollLock ? new Debug_.NoGcRegion(50_000_000) : default;
 
 		if (!cd.GetDocument()) return; //returns false if fails (unlikely)
-		Document document = cd.document;
-		Debug.Assert(code == document.GetTextAsync().Result.ToString());
+		var document = cd.document;
 		p1.Next('d');
 
 		if (ch == '/') {

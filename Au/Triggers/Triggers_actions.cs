@@ -1,7 +1,5 @@
-namespace Au.Triggers
-{
-	class TOptions
-	{
+namespace Au.Triggers {
+	class TOptions {
 		public Action<TOBAArgs> before;
 		public Action<TOBAArgs> after;
 		public sbyte thread; //>=0 dedicated or <0 TOThread
@@ -14,8 +12,7 @@ namespace Au.Triggers
 	class TOThread { public const sbyte Main = -1, New = -2, Pool = -3; }
 
 	[Flags]
-	enum TOFlags : byte
-	{
+	enum TOFlags : byte {
 		NoWarning = 1,
 		Single = 2,
 		//MtaThread = 4,
@@ -40,8 +37,7 @@ namespace Au.Triggers
 	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => print.it(opt.key.KeySpeed); //20
 	/// ]]></code>
 	/// </example>
-	public class TriggerOptions
-	{
+	public class TriggerOptions {
 		TOptions _new, _prev;
 
 		TOptions _New() => _new ??= (_prev?.Clone() ?? new TOptions());
@@ -163,8 +159,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// Arguments for <see cref="TriggerOptions.BeforeAction"/> and <see cref="TriggerOptions.AfterAction"/>.
 	/// </summary>
-	public struct TOBAArgs
-	{
+	public struct TOBAArgs {
 		internal TOBAArgs(TriggerArgs args) {
 			ActionArgs = args;
 			Exception = null;
@@ -182,8 +177,7 @@ namespace Au.Triggers
 		public Exception Exception { get; internal set; }
 	}
 
-	class TriggerActionThreads
-	{
+	class TriggerActionThreads {
 		public void Run(ActionTrigger trigger, TriggerArgs args, int muteMod) {
 			//perf.first();
 			Action actionWrapper = () => {
@@ -233,6 +227,7 @@ namespace Au.Triggers
 				finally {
 					oldOpt.Dispose();
 					if (o.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
+					if (o.thread != TOThread.Main) toolbar.TriggerActionEndedInNonmainThread_();
 				}
 			};
 			//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
@@ -307,8 +302,7 @@ namespace Au.Triggers
 		List<_Thread> _a = new();
 		ConcurrentDictionary<ActionTrigger, object> _d;
 
-		class _Thread
-		{
+		class _Thread {
 			struct _Action { public Action actionWrapper; public long time; }
 
 			AutoResetEvent _event;
@@ -335,7 +329,7 @@ namespace Au.Triggers
 									while (!_disposed) {
 										_Action x;
 										lock (_q) {
-											g1:
+										g1:
 											if (_q.Count == 0) { _running = false; break; }
 											x = _q.Dequeue();
 											if (x.time != 0 && perf.ms > x.time) goto g1;

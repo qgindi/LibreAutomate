@@ -292,9 +292,9 @@ m.Submenu("", m => {
 	m[""] = o => {  };
 });
 m.Separator();
-m["Run program example"] = o => run.it(folders.System + @"notepad.exe");
-m["Run script example"] = o => script.run("Script123456789.cs");
-m["Copy-paste example"] = o => {
+m["Run program|Tooltip"] = o => run.it(folders.System + @"notepad.exe");
+m["Run script"] = o => script.run("Script123456789.cs");
+m["Copy-paste"] = o => {
 	string s = clipboard.copy();
 	s = s.Upper();
 	clipboard.paste(s);
@@ -519,14 +519,15 @@ string _field;
 //Toolbar_RenameMe(); //show the toolbar at startup
 //Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = Toolbar_RenameMe; //attach the toolbar to the window
 //Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = o => { Toolbar_One(o); Toolbar_Two(o); } //attach 2 toolbars
-//Triggers.Mouse[TMEdge.TopInLeft25] = Toolbar_RenameMe; //show when the mouse touches the screen edge first time
+//Triggers.Mouse[TMEdge.TopInLeft25] = Toolbar_RenameMe; //show when the mouse cursor touches the screen edge
 void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	var t = new toolbar("Toolbar_RenameMe $random$");
 	if (t.FirstTime) {
 		
 	}
 	
-	t["Button1"] = o => {  };
+	t["Button1"] = o => { print.it("button clicked"); };
+	t["|Tooltip", image: "*EvaIcons.SyncOutline #496DDC"] = o => {  };
 	t[""] = o => {  };
 	t.Menu("Menu1", m => {
 		m[""] = o => {  };
