@@ -6,6 +6,8 @@ using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Windows.Input;
 using System.Windows;
 using Microsoft.CodeAnalysis.Completion;
@@ -351,14 +353,14 @@ static class CodeInfo {
 		/// Initializes all fields except document.
 		/// For sciDoc uses Panels.Editor.ZActiveDoc.
 		/// </summary>
+		/// <param name="pos">If -1, gets current position. If -2, gets selection start.</param>
 		public Context(int pos) {
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 
 			document = null;
 			sciDoc = Panels.Editor.ZActiveDoc;
 			code = sciDoc.zText;
-			if (pos == -1) pos = sciDoc.zCurrentPos16; else if (pos == -2) pos = sciDoc.zSelectionStart16;
-			pos16 = pos;
+			pos16 = pos switch { -1 => sciDoc.zCurrentPos16, -2 => sciDoc.zSelectionStart16, _ => pos };
 			if (isCodeFile = sciDoc.ZFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 
@@ -395,45 +397,41 @@ static class CodeInfo {
 			document = _document = _solution.GetDocument(_documentId);
 			if (document == null) return false;
 
-			//_ModifySource();
+			_ModifyTLS();
 
 			return true;
 		}
 
-		//public bool GetDocumentAndSyntaxRoot(out SyntaxNode root)
-		//{
-		//	if(!GetDocument()) { root = null; return false; }
-		//	root = document.GetSyntaxRootAsync().Result;
-		//	return true;
-		//}
-
-		//public bool GetDocumentAndFindNode(out SyntaxNode node)
-		//{
-		//	if(!GetDocument()) { node = null; return false; }
-		//	node = document.GetSyntaxRootAsync().Result.FindToken(position).Parent;
-		//	return true;
-		//}
-
-		//this was a failed attempt to modify code of top-level-statements (TLS) script to avoid code info problems.
-		//	I see 2 ways:
-		//		1. The best would be to surround TLS with {  }.
-		//		2. Surround with semicolons. But it solves only some problems. Also then no error if real semicolon is missing.
-		//	Problem: can only replace code but not insert. Then all reported positions (styling, errors, etc) don't match positions in code editor. Would be too complex to make it work.
-		//		For this reason cannot surround TLS with {  } if TLS starts at very start of code.
+		//Workaround for Roslyn bug: in some cases the CompilationUnitSyntax has a child MethodDeclarationSyntax. It breaks intellisense.
+		//	Example code in TLS, not inside a { block }:
+		//		kkk
+		//		print.it(1);
+		//	Roslyn thinks that 'kkk print.it(1);' is a MethodDeclarationSyntax. But 'kkk' is a new statement with missing ;.
+		//	Workaround: add ;.
+		//	Need to replace a whitespace character. Can't just insert, then all positions (styling, errors, etc) don't match positions in code editor.
 		//	Hope Roslyn in the future will support TLS better.
-		//	FUTURE: try to work with this again if Roslyn still lazy. Eg if default template starts with comments, can surround with { }, and never mind if TLS stars from very start.
-		//void _ModifySource() {
-		//	var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-		//	//print.it("Externs:", r.Externs);
-		//	//print.it("Usings:", r.Usings);
-		//	//print.it("AttributeLists:", r.AttributeLists);
-		//	//print.it("Members:", r.Members);
-		//	if (cu.Members.FirstOrDefault() is not GlobalStatementSyntax) return;
-		//	var ms = cu.Members.Span; CiUtil.HiliteRange(ms);
-		//	//document.
+		void _ModifyTLS() {
+			var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+			var m = cu.Members.FirstOrDefault(o => o is MethodDeclarationSyntax); if (m == null) return;
+			//CiUtil.PrintNode(m);
+			var span = m.Span;
+			var s = "{" + code[span.Start..span.End] + "}"; //no bug if inside any { }
+			var tree = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview), "", Encoding.UTF8);
+			var cu2 = tree.GetCompilationUnitRoot();
+			var a = ((cu2.Members[0] as GlobalStatementSyntax).Statement as BlockSyntax).Statements;
+			//foreach (var v in a) CiUtil.PrintNode(v);
+			if (a.Count != 2) return;
 
-		//	//	document = _document = document.With...;
-		//}
+			var tok2 = a[0].GetLastToken(true);
+			if (!(tok2.IsKind(SyntaxKind.SemicolonToken) && tok2.IsMissing)) return;
+
+			int i = span.Start + tok2.Span.Start - 2;
+			if (code[i] != '\n') return; //else probably the next statement is in the same line, and Roslyn parses differently
+			s = code.ReplaceAt(i, 1, ";");
+			//print.it(s);
+			_solution = _solution.WithDocumentText(_documentId, SourceText.From(s, Encoding.UTF8));
+			document = _document = _solution.GetDocument(_documentId);
+		}
 	}
 
 	/// <summary>

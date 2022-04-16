@@ -1,8 +1,7 @@
 
 using Au.Triggers;
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Floating toolbar.
 	/// Can be attached to windows of other programs.
@@ -12,8 +11,7 @@ namespace Au
 	/// 
 	/// Not thread-safe. All functions must be called from the same thread that created the <b>toolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 	/// </remarks>
-	public partial class toolbar : MTBase
-	{
+	public partial class toolbar : MTBase {
 		readonly _Settings _sett;
 		readonly List<ToolbarItem> _a = new();
 		bool _created;
@@ -104,6 +102,12 @@ namespace Au
 		/// Does not find satellite toolbars. Use this code: <c>toolbar.find("owner toolbar").Satellite</c>
 		/// </remarks>
 		public static toolbar find(string name) => _Manager._atb.Find(o => o.Name == name);
+
+		//By default trigger actions run in non-main threads. Toolbars don't work there.
+		internal static void TriggerActionEndedInNonmainThread_() {
+			if (_Manager._atb.Count > 0)
+				print.warning("Trigger actions that create toolbars should run in the main thread. Add this code: Triggers.Options.ThreadMain(); //Triggers is an ActionTriggers variable.", -1);
+		}
 
 		#endregion
 

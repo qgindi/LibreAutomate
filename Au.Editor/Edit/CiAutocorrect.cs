@@ -678,7 +678,8 @@ class CiAutocorrect {
 			for (var v = node; v != null; v = v.Parent) {
 				//CiUtil.PrintNode(v);
 				switch (v) {
-				case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax): //don't indent block that is child of eg 'if' which adds indentation
+				//case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax): //don't indent block that is child of eg 'if' which adds indentation
+				case BlockSyntax: //don't indent any blocks. See also the //* line below.
 				case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
 				case ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax:
 				case LabeledStatementSyntax or AttributeListSyntax or AccessorListSyntax:
@@ -749,6 +750,7 @@ class CiAutocorrect {
 			}
 
 			//append newlines and tabs
+			if (!dontIndent && indent > 0) dontIndent = node is BlockSyntax && node.Parent is BlockSyntax; //*
 			if (canExitBlock) {
 				if (!dontIndent && indent > 0) indent--;
 				b.Append('\t', indent).AppendLine("}");
@@ -762,9 +764,7 @@ class CiAutocorrect {
 					b.Append('\t', indent);
 				}
 				b.AppendLine();
-				if (indent > 0 && isBraceLine && !dontIndent)
-					//if(!(node is BlockSyntax && node.Parent is BlockSyntax))
-					indent--;
+				if (indent > 0 && isBraceLine && !dontIndent) indent--;
 			}
 			if (indent > 0) b.Append('\t', indent);
 
@@ -773,7 +773,7 @@ class CiAutocorrect {
 			//print.it($"'{s}'");
 			doc.zReplaceRange(true, replaceFrom, replaceTo, s);
 			pos = replaceFrom + s.Length;
-			if (expandBraces) pos -= indent + 2; else if (isBraceLine && code.Eq(replaceFrom - 1, "\n")) pos -= indent;
+			if (expandBraces) pos -= indent + 2;
 			doc.zGoToPos(true, pos);
 		}
 		return true;

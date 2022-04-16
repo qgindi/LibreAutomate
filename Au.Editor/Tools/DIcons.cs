@@ -75,17 +75,19 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.End();
 		b.AddSeparator().Margin("B20");
 
-		_Action lastAction = 0;
+		//rejected: double-clicking an icon clicks the last clicked button. Unclear and not so useful.
+		//_Action lastAction = 0;
 		tv.ItemActivated += (o, e) => {
-			switch (lastAction) {
-			case 0: break;
-			case _Action.FileIcon: _SetIcon(tv); break;
-			default: _InsertCodeOrExport(tv, lastAction); break;
-			}
+			//	switch (lastAction) {
+			//	case 0: break;
+			//	case _Action.FileIcon: _SetIcon(tv); break;
+			//	default: _InsertCodeOrExport(tv, lastAction); break;
+			//	}
+			_InsertCodeOrExport(tv, _Action.MenuIcon);
 		};
 
 		b.StartStack<Expander>(out var exp1, "Set icon of selected files");
-		b.AddButton(out var bThis, "This", _ => { _SetIcon(tv); lastAction = _Action.FileIcon; }).Width(70).Disabled();
+		b.AddButton(out var bThis, "This", _ => { _SetIcon(tv); /*lastAction = _Action.FileIcon;*/ }).Width(70).Disabled();
 		b.AddButton("Default", _ => _SetIcon(null)).Width(70);
 		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.AddButton("Show current", _ => _tName.Text = FilesModel.TreeControl.SelectedItems.FirstOrDefault()?.CustomIconName).Margin("L20");
@@ -95,7 +97,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.StartGrid<Expander>("Insert code for menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
-		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled();
+		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled().Tooltip("To assign the selected icon to a toolbar button or menu item, in the code editor click its line (anywhere except action code) and then click this button. Or double-click an icon.");
 		b.End();
 		b.R.Add<Label>("Insert line: ");
 		b.StartStack();
@@ -107,7 +109,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, _Action.CopyName)).Width(70).Disabled().Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars, editor menus and toolbars (edit Commands.xml), script.editor.GetIcon, IconImageCache, ImageUtil, output tag <image>.");
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
-		b.Add<Label>("Tip: double-clicking an icon clicks the same button.");
+		//b.Add<Label>("Tip: double-clicking an icon clicks the same button.");
 		b.End();
 
 		b.StartStack<Expander>("Export to current workspace folder");
@@ -211,7 +213,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		}
 
 		void _InsertCodeOrExport(KTreeView tv, _Action what) {
-			lastAction = what;
+			//lastAction = what;
 			if (tv.SelectedItem is not _Item k) return;
 			string code = null;
 			if (what == _Action.MenuIcon) {

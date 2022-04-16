@@ -643,11 +643,15 @@ static class InsertCode {
 		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
 	}
 
+	/// <summary>
+	/// Called from Dicons.
+	/// </summary>
+	/// <param name="icon">Like "*Pack.Name #color".</param>
 	public static void SetMenuToolbarItemIcon(string icon) {
-		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
+		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node, -2)) return;
 		var semo = cd.document.GetSemanticModelAsync().Result;
 
-		//find nearest argument list and its method symbol
+		//find nearest argumentlist and its method symbol
 		BaseArgumentListSyntax arglist = null; IMethodSymbol method = null;
 		var es = node.FirstAncestorOrSelf<ExpressionStatementSyntax>()?.Expression;
 		if (es is InvocationExpressionSyntax ies) { //m.Add("name", "image"); or m.Submenu("name", , "image"); etc
@@ -694,7 +698,7 @@ static class InsertCode {
 			replFrom = replTo = arglist.Span.End - 1;
 			if (arglist.Arguments.Count > 0) prefix = ", ";
 		}
-		icon = $"{prefix}{paramName}: \"{icon.Escape()}\"{suffix}";
+		icon = $"{prefix}{paramName}: \"{icon}\"{suffix}";
 		//print.it(cd.pos16, replFrom, replTo, icon);
 
 		cd.sciDoc.zReplaceRange(true, replFrom, replTo, icon);
