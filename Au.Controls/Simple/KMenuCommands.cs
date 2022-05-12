@@ -91,8 +91,7 @@ namespace Au.Controls
 		/// <param name="autoUnderline">Automatically insert _ in item text for Alt-underlining where not specified explicitly.</param>
 		/// <param name="itemFactory">Optional callback function that is called for each menu item. Can create menu items, set properties, create toolbar buttons, etc.</param>
 		/// <exception cref="ArgumentException">Duplicate name. Use <see cref="CommandAttribute.name"/>.</exception>
-		public KMenuCommands(Type commands, Menu menu, bool autoUnderline = true, Action<FactoryParams> itemFactory = null) {
-			if (commands == null || menu == null) throw new ArgumentNullException();
+		public KMenuCommands(Type commands!!, Menu menu!!, bool autoUnderline = true, Action<FactoryParams> itemFactory = null) {
 			_itemFactory = itemFactory;
 			_autoUnderline = autoUnderline;
 

@@ -69,7 +69,8 @@ class CiErrors {
 					or ErrorCode.ERR_NoSuchMemberOrExtension
 					or ErrorCode.ERR_NoSuchMemberOrExtensionNeedUsing
 					or ErrorCode.ERR_UnimplementedInterfaceMember
-					or ErrorCode.ERR_UnimplementedAbstractMethod:
+					or ErrorCode.ERR_UnimplementedAbstractMethod
+					or ErrorCode.ERR_BadBinaryOps:
 						_semo = semo;
 						break;
 					}
@@ -152,8 +153,8 @@ class CiErrors {
 					var k = new keys(null);
 					foreach (var nk in args.DescendantNodes()) {
 						if (nk is ArgumentSyntax) continue;
-						if(nk is LiteralExpressionSyntax les && nk.Kind() == SyntaxKind.CharacterLiteralExpression) {
-							if(les.Token.Value is char c1) k.AddChar(c1);
+						if (nk is LiteralExpressionSyntax les && nk.Kind() == SyntaxKind.CharacterLiteralExpression) {
+							if (les.Token.Value is char c1) k.AddChar(c1);
 						} else {
 							if (CiUtil.GetParameterStringFormat(nk, semo, false) != PSFormat.Keys) continue;
 							s = nk.GetFirstToken().ValueText;
@@ -182,6 +183,16 @@ class CiErrors {
 				case PSFormat.TriggerMod:
 					if (!keys.more.parseTriggerString(s, out _, out _, out _, true))
 						_AddError(node, "Invalid modifiers string.");
+					break;
+				case PSFormat.CodeFile:
+					if (null == App.Model.Find(s, FNFind.CodeFile, silent: true)) {
+						var ae = App.Model.FoundMultiple;
+						if (ae != null) {
+							var paths = string.Join('\n', ae.Select(o => o.ItemPath));
+							_AddError(node, "Multiple found. Use path, or rename some.\nPaths:\n" + paths);
+							//never mind: should add links.
+						} else _AddError(node, "Not found.");
+					}
 					break;
 				}
 			}
@@ -250,8 +261,8 @@ class CiErrors {
 
 			var ec = (ErrorCode)d.Code;
 			if (d.Severity == DiagnosticSeverity.Error) {
-				if (_semo == null) continue;
 				//print.it(ec, d.Id);
+				if (_semo == null) continue;
 				if (_MissingUsingError.IsMissingUsingError(ec, out bool extMethod)) {
 					if (ec == ecPrev && !extMethod) continue; //probably "not found 'AbcAttribute'" followed by "not found 'Abc'"
 					ecPrev = ec;
@@ -266,6 +277,15 @@ class CiErrors {
 						Debug.Assert(implPos == -1 || implPos == v.start);
 						implPos = v.start;
 						implInterface = ec == ErrorCode.ERR_UnimplementedInterfaceMember;
+						break;
+					case ErrorCode.ERR_BadBinaryOps:
+						//New users may not know how to use multiple flags, and intuitively try operator +. Let's add more info.
+						if (d.GetMessage().RxIsMatch(@"^Operator '\+' cannot be applied to operands of type '(\w+)' and '\1'$")) {
+							var n1 = _semo.Root.FindToken(v.start).Parent;
+							if (_semo.GetTypeInfo(n1).Type?.IsEnumType() ?? false) {
+								x.Append(". Use operator '|'.");
+							}
+						}
 						break;
 					}
 				}

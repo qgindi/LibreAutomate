@@ -10,6 +10,7 @@ using System.Windows.Input;
 //using Au.Controls;
 using static Au.Controls.Sci;
 using Au.Compiler;
+using Au.Triggers;
 //using System.Windows.Forms;
 
 //using DiffMatchPatch;
@@ -37,7 +38,6 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 
 #pragma warning disable 169
 
-
 static unsafe class Test {
 
 
@@ -54,18 +54,32 @@ static unsafe class Test {
 
 	public static void FromMenubar() {
 		print.clear();
+
+
+		//InsertCode.Statements("var s = \"\"\"\r\ntext\r\ntext\r\n\"\"\";");
+
+		//var f = App.Model.FindCodeFile(@"\@DNewToolbar\test DNewToolbar.cs");
+		//CompileRun.CompileAndRun(true, f, runFromEditor: true);
+
+
+
+		//App.Model.NewItem("Class.cs", text: new(true, "moo"));
+
 		//		var s = @"var w = wnd.find(1, ""name"", ""class"");
 		//var w2 = w.Child(""name"");
 		//int args = 20;";
 		//		//s = @"var s = ""a""; var s = ""b"";";
 		//		InsertCode.Statements(s);
 
-		InsertCode.SetMenuToolbarItemIcon("*Unicons.Thunderstorm #0D84F2");
+		//InsertCode.SetMenuToolbarItemIcon("*Unicons.Thunderstorm #0D84F2");
 
 		//TestMarkdig();
 
-		//if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token, findInsideTrivia: keys.isScrollLock)) return;
-		//////CiUtil.PrintNode(token);
+		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
+		//CiUtil.PrintNode(node);
+		//var span = node.GetRealFullSpan();
+		//cd.sciDoc.zSelect(true, span.Start, span.End);
+
 		//var node = token.Parent;
 		//print.it("---------");
 		//foreach (var v in node.AncestorsAndSelf()) CiUtil.PrintNode(v);

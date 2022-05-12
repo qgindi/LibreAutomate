@@ -51,7 +51,7 @@ namespace Au {
 		/// Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
 		/// </returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		public static int run(string script, params string[] args)
+		public static int run([ParamString(PSFormat.CodeFile)] string script, params string[] args)
 			=> _Run(0, script, args, out _);
 
 		/// <summary>
@@ -61,7 +61,7 @@ namespace Au {
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
 		/// <inheritdoc cref="run"/>
-		public static int runWait(string script, params string[] args)
+		public static int runWait([ParamString(PSFormat.CodeFile)] string script, params string[] args)
 			=> _Run(1, script, args, out _);
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -73,7 +73,7 @@ namespace Au {
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
 		/// <inheritdoc cref="run"/>
-		public static int runWait(out string results, string script, params string[] args)
+		public static int runWait(out string results, [ParamString(PSFormat.CodeFile)] string script, params string[] args)
 			=> _Run(3, script, args, out results);
 
 		/// <summary>
@@ -84,7 +84,7 @@ namespace Au {
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script task.</exception>
 		/// <inheritdoc cref="run"/>
-		public static int runWait(Action<string> results, string script, params string[] args)
+		public static int runWait(Action<string> results, [ParamString(PSFormat.CodeFile)] string script, params string[] args)
 			=> _Run(3, script, args, out _, results);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 

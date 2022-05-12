@@ -1284,8 +1284,8 @@ namespace Au {
 		/// 
 		/// This function is slower. Speed can be important when saving many files.
 		/// </remarks>
-		public static void save(string file, Action<string> writer, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
-			_Save(file, writer ?? throw new ArgumentNullException(), backup, tempDirectory, lockedWaitMS);
+		public static void save(string file, Action<string> writer!!, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
+			_Save(file, writer, backup, tempDirectory, lockedWaitMS);
 		}
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -1310,8 +1310,8 @@ namespace Au {
 		/// <exception cref="Exception" />
 		/// <exception cref="IOException" />
 		/// <inheritdoc cref="save"/>
-		public static void saveBytes(string file, byte[] bytes, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
-			_Save(file, bytes ?? throw new ArgumentNullException(), backup, tempDirectory, lockedWaitMS);
+		public static void saveBytes(string file, byte[] bytes!!, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
+			_Save(file, bytes, backup, tempDirectory, lockedWaitMS);
 		}
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 

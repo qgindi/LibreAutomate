@@ -123,7 +123,7 @@ class PanelRecipe : DockPanel {
 			code = string.Join("\r\n", ac.Select(o => o.code));
 			Debug.Assert(code.IsAscii()); //never mind: does not support non-ASCII
 			var b = new byte[code.Length];
-			var document = CiUtil.CreateRoslynDocument(code, needSemantic: true);
+			var document = CiUtil.CreateDocumentFromCode(code, needSemantic: true);
 			var semo = document.GetSemanticModelAsync().Result;
 			var a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, code.Length)).Result;
 			foreach (var v in a) {
@@ -149,7 +149,7 @@ class PanelRecipe : DockPanel {
 	void _SeeLinkClicked(string s) {
 		//add same namespaces as in default global.cs. Don't include global.cs because it may be modified.
 		string code = _usings + $"///<see cref='{s}'/>";
-		var document = CiUtil.CreateRoslynDocument(code, needSemantic: true);
+		var document = CiUtil.CreateDocumentFromCode(code, needSemantic: true);
 		var syn = document.GetSyntaxRootAsync().Result;
 		var node = syn.FindToken(code.Length - 3 - s.Length, true).Parent.FirstAncestorOrSelf<CrefSyntax>();
 		if (node == null) return;

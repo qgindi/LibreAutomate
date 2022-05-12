@@ -1,5 +1,4 @@
-﻿namespace Au
-{
+﻿namespace Au {
 	/// <summary>
 	/// A variable of <b>wnd</b> type represents a window or control. It is a window handle, also known as HWND.
 	/// </summary>
@@ -32,8 +31,7 @@
 	/// print.it(c.Name);
 	/// ]]></code>
 	/// </example>
-	public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd>
-	{
+	public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 #if false
 		/// Why wnd is struct, not class:
 		///		Advantages:
@@ -689,8 +687,7 @@
 
 		#region activate, focus
 
-		internal static partial class Internal_
-		{
+		internal static partial class Internal_ {
 			/// <summary>
 			/// No exceptions.
 			/// </summary>
@@ -708,7 +705,7 @@
 				}
 
 				var wFore = active; bool retry = false;
-				g1: _EnableActivate_MinRes();
+			g1: _EnableActivate_MinRes();
 				if (!_EnableActivate_AllowSetFore()) return false;
 				if (!wFore.Is0 && !retry) {
 					Api.SetForegroundWindow(wFore);
@@ -799,8 +796,7 @@
 			}
 
 			[Flags]
-			internal enum ActivateFlags
-			{
+			internal enum ActivateFlags {
 				/// <summary>
 				/// Don't call ThrowIfInvalid (ie caller ensures it is valid).
 				/// </summary>
@@ -855,7 +851,7 @@
 			if (!R) {
 				if (0 != (flags & Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					if (IsNoActivateStyle_() && !IsCloaked) {
-						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
+						ZorderTop();
 						return false; //if cloaked, need to activate to uncloak
 					}
 				}
@@ -1051,10 +1047,10 @@
 
 			MinimalSleepNoCheckThread_();
 			return;
-			gDisabled: //SetFocus fails if disabled
+		gDisabled: //SetFocus fails if disabled
 			ThrowIfInvalid();
 			ThrowNoNative("*set focus. Disabled");
-			gFailed:
+		gFailed:
 			ThrowUseNative("*set focus");
 		}
 
@@ -1091,8 +1087,7 @@
 		/// <summary>
 		/// Functions that can be used only with windows/controls of this thread.
 		/// </summary>
-		public static class thisThread
-		{
+		public static class thisThread {
 			/// <summary>
 			/// Calls API <msdn>SetFocus</msdn>. It sets the keyboard input focus to the specified control or window, which must be of this thread.
 			/// Returns false if fails. Supports <see cref="lastError"/>.
@@ -1763,8 +1758,7 @@
 
 		#region MoveInScreen, EnsureInScreen, Screen
 
-		internal static partial class Internal_
-		{
+		internal static partial class Internal_ {
 			/// <summary>
 			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen. With inRect used by RECT.MoveInRect.
 			/// </summary>
@@ -1904,144 +1898,233 @@
 		#endregion
 
 		#region Zorder
-		const SWPFlags _SWP_ZORDER = SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER;
-		//note: without SWPFlags.NOOWNERZORDER sometimes fails, even when no owner.
-		//	Eg after moving or resizing a toolbar starts to fail to zorder it above target window.
-		//	Also, when setting topmost, may set owner topmost and this below owner.
-
-		SWPFlags _SWP_ZorderFlags() {
-			var r = _SWP_ZORDER;
-			if (!Get.Owner.Is0) r &= ~SWPFlags.NOOWNERZORDER;
-			return r;
-		}
+		const SWPFlags _SWP_ZORDER_OWNER = SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE,
+			_SWP_ZORDER_NOOWNER = SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER;
+		//info: with SWP_NOOWNERZORDER the API does not zorder owner and owned windows.
+		//note: without SWP_NOOWNERZORDER the API is full of bugs. Eg fails if the window has a topmost owned window.
 
 		/// <summary>
-		/// Places this window above window w in the Z order.
+		/// Places this window above window <i>w</i> in the Z order.
 		/// </summary>
-		/// <param name="w"></param>
-		/// <param name="ownerToo">Change Z order of owner window too.</param>
+		/// <param name="w">Another window.</param>
+		/// <param name="ownerToo">Place owner windows below this window. If false (default), does it only if they otherwise would be on top of this window.</param>
 		/// <remarks>
-		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
-		/// This window and w can be both top-level windows or both controls of same parent.
-		/// If w is default(wnd), calls <see cref="ZorderBottom"/>.
-		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; it depends on many documented and undocumented conditions; can even return true when failed.
+		/// This window and <i>w</i> can be both top-level windows or both controls of same parent.
+		/// Can make this window topmost or non-topmost, depending on where <i>w</i> is in the Z order.
+		/// Also affects owned and owner windows, but does not make them topmost/nontopmost if not necessary.
+		/// 
+		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
-		public bool ZorderAbove(wnd w, bool ownerToo = false) => _ZorderAfterBefore(w, true, ownerToo);
+		public bool ZorderAbove(wnd w, bool ownerToo = false)
+			=> _ZorderAB(w, true, ownerToo);
 
 		/// <summary>
-		/// Places this window below window w in the Z order.
+		/// Places this window below window <i>w</i> in the Z order.
 		/// </summary>
-		/// <param name="w"></param>
-		/// <param name="ownerToo">Change Z order of owner window too.</param>
+		/// <param name="w">Another window. If default(wnd), calls <see cref="ZorderTop"/>.</param>
+		/// <param name="ownerToo">Place owner windows below this window. If false (default), does it only if they otherwise would be on top of this window.</param>
 		/// <remarks>
-		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
-		/// This window and w can be both top-level windows or both controls of same parent.
-		/// If w is default(wnd), calls <see cref="ZorderTop"/>.
-		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// This window and <i>w</i> can be both top-level windows or both controls of same parent.
+		/// Can make this window topmost or non-topmost, depending on where <i>w</i> is in the Z order.
+		/// Also affects owned and owner windows, but does not make them topmost/nontopmost if not necessary.
+		///
+		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
-		public bool ZorderBelow(wnd w, bool ownerToo = false) => _ZorderAfterBefore(w, false, ownerToo);
+		public bool ZorderBelow(wnd w, bool ownerToo = false)
+			=> _ZorderAB(w, false, ownerToo);
 
-		bool _ZorderAfterBefore(wnd w, bool before, bool ownerToo) {
-			if (w.Is0) return before ? ZorderBottom() : ZorderTop(ownerToo);
-			if (w == this) return true;
-			if (IsTopmost && !w.IsTopmost) ZorderNoTopmost(); //see comments below
-			var swp = ownerToo ? _SWP_ZorderFlags() : _SWP_ZORDER;
-			return SetWindowPos(swp, 0, 0, 0, 0, before ? w.Get.Previous() : w);
+		bool _ZorderAB(wnd w, bool before, bool ownerToo, bool top = false) {
+			if (!top) {
+				if (before || !w.Is0) {
+					if (!w.IsAlive || w == this) return false;
+					if (before) {
+					g1: var wp = w.Get.Previous();
+						if (wp.Is0 && !w.IsAlive) return false; //w is at the very top?
+						w = wp;
+						for (wnd ow = Get.Owner; !ow.Is0; ow = ow.Get.Owner) if (w == ow) goto g1;
+					}
+				}
+			}
+			if (IsChild) return SetWindowPos(_SWP_ZORDER_NOOWNER, zorderAfter: w);
+
+			//All ZorderX functions work almost like SetWindowPos without SWP_NOOWNERZORDER should work as documented.
+			//	However cannot simply call it because of its bugs.
+			//	To simulate it, we reposition this and each owned/owner window with SWP_NOOWNERZORDER.
+			//	The flag isn't well documented. With it zorders only this window; ignores owner and owned windows.
+			//	Speed: 10% slower than SetWindowPos without SWP_NOOWNERZORDER.
+			//	Still can't overcome this API bug: can't zorder above a topmost uiAccess window; also Start menu.
+
+			var od = new getwnd.OwnedDescendants_();
+			var all = od.all;
+			int iLastTopmost = -1; for (int i = 0; i < all.Length && all[i].IsTopmost; i++) iLastTopmost = i;
+			int iThis = Array.IndexOf(all, this);
+			if (iThis < 0) return false;
+			int iW = -1;
+			if (top) { //make this the top window in the topmost or nontopmost group
+				if (iThis > iLastTopmost && iLastTopmost >= 0) w = all[iW = iLastTopmost];
+			} else if (!w.Is0) {
+				iW = Array.IndexOf(all, w);
+				if (iW < 0) return false;
+			}
+			bool wasTopmost = iThis <= iLastTopmost;
+			bool willBeTopmost = iW < iLastTopmost || (iW == iLastTopmost && wasTopmost);
+
+			//descendants
+			bool skipTopmostOwned = !willBeTopmost && !wasTopmost;
+			List<int> ai = od.GetIndices(this, skipTopmostOwned ? i => i <= iLastTopmost || i == iW : i => i == iW);
+			ai.Add(iThis);
+
+			//owners
+			int iSkip = iThis;
+			for (wnd ow = Get.Owner; !ow.Is0; ow = ow.Get.Owner) {
+				int i2 = Array.IndexOf(all, ow);
+				if (i2 < 0 || i2 == iW) break;
+				if (willBeTopmost && i2 > iLastTopmost) break; //ignore nontopmost owners
+				if (!ownerToo && i2 > iW) break; //don't zorder owners unless they would be on top of this
+				List<int> ai2 = od.GetIndices(ow, i => i == iSkip || (!willBeTopmost && i <= iLastTopmost));
+				ai.AddRange(ai2);
+				ai.Add(iSkip = i2);
+			}
+
+			if (ai.Count == 1) return SetWindowPos(_SWP_ZORDER_NOOWNER, zorderAfter: w);
+
+			//With DeferWindowPos faster and no flickering.
+			//	But it's unreliable. Eg can't change topmost/notopmost.
+			//	If fails, retry with SetWindowPos.
+
+			bool dwpWillFail = willBeTopmost; //will fail if need to move above topmost uiAccess etc windows
+			if (!dwpWillFail) { //will fail if need to change topmost/notopmost
+				for (int i = 0; i < ai.Count; i++) { if (dwpWillFail = ai[i] <= iLastTopmost) break; }
+			}
+
+			var wPrev = w;
+			if (!dwpWillFail) {
+				var hp = Api.BeginDeferWindowPos(ai.Count);
+				for (int i = 0; i < ai.Count; i++) {
+					var k = all[ai[i]];
+					hp = Api.DeferWindowPos(hp, k, wPrev, 0, 0, 0, 0, _SWP_ZORDER_NOOWNER);
+					if (hp == default) break;
+					wPrev = k;
+				}
+				if (hp != default) {
+					Api.EndDeferWindowPos(hp); //usually returns true when fails
+					wPrev = w;
+					for (int i = 0; ;) {
+						var k = all[ai[i]];
+						if (k.Get.Previous() != wPrev) break;
+						if (++i == ai.Count) return true;
+						wPrev = k;
+					}
+				}
+				Debug_.Print("DeferWindowPos failed");
+				wPrev = w;
+			}
+
+			for (int i = 0; i < ai.Count; i++) {
+				var k = all[ai[i]];
+				bool ok = k.SetWindowPos(_SWP_ZORDER_NOOWNER, zorderAfter: wPrev);
+				if (!ok) {
+					if (k == this) return false;
+					continue;
+				}
+				wPrev = k;
+			}
+			return true;
 		}
 
 		/// <summary>
 		/// Places this window or control at the top of the Z order. Does not activate.
-		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows.
+		/// If the window was topmost, it will be at the top of topmost windows, else at the top of other windows.
 		/// </summary>
-		/// <param name="ownerToo">Change Z order of owner window too.</param>
+		/// <param name="ownerToo">Place owner windows below this window. If false (default), does it only if they otherwise would be on top of this window.</param>
 		/// <remarks>
-		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Also affects owner and owned windows.
+		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
-		public bool ZorderTop(bool ownerToo = false) {
-			if (IsChild) return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHWND.TOP);
-			var swp = ownerToo ? _SWP_ZorderFlags() : _SWP_ZORDER;
-			if (IsTopmost) return SetWindowPos(swp, 0, 0, 0, 0, SpecHWND.TOP);
+		public bool ZorderTop(bool ownerToo = false)
+			=> _ZorderAB(default, false, ownerToo, top: true);
+
+		/// <summary>
+		/// Calls SetWindowPos with HWND_TOP and SWP_NOOWNERZORDER (ignores owner and owned windows).
+		/// </summary>
+		internal bool ZorderTopRaw_() {
+			Debug_.PrintIf(!IsChild && !Get.EnabledOwned().Is0, "has owned windows: " + ToString());
+			if (IsChild || IsTopmost || IsActive) return SetWindowPos(_SWP_ZORDER_NOOWNER);
 			getwnd.top2(out var lastTopmost);
-			return SetWindowPos(swp, 0, 0, 0, 0, lastTopmost);
+			return SetWindowPos(_SWP_ZORDER_NOOWNER, zorderAfter: lastTopmost);
 		}
 
 		/// <summary>
 		/// Places this window or control at the bottom of the Z order.
-		/// If the window was topmost, makes it and its owner window non-topmost.
 		/// </summary>
 		/// <remarks>
-		/// Changes Z order of owner window too.
-		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Also affects owner and owned windows.
+		/// If the window was topmost, makes it and its owner and owned windows non-topmost.
+		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public bool ZorderBottom() {
-			ZorderNoTopmost();
-			return SetWindowPos(_SWP_ZorderFlags(), 0, 0, 0, 0, SpecHWND.BOTTOM);
+			return SetWindowPos(_SWP_ZORDER_OWNER, zorderAfter: SpecHWND.BOTTOM);
+			//Bug in older Windows 10: the first HWND_BOTTOM moves a topmost window to the top of non-topmost windows.
 		}
 
 		/// <summary>
 		/// Makes this window topmost (always on top of non-topmost windows in the Z order). Does not activate.
 		/// </summary>
-		/// <param name="ownerToo">Change Z order of owner window too.</param>
 		/// <remarks>
 		/// This cannot be a control.
-		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Also affects owned windows. Does not affect owners.
+		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
-		public bool ZorderTopmost(bool ownerToo = false) {
-			if (ownerToo) { //cannot use without SWP_NOOWNERZORDER because of SWP bug. See comments below _SWP_ZORDER.
-				var ow = Get.Owner;
-				if (!ow.Is0) ow.ZorderTopmost(true);
+		public bool ZorderTopmost() {
+			if (!SetWindowPos(_SWP_ZORDER_NOOWNER, zorderAfter: SpecHWND.TOPMOST)) return false;
+			var a = Get.AllOwned(allDescendants: true);
+			for (int i = a.Length; --i >= 0;) {
+				a[i].SetWindowPos(_SWP_ZORDER_NOOWNER, zorderAfter: SpecHWND.TOPMOST);
 			}
-			if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHWND.TOPMOST)) return false;
 			return true;
+			//note: cannot use without SWP_NOOWNERZORDER because of API bugs.
 		}
+
+		///
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
+		public bool ZorderTopmost(bool ownerToo)
+			=> (ownerToo ? Get.RootOwnerOrThis() : this).ZorderTopmost();
 
 		/// <summary>
 		/// Makes this window non-topmost.
 		/// </summary>
 		/// <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is this or owner.</param>
 		/// <remarks>
-		/// Changes Z order of owner window too.
 		/// This cannot be a control.
-		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Also affects owner and owned windows.
+		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public bool ZorderNoTopmost(bool afterActiveWindow = false) {
-			if (!IsTopmost) return true;
-
-			var swp = _SWP_ZorderFlags();
-			wnd after = SpecHWND.NOTOPMOST;
+			if (!IsTopmost) return IsAlive;
 			if (afterActiveWindow) {
 				wnd wa = active;
-				if (!wa.Is0 && !Get.Owners(andThisWindow: true).Contains(wa)) after = wa;
+				if (wa != this && !wa.Is0 && !wa.IsTopmost && !Get.Owners().Contains(wa)) {
+					if (SetWindowPos(_SWP_ZORDER_OWNER, zorderAfter: wa) && !IsTopmost) return true;
+				}
 			}
-
-			for (int i = 0; i < 4; i++) {
-				if (!SetWindowPos(swp, 0, 0, 0, 0, after)) return false;
-				if (i == 0 && !IsTopmost) break;
-				Debug_.Print("retry");
-			}
-			return true;
+			return SetWindowPos(_SWP_ZORDER_OWNER, zorderAfter: SpecHWND.NOTOPMOST);
 		}
-		// Windows 8/10 bug: cannot make a topmost uiAccess window non-topmost (with HWND_NOTOPMOST, HWND_BOTTOM or non-topmost hwndInsertAfter).
-		//   Workaround: call SWP 2 times. With some Windows updates also need SWP_NOOWNERZORDER.
-		//   Problems with SWP_NOOWNERZORDER:
-		//      1. If used with non-uiAccess windows, then later HWND_TOPMOST does not work. Solution: call SWP first time without this flag.
-		//      2. Does not make owned windows non-topmost. Solution: finally call SWP without this flag.
-		//      3. Does not make owner window non-topmost. Never mind, it is rare, and a solution is dirty.
-		//   The bug and workarounds are undocumented.
-		//   Now I cannot reproduce on Win10, maybe it is fixed in current Win10 version. Tested and can reproduce on Win8.1.
-		// More problems with topmost uiAccess windows:
-		//   Sometimes inserting a uiAccess hwnd after a window does not work, sometimes works...
-		//   Problems with HWND_BOTTOM and owned windows.
-		//   And so on.
-		// On Windows XP/7/8 HWND_BOTTOM moves a topmost window to the bottom of ALL windows, as documented.
-		//   But on Windows 10 - to the top of non-topmost windows; 2-nd SWP moves to the right place, but 3-th SWP moves uiAccess windows back :), 4-th makes correct (owned windows too).
-		//      It seems it is fixed in current Win10 version.
+
+		//Windows 7-10 bug: cannot make a topmost uiAccess window non-topmost (with HWND_NOTOPMOST, HWND_BOTTOM or non-topmost hwndInsertAfter).
+		//	Workaround: call SWP 2 times. With some Windows updates also need SWP_NOOWNERZORDER.
+		//	It seems it's fixed in current Win10.
+		//Bug with SWP_NOOWNERZORDER: if used with non-uiAccess windows, then later HWND_TOPMOST does not work.
+		//	It seems it's fixed in current Win10. Can reproduce on Win8.1.
+		//More problems with topmost uiAccess windows:
+		//	Can't insert a uiAccess window after a normal window.
+		//	Problems with HWND_BOTTOM and owned windows.
+		//	And so on. Possibly some now fixed.
 
 		/// <summary>
 		/// Returns true if this is a topmost (always-on-top) window.
@@ -2049,7 +2132,7 @@
 		public bool IsTopmost => HasExStyle(WSE.TOPMOST);
 
 		/// <summary>
-		/// Returns true if this window is above window w in the Z order.
+		/// Returns true if this window is above window <i>w</i> in the Z order.
 		/// </summary>
 		public bool ZorderIsAbove(wnd w) {
 			if (w.Is0) return false;
@@ -2063,6 +2146,7 @@
 		#endregion
 
 		#region style, exStyle
+
 		/// <summary>
 		/// Gets window style.
 		/// </summary>
@@ -2794,14 +2878,12 @@
 
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="wnd.SetStyle"/> and <see cref="wnd.SetExStyle"/>.
 	/// </summary>
 	[Flags]
-	public enum WSFlags
-	{
+	public enum WSFlags {
 		/// <summary>Add the specified styles and don't change others.</summary>
 		Add = 1,
 

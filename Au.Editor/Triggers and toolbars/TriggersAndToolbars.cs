@@ -2,20 +2,35 @@ using System.Linq;
 using System.Xml.Linq;
 using Au.Triggers;
 
-static class TriggersAndToolbars
-{
-	public static void Edit(string file) {
+partial class TriggersAndToolbars {
+	public static bool Edit(string file) {
 		var f = _GetFile(file, create: true);
-		if (f == null) return;
-		App.Model.OpenAndGoTo(f);
+		if (f == null) return false;
+		return App.Model.OpenAndGoTo(f);
 	}
 
-	static FileNode _GetProject(bool create) {
+	public static void ToolbarsMenu() {
+		var folder = GetProject(create: true);
+		folder = folder.Children().First(f => f.IsFolder && f.Name.Eqi("Toolbars"));
+		var m = new popupMenu();
+		foreach (var f in folder.Children()) {
+			if (!f.IsClass) continue;
+			m[f.DisplayName] = _ => App.Model.OpenAndGoTo(f);
+		}
+		m.Show();
+	}
+
+	/// <summary>
+	/// Finds or creates project @"\@Triggers and toolbars".
+	/// </summary>
+	/// <param name="create">Create if does not exist.</param>
+	/// <returns>The project folder. Returns null if does not exist and <i>create</i> false.</returns>
+	public static FileNode GetProject(bool create) {
 		var fProject = App.Model.Find(@"\@Triggers and toolbars", FNFind.Folder);
 		if (create) {
 			if (fProject == null) {
 				fProject = App.Model.NewItemL(s_templPath);
-				print.it("Info: project \"@Triggers and toolbars\" has been created.");
+				print.it("Info: folder \"@Triggers and toolbars\" has been created.");
 			} else { //create missing files. Note: don't cache, because files can be deleted at any time. Fast enough.
 				var xTempl = FileNode.Templates.LoadXml(s_templPath); //fast, does not load the xml file each time
 				_Folder(xTempl, fProject);
@@ -61,9 +76,9 @@ static class TriggersAndToolbars
 	}
 	const string s_templPath = @"Default\@Triggers and toolbars";
 
-	static FileNode _GetFile(string file, bool create) {
-		var f = _GetProject(create: create);
-		return f?.FindRelative(file, FNFind.File);
+	static FileNode _GetFile(string file, bool create, FNFind kind = FNFind.File) {
+		var f = GetProject(create: create);
+		return f?.FindRelative(file, kind);
 	}
 
 	public static void Restart() {
@@ -103,8 +118,13 @@ static class TriggersAndToolbars
 
 	//}
 
-	//public static void AddToolbar()
-	//{
+	public static void NewToolbar() {
+		var tt = new TriggersAndToolbars();
+		tt._NewToolbar();
+	}
 
-	//}
+	public static void SetToolbarTrigger() {
+		var tt = new TriggersAndToolbars();
+		tt._SetToolbarTrigger();
+	}
 }

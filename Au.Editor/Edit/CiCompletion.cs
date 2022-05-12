@@ -187,6 +187,13 @@ partial class CiCompletion {
 				//in some cases show list when typing a character where GetCompletionsAsync works only on command
 				if (ch == '[' && syncon.IsAttributeNameContext) ch = default;
 				if (ch == ' ' && syncon.IsObjectCreationTypeContext) ch = default;
+				if (ch == '|') { //show on 'Enum.Member|'. Somehow Roslyn shows only on 'Enum.Member| ' (need space after |).
+					var t2 = tok.GetPreviousToken();
+					if (t2.IsKind(SyntaxKind.BarToken) && t2.SpanStart == position - 1 && t2.Parent.IsKind(SyntaxKind.BitwiseOrExpression)) {
+						var n2 = t2.GetPreviousToken().Parent;
+						if (n2 is IdentifierNameSyntax && (model.GetTypeInfo(n2).Type?.IsEnumType() ?? false)) ch = default;
+					}
+				}
 
 				completionService = CompletionService.GetService(document);
 				if (cancelToken.IsCancellationRequested) return null;
@@ -1139,7 +1146,7 @@ partial class CiCompletion {
 	static CompletionOptions s_options = CompletionOptions.Default with {
 		TriggerInArgumentLists = false,
 		ShowNameSuggestions = false,
-		};
+	};
 }
 
 //Debug_.NoGcRegion can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms. Tested with some old Roslyn version.

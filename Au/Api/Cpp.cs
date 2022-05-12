@@ -35,37 +35,53 @@ namespace Au.Types
 
 		internal delegate int Cpp_AccFindCallbackT(Cpp_Acc a);
 
-		internal struct Cpp_AccParams
+		internal struct Cpp_AccFindParams
 		{
 			string _role, _name, _prop;
 			int _roleLength, _nameLength, _propLength;
 			public EFFlags flags;
 			public int skip;
-			char resultProp; //elmFinder.RProp
+			char _resultProp; //elmFinder.RProp
+			int _flags2;
 
-			public Cpp_AccParams(string role, string name, string prop, EFFlags flags, int skip, char resultProp) : this() {
+			public Cpp_AccFindParams(string role, string name, string prop, EFFlags flags, int skip, char resultProp) : this() {
 				if (role != null) { _role = role; _roleLength = role.Length; }
 				if (name != null) { _name = name; _nameLength = name.Length; }
 				if (prop != null) { _prop = prop; _propLength = prop.Length; }
 				this.flags = flags;
 				this.skip = skip;
-				this.resultProp = resultProp;
+				_resultProp = resultProp;
+			}
+
+			/// <summary>
+			/// Parses role. Enables Chrome acc if need.
+			/// </summary>
+			public void RolePrefix(wnd w) {
+				if (_roleLength < 4) return;
+				int i = _role.IndexOf(':'); if (i < 3) return;
+				_flags2 = Cpp_AccRolePrefix(_role, i, w);
+				if (_flags2 != 0) {
+					_roleLength -= ++i;
+					_role = _roleLength > 0 ? _role[i..] : null;
+				}
 			}
 		}
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+		static extern int Cpp_AccRolePrefix(string s, int len, wnd w);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
 
 		internal enum EError
 		{
 			NotFound = 0x1001, //UI element not found. With FindAll - no errors. This is actually not an error.
 			InvalidParameter = 0x1002, //invalid parameter, for example wildcard expression (or regular expression in it)
 			WindowClosed = 0x1003, //the specified window handle is invalid or the window was destroyed while injecting
-			WaitChromeDisabled = 0x1004, //need to wait while enabling Chrome UI elements finished
 		}
 
 		internal static bool IsCppError(int hr) {
-			return hr >= (int)EError.NotFound && hr <= (int)EError.WaitChromeDisabled;
+			return hr >= (int)EError.NotFound && hr <= (int)EError.WindowClosed;
 		}
 
 		/// <summary>
@@ -148,7 +164,8 @@ namespace Au.Types
 
 		// TEST
 
-		//FUTURE: remove tests
+#if DEBUG
+
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Test();
 
@@ -205,5 +222,6 @@ namespace Au.Types
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern void Cpp_ThreadExitEvent2(IntPtr callback);
+#endif
 	}
 }

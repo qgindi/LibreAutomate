@@ -707,6 +707,9 @@ namespace Au.Triggers
 			Trigger = trigger;
 			Window = w; Mod = mod;
 		}
+
+		///
+		public override string ToString() => "Trigger: " + Trigger;
 	}
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

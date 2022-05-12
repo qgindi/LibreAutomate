@@ -390,9 +390,8 @@ namespace Au
 		/// </summary>
 		/// <returns>This.</returns>
 		/// <param name="cd">Clipboard data.</param>
-		public keys AddClipboardData(clipboardData cd) {
+		public keys AddClipboardData(clipboardData cd!!) {
 			_ThrowIfSending();
-			if (cd == null) throw new ArgumentNullException();
 			_AddKEvent(new _KEvent(_KType.Text, _SetData(cd)));
 			return this;
 		}
@@ -427,9 +426,8 @@ namespace Au
 		/// <remarks>
 		/// The callback function will be called by <see cref="SendIt"/> and can do anything except sending keys and copy/paste.
 		/// </remarks>
-		public keys AddAction(Action a) {
+		public keys AddAction(Action a!!) {
 			_ThrowIfSending();
-			if (a == null) throw new ArgumentNullException();
 			return _AddKEvent(new _KEvent(_KType.Callback, _SetData(a)));
 		}
 

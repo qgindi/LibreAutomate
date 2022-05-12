@@ -427,11 +427,11 @@ namespace Au.Types
 
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
-		public DpiOf(System.Windows.Forms.Control c) : this(c?.Hwnd() ?? throw new ArgumentNullException()) { }
+		public DpiOf(System.Windows.Forms.Control c!!) : this(c.Hwnd()) { }
 
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
-		public DpiOf(System.Windows.DependencyObject c) : this(c?.Hwnd() ?? throw new ArgumentNullException()) { }
+		public DpiOf(System.Windows.DependencyObject c!!) : this(c.Hwnd()) { }
 
 		///
 		public DpiOf(IntPtr hMonitor) { _dpi = More.Dpi.OfScreen(hMonitor); }

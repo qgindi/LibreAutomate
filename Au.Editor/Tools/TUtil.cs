@@ -168,13 +168,18 @@ static class TUtil {
 		}
 		return s;
 	}
+	
+	public static string ArgsFromWndFindCode(string wndFind) {
+		if (wndFind.RxMatch(@"\bwnd.find\((?:-?\d+, )?(.+)\);", 1, out RXGroup g)) return g.Value;
+		return null;
+	}
 
 	#endregion
 
 	#region formatters
 
 	public record WindowFindCodeFormatter {
-		public string nameW, classW, programW, containsW, alsoW, waitW, orRunW;
+		public string nameW, classW, programW, containsW, alsoW, waitW, orRunW, andRunW;
 		public bool hiddenTooW, cloakedTooW, programNotStringW;
 		public string idC, nameC, classC, alsoC, skipC, nameC_comments, classC_comments;
 		public bool hiddenTooC;
@@ -186,10 +191,11 @@ static class TUtil {
 			var b = new StringBuilder(CodeBefore);
 			if (CodeBefore != null && !CodeBefore.Ends('\n')) b.AppendLine();
 
-			bool orThrow = false, orRun = false, activate = false;
+			bool orThrow = false, orRun = false, andRun = false, activate = false;
 			if (!Test) {
 				orThrow = Throw;
 				orRun = orRunW != null;
+				andRun = andRunW != null;
 				activate = Activate;
 			}
 
@@ -201,9 +207,13 @@ static class TUtil {
 
 				if (orRun) {
 					b.Append(" = wnd.findOrRun(");
+				} else if(andRun) {
+					b.Append(" = wnd.runAndFind(() => { ").Append(andRunW).Append(" }, ");
+					b.AppendWaitTime(waitW, orThrowW);
 				} else {
 					b.Append(" = wnd.find(");
-					if (waitW != null && !Test) b.AppendWaitTime(waitW, orThrowW); else if (orThrowW) b.Append('0');
+					if (waitW != null && !Test) b.AppendWaitTime(waitW, orThrowW);
+					else if (orThrowW) b.Append('0');
 				}
 
 				b.AppendStringArg(nameW);
@@ -223,6 +233,8 @@ static class TUtil {
 				if (orRun) {
 					b.Append(", run: () => { ").Append(orRunW).Append(" }");
 					if (!orThrowW) b.Append(", waitS: -60");
+				}
+				if (orRun || andRun) {
 					if (!activate) b.Append(", activate: !true");
 					activate = false;
 				}
@@ -236,7 +248,8 @@ static class TUtil {
 				if (!Test) b.Append("var ").Append(VarControl).Append(" = ");
 				b.Append(VarWindow).Append(".Child(");
 				if (!Test) {
-					if (waitW is not (null or "0") || orRun) b.Append(orThrow ? "1" : "-1"); else if (orThrow) b.Append('0');
+					if (waitW is not (null or "0") || orRun || andRun) b.Append(orThrow ? "1" : "-1");
+					else if (orThrow) b.Append('0');
 				}
 				if (nameC != null) b.AppendStringArg(nameC);
 				if (classC != null) b.AppendStringArg(classC, nameC == null ? "cn" : null);
@@ -344,16 +357,61 @@ static class TUtil {
 	//Tool dialogs such as Delm normally run in new thread. If started from another such dialog - in its thread.
 	//	Else main thread would hang when something is slow or hangs when working with UI elements or executing 'also' code.
 	public static void ShowDialogInNonmainThread(Func<KDialogWindow> newDialog) {
-		if (Environment.CurrentManagedThreadId != 1) _Show(false);
-		else run.thread(() => _Show(true)).Name = "tool"; //info: thread name used for debugging
+#if true
+		if (Environment.CurrentManagedThreadId != 1) {
+			_Show(false);
+		} else {
+			run.thread(() => {
+				_Show(true);
+				wait.doEvents();
+			}).Name = "tool"; //info: thread name used for debugging
+		}
 
-		void _Show(bool dialog) {
+		bool _Show(bool dialog) {
 			try { //unhandled exception kills process if in nonmain thread
 				var d = newDialog();
-				if (dialog) d.ShowDialog(); else d.Show();
+				if (dialog) return true == d.ShowDialog();
+				d.Show();
 			}
 			catch (Exception e1) { print.it(e1); }
+			return false;
 		}
+#else
+		//this was used to detect when it seems the Window is never GC-collected.
+		//	However usually it gives false positives. WPF allows to GC-collect later, when another WPF window shown.
+		//	SHOULDDO: detect true leaks, when the Window is never GC-collected because of our code, eg subscribing to static events and not unsubscribing when closed.
+		if (Environment.CurrentManagedThreadId != 1) {
+			_Show(false);
+		} else {
+			run.thread(() => {
+				var (wr, type) = _Show(true); if (wr == null) return;
+				//GC-collect and wait if need, else it seems the Window is never GC-collected
+				wait.doEvents();
+				for (int i = 500; i < 2000; i+=100) {
+					GC.Collect();
+					GC.WaitForPendingFinalizers(); //usually finalizer runs the first time
+					if (!_IsAlive(wr)) return;
+					Debug_.Print(i);
+					wait.doEvents(i);
+				}
+				static bool _IsAlive(WeakReference<Window> wr) => wr.TryGetTarget(out _); //in Debug config the _ would keep alive
+				Debug_.Print(type + " not finalized");
+			}).Name = "tool"; //info: thread name used for debugging
+		}
+
+		(WeakReference<Window> wr, string type) _Show(bool dialog) {
+			try { //unhandled exception kills process if in nonmain thread
+				var d = newDialog();
+				if (dialog) {
+					d.ShowDialog();
+					return (new(d), d.GetType().Name);
+				}
+				d.Show();
+			}
+			catch (Exception e1) { print.it(e1); }
+			return default;
+		}
+#endif
 	}
 
 	public static void CloseDialogsInNonmainThreads() {
@@ -532,9 +590,9 @@ static class TUtil {
 		return s;
 	}
 
-	#endregion
+#endregion
 
-	#region OnScreenRect
+#region OnScreenRect
 
 	/// <summary>
 	/// Creates standard <see cref="osdRect"/>.
@@ -565,7 +623,7 @@ static class TUtil {
 		int i = 0;
 		timer.every(250, t => {
 			if (i++ < 5) {
-				osr.Hwnd.ZorderTop();
+				osr.Hwnd.ZorderTopRaw_();
 				osr.Color = (i & 1) != 0 ? (error ? 0xFFFF0000 : 0xFF0000FF) : 0xFFFFFF00; //(red : blue) : yellow
 			} else {
 				t.Stop();
@@ -585,9 +643,9 @@ static class TUtil {
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region capture
+#region capture
 
 	/// <summary>
 	/// Common code for tools that capture UI objects with F3.
@@ -746,9 +804,9 @@ static class TUtil {
 		});
 	}
 
-	#endregion
+#endregion
 
-	#region test
+#region test
 
 	public record RunTestFindResult(object obj, long speed, InfoStrings info);
 
@@ -911,9 +969,9 @@ obj.{code};
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region info
+#region info
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.zText = $"<Z #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
@@ -1026,7 +1084,7 @@ Can use global usings and classes/functions from file ""global.cs"".";
 	//	tt.IsOpen = true;
 	//}
 
-	#endregion
+#endregion
 }
 
 ///// <summary>

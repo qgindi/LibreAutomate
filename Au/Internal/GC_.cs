@@ -1,10 +1,8 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More {
 	/// <summary>
 	/// <see cref="GC"/> extensions.
 	/// </summary>
-	static class GC_
-	{
+	static class GC_ {
 		static readonly ConditionalWeakTable<object, _Remover> s_table = new();
 
 		/// <summary>
@@ -17,8 +15,7 @@
 			s_table.Add(obj, new _Remover(size));
 		}
 
-		class _Remover
-		{
+		class _Remover {
 			readonly long _size;
 
 			public _Remover(long size) {

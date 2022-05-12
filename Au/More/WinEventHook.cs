@@ -42,8 +42,7 @@
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>See <see cref="WinEventHook"/>.</example>
-		public WinEventHook(EEvent eventMin, EEvent eventMax, Action<HookData.WinEvent> hookProc, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
-			if (hookProc == null) throw new ArgumentNullException();
+		public WinEventHook(EEvent eventMin, EEvent eventMax, Action<HookData.WinEvent> hookProc!!, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			_proc1 = _HookProc;
 			Hook(eventMin, eventMax, idProcess, idThread, flags);
 			_proc2 = hookProc;
@@ -60,8 +59,7 @@
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>See <see cref="WinEventHook"/>.</example>
-		public WinEventHook(EEvent[] events, Action<HookData.WinEvent> hookProc, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
-			if (hookProc == null || events == null) throw new ArgumentNullException();
+		public WinEventHook(EEvent[] events!!, Action<HookData.WinEvent> hookProc!!, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			_proc1 = _HookProc;
 			Hook(events, idProcess, idThread, flags);
 			_proc2 = hookProc;

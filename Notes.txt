@@ -12,6 +12,7 @@ To update version info of dll files (Au, Au.Editor, Au.Controls):
 To update version info of the setup file:
 	Open the .iss file in Inno Script Studio and edit MyAppVersion.
 Also update version, date, filesize and used .NET version info in index.md. It is part of the help website.
+Also may need to update year in LICENSE.txt.
 
 All significant changes of that version must be documented in Other/DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
 

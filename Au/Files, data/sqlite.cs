@@ -379,11 +379,10 @@ namespace Au
 		/// <param name="db"></param>
 		/// <param name="sql">Single SQL statement.</param>
 		/// <param name="persistent">Use flag SQLITE_PREPARE_PERSISTENT.</param>
-		/// <exception cref="ArgumentNullException">db is null.</exception>
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
-		public sqliteStatement(sqlite db, string sql, bool persistent = false) {
-			_db = db ?? throw new ArgumentNullException();
+		public sqliteStatement(sqlite db!!, string sql, bool persistent = false) {
+			_db = db;
 			int flags = persistent ? 1 : 0; //SQLITE_PREPARE_PERSISTENT
 			fixed (char* p = sql) {
 				char* tail = null;
@@ -853,8 +852,7 @@ namespace Au.Types
 		/// <param name="sql">SQL to execute now. Default "BEGIN". For nested transaction use "SAVEPOINT name".</param>
 		/// <param name="sqlOfDispose">SQL to execute when disposing this variable if not called <see cref="Commit"/> or <see cref="Rollback"/>. Default "ROLLBACK". For nested transaction use "ROLLBACK TO name". See also: <see cref="SqlOfDispose"/>.</param>
 		/// <exception cref="SLException">Failed to execute sql.</exception>
-		public SLTransaction(sqlite db, string sql = "BEGIN", string sqlOfDispose = "ROLLBACK") : this() {
-			if (db == null) throw new ArgumentNullException();
+		public SLTransaction(sqlite db!!, string sql = "BEGIN", string sqlOfDispose = "ROLLBACK") : this() {
 			db.Execute(sql);
 			_db = db;
 			SqlOfDispose = sqlOfDispose;

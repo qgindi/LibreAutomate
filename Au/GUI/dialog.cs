@@ -1183,7 +1183,7 @@ namespace Au
 				_editParent.MoveL(r);
 				_editWnd.MoveL(0, 0, r.Width, r.Height);
 			}
-			_editParent.ZorderTop();
+			_editParent.ZorderTopRaw_();
 		}
 
 		void _EditControlUpdateAsync(bool onlyZorder = false) {
@@ -1256,7 +1256,7 @@ namespace Au
 			} else {
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
-			_editParent.ZorderTop();
+			_editParent.ZorderTopRaw_();
 			Api.SetFocus(_editWnd);
 		}
 
@@ -2042,7 +2042,7 @@ namespace Au.Types
 	#region public API
 #pragma warning disable 1591 //missing XML documentation
 	/// <summary>
-	/// Rarely used constants for native API used by <see cref="dialog"/>.
+	/// Rarely used constants for Windows API used by <see cref="dialog"/>.
 	/// </summary>
 	/// <remarks>
 	/// Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <b>TDM_CLICK_BUTTON</b> use <c>DNative.TDM.CLICK_BUTTON</c>.

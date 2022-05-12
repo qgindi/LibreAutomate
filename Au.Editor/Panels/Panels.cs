@@ -57,8 +57,9 @@ static class Panels
 
 		ToolBar _TB(string name, bool isHelp = false) {
 			var c = new ToolBar { Name = name };
-			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
 			c.UiaSetName(name);
+			c.HideGripAndOverflow(false);
+			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
 			tt.ToolBars.Add(c);
 #if true
 			if (isHelp) {
@@ -78,6 +79,29 @@ static class Panels
 #endif
 			return c;
 		}
+		//		ToolBar _TB(string name, bool isHelp = false) {
+		//			var c = new ToolBar { Name = name };
+		//			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
+		//			c.UiaSetName(name);
+		//			tt.ToolBars.Add(c);
+		//#if true
+		//			if (isHelp) {
+		//				var p = new DockPanel { Background = tt.Background };
+		//				DockPanel.SetDock(tt, Dock.Right);
+		//				p.Children.Add(tt);
+		//				//FUTURE
+		//				//var box = new TextBox { Height = 20, Margin = new Thickness(3, 1, 3, 2), Padding = new Thickness(1, 1, 1, 0) };
+		//				//p.Children.Add(box);
+		//				pm[name].Content = p;
+		//			} else {
+		//				pm[name].Content = tt;
+		//			}
+		//#else
+		//			if (name == "Help") c.Items.Add(new TextBox { Width = 150, Padding = new Thickness(1, 0, 1, 0) });
+		//			pm[name].Content = tt;
+		//#endif
+		//			return c;
+		//		}
 	}
 
 	public static void CreatePanels() {

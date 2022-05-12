@@ -172,7 +172,7 @@ static class Menus {
 		public static void Parameter_info() { CodeInfo.ShowSignature(); }
 
 		[Command(keysText = "F12", image = "*RemixIcon.WalkFill #B340FF")]
-		public static void Go_to_definition() { CiGoTo.GoToSymbolFromPos(); }
+		public static void Go_to_definition() { CiGoTo.GoToDefinition(); }
 
 		[Command(separator = true)]
 		public static class Selection {
@@ -203,10 +203,10 @@ static class Menus {
 		[Command]
 		public static class View {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #99BF00")]
-			public static void Wrap_lines() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
+			public static void Wrap_lines() { SciCode.ToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
 			[Command(checkable = true, image = "*Material.TooltipImageOutline #99BF00")]
-			public static void Images_in_code() { SciCode.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
+			public static void Images_in_code() { SciCode.ToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
 
 		[Command]
@@ -223,7 +223,7 @@ static class Menus {
 	public static class Code {
 		[Command(underlined: 'r', image = "*Material.RecordRec #008EEE")]
 		//[Command(underlined: 'r', image = "*BoxIcons.RegularVideoRecording #008EEE")]
-		public static void Input_recorder() { InputRecorder.ShowRecorder(); }
+		public static void Input_recorder() { DInputRecorder.ShowRecorder(); }
 
 		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #008EEE")]
 		public static void wnd() { Dwnd.Dialog(); }
@@ -293,12 +293,6 @@ static class Menus {
 
 	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
 	public static class TT {
-		//[Command("...")]
-		//public static void Add_trigger() { TriggersAndToolbars.AddTrigger(); }
-
-		//[Command("...")]
-		//public static void Add_toolbar() { TriggersAndToolbars.AddToolbar(); }
-
 		[Command('k'/*, separator = true*/)]
 		public static void Hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
 
@@ -311,28 +305,35 @@ static class Menus {
 		[Command]
 		public static void Window_triggers() { TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs"); }
 
+		[Command("...", image = "*Codicons.SymbolEvent #008EEE")]
+		public static void New_trigger() { TriggersAndToolbars.NewTrigger(); }
+
+		//rejected. It's in the quick capturing menu.
+		//[Command("...")]
+		//public static void Trigger_scope() { TriggersAndToolbars.TriggerScope(); }
+
+		//[Command("...")]
+		//public static void Active_triggers() {  }
+
 		[Command(separator = true)]
-		public static void Common_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Common toolbars.cs"); }
+		public static void Toolbars() { TriggersAndToolbars.ToolbarsMenu(); }
+
+		[Command("...")]
+		public static void New_toolbar() { TriggersAndToolbars.NewToolbar(); }
+
+		[Command("...")]
+		public static void Toolbar_trigger() { TriggersAndToolbars.SetToolbarTrigger(); }
 
 		[Command]
-		public static void Window_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Window toolbars.cs"); }
+		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }
 
 		[Command(separator = true)]
-		public static void Edit_TT_script() { TriggersAndToolbars.Edit(@"Triggers and toolbars.cs"); }
+		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
 
 		[Command]
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 
 		[Command(separator = true)]
-		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
-
-		//[Command("...")]
-		//public static void Active_triggers() {  }
-
-		[Command("...")]
-		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }
-
-		[Command("...", separator = true)]
 		public static void Script_triggers() { DCommandline.ZShow(); }
 	}
 

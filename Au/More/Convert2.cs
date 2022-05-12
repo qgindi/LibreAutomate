@@ -1,13 +1,11 @@
 
 using System.IO.Compression;
 
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Data conversion functions. Compression, hex encoding, UTF8.
 	/// </summary>
-	public static unsafe class Convert2
-	{
+	public static unsafe class Convert2 {
 		#region hex encode
 
 		/// <summary>
@@ -42,7 +40,7 @@ namespace Au.More
 		/// <summary>
 		/// Converts data in byte[] or other memory to hex encoded string.
 		/// </summary>
-		/// <param name="data">The data.</param>
+		/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		/// <remarks>
 		/// The result string length is 2 * data length.
@@ -297,7 +295,7 @@ namespace Au.More
 		/// <summary>
 		/// Compresses data. Uses <see cref="DeflateStream"/>.
 		/// </summary>
-		/// <param name="data"></param>
+		/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 		/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
 		public static byte[] DeflateCompress(ReadOnlySpan<byte> data) {
 			using var ms = new MemoryStream();
@@ -339,7 +337,7 @@ namespace Au.More
 		/// <summary>
 		/// Compresses data. Uses <see cref="BrotliEncoder"/>.
 		/// </summary>
-		/// <param name="data"></param>
+		/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 		/// <param name="level">Compression level, 0 (no compression) to 11 (maximal compression). Default 6. Bigger levels don't make much smaller but can make much slower.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>level</i>.</exception>
 		/// <exception cref="OutOfMemoryException"></exception>

@@ -28,7 +28,7 @@ partial class SciCode : KScintilla {
 
 	//#if DEBUG
 	//	public const int c_indicTest = 21;
-	//	internal void TestHidden() {
+	//	internal void TestHidden_() {
 	//		string code = zText;
 	//		int start8 = code.Find("/*image:")+7;
 	//		int end8 = code.Find("*/");
@@ -43,7 +43,7 @@ partial class SciCode : KScintilla {
 	//		unsafe { fixed (byte* bp = b) Call(SCI_SETSTYLINGEX, b.Length, bp); }
 	//	}
 
-	//	internal void TestIndicators() {
+	//	internal void TestIndicators_() {
 	//		Call(SCI_INDICSETFORE, c_indicTest, 0x008000);
 	//		Call(SCI_INDICSETSTYLE, c_indicTest, INDIC_BOX);
 	//		zIndicatorClear(c_indicTest);
@@ -90,7 +90,7 @@ partial class SciCode : KScintilla {
 			Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
 
 			Call(SCI_SETCARETLINEFRAME, 1);
-			Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_CARET_LINE_BACK, 0xe0e0e0);
+			Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_CARET_LINE_BACK, 0xEEEEEE);
 			Call(SCI_SETCARETLINEVISIBLEALWAYS, 1);
 
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
@@ -131,12 +131,12 @@ partial class SciCode : KScintilla {
 	}
 
 	//Called by PanelEdit.ZOpen.
-	internal void _Init(byte[] text, bool newFile, bool noTemplate) {
+	internal void Init_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
-		_SetLineNumberMarginWidth();
+		SetLineNumberMarginWidth_();
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
@@ -215,7 +215,7 @@ partial class SciCode : KScintilla {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
 				//	//}
-				if (n.linesAdded != 0) _SetLineNumberMarginWidth(onModified: true);
+				if (n.linesAdded != 0) SetLineNumberMarginWidth_(onModified: true);
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
@@ -400,7 +400,7 @@ partial class SciCode : KScintilla {
 	bool _isUnsaved;
 
 	//Called by PanelEdit.ZSaveText.
-	internal bool _SaveText() {
+	internal bool SaveText_() {
 		if (_IsUnsaved) {
 			//print.qm2.write("saving");
 			_fn.UnCacheText();
@@ -413,7 +413,7 @@ partial class SciCode : KScintilla {
 	}
 
 	//Called by FileNode.UnCacheText.
-	internal void _FileModifiedExternally() {
+	internal void FileModifiedExternally_() {
 		if (zIsReadonly) return;
 		var text = _fn.GetText(saved: true); if (text == this.zText) return;
 		ZReplaceTextGently(text);
@@ -422,7 +422,7 @@ partial class SciCode : KScintilla {
 	}
 
 	//never mind: not called when zoom changes.
-	internal void _SetLineNumberMarginWidth(bool onModified = false) {
+	internal void SetLineNumberMarginWidth_(bool onModified = false) {
 		int c = 4, lines = zLineCount;
 		while (lines > 999) { c++; lines /= 10; }
 		if (!onModified || c != _prevLineNumberMarginWidth) zSetMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
@@ -473,7 +473,7 @@ partial class SciCode : KScintilla {
 	public void ZPaste() {
 		var s1 = clipboard.text; if (s1.NE()) return;
 
-		var (isFC, text, name, isClass) = ZIsForumCode(s1, false);
+		var (isFC, text, name, isClass) = IsForumCode_(s1, false);
 		if (isFC) {
 			string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
 				? "1 Create new file|0 Cancel"
@@ -496,7 +496,7 @@ partial class SciCode : KScintilla {
 		}
 	}
 
-	internal static (bool yes, string text, string filename, bool isClass) ZIsForumCode(string s, bool newFile) {
+	internal static (bool yes, string text, string filename, bool isClass) IsForumCode_(string s, bool newFile) {
 		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 		if (!s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return default;
 
@@ -566,7 +566,7 @@ partial class SciCode : KScintilla {
 	[Flags]
 	public enum EView { Wrap = 1, Images = 2 }
 
-	internal static void ZToggleView_call_from_menu_only_(EView what) {
+	internal static void ToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			App.Settings.edit_wrap ^= true;
 			foreach (var v in Panels.Editor.ZOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);

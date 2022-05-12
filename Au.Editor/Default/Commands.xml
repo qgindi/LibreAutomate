@@ -57,6 +57,7 @@ All attributes are optional. The Example command contains all.
 		<elm />
 		<uiimage />
 		<Keys />
+		<New_trigger separator="" />
 		<Icons separator="" />
 		<Options />
 	</Tools>

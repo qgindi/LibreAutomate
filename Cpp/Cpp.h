@@ -85,12 +85,14 @@ enum class eAF
 ENABLE_BITMASK_OPERATORS(eAF);
 
 //Parameters for Cpp_AccFind.
+enum class eAF2;
 struct Cpp_AccFindParams {
 	STR role, name, prop;
 	int roleLength, nameLength, propLength;
 	eAF flags;
 	int skip;
 	WCHAR resultProp;
+	eAF2 flags2;
 
 	Cpp_AccFindParams() noexcept { memset(this, 0, sizeof(*this)); }
 };
@@ -126,11 +128,11 @@ enum class eError
 	NotFound = 0x1001, //AO not found. With FindAll - no errors. This is actually not an error.
 	InvalidParameter = 0x1002, //invalid parameter, for example wildcard expression (or regular expression in it)
 	WindowClosed = 0x1003, //the specified window handle is invalid or the window was destroyed while injecting
-	WaitChromeDisabled = 0x1004, //need to wait while enabling Chrome AOs
 #ifdef Cpp_EXPORTS
 	Inject = 0x1100, //failed to inject this dll into the target process
 	WindowOfThisThread = 0x1101, //the specified window belongs to the caller thread
 	UseNotInProc = 0x1102, //window class name is Windows.UI.Core.CoreWindow etc
+	WaitChromeDisabled = 0x1103, //need to wait while enabling Chrome AOs
 #endif
 };
 

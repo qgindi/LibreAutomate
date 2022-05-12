@@ -955,5 +955,8 @@ namespace Au.Triggers
 			Window = w;
 			Later = later;
 		}
+
+		///
+		public override string ToString() => "Trigger: " + Trigger;
 	}
 }

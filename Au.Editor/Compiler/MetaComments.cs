@@ -640,7 +640,7 @@ namespace Au.Compiler {
 		bool _Error(string s, int from, int to) {
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
-			} else if (_f.f == Panels.Editor.ZActiveDoc.ZFile) {
+			} else if (_flags.Has(EMPFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ZActiveDoc.ZFile) {
 				CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 			}
 			return false;
@@ -939,6 +939,12 @@ namespace Au.Compiler {
 		/// Need only references (r, pr, com, nuget).
 		/// </summary>
 		OnlyRef = 4,
+
+		/// <summary>
+		/// Used for code info in editor. Includes ForCodeInfo.
+		/// Same as ForCodeInfo; also adds some editor-specific stuff, like CodeInfo._diag.AddMetaError.
+		/// </summary>
+		ForCodeInfoInEditor = 2 | 8,
 
 		///// <summary>
 		///// Used for file Properties dialog etc, not when compiling.

@@ -9,8 +9,7 @@ using System.Drawing;
 
 namespace Au.Tools;
 
-class Duiimage : KDialogWindow
-{
+class Duiimage : KDialogWindow {
 	public static void Dialog()
 		=> TUtil.ShowDialogInNonmainThread(() => new Duiimage());
 
@@ -72,7 +71,7 @@ class Duiimage : KDialogWindow
 		b.End();
 		_noeventValueChanged = false;
 
-		WndSavedRect.Restore(this, App.Settings.Duiimage_wndPos, o => App.Settings.Duiimage_wndPos = o);
+		WndSavedRect.Restore(this, App.Settings.wndpos.uiimage, o => App.Settings.wndpos.uiimage = o);
 	}
 
 	static Duiimage() {
@@ -100,7 +99,7 @@ class Duiimage : KDialogWindow
 	}
 
 	private void _bWnd_Click(WBButtonClickArgs e) {
-		var r = _code.ZShowWndTool(this, _wnd, _con, !_useCon);
+		var r = _code.ZShowWndTool(this, _wnd, _con, checkControl: _useCon);
 		if (r.ok) _SetWndCon(r.w, r.con, r.useCon, true);
 	}
 
@@ -225,7 +224,7 @@ class Duiimage : KDialogWindow
 			b.Append("var f = new uiimageFinder(");
 		} else {
 			b.Append(waitNot ? "uiimage.waitNot(" : "uiimage.find(");
-			if (wait || waitNot || orThrow) if(b.AppendWaitTime(waitTime ?? "0", orThrow)) b.Append(", ");
+			if (wait || waitNot || orThrow) if (b.AppendWaitTime(waitTime ?? "0", orThrow)) b.Append(", ");
 
 			(wndCode, wndVar) = _code.ZGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			bb.AppendLine(wndCode);
@@ -524,8 +523,7 @@ If unchecked, returns false.");
 	//	UseLayoutRounding does not help in this case.
 	//	RenderOptions.SetBitmapScalingMode(NearestNeighbor) helps it seems. But why it tries to scale the image, and how many times?
 	//	Tried winforms PictureBox, bust sometimes very slowly starts.
-	class _PictureBox : HwndHost
-	{
+	class _PictureBox : HwndHost {
 		wnd _w;
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {

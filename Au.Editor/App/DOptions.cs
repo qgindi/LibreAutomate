@@ -5,14 +5,13 @@ using Microsoft.Win32;
 using System.Windows.Controls.Primitives;
 using Au.Tools;
 
-class DOptions : KDialogWindow
-{
+class DOptions : KDialogWindow {
 	public static void ZShow() {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
 		} else {
-			s_dialog.Activate();
+			s_dialog.Hwnd().ActivateL(true);
 		}
 	}
 	static DOptions s_dialog;
@@ -118,18 +117,18 @@ class DOptions : KDialogWindow
 		}
 	}
 
-	void _Files() {
-		var b = _Page("Files");
-		b.End();
+	//void _Files() {
+	//	var b = _Page("Files");
+	//	b.End();
 
-		b.Loaded += () => {
+	//	b.Loaded += () => {
 
-		};
+	//	};
 
-		_b.OkApply += e => {
+	//	_b.OkApply += e => {
 
-		};
-	}
+	//	};
+	//}
 
 	void _Font() {
 		var b = _Page("Font", WBPanelType.Dock);
@@ -304,7 +303,7 @@ Line number";
 					CiStyling.TStyles.Settings = styles;
 					foreach (var v in Panels.Editor.ZOpenDocs) {
 						styles.ToScintilla(v);
-						v._SetLineNumberMarginWidth();
+						v.SetLineNumberMarginWidth_();
 					}
 				}
 			};
@@ -462,8 +461,7 @@ To apply changes after deleting etc, restart this application.
 		};
 	}
 
-	static class api
-	{
+	static class api {
 		[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
 		internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, nint lParam, uint dwFlags);
 		internal unsafe delegate int FONTENUMPROC(Api.LOGFONT* lf, IntPtr tm, uint fontType, nint lParam);

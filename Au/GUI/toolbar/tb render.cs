@@ -201,7 +201,7 @@ namespace Au
 		/// Returns size of client area.
 		/// </summary>
 		SIZE _Measure(int? width = null) {
-			//		print.it("measure");
+			//print.it("measure");
 			SIZE R = default;
 			bool autoSize = AutoSize && _a.Count > 0;
 			bool vert = Layout == TBLayout.Vertical;
@@ -212,7 +212,7 @@ namespace Au
 			if (width != null) ww = width.Value - tbp * 2;
 			else if (!autoSize) ww = _Scale(_sett.size.Width, false) - tbp * 2;
 			else if (AutoSizeWrapWidth > 0) ww = _Scale(AutoSizeWrapWidth, false);
-			ww = Math.Max(ww, m.image);
+			//ww = Math.Max(ww, m.image); //no, then can't have thin vertical screen edge toolbars
 
 			for (int i = 0, x = 0, y = 0; i < _a.Count; i++) {
 				var b = _a[i];
@@ -249,7 +249,7 @@ namespace Au
 			} else {
 				R = new(ww + tbp * 2, _Scale(_sett.size.Height, false));
 			}
-			//		print.it(R);
+			//print.it(R);
 
 			foreach (var b in _a) {
 				b.rect.Offset(tbp, tbp);

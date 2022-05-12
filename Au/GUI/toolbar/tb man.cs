@@ -355,7 +355,13 @@ namespace Au {
 
 		void _Zorder() {
 			if (!IsOwned) {
-
+				//Ensure the toolbar is on top of taskbar.
+				//	It means usually will be on top of most topmost windows.
+				//	Not on top of all topmost windows. Would cover tooltips etc, fight with sibling toolbars, etc.
+				var wo = s_taskbar.FindFast(null, "Shell_TrayWnd", false);
+				if (!wo.IsTopmost) return;
+				if (_w.ZorderIsAbove(wo)) return;
+				_w.ZorderAbove(wo);
 			} else if (_ow.visible) {
 				wnd wt = _w, wo = _ow.w;
 
@@ -371,10 +377,9 @@ namespace Au {
 				//print.it(wo);
 
 				if (!_zorderedOnce || !wt.ZorderIsAbove(wo)) {
-					bool ok = wt.ZorderAbove(wo);
-					if (!ok) {
+					if (!wt.ZorderAbove(wo)) {
 						var ec = lastError.code;
-						if (!wt.ZorderIsAbove(wo)) { //if owner is win store app and this process isn't admin, zorders but returns false
+						if (!wt.ZorderIsAbove(wo)) {
 							var es = ec == Api.ERROR_ACCESS_DENIED && wo.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : lastError.messageFor(ec);
 							print.warning($"Failed to Z-order toolbar '{_name}' above owner window. {es}");
 						}
@@ -389,6 +394,7 @@ namespace Au {
 			}
 		}
 		bool _zorderedOnce;
+		static wnd.Cached_ s_taskbar;
 
 		void _FollowRect(bool onFollowOwner = false) {
 			if (_inMoveSize) return;

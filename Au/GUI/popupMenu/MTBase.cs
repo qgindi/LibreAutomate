@@ -39,7 +39,9 @@ public abstract partial class MTBase {
 		_threadId = Api.GetCurrentThreadId();
 	}
 
-	private protected MTBase(string name, string f_, int l_) : this() {
+	private protected MTBase(string name, string f_, int l_, string m_ = null) : this() {
+		if (name == null && !m_.NE())
+			if (m_[0] is not ('<' or '.')) name = m_; //<Main>$, .ctor
 		_name = name;
 		_sourceFile = f_;
 		_sourceLine = l_;
@@ -176,7 +178,7 @@ public abstract partial class MTBase {
 			}
 
 			if (b is popupMenu.MenuItem) { //ensure the tooltip is above submenu in Z order
-				_tt.tt.ZorderTop();
+				_tt.tt.ZorderTopRaw_();
 				if (submenuDelay > 0) submenuDelay += 100;
 				_tt.tt.Send(0x403, 3, submenuDelay > (int)_tt.tt.Send(0x415, 3) ? submenuDelay : -1); //TTM_SETDELAYTIME,TTM_GETDELAYTIME,TTDT_INITIAL
 			}

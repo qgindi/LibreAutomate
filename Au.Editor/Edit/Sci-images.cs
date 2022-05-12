@@ -345,7 +345,7 @@ partial class SciCode {
 	//		Workaround: modify scintilla source in Editor::RangeContainsProtected.
 
 	bool _ImageDeleteKey(KKey key) {
-		if (key is KKey.Delete or KKey.Back && !base.zIsSelection) {
+		if (key is KKey.Delete or KKey.Back && !base.zHasSelection) {
 			int pos = base.zCurrentPos8, to = pos;
 			if (key == KKey.Back) {
 				while (zGetStyleAt(pos - 1) == STYLE_HIDDEN) pos--;
@@ -377,7 +377,7 @@ partial class SciCode {
 
 	public void ImageRemoveScreenshots() {
 		if (zIsReadonly || !_fn.IsCodeFile) return;
-		bool isSel = zIsSelection;
+		bool isSel = zHasSelection;
 		string s = isSel ? zSelectedText() : zText;
 		var s2 = _ImageRemoveScreenshots(s);
 		if (s2 == s) return;

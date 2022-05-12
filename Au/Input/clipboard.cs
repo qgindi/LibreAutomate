@@ -109,8 +109,7 @@ namespace Au
 		/// if(files == null) print.it("no files in clipboard"); else print.it(files);
 		/// ]]></code>
 		/// </example>
-		public static void copyData(Action callback, bool cut = false, OKey options = null) {
-			if (callback == null) throw new ArgumentNullException();
+		public static void copyData(Action callback!!, bool cut = false, OKey options = null) {
 			_Copy(cut, options, callback);
 		}
 
@@ -222,8 +221,7 @@ namespace Au
 		/// clipboard.pasteData(new clipboardData().AddHtml("<b>text</b>").AddText("text"));
 		/// ]]></code>
 		/// </example>
-		public static void pasteData(clipboardData data, OKey options = null) {
-			if (data == null) throw new ArgumentNullException();
+		public static void pasteData(clipboardData data!!, OKey options = null) {
 			_Paste(data, options);
 		}
 

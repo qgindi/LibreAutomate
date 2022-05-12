@@ -9,9 +9,9 @@ enum class eAF2
 {
 	//these are from role prefix
 	InWebPage = 1, //"web:", "firefox:" or "chrome:"
-	InFirefoxPage = 2, //"firefox:"
-	InChromePage = 4, //"chrome:"
-	InIES = 8, //"web:", IE web browser control
+	InFirefoxPage = 2, //"firefox:", or "web:" and detected Firefox
+	InChromePage = 4, //"chrome:", or "web:" and detected Chrome
+	InIES = 8, //"web:", detected IE web browser control
 
 	NotInProc = 0x100, //from eAF::NotInProc
 	FindAll = 0x200,
@@ -106,6 +106,14 @@ struct MarshalParams_AccElem
 {
 	MarshalParams_Header hdr;
 	long elem;
+};
+
+//Used for marshaling parameters of when need HWND and int when calling the get_accHelpTopic hook function.
+struct MarshalParams_AccHwndInt
+{
+	MarshalParams_Header hdr;
+	int hwnd;
+	int i;
 };
 
 namespace outproc
@@ -228,10 +236,7 @@ extern HookIAccessible s_hookIAcc;
 
 enum class eWinFlags
 {
-	AccEnableStarted=1,
-	AccEnableYes=2,
-	AccEnableNo=4,
-	AccEnableMask=7,
+	AccEnabled=1,
 	AccJavaYes=8,
 	AccJavaNo=16,
 };

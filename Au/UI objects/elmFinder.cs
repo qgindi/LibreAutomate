@@ -17,8 +17,7 @@
 /// print.it(f.Result);
 /// ]]></code>
 /// </example>
-public unsafe class elmFinder
-{
+public unsafe class elmFinder {
 	readonly string _role, _name, _prop, _navig;
 	readonly EFFlags _flags;
 	readonly int _skip;
@@ -212,7 +211,7 @@ public unsafe class elmFinder
 			if (_flags.Has(_EFFlags_Empty)) throw new InvalidOperationException();
 			if (value != _next) {
 				if (value != null) {
-					if (value._flags.HasAny(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in elm.");
+					if (value._flags.HasAny(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Don't use flags UIA and ClientArea when searching in elm.");
 				}
 				_next = value;
 				_also2 = null;
@@ -326,13 +325,17 @@ public unsafe class elmFinder
 
 	internal bool Find_(bool inElm, wnd w, elm eParent, double? waitS = null, bool isNext = false) {
 		if (_flags.Has(_EFFlags_Empty)) throw new InvalidOperationException();
-		if (_flags.Has(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea together.");
+		if (_flags.Has(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Don't use flags UIA and ClientArea together.");
+		if (_role != null) {
+			if (_role == "") throw new ArgumentException("role cannot be \"\".");
+			if (inElm && 0 != _role.Starts(false, "web:", "chrome:", "firefox:")) throw new ArgumentException("Don't use role prefix when searching in elm.");
+		}
 
 		Cpp.Cpp_Acc aParent; Cpp.Cpp_Acc* pParent = null;
 		EFFlags flags = _flags;
 		if (inElm) {
 			if (!isNext) {
-				if (_flags.HasAny(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in elm.");
+				if (_flags.HasAny(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Don't use flags UIA and ClientArea when searching in elm.");
 				if (eParent == null) throw new ArgumentNullException();
 				eParent.ThrowIfDisposed_();
 				if (eParent.Item != 0) throw new ArgumentException("Item not 0.");
@@ -350,7 +353,9 @@ public unsafe class elmFinder
 
 		_ClearResult();
 
-		var ap = new Cpp.Cpp_AccParams(_role, _name, _prop, flags, Math.Max(0, _skip), _resultProp);
+		var ap = new Cpp.Cpp_AccFindParams(_role, _name, _prop, flags, Math.Max(0, _skip), _resultProp);
+
+		if (!inElm) ap.RolePrefix(w); //converts role prefix to flags (C++ internal) and may enable Chrome AOs
 
 		//if used skip<0 and path or navig, need to search in all possible paths. For it we use the 'also' callback.
 		//FUTURE: optimize. Add part of code to the C++ dll. Now can walk same tree branches multiple times.
@@ -367,9 +372,9 @@ public unsafe class elmFinder
 			if (_also != null) also = _also2 ??= ca => _also(new elm(ca)) ? 1 : 0;
 		}
 
-		var to = new wait.Loop(waitS ?? -1, inProc ? s_owait10 : s_owait40); //-1 for WaitChromeDisabled
+		var to = new wait.Loop(waitS ?? -1, inProc ? s_owait10 : s_owait40);
 		for (bool doneUAC = false, doneThread = false; ;) {
-			var hr = Cpp.Cpp_AccFind(w, pParent, in ap, also, out var ca, out string sResult);
+			var hr = Cpp.Cpp_AccFind(w, pParent, ap, also, out var ca, out string sResult);
 
 			if (hr == 0) {
 				switch (_resultProp) {
@@ -411,11 +416,6 @@ public unsafe class elmFinder
 			switch (hr) {
 			case Cpp.EError.NotFound:
 				if (waitS == null) return false;
-				break;
-			case Cpp.EError.WaitChromeDisabled:
-				//print.it("WaitChromeDisabled");
-				if (to.TimeRemaining < 3000) to.TimeRemaining += (long)(to.Period * 15 / 16);
-				//normally waits ~10 times longer, eg 10 s instead of 1
 				break;
 			default:
 				Debug.Assert(!Cpp.IsCppError((int)hr));
@@ -554,8 +554,7 @@ public unsafe class elmFinder
 	//}
 }
 
-partial class elm
-{
+partial class elm {
 	/// <summary>
 	/// Gets an <see cref="elmFinder"/> for finding UI elements in a window or UI element that can be set later with <see cref="elmFinder.In"/>.
 	/// Example: <c>var e = elm.path["ROLE", "Name"].In(w).Find();</c>. Same as <c>var e = w.Elm["ROLE", "Name"].Find();</c>.
@@ -573,8 +572,7 @@ partial class elm
 	public elmFinder Elm => new(default, this);
 }
 
-partial struct wnd
-{
+partial struct wnd {
 	/// <summary>
 	/// Gets an <see cref="elmFinder"/> for finding UI elements in this window or control.
 	/// Example: <c>var e = w.Elm["ROLE", "Name"].Find();</c>.

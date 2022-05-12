@@ -23,8 +23,7 @@ using System.Linq;
 
 namespace Au.Tools;
 
-class Delm : KDialogWindow
-{
+class Delm : KDialogWindow {
 	public static void Dialog(POINT? p = null)
 		=> TUtil.ShowDialogInNonmainThread(() => new Delm(p));
 
@@ -40,14 +39,12 @@ class Delm : KDialogWindow
 	ComboBox _cbAction;
 	KCheckBox _cCapture, _cAutoTestAction, _cAutoInsert, _cControl, _cException, _cScroll;
 	KCheckTextBox _wait, _xy;
-	Panel _topRow3;
 	_PropPage _page, _commonPage;
 	Border _pageBorder;
 	KSciCodeBoxWnd _code;
 	KTreeView _tree;
 
-	partial class _PropPage
-	{
+	partial class _PropPage {
 		Delm _dlg;
 
 		public KCheckTextBox roleA, nameA, uiaidA, idA, classA, valueA, descriptionA, actionA, keyA, helpA, elemA, stateA, rectA, alsoA, skipA, navigA, notinA, maxccA, levelA;
@@ -136,7 +133,7 @@ class Delm : KDialogWindow
 		_xy = b.xAddCheckText("x, y", noR: true, check: _Opt.Has(_EOptions.MouseXY)); b.Span(1).Height(18); _xy.t.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 		b.Add(out _cScroll, "Scroll").Checked(_Opt.Has(_EOptions.MouseScroll));
 		//row 3
-		b.R.StartStack(); _topRow3 = b.Panel;
+		b.R.StartStack();
 		b.AddButton(out _bWindow, "Window...", _bWnd_Click).Width(70);
 		b.xAddCheck(out _cControl, "Control").Margin("R30");
 		_wait = b.xAddCheckText("Wait", App.Settings.delm.wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
@@ -172,7 +169,7 @@ class Delm : KDialogWindow
 			showActivated: _elm != null ? false : null //eg if captured a popup menu item, activating this window closes the menu and we cannot get properties
 			);
 
-		WndSavedRect.Restore(this, App.Settings.delm.wndPos, o => App.Settings.delm.wndPos = o);
+		WndSavedRect.Restore(this, App.Settings.wndpos.elm, o => App.Settings.wndpos.elm = o);
 	}
 
 	static Delm() {
@@ -190,6 +187,15 @@ class Delm : KDialogWindow
 	protected override void OnClosing(CancelEventArgs e) {
 		_cCapture.IsChecked = false;
 		base.OnClosing(e);
+	}
+
+	protected override void OnClosed(EventArgs e) {
+		//let GC collect UI elements in case this window isn't collected when it should. Not tested, never mind.
+		_elm = null;
+		_treeRoot = null;
+		GC.Collect();
+
+		base.OnClosed(e);
 	}
 
 	void _SetElm(bool captured) {
@@ -286,7 +292,7 @@ class Delm : KDialogWindow
 		using var nevc = new _NoeventValueChanged(this);
 
 		bool isWeb = browser != 0;
-		_isWebIE = isWeb && browser == _BrowserEnum.IE;
+		_isWebIE = browser == _BrowserEnum.IE;
 
 		var role = p.Role; if (isWeb) role = "web:" + role;
 		_SetHideIfEmpty(_page.roleA, role, check: true, escape: false);
@@ -366,7 +372,7 @@ class Delm : KDialogWindow
 	private void _bWnd_Click(WBButtonClickArgs e) {
 		var wPrev = _WndSearchIn;
 		bool captCheck = _cCapture.IsChecked;
-		var r = _code.ZShowWndTool(this, _wnd, _con, !_useCon);
+		var r = _code.ZShowWndTool(this, _wnd, _con, checkControl: _useCon);
 		if (captCheck) _cCapture.IsChecked = true;
 		if (!r.ok) return;
 		_SetWndCon(r.w, r.con, r.useCon);
@@ -401,8 +407,7 @@ class Delm : KDialogWindow
 	}
 
 	int _noeventValueChanged;
-	ref struct _NoeventValueChanged
-	{
+	ref struct _NoeventValueChanged {
 		Delm _d;
 		public _NoeventValueChanged(Delm d) { _d = d; _d._noeventValueChanged++; }
 		public void Dispose() { _d._noeventValueChanged--; }
@@ -1084,8 +1089,7 @@ class Delm : KDialogWindow
 		//IUIAutomationElement. Very slow ElementFromIAccessible. In Firefox can be 30 ms.
 	}
 
-	class _TreeItem : TreeBase<_TreeItem>, ITreeViewItem
-	{
+	class _TreeItem : TreeBase<_TreeItem>, ITreeViewItem {
 		readonly Delm _dlg;
 		public elm e;
 		string _displayText;
@@ -1485,8 +1489,7 @@ class Delm : KDialogWindow
 	}
 
 	[Flags]
-	enum _EOptions
-	{
+	enum _EOptions {
 		AutoTest = 1,
 		//NoScope = 1 << 1, //rejected
 		MouseXY = 1 << 2,
@@ -1565,8 +1568,7 @@ class Delm : KDialogWindow
 		_page.navigA.Set(navig.Length > 0, navig);
 	}
 
-	public static class Java
-	{
+	public static class Java {
 		/// <summary>
 		/// Calls <see cref="EnableDisableJab"/>. Before it shows dialog "enable/disable". After it shows dialog with results.
 		/// </summary>
@@ -1640,18 +1642,26 @@ class Delm : KDialogWindow
 	//Returns nonzero if container's class is like in one of browsers: 1 IES, 2 FF, 3 Chrome. Even if returns false.
 	static _BrowserEnum _IsVisibleWebPage(elm e, wnd wContainer) {
 		if (e.MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java)) return 0;
-		var browser = (_BrowserEnum)wContainer.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
-		if (browser > _BrowserEnum.IE) {
+
+		var browser = wContainer.HasStyle(WS.CHILD)
+			? wContainer.ClassNameIs(Api.string_IES, "Chrome_RenderWidgetHostHWND") switch { 1 => _BrowserEnum.IE, 2 => _BrowserEnum.Chrome, _ => 0 }
+			: (_BrowserEnum)wContainer.ClassNameIs("Chrome*", "Mozilla*");
+
+		if (browser is _BrowserEnum.Chrome or _BrowserEnum.FF) {
 			elm eDoc = null;
 			do {
 				if (e.RoleInt == ERole.DOCUMENT) eDoc = e;
 				e = e.Parent;
 			} while (e != null);
 			if (eDoc == null || eDoc.IsInvisible) return 0;
+
+			if (browser == _BrowserEnum.Chrome && eDoc.Value is string sv)
+				if (0 != sv.Starts(false, "chrome://read-later", "devtools:", "chrome-devtools:")) return 0; //see _FindDocumentCallback
 		}
+
 		return browser;
 	}
-	enum _BrowserEnum { IE = 1, FF, Chrome }
+	enum _BrowserEnum { Chrome = 1, FF, IE }
 
 	void _EnableDisableTopControls(bool enable) {
 		_bTest.IsEnabled = enable; _bInsert.IsEnabled = enable;
@@ -1866,8 +1876,7 @@ If the hotkey doesn't work when the target window is active, probably its proces
 	//const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature. More info in <help>elm<> help. Or use Chrome instead.";
 	const string c_infoJava = "If there are no UI elements in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>elm<> help.";
 
-	partial class _PropPage
-	{
+	partial class _PropPage {
 		void _InitInfo() {
 			var _info = _dlg._info;
 			_info.InfoCT(roleA,

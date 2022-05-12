@@ -89,7 +89,7 @@ class PanelEdit : Grid
 			_docs.Add(doc);
 			_activeDoc = doc;
 			Children.Add(doc);
-			doc._Init(text, newFile, noTemplate);
+			doc.Init_(text, newFile, noTemplate);
 			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
@@ -163,7 +163,7 @@ class PanelEdit : Grid
 	}
 
 	public bool ZSaveText() {
-		return _activeDoc?._SaveText() ?? true;
+		return _activeDoc?.SaveText_() ?? true;
 	}
 
 	public void ZSaveEditorData() {

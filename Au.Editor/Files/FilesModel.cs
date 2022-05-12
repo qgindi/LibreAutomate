@@ -6,8 +6,7 @@ using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 
-partial class FilesModel
-{
+partial class FilesModel {
 	public readonly FileNode Root;
 	public readonly int WorkspaceSN; //sequence number of workspace open in this process: 1, 2...
 	static int s_workspaceSN;
@@ -15,13 +14,13 @@ partial class FilesModel
 	public readonly string WorkspaceDirectory;
 	public readonly string WorkspaceFile; //.xml file containing the tree of .cs etc files
 	public readonly string FilesDirectory; //.cs etc files
-	//public readonly string CacheDirectory; //any cache files
+										   //public readonly string CacheDirectory; //any cache files
 	public readonly string TempDirectory; //any temporary files
 	public readonly string NugetDirectory; //NuGet libraries
 	public readonly string NugetDirectoryBS; //NugetDirectory\
 	public readonly string DllDirectory; //user-created or downloaded libraries
 	public readonly string DllDirectoryBS; //LibrariesDirectory\
-	//public readonly string ExeDirectory; //user-created exe files
+										   //public readonly string ExeDirectory; //user-created exe files
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	internal readonly Dictionary<string, object> _nameMap;
@@ -129,7 +128,7 @@ partial class FilesModel
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = App.Model;
 		FilesModel m = null;
-		g1:
+	g1:
 		try {
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 
@@ -137,7 +136,7 @@ partial class FilesModel
 				filesystem.copy(folders.ThisAppBS + @"Default\Workspace", wsDir);
 			}
 
-			oldModel?.UnloadingWorkspace(); //saves all, closes documents, sets current file = null
+			oldModel?.UnloadingWorkspace_(); //saves all, closes documents, sets current file = null
 
 			m = new FilesModel(xmlFile, importing: false);
 		}
@@ -230,7 +229,8 @@ partial class FilesModel
 	/// If just "name" and not found and name does not end with ".cs", tries to find name + ".cs".
 	/// </param>
 	/// <param name="kind">Ignored if <i>name</i> is id.</param>
-	public FileNode Find(string name, FNFind kind = FNFind.Any) {
+	/// <param name="silent">Don't print warning "Found multiple...".</param>
+	public FileNode Find(string name, FNFind kind = FNFind.Any, bool silent = false) {
 		FoundMultiple = null;
 		if (name.NE()) return null;
 		if (name[0] == '<') {
@@ -249,8 +249,11 @@ partial class FilesModel
 					if (KindFilter_(f, kind) == null) continue;
 					if (first == null) first = f; else (FoundMultiple ??= new() { first }).Add(f);
 				}
-				if (FoundMultiple == null) return first; //note: don't return first if found multiple. Unsafe.
-				print.warning($"Found multiple '{name}'. Use path if possible, or rename.\r\n\tPaths: {string.Join(", ", FoundMultiple.Select(o => o.SciLink(path: true)))}.", -1);
+				if (FoundMultiple == null) return first; //note: don't return the first if found multiple. Unsafe.
+				if (!silent) {
+					var paths = string.Join(", ", FoundMultiple.Select(o => o.SciLink(path: true)));
+					print.warning($"Found multiple '{name}'. Use path if possible, or rename.\r\n\tPaths: {paths}."/*, -1*/);
+				}
 				return null;
 			}
 			if (kind != FNFind.Folder && !name.Ends(".cs", true)) return _FindByName(name + ".cs", kind);
@@ -259,7 +262,7 @@ partial class FilesModel
 	}
 
 	/// <summary>
-	/// When <see cref="Find"/> returns null because exists multiple items with the specified name/kind, this property contains them.
+	/// When <see cref="Find"/> returns null because exists multiple items with the specified name/kind, this property contains them. Else null.
 	/// </summary>
 	public List<FileNode> FoundMultiple;
 
@@ -273,9 +276,9 @@ partial class FilesModel
 	};
 
 	/// <summary>
-	/// Calls <see cref="Find(string, FNFind)"/>(name, FNFind.CodeFile).
+	/// Calls <see cref="Find(string, FNFind, bool)"/>(name, FNFind.CodeFile).
 	/// </summary>
-	public FileNode FindCodeFile(string name) => Find(name, FNFind.CodeFile);
+	public FileNode FindCodeFile(string name, bool silent = false) => Find(name, FNFind.CodeFile, silent);
 
 	/// <summary>
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
@@ -306,7 +309,7 @@ partial class FilesModel
 	/// Returns <i>id</i> or the generated id.
 	/// </summary>
 	public uint AddGetId(FileNode f, uint id = 0) {
-		g1:
+	g1:
 		if (id == 0) {
 			//Normally we don't reuse ids of deleted items.
 			//	Would be problems with something that we cannot/fail/forget to delete when deleting items.
@@ -444,7 +447,7 @@ partial class FilesModel
 	/// Called by <see cref="PanelFiles.ZLoadWorkspace"/> before opening another workspace and disposing this.
 	/// Saves all, closes documents, sets _currentFile = null.
 	/// </summary>
-	public void UnloadingWorkspace() {
+	internal void UnloadingWorkspace_() {
 		Save.AllNowIfNeed();
 		UnloadingWorkspaceEvent?.Invoke();
 		_currentFile = null;
@@ -453,7 +456,22 @@ partial class FilesModel
 		_UpdateOpenFiles(null);
 	}
 
+	/// <summary>
+	/// Note: unsubscribe to avoid memory leaks.
+	/// </summary>
 	public event Action UnloadingWorkspaceEvent;
+
+	//rejected. Let unsubscribe in OnClosed: App.Model.UnloadingWorkspaceEvent -= Close;
+	///// <summary>
+	///// Closes window <i>w</i> when unloading workspace.
+	///// </summary>
+	//public void UnloadingWorkspaceCloseWindow(Window w) {
+	//	Action aClose = w.Close;
+	//	UnloadingWorkspaceEvent += aClose;
+	//	EventHandler closed = null;
+	//	closed = (_, _) => { UnloadingWorkspaceEvent -= aClose; w.Closed -= closed; };
+	//	w.Closed += closed;
+	//}
 
 	/// <summary>
 	/// Gets the current file. It is open/active in the code editor.
@@ -510,7 +528,7 @@ partial class FilesModel
 		return true;
 	}
 
-	void _ItemRightClicked(FileNode f) {
+	void _ItemRightClicked(FileNode f) { //Dispatcher.InvokeAsync
 		if (IsAlien(f)) return;
 		if (!f.IsSelected) f.SelectSingle();
 		_ContextMenu();
@@ -519,6 +537,7 @@ partial class FilesModel
 	bool s_inContextMenu;
 
 	void _ContextMenu() {
+		if (s_inContextMenu) return; //workaround for: sometimes, when dying mouse generates >1 rclick, somehow the menu is at screen 0 0
 		if (s_contextMenu == null) {
 			var m = new ContextMenu { PlacementTarget = TreeControl };
 			//m.ItemsSource = App.Commands[nameof(Menus.File)].MenuItem.Items; //shows menu but then closes on mouse over
@@ -559,10 +578,12 @@ partial class FilesModel
 				if (columnOrPos > 0) i = doc.zPos8(Math.Min(doc.zPos16(i) + columnOrPos, doc.zLen16)); //not SCI_FINDCOLUMN, it calculates tabs
 				columnOrPos = i;
 			}
-			if (wasOpen) doc.zGoToPos(false, columnOrPos);
-			else timer.after(10, _ => doc.zGoToPos(false, columnOrPos));
-			//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
+			if (!wasOpen) wait.doEvents(); //else scrolling does not work well if now opened the file. Can't async, because caller may use the new pos immediately.
+			doc.zGoToPos(false, columnOrPos);
+		} else {
+			if (!wasOpen) wait.doEvents(); //caller then may call zGoToPos or zSelect etc
 		}
+		doc.Focus();
 		return true;
 	}
 
@@ -778,8 +799,7 @@ partial class FilesModel
 		if (update) UpdateControlItems();
 	}
 
-	public enum ECloseCmd
-	{
+	public enum ECloseCmd {
 		/// <summary>
 		/// Closes selected files. If there are no selected files, closes current file. Does not collapse selected folders.
 		/// </summary>
@@ -883,10 +903,16 @@ partial class FilesModel
 	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	/// </summary>
 	public FileNode NewItemX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
-		var f = NewItemLX(template, where, name);
+		string s = null;
+		if (text != null && text.replaceTemplate) {
+			s = text.meta.NE() ? text.text : _MetaPlusText(text.text);
+			text = null;
+		}
+
+		var f = NewItemLX(template, where, name, s);
 		if (f == null) return null;
 
-		if (beginRenaming && template != null && FileNode.Templates.IsInExamplesOrDefault(template)) beginRenaming = false;
+		if (beginRenaming && template != null && FileNode.Templates.IsInDefault(template)) beginRenaming = false;
 
 		if (f.IsFolder) {
 			if (f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
@@ -896,30 +922,25 @@ partial class FilesModel
 		}
 
 		if (text != null && f == CurrentFile) {
-			string s;
-			if (text.replaceTemplate) {
-				s = text.meta.NE() ? text.text : _MetaPlusText(text.text);
-			} else {
-				Debug.Assert(f.IsScript);
-				s = f.GetText();
-				var me = Au.Compiler.MetaComments.FindMetaComments(s).end;
-				if (!text.meta.NE()) {
-					if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
-					else s = s.Insert(me - 3, (s[me - 4] == ' ' ? "" : " ") + text.meta + " ");
-				}
-				if (!text.text.NE()) {
-					if (s.NE()) s = text.text;
-					else if (s.RxMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
-					else if (s.RxMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
-				}
+			Debug.Assert(f.IsScript);
+			s = f.GetText();
+			var me = Au.Compiler.MetaComments.FindMetaComments(s).end;
+			if (!text.meta.NE()) {
+				if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
+				else s = s.Insert(me - 3, (s[me - 4] == ' ' ? "" : " ") + text.meta + " ");
+			}
+			if (!text.text.NE()) {
+				if (s.NE()) s = text.text;
+				else if (s.RxMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
+				else if (s.RxMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
 			}
 			Panels.Editor.ZActiveDoc.zSetText(s);
-
-			string _MetaPlusText(string t) => $"/*/ {text.meta} /*/{(f.IsScript && t.Starts("//.") ? " " : "\r\n")}{t}";
 		}
 
 		if (beginRenaming && f.IsSelected) RenameSelected(newFile: true);
 		return f;
+
+		string _MetaPlusText(string t) => $"/*/ {text.meta} /*/{(t.Starts("//.") ? " " : "\r\n")}{t}";
 	}
 
 	/// <summary>
@@ -930,7 +951,8 @@ partial class FilesModel
 	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
-	public FileNode NewItemLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null) {
+	/// <param name="text">If not null, sets this text. If null, sets default text (template etc). Not used for folders.</param>
+	public FileNode NewItemLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, string text = null) {
 		var (target, pos) = where ?? _GetInsertPos();
 		FileNode newParent = (pos == FNPosition.Inside) ? target : target.Parent;
 
@@ -943,7 +965,7 @@ partial class FilesModel
 			} else {
 				name = template.Attr("n");
 				if (isFolder && name.Starts('!')) name = name[1..];
-				append1 = !FileNode.Templates.IsInExamplesOrDefault(template);
+				append1 = !FileNode.Templates.IsInDefault(template);
 			}
 			//let unique names start from 1
 			if (append1) {
@@ -953,15 +975,14 @@ partial class FilesModel
 		}
 		name = FileNode.CreateNameUniqueInFolder(newParent, name, isFolder, autoGenerated: true);
 
-		return _NewItem(target, pos, template, name);
+		return _NewItem(target, pos, template, name, text);
 	}
 
-	FileNode _NewItem(FileNode target, FNPosition pos, XElement template, string name) {
+	FileNode _NewItem(FileNode target, FNPosition pos, XElement template, string name, string text) {
 		var fileType = template == null ? EFileType.Folder : FileNode.XmlTagToFileType(template.Name.LocalName, canThrow: false);
 		Debug.Assert(fileType is not (EFileType.Script or EFileType.Class) || name.Ends(".cs"));
 
-		string text = null;
-		if (fileType != EFileType.Folder) {
+		if (text == null && fileType != EFileType.Folder) {
 			string relPath = template.Attr("n");
 			for (var p = template; (p = p.Parent).Name.LocalName != "files";) relPath = p.Attr("n") + "\\" + relPath;
 			if (fileType == EFileType.Other) {
@@ -993,7 +1014,7 @@ partial class FilesModel
 
 			if (fileType == EFileType.Folder) {
 				foreach (var x in template.Elements()) {
-					_NewItem(f, FNPosition.Inside, x, x.Attr("n"));
+					_NewItem(f, FNPosition.Inside, x, x.Attr("n"), null);
 				}
 			}
 		}
@@ -1005,8 +1026,7 @@ partial class FilesModel
 
 	#region clipboard
 
-	struct _Clipboard
-	{
+	struct _Clipboard {
 		public FileNode[] items;
 		public bool cut;
 		public uint clipSN;
@@ -1046,7 +1066,7 @@ partial class FilesModel
 					var a = clipboardData.HdropToFiles_(h);
 					_DroppedOrPasted(null, a, false, target, pos);
 				} else if (clipboardData.GetText_(0) is string s && s.Length > 0) {
-					SciCode.ZIsForumCode(s, newFile: true);
+					SciCode.IsForumCode_(s, newFile: true);
 				}
 			}
 		}
@@ -1372,6 +1392,8 @@ partial class FilesModel
 					IncludeSubdirectories = true,
 					NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
 				};
+				//we need to know only when files are modified. Not when deleted/created/renamed.
+				//	But may save using temp file etc, therefore also need 'created' and 'renamed' events.
 				_watcher.Changed += _watcher_Event;
 				_watcher.Created += _watcher_Event;
 				//_watcher.Deleted += _watcher_Event;
@@ -1384,10 +1406,14 @@ partial class FilesModel
 			_watcher?.Dispose(); //disables raising events and sets all events = null
 			_watcher = null;
 		}
+		//SHOULDDO: watch links too. Maybe without a FileSystemWatcher.
+		//	Algorithm:
+		//	When getting link target text (when opening in editor or getting FileNode text), remember file mod time.
+		//	If it is current file in editor, use timer to watch for changed mod time.
+		//	Else, when getting FileNode text, don't use cached text if changed mod time.
 	}
 
-	private void _watcher_Event(object sender, FileSystemEventArgs e) //in thread pool
-	{
+	private void _watcher_Event(object sender, FileSystemEventArgs e) { /*in thread pool*/
 		//if(e.Name.Ends("~temp") || e.Name.Ends("~backup")) return; //no such events, because we use other directory for temp files
 		if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).File) return; //we receive 'directory changed' after every 'file changed' etc
 
@@ -1396,7 +1422,9 @@ partial class FilesModel
 	}
 
 	private void _watcher_Event2(FileSystemEventArgs e) { //in main thread
-		var f = Find("\\" + e.Name);
+		var name = e.Name;
+		//var name = e is RenamedEventArgs ren ? ren.OldName : e.Name;
+		var f = Find("\\" + name);
 		//if(e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else print.it(e.ChangeType, e.Name, e.FullPath, f);
 		if (f == null || f.IsLink) return;
 		//Debug_.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
@@ -1510,8 +1538,7 @@ partial class FilesModel
 		}
 	}
 
-	public class UserData
-	{
+	public class UserData {
 		public string guid { get; set; }
 		public string startupScripts { get; set; }
 	}
@@ -1607,19 +1634,16 @@ partial class FilesModel
 	#endregion
 }
 
-enum FNPosition
-{
+enum FNPosition {
 	//note: must match Aga.Controls.Tree.NodePosition
 	Inside, Before, After
 }
 
-enum FNFind
-{
+enum FNFind {
 	Any, File, Folder, CodeFile, Class/*, Script*/ //Script not useful because class files can be executable too
 }
 
-class EdNewFileText
-{
+class EdNewFileText {
 	public bool replaceTemplate;
 	public string text, meta;
 

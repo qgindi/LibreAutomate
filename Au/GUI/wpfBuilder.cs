@@ -902,10 +902,14 @@ namespace Au {
 						if (e.Cancel) return;
 					}
 					if (flags.Has(WBBFlags.OK)) {
-						try { w.DialogResult = true; }
-						catch (InvalidOperationException) { w.Close(); } //nonmodal //SHOULDDO: find a better way to detect nonmodal
+						bool modal = w.IsModal_() != false;
+						if (modal) {
+							try { w.DialogResult = true; }
+							catch (InvalidOperationException) { modal = false; } //failed to detect modal?
+						}
+						if (!modal) w.Close();
 					} else if (flags.Has(WBBFlags.Cancel)) {
-						w.Close(); //because IsCancel ignored if nonmodal
+						w.Close(); //info: IsCancel ignored if nonmodal
 					}
 				};
 			}

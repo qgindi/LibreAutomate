@@ -317,5 +317,8 @@ namespace Au.Triggers
 			Trigger = trigger;
 			Window = w; Key = key; Mod = mod;
 		}
+
+		///
+		public override string ToString() => "Trigger: " + Trigger;
 	}
 }

@@ -150,13 +150,29 @@ static class CodeInfo {
 	}
 
 	/// <summary>
-	/// Called when files added, deleted, moved, copied, imported.
+	/// Called when files added, deleted, moved, copied, imported, renamed.
 	/// Eg need to update styling when a meta c file became [un]available or when project folder structure changed.
 	/// </summary>
 	public static void FilesChanged() {
-		Stop();
-		_styling.Update();
+		if (_filesChangedAsync) return; _filesChangedAsync = true;
+		App.Dispatcher.InvokeAsync(() => {
+			_filesChangedAsync = false;
+			Stop();
+			_styling.Update();
+			FilesChangedEvent?.Invoke();
+		});
+		//why async:
+		//	1. Easier to consolidate multiple events.
+		//	2. Easier to create files with custom text (the text is added after calling this).
+		//	3. In some cases may be better/safer.
 	}
+	static bool _filesChangedAsync;
+
+	/// <summary>
+	/// When files added, deleted, moved, copied, imported, renamed.
+	/// Called through Dispatcher.InvokeAsync and may consolidate multiple changes.
+	/// </summary>
+	public static event Action FilesChangedEvent;
 
 	public static void SciKillFocus(SciCode doc) {
 		if (!_CanWork(doc)) return;
@@ -499,7 +515,7 @@ static class CodeInfo {
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
 			var m = new MetaComments();
-			m.Parse(f, projFolder, EMPFlags.ForCodeInfo);
+			m.Parse(f, projFolder, EMPFlags.ForCodeInfoInEditor);
 			if (isMain) _meta = m;
 			if (m.TestInternal is string[] testInternal) InternalsVisible.Add(f.Name, testInternal);
 
@@ -593,6 +609,7 @@ static class CodeInfo {
 	public class CharContext : IDisposable {
 		public readonly SciCode doc;
 		public char ch;
+		/// <summary>Don't show completions, signature, etc.</summary>
 		public bool ignoreChar;
 		//bool _undoStarted;
 

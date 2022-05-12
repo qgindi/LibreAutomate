@@ -31,7 +31,7 @@ Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 The program and the library are very young. Need more testing. Some classes/functions/etc may be changed in the future.
 
 #### Links
-- [Download](https://www.quickmacros.com/au/Uiscripter.exe) v0.5.0, 2022-04-07, 24 MB
+- [Download](https://www.quickmacros.com/au/Uiscripter.exe) v0.6.0, 2022-05-08, 24 MB
 - [Changes](https://github.com/qgindi/Au/blob/master/Other/DocFX/_doc/changes/)
 - [Source code](https://github.com/qgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)

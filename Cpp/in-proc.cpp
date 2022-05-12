@@ -99,11 +99,11 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 HRESULT AccGetProps(Cpp_Acc a, STR props, out BSTR& sResult);
 HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult);
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult);
+HRESULT AccEnableChrome2(HWND w, int i);
 
 namespace inproc
 {
 HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResult);
-HRESULT AccEnableChrome2(MarshalParams_AccElem* p);
 HRESULT ShellExec(MarshalParams_Header* h, out BSTR& sResult);
 
 //Our hook of get_accHelpTopic.
@@ -142,7 +142,7 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 					hr = AccWeb(iacc, (STR)(h + 1), sResult);
 					break;
 				case InProcAction::IPA_AccEnableChrome:
-					hr = AccEnableChrome2(p);
+					hr = AccEnableChrome2((HWND)(LPARAM)((MarshalParams_AccHwndInt*)h)->hwnd, ((MarshalParams_AccHwndInt*)h)->i);
 					break;
 				case InProcAction::IPA_ShellExec:
 					hr = ShellExec(h, out sResult);

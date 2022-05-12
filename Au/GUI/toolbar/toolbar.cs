@@ -1,4 +1,3 @@
-
 using Au.Triggers;
 
 namespace Au {
@@ -7,7 +6,7 @@ namespace Au {
 	/// Can be attached to windows of other programs.
 	/// </summary>
 	/// <remarks>
-	/// To create toolbar code can be used snippet toolbarSnippet. In code editor type "toolbar" and selext the snippet from the list.
+	/// To create toolbar code can be used menu TT -> New toolbar.
 	/// 
 	/// Not thread-safe. All functions must be called from the same thread that created the <b>toolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 	/// </remarks>
@@ -26,12 +25,14 @@ namespace Au {
 		/// </summary>
 		/// <param name="name">
 		/// Toolbar name. Must be valid filename.
-		/// Used for toolbar window name and for settings file name. Also used by <see cref="find"/> and some other functions.
+		/// Used for: toolbar window name, settings file name, <see cref="find"/>, some other functions.
+		/// If null, uses the caller function's name if available, else exception.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="f_">[](xref:caller_info)</param>
 		/// <param name="l_">[](xref:caller_info)</param>
-		/// <exception cref="ArgumentException">Empty or invalid name.</exception>
+		/// <param name="m_">[](xref:caller_info)</param>
+		/// <exception cref="ArgumentException">Invalid name.</exception>
 		/// <remarks>
 		/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="getSettingsFilePath"/>. If fails, writes warning to the output and uses default settings.
 		/// 
@@ -39,11 +40,13 @@ namespace Au {
 		/// - <see cref="MTBase.ActionThread"/> = true.
 		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// </remarks>
-		public toolbar(string name, TBCtor flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
+		public toolbar(string name = null, TBCtor flags = 0,
+			[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
+			: base(name, f_, l_, m_) {
+
 			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) print.warning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
-			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
-			var path = flags.Has(TBCtor.DontSaveSettings) ? null : getSettingsFilePath(name);
+			var path = flags.Has(TBCtor.DontSaveSettings) ? null : getSettingsFilePath(_name);
 			_sett = _Settings.Load(path, flags.Has(TBCtor.ResetSettings));
 
 			_offsets = _sett.offsets; //SHOULDDO: don't use saved offsets if this toolbar was free and now is owned or vice versa. Because the position is irrelevent and may be far/offscreen. It usually happens when testing.
@@ -68,7 +71,7 @@ namespace Au {
 		public string Name => _name;
 
 		///
-		public override string ToString() => _IsSatellite ? "    " + Name : Name; //the indentation is for the list in the Toolbars dialog
+		public override string ToString() => _IsSatellite ? "    " + Name : Name; //the indentation is for the list in the Active toolbars dialog
 
 		/// <summary>
 		/// True if this toolbar started with default settings. False if loaded saved settings from file.
@@ -292,7 +295,7 @@ namespace Au {
 		/// </remarks>
 		public void Show(wnd ownerWindow, bool clientArea = false) {
 			_followClientArea = clientArea;
-			_Show(true, ownerWindow, null, default);
+			_Show(true, ownerWindow, null, _screenAHSE);
 		}
 
 		/// <summary>
@@ -331,6 +334,7 @@ namespace Au {
 				if (owner.Is0) throw new ArgumentException();
 				var w = owner.Window; if (w.Is0) return;
 				if (w != owner) { c = owner; owner = w; }
+				if (!_screenAHSE.IsEmpty) _sett.anchor |= TBAnchor.Screen;
 			}
 
 			_CreateWindow(owned, owner, screen);
@@ -338,7 +342,7 @@ namespace Au {
 		}
 
 		//used for normal and satellite toolbars
-		void _CreateWindow(bool owned, wnd owner, screen screen = default) {
+		void _CreateWindow(bool owned, wnd owner, screen screen = default, bool isSatelite = false) {
 			_topmost = !owned || owner.IsTopmost;
 			if (!owned || Anchor.OfScreen()) _os = new _OwnerScreen(this, screen);
 
@@ -353,7 +357,7 @@ namespace Au {
 			var r = owned ? owner.Rect : screen.Rect; //create in center of owner window or screen, to minimize possibility of DPI change when setting final position
 			r = new(r.CenterX - size.width / 2, r.CenterY - size.height / 2, size.width, size.height);
 			Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
-			WndUtil.CreateWindow(_WndProc, true, "Au.toolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height);
+			WndUtil.CreateWindow(_WndProc, true, "Au.toolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height, isSatelite ? owner : default);
 			_created = true;
 		}
 
@@ -784,7 +788,7 @@ namespace Au {
 			}
 
 			if (!no.Has(TBNoMenu.Toolbars | TBNoMenu.Help) && m.Last != null && !m.Last.IsSeparator) m.Separator();
-			if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars", o => toolbarsDialog().Show());
+			if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars", o => toolbarsDialog(true));
 			if (!no.Has(TBNoMenu.Help)) m["How to"] = _ => dialog.showInfo("How to",
 	@"Move toolbar: Shift+drag.
 Resize toolbar: drag border. Cannot resize if in context menu is unchecked or unavailable More -> Sizable; or if checked Border -> None.

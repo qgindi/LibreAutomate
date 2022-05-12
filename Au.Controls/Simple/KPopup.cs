@@ -3,8 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace Au.Controls
-{
+namespace Au.Controls {
 	/// <summary>
 	/// HwndSource-based window to use for various temporary tool/info popup windows.
 	/// For example, in editor used for code info windows (completion list, parameters, "Regex" etc) and for some tooltips.
@@ -12,8 +11,7 @@ namespace Au.Controls
 	/// Like Popup, can show by rectangle. Unlike Popup, can be resizable.
 	/// Like Popup, can be click-closed, and does not eat mouse events like Popup.
 	/// </summary>
-	public class KPopup
-	{
+	public class KPopup {
 		WS _style;
 		WSE _exStyle;
 		SizeToContent _sizeToContent;
@@ -50,8 +48,7 @@ namespace Au.Controls
 			return _hs;
 		}
 
-		class _HwndSource : HwndSource
-		{
+		class _HwndSource : HwndSource {
 			public _HwndSource(HwndSourceParameters p) : base(p) { }
 			public KPopup kpopup;
 		}
@@ -355,7 +352,7 @@ namespace Au.Controls
 				}
 				if (wp->flags.Has(SWPFlags.HIDEWINDOW)) {
 					_ClickCloseTimer(false);
-					if(Border.IsKeyboardFocusWithin) Keyboard.ClearFocus();
+					if (Border.IsKeyboardFocusWithin) Keyboard.ClearFocus();
 					Hidden?.Invoke(this, EventArgs.Empty);
 				}
 				break;
