@@ -718,9 +718,9 @@ namespace Au.Controls {
 		public int zSelectionEnd16 => zPos16(zSelectionEnd8);
 
 		/// <summary>
-		/// true if there is selected text.
+		/// true if !SCI_GETSELECTIONEMPTY.
 		/// </summary>
-		public bool zIsSelection => 0 == Call(SCI_GETSELECTIONEMPTY);
+		public bool zHasSelection => 0 == Call(SCI_GETSELECTIONEMPTY);
 
 		/// <summary>
 		/// Gets line index from character position.

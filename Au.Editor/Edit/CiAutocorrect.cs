@@ -16,11 +16,10 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 //		var s="aaa bbb"
 //		char c = 'a';
 //	Syntax Visualizer shows that the second statement isn't recognized as statement.
-
-//SHOULDDO: decrease indent when typing }.
+//	Applied workarounds for some cases, but not for all.
 
 //CONSIDER: menu command "Exit statement on Enter" and toolbar check-button [;].
-//	Would complete from anywhere in statement, eg in string or at the end of line.
+//	Would complete statement from anywhere in statement.
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
 
@@ -94,7 +93,7 @@ class CiAutocorrect {
 		bool isBackspace = false, isOpenBrac = false;
 
 		int pos = doc.zCurrentPos8;
-		if (pos == doc.zLen8 && ch != (char)KKey.Back && !doc.zIsSelection) { //if pos is at the end of text, add newline
+		if (pos == doc.zLen8 && ch != (char)KKey.Back && !doc.zHasSelection) { //if pos is at the end of text, add newline
 			doc.zInsertText(false, pos, "\r\n");
 		}
 
@@ -140,11 +139,14 @@ class CiAutocorrect {
 	}
 
 	/// <summary>
-	/// Called on SCN_CHARADDED. If ch is '(' etc, adds ')' etc.
+	/// Called on SCN_CHARADDED.
+	/// If ch is '(' etc, adds ')' etc. Similar with """ and /*.
+	/// If ch is }, decreases indentation if need.
+	/// Replaces code like 5s with 5.s(); etc.
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' => "", _ => null };
+		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' => "", _ => null };
 		if (replaceText == null) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -154,7 +156,7 @@ class CiAutocorrect {
 		Debug.Assert(code[pos] == ch);
 		if (code[pos] != ch) return;
 
-		bool isBeforeWord = cd.pos16 < code.Length && char.IsLetterOrDigit(code[cd.pos16]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
+		bool isBeforeWord = ch != '}' && cd.pos16 < code.Length && char.IsLetterOrDigit(code[cd.pos16]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
 		if (isBeforeWord && ch != '{') return;
 
 		var root = cd.document.GetSyntaxRootAsync().Result;
@@ -203,6 +205,30 @@ class CiAutocorrect {
 		} else {
 			var token = root.FindToken(pos);
 			var node = token.Parent;
+
+			if (ch == '}') { //decrease indentation
+				int i = pos;
+				while (i > 0 && code[i - 1] == '\t') i--; //and ignore spaces
+				if (i < 2 || code[i - 1] != '\n') return;
+				//CiUtil.PrintNode(node);
+				if (token.Kind() != SyntaxKind.CloseBraceToken || pos != token.SpanStart) return;
+				if (node is not (BlockSyntax or MemberDeclarationSyntax or AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax)) return;
+				if (node is BlockSyntax && node.Parent is BlockSyntax or SwitchSectionSyntax) return; //the code editor does not indent code in simple { block }
+				int ip = code.LastIndexOf('\n', i - 2) + 1;
+				var (ind1, _) = _GetLineInd(ip);
+				var (ind2, end2) = _GetLineInd(i);
+				if (ind1 == 0 || ind2 == --ind1) return;
+				c.doc.zReplaceRange(true, i, end2, new string('\t', ind1), moveCurrentPos: true);
+				c.ignoreChar = true;
+				return;
+
+				(int ind, int end) _GetLineInd(int i) {
+					int r = 0;
+					for (; i < code.Length && code[i] == '\t'; i++) r++;
+					return (r, i);
+				}
+			}
+
 			var kind = node.Kind();
 			if (kind == SyntaxKind.InterpolatedStringText) {
 				node = node.Parent;
@@ -222,7 +248,7 @@ class CiAutocorrect {
 			if (ch == '\'') {
 				if (kind != SyntaxKind.CharacterLiteralExpression || span.Start != pos) return;
 			} else if (ch == '\"') {
-				bool isVerbatim = false, isInterpolated = false;
+				bool isVerbatim, isInterpolated = false;
 				switch (kind) {
 				case SyntaxKind.StringLiteralExpression:
 					isVerbatim = code[span.Start] == '@';
@@ -328,7 +354,7 @@ class CiAutocorrect {
 		if (pos < 1) return false;
 		if (pos == code.Length) return false;
 
-		bool canCorrect = true, canAutoindent = onEnterWithoutMod, isSelection = doc.zIsSelection; //note: complResult is never Complex here
+		bool canCorrect = true, canAutoindent = onEnterWithoutMod, isSelection = doc.zHasSelection; //note: complResult is never Complex here
 		if (!anywhere) {
 			if (!isSelection) {
 				char ch = code[pos];
@@ -513,7 +539,7 @@ class CiAutocorrect {
 					}
 					if (!onSemicolon) canAutoindent = true;
 					break;
-				case AccessorListSyntax k:
+				case AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax:
 					canExitBlock = true;
 					break;
 				case AccessorDeclarationSyntax k:
@@ -676,22 +702,28 @@ class CiAutocorrect {
 
 			//get indentation
 			for (var v = node; v != null; v = v.Parent) {
-				//CiUtil.PrintNode(v);
+				//if(v is not CompilationUnitSyntax) CiUtil.PrintNode(v);
+				//if(v is not (CompilationUnitSyntax or TypeDeclarationSyntax or MethodDeclarationSyntax)) CiUtil.PrintNode(v);
 				switch (v) {
 				//case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax): //don't indent block that is child of eg 'if' which adds indentation
 				case BlockSyntax: //don't indent any blocks. See also the //* line below.
 				case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
 				case ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax:
-				case LabeledStatementSyntax or AttributeListSyntax or AccessorListSyntax:
+				case PropertyPatternClauseSyntax or RecursivePatternSyntax or BinaryPatternSyntax: //PropertyPatternClauseSyntax and its ancestors
+				case LabeledStatementSyntax:
+				case AttributeListSyntax:
+				case AccessorListSyntax:
 				case NamespaceDeclarationSyntax or FileScopedNamespaceDeclarationSyntax: //don't indent namespaces
 				case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 				case UsingStatementSyntax k4 when k4.Parent is UsingStatementSyntax: //don't indent multiple using()
 				case FixedStatementSyntax k5 when k5.Parent is FixedStatementSyntax: //don't indent multiple fixed()
 				case BaseArgumentListSyntax or ArgumentSyntax:
-				case ExpressionSyntax or EqualsValueClauseSyntax:
+				case ExpressionSyntax:
+				case EqualsValueClauseSyntax:
 				case VariableDeclaratorSyntax or VariableDeclarationSyntax:
+				case SelectClauseSyntax:
 					//print.it("--" + v.GetType().Name, v.Span, pos);
-					continue; //these can be if we are in a lambda block. And maybe more, nevermind.
+					continue;
 				case GlobalStatementSyntax or CompilationUnitSyntax: //don't indent top-level statements
 				case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //don't indent script class content
 				case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //don't indent script constructor content
@@ -710,6 +742,10 @@ class CiAutocorrect {
 			case BaseTypeDeclarationSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
 			case NamespaceDeclarationSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
 			case AccessorListSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
+			case InitializerExpressionSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
+			case AnonymousObjectCreationExpressionSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
+			case SwitchExpressionSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
+			case PropertyPatternClauseSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
 			}
 			bool isBraceLine = to == iCB, expandBraces = isBraceLine && from == iOB;
 
@@ -750,7 +786,7 @@ class CiAutocorrect {
 			}
 
 			//append newlines and tabs
-			if (!dontIndent && indent > 0) dontIndent = node is BlockSyntax && node.Parent is BlockSyntax; //*
+			if (!dontIndent && indent > 0) dontIndent = node is BlockSyntax && node.Parent is BlockSyntax or SwitchSectionSyntax; //*
 			if (canExitBlock) {
 				if (!dontIndent && indent > 0) indent--;
 				b.Append('\t', indent).AppendLine("}");
@@ -841,17 +877,22 @@ class CiAutocorrect {
 	}
 
 	static bool _OnBackspaceOrDelete(SciCode doc, bool back) {
-		if (doc.zIsSelection) return false;
-		int i = doc.zCurrentPos8, j = back ? doc.zLineStartFromPos(false, i) : doc.zLineEndFromPos(false, i);
-		if (j != i) return false;
-		i = doc.zPos16(i);
+		//when joining 2 non-empty lines with Delete or Backspace, remove indentation from the second line
+		if (doc.zHasSelection) return false;
+		int i = doc.zCurrentPos16;
 		var code = doc.zText;
+		RXGroup g;
 		if (back) {
-			if (i > 0 && code[i - 1] == '\n') i--;
-			if (i > 0 && code[i - 1] == '\r') i--;
+			int i0 = i;
+			if (code.Eq(i - 1, '\n')) i--;
+			if (code.Eq(i - 1, '\r')) i--;
+			if (i == i0) return false;
+		} else {
+			//if at the start of a line containing just tabs/spaces, let Delete delete entire line
+			if (code.RxMatch(@"(?m)^\h+(\R|)", 0, out g, RXFlags.ANCHORED, i..)) goto g1;
 		}
-		if (!code.RxMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
-		doc.zDeleteRange(true, g.Start, g.End);
+		if (!code.RxMatch(@"(?m)(?<!^)\R\h+", 0, out g, RXFlags.ANCHORED, i..)) return false;
+		g1: doc.zDeleteRange(true, g.Start, g.End);
 		return true;
 	}
 

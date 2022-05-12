@@ -2,7 +2,7 @@
 #include "cpp.h"
 #include "acc.h"
 
-HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, eAF2 flags2, out BSTR& errStr);
+HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, out BSTR& errStr);
 HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, int specWnd, out Cpp_Acc& aResult);
 HRESULT AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResult);
 HRESULT AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult);
@@ -48,9 +48,8 @@ public:
 		return sizeof(MarshalParams_AccFind) + (ap.roleLength + ap.nameLength + ap.propLength + 3) * 2;
 	}
 
-	void Marshal(HWND w, const Cpp_AccFindParams& ap, eAF2 flags2_) {
+	void Marshal(HWND w, const Cpp_AccFindParams& ap) {
 		hwnd = (int)(LPARAM)w;
-		flags2 = flags2_;
 
 		auto s = (LPWSTR)(this + 1);
 		s = _SetString(ap.role, ap.roleLength, s, out _role);
@@ -59,6 +58,7 @@ public:
 		_flags = ap.flags;
 		_skip = ap.skip;
 		_resultProp = ap.resultProp;
+		flags2 = ap.flags2;
 	}
 
 	void Unmarshal(out Cpp_AccFindParams& ap) {
@@ -68,6 +68,7 @@ public:
 		ap.flags = _flags;
 		ap.skip = _skip;
 		ap.resultProp = _resultProp;
+		ap.flags2 = flags2;
 	}
 };
 
@@ -402,7 +403,7 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		ge:
 			hr = RPC_E_SERVER_CANTMARSHAL_DATA;
 			return eAccFindCallbackResult::StopNotFound;
-		}, w, w ? null : &aParent, ref ap, flags2, out sResult);
+		}, w, w ? null : &aParent, ref ap, out sResult);
 
 		if(hr2 != 0 && hr2 != (HRESULT)eError::NotFound) return hr2;
 		if(hr != 0) return hr;
@@ -553,25 +554,22 @@ g1:
 //	When this func returns eError::InvalidParameter, it is error string.
 //	When this func returns 0 and used ap.resultProp, it is the property (string, or binary struct); null if '-'.
 //	Else null.
-EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, Cpp_AccFindCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult)
+EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult)
 {
 	//Perf.First();
 	aResult.Zero(); sResult = null;
 	bool inProc = !(ap.flags & eAF::NotInProc), findAll = (also != null), useWnd = (aParent == null);
-	eAF2 flags2 = findAll ? eAF2::FindAll : (eAF2)0;
+	if(findAll) ap.flags2 |= eAF2::FindAll;
 	HRESULT R;
 
 	assert(!!w == !aParent);
 	assert(!ap.resultProp || !findAll);
 
 	if(useWnd) {
-		//If role has prefix "web:" and w is IE, need to find the web browser control at first, because it's in a different process than IE.
-		//We cannot detect IE by window class name. It can be any, because IE-based web browser controls can be used anywhere.
-		//To detect it, we look for an "Internet Explorer_Server" control.
-		//If it is Firefox or Chrome, this makes slightly slower.
-		if(ap.roleLength >= 4 && CMP4(ap.role, L"web:")) {
+		if((ap.flags2 & (eAF2::InWebPage | eAF2::InChromePage | eAF2::InFirefoxPage | eAF2::InIES)) == eAF2::InWebPage) {
 			HWND wIES = wn::FindChildByClassName(w, c_IES, true);
-			if(wIES) { w = wIES; flags2 |= eAF2::InIES; }
+			if(wIES) { w = wIES; ap.flags2 |= eAF2::InIES; }
+			//info: in Internet Explorer the web browser control is in another process.
 		}
 	}
 
@@ -595,7 +593,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap
 		InProcCall c;
 		auto sizeofParams = MarshalParams_AccFind::CalcMemSize(ref ap);
 		auto p = (MarshalParams_AccFind*)c.AllocParams(aParent, InProcAction::IPA_AccFind, sizeofParams);
-		p->Marshal(useWnd ? w : 0, ref ap, flags2);
+		p->Marshal(useWnd ? w : 0, ref ap);
 
 		if(0 != (R = c.Call())) {
 			if(R == (HRESULT)eError::InvalidParameter) sResult = c.DetachResultBSTR();
@@ -620,7 +618,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap
 		}
 		//Perf.Next();
 	} else {
-		flags2 |= eAF2::NotInProc;
+		ap.flags2 |= eAF2::NotInProc;
 		bool found = false;
 		R = AccFind(
 			[&found, &aResult, &sResult, &ap, skip = ap.skip, also](Cpp_Acc a) mutable
@@ -641,7 +639,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap
 			}
 
 			return eAccFindCallbackResult::StopFound;
-		}, w, aParent, ref ap, flags2, out sResult);
+		}, w, aParent, ref ap, out sResult);
 
 		if(!R && !found) R = (HRESULT)eError::NotFound;
 	}

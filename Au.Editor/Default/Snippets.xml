@@ -514,47 +514,6 @@ string _field;
 	<group context="Type|Function">
 		<!-- snippets that are valid in types and functions -->
 
-		<snippet name="toolbarSnippet" info="Create toolbar." more="Where: \@Triggers and toolbars\Toolbars, in an existing file or new partial file. Use menu TT -> Edit Toolbars.">
-			<![CDATA[//Call this function from the [Toolbars] function, directly or from a trigger. Examples:
-//Toolbar_RenameMe(); //show the toolbar at startup
-//Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = Toolbar_RenameMe; //attach the toolbar to the window
-//Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = o => { Toolbar_One(o); Toolbar_Two(o); } //attach 2 toolbars
-//Triggers.Mouse[TMEdge.TopInLeft25] = Toolbar_RenameMe; //show when the mouse cursor touches the screen edge
-void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
-	var t = new toolbar("Toolbar_RenameMe $random$");
-	if (t.FirstTime) {
-		
-	}
-	
-	t["Button1"] = o => { print.it("button clicked"); };
-	t["|Tooltip", image: "*EvaIcons.SyncOutline #496DDC"] = o => {  };
-	t[""] = o => {  };
-	t.Menu("Menu1", m => {
-		m[""] = o => {  };
-		m[""] = o => {  };
-	});
-	t.Separator();
-	t[""] = o => {  };
-	t[""] = o => {  };
-	
-//	//auto-hide. Above is the auto-hide part. Below is the always-visible part.
-//	t = t.AutoHide();
-//	if (t.FirstTime) {
-//		
-//	}
-	
-	t.Show(ta);
-	
-//	//this code is the same as the above line, but you can specify more Show parameters, for example attach to a control
-//	if (ta is Au.Triggers.WindowTriggerArgs wta) {
-//		t.Show(wta.Window); //attach to the trigger window
-//	} else {
-//		t.Show();
-//		ta?.DisableTriggerUntilClosed(t); //single instance
-//	}
-}]]>
-		</snippet>
-
 	</group>
 	<!-- end of Type|Function -->
 
@@ -562,9 +521,9 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	<group context="Namespace|Type|Line">
 		<!-- snippets that are valid in types, namespaces and global scope, at the start of line -->
 
-		<snippet name="nativeApiSnippet" info="Adds class for Windows API or other native API.">
+		<snippet name="nativeApiSnippet" info="Adds class for Windows API declarations.">
 			<![CDATA[/// <summary>
-/// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use native API. Change the class name (api) if want.
+/// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use Windows API. Change the class name (api) if want.
 /// Then, whenever you need an API function etc, type the class name and dot (api.). The completion list contains API names and adds declarations to this class.
 /// </summary>
 #pragma warning disable 649, 169 //field never assigned/used

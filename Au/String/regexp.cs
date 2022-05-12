@@ -127,8 +127,7 @@ namespace Au
 		/// 
 		/// Examples in class help: <see cref="regexp"/>.
 		/// </remarks>
-		public regexp([ParamString(PSFormat.Regexp)] string rx, RXFlags flags = 0) {
-			if (rx == null) throw new ArgumentNullException();
+		public regexp([ParamString(PSFormat.Regexp)] string rx!!, RXFlags flags = 0) {
 			_matchFlags = (byte)((ulong)flags >> 56); flags = (RXFlags)((ulong)flags & 0xffffff_ffffffff);
 			_codeUnsafe = Cpp.Cpp_RegexCompile(rx, rx.Length, flags, out int codeSize, out BSTR errStr);
 			if (_codeUnsafe == default) throw new ArgumentException(errStr.ToStringAndDispose());
@@ -217,8 +216,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Multiple groups have this name.</exception>
 		/// <seealso cref="RXMatch.GroupNumberFromName(string)"/>
 		/// <seealso cref="RXMatch.GroupNumberFromName(string, out bool)"/>
-		public int GetGroupNumberOf(string groupName) {
-			if (groupName == null) throw new ArgumentNullException();
+		public int GetGroupNumberOf(string groupName!!) {
 			fixed (char* p = groupName) {
 				int R = Cpp.pcre2_substring_nametable_scan(_CodeHR, p, null, null);
 				if (R <= 0) {

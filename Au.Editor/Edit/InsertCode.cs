@@ -22,10 +22,14 @@ enum ICSFlags {
 	Fold = 2,
 
 	/// <summary>Activate editor window.</summary>
-	Activate = 4,
+	ActivateEditor = 4,
 
 	/// <summary>Don't focus the editor control. Without this flag focuses it if window is active or activated.</summary>
 	NoFocus = 8,
+
+	GoToStart = 16,
+
+	SelectNewCode = 32,
 }
 
 /// <summary>
@@ -63,50 +67,52 @@ static class InsertCode {
 		//get the best valid insertion place
 
 		bool havePos = false;
-		var members = root.Members;
-		if (members.Any()) {
-			var g = members.LastOrDefault(o => o is GlobalStatementSyntax);
-			int posAfterTLS = g?.FullSpan.End ?? members.First().FullSpan.Start;
+		var last = root.AttributeLists.LastOrDefault() as SyntaxNode
+			?? root.Usings.LastOrDefault() as SyntaxNode
+			?? root.Externs.LastOrDefault() as SyntaxNode
+			?? root.GetDirectives(o => o is DefineDirectiveTriviaSyntax).LastOrDefault();
+		if (last != null) {
+			int e1 = last.FullSpan.End;
+			if (havePos = pos <= e1) pos = e1;
+		}
 
-			bool done1 = false;
-			if (node is BlockSyntax) {
-				done1 = node.Span.ContainsInside(pos);
-			} else if (node is MemberDeclarationSyntax) {
-				done1 = true;
-				//don't use posAfterTLS if before the first type
-				bool here = node == members.FirstOrDefault(o => o is not GlobalStatementSyntax) && pos <= node.SpanStart;
-				pos = Math.Min(pos, here ? node.SpanStart : posAfterTLS);
-			} else if (node is CompilationUnitSyntax && g != members[^1]) { //after types
-				done1 = true;
-				pos = Math.Min(pos, posAfterTLS);
-			}
-			if (!done1) {
-				for (; node is not CompilationUnitSyntax; node = node.Parent) {
-					//CiUtil.PrintNode(node);
-					if (node is StatementSyntax) {
-						var pa = node.Parent;
-						if (node is BlockSyntax && pa is not (BlockSyntax or GlobalStatementSyntax)) continue;
-						var span = node.Span;
-						if (havePos = pos >= span.End && token.IsKind(SyntaxKind.CloseBraceToken)) pos = node.FullSpan.End;
-						else if (havePos = pos >= span.Start) pos = span.Start;
-						break;
-					}
-					if (node is MemberDeclarationSyntax) {
-						pos = posAfterTLS;
-						break;
+		if (!havePos) {
+			var members = root.Members;
+			if (members.Any()) {
+				var g = members.LastOrDefault(o => o is GlobalStatementSyntax);
+				int posAfterTLS = g?.FullSpan.End ?? members.First().FullSpan.Start;
+
+				bool done1 = false;
+				if (node is BlockSyntax) {
+					done1 = node.Span.ContainsInside(pos);
+				} else if (node is MemberDeclarationSyntax) {
+					done1 = true;
+					//don't use posAfterTLS if before the first type
+					bool here = node == members.FirstOrDefault(o => o is not GlobalStatementSyntax) && pos <= node.SpanStart;
+					pos = Math.Min(pos, here ? node.SpanStart : posAfterTLS);
+				} else if (node is CompilationUnitSyntax && g != members[^1]) { //after types
+					done1 = true;
+					pos = Math.Min(pos, posAfterTLS);
+				}
+				if (!done1) {
+					for (; node is not CompilationUnitSyntax; node = node.Parent) {
+						//CiUtil.PrintNode(node);
+						if (node is StatementSyntax) {
+							var pa = node.Parent;
+							if (node is BlockSyntax && pa is not (BlockSyntax or GlobalStatementSyntax)) continue;
+							var span = node.Span;
+							if (havePos = pos >= span.End && token.IsKind(SyntaxKind.CloseBraceToken)) pos = node.FullSpan.End;
+							else if (havePos = pos >= span.Start) pos = span.Start;
+							break;
+						}
+						if (node is MemberDeclarationSyntax) {
+							pos = posAfterTLS;
+							break;
+						}
 					}
 				}
-			}
 
-			havePos |= pos == posAfterTLS;
-		} else {
-			var last = root.AttributeLists.LastOrDefault() as SyntaxNode
-				?? root.Usings.LastOrDefault() as SyntaxNode
-				?? root.Externs.LastOrDefault() as SyntaxNode
-				?? root.GetDirectives(o => o is DefineDirectiveTriviaSyntax).LastOrDefault();
-			if (last != null) {
-				int e1 = last.FullSpan.End;
-				if (havePos = pos <= e1) pos = e1;
+				havePos |= pos == posAfterTLS;
 			}
 		}
 
@@ -156,7 +162,16 @@ static class InsertCode {
 			int nn = 0; for (int i = pos; --i >= 0 && code[i] <= ' ';) if (code[i] == '\n' && ++nn == 2) break;
 			if (nn < 2) b.Append('\t', indent).AppendLine();
 		}
-		foreach (var v in s.Lines()) b.Append('\t', indent).AppendLine(v);
+
+		bool rawString = false;
+		foreach (var v in s.Lines()) {
+			if (indent > 0) {
+				if (!rawString) b.Append('\t', indent);
+				rawString = rawString ? !v.Starts("\"\"\"") : v.Ends("\"\"\"");
+			}
+			b.AppendLine(v);
+		}
+
 		if (separate && !s.Ends("\n}") && replTo < code.Length && code[replTo] is not ('\r' or '}')) {
 			b.Append('\t', indent).AppendLine();
 		}
@@ -173,7 +188,10 @@ static class InsertCode {
 
 		CodeInfo.Pasting(d, silent: true);
 		d.zSetAndReplaceSel(true, pos, replTo, s);
+
 		if (go >= 0) d.zGoToPos(true, pos + go);
+		else if (flags.Has(ICSFlags.SelectNewCode)) d.zSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
+		else if (flags.Has(ICSFlags.GoToStart)) d.zGoToPos(true, pos);
 
 		if (flags.Has(ICSFlags.Fold)) _FoldInsertedCode(d, pos, s.LineCount());
 
@@ -188,7 +206,7 @@ static class InsertCode {
 		}
 
 		var w = d.Hwnd.Window;
-		if (flags.Has(ICSFlags.Activate)) w.ActivateL();
+		if (flags.Has(ICSFlags.ActivateEditor)) w.ActivateL();
 		if (!flags.Has(ICSFlags.NoFocus) && w.IsActive) d.Focus();
 	}
 
@@ -224,7 +242,7 @@ static class InsertCode {
 		//get symbols declared in s
 		List<ISymbol> a2 = new();
 		HashSet<string> h2 = new();
-		var doc2 = CiUtil.CreateRoslynDocument(s, false);
+		var doc2 = CiUtil.CreateDocumentFromCode(s, false);
 		var semo2 = doc2.GetSemanticModelAsync().Result;
 		_GetDeclaredSymbols(semo2, semo2.Root, a2, h2);
 		//print.it("---- h2 ----"); foreach (var v in h2) print.it(v);
@@ -280,8 +298,12 @@ static class InsertCode {
 	/// At current position, not as new line, replaces selection.
 	/// </summary>
 	/// <param name="c">If null, uses the focused control, else sets focus.</param>
-	/// <param name="s">If contains '%', removes it and moves caret there. Alternatively use '\b', then does not touch '%'.</param>
-	public static void TextSimplyInControl(FrameworkElement c, string s) {
+	/// <param name="s">
+	/// If contains '%', removes it and moves caret there.
+	/// Alternatively use '\b', then does not touch '%'.
+	/// If contains '%' or \b, must be single line.
+	/// </param>
+	public static void TextSimplyInControl(FrameworkElement c, string s) { //SHOULDDO: flags for processing % etc
 		if (c == null) {
 			c = App.FocusedElement;
 			if (c == null) return;

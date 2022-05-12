@@ -16,16 +16,16 @@ using System.Linq;
 namespace Au.Tools;
 #endif
 
-class InputRecorder : Window {
+class DInputRecorder : KDialogWindow {
 	public static void ShowRecorder() {
 		if (s_showing) return;
 
 		int t = WindowsHook.LowLevelHooksTimeout;
 		if (t < 300) { //default 300, max 1000
-			print.it($"Warning: incorrect Windows settings. The keyboard/mouse hook timeout is {t} ms. Must be 300-1000. Set it in Options -> OS, and restart computer. Now recording and triggers are unreliable.");
+			print.it($"Warning: incorrect Windows settings. The keyboard/mouse hook timeout is {t} ms. Should be 1000. Set it in Options -> OS, and restart computer. Now recording and triggers are unreliable.");
 		}
 
-		var ir = new InputRecorder();
+		var ir = new DInputRecorder();
 #if SCRIPT
 		ir.ShowDialog();
 #else
@@ -47,7 +47,7 @@ class InputRecorder : Window {
 
 	const int c_xyWindow = 0, c_xyControl = 1, c_xyScreen = 2;
 
-	InputRecorder() {
+	DInputRecorder() {
 		Title = "Input recorder";
 		var b = new wpfBuilder(this).WinSize((300, 200..400), (270, 260..)).Columns(80, -1);
 		b.WinProperties(WindowStartupLocation.Manual, /*resizeMode: ResizeMode.NoResize,*/ showActivated: false, showInTaskbar: false, topmost: true, style: WindowStyle.ToolWindow);
@@ -129,10 +129,10 @@ class InputRecorder : Window {
 
 		b.End();
 
-		b.WinSaved(App.Settings.recorder.wndPos, o => App.Settings.recorder.wndPos = o);
+		b.WinSaved(App.Settings.wndpos.recorder, o => App.Settings.wndpos.recorder = o);
 	}
 
-	static InputRecorder() {
+	static DInputRecorder() {
 		//JIT some code that is called in hook proc
 		var w = App.Hmain;
 		var r1 = new _RecoWinFind { w = w, varName = 1, waitS = 1 };

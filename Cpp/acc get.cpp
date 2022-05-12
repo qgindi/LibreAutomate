@@ -4,7 +4,7 @@
 
 namespace outproc
 {
-int AccEnableChrome(HWND w, bool checkClassName);
+void AccEnableChrome(HWND w);
 }
 
 namespace {
@@ -317,10 +317,10 @@ gRetry:
 			}
 		}
 		//specWnd = _ESpecWnd::None;
-	} else if((specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) && !(WinFlags::Get(wTL) & eWinFlags::AccEnableMask)) {
+	} else if(specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) {
 		if(specWnd == _ESpecWnd::Chrome) {
-			outproc::AccEnableChrome(wTL, false);
-			//note: now can get wrong AO, although the above func waits for new good DOCUMENT (max 1.5 s).
+			outproc::AccEnableChrome(wTL);
+			//note: now can get wrong AO, although the above func waits for new good DOCUMENT (max 3 s).
 			//	Chrome updates web page AOs lazily. The speed depends on web page. Can get wrong AO even after loong time.
 			//	Or eg can be good AO, but some its properties are still not set.
 			//	This func doesn't know what AO must be there, and cannot wait.
@@ -459,9 +459,9 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResu
 			aResult.misc.flags = eAccMiscFlags::Java;
 			return 0;
 		}
-	} else if((specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) && !(WinFlags::Get(w) & eWinFlags::AccEnableMask)) {
+	} else if(specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) {
 		if(specWnd == _ESpecWnd::Chrome) {
-			AccEnableChrome(w, false);
+			AccEnableChrome(w);
 		} else { //OpenOffice, LibreOffice
 			tsr.Set(wTL);
 			//OpenOffice bug: crashes. More info in Cpp_AccFromPoint.

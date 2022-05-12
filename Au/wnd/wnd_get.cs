@@ -1,7 +1,6 @@
 ﻿namespace Au;
 
-public partial struct wnd
-{
+public partial struct wnd {
 	/// <summary>
 	/// Gets related windows and controls.
 	/// Use like <c>wnd w2 = w1.Get.Owner;</c> (here w1 is a <b>wnd</b> variable).
@@ -12,8 +11,7 @@ public partial struct wnd
 	/// Static functions of this class are used to get special windows (used like <c>wnd w = wnd.getwnd.top;</c>) and all windows.
 	/// Instances of this class are used to get related windows and controls, like <c>wnd w2 = w1.Get.FirstChild;</c> (here w1 is a <b>wnd</b> variable).
 	/// </summary>
-	public partial struct getwnd
-	{
+	public partial struct getwnd {
 		wnd _w;
 		///
 		public getwnd(wnd wThis) => _w = wThis;
@@ -335,13 +333,18 @@ public partial struct wnd
 		}
 
 		/// <summary>
-		/// Gets all owner windows (owner, its owner and so on) of this window, optionally including this window.
+		/// Gets all owner windows (owner, its owner and so on) of this window.
 		/// </summary>
 		/// <param name="andThisWindow">Add this window (or its top-level parent if control) as the first list element.</param>
 		/// <param name="onlyVisible">Skip invisible windows.</param>
 		/// <remarks>
 		/// This window can be top-level window or control.
 		/// </remarks>
+		public wnd[] AllOwners(bool andThisWindow = false, bool onlyVisible = false)
+			=> Owners(andThisWindow, onlyVisible).ToArray();
+
+		///
+		[EditorBrowsable(EditorBrowsableState.Never)] //returns List, whereas all other public functions return array
 		public List<wnd> Owners(bool andThisWindow = false, bool onlyVisible = false) {
 			var a = new List<wnd>();
 			for (var w = Window; !w.Is0 && w != root; w = w.Get.Owner) {
@@ -349,6 +352,85 @@ public partial struct wnd
 				if (!onlyVisible || w.IsVisible) a.Add(w);
 			}
 			return a;
+		}
+
+		/// <summary>
+		/// Gets windows owned by this window.
+		/// </summary>
+		/// <param name="allDescendants">Also get indirectly owned windows (owned by owned windows).</param>
+		/// <param name="andThisWindow">Add this window to the array. Since the array is sorted like in the Z order, usually it is the last element, but not always.</param>
+		/// <returns>Array containing zero or more elements. Sorted like in the Z order.</returns>
+		public wnd[] AllOwned(bool allDescendants, bool andThisWindow = false) {
+			if (allDescendants) {
+				var od = new OwnedDescendants_();
+				var ai = od.GetIndices(_w, andOwner: andThisWindow);
+				if (ai.Count == 0) return Array.Empty<wnd>();
+				var ar = new wnd[ai.Count];
+				for (int i = 0; i < ai.Count; i++) ar[i] = od.all[ai[i]];
+				return ar;
+			} else {
+				var ar = new List<wnd>();
+				var all = allWindowsZorder(); //the slowest part
+				foreach (var k in all) {
+					if (k == _w) { if (andThisWindow) ar.Add(k); continue; }
+					if (k.Get.Owner == _w) ar.Add(k);
+				}
+				return ar.ToArray();
+			}
+		}
+
+		/// <summary>
+		/// Gets indices of owned windows of the specified window, including all descendants.
+		/// </summary>
+		internal class OwnedDescendants_ {
+			/// <summary>
+			/// All top-level windows in Z order.
+			/// The array is created once in ctor.
+			/// </summary>
+			public readonly wnd[] all;
+
+			/// <summary>
+			/// Owners of all windows that are in the <i>all</i> array.
+			/// The array is created once in ctor.
+			/// </summary>
+			public readonly int[] owners;
+
+			public OwnedDescendants_() {
+				all = getwnd.allWindowsZorder();
+				owners = new int[all.Length];
+				for (int i = 0; i < all.Length; i++) owners[i] = (int)all[i].Get.Owner;
+			}
+
+			/// <summary>
+			/// Gets indices of owned windows of the specified window, including all descendants.
+			/// Can be called multiple times for different owner windows; uses arrays created in ctor (the slowest part).
+			/// </summary>
+			/// <param name="owner">Owner window.</param>
+			/// <param name="skip">A callback function that receives descendant indice and can return true to skip that window and its descendants.</param>
+			/// <param name="andOwner">Add <i>owner</i> to the list too, at the position matching the Z order.</param>
+			/// <returns>List of <see cref="all"/> indices of owned windows. Sorted like in the Z order. Not null.</returns>
+			public List<int> GetIndices(wnd owner, Func<int, bool> skip = null, bool andOwner = false) {
+				var ai = new List<int>();
+				_Owned(owner);
+
+				void _Owned(wnd owner) {
+					int oint = (int)owner;
+					for (int i = 0; i < owners.Length; i++) {
+						if (owners[i] == oint) {
+							if (skip != null && skip(i)) continue;
+							ai.Add(i);
+							_Owned(all[i]);
+						}
+					}
+				}
+
+				if (andOwner) {
+					int j = Array.IndexOf(all, owner);
+					if (j >= 0) ai.Add(j); else Debug_.Print("owner not in all");
+				}
+				ai.Sort();
+				return ai;
+			}
 		}
 
 		#endregion
@@ -434,8 +516,7 @@ public partial struct wnd
 
 	#region main windows
 
-	public partial struct getwnd
-	{
+	public partial struct getwnd {
 		/// <summary>
 		/// Returns true if window w is considered a main window, ie probably is in the Windows taskbar.
 		/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.

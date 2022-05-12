@@ -12,10 +12,10 @@
 	/// <code>Triggers.TriggerType[parameters] = action;</code>
 	/// Examples:
 	/// <code>
-	/// Triggers.Hotkey["Ctrl+K"] = o => print.it(o.Trigger);
+	/// Triggers.Hotkey["Ctrl+K"] = o => print.it(o);
 	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => {
 	///		print.it("This is a trigger action (lambda function).");
-	///		print.it($"It runs when you press {o.Trigger}.");
+	///		print.it($"It runs when you press {o}.");
 	/// };
 	/// Triggers.Run();
 	/// </code>
@@ -49,9 +49,9 @@
 	/// 
 	/// //hotkey triggers
 	/// 
-	/// hk["Ctrl+K"] = o => print.it(o.Trigger); //it means: execute code "o => print.it(o.Trigger)" when I press Ctrl+K
+	/// hk["Ctrl+K"] = o => print.it(o); //it means: execute code "o => print.it(o)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
-	/// 	print.it(o.Trigger);
+	/// 	print.it(o);
 	/// 	var w1 = wnd.findOrRun("* Notepad", run: () => run.it(folders.System + "notepad.exe"));
 	/// 	keys.sendt("text");
 	/// 	w1.Close();
@@ -61,26 +61,26 @@
 	/// //triggers that work only with some windows
 	/// 
 	/// Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
-	/// hk["Ctrl+F5"] = o => print.it(o.Trigger, o.Window);
-	/// hk["Ctrl+F6"] = o => print.it(o.Trigger, o.Window);
+	/// hk["Ctrl+F5"] = o => print.it(o, o.Window);
+	/// hk["Ctrl+F6"] = o => print.it(o, o.Window);
 	/// 
 	/// var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
-	/// hk["Ctrl+F5"] = o => print.it(o.Trigger, o.Window);
-	/// hk["Ctrl+F6"] = o => print.it(o.Trigger, o.Window);
+	/// hk["Ctrl+F5"] = o => print.it(o, o.Window);
+	/// hk["Ctrl+F6"] = o => print.it(o, o.Window);
 	/// 
 	/// Triggers.Of.AllWindows(); //let the following triggers work with all windows
 	/// 
 	/// //mouse triggers
 	/// 
-	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => print.it(o.Trigger);
-	/// mouse[TMEdge.RightInCenter50] = o => { print.it(o.Trigger); dialog.show("Bang!", x: Coord.Max); };
+	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => print.it(o);
+	/// mouse[TMEdge.RightInCenter50] = o => { print.it(o); dialog.show("Bang!", x: Coord.Max); };
 	/// mouse[TMMove.LeftRightInCenter50] = o => wnd.switchActiveWindow();
 	/// 
 	/// Triggers.FuncOf.NextTrigger = o => keys.isScrollLock; //example of a custom scope (aka context, condition)
-	/// mouse[TMWheel.Forward] = o => print.it($"{o.Trigger} while ScrollLock is on");
+	/// mouse[TMWheel.Forward] = o => print.it($"{o} while ScrollLock is on");
 	/// 
 	/// Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
-	/// mouse[TMMove.LeftRightInBottom25] = o => { print.it(o.Trigger); o.Window.Close(); };
+	/// mouse[TMMove.LeftRightInBottom25] = o => { print.it(o); o.Window.Close(); };
 	/// Triggers.Of.AllWindows();
 	/// 
 	/// //window triggers. Note: window triggers don't depend on Triggers.Of.
@@ -372,7 +372,7 @@
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		void _ShowToolbarsDialog() {
-			toolbar.toolbarsDialog().Show();
+			toolbar.toolbarsDialog(true);
 		}
 
 		unsafe void _KeyMouseEvent(int messageId, HooksThread.UsedEvents eventType) {

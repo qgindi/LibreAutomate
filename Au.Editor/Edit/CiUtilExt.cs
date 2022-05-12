@@ -213,6 +213,36 @@ static class CiUtilExt {
 		return false;
 	}
 
+	/// <summary>
+	/// Gets full span of a method or type declaration node, not including leading trivia that is not comments/doccomments touching the declaration.
+	/// </summary>
+	public static TextSpan GetRealFullSpan(this SyntaxNode t) {
+		//from leading trivia delete only comments and doc comments, until an empty line
+		int from = t.SpanStart;
+		bool eol = false;
+		var a = t.GetLeadingTrivia();
+		for (int i = a.Count; --i >= 0;) {
+			var v = a[i];
+			var k = v.Kind();
+			if (k == SyntaxKind.EndOfLineTrivia) {
+				if (eol) break;
+				eol = true;
+				if (i > 0 && a[i - 1].IsKind(SyntaxKind.WhitespaceTrivia)) v = a[--i];
+			} else {
+				eol = false;
+				if (k is not (SyntaxKind.WhitespaceTrivia
+					or SyntaxKind.SingleLineCommentTrivia
+					or SyntaxKind.SingleLineDocumentationCommentTrivia
+					or SyntaxKind.MultiLineCommentTrivia
+					or SyntaxKind.MultiLineDocumentationCommentTrivia)
+					) break;
+			}
+			from = v.SpanStart;
+			//CiUtil.PrintNode(v);
+		}
+		return TextSpan.FromBounds(from, t.FullSpan.End);
+	}
+
 	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
 		=> t.Eq(span.Start..span.End, s, ignoreCase);
 

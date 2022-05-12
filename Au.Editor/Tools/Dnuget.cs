@@ -21,7 +21,7 @@ class DNuget : KDialogWindow {
 			s_dialog = new();
 			s_dialog.Show();
 		} else {
-			s_dialog.Activate();
+			s_dialog.Hwnd().ActivateL(true);
 		}
 		if (package != null) s_dialog._tPackage.Text = package;
 	}
@@ -29,6 +29,7 @@ class DNuget : KDialogWindow {
 
 	protected override void OnClosed(EventArgs e) {
 		s_dialog = null;
+		App.Model.UnloadingWorkspaceEvent -= Close;
 		base.OnClosed(e);
 	}
 
@@ -113,9 +114,8 @@ A script can use packages from multiple folders if they are compatible.");
 		b.R.Add(out TextBlock infoSDK).Text("<b>Need to install .NET SDK x64, version 6.0 or later. ", "<a>Download", gotoSDK).Hidden();
 		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 
-		App.Model.UnloadingWorkspaceEvent += () => Close();
-
-		b.Loaded += async () => {
+		Loaded += async (_, _) => {
+			App.Model.UnloadingWorkspaceEvent += Close;
 			_FillTree();
 
 			bool sdkOK = false;

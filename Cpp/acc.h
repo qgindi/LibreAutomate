@@ -203,11 +203,11 @@ public:
 	//Does nothing if w has flag AccEnableYes. Adds this flag if need.
 	void Set(HWND w)
 	{
-		if(!!(WinFlags::Get(w) & eWinFlags::AccEnableYes)) return;
+		if(!!(WinFlags::Get(w) & eWinFlags::AccEnabled)) return;
 		int r = 0;
 		SystemParametersInfoW(SPI_GETSCREENREADER, 0, &r, 0);
 		_restore = r == 0 && SystemParametersInfoW(SPI_SETSCREENREADER, 1, 0, 0);
-		if(_restore) WinFlags::Set(w, eWinFlags::AccEnableYes);
+		if(_restore) WinFlags::Set(w, eWinFlags::AccEnabled);
 	}
 };
 
@@ -241,8 +241,8 @@ struct AccRaw : public Cpp_Acc
 
 	//Calls Release (even if elem is not 0) and clears this variable.
 	void Dispose() {
-		if(acc != null) { acc->Release(); acc = null; }
-		elem = 0;
+		if(acc != null) acc->Release();
+		Zero();
 	}
 
 	bool IsEmpty() const { return acc == null && elem == 0; }

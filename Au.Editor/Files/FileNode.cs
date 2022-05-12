@@ -327,19 +327,24 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		//if(cache) print.it("GetText", Name, _text != null);
 		if (_text != null) return _text;
 		string r = null, es = null, path = FilePath;
-		try {
-			using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
-			if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
-			else r = sr.ReadToEnd();
-		}
-		catch (Exception ex) {
-			if (warningIfNotFound || !(ex is FileNotFoundException || ex is DirectoryNotFoundException)) es = ex.ToStringWithoutStack();
-		}
-		r ??= "";
-		if (es != null) {
-			print.warning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
-		} else if (cache && Model.IsWatchingFileChanges && !this.IsLink && r.Length < 1_000_000) { //don't cache links because we don't watch their file folders
-			_text = r; //FUTURE: set = null after some time if not used
+		if (path == null) { //IsDeleted
+			if (warningIfNotFound) print.warning($"Cannot get text of {Name}. The file is deleted.", -1);
+			r = "";
+		} else {
+			try {
+				using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
+				if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
+				else r = sr.ReadToEnd();
+			}
+			catch (Exception ex) {
+				if (warningIfNotFound || !(ex is FileNotFoundException or DirectoryNotFoundException)) es = ex.ToStringWithoutStack();
+			}
+			r ??= "";
+			if (es != null) {
+				print.warning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
+			} else if (cache && Model.IsWatchingFileChanges && !this.IsLink && r.Length < 1_000_000) { //don't cache links because we don't watch their file folders
+				_text = r; //FUTURE: set = null after some time if not used
+			}
 		}
 		return r;
 	}
@@ -348,7 +353,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	public void UnCacheText(bool fromWatcher = false) {
 		//print.it("UnCacheText", Name, _text != null);
 		_text = null;
-		if (fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?._FileModifiedExternally();
+		if (fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?.FileModifiedExternally_();
 	}
 
 	///// <summary>
@@ -723,7 +728,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		static readonly string s_xmlFilePath = folders.ThisAppBS + @"Templates\files.xml";
 		static DateTime s_xmlFileTime;
 
-		public static bool IsInExamplesOrDefault(XElement x) => x.Ancestors().Any(o => o.Attr("n") is "Examples" or "Default");
+		public static bool IsInDefault(XElement x) => x.Ancestors().Any(o => o.Attr("n") == "Default");
 	}
 
 	[Flags]

@@ -5,14 +5,13 @@ using System.Windows.Interop;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Windows.Data;
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Adds extension methods for some WPF classes.
 	/// </summary>
-	public static class ExtWpf
-	{
+	public static class ExtWpf {
 		/// <summary>
 		/// Gets native window handle of this <b>Window</b> or <b>Popup</b>, or container window handle of this child object.
 		/// Returns <c>default(wnd)</c> if: called before creating or after closing real window; failed; <i>t</i> is null.
@@ -83,7 +82,7 @@ namespace Au.Types
 		/// <summary>
 		/// Enumerates logical descendant objects, including parts of composite controls.
 		/// </summary>
-		public static System.Collections.IEnumerable LogicalDescendants(this DependencyObject t) {
+		public static IEnumerable LogicalDescendants(this DependencyObject t) {
 			//foreach (var v in LogicalTreeHelper.GetChildren(t)) {
 			//	yield return v;
 			//	if (v is DependencyObject d)
@@ -167,6 +166,7 @@ namespace Au.Types
 		public static bool True(this CheckBox t) => t.IsChecked == true;
 
 #if true
+		//SHOULDDO: does not work if this is called in ctor and caller sets Title afterwards.
 		static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {
 			var wstate = t.WindowState;
 			if (t.IsLoaded) {
@@ -484,6 +484,46 @@ namespace Au.Types
 				bool wasVisible = w.IsVisible; //allow to activate when opening window in non-primary screen
 				var h = WindowsHook.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE && (wnd)k.wParam == w && (wasVisible || !w.IsVisible));
 				d.InvokeAsync(() => h.Dispose());
+			}
+		}
+
+		/// <returns>true if in ShowDialog, false if not, null if failed (uses reflection).</returns>
+		internal static bool? IsModal_(this Window t) {
+			try {
+				var f = typeof(Window).GetField("_showingAsDialog", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic);
+				return (bool)f.GetValue(t);
+			}
+			catch {
+				Debug_.Print("_showingAsDialog");
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Hides the grip and/or overflow controls in this toolbar.
+		/// Call before the toolbar is loaded.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="hideGrip">Hide grip. Sets <b>SetIsLocked</b> true.</param>
+		/// <param name="hideOverflow">Hides the overflow button while it is disabled.</param>
+		/// <exception cref="InvalidOperationException">Loaded.</exception>
+		public static void HideGripAndOverflow(this ToolBar t, bool hideGrip = true, bool hideOverflow = true) {
+			if (hideGrip) ToolBarTray.SetIsLocked(t, true);
+			if (hideOverflow) {
+				if (t.IsLoaded) throw new InvalidOperationException("loaded");
+				RoutedEventHandler h = null;
+				h = (_, _) => {
+					t.Loaded -= h;
+					if (t.Template.FindName("OverflowButton", t) is ButtonBase ob) {
+						ob.SetBinding(
+							UIElement.VisibilityProperty,
+							new Binding("IsEnabled") {
+								RelativeSource = RelativeSource.Self,
+								Converter = new BooleanToVisibilityConverter()
+							});
+					}
+				};
+				t.Loaded += h;
 			}
 		}
 	}

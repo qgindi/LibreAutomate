@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Au.Controls;
+using Au.Compiler;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Tags;
@@ -19,9 +20,9 @@ static class CiUtil {
 	//	return sym != null;
 	//}
 
-	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd) {
+	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd, bool metaToo = false) {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) { cd = default; return default; }
-		if (!CodeInfo.GetContextAndDocument(out cd)) return default;
+		if (!CodeInfo.GetContextAndDocument(out cd, metaToo: metaToo)) return default;
 		return GetSymbolOrKeywordFromPos(cd.document, cd.pos16, cd.code);
 	}
 
@@ -51,7 +52,7 @@ static class CiUtil {
 				return (null, word, HelpKind.ContextualKeyword, token);
 			}
 		} else if (tkind == SyntaxKind.OpenBracketToken) { //indexer?
-			if(token.Parent is BracketedArgumentListSyntax bal && bal.Parent is ElementAccessExpressionSyntax es) node = es;
+			if (token.Parent is BracketedArgumentListSyntax bal && bal.Parent is ElementAccessExpressionSyntax es) node = es;
 		} else {
 			var k = token.Kind();
 
@@ -313,7 +314,7 @@ static class CiUtil {
 	/// From C# code creates a Roslyn workspace+project+document for code analysis.
 	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
 	/// </summary>
-	public static Document CreateRoslynDocument(string code, bool needSemantic) {
+	public static Document CreateDocumentFromCode(string code, bool needSemantic) {
 		ProjectId projectId = ProjectId.CreateNewId();
 		DocumentId documentId = DocumentId.CreateNewId(projectId);
 		var ws = new AdhocWorkspace();
@@ -334,7 +335,6 @@ global using System.Diagnostics;
 global using System.Globalization;
 global using System.IO;
 global using System.IO.Compression;
-global using System.Media;
 global using System.Runtime.CompilerServices;
 global using System.Runtime.InteropServices;
 global using System.Text;
@@ -349,41 +349,61 @@ global using Au.More;
 		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
 	}
 
-	//	/// <summary>
-	//	/// From C# code creates a Roslyn workspace+project+document for syntax and semantic analysis.
-	//	/// If needSemantic adds default usings (same as in default global.cs; prepends to code) and references.
-	//	/// </summary>
-	//	public static Document CreateRoslynDocument(ref string code, bool needSemantic) {
-	//		if (needSemantic) code = @"using Au;
-	//using Au.Types;
-	//using System;
-	//using System.Collections.Generic;
-	//using System.Linq;
-	//using System.Collections.Concurrent;
-	//using System.Diagnostics;
-	//using System.Globalization;
-	//using System.IO;
-	//using System.IO.Compression;
-	//using System.Media;
-	//using System.Runtime.CompilerServices;
-	//using System.Runtime.InteropServices;
-	//using System.Text;
-	//using System.Text.RegularExpressions;
-	//using System.Threading;
-	//using System.Threading.Tasks;
-	//using Microsoft.Win32;
-	//using Au.More;
-	//" + code;
-	//		ProjectId projectId = ProjectId.CreateNewId();
-	//		DocumentId documentId = DocumentId.CreateNewId(projectId);
-	//		var ws = new AdhocWorkspace();
-	//		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
-	//			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
-	//			new CSharpParseOptions(LanguageVersion.Preview),
-	//			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
-	//			);
-	//		return ws.CurrentSolution.AddProject(pi).AddDocument(documentId, "l.cs", code).GetDocument(documentId);
-	//	}
+	/// <summary>
+	/// Creates Compilation from a file or project folder.
+	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
+	/// </summary>
+	/// <param name="f">A code file or a project folder. If in a project folder, creates from the project.</param>
+	/// <returns>null if can't create, for example if f isn't a code file or if meta contains errors.</returns>
+	public static Compilation CreateCompilationFromFileNode(FileNode f) { //not CSharpCompilation, it creates various small problems
+		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
+		if (!f.IsCodeFile) return null;
+
+		var m = new MetaComments();
+		if (!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) return null; //with this flag never returns false, but anyway
+
+		var pOpt = m.CreateParseOptions();
+		var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
+		for (int i = 0; i < trees.Length; i++) {
+			var f1 = m.CodeFiles[i];
+			trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, Encoding.Default) as CSharpSyntaxTree;
+		}
+
+		var cOpt = m.CreateCompilationOptions();
+		return CSharpCompilation.Create("Compilation", trees, m.References.Refs, cOpt);
+	} //FUTURE: remove if unused
+
+	/// <summary>
+	/// Creates Solution from a file or project folder.
+	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
+	/// </summary>
+	/// <param name="f">A code file or a project folder. If in a project folder, creates from the project.</param>
+	/// <returns>null if can't create, for example if f isn't a code file or if meta contains errors.</returns>
+	public static (Solution sln, MetaComments meta) CreateSolutionFromFileNode(FileNode f) {
+		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
+		if (!f.IsCodeFile) return default;
+
+		var m = new MetaComments();
+		if (!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) return default; //with this flag never returns false, but anyway
+
+		var projectId = ProjectId.CreateNewId();
+		var adi = new List<DocumentInfo>();
+		foreach (var f1 in m.CodeFiles) {
+			var docId = DocumentId.CreateNewId(projectId);
+			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
+			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
+		}
+
+		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
+			m.CreateCompilationOptions(),
+			m.CreateParseOptions(),
+			adi,
+			null,
+			m.References.Refs);
+
+		var ws = new AdhocWorkspace();
+		return (ws.CurrentSolution.AddProject(pi), m);
+	}
 
 	/// <summary>
 	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
@@ -400,17 +420,17 @@ global using Au.More;
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString())}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void PrintNode(SyntaxToken x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x.ToString().Limit(10, middle: true, lines: true)}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void PrintNode(SyntaxTrivia x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x.ToString().Limit(10, middle: true, lines: true)}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 

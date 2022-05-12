@@ -554,6 +554,18 @@ namespace Au {
 		}
 
 		/// <summary>
+		/// Returns true if haracter <i>c</i> is invalid in file names (the filename part).
+		/// </summary>
+		public static bool isInvalidNameChar(char c)
+			=> c is < ' ' or '\"' or '<' or '>' or '|'or '*' or '?' or ':'  or '\\' or '/';
+
+		/// <summary>
+		/// Returns true if haracter <i>c</i> is invalid in file paths.
+		/// </summary>
+		public static bool isInvalidPathChar(char c)
+			=> c is < ' ' or '\"' or '<' or '>' or '|' or '*' or '?';
+
+		/// <summary>
 		/// Gets filename from path. Does not remove extension.
 		/// Returns "" if there is no filename.
 		/// Returns null if path is null.

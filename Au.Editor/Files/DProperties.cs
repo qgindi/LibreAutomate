@@ -27,7 +27,7 @@ class DProperties : KDialogWindow {
 		Owner = App.Wmain;
 		Title = "Properties of " + _f.Name;
 
-		var b = new wpfBuilder(this).Columns(440.., 0);
+		var b = new wpfBuilder(this).WinSize(600).Columns(-1, 0);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
 		b.R.StartStack(vertical: true); //left column
@@ -171,14 +171,14 @@ class DProperties : KDialogWindow {
 			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, kind, orAnywhere: true)) ? name + " file not found" : null;
 		}
 
-		//b.Loaded += () => {
-		//	
-		//};
-
+		Loaded += (_, _) => { App.Model.UnloadingWorkspaceEvent += Close; };
 		b.OkApply += _OkApply;
 		_InitInfo();
+	}
 
-		App.Model.UnloadingWorkspaceEvent += () => Close();
+	protected override void OnClosed(EventArgs e) {
+		App.Model.UnloadingWorkspaceEvent -= Close;
+		base.OnClosed(e);
 	}
 
 	void _GetMeta() {

@@ -1,10 +1,7 @@
-
 using Au.Triggers;
 
-namespace Au
-{
-	public partial class toolbar
-	{
+namespace Au {
+	public partial class toolbar {
 		toolbar _satellite;
 		toolbar _satPlanet;
 		bool _satVisible;
@@ -56,10 +53,9 @@ namespace Au
 			//print.it("show");
 			if (!_satellite._created) {
 				var owner = _w;
-				_satellite._CreateWindow(true, owner);
+				_satellite._CreateWindow(true, owner, isSatelite: true);
 				_satellite._ow = new _OwnerWindow(owner);
 				_satellite._ow.a.Add(_satellite);
-				WndUtil.SetOwnerWindow(_satellite._w, owner); //let OS keep Z order and close/hide when owner toolbar closed/minimized
 			}
 			_SatFollow();
 			_SatShowHide(true, animate: true);
@@ -96,7 +92,7 @@ namespace Au
 
 		void _SatDestroying() {
 			if (_IsSatellite) _satPlanet.Satellite = null;
-			Debug_.PrintIf(_satellite != null, "_satellite");
+			Debug_.PrintIf(_satellite != null && _satellite.IsOpen, "_satellite");
 			//When destroying planet, OS at first destroys satellites (owned windows).
 		}
 
@@ -151,7 +147,7 @@ namespace Au
 		/// Creates new toolbar and sets its <see cref="Satellite"/> = this.
 		/// Returns the new toolbar.
 		/// </summary>
-		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int)"/>.</param>
+		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
 		/// <param name="f_">[](xref:caller_info)</param>
 		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
@@ -179,11 +175,10 @@ namespace Au
 		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, .5f, other with .5f, 1f.</param>
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness. Pixels.</param>
-		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int)"/>.</param>
+		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
 		/// <param name="f_">[](xref:caller_info)</param>
 		/// <param name="l_">[](xref:caller_info)</param>
-		public toolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
-			if (mta == null) throw new ArgumentNullException();
+		public toolbar AutoHideScreenEdge(MouseTriggerArgs mta!!, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
 			if (mta.Trigger.Kind != TMKind.Edge) throw new ArgumentException("Not an edge trigger.");
 			return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.ScreenIndex, rangeStart, rangeEnd, thickness, ctorFlags, f_, l_);
 		}
@@ -197,7 +192,7 @@ namespace Au
 		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, .5f, other with .5f, 1f.</param>
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness. Pixels.</param>
-		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int)"/>.</param>
+		/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
 		/// <param name="f_">[](xref:caller_info)</param>
 		/// <param name="l_">[](xref:caller_info)</param>
 		public toolbar AutoHideScreenEdge(TMEdge edge, TMScreen scrn = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
@@ -243,8 +238,11 @@ namespace Au
 
 			var planet = AutoHide(ctorFlags, f_, l_);
 			planet._screenAHSE = sh;
+			if (planet.FirstTime || vertical != (planet.Size.Height > planet.Size.Width)) {
+				SIZE z1 = vertical ? new(thickness + offscreen, length) : new(length, thickness + offscreen);
+				planet.Size = Dpi.Unscale(z1, sh.Handle);
+			}
 			if (planet.FirstTime) {
-				planet.Size = Dpi.Unscale(vertical ? new SIZE(thickness + offscreen, length) : new SIZE(length, thickness + offscreen), sh.Handle);
 				planet.Sizable = false;
 			}
 			planet.Anchor = anchor;

@@ -68,10 +68,6 @@ class CiPopupText
 					run.itSafe(s);
 				}
 			};
-
-			//never mind: on mouse up: if(IsVisible && !c.zSelectedText.NE()) _w.Hwnd.ActivateL(); //the user may want Ctrl+C
-			//	but no mouse up events, even PreviewX.
-			//	can use context menu instead.
 		}
 		return _w;
 	}

@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using System.Windows.Input;
 
 //SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
 
@@ -837,5 +838,10 @@ class FlowDocumentControl : FlowDocumentScrollViewer
 	public void Clear() {
 		Document.Blocks.Clear();
 		_ = Selection?.IsEmpty; //workaround for WPF bug: if some text was selected, would select all new text
+	}
+
+	protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
+		if (!Selection.IsEmpty) this.Hwnd().ActivateL(); //user may want to copy text with Ctrl+C
+		base.OnPreviewMouseLeftButtonUp(e);
 	}
 }

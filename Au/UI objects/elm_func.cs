@@ -826,7 +826,7 @@ namespace Au
 		/// <param name="waitS">Wait for the wanted UI element max this number of seconds. If negative, waits forever.</param>
 		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
 		/// <remarks>
-		/// Can be only 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
+		/// Can be 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
 		/// A string like <c>"next3"</c> or <c>"next,3"</c> is the same as <c>"next next next"</c>. Except for <c>"child"</c>.
 		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <msdn>IAccessible.accNavigate</msdn>.
 		/// 
@@ -839,9 +839,8 @@ namespace Au
 		/// a = a.Navigate("parent next ch3");
 		/// ]]></code>
 		/// </example>
-		public elm Navigate(string navig, double waitS = 0) {
+		public elm Navigate(string navig!!, double waitS = 0) {
 			ThrowIfDisposed_();
-			if (navig == null) throw new ArgumentNullException();
 			int hr; Cpp.Cpp_Acc ca;
 			if (waitS == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
@@ -862,7 +861,10 @@ namespace Au
 		/// Gets parent element. Same as <see cref="Navigate"/> with argument "pa".
 		/// </summary>
 		/// <returns>null if failed.</returns>
-		public elm Parent => Navigate("pa"); //info: Navigate("pa") is optimized in C++
+		public elm Parent => Navigate("pa");
+		//info: Navigate("pa") is optimized in C++
+		//Chrome bug: the parent element retrieved in this way has some incorrect properties.
+		//	Eg Parent.WndContainer is the legacy control, whereas this.WndContainer is the top-level window.
 
 		/// <summary>
 		/// Gets HTML.

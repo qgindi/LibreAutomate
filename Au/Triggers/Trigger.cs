@@ -329,8 +329,7 @@ namespace Au.Triggers
 		public TriggerScope NotWindows(params wndFinder[] any)
 			=> _Add(true, any);
 
-		TriggerScope _Add(bool not, wndFinder f) {
-			if (f == null) throw new ArgumentNullException();
+		TriggerScope _Add(bool not, wndFinder f!!) {
 			Used = true;
 			return Current = new TriggerScope(f, not);
 		}
@@ -412,13 +411,13 @@ namespace Au.Triggers
 	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => print.it("action: mouse left button + Ctrl+B or Ctrl+Shift+B");
 	/// 
 	/// //examples of assigning a CF to multiple triggers
-	/// Triggers.FuncOf.FollowingTriggers = o => { var v = o as HotkeyTriggerArgs; print.it("func", v.Trigger); return true; };
-	/// Triggers.Hotkey["Ctrl+F8"] = o => print.it("action: " + o.Trigger);
-	/// Triggers.Hotkey["Ctrl+F9"] = o => print.it("action: " + o.Trigger);
+	/// Triggers.FuncOf.FollowingTriggers = o => { var v = o as HotkeyTriggerArgs; print.it("func", v); return true; };
+	/// Triggers.Hotkey["Ctrl+F8"] = o => print.it("action: " + o);
+	/// Triggers.Hotkey["Ctrl+F9"] = o => print.it("action: " + o);
 	/// Triggers.FuncOf.FollowingTriggers = null; //stop assigning the CF to triggers added afterwards
 	/// 
 	/// //sometimes all work can be done in CF and you don't need the trigger action
-	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; print.it("func: " + v.Trigger); return true; };
+	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; print.it("func: " + v); return true; };
 	/// Triggers.Hotkey["Ctrl+F12"] = null;
 	/// 
 	/// Triggers.Run();

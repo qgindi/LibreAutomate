@@ -40,7 +40,7 @@
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control".
+		/// To create code for this function, use dialog "Find window".
 		/// </remarks>
 		public wnd Child(
 			[ParamString(PSFormat.Wildex)] string name = null,
@@ -156,7 +156,7 @@
 		///// <param name="flags">This function supports flags <b>DirectChild</b> and <b>HiddenToo</b>. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		///// <remarks>
-		///// To create code for this function, use dialog "Find window or control".
+		///// To create code for this function, use dialog "Find window".
 		///// 
 		///// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		///// </remarks>

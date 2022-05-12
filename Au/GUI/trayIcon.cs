@@ -262,7 +262,7 @@
 					case Api.NIN_KEYSELECT: //Space, Enter (never mind bug: 2 NIN_KEYSELECT on Enter), DoDefaultAction
 						Click?.Invoke(new(m, p));
 						break;
-					case Api.WM_MBUTTONDOWN:
+					case Api.WM_MBUTTONUP:
 						MiddleClick?.Invoke(new(m, p));
 						break;
 					case Api.NIN_BALLOONUSERCLICK:
@@ -311,12 +311,12 @@
 		public event Action<TIEventArgs> Click;
 
 		/// <summary>
-		/// When context menu should be shown (on right click or Apps key).
+		/// When a context menu should be shown (on right click or Apps key).
 		/// </summary>
 		public event Action<TIEventArgs> RightClick;
 
 		/// <summary>
-		/// When the tray icon clicked with middle button.
+		/// When the tray icon clicked with the middle button.
 		/// </summary>
 		public event Action<TIEventArgs> MiddleClick;
 

@@ -277,7 +277,7 @@ namespace Au.Controls
 
 			//print.it("down", e.ClickCount, Keyboard.Modifiers, e.Timestamp);
 			var b = e.ChangedButton;
-			if (b == MouseButton.Left || b == MouseButton.Right || b == MouseButton.Middle) {
+			if (b is MouseButton.Left or MouseButton.Right or MouseButton.Middle) {
 				if (b != MouseButton.Middle && Focusable) Focus();
 				var xy = _w.MouseClientXY;
 				if (HitTest(xy, out var h) && e.ButtonState == MouseButtonState.Pressed && !IsMouseCaptured) {
@@ -286,7 +286,7 @@ namespace Au.Controls
 						Expand(h.index, null);
 					} else {
 						var mk = Keyboard.Modifiers;
-						bool multiSelect = MultiSelect && b == MouseButton.Left && e.ClickCount == 1 && (mk == ModifierKeys.Control || mk == ModifierKeys.Shift);
+						bool multiSelect = MultiSelect && b == MouseButton.Left && e.ClickCount == 1 && (mk is ModifierKeys.Control or ModifierKeys.Shift);
 						bool unselectOnUp = false, checkbox = h.part == TVParts.Checkbox && !multiSelect;
 						if (b == MouseButton.Left && !multiSelect && !checkbox) {
 							unselectOnUp = MultiSelect && IsSelected(h.index); //unselect other on up, else could not drag multiple

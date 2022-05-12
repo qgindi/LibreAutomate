@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "cpp.h"
 #include "acc.h"
+#include "IAccessible2.h"
 
 #pragma comment(lib, "oleacc.lib")
 
 bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count);
-int AccChromeHtmlEnabled(IAccessible* aDoc);
+void AccChromeEnableHtml(IAccessible* aDoc);
 
 class AccFinder
 {
@@ -13,7 +14,8 @@ class AccFinder
 	AccContext _context; //shared memory buffer and maxcc
 	str::Wildex _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
-	Bstr _roleStrings, _propStrings; //a copy of the input role/prop string when eg need to parse (modify) the string
+	//Bstr _roleStrings; //a copy of the input role string when eg need to parse (modify) the string
+	Bstr _propStrings; //a copy of the input prop string when eg need to parse (modify) the string
 
 	//our ctor ZEROTHISFROM(_callback)
 	AccFindCallback* _callback; //receives found AO
@@ -31,7 +33,7 @@ class AccFinder
 	eAF _flags; //user
 	eAF2 _flags2; //internal
 	bool _found; //true when the AO has been found
-	IAccessible** _findDOCUMENT; //used by _FindDocumentSimple, else null
+	IAccessible** _findDOCUMENT; //used by FindDocumentSimple_, else null
 	BSTR* _errStr; //error string, when a parameter is invalid
 	HWND _wTL; //window in which currently searching
 
@@ -56,66 +58,45 @@ class AccFinder
 		return (HRESULT)eError::InvalidParameter;
 	}
 
-	bool _ParseRole(STR role, int roleLen)
-	{
-		if(role == null) return true;
-		if(roleLen == 0) return _Error(L"role cannot be \"\".");
-
-		//is prefix?
-		int iColon = -1;
-		for(int i = 0; i < roleLen; i++) {
-			auto c = role[i];
-			if(c == ':') { iColon = i; break; }
-		}
-		if(iColon > 0) {
-			int prefix = str::Switch(role, iColon, { L"web", L"firefox", L"chrome" });
-			if(prefix > 0) {
-				switch(prefix) {
-				case 1: _flags2 |= eAF2::InWebPage; break; //auto-detect by window class name. Or Cpp_AccFind already found IES and added InIES.
-				case 2: _flags2 |= eAF2::InFirefoxPage | eAF2::InWebPage; break;
-				case 3: _flags2 |= eAF2::InChromePage | eAF2::InWebPage; break;
-				}
-				if(++iColon == roleLen) return true;
-				role += iColon; roleLen -= iColon;
-			}
-		}
-
-		//is path?
-		//rejected. Nobody will use.
-		//if(_pathCount = (int)std::count(role, role + roleLen, '/')) {
-		//	auto a = _path = new _PathPart[++_pathCount];
-		//	int level = 0;
-		//	LPWSTR s = _roleStrings.Assign(role, roleLen);
-		//	for(LPWSTR partStart = s, eos = s + roleLen; s <= eos; s++) {
-		//		auto c = *s;
-		//		if(c == '/' || c == '[' || s == eos) {
-		//			_PathPart& e = a[level];
-		//			if(s > partStart) { //else can be any role at this level
-		//				e.role = partStart;
-		//				*s = 0;
-		//			}
-		//			if(c == '[') {
-		//				auto s0 = s + 1;
-		//				e.startIndex = strtoi(s0, &s);
-		//				if(s == s0) goto ge;
-		//				if(*s == '!') { s++; e.exactIndex = true; }
-		//				if(*s++ != ']') goto ge;
-		//				if(s < eos && *s != '/') goto ge;
-		//			}
-		//			partStart = s + 1;
-		//			level++;
-		//		}
-		//	}
-		//	//Print(_pathCount); for(int i = 0; i < _pathCount; i++) Printf(L"'%s'  %i %i", a[i].role, a[i].startIndex, a[i].exactIndex);
-		//} else {
-		if(role[roleLen] == 0) _role = role;
-		else _role = _roleStrings.Assign(role, roleLen);
-	//}
-
-		return true;
+//	bool _ParseRole(STR role, int roleLen)
+//	{
+//		if(role == null) return true;
+//
+//		//is path?
+//		//rejected. Nobody will use.
+//		if(_pathCount = (int)std::count(role, role + roleLen, '/')) {
+//			auto a = _path = new _PathPart[++_pathCount];
+//			int level = 0;
+//			LPWSTR s = _roleStrings.Assign(role, roleLen);
+//			for(LPWSTR partStart = s, eos = s + roleLen; s <= eos; s++) {
+//				auto c = *s;
+//				if(c == '/' || c == '[' || s == eos) {
+//					_PathPart& e = a[level];
+//					if(s > partStart) { //else can be any role at this level
+//						e.role = partStart;
+//						*s = 0;
+//					}
+//					if(c == '[') {
+//						auto s0 = s + 1;
+//						e.startIndex = strtoi(s0, &s);
+//						if(s == s0) goto ge;
+//						if(*s == '!') { s++; e.exactIndex = true; }
+//						if(*s++ != ']') goto ge;
+//						if(s < eos && *s != '/') goto ge;
+//					}
+//					partStart = s + 1;
+//					level++;
+//				}
+//			}
+//			//Print(_pathCount); for(int i = 0; i < _pathCount; i++) Printf(L"'%s'  %i %i", a[i].role, a[i].startIndex, a[i].exactIndex);
+//		} else {
+//			_role = role;
+//		}
+//
+//		return true;
 //ge:
-		return _Error(L"Invalid role.");
-	}
+//		return _Error(L"Invalid role.");
+//	}
 
 	void _ParseNotin(LPWSTR s, LPWSTR eos)
 	{
@@ -284,11 +265,12 @@ public:
 		delete[] _notin;
 	}
 
-	bool SetParams(const Cpp_AccFindParams& ap, eAF2 flags2)
+	bool SetParams(const Cpp_AccFindParams& ap)
 	{
 		_flags = ap.flags;
-		_flags2 = flags2;
-		if(!_ParseRole(ap.role, ap.roleLength)) return false;
+		_flags2 = ap.flags2;
+		//if(!_ParseRole(ap.role, ap.roleLength)) return false;
+		_role = ap.role;
 		if(ap.name != null && !_name.Parse(ap.name, ap.nameLength, true, _errStr)) return false;
 		if(!_ParseProp(ap.prop, ap.propLength)) return false;
 
@@ -296,7 +278,7 @@ public:
 			_flags |= eAF::MenuToo;
 			if(!!(_flags & (eAF::UIA | eAF::ClientArea))
 				|| !!(_flags2 & eAF2::InControls)
-				) return _Error(L"role prefix 'web:' cannot be used with: flag UIA, flag ClientArea, prop 'class', prop 'id'.");
+				) return _Error(L"role prefix cannot be used with: flag UIA, flag ClientArea, prop 'class', prop 'id'.");
 		}
 
 		return true;
@@ -645,26 +627,15 @@ private:
 	}
 
 	//Finds DOCUMENT of Firefox, Chrome or some other program.
-	//Enables Chrome web page AOs.
-	//Returns 0, NotFound or WaitChromeDisabled.
+	//Returns 0, NotFound.
+	//Called if _flags2 & eAF2::InWebPage.
 	HRESULT _FindDocument(HWND w, out AccRaw& ar)
 	{
 		assert(ar.IsEmpty());
 
 		AccDtorIfElem0 ap_;
-		if(AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&ap_.acc)) return (HRESULT)eError::NotFound;
+		if(0 != AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&ap_.acc)) return (HRESULT)eError::NotFound;
 		IAccessible* ap = ap_.acc;
-
-		if(!(_flags2 & (eAF2::InFirefoxPage | eAF2::InChromePage))) {
-			switch(wn::ClassNameIs(w, { L"Mozilla*", L"Chrome*" })) {
-			case 1: _flags2 |= eAF2::InFirefoxPage; break;
-			case 2: _flags2 |= eAF2::InChromePage; break;
-			}
-		}
-
-		//FUTURE: some windows may use Chrome control in non-chrome-classnamed window.
-		//	Eg old version of Spotify, IIRC. Everything was OK; probably AOs not disabled.
-		//	Need to review/test more, but now I don't know such programs.
 
 		if(!!(_flags2 & eAF2::InFirefoxPage)) {
 			//To get DOCUMENT, use Navigate(0x1009). It is documented and tested on FF>=2.
@@ -675,27 +646,30 @@ private:
 				//note: don't check BUSY state, it's unreliable.
 			}
 
-			//Fails when calling first time after starting Firefox. _FindDocumentSimple too. Never mind, it is documented, let use Wait.
+			PRINTS(L"failed Firefox accNavigate(0x1009). It's OK first time after Firefox starts.");
+			//Fails when calling first time after starting Firefox. FindDocumentSimple_ too. Never mind, it is documented, let use Wait.
 			//In some Firefox versions (56, 57) accNavigate(0x1009) is broken.
 			//Also ocassionally fails in some pages, even if page is loaded, maybe when executing scripts.
-			//	Then _FindDocumentSimple finds it. Also, the caller by default waits.
+			//	Then FindDocumentSimple_ finds it. Also, the caller by default waits.
 
-		} else if(!!(_flags2 & eAF2::InChromePage)) {
-			return GetChromeDOCUMENT(w, ap, out ar, !(_flags2 & eAF2::NotInProc));
+		//} else if(!!(_flags2 & eAF2::InChromePage)) {
+		//	return AccFinder::FindDocumentSimple_(ap, out ar, eAF2::InChromePage);
+		//	//note: the IAccessible of the Chrome_RenderWidgetHostHWND control is a DOCUMENT, but it's a random document, not the active.
 		}
 
-		PRINTS(L"unknown browser, or failed Firefox accNavigate(0x1009). It's OK first time after Firefox starts.");
-		return _FindDocumentSimple(ap, out ar, _flags2);
+		return FindDocumentSimple_(ap, out ar, _flags2);
 	}
 
+public:
 	//Finds DOCUMENT with AccFinder::Find. Skips TREE etc.
 	//Returns 0 or NotFound.
-	static HRESULT _FindDocumentSimple(IAccessible* ap, out AccRaw& ar, eAF2 flags2)
+	static HRESULT FindDocumentSimple_(IAccessible* ap, out AccRaw& ar, eAF2 flags2)
 	{
 		AccFinder f;
 		f._findDOCUMENT = &ar.acc;
 		f._flags2 = flags2 & (eAF2::InChromePage | eAF2::InFirefoxPage);
 		if(!!(flags2 & eAF2::InFirefoxPage)) f._flags2 |= eAF2::InFirefoxNotWebNotUIA; //skip background tabs
+		else if(!!(flags2 & eAF2::InChromePage)) f._flags |= eAF::Reverse; //~20% faster, skips devtools, but finds sidebar first
 		f._maxLevel = 10;
 		Cpp_Acc a(ap, 0);
 		if(0 != f.Find(0, &a, null)) return (HRESULT)eError::NotFound;
@@ -703,20 +677,43 @@ private:
 
 		//when outproc, sometimes fails to get DOCUMENT role while enabling Chrome AOs. The caller will wait/retry.
 	}
+private:
 
-	//Used by _FindDocumentSimple.
+	//Used by FindDocumentSimple_.
 	_eMatchResult _FindDocumentCallback(ref const AccRaw& a)
 	{
+		//a.PrintAcc();
 		int role = a.misc.roleByte;
 		if(role == ROLE_SYSTEM_DOCUMENT) {
 			long state; if(0 != a.get_accState(out state) || !!(state & STATE_SYSTEM_INVISIBLE)) return _eMatchResult::SkipChildren;
-			if(!!(_flags2 & eAF2::InChromePage)) { //skip devtools DOCUMENT
+
+			if(!!(_flags2 & eAF2::InChromePage)) {
+				//tested: the IAccessible2 does not have attributes or something that would help to find the true document
+				//IAccessible2* aw2 = null;
+				//if(QueryService(a.acc, &aw2, &IID_IAccessible)) {
+				//	Bstr b;
+				//	auto r = aw2->get_attributes(&b);
+				//	//auto r = aw2->get_extendedRole(&b);
+				//	Printf(L"0x%X, %s", r, b.m_str);
+				//	//long n = 0; auto r = aw2->get_nExtendedStates(&n);
+				//	//long n = 0; auto r = aw2->get_nRelations(&n);
+				//	//long n = 0; auto r = aw2->get_uniqueID(&n);
+				//	//long n = 0; auto r = aw2->role(&n);
+				//	//Printf(L"0x%X, %i", r, n);
+				//	aw2->Release();
+				//	return _eMatchResult::SkipChildren;
+				//}
+
 				Bstr b;
-				if(0 == a.acc->get_accValue(ao::VE(), &b) && b) {
-					//Print(b);
-					if(b.Length() >= 16 && !wcsncmp(b, L"chrome-devtools:", 16)) return _eMatchResult::SkipChildren;
+				if(0 == a.acc->get_accValue(ao::VE(), &b) && b && b.Length() >= 16) {
+					if(!wcsncmp(b, L"devtools:", 9) //last tested with Chrome 101
+						|| !wcsncmp(b, L"chrome-devtools:", 16) //old
+						|| !wcsncmp(b, L"chrome://read-later", 19) //side panel, last tested with Chrome 101
+						) return _eMatchResult::SkipChildren;
+					//when editing this code, also edit Delm._IsVisibleWebPage.
 				}
 			}
+
 			a.acc->AddRef();
 			*_findDOCUMENT = a.acc;
 			_found = true;
@@ -731,125 +728,142 @@ private:
 		for(int i = 0; i < _countof(b); i++) if(role == b[i]) return _eMatchResult::SkipChildren;
 		return _eMatchResult::Continue;
 	}
-
-	//#include "IAccessible2.h"
-	MIDL_INTERFACE("E89F726E-C4F4-4c19-BB19-B647D7FA8478")
-		IAccessible2 : public IAccessible{ };
-
-public:
-	//Finds Chrome DOCUMENT (web page) and enables its descendant AOs.
-	//Returns 0, NotFound or WaitChromeDisabled.
-	static HRESULT GetChromeDOCUMENT(HWND w, IAccessible* ap, out AccRaw& ar, bool inProc)
-	{
-		assert(ar.IsEmpty());
-
-		HRESULT hr = _FindDocumentSimple(ap, out ar, eAF2::InChromePage);
-
-		//we use a window prop for the AO enabling status
-		auto enablingStatus = WinFlags::Get(w) & eWinFlags::AccEnableMask;
-
-		if(hr != 0) {
-			//when not in-proc, sometimes does not find while enabling, eg fails to get role because the AO is disconnected
-			if(enablingStatus == eWinFlags::AccEnableStarted) return (HRESULT)eError::WaitChromeDisabled;
-			return hr;
-		}
-		if(!!(enablingStatus & eWinFlags::AccEnableYes)) return 0;
-
-		//when Chrome web page AOs disabled, DOCUMENT has BUSY state, until enabling finished. Later never has BUSY state.
-		bool isEnabled = false; long state, cc;
-		//if(0 == ar.get_accState(out state)) Printf(L"busy: %i", state & STATE_SYSTEM_BUSY); else Print("can't get state");
-		if(0 == ar.get_accState(out state) && !(state & STATE_SYSTEM_BUSY)) isEnabled = true; //not BUSY
-		else if(0 == ar.acc->get_accChildCount(&cc) && cc) isEnabled = true; //or has children
-
-		//After enabling acc also need to wait for enabled HTML properties. Until then can't get even tag and acc action.
-		if(isEnabled && inProc) isEnabled = 0 != AccChromeHtmlEnabled(ar.acc);
-
-		WinFlags::Set(w, isEnabled ? eWinFlags::AccEnableYes : eWinFlags::AccEnableStarted, eWinFlags::AccEnableMask);
-
-		if(isEnabled) return 0;
-		ar.Dispose();
-
-		//enable web page AOs
-		IAccessible2* a2 = null;
-		if(QueryService(ap, &a2, &IID_IAccessible)) a2->Release();
-		//succeeds inproc, fails outproc, but enables AOs anyway. QI always fails.
-		//speed: < 1% of Find. First time 5%.
-		//note: this is undocumented and may stop working with a new Chrome version.
-		//note: with old Chrome versions need QS(ar.a), not QS(ap).
-		//note: does not enable AOs if Find not called before.
-
-		return (HRESULT)eError::WaitChromeDisabled; //let the caller wait/retry, because we cannot wait inproc. By default waits when NotFound too, but much shorter.
-	}
 };
 
-HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, eAF2 flags2, out BSTR& errStr)
+HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, out BSTR& errStr)
 {
 	AccFinder f(&errStr);
-	if(!f.SetParams(ref ap, flags2)) return (HRESULT)eError::InvalidParameter;
+	if(!f.SetParams(ref ap)) return (HRESULT)eError::InvalidParameter;
 	return f.Find(w, aParent, &callback);
 }
 
-//HRESULT GetChromeDOCUMENT(HWND w, IAccessible* aCLIENT, out IAccessible** ar)
-//{
-//	AccRaw a;
-//	HRESULT hr = AccFinder::GetChromeDOCUMENT(w, aCLIENT, out a);
-//	*ar = a.acc;
-//	return hr;
-//}
+//MIDL_INTERFACE("E89F726E-C4F4-4c19-BB19-B647D7FA8478")
+//IAccessible2 : public IAccessible{ };
 
-namespace inproc
+HRESULT AccEnableChrome2(HWND w, int i)
 {
-HRESULT AccEnableChrome2(MarshalParams_AccElem* p)
-{
-	HWND w = (HWND)(LPARAM)p->elem;
-	Smart<IAccessible> aCLIENT;
-	HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aCLIENT);
-	if(hr) return hr;
-	AccDtorIfElem0 a;
-	return AccFinder::GetChromeDOCUMENT(w, aCLIENT, out a, true);
-}
+	Smart<IAccessible> aw;
+	HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aw);
+	if(hr != 0) return (HRESULT)eError::NotFound;
+
+	if(i == 0) {
+		IAccessible2* aw2 = null;
+		if(QueryService(aw, &aw2, &IID_IAccessible)) aw2->Release();
+		//tested: the IAccessible2 does not have relations or something that would give the document
+	}
+
+	AccDtorIfElem0 ar;
+	hr = AccFinder::FindDocumentSimple_(aw, out ar, eAF2::InChromePage);
+	PRINTF_IF(hr != 0, L"DOCUMENT not found, i=%i", i);
+	if(hr != 0) return (HRESULT)eError::NotFound;
+	IAccessible* aDoc = ar.acc;
+
+	long cc = 0;
+	bool isEnabled = 0 == aDoc->get_accChildCount(&cc) && cc > 0;
+
+	if(i == 0) {
+		if(!isEnabled) {
+			Bstr name, action;
+			aDoc->get_accName(ao::VE(), &name);
+			aDoc->get_accDefaultAction(ao::VE(), &action);
+		}
+		AccChromeEnableHtml(aDoc); //not necessary, it seems get_accName enables it, but anyway
+	}
+
+	return isEnabled ? 0 : (HRESULT)eError::WaitChromeDisabled;
 }
 
 namespace outproc
 {
-//Returns: 0 not Chrome, 1 Chrome was already enabled, 2 Chrome enabled now.
-int AccEnableChrome(HWND w, bool checkClassName)
+void AccEnableChrome(HWND w)
 {
+	if(!!(WinFlags::Get(w) & eWinFlags::AccEnabled)) return;
+
 	assert(!(wn::Style(w) & WS_CHILD));
 
-	if(checkClassName && !wn::ClassNameIs(w, L"Chrome*")) return 0;
+	//I know 2 ways to auto-enable Chrome web page AOs:
+	//1. Send WM_GETOBJECT(0, 1) to the child window classnamed "Chrome_RenderWidgetHostHWND".
+	//	It is documented, but was broken in many Chrome versions.
+	//  Now works again, but may stop working again. They want to get rid of the "legacy" control.
+	//	It does not enable by itself. Then need to get Name; faster if also DefaultAction. It's undocumented.
+	//	Need to wait. The time depends on how big is the webpage (which tab?). May be even 1 s.
+	//  The documentation says that Chrome calls NotifyWinEvent(ALERT) when starts, and enables acc if then receives WM_GETOBJECT with its arguments.
+	//		Actually it enables when receives WM_GETOBJECT(0, 1) at any time, but maybe stops after some long time ets. I tested after ~2 hours, still worked.
+	//2. Try to QS IAccessible2 from the client IAccessible of the main window.
+	//	It's undocumented. I found it in Chromium source code, and later on the internet.
+	//		One Chromium developer suggested to use it instead of the broken WM_GETOBJECT way.
+	//  Works inproc and outproc. If outproc, the QS fails, but enables anyway.
+	//	It may not enable by itself. Or very slowly. Then need to get Name. It's undocumented.
+	//	Need to wait. The time depends on how big is the webpage (which tab?). May be even 1 s.
+	//	It seems this way is slightly better, although undocumented.
+	//	When used in certain way, used to kill Chrome process on Win7 (or it depends on Chrome settings etc). Current code works well.
 
-	auto wf = WinFlags::Get(w);
-	if(!!(wf & eWinFlags::AccEnableYes)) return 1;
-	if(!!(wf & eWinFlags::AccEnableMask)) return 0; //No or Started
+	HWND c = FindWindowEx(w, 0, L"Chrome_RenderWidgetHostHWND", null);
+	if(c) SendMessage(c, WM_GETOBJECT, 0, 1); else PRINTS(L"no Chrome_RenderWidgetHostHWND");
 
-	//Perf.First();
+	//notinproc FindDocumentSimple_ is very slow
 	Cpp_Acc_Agent aAgent;
-	if(0 != InjectDllAndGetAgent(w, out aAgent.acc)) return 0;
-	//Perf.NW();
+	bool inProc = 0 == InjectDllAndGetAgent(w, out aAgent.acc);
 
-	InProcCall c;
-	auto p = (MarshalParams_AccElem*)c.AllocParams(&aAgent, InProcAction::IPA_AccEnableChrome, sizeof(MarshalParams_AccElem));
-	p->elem = (int)(LPARAM)w;
-
-	int R = 0;
-	for(int i = 0; i < 100; i++) {
+	for(int i = 0, nNoDoc = 0; i < 70; i++) { //max 3 s
+		HRESULT hr;
 		//Perf.First();
-		HRESULT hr = c.Call();
-		//Perf.NW();
-		if(hr) {
-			if(hr == (HRESULT)eError::WaitChromeDisabled) R = 2;
-			if(R == 2) {
-				Sleep(10);
-				continue;
-			}
+		if(inProc) {
+			InProcCall c;
+			auto p = (MarshalParams_AccHwndInt*)c.AllocParams(&aAgent, InProcAction::IPA_AccEnableChrome, sizeof(MarshalParams_AccHwndInt));
+			p->hwnd = (int)(LPARAM)w;
+			p->i = i;
+			hr = c.Call();
 		} else {
-			if(R == 2) Sleep(10);
-			else R = 1;
+			hr = AccEnableChrome2(w, i);
 		}
-		break;
+		//Perf.NW();
+		Sleep(10 + i);
+		if(hr == 0) break;
+		if(hr != (HRESULT)eError::NotFound) nNoDoc = 0; else if(++nNoDoc < 30) i = -1; else break;
 	}
-	if(R == 0) WinFlags::Set(w, eWinFlags::AccEnableNo);
-	return R;
+	WinFlags::Set(w, eWinFlags::AccEnabled);
+	//never mind: may be timeout with large pages or at Chrome startup. We can't wait so long here. Let scripts wait.
 }
+
+//Called by elmFinder before find or find-wait in window (not in elm).
+//If s is a role prefix like "web:", detects/returns browser type flags for Cpp_AccFindParams::flags2 (except IE unless w is IES).
+//Else returns 0.
+//If detects Chrome, enables its acc.
+EXPORT eAF2 Cpp_AccRolePrefix(STR s, int len, HWND w)
+{
+	eAF2 R = (eAF2)0;
+	int prefix = str::Switch(s, len, { L"web", L"firefox", L"chrome" });
+	if(prefix > 0) {
+		switch(prefix) {
+		case 1:
+			R |= eAF2::InWebPage;
+			if(wn::Style(w) & WS_CHILD) { //cannot be Chrome/FF
+				if(wn::ClassNameIs(w, c_IES)) R |= eAF2::InIES;
+			} else {
+				switch(wn::ClassNameIs(w, { L"Mozilla*", L"Chrome*" })) {
+				case 1: R |= eAF2::InFirefoxPage; break;
+				case 2: R |= eAF2::InChromePage; break;
+				}
+			}
+			//info: if no InIES|InChromePage|InFirefoxPage, Cpp_AccFind will try to find IES in w and use it instead of w.
+			//	Not here, because need to seach in each Cpp_AccFind when waiting.
+			break;
+		case 2:
+			R |= eAF2::InFirefoxPage | eAF2::InWebPage;
+			break;
+		case 3:
+			R |= eAF2::InChromePage | eAF2::InWebPage;
+			break;
+		}
+
+		if(!!(R & eAF2::InChromePage)) AccEnableChrome(w);
+	}
+	return R;
+
+	//FUTURE: some windows may use Chrome control in non-chrome-classnamed window.
+	//	Eg old version of Spotify, IIRC. Everything was OK; probably AOs not disabled.
+	//	Need to review/test more, but now I don't know such programs.
+}
+
 }

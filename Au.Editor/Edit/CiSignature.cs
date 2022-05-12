@@ -211,7 +211,7 @@ class CiSignature {
 
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);
-		if (argNode is ArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
+		if (argNode is ArgumentListSyntax or BracketedArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
 			//print.it("string");
 			var semo = cd.document.GetSemanticModelAsync().Result;
 			var token = root.FindToken(cd.pos16);

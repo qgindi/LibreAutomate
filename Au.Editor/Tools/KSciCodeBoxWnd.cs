@@ -223,8 +223,9 @@ class KSciCodeBoxWnd : KSciCodeBox {
 	/// <summary>
 	/// Shows <see cref="Dwnd"/> and updates text.
 	/// </summary>
-	public (bool ok, wnd w, wnd con, bool useCon) ZShowWndTool(Window owner, wnd w, wnd con, bool uncheckControl) {
-		var d = new Dwnd(con.Is0 ? w : con, uncheckControl, dontInsert: true);
+	public (bool ok, wnd w, wnd con, bool useCon) ZShowWndTool(Window owner, wnd w, wnd con, bool checkControl) {
+		var flags = DwndFlags.DontInsert; if (checkControl) flags |= DwndFlags.CheckControl;
+		var d = new Dwnd(con.Is0 ? w : con, flags);
 		d.ShowAndWait(owner, hideOwner: true);
 		var code = d.ZResultCode; if (code == null) return default;
 		_wnd = d.ZResultWindow;

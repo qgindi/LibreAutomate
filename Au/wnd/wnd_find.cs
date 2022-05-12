@@ -43,7 +43,7 @@ namespace Au {
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control".
+		/// To create code for this function, use dialog "Find window".
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
@@ -129,7 +129,7 @@ namespace Au {
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
 		/// <remarks>
-		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFlags.HiddenToo"/>) are always after visible windows.
+		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFlags.HiddenToo"/>) and IME windows are always after visible windows.
 		/// </remarks>
 		/// <seealso cref="getwnd.allWindows"/>
 		/// <seealso cref="getwnd.mainWindows"/>
@@ -325,17 +325,18 @@ namespace Au {
 		public partial struct getwnd {
 			/// <summary>
 			/// Gets top-level windows.
-			/// Returns array containing window handles as <b>wnd</b>.
 			/// </summary>
+			/// <returns>Array containing window handles as <b>wnd</b>.</returns>
 			/// <param name="onlyVisible">
 			/// Need only visible windows.
 			/// Note: this function does not check whether windows are cloaked, as it is rather slow. Use <see cref="IsCloaked"/> if need.
 			/// </param>
 			/// <param name="sortFirstVisible">
-			/// Place hidden windows at the end of the array. If false, the order of array elements matches the Z order.
+			/// Place hidden windows at the end of the array.
 			/// Not used when <i>onlyVisible</i> is true.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
+			/// Although undocumented, the API retrieves most windows as in the Z order, however places IDE windows (hidden) at the end. See also: <see cref="allWindowsZorder"/>;
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="mainWindows"/>.</note>
 			/// Skips message-only windows; use <see cref="findFast"/> if need.
 			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have disableWindowFiltering true in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
@@ -359,6 +360,57 @@ namespace Au {
 			public static void allWindows(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false) {
 				Internal_.EnumWindows2(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<wnd>());
 			}
+
+			/// <summary>
+			/// Gets top-level windows ordered as in the Z order.
+			/// </summary>
+			/// <returns>Array containing window handles as <b>wnd</b>.</returns>
+			/// <remarks>
+			/// Uses API <msdn>GetWindow</msdn> and ensures it is reliable.
+			/// </remarks>
+			public static wnd[] allWindowsZorder() {
+				//Algorithm to make getting all windows with GetWindow reliable:
+				//	Get all windows 2 times, and compare results. If different, wait 1-2 ms and repeat.
+				//	Still occasionally 1 window missing.
+				//		It seems, when OS is reordering windows, it removes a window from its internal array and inserts in another place not atomically.
+				//		To fix it, wait 1 ms after the first _GetWindows if results are different than previously.
+				//Tested in stress conditions and compared with EnumWindows results. Never failed.
+				//Speed with cold CPU: ~20% faster than EnumWindows.
+
+				WeakReference<List<wnd>> wr1 = t_awz.wr1, wr2 = t_awz.wr2;
+				if (wr1 == null) t_awz = (wr1 = new(null), wr2 = new(null), default);
+				if (!wr1.TryGetTarget(out var a1)) wr1.SetTarget(a1 = new(800));
+				if (!wr2.TryGetTarget(out var a2)) wr2.SetTarget(a2 = new(800));
+
+				int nRetry = 0;
+				_GetWindows(a1);
+
+				//the fix
+				var hash1 = _Hash(a1);
+				if (hash1 != t_awz.hash1) 1.ms();
+
+				g1:
+				_GetWindows(a2);
+				if (a1.SequenceEqual(a2)) {
+					Debug_.PrintIf(nRetry > 50, nRetry);
+					t_awz.hash1 = nRetry == 0 ? hash1 : _Hash(a2);
+					return a2.ToArray();
+				}
+				Math2.Swap(ref a1, ref a2);
+				1.ms();
+				nRetry++;
+				goto g1;
+
+				void _GetWindows(List<wnd> a) {
+					a.Clear();
+					for (var w = wnd.getwnd.top; !w.Is0; w = w.Get.Next()) a.Add(w);
+				}
+
+				Hash.MD5Result _Hash(List<wnd> a) {
+					return Hash.MD5(MemoryMarshal.AsBytes(CollectionsMarshal.AsSpan(a)));
+				}
+			}
+			[ThreadStatic] static (WeakReference<List<wnd>> wr1, WeakReference<List<wnd>> wr2, Hash.MD5Result hash1) t_awz;
 
 			/// <summary>
 			/// Gets top-level windows of a thread.

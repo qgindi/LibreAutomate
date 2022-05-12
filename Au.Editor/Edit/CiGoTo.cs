@@ -10,10 +10,8 @@ using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 
-class CiGoTo
-{
-	struct _SourceLocation
-	{
+class CiGoTo {
+	struct _SourceLocation {
 		public _SourceLocation(string file, int line, int column) {
 			this.file = file; this.line = line; this.column = column;
 		}
@@ -212,8 +210,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 		}
 	}
 
-	internal record AssemblySett
-	{
+	internal record AssemblySett {
 		public string repo, path;
 		public bool csharp;
 	}
@@ -238,15 +235,73 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	//	finally { alc.Unload(); }
 	//}
 
-	public static void GoToSymbolFromPos() {
-		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out _);
+	public static void GoToDefinition() {
+		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out var cd, metaToo: true);
 		if (sym != null) {
-			//print.it(sym);
-			var g = new CiGoTo(sym);
-			if (g.CanGoTo) g.GoTo();
+			if (_GetFoldersPath(token, out var fp, false)) {
+				run.it(fp);
+			} else {
+				var g = new CiGoTo(sym);
+				if (g.CanGoTo) g.GoTo();
+			}
+		} else if (cd.sciDoc.zHasSelection) {
+			_Open(cd.sciDoc.zSelectedText());
 		} else if (helpKind == CiUtil.HelpKind.String && token.Parent.IsKind(SyntaxKind.StringLiteralExpression)) {
-			var s = token.ValueText;
-			if (s.Ends(".cs", true)) App.Model.OpenAndGoTo(s);
+			_Open(token.ValueText, token);
+		} else if (helpKind == CiUtil.HelpKind.None && cd != null) { //maybe path in comments or disabled code
+			int pos = cd.pos16;
+			if (pos < cd.meta.end && pos > cd.meta.start) {
+				foreach (var t in Au.Compiler.MetaComments.EnumOptions(cd.code, cd.meta)) {
+					if (pos >= t.valueStart && pos <= t.valueStart + t.valueLen) {
+						_Open(cd.code[t.valueStart..(t.valueStart + t.valueLen)]);
+						break;
+					}
+				}
+			} else {
+				var root = cd.document.GetSyntaxRootAsync().Result;
+				var trivia = root.FindTrivia(pos); if (trivia.RawKind == 0) return;
+				var code = cd.code;
+				var span = trivia.Span;
+				int from = pos, to = from;
+				while (to < span.End && !pathname.isInvalidPathChar(code[to])) to++;
+				while (from > span.Start && !pathname.isInvalidPathChar(code[from - 1])) from--;
+				while (to > pos && code[to - 1] is <= ' ' or '.' or ';' or ',') to--; //trim right
+				while (from < pos && code[from] <= ' ') from++; //trim left
+				if (to == from) return;
+				//rejected: try to find path even if without "". How to know which text part it is? Better let the user select the text.
+				if (!(code.Eq(from - 1, '\"') && code.Eq(to, '\"'))) return;
+				_Open(code[from..to]);
+			}
+		}
+
+		//if s is script, opens it. If file path, selects in Explorer. If folder path, opens the folder.
+		static bool _Open(string s, SyntaxToken token = default) {
+			if (s.NE()) return false;
+			if (!pathname.isFullPathExpand(ref s, strict: false)) {
+				var f = App.Model.Find(s);
+				if (f != null) { App.Model.SetCurrentFile(f); return true; }
+				if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, true)) return false;
+				s = pathname.combine(fp, s);
+			}
+			var fe = filesystem.exists(s); if (!fe) return false;
+			if (fe.Directory) run.it(s);
+			else run.selectInExplorer(s);
+			return true;
+		}
+
+		//If t is "string" in 'folders.Folder + "string"' or Folder in 'folders.Folder', gets folder path and return true.
+		static bool _GetFoldersPath(SyntaxToken t, out string s, bool isString) {
+			s = null;
+			if (isString) {
+				t = t.GetPreviousToken(); if (!t.IsKind(SyntaxKind.PlusToken)) return false;
+				t = t.GetPreviousToken();
+			}
+			if (!t.IsKind(SyntaxKind.IdentifierToken)) return false;
+			var s2 = t.Text;
+			t = t.GetPreviousToken(); if (!t.IsKind(SyntaxKind.DotToken)) return false;
+			t = t.GetPreviousToken(); if (!t.IsKind(SyntaxKind.IdentifierToken) || t.Text != "folders") return false;
+			s = folders.getFolder(s2);
+			return s != null;
 		}
 	}
 }

@@ -241,6 +241,15 @@ namespace Au.Types {
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SetWindowPos(wnd hWnd, wnd hWndInsertAfter, int X, int Y, int cx, int cy, SWPFlags swpFlags);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern IntPtr BeginDeferWindowPos(int nNumWindows);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern IntPtr DeferWindowPos(IntPtr hWinPosInfo, wnd hWnd, wnd hWndInsertAfter, int x, int y, int cx, int cy, SWPFlags uFlags);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool EndDeferWindowPos(IntPtr hWinPosInfo);
+
 		internal struct FLASHWINFO {
 			public int cbSize;
 			public wnd hwnd;

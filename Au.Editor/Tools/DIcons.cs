@@ -11,7 +11,7 @@ class DIcons : KDialogWindow {
 			s_dialog = new(expandFileIcon: fileIcon, randomizeColors: find == null);
 			s_dialog.Show();
 		} else {
-			s_dialog.Activate();
+			s_dialog.Hwnd().ActivateL(true);
 		}
 		if (find != null) s_dialog._tName.Text = find;
 	}
@@ -43,9 +43,9 @@ class DIcons : KDialogWindow {
 	DIcons(bool expandFileIcon, bool randomizeColors) {
 		Title = "Icons";
 		Owner = App.Wmain;
+		ShowInTaskbar = false;
 
 		var b = new wpfBuilder(this).WinSize(600, 600);
-		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.Columns(-1, 0);
 
 		//left - edit control and tree view
@@ -97,7 +97,8 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.StartGrid<Expander>("Insert code for menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
-		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled().Tooltip("To assign the selected icon to a toolbar button or menu item, in the code editor click its line (anywhere except action code) and then click this button. Or double-click an icon.");
+		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled()
+			.Tooltip("To assign the selected icon to a toolbar button or menu item,\nin the code editor click its line (anywhere except action code)\nand then click this button. Or double-click an icon.");
 		b.End();
 		b.R.Add<Label>("Insert line: ");
 		b.StartStack();
@@ -106,7 +107,8 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 		b.End();
 		b.R.Add<Label>("Copy text: ");
 		b.StartStack();
-		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, _Action.CopyName)).Width(70).Disabled().Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars, editor menus and toolbars (edit Commands.xml), script.editor.GetIcon, IconImageCache, ImageUtil, output tag <image>.");
+		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, _Action.CopyName)).Width(70).Disabled()
+			.Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars,\neditor menus and toolbars (edit Commands.xml),\nscript.editor.GetIcon, IconImageCache, ImageUtil,\noutput tag <image>.");
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
 		//b.Add<Label>("Tip: double-clicking an icon clicks the same button.");
@@ -193,6 +195,8 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 			//	print.it(xaml);
 			//}
 		};
+
+		b.WinSaved(App.Settings.wndpos.icons, o => App.Settings.wndpos.icons = o);
 
 		void _EnableControls(bool enable) {
 			bThis.IsEnabled = enable;
@@ -411,7 +415,7 @@ Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
 #endif
 
 	public static string GetIconString(string s, EGetIcon what) {
-		if (what != EGetIcon.IconNameToXaml) s = App.Model.Find(s)?.ImageSource;
+		if (what != EGetIcon.IconNameToXaml) s = App.Model.Find(s, silent: true)?.ImageSource;
 		if (what != EGetIcon.PathToIconName && s != null) TryGetIconFromBigDB(s, out s);
 		return s;
 	}

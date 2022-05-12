@@ -4,7 +4,6 @@
 #include <mshtml.h>
 #include "ISimpleDOMNode.h"
 #include "ISimpleDOMText.h"
-//#include "IAccessible2.h"
 
 namespace
 {
@@ -364,14 +363,9 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count)
 	return true;
 }
 
-int AccChromeHtmlEnabled(IAccessible* aDoc) {
+void AccChromeEnableHtml(IAccessible* aDoc) {
 	FFNode ff;
-	if(!ff.FromAcc(aDoc)) return -1;
-	FFNode::NodeInfo x;
-	if(!ff.GetNodeInfo(x, true)) return -1;
-	BSTR b = x.tag.m_str;
-	if(b == nullptr || b[0] == 0) return 0;
-	return 1;
+	ff.FromAcc(aDoc);
 }
 
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)

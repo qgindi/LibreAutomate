@@ -18,8 +18,6 @@ record AppSettings : JSettings
 
 	public bool runHidden, files_multiSelect;
 
-	public string wndPos, Dwnd_wndPos, Duiimage_wndPos;
-
 	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
 	//	Somehow .NET does not support struct and record struct, InvalidCastException.
 	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
@@ -32,6 +30,11 @@ record AppSettings : JSettings
 			;
 	}
 	public hotkeys_t hotkeys = new();
+
+	public record wndpos_t {
+		public string main, wnd, elm, uiimage, recorder, icons;
+	}
+	public wndpos_t wndpos = new();
 
 	public bool edit_wrap, edit_noImages, output_wrap, output_white, output_topmost;
 
@@ -48,7 +51,7 @@ record AppSettings : JSettings
 	public record delm_t
 	{
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
-		public string wndPos, wait, actionn; //named actionn because once was int action
+		public string wait, actionn; //named actionn because once was int action
 		public int flags;
 	}
 	public delm_t delm = new();
@@ -57,7 +60,7 @@ record AppSettings : JSettings
 	{
 		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
 		public int xyIn;
-		public string speed = "10", wndPos;
+		public string speed = "10";
 	}
 	public recorder_t recorder = new();
 

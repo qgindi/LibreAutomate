@@ -3,12 +3,12 @@
 
 #include "stdafx.h"
 #include "cpp.h"
+//#include "ISimpleDOMNode.h"
 
 //#include <sphelper.h>
 
 #if _DEBUG
 //#if 1
-
 
 __interface __declspec(uuid("3AB5235E-2768-47A2-909A-B5852A9D1868"))
 	IInterface : IUnknown
@@ -744,6 +744,7 @@ void _TestIAccessibleImpl();
 
 EXPORT void Cpp_Test()
 {
+
 
 	//TestFileDialog();
 

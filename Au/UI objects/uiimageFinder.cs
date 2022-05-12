@@ -191,8 +191,8 @@ public unsafe class uiimageFinder
 	}
 
 	//called at the start of Find_ and Wait_
-	void _Before(IFArea area, Action_ action) {
-		_area = area ?? throw new ArgumentNullException();
+	void _Before(IFArea area!!, Action_ action) {
+		_area = area;
 		_action = action;
 
 		if (_action == Action_.WaitChanged) {

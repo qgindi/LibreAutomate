@@ -1,16 +1,14 @@
 ﻿//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
 //	QM2 has problems crossing non-screen corners at default speed. Au works well.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Mouse functions.
 	/// </summary>
 	/// <remarks>
 	/// Should not be used to click windows of own thread. It may work or not. If need, use another thread. Example in <see cref="keys.send"/>.
 	/// </remarks>
-	public static class mouse
-	{
+	public static class mouse {
 		/// <summary>
 		/// Gets cursor (mouse pointer) position.
 		/// </summary>
@@ -272,8 +270,7 @@ namespace Au
 			_Move(t_prevMousePos.first, fast: true);
 		}
 
-		class _PrevMousePos
-		{
+		class _PrevMousePos {
 			public POINT first, last;
 			public _PrevMousePos() { first = last = xy; }
 			public _PrevMousePos(POINT p) { first = last = p; }
@@ -534,7 +531,7 @@ namespace Au
 						//info: activating brings to the Z top and also uncloaks
 						if (!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 						else if (wTL.ThreadId == wnd.getwnd.shellWindow.ThreadId) bad = true; //desktop
-						else if (wTL.IsActive) wTL.ZorderTop(ownerToo: true); //can be below another window in the same topmost/normal Z order, although it is rare
+						else if (wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare.
 						else bad = !wTL.Activate_(wnd.Internal_.ActivateFlags.NoThrowIfInvalid | wnd.Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc | wnd.Internal_.ActivateFlags.NoGetWindow);
 
 						//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.
@@ -1319,8 +1316,7 @@ namespace Au
 		/// Workaround for the documented BM_CLICK/WM_LBUTTONDOWN bug of classic button controls: randomly fails if inactive window.
 		/// If c is a button in a dialog box, posts WM_ACTIVATE messages to the dialog box.
 		/// </summary>
-		internal ref struct ButtonPostClickWorkaround_
-		{
+		internal ref struct ButtonPostClickWorkaround_ {
 			readonly wnd _w;
 
 			public ButtonPostClickWorkaround_(wnd c) {
@@ -1419,8 +1415,7 @@ namespace Au
 #endif
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// <i>button</i> parameter type for <see cref="mouse.clickEx(MButton, bool)"/> and similar functions.
 	/// </summary>
@@ -1433,8 +1428,7 @@ namespace Au.Types
 	/// Values from different groups can be combined. For example Right|Down.
 	/// </remarks>
 	[Flags]
-	public enum MButton
-	{
+	public enum MButton {
 		/// <summary>The left button.</summary>
 		Left = 1,
 
@@ -1475,8 +1469,7 @@ namespace Au.Types
 	/// The values are the same as <see cref="System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.
 	/// </remarks>
 	[Flags]
-	public enum MButtons
-	{
+	public enum MButtons {
 		/// <summary>The left button.</summary>
 		Left = 0x00100000,
 
@@ -1502,8 +1495,7 @@ namespace Au.Types
 	/// using(mouse.leftDown(w, 8, 8)) mouse.moveBy(0, 20); //the button is auto-released when the 'using' code block ends
 	/// ]]></code>
 	/// </example>
-	public struct MRelease : IDisposable
-	{
+	public struct MRelease : IDisposable {
 		MButton _buttons;
 		///
 		public static implicit operator MRelease(MButton b) => new MRelease() { _buttons = b };
@@ -1525,8 +1517,7 @@ namespace Au.Types
 	/// Standard cursor ids.
 	/// Used with <see cref="mouse.waitForCursor(double, MCursor, bool)"/>.
 	/// </summary>
-	public enum MCursor
-	{
+	public enum MCursor {
 		/// <summary>Standard arrow.</summary>
 		Arrow = 32512,
 
@@ -1574,8 +1565,7 @@ namespace Au.Types
 	/// This type is used for parameters of <see cref="mouse"/> functions that accept multiple types of UI objects (window, UI element, screen, etc).
 	/// Has implicit conversions from <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> and <b>bool</b> (relative coordinates). Also has static functions to specify more parameters.
 	/// </summary>
-	public struct MObject
-	{
+	public struct MObject {
 		object _o;
 		MObject(object o) => _o = o;
 
@@ -1593,13 +1583,13 @@ namespace Au.Types
 		/// Allows to specify coordinates in the rectangle of a UI element.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		public static implicit operator MObject(elm e) => new(e ?? throw new ArgumentNullException());
+		public static implicit operator MObject(elm e!!) => new(e);
 
 		/// <summary>
 		/// Allows to specify coordinates in the rectangle of an image found in a window etc.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		public static implicit operator MObject(uiimage i) => new(i ?? throw new ArgumentNullException());
+		public static implicit operator MObject(uiimage i!!) => new(i);
 
 		/// <summary>
 		/// Allows to specify coordinates in a rectangle anywhere on screen.

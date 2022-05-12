@@ -84,6 +84,11 @@
 		/// Trigger modifiers without key.
 		/// </summary>
 		TriggerMod,
+
+		/// <summary>
+		/// Name or path of a script or class file in current workspace.
+		/// </summary>
+		CodeFile,
 	}
 
 	/// <summary>

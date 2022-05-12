@@ -50,8 +50,7 @@ namespace Au
 			if (badFormat) throw new ArgumentException("Invalid format id.");
 		}
 
-		clipboardData _Add(object data, int format, bool minimalCheckFormat = false) {
-			if (data == null) throw new ArgumentNullException();
+		clipboardData _Add(object data!!, int format, bool minimalCheckFormat = false) {
 			_CheckFormat(format, minimalCheckFormat);
 
 			_a.Add(new _Data() { data = data, format = format });
@@ -141,8 +140,7 @@ namespace Au
 		/// </summary>
 		/// <param name="files">One or more file paths.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public clipboardData AddFiles(params string[] files) {
-			if (files == null) throw new ArgumentNullException();
+		public clipboardData AddFiles(params string[] files!!) {
 			var b = new StringBuilder("\x14\0\0\0\0\0\0\0\x1\0"); //struct DROPFILES
 			foreach (var s in files) { b.Append(s); b.Append('\0'); }
 			return _Add(b.ToString(), Api.CF_HDROP, false);
@@ -252,8 +250,7 @@ namespace Au
 		/// "<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>"
 		/// ]]></code>
 		/// </example>
-		internal static unsafe byte[] CreateHtmlFormatData_(string html) {
-			if (html == null) throw new ArgumentNullException();
+		internal static unsafe byte[] CreateHtmlFormatData_(string html!!) {
 			var b = new StringBuilder(c_headerTemplate);
 			//find "<body>...</body>" and "<!--StartFragment-->...<!--EndFragment-->" in it
 			int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment
