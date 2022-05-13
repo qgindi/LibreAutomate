@@ -269,15 +269,15 @@ EXPORT HRESULT Cpp_AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult)
 		hr = AccNavigate(aFrom, navig, aResult);
 	} else {
 		aResult.Zero();
-		InProcCall c;
+		InProcCall ic;
 		auto len = str::Len(navig);
 		auto memSize = sizeof(MarshalParams_AccElem) + (len + 1) * 2;
-		auto p = (MarshalParams_AccElem*)c.AllocParams(&aFrom, InProcAction::IPA_AccNavigate, memSize);
+		auto p = (MarshalParams_AccElem*)ic.AllocParams(&aFrom, InProcAction::IPA_AccNavigate, memSize);
 		p->elem = aFrom.elem;
 		auto s = (LPWSTR)(p + 1); memcpy(s, navig, len * 2); s[len] = 0;
-		hr = c.Call();
+		hr = ic.Call();
 		if(hr) return hr;
-		hr = c.ReadResultAcc(ref aResult);
+		hr = ic.ReadResultAcc(ref aResult);
 	}
 	return hr;
 }
@@ -475,15 +475,15 @@ EXPORT HRESULT Cpp_AccGetProps(Cpp_Acc a, STR props, out BSTR& sResult)
 	if(!(a.misc.flags & eAccMiscFlags::InProc)) return AccGetProps(a, props, out sResult);
 
 	sResult = null;
-	InProcCall c;
+	InProcCall ic;
 	auto len = str::Len(props);
 	auto memSize = sizeof(MarshalParams_AccElem) + (len + 1) * 2;
-	auto p = (MarshalParams_AccElem*)c.AllocParams(&a, InProcAction::IPA_AccGetProps, memSize);
+	auto p = (MarshalParams_AccElem*)ic.AllocParams(&a, InProcAction::IPA_AccGetProps, memSize);
 	p->elem = a.elem;
 	auto s = (LPWSTR)(p + 1); memcpy(s, props, len * 2); s[len] = 0;
-	HRESULT hr = c.Call();
+	HRESULT hr = ic.Call();
 	if(hr) return hr;
-	sResult = c.DetachResultBSTR();
+	sResult = ic.DetachResultBSTR();
 	return 0;
 }
 
@@ -525,11 +525,11 @@ g1:
 		return hr;
 	}
 
-	InProcCall c;
-	c.AllocParams(&a, InProcAction::IPA_AccGetWindow, sizeof(MarshalParams_Header));
-	HRESULT hr = c.Call();
+	InProcCall ic;
+	ic.AllocParams(&a, InProcAction::IPA_AccGetWindow, sizeof(MarshalParams_Header));
+	HRESULT hr = ic.Call();
 	if(hr) return hr;
-	R = *(long*)c.GetResultBSTR();
+	R = *(long*)ic.GetResultBSTR();
 	return 0;
 }
 

@@ -650,7 +650,8 @@ private:
 			//Fails when calling first time after starting Firefox. FindDocumentSimple_ too. Never mind, it is documented, let use Wait.
 			//In some Firefox versions (56, 57) accNavigate(0x1009) is broken.
 			//Also ocassionally fails in some pages, even if page is loaded, maybe when executing scripts.
-			//	Then FindDocumentSimple_ finds it. Also, the caller by default waits.
+			//	Also fails in some tool windows, eg Browser Console. Sometimes always fails in full-screen mode.
+			//	Then FindDocumentSimple_ finds it.
 
 		//} else if(!!(_flags2 & eAF2::InChromePage)) {
 		//	return AccFinder::FindDocumentSimple_(ap, out ar, eAF2::InChromePage);
@@ -710,7 +711,7 @@ private:
 						|| !wcsncmp(b, L"chrome-devtools:", 16) //old
 						|| !wcsncmp(b, L"chrome://read-later", 19) //side panel, last tested with Chrome 101
 						) return _eMatchResult::SkipChildren;
-					//when editing this code, also edit Delm._IsVisibleWebPage.
+					//note: sync with Delm._IsVisibleWebPage.
 				}
 			}
 
@@ -740,7 +741,7 @@ HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_A
 //MIDL_INTERFACE("E89F726E-C4F4-4c19-BB19-B647D7FA8478")
 //IAccessible2 : public IAccessible{ };
 
-HRESULT AccEnableChrome2(HWND w, int i)
+HRESULT AccEnableChrome2(HWND w, int i, HWND c)
 {
 	Smart<IAccessible> aw;
 	HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aw);
@@ -754,7 +755,7 @@ HRESULT AccEnableChrome2(HWND w, int i)
 
 	AccDtorIfElem0 ar;
 	hr = AccFinder::FindDocumentSimple_(aw, out ar, eAF2::InChromePage);
-	PRINTF_IF(hr != 0, L"DOCUMENT not found, i=%i", i);
+	PRINTF_IF(hr != 0 && c, L"DOCUMENT not found, i=%i", i);
 	if(hr != 0) return (HRESULT)eError::NotFound;
 	IAccessible* aDoc = ar.acc;
 
@@ -799,31 +800,44 @@ void AccEnableChrome(HWND w)
 	//	When used in certain way, used to kill Chrome process on Win7 (or it depends on Chrome settings etc). Current code works well.
 
 	HWND c = FindWindowEx(w, 0, L"Chrome_RenderWidgetHostHWND", null);
-	if(c) SendMessage(c, WM_GETOBJECT, 0, 1); else PRINTS(L"no Chrome_RenderWidgetHostHWND");
+	if(c) SendMessage(c, WM_GETOBJECT, 0, 1);
+	else {
+		DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
+		if(0 != (style & WS_POPUP) || style == 0) return; //a popup window, eg menu, tooltip, new bookmark. Or invalid window handle.
+#ifdef TRACE
+		PRINTS(L"no Chrome_RenderWidgetHostHWND in:");
+		wn::PrintWnd(w); //eg Task Manager
+#endif
+	}
 
 	//notinproc FindDocumentSimple_ is very slow
 	Cpp_Acc_Agent aAgent;
 	bool inProc = 0 == InjectDllAndGetAgent(w, out aAgent.acc);
 
-	for(int i = 0, nNoDoc = 0; i < 70; i++) { //max 3 s
+	for(int i = 0, nNoDoc = 0; i < (inProc ? 70 : 20); i++) { //max 3 s
 		HRESULT hr;
 		//Perf.First();
 		if(inProc) {
-			InProcCall c;
-			auto p = (MarshalParams_AccHwndInt*)c.AllocParams(&aAgent, InProcAction::IPA_AccEnableChrome, sizeof(MarshalParams_AccHwndInt));
-			p->hwnd = (int)(LPARAM)w;
-			p->i = i;
-			hr = c.Call();
+			InProcCall ic;
+			auto p = (MarshalParams_AccInt4*)ic.AllocParams(&aAgent, InProcAction::IPA_AccEnableChrome, sizeof(MarshalParams_AccInt4));
+			p->i0 = (int)(LPARAM)w;
+			p->i1 = i;
+			p->i2 = (int)(LPARAM)c;
+			hr = ic.Call();
 		} else {
-			hr = AccEnableChrome2(w, i);
+			hr = AccEnableChrome2(w, i, c);
 		}
 		//Perf.NW();
-		Sleep(10 + i);
+		if(hr == (HRESULT)eError::NotFound) {
+			if(!IsWindow(w)) return;
+			if(!c) break;
+		}
+		Sleep((inProc ? 10 : 100) + i);
 		if(hr == 0) break;
-		if(hr != (HRESULT)eError::NotFound) nNoDoc = 0; else if(++nNoDoc < 30) i = -1; else break;
+		if(hr != (HRESULT)eError::NotFound) nNoDoc = 0; else if(++nNoDoc < 20) i = -1; else break;
 	}
 	WinFlags::Set(w, eWinFlags::AccEnabled);
-	//never mind: may be timeout with large pages or at Chrome startup. We can't wait so long here. Let scripts wait.
+	//never mind: possible timeout with large pages or at Chrome startup. Can't wait so long here. Let scripts wait.
 }
 
 //Called by elmFinder before find or find-wait in window (not in elm).

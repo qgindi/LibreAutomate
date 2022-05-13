@@ -81,7 +81,7 @@ void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref BYTE& role, boo
 		}
 	}
 	if(useParent) {
-		//bug in old Chrome and some Firefox version in some cases: AO retrieved with get_accParent is invalid, eg cannot get its window.
+		//bug in old Chrome and secondary windows of Firefox: AO retrieved with get_accParent is invalid, eg cannot get its window.
 		HWND wp;
 		if(elem == 0 && 0 != WindowFromAccessibleObject(parent, &wp)) {
 			PRINTF(L"Cannot get parent LINK because WindowFromAccessibleObject would fail.");
@@ -394,13 +394,13 @@ gNotinproc:
 		flags |= eXYFlags::NotInProc; goto gNotinproc;
 	}
 
-	InProcCall c;
-	auto x = (MarshalParams_AccFromPoint*)c.AllocParams(&aAgent, InProcAction::IPA_AccFromPoint, sizeof(MarshalParams_AccFromPoint));
+	InProcCall ic;
+	auto x = (MarshalParams_AccFromPoint*)ic.AllocParams(&aAgent, InProcAction::IPA_AccFromPoint, sizeof(MarshalParams_AccFromPoint));
 	x->p = p;
 	x->flags = flags;
 	x->specWnd = (int)specWnd;
 	x->wFP = (int)(LPARAM)wFP;
-	if(0 != (R = c.Call())) {
+	if(0 != (R = ic.Call())) {
 		if(R == E_FP_RETRY) {
 			HWND w2 = WindowFromPhysicalPoint(p);
 			if(w2 != wFP) { wFP = w2; goto gRetry; }
@@ -409,7 +409,7 @@ gNotinproc:
 		return R;
 	}
 	//Perf.Next();
-	R = c.ReadResultAcc(ref aResult);
+	R = ic.ReadResultAcc(ref aResult);
 	//Perf.NW();
 	return R;
 }
@@ -483,11 +483,11 @@ gNotinproc:
 		flags |= eFocusedFlags::NotInProc; goto gNotinproc;
 	}
 
-	InProcCall c;
-	auto x = (MarshalParams_AccFocused*)c.AllocParams(&aAgent, InProcAction::IPA_AccFocused, sizeof(MarshalParams_AccFocused));
+	InProcCall ic;
+	auto x = (MarshalParams_AccFocused*)ic.AllocParams(&aAgent, InProcAction::IPA_AccFocused, sizeof(MarshalParams_AccFocused));
 	x->hwnd = (int)(LPARAM)w;
 	x->flags = flags;
-	if(0 != (R = c.Call())) return R;
-	return c.ReadResultAcc(ref aResult);
+	if(0 != (R = ic.Call())) return R;
+	return ic.ReadResultAcc(ref aResult);
 }
 } //namespace outproc

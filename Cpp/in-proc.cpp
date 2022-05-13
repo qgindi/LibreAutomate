@@ -99,7 +99,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 HRESULT AccGetProps(Cpp_Acc a, STR props, out BSTR& sResult);
 HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult);
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult);
-HRESULT AccEnableChrome2(HWND w, int i);
+HRESULT AccEnableChrome2(HWND w, int i, HWND c);
 
 namespace inproc
 {
@@ -142,7 +142,7 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 					hr = AccWeb(iacc, (STR)(h + 1), sResult);
 					break;
 				case InProcAction::IPA_AccEnableChrome:
-					hr = AccEnableChrome2((HWND)(LPARAM)((MarshalParams_AccHwndInt*)h)->hwnd, ((MarshalParams_AccHwndInt*)h)->i);
+					hr = AccEnableChrome2((HWND)(LPARAM)((MarshalParams_AccInt4*)h)->i0, ((MarshalParams_AccInt4*)h)->i1, (HWND)(LPARAM)((MarshalParams_AccInt4*)h)->i2);
 					break;
 				case InProcAction::IPA_ShellExec:
 					hr = ShellExec(h, out sResult);
@@ -581,8 +581,8 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 #ifdef _DEBUG
 EXPORT void Cpp_InProcTest(IAccessible* a)
 {
-	InProcCall c;
-	c.AllocParams(a, InProcAction::IPA_AccTest, sizeof(MarshalParams_Header));
+	InProcCall ic;
+	ic.AllocParams(a, InProcAction::IPA_AccTest, sizeof(MarshalParams_Header));
 }
 #endif
 

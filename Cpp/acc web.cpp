@@ -430,14 +430,14 @@ EXPORT HRESULT Cpp_AccWeb(Cpp_Acc a, STR what, out BSTR& sResult)
 	if(!(a.misc.flags & eAccMiscFlags::InProc)) return E_NOINTERFACE;
 	if(a.elem) return 1; //eg TEXT of LINK in IE. Let use the LINK instead.
 
-	InProcCall c;
+	InProcCall ic;
 	auto len = str::Len(what);
 	auto memSize = sizeof(MarshalParams_Header) + (len + 1) * 2;
-	auto p = c.AllocParams(&a, InProcAction::IPA_AccGetHtml, memSize);
+	auto p = ic.AllocParams(&a, InProcAction::IPA_AccGetHtml, memSize);
 	auto s = (LPWSTR)(p + 1); memcpy(s, what, len * 2); s[len] = 0;
-	HRESULT hr = c.Call();
+	HRESULT hr = ic.Call();
 	if(hr) return hr;
-	sResult = c.DetachResultBSTR();
+	sResult = ic.DetachResultBSTR();
 	return 0;
 }
 }

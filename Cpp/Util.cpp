@@ -277,8 +277,9 @@ void PrintWnd(HWND w)
 		Name(w, out sn);
 		RECT r = {}; GetWindowRect(w, &r);
 		STR inv = IsWindowVisible(w) ? L"" : L" invisible";
-		Printf(L"%i %s \"%s\" {L=%i T=%i W=%i H=%i}%s",
-			(int)(LPARAM)w, sc, sn, r.left, r.top, r.right - r.left, r.bottom - r.top, inv);
+		DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
+		Printf(L"%i %s \"%s\" {L=%i T=%i W=%i H=%i}%s style=0x%X",
+			(int)(LPARAM)w, sc, sn, r.left, r.top, r.right - r.left, r.bottom - r.top, inv, style);
 	}
 }
 #endif
