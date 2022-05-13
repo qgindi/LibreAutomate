@@ -1877,11 +1877,11 @@
 		}
 
 		/// <summary>
-		/// Moves this window to the center of the screen.
+		/// Moves this window to the center of the screen. Ensures that entire window is in screen.
 		/// </summary>
 		/// <param name="screen">Move to this screen (see <see cref="screen"/>). If default, uses screen of this window.</param>
 		/// <exception cref="AuWndException"/>
-		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
+		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>. See <see cref="MoveInScreen"/>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
 		public void MoveToScreenCenter(screen screen = default) {
 			ShowNotMinMax(true);

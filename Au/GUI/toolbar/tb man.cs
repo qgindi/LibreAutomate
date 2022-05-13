@@ -377,7 +377,7 @@ namespace Au {
 				//print.it(wo);
 
 				if (!_zorderedOnce || !wt.ZorderIsAbove(wo)) {
-					if (!wt.ZorderAbove(wo)) {
+					if (!wt.ZorderAbove(wo) && wo.IsAlive) {
 						var ec = lastError.code;
 						if (!wt.ZorderIsAbove(wo)) {
 							var es = ec == Api.ERROR_ACCESS_DENIED && wo.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : lastError.messageFor(ec);

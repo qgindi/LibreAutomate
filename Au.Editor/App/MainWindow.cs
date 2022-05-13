@@ -4,15 +4,19 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 
-partial class MainWindow : Window
-{
+partial class MainWindow : Window {
 	public void Init() {
 		//_StartProfileOptimization();
 
 		Title = App.AppNameLong; //don't append document name etc
 
+		if (App.Settings.wndpos.main == null) {
+			Width = 1000;
+			Height = 700;
+			WindowStartupLocation = WindowStartupLocation.CenterScreen;
+			//and will EnsureInScreen
+		}
 		WndSavedRect.Restore(this, App.Settings.wndpos.main, o => App.Settings.wndpos.main = o);
-		//SHOULDDO: now on Win8 first time very small if high DPI and small screen. Don't use default window size. Or test with small screen on all OS.
 
 		Panels.LoadAndCreateToolbars();
 
@@ -87,6 +91,8 @@ partial class MainWindow : Window
 		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		App.Hmain = (wnd)hs.Handle;
+
+		if (App.Settings.wndpos.main == null) App.Hmain.EnsureInScreen();
 
 		//workaround for: sometimes OS does not set foreground window. Then we have a fake active/focused state (blinking caret, called OnActivated, etc).
 		//	1. When started hidden, and now clicked tray icon first time. Is it because of the "lock foreground window"? Or WPF shows window somehow incorrectly?
