@@ -8,11 +8,11 @@ The editor program is an integrated scripting environment (ISE) for creating and
 
 More info and download the setup file: https://www.quickmacros.com/au/help/
 
-<!--Editor window
+Editor window
 
 ![window](https://www.quickmacros.com/au/help/images/window.png "Editor window")
--->
-### How to build
+
+## How to build
 Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 SDK.
 
 1. Open Au.sln in Visual Studio. Ignore "failed to load project" errors.
