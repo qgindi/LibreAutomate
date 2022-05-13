@@ -524,15 +524,15 @@ g1:
 	}
 	//Perf.Next();
 
-	InProcCall c;
-	auto p = (MarshalParams_AccFromWindow*)c.AllocParams(&aAgent, InProcAction::IPA_AccFromWindow, sizeof(MarshalParams_AccFromWindow));
+	InProcCall ic;
+	auto p = (MarshalParams_AccFromWindow*)ic.AllocParams(&aAgent, InProcAction::IPA_AccFromWindow, sizeof(MarshalParams_AccFromWindow));
 	p->hwnd = (int)(LPARAM)w;
 	p->objid = objid;
 	p->flags = flags;
-	if(0 != (R = c.Call())) return R;
+	if(0 != (R = ic.Call())) return R;
 	//Perf.Next();
-	if(flags & 2) sResult = c.DetachResultBSTR();
-	else R = c.ReadResultAcc(ref aResult);
+	if(flags & 2) sResult = ic.DetachResultBSTR();
+	else R = ic.ReadResultAcc(ref aResult);
 	//Perf.NW();
 	return R;
 }
@@ -590,21 +590,21 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_A
 	}
 
 	if(inProc) {
-		InProcCall c;
+		InProcCall ic;
 		auto sizeofParams = MarshalParams_AccFind::CalcMemSize(ref ap);
-		auto p = (MarshalParams_AccFind*)c.AllocParams(aParent, InProcAction::IPA_AccFind, sizeofParams);
+		auto p = (MarshalParams_AccFind*)ic.AllocParams(aParent, InProcAction::IPA_AccFind, sizeofParams);
 		p->Marshal(useWnd ? w : 0, ref ap);
 
-		if(0 != (R = c.Call())) {
-			if(R == (HRESULT)eError::InvalidParameter) sResult = c.DetachResultBSTR();
+		if(0 != (R = ic.Call())) {
+			if(R == (HRESULT)eError::InvalidParameter) sResult = ic.DetachResultBSTR();
 		} else if(!findAll) {
-			if(!ap.resultProp) R = c.ReadResultAcc(ref aResult);
-			else if(ap.resultProp != '-') sResult = c.DetachResultBSTR();
+			if(!ap.resultProp) R = ic.ReadResultAcc(ref aResult);
+			else if(ap.resultProp != '-') sResult = ic.DetachResultBSTR();
 		} else {
 			Cpp_Acc a;
 			int skip = ap.skip;
 			for(;;) {
-				R = c.ReadResultAcc(ref a);
+				R = ic.ReadResultAcc(ref a);
 				if(R) break; //NotFound when end of stream
 				if(!also(a)) continue; //must Release u.acc, preferably later
 				if(skip-- == 0) {
@@ -614,7 +614,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_A
 				}
 			}
 			//release the marshal data of remaining AO
-			for(auto k = R; k == 0; ) k = c.ReadResultAcc(ref a, true);
+			for(auto k = R; k == 0; ) k = ic.ReadResultAcc(ref a, true);
 		}
 		//Perf.Next();
 	} else {

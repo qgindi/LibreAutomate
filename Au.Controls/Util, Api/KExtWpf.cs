@@ -6,21 +6,22 @@ using Au.Controls;
 namespace Au.Tools;
 
 /// <summary>
-/// KCheckBox and TextBox. Optionally + Button and KPopupListBox.
+/// KCheckBox and KTextBox. Optionally + Button and KPopupListBox.
 /// </summary>
 public class KCheckTextBox {
 	public readonly KCheckBox c;
-	public readonly TextBox t;
+	public readonly KTextBox t;
 	readonly Button _button;
 	KPopupListBox _popup;
 	object _items; //List<string> or Func<List<string>>
 
 	///
-	public KCheckTextBox(KCheckBox c, TextBox t, Button button = null) {
+	public KCheckTextBox(KCheckBox c, KTextBox t, Button button = null) {
 		this.c = c;
 		this.t = t;
 		c.Tag = this;
 		t.Tag = this;
+		t.Small = true;
 		_button = button;
 		if (_button != null) {
 			//_button.ClickMode = ClickMode.Press; //open on button down. But then Popup.StaysOpen=false does not work. Tried async, but same. //SHOULDDO: replace Popup in KPopupListBox with KPopup.
@@ -175,17 +176,17 @@ public static class KExtWpf {
 	}
 
 	/// <summary>
-	/// Adds TextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
+	/// Adds KTextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
 	/// Sets multiline with limited height. If in grid, sets padding/margin for propertygrid.
 	/// </summary>
-	public static wpfBuilder xAddText(this wpfBuilder b, out TextBox t, string text = null) {
+	public static wpfBuilder xAddText(this wpfBuilder b, out KTextBox t, string text = null) {
 		b.Add(out t, text).Multiline(..55, wrap: TextWrapping.NoWrap);
 		if (b.Panel is Grid) b.Padding(new Thickness(0, -1, 0, 1)).Margin(left: 4);
 		return b;
 	}
 
 	/// <summary>
-	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline TextBox (<see cref="xAddText"/>) in a propertygrid row.
+	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline KTextBox (<see cref="xAddText"/>) in a propertygrid row.
 	/// </summary>
 	/// <param name="b"></param>
 	/// <param name="name">Checkbox text.</param>
@@ -199,7 +200,7 @@ public static class KExtWpf {
 	}
 
 	/// <summary>
-	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline TextBox (<see cref="xAddText"/>) in a propertygrid row.
+	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline KTextBox (<see cref="xAddText"/>) in a propertygrid row.
 	/// Also adds ▾ button that shows a drop-down list (see <see cref="KCheckTextBox.Set(bool, string, List{string})"/>).
 	/// Unlike ComboBox, text can be multiline and isn't selected when receives focus.
 	/// </summary>

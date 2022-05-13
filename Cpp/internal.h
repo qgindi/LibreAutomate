@@ -108,12 +108,11 @@ struct MarshalParams_AccElem
 	long elem;
 };
 
-//Used for marshaling parameters of when need HWND and int when calling the get_accHelpTopic hook function.
-struct MarshalParams_AccHwndInt
+//Used for marshaling 1-4 int parameters when calling the get_accHelpTopic hook function.
+struct MarshalParams_AccInt4
 {
 	MarshalParams_Header hdr;
-	int hwnd;
-	int i;
+	int i0, i1, i2, i3;
 };
 
 namespace outproc

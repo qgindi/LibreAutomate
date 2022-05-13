@@ -156,12 +156,12 @@ EXPORT bool Cpp_ShellExec(const SHELLEXECUTEINFO& x, out DWORD& pid, out HRESULT
 		return false;
 	}
 
-	outproc::InProcCall c;
-	auto p = (MarshalParams_ShellExec*)c.AllocParams(&aAgent, InProcAction::IPA_ShellExec, MarshalParams_ShellExec::CalcMemSize(x));
+	outproc::InProcCall ic;
+	auto p = (MarshalParams_ShellExec*)ic.AllocParams(&aAgent, InProcAction::IPA_ShellExec, MarshalParams_ShellExec::CalcMemSize(x));
 	p->Marshal(x);
-	if(0 != (execError = c.Call())) return false;
+	if(0 != (execError = ic.Call())) return false;
 
-	BSTR b = c.GetResultBSTR();
+	BSTR b = ic.GetResultBSTR();
 	if(b) pid = *(DWORD*)b;
 
 	return true;
