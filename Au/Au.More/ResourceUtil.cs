@@ -1,5 +1,4 @@
-﻿
-using System.Resources;
+﻿using System.Resources;
 using System.Windows.Media.Imaging;
 using System.Windows.Markup;
 using System.Windows;

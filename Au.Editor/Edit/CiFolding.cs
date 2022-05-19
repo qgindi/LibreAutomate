@@ -11,8 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
-class CiFolding
-{
+class CiFolding {
 	public record struct FoldPoint(int pos, bool start, ushort separator);
 
 	//Called from CiStyling._Work -> Task.Run when document opened or modified (250 ms timer).
@@ -363,8 +362,7 @@ class CiFolding
 	}
 }
 
-partial class SciCode
-{
+partial class SciCode {
 	bool _FoldOnMarginClick(bool? fold, int startPos) {
 		int line = Call(SCI_LINEFROMPOSITION, startPos);
 		if (0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
@@ -448,7 +446,10 @@ partial class SciCode
 							db.Execute("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,0,0,?)", p => p.Bind(1, _fn.Id).Bind(2, a));
 						} else if (cp == 0) {
 							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
-							if (pos > 0 && pos <= zLen8) zCurrentPos8 = _savedPos = pos;
+							if (pos > 0 && pos <= zLen8) {
+								App.Model.EditGoBack.OnRestoringSavedPos();
+								zCurrentPos8 = _savedPos = pos;
+							}
 						}
 					}
 				}

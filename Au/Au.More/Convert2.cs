@@ -1,4 +1,3 @@
-
 using System.IO.Compression;
 
 namespace Au.More {

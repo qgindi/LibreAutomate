@@ -179,19 +179,7 @@ namespace Au.Compiler {
 				r.flags |= _AddAttributesEtc(ref compilation, m);
 				p1.Next('a');
 
-				//if empty script, error "no Main". Users would not understand why.
-				if (m.Role != ERole.classLibrary) {
-					var diag1 = compilation.GetDiagnostics();
-					if (diag1.Any(o => o.Id == "CS5001")) { //no Main
-						var st = trees[m.CodeFiles.IndexOf(m.MainFile)];
-						var cu = st.GetCompilationUnitRoot();
-						var code2 = m.MainFile.code;
-						int i = cu.Members.Any() ? cu.Members.Span.Start : code2.Length;
-						code2 = code2.Insert(i, "\r\n{}\r\n");
-						compilation = compilation.ReplaceSyntaxTree(st, st.WithChangedText(SourceText.From(code2, Encoding.UTF8)) as CSharpSyntaxTree);
-					}
-					p1.Next('d');
-				}
+				//rejected: if empty script, add {} to avoid error "no Main". See AddErrorOrWarning.
 
 				//Create debug info always. It is used for run-time error links.
 				//Embed it in assembly. It adds < 1 KB. Almost the same compiling speed. Same loading speed.
@@ -237,6 +225,7 @@ namespace Au.Compiler {
 			if (needOutputFiles) {
 				if (m.Role == ERole.miniProgram) {
 					//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
+					//TODO: C# 11 [assembly: MTAThread]
 					if (compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.EFlags.MTA;
 
 					if (m.Console) r.flags |= MiniProgram_.EFlags.Console;

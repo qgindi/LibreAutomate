@@ -137,9 +137,13 @@ partial class SciCode : KScintilla {
 
 		bool editable = _fls.SetText(this, text);
 		SetLineNumberMarginWidth_();
+
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
+
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
+
+		App.Model.EditGoBack.OnPosChanged(this);
 
 		//detect \r without '\n', because it is not well supported
 		if (editable) {
@@ -166,6 +170,10 @@ partial class SciCode : KScintilla {
 	//	print.qm2.write($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
 	//	base.Dispose(disposing);
 	//}
+
+	internal void OnOpenDocActivated() {
+		App.Model.EditGoBack.OnPosChanged(this);
+	}
 
 	protected override void ZOnSciNotify(ref SCNotification n) {
 		//if (test_) {
@@ -207,6 +215,7 @@ partial class SciCode : KScintilla {
 			if (n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
 				_modified = true;
 				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
+				App.Model.EditGoBack.OnTextModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
 				CodeInfo.SciModified(this, n);
 				Panels.Find.ZUpdateQuickResults(true);
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
@@ -235,6 +244,7 @@ partial class SciCode : KScintilla {
 			if (0 == (n.updated & 15)) break;
 			if (0 != (n.updated & 3)) { //text (1), selection/click (2)
 				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
+				if (0 != (n.updated & 2)) App.Model.EditGoBack.OnPosChanged(this);
 				Panels.Editor._UpdateUI_EditEnabled();
 			}
 			CodeInfo.SciUpdateUI(this, n.updated);

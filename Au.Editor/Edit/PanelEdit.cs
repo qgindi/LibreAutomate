@@ -73,6 +73,7 @@ class PanelEdit : Grid
 			_ShowHideActiveDoc(false);
 			_activeDoc = doc;
 			_ShowHideActiveDoc(true);
+			doc.OnOpenDocActivated();
 			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();

@@ -266,8 +266,17 @@ public unsafe partial class KScintilla : HwndHost {
 		//if(code != NOTIF.SCN_PAINTED) print.qm2.write(code.ToString());
 		switch (code) {
 		case NOTIF.SCN_MODIFIED:
-			if ((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
-			_NotifyModified(n);
+			var mt = n.modificationType;
+			//if(this.Name!= "Output_text") print.it(mt, n.position);
+			if (mt.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
+				_text = null;
+				_posState = default;
+				_aPos.Clear();
+
+				ZImages?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+				ZTags?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+			}
+			//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 			if (ZDisableModifiedNotifications) return;
 			break;
 		case NOTIF.SCN_HOTSPOTRELEASECLICK:
@@ -275,27 +284,6 @@ public unsafe partial class KScintilla : HwndHost {
 			break;
 		}
 		ZOnSciNotify(ref n);
-	}
-
-	//void _Print(object text)
-	//{
-	//	var t = Name ?? GetType().ToString();
-	//	if(Name != "Status_text") print.qm2.write($"{t}: {text}");
-	//}
-
-	unsafe void _NotifyModified(in SCNotification n) {
-		var mt = n.modificationType;
-		//if(this.Name!= "Output_text") print.it(mt, n.position);
-		if (mt.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
-			_text = null;
-			_posState = default;
-			_aPos.Clear();
-
-			bool ins = mt.Has(MOD.SC_MOD_INSERTTEXT);
-			ZImages?.OnTextChanged_(ins, n);
-			ZTags?.OnTextChanged_(ins, n);
-		}
-		//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 	}
 
 	/// <summary>
