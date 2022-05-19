@@ -54,8 +54,8 @@ static class Menus {
 			public static void Copy_full_path() { App.Model.SelectedCopyPath(true); }
 		}
 
-		[Command("Open, close")]
-		public static class OpenClose {
+		[Command("Open, close, go")]
+		public static class OpenCloseGo {
 			[Command(keysText = "Enter")]
 			public static void Open() { App.Model.OpenSelected(1); }
 
@@ -79,6 +79,12 @@ static class Menus {
 
 			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
 			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
+
+			[Command(keys = "Alt+Left", target = "", image = "*EvaIcons.ArrowBack #585858")]
+			public static void Go_back() { App.Model.EditGoBack.GoBack(); }
+
+			[Command(keys = "Alt+Right", target = "", image = "*EvaIcons.ArrowForward #585858")]
+			public static void Go_forward() { App.Model.EditGoBack.GoForward(); }
 		}
 
 		//[Command]

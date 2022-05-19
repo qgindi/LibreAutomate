@@ -9,6 +9,8 @@ partial class PanelFiles : DockPanel
 
 		_tv = new() { Name = "Files_list" };
 		this.Children.Add(_tv);
+
+		EditGoBack.DisableUI();
 	}
 
 	public FilesModel.FilesView TreeControl => _tv;

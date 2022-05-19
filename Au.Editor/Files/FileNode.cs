@@ -353,7 +353,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	public void UnCacheText(bool fromWatcher = false) {
 		//print.it("UnCacheText", Name, _text != null);
 		_text = null;
-		if (fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?.FileModifiedExternally_();
+		if (fromWatcher) {
+			var doc = Panels.Editor.ZGetOpenDocOf(this);
+			if (doc != null) doc.FileModifiedExternally_();
+			else this.Model.EditGoBack.OnTextReplaced(this);
+		}
 	}
 
 	///// <summary>

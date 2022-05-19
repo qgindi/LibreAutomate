@@ -65,7 +65,8 @@ class DOptions : KDialogWindow {
 		b.End();
 		//right column
 		b.StartStack(vertical: true);
-		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(60, TextWrapping.NoWrap).Validation(_startupScripts_Validation);
+		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(110, TextWrapping.NoWrap)
+			.Validation(_startupScripts_Validation);
 		b.End();
 		b.End();
 

@@ -95,6 +95,7 @@ partial class FilesModel {
 		_InitWatcher(false);
 		DB?.Dispose();
 		WSSett?.Dispose();
+		EditGoBack.DisableUI();
 	}
 
 	#region tree control
@@ -440,7 +441,7 @@ partial class FilesModel {
 	/// </summary>
 	void _UpdateOpenFiles(FileNode current) {
 		Panels.Open.ZUpdateList();
-		App.Commands[nameof(Menus.File.OpenClose.Previous_document)].Enabled = OpenFiles.Count > 1;
+		App.Commands[nameof(Menus.File.OpenCloseGo.Previous_document)].Enabled = OpenFiles.Count > 1;
 	}
 
 	/// <summary>
@@ -658,6 +659,7 @@ partial class FilesModel {
 
 		CloseFiles(e);
 		Uncut();
+		App.Model.EditGoBack.OnFileDeleted(f);
 
 		if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
 			if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin ? FDFlags.RecycleBin : 0), deletion: true)) return false;
@@ -1583,6 +1585,9 @@ partial class FilesModel {
 		}
 		catch (FormatException) { }
 	}
+
+	//Used mostly by SciCode, but owned by workspace because can go to any file.
+	internal readonly EditGoBack EditGoBack = new();
 
 	#endregion
 

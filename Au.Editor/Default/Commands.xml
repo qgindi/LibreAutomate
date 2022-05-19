@@ -33,6 +33,8 @@ All attributes are optional. The Example command contains all.
 		<Properties />
 		<MultiSelect_files />
 		<Save_now />
+		<Go_back separator="" />
+		<Go_forward />
 	</File>
 	<Run>
 		<Compile />

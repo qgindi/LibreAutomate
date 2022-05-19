@@ -12,17 +12,13 @@ using System.Media;
 //CONSIDER: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex (now can use Wildex, Word, Regex; it's easier).
 //	Now in "Name" mode all the push buttons are not used. If clicked, they uncheck "Name". And the Replace textbox not used.
 
-class PanelFind : UserControl
-{
+class PanelFind : UserControl {
 	TextBox _tFind, _tReplace;
 	KCheckBox _cFolder, _cName, _cCase, _cWord, _cRegex, _cWildex;
 	KPopup _ttRegex, _ttNext;
 
 	public PanelFind() {
 		this.UiaSetName("Find panel");
-
-		var cstyle = Application.Current.FindResource(ToolBar.CheckBoxStyleKey) as Style;
-		var bstyle = Application.Current.FindResource(ToolBar.ButtonStyleKey) as Style;
 
 		var b = new wpfBuilder(this).Columns(-1).Brush(SystemColors.ControlBrush);
 		b.Options(modifyPadding: false, margin: new Thickness(2));
@@ -37,10 +33,16 @@ class PanelFind : UserControl
 
 		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
 		b.StartStack();
-		b.Add(out _cFolder, ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline #99BF00")).Padding(1, 0, 1, 1).Tooltip("Let 'In files' search only in current project or root folder");
-		_cFolder.Style = cstyle;
-		b.AddButton(ImageUtil.LoadWpfImageElement("*EvaIcons.Options2 #99BF00"), _bOptions_Click).Tooltip("More options");
-		b.Last.Style = bstyle;
+		_cFolder = b.xAddCheckIcon("*Material.FolderSearchOutline #99BF00", "Let 'In files' search only in current project or root folder");
+		b.Padding(1, 0, 1, 1);
+		b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _bOptions_Click, "More options");
+
+		var cmd1 = App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)];
+		var bBack = b.xAddButtonIcon("*EvaIcons.ArrowBack #585858", _ => Menus.File.OpenCloseGo.Go_back(), "Go back");
+		b.Disabled(!cmd1.Enabled);
+		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
+		//TODO: if using this, should record every position changed by the Find panel. Or remove this.
+
 		b.End();
 
 		b.Add(out _cName, "Name").Tooltip("Search in filenames, not in text");
@@ -297,8 +299,7 @@ class PanelFind : UserControl
 	}
 	timer _timerUE;
 
-	record _TextToFind
-	{
+	record _TextToFind {
 		public string findText;
 		public string replaceText;
 		public regexp rx;
@@ -372,7 +373,7 @@ class PanelFind : UserControl
 		int i, len = 0, from8 = replace ? doc.zSelectionStart8 : doc.zSelectionEnd8, from = doc.zPos16(from8);
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
-		g1:
+	g1:
 		if (f.rx != null) {
 			if (f.rx.Match(text, out rm, from..)) {
 				i = rm.Start;
