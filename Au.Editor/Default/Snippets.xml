@@ -123,7 +123,7 @@ finally {  }]]>
 			</list>
 		</snippet>
 
-		<snippet name="methodLocalSnippet" info="Local function.">
+		<snippet name="localFunctionSnippet" info="Local function.">
 			<![CDATA[void $end$_MyFunction$end$() {
 	
 }

@@ -9,15 +9,20 @@
 	internal void OnPosChanged(SciCode doc) {
 		//print.it("pos", zCurrentPos8);
 
-		bool add = false;
+		bool add;
 		int pos = doc.zCurrentPos8;
 		var prev = _a.Count > 0 ? _a[_i] : default;
 		if (prev.fn != doc.ZFile) {
 			add = true;
 		} else {
 			if (pos == prev.pos) return; //eg on Back/Forward
-			add = Environment.TickCount64 - _time > 500
-				&& Math.Abs(doc.zLineFromPos(false, pos) - doc.zLineFromPos(false, prev.pos)) >= 10;
+			if (_recordNext) {
+				_recordNext = false;
+				add = true;
+			} else {
+				add = Environment.TickCount64 - _time > 500
+					&& Math.Abs(doc.zLineFromPos(false, pos) - doc.zLineFromPos(false, prev.pos)) >= 10;
+			}
 		}
 
 		var now = new _Location(doc.ZFile, pos);
@@ -93,6 +98,12 @@
 		_time = 0;
 		_UpdateUI();
 	}
+
+	/// <summary>
+	/// Record next position change event, even if it is near in space or time.
+	/// </summary>
+	public void RecordNext() { _recordNext = true; }
+	bool _recordNext;
 
 	public void GoBack() {
 		if (_i < 1) return;

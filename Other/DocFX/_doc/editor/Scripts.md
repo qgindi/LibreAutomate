@@ -24,7 +24,7 @@ A script can contain these parts, all optional:
 - Script code. It can contain local functions anywhere.
 - Classes and other types used in the script.
 
-This syntax is known as "C# top-level statements". It is simple and concise, but has some limitations. You can instead use a class with Main function. Try menu Edit -> Insert -> Add class Program.
+This syntax is known as "C# top-level statements". It is simple and concise, but has some limitations. You can instead use a class with Main function. Try menu Code -> Add -> Add class Program.
 
 The ```//.``` and ```//..``` are used to fold (hide) code. Click the small [+] box at the top-left to see and edit that code when need. 
 

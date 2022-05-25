@@ -420,7 +420,7 @@ global using Au.More;
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.FullSpan}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 

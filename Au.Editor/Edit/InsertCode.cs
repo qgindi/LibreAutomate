@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using acc = Microsoft.CodeAnalysis.Accessibility;
-//using Microsoft.CodeAnalysis.Shared.Extensions;
-//using Microsoft.CodeAnalysis.CSharp.Extensions;
-//using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Rename;
 
 [Flags]
@@ -433,7 +433,7 @@ static class InsertCode {
 		string code = cd.code;
 		SciCode doc = cd.sciDoc;
 
-		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !IsLineStart(code, pos - 3)) return;
+		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !InsertCodeUtil.IsLineStart(code, pos - 3)) return;
 
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		var node = root.FindToken(pos).Parent;
@@ -473,27 +473,159 @@ static class InsertCode {
 			//rejected: <typeparam name="TT"></typeparam>. Rarely used.
 		}
 
-		s = IndentStringForInsert(s, doc, pos);
+		s = InsertCodeUtil.IndentStringForInsert(s, doc, pos);
 
 		doc.zInsertText(true, pos, s, true, true);
 		doc.zGoToPos(true, pos + s.Find("/ ") + 2);
 	}
 
-	/// <summary>
-	/// Returns true if pos in string is at a line start + any number of spaces and tabs.
-	/// </summary>
-	public static bool IsLineStart(string s, int pos) {
-		int i = pos; while (--i >= 0 && (s[i] == ' ' || s[i] == '\t')) { }
-		return i < 0 || s[i] == '\n';
+	public static void AddFileDescription() {
+		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
+		doc.zInsertText(false, 0, "/// Description\r\n\r\n");
+		doc.zSelect(false, 4, 15, makeVisible: true);
+	}
+
+	public static void AddClassProgram() {
+		var a = new string[] {
+			"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...",
+			"class Program { static void Main(string[] args) { //...",
+		};
+		int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
+
+		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
+		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+
+		int start, end = cd.code.Length;
+		var members = cu.Members;
+		if (members.Any()) {
+			start = _FindRealStart(false, members[0]);
+			if (members[0] is not GlobalStatementSyntax) end = start;
+			else if (members.FirstOrDefault(v => v is not GlobalStatementSyntax) is SyntaxNode sn) end = _FindRealStart(true, sn);
+
+			int _FindRealStart(bool needEnd, SyntaxNode sn) {
+				int start = sn.SpanStart;
+				//find first empty line in comments before
+				var t = sn.GetLeadingTrivia();
+				for (int i = t.Count; --i >= 0;) {
+					var v = t[i];
+					int ss = v.SpanStart;
+					if (ss < cd.meta.end) break;
+					//if (needEnd) { print.it($"{v.Kind()}, '{v}'"); continue; }
+					var k = v.Kind();
+					if (k == SyntaxKind.EndOfLineTrivia) {
+						while (i > 0 && t[i - 1].IsKind(SyntaxKind.WhitespaceTrivia)) i--;
+						if (i == 0 || t[i - 1].IsKind(k)) return needEnd ? ss : v.Span.End;
+					} else if (k == SyntaxKind.SingleLineCommentTrivia) {
+						if (cd.code.Eq(ss, "//.") && char.IsWhiteSpace(cd.code[ss + 3])) break;
+					} else if (k is not (SyntaxKind.WhitespaceTrivia or SyntaxKind.MultiLineCommentTrivia or SyntaxKind.SingleLineDocumentationCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia)) {
+						break; //eg #directive
+					}
+				}
+				return start;
+			}
+		} else start = end;
+		//CiUtil.HiliteRange(start, end); return;
+
+		using var undo = new KScintilla.UndoAction(cd.sciDoc);
+		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
+		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
 	}
 
 	/// <summary>
-	/// Returns string with same indentation as of the document line from pos.
+	/// Prints delegate code. Does not insert.
 	/// </summary>
-	public static string IndentStringForInsert(string s, SciCode doc, int pos) {
-		int indent = doc.zLineIndentationFromPos(true, pos);
-		if (indent > 0) s = s.RxReplace(@"(?<=\n)", new string('\t', indent));
-		return s;
+	public static void CreateDelegate() {
+		if (!_CreateDelegate()) print.it("To create delegate code, the text cursor must be where a delegate can be used, for example after 'Event+=' or in a function argument list.");
+	}
+
+	static bool _CreateDelegate() {
+		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return false;
+		int pos = cd.pos16;
+		var semo = cd.document.GetSemanticModelAsync().Result;
+
+		if (token.IsKind(SyntaxKind.SemicolonToken)) {
+			if (pos > token.SpanStart) return false;
+			token = token.GetPreviousToken();
+		}
+
+		for (var node = token.Parent; node != null; node = node.Parent) {
+			if (node is AssignmentExpressionSyntax aes) {
+				if (node.Kind() is SyntaxKind.SimpleAssignmentExpression or SyntaxKind.AddAssignmentExpression or SyntaxKind.SubtractAssignmentExpression)
+					//if (pos >= aes.OperatorToken.Span.End)
+					return _GetTypeAndFormat(aes.Left, aes);
+			} else if (node is BaseArgumentListSyntax als) {
+				if (!node.Span.ContainsInside(pos)) continue;
+				var (arg, ps) = InsertCodeUtil.GetArgumentParameterFromPos(als, pos, semo);
+				if (ps != null) return _Format(ps.Type);
+			} else if (node is ReturnStatementSyntax rss) {
+				//if (pos >= rss.ReturnKeyword.Span.End)
+				return _GetTypeAndFormat(rss.GetAncestor<MethodDeclarationSyntax>()?.ReturnType);
+			} else if (node is ArrowExpressionClauseSyntax ae) {
+				//if (pos >= ae.ArrowToken.Span.End)
+				switch (node.Parent) {
+				case MethodDeclarationSyntax m: return _GetTypeAndFormat(m.ReturnType);
+				case PropertyDeclarationSyntax p: return _GetTypeAndFormat(p.Type);
+				}
+			} else continue;
+			break;
+		}
+
+		return false;
+
+		bool _GetTypeAndFormat(SyntaxNode sn, AssignmentExpressionSyntax aes = null) {
+			if (sn == null) return false;
+			return _Format(semo.GetTypeInfo(sn).Type, aes);
+		}
+
+		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
+			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol || t.TypeKind != TypeKind.Delegate) return false;
+			var b = new StringBuilder("<><Z #A0C0A0>Delegate method and lambda<>\r\n<code>");
+			var m = t.DelegateInvokeMethod;
+
+			//method
+
+			var format = new SymbolDisplayFormat(
+				memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef,
+				miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers,
+				parameterOptions: SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeDefaultValue
+				);
+
+			b.Append(m.ToMinimalDisplayString(semo, pos, format));
+
+			string methodName = "_RenameMe";
+			if (aes != null) {
+				if (aes.Left is IdentifierNameSyntax ins) {
+					methodName = $"_{ins.Identifier.Text}";
+				} else if (aes.Left is MemberAccessExpressionSyntax maes) {
+					if (maes.Expression is IdentifierNameSyntax ins2) {
+						methodName = $"_{ins2.Identifier.Text}_{maes.Name.Identifier.Text}";
+					} else {
+						methodName = $"_{maes.Name.Identifier.Text}";
+					}
+				}
+			}
+			b.Replace(" Invoke(", $" {methodName}(");
+
+			b.Append(" {\r\n\t");
+			if (!m.ReturnsVoid) b.Append("return default;"); //never mind ref return
+			b.Append("\r\n}\r\n");
+
+			//lambda
+
+			var s = "()";
+			if (m.Parameters.Any()) {
+				format = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeParameters);
+				bool withTypes = m.Parameters.Any(o => o.RefKind != 0 || o.IsParams);
+				if (withTypes) format = format.RemoveParameterOptions(SymbolDisplayParameterOptions.IncludeDefaultValue);
+				else format = format.WithParameterOptions(SymbolDisplayParameterOptions.IncludeName);
+				s = m.ToMinimalDisplayString(semo, pos, format);
+				if (m.Parameters.Length == 1 && !withTypes) s = s[7..^1]; else s = s[6..]; //remove 'Invoke' and maybe '()'
+			}
+			b.Append(s).AppendLine(" => </code>");
+
+			print.it(b);
+			return true;
+		}
 	}
 
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
@@ -611,58 +743,6 @@ static class InsertCode {
 		cd.sciDoc.zGoToPos(true, position);
 
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
-	}
-
-	public static void AddFileDescription() {
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
-		doc.zInsertText(false, 0, "/// Description\r\n\r\n");
-		doc.zSelect(false, 4, 15, makeVisible: true);
-	}
-
-	public static void AddClassProgram() {
-		var a = new string[] {
-			"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...",
-			"class Program { static void Main(string[] args) { //...",
-		};
-		int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
-
-		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
-		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-
-		int start, end = cd.code.Length;
-		var members = cu.Members;
-		if (members.Any()) {
-			start = _FindRealStart(false, members[0]);
-			if (members[0] is not GlobalStatementSyntax) end = start;
-			else if (members.FirstOrDefault(v => v is not GlobalStatementSyntax) is SyntaxNode sn) end = _FindRealStart(true, sn);
-
-			int _FindRealStart(bool needEnd, SyntaxNode sn) {
-				int start = sn.SpanStart;
-				//find first empty line in comments before
-				var t = sn.GetLeadingTrivia();
-				for (int i = t.Count; --i >= 0;) {
-					var v = t[i];
-					int ss = v.SpanStart;
-					if (ss < cd.meta.end) break;
-					//if (needEnd) { print.it($"{v.Kind()}, '{v}'"); continue; }
-					var k = v.Kind();
-					if (k == SyntaxKind.EndOfLineTrivia) {
-						while (i > 0 && t[i - 1].IsKind(SyntaxKind.WhitespaceTrivia)) i--;
-						if (i == 0 || t[i - 1].IsKind(k)) return needEnd ? ss : v.Span.End;
-					} else if (k == SyntaxKind.SingleLineCommentTrivia) {
-						if (cd.code.Eq(ss, "//.") && char.IsWhiteSpace(cd.code[ss + 3])) break;
-					} else if (k is not (SyntaxKind.WhitespaceTrivia or SyntaxKind.MultiLineCommentTrivia or SyntaxKind.SingleLineDocumentationCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia)) {
-						break; //eg #directive
-					}
-				}
-				return start;
-			}
-		} else start = end;
-		//CiUtil.HiliteRange(start, end); return;
-
-		using var undo = new KScintilla.UndoAction(cd.sciDoc);
-		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
-		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
 	}
 
 	/// <summary>
