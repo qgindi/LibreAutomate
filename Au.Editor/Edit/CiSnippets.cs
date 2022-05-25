@@ -155,7 +155,7 @@ static class CiSnippets
 			//FUTURE: snippet editor, maybe like in Eclipse.
 		}
 
-		bool isLineStart = InsertCode.IsLineStart(code, pos);
+		bool isLineStart = InsertCodeUtil.IsLineStart(code, pos);
 
 		foreach (var v in s_items) {
 			if (!v.context.HasAny(context)) continue;
@@ -249,7 +249,7 @@ static class CiSnippets
 		usingDir = x.Attr("using") ?? snippet.x.Attr("using");
 
 		//if multiline, add indentation
-		if (s.Contains('\n')) s = InsertCode.IndentStringForInsert(s, doc, pos);
+		if (s.Contains('\n')) s = InsertCodeUtil.IndentStringForInsert(s, doc, pos);
 
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
 		int selectLength = 0;

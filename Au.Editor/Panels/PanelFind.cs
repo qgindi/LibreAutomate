@@ -41,7 +41,6 @@ class PanelFind : UserControl {
 		var bBack = b.xAddButtonIcon("*EvaIcons.ArrowBack #585858", _ => Menus.File.OpenCloseGo.Go_back(), "Go back");
 		b.Disabled(!cmd1.Enabled);
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
-		//TODO: if using this, should record every position changed by the Find panel. Or remove this.
 
 		b.End();
 
@@ -79,7 +78,7 @@ class PanelFind : UserControl {
 			};
 		}
 
-		foreach (var v in new KCheckBox[] { _cWildex, _cWord, _cRegex, _cName }) v.CheckChanged += _CheckedChanged;
+		foreach (var v in new KCheckBox[] { _cCase, _cWildex, _cWord, _cRegex, _cName }) v.CheckChanged += _CheckedChanged;
 	}
 
 	#region control events
@@ -417,6 +416,7 @@ class PanelFind : UserControl {
 				//}
 			}
 
+			App.Model.EditGoBack.RecordNext();
 			doc.zSelect(false, i, to, true);
 		}
 	}
@@ -529,7 +529,10 @@ class PanelFind : UserControl {
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
-				timer.after(10, _ => doc.zSelect(true, from, to, true));
+				timer.after(10, _ => {
+					App.Model.EditGoBack.RecordNext();
+					doc.zSelect(true, from, to, true);
+				});
 				//info: scrolling works better with async when now opened the file
 			});
 

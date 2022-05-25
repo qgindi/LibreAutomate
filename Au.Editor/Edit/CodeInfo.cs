@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Windows.Input;
 using System.Windows;
 using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 static class CodeInfo {
 	internal static readonly CiCompletion _compl = new();
@@ -390,6 +391,7 @@ static class CodeInfo {
 				document = _document;
 				return true;
 			}
+			perf.first();
 
 			if (_solution != null && !code.Eq(meta.start..meta.end, _metaText)) {
 				_Uncache();
@@ -411,43 +413,116 @@ static class CodeInfo {
 			}
 
 			document = _document = _solution.GetDocument(_documentId);
-			if (document == null) return false;
 
+			//perf.next();
 			_ModifyTLS();
+
+			//perf.next();
+			//var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+			//perf.nw();
 
 			return true;
 		}
 
-		//Workaround for Roslyn bug: in some cases the CompilationUnitSyntax has a child MethodDeclarationSyntax. It breaks intellisense.
-		//	Example code in TLS, not inside a { block }:
-		//		kkk
-		//		print.it(1);
-		//	Roslyn thinks that 'kkk print.it(1);' is a MethodDeclarationSyntax. But 'kkk' is a new statement with missing ;.
-		//	Workaround: add ;.
-		//	Need to replace a whitespace character. Can't just insert, then all positions (styling, errors, etc) don't match positions in code editor.
-		//	Hope Roslyn in the future will support TLS better.
+		//Workarounds for Roslyn bugs that break intellisense.
 		void _ModifyTLS() {
 			var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-			var m = cu.Members.FirstOrDefault(o => o is MethodDeclarationSyntax); if (m == null) return;
-			//CiUtil.PrintNode(m);
-			var span = m.Span;
-			var s = "{" + code[span.Start..span.End] + "}"; //no bug if inside any { }
-			var tree = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview), "", Encoding.UTF8);
-			var cu2 = tree.GetCompilationUnitRoot();
-			var a = ((cu2.Members[0] as GlobalStatementSyntax).Statement as BlockSyntax).Statements;
-			//foreach (var v in a) CiUtil.PrintNode(v);
-			if (a.Count != 2) return;
+			var members = cu.Members;
 
-			var tok2 = a[0].GetLastToken(true);
-			if (!(tok2.IsKind(SyntaxKind.SemicolonToken) && tok2.IsMissing)) return;
+			//TLS code like this, not in a { block }:
+			//		kkk
+			//		print.it(1);
+			//	Roslyn thinks that 'kkk print.it(1);' is a MethodDeclarationSyntax (directly in CompilationUnitSyntax).
+			var met = members.FirstOrDefault(o => o is MethodDeclarationSyntax);
+			if (met != null) {
+				if (_Fix(met)) return;
+			}
 
-			int i = span.Start + tok2.Span.Start - 2;
-			if (code[i] != '\n') return; //else probably the next statement is in the same line, and Roslyn parses differently
-			s = code.ReplaceAt(i, 1, ";");
-			//print.it(s);
-			_solution = _solution.WithDocumentText(_documentId, SourceText.From(s, Encoding.UTF8));
-			document = _document = _solution.GetDocument(_documentId);
+			//TLS code like this, not in a { block }:
+			//		int i=5
+			//		print.it(1);
+			//	Roslyn thinks that 'int i=5 print.it(1' is one statement, and next is ';'.
+			if (members.FirstOrDefault() is GlobalStatementSyntax g0) {
+				foreach (var d in cu.GetDiagnostics()) {
+					//print.it(d);
+					var ec = (ErrorCode)d.Code;
+					if (ec != ErrorCode.ERR_SemicolonExpected) continue; //not tested other ERR_SemicolonX
+					int iErr = d.Location.SourceSpan.Start;
+					if (members.FirstOrDefault(o => o.FullSpan.ContainsOrTouches(iErr)) is GlobalStatementSyntax ge) {
+						foreach (var v in ge.GetDiagnostics()) {
+							//print.it((ErrorCode)v.Code);
+							if (v.Code == d.Code) break; //v==d does not work
+							if ((ErrorCode)v.Code != ErrorCode.ERR_SyntaxError) continue;
+							if (v.GetMessage(CultureInfo.InvariantCulture) != "Syntax error, ',' expected") continue;
+							if (_Fix(ge)) return;
+						}
+					}
+				}
+			}
+
+			bool _Fix(SyntaxNode node) {
+				SyntaxNode node2 = null;
+				int iNode = 0;
+				if (node is GlobalStatementSyntax gss) {
+					//span ends in the middle of the statement. Include fullspan of next node.
+					iNode = cu.Members.IndexOf(gss);
+					if (iNode + 1 < cu.Members.Count) node2 = cu.Members[iNode + 1];
+				}
+				var span = TextSpan.FromBounds(node.SpanStart, (node2 ?? node).FullSpan.End);
+
+				//to get correct nodes, parse that code inside { } block
+				var s = "{\n" + code[span.Start..span.End] + "}";
+				//print.it($"'{s}'");
+				var tree = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview), "", Encoding.UTF8);
+				var cu2 = tree.GetCompilationUnitRoot();
+				if (cu2.ContainsDirectives) return false;
+				var block = (cu2.Members[0] as GlobalStatementSyntax).Statement as BlockSyntax;
+				var a = block.Statements;
+				//foreach (var v in a) CiUtil.PrintNode(v);
+				if (a.Count < 2) return false;
+
+				var tok2 = a[0].GetLastToken(true);
+				if (!(tok2.IsKind(SyntaxKind.SemicolonToken) && tok2.IsMissing)) return false;
+
+				//put each node into a GlobalStatementSyntax
+				var a2 = new GlobalStatementSyntax[a.Count];
+				for (int i = 0; i < a.Count; i++) {
+					var n = a[i];
+					if (i == 0) n = n.WithLeadingTrivia(node.GetLeadingTrivia());
+					a2[i] = SyntaxFactory.GlobalStatement(n);
+				}
+
+				var cu3 = cu.ReplaceNode(node, a2);
+				if (node2 != null) cu3 = cu3.RemoveNode(cu3.Members[iNode + a2.Length], 0);
+				//or this. Same speed.
+				//members = members.RemoveAt(iNode);
+				//if (node2 != null) members = members.RemoveAt(iNode);
+				//members = members.InsertRange(iNode, a2);
+				//var cu3 = cu.WithMembers(members);
+
+				//print.it("----"); foreach (var v in cu3.Members) CiUtil.PrintNode(v);
+
+				_solution = _solution.WithDocumentSyntaxRoot(_documentId, cu3);
+				document = _document = _solution.GetDocument(_documentId);
+				return true;
+			}
 		}
+
+		//this would be slower, because creates tree 2 times.
+		//	And would need to somehow make { token span length = 0. Not tested.
+		//	This code is just to test speed.
+		//void _ModifyTLS2() {
+		//	var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		//	var members = cu.Members;
+		//	perf.next();
+		//	var s = "{\n" + code + "\n}";
+
+		//	//var d = document.WithText(SourceText.From(s, Encoding.UTF8));
+		//	//var cu2=cu.With
+
+		//	_solution = _solution.WithDocumentText(_documentId, SourceText.From(s, Encoding.UTF8));
+		//	document = _document = _solution.GetDocument(_documentId);
+		//}
 	}
 
 	/// <summary>

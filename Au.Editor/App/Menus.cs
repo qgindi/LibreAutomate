@@ -214,15 +214,6 @@ static class Menus {
 			[Command(checkable = true, image = "*Material.TooltipImageOutline #99BF00")]
 			public static void Images_in_code() { SciCode.ToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
-
-		[Command]
-		public static class Insert {
-			[Command(image = "*Material.CommentEditOutline #9F5300")]
-			public static void Add_file_description() { InsertCode.AddFileDescription(); }
-
-			[Command(image = "*Codicons.SymbolClass #9F5300")]
-			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
-		}
 	}
 
 	[Command(target = "Edit")]
@@ -243,7 +234,7 @@ static class Menus {
 		[Command]
 		public static void Quick_capturing() { QuickCapture.Info(); }
 
-		[Command(separator = true, keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #008EEE")]
+		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #008EEE")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 
 		[Command(underlined: 'x', keysText = "Ctrl+Space in string")]
@@ -251,6 +242,27 @@ static class Menus {
 
 		[Command(underlined: 'A')]
 		public static void Windows_API() { new DWinapi().Show(); }
+
+		[Command(separator = true)]
+		public static class Add {
+			[Command(image = "*Material.CommentEditOutline #9F5300")]
+			public static void Add_file_description() { InsertCode.AddFileDescription(); }
+
+			[Command(image = "*Codicons.SymbolClass #9F5300")]
+			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
+		}
+
+		[Command]
+		public static class Generate {
+			[Command(keys = "Ctrl+Shift+D")]
+			public static void Create_delegate() { InsertCode.CreateDelegate(); }
+
+			[Command(tooltip = "Implement interface or abstract class")]
+			public static void Implement_interface() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: false); }
+
+			[Command(tooltip = "Implement interface, private functions")]
+			public static void Implement_interface_explicitly() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: true); }
+		}
 	}
 
 	[Command(target = "Edit")]

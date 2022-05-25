@@ -25,6 +25,8 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
+//using Microsoft.CodeAnalysis.Options;
+//using Microsoft.CodeAnalysis.Formatting;
 
 
 /*
@@ -52,9 +54,13 @@ static unsafe class Test {
 	//		print.it(html);
 	//	}
 
+
 	public static void FromMenubar() {
 		print.clear();
 
+		InsertCode.CreateDelegate();
+		//var f = App.Model.FindCodeFile("InsertCode");
+		//CompileRun.CompileAndRun(true, f, runFromEditor: true);
 
 		//InsertCode.Statements("var s = \"\"\"\r\ntext\r\ntext\r\n\"\"\";");
 
@@ -130,6 +136,24 @@ static unsafe class Test {
 
 		//Cpp.Cpp_Test();
 	}
+
+	//static void TestFormatting() {
+	//	//works, but:
+	//	//	Moves { to new line. Don't know how to change.
+	//	//	Removes tabs from empty lines.
+
+	//	if (!CodeInfo.GetContextAndDocument(out var k)) return;
+	//	var cu = k.document.GetSyntaxTreeAsync().Result.GetCompilationUnitRoot();
+
+	//	var workspace = k.document.Project.Solution.Workspace;
+	//	var o = workspace.Options;
+	//	o = o.WithChangedOption(FormattingOptions.UseTabs, "C#", true);
+	//	//o = o.WithChangedOption(FormattingOptions.SmartIndent, "C#", FormattingOptions.IndentStyle.Block);
+	//	//Microsoft.CodeAnalysis.Formatting.
+
+	//	var f = Microsoft.CodeAnalysis.Formatting.Formatter.Format(cu, workspace, o);
+	//	print.it(f);
+	//}
 
 	//static void TestScripting() {
 	//	string code = @"if(!keys.isScrollLock) print.it(""test"");";
