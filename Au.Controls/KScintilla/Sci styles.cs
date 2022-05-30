@@ -123,32 +123,6 @@ namespace Au.Controls
 
 		#endregion
 
-		#region spec styles
-
-		//these SCI_ are deprecated. Instead use 
-		//public void zSelectionForeColor(bool use, ColorInt color) {
-		//	Call(SCI_SETSELFORE, use, color.ToBGR());
-		//}
-
-		//public void zSelectionBackColor(bool use, ColorInt color, int alpha = 256) {
-		//	Call(SCI_SETSELBACK, use, color.ToBGR());
-		//	Call(SCI_SETSELALPHA, alpha);
-		//}
-
-		//public void zCaretLineColor(bool use, ColorInt color, int alpha = 256) {
-		//	Call(SCI_SETCARETLINEBACK, color.ToBGR());
-		//	Call(SCI_SETCARETLINEBACKALPHA, alpha);
-		//	Call(SCI_SETCARETLINEVISIBLE, use);
-		//}
-
-		//we set it in ctor and don't need to change
-		//public void zCaretWidth(int value)
-		//{
-		//	Call(SCI_SETCARETWIDTH, value);
-		//}
-
-		#endregion
-
 		#region margins
 
 		public void zSetMarginType(int margin, int SC_MARGIN_) {
@@ -212,85 +186,6 @@ namespace Au.Controls
 			int x = 0;
 			for (int i = 0; i < margin; i++) x += Call(SCI_GETMARGINWIDTHN, i);
 			return (x, x + Call(SCI_GETMARGINWIDTHN, margin));
-		}
-
-		#endregion
-
-		#region lexer
-
-		/// <summary>
-		/// Sets lexer for a language.
-		/// Does not set keywords, options etc. Just creates (or gets cached) and sets lexer object, and clears styles 0-31.
-		/// For C# instead use <see cref="zSetLexerCsharp"/> (it sets keywords etc).
-		/// Does not check whether already using that lexer.
-		/// </summary>
-		/// <param name="lang">Language. See SCI_GETLEXERLANGUAGE doc. Use null for no lexer.</param>
-		/// <returns>false if <i>lang</i> unknown.</returns>
-		public bool zSetLexer(string lang) {
-			nint il = 0;
-			if (lang != null) {
-				//note: cannot cache lexer objects. It seems Scintilla deletes old object, eg when sets new; with old object crashes. Not too slow.
-				il = Sci_CreateLexer(Convert2.Utf8Encode(lang)); //FUTURE: test other languages
-				if (il == 0) { print.it("There is no lexer for " + lang); return false; }
-			}
-			zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
-			Call(SCI_SETILEXER, 0, il);
-			return true;
-		}
-
-		public void zSetLexerCsharp(/*ColorInt? codeBackColor = null*/) {
-			//There is no C# lexer, but can use the "cpp" lexer.
-			//	Use separate lexer objects for C# and other C-like languages, because keywords and options etc are different.
-			zSetLexer("cpp");
-
-			//if (codeBackColor != null) for (int i = 0; i < STYLE_DEFAULT; i++) zStyleBackColor(i, codeBackColor.Value);
-
-			const int colorComment = 0x60A000;
-			const int colorString = 0xA07040;
-			const int colorNumber = 0x804000;
-			const int colorDoc = 0x606060;
-			zStyleForeColor((int)LexCppStyles.SCE_C_COMMENT, colorComment); //  /*...*/
-			zStyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINE, colorComment); //  //...
-			zStyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINEDOC, colorDoc); //  ///...
-			zStyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOC, colorDoc); //  /**...*/
-			zStyleForeColor((int)LexCppStyles.SCE_C_CHARACTER, colorNumber);
-			zStyleForeColor((int)LexCppStyles.SCE_C_NUMBER, colorNumber);
-			zStyleForeColor((int)LexCppStyles.SCE_C_STRING, colorString);
-			zStyleForeColor((int)LexCppStyles.SCE_C_VERBATIM, colorString); //@"string"
-			zStyleForeColor((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, 0xB776FB);
-			//zStyleForeColor((int)LexCppStyles.SCE_C_OPERATOR, 0x80); //+,;( etc. Let it be black.
-			zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSOR, 0xFF8000);
-			zStyleForeColor((int)LexCppStyles.SCE_C_WORD, 0xFF); //keywords
-			zStyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x00C000); zStyleBackColor((int)LexCppStyles.SCE_C_TASKMARKER, 0);
-			//zStyleForeColor((int)LexCppStyles.SCE_C_WORD2, 0x80F0); //functions. Not using here.
-			//zStyleForeColor((int)LexCppStyles.SCE_C_GLOBALCLASS, 0xC000C0); //types. Not using here.
-
-			//zStyleForeColor((int)LexCppStyles.SCE_C_USERLITERAL, ); //C++, like 10_km
-			//zStyleForeColor((int)LexCppStyles.SCE_C_STRINGRAW, ); //R"string"
-			//zStyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOCKEYWORD, ); //supports only JavaDoc and Doxygen
-			//zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENT, ); //?
-			//zStyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENTDOC, ); //?
-
-			zSetStringString(SCI_SETPROPERTY, "styling.within.preprocessor\0" + "1");
-			zSetStringString(SCI_SETPROPERTY, "lexer.cpp.allow.dollars\0" + "0");
-			zSetStringString(SCI_SETPROPERTY, "lexer.cpp.track.preprocessor\0" + "0"); //default 1
-			zSetStringString(SCI_SETPROPERTY, "lexer.cpp.escape.sequence\0" + "1");
-			//zSetStringString(SCI_SETPROPERTY, "lexer.cpp.verbatim.strings.allow.escapes\0" + "1"); //expected to style "", but it does nothing
-
-
-			//print.it(zGetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
-			//Primary keywords and identifiers
-			//Secondary keywords and identifiers
-			//Documentation comment keywords
-			//Global classes and typedefs
-			//Preprocessor definitions
-			//Task marker and error marker keywords
-			zSetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while add alias ascending async await by descending dynamic equals from get global group into join let nameof on orderby partial remove select set value var when where yield unmanaged notnull record init nint nuint not and or");
-			//zSetString(SCI_SETKEYWORDS, 1, "Function"); //functions. Not using here.
-			//zSetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
-			//zSetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
-			//zSetString(SCI_SETKEYWORDS, 4, "DEBUG TRACE"); //if used with #if, lexer knows which #if/#else branch to style. Not using here (see "lexer.cpp.track.preprocessor").
-			zSetString(SCI_SETKEYWORDS, 5, "TO" + "DO SHOULD" + "DO CON" + "SIDER FU" + "TURE B" + "UG HA" + "CK");
 		}
 
 		#endregion

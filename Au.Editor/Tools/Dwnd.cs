@@ -325,9 +325,9 @@ class Dwnd : KDialogWindow {
 
 		int iFunc = _cbFunc.SelectedIndex;
 		if (!forTest && iFunc is 1 or 2) {
-			var p = TUtil.PathInfo.FromWindow(_wnd);
-			if (p != null) {
-				var s1 = "run.it(" + p.GetCode().path + ");";
+			var pi = TUtil.PathInfo.FromWindow(_wnd);
+			if (pi != null) {
+				var s1 = pi.FormatCode(1);
 				if (iFunc == 1) f.orRunW = s1; else f.andRunW = s1;
 			}
 		}

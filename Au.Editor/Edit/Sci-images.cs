@@ -185,7 +185,6 @@ partial class SciCode {
 			}
 
 			//file path or URL
-			if (s.Length < 8) return default;
 			//string expanded = null;
 			//if (s[0] == '%') {
 			//	expanded = pathname.expand(s.ToString(), strict: false);
@@ -193,20 +192,24 @@ partial class SciCode {
 			//	s = expanded;
 			//}
 			if (pathname.isFullPath(s, orEnvVar: true)) { //is image file path?
-				if (s[^4] == '.') {
-					var ext = s[^3..];
-					if (ext.Eqi("png") || ext.Eqi("gif") || ext.Eqi("jpg")) return ImageType.PngGifJpg;
-					if (ext.Eqi("bmp")) return ImageType.Bmp;
-					if (ext.Eqi("ico")) return ImageType.Ico;
-					if (ext.Eqi("cur") || ext.Eqi("ani")) return ImageType.Cur;
-				} else if (s[^1].IsAsciiDigit() && s.Contains(',')) { //can be like C:\x.dll,10
-					if (icon.parsePathIndex(s.ToString(), out _, out _)) return ImageType.IconLib;
-				}
-			} else if (pathname.isUrl(s)) {
-				//display icon only if it is a known frequently used protocol that can be used with run.it(). Avoid non-protocol prefixes such as "web:LINK".
-				//if (!(s.Starts("http:") || s.Starts("https:") || s.Starts("mailto:") || s.Starts("shell:"))) return default;
-				if (!s.Starts("shell:")) return default; //don't display http etc, it's not useful
-			} else if (!s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return default;
+				if (s.Length >= 8) { //can be image file. Else can be eg "C:\" or "C:\A".
+					if (s[^4] == '.') {
+						var ext = s[^3..];
+						if (ext.Eqi("png") || ext.Eqi("gif") || ext.Eqi("jpg")) return ImageType.PngGifJpg;
+						if (ext.Eqi("bmp")) return ImageType.Bmp;
+						if (ext.Eqi("ico")) return ImageType.Ico;
+						if (ext.Eqi("cur") || ext.Eqi("ani")) return ImageType.Cur;
+					} else if (s[^1].IsAsciiDigit() && s.Contains(',')) { //can be like C:\x.dll,10
+						if (icon.parsePathIndex(s.ToString(), out _, out _)) return ImageType.IconLib;
+					}
+				} else if (s.Length < 4 && s[1] != ':') return default; //eg "\\"
+			} else {
+				if (s.Length < 4) return default;
+				if (pathname.isUrl(s)) {
+					//display icon only for known protocols that can be used with run.it(). Ignore "web:LINK" etc and protocols with common icon (eg "http:").
+					if (!(s.Starts("shell:") || s.Starts("ms-settings:"))) return default;
+				} else if (!s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return default;
+			}
 
 			return ImageType.ShellIcon;
 		}

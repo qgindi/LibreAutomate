@@ -76,7 +76,7 @@ class PanelRecipe : DockPanel {
 		//		Can accidentally damage real 'if' code. I didn't use it; it's better to test codes in other script.
 
 		StringBuilder usings = null;
-		var ac = new List<(string code, int offset8)>();
+		var ac = new List<(string code, int offset8, int len8)>();
 		int iCode = 0;
 		foreach (var m in code.RxFindAll(@"(?ms)^(?:///(?!=/)\N*\R*)+|^/\*\*.+?\*/\R*")) {
 			//print.it(m);
@@ -106,12 +106,12 @@ class PanelRecipe : DockPanel {
 			if (end == start) return;
 			var s = code[start..end];
 			//print.it("CODE"); print.it(s);
-
 			int n1 = _c.zLineCount, offset8 = _c.zLen8 + 2;
-			_c.zAppendText("\r\n" + s + "\r\n", andRN: true, scroll: false, ignoreTags: true);
+			var s8 = Encoding.UTF8.GetBytes("\r\n" + s + "\r\n\r\n");
+			_c.zAppendText8(s8, scroll: false);
 			int n2 = _c.zLineCount - 2;
 			for (int i = n1; i < n2; i++) _c.Call(SCI_MARKERADD, i, 0);
-			ac.Add((s, offset8));
+			ac.Add((s, offset8, s8.Length - 6));
 
 			foreach (var m in s.RxFindAll(@"(?m)^using [\w\.]+;")) {
 				(usings ??= new()).AppendLine(m.Value);
@@ -121,24 +121,14 @@ class PanelRecipe : DockPanel {
 		//code styling
 		if (ac != null) {
 			code = string.Join("\r\n", ac.Select(o => o.code));
-			Debug.Assert(code.IsAscii()); //never mind: does not support non-ASCII
-			var b = new byte[code.Length];
-			var document = CiUtil.CreateDocumentFromCode(code, needSemantic: true);
-			var semo = document.GetSemanticModelAsync().Result;
-			var a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, code.Length)).Result;
-			foreach (var v in a) {
-				//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
-				EToken style = CiStyling.StyleFromClassifiedSpan(v, semo);
-				if (style == EToken.None) continue;
-				for (int i = v.TextSpan.Start; i < v.TextSpan.End; i++) b[i] = (byte)style;
-			}
+			var styles8 = CiUtil.GetScintillaStylingBytes(code);
 			unsafe {
-				fixed (byte* bp = b) {
+				fixed (byte* bp = styles8) {
 					int bOffset = 0;
 					foreach (var v in ac) {
 						_c.Call(SCI_STARTSTYLING, v.offset8);
-						_c.Call(SCI_SETSTYLINGEX, v.code.Length, bp + bOffset);
-						bOffset += v.code.Length + 2; //+2 for string.Join("\r\n"
+						_c.Call(SCI_SETSTYLINGEX, v.len8, bp + bOffset);
+						bOffset += v.len8 + 2; //+2 for string.Join("\r\n"
 					}
 				}
 			}

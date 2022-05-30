@@ -128,7 +128,7 @@ namespace Au {
 		/// Adds button.
 		/// Same as <see cref="this[string, MTImage, int]"/>.
 		/// </summary>
-		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 		/// <param name="click">Action called when the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -136,7 +136,7 @@ namespace Au {
 		/// More properties can be specified later (set properties of the returned <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 		/// </remarks>
 		public ToolbarItem Add(string text, Action<ToolbarItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0) {
-			var item = new ToolbarItem();
+			var item = new ToolbarItem(TBItemType.Button);
 			_Add(item, text, click, image, l_);
 			return item;
 		}
@@ -145,7 +145,7 @@ namespace Au {
 		/// Adds button.
 		/// Same as <see cref="Add(string, Action{ToolbarItem}, MTImage, int)"/>.
 		/// </summary>
-		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
 		/// <value>Action called when the button clicked.</value>
@@ -175,7 +175,7 @@ namespace Au {
 		/// <summary>
 		/// Adds button with drop-down menu.
 		/// </summary>
-		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 		/// <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -191,7 +191,7 @@ namespace Au {
 		/// ]]></code>
 		/// </example>
 		public ToolbarItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
-			var item = new ToolbarItem { type = TBItemType.Menu };
+			var item = new ToolbarItem(TBItemType.Menu);
 			_Add(item, text, menu, image, l_);
 			return item;
 		}
@@ -199,7 +199,7 @@ namespace Au {
 		/// <summary>
 		/// Adds button with drop-down menu.
 		/// </summary>
-		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
+		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 		/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l_">[](xref:caller_info)</param>
@@ -214,7 +214,7 @@ namespace Au {
 		/// ]]></code>
 		/// </example>
 		public ToolbarItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
-			var item = new ToolbarItem { type = TBItemType.Menu };
+			var item = new ToolbarItem(TBItemType.Menu);
 			_Add(item, text, menu, image, l_);
 			return item;
 		}
@@ -225,7 +225,7 @@ namespace Au {
 		public ToolbarItem Separator() {
 			int i = _a.Count - 1;
 			if (i < 0 || _a[i].IsGroup_) throw new InvalidOperationException("first item is separator");
-			var item = new ToolbarItem { type = TBItemType.Separator };
+			var item = new ToolbarItem(TBItemType.Separator);
 			_Add(item, null, null, default, 0);
 			return item;
 		}
@@ -235,7 +235,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
 		public ToolbarItem Group(string text = null) {
-			var item = new ToolbarItem { type = TBItemType.Group };
+			var item = new ToolbarItem(TBItemType.Group);
 			_Add(item, text, null, default, 0);
 			return item;
 		}

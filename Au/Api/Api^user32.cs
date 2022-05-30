@@ -1489,11 +1489,11 @@ namespace Au.Types {
 		//static extern int DrawTextExW(IntPtr hdc, char* lpchText, int cchText, ref RECT lprc, TFFlags format, DRAWTEXTPARAMS* lpdtp);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		static extern int DrawTextExW(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, TFFlags format, void* lpdtp);
+		static extern int DrawTextExW(IntPtr hdc, char* lpchText, int cchText, ref RECT lprc, TFFlags format, void* lpdtp);
 
-		internal static int DrawText(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, TFFlags format) {
+		internal static int DrawText(IntPtr hdc, ReadOnlySpan<char> s, ref RECT lprc, TFFlags format) {
 			if (format.Has(TFFlags.MODIFYSTRING)) throw new NotSupportedException("MODIFYSTRING");
-			return DrawTextExW(hdc, lpchText, cchText, ref lprc, format, null);
+			fixed (char* p = s) return DrawTextExW(hdc, p, s.Length, ref lprc, format, null);
 
 			//DRAWTEXTPARAMS doc incorrect. Left nad right margin fields are in pixels, not average char widths. Not tested tab width.
 		}

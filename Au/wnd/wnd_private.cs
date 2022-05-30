@@ -1,7 +1,5 @@
-namespace Au
-{
-	public unsafe partial struct wnd
-	{
+namespace Au {
+	public unsafe partial struct wnd {
 		/// <summary>
 		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
 		/// </summary>
@@ -28,7 +26,7 @@ namespace Au
 		static wnd _WindowsStoreAppFrameChild(wnd w) {
 			bool retry = false;
 			string name;
-			g1:
+		g1:
 			if (!osVersion.minWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
 			wnd c = Api.FindWindowEx(w, default, "Windows.UI.Core.CoreWindow", null);
 			if (!c.Is0) return c;
@@ -58,61 +56,12 @@ namespace Au
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
 		//}
 
-		internal static partial class Internal_
-		{
-			/// <summary>
-			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-			/// Returns 1 if gets user model id, 2 if gets path, 0 if fails.
-			/// </summary>
-			/// <param name="w">A top-level window.</param>
-			/// <param name="appId">Receives app ID.</param>
-			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
-			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
-			[SkipLocalsInit]
-			internal static int GetWindowsStoreAppId(wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
-				appId = null;
-
-				if (osVersion.minWin8) {
-					switch (w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
-					case 1:
-						using (var p = Handle_.OpenProcess(w)) {
-							if (!p.Is0) {
-								int na = 1024; var b = stackalloc char[na];
-								if (0 == Api.GetApplicationUserModelId(p, ref na, b) && na > 1) appId = new(b, 0, na - 1);
-							}
-						}
-						break;
-					case 2 when osVersion.minWin10:
-						if (0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
-							if (0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
-								if (v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
-								v.Dispose();
-							}
-							Marshal.ReleaseComObject(ps);
-						}
-						break;
-					}
-
-					if (appId != null) {
-						if (prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
-						return 1;
-					}
-				}
-
-				if (getExePathIfNotWinStoreApp) {
-					appId = w.ProgramPath;
-					if (appId != null) return 2;
-				}
-
-				return 0;
-			}
-
+		internal static partial class Internal_ {
 			/// <summary>
 			/// Calls API SetProp/GetProp to set/get misc flags for a window.
 			/// Currently unused.
 			/// </summary>
-			internal static class WinFlags
-			{
+			internal static class WinFlags {
 				static readonly ushort s_atom = Api.GlobalAddAtom("Au.WFlags_"); //atom is much faster than string
 																				 //note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
 
@@ -133,8 +82,7 @@ namespace Au
 				}
 
 				[Flags]
-				internal enum WFlags_
-				{
+				internal enum WFlags_ {
 					//these were used by elm.
 					//ChromeYes = 1,
 					//ChromeNo = 2,
@@ -224,8 +172,7 @@ namespace Au
 			/// Holds ArrayBuilder_ or IEnumerator or single wnd or none.
 			/// Must be disposed if it is ArrayBuilder_ or IEnumerator, else disposing is optional.
 			/// </summary>
-			internal struct WndList_ : IDisposable
-			{
+			internal struct WndList_ : IDisposable {
 				internal enum ListType { None, ArrayBuilder, Enumerator, SingleWnd }
 
 				ListType _t;

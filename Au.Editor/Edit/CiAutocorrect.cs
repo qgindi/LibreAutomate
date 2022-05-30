@@ -218,7 +218,7 @@ class CiAutocorrect {
 				var (ind1, _) = _GetLineInd(ip);
 				var (ind2, end2) = _GetLineInd(i);
 				if (ind1 == 0 || ind2 == --ind1) return;
-				c.doc.zReplaceRange(true, i, end2, new string('\t', ind1), moveCurrentPos: true);
+				c.doc.zReplaceRange(true, i, end2, new string('\t', ind1));
 				c.ignoreChar = true;
 				return;
 

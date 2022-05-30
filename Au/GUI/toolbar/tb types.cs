@@ -11,13 +11,19 @@ namespace Au
 		public class ToolbarItem : MTItem
 		{
 			internal SIZE textSize;
-			internal TBItemType type;
+			internal readonly TBItemType type;
+			internal bool textAlways;
 			internal popupMenu menu;
+
+			internal ToolbarItem(TBItemType type) {
+				this.type = type;
+				textAlways = type == TBItemType.Group;
+			}
 
 			internal bool IsSeparator_ => type == TBItemType.Separator;
 			internal bool IsGroup_ => type == TBItemType.Group;
 			internal bool IsMenu_ => type == TBItemType.Menu;
-			internal bool IsSeparatorOrGroup_ => type is (TBItemType.Separator or TBItemType.Group);
+			internal bool IsSeparatorOrGroup_ => type is TBItemType.Separator or TBItemType.Group;
 
 			///
 			public TBItemType ItemType => type;

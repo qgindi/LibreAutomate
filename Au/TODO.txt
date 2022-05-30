@@ -6,7 +6,6 @@ computer:
 	getCpuUsage, getDiskUsage.
 process:
 	getCpuUsage, getStartupTime (.NET Process has it?).
-IntCheckConnection, IntGetFile (now recipe exists).
 outb, DetectStringEncoding.
 
 Review functions/classes in QM2 Archive. Now reviewed all in qm.exe and System.

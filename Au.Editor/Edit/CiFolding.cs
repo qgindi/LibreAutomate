@@ -428,8 +428,8 @@ partial class SciCode {
 				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?").Bind(1, _fn.Id);
 				if (p.Step()) {
 					int cp = zCurrentPos8;
-					int top = p.GetInt(0);
-					int pos = p.GetInt(1);
+					int top = Math.Max(0, p.GetInt(0));
+					int pos = Math.Clamp(p.GetInt(1), 0, zLen8);
 					var a = p.GetList<int>(2);
 					if (a != null) {
 						_savedLinesMD5 = _Hash(a);
@@ -445,11 +445,30 @@ partial class SciCode {
 						if (os != _EOpenState.Reopen) {
 							db.Execute("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,0,0,?)", p => p.Bind(1, _fn.Id).Bind(2, a));
 						} else if (cp == 0) {
-							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
-							if (pos > 0 && pos <= zLen8) {
+							_savedTop = top;
+							_savedPos = pos;
+
+							//workaround for:
+							//	When reopening a non-first document, scrollbar position remains at the top, although scrolls the view.
+							//	Scintilla calls SetScrollInfo(pos), but it does not work because still didn't call SetScrollInfo(max).
+							//	Another possible workaround would be a timer, but even 50 ms is too small.
+							Call(SCI_SETVSCROLLBAR, false);
+							Call(SCI_SETVSCROLLBAR, true);
+
+							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, Call(SCI_VISIBLEFROMDOCLINE, top));
+							if (pos <= zLen8) {
 								App.Model.EditGoBack.OnRestoringSavedPos();
-								zCurrentPos8 = _savedPos = pos;
+								zGoToPos(false, pos);
 							}
+
+							//workaround for: in wrap mode SCI_SETFIRSTVISIBLELINE sets wrong line because still not wrapped.
+							//	Don't need when saving document line, not visible line.
+							//if (top > 0 && 0 != Call(SCI_GETWRAPMODE)) {
+							//	timer.after(10, _ => {
+							//		if (this == Panels.Editor.ZActiveDoc && zCurrentPos8 == pos)
+							//			Call(SCI_SETFIRSTVISIBLELINE, top);
+							//	});
+							//}
 						}
 					}
 				}
@@ -483,6 +502,7 @@ partial class SciCode {
 		var hash = _Hash(a);
 		//p1.Next();
 		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = zCurrentPos8;
+		if (top > 0) top = Call(SCI_DOCLINEFROMVISIBLE, top); //save document line, because visible line changes after changing wrap mode or resizing in wrap mode etc. Never mind: the top visible line may be not at the start of the document line.
 		if (top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
 			try {
 				//using var p = db.Statement("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,?,?,?)");

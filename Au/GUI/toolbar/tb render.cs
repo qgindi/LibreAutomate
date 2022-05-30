@@ -58,6 +58,11 @@ namespace Au
 		/// <summary>
 		/// Display button text. Default true. If false, displays text in tooltips, and only displays first 2 characters for buttons without image.
 		/// </summary>
+		/// <remarks>
+		/// A button can override this property:
+		/// - To never display text, let its text be empty, like <c>""</c> or <c>"|Tooltip"</c>.
+		/// - To always display text, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.
+		/// </remarks>
 		public bool DisplayText {
 			get => _sett.dispText;
 			set {
@@ -152,7 +157,7 @@ namespace Au
 					int len = _TextDispLen(b);
 					if (len != 0) {
 						dc ??= new FontDC_(font = Font.CreateFont(_dpi));
-						b.textSize = dc.Measure(b.Text, len, c_tff);
+						b.textSize = dc.MeasureDT(b.Text.AsSpan(0, len), c_tff);
 						b.textSize.height++;
 					} else {
 						b.textSize = default;
@@ -168,7 +173,7 @@ namespace Au
 		int _TextDispLen(ToolbarItem b) {
 			var s = b.Text;
 			if (s.NE()) return 0;
-			if (DisplayText || b.IsGroup_) return s.Length;
+			if (DisplayText || b.textAlways) return s.Length;
 			if (b.HasImage_) return 0;
 			return Math.Min(s.Length, 2); //info: 2 is ok for surrogate
 		}
@@ -345,9 +350,9 @@ namespace Au
 							r = new(b.rect.left + m.bBorder + m.imagePaddingX * 2 + m.ImageEtc(b, vert), b.rect.top + m.bBorder + m.textPaddingY, b.textSize.width, b.textSize.height);
 						}
 						r.right = Math.Min(r.right, b.rect.right - m.bBorder * 2);
-						//				if(!b.Text.Contains('\n')) tff|=TFFlags.SINGLELINE|TFFlags.VCENTER;
+						//if(!b.Text.Contains('\n')) tff|=TFFlags.SINGLELINE|TFFlags.VCENTER;
 						Api.SetTextColor(dc, textColor);
-						Api.DrawText(dc, b.Text, _TextDispLen(b), ref r, tff);
+						Api.DrawText(dc, b.Text.AsSpan(0, _TextDispLen(b)), ref r, tff);
 					}
 				}
 			}

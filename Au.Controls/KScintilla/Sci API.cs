@@ -35,8 +35,8 @@ namespace Au.Controls
 		[DllImport("Scintilla")]
 		public static extern void Sci_GetVisibleRange(nint sci, out Sci_VisibleRange r);
 
-		[DllImport("Lexilla", EntryPoint = "CreateLexer")]
-		public static extern nint Sci_CreateLexer(byte[] lexer);
+		//[DllImport("Lexilla", EntryPoint = "CreateLexer")]
+		//public static extern nint Sci_CreateLexer(byte[] lexer);
 
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData

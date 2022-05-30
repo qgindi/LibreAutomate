@@ -168,7 +168,7 @@ static class TUtil {
 		}
 		return s;
 	}
-	
+
 	public static string ArgsFromWndFindCode(string wndFind) {
 		if (wndFind.RxMatch(@"\bwnd.find\((?:-?\d+, )?(.+)\);", 1, out RXGroup g)) return g.Value;
 		return null;
@@ -207,7 +207,7 @@ static class TUtil {
 
 				if (orRun) {
 					b.Append(" = wnd.findOrRun(");
-				} else if(andRun) {
+				} else if (andRun) {
 					b.Append(" = wnd.runAndFind(() => { ").Append(andRunW).Append(" }, ");
 					b.AppendWaitTime(waitW, orThrowW);
 				} else {
@@ -487,10 +487,13 @@ static class TUtil {
 	public class PathInfo {
 		public readonly string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
 		readonly string _name, _name2, _args;
+		readonly bool _elevated;
 
-		public PathInfo(string path) {
+		public PathInfo(string path, string name = null, string args = null, bool elevated = false) {
 			filePath = path;
-			_name = pathname.getNameNoExt(path);
+			_name = name ?? _Name(path);
+			_args = args;
+			_elevated = elevated;
 			if (path.Ends(".lnk", true)) {
 				try {
 					var g = shortcutFile.open(path);
@@ -499,9 +502,10 @@ static class TUtil {
 						using var pidl = Pidl.FromString(target);
 						_name2 = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 					} else {
-						_args = g.Arguments;
-						if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))
-							_name2 = pathname.getNameNoExt(target);
+						_args ??= g.Arguments;
+						if (name == null)
+							if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))
+								_name2 = _Name(target);
 					}
 					lnkPath = path;
 					filePath = target;
@@ -517,31 +521,60 @@ static class TUtil {
 				s = _Str(s);
 			}
 
-			static string _Str(string s) {
-				if (!MakeVerbatim(ref s)) s = s.Escape(quote: true);
+			static string _Name(string path) {
+				if (path.Starts("shell:") || path.Starts("::")) return "";
+				var s = pathname.getNameNoExt(path);
+				if (s.Length == 0) {
+					s = pathname.getName(path); //eg some folders are like ".name"
+					if (s.Length == 0 && path.Like("?:\\")) s = path[..2]; //eg "C:\"
+				}
 				return s;
 			}
 		}
 
+		static string _Str(string s) {
+			if (s == null) return "null";
+			if (!MakeVerbatim(ref s)) s = s.Escape(quote: true);
+			return s;
+		}
+
 		/// <summary>
-		/// Gets path of window's program for <see cref="run.it"/>. Supports app id and folder path.
+		/// Gets path of window's program for <see cref="run.it"/>. Supports appid, folder, mmc.
 		/// Returns null if failed to get path or app id.
 		/// </summary>
 		public static PathInfo FromWindow(wnd w) {
 			var path = WndUtil.GetWindowsStoreAppId(w, true, true);
 			if (path == null) return null;
+			string name=null,args = null;
+			bool elevated = w.Uac.Elevation == UacElevation.Full;
 			//if folder window, try to get folder path
-			if (path.Ends(@"\explorer.exe", true) && w.ClassNameIs("CabinetWClass")) {
-				////This is simpler but less reliable. Can't get eg Documents, because the address bar displays name, not path.
-				//var tb = w.Child(cn: "ToolbarWindow32", id: 1001); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
-				//if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg)
-				//	&& filesystem.exists(sa = rg.Value, useRawPath: true).Directory
-				//	) path = sa;
-				//else {
-				if (WndUtil.GetExplorerFolderPath_(w) is string s) path = s;
-				//}
+			if (path.Ends(@"\explorer.exe", true)) {
+				if (w.ClassNameIs("CabinetWClass")) {
+					////This is simpler but less reliable. Can't get eg Documents, because the address bar displays name, not path.
+					//var tb = w.Child(cn: "ToolbarWindow32", id: 1001); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
+					//if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg)
+					//	&& filesystem.exists(sa = rg.Value, useRawPath: true).Directory
+					//	) path = sa;
+					//else {
+					if (WndUtil.GetExplorerFolderPath_(w) is string s) path = s;
+					//}
+				}
+			} else if (path.Ends(@"\mmc.exe", true) && path[..^8].Eqi(folders.System)) {
+				var s = process.getCommandLine(w.ProcessId);
+				if (s != null) {
+					string rx = $@"(?i)(?:"".+?""|\S+) ("".+?\.msc""|\S+\.msc)(?: (.+))?$";
+					if (s.RxMatch(rx, out RXMatch m)) {
+						s = m[1].Value.Trim('\"');
+						if (!pathname.isFullPath(s)) s = filesystem.searchPath(s);
+						else if (!filesystem.exists(s)) s = null;
+						if (s != null) { path = s; args = m[2].Value; name = w.Name; };
+					}
+				}
+			} else {
+				if (path.Starts("shell:")) name = w.Name;
 			}
-			return new(path);
+			var r = new PathInfo(path, name, args, elevated);
+			return r;
 		}
 
 		/// <summary>
@@ -549,7 +582,7 @@ static class TUtil {
 		/// Paths are escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
 		/// If shortcut, shows dialog, let the user choose target path or lnk path.
 		/// </summary>
-		public (string path, string name, string args) GetCode(AnyWnd owner = default) {
+		public (string path, string name, string args) GetStringsForCode() {
 			bool u = App.Settings.ci_unexpandPath, u1 = u && fileUnexpanded != null, u2 = u && lnkUnexpanded != null;
 			int i;
 			if (lnkPath == null) i = u1 ? 2 : 1;
@@ -557,13 +590,35 @@ static class TUtil {
 				string s1 = u1 ? fileUnexpanded : filePath;
 				string s2 = u2 ? lnkUnexpanded : lnkPath;
 				string sb = $"{(u1 ? 2 : 1)} Target path\n{s1.Limit(99, middle: true)}|{(u2 ? 4 : 3)} Shortcut path\n{s2.Limit(99, middle: true)}";
-				i = dialog.show("Shortcut", buttons: sb, flags: DFlags.CommandLinks | DFlags.CenterMouse | DFlags.Wider, owner: owner);
+				i = dialog.show("Shortcut", buttons: sb, flags: DFlags.CommandLinks | DFlags.CenterMouse | DFlags.Wider);
 			}
-			return (
-			i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null },
-			i <= 2 ? _name2 ?? _name : _name,
-			i <= 2 ? _args : null
-			);
+			var path = i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null };
+			var name = i <= 2 ? _name2 ?? _name : _name;
+			return (path, name, i <= 2 ? _args : null);
+		}
+
+		/// <summary>
+		/// Calls <see cref="GetStringsForCode"/> and returns code like <c>run.it(path);</c>.
+		/// </summary>
+		/// <param name="what">0 'var s = path', 1 'run.it', 2 toolbar button with 'run.it'.</param>
+		/// <param name="varIndex">If not 0, appends to s in 'var s = path'.</param>
+		public string FormatCode(int what, int varIndex = 0) {
+			var (path, name, args) = GetStringsForCode();
+			string nameComment = (what <= 1 && (path.Starts("\":: ") || path.Like("folders.shell.*\"")) && !name.NE()) ? $"/* {name} */ " : null;
+			if (what is not (1 or 2)) {
+				string si = varIndex > 0 ? varIndex.ToS() : null;
+				return $"string s{si} = {nameComment}{path};"; //not var s, because may be FolderPath
+			}
+			var b = new StringBuilder();
+			if (what == 2) {
+				var t = InsertCodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
+				b.Append($"{t?.Name ?? "t"}[{_Str(name)}] = o => ");
+			}
+			b.Append("run.it(").Append(nameComment).Append(path);
+			if (!args.NE()) b.Append($", \"{args.Escape()}\"");
+			if (_elevated) b.Append(", flags: RFlags.Admin");
+			b.Append(");");
+			return b.ToString();
 		}
 	}
 
@@ -590,9 +645,9 @@ static class TUtil {
 		return s;
 	}
 
-#endregion
+	#endregion
 
-#region OnScreenRect
+	#region OnScreenRect
 
 	/// <summary>
 	/// Creates standard <see cref="osdRect"/>.
@@ -643,9 +698,9 @@ static class TUtil {
 		}
 	}
 
-#endregion
+	#endregion
 
-#region capture
+	#region capture
 
 	/// <summary>
 	/// Common code for tools that capture UI objects with F3.
@@ -804,9 +859,9 @@ static class TUtil {
 		});
 	}
 
-#endregion
+	#endregion
 
-#region test
+	#region test
 
 	public record RunTestFindResult(object obj, long speed, InfoStrings info);
 
@@ -969,9 +1024,9 @@ obj.{code};
 		}
 	}
 
-#endregion
+	#endregion
 
-#region info
+	#region info
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.zText = $"<Z #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
@@ -1084,7 +1139,7 @@ Can use global usings and classes/functions from file ""global.cs"".";
 	//	tt.IsOpen = true;
 	//}
 
-#endregion
+	#endregion
 }
 
 ///// <summary>

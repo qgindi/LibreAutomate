@@ -30,7 +30,7 @@ public unsafe partial class KScintilla : HwndHost {
 
 	static KScintilla() {
 		filesystem.more.loadDll64or32Bit_("Scintilla.dll");
-		filesystem.more.loadDll64or32Bit_("Lexilla.dll");
+		//filesystem.more.loadDll64or32Bit_("Lexilla.dll");
 	}
 
 	public nint ZSciPtr => _sciPtr;

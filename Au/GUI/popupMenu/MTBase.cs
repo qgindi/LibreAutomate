@@ -152,10 +152,12 @@ public abstract partial class MTBase {
 
 	private protected string _GetFullTooltip(MTItem b) {
 		var s = b.Tooltip;
-		if (this is toolbar tb && !tb.DisplayText) {
+		if (this is toolbar tb) {
 			var v = b as toolbar.ToolbarItem;
-			if (s.NE()) s = v.Text;
-			else if (!v.Text.NE() && !v.IsGroup_) s = b.Text + "\n" + s;
+			if (!(tb.DisplayText || v.textAlways)) {
+				if (s.NE()) s = v.Text;
+				else if (!v.Text.NE()) s = b.Text + "\n" + s;
+			}
 		}
 		if (b.pathInTooltip) {
 			var sf = b.File;
@@ -297,7 +299,13 @@ public abstract partial class MTBase {
 					text = v.Item1;
 					Tooltip = v.Item2;
 				}
-				if (mi != null && !rawText && text.Lenn() >= 2) {
+				int len = text.Lenn();
+				if (len > 0 && text[^1] == '\a') {
+					text = text[..^1]; //remove for menu too, because user may move items from toolbar to menu and forget to remove '\a'
+					len--;
+					if (this is toolbar.ToolbarItem ti) ti.textAlways = true; //note: textAlways of groups is already true
+				}
+				if (mi != null && !rawText && len > 1) {
 					i = text.IndexOf('\t', 1);
 					if (i > 0) {
 						var v = _Split(text, i);

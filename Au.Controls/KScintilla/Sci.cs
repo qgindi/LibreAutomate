@@ -348,10 +348,23 @@ namespace Au.Controls {
 		}
 
 		/// <summary>
+		/// SCI_APPENDTEXT.
+		/// </summary>
+		/// <param name="s"></param>
+		/// <param name="scroll">Move current position and scroll to the end.</param>
+		public void zAppendText8(ReadOnlySpan<byte> s, bool scroll) {
+			using (new _NoReadonly(this)) {
+				fixed (byte* p = s) Call(SCI_APPENDTEXT, s.Length, p);
+			}
+
+			if (scroll) Call(SCI_GOTOPOS, zLen8);
+		}
+
+		/// <summary>
 		/// Sets or appends UTF-8 text of specified length. Does not parse tags.
 		/// If <i>scroll</i>, moves current position and scrolls to the end (SCI_GOTOPOS).
 		/// </summary>
-		internal void zAddText_(bool append, bool scroll, byte* s, int lenToAppend) {
+		internal void zAddText8_(bool append, bool scroll, byte* s, int lenToAppend) {
 			using (new _NoReadonly(this))
 				if (append) Call(SCI_APPENDTEXT, lenToAppend, s);
 				else Call(SCI_SETTEXT, 0, s);

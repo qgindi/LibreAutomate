@@ -33,58 +33,58 @@ partial class TriggersAndToolbars {
 	}
 
 	void _NewToolbar() {
-		var w=new KDialogWindow { Title="New toolbar" };
+		var w = new KDialogWindow { Title = "New toolbar" };
 		var b = new wpfBuilder(w).WinSize(400);
 		b.WinProperties(WindowStartupLocation.CenterOwner, ResizeMode.NoResize, showInTaskbar: false);
-		
+
 		b.R.Add("Name", out TextBox tName, "Toolbar_").Focus()
 			.Validation(_ => tName.Text is "" or "Toolbar_" ? "No name" : !SyntaxFacts.IsValidIdentifier(tName.Text) ? "Invalid function name" : null);
-		
+
 		b.R.Add("In file", out ComboBox cbFile);
-		cbFile.ShouldPreserveUserEnteredPrefix=true;
+		cbFile.ShouldPreserveUserEnteredPrefix = true;
 		cbFile.Items.Add("<new file>");
-		foreach (var st in _EnumToolbarTriggersFunctionsST().Distinct()) {
+		foreach (var st in _EnumToolbarTriggersFunctions().Select(o => o.Locations[0].SourceTree).Distinct()) {
 			cbFile.Items.Add(_fnFromSt[st]);
 		}
-		cbFile.SelectedIndex=0;
-		
+		cbFile.SelectedIndex = 0;
+
 		b.R.Add("Code", out ComboBox cbTrigger).Items("Window trigger, attach to window|Window trigger, attach, auto-hide at screen edge|Show at startup, auto-hide at screen edge|Mouse trigger, auto-hide at screen edge|No trigger");
 		var aHide1 = new List<FrameworkElement>(); b.AlsoAll((_, _) => { b.Hidden(); aHide1.Add(b.Last); });
 		b.R.Add("Edge", out ComboBox cbEdge).Items(typeof(TMEdge).GetEnumNames()).Select(1)
 			.And(170).StartGrid().Add("Screen", out ComboBox cbScreen).Items(typeof(TMScreen).GetEnumNames()).End();
 		b.AlsoAll(null);
-		cbTrigger.SelectionChanged+=(_,_)=> {
-			int si=cbTrigger.SelectedIndex;
-			foreach(var v in aHide1) v.Visibility=si is 1 or 2 or 3 ? Visibility.Visible : Visibility.Hidden;
+		cbTrigger.SelectionChanged += (_, _) => {
+			int si = cbTrigger.SelectedIndex;
+			foreach (var v in aHide1) v.Visibility = si is 1 or 2 or 3 ? Visibility.Visible : Visibility.Hidden;
 		};
-		
+
 		b.R.AddOkCancel();
 		b.End();
-		
-		b.Loaded+=()=> { tName.CaretIndex=tName.Text.Length; };
-		
+
+		b.Loaded += () => { tName.CaretIndex = tName.Text.Length; };
+
 		//if (!w.ShowAndWait(App.Wmain)) return;
 		if (!b.ShowDialog(App.Wmain)) return;
-		
+
 		string sName = _GetUniqueNameInProgram(tName.Text);
-		
+
 		var f = cbFile.SelectedItem as FileNode;
-		if (f==null) { //new file
-			var text1=$$"""
+		if (f == null) { //new file
+			var text1 = $$"""
 using Au.Triggers;
 
 partial class Program {
 [Toolbars]
-void {{_GetUniqueNameInProgram(sName+"_Triggers")}}() {
+void {{_GetUniqueNameInProgram(sName + "_Triggers")}}() {
 }
 }
 
 """;
-			var folder=App.Model.Find(@"\@Triggers and toolbars\Toolbars", FNFind.Folder);
-			f = App.Model.NewItem("Class.cs", (folder, FNPosition.Inside), sName+".cs", text: new(true, text1));
+			var folder = App.Model.Find(@"\@Triggers and toolbars\Toolbars", FNFind.Folder);
+			f = App.Model.NewItem("Class.cs", (folder, FNPosition.Inside), sName + ".cs", text: new(true, text1));
 			_Update();
 		}
-		
+
 		int iTrigger = cbTrigger.SelectedIndex;
 		string sArg = "TriggerArgs ta = null", sAutoHide = null;
 		if (iTrigger is 0 or 4) { //window, none
@@ -121,25 +121,28 @@ void {{_GetUniqueNameInProgram(sName+"_Triggers")}}() {
 
 """;
 		}
-		
+
 		var text2 = $$"""
 
 void {{sName}}({{sArg}}) {
 	var t = new toolbar();
 	if (t.FirstTime) {
+		//t.DisplayText = !true; //display only icon or 2 characters, unless button text is like "Text\a"
 		
 	}
 	
-	t["Button1"] = o => { print.it("button clicked"); };
-	t["|Tooltip", image: "*Modern.TreeLeaf #73BF00"] = o => {  };
-	t[""] = o => {  };
-	t.Menu("Menu1", m => {
-		m[""] = o => {  };
-		m[""] = o => {  };
+	//Add buttons here, like in examples. Hints: toolbarButtonSnippet, drag-drop, Ctrl+Shift+Q.
+	//More info: 1. Cookbook -> Floating toolbars. 2. toolbar class help (click word toolbar above and press F1).
+	
+	t["Example"] = o => { print.it("button clicked"); };
+	t["|Tooltip1", image: "*Modern.TreeLeaf #73BF00"] = o => {  }; //to set icon use the Icons dialog
+	t["Text\a"] = o => {  }; //this button always displays text. The above button never.
+	t.Menu("Menu1", t => {
+		t["A"] = o => {  };
+		t["B|Tooltip3"] = o => {  };
 	});
 	t.Separator();
-	t[""] = o => {  };
-	t[""] = o => {  };
+	t["Text2\a|Tooltip2"] = o => {  };
 {{sAutoHide}}
 	t.Show(ta);
 	
@@ -153,34 +156,41 @@ void {{sName}}({{sArg}}) {
 }
 
 """;
-		
-		var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if(programNode==null) return;
+
+		var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if (programNode == null) return;
 		int pos = programNode.CloseBraceToken.SpanStart;
 		var doc = _OpenSourceFile(f, pos);
 		doc.zReplaceSel(text2);
-		doc.zGoToPos(true, pos+2);
-		
+		doc.zGoToPos(true, pos + 2);
+
 		_Update();
-		
+
 		//trigger
-		
-		var t=_toolbars[Array.FindIndex(_toolbars, o => o.Name == sName)];
-		if (iTrigger is 0 or 1) { //window
-			_AddTriggerWindow(t);
-		} else if(iTrigger==2) { //startup
-			_AddTriggerStartup(t);
-		} else if (iTrigger==3) { //mouse
-			_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen.SelectedItem as string);
+
+		var t = _toolbars[Array.FindIndex(_toolbars, o => o.Name == sName)];
+		if (iTrigger != 4) {
+			if (iTrigger is 0 or 1) { //window
+				_AddTriggerWindow(t);
+			} else if (iTrigger == 2) { //startup
+				_AddTriggerStartup(t);
+			} else if (iTrigger == 3) { //mouse
+				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen.SelectedItem as string);
+			}
+			_Update();
+			t = _toolbars.FirstOrDefault(o => o.EqualsMethodQName(t));
 		}
-		
+		//go to the toolbar function
+		var span = t.location.SourceSpan;
+		doc.zSelect(true, span.Start, span.End, true);
+
 		//maybe a settings file exists with this name, probably orphaned
-		
+
 		var jsFolder = folders.Workspace + ".toolbars";
 		var jsPath = jsFolder + "\\" + sName + ".json";
 		if (filesystem.exists(jsPath)) {
 			//rejected: show a dialog box.
 			//CONSIDER: for new toolbar names use name+GUID.
-			if (true == filesystem.delete(jsPath, FDFlags.RecycleBin|FDFlags.CanFail))
+			if (true == filesystem.delete(jsPath, FDFlags.RecycleBin | FDFlags.CanFail))
 				print.it($"<>Note: A toolbar settings file with this name ({sName}) has been found, and moved to the Recycle Bin to avoid confusion.\r\n\tInfo: Each toolbar has a settings file with the same name, saved <link {jsFolder}>here<>. The program does not delete settings files of deleted or renamed toolbars. You can delete unused files. Deleting a used file resets the position, size and context menu settings of that toolbar.");
 		}
 	}
@@ -290,7 +300,7 @@ void {{sName}}({{sArg}}) {
 
 	void _AddTrigger(_Toolbar t, string s, int pos) {
 		if (pos < 0) pos = _FindToolbarTriggersFunction(t).node.Body.CloseBraceToken.SpanStart;
-		_OpenSourceFile(t, pos);
+		_OpenSourceFile(t.fn, pos);
 		InsertCode.Statements(s, ICSFlags.SelectNewCode);
 	}
 
@@ -319,7 +329,7 @@ void {{sName}}({{sArg}}) {
 		return false;
 	}
 
-	bool _GetTriggerStatementFullRange(_Trigger t, out TextSpan span, bool replacing) {
+	static bool _GetTriggerStatementFullRange(_Trigger t, out TextSpan span, bool replacing) {
 		span = default;
 		var node = t.location.FindNode(default);
 	g1:
@@ -353,20 +363,12 @@ void {{sName}}({{sArg}}) {
 		return t != null;
 	}
 
-	SciCode _OpenSourceFile(_Toolbar t, int pos = -1) => _OpenSourceFile(t.fn, pos);
-
-	//SciCode _OpenSourceFile(SyntaxTree tree, int pos = -1) => _OpenSourceFile(_fnFromSt[tree], pos);
-
-	SciCode _OpenSourceFile(FileNode f, int pos = -1) {
+	static SciCode _OpenSourceFile(FileNode f, int pos = -1) {
 		if (App.Model.OpenAndGoTo(f, columnOrPos: pos)) return Panels.Editor.ZActiveDoc;
 		return null;
 	}
 
-	//SciCode _OpenSourceFile(_Toolbar t, TextSpan span) => _OpenSourceFile(t.fn, span);
-
-	//SciCode _OpenSourceFile(SyntaxTree tree, TextSpan span) => _OpenSourceFile(_fnFromSt[tree], span);
-
-	SciCode _OpenSourceFile(FileNode f, TextSpan span) {
+	static SciCode _OpenSourceFile(FileNode f, TextSpan span) {
 		if (!App.Model.OpenAndGoTo(f)) return null;
 		var doc = Panels.Editor.ZActiveDoc;
 		doc.zSelect(true, span.End, span.Start, true);
@@ -380,9 +382,8 @@ void {{sName}}({{sArg}}) {
 		}
 	}
 
-	IEnumerable<SyntaxTree> _EnumToolbarTriggersFunctionsST() => _EnumToolbarTriggersFunctions().Select(o => o.Locations[0].SourceTree);
-
-	ClassDeclarationSyntax _ProgramClassNodeFromST(SyntaxTree tree) => _programSym.Locations.FirstOrDefault(o => o.SourceTree == tree)?.FindNode(default) as ClassDeclarationSyntax;
+	ClassDeclarationSyntax _ProgramClassNodeFromST(SyntaxTree tree)
+		=> _programSym.Locations.FirstOrDefault(o => o.SourceTree == tree)?.FindNode(default) as ClassDeclarationSyntax;
 
 	string _GetUniqueNameInProgram(string name) {
 		if (_programSym.MemberNames.Contains(name)) {
@@ -406,7 +407,7 @@ void {{sName}}({{sArg}}) {
 		//create the function
 		string name = _GetUniqueNameInProgram("Toolbars");
 		var programNode = _ProgramClassNodeFromST(t.tree);
-		_OpenSourceFile(t, programNode.OpenBraceToken.FullSpan.End);
+		_OpenSourceFile(t.fn, programNode.OpenBraceToken.FullSpan.End);
 		var s = $$"""
 
 [Toolbars]
