@@ -202,15 +202,12 @@
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// [STAThread]
-		/// static void Main() {
-		/// 	print.writer = new TestOutputWriter();
+		/// print.writer = new OutputWriterWithTime();
 		/// 
-		/// 	print.it("test");
-		/// }
+		/// print.it("test");
 		/// 
-		/// class TestOutputWriter :TextWriter {
-		/// 	public override void WriteLine(string value) { print.directly("redirected: " + value); }
+		/// class OutputWriterWithTime :TextWriter {
+		/// 	public override void WriteLine(string value) { print.directly(DateTime.Now.ToString("T") + ".  " + value); }
 		/// 	public override Encoding Encoding => Encoding.Unicode;
 		/// }
 		/// ]]></code>

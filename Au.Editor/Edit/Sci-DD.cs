@@ -77,24 +77,20 @@ partial class SciCode {
 
 		unsafe void _Drop(POINT xy, int effect) {
 			_GetDropPos(ref xy, out int pos8);
+			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 			string s = null;
 			var b = new StringBuilder();
-			int what = 0, fileIndex = 0;
+			int what = 0, index = 0;
 
 			if (_justText) {
 				s = _data.text;
 			} else {
-				if (_sci._fn.IsCodeFile) {
-					//var text = _sci.zText;
-					//var meta = Au.Compiler.MetaComments.FindMetaComments(text);
-					//if (meta.end > 0) {
-					//	int pos1 = _sci.zPos16(pos8);
-					//	if (pos1 > meta.start && pos1 < meta.end) return;
-					//}
+				_sci.Call(SCI_DRAGDROP, 2, &z); //just hides the drag indicator and sets caret position
 
+				if (_sci._fn.IsCodeFile) {
 					string mi = _data.scripts
-						? "1 var s = name;|2 var s = path;|3 script.run(path);|4 t[name] = o => script.run(path);"
-						: "11 var s = path;|12 run.it(path);|13 t[name] = o => run.it(path);";
+						? "1 string s = name;|2 string s = path;|3 script.run(path);|4 t[name] = o => script.run(path);"
+						: "11 string s = path;|12 run.it(path);|13 t[name] = o => run.it(path);";
 					what = popupMenu.showSimple(mi);
 					if (what == 0) return;
 				}
@@ -103,34 +99,23 @@ partial class SciCode {
 					var a = Panels.Files.TreeControl.DragDropFiles;
 					if (a != null) {
 						foreach (var f in a) {
-							_AppendFile("@\"" + f.ItemPath + "\"", f.Name, null, f);
+							_AppendScriptOrLink(f.ItemPath, f.Name, f);
 						}
-						s = b.ToString();
 					}
 				} else if (_data.files != null) {
-					foreach (var path in _data.files) {
-						if (what == 0) { _AppendFile(path, null); continue; }
-						var r = new TUtil.PathInfo(path).GetCode();
-						_AppendFile(r.path, r.name, r.args);
-					}
-					s = b.ToString();
+					foreach (var path in _data.files) _AppendFileOrShell(path);
 				} else if (_data.shell != null) {
 					_GetShell(_data.shell, out var shells, out var names);
 					if (shells != null) {
-						for (int i = 0; i < shells.Length; i++) {
-							if (what == 0) _AppendFile(shells[i], null);
-							else _AppendFile(new TUtil.PathInfo(shells[i]).GetCode().path, names[i]);
-						}
-						s = b.ToString();
+						for (int i = 0; i < shells.Length; i++) _AppendFileOrShell(shells[i], names[i]);
 					}
 				} else if (_data.linkName != null) {
-					_AppendFile("\"" + _data.text + "\"", _GetLinkName(_data.linkName));
-					s = b.ToString();
+					_AppendScriptOrLink(_data.text, _GetLinkName(_data.linkName));
 				}
+				s = b.ToString();
 			}
 
 			if (!s.NE()) {
-				var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 				if (_justText) { //a simple drag-drop inside scintilla or text-only from outside
 					var s8 = Encoding.UTF8.GetBytes(s);
 					fixed (byte* p8 = s8) {
@@ -141,7 +126,6 @@ partial class SciCode {
 						_sci.Call(SCI_DRAGDROP, 2, &z);
 					}
 				} else { //file, script or URL
-					_sci.Call(SCI_DRAGDROP, 2, &z); //just hides the drag indicator and sets caret position
 					InsertCode.Statements(s, ICSFlags.NoFocus);
 				}
 				if (!_sci.IsFocused && _sci.Hwnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
@@ -153,33 +137,33 @@ partial class SciCode {
 				_sci.Call(SCI_DRAGDROP, 3);
 			}
 
-			void _AppendFile(string path, string name, string args = null, FileNode fn = null) {
+			void _AppendFileOrShell(string path, string name = null) {
+				if (b.Length > 0) b.AppendLine();
+				var pi = new TUtil.PathInfo(path, name);
+				b.Append(pi.FormatCode(what - 11, ++index));
+			}
+
+			void _AppendScriptOrLink(string path, string name, FileNode fn = null) {
 				if (b.Length > 0) b.AppendLine();
 				if (what == 0) {
 					b.Append(path);
 				} else {
+					if (what == 4) name = name.RemoveSuffix(".cs");
 					name = name.Escape();
-					switch (what) {
-					case 1: case 2: case 11:
-						b.AppendFormat("string s{0} = ", ++fileIndex); //not var s, because may be FolderPath
-						break;
-					case 4: case 13:
-						b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name);
-						break;
+
+					if (what is 4 or 13) {
+						var t = InsertCodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
+						b.Append($"{t?.Name ?? "t"}[\"{name}\"] = o => ");
+					} else if (what is 1 or 2 or 11) {
+						b.Append($"string s{++index} = ");
 					}
-					if (what is 12 or 13) b.Append("run.it(");
-					if (what is 11 or 12 && (path.Starts("\":: ") || path.Like("folders.shell.*\""))) b.AppendFormat("/* {0} */ ", name);
-					switch (what) {
-					case 1: b.AppendFormat("\"{0}\"", name); break;
-					case 2 or 11: b.Append(path); break;
-					case 3 or 4: b.AppendFormat("script.run({0})", path); break;
-					case 12 or 13:
-						b.Append(path);
-						if (!args.NE()) b.AppendFormat(", \"{0}\"", args.Escape());
-						b.Append(')');
-						break;
-					}
-					b.Append(';');
+
+					b.Append(what switch {
+						1 => $"\"{name}\";",
+						2 or 11 => $"@\"{path}\";",
+						3 or 4 => $"script.run(@\"{path}\");",
+						_ => $"run.it(@\"{path}\");"
+					});
 				}
 			}
 

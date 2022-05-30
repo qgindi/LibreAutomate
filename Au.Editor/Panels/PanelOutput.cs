@@ -2,8 +2,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class PanelOutput : DockPanel
-{
+class PanelOutput : DockPanel {
 	readonly _SciOutput _c;
 	readonly KPanels.ILeaf _leaf;
 	readonly Queue<PrintServerMessage> _history;
@@ -112,8 +111,7 @@ class PanelOutput : DockPanel
 	}
 	(bool isTimer, wnd w) _workaround1;
 
-	class _SciOutput : KScintilla
-	{
+	class _SciOutput : KScintilla {
 		PanelOutput _p;
 		StringBuilder _sb;
 
@@ -130,10 +128,10 @@ class PanelOutput : DockPanel
 		protected override void ZOnHandleCreated() {
 			_p._c_HandleCreated();
 			zSetMarginWidth(1, 3);
-			zStyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
-			//zStyleFont(STYLE_DEFAULT, "Courier New", 8); //maybe better, except <b>
-			zStyleFont(STYLE_DEFAULT, "Consolas", 9);
-			zStyleClearAll();
+
+			var styles = new CiStyling.TStyles { FontName = "Consolas", FontSize = 9, BackgroundColor = 0xF7F7F7 };
+			styles.ToScintilla(this);
+			ZTags.CodeStylesProvider = code => CiUtil.GetScintillaStylingBytes(code);
 
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));

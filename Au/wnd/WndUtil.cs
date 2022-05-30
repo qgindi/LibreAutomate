@@ -1,10 +1,8 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More {
 	/// <summary>
 	/// Miscellaneous window-related functions. Rarely used in automation scripts.
 	/// </summary>
-	public static class WndUtil
-	{
+	public static class WndUtil {
 		//public void ShowAnimate(bool show)
 		//{
 		//	//Don't add wnd function, because:
@@ -283,11 +281,52 @@
 		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
 		/// <remarks>
-		/// Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
+		/// Most Windows Store app windows have class name "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
 		/// </remarks>
-		public static string GetWindowsStoreAppId(wnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
-			if (0 != wnd.Internal_.GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
-			return null;
+		public static unsafe string GetWindowsStoreAppId(wnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
+			string appId = null;
+
+			if (osVersion.minWin8) {
+				var cn = w.ClassName;
+				if (osVersion.minWin10 && cn == "ApplicationFrameWindow") {
+					var w2 = w.ChildFast(null, "Windows.UI.Core.CoreWindow");
+					if (!w2.Is0) {
+						w = w2;
+						cn = "Windows.UI.Core.CoreWindow";
+					} else { //probably minimized. Very slow, ~20 times slower than GetApplicationUserModelId.
+						if (0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
+							if (0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
+								if (v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
+								v.Dispose();
+							}
+							Marshal.ReleaseComObject(ps);
+						}
+					}
+				}
+
+				//this code works with "Windows.UI.Core.CoreWindow" and WinUI 3 windows. Not with "ApplicationFrameWindow".
+				if (appId == null) {
+					using var p = Handle_.OpenProcess(w);
+					if (!p.Is0) {
+						int na = 1024; var b = stackalloc char[na];
+						if (0 == Api.GetApplicationUserModelId(p, ref na, b) && na > 1) appId = new(b, 0, na - 1);
+					}
+				}
+
+				if (appId != null) {
+					if (cn is not ("Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow")) { //is it really a Store window?
+						var s = w.ProgramPath;
+						if (s != null && !s.Starts(folders.ProgramFiles + @"WindowsApps\", true)) {
+							Debug_.Print(s);
+							return getExePathIfNotWinStoreApp ? s : null;
+						}
+					}
+					if (prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
+					return appId;
+				}
+			}
+
+			return getExePathIfNotWinStoreApp ? w.ProgramPath : null;
 		}
 
 		/// <summary>
@@ -847,7 +886,9 @@ void _WmDeclTextToCode() {
 					if (sw.Item(i) is api.IWebBrowserApp k && k.HWND == (nint)w) {
 						var s = k.LocationURL;
 						if (s.NE() || !s.Starts("file:///")) break;
-						return s[8..].Replace('/', '\\');
+						s = s[8..].Replace('/', '\\');
+						s = System.Net.WebUtility.UrlDecode(s);
+						return s;
 					}
 				}
 			}
@@ -858,21 +899,18 @@ void _WmDeclTextToCode() {
 			//FUTURE: add public class ExplorerFolder with functions GetPath, GetSelectedItems, etc. See script ExplorerFolder.
 		}
 
-		unsafe class api
-		{
+		unsafe class api {
 			[ComImport, Guid("9BA05972-F6A8-11CF-A442-00A0C90A8F39"), ClassInterface(ClassInterfaceType.None)]
 			internal class ShellWindows { }
 
 			[ComImport, Guid("85CB6900-4D95-11CF-960C-0080C7F4EE85")]
-			internal interface IShellWindows
-			{
+			internal interface IShellWindows {
 				int Count();
 				[return: MarshalAs(UnmanagedType.IDispatch)] object Item(object index);
 			}
 
 			[ComImport, Guid("0002DF05-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
-			internal interface IWebBrowserApp
-			{
+			internal interface IWebBrowserApp {
 				string LocationURL { get; }
 				long HWND { get; }
 			}
@@ -880,13 +918,11 @@ void _WmDeclTextToCode() {
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Options for <see cref="WndUtil.PrintMsg"/>.
 	/// </summary>
-	public class PrintMsgOptions
-	{
+	public class PrintMsgOptions {
 		///
 		public PrintMsgOptions() { }
 
@@ -922,8 +958,7 @@ namespace Au.Types
 	/// <summary>
 	/// <see cref="WndUtil.DragLoop"/> callback function arguments.
 	/// </summary>
-	public class WDLArgs
-	{
+	public class WDLArgs {
 		/// <summary>
 		/// Current message retrieved by API <msdn>GetMessage</msdn>.
 		/// API <msdn>MSG</msdn>.
@@ -946,8 +981,7 @@ namespace Au.Types
 	/// Used with <see cref="WndUtil.RegisterWindowClass"/>.
 	/// </summary>
 	[NoDoc]
-	public class RWCEtc
-	{
+	public class RWCEtc {
 #pragma warning disable 1591 //XML doc
 		public uint style;
 		public int cbClsExtra;

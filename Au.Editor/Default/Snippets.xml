@@ -9,17 +9,12 @@
 	
 }]]>
 			</list>
-			<list item="Increment variable j">
-				<![CDATA[for (int j = 0; j < $end$count$end$; j++) {
-	
-}]]>
-			</list>
-			<list item="Decrement variable i">
+			<list item="&amp;Decrement variable i">
 				<![CDATA[for (int i = $end$count$end$; --i >= 0; ) {
 	
 }]]>
 			</list>
-			<list item="Repeat forever (or until break etc)">
+			<list item="&amp;Repeat forever (or until break etc)">
 				<![CDATA[for (;;) {
 	$end$
 }]]>
@@ -108,13 +103,13 @@ string s = i switch {
 }
 catch(Exception e1) {  }]]>
 			</list>
-			<list item="try finally">
+			<list item="try &amp;finally">
 				<![CDATA[try {
 	$end$
 }
 finally {  }]]>
 			</list>
-			<list item="try catch finally">
+			<list item="&amp;try catch finally">
 				<![CDATA[try {
 	$end$
 }
@@ -254,7 +249,7 @@ if (w.IsMatch("$end$*Name$end$")) {
 			<list item="Scroll Lock toggled">if (keys.isScrollLock) { $end$ }</list>
 		</snippet>
 
-		<snippet name="speedSnippet" info="Change sleep times used by keyboard and mouse functions." more="The snippet code sets default values.">
+		<snippet name="speedSnippet" info="Change sleep times used by keyboard and mouse functions." more="The snippet contains all speed opt, with default values; remove lines you don't need.">
 			<![CDATA[opt.key.KeySpeed = 1;
 opt.key.TextSpeed = 0;
 opt.key.SleepFinally = 10;
@@ -281,7 +276,7 @@ p1.Next();]]>
 			</list>
 		</snippet>
 
-		<snippet name="menuSnippet" info="Popup menu.">
+		<snippet name="popupMenuSnippet" info="Popup menu.">
 			<list item="Menu for automation scripts">
 				<![CDATA[var m = new popupMenu("$guid$");
 
@@ -328,26 +323,26 @@ default: return;
 			</list>
 		</snippet>
 
-		<snippet name="menuItemSnippet" info="Add menu item or submenu." more="Tip: to add menu items you can drag and drop files and scripts.">
+		<snippet name="menuItemSnippet" info="Menu item or submenu." more="Other ways: drag-drop scripts, files, links; hotkey Ctrl+Shift+Q. More info in Cookbook." var="Au.popupMenu,m">
 			<list item="Item">
-				<![CDATA[m["$end$"] = o => {  };]]>
+				<![CDATA[$var$["$end$"] = o => {  };]]>
 			</list>
-			<list item="Submenu">
-				<![CDATA[m.Submenu("", m => {
-	m[""] = o => {  };
-	m[""] = o => {  };
+			<list item="&amp;Submenu">
+				<![CDATA[$var$.Submenu("", $var$ => {
+	$var$[""] = o => {  };
+	$var$[""] = o => {  };
 });]]>
 			</list>
 		</snippet>
 
-		<snippet name="toolbarButtonSnippet" info="Add toolbar button or drop-down menu." more="Tip: to add buttons you can drag and drop files and scripts.">
+		<snippet name="tbToolbarButtonSnippet" info="Toolbar button." more="Other ways: drag-drop scripts, files, links; hotkey Ctrl+Shift+Q. More info in Cookbook." var="Au.toolbar,t">
 			<list item="Button">
-				<![CDATA[t["$end$"] = o => {  };]]>
+				<![CDATA[$var$["$end$"] = o => {  };]]>
 			</list>
-			<list item="Drop-down menu">
-				<![CDATA[t.Menu("$end$", m => {
-	m[""] = o => {  };
-	m[""] = o => {  };
+			<list item="Drop-down &amp;menu">
+				<![CDATA[$var$.Menu("$end$", $var$ => {
+	$var$[""] = o => {  };
+	$var$[""] = o => {  };
 });]]>
 			</list>
 		</snippet>
@@ -386,11 +381,11 @@ script.setup(trayIcon: true, sleepExit: true);
 			<![CDATA[print.it($end$);]]>
 		</snippet>
 
-		<snippet name="pcPrintClearSnippet" info="Clears the output window.">
+		<snippet name="pcPrintClearSnippet" info="Clear the output window.">
 			<![CDATA[print.clear();]]>
 		</snippet>
 
-		<snippet name="ocPrintClearSnippet" info="Clears the output window.">
+		<snippet name="ocPrintClearSnippet" info="Clear the output window.">
 			<![CDATA[print.clear();]]>
 		</snippet>
 

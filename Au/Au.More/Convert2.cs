@@ -409,6 +409,22 @@ namespace Au.More {
 		/// </remarks>
 		public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8));
 
+		/// <summary>
+		/// If s isn't ASCII, gets UTF8 character offsets for each s character plus at s.Length. Else returns null.
+		/// </summary>
+		internal static int[] MapUtf8Offsets_(string s) {
+			if (s == null || s.IsAscii()) return null;
+			var enc = Encoding.UTF8;
+			var a = new int[s.Length + 1];
+			int i = 0, i8 = 0;
+			for (; i < s.Length; i++) {
+				a[i] = i8;
+				i8 += s[i] < '\x80' ? 1 : enc.GetByteCount(s, i, 1);
+			}
+			a[i] = i8; //makes user code simpler
+			return a;
+		}
+
 		#endregion
 	}
 }

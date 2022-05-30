@@ -42,7 +42,7 @@
 			get {
 				if (_heightOnScreen == 0) {
 					using var dc = new FontDC_(_h);
-					_heightOnScreen = dc.Measure("A").height;
+					_heightOnScreen = dc.MeasureEP("A").height;
 				}
 				return _heightOnScreen;
 			}

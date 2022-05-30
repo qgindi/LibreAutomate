@@ -8,10 +8,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
-static class CiSnippets
-{
-	class _CiComplItemSnippet : CiComplItem
-	{
+static class CiSnippets {
+	class _CiComplItemSnippet : CiComplItem {
 		public readonly XElement x;
 		public readonly _Context context;
 		public readonly bool custom;
@@ -26,8 +24,7 @@ static class CiSnippets
 	static List<_CiComplItemSnippet> s_items;
 
 	[Flags]
-	enum _Context
-	{
+	enum _Context {
 		None,
 		Namespace = 1, //global, namespace{ }
 		Type = 2, //class{ }, struct{ }, interface{ }
@@ -119,7 +116,7 @@ static class CiSnippets
 				catch { goto g1; }
 			}
 			_LoadFile(CustomFile, true);
-			g1: _LoadFile(DefaultFile, false);
+		g1: _LoadFile(DefaultFile, false);
 			if (a.Count == 0) return;
 			s_items = a;
 
@@ -209,14 +206,13 @@ static class CiSnippets
 
 	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff) {
 		var snippet = item as _CiComplItemSnippet;
-		string s, usingDir = null;
+		string s, usingDir;
 		var ci = item.ci;
 		int pos = ci.Span.Start, endPos = pos + ci.Span.Length + codeLenDiff;
 
 		//list of snippets?
 		var x = snippet.x;
 		if (x.HasElements) {
-			x = null;
 			var a = snippet.x.Elements("list").ToArray();
 			var m = new popupMenu();
 			foreach (var v in a) m.Add(v.Attr("item"));
@@ -240,6 +236,14 @@ static class CiSnippets
 		if (j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
 		j = s.Find("$random$");
 		if (j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
+
+		//get variable name from code
+		if (x.Attr(out string avar, "var") || snippet.x.Attr(out avar, "var")) {
+			if (avar.RxMatch(@"^(.+?),(.+)$", out var m)) {
+				var t = InsertCodeUtil.GetNearestLocalVariableOfType(m[1].Value);
+				s = s.Replace("$var$", t?.Name ?? m[2].Value);
+			}
+		}
 
 		//remove ';' if in =>
 		if (s.Ends(';') && s_context == _Context.Arrow) {

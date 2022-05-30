@@ -118,28 +118,22 @@ namespace Au.More
 		/// Measures text with API <msdn>GetTextExtentPoint32</msdn>.
 		/// Should be single line without tabs. For drawing with API <msdn>TextOut</msdn> or <msdn>ExtTextOut</msdn>.
 		/// </summary>
-		public SIZE Measure(string s) {
+		public SIZE MeasureEP(string s) {
 			Api.GetTextExtentPoint32(_dc, s, s.Length, out var z);
 			return z;
 		}
 
 		/// <summary>
-		/// Measures text with API <msdn>DrawText</msdn>.
-		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
+		/// Measures text with API <msdn>DrawTextEx</msdn>.
+		/// Can be multiline. For drawing with API <msdn>DrawTextEx</msdn>.
 		/// </summary>
-		public SIZE Measure(string s, int length, TFFlags format, int wrapWidth = 0) {
-			if ((uint)length > s.Lenn()) throw new ArgumentException();
-			if (length == 0) return default;
+		public SIZE MeasureDT(ReadOnlySpan<char> s, TFFlags format, int wrapWidth = 0) {
+			if (s.Length == 0) return default;
 			RECT r = new(0, 0, wrapWidth, 0);
-			Api.DrawText(_dc, s, length, ref r, format | TFFlags.CALCRECT);
-			return new(r.Width, r.Height);
+			Api.DrawText(_dc, s, ref r, format | TFFlags.CALCRECT);
+			return new(r.Width + 1, r.Height);
+			//When drawing, may cut 1 pixel at the right, eg if text ends with T. Workaround: now add 1.
 		}
-
-		/// <summary>
-		/// Measures text with API <msdn>DrawText</msdn>.
-		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
-		/// </summary>
-		public SIZE Measure(string s, TFFlags format, int wrapWidth = 0) => Measure(s, s.Lenn(), format, wrapWidth);
 	}
 
 	struct Pen_ : IDisposable

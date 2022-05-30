@@ -695,7 +695,7 @@ namespace Au
 				var tff = TextFormatFlags; if (WrapWidth > 0) tff |= TFFlags.WORDBREAK;
 				using var soFont = new GdiSelectObject_(dc, _font);
 				RECT rt = r;
-				Api.DrawText(dc, Text, Text.Length, ref rt, tff);
+				Api.DrawText(dc, Text, ref rt, tff);
 			}
 		}
 
@@ -742,7 +742,7 @@ namespace Au
 					int maxWidth = scrn.WorkArea.Width - zi.Width - 10;
 					int ww = WrapWidth; if (ww > 0) { maxWidth = Math.Min(maxWidth, ww); tff |= TFFlags.WORDBREAK; }
 					using var dc = new FontDC_(_font);
-					z = dc.Measure(Text, tff, maxWidth);
+					z = dc.MeasureDT(Text, tff, maxWidth);
 				}
 
 				z.Width += zi.Width;

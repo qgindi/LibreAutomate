@@ -55,14 +55,12 @@ static class QuickCapture {
 		m.Submenu("Find+", m => {
 			m["Find and activate"] = _ => _Insert(_Wnd_Find(w, activate: true));
 			m["Find or run"] = _ => {
-				if (TUtil.PathInfo.FromWindow(w)?.filePath is string path) {
-					_Insert(_Wnd_Find(w, activate: true, orRun: $"run.it({path});"));
-				}
+				var pi = TUtil.PathInfo.FromWindow(w);
+				if (pi != null) _Insert(_Wnd_Find(w, activate: true, orRun: pi.FormatCode(1)));
 			};
 			m["Run and find"] = _ => {
-				if (TUtil.PathInfo.FromWindow(w)?.filePath is string path) {
-					_Insert(_Wnd_Find(w, activate: true, andRun: $"run.it({path});"));
-				}
+				var pi = TUtil.PathInfo.FromWindow(w);
+				if (pi != null) _Insert(_Wnd_Find(w, activate: true, andRun: pi.FormatCode(1)));
 			};
 			m["wndFinder"] = _ => _Insert("var f = new wndFinder(" + TUtil.ArgsFromWndFindCode(_Wnd_Find(w)) + ");");
 			m["Find control"] = _ => _Insert(_Wnd_Find(w, c));
@@ -89,17 +87,11 @@ static class QuickCapture {
 		m.Submenu("Program", m => {
 			var pi = TUtil.PathInfo.FromWindow(w);
 			if (pi != null) {
-				m["var s = path;"] = _ => _Path(0);
-				m["run.it(path);"] = _ => _Path(1);
-				m["t[name] = o => run.it(path);"] = _ => _Path(2);
+				m["string s = path;"] = _ => _Insert(pi.FormatCode(0));
+				m["run.it(path);"] = _ => _Insert(pi.FormatCode(1));
+				m["t[name] = o => run.it(path);"] = _ => _Insert(pi.FormatCode(2));
 				m.Separator();
 				m["Copy path"] = _ => clipboard.text = pi.filePath;
-
-				void _Path(int what) {
-					var (path, name, args) = pi.GetCode();
-					if (what == 2 && path.Starts("shell:")) name = w.Name;
-					_Insert(what switch { 1 => $"run.it({path});", 2 => $"t[{_Str(name)}] = o => run.it({path});", _ => $"var s = {path};" });
-				}
 			}
 			if (w.ProgramName is string pn) m["Copy filename"] = _ => clipboard.text = pn;
 		});
@@ -128,12 +120,6 @@ static class QuickCapture {
 		_m = m;
 		m.Show();
 		_m = null;
-	}
-
-	static string _Str(string s) {
-		if (s == null) return "null";
-		if (!TUtil.MakeVerbatim(ref s)) s = s.Escape(quote: true);
-		return s;
 	}
 
 	static string _Wnd_Find(wnd w, wnd c = default, bool activate = false, string orRun = null, string andRun = null) {

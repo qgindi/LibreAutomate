@@ -58,7 +58,7 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
-		InsertCode.CreateDelegate();
+		//InsertCode.CreateDelegate();
 		//var f = App.Model.FindCodeFile("InsertCode");
 		//CompileRun.CompileAndRun(true, f, runFromEditor: true);
 

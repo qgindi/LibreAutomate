@@ -77,13 +77,13 @@ namespace Au
 
 			var font = NativeFont_.RegularCached(_dpi);
 			using var dc = new FontDC_(font);
-			int lineHeight = dc.Measure(" ").height + buttonPlusY;
+			int lineHeight = dc.MeasureEP(" ").height + buttonPlusY;
 
 			int maxHotkey = 0;
 			if (_z.hasHotkeys) {
 				foreach (var b in _a) {
 					if (b.hotkey == null) continue;
-					int wid = dc.Measure(b.hotkey, c_tffHotkey).width;
+					int wid = dc.MeasureDT(b.hotkey, c_tffHotkey).width;
 					maxHotkey = Math.Max(maxHotkey, Math.Min(wid, maxTextWidth / 2));
 				}
 			}
@@ -100,10 +100,9 @@ namespace Au
 					z = new(0, _z.separator);
 				} else {
 					var s = b.Text;
-					int len = s.Lenn();
-					if (len > 0) {
+					if (!s.NE()) {
 						if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
-						z = dc.Measure(s, len, _TfFlags(b), maxTextWidth);
+						z = dc.MeasureDT(s, _TfFlags(b), maxTextWidth);
 						z.width = Math.Min(z.width, maxTextWidth);
 						if (b.FontBold) Api.SelectObject(dc, font);
 						_z.xTextEnd = Math.Max(_z.xTextEnd, z.width);
@@ -183,15 +182,14 @@ namespace Au
 					if (b.hotkey != null) {
 						Api.SetTextColor(dc, textColorDisabled);
 						var rh = r; rh.left += _z.xHotkeyStart;
-						Api.DrawText(dc, b.hotkey, b.hotkey.Length, ref rh, c_tffHotkey);
+						Api.DrawText(dc, b.hotkey, ref rh, c_tffHotkey);
 					}
 
 					Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));
-					int len = b.Text.Lenn();
-					if (len > 0) {
+					if (!b.Text.NE()) {
 						if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
 						r.Width = _z.xTextEnd;
-						Api.DrawText(dc, b.Text, len, ref r, _TfFlags(b));
+						Api.DrawText(dc, b.Text, ref r, _TfFlags(b));
 						if (b.FontBold) Api.SelectObject(dc, font);
 					}
 
@@ -208,7 +206,7 @@ namespace Au
 							Api.DrawThemeBackground(_z.theme, dc, part, state, r);
 						} else {
 							RECT r = new(x, y, width, height);
-							Api.DrawText(dc, c, 1, ref r, TFFlags.CENTER);
+							Api.DrawText(dc, c, ref r, TFFlags.CENTER);
 							//cannot use DrawFrameControl(DFC_MENU, DFCS_MENUARROW etc), it draws with white background and too small when high DPI
 						}
 					}

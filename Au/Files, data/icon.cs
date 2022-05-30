@@ -2,8 +2,7 @@
 using System.Reflection.Emit;
 using System.Drawing;
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Gets icons from/of files etc. Contains native icon handle.
 	/// </summary>
@@ -498,7 +497,8 @@ namespace Au
 			//int size = Api.GetSystemMetrics(big ? Api.SM_CXICON : Api.SM_CXSMICON);
 
 			//support Windows Store apps
-			if (1 == wnd.Internal_.GetWindowsStoreAppId(w, out var appId, true)) {
+			var appId = WndUtil.GetWindowsStoreAppId(w, prependShellAppsFolder: true);
+			if (appId != null) {
 				var v = of(appId, size, IconGetFlags.DontSearch);
 				if (v != null) return v;
 			}
@@ -679,8 +679,7 @@ namespace Au
 		/// </remarks>
 		public static int debugSpeed { get; set; }
 
-		struct _DebugSpeed : IDisposable
-		{
+		struct _DebugSpeed : IDisposable {
 			long _time;
 			object _file; //string or Pidl
 
@@ -780,14 +779,12 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="icon.of"/> and similar functions.
 	/// </summary>
 	[Flags]
-	public enum IconGetFlags
-	{
+	public enum IconGetFlags {
 		/// <summary>
 		/// The <i>file</i> argument is literal full path. Don't parse "path,index", don't support ".ext" (file type icon), don't make fully-qualified, etc.
 		/// </summary>
@@ -811,8 +808,7 @@ namespace Au.Types
 
 #pragma warning disable 1591 //missing XML documentation
 	/// <summary>See <see cref="icon.stock"/>, <msdn>SHSTOCKICONID</msdn>.</summary>
-	public enum StockIcon
-	{
+	public enum StockIcon {
 		DOCNOASSOC,
 		DOCASSOC,
 		APPLICATION,

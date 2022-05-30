@@ -12,6 +12,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Classification;
+using EToken = CiStyling.EToken;
 
 static class CiUtil {
 	//not used
@@ -403,6 +405,30 @@ global using Au.More;
 
 		var ws = new AdhocWorkspace();
 		return (ws.CurrentSolution.AddProject(pi), m);
+	}
+
+	/// <summary>
+	/// For C# code gets style bytes that can be used with SCI_SETSTYLINGEX for UTF-8 text.
+	/// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
+	/// Controls that use this should set styles like this example, probably when handle created:
+	/// var styles = new CiStyling.TStyles { FontSize = 9 };
+	/// styles.ToScintilla(this);
+	/// </summary>
+	public static byte[] GetScintillaStylingBytes(string code) {
+		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
+		var map8 = Convert2.MapUtf8Offsets_(code);
+		var document = CreateDocumentFromCode(code, needSemantic: true);
+		var semo = document.GetSemanticModelAsync().Result;
+		var a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, code.Length)).Result;
+		foreach (var v in a) {
+			var ct = v.ClassificationType; if (ct == ClassificationTypeNames.StaticSymbol) continue; /*duplicate*/
+			//print.it(v.TextSpan, ct, code[v.TextSpan.Start..v.TextSpan.End]);
+			EToken style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			if (style == EToken.None) continue;
+			int i = v.TextSpan.Start, end = v.TextSpan.End; if (map8 != null) { i = map8[i]; end = map8[end]; }
+			for (; i < end; i++) styles8[i] = (byte)style;
+		}
+		return styles8;
 	}
 
 	/// <summary>
