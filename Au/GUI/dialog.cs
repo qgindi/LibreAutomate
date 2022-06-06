@@ -184,7 +184,7 @@ namespace Au
 			public static bool topmostIfNoOwnerWindow { get; set; } = true;
 
 			/// <summary>
-			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
+			/// Show dialogs on this screen when screen is not explicitly specified (property <see cref="Screen"/> or parameter <i>screen</i>) and there is no owner window.
 			/// The <b>screen</b> must be lazy or empty.
 			/// </summary>
 			/// <exception cref="ArgumentException"><b>screen</b> with <b>Handle</b>. Must be lazy or empty.</exception>
@@ -229,7 +229,7 @@ namespace Au
 		public dialog(
 			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, screen screen = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) : this(flags) {
 			if (0 != (flags & DFlags.Wider)) Width = 700;
 
@@ -244,6 +244,7 @@ namespace Au
 			}
 			SetOwnerWindow(owner, 0 != (flags & DFlags.CenterOwner));
 			SetXY(x, y, 0 != (flags & DFlags.RawXY));
+			Screen = screen;
 			SetTimeout(secondsTimeout);
 			SetExpandedText(expandedText, 0 != (flags & DFlags.ExpandDown));
 			SetFooter(footer);
@@ -776,7 +777,7 @@ namespace Au
 			WindowsHook hook = null;
 
 			try {
-				_threadIdInShow = Thread.CurrentThread.ManagedThreadId;
+				_threadIdInShow = Environment.CurrentManagedThreadId;
 
 				_buttons.MarshalButtons(ref _c);
 				if (_c.pButtons == null) _SetFlag(_TDF.USE_COMMAND_LINKS | _TDF.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
@@ -1029,7 +1030,7 @@ namespace Au
 
 		bool _WaitWhileInShow() {
 			if (_threadIdInShow != 0) {
-				if (_threadIdInShow == Thread.CurrentThread.ManagedThreadId) return false;
+				if (_threadIdInShow == Environment.CurrentManagedThreadId) return false;
 				while (_threadIdInShow != 0) Thread.Sleep(15);
 			}
 			return true;
@@ -1062,7 +1063,7 @@ namespace Au
 		}
 
 		void _AssertIsOtherThread() {
-			if (_threadIdInShow != 0 && _threadIdInShow == Thread.CurrentThread.ManagedThreadId)
+			if (_threadIdInShow != 0 && _threadIdInShow == Environment.CurrentManagedThreadId)
 				throw new AuException("wrong thread");
 		}
 
@@ -1327,6 +1328,7 @@ namespace Au
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - center.</param>
+		/// <param name="screen"><see cref="Screen"/>. Examples: <c>screen.ofMouse</c>, <c>screen.index(1)</c>.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
@@ -1389,11 +1391,11 @@ namespace Au
 		public static int show(
 			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, screen screen = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) {
 			var d = new dialog(text1, text2, buttons, flags, icon, owner,
 				expandedText, footer, title, controls,
-				defaultButton, x, y, secondsTimeout, onLinkClick);
+				defaultButton, x, y, screen, secondsTimeout, onLinkClick);
 			return d.ShowDialog();
 		}
 
@@ -1467,6 +1469,7 @@ namespace Au
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
+		/// <param name="screen"><see cref="Screen"/>. Examples: <c>screen.ofMouse</c>, <c>screen.index(1)</c>.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <param name="buttons">
@@ -1521,14 +1524,14 @@ namespace Au
 			DEdit editType = DEdit.Text, string editText = null, Strings comboItems = default,
 			DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
-			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
+			Coord x = default, Coord y = default, screen screen = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
 			string buttons = "1 OK|2 Cancel", Action<DEventArgs> onButtonClick = null
 			) {
 			if (buttons.NE()) buttons = "1 OK|2 Cancel";
 
 			var d = new dialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footer, title, controls,
-				0, x, y, secondsTimeout, onLinkClick);
+				0, x, y, screen, secondsTimeout, onLinkClick);
 
 			d.SetEditControl(editType == DEdit.None ? DEdit.Text : editType, editText, comboItems);
 			if (onButtonClick != null) d.ButtonClicked += onButtonClick;
@@ -1589,6 +1592,7 @@ namespace Au
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
+		/// <param name="screen"><see cref="Screen"/>. Examples: <c>screen.ofMouse</c>, <c>screen.index(1)</c>.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <remarks>
@@ -1606,12 +1610,12 @@ namespace Au
 		public static int showList(
 			Strings list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
+			int defaultButton = 0, Coord x = default, Coord y = default, screen screen = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
 			) {
 			var d = new dialog(text1, text2, default, flags | DFlags.XCancel, 0, owner,
 				expandedText, footer, title, controls,
-				defaultButton, x, y, secondsTimeout, onLinkClick);
+				defaultButton, x, y, screen, secondsTimeout, onLinkClick);
 
 			d.SetButtons(default, true, list);
 			d.SetExpandedText(expandedText, true);
@@ -1648,13 +1652,13 @@ namespace Au
 		public static dialog showProgress(bool marquee,
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
-			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
+			Coord x = default, Coord y = default, screen screen = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 		) {
 			if (buttons.NE()) buttons = "0 Cancel";
 
 			var d = new dialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footer, title, controls,
-				0, x, y, secondsTimeout, onLinkClick);
+				0, x, y, screen, secondsTimeout, onLinkClick);
 
 			if (marquee) d.ProgressBarMarquee = true; else d.ProgressBar = true;
 
@@ -1693,11 +1697,11 @@ namespace Au
 		public static dialog showNoWait(
 			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, screen screen = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) {
 			var d = new dialog(text1, text2, buttons, flags, icon, owner,
 				expandedText, footer, title, controls,
-				defaultButton, x, y, secondsTimeout, onLinkClick);
+				defaultButton, x, y, screen, secondsTimeout, onLinkClick);
 			d.ShowDialogNoWait();
 			return d;
 		}

@@ -38,11 +38,11 @@ enum ICSFlags {
 /// </summary>
 static class InsertCode {
 	/// <summary>
-	/// Inserts one or more statements at current line.
+	/// Inserts one or more statements at current line. With correct position, indentation, etc.
 	/// If editor is null or readonly, prints in output.
 	/// Async if called from non-main thread.
 	/// </summary>
-	/// <param name="s">Text without "\r\n" at the end. Does nothing if null.</param>
+	/// <param name="s">Text. The function ignores "\r\n" at the end. Does nothing if null.</param>
 	/// <param name="separate">Prepend/append empty line to separate from surrounding code if need. If null, does it if <i>s</i> contains '\n'.</param>
 	public static void Statements(string s, ICSFlags flags = 0, bool? separate = null) {
 		if (s == null) return;
@@ -58,9 +58,9 @@ static class InsertCode {
 			print.it(s);
 			return;
 		}
-		var root = k.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		var root = k.syntaxRoot;
 		var code = k.code;
-		var pos = k.pos16;
+		var pos = k.pos;
 		var token = root.FindToken(pos);
 		var node = token.Parent;
 
@@ -147,7 +147,7 @@ static class InsertCode {
 		for (; pos > 0 && code[pos - 1] != '\n'; pos--) if (code[pos - 1] is not (' ' or '\t')) { breakLine = "\r\n"; break; }
 		int replTo = pos; while (replTo < code.Length && code[replTo] is ' ' or '\t') replTo++;
 
-		var d = k.sciDoc;
+		var d = k.sci;
 
 		var t2 = root.FindToken(pos); if (t2.SpanStart >= pos) t2 = t2.GetPreviousToken();
 		bool afterOpenBrace = t2.IsKind(SyntaxKind.OpenBraceToken);
@@ -163,14 +163,7 @@ static class InsertCode {
 			if (nn < 2) b.Append('\t', indent).AppendLine();
 		}
 
-		bool rawString = false;
-		foreach (var v in s.Lines()) {
-			if (indent > 0) {
-				if (!rawString) b.Append('\t', indent);
-				rawString = rawString ? !v.Starts("\"\"\"") : v.Ends("\"\"\"");
-			}
-			b.AppendLine(v);
-		}
+		InsertCodeUtil.AppendCodeWithIndent(b, s, indent, andNewline: true);
 
 		if (separate && !s.Ends("\n}") && replTo < code.Length && code[replTo] is not ('\r' or '}')) {
 			b.Append('\t', indent).AppendLine();
@@ -342,6 +335,42 @@ static class InsertCode {
 	}
 
 	/// <summary>
+	/// In current document gently replaces text in range from..to with before + text + after. Indents if need.
+	/// Ignores newline at the end of the range text.
+	/// </summary>
+	public static void Surround(int from, int to, string before, string after, int indentPlus) {
+		var doc = Panels.Editor.ZActiveDoc;
+		int indent = doc.zLineIndentationFromPos(true, from);
+		if (indent > 0) {
+			var si = new string('\t', indent);
+			before = before.RxReplace("(?m)^", si);
+			after = after.RxReplace("(?m)^", si);
+		}
+		var b = new StringBuilder(before);
+		var s = doc.zRangeText(true, from, to);
+		InsertCodeUtil.AppendCodeWithIndent(b, s, indentPlus, andNewline: false);
+		b.Append(after);
+		doc.ZReplaceTextGently(b.ToString(), from..to);
+	}
+
+	/// <summary>
+	/// In current document gently replaces the selected text or statement with before + text + after. Indents if need.
+	/// Ignores newline at the end of the selected text.
+	/// </summary>
+	public static void Surround(string before, string after, int indentPlus) {
+		var doc = Panels.Editor.ZActiveDoc;
+		int from = doc.zSelectionStart16, to = doc.zSelectionEnd16;
+		if (from == to) {
+			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
+			var stat = CiUtil.GetStatementEtcFromPos(cd, from);
+			if (stat == null) return;
+			var span = stat.GetRealFullSpan(minimalLeadingTrivia: true);
+			(from, to) = span;
+		}
+		Surround(from, to, before, after, indentPlus);
+	}
+
+	/// <summary>
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
 	/// Returns true if inserted.
 	/// </summary>
@@ -360,7 +389,7 @@ static class InsertCode {
 			if (v != null) b.Append("using ").Append(v).AppendLine(";");
 		}
 
-		k.sciDoc.zInsertText(true, i, b.ToString(), addUndoPointAfter: true, restoreFolding: true);
+		k.sci.zInsertText(true, i, b.ToString(), addUndoPointAfter: true, restoreFolding: true);
 
 		return true;
 
@@ -386,14 +415,14 @@ static class InsertCode {
 		}
 
 		//at first look for "global using"
-		var semo = k.document.GetSemanticModelAsync().Result;
+		var semo = k.semanticModel;
 		if (namespaces != null && _ClearExistingUsings(CiUtil.GetAllGlobalUsings(semo))) return -1;
 
 		int end = -1;
-		var cu = k.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		var cu = k.syntaxRoot;
 
 		//then look in current namespace, ancestor namespaces, compilation unit
-		int pos = k.sciDoc.zCurrentPos16;
+		int pos = k.sci.zCurrentPos16;
 		for (var node = cu.FindToken(pos).Parent; node != null; node = node.Parent) {
 			SyntaxList<UsingDirectiveSyntax> usings; SyntaxList<ExternAliasDirectiveSyntax> externs;
 			if (node is NamespaceDeclarationSyntax ns) {
@@ -429,13 +458,13 @@ static class InsertCode {
 	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
 	/// </summary>
 	public static void DocComment(CodeInfo.Context cd) {
-		int pos = cd.pos16;
+		int pos = cd.pos;
 		string code = cd.code;
-		SciCode doc = cd.sciDoc;
+		SciCode doc = cd.sci;
 
 		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !InsertCodeUtil.IsLineStart(code, pos - 3)) return;
 
-		var root = cd.document.GetSyntaxRootAsync().Result;
+		var root = cd.syntaxRoot;
 		var node = root.FindToken(pos).Parent;
 		var start = node.SpanStart;
 		if (start < pos) return;
@@ -473,7 +502,7 @@ static class InsertCode {
 			//rejected: <typeparam name="TT"></typeparam>. Rarely used.
 		}
 
-		s = InsertCodeUtil.IndentStringForInsert(s, doc, pos);
+		s = InsertCodeUtil.IndentStringForInsertSimple(s, doc, pos);
 
 		doc.zInsertText(true, pos, s, true, true);
 		doc.zGoToPos(true, pos + s.Find("/ ") + 2);
@@ -486,17 +515,9 @@ static class InsertCode {
 	}
 
 	public static void AddClassProgram() {
-		var a = new string[] {
-			"class Program { static void Main(string[] a) => new Program(a); Program(string[] args) { //...",
-			"class Program { static void Main(string[] args) { //...",
-		};
-		int pm = popupMenu.showSimple(a) - 1; if (pm < 0) return;
-
-		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sciDoc.ZFile.IsScript*/) return;
-		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-
+		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sci.ZFile.IsScript*/) return;
 		int start, end = cd.code.Length;
-		var members = cu.Members;
+		var members = cd.syntaxRoot.Members;
 		if (members.Any()) {
 			start = _FindRealStart(false, members[0]);
 			if (members[0] is not GlobalStatementSyntax) end = start;
@@ -526,9 +547,16 @@ static class InsertCode {
 		} else start = end;
 		//CiUtil.HiliteRange(start, end); return;
 
-		using var undo = new KScintilla.UndoAction(cd.sciDoc);
-		cd.sciDoc.zInsertText(true, end, "\r\n}\r\n}\r\n");
-		cd.sciDoc.zInsertText(true, start, a[pm] + "\r\n");
+		var before = """
+class Program {
+	static void Main(string[] a) => new Program(a);
+	Program(string[] args) {
+
+""";
+		var after = @"
+	}
+}";
+		Surround(start, end, before, after, indentPlus: 2);
 	}
 
 	/// <summary>
@@ -540,8 +568,8 @@ static class InsertCode {
 
 	static bool _CreateDelegate() {
 		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return false;
-		int pos = cd.pos16;
-		var semo = cd.document.GetSemanticModelAsync().Result;
+		int pos = cd.pos;
+		var semo = cd.semanticModel;
 
 		if (token.IsKind(SyntaxKind.SemicolonToken)) {
 			if (pos > token.SpanStart) return false;
@@ -630,8 +658,8 @@ static class InsertCode {
 
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
-		var semo = cd.document.GetSemanticModelAsync().Result;
-		var node = semo.Root.FindToken(cd.pos16).Parent;
+		var semo = cd.semanticModel;
+		var node = semo.Root.FindToken(cd.pos).Parent;
 		//CiUtil.PrintNode(node);
 
 		bool haveBaseType = false;
@@ -739,8 +767,8 @@ static class InsertCode {
 		//print.it(text);
 		//clipboard.text = text;
 
-		cd.sciDoc.zInsertText(true, position, text, addUndoPointAfter: true);
-		cd.sciDoc.zGoToPos(true, position);
+		cd.sci.zInsertText(true, position, text, addUndoPointAfter: true);
+		cd.sci.zGoToPos(true, position);
 
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
 	}
@@ -751,7 +779,7 @@ static class InsertCode {
 	/// <param name="icon">Like "*Pack.Name #color".</param>
 	public static void SetMenuToolbarItemIcon(string icon) {
 		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node, -2)) return;
-		var semo = cd.document.GetSemanticModelAsync().Result;
+		var semo = cd.semanticModel;
 
 		//find nearest argumentlist and its method symbol
 		BaseArgumentListSyntax arglist = null; IMethodSymbol method = null;
@@ -801,8 +829,40 @@ static class InsertCode {
 			if (arglist.Arguments.Count > 0) prefix = ", ";
 		}
 		icon = $"{prefix}{paramName}: \"{icon}\"{suffix}";
-		//print.it(cd.pos16, replFrom, replTo, icon);
+		//print.it(cd.pos, replFrom, replTo, icon);
 
-		cd.sciDoc.zReplaceRange(true, replFrom, replTo, icon);
+		cd.sci.zReplaceRange(true, replFrom, replTo, icon);
+	}
+
+	//FUTURE: dialogs in SurroundFor and SurroundTryCatch. Eg to set variable name, count, whether to add finally.
+	public static void SurroundFor() {
+		var before = """
+for (int i = 0; i < count; i++) {
+
+""";
+		var after = """
+
+}
+
+""";
+		Surround(before, after, 1);
+	}
+
+	public static void SurroundTryCatch() {
+		//SHOULDDO: If a statement is like 'var v = expression;', make 'Type v = null; try { v = expression; } catch {  }'.
+
+		var before = """
+try {
+
+""";
+		var after = """
+
+}
+catch (Exception) {
+	
+}
+
+""";
+		Surround(before, after, 1);
 	}
 }

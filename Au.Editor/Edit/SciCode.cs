@@ -330,7 +330,7 @@ partial class SciCode : KScintilla {
 				m.Show(this, byCaret: kbd);
 				break;
 			case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
-				ZCommentLines(null, notSlashStar: true);
+				ModifyCode.CommentLines(null, notSlashStar: true);
 				break;
 			case c_marginFold:
 				int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful

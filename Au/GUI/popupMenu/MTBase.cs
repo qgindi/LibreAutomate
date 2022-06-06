@@ -65,6 +65,7 @@ public abstract partial class MTBase {
 	/// Extract file path or script path from item action code (for example <see cref="run.it"/> or <see cref="script.run"/> argument) and use icon of that file or script.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
+	/// <value>Default: <b>toolbar</b> true, <b>popupMenu</b> with <i>name</i> true, <b>popupMenu</b> without <i>name</i> false.</value>
 	/// <remarks>
 	/// Gets path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell or <c>@"\folder\script.cs"</c>.
 	/// Also supports code patterns like <c>folders.System + "notepad.exe"</c>, <c>folders.shell.RecycleBin</c>.
@@ -77,6 +78,7 @@ public abstract partial class MTBase {
 	/// Execute item actions asynchronously in new threads.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
+	/// <value>Default: <b>toolbar</b> true<b>, popupMenu</b> false.</value>
 	/// <remarks>
 	/// If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = true to avoid it.
 	/// </remarks>
@@ -86,12 +88,14 @@ public abstract partial class MTBase {
 	/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="print.warning"/>.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
+	/// <value>Default: <b>toolbar</b> false<b>, popupMenu</b> false.</value>
 	public bool ActionException { get; set; }
 
 	/// <summary>
 	/// If an item has file path, show it in tooltip.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
+	/// <value>Default: <b>toolbar</b> false<b>, popupMenu</b> false.</value>
 	public bool PathInTooltip { get; set; }
 
 	private protected void _CopyProps(MTBase m) {

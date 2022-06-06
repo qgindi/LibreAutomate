@@ -53,7 +53,8 @@ class DIcons : KDialogWindow {
 		b.Add(out _tName).Tooltip(@"Search.
 Part of icon name, or wildcard expression.
 Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
-Can be Pack.Icon, like Modern.List.").Dock(Dock.Top);
+Can be Pack.Icon, like Modern.List.")
+			.Dock(Dock.Top).Focus();
 		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
 		b.xAddInBorder(out KTreeView tv); //tv.SingleClickActivate = true;
 		b.End();

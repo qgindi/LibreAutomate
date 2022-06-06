@@ -35,10 +35,10 @@ class KeysWindow : InfoWindow //KPopup
 	void _Insert(string s) {
 		Debug.Assert(InsertInControl == Panels.Editor.ZActiveDoc);
 		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return;
-		if (true != token.IsInString(cd.pos16, cd.code, out var si)) return;
+		if (true != token.IsInString(cd.pos, cd.code, out var si)) return;
 		var code = cd.code;
-		var pos = cd.pos16;
-		var sci = cd.sciDoc;
+		var pos = cd.pos;
+		var sci = cd.sci;
 		int from = si.textSpan.Start, to = si.textSpan.End;
 
 		switch (s) {

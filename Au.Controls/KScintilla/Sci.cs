@@ -1053,22 +1053,6 @@ namespace Au.Controls {
 		}
 
 		/// <summary>
-		/// zGoToPos and SCI_REPLACESEL.
-		/// </summary>
-		/// <param name="utf16"></param>
-		/// <param name="s">Replacement text. Can be null.</param>
-		/// <param name="pos">Start index.</param>
-		/// <remarks>
-		/// Does not parse tags.
-		/// If read-only, asserts and fails (unlike most other functions that change text).
-		/// </remarks>
-		public void zReplaceSel(bool utf16, int pos, string s) {
-			Debug.Assert(!zIsReadonly);
-			zGoToPos(utf16, pos);
-			zSetString(SCI_REPLACESEL, 0, s ?? "");
-		}
-
-		/// <summary>
 		/// Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
 		/// </summary>
 		/// <param name="utf16"></param>

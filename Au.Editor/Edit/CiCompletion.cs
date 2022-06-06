@@ -121,8 +121,8 @@ partial class CiCompletion {
 		Cancel();
 
 		if (!CodeInfo.GetContextWithoutDocument(out var cd)) return; //returns false if position is in meta comments
-		SciCode doc = cd.sciDoc;
-		int position = cd.pos16;
+		SciCode doc = cd.sci;
+		int position = cd.pos;
 		string code = cd.code;
 
 		if (ch != default && position > 1 && SyntaxFacts.IsIdentifierPartCharacter(ch) && SyntaxFacts.IsIdentifierPartCharacter(code[position - 2])) { //in word
@@ -164,7 +164,7 @@ partial class CiCompletion {
 #endif
 
 		try {
-			CompletionList r = await Task.Run(async () => { //info: actually GetCompletionsAsync etc are not async
+			CompletionList r = await Task.Run(async () => { //info: usually GetCompletionsAsync etc are not async
 				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too. Same speed if only GetSyntaxRootAsync.
 				root = model.Root as CompilationUnitSyntax;
 				var tok = root.FindToken(position, findInsideTrivia: true);
@@ -186,13 +186,14 @@ partial class CiCompletion {
 				//in some cases show list when typing a character where GetCompletionsAsync works only on command
 				if (ch == '[' && syncon.IsAttributeNameContext) ch = default;
 				if (ch == ' ' && syncon.IsObjectCreationTypeContext) ch = default;
-				if (ch == '|') { //show on 'Enum.Member|'. Somehow Roslyn shows only on 'Enum.Member| ' (need space after |).
-					var t2 = tok.GetPreviousToken();
-					if (t2.IsKind(SyntaxKind.BarToken) && t2.SpanStart == position - 1 && t2.Parent.IsKind(SyntaxKind.BitwiseOrExpression)) {
-						var n2 = t2.GetPreviousToken().Parent;
-						if (n2 is IdentifierNameSyntax && (model.GetTypeInfo(n2).Type?.IsEnumType() ?? false)) ch = default;
-					}
-				}
+				//rejected. Then, if typed space, shows list 2 times. Not nice.
+				//if (ch == '|') { //show on 'Enum.Member|'. Roslyn shows only on 'Enum.Member| ' (need space after |).
+				//	var t2 = tok.GetPreviousToken();
+				//	if (t2.IsKind(SyntaxKind.BarToken) && t2.SpanStart == position - 1 && t2.Parent.IsKind(SyntaxKind.BitwiseOrExpression)) {
+				//		var n2 = t2.GetPreviousToken().Parent;
+				//		if (n2 is IdentifierNameSyntax && (model.GetTypeInfo(n2).Type?.IsEnumType() ?? false)) ch = default;
+				//	}
+				//}
 
 				completionService = CompletionService.GetService(document);
 				if (cancelToken.IsCancellationRequested) return null;
@@ -985,7 +986,7 @@ partial class CiCompletion {
 						//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
 						if (i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
 							if (cd.code[i - 1] == ' ' && cd.GetDocument()) {
-								var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
+								var node = cd.syntaxRoot.FindToken(i - 1).Parent;
 								//print.it(node.Kind(), i, node.Span, node);
 								if (node.SpanStart < i) switch (node) { case ExpressionSyntax: case BaseArgumentListSyntax: ch = '{'; break; } //expression
 							}

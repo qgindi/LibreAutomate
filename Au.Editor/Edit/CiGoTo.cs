@@ -244,12 +244,12 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 				var g = new CiGoTo(sym);
 				if (g.CanGoTo) g.GoTo();
 			}
-		} else if (cd.sciDoc.zHasSelection) {
-			_Open(cd.sciDoc.zSelectedText());
+		} else if (cd.sci.zHasSelection) {
+			_Open(cd.sci.zSelectedText());
 		} else if (helpKind == CiUtil.HelpKind.String && token.Parent.IsKind(SyntaxKind.StringLiteralExpression)) {
 			_Open(token.ValueText, token);
 		} else if (helpKind == CiUtil.HelpKind.None && cd != null) { //maybe path in comments or disabled code
-			int pos = cd.pos16;
+			int pos = cd.pos;
 			if (pos < cd.meta.end && pos > cd.meta.start) {
 				foreach (var t in Au.Compiler.MetaComments.EnumOptions(cd.code, cd.meta)) {
 					if (pos >= t.valueStart && pos <= t.valueStart + t.valueLen) {
@@ -258,7 +258,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 					}
 				}
 			} else {
-				var root = cd.document.GetSyntaxRootAsync().Result;
+				var root = cd.syntaxRoot;
 				var trivia = root.FindTrivia(pos); if (trivia.RawKind == 0) return;
 				var code = cd.code;
 				var span = trivia.Span;

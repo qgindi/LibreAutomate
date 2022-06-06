@@ -215,7 +215,7 @@ XML doc text
 Line number";
 			sciStyles.zText = s;
 			int i = -3;
-			foreach (var v in s.Segments(SegSep.Line)) {
+			foreach (var v in s.Lines(..)) {
 				i++;
 				if (i < 0) { //Font, Background
 

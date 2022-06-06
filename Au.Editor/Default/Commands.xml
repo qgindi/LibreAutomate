@@ -49,6 +49,7 @@ All attributes are optional. The Example command contains all.
 		<Paste />
 		<Comment separator="" />
 		<Uncomment />
+		<Format_document />
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<Find separator="" />

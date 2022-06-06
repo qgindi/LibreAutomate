@@ -146,15 +146,15 @@ partial class CiStyling
 
 			bool minimal = end8 >= 0;
 			bool needFolding = !minimal && !_folded;
-			SyntaxNode root = null;
 			List<CiFolding.FoldPoint> af = null;
 
-			await Task.Run(async () => {
-				root = await document.GetSyntaxRootAsync(cancelToken).ConfigureAwait(false);
-				_PN('s');
-				if (needFolding) af = CiFolding.GetFoldPoints(root, code, cancelToken);
-			});
-			if (_Cancelled()) return;
+			if (needFolding) {
+				await Task.Run(() => {
+					_PN('s');
+					af = CiFolding.GetFoldPoints(cd.syntaxRoot, code, cancelToken);
+				});
+				if (_Cancelled()) return;
+			}
 			_PN('p');
 
 			if (minimal) {

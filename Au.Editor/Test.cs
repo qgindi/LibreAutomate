@@ -42,7 +42,6 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 
 static unsafe class Test {
 
-
 	//	static void TestMarkdig() {
 	//		string markdown = @"List:
 	//- one.
@@ -54,9 +53,16 @@ static unsafe class Test {
 	//		print.it(html);
 	//	}
 
-
+	/// <summary>
+	/// one two three four five six seven eith none ten
+	/// </summary>
 	public static void FromMenubar() {
 		print.clear();
+
+		//ModifyCode.Format(true);
+
+
+		Menus.Edit.Surround.Surround_for();
 
 		//InsertCode.CreateDelegate();
 		//var f = App.Model.FindCodeFile("InsertCode");
@@ -66,7 +72,6 @@ static unsafe class Test {
 
 		//var f = App.Model.FindCodeFile(@"\@DNewToolbar\test DNewToolbar.cs");
 		//CompileRun.CompileAndRun(true, f, runFromEditor: true);
-
 
 
 		//App.Model.NewItem("Class.cs", text: new(true, "moo"));
@@ -84,7 +89,7 @@ static unsafe class Test {
 		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		//CiUtil.PrintNode(node);
 		//var span = node.GetRealFullSpan();
-		//cd.sciDoc.zSelect(true, span.Start, span.End);
+		//cd.sci.zSelect(true, span.Start, span.End);
 
 		//var node = token.Parent;
 		//print.it("---------");
@@ -92,7 +97,7 @@ static unsafe class Test {
 		//print.it("---------");
 		//for(var v=node;v!=null; v=v.Parent) CiUtil.PrintNode(v);
 
-		//var pos16 = cd.pos16;
+		//var pos16 = cd.pos;
 		//bool? inString = token.IsInString(pos16, cd.code, out var x);
 		//if (inString == true) print.it($"{pos16}, {x.textSpan}, {(x.isInterpolated ? "i" : "")}, {(x.isVerbatim ? "V" : x.isRaw ? "R" : "")}");
 		//else print.it(inString);
@@ -113,7 +118,7 @@ static unsafe class Test {
 		//print.it(doc.zCurrentPos16);
 
 		//var v = CiUtil.GetSymbolEtcFromPos(out var k);
-		//var semo = k.document.GetSemanticModelAsync().Result;
+		//var semo = k.semanticModel;
 		//var comp = semo.Compilation;
 		//var c = v.symbol.GetDocumentationComment(comp, expandIncludes: true, expandInheritdoc: true);
 		//var s = c.FullXmlFragment;
@@ -143,7 +148,7 @@ static unsafe class Test {
 	//	//	Removes tabs from empty lines.
 
 	//	if (!CodeInfo.GetContextAndDocument(out var k)) return;
-	//	var cu = k.document.GetSyntaxTreeAsync().Result.GetCompilationUnitRoot();
+	//	var cu = k.syntaxRoot;
 
 	//	var workspace = k.document.Project.Solution.Workspace;
 	//	var o = workspace.Options;

@@ -216,20 +216,20 @@ static class CiUtilExt {
 	/// <summary>
 	/// Gets full span of a method or type declaration node, not including leading trivia that is not comments/doccomments touching the declaration.
 	/// </summary>
-	public static TextSpan GetRealFullSpan(this SyntaxNode t) {
-		//from leading trivia delete only comments and doc comments, until an empty line
+	/// <param name="minimalLeadingTrivia">Get leading trivia just until the first newline when searching backwards. Usually it is indentation whitespace or nothing.</param>
+	public static TextSpan GetRealFullSpan(this SyntaxNode t, bool minimalLeadingTrivia = false) {
 		int from = t.SpanStart;
-		bool eol = false;
 		var a = t.GetLeadingTrivia();
 		for (int i = a.Count; --i >= 0;) {
 			var v = a[i];
 			var k = v.Kind();
+			//print.it(i, k);
 			if (k == SyntaxKind.EndOfLineTrivia) {
-				if (eol) break;
-				eol = true;
-				if (i > 0 && a[i - 1].IsKind(SyntaxKind.WhitespaceTrivia)) v = a[--i];
+				if (i == 0 || minimalLeadingTrivia) break;
+				k = a[i - 1].Kind();
+				if (k == SyntaxKind.EndOfLineTrivia) break;
+				if (k == SyntaxKind.WhitespaceTrivia) if (i == 1 || a[i - 2].IsKind(SyntaxKind.EndOfLineTrivia)) break;
 			} else {
-				eol = false;
 				if (k is not (SyntaxKind.WhitespaceTrivia
 					or SyntaxKind.SingleLineCommentTrivia
 					or SyntaxKind.SingleLineDocumentationCommentTrivia
@@ -238,7 +238,6 @@ static class CiUtilExt {
 					) break;
 			}
 			from = v.SpanStart;
-			//CiUtil.PrintNode(v);
 		}
 		return TextSpan.FromBounds(from, t.FullSpan.End);
 	}

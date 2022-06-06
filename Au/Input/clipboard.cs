@@ -1,5 +1,4 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Clipboard functions: copy, paste, get and set clipboard text and other data.
 	/// </summary>
@@ -10,8 +9,7 @@ namespace Au
 	/// 
 	/// Don't copy/paste in windows of own thread. Call it from another thread. Example in <see cref="keys.send"/>.
 	/// </remarks>
-	public static class clipboard
-	{
+	public static class clipboard {
 		/// <summary>
 		/// Clears the clipboard.
 		/// </summary>
@@ -85,6 +83,49 @@ namespace Au
 		public static string copy(bool cut = false, OKey options = null) {
 			return _Copy(cut, options, null);
 			//rejected: 'format' parameter. Not useful.
+		}
+
+		/// <summary>
+		/// Calls <see cref="copy"/> and handles exceptions.
+		/// </summary>
+		/// <returns>Returns false if failed.</returns>
+		/// <param name="text">Receives the copied text.</param>
+		/// <param name="cut"></param>
+		/// <param name="options"></param>
+		/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
+		/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to copy text". Default true.</param>
+		public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true) {
+			try {
+				text = copy(cut, options);
+				return true;
+			}
+			catch (Exception e1) {
+				if (warning) print.warning(e1.Message, 1);
+				if (osd) osdText.showTransparentText("Failed to copy text");
+				text = null;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Calls <see cref="paste"/> and handles exceptions.
+		/// </summary>
+		/// <returns>Returns false if failed.</returns>
+		/// <param name="text"></param>
+		/// <param name="html"></param>
+		/// <param name="options"></param>
+		/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
+		/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to paste text". Default true.</param>
+		public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true) {
+			try {
+				clipboard.paste(text, html, options);
+				return true;
+			}
+			catch (Exception e1) {
+				if (warning) print.warning(e1.Message, 1);
+				if (osd) osdText.showTransparentText("Failed to paste text");
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -349,8 +390,7 @@ namespace Au
 		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
 		/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
 		/// </summary>
-		class _ClipboardListener : WaitVariable_
-		{
+		class _ClipboardListener : WaitVariable_ {
 			bool _paste; //true if used for paste, false if for copy
 			object _data; //string or Data. null if !_paste.
 			WNDPROC _wndProc;
@@ -486,8 +526,7 @@ namespace Au
 		/// If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
 		/// Dispose() closes clipboard and destroys the owner window.
 		/// </summary>
-		internal struct OpenClipboard_ : IDisposable
-		{
+		internal struct OpenClipboard_ : IDisposable {
 			bool _isOpen;
 			wnd _w;
 
@@ -543,8 +582,7 @@ namespace Au
 		/// Saves and restores clipboard data.
 		/// Clipboard must be open. Don't need to call EmptyClipboard before Restore.
 		/// </summary>
-		struct _SaveRestore
-		{
+		struct _SaveRestore {
 			Dictionary<int, byte[]> _data;
 
 			public void Save(bool debug = false) {
@@ -637,8 +675,7 @@ namespace Au
 		/// Temporarily disables Windows 10 Clipboard History.
 		/// Note: before disabling, we must open clipboard, else Clipboard History could be suspended while it has clipboard open.
 		/// </summary>
-		struct _DisableClipboardHistory
-		{
+		struct _DisableClipboardHistory {
 			//Pasting is unreliable with Windows 10 Clipboard History (CH).
 			//Sometimes does not paste because OpenClipboard fails in the target app, because then CH has it open.
 			//Then also _IsTargetWindow debugprints. Often just debugprints and waits briefly, but pasting works.

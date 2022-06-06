@@ -83,7 +83,7 @@ class CiTools {
 		bool retry = false;
 	g1:
 		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return;
-		var pos16 = cd.pos16;
+		var pos16 = cd.pos;
 		bool? inString = token.IsInString(pos16, cd.code, out var stri);
 		if (inString == null) return;
 		if (inString != true) {
@@ -118,14 +118,14 @@ class CiTools {
 
 		var t = CodeInfo._tools;
 		if (isRegex) {
-			t._RegexWindowShow(cd.sciDoc, cd.code, pos16, stri, replace: false);
+			t._RegexWindowShow(cd.sci, cd.code, pos16, stri, replace: false);
 		} else {
 			PSFormat format = PSFormat.Keys;
 			if (inString == true) {
-				var semo = cd.document.GetSemanticModelAsync().Result;
+				var semo = cd.semanticModel;
 				format = CiUtil.GetParameterStringFormat(token.Parent, semo, true);
 			}
-			t._KeysWindowShow(cd.sciDoc, cd.code, pos16, stri, format);
+			t._KeysWindowShow(cd.sci, cd.code, pos16, stri, format);
 		}
 	}
 
@@ -133,10 +133,10 @@ class CiTools {
 		switch (stringFormat) {
 		case PSFormat.Regexp:
 		case PSFormat.RegexpReplacement:
-			_RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, si, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
+			_RegexWindowShow(cd.sci, cd.code, cd.pos, si, replace: stringFormat == PSFormat.RegexpReplacement, dontCover);
 			break;
 		case PSFormat.Keys or PSFormat.Hotkey or PSFormat.HotkeyTrigger or PSFormat.TriggerMod:
-			_KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, si, stringFormat, dontCover);
+			_KeysWindowShow(cd.sci, cd.code, cd.pos, si, stringFormat, dontCover);
 			break;
 		}
 	}

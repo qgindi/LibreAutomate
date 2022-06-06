@@ -521,7 +521,7 @@ public static unsafe partial class ExtString {
 	/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) print.it(s[t.start..t.end]);
 	/// ]]></code>
 	/// </example>
-	/// <seealso cref="Lines"/>
+	/// <seealso cref="Lines(string, Range, bool)"/>
 	public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null) {
 		return new SegParser(t, separators, flags, range);
 	}
@@ -562,57 +562,86 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Splits this string using newline separators "\r\n", "\n", "\r".
 	/// </summary>
+	/// <returns>Array containing lines as strings. Does not include the last empty line.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="noEmpty">Don't need empty lines.</param>
-	/// <seealso cref="Segments"/>
-	/// <seealso cref="SegSep.Line"/>
+	/// <seealso cref="StringReader.ReadLine"/>
+	[SkipLocalsInit]
 	public static string[] Lines(this string t, bool noEmpty = false) {
-		int n = 0, from = 0;
-		for (int i = 0; i < t.Length; i++) {
-			char c = t[i];
-			if (c <= '\r') {
-				if (c == '\r' || c == '\n') {
-					if (i > from || !noEmpty) n++;
-					if (c == '\r') if (++i == t.Length || t[i] != '\n') i--;
-					from = i + 1;
-				}
+		//this code is similar to StringReader.ReadLine, but much faster. Faster than string.Split(char).
+		using var f = new FastBuffer<StartEnd>();
+		int n = 0;
+		for (int pos = 0; pos < t.Length;) {
+			if (n == f.n) f.More(preserve: true);
+			var span = t.AsSpan(pos);
+			int len = span.IndexOfAny('\r', '\n');
+			if (len < 0) {
+				f[n++] = new(pos, t.Length);
+				break;
+			} else {
+				if (!(noEmpty && len == 0)) f[n++] = new(pos, pos + len);
+				pos += len + 1;
+				if (span[len] == '\r' && pos < t.Length && t[pos] == '\n') pos++;
 			}
 		}
-		if (from < t.Length || !noEmpty) n++;
 		var a = new string[n];
-		if (n == 1) {
-			a[0] = t;
-		} else if (n > 1) {
-			n = 0; from = 0;
-			for (int i = 0; i < t.Length; i++) {
-				char c = t[i];
-				if (c <= '\r') {
-					if (c == '\r' || c == '\n') {
-						if (i > from || !noEmpty) a[n++] = t[from..i];
-						if (c == '\r') if (++i == t.Length || t[i] != '\n') i--;
-						from = i + 1;
-					}
-				}
-			}
-			if (n < a.Length) a[n] = t[from..];
+		for (int i = 0; i < n; i++) {
+			var v = f[i];
+			a[i] = t[v.start..v.end];
 		}
 		return a;
 	}
 
 	/// <summary>
-	/// Splits this string into lines using separators "\r\n", "\n", "\r".
+	/// Splits this string or its range using newline separators "\r\n", "\n", "\r". Gets start/end offsets of lines.
 	/// </summary>
+	/// <returns>Array containing start/end offsets of lines in the string (not in the range). Does not include the last empty line.</returns>
 	/// <param name="t">This string.</param>
-	/// <param name="maxCount">The maximal number of substrings to get.</param>
-	/// <param name="options"></param>
-	/// <seealso cref="Segments"/>
-	/// <seealso cref="SegSep.Line"/>
-	public static string[] Lines(this string t, int maxCount, StringSplitOptions options = 0) {
-		if (options.Has(StringSplitOptions.RemoveEmptyEntries)) return t.Split(s_rn, maxCount, options); //30% slower than above
-		return t.Split(s_rns, maxCount, options); //60% slower than above
+	/// <param name="range">Range of this string. Example: <c>var a = s.Lines(..); //split entire string</c>.</param>
+	/// <param name="noEmpty">Don't need empty lines.</param>
+	/// <seealso cref="Lines(ReadOnlySpan{char}, bool)"/>
+	public static StartEnd[] Lines(this string t, Range range, bool noEmpty = false) {
+		var (start, len) = range.GetOffsetAndLength(t.Length);
+		var a = t.AsSpan(start, len).Lines(noEmpty);
+		if (start != 0) {
+			for (int i = 0; i < a.Length; i++) {
+				a[i].start += start;
+				a[i].end += start;
+			}
+		}
+		return a;
 	}
-	static readonly char[] s_rn = new char[] { '\r', '\n' };
-	static readonly string[] s_rns = new string[] { "\r\n", "\n", "\r" };
+
+	/// <summary>
+	/// Splits this string using newline separators "\r\n", "\n", "\r". Gets start/end offsets of lines.
+	/// </summary>
+	/// <returns>Array containing start/end offsets of lines. Does not include the last empty line.</returns>
+	/// <param name="t">This string.</param>
+	/// <param name="noEmpty">Don't need empty lines.</param>
+	[SkipLocalsInit]
+	public static StartEnd[] Lines(this RStr t, bool noEmpty = false) {
+		using var f = new FastBuffer<StartEnd>();
+
+		//this code is like in Lines. Tried to move it to a function, but then somehow very slow.
+		int n = 0;
+		for (int pos = 0; pos < t.Length;) {
+			if (n == f.n) f.More(preserve: true);
+			var span = t[pos..];
+			int len = span.IndexOfAny('\r', '\n');
+			if (len < 0) {
+				f[n++] = new(pos, t.Length);
+				break;
+			} else {
+				if (!(noEmpty && len == 0)) f[n++] = new(pos, pos + len);
+				pos += len + 1;
+				if (span[len] == '\r' && pos < t.Length && t[pos] == '\n') pos++;
+			}
+		}
+
+		var a = new StartEnd[n];
+		new Span<StartEnd>(f.p, n).CopyTo(a);
+		return a;
+	}
 
 	/// <summary>
 	/// Returns the number of lines.
@@ -1124,14 +1153,14 @@ public static unsafe partial class ExtString {
 	public static string Limit(this string t, int limit, bool middle = false, bool lines = false) {
 		if (limit < 1) limit = 1;
 		if (lines) {
-			var a = System.Linq.Enumerable.ToArray(t.Segments(SegSep.Line));
+			var a = t.AsSpan().Lines();
 			int k = a.Length;
 			if (k > limit) {
 				limit--; //for "…" line
 				if (limit == 0) return t[a[0].Range] + "…";
 				if (middle) {
 					if (limit == 1) return t[a[0].Range] + "\r\n…";
-					int half = limit - (limit / 2); //if limit is odd number, prefer more lines at the start
+					int half = limit - limit / 2; //if limit is odd number, prefer more lines at the start
 					int half2 = a.Length - (limit - half);
 					//if (half2 == a.Length - 1 && a[half2].Length == 0) return t[..a[half].end] + "\r\n…"; //rejected: if ends with newline, prefer more lines at the start than "\r\n…\r\n" at the end
 					return t.ReplaceAt(a[half - 1].end..a[half2].start, "\r\n…\r\n");

@@ -384,6 +384,7 @@ partial class SciCode {
 		string s = isSel ? zSelectedText() : zText;
 		var s2 = _ImageRemoveScreenshots(s);
 		if (s2 == s) return;
-		if (isSel) zReplaceSel(s2); else zText = s2;
+		if (isSel) ZReplaceTextGently(s2, zSelectionStart8..zSelectionEnd8);
+		else ZReplaceTextGently(s2);
 	}
 }

@@ -16,6 +16,19 @@ using Microsoft.CodeAnalysis.Classification;
 using EToken = CiStyling.EToken;
 
 static class CiUtil {
+	/// <summary>
+	/// Gets statement or member declaration or using directive etc from position.
+	/// Returns null if at the end of file.
+	/// </summary>
+	public static SyntaxNode GetStatementEtcFromPos(CodeInfo.Context cd, int pos) {
+		var cu = cd.syntaxRoot;
+		var node = cu.FindToken(pos).Parent;
+		SyntaxNode n = node.FirstAncestorOrSelf<StatementSyntax>();
+		n ??= node.FirstAncestorOrSelf<MemberDeclarationSyntax>();
+		n ??= node.FirstAncestorOrSelf<SyntaxNode>(o => o.Parent is CompilationUnitSyntax); //using directive etc
+		return n;
+	}
+	
 	//not used
 	//public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd) {
 	//	(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
@@ -25,7 +38,7 @@ static class CiUtil {
 	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd, bool metaToo = false) {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) { cd = default; return default; }
 		if (!CodeInfo.GetContextAndDocument(out cd, metaToo: metaToo)) return default;
-		return GetSymbolOrKeywordFromPos(cd.document, cd.pos16, cd.code);
+		return GetSymbolOrKeywordFromPos(cd.document, cd.pos, cd.code);
 	}
 
 	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token) GetSymbolOrKeywordFromPos(Document document, int position, string code) {
@@ -154,7 +167,13 @@ static class CiUtil {
 		if (metadata != null) {
 			bool au = metadata.Name == "Au.dll";
 			if (au && sym.IsEnumMember()) sym = sym.ContainingType;
-			query = sym.QualifiedName();
+			if (sym is INamedTypeSymbol nt && nt.IsGenericType) {
+				var qn = sym.QualifiedName(noDirectName: true);
+				if (au) query = qn + "." + sym.MetadataName.Replace('`', '-');
+				else query = $"{qn}.{sym.Name}<{string.Join(", ", nt.TypeParameters)}>";
+			} else {
+				query = sym.QualifiedName();
+			}
 
 			if (query.Ends("..ctor")) query = query.ReplaceAt(^6.., au ? ".-ctor" : " constructor");
 			else if (query.Ends(".this[]")) query = query.ReplaceAt(^7.., ".Item");
@@ -277,7 +296,7 @@ static class CiUtil {
 	public static string GetTextWithoutUnusedUsingDirectives() {
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
 		var code = cd.code;
-		var semo = cd.document.GetSemanticModelAsync().Result;
+		var semo = cd.semanticModel;
 		var a = semo.GetDiagnostics(null)
 			.Where(d => d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019)
 			.Select(d => d.Location.SourceSpan)
@@ -435,7 +454,7 @@ global using Au.More;
 	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
 	/// </summary>
 	public static bool IsScript(string code) {
-		var cu = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview), "", Encoding.UTF8).GetCompilationUnitRoot();
+		var cu = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
 		var f = cu.Members.FirstOrDefault();
 		if (f is GlobalStatementSyntax or null) return true;
 		if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
@@ -555,7 +574,7 @@ global using Au.More;
 	public static /*CiContextType*/void GetContextType(/*in CodeInfo.Context cd,*/ CSharpSyntaxContext c) {
 		//print.it("--------");
 		print.clear();
-		//print.it(cd.pos16);
+		//print.it(cd.pos);
 		_Print("IsInNonUserCode", c.IsInNonUserCode);
 		_Print("IsGlobalStatementContext", c.IsGlobalStatementContext);
 		_Print("IsAnyExpressionContext", c.IsAnyExpressionContext);

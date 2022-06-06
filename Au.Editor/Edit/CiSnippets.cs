@@ -253,7 +253,7 @@ static class CiSnippets {
 		usingDir = x.Attr("using") ?? snippet.x.Attr("using");
 
 		//if multiline, add indentation
-		if (s.Contains('\n')) s = InsertCodeUtil.IndentStringForInsert(s, doc, pos);
+		s = InsertCodeUtil.IndentStringForInsertSimple(s, doc, pos);
 
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
 		int selectLength = 0;

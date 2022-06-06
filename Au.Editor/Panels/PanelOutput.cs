@@ -198,7 +198,7 @@ class PanelOutput : DockPanel {
 					s_rx2 ??= new regexp(@" in (.+?):line (?=\d+$)");
 					bool replaced = false, isMain = false;
 					int stackEnd = s.Length/*, stackEnd2 = 0*/;
-					foreach (var k in s.Segments(SegSep.Line, range: i..)) {
+					foreach (var k in s.Lines(i..)) {
 						//print.qm2.write("'"+k+"'");
 						if (s.Eq(k.start, "   at ")) {
 							if (isMain) {

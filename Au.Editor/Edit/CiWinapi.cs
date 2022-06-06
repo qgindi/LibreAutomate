@@ -62,18 +62,18 @@ class CiWinapi
 	bool _InsertDeclaration(CiComplItem item, string text) {
 		if (!_canInsert) return false;
 		if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var typenameNode, _typenameStart)) return false;
-		var semo = cd.document.GetSemanticModelAsync().Result;
+		var semo = cd.semanticModel;
 		var sym = semo.GetSymbolInfo(typenameNode).Symbol;
 		if (sym is not INamedTypeSymbol t || !t.IsFromSource()) return false;
 		var sr = t.DeclaringSyntaxReferences[0];
 
-		SciCode doc = cd.sciDoc;
+		SciCode doc = cd.sci;
 		FileNode fSelect = null;
 		if (sr.SyntaxTree != semo.SyntaxTree) {
 			var f = App.Model.Find(sr.SyntaxTree.FilePath, FNFind.CodeFile);
 			if (!App.Model.SetCurrentFile(f, dontChangeTreeSelection: true)) return false;
 			doc = Panels.Editor.ZActiveDoc;
-			fSelect = cd.sciDoc.ZFile;
+			fSelect = cd.sci.ZFile;
 		}
 
 		var hs = new HashSet<string>();
@@ -122,7 +122,7 @@ class CiWinapi
 			if (level > 30) return; //max seen 10. Tested: at level 10 uses ~40 KB of stack.
 			if (!CodeInfo.GetDocumentAndFindNode(out var cd, out node, posClass)) return;
 			if (node is not ClassDeclarationSyntax) return;
-			var semo = cd.document.GetSemanticModelAsync().Result;
+			var semo = cd.semanticModel;
 			var newSpan = new TextSpan(posInsert, text.Length);
 			var da = semo.GetDiagnostics(newSpan); //the slowest part
 			foreach (var d in da) {
