@@ -27,6 +27,7 @@ static class CodeInfo {
 	static ProjectId _projectId;
 	static DocumentId _documentId;
 	static Document _document;
+	static CompilationUnitSyntax _syntaxRoot;
 	static MetaComments _meta;
 	static string _metaText;
 	static bool _isWarm;
@@ -135,6 +136,7 @@ static class CodeInfo {
 		_projectId = null;
 		_documentId = null;
 		_document = null;
+		_syntaxRoot = null;
 		_meta = null;
 		_metaText = null;
 	}
@@ -359,39 +361,50 @@ static class CodeInfo {
 	}
 
 	public class Context {
-		public Document document { get; private set; }
-		public readonly SciCode sciDoc;
+		public readonly SciCode sci;
 		public readonly string code;
 		public readonly StartEnd meta;
-		public int pos16;
+		public int pos;
 		public readonly bool isCodeFile;
+
+		public Document document { get; private set; }
+
+		public CompilationUnitSyntax syntaxRoot { get; private set; }
+
+		public SemanticModel semanticModel => document.GetSemanticModelAsync().Result; //only first time slow
 
 		/// <summary>
 		/// Initializes all fields except document.
-		/// For sciDoc uses Panels.Editor.ZActiveDoc.
+		/// For <b>sci</b> uses <b>Panels.Editor.ZActiveDoc</b>.
 		/// </summary>
 		/// <param name="pos">If -1, gets current position. If -2, gets selection start.</param>
 		public Context(int pos) {
-			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
+			Debug.Assert(Environment.CurrentManagedThreadId == 1);
 
-			document = null;
-			sciDoc = Panels.Editor.ZActiveDoc;
-			code = sciDoc.zText;
-			pos16 = pos switch { -1 => sciDoc.zCurrentPos16, -2 => sciDoc.zSelectionStart16, _ => pos };
-			if (isCodeFile = sciDoc.ZFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
+			sci = Panels.Editor.ZActiveDoc;
+			code = sci.zText;
+			this.pos = pos switch { -1 => sci.zCurrentPos16, -2 => sci.zSelectionStart16, _ => pos };
+			if (isCodeFile = sci.ZFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 
 		/// <summary>
 		/// Initializes the document field.
 		/// Creates or updates Solution if need.
-		/// Returns false if fails, unlikely.
+		/// Returns false if fails, eg if code too big.
 		/// </summary>
 		public bool GetDocument() {
 			if (_document != null) {
 				document = _document;
+				syntaxRoot = _syntaxRoot;
 				return true;
 			}
-			perf.first();
+			//perf.first();
+
+			//return false if code is too big. Eg Roslyn hangs if pasted 20 MB """XML""".
+			if (code.Length > 10_000_000) {
+				_Uncache();
+				return false;
+			}
 
 			if (_solution != null && !code.Eq(meta.start..meta.end, _metaText)) {
 				_Uncache();
@@ -401,7 +414,7 @@ static class CodeInfo {
 
 			try {
 				if (_solution == null) {
-					_CreateWorkspace(sciDoc.ZFile);
+					_CreateWorkspace(sci.ZFile);
 				} else {
 					_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
 				}
@@ -409,29 +422,34 @@ static class CodeInfo {
 			catch (Exception ex) {
 				//Debug_.Print(ex);
 				print.it(ex);
+				_Uncache();
 				return false;
 			}
 
 			document = _document = _solution.GetDocument(_documentId);
+			//perf.next();
+
+			//syntaxRoot protects the syntax tree from GC. Creating it is expensive.
+			//	Roslyn keeps just a week reference, and could have to recompute it for every task.
+			//	Note: now I can't reproduce. It seems TryGetSyntaxRoot etc always succeeds.
+			syntaxRoot = _syntaxRoot = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
 
 			//perf.next();
 			_ModifyTLS();
-
-			//perf.next();
-			//var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-			//perf.nw();
 
 			return true;
 		}
 
 		//Workarounds for Roslyn bugs that break intellisense.
 		void _ModifyTLS() {
-			var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+			var cu = syntaxRoot;
 			var members = cu.Members;
 
 			//TLS code like this, not in a { block }:
-			//		kkk
-			//		print.it(1);
+			/*
+kkk
+print.it(1);
+			*/
 			//	Roslyn thinks that 'kkk print.it(1);' is a MethodDeclarationSyntax (directly in CompilationUnitSyntax).
 			var met = members.FirstOrDefault(o => o is MethodDeclarationSyntax);
 			if (met != null) {
@@ -439,23 +457,29 @@ static class CodeInfo {
 			}
 
 			//TLS code like this, not in a { block }:
-			//		int i=5
-			//		print.it(1);
+			/*
+int i=5
+print.it(1);
+			*/
 			//	Roslyn thinks that 'int i=5 print.it(1' is one statement, and next is ';'.
+			//	Same with codes:
+			/*
+var s="aaa bbb"
+char c = 'a';
+
+var s="one\ntwo\n";
+var a=s.Lines()
+for (int i = 0; i < count; i++) { }
+			*/
 			if (members.FirstOrDefault() is GlobalStatementSyntax g0) {
 				foreach (var d in cu.GetDiagnostics()) {
 					//print.it(d);
-					var ec = (ErrorCode)d.Code;
-					if (ec != ErrorCode.ERR_SemicolonExpected) continue; //not tested other ERR_SemicolonX
-					int iErr = d.Location.SourceSpan.Start;
-					if (members.FirstOrDefault(o => o.FullSpan.ContainsOrTouches(iErr)) is GlobalStatementSyntax ge) {
-						foreach (var v in ge.GetDiagnostics()) {
-							//print.it((ErrorCode)v.Code);
-							if (v.Code == d.Code) break; //v==d does not work
-							if ((ErrorCode)v.Code != ErrorCode.ERR_SyntaxError) continue;
-							if (v.GetMessage(CultureInfo.InvariantCulture) != "Syntax error, ',' expected") continue;
-							if (_Fix(ge)) return;
-						}
+					if (((ErrorCode)d.Code) == ErrorCode.ERR_SyntaxError && d.GetMessage(CultureInfo.InvariantCulture) == "Syntax error, ',' expected") {
+						var tok = d.Location.FindToken(default);
+						var gss = tok.Parent.FirstAncestorOrSelf<GlobalStatementSyntax>();
+						if (gss?.Statement is not LocalDeclarationStatementSyntax) continue;
+						if (!tok.TrailingTrivia.Any(SyntaxKind.SkippedTokensTrivia)) continue;
+						if (_Fix(gss)) return;
 					}
 				}
 			}
@@ -464,7 +488,7 @@ static class CodeInfo {
 				SyntaxNode node2 = null;
 				int iNode = 0;
 				if (node is GlobalStatementSyntax gss) {
-					//span ends in the middle of the statement. Include fullspan of next node.
+					//the span ends in the middle of the statement. Include fullspan of next node.
 					iNode = cu.Members.IndexOf(gss);
 					if (iNode + 1 < cu.Members.Count) node2 = cu.Members[iNode + 1];
 				}
@@ -473,7 +497,7 @@ static class CodeInfo {
 				//to get correct nodes, parse that code inside { } block
 				var s = "{\n" + code[span.Start..span.End] + "}";
 				//print.it($"'{s}'");
-				var tree = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview), "", Encoding.UTF8);
+				var tree = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview));
 				var cu2 = tree.GetCompilationUnitRoot();
 				if (cu2.ContainsDirectives) return false;
 				var block = (cu2.Members[0] as GlobalStatementSyntax).Statement as BlockSyntax;
@@ -504,6 +528,7 @@ static class CodeInfo {
 
 				_solution = _solution.WithDocumentSyntaxRoot(_documentId, cu3);
 				document = _document = _solution.GetDocument(_documentId);
+				syntaxRoot = _syntaxRoot = cu3;
 				return true;
 			}
 		}
@@ -547,7 +572,7 @@ static class CodeInfo {
 	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false) {
 		r = new Context(position);
 		if (!r.isCodeFile) return false;
-		if (!metaToo && r.pos16 < r.meta.end && r.pos16 > r.meta.start) return false;
+		if (!metaToo && r.pos < r.meta.end && r.pos > r.meta.start) return false;
 		return true;
 	}
 
@@ -558,7 +583,7 @@ static class CodeInfo {
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
 	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1, bool metaToo = false, bool findInsideTrivia = false) {
 		if (!GetContextAndDocument(out r, position, metaToo)) { node = null; return false; }
-		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16, findInsideTrivia).Parent;
+		node = r.syntaxRoot.FindToken(r.pos, findInsideTrivia).Parent;
 		return true;
 	}
 
@@ -569,7 +594,7 @@ static class CodeInfo {
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
 	public static bool GetDocumentAndFindToken(out Context r, out SyntaxToken token, int position = -1, bool metaToo = false, bool findInsideTrivia = false) {
 		if (!GetContextAndDocument(out r, position, metaToo)) { token = default; return false; }
-		token = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16, findInsideTrivia);
+		token = r.syntaxRoot.FindToken(r.pos, findInsideTrivia);
 		return true;
 	}
 

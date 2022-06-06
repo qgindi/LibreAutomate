@@ -84,7 +84,7 @@ namespace Au
 			_id = r;
 			_singlePeriod = singlePeriod;
 			if (isNew) {
-				_threadId = Thread.CurrentThread.ManagedThreadId;
+				_threadId = Environment.CurrentManagedThreadId;
 				(t_timers ??= new Dictionary<nint, timer>()).Add(_id, this);
 			}
 			//print.it($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
@@ -138,7 +138,7 @@ namespace Au
 		public void Now() => _action(this);
 
 		void _ThreadTrap() {
-			bool isSameThread = _threadId == Thread.CurrentThread.ManagedThreadId;
+			bool isSameThread = _threadId == Environment.CurrentManagedThreadId;
 			Debug.Assert(isSameThread);
 			if (!isSameThread) throw new InvalidOperationException(nameof(timer) + " used in multiple threads.");
 			//FUTURE: somehow allow other thread. It is often useful.

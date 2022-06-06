@@ -63,30 +63,12 @@ partial class TriggersAndToolbars {
 
 		b.Loaded += () => { tName.CaretIndex = tName.Text.Length; };
 
-		//if (!w.ShowAndWait(App.Wmain)) return;
 		if (!b.ShowDialog(App.Wmain)) return;
 
 		string sName = _GetUniqueNameInProgram(tName.Text);
 
-		var f = cbFile.SelectedItem as FileNode;
-		if (f == null) { //new file
-			var text1 = $$"""
-using Au.Triggers;
-
-partial class Program {
-[Toolbars]
-void {{_GetUniqueNameInProgram(sName + "_Triggers")}}() {
-}
-}
-
-""";
-			var folder = App.Model.Find(@"\@Triggers and toolbars\Toolbars", FNFind.Folder);
-			f = App.Model.NewItem("Class.cs", (folder, FNPosition.Inside), sName + ".cs", text: new(true, text1));
-			_Update();
-		}
-
 		int iTrigger = cbTrigger.SelectedIndex;
-		string sArg = "TriggerArgs ta = null", sAutoHide = null;
+		string sAutoHide = null;
 		if (iTrigger is 0 or 4) { //window, none
 			sAutoHide = """
 
@@ -109,7 +91,6 @@ void {{_GetUniqueNameInProgram(sName + "_Triggers")}}() {
 
 """;
 		} else if (iTrigger == 3) { //screen+mouse
-			sArg = "MouseTriggerArgs ta";
 			sAutoHide = """
 
 	//auto-hide at the screen edge of the mouse trigger. Above is the auto-hide part. Below is the always-visible part.
@@ -122,7 +103,13 @@ void {{_GetUniqueNameInProgram(sName + "_Triggers")}}() {
 """;
 		}
 
-		var text2 = $$"""
+		var sArg = iTrigger switch {
+			0 or 1 => "WindowTriggerArgs ta",
+			3 => "MouseTriggerArgs ta",
+			_ => "TriggerArgs ta = null"
+		};
+
+		var text = $$"""
 
 void {{sName}}({{sArg}}) {
 	var t = new toolbar();
@@ -157,34 +144,50 @@ void {{sName}}({{sArg}}) {
 
 """;
 
-		var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if (programNode == null) return;
-		int pos = programNode.CloseBraceToken.SpanStart;
-		var doc = _OpenSourceFile(f, pos);
-		doc.zReplaceSel(text2);
-		doc.zGoToPos(true, pos + 2);
+		if (cbFile.SelectedItem is not FileNode f) { //new file
+			text = $$"""
+using Au.Triggers;
+
+partial class Program {
+[Toolbars]
+void {{_GetUniqueNameInProgram(sName + "_Triggers")}}() {
+}
+
+"""
++ text
++ @"}
+";
+			var folder = App.Model.Find(@"\@Triggers and toolbars\Toolbars", FNFind.Folder);
+			f = App.Model.NewItem("Class.cs", (folder, FNPosition.Inside), sName + ".cs", text: new(true, text));
+		} else {
+			var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if (programNode == null) return;
+			_OpenSourceFile(f).zInsertText(true, programNode.CloseBraceToken.SpanStart, text);
+		}
 
 		_Update();
+		var t = _toolbars[Array.FindIndex(_toolbars, o => o.Name == sName)];
 
 		//trigger
-
-		var t = _toolbars[Array.FindIndex(_toolbars, o => o.Name == sName)];
 		if (iTrigger != 4) {
+			wait.doEvents(30); //workaround for bad scrolling (mouse/screen) etc
 			if (iTrigger is 0 or 1) { //window
 				_AddTriggerWindow(t);
 			} else if (iTrigger == 2) { //startup
 				_AddTriggerStartup(t);
-			} else if (iTrigger == 3) { //mouse
+			} else { //mouse
 				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen.SelectedItem as string);
 			}
 			_Update();
-			t = _toolbars.FirstOrDefault(o => o.EqualsMethodQName(t));
+			if (!_StillExists(ref t)) return;
 		}
+
 		//go to the toolbar function
-		var span = t.location.SourceSpan;
-		doc.zSelect(true, span.Start, span.End, true);
+		int i = t.location.SourceSpan.Start;
+		timer.after(iTrigger != 4 ? 500 : 10, _ => { //workaround for bad scrolling. Also briefly shows the trigger.
+			_OpenSourceFile(f)?.zGoToPos(true, i);
+		});
 
 		//maybe a settings file exists with this name, probably orphaned
-
 		var jsFolder = folders.Workspace + ".toolbars";
 		var jsPath = jsFolder + "\\" + sName + ".json";
 		if (filesystem.exists(jsPath)) {
@@ -196,37 +199,37 @@ void {{sName}}({{sArg}}) {
 	}
 
 	void _SetToolbarTrigger(_Toolbar t, _Trigger tr) {
-		var w = new KDialogWindow { Title = "Toolbar trigger" };
+		var w = new KDialogWindow { Title = "New trigger for " + t.Name };
 		var b = new wpfBuilder(w).WinSize(450);
 		b.WinProperties(WindowStartupLocation.CenterOwner, ResizeMode.NoResize, showInTaskbar: false);
 
-		ComboBox cbReplace = null;
+		ComboBox cbReplace = null, cbEdge = null, cbScreen = null;
+
 		if (t.triggers.Length > 0) {
-			b.R.Add("Replace", out cbReplace);
+			b.R.Add("Replace trigger", out cbReplace);
 			cbReplace.Items.Add("Don't replace");
 			foreach (var v in t.triggers) { int it = cbReplace.Items.Add(v); if (v == tr) cbReplace.SelectedIndex = it; }
-			b.Validation(o => cbReplace.SelectedIndex < 0 ? "Empty 'Replace'" : null);
+			b.Validation(o => cbReplace.SelectedIndex < 0 ? "Empty 'Replace trigger'" : null);
 		}
 
-		bool isForMouse = t.method.Parameters.Length > 0 && t.method.Parameters[0].Type == _compilation.GetTypeByMetadataName("Au.Triggers." + nameof(MouseTriggerArgs));
+		int iTrigger = -1; //0 window, 1 startup, 2 mouse
+		if (t.method.Parameters.Length > 0) {
+			var pt = t.method.Parameters[0].Type;
+			if (pt == _compilation.GetTypeByMetadataName("Au.Triggers.WindowTriggerArgs")) iTrigger = 0;
+			else if (pt == _compilation.GetTypeByMetadataName("Au.Triggers.MouseTriggerArgs")) iTrigger = 2;
+		}
 
-		b.R.Add("Trigger", out ComboBox cbTrigger).Items(isForMouse ? "Mouse at screen edge" : "Window|Show at startup");
-		var aHide1 = new List<FrameworkElement>(); b.AlsoAll((_, _) => { b.Hidden(); aHide1.Add(b.Last); });
-		b.R.Add("Edge", out ComboBox cbEdge).Items(typeof(TMEdge).GetEnumNames()).Select(1)
-			.And(170).StartGrid().Add("Screen", out ComboBox cbScreen).Items(typeof(TMScreen).GetEnumNames()).End();
-		b.AlsoAll(null);
+		b.R.Add("Trigger type", out ComboBox cbTrigger).Disabled(iTrigger >= 0)
+			.Items(iTrigger switch { 0 => "Window", 2 => "Mouse", _ => "Window|Show at startup" });
+		if (iTrigger == 2) {
+			b.R.Add("Screen edge", out cbEdge).Items(typeof(TMEdge).GetEnumNames()).Select(1)
+				.And(170).StartGrid().Add("Screen", out cbScreen).Items(typeof(TMScreen).GetEnumNames()).End();
+		}
 		//b.R.Add(out KCheckBox cRestart, "Restart TT script").Checked(); //rejected
-		cbTrigger.SelectionChanged += (_, _) => _HideControls();
-		_HideControls();
-		void _HideControls() {
-			int si = isForMouse ? 2 : cbTrigger.SelectedIndex;
-			foreach (var v in aHide1) v.Visibility = si == 2 ? Visibility.Visible : Visibility.Hidden;
-		}
 
 		b.R.AddOkCancel();
 		b.End();
 
-		//if (!w.ShowAndWait(App.Wmain)) return;
 		if (!b.ShowDialog(App.Wmain)) return;
 		if (!_StillExists(ref t)) return;
 
@@ -243,12 +246,12 @@ void {{sName}}({{sArg}}) {
 		_Update();
 
 		void _Add() {
-			int iTrigger = isForMouse ? 2 : cbTrigger.SelectedIndex;
-			if (iTrigger == 0) { //window
+			if (iTrigger < 0) iTrigger = cbTrigger.SelectedIndex;
+			if (iTrigger == 0) {
 				_AddTriggerWindow(t, pos);
-			} else if (iTrigger == 1) { //startup
+			} else if (iTrigger == 1) {
 				_AddTriggerStartup(t, pos);
-			} else if (iTrigger == 2) { //mouse
+			} else if (iTrigger == 2) {
 				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen.SelectedItem as string, pos);
 			}
 		}
@@ -256,24 +259,22 @@ void {{sName}}({{sArg}}) {
 
 	void _SetToolbarTrigger() {
 		var (t, tr) = _ToolbarFromCurrentPos();
-		if (t == null) {
-			print.it("To set toolbar trigger, the text cursor must be in the toolbar function. To replace trigger, the text cursor must be in the function name in the trigger action.");
-			return;
-		}
-		//print.it(t, tr);
-		_SetToolbarTrigger(t, tr);
+		if (t != null) _SetToolbarTrigger(t, tr);
 	}
 
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return default;
 		int pos = doc.zCurrentPos16;
 		var f = doc.ZFile;
+		//is pos in a toolbar function?
 		var t = _toolbars.FirstOrDefault(o => o.fn == f && o.method.DeclaringSyntaxReferences[0].Span.ContainsOrTouches(pos));
 		if (t != null) return (t, null);
+		//is pos in a name of a toolbar function?
 		foreach (var tb in _toolbars) {
 			foreach (var tr in tb.triggers) if (tr.fn == f && tr.location.SourceSpan.ContainsOrTouches(pos)) return (tb, tr);
 		}
-		return default;
+		//get the first toolbar in the file
+		return (_toolbars.FirstOrDefault(o => o.fn == f), null);
 	}
 
 	//void _EditToolbar(_Toolbar t) {
@@ -286,7 +287,6 @@ void {{sName}}({{sArg}}) {
 	void _AddTriggerWindow(_Toolbar t, int pos = -1) {
 		var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
 		if (!d.ShowAndWait(null)) return;
-		if (!_StillExists(ref t)) return;
 		_AddTrigger(t, $"Triggers.Window[TWEvent.ActiveOnce, {d.ZResultCode}] = {t.Name};", pos);
 	}
 
@@ -300,11 +300,11 @@ void {{sName}}({{sArg}}) {
 
 	void _AddTrigger(_Toolbar t, string s, int pos) {
 		if (pos < 0) pos = _FindToolbarTriggersFunction(t).node.Body.CloseBraceToken.SpanStart;
-		_OpenSourceFile(t.fn, pos);
+		if (null == _OpenSourceFile(t.fn, pos)) return;
 		InsertCode.Statements(s, ICSFlags.SelectNewCode);
 	}
 
-	void _EditTrigger(_Trigger t) {
+	static void _EditTrigger(_Trigger t) {
 		_OpenSourceFile(t.fn, t.location.SourceSpan);
 	}
 
@@ -322,7 +322,7 @@ void {{sName}}({{sArg}}) {
 	//	return true;
 	//}
 
-	bool _GetTriggerStatementFullRange2(_Trigger t, out TextSpan span, bool replacing) {
+	static bool _GetTriggerStatementFullRange2(_Trigger t, out TextSpan span, bool replacing) {
 		if (_GetTriggerStatementFullRange(t, out span, replacing)) return true;
 		print.it("This trigger should be deleted manually: " + t.text + "\r\n\tIt depends on other code which should be edited, deleted or reviewed.");
 		if (!replacing) _EditTrigger(t);
@@ -360,7 +360,7 @@ void {{sName}}({{sArg}}) {
 	bool _StillExists(ref _Toolbar t) {
 		var tt = t;
 		t = _toolbars.FirstOrDefault(o => o.EqualsMethodQName(tt));
-		return t != null;
+		return t != null && !t.fn.IsDeleted;
 	}
 
 	static SciCode _OpenSourceFile(FileNode f, int pos = -1) {

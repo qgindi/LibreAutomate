@@ -18,7 +18,7 @@ class CiSignature {
 		public SignatureHelpItems r;
 		public _Span span;
 		public int iSelected, iUserSelected, iRoslynSelected;
-		public SciCode sciDoc;
+		public SciCode sci;
 
 		public bool IsSameSpan(_Span span2) {
 			return span2.start == span.start && span2.fromEnd == span.fromEnd;
@@ -52,7 +52,7 @@ class CiSignature {
 
 	void _CancelUI() {
 		if (_data == null) return;
-		foreach (var r in _data.sciDoc.ZTempRanges_Enum(this)) r.Remove();
+		foreach (var r in _data.sci.ZTempRanges_Enum(this)) r.Remove();
 		_data = null;
 		_textPopup?.Hide();
 	}
@@ -76,7 +76,7 @@ class CiSignature {
 
 	async void _ShowSignature(SciCode doc, char ch, bool methodCompletion = false) {
 		//using var p1 = perf.local();
-		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos16 < 2) return; //returns false if position is in meta comments
+		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos < 2) return; //returns false if position is in meta comments
 
 		_cancelTS?.Cancel();
 		_cancelTS = new CancellationTokenSource();
@@ -93,7 +93,7 @@ class CiSignature {
 			//could be sync, quite fast, but then sometimes reenters (GetItemsAsync waits/dispatches) and sometimes hangs
 			r = await Task.Run(async () => {
 				//p1.Next();
-				root = cd.document.GetSyntaxRootAsync().Result;
+				root = cd.syntaxRoot;
 				//p1.Next('r');
 				var providers = _SignatureHelpProviders;
 				//print.it(providers);
@@ -101,7 +101,7 @@ class CiSignature {
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					//print.it(p);
-					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
+					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
@@ -130,16 +130,16 @@ class CiSignature {
 			return;
 		}
 		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
+		if (cd.pos != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
 																				   //p1.Next('s');
 
-		//print.it($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
+		//print.it($"<><c orange>pos={cd.pos}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
 
 		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
 		var fullSpan = r.ApplicableSpan;
 		//CiUtil.HiliteRange(fullSpan); wait.doEvents(500);
 		var start = fullSpan.Start;
-		var tok = root.FindToken(cd.pos16);
+		var tok = root.FindToken(cd.pos);
 		if (tok.Kind() is SyntaxKind.OpenParenToken or SyntaxKind.OpenBracketToken or SyntaxKind.LessThanToken) tok = tok.GetPreviousToken();
 		var argNode = tok.Parent;
 		while (argNode != null) {
@@ -169,7 +169,7 @@ class CiSignature {
 			span = span,
 			iUserSelected = iSel,
 			iRoslynSelected = iSel2,
-			sciDoc = doc,
+			sci = doc,
 		};
 
 		if (iSel < 0) iSel = iSel2;
@@ -190,7 +190,7 @@ class CiSignature {
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
-		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
+		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos));
 		doc.Hwnd.MapClientToScreen(ref rect);
 		rect.Width += Dpi.Scale(200, doc.Hwnd);
 		rect.left -= 6;
@@ -211,11 +211,11 @@ class CiSignature {
 
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);
-		if (argNode is ArgumentListSyntax or BracketedArgumentListSyntax && cd.code.Eq(cd.pos16 - 1, "\"\"")) {
+		if (argNode is ArgumentListSyntax or BracketedArgumentListSyntax && cd.code.Eq(cd.pos - 1, "\"\"")) {
 			//print.it("string");
-			var semo = cd.document.GetSemanticModelAsync().Result;
-			var token = root.FindToken(cd.pos16);
-			if (true == token.IsInString(cd.pos16, cd.code, out var stringInfo)) {
+			var semo = cd.semanticModel;
+			var token = root.FindToken(cd.pos);
+			if (true == token.IsInString(cd.pos, cd.code, out var stringInfo)) {
 				var stringFormat = CiUtil.GetParameterStringFormat(stringInfo.stringNode, semo, true);
 				if (stringFormat != 0)
 					CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo, _textPopup.PopupWindow.Hwnd);

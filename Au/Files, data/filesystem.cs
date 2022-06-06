@@ -1223,11 +1223,24 @@ namespace Au {
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
 		/// <param name="encoding">Text encoding in file (if there is no BOM). Default UTF-8.</param>
+		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">A timeout is less than -1.</exception>
+		/// <exception cref="TimeoutException"><i>missingWaitMS</i> is &gt; 0 and the file still does not exist after waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText"/>.</exception>
-		public static string loadText(string file, Encoding encoding = null) {
+		public static string loadText(string file, Encoding encoding = null, int lockedWaitMS = 2000, int missingWaitMS = 0) {
+			file = _LoadIntro(file, missingWaitMS);
+			return waitIfLocked(() => encoding == null ? File.ReadAllText(file) : File.ReadAllText(file, encoding), lockedWaitMS);
+		}
+
+		static string _LoadIntro(string file, int ms) {
 			file = pathname.NormalizeForNET_(file);
-			return waitIfLocked(() => encoding == null ? File.ReadAllText(file) : File.ReadAllText(file, encoding));
+			if (ms != 0) {
+				double t = ms > 0 ? ms / 1000d : ms == -1 ? 0d : throw new ArgumentOutOfRangeException();
+				wait.forCondition(t, () => exists(file, useRawPath: true));
+			}
+			return file;
 		}
 
 		/// <summary>
@@ -1235,11 +1248,15 @@ namespace Au {
 		/// Uses <see cref="File.ReadAllBytes(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">A timeout is less than -1.</exception>
+		/// <exception cref="TimeoutException"><i>missingWaitMS</i> is &gt; 0 and the file still does not exist after waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes(string)"/>.</exception>
-		public static byte[] loadBytes(string file) {
-			file = pathname.NormalizeForNET_(file);
-			return waitIfLocked(() => File.ReadAllBytes(file));
+		public static byte[] loadBytes(string file, int lockedWaitMS = 2000, int missingWaitMS = 0) {
+			file = _LoadIntro(file, missingWaitMS);
+			return waitIfLocked(() => File.ReadAllBytes(file), lockedWaitMS);
 		}
 
 		/// <summary>
@@ -1247,11 +1264,15 @@ namespace Au {
 		/// Uses <see cref="File.OpenRead(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">A timeout is less than -1.</exception>
+		/// <exception cref="TimeoutException"><i>missingWaitMS</i> is &gt; 0 and the file still does not exist after waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.OpenRead(string)"/>.</exception>
-		public static FileStream loadStream(string file) {
-			file = pathname.NormalizeForNET_(file);
-			return waitIfLocked(() => File.OpenRead(file));
+		public static FileStream loadStream(string file, int lockedWaitMS = 2000, int missingWaitMS = 0) {
+			file = _LoadIntro(file, missingWaitMS);
+			return waitIfLocked(() => File.OpenRead(file), lockedWaitMS);
 		}
 
 		/// <summary>
@@ -1269,8 +1290,9 @@ namespace Au {
 		/// <param name="tempDirectory">
 		/// Directory for backup file and temporary file. If null or "" - <i>file</i>'s directory. Can contain environment variales etc.
 		/// Must be in the same drive as <i>file</i>. If the directory does not exist, this function creates it.</param>
-		/// <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>lockedWaitMS</i> is less than -1.</exception>
 		/// <exception cref="Exception">Exceptions of the <i>writer</i> function.</exception>
 		/// <exception cref="IOException">Failed to replace file. The <i>writer</i> function also can thow it.</exception>
 		/// <remarks>

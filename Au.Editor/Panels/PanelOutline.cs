@@ -44,7 +44,7 @@ class PanelOutline : DockPanel
 		//print.it("update");
 		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return false;
-		var cu = cd.document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+		var cu = cd.syntaxRoot;
 
 		var root = new _Item();
 
@@ -111,7 +111,7 @@ class PanelOutline : DockPanel
 		}
 
 		_modified = false;
-		_activeDoc = cd.sciDoc;
+		_activeDoc = cd.sci;
 		//_oldDocument = cd.document;
 
 		int changed = 4;

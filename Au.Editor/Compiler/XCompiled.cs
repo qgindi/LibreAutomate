@@ -261,7 +261,7 @@ y - res
 			if (_data != null) return true;
 			if (!filesystem.exists(_file).File) return false;
 			string sData = filesystem.loadText(_file);
-			foreach (var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
+			foreach (var v in sData.Lines(.., noEmpty: true)) {
 				if (_data == null) {
 					//first line contains .NET version and Au.dll version, like 5.0.4|1.2.3.4
 					if (sData[v.Range] != s_versions) goto g1;

@@ -1,3 +1,9 @@
+//CONSIDER: trigger type: When pressed CapsLock, eat trigger text. When triggered, turn off CapsLock.
+//	To cancel, user can turn off CapsLock.
+//	Display typed text in OSD. Allow Backspace.
+//	Eg I can use it for tags instead of Alt+B etc.
+//	Allow to use instead of CapsLock: ScrollLock, Insert. Or not, because unavailable in many keyboards.
+//	Another way: press CapsLock, type text, press CapsLock again (then triggers).
 
 using System.Linq;
 

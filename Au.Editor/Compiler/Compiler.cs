@@ -24,7 +24,7 @@ namespace Au.Compiler {
 		/// <param name="projFolder">null or project folder.</param>
 		/// <param name="needMeta">Parse metacomments and set r.meta even if don't need to compile.</param>
 		/// <remarks>
-		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1).
+		/// Must be always called in the main UI thread (Environment.CurrentManagedThreadId == 1).
 		/// 
 		/// Adds <see cref="MetaReferences.DefaultReferences"/>.
 		/// 
@@ -33,7 +33,7 @@ namespace Au.Compiler {
 		///		Else compiles but does not create output files.
 		/// </remarks>
 		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false) {
-			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
+			Debug.Assert(Environment.CurrentManagedThreadId == 1);
 			r = null;
 			var cache = XCompiled.OfWorkspace(f.Model);
 			if (reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder)) {

@@ -874,7 +874,7 @@ class DInputRecorder : KDialogWindow {
 		if (!_a.Any()) return null;
 		var b = new StringBuilder();
 		string speed = _tSpeed.Text.NullIfEmpty_();
-		if (speed != null) b.Append("using(opt.scope.all()) ");
+		if (speed != null) b.Append("using (opt.scope.all()) ");
 		b.AppendLine("{ //recorded");
 		if (speed != null) b.AppendLine($"opt.mouse.MoveSpeed = opt.key.KeySpeed = opt.key.TextSpeed = {speed};");
 		//bool addEmptyLine = false;
@@ -913,7 +913,10 @@ class DInputRecorder : KDialogWindow {
 				//if (r is _RecoMouseButton mbb && mbb.image == null) b.Append(mbb.comment);
 				if (r is _RecoMouseButton mbb) {
 					b.Append(mbb.comment);
-					if (mbb.image != null) b.AppendLine(mbb.image);
+					if (mbb.image != null) {
+						b.Append(mbb.image);
+						if (i < n - 1) b.AppendLine(); //make space for image
+					}
 				}
 				break;
 			case _RecoKey or _RecoChar:
@@ -975,7 +978,8 @@ class DInputRecorder : KDialogWindow {
 			}
 			if (i < n - 1) b.AppendLine();
 		}
-		if (speed != null) b.Replace("\n", "\n\t");
+		//if (speed != null)
+		b.Replace("\n", "\n\t");
 		b.Append("\r\n}");
 
 		return b.ToString();

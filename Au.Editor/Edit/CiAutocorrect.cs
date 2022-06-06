@@ -9,15 +9,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
-//SHOULDDO: Roslyn bugs in top-level statemens:
-//	1. Ctrl+Enter sometimes does not add ;.
-//	2. Ctrl+; sometimes jumps to a ; somewhere in next statement.
-//	To reproduce both, press the hotkey in the string in this code:
-//		var s="aaa bbb"
-//		char c = 'a';
-//	Syntax Visualizer shows that the second statement isn't recognized as statement.
-//	Applied workarounds for some cases, but not for all.
-
 //CONSIDER: menu command "Exit statement on Enter" and toolbar check-button [;].
 //	Would complete statement from anywhere in statement.
 //	Tab would complete without new line.
@@ -141,41 +132,41 @@ class CiAutocorrect {
 	/// <summary>
 	/// Called on SCN_CHARADDED.
 	/// If ch is '(' etc, adds ')' etc. Similar with """ and /*.
-	/// If ch is }, decreases indentation if need.
+	/// At the start of line corrects indentation of '}'. Removes of '#'.
 	/// Replaces code like 5s with 5.s(); etc.
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' => "", _ => null };
+		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' => "", _ => null };
 		if (replaceText == null) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
 		string code = cd.code;
-		int pos = cd.pos16 - 1; if (pos < 0) return;
+		int pos = cd.pos - 1; if (pos < 0) return;
 
 		Debug.Assert(code[pos] == ch);
 		if (code[pos] != ch) return;
 
-		bool isBeforeWord = ch != '}' && cd.pos16 < code.Length && char.IsLetterOrDigit(code[cd.pos16]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
+		bool isBeforeWord = ch != '}' && cd.pos < code.Length && char.IsLetterOrDigit(code[cd.pos]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
 		if (isBeforeWord && ch != '{') return;
 
-		var root = cd.document.GetSyntaxRootAsync().Result;
+		var root = cd.syntaxRoot;
 		//if(!root.ContainsDiagnostics) return; //no. Don't use errors. It can do more bad than good. Tested.
 
 		if (ch == 's') { //when typed like 5s or 500ms, replace with 5.s(); or 500.ms();
 			if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
 			if (_IsNumericLiteralStatement(out _)) {
 				//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
-				c.doc.zReplaceRange(true, pos, cd.pos16, replaceText, moveCurrentPos: true);
+				c.doc.zReplaceRange(true, pos, cd.pos, replaceText, moveCurrentPos: true);
 				c.ignoreChar = true;
 			}
 			return;
 		}
 		if (ch == 't') { //when typed like 5t, replace with for (int i = 0; i < 5; i++) {  }
 			if (_IsNumericLiteralStatement(out int spanStart)) {
-				var br = code.Eq(cd.pos16, '{') ? null : "{  }";
+				var br = code.Eq(cd.pos, '{') ? null : "{  }";
 				replaceText = $"for (int i = 0; i < {code[spanStart..pos]}; i++) {br}";
-				c.doc.zReplaceRange(true, spanStart, cd.pos16, replaceText);
+				c.doc.zReplaceRange(true, spanStart, cd.pos, replaceText);
 				c.doc.zCurrentPos16 = spanStart + replaceText.Length - (br == null ? 0 : 2);
 				c.ignoreChar = true;
 			}
@@ -194,9 +185,17 @@ class CiAutocorrect {
 			return false;
 		}
 
-		int replaceLength = 0, tempRangeFrom = cd.pos16, tempRangeTo = cd.pos16, newPos = 0;
+		int replaceLength = 0, tempRangeFrom = cd.pos, tempRangeTo = cd.pos, newPos = 0;
 
-		if (ch == '*') { /**/
+		if (ch == '#') { //#directive
+			int i = pos; while (i > 0 && code[i - 1] is '\t' or ' ') i--;
+			if (i < pos && (i == 0 || code[i - 1] == '\n')) {
+				if (root.FindTrivia(pos).IsDirective) {
+					c.doc.zDeleteRange(true, i, pos);
+				}
+			}
+			return;
+		} else if (ch == '*') { /**/
 			var trivia = root.FindTrivia(pos);
 			if (!trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) return;
 			if (trivia.SpanStart != --pos) return;
@@ -213,7 +212,6 @@ class CiAutocorrect {
 				//CiUtil.PrintNode(node);
 				if (token.Kind() != SyntaxKind.CloseBraceToken || pos != token.SpanStart) return;
 				if (node is not (BlockSyntax or MemberDeclarationSyntax or AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax)) return;
-				if (node is BlockSyntax && node.Parent is BlockSyntax or SwitchSectionSyntax) return; //the code editor does not indent code in simple { block }
 				int ip = code.LastIndexOf('\n', i - 2) + 1;
 				var (ind1, _) = _GetLineInd(ip);
 				var (ind2, end2) = _GetLineInd(i);
@@ -264,14 +262,14 @@ class CiAutocorrect {
 					if (isVerbatim) {
 						//rejected: inside verbatim string replace " with "". Often more annoying than useful.
 						return;
-						//cd.pos16--; //insert " before ", and let caret be after ""
+						//cd.pos--; //insert " before ", and let caret be after ""
 						//tempRangeFrom = 0;
 					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken && token.Parent.NoClosingQuote()) {
 						int i = span.Start;
 						while (code[i] == '$') i++;
 						int iq = i;
 						while (i < pos) if (code[i++] != '\"') return;
-						if (!code.Eq(cd.pos16, '\"')) replaceText = code[iq..cd.pos16]; //add eg """ at """|, else add " at """"|"""
+						if (!code.Eq(cd.pos, '\"')) replaceText = code[iq..cd.pos]; //add eg """ at """|, else add " at """"|"""
 						if (pos - iq >= 2) tempRangeFrom = 0; //don't add temp range, else next typed " would just skip one " instead of inserting ""
 					} else return;
 				}
@@ -285,7 +283,7 @@ class CiAutocorrect {
 					return;
 				case SyntaxKind.InterpolatedStringExpression:
 					//after next typed { in interpolated string remove } added after first {
-					if (ch == '{' && code.Eq(pos - 1, "{{}") && c.doc.ZTempRanges_Enum(cd.pos16, this, endPosition: true).Any()) {
+					if (ch == '{' && code.Eq(pos - 1, "{{}") && c.doc.ZTempRanges_Enum(cd.pos, this, endPosition: true).Any()) {
 						replaceLength = 1;
 						replaceText = null;
 						tempRangeFrom = 0;
@@ -299,7 +297,7 @@ class CiAutocorrect {
 							int n = 0;
 							for (int i = pos; code[i] == '{'; i--) n++;
 							if (n > 1) tempRangeFrom = 0; //raw string like $$"""...{{
-							for (int i = cd.pos16; code.Eq(i, '}'); i++) n--;
+							for (int i = cd.pos; code.Eq(i, '}'); i++) n--;
 							if (n <= 0) return;
 							if (n > 1) replaceText = new('}', n);
 						} else {
@@ -307,7 +305,7 @@ class CiAutocorrect {
 							if (pos > 0 && !char.IsWhiteSpace(code[pos - 1])) {
 								replaceText = " {  }";
 								tempRangeFrom++;
-								cd.pos16--; replaceLength = 1; //replace the '{' too
+								cd.pos--; replaceLength = 1; //replace the '{' too
 							}
 							tempRangeTo = tempRangeFrom + 2;
 							newPos = tempRangeFrom + 1;
@@ -320,7 +318,7 @@ class CiAutocorrect {
 					if (kind is SyntaxKind.TypeParameterList or SyntaxKind.TypeArgumentList) return true;
 					if (kind != SyntaxKind.LessThanExpression) return false;
 					var tok2 = token.GetPreviousToken(); if (!tok2.IsKind(SyntaxKind.IdentifierToken)) return false;
-					var semo = cd.document.GetSemanticModelAsync().Result;
+					var semo = cd.semanticModel;
 					var sa = semo.GetSymbolInfo(tok2).GetAllSymbols();
 					if (!sa.IsEmpty) {
 						foreach (var v in sa) {
@@ -335,7 +333,7 @@ class CiAutocorrect {
 			}
 		}
 
-		c.doc.zReplaceRange(true, cd.pos16, cd.pos16 + replaceLength, replaceText, moveCurrentPos: ch == ';');
+		c.doc.zReplaceRange(true, cd.pos, cd.pos + replaceLength, replaceText, moveCurrentPos: ch == ';');
 		if (newPos > 0) c.doc.zCurrentPos16 = newPos;
 
 		if (tempRangeFrom > 0) c.doc.ZTempRanges_Add(this, tempRangeFrom, tempRangeTo);
@@ -348,9 +346,9 @@ class CiAutocorrect {
 		bool onEnterWithoutMod = !(onSemicolon | anywhere);
 
 		if (!CodeInfo.GetContextWithoutDocument(out var cd)) return false;
-		var doc = cd.sciDoc;
+		var doc = cd.sci;
 		var code = cd.code;
-		int pos = cd.pos16;
+		int pos = cd.pos;
 		if (pos < 1) return false;
 		if (pos == code.Length) return false;
 
@@ -367,7 +365,7 @@ class CiAutocorrect {
 
 		if (!cd.GetDocument()) return false;
 
-		var root = cd.document.GetSyntaxRootAsync().Result;
+		var root = cd.syntaxRoot;
 		var tok1 = root.FindToken(pos);
 
 		//CiUtil.PrintNode(tok1, printErrors: true);
@@ -456,7 +454,7 @@ class CiAutocorrect {
 				}
 
 				//if eg 'if(...) ThisNodeNotInBraces', next line must have indent of 'if'
-				if (needSemicolon && node.Parent is StatementSyntax pa && !(pa is BlockSyntax)) indentNode = pa;
+				if (needSemicolon && node.Parent is StatementSyntax pa && pa is not BlockSyntax) indentNode = pa;
 
 			} else if (v is MemberDeclarationSyntax mds) {
 				node = v;
@@ -681,7 +679,7 @@ class CiAutocorrect {
 				TextSpan spanN = node.Span;
 				if (!(from >= spanN.End && tok1.IsKind(SyntaxKind.CloseParenToken))) { //if after ')', we are after eg if(...) or inside an expression
 					for (; !(from > spanN.Start && from < spanN.End); spanN = node.Span) {
-						if (node is SwitchSectionSyntax && from >= spanN.End && !(nodeFromPos is BreakStatementSyntax)) break; //indent switch section statements and 'break'
+						if (node is SwitchSectionSyntax && from >= spanN.End && nodeFromPos is not BreakStatementSyntax) break; //indent switch section statements and 'break'
 						node = node.Parent;
 						if (node == null) return false;
 					}
@@ -705,15 +703,15 @@ class CiAutocorrect {
 				//if(v is not CompilationUnitSyntax) CiUtil.PrintNode(v);
 				//if(v is not (CompilationUnitSyntax or TypeDeclarationSyntax or MethodDeclarationSyntax)) CiUtil.PrintNode(v);
 				switch (v) {
-				//case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax): //don't indent block that is child of eg 'if' which adds indentation
-				case BlockSyntax: //don't indent any blocks. See also the //* line below.
+				case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax or SwitchSectionSyntax): //don't indent block that is child of function, 'if' etc which adds indentation
 				case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
 				case ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax:
 				case PropertyPatternClauseSyntax or RecursivePatternSyntax or BinaryPatternSyntax: //PropertyPatternClauseSyntax and its ancestors
 				case LabeledStatementSyntax:
 				case AttributeListSyntax:
 				case AccessorListSyntax:
-				case NamespaceDeclarationSyntax or FileScopedNamespaceDeclarationSyntax: //don't indent namespaces
+				//case NamespaceDeclarationSyntax: //rejected: don't indent namespaces. Now can use file-scoped namespaces.
+				case FileScopedNamespaceDeclarationSyntax:
 				case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 				case UsingStatementSyntax k4 when k4.Parent is UsingStatementSyntax: //don't indent multiple using()
 				case FixedStatementSyntax k5 when k5.Parent is FixedStatementSyntax: //don't indent multiple fixed()
@@ -725,8 +723,8 @@ class CiAutocorrect {
 					//print.it("--" + v.GetType().Name, v.Span, pos);
 					continue;
 				case GlobalStatementSyntax or CompilationUnitSyntax: //don't indent top-level statements
-				case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //don't indent script class content
-				case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //don't indent script constructor content
+																	 //case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //rejected: don't indent script class content. Now can use top-level statements.
+																	 //case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //rejected: don't indent script constructor content
 					goto endLoop1;
 				}
 				//print.it(v.GetType().Name, v.Span, pos);
@@ -775,7 +773,7 @@ class CiAutocorrect {
 			//correct 'case' if indented too much. It happens when it is not the first 'case' in section.
 			if (!expandBraces && indent > 0 && node is SwitchSectionSyntax && nodeFromPos is SwitchLabelSyntax && from >= nodeFromPos.Span.End) {
 				int i = nodeFromPos.SpanStart, j = i;
-				if (cd.sciDoc.zLineIndentationFromPos(true, i) != indent - 1) {
+				if (cd.sci.zLineIndentationFromPos(true, i) != indent - 1) {
 					while (_IsSpace(code[i - 1])) i--;
 					if (code[i - 1] == '\n') {
 						replaceFrom = i;
@@ -786,7 +784,6 @@ class CiAutocorrect {
 			}
 
 			//append newlines and tabs
-			if (!dontIndent && indent > 0) dontIndent = node is BlockSyntax && node.Parent is BlockSyntax or SwitchSectionSyntax; //*
 			if (canExitBlock) {
 				if (!dontIndent && indent > 0) indent--;
 				b.Append('\t', indent).AppendLine("}");
@@ -819,12 +816,12 @@ class CiAutocorrect {
 	static int _InNonblankTriviaOrStringOrChar(CodeInfo.Context cd, SyntaxToken token, bool isSelection) {
 		string /*prefix = null,*/ suffix = null; bool newlineLast = false;
 		int indent = 0;
-		int pos = cd.pos16, posStart = pos, posEnd = pos;
+		int pos = cd.pos, posStart = pos, posEnd = pos;
 		var span = token.Span;
 		if (pos < span.Start || pos > span.End) {
 			if (isSelection) {
-				posStart = cd.sciDoc.zSelectionStart16;
-				posEnd = cd.sciDoc.zSelectionEnd16;
+				posStart = cd.sci.zSelectionStart16;
+				posEnd = cd.sci.zSelectionEnd16;
 			}
 			var trivia = token.Parent.FindTrivia(pos);
 			//CiUtil.PrintNode(trivia, pos);
@@ -854,13 +851,13 @@ class CiAutocorrect {
 			if (span.ContainsInside(pos) && token.IsKind(SyntaxKind.CharacterLiteralToken)) return 3;
 			bool? isString = token.IsInString(pos, cd.code, out var si);
 			if (isString == false) return 0;
-			if (si.isRawPrefixCenter) cd.sciDoc.zInsertText(true, pos, "\r\n"); //let Enter in raw string prefix like """|""" add extra newline
+			if (si.isRawPrefixCenter) cd.sci.zInsertText(true, pos, "\r\n"); //let Enter in raw string prefix like """|""" add extra newline
 			if (isString == null || !si.isClassic) return 2;
 			return 3;
 			//rejected: split string into "abc" + "" or "abc\r\n" + "". Rarely used. Better complete statement.
 		}
 
-		var doc = cd.sciDoc;
+		var doc = cd.sci;
 		indent += doc.zLineIndentationFromPos(true, posStart);
 		if (indent < 1 /*&& prefix == null*/ && suffix == null) return 2;
 
@@ -889,7 +886,7 @@ class CiAutocorrect {
 			if (i == i0) return false;
 		} else {
 			//if at the start of a line containing just tabs/spaces, let Delete delete entire line
-			if (code.RxMatch(@"(?m)^\h+(\R|)", 0, out g, RXFlags.ANCHORED, i..)) goto g1;
+			if (code.RxMatch(@"(?m)^\h+\R", 0, out g, RXFlags.ANCHORED, i..)) goto g1;
 		}
 		if (!code.RxMatch(@"(?m)(?<!^)\R\h+", 0, out g, RXFlags.ANCHORED, i..)) return false;
 		g1: doc.zDeleteRange(true, g.Start, g.End);

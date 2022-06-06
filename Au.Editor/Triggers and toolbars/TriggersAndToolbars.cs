@@ -9,15 +9,21 @@ partial class TriggersAndToolbars {
 		return App.Model.OpenAndGoTo(f);
 	}
 
-	public static void ToolbarsMenu() {
+	public static void GoToToolbars() {
 		var folder = GetProject(create: true);
 		folder = folder.Children().First(f => f.IsFolder && f.Name.Eqi("Toolbars"));
-		var m = new popupMenu();
-		foreach (var f in folder.Children()) {
-			if (!f.IsClass) continue;
-			m[f.DisplayName] = _ => App.Model.OpenAndGoTo(f);
-		}
-		m.Show();
+
+		folder.SelectSingle();
+		var tv = Panels.Files.TreeControl;
+		if(!folder.IsExpanded) tv.Expand(folder, true);
+		tv.EnsureVisible(folder, scrollTop: true);
+
+		//var m = new popupMenu();
+		//foreach (var f in folder.Children()) {
+		//	if (!f.IsClass) continue;
+		//	m[f.DisplayName] = _ => App.Model.OpenAndGoTo(f);
+		//}
+		//m.Show();
 	}
 
 	/// <summary>

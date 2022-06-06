@@ -1,7 +1,7 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More {
 	/// <summary>
-	/// Memory buffer on stack with ability to expand and use heap memory. Used mostly for calling Windows API.
+	/// Memory buffer on stack with ability to expand and use heap memory.
+	/// Can be used for calling Windows API or building arrays.
 	/// Must be used with <c>[SkipLocalsInit]</c> attribute; add it to the caller function or class.
 	/// </summary>
 	/// <example>
@@ -21,8 +21,7 @@
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential, Size = 16 + StackSize + 16)] //16 for other fields + 16 for safety
-	public unsafe ref struct FastBuffer<T> where T : unmanaged
-	{
+	public unsafe ref struct FastBuffer<T> where T : unmanaged {
 		T* _p; //buffer pointer (on stack or native heap)
 		int _n; //buffer length (count of T elements)
 		bool _free; //if false, buffer is on stack in this variable (_p=&_stack). If true, buffer is allocated with MemoryUtil.Alloc.
@@ -108,12 +107,21 @@
 		/// Allocates new bigger buffer of specified length. Frees old buffer if need.
 		/// </summary>
 		/// <param name="n">Number of elements of type T.</param>
+		/// <param name="preserve">Copy previous buffer contents to the new buffer.</param>
 		/// <exception cref="ArgumentException"><i>n</i> &lt;= current buffer lenght.</exception>
-		public void More(int n) {
+		public void More(int n, bool preserve = false) {
 			if (_n == 0) throw new ArgumentNullException(null, "No buffer. Use another constructor."); //with many API would still work, but very slow
 			if (n <= _n) throw new ArgumentException("n <= this.n");
-			Dispose();
-			_p = MemoryUtil.Alloc<T>(n + 1); //+1 for safety
+			if (!preserve) {
+				Dispose();
+				_p = MemoryUtil.Alloc<T>(n + 1); //+1 for safety
+			} else if (_free) {
+				MemoryUtil.ReAlloc<T>(ref _p, n + 1);
+			} else {
+				var p = MemoryUtil.Alloc<T>(n + 1);
+				MemoryUtil.Copy(_p, p, _n * sizeof(T));
+				_p = p;
+			}
 			_n = n;
 			_free = true;
 		}
@@ -121,7 +129,8 @@
 		/// <summary>
 		/// Allocates new bigger buffer of at least <c>n*2</c> length. Frees old buffer if need.
 		/// </summary>
-		public void More() => More(Math.Max(checked(_n * 2), 0x4000 / sizeof(T))); //16 KB = StackSize * 8
+		/// <param name="preserve">Copy previous buffer contents to the new buffer.</param>
+		public void More(bool preserve = false) => More(Math.Max(checked(_n * 2), 0x4000 / sizeof(T)), preserve); //16 KB = StackSize * 8
 
 		/// <summary>
 		/// Frees allocated memory if need.
@@ -203,8 +212,7 @@
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	//error CS1657: Cannot use 'b' as a ref or out value because it is a 'using variable'.
 	//If in, compiles, but very slow. Probably copies t because calls More() which isn't readonly.
 	//public static partial class ExtAu
@@ -218,8 +226,7 @@ namespace Au.Types
 	/// Flags for <see cref="FastBuffer{T}.GetString"/>.
 	/// </summary>
 	[Flags]
-	public enum BSFlags
-	{
+	public enum BSFlags {
 		/// <summary>
 		/// If buffer too small, the API gets part of string instead of returning required buffer length.
 		/// </summary>

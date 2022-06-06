@@ -181,30 +181,65 @@ static class Menus {
 		public static void Go_to_definition() { CiGoTo.GoToDefinition(); }
 
 		[Command(separator = true)]
-		public static class Selection {
-			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd #9F5300")]
-			public static void Comment() { Panels.Editor.ZActiveDoc.ZCommentLines(true); }
+		public static class Document {
+			[Command(image = "*Material.CommentEditOutline #9F5300")]
+			public static void Add_file_description() { InsertCode.AddFileDescription(); }
 
-			[Command(keysText = "R-click margin", keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus #9F5300")]
-			public static void Uncomment() { Panels.Editor.ZActiveDoc.ZCommentLines(false); }
+			[Command(image = "*Codicons.SymbolClass #9F5300")]
+			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 
-			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease #9F5300")]
-			public static void Indent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB); }
-
-			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease #9F5300")]
-			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
-
-			[Command]
-			public static void Remove_screenshots() { Panels.Editor.ZActiveDoc.ImageRemoveScreenshots(); }
+			[Command(image = "*PixelartIcons.AlignLeft #9F5300")]
+			public static void Format_document() { ModifyCode.Format(false); }
 
 			[Command(keysText = "Ctrl+A")]
 			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 
-		//[Command]
-		//public static class Convert
-		//{
-		//}
+		[Command]
+		public static class Selection {
+			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd #9F5300")]
+			public static void Comment() { ModifyCode.CommentLines(true); }
+
+			[Command(keysText = "R-click margin", keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus #9F5300")]
+			public static void Uncomment() { ModifyCode.CommentLines(false); }
+
+			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease #9F5300")]
+			public static void Indent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB); }
+			//SHOULDDO: now does not indent empty lines if was no indentation.
+
+			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease #9F5300")]
+			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
+
+			[Command(keysText = "Ctrl+D")]
+			public static void Duplicate() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
+
+			[Command]
+			public static void Format_selection() { ModifyCode.Format(true); }
+
+			[Command]
+			public static void Remove_screenshots() { Panels.Editor.ZActiveDoc.ImageRemoveScreenshots(); }
+		}
+
+		[Command]
+		public static class Surround {
+			[Command("Repeat (for)")]
+			public static void Surround_for() { InsertCode.SurroundFor(); }
+
+			[Command("Handle exceptions (try catch)")]
+			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
+		}
+
+		[Command]
+		public static class Generate {
+			[Command(keys = "Ctrl+Shift+D")]
+			public static void Create_delegate() { InsertCode.CreateDelegate(); }
+
+			[Command(tooltip = "Implement interface or abstract class")]
+			public static void Implement_interface() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: false); }
+
+			[Command(tooltip = "Implement interface, private functions")]
+			public static void Implement_interface_explicitly() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: true); }
+		}
 
 		[Command]
 		public static class View {
@@ -242,27 +277,6 @@ static class Menus {
 
 		[Command(underlined: 'A')]
 		public static void Windows_API() { new DWinapi().Show(); }
-
-		[Command(separator = true)]
-		public static class Add {
-			[Command(image = "*Material.CommentEditOutline #9F5300")]
-			public static void Add_file_description() { InsertCode.AddFileDescription(); }
-
-			[Command(image = "*Codicons.SymbolClass #9F5300")]
-			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
-		}
-
-		[Command]
-		public static class Generate {
-			[Command(keys = "Ctrl+Shift+D")]
-			public static void Create_delegate() { InsertCode.CreateDelegate(); }
-
-			[Command(tooltip = "Implement interface or abstract class")]
-			public static void Implement_interface() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: false); }
-
-			[Command(tooltip = "Implement interface, private functions")]
-			public static void Implement_interface_explicitly() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: true); }
-		}
 	}
 
 	[Command(target = "Edit")]
@@ -294,7 +308,7 @@ static class Menus {
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
 		[Command("...")]
-		public static void Recent() { RecentTT.Show(); }
+		public static void Recent() { RecentTT.Show(); } //CONSIDER: toolbar button
 
 		[Command(separator = true)]
 		public static class Debugger {
@@ -334,9 +348,9 @@ static class Menus {
 		//public static void Active_triggers() {  }
 
 		[Command(separator = true)]
-		public static void Toolbars() { TriggersAndToolbars.ToolbarsMenu(); }
+		public static void Toolbars() { TriggersAndToolbars.GoToToolbars(); }
 
-		[Command("...")]
+		[Command("...", image = "*Material.ShapeRectanglePlus #008EEE")]
 		public static void New_toolbar() { TriggersAndToolbars.NewToolbar(); }
 
 		[Command("...")]

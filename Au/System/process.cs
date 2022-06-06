@@ -745,7 +745,7 @@ namespace Au {
 		/// </remarks>
 		/// <seealso cref="wnd.ThreadId"/>
 		public static int thisThreadId => Api.GetCurrentThreadId();
-		//speed: fast, but several times slower than Thread.CurrentThread.ManagedThreadId. Caching in a ThreadStatic variable makes even slower.
+		//speed: fast, but several times slower than Environment.CurrentManagedThreadId. Caching in a ThreadStatic variable makes even slower.
 
 		/// <summary>
 		/// Returns native thread handle of this thread (API <msdn>GetCurrentThread</msdn>).

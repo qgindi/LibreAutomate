@@ -19,12 +19,12 @@ class CiErrors {
 		_semo = null;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return;
-		var doc = cd.sciDoc;
+		var doc = cd.sci;
 		var code = cd.code;
 		if (code.Eq(end16 - 1, '\n')) end16--; //don't include error from next line
 		if (end16 <= start16) return;
 		bool has = false;
-		var semo = cd.document.GetSemanticModelAsync().Result;
+		var semo = cd.semanticModel;
 		var a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16));
 		if (!a.IsDefaultOrEmpty) {
 			_codeDiag = new(a.Length);

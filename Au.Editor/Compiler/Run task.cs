@@ -22,7 +22,7 @@ static class CompileRun
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
-	/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1), because calls its file model functions.
+	/// Must be always called in the main UI thread (Environment.CurrentManagedThreadId == 1), because calls its file model functions.
 	/// </remarks>
 	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false) {
 #if TEST_STARTUP_SPEED
