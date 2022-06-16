@@ -2,10 +2,8 @@ using System.Linq;
 
 //FUTURE: ChildFromXY. Like wnd.ChildFromXY. Use IAccessible.accHitTest.
 
-namespace Au
-{
-	public unsafe partial class elm
-	{
+namespace Au {
+	public unsafe partial class elm {
 		/// <summary>
 		/// Gets the container window or control of this UI element.
 		/// </summary>
@@ -964,19 +962,20 @@ namespace Au
 		/// Waits for a user-defined state/condition of this UI element. For example enabled, checked, changed name.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>, for example <c>true</c>.</param>
+		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Failed to get container window (<see cref="WndContainer"/>), or it was closed while waiting.</exception>
-		public bool WaitFor(double secondsTimeout, Func<elm, bool> condition) {
+		public T WaitFor<T>(double secondsTimeout, Func<elm, T> condition) {
 			var w = WndContainer; //calls ThrowIfDisposed_
 			var to = new wait.Loop(secondsTimeout);
 			for (; ; ) {
 				w.ThrowIfInvalid();
-				bool ok = condition(this);
+				T r = condition(this);
+				bool ok = !EqualityComparer<T>.Default.Equals(r, default);
 				w.ThrowIfInvalid(); //eg when waiting for button enabled, if window closed while in callback, the DISABLED state may be removed
-				if (ok) return true;
-				if (!to.Sleep()) return false;
+				if (ok) return r;
+				if (!to.Sleep()) return default;
 			}
 		}
 
@@ -1047,7 +1046,7 @@ namespace Au
 			if (r.NoArea) throw new AuException(IsOffscreen ? "The UI element is offscreen. Try scroll." : "The UI element rectangle is empty");
 			var w = WndContainer; //need window for mouse functions, else could click another window etc
 			bool retry = false; var r0 = r;
-			g1:
+		g1:
 			if (!w.GetRect(out var rw)) throw new AuException(0, "*get container window");
 			if (!r.Intersect(rw)) {
 				if (!retry && scroll != 0) { //workaround for: WndContainer of a popup item may be the popup's owner. Eg WPF combobox.
@@ -1392,7 +1391,7 @@ namespace Au
 					_ExpandIfNeed(this, hi);
 				}
 
-				for(int i = 0; i < a.Length; i++) {
+				for (int i = 0; i < a.Length; i++) {
 					var name = a[i];
 					bool ok = waitS == 0 ? _Find(name) : wait.forCondition(-Math.Abs(waitS), () => _Find(name));
 					if (!ok) throw new NotFoundException("Not found elm expand path part: " + name);

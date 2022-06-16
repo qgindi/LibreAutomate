@@ -1,5 +1,4 @@
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Manages an ITEMIDLIST structure that is used to identify files and other shell objects instead of a file-system path.
 	/// </summary>
@@ -12,8 +11,7 @@ namespace Au.Types
 	/// 
 	/// This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
 	/// </remarks>
-	public unsafe class Pidl : IDisposable
-	{
+	public unsafe class Pidl : IDisposable {
 		IntPtr _pidl;
 
 		/// <summary>
@@ -251,6 +249,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Returns string ":: ITEMIDLIST".
 		/// This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
 		/// </summary>
 		public static string ToHexString(IntPtr pidl) {
@@ -261,5 +260,16 @@ namespace Au.Types
 			return ":: " + Convert2.HexEncode((void*)pidl, n);
 		}
 		//rejected: use base64 ITEMIDLIST. Shorter, but cannot easily split, for example in folders.UnexpandPath.
+
+		/// <summary>
+		/// If s starts with "::{", converts to ":: ITEMIDLIST". Else returns s.
+		/// </summary>
+		internal static string ClsidToItemidlist_(string s) {
+			if (s != null && s.Starts("::{")) {
+				using var pidl = FromString(s);
+				if (pidl != null) return pidl.ToString();
+			}
+			return s;
+		}
 	}
 }

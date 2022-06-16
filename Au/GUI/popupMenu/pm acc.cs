@@ -3,11 +3,9 @@ using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
 using NAVDIR = Au.Types.Api.NAVDIR;
 
-namespace Au.Types
-{
+namespace Au.Types {
 	[ComVisible(true)]
-	partial class MTBase
-	{
+	partial class MTBase {
 		private protected bool _WmGetobject(nint wParam, nint lParam, out nint result) {
 			result = default;
 			var oid = (EObjid)lParam;
@@ -30,11 +28,9 @@ namespace Au.Types
 	}
 }
 
-namespace Au
-{
+namespace Au {
 	[ComVisible(true)]
-	partial class popupMenu : IAccessible
-	{
+	partial class popupMenu : IAccessible {
 		IAccessible IAccessible.get_accParent() => _StdAO.get_accParent();
 
 		int IAccessible.get_accChildCount() => _a.Count;
@@ -85,7 +81,8 @@ namespace Au
 
 		object IAccessible.get_accSelection() => null;
 
-		string IAccessible.get_accDefaultAction(VarInt varChild) => _B(varChild, out var b) && b.clicked != null ? (b.IsSubmenu ? "Open" : "Execute") : null;
+		string IAccessible.get_accDefaultAction(VarInt varChild)
+			=> !_B(varChild, out var b) || b.IsDisabled ? null : b.IsSubmenu ? "Open" : "Execute";
 
 		void IAccessible.accSelect(ESelect flagsSelect, VarInt varChild) => throw new NotImplementedException();
 
@@ -123,7 +120,7 @@ namespace Au
 		}
 
 		void IAccessible.accDoDefaultAction(VarInt varChild) {
-			if (!_B(varChild, out var b) || b.clicked == null) return;
+			if (!_B(varChild, out var b) || b.IsDisabled) return;
 			_w.Post(Api.WM_USER + 50, (int)varChild);
 		}
 

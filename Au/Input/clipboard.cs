@@ -25,10 +25,11 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets clipboard text.
 		/// </summary>
+		/// <value>null if there is no text.</value>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
 		/// <exception cref="OutOfMemoryException">The 'set' function failed to allocate memory.</exception>
 		/// <remarks>
-		/// The 'get' function calls <see cref="clipboardData.getText"/>. Returns null if there is no text.
+		/// The 'get' function calls <see cref="clipboardData.getText"/>.
 		/// 
 		/// Gets/sets only data of text format. For other formats (files, HTML, image, etc) use <see cref="clipboardData"/> class.
 		/// </remarks>

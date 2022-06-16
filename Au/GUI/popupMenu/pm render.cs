@@ -33,7 +33,7 @@ namespace Au
 						if (b.HasImage_) hasImages = true;
 						if (b.checkType > 0) hasCheck = true;
 						if (b.IsSubmenu) hasSubmenus = true;
-						if (b.hotkey != null) hasHotkeys = true;
+						if (b.Hotkey != null) hasHotkeys = true;
 					}
 				}
 
@@ -82,8 +82,8 @@ namespace Au
 			int maxHotkey = 0;
 			if (_z.hasHotkeys) {
 				foreach (var b in _a) {
-					if (b.hotkey == null) continue;
-					int wid = dc.MeasureDT(b.hotkey, c_tffHotkey).width;
+					if (b.Hotkey == null) continue;
+					int wid = dc.MeasureDT(b.Hotkey, c_tffHotkey).width;
 					maxHotkey = Math.Max(maxHotkey, Math.Min(wid, maxTextWidth / 2));
 				}
 			}
@@ -179,10 +179,10 @@ namespace Au
 					r.left += _z.image + _z.textPaddingX; r.right -= _z.textPaddingX + _z.submenu + _z.submenuMargin;
 					r.top += _z.textPaddingY; r.bottom -= _z.textPaddingY;
 
-					if (b.hotkey != null) {
+					if (b.Hotkey != null) {
 						Api.SetTextColor(dc, textColorDisabled);
 						var rh = r; rh.left += _z.xHotkeyStart;
-						Api.DrawText(dc, b.hotkey, ref rh, c_tffHotkey);
+						Api.DrawText(dc, b.Hotkey, ref rh, c_tffHotkey);
 					}
 
 					Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));

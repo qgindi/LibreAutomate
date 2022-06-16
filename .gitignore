@@ -228,6 +228,7 @@ ModelManifest.xml
 !/_/Default/Workspace/files/
 !/_/Default/Workspace/files.xml
 !/_/Default/Workspace/state.db
+!/_/Default/.gitignore
 
 /_/Templates/*
 !/_/Templates/files/

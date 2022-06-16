@@ -1,5 +1,4 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More {
 	/// <summary>
 	/// Shows standard "Open", "Save As" or "Select Folder" dialog to select a file or folder.
 	/// </summary>
@@ -19,8 +18,7 @@
 	/// if(d.ShowOpen(out string s)) print.it(s);
 	/// ]]></code>
 	/// </example>
-	public class FileOpenSaveDialog
-	{
+	public class FileOpenSaveDialog {
 		readonly string _clientGuid;
 		readonly bool _clearClientData;
 
@@ -163,7 +161,7 @@
 		/// <param name="result">Full path of the selected file.</param>
 		/// <param name="owner">Owner window. Optional.</param>
 		/// <param name="selectFolder">Select folders, not files.</param>
-		/// <param name="onlyFilesystem">The dialog allows to select only file system items (files, folders), not other shell items or URLs. Default true. If false, other shell items are returned like "::{CLSID}"; see <see cref="Pidl.FromString(string, bool)"/>.</param>
+		/// <param name="onlyFilesystem">The dialog allows to select only file system items (files, folders), not other shell items or URLs. Default true. If false, other shell items are returned like ":: ITEMIDLIST"; see <see cref="Pidl"/>.</param>
 		/// <param name="fileMustExist">The dialog can return only existing items. Default true.</param>
 		/// <param name="previewPane">Display the preview pane.</param>
 		/// <returns>true on OK, false on Cancel or error.</returns>
@@ -215,15 +213,8 @@
 			//	}
 			//}
 
-			return r.GetDisplayName(SIGDN.FILESYSPATH | SIGDN.URL);
-			//info: for a non-FS item, even with SIGDN.FILESYSPATH gets string like "::{GUID}"
-
-			//var s = r.GetDisplayName(SIGDN.FILESYSPATH | SIGDN.URL);
-			//if(s!=null && s.Starts("::{")) {
-			//	var p = Pidl.FromString(s);
-			//	if(p!=null) s=p.ToString(); //":: PIDL"
-			//}
-			//return s;
+			var s = r.GetDisplayName(SIGDN.FILESYSPATH | SIGDN.URL); //info: for a non-FS item, even with SIGDN.FILESYSPATH gets string like "::{GUID}"
+			return Pidl.ClsidToItemidlist_(s);
 		}
 
 		static bool _ShellItemFromString(string path, out api.IShellItem si) {
@@ -235,15 +226,13 @@
 			}
 		}
 
-		unsafe class api : NativeApi
-		{
+		unsafe class api : NativeApi {
 			internal static Guid CLSID_FileOpenDialog = new(0xDC1C5A9C, 0xE88A, 0x4DDE, 0xA5, 0xA1, 0x60, 0xF8, 0x2A, 0x20, 0xAE, 0xF7);
 
 			internal static Guid CLSID_FileSaveDialog = new(0xC0B4E2F3, 0xBA21, 0x4773, 0x8D, 0xBA, 0x33, 0x5E, 0xC9, 0x46, 0xEB, 0x8B);
 
 			[ComImport, Guid("d57c7288-d4ad-4768-be02-9d969532d960"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-			internal interface IFileOpenDialog : IFileDialog
-			{
+			internal interface IFileOpenDialog : IFileDialog {
 				//IModalWindow
 				[PreserveSig] new int Show(wnd hwndOwner);
 				//IFileDialog
@@ -276,8 +265,7 @@
 			}
 
 			[ComImport, Guid("84bccd23-5fde-4cdb-aea4-af64b83d78ab"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-			internal interface IFileSaveDialog : IFileDialog
-			{
+			internal interface IFileSaveDialog : IFileDialog {
 				//IModalWindow
 				[PreserveSig] new int Show(wnd hwndOwner);
 				//IFileDialog
@@ -313,8 +301,7 @@
 			}
 
 			[ComImport, Guid("42f85136-db7e-439c-85f1-e4075d135fc8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-			internal interface IFileDialog
-			{
+			internal interface IFileDialog {
 				//IModalWindow
 				[PreserveSig] int Show(wnd hwndOwner);
 				//IFileDialog
@@ -344,8 +331,7 @@
 			}
 
 			[ComImport, Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-			internal interface IShellItem
-			{
+			internal interface IShellItem {
 				[PreserveSig] int BindToHandler(IntPtr pbc, in Guid bhid, in Guid riid, void** ppv);
 				[PreserveSig] int GetParent(out IShellItem ppsi);
 				[return: MarshalAs(UnmanagedType.LPWStr)] string GetDisplayName(SIGDN sigdnName);
@@ -354,8 +340,7 @@
 			}
 
 			[ComImport, Guid("b63ea76d-1f85-456f-a19c-48159efa858b"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-			internal interface IShellItemArray
-			{
+			internal interface IShellItemArray {
 				[PreserveSig] int BindToHandler(/*IntPtr pbc, in Guid bhid, in Guid riid, void** ppvOut*/);
 				[PreserveSig] int GetPropertyStore(/*GETPROPERTYSTOREFLAGS flags, in Guid riid, void** ppv*/);
 				[PreserveSig] int GetPropertyDescriptionList(/*in PROPERTYKEY keyType, in Guid riid, void** ppv*/);
@@ -366,8 +351,7 @@
 			}
 
 			[Flags]
-			internal enum FOS : uint
-			{
+			internal enum FOS : uint {
 				FOS_OVERWRITEPROMPT = 0x2,
 				FOS_STRICTFILETYPES = 0x4,
 				FOS_NOCHANGEDIR = 0x8,
@@ -405,8 +389,7 @@
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// <see cref="FileOpenSaveDialog.CommonFlags"/>.
 	/// </summary>

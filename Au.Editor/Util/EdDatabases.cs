@@ -222,6 +222,7 @@ static class EdDatabases
 
 	#endregion
 
+#if false //now in script "SDK create database".
 	/// <summary>
 	/// Creates SQLite database containing Windows API declarations.
 	/// </summary>
@@ -275,4 +276,5 @@ static class EdDatabases
 
 		print.it("CreateWinapi done.");
 	}
+#endif
 }

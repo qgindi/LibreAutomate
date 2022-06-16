@@ -530,6 +530,7 @@ class PanelFind : UserControl {
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
 				timer.after(10, _ => {
+					if (to >= doc.zLen16) return;
 					App.Model.EditGoBack.RecordNext();
 					doc.zSelect(true, from, to, true);
 				});

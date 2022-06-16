@@ -62,7 +62,7 @@ static unsafe class Test {
 		//ModifyCode.Format(true);
 
 
-		Menus.Edit.Surround.Surround_for();
+		//Menus.Edit.Surround.Surround_for();
 
 		//InsertCode.CreateDelegate();
 		//var f = App.Model.FindCodeFile("InsertCode");

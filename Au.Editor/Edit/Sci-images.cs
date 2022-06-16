@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using static Au.Controls.KImageUtil;
 using System.Buffers;
+using CT = Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
 
 partial class SciCode {
 	struct _Image {
@@ -31,7 +32,7 @@ partial class SciCode {
 		//using var p1 = perf.local(); //fast when bitmaps loaded/cached
 
 		//remove StaticSymbol. It is added for each static symbol, randomly before or after. Makes code difficult.
-		var a = list.Where(o => o.ClassificationType != ClassificationTypeNames.StaticSymbol).ToArray();
+		var a = list.Where(o => o.ClassificationType != CT.StaticSymbol).ToArray();
 
 		if (a.Length > 0) zIndicatorClear(true, c_indicImages, a[0].TextSpan.Start..a[^1].TextSpan.End);
 
@@ -52,7 +53,7 @@ partial class SciCode {
 				s = sr.ToString();
 			} else if (null != (s = _IsFolders(a[i], ref i))) {
 				imType = _ImageTypeFromString(true, s);
-			} else if (i < a.Length && a[i].ClassificationType == ClassificationTypeNames.Comment) {
+			} else if (i < a.Length && a[i].ClassificationType == CT.Comment) {
 				var ts = a[i].TextSpan;
 				if (!code.Eq(ts.Start, "/*")) continue;
 				int j = ts.Start + 2;
@@ -124,7 +125,7 @@ partial class SciCode {
 			r = default;
 			bool verbatim = false;
 			var ct = v.ClassificationType;
-			if (!(ct == ClassificationTypeNames.StringLiteral || (verbatim = ct == ClassificationTypeNames.VerbatimStringLiteral))) return false;
+			if (!(ct == CT.StringLiteral || (verbatim = ct == CT.VerbatimStringLiteral))) return false;
 			//skip short strings and $"string" parts
 			int start = v.TextSpan.Start, end = v.TextSpan.End - 1;
 			if (verbatim && code[start++] != '@') return false;
@@ -134,23 +135,28 @@ partial class SciCode {
 		}
 
 		string _IsFolders(ClassifiedSpan v, ref int i) {
-			if (_Eq(i, ClassificationTypeNames.ClassName, "folders") && _Eq(++i, ClassificationTypeNames.Operator, ".")) {
+			if (_Eq(i, CT.ClassName, "folders") && _Eq(++i, CT.Operator, ".")) {
 				int i1 = ++i;
-				if (_Eq(i, ClassificationTypeNames.PropertyName)
-					|| (_Eq(i, ClassificationTypeNames.ClassName, "shell") && _Eq(++i, ClassificationTypeNames.Operator, ".") && _Eq(++i, ClassificationTypeNames.PropertyName))
+				if (_Eq(i, CT.PropertyName)
+					|| (_Eq(i, CT.ClassName, "shell") && _Eq(++i, CT.Operator, ".") && _Eq(++i, CT.PropertyName))
 					) {
 					var fp = folders.getFolder(code[a[i1].TextSpan.Start..a[i].TextSpan.End]);
-					if (!fp.IsNull) {
-						//print.it("FOLDERS", fp.Path);
-						if (i < a.Length - 2 && _Eq(i + 1, ClassificationTypeNames.OperatorOverloaded, "+") && _IsString(a[i + 2], out var r)) {
-							i += 2;
-							return fp + r.ToString();
-						}
-						return fp.Path;
-					}
+					if (!fp.IsNull) return _Plus(fp, ref i);
+				} else if (_Eq(i = i1, CT.MethodName) && _Eq(i + 1, CT.Punctuation, "(") && _Eq(i + 2, CT.Punctuation, ")")) {
+					i += 2;
+					if (code[a[i1].TextSpan.ToRange()] == "sourceCode") return _Plus(folders.sourceCode(_fn.FilePath), ref i);
 				}
 			}
 			return null;
+
+			string _Plus(FolderPath fp, ref int i) {
+				//print.it("FOLDERS", fp.Path);
+				if (i < a.Length - 2 && _Eq(i + 1, CT.OperatorOverloaded, "+") && _IsString(a[i + 2], out var r)) {
+					i += 2;
+					return fp + r.ToString();
+				}
+				return fp.Path;
+			}
 		}
 
 		static ImageType _ImageTypeFromString(bool folders, ReadOnlySpan<char> s/*, out int prefixLength*/) {

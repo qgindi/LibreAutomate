@@ -338,18 +338,29 @@ static class InsertCode {
 	/// In current document gently replaces text in range from..to with before + text + after. Indents if need.
 	/// Ignores newline at the end of the range text.
 	/// </summary>
-	public static void Surround(int from, int to, string before, string after, int indentPlus) {
+	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ZActiveDoc;
+
 		int indent = doc.zLineIndentationFromPos(true, from);
 		if (indent > 0) {
 			var si = new string('\t', indent);
 			before = before.RxReplace("(?m)^", si);
 			after = after.RxReplace("(?m)^", si);
 		}
-		var b = new StringBuilder(before);
+
 		var s = doc.zRangeText(true, from, to);
-		InsertCodeUtil.AppendCodeWithIndent(b, s, indentPlus, andNewline: false);
-		b.Append(after);
+		var b = new StringBuilder();
+
+		if(concise && s.LineCount() <= 1) {
+			b.Append(before.TrimEnd("\r\n")).Append(' ');
+			b.Append(s.TrimEnd("\r\n")).Append(' ');
+			b.Append(after.TrimStart("\r\n"));
+		} else {
+			b.Append(before);
+			InsertCodeUtil.AppendCodeWithIndent(b, s, indentPlus, andNewline: false);
+			b.Append(after);
+		}
+
 		doc.ZReplaceTextGently(b.ToString(), from..to);
 	}
 
@@ -357,7 +368,8 @@ static class InsertCode {
 	/// In current document gently replaces the selected text or statement with before + text + after. Indents if need.
 	/// Ignores newline at the end of the selected text.
 	/// </summary>
-	public static void Surround(string before, string after, int indentPlus) {
+	/// <param name="concise">If text is single line, surround as single line.</param>
+	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ZActiveDoc;
 		int from = doc.zSelectionStart16, to = doc.zSelectionEnd16;
 		if (from == to) {
@@ -367,7 +379,7 @@ static class InsertCode {
 			var span = stat.GetRealFullSpan(minimalLeadingTrivia: true);
 			(from, to) = span;
 		}
-		Surround(from, to, before, after, indentPlus);
+		Surround(from, to, before, after, indentPlus, concise);
 	}
 
 	/// <summary>
@@ -858,11 +870,9 @@ try {
 		var after = """
 
 }
-catch (Exception) {
-	
-}
+catch (Exception) {  }
 
 """;
-		Surround(before, after, 1);
+		Surround(before, after, 1, concise: true);
 	}
 }

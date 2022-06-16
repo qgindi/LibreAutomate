@@ -1951,7 +1951,7 @@
 
 			//All ZorderX functions work almost like SetWindowPos without SWP_NOOWNERZORDER should work as documented.
 			//	However cannot simply call it because of its bugs.
-			//	To simulate it, we reposition this and each owned/owner window with SWP_NOOWNERZORDER.
+			//	To simulate it, we zorder this and each owned/owner window with SWP_NOOWNERZORDER.
 			//	The flag isn't well documented. With it zorders only this window; ignores owner and owned windows.
 			//	Speed: 10% slower than SetWindowPos without SWP_NOOWNERZORDER.
 			//	Still can't overcome this API bug: can't zorder above a topmost uiAccess window; also Start menu.

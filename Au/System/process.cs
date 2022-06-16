@@ -262,14 +262,20 @@ namespace Au {
 		/// <summary>
 		/// Gets process id of the first found process of the specified program.
 		/// Returns 0 if not found.
-		/// More info: <see cref="getProcessIds"/>.
 		/// </summary>
-		/// <exception cref="ArgumentException"/>
+		/// <inheritdoc cref="getProcessIds"/>
 		public static int getProcessId([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
 			if (processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);
 		}
+
+		/// <summary>
+		/// Returns true if a process of the specified program is running.
+		/// </summary>
+		/// <inheritdoc cref="getProcessIds"/>
+		public static bool exists([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false)
+			=> 0 != getProcessId(processName, fullPath, ofThisSession);
 
 		internal static int GetProcessesByName_(ref List<int> a, wildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false) {
 			a?.Clear();
@@ -379,13 +385,16 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets the command line string used to start the process. Returns null if fails.
+		/// Gets the command line string used to start the process.
 		/// </summary>
+		/// <returns>null if failed.</returns>
+		/// <param name="processId">Process id.</param>
+		/// <param name="removeProgram">Remove program path. Return only arguments, or empty string if there is no arguments.</param>
 		/// <remarks>
 		/// The string starts with program file path or name, often enclosed in "", and may be followed by arguments. Some processes may modify it; then this function gets the modified string.
 		/// Fails if the specified process is admin and this processs isn't. May fail with some system processes. Fails if this is a 32-bit process.
 		/// </remarks>
-		public static unsafe string getCommandLine(int processId) {
+		public static unsafe string getCommandLine(int processId, bool removeProgram = false) {
 			if (osVersion.is32BitProcess) return null; //can't get PEB address of 64-bit processes. Never mind 32-bit OS.
 			using var pm = new ProcessMemory(processId, 0, noException: true);
 			if (pm.ProcessHandle == default) return null;
@@ -394,9 +403,11 @@ namespace Au {
 				long upp; Api.RTL_USER_PROCESS_PARAMETERS up;
 				if (pm.Read((IntPtr)pbi.PebBaseAddress + 32, &upp, 8) && pm.Read((IntPtr)upp, &up, sizeof(Api.RTL_USER_PROCESS_PARAMETERS))) {
 					pm.Mem = (IntPtr)up.CommandLine.Buffer;
-					return pm.ReadCharString(up.CommandLine.Length / 2)
+					var s = pm.ReadCharString(up.CommandLine.Length / 2)
 						?.Trim() //many end with space, usually when without commandline args
 						?.Replace('\0', ' '); //sometimes '\0' instead of spaces before args
+					if (removeProgram) s = s.RxReplace(@"(?i)^(?:"".+?""|\S+)(?:\s+(.*))?", "$1");
+					return s;
 				}
 			}
 			return null;
@@ -414,6 +425,14 @@ namespace Au {
 		/// This function does not try to end process "softly" (close main window). Unsaved data will be lost.
 		/// Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="run.console"/>. More info on the internet.
 		/// </remarks>
+		/// <example>
+		/// Restart the shell process (explorer).
+		/// <code><![CDATA[
+		/// process.terminate(wnd.getwnd.shellWindow.ProcessId, 1);
+		/// if (!dialog.showYesNo("Restart explorer?")) return;
+		/// run.it(folders.Windows + @"explorer.exe", flags: RFlags.InheritAdmin);
+		/// ]]></code>
+		/// </example>
 		public static bool terminate(int processId, int exitCode = 0) {
 			if (Api.WTSTerminateProcess(default, processId, exitCode)) return true;
 			bool invalidParam = lastError.code == Api.ERROR_INVALID_PARAMETER;

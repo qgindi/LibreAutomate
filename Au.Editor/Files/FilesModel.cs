@@ -939,7 +939,7 @@ partial class FilesModel {
 			Panels.Editor.ZActiveDoc.zSetText(s);
 		}
 
-		if (beginRenaming && f.IsSelected) RenameSelected(newFile: true);
+		if (beginRenaming && f.IsSelected) RenameSelected(newFile: !f.IsFolder);
 		return f;
 
 		string _MetaPlusText(string t) => $"/*/ {text.meta} /*/{(t.Starts("//.") ? " " : "\r\n")}{t}";
@@ -1244,6 +1244,9 @@ partial class FilesModel {
 
 				FileNode k;
 				var name = pathname.getName(path);
+				if (r == 1) {
+					if (name.Ends(".cs", true)) name = name.Insert(^3, " (link)"); else name += " (link)";
+				}
 				if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 
 				if (r == 1) { //add as link

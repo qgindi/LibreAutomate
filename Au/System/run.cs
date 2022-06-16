@@ -109,7 +109,7 @@ namespace Au {
 
 			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
 			Pidl pidl = null;
-			if (isShellPath) { //":: Base64ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
+			if (isShellPath) { //":: ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
 				pidl = Pidl.FromString(file); //does not throw
 				if (pidl != null) {
 					x.lpIDList = pidl.UnsafePtr;
