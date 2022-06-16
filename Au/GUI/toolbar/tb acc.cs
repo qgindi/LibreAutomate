@@ -58,7 +58,7 @@ namespace Au
 		object IAccessible.get_accSelection() => null;
 
 		string IAccessible.get_accDefaultAction(VarInt varChild)
-			=> _B(varChild, out var b) && b.clicked != null ? (b.IsMenu_ ? "Open" : "Execute") : null;
+			=> !_B(varChild, out var b) || b.IsSeparatorOrGroup_ ? null : b.IsMenu_ ? "Open" : "Execute";
 
 		void IAccessible.accSelect(ESelect flagsSelect, VarInt varChild) => throw new NotImplementedException();
 
@@ -97,7 +97,7 @@ namespace Au
 		}
 
 		void IAccessible.accDoDefaultAction(VarInt varChild) {
-			if (!_B(varChild, out var b) || b.clicked == null) return;
+			if (!_B(varChild, out var b) || b.IsSeparatorOrGroup_) return;
 			_w.Post(Api.WM_USER + 50, (int)varChild);
 		}
 

@@ -147,41 +147,22 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits for a user-defined condition. This overload waits ontil the callback function returns true.
+		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="condition">Callback function (eg lambda).</param>
+		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. The calling period depends on <i>options</i>.</param>
 		/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <remarks>
-		/// Calls the <i>condition</i> function repeatedly, until it returns true or non-default (the T overload). The calling period depends on <i>options</i>.
-		///  
-		/// More info: <see cref="wait"/>.
-		/// </remarks>
-		/// <example>See <see cref="wait"/>.</example>
-		public static bool forCondition(double secondsTimeout, Func<bool> condition, OWait options = null) {
-			var to = new Loop(secondsTimeout, options);
-			for (; ; ) {
-				if (condition()) return true;
-				if (!to.Sleep()) return false;
-			}
-		}
-
-		/// <summary>
-		/// Waits for a user-defined condition. This overload waits ontil the callback function returns a value other than <c>default(T)</c>, and then returns that value.
-		/// </summary>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <inheritdoc cref="forCondition(double, Func{bool}, OWait)"/>
+		/// <example>See <see cref="wait"/>.</example>
+		/// <seealso cref="wait"/>
 		public static T forCondition<T>(double secondsTimeout, Func<T> condition, OWait options = null) {
 			var to = new Loop(secondsTimeout, options);
 			for (; ; ) {
-				var r = condition();
-				if (!EqualityComparer<T>.Default.Equals(r, default(T))) return r;
+				T r = condition();
+				if (!EqualityComparer<T>.Default.Equals(r, default)) return r;
 				if (!to.Sleep()) return r;
 			}
 		}
-		//This could be used for bool too, but then not so easy to understand the purpose and how to use, and therefore probably would be rarely used.
 
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).
@@ -355,37 +336,35 @@ namespace Au
 			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, condition, null);
 		}
 
-		/// <summary>
-		/// Waits until a variable is set = true.
-		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="variable">Stop waiting when this variable is true.</param>
-		/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <remarks>
-		/// This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="forMessagesAndCondition"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// bool stop = false;
-		/// Task.Run(() => { 2.s(); print.it("task"); stop = true; });
-		/// wait.forVariable(5, stop);
-		/// print.it(stop);
-		/// ]]></code>
-		/// </example>
-		public static bool forVariable(double secondsTimeout, in bool variable, OWait options = null) {
-			var to = new Loop(secondsTimeout, options);
-			for (; ; ) {
-				if (variable) return true;
-				if (!to.Sleep()) return false;
-			}
-		}
+		//rejected. Rarely used; type-limited. Let use forCondition.
+		///// <summary>
+		///// Waits until a variable is set = true.
+		///// </summary>
+		///// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		///// <param name="variable">Stop waiting when this variable is true.</param>
+		///// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
+		///// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		///// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		///// <remarks>
+		///// This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="forMessagesAndCondition"/>.
+		///// </remarks>
+		///// <example>
+		///// <code><![CDATA[
+		///// bool stop = false;
+		///// Task.Run(() => { 2.s(); print.it("task"); stop = true; });
+		///// wait.forVariable(5, stop);
+		///// print.it(stop);
+		///// ]]></code>
+		///// </example>
+		//public static bool forVariable(double secondsTimeout, in bool variable, OWait options = null) {
+		//	var to = new Loop(secondsTimeout, options);
+		//	for (; ; ) {
+		//		if (variable) return true;
+		//		if (!to.Sleep()) return false;
+		//	}
+		//}
 
 		//FUTURE: add misc wait functions implemented using WindowsHook and WinEventHook.
-		//public static class Hook
-		//{
-		//}
 	}
 }
 

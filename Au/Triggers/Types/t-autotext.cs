@@ -7,8 +7,7 @@
 
 using System.Linq;
 
-namespace Au.Triggers
-{
+namespace Au.Triggers {
 	/// <summary>
 	/// Flags of autotext triggers.
 	/// </summary>
@@ -16,8 +15,7 @@ namespace Au.Triggers
 	/// To avoid passing flags to each trigger as the <i>flags</i> parameter, use <see cref="AutotextTriggers.DefaultFlags"/>; its initial value is 0, which means: case-insensitive, erase the typed text with Backspace, modify the replacement text depending on the case of the typed text.
 	/// </remarks>
 	[Flags]
-	public enum TAFlags : byte
-	{
+	public enum TAFlags : byte {
 		/// <summary>
 		/// Case-sensitive.
 		/// </summary>
@@ -60,8 +58,7 @@ namespace Au.Triggers
 	/// The trigger action runs only when the user ends the autotext with a postfix character or key, unless postfix type is <b>None</b>.
 	/// Default: <b>CharOrKey</b>.
 	/// </summary>
-	public enum TAPostfix : byte
-	{
+	public enum TAPostfix : byte {
 		/// <summary>A postfix character (see <b>Char</b>) or key (see <b>Key</b>).</summary>
 		CharOrKey,
 
@@ -78,8 +75,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// Represents an autotext trigger.
 	/// </summary>
-	public class AutotextTrigger : ActionTrigger
-	{
+	public class AutotextTrigger : ActionTrigger {
 		internal string text;
 		internal TAFlags flags;
 		internal TAPostfix postfixType;
@@ -124,8 +120,7 @@ namespace Au.Triggers
 	/// Autotext triggers.
 	/// </summary>
 	/// <example>See <see cref="ActionTriggers"/>.</example>
-	public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger>
-	{
+	public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		ActionTriggers _triggers;
 		Dictionary<int, ActionTrigger> _d = new();
 
@@ -343,7 +338,7 @@ namespace Au.Triggers
 			for (int i = 0; i < n; i++) _Trigger(c[i], false, wFocus, thc);
 
 			return;
-			gReset:
+		gReset:
 			_Reset();
 		}
 
@@ -535,8 +530,7 @@ namespace Au.Triggers
 		//User-typed characters. _len characters are valid.
 		_Char[] _text = new _Char[128];
 
-		struct _Char
-		{
+		struct _Char {
 			public char c, cLow;
 			public bool isWordChar;
 
@@ -588,8 +582,7 @@ namespace Au.Triggers
 	/// Arguments for actions of autotext triggers.
 	/// Use function <see cref="Replace"/> to replace user-typed text.
 	/// </summary>
-	public class AutotextTriggerArgs : TriggerArgs
-	{
+	public class AutotextTriggerArgs : TriggerArgs {
 		///
 		public AutotextTrigger Trigger { get; internal set; }
 
@@ -789,23 +782,24 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
-		/// Returns true if the user clicked the item or pressed Enter or Tab. Other keys close the menu.
 		/// </summary>
-		/// <param name="text">Menu item text. This function limits it to 300 characters. If null, uses "Autotext".</param>
+		/// <returns>Returns true if the user clicked the item or pressed Enter or Tab.</returns>
+		/// <param name="text">Text to display. This function limits it to 300 characters. Default "Replace".</param>
 		/// <remarks>
 		/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
+		/// 
+		/// The user can close the menu with Enter, Tab or Esc. Other keys close the menu and are passed to the active window.
 		/// </remarks>
 		/// <example>
-		/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+		/// Code in file "Autotext triggers".
 		/// <code><![CDATA[
-		/// var tt = Triggers.Autotext;
+		/// //var tt = Triggers.Autotext;
 		/// tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");
 		/// tt["con2"] = o => { if(o.Confirm("Example")) o.Replace("Function Confirm"); };
-		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>
-		public bool Confirm(string text = "Autotext") {
-			text ??= "Autotext";
+		public bool Confirm(string text = "Replace") {
+			text ??= "Replace";
 			var m = new popupMenu { RawText = true };
 			m.Add(1, text.Limit(300));
 			m.KeyboardHook = (m, g) => {
@@ -816,15 +810,82 @@ namespace Au.Triggers
 				return MKHook.Close;
 			};
 			return 1 == m.Show(MSFlags.ByCaret);
-			//CONSIDER: one QM2 user wanted, if cannot show at caret, option to show in screen center
 		}
 
-		//FUTURE: Menu.
+		//CONSIDER: (QM2 user suggestion) if cannot show menu at the caret, option to show in the center of the active window or screen.
+
+		/// <summary>
+		/// Creates and shows a menu below the text cursor (caret) or mouse cursor, and calls <see cref="Replace(string, string)"/>.
+		/// </summary>
+		/// <param name="items">
+		/// Menu items. Any number of arguments of types:
+		/// - string - the replacement text and menu item label. Can contain tooltip like <c>"Text\0 Tooltip"</c>.
+		/// - <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
+		/// </param>
+		/// <remarks>
+		/// The user can use these keyboard keys:
+		/// - Esc - close the menu.
+		/// - Enter, Tab - select the focused or the first item.
+		/// - Down, Up, End, Home, PageDown, PageUp - focus menu items.
+		/// - Also to select menu items can type the number characters displayed at the right.
+		/// - Other keys close the menu and are passed to the active window.
+		/// </remarks>
+		/// <example>
+		/// Code in file "Autotext triggers".
+		/// <code><![CDATA[
+		/// //var tt = Triggers.Autotext;
+		/// tt["m1"] = o => o.Menu(
+		/// 	"https://www.example.com",
+		/// 	"<tag>[[|]]</tag>",
+		/// 	new("Label example", "TEXT"),
+		/// 	new("HTML example", "TEXT", "<b>TEXT</b>")
+		/// 	);
+		/// ]]></code>
+		/// </example>
+		public void Menu(params TAMenuItem[] items) {
+			if (items.NE_()) return;
+
+			var m = new popupMenu { RawText = true };
+			for (int i = 0; i < items.Length; i++) {
+				var v = items[i];
+				string lab = v.Label, text = v.Text ?? v.Html;
+				if (lab == null) {
+					lab = text.Limit(50).RxReplace(@"\R", " ");
+					if (v.Text != null) lab = lab.Replace("[[|]]", null);
+				}
+				var mi = m.Add(i + 1, lab);
+				if (text != lab) mi.Tooltip ??= text;
+				//if (i == 0) m.FocusedItem = mi; //then no tooltip
+				if (i < 9) mi.Hotkey = (i + 1).ToS();
+			}
+
+			KeyToTextConverter kt = null;
+			m.KeyboardHook = (m, g) => {
+				if (g.Key is KKey.Enter or KKey.Tab) {
+					m.FocusedItem ??= m.ItemsAndSeparators[0];
+					return MKHook.Default;
+				}
+				if (g.Key is KKey.Escape or KKey.Down or KKey.Up or KKey.End or KKey.Home or KKey.PageDown or KKey.PageUp) {
+					return MKHook.Default;
+				}
+				if (g.Mod != 0) return MKHook.None;
+				kt ??= new();
+				if (kt.Convert(out var c, g.vkCode, g.scanCode, keys.getMod(), Window.ThreadId) && c.c is >= '1' and <= '9') {
+					int i = c.c - '1';
+					if (i >= m.ItemsAndSeparators.Count) return MKHook.Default; //block
+					m.FocusedItem = m.ItemsAndSeparators[i];
+					return MKHook.ExecuteFocused;
+				}
+				return MKHook.Close;
+			};
+
+			int r = m.Show(MSFlags.ByCaret) - 1;
+			if (r >= 0) Replace(items[r].Text, items[r].Html);
+		}
 	}
 
 	/// <remarks>Infrastructure.</remarks>
-	public class TASimpleReplace
-	{
+	public class TASimpleReplace {
 		AutotextTriggers _host;
 
 		internal TASimpleReplace(AutotextTriggers host) {
@@ -832,7 +893,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// Adds an autotext trigger. Its action calls <see cref="AutotextTriggerArgs.Replace"/>.
+		/// Adds an autotext trigger. Its action calls <see cref="AutotextTriggerArgs.Replace(string, string)"/>.
 		/// More info: <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>.</exception>
@@ -841,5 +902,18 @@ namespace Au.Triggers
 				_host[text, flags, postfixType, postfixChars, f_, l_] = o => o.Replace(value);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Used with <see cref="AutotextTriggerArgs.Menu"/>.
+	/// </summary>
+	/// <param name="Label">Menu item label. If null, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
+	/// <param name="Text">The replacement text. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	/// <param name="Html">The replacement HTML. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	public record TAMenuItem(string Label, string Text, string Html = null) {
+		/// <summary>
+		/// Creates <b>TAMenuItem</b> with only <b>Text</b>.
+		/// </summary>
+		public static implicit operator TAMenuItem(string text) => new(null, text);
 	}
 }

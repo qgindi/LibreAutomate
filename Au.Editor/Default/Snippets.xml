@@ -211,17 +211,28 @@ mouse.move(w, );]]>
 			<list item="Hotkey">
 				<![CDATA[hk["$end$"] = o => {  };]]>
 			</list>
-			<list item="&amp;Autotext">
+			<list item="Autotext">
 				<![CDATA[tt["$end$"] = o => {  };]]>
 			</list>
-			<list item="Autotext simple &amp;replace">
+			<list item="Autotext replace">
+				<![CDATA[tt["$end$"] = o => o.Replace("text");]]>
+			</list>
+			<list item="Autotext simple replace">
 				<![CDATA[tr["$end$"] = "";]]>
 			</list>
-			<list item="&amp;Mouse">
+			<list item="Autotext menu">
+				<![CDATA[tt["$end$"] = o => o.Menu(
+	"text",
+	"<tag>[[|]]</tag>",
+	new("Label1", "text"),
+	new("Label2", "text", "<b>html</b>")
+	);]]>
+			</list>
+			<list item="Mouse">
 				<![CDATA[Triggers.Mouse[TM$end$] = o => {  };]]>
 			</list>
-			<list item="&amp;Window">
-				<![CDATA[Triggers.Window[TWEvent.ActiveOnce, "$end$"] = o => {  };]]>
+			<list item="Window">
+				<![CDATA[Triggers.Window[TWEvent.ActiveNew, "$end$"] = o => {  };]]>
 			</list>
 		</snippet>
 

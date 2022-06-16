@@ -1,11 +1,9 @@
-namespace Au.Triggers
-{
+namespace Au.Triggers {
 	/// <summary>
 	/// Flags of window triggers.
 	/// </summary>
 	[Flags]
-	public enum TWFlags : byte
-	{
+	public enum TWFlags : byte {
 		/// <summary>
 		/// Run the action when <see cref="ActionTriggers.Run"/> called, if the window then is active (for <b>ActiveOnce</b> etc triggers) or visible (for <b>VisibleOnce</b> etc triggers).
 		/// </summary>
@@ -26,8 +24,7 @@ namespace Au.Triggers
 	/// <remarks>
 	/// Cloaked windows are considered invisible. See <see cref="wnd.IsCloaked"/>.
 	/// </remarks>
-	public enum TWEvent
-	{
+	public enum TWEvent {
 		/// <summary>
 		/// When the specified window becomes active (each time).
 		/// </summary>
@@ -65,8 +62,7 @@ namespace Au.Triggers
 	/// Window events for the <i>later</i> parameter of window triggers.
 	/// </summary>
 	[Flags]
-	public enum TWLater : ushort
-	{
+	public enum TWLater : ushort {
 		/// <summary>
 		/// Name changed.
 		/// This event occurs only when the window is active. If name changed while inactive - when activated.
@@ -153,8 +149,7 @@ namespace Au.Triggers
 	/// var v = Triggers.Window.Last; //v is the new WindowTrigger. Rarely used.
 	/// ]]></code>
 	/// </example>
-	public class WindowTrigger : ActionTrigger
-	{
+	public class WindowTrigger : ActionTrigger {
 		internal readonly wndFinder finder;
 		internal readonly TWLater later;
 		internal readonly TWFlags flags;
@@ -203,8 +198,7 @@ namespace Au.Triggers
 	/// ]]></code>
 	/// More examples: <see cref="ActionTriggers"/>.
 	/// </example>
-	public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger>
-	{
+	public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 		ActionTriggers _triggers;
 		bool _win10, _win8;
 
@@ -360,8 +354,7 @@ namespace Au.Triggers
 		Queue<(EEvent, int)> _hookEventQueue;
 		WFCache _winPropCache;
 
-		struct _TriggeredData
-		{
+		struct _TriggeredData {
 			public object triggered; //WindowTrigger or List<WindowTrigger>
 			public string name; //for Name triggers
 		}
@@ -876,8 +869,7 @@ namespace Au.Triggers
 		/// For _aTriggered, _aVisible and _aVisibleOld we use resizable array, not List.
 		/// We access elements by index in time-critical code. With List it is much slower.
 		/// </summary>
-		struct _WndArray
-		{
+		struct _WndArray {
 			public wnd[] a;
 			public int len;
 
@@ -921,8 +913,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// Arguments for actions of window triggers.
 	/// </summary>
-	public class WindowTriggerArgs : TriggerArgs
-	{
+	public class WindowTriggerArgs : TriggerArgs {
 		/// <summary>
 		/// The trigger.
 		/// </summary>
@@ -958,5 +949,73 @@ namespace Au.Triggers
 
 		///
 		public override string ToString() => "Trigger: " + Trigger;
+
+		/// <summary>
+		/// Shows or hides a window-attached toolbar depending on window name.
+		/// Use in window trigger action, like in examples.
+		/// </summary>
+		/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
+		/// <param name="windowName">Window name when the toolbar should be visible. String format: [](xref:wildcard_expression).</param>
+		/// <exception cref="ArgumentException">Invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
+		/// <remarks>
+		/// The trigger must have argument <c>, later: TWLater.Name</c> (see <see cref="TWLater"/>) and match the window with any name.
+		/// </remarks>
+		/// <example>
+		/// Show toolbar Toolbar_Chrome1 on a Chrome window when window name starts with "NuGet".
+		/// <code><![CDATA[
+		/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] =
+		///		ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome1, "NuGet*");
+		/// ]]></code>
+		/// Toolbar Toolbar_Chrome1 for the above example.
+		/// <code><![CDATA[
+		/// toolbar Toolbar_Chrome1(WindowTriggerArgs ta) { var t = new toolbar(); /* add buttons */ t.Show(ta); return t; }
+		/// ]]></code>
+		/// Show Toolbar_A when window name starts with "A -", Toolbar_B when "B -", and Toolbar_C always.
+		/// <code><![CDATA[
+		/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] = ta => {
+		/// 	ta.ShowToolbarWhenWindowName(Toolbar_A, "A -*");
+		/// 	ta.ShowToolbarWhenWindowName(Toolbar_B, "B -*");
+		/// 	if (ta.Later == 0) Toolbar_C(ta);
+		/// };
+		/// ]]></code>
+		/// </example>
+		public void ShowToolbarWhenWindowName(Func<WindowTriggerArgs, toolbar> tbFunc, [ParamString(PSFormat.Wildex)] string windowName) {
+			var wild = new wildex(windowName);
+			ShowToolbarWhenWindowName(tbFunc, o => wild.Match(o.Name));
+		}
+		//rejected: shorter syntax. Limited, eg can't use the same trigger for multiple toolbars. Examples:
+		//	Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", whenName: "NuGet*"] = Toolbar_Chrome1;
+		//	Triggers.Window.Toolbar(Toolbar_Chrome1, "*Google Chrome", "Chrome_WidgetWin_1", whenName: "NuGet*");
+
+		/// <summary>
+		/// Shows or hides a window-attached toolbar depending on window name.
+		/// Use in window trigger action, like in examples.
+		/// </summary>
+		/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
+		/// <param name="windowName">Callback function that returns true if the toolbar should be visible.</param>
+		/// <example>
+		/// Show toolbar Toolbar_Chrome2 on a Chrome window when web page URL starts with "https://www.youtube.com/".
+		/// <code><![CDATA[
+		/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] = ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome2, w => {
+		/// 	var e = w.Elm["web:DOCUMENT"].Find(-1);
+		/// 	return e != null && e.Value.Starts("https://www.youtube.com/");
+		/// });
+		/// ]]></code>
+		/// </example>
+		public void ShowToolbarWhenWindowName(Func<WindowTriggerArgs, toolbar> tbFunc, Func<wnd, bool> windowName) {
+			var mi = tbFunc.Method;
+			(t_mt ??= new()).TryGetValue(mi, out var v);
+			if (!windowName(Window)) { v?.Close(); return; }
+			if (v != null) return;
+			v = tbFunc(this);
+			if (v != null) {
+				t_mt[mi] = v;
+				v.Closed += () => { t_mt.Remove(mi); };
+			} else {
+				t_mt.Remove(mi);
+			}
+		}
+
+		[ThreadStatic] static Dictionary<MethodInfo, toolbar> t_mt;
 	}
 }

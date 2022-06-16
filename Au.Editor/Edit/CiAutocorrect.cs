@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Indentation;
+using Microsoft.CodeAnalysis.Formatting;
 
 //CONSIDER: menu command "Exit statement on Enter" and toolbar check-button [;].
 //	Would complete statement from anywhere in statement.
@@ -206,25 +208,25 @@ class CiAutocorrect {
 			var node = token.Parent;
 
 			if (ch == '}') { //decrease indentation
-				int i = pos;
-				while (i > 0 && code[i - 1] == '\t') i--; //and ignore spaces
+				int i = pos; while (i > 0 && code[i - 1] is '\t' or ' ') i--;
 				if (i < 2 || code[i - 1] != '\n') return;
-				//CiUtil.PrintNode(node);
-				if (token.Kind() != SyntaxKind.CloseBraceToken || pos != token.SpanStart) return;
+				if (!token.IsKind(SyntaxKind.CloseBraceToken) || pos != token.SpanStart) return;
 				if (node is not (BlockSyntax or MemberDeclarationSyntax or AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax)) return;
-				int ip = code.LastIndexOf('\n', i - 2) + 1;
-				var (ind1, _) = _GetLineInd(ip);
-				var (ind2, end2) = _GetLineInd(i);
-				if (ind1 == 0 || ind2 == --ind1) return;
-				c.doc.zReplaceRange(true, i, end2, new string('\t', ind1));
-				c.ignoreChar = true;
-				return;
 
-				(int ind, int end) _GetLineInd(int i) {
-					int r = 0;
-					for (; i < code.Length && code[i] == '\t'; i++) r++;
-					return (r, i);
+				int li = token.GetLocation().GetLineSpan().StartLinePosition.Line;
+				var ir = CSharpIndentationService.Instance.GetIndentation(cd.document, li, FormattingOptions.IndentStyle.Smart, default);
+
+				int ind = ir.Offset / 4; bool correct;
+				if (ind > 0) {
+					int j = i; while (j < pos && code[j] == '\t') j++;
+					correct = j - i != ind || j < pos;
+				} else correct = i < pos;
+
+				if (correct) {
+					c.doc.zReplaceRange(true, i, pos, new string('\t', ind));
+					c.ignoreChar = true;
 				}
+				return;
 			}
 
 			var kind = node.Kind();
@@ -453,7 +455,7 @@ class CiAutocorrect {
 					break;
 				}
 
-				//if eg 'if(...) ThisNodeNotInBraces', next line must have indent of 'if'
+				//if eg 'if(...) ThisNodeNotInBraces', next line must have indentation of 'if'
 				if (needSemicolon && node.Parent is StatementSyntax pa && pa is not BlockSyntax) indentNode = pa;
 
 			} else if (v is MemberDeclarationSyntax mds) {

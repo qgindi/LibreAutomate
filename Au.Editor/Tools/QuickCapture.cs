@@ -78,6 +78,8 @@ static class QuickCapture {
 			m["Click screen"] = _ => _Insert($"mouse.click({p.x}, {p.y});{screenshot}");
 		});
 		m.Submenu("Triggers", m => {
+			//CONSIDER: somehow allow to select "program" and "contains".
+			//	Or show 'Find window' tool in trigger mode. Also the tool should allow to set scope.
 			m["Window trigger"] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 0);
 			m["Window scope for triggers"] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 1);
 			m.Last.Tooltip = "Hotkey/autotext/mouse triggers added afterwards will work only when this window is active";

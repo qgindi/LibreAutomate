@@ -190,9 +190,6 @@ static class Menus {
 
 			[Command(image = "*PixelartIcons.AlignLeft #9F5300")]
 			public static void Format_document() { ModifyCode.Format(false); }
-
-			[Command(keysText = "Ctrl+A")]
-			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 
 		[Command]
@@ -218,14 +215,17 @@ static class Menus {
 
 			[Command]
 			public static void Remove_screenshots() { Panels.Editor.ZActiveDoc.ImageRemoveScreenshots(); }
+
+			[Command(separator = true, keysText = "Ctrl+A")]
+			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 
 		[Command]
 		public static class Surround {
-			[Command("Repeat (for)")]
+			[Command("for (repeat)")]
 			public static void Surround_for() { InsertCode.SurroundFor(); }
 
-			[Command("Handle exceptions (try catch)")]
+			[Command("try (catch exceptions)")]
 			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
 		}
 
@@ -279,50 +279,6 @@ static class Menus {
 		public static void Windows_API() { new DWinapi().Show(); }
 	}
 
-	[Command(target = "Edit")]
-	public static class Run {
-		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
-		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
-
-		[Command(image = "*FontAwesome.StopCircleRegular #585858")]
-		public static void End_task() {
-			var f = App.Model.CurrentFile;
-			if (f != null) {
-				if (f.FindProject(out _, out var fMain)) f = fMain;
-				if (App.Tasks.EndTasksOf(f)) return;
-			}
-			var a = App.Tasks.Items;
-			if (a.Count > 0) {
-				var m = new popupMenu { RawText = true };
-				m.Submenu("End task", m => {
-					foreach (var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
-				});
-				m.Show();
-			}
-		}
-
-		//[Command(image = "")]
-		//public static void Pause() { }
-
-		[Command(image = "*VaadinIcons.Compile #008EEE")]
-		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
-
-		[Command("...")]
-		public static void Recent() { RecentTT.Show(); } //CONSIDER: toolbar button
-
-		[Command(separator = true)]
-		public static class Debugger {
-			[Command("Insert script.debug (wait for debugger to attach)")]
-			public static void Debug_attach() { InsertCode.Statements("script.debug();\r\nDebugger.Break();"); }
-
-			[Command("Insert Debugger.Break (debugger step mode)")]
-			public static void Debug_break() { InsertCode.Statements("Debugger.Break();"); }
-
-			[Command("Insert Debugger.Launch (launch VS debugger)")]
-			public static void Debug_launch() { InsertCode.Statements("Debugger.Launch();"); }
-		}
-	}
-
 	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
 	public static class TT {
 		[Command('k'/*, separator = true*/)]
@@ -367,6 +323,50 @@ static class Menus {
 
 		[Command(separator = true)]
 		public static void Script_triggers() { DCommandline.ZShow(); }
+	}
+
+	[Command(target = "Edit")]
+	public static class Run {
+		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
+		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
+
+		[Command(image = "*FontAwesome.StopCircleRegular #585858")]
+		public static void End_task() {
+			var f = App.Model.CurrentFile;
+			if (f != null) {
+				if (f.FindProject(out _, out var fMain)) f = fMain;
+				if (App.Tasks.EndTasksOf(f)) return;
+			}
+			var a = App.Tasks.Items;
+			if (a.Count > 0) {
+				var m = new popupMenu { RawText = true };
+				m.Submenu("End task", m => {
+					foreach (var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
+				});
+				m.Show();
+			}
+		}
+
+		//[Command(image = "")]
+		//public static void Pause() { }
+
+		[Command(image = "*VaadinIcons.Compile #008EEE")]
+		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
+
+		[Command("...")]
+		public static void Recent() { RecentTT.Show(); } //CONSIDER: toolbar button
+
+		[Command(separator = true)]
+		public static class Debugger {
+			[Command("Insert script.debug (wait for debugger to attach)")]
+			public static void Debug_attach() { InsertCode.Statements("script.debug();\r\nDebugger.Break();"); }
+
+			[Command("Insert Debugger.Break (debugger step mode)")]
+			public static void Debug_break() { InsertCode.Statements("Debugger.Break();"); }
+
+			[Command("Insert Debugger.Launch (launch VS debugger)")]
+			public static void Debug_launch() { InsertCode.Statements("Debugger.Launch();"); }
+		}
 	}
 
 	[Command(target = "")]

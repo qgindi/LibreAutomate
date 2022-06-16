@@ -568,11 +568,13 @@ class DProperties : KDialogWindow {
 	#region info
 
 	void _InitInfo() {
-		info.zText = "This file is a C# <help editor/" + (_isClass ? @"Class files, projects>class file" : "Scripts>script") + @"<>.
+		info.zText = $"""
+Type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>
+Path: <explore>{_f.FilePath}<>
 
 C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
-";
+""";
 
 		info.ZAddElem(role,
 @"<b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.

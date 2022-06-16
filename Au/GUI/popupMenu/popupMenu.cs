@@ -48,7 +48,6 @@ namespace Au {
 		/// </remarks>
 		public class MenuItem : MTItem {
 			readonly popupMenu _m;
-			internal string hotkey;
 			internal byte checkType; //1 checkbox, 2 radio
 			internal bool checkDontClose;
 			internal bool rawText;
@@ -109,7 +108,10 @@ namespace Au {
 			/// <summary>Gets or sets background color.</summary>
 			public ColorInt BackgroundColor { get; set; }
 
-			//public string Hotkey => hotkey;
+			/// <summary>
+			/// Hotkey display text.
+			/// </summary>
+			public string Hotkey { get; set; }
 		}
 
 		readonly List<MenuItem> _a = new();
@@ -144,7 +146,7 @@ namespace Au {
 		/// <remarks>
 		/// This overload sets <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// 
-		/// Users can right-click an item to open/select it in editor, unless <i>f</i> = null.
+		/// Users can right-click an item to open/select it in editor, unless <i>f_</i> is explicitly set = null.
 		/// </remarks>
 		public popupMenu(string name, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
 			ExtractIconPathFromCode = true;
@@ -319,7 +321,7 @@ namespace Au {
 		public MenuItem Last { get; private set; }
 
 		/// <summary>
-		/// Gets added items, except separators.
+		/// Gets added items, except separators and items in submenus.
 		/// </summary>
 		/// <remarks>
 		/// Allows to set properties of multiple items in single place instead of after each 'add item' code line.
@@ -332,6 +334,16 @@ namespace Au {
 				foreach (var v in _a) {
 					if (!v.IsSeparator) yield return v;
 				}
+			}
+		}
+
+		/// <summary>
+		/// Gets added items and separators, except items in submenus.
+		/// </summary>
+		public IReadOnlyList<MenuItem> ItemsAndSeparators {
+			get {
+				_ThreadTrap();
+				return _a;
 			}
 		}
 
@@ -471,23 +483,28 @@ namespace Au {
 				bool _IsMenuWindow(wnd w) => w == _w || w.ClassNameIs("Au.popupMenu");
 
 				if (!foreground) {
-					//never mind: hooks don't work if active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
+					//never mind: hooks don't work if the active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
 					hKey = WindowsHook.Keyboard(h => {
+						var k = h.Key;
 						if (KeyboardHook != null && !h.IsUp) {
 							switch (KeyboardHook(this, h)) {
 							case MKHook.None: return;
-							case MKHook.Close: _w.Post(Api.WM_CLOSE); return;
+							case MKHook.Close:
+								_w.Post(Api.WM_CLOSE);
+								return;
+							case MKHook.ExecuteFocused when FocusedItem != null:
+								_w.Post(Api.WM_USER + 50, _a.IndexOf(FocusedItem));
+								h.BlockEvent();
+								return;
 							}
 						}
 #if true
-						var k = h.Key;
 						if (!_IsCancelKey(k)) {
 							if (_IsPassKey(k)) return;
 							h.BlockEvent();
 						}
 						if (!h.IsUp) _w.Post(Api.WM_KEYDOWN, (int)k, 0); //else _w.Post(Api.WM_KEYUP, (int)k, 0xC0000001);
 #else //unfinished. The idea was to call TranslateMessage, and if then PeekMessage gets wm_char...
-						var k = h.Key;
 						if(_IsCancelKey(k)) {
 							_w.Post(Api.WM_CLOSE);
 							return;
@@ -779,7 +796,7 @@ namespace Au {
 			case Api.WM_GETOBJECT:
 				if (_WmGetobject(wParam, lParam, out var r1)) return r1;
 				break;
-			case Api.WM_USER + 50: //posted by acc dodefaultaction
+			case Api.WM_USER + 50: //posted by acc dodefaultaction or MKHook.ExecuteFocused
 				if (IsOpen) {
 					int i = (int)wParam;
 					if ((uint)i < _a.Count) _Click(i);
@@ -1114,5 +1131,8 @@ namespace Au.Types {
 
 		/// <summary>Do nothing.</summary>
 		None,
+
+		/// <summary>Execute the cocused item and close the menu.</summary>
+		ExecuteFocused,
 	}
 }

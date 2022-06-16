@@ -205,6 +205,7 @@ static class ModifyCode {
 				int ss = v.Span.Start, se = v.Span.End;
 				//Debug_.PrintIf(ss < from || se > to, $"from: {from}, ss: {ss},  to: {to}, se: {se},  v: {v}");
 				if (ss < from || se > to || code.Eq(v.Span.ToRange(), v.NewText)) continue;
+				if (se - ss == 1 && code[ss] == ' ' && v.NewText == "" && code.Eq((ss - 2)..(ss + 2), "{  }")) continue; //don't replace "{  }" with "{ }"
 				b.Append(code, i1, ss - i1);
 				b.Append(v.NewText);
 				i1 = v.Span.End;

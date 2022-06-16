@@ -47,6 +47,7 @@ partial class TriggersAndToolbars {
 			"o => o.Replace(\"\"\"multiline replacement\"\"\")",
 			"\"replacement\"",
 			"\"\"\"multiline replacement\"\"\"",
+			"o => o.Menu(\"one\", \"two\", new(\"Label3\", \"three\"))",
 			"o => { print.it(o); }",
 			$"o => script.run(@\"{(canRunThisScript ? fn.ItemPath : "script.cs")}\")",
 		};
@@ -73,7 +74,7 @@ partial class TriggersAndToolbars {
 				lInfo.Content = iType == 4
 					? "Now in code click where to insert the new trigger.\nThen click OK, select window, OK, edit code if need."
 					: "Now in code click where to insert the new trigger.\nThen click OK, and edit the new code.\nTo set window scope can be used " + App.Settings.hotkeys.tool_quick + ".";
-				lbAction.ItemsSource = iType == 2 ? aa : aa.Skip(4);
+				lbAction.ItemsSource = iType == 2 ? aa : aa.Skip(5);
 				lbAction.SelectedIndex = 0;
 			}
 			lInfo.Visibility = enable ? Visibility.Visible : Visibility.Hidden;
@@ -95,7 +96,7 @@ partial class TriggersAndToolbars {
 		} else if (iType == 4) {
 			var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
 			if (!d.ShowAndWait(null)) return;
-			s = $"Triggers.Window[TWEvent.%ActiveOnce, {d.ZResultCode}]";
+			s = $"Triggers.Window[TWEvent.%ActiveNew, {d.ZResultCode}]";
 		}
 		s = $"{s} = {sAction};";
 		_CorrectTriggerPlace();
@@ -126,7 +127,7 @@ partial class TriggersAndToolbars {
 		} else {
 			s = _WndFindArgs(w);
 			if (action == 1) s = $"Triggers.Of.Window({s});";
-			else s = $"Triggers.Window[TWEvent.ActiveOnce, {s}] = o => {{ print.it(o); }};";
+			else s = $"Triggers.Window[TWEvent.ActiveNew, {s}] = o => {{ print.it(o); }};";
 		}
 		_CorrectTriggerPlace();
 		InsertCode.Statements(s);

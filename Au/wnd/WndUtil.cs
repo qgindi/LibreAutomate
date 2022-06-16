@@ -875,46 +875,6 @@ void _WmDeclTextToCode() {
 		public static bool PostThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
 			return Api.PostThreadMessage(threadId, message, wParam, lParam);
 		}
-
-		/// <summary>
-		/// Gets the folder path of a File Explorer window.
-		/// </summary>
-		/// <returns>null if failed or if the window displays a non-filesystem folder.</returns>
-		internal static string GetExplorerFolderPath_(wnd w) {
-			if (!w.Is0 && new api.ShellWindows() is api.IShellWindows sw) {
-				for (int i = 0, n = sw.Count(); i < n; i++) {
-					if (sw.Item(i) is api.IWebBrowserApp k && k.HWND == (nint)w) {
-						var s = k.LocationURL;
-						if (s.NE() || !s.Starts("file:///")) break;
-						s = s[8..].Replace('/', '\\');
-						s = System.Net.WebUtility.UrlDecode(s);
-						return s;
-					}
-				}
-			}
-			return null;
-			//Speed 22 ms. With dynamic less code, but first time 250 ms.
-			//Never mind: this code can't get pidl of non-filesystem folders. It's possible, see script ExplorerFolder.
-
-			//FUTURE: add public class ExplorerFolder with functions GetPath, GetSelectedItems, etc. See script ExplorerFolder.
-		}
-
-		unsafe class api {
-			[ComImport, Guid("9BA05972-F6A8-11CF-A442-00A0C90A8F39"), ClassInterface(ClassInterfaceType.None)]
-			internal class ShellWindows { }
-
-			[ComImport, Guid("85CB6900-4D95-11CF-960C-0080C7F4EE85")]
-			internal interface IShellWindows {
-				int Count();
-				[return: MarshalAs(UnmanagedType.IDispatch)] object Item(object index);
-			}
-
-			[ComImport, Guid("0002DF05-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
-			internal interface IWebBrowserApp {
-				string LocationURL { get; }
-				long HWND { get; }
-			}
-		}
 	}
 }
 

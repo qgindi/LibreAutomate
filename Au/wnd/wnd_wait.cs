@@ -142,12 +142,12 @@ namespace Au
 		/// Waits for a user-defined state/condition of this window. For example active, visible, enabled, closed, contains something.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
+		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>, for example <c>true</c>.</param>
 		/// <param name="dontThrowIfClosed">
 		/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
-		/// In such case the callback function must return true, like in the examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
+		/// In such case the callback function must return a non-default value, like in examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
 		/// </param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <example>
@@ -177,17 +177,18 @@ namespace Au
 		/// print.it("control focused");
 		/// ]]></code>
 		/// </example>
-		public bool WaitFor(double secondsTimeout, Func<wnd, bool> condition, bool dontThrowIfClosed = false) {
+		public T WaitFor<T>(double secondsTimeout, Func<wnd, T> condition, bool dontThrowIfClosed = false) {
 			bool wasInvalid = false;
 			var to = new wait.Loop(secondsTimeout);
 			for (; ; ) {
 				if (!dontThrowIfClosed) ThrowIfInvalid();
-				if (condition(this)) return true;
+				T r = condition(this);
+				if (!EqualityComparer<T>.Default.Equals(r, default)) return r;
 				if (dontThrowIfClosed) {
 					if (wasInvalid) ThrowIfInvalid();
 					wasInvalid = !IsAlive;
 				}
-				if (!to.Sleep()) return false;
+				if (!to.Sleep()) return default;
 			}
 		}
 

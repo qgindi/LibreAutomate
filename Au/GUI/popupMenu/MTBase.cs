@@ -314,7 +314,7 @@ public abstract partial class MTBase {
 					if (i > 0) {
 						var v = _Split(text, i);
 						text = v.Item1;
-						mi.hotkey = v.Item2;
+						mi.Hotkey = v.Item2;
 					}
 				}
 				if (!text.NE()) Text = text;

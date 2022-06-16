@@ -765,6 +765,24 @@ namespace Au {
 		}
 
 		/// <summary>
+		/// Generates virtual keystrokes. Like <see cref="send"/>, but without reliability features: delays, user input blocking, resetting modifiers/CapsLock.
+		/// </summary>
+		/// <param name="keysEtc"></param>
+		/// <remarks>
+		/// Ignores <b>opt.key</b> and instead uses default options with these changes:
+		/// - SleepFinally = 0.
+		/// - KeySpeed = 0.
+		/// - NoBlockInput = true.
+		/// - NoCapsOff = true.
+		/// - NoModOff = true.
+		/// </remarks>
+		/// <seealso cref="more.sendKey"/>
+		public static void sendL([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
+			var o = new OKey() { KeySpeed = 0, NoBlockInput = true, NoCapsOff = true, NoModOff = true, SleepFinally = 0 };
+			new keys(o).Add(keysEtc).SendIt();
+		}
+
+		/// <summary>
 		/// Sends text to the active window, using virtual keystrokes or clipboard.
 		/// </summary>
 		/// <param name="text">Text. Can be null.</param>

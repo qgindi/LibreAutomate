@@ -482,18 +482,18 @@ static class TUtil {
 	/// From path gets name and various path formats (raw, unexpanded, shortcut) for inserting in code.
 	/// If shortcut, also gets arguments.
 	/// Supports ":: ITEMIDLIST".
-	/// Can get path from window.
 	/// </summary>
 	public class PathInfo {
 		public readonly string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
 		readonly string _name, _name2, _args;
-		readonly bool _elevated;
+		readonly bool _elevated, _argsComment;
 
-		public PathInfo(string path, string name = null, string args = null, bool elevated = false) {
+		public PathInfo(string path, string name = null, string args = null, bool elevated = false, bool argsComment = false) {
 			filePath = path;
 			_name = name ?? _Name(path);
 			_args = args;
 			_elevated = elevated;
+			_argsComment = argsComment;
 			if (path.Ends(".lnk", true)) {
 				try {
 					var g = shortcutFile.open(path);
@@ -502,7 +502,7 @@ static class TUtil {
 						using var pidl = Pidl.FromString(target);
 						_name2 = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 					} else {
-						_args ??= g.Arguments;
+						_args ??= g.Arguments.NullIfEmpty_();
 						if (name == null)
 							if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))
 								_name2 = _Name(target);
@@ -515,6 +515,7 @@ static class TUtil {
 
 			_Format(ref filePath, out fileUnexpanded);
 			if (lnkPath != null) _Format(ref lnkPath, out lnkUnexpanded);
+			if (_args != null) _args = _Str(args);
 
 			static void _Format(ref string s, out string unexpanded) {
 				if (folders.unexpandPath(s, out unexpanded, out var sn) && !sn.NE()) unexpanded = unexpanded + " + " + _Str(sn);
@@ -539,47 +540,48 @@ static class TUtil {
 		}
 
 		/// <summary>
-		/// Gets path of window's program for <see cref="run.it"/>. Supports appid, folder, mmc.
+		/// Gets path of window's program for <see cref="run.it"/>. Supports appid, folder, mmc, itemidlist.
 		/// Returns null if failed to get path or app id.
 		/// </summary>
 		public static PathInfo FromWindow(wnd w) {
 			var path = WndUtil.GetWindowsStoreAppId(w, true, true);
 			if (path == null) return null;
-			string name=null,args = null;
+			string name = null, args = null;
 			bool elevated = w.Uac.Elevation == UacElevation.Full;
+			bool argsComment = false;
 			//if folder window, try to get folder path
-			if (path.Ends(@"\explorer.exe", true)) {
-				if (w.ClassNameIs("CabinetWClass")) {
-					////This is simpler but less reliable. Can't get eg Documents, because the address bar displays name, not path.
-					//var tb = w.Child(cn: "ToolbarWindow32", id: 1001); // @"Address: C:\Program Files (x86)\Windows Kits\10\bin\x86"
-					//if (!tb.Is0 && tb.Name is string sa && sa.RxMatch(@"^\S+: +(.+)", 1, out RXGroup rg)
-					//	&& filesystem.exists(sa = rg.Value, useRawPath: true).Directory
-					//	) path = sa;
-					//else {
-					if (WndUtil.GetExplorerFolderPath_(w) is string s) path = s;
-					//}
-				}
-			} else if (path.Ends(@"\mmc.exe", true) && path[..^8].Eqi(folders.System)) {
-				var s = process.getCommandLine(w.ProcessId);
-				if (s != null) {
-					string rx = $@"(?i)(?:"".+?""|\S+) ("".+?\.msc""|\S+\.msc)(?: (.+))?$";
-					if (s.RxMatch(rx, out RXMatch m)) {
+			if (path.Starts("shell:")) {
+				name = w.Name;
+			} else if (path.Ends(@"\explorer.exe", true) && w.ClassNameIs("CabinetWClass")) {
+				var s1 = ExplorerFolder.Of(w)?.GetFolderPath();
+				if (!s1.NE()) path = s1;
+			} else {
+				var s = process.getCommandLine(w.ProcessId, removeProgram: true);
+				if (!s.NE()) {
+					if (path.Ends(@"\javaw.exe", true)) {
+						args = s;
+					} else if (path.Ends(@"\mmc.exe", true)
+						&& path[..^8].Eqi(folders.System)
+						&& s.RxMatch($@"^("".+?\.msc""|\S+\.msc)(?: (.+))?$", out RXMatch m)) {
 						s = m[1].Value.Trim('\"');
 						if (!pathname.isFullPath(s)) s = filesystem.searchPath(s);
 						else if (!filesystem.exists(s)) s = null;
 						if (s != null) { path = s; args = m[2].Value; name = w.Name; };
+					} else {
+						args = s;
+						argsComment = args != null;
 					}
+
 				}
-			} else {
-				if (path.Starts("shell:")) name = w.Name;
 			}
-			var r = new PathInfo(path, name, args, elevated);
+			var r = new PathInfo(path, name, args, elevated, argsComment);
 			return r;
 		}
 
 		/// <summary>
 		/// Gets path/name/args code for inserting in editor. Unexpands if App.Settings.ci_unexpandPath.
-		/// Paths are escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
+		/// path is escaped/enclosed and may be unexpanded (depends on settings), like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
+		/// If args not null, it is escaped/enclosed is like ", args" or "/*, args*/".
 		/// If shortcut, shows dialog, let the user choose target path or lnk path.
 		/// </summary>
 		public (string path, string name, string args) GetStringsForCode() {
@@ -594,7 +596,9 @@ static class TUtil {
 			}
 			var path = i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null };
 			var name = i <= 2 ? _name2 ?? _name : _name;
-			return (path, name, i <= 2 ? _args : null);
+			var args = i <= 2 ? _args : null;
+			if (args != null) args = _argsComment ? "/*, " + args + "*/" : ", " + args;
+			return (path, name, args);
 		}
 
 		/// <summary>
@@ -614,8 +618,7 @@ static class TUtil {
 				var t = InsertCodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
 				b.Append($"{t?.Name ?? "t"}[{_Str(name)}] = o => ");
 			}
-			b.Append("run.it(").Append(nameComment).Append(path);
-			if (!args.NE()) b.Append($", \"{args.Escape()}\"");
+			b.Append("run.it(").Append(nameComment).Append(path).Append(args);
 			if (_elevated) b.Append(", flags: RFlags.Admin");
 			b.Append(");");
 			return b.ToString();

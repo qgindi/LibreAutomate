@@ -812,14 +812,14 @@ namespace Au.Types {
 
 		#region shlwapi
 
-		//[DllImport("shlwapi.dll", EntryPoint = "#176", PreserveSig = true)]
-		//internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
-		//internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, void* ppvOut);
-		//internal static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
+		[DllImport("shlwapi.dll", EntryPoint = "#176")]
+		static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, in Guid guidService, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppvOut);
 
-		//[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
-		//internal static extern bool PathIsDirectoryEmpty(string pszPath);
-		//speed: slightly faster than with filesystem.enumerate.
+		public static bool QueryService<T>(object from, in Guid guidService, out T result) where T : class {
+			bool ok = 0 == IUnknown_QueryService(from, guidService, typeof(T).GUID, out var o);
+			result = ok ? (T)o : null;
+			return ok;
+		}
 
 		//[DllImport("shlwapi.dll")]
 		//internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);

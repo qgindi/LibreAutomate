@@ -1068,6 +1068,18 @@ public static unsafe partial class ExtString {
 	#endregion
 
 	/// <summary>
+	/// Inserts other string.
+	/// </summary>
+	/// <returns>The result string.</returns>
+	/// <param name="t">This string.</param>
+	/// <param name="startIndex">Offset in this string. Can be from end, like <c>^4</c>.</param>
+	/// <param name="s">String to insert.</param>
+	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+	public static string Insert(this string t, Index startIndex, string s) {
+		return t.Insert(startIndex.GetOffset(t.Length), s);
+	}
+
+	/// <summary>
 	/// Replaces part of this string with other string.
 	/// </summary>
 	/// <returns>The result string.</returns>
