@@ -1,6 +1,5 @@
 ﻿//#define SMALLER_SCREENSHOTS //smaller if /*image:...*/
 
-using System.Linq;
 using static Au.Controls.Sci;
 using System.Drawing;
 using Microsoft.CodeAnalysis.Classification;
@@ -27,7 +26,7 @@ partial class SciCode {
 	_Images _im;
 
 	//Called by CiStyling._StylingAndFolding.
-	internal void _ImagesGet(CodeInfo.Context cd, IEnumerable<ClassifiedSpan> list, in Sci_VisibleRange vr) {
+	internal void EImagesGet_(CodeInfo.Context cd, IEnumerable<ClassifiedSpan> list, in Sci_VisibleRange vr) {
 		if (App.Settings.edit_noImages) return;
 		//using var p1 = perf.local(); //fast when bitmaps loaded/cached
 
@@ -317,7 +316,7 @@ partial class SciCode {
 	/// <remarks>
 	/// Called on SCN_STYLENEEDED (to avoid bad things like briefly visible and added horizontal scrollbar) and then by CiStyling._Work (async).
 	/// </remarks>
-	internal unsafe void HideImages_(int from8, int to8, byte[] styles = null, [CallerMemberName] string caller = null) {
+	internal unsafe void EHideImages_(int from8, int to8, byte[] styles = null, [CallerMemberName] string caller = null) {
 		if (styles == null) from8 = zLineStartFromPos(false, from8);
 		if (to8 - from8 < 40) return;
 		//print.it("HI", from8, to8, styles != null);
@@ -384,13 +383,13 @@ partial class SciCode {
 		return s.RxReplace(@"/\*image:[\w/+]{40,}=*\*/", "");
 	}
 
-	public void ImageRemoveScreenshots() {
+	public void EImageRemoveScreenshots() {
 		if (zIsReadonly || !_fn.IsCodeFile) return;
 		bool isSel = zHasSelection;
 		string s = isSel ? zSelectedText() : zText;
 		var s2 = _ImageRemoveScreenshots(s);
 		if (s2 == s) return;
-		if (isSel) ZReplaceTextGently(s2, zSelectionStart8..zSelectionEnd8);
-		else ZReplaceTextGently(s2);
+		if (isSel) EReplaceTextGently(s2, zSelectionStart8..zSelectionEnd8);
+		else EReplaceTextGently(s2);
 	}
 }

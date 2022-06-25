@@ -49,8 +49,8 @@ namespace Au.Types {
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 
-		//[DllImport("kernel32.dll")]
-		//internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 
 		//[DllImport("kernel32.dll")]
 		//internal static extern bool QueryProcessCycleTime(IntPtr ProcessHandle, out long CycleTime);

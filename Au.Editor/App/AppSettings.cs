@@ -39,7 +39,7 @@ record AppSettings : JSettings
 	public bool edit_wrap, edit_noImages, output_wrap, output_white, output_topmost;
 
 	public int templ_use;
-	public int templ_flags;
+	//public int templ_flags;
 
 	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;

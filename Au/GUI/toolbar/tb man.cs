@@ -1,6 +1,4 @@
 
-using System.Linq;
-
 namespace Au;
 
 public partial class toolbar {
@@ -387,12 +385,19 @@ public partial class toolbar {
 				_zordered = wt.ZorderAbove(wo) || !wo.IsAlive;
 				if (!_zordered) {
 					var ec = lastError.code;
-					if (!wt.ZorderIsAbove(wo)) {
+					if (wt.ZorderIsAbove(wo)) {
+						_zordered = true;
+					} else if (
+#if !DEBUG
+						_zorderRetry == 1 //the last retry
+#else
+						_zorderRetry > 0 //any retry. It's OK if sometimes fails first time, brobably then it's a bad time to zorder.
+#endif
+						) {
 						var es = ec == Api.ERROR_ACCESS_DENIED && wo.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : lastError.messageFor(ec);
 						print.warning($"Failed to Z-order toolbar '{_name}' above owner window. {es}");
 					}
 				}
-				//if (keys.isScrollLock) _zordered = false;
 			}
 
 			if (_zordered) _zorderRetry = 0; else if (_zorderRetry == 0) _zorderRetry = 5; else _zorderRetry--;
@@ -402,7 +407,7 @@ public partial class toolbar {
 			//	Possible workarounds:
 			//	1. Temporarily make wt nativaly owned by _ow.w. Restore after 500 ms. But fails with higher UAC IL windows and appstore windows.
 			//	2. Temporarily make wt topmost. Restore after 500 ms. But Windows makes it difficult and possibly unreliable.
-			
+
 			//ONCE: when clicked another window, the owner window becomes over it again. Maybe because of the toolbar.
 		}
 	}

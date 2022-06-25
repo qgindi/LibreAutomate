@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using System.Linq;
 using Au.Controls;
 using Au.Tools;
 

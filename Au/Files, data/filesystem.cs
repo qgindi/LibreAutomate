@@ -1,7 +1,6 @@
 ﻿
 //#define TEST_FINDFIRSTFILEEX
 
-using System.Linq;
 using Microsoft.Win32;
 
 namespace Au {

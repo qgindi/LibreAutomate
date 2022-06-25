@@ -1,6 +1,3 @@
-
-using System.Linq;
-
 namespace Au {
 	partial class filesystem {
 		/// <summary>

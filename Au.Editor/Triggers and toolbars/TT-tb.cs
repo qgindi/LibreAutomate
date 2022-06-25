@@ -17,7 +17,6 @@ using Au.Controls;
 #if SCRIPT
 namespace Script;
 #else
-using System.Linq;
 #endif
 
 partial class TriggersAndToolbars {
@@ -272,7 +271,7 @@ partial class Program {
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return default;
 		int pos = doc.zCurrentPos16;
-		var f = doc.ZFile;
+		var f = doc.EFile;
 		//is pos in a toolbar function?
 		var t = _toolbars.FirstOrDefault(o => o.fn == f && o.method.DeclaringSyntaxReferences[0].Span.ContainsOrTouches(pos));
 		if (t != null) return (t, null);

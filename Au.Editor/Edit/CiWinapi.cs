@@ -1,5 +1,4 @@
-﻿using System.Linq;
-
+﻿
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -73,7 +72,7 @@ class CiWinapi
 			var f = App.Model.Find(sr.SyntaxTree.FilePath, FNFind.CodeFile);
 			if (!App.Model.SetCurrentFile(f, dontChangeTreeSelection: true)) return false;
 			doc = Panels.Editor.ZActiveDoc;
-			fSelect = cd.sci.ZFile;
+			fSelect = cd.sci.EFile;
 		}
 
 		var hs = new HashSet<string>();

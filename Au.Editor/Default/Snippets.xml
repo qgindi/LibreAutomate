@@ -384,8 +384,28 @@ b.R.Add(out CheckBox c1, "Check");
 b.R.AddButton("Button", _ => { print.it("Button clicked"); });
 b.R.AddOkCancel();
 b.End();
+#if WPF_PREVIEW
+b.Window.Preview();
+#endif
 if (!b.ShowDialog()) return;
 //print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true);]]>
+		</snippet>
+
+		<snippet name="wpfWndprocSnippet" info="Set WPF window hook to receives messages." using="System.Windows;System.Windows.Interop">
+			<![CDATA[$end$window$end$.SourceInitialized += (o, _) => {
+	var hs = PresentationSource.FromVisual(o as Window) as HwndSource;
+	hs.AddHook(_WndProc);
+	nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
+		var w = (wnd)hwnd;
+		//WndUtil.PrintMsg(w, msg, wParam, lParam);
+		
+		switch (msg) {
+		
+		}
+		
+		return 0;
+	}
+};]]>
 		</snippet>
 
 		<snippet name="ssScriptSetupSnippet" info="Set run-time options such as tray icon and emergency exit ways.">

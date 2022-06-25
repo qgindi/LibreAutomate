@@ -1,4 +1,3 @@
-using System.Linq;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -57,7 +56,7 @@ class CiErrors {
 					ec = ErrorCode.ERR_NameNotInContext;
 				}
 
-				if (!has) doc.InicatorsDiag_(has = true);
+				if (!has) doc.EInicatorsDiag_(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
 				doc.zIndicatorAdd(true, indic, start..end);
 				_codeDiag.Add((d, start, end));
@@ -84,19 +83,19 @@ class CiErrors {
 			foreach (var v in _metaErrors) {
 				int from = v.from + offs, to = v.to + offs;
 				if (to <= start16 || from >= end16) continue;
-				if (!has) doc.InicatorsDiag_(has = true);
+				if (!has) doc.EInicatorsDiag_(has = true);
 				doc.zIndicatorAdd(true, SciCode.c_indicError, from..to);
 			}
 		}
 		_Strings(semo, cd, start16, end16);
 		if (_stringErrors.Count > 0) {
-			if (!has) doc.InicatorsDiag_(has = true);
+			if (!has) doc.EInicatorsDiag_(has = true);
 			foreach (var v in _stringErrors) {
 				doc.zIndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
 			}
 		}
 		if (!has) {
-			doc.InicatorsDiag_(false);
+			doc.EInicatorsDiag_(false);
 			_codeDiag = null;
 		} else if (pasting && _semo != null) {
 			//insert missing using directives
@@ -110,10 +109,16 @@ class CiErrors {
 			//print.it(amu.Lenn_(), amu);
 
 			List<string> usings = _GetMissingUsings(amu);
-			if (usings != null) doc.Dispatcher.InvokeAsync(() => { //this func is called from scintilla notification
-				if (!pastingSilent && !dialog.showYesNo("Add missing using directives?", string.Join('\n', usings), owner: doc)) return;
-				InsertCode.UsingDirective(string.Join(';', usings), true);
-			});
+			if (usings != null) {
+				//remove some usings that are rarely used and cause errors
+				if (usings.Count > 1 && usings.Contains("System.Windows.Forms") && cd.code.FindWord("wpfBuilder") > 0) usings.Remove("System.Windows.Forms");
+				
+				doc.Dispatcher.InvokeAsync(() => { //this func is called from scintilla notification
+					if (!pastingSilent && !dialog.showYesNo("Add missing using directives?", string.Join('\n', usings), owner: doc)) return;
+					InsertCode.UsingDirective(string.Join(';', usings), true);
+					if (!pastingSilent && usings.Count > 1) print.it("Info: multiple using directives have been added. It may cause 'ambiguous reference' errors.\r\n\tTo fix it, remove one of usings displayed in the error tooltip. If that does not work, undo and remove other using.");
+				});
+			}
 		}
 	}
 

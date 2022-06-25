@@ -6,8 +6,7 @@ using Au.Controls;
 //CONSIDER: for ifRunning use mutex. Release mutex as soon as script ends, ie before the process ends (need some time to unload .NET).
 //	Maybe then could repeatedly start short tasks more frequently.
 
-static class CompileRun
-{
+static class CompileRun {
 	/// <summary>
 	/// Compiles and/or executes C# file or its project.
 	/// If <paramref name="run"/> is false, returns 1 if compiled, 0 if failed to compile.
@@ -66,6 +65,21 @@ static class CompileRun
 		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor);
 	}
 
+	public static void RunWpfPreview(FileNode f, Func<CanCompileArgs, bool> canCompile) {
+		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
+
+		//If f is a class file, run it as a script.
+		//	Ignore its test script. For a library it wouldn't work. For a simple projectless class file usually don't need.
+
+		bool ok = Compiler.Compile(ECompReason.WpfPreview, out var r, f, projFolder, canCompile: canCompile);
+		if (!ok) return;
+
+		int pid = App.Tasks.RunCompiled(f, r, new string[] { "WPF_PREVIEW", s_wpfPreview.pid.ToS(), s_wpfPreview.time.ToS() });
+		Api.GetSystemTimeAsFileTime(out long time);
+		s_wpfPreview = (pid, time);
+	}
+	static (int pid, long time) s_wpfPreview;
+
 	static void _OnRunClassFile(FileNode f, FileNode projFolder) {
 		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
@@ -97,7 +111,7 @@ static class CompileRun
 				//extract code from /// <example>
 				string example = null;
 				var s = f.GetText();
-				if(s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
+				if (s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
 					if (s.RxMatch(@"(?m)^\h*/// *<code>(<!\[CDATA\[)?\s+((\h*/// ?.*\R)+?)^\h*/// *(?(1)\]\]>)</code>", 2, out g, range: g)) {
 						example = s[(Range)g].RxReplace(@"(?m)^\h*/// ?", "");
 					}
@@ -123,8 +137,7 @@ static class CompileRun
 /// A running script task.
 /// Starts/ends task, watches/notifies when ended.
 /// </summary>
-class RunningTask : ITreeViewItem
-{
+class RunningTask : ITreeViewItem {
 	volatile WaitHandle _process;
 	public readonly FileNode f;
 	public readonly int taskId;
@@ -219,10 +232,8 @@ class RunningTask : ITreeViewItem
 /// <summary>
 /// Manages running script tasks.
 /// </summary>
-class RunningTasks
-{
-	class _WaitingTask
-	{
+class RunningTasks {
+	class _WaitingTask {
 		public readonly FileNode f;
 		public readonly Compiler.CompResults r;
 		public readonly string[] args;
@@ -237,6 +248,10 @@ class RunningTasks
 	bool _updateUI;
 	volatile bool _disposed;
 
+	/// <summary>
+	/// Gets running tasks.
+	/// Order: the last started is the first in the list.
+	/// </summary>
 	public IReadOnlyList<RunningTask> Items => _a;
 
 	public RunningTasks() {
@@ -404,7 +419,7 @@ class RunningTasks
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false) {
-		g1:
+	g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
 			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
@@ -530,8 +545,7 @@ class RunningTasks
 		return pid;
 	}
 
-	class _Preloaded
-	{
+	class _Preloaded {
 		public readonly string pipeName;
 		public readonly Handle_ hPipe;
 		public readonly Handle_ overlappedEvent;
@@ -559,8 +573,7 @@ class RunningTasks
 	/// How _StartProcess must start process.
 	/// Note: it is not UAC IL of the process.
 	/// </summary>
-	enum _SpUac
-	{
+	enum _SpUac {
 		normal, //start process of same IL as this process, but without uiAccess. It is how CreateProcess API works.
 		admin, //start admin process from this user or uiAccess process
 		userFromAdmin, //start user process from this admin process

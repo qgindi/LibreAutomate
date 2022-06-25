@@ -1,6 +1,5 @@
 //Code colors. Also calls functions of folding, images, errors.
 
-using System.Linq;
 using Au.Controls;
 using static Au.Controls.Sci;
 using Microsoft.CodeAnalysis.Classification;
@@ -105,7 +104,7 @@ partial class CiStyling
 		//	If the hidden text is long, it adds horz scrollbar and scrolls.
 		//	Not if the undo text ends with newline.
 		if (n.modificationType.Has(MOD.SC_LASTSTEPINUNDOREDO | MOD.SC_MOD_INSERTTEXT)) {
-			doc.HideImages_(n.position, doc.zLineEndFromPos(false, n.position + n.length));
+			doc.EHideImages_(n.position, doc.zLineEndFromPos(false, n.position + n.length));
 			doc.zSetStyled();
 		}
 	}
@@ -245,7 +244,7 @@ partial class CiStyling
 					}
 				}
 			}
-			doc.HideImages_(start8, end8, b);
+			doc.EHideImages_(start8, end8, b);
 			_PN();
 			doc.Call(SCI_STARTSTYLING, start8);
 			unsafe { fixed (byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
@@ -255,7 +254,7 @@ partial class CiStyling
 			_visibleLines = minimal ? default : vr;
 			_PN('S');
 			if (!minimal) {
-				doc._ImagesGet(cd, ar.SelectMany(o => o.a), vr);
+				doc.EImagesGet_(cd, ar.SelectMany(o => o.a), vr);
 				_diagCounter = 4; //update diagnostics after 1 s
 			} else {
 				CodeInfo._diag.EraseIndicatorsInLine(doc, doc.zCurrentPos8);

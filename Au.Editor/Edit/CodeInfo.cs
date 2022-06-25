@@ -1,6 +1,5 @@
 //#define NO_COMPL_CORR_SIGN
 
-using System.Linq;
 using Au.Compiler;
 using Au.Controls;
 
@@ -124,7 +123,7 @@ static class CodeInfo {
 	static bool _CanWork(SciCode doc) {
 		if (!_isWarm) return false;
 		if (doc == null) return false;
-		if (!doc.ZFile.IsCodeFile) return false;
+		if (!doc.EFile.IsCodeFile) return false;
 		if (doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
@@ -249,13 +248,14 @@ static class CodeInfo {
 		return false;
 	}
 
-	public static void SciModified(SciCode doc, in Sci.SCNotification n) {
-		if (!_CanWork(doc)) return;
+	public static bool SciModified(SciCode doc, in Sci.SCNotification n) {
+		if (!_CanWork(doc)) return false;
 		_document = null;
 		_compl.SciModified(doc, in n);
 		_styling.SciModified(doc, in n);
 		_diag.SciModified(doc, in n);
 		Panels.Outline.SciModified();
+		return true;
 	}
 
 	public static void SciCharAdded(SciCode doc, char ch) {
@@ -384,7 +384,7 @@ static class CodeInfo {
 			sci = Panels.Editor.ZActiveDoc;
 			code = sci.zText;
 			this.pos = pos switch { -1 => sci.zCurrentPos16, -2 => sci.zSelectionStart16, _ => pos };
-			if (isCodeFile = sci.ZFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
+			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 
 		/// <summary>
@@ -414,7 +414,7 @@ static class CodeInfo {
 
 			try {
 				if (_solution == null) {
-					_CreateWorkspace(sci.ZFile);
+					_CreateWorkspace(sci);
 				} else {
 					_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
 				}
@@ -602,20 +602,21 @@ for (int i = 0; i < count; i++) { }
 
 	public static MetaComments Meta => _meta;
 
-	static void _CreateWorkspace(FileNode f) {
+	static void _CreateWorkspace(SciCode sci) {
+		var f = sci.EFile;
 		_diag.ClearMetaErrors();
 		InternalsVisible.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
 
 		_solution = CurrentWorkspace.CurrentSolution;
-		_projectId = _AddProject(f, true);
+		_projectId = _AddProject(f, true, isWpfPreview: sci.IsWpfPreview);
 
-		static ProjectId _AddProject(FileNode f, bool isMain) {
+		static ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
 			var f0 = f;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
 			var m = new MetaComments();
-			m.Parse(f, projFolder, EMPFlags.ForCodeInfoInEditor);
+			m.Parse(f, projFolder, EMPFlags.ForCodeInfoInEditor | (isWpfPreview ? EMPFlags.WpfPreview : 0));
 			if (isMain) _meta = m;
 			if (m.TestInternal is string[] testInternal) InternalsVisible.Add(f.Name, testInternal);
 

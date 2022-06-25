@@ -1,5 +1,3 @@
-using System.Linq;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.SignatureHelp;
@@ -52,7 +50,7 @@ class CiSignature {
 
 	void _CancelUI() {
 		if (_data == null) return;
-		foreach (var r in _data.sci.ZTempRanges_Enum(this)) r.Remove();
+		foreach (var r in _data.sci.ETempRanges_Enum(this)) r.Remove();
 		_data = null;
 		_textPopup?.Hide();
 	}
@@ -185,8 +183,8 @@ class CiSignature {
 			}
 		}
 
-		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
-			if (doc.ZTempRanges_Enum(doc.zCurrentPos8, this, utf8: true).Any()) return;
+		doc.ETempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
+			if (doc.ETempRanges_Enum(doc.zCurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 

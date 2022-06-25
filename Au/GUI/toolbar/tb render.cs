@@ -1,3 +1,4 @@
+//TODO: Now may be too small buttons. Add property ButtonMargin. Maybe also icon size. For menu too.
 
 using System.Drawing;
 using System.Drawing.Drawing2D;

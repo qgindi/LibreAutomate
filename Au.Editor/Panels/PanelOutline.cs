@@ -1,6 +1,5 @@
 using System.Windows.Controls;
 using Au.Controls;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

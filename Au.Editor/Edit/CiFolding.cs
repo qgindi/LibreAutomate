@@ -2,7 +2,6 @@
 //#define PRINT
 //#endif
 
-using System.Linq;
 using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -135,11 +134,15 @@ class CiFolding {
 		_PN();
 
 		//Find comments that need to fold:
-		//	1. Blocks of //comments of >= 2 lines. Include empty lines, but split at last empty line if last comments are followed by non-comments or other type of comments.
+		//	1. Blocks of //comments of >= 4 lines. Include empty lines, but split at last empty line if last comments are followed by non-comments or other type of comments.
 		//	2. Blocks of ///comments of >= 2 lines.
 		//	3. /*...*/ comments of >= 2 lines. Same for /**..*/.
 		//	4. //. is like #region, but can be not at start of line too. Must not be followed by non-space character.
 		//	5. //.. is like #endregion, but can be not at start of line too. More . can be added (like //...) to decrement folding level more. Must not be followed by non-space character.
+		
+		//BAD: //.. isn't good. In code examples often used //... . Better would be eg //' or //\, but now can't change.
+		//	Workaround: autocorrect //... -> // ...
+
 		//Since root.DescendantTrivia is slow, we parse code
 		//	and then use Roslyn just to verify that the found // etc is at start of trivia, ie isn't inside a string or other comments or #directive.
 		//We skip disabled code (!BranchingDirectiveTriviaSyntax.BranchTaken).
@@ -205,7 +208,7 @@ class CiFolding {
 								if (i == s.Length) { nlines++; break; }
 								i++;
 							}
-							if (nlines < 2) continue;
+							if (nlines < 4) continue;
 						}
 						if (!_IsStartOfTrivia(isLineComment)) continue;
 						_AddFoldPoints(rangeStart + i0, rangeStart + i);
@@ -322,7 +325,7 @@ class CiFolding {
 			fixed (int* ip = a) Sci_SetFoldLevels(doc.ZSciPtr, 0, -1, a.Lenn_(), ip);
 		}
 		//p1.Next('f');
-		doc._RestoreEditorData();
+		doc.ERestoreEditorData_();
 		//p1.NW('F');
 	}
 
@@ -402,7 +405,7 @@ partial class SciCode {
 #endif
 	}
 
-	internal void _RestoreEditorData() {
+	internal void ERestoreEditorData_() {
 		//print.it(_openState);
 		if (_openState == _EOpenState.FoldingDone) return;
 		var os = _openState; _openState = _EOpenState.FoldingDone;
@@ -411,7 +414,15 @@ partial class SciCode {
 			if (_fn.IsScript) {
 				var code = zText;
 				if (!code.NE()) {
-					if (0 == (1 & App.Settings.templ_flags)) Call(SCI_FOLDALL, 0);
+					//fold all //.
+					for (int i = base.zLineCount - 1; --i >= 0;) {
+						int k = Call(SCI_GETFOLDLEVEL, i);
+						if (0 != (k & SC_FOLDLEVELHEADERFLAG)) {
+							int j = zLineEnd(false, i);
+							if (Call(SCI_GETCHARAT, j - 1) == '.' && Call(SCI_GETCHARAT, j - 2) == '/') Call(SCI_FOLDLINE, i);
+						}
+					}
+
 					if (code.RxMatch(@"//\.\.+\R\R?(?=\z|\R)", 0, out RXGroup g)) {
 						zGoToPos(true, g.End);
 					}
@@ -483,7 +494,7 @@ partial class SciCode {
 	/// <summary>
 	/// Saves folding, markers etc in database.
 	/// </summary>
-	internal void _SaveEditorData() {
+	internal void ESaveEditorData_() {
 		//CONSIDER: save styling and fold levels of the visible part of current doc. Then at startup can restore everything fast, without waiting for warmup etc.
 		//_TestSaveFolding();
 		//return;

@@ -353,6 +353,21 @@ namespace Au {
 		}
 
 		/// <summary>
+		/// Gets process creation and execution times (API <msdn>GetProcessTimes</msdn>).
+		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <param name="processId">Process id.</param>
+		/// <param name="created">Creation time. As absolute <msdn>FILETIME</msdn>, UTC. If you need <b>DateTime</b>, use <see cref="DateTime.FromFileTimeUtc"/>.</param>
+		/// <param name="executed">Amount of time spent executing code (using CPU). As <msdn>FILETIME</msdn>. If you need <b>TimeSpan</b>, use <see cref="TimeSpan.FromTicks"/>.</param>
+		public static bool getTimes(int processId, out long created, out long executed) {
+			created = 0; executed = 0;
+			using var ph = Handle_.OpenProcess(processId);
+			if (ph.Is0 || !Api.GetProcessTimes(ph, out created, out _, out long tk, out long tu)) return false;
+			executed = tk + tu;
+			return true;
+		}
+
+		/// <summary>
 		/// Returns true if the process is 32-bit, false if 64-bit.
 		/// Also returns false if fails. Supports <see cref="lastError"/>.
 		/// </summary>

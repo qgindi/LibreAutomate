@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
@@ -18,9 +17,10 @@ namespace Au.Controls
 	/// Supports xaml/png/etc images, key/mouse shortcuts, auto-Alt-underline, easy creating of toolbar buttons and context menus with same/synchronized properties (command, text, image, enabled, checked, etc).
 	/// </summary>
 	/// <remarks>
-	/// Creates submenus from public static nested types with <see cref="CommandAttribute"/>. Creates executable menu items from public static methods with <see cref="CommandAttribute"/>.
+	/// Creates submenus from public static nested types with <see cref="CommandAttribute"/>.
+	/// Creates executable menu items from public static methods with <see cref="CommandAttribute"/>.
 	/// From each such type and method creates a <see cref="Command"/> object that you can access through indexer.
-	/// Supports methods <c>public static void Method()</c> and <c>public static void Method(object)</c>.
+	/// Supports methods <c>public static void Method()</c> and <c>public static void Method(MenuItem)</c>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -295,7 +295,8 @@ namespace Au.Controls
 				_enabled = true;
 				Name = name;
 				_ca = ca;
-				if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<object>));
+				if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<MenuItem>));
+				//if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<object>));
 			}
 
 			internal void SetMenuItem_(object text, string image, MenuItem miFactory = null) {
@@ -566,7 +567,8 @@ namespace Au.Controls
 			void ICommand.Execute(object parameter) {
 				switch (_del) {
 				case Action a0: a0(); break;
-				case Action<object> a1: a1(parameter); break;
+				case Action<MenuItem> a1: a1(_mi); break;
+				//case Action<object> a1: a1(parameter); break;
 					//default: throw new InvalidOperationException("Submenu");
 				}
 			}

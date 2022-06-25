@@ -1,7 +1,4 @@
-﻿
-using System.Linq;
-
-//note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
+﻿//note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
 namespace Au.Types;
 

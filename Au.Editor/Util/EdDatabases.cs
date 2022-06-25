@@ -1,4 +1,3 @@
-using System.Linq;
 
 /// <summary>
 /// Creates and opens databases ref.db, doc.db, winapi.db.

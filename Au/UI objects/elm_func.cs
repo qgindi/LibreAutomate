@@ -1,5 +1,3 @@
-using System.Linq;
-
 //FUTURE: ChildFromXY. Like wnd.ChildFromXY. Use IAccessible.accHitTest.
 
 namespace Au {

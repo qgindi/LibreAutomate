@@ -246,7 +246,7 @@
 		/// By default appends the stack trace.
 		/// </summary>
 		/// <param name="text">Warning text.</param>
-		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
+		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0. Does not append if <i>text</i> looks like a stack trace.</param>
 		/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 		/// <remarks>
 		/// Calls <see cref="print.it"/>.
@@ -265,7 +265,7 @@
 			}
 
 			string s = text ?? "";
-			if (showStackFromThisFrame >= 0) {
+			if (showStackFromThisFrame >= 0 && !(s.Contains("\n   at ") && s.RxIsMatch(@"Exception: .*\R   at "))) { //include stack unless text contains stack
 				var x = new StackTrace(showStackFromThisFrame + 1, true);
 				var st = x.ToString(); var rn = st.Ends('\n') ? "" : "\r\n";
 				s = $"{prefix}{s} <fold><\a>\r\n{st}{rn}</\a></fold>";

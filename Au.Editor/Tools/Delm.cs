@@ -2,7 +2,6 @@
 using System.Windows.Controls;
 using Au.Controls;
 using System.Windows.Input;
-using System.Linq;
 
 //SHOULDDO: if checked 'state', activate window before test. Else different FOCUSED etc.
 

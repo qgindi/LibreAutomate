@@ -1,10 +1,8 @@
 using System.Windows;
 using System.Windows.Interop;
 
-namespace Au.Controls
-{
-	public unsafe partial class KTreeView : HwndHost
-	{
+namespace Au.Controls {
+	public unsafe partial class KTreeView : HwndHost {
 		wnd _w;
 		bool _hasHwnd;
 
@@ -15,20 +13,15 @@ namespace Au.Controls
 		//	WndUtil.RegisterWindowClass(c_winClassName);
 		//}
 
-		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
-			var wParent = (wnd)hwndParent.Handle;
-			//WndUtil.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+		//bool _test;
 
+		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
+			//_test = Name == "Files_list";
+
+			var wParent = (wnd)hwndParent.Handle;
 			_w = WndUtil.CreateWindow(_wndProc = _WndProc, false, "Static", Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 			_hasHwnd = true;
 			_SetDpiAndItemSize(More.Dpi.OfWindow(_w));
-
-			//Mouse messages must go to the parent window. On WM_NCHITTEST return HTTRANSPARENT.
-			//	But UIA element from point does not work. Solution: let it be Static; UIA knows it.
-			//Other tested ways don't work:
-			//	WS.DISABLED. Scrollbars don't work.
-			//	WSE.TRANSPARENT|WSE.LAYERED + Api.SetLayeredWindowAttributes(_w, 0, 0, 0). Unavailable on Win7. Scrollbars and UIA don't work.
-			//	Relay mouse messages to the parent window. Does not work.
 
 			return new HandleRef(this, _w.Handle);
 		}
@@ -41,7 +34,7 @@ namespace Au.Controls
 		nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 			//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
-			//if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam)) print.it("<><c green>" + s + "<>");
+			//if(_test) if (WndUtil.PrintMsg(out string s, _w, msg, wParam, lParam)) print.it("<><c green>" + s + "<>");
 
 			if (_vscroll.WndProc(w, msg, wParam, lParam) || _hscroll.WndProc(w, msg, wParam, lParam)) return default;
 

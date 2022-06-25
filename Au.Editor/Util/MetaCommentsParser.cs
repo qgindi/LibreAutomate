@@ -1,4 +1,3 @@
-using System.Linq;
 using Au.Compiler;
 
 //SHOULDDO: preserve order.
@@ -124,7 +123,7 @@ class MetaCommentsParser
 
 	public void Apply() {
 		var doc = Panels.Editor.ZActiveDoc;
-		var f = doc.ZFile;
+		var f = doc.EFile;
 		var code = doc.zText;
 		var meta = MetaComments.FindMetaComments(code);
 		string prepend = null, append = null;

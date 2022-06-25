@@ -1,5 +1,6 @@
 ﻿using Au.Controls;
 using Au.Tools;
+using System.Windows.Controls;
 
 //CONSIDER: Add top menu item "Insert". Move there the "Add ..." items from the "Code" menu.
 //	Also add "Add script.setup", "Add try/catch (surround selected code)", etc.
@@ -157,13 +158,13 @@ static class Menus {
 		public static void Cut() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_CUT); }
 
 		[Command(keysText = "Ctrl+C", image = "*Material.ContentCopy #9F5300")]
-		public static void Copy() { Panels.Editor.ZActiveDoc.ZCopy(); }
+		public static void Copy() { Panels.Editor.ZActiveDoc.ECopy(); }
 
 		[Command(keysText = "Ctrl+V", image = "*Material.ContentPaste #9F5300")]
-		public static void Paste() { Panels.Editor.ZActiveDoc.ZPaste(); }
+		public static void Paste() { Panels.Editor.ZActiveDoc.EPaste(); }
 
 		[Command(image = "*Material.ForumOutline #9F5300")]
-		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZCopy(forum: true); }
+		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ECopy(forum: true); }
 
 		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace #008EEE")]
 		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
@@ -214,7 +215,7 @@ static class Menus {
 			public static void Format_selection() { ModifyCode.Format(true); }
 
 			[Command]
-			public static void Remove_screenshots() { Panels.Editor.ZActiveDoc.ImageRemoveScreenshots(); }
+			public static void Remove_screenshots() { Panels.Editor.ZActiveDoc.EImageRemoveScreenshots(); }
 
 			[Command(separator = true, keysText = "Ctrl+A")]
 			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
@@ -244,10 +245,13 @@ static class Menus {
 		[Command]
 		public static class View {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #99BF00")]
-			public static void Wrap_lines() { SciCode.ToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
+			public static void Wrap_lines() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
 			[Command(checkable = true, image = "*Material.TooltipImageOutline #99BF00")]
-			public static void Images_in_code() { SciCode.ToggleView_call_from_menu_only_(SciCode.EView.Images); }
+			public static void Images_in_code() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Images); }
+
+			[Command(checkable = true, image = "*Codicons.Preview #99BF00")]
+			public static void WPF_preview(MenuItem mi) { SciCode.WpfPreviewStartStop(mi); }
 		}
 	}
 

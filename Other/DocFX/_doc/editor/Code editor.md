@@ -4,7 +4,7 @@ uid: code_editor
 
 # Code editor
 
-In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, bracket completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, drag/drop files, find/replace text, find namespace, find Windows API, insert keys/regex/etc, capture UI elements.
+In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, bracket completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, go back/forward, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, format code, drag/drop files, find/replace text, find namespace, find Windows API, insert keys/regex/etc, implement interface, capture UI elements, WPF preview.
 
 C# code may look like this:
 ```csharp
@@ -91,7 +91,7 @@ Often you'll want to disable or enable one or more lines of code by converting t
 Press Tab or Shift+Tab to indent or unindent all selected lines. It adds or removes one tab character before each line.
 
 #### Drag and drop files to insert path
-You can drag and drop files from File Explorer etc to the code editor. It inserts code with file path.
+You can drag and drop files from File Explorer etc to the code editor. It inserts code with file path. Links too.
 
 #### Find and replace
 Use the Find panel to find and replace text in editor. It marks all matches in editor with yellow. Also can find files by name and files containing text. Can replace text in multiple files.
@@ -101,3 +101,46 @@ The Code menu contains dialogs and simple commands for creating code to find a w
 
 #### Focus
 To focus the code editor control without changing selection: middle-click.
+
+#### WPF preview
+The program does not have a dialog window editor/designer, but it's easy to create windows in code, using class **wpfBuilder**. The program can automatically show/update the window while you edit its code, if it contains code like this:
+
+```csharp
+#if WPF_PREVIEW
+b.Window.Preview();
+#endif
+```
+
+This code must be after building the window but before showing it (**ShowDialog** etc).
+
+To activate this feature for current document, check toolbar button "WPF preview" or menu Edit -> View -> WPF preview.
+
+How it works: If "WPF preview" is checked and current script contains `#if WPF_PREVIEW`, the program launches/restarts the script whenever you make changes in its code, unless there are errors. The script runs like when clicked the Run button, with these changes:
+- Defined **WPF_PREVIEW**. In script you use `#if WPF_PREVIEW` to include preview-specific code. Or use **script.isWpfPreview**.
+- Function **Preview** shows the window without activating. Also changes some its properties. Ends the process when the window closed.
+- Some <span style="color: green">/\*/ properties /\*/</span> are ignored: role, ifRunning, uac, bit32, console, optimize, outputPath, preBuild, postBuild, xmlDoc.
+- If current file (or its main project file) is a class file, runs it as a script; ignores the test script. Therefore need `#if WPF_PREVIEW` code that runs at startup and calls the function that contains the window code.
+- Function **script.setup** does nothing.
+
+In preview mode the script must go straight to the window code. If normally it doesn't, add code like this somewhere at the start:
+```csharp
+#if WPF_PREVIEW
+FunctionContainingWindowCode();
+#endif
+```
+
+If it's a dialog class, add code like this:
+```csharp
+#if WPF_PREVIEW
+new DialogClass().Preview();
+#endif
+```
+
+or this:
+```csharp
+#if WPF_PREVIEW
+class Program { static void Main() { new DialogClass().Preview(); }}
+#endif
+```
+
+In preview mode the script must not activate or move the window. Should skip slow/expensive operations that aren't necessary for preview. Should not show the tray icon.
