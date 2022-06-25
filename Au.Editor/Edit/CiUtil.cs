@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Au.Controls;
+﻿using Au.Controls;
 using Au.Compiler;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
@@ -481,8 +480,8 @@ global using Au.More;
 
 	public static void HiliteRange(int start, int end) {
 		var doc = Panels.Editor.ZActiveDoc;
-		doc.InicatorsFind_(null);
-		doc.InicatorsFind_(new List<Range> { start..end });
+		doc.EInicatorsFind_(null);
+		doc.EInicatorsFind_(new List<Range> { start..end });
 	}
 
 	public static void HiliteRange(TextSpan span) => HiliteRange(span.Start, span.End);

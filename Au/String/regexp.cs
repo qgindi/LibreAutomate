@@ -1,5 +1,4 @@
 
-using System.Linq;
 using System.Text.RegularExpressions; //for XML doc links
 
 namespace Au

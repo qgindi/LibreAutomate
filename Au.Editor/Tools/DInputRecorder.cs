@@ -12,7 +12,6 @@ using System.Windows.Threading;
 using Au.Tools;
 namespace Au.Tools2;
 #else
-using System.Linq;
 namespace Au.Tools;
 #endif
 

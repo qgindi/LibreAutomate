@@ -12,7 +12,7 @@
 		bool add;
 		int pos = doc.zCurrentPos8;
 		var prev = _a.Count > 0 ? _a[_i] : default;
-		if (prev.fn != doc.ZFile) {
+		if (prev.fn != doc.EFile) {
 			add = true;
 		} else {
 			if (pos == prev.pos) return; //eg on Back/Forward
@@ -25,7 +25,7 @@
 			}
 		}
 
-		var now = new _Location(doc.ZFile, pos);
+		var now = new _Location(doc.EFile, pos);
 		if (add) {
 			if (++_i < _a.Count) _a.RemoveRange(_i, _a.Count - _i); //after GoBack
 			else if (_a.Count == 256) _a.RemoveAt(0);
@@ -47,7 +47,7 @@
 		_time = 0;
 		if (_i < 0) return; //probably impossible, but anyway
 		if (deleted) len = -len;
-		var fn = doc.ZFile;
+		var fn = doc.EFile;
 		for (int i = _a.Count; --i >= 0;) {
 			if (_a[i].fn == fn && _a[i].pos > pos) {
 				_a[i] = new(fn, Math.Max(pos, _a[i].pos + len));

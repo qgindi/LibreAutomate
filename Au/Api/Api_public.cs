@@ -251,7 +251,7 @@ namespace Au.Types
 	}
 
 	/// <summary>API <msdn>WNDPROC</msdn></summary>
-	public delegate nint WNDPROC(wnd w, int msg, nint wParam, nint lParam);
+	public delegate nint WNDPROC(wnd w, int msg, nint wp, nint lp);
 
 	/// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="wnd.SendTimeout"/>.</summary>
 	[Flags]

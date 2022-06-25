@@ -1,6 +1,5 @@
 using Au.Controls;
 using Au.Compiler;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -355,7 +354,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		_text = null;
 		if (fromWatcher) {
 			var doc = Panels.Editor.ZGetOpenDocOf(this);
-			if (doc != null) doc.FileModifiedExternally_();
+			if (doc != null) doc.EFileModifiedExternally_();
 			else this.Model.EditGoBack.OnTextReplaced(this);
 		}
 	}

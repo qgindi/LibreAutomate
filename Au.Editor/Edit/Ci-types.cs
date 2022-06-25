@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Au.Controls;
+﻿using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;

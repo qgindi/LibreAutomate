@@ -1,4 +1,3 @@
-using System.Linq;
 using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;

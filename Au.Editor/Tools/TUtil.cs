@@ -4,7 +4,6 @@ using Au.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
-using System.Linq;
 using System.Windows.Threading;
 
 namespace Au.Tools;

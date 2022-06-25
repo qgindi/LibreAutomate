@@ -1,5 +1,3 @@
-//Show/hide code info tool windows such as Regex and Keys.
-
 using Au.Tools;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -46,7 +44,7 @@ class CiTools {
 			_regexTopic = s;
 			_regexWindow.CurrentTopic = "replace";
 		}
-		doc.ZTempRanges_Add(this, spanStart, spanEnd, onLeave: () => _regexWindow.Close());
+		doc.ETempRanges_Add(this, spanStart, spanEnd, onLeave: () => _regexWindow.Close());
 	}
 
 	//public bool RegexWindowIsVisible => _regexWindow?.Window.Visible ?? false;
@@ -61,7 +59,7 @@ class CiTools {
 		_keysWindow ??= new KeysWindow();
 		_ShowWindow(_keysWindow, doc, pos16, dontCover);
 		_keysWindow.SetFormat(format);
-		doc.ZTempRanges_Add(this, si.textSpan.Start, si.textSpan.End, onLeave: () => _keysWindow.Close());
+		doc.ETempRanges_Add(this, si.textSpan.Start, si.textSpan.End, onLeave: () => _keysWindow.Close());
 	}
 
 	#endregion

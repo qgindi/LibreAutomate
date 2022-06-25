@@ -1,6 +1,5 @@
 //note: the Roslyn project has been modified. Eg added Symbols property to the CompletionItem class.
 
-using System.Linq;
 using Au.Controls;
 
 using System.Collections.Immutable;
@@ -630,7 +629,7 @@ partial class CiCompletion {
 			if (!span.IsEmpty) _FilterItems(d);
 			p1.Next('F');
 
-			d.tempRange = doc.ZTempRanges_Add(this, span.Start, span.End, () => {
+			d.tempRange = doc.ETempRanges_Add(this, span.Start, span.End, () => {
 				//print.it("leave", _data==d);
 				if (_data == d) _CancelUI(tempRangeRemoved: true);
 			}, position == span.End ? SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange : 0);

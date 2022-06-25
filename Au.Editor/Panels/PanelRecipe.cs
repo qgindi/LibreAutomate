@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
@@ -184,7 +183,7 @@ class PanelRecipe : DockPanel {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!this.IsVisible) return;
 			var doc = Panels.Editor.ZActiveDoc;
-			if (doc == null || !doc.ZFile.IsScript || doc.ZFile.Parent.Name == "-") return;
+			if (doc == null || !doc.EFile.IsScript || doc.EFile.Parent.Name == "-") return;
 			string text = doc.zText;
 			if (text == prevText) return;
 			prevText = text;
@@ -192,7 +191,7 @@ class PanelRecipe : DockPanel {
 
 			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
 			if (n1 > 0) _c.Hwnd.Send(Api.WM_SETREDRAW);
-			_SetText(doc.ZFile.DisplayName, text);
+			_SetText(doc.EFile.DisplayName, text);
 			if (doc == prevDoc) {
 				if (n1 > 0)
 					//_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
@@ -203,7 +202,7 @@ class PanelRecipe : DockPanel {
 					});
 			} else {
 				prevDoc = doc;
-				Panels.Cookbook.AddToHistory(doc.ZFile.DisplayName);
+				Panels.Cookbook.AddToHistory(doc.EFile.DisplayName);
 			}
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
 		};

@@ -1,4 +1,3 @@
-using System.Linq;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
@@ -351,7 +350,7 @@ static class InsertCode {
 		var s = doc.zRangeText(true, from, to);
 		var b = new StringBuilder();
 
-		if(concise && s.LineCount() <= 1) {
+		if (concise && s.LineCount() <= 1) {
 			b.Append(before.TrimEnd("\r\n")).Append(' ');
 			b.Append(s.TrimEnd("\r\n")).Append(' ');
 			b.Append(after.TrimStart("\r\n"));
@@ -361,7 +360,7 @@ static class InsertCode {
 			b.Append(after);
 		}
 
-		doc.ZReplaceTextGently(b.ToString(), from..to);
+		doc.EReplaceTextGently(b.ToString(), from..to);
 	}
 
 	/// <summary>
@@ -400,6 +399,7 @@ static class InsertCode {
 		foreach (var v in namespaces) {
 			if (v != null) b.Append("using ").Append(v).AppendLine(";");
 		}
+		if (i == k.code.Length || k.code[i] is not ('\r' or '\n')) b.AppendLine();
 
 		k.sci.zInsertText(true, i, b.ToString(), addUndoPointAfter: true, restoreFolding: true);
 
@@ -527,7 +527,7 @@ static class InsertCode {
 	}
 
 	public static void AddClassProgram() {
-		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sci.ZFile.IsScript*/) return;
+		if (!CodeInfo.GetContextAndDocument(out var cd) /*|| !cd.sci.EFile.IsScript*/) return;
 		int start, end = cd.code.Length;
 		var members = cd.syntaxRoot.Members;
 		if (members.Any()) {

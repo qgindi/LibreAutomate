@@ -1,5 +1,4 @@
 using Au.Controls;
-using System.Linq;
 using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;

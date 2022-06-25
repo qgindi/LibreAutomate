@@ -875,6 +875,48 @@ void _WmDeclTextToCode() {
 		public static bool PostThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
 			return Api.PostThreadMessage(threadId, message, wParam, lParam);
 		}
+
+		/// <summary>
+		/// Subclasses a window.
+		/// </summary>
+		/// <param name="w">A window or control of this thread.</param>
+		/// <param name="proc">The new window procedure. It is called on every message received by the window (unless blocked by another subclass added later). Let it call <see cref="DefSubclassProc"/>, except when you want to block the message.</param>
+		/// <returns>A cookie for <see cref="Unsubclass"/>. Returns null if fails.</returns>
+		/// <remarks>
+		/// Uses API <msdn>SetWindowSubclass</msdn>.
+		/// Implicitly unsubclasses when the window is destroyed.
+		/// Protects <i>proc</i> from GC for as long as need.
+		/// </remarks>
+		public static object Subclass(wnd w, WNDPROC proc) {
+			Api.SUBCLASSPROC sp = null;
+			if (!Api.SetWindowSubclass(w, sp = _WndProc, 1)) return null;
+			(t_asp ??= new()).Add(sp);
+			nint _WndProc(wnd w, int msg, nint wp, nint lp, nint idSubclass, nint refData) {
+				var r = proc(w, msg, wp, lp);
+				if (msg == Api.WM_NCDESTROY) if (Api.RemoveWindowSubclass(w, sp, 1)) t_asp.Remove(sp);
+				return r;
+			}
+			return new _SubclassCookie(w, sp);
+		}
+		[ThreadStatic] static List<Api.SUBCLASSPROC> t_asp; //GC
+		record _SubclassCookie(wnd w, Api.SUBCLASSPROC sp);
+
+		/// <summary>
+		/// Unsubclasses window subclassed by <see cref="Subclass"/>.
+		/// Unsubclassing is optional; the window is implicitly unsubclassed when closed.
+		/// </summary>
+		/// <param name="cookie">The return value of <b>Subclass</b>.</param>
+		public static void Unsubclass(object cookie) {
+			if (cookie == null) return;
+			if (cookie is not _SubclassCookie c) throw new ArgumentException();
+			if (Api.RemoveWindowSubclass(c.w, c.sp, 1) || !c.w.IsAlive) t_asp.Remove(c.sp);
+		}
+
+		/// <summary>
+		/// Let your callback function used with <see cref="Subclass"/> call this function and return its return value. After or before processing the message.
+		/// </summary>
+		public static nint DefSubclassProc(wnd w, int msg, nint wp, nint lp)
+			=> Api.DefSubclassProc(w, msg, wp, lp);
 	}
 }
 

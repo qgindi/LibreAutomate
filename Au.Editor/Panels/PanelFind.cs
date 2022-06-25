@@ -1,6 +1,5 @@
 ﻿using Au.Controls;
 using Au.Tools;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -54,7 +53,7 @@ class PanelFind : UserControl {
 
 		//this.AccessibleName = this.Name = "Find";
 		this.IsVisibleChanged += (_, _) => {
-			if (!_cName.IsChecked) Panels.Editor.ZActiveDoc?.InicatorsFind_(IsVisible ? _aEditor : null);
+			if (!_cName.IsChecked) Panels.Editor.ZActiveDoc?.EInicatorsFind_(IsVisible ? _aEditor : null);
 		};
 
 		_tFind.TextChanged += (_, _) => ZUpdateQuickResults(false);
@@ -149,7 +148,7 @@ class PanelFind : UserControl {
 			Panels.Found.ZControl.zClearText();
 			if (_cName.IsChecked) {
 				_aEditor.Clear();
-				Panels.Editor.ZActiveDoc?.InicatorsFind_(null);
+				Panels.Editor.ZActiveDoc?.EInicatorsFind_(null);
 				_cCase.Visibility = Visibility.Hidden;
 				_cWildex.Visibility = Visibility.Visible;
 			} else {
@@ -290,7 +289,7 @@ class PanelFind : UserControl {
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
-				Panels.Editor.ZActiveDoc?.InicatorsFind_(_aEditor);
+				Panels.Editor.ZActiveDoc?.EInicatorsFind_(_aEditor);
 			}
 		});
 
@@ -579,7 +578,7 @@ class PanelFind : UserControl {
 		List<FileNode> aFiles = names ? null : new();
 
 		var folder = App.Model.Root;
-		if (!names && _cFolder.IsChecked && Panels.Editor.ZActiveDoc?.ZFile is FileNode fn) {
+		if (!names && _cFolder.IsChecked && Panels.Editor.ZActiveDoc?.EFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}

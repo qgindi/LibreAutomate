@@ -1,5 +1,4 @@
 
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -421,6 +420,7 @@ namespace Au {
 			_ThrowIfNotWindow();
 			if (_IsNested) throw new InvalidOperationException("Missing End() for a StartX() panel");
 			End();
+			//if (script.isWpfPreview) _window.Preview(); //no
 			_window.Owner = owner; //SHOULDDO: try to support AnyWnd. Why WPF here supports only Window? Why if we need Popup or HwndSource?
 			return true == _window.ShowDialog();
 		}

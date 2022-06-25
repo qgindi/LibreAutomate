@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Au {
+﻿namespace Au {
 	public unsafe partial struct wnd {
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
@@ -185,6 +183,22 @@ namespace Au {
 					lock ("x5rX3BZJrE+pOTqszh4ttQ") {
 						if (t - _time > 1000 || !_w.IsAlive) {
 							_w = findFast(name, cn, messageOnly);
+						}
+					}
+				}
+				_time = t;
+				return _w;
+			}
+
+			/// <summary>
+			/// Calls/returns callback <i>f</i> and stores found hwnd and time. Returns the cached hwnd if called frequently and it's still valid.
+			/// </summary>
+			public wnd Get(Func<wnd> f) {
+				long t = Environment.TickCount64;
+				if (t - _time > 1000 || !_w.IsAlive) {
+					lock ("x5rX3BZJrE+pOTqszh4ttQ") {
+						if (t - _time > 1000 || !_w.IsAlive) {
+							_w = f();
 						}
 					}
 				}

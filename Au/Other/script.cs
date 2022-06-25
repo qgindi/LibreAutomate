@@ -37,6 +37,23 @@ namespace Au {
 		static bool? s_debug;
 		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
 
+		/// <summary>
+		/// Returns true if running in WPF preview mode.
+		/// </summary>
+		public static bool isWpfPreview {
+			get {
+				if (s_role != SRole.MiniProgram) return false;
+				var s = Environment.CommandLine;
+				//return s.Contains(" WPF_PREVIEW ") && s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$"); //slower JIT
+				return s.Contains(" WPF_PREVIEW ") && _IsisWpfPreviewMode2(s);
+
+				//[MethodImpl(MethodImplOptions.NoInlining)]
+				static bool _IsisWpfPreviewMode2(string s) => s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$");
+
+				//don't cache. It makes JIT slower. Now fast after JIT.
+			}
+		}
+
 		#region run
 
 		/// <summary>
@@ -312,10 +329,11 @@ namespace Au {
 		/// <remarks>
 		/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread, unhandled exception action).
 		/// 
-		/// Does nothing if role editorExtension.
+		/// Does nothing if role editorExtension or if running in WPF preview mode.
 		/// </remarks>
 		public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print, [CallerFilePath] string f_ = null) {
 			if (role == SRole.EditorExtension) return;
+			if (isWpfPreview) return;
 			if (s_setup) throw new InvalidOperationException("script.setup already called");
 			s_setup = true;
 
@@ -616,12 +634,17 @@ namespace Au {
 		/// Uses <see cref="wnd.Cached_"/>.
 		/// </summary>
 		internal static wnd WndMsg_ => s_wndMsg.FindFast(null, c_msgWndClassName, true);
-		static wnd.Cached_ s_wndMsg;
+		static wnd.Cached_ s_wndMsg, s_wndMain;
 
 		/// <summary>
 		/// Class name of <see cref="WndMsg_"/> window.
 		/// </summary>
 		internal const string c_msgWndClassName = "Au.Editor.m3gVxcTJN02pDrHiQ00aSQ";
+
+		internal static wnd WndMain_(bool show = false) {
+			var w = WndMsg_;
+			return w.Is0 ? default : s_wndMain.Get(() => (wnd)w.Send(Api.WM_USER, 0, show ? 1 : 0));
+		}
 
 		/// <summary>
 		/// Starts new thread that waits and ends this process when editor crashed or terminated.
@@ -658,6 +681,13 @@ namespace Au {
 			public static bool Available => !WndMsg_.Is0;
 
 			/// <summary>
+			/// The main editor window.
+			/// </summary>
+			/// <param name="show">Show the window (if the editor program is running).</param>
+			/// <returns>default(wnd) if the editor program isn't running or its main window still wasn't visible.</returns>
+			public static wnd MainWindow(bool show = false) => WndMain_(show);
+
+			/// <summary>
 			/// Opens the specified source file (script etc) and sets code editor's current position at the start of the specified line.
 			/// Does nothing if editor isn't running.
 			/// </summary>
@@ -682,7 +712,7 @@ namespace Au {
 				var del = IconNameToXaml_;
 				if (del != null) return del(file, what);
 
-				if(what == EGetIcon.IconNameToXaml && script.role != SRole.EditorExtension) {
+				if (what == EGetIcon.IconNameToXaml && script.role != SRole.EditorExtension) {
 					if (file.Starts("*<")) file = file[1..]; //"*<library>*icon", else "*icon"
 					var rr = ResourceUtil.TryGetString_(file);
 					if (rr != null) return rr;

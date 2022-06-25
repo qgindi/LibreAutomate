@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Windows.Data;
+using Microsoft.Win32;
 
 namespace Au.Types {
 	/// <summary>
@@ -524,6 +525,80 @@ namespace Au.Types {
 					}
 				};
 				t.Loaded += h;
+			}
+		}
+
+		/// <summary>
+		/// Shows the window in [preview mode](xref:code_editor).
+		/// </summary>
+		/// <param name="t"></param>
+		/// <exception cref="InvalidOperationException">Called not in preview mode.</exception>
+		/// <remarks>
+		/// Changes some window properties (owner window, location, activation, etc), terminates previous preview process, calls <b>ShowDialog</b>. If closed, calls <b>Environment.Exit</b>.
+		/// 
+		/// If called not in preview mode, calls <b>Environment.Exit</b>.
+		/// </remarks>
+		public static void Preview(this Window t) {
+			wnd wMain = script.editor.MainWindow(); if (wMain.Is0) Environment.Exit(0);
+			if (!Environment.CommandLine.RxMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$", out var m)) Environment.Exit(0);
+			int pid = m[1].Value.ToInt();
+			m[2].Value.ToInt(out long time);
+
+			t.Title = "WPF preview";
+			t.ShowActivated = false;
+			t.WindowStartupLocation = WindowStartupLocation.Manual;
+			t.ShowInTaskbar = false;
+			t.WindowState = WindowState.Normal;
+			t.Loaded += (_, _) => {
+				var w = t.Hwnd();
+				//unsafe { int BOOL = 1; api.DwmSetWindowAttribute(w, api.DWMWINDOWATTRIBUTE.DWMWA_TRANSITIONS_FORCEDISABLED, &BOOL, 0); } //does not disable the inflate/deflate animation; and don't need, with it even better
+				if (Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au", "WPFpreview xy", null) is int xy) {
+					var p = Math2.NintToPOINT(xy);
+					w.MoveL(p.x, p.y);
+					w.EnsureInScreen();
+				} else {
+					w.MoveInScreen(^1, .5f);
+				}
+				//_TerminatePrevious(); pid = 0; //async less flickering, especially when no animations, eg toolwindow
+				t.Dispatcher.InvokeAsync(() => { _TerminatePrevious(); pid = 0; }, DispatcherPriority.ApplicationIdle);
+				WndUtil.SetOwnerWindow(w, wMain);
+
+				//workaround for: when the window is inactive, on click nonclient (eg to close), the window hangs until mouse moved. Only when using SetOwnerWindow.
+				var hs = PresentationSource.FromVisual(t) as HwndSource;
+				hs.AddHook(_WndProc);
+				nint _WndProc(nint hwnd, int msg, nint wp, nint lp, ref bool handled) {
+					if (msg is Api.WM_NCLBUTTONDOWN or Api.WM_NCRBUTTONDOWN) { //the window is already active
+						Task.Run(() => { var p = mouse.xy; Api.SetCursorPos(p.x, p.y); });
+					}
+					return 0;
+				}
+			};
+			t.LocationChanged += (_, _) => {
+				var w = t.Hwnd();
+				if (w.IsMinimized || w.IsMaximized) return;
+				var r = w.Rect;
+				Registry.SetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au", "WPFpreview xy", (int)Math2.MakeLparam(r.left, r.top));
+			};
+			try {
+				t.ShowDialog();
+			}
+			finally {
+				_TerminatePrevious();
+				Environment.Exit(0);
+			}
+
+			void _TerminatePrevious() {
+				if (pid == 0) return;
+				if (process.getTimes(pid, out long tc, out _) && tc <= time) {
+					//print.it("terminate", pid, time, tc);
+					process.terminate(pid);
+				} else {
+					//print.it("bad");
+					//if previous task failed before calling this func, this wasn't called and therefore an even older task may be running. Close its window.
+					foreach (var w in wnd.findAll("WPF preview", "HwndWrapper[*", "Au.Task.exe")) {
+						if (w.ProcessId != process.thisProcessId) w.Close(noWait: true);
+					}
+				}
 			}
 		}
 	}

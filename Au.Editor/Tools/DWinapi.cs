@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Linq;
 using Au.Controls;
 
 namespace Au.Tools;

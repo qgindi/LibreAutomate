@@ -52,6 +52,7 @@ All attributes are optional. The Example command contains all.
 		<Format_document />
 		<Wrap_lines separator="" />
 		<Images_in_code />
+		<WPF_preview />
 		<Find separator="" />
 	</Edit>
 	<Tools>

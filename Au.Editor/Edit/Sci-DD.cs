@@ -5,11 +5,11 @@ using Au.Tools;
 partial class SciCode {
 	void _InitDragDrop() {
 		Api.RevokeDragDrop(Hwnd); //of Scintilla
-		Api.RegisterDragDrop(Hwnd, _dt = new _DragDrop(this));
+		Api.RegisterDragDrop(Hwnd, _ddTarget = new _DragDrop(this));
 		//Scintilla will call RevokeDragDrop when destroying window
 	}
 
-	_DragDrop _dt;
+	_DragDrop _ddTarget;
 
 	class _DragDrop : Api.IDropTarget {
 		readonly SciCode _sci;

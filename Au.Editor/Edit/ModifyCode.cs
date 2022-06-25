@@ -123,10 +123,10 @@ static class ModifyCode {
 
 		if (s == null) return;
 		if (selection) {
-			doc.ZReplaceTextGently(s, from..to);
+			doc.EReplaceTextGently(s, from..to);
 			doc.zSelect(true, from0, doc.zLen16 - tail);
 		} else {
-			doc.ZReplaceTextGently(s);
+			doc.EReplaceTextGently(s);
 		}
 	}
 
@@ -242,7 +242,7 @@ partial class SciCode {
 	/// <summary>
 	/// Replaces text without losing markers, expanding folded code, etc.
 	/// </summary>
-	public void ZReplaceTextGently(string s, Range? range = null) {
+	public void EReplaceTextGently(string s, Range? range = null) {
 		var (rFrom, rTo) = range.GetStartEnd(zLen16);
 		int len = s.Lenn(); if (len == 0) goto gRaw;
 		string old = range.HasValue ? zRangeText(true, rFrom, rTo) : zText;

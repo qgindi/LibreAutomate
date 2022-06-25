@@ -5,8 +5,6 @@
 //	Allow to use instead of CapsLock: ScrollLock, Insert. Or not, because unavailable in many keyboards.
 //	Another way: press CapsLock, type text, press CapsLock again (then triggers).
 
-using System.Linq;
-
 namespace Au.Triggers {
 	/// <summary>
 	/// Flags of autotext triggers.

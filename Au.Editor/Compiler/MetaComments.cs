@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Xml.Linq;
@@ -313,6 +312,7 @@ namespace Au.Compiler {
 		/// <summary>
 		/// Meta option 'role'.
 		/// Default: miniProgram if script, else classFile.
+		/// In WPF preview mode it's always miniProgram.
 		/// </summary>
 		public ERole Role { get; private set; }
 
@@ -320,6 +320,11 @@ namespace Au.Compiler {
 		/// Gets default meta option 'role' value. It is miniProgram if isScript, else classFile.
 		/// </summary>
 		public static ERole DefaultRole(bool isScript) => isScript ? ERole.miniProgram : ERole.classFile;
+
+		/// <summary>
+		/// Same As <b>Role</b>, but unchanged in WPF preview mode.
+		/// </summary>
+		public ERole UnchangedRole { get; private set; }
 
 		/// <summary>
 		/// Meta option 'sign'.
@@ -443,6 +448,23 @@ namespace Au.Compiler {
 				}
 			}
 			//p1.NW();
+
+			if (isMain) {
+				this.UnchangedRole = this.Role;
+				if (_flags.Has(EMPFlags.WpfPreview)) {
+					this.Role = ERole.miniProgram;
+					this.IfRunning = EIfRunning.run;
+					this.Defines.Add("WPF_PREVIEW");
+					this.Uac = default;
+					this.Bit32 = false;
+					this.Console = false;
+					this.Optimize = false;
+					this.OutputPath = null;
+					this.PreBuild = default;
+					this.PostBuild = default;
+					this.XmlDoc = false;
+				}
+			}
 
 			//let at first compile "global.cs" and meta c files. Why:
 			//	1. If they have same classes etc or assembly/module attributes, it's better to show error in current file.
@@ -640,7 +662,7 @@ namespace Au.Compiler {
 		bool _Error(string s, int from, int to) {
 			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
-			} else if (_flags.Has(EMPFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ZActiveDoc.ZFile) {
+			} else if (_flags.Has(EMPFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ZActiveDoc.EFile) {
 				CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 			}
 			return false;
@@ -755,7 +777,8 @@ namespace Au.Compiler {
 			const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, bit32";
 
 			bool needOP = false;
-			switch (Role) {
+			var role = UnchangedRole;
+			switch (role) {
 			case ERole.miniProgram:
 				if (Specified.HasAny(EMSpecified.outputPath | EMSpecified.manifest | EMSpecified.bit32 | EMSpecified.xmlDoc)) return _ErrorM("with role miniProgram cannot use: outputPath, manifest, bit32, xmlDoc");
 				break;
@@ -773,9 +796,9 @@ namespace Au.Compiler {
 				if (Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, com, nuget, r, resource");
 				break;
 			}
-			if (needOP) OutputPath ??= GetDefaultOutputPath(_f.f, Role, withEnvVar: false);
+			if (needOP && !_flags.Has(EMPFlags.WpfPreview)) OutputPath ??= GetDefaultOutputPath(_f.f, role, withEnvVar: false);
 
-			if (IconFile?.IsFolder ?? false) if (Role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
+			if (IconFile?.IsFolder ?? false) if (role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
 
 			//if(ResFile != null) {
 			//	if(IconFile != null) return _ErrorM("cannot add both res file and icon");
@@ -906,12 +929,7 @@ namespace Au.Compiler {
 		public override string ToString() => f.ToString();
 	}
 
-	struct MetaFileAndString {
-		public FileNode f;
-		public string s;
-
-		public MetaFileAndString(FileNode f, string s) { this.f = f; this.s = s; }
-	}
+	record struct MetaFileAndString(FileNode f, string s);
 
 	enum ERole { miniProgram, exeProgram, editorExtension, classLibrary, classFile }
 
@@ -945,6 +963,12 @@ namespace Au.Compiler {
 		/// Same as ForCodeInfo; also adds some editor-specific stuff, like CodeInfo._diag.AddMetaError.
 		/// </summary>
 		ForCodeInfoInEditor = 2 | 8,
+
+		/// <summary>
+		/// Compiling for WPF preview.
+		/// Defines WPF_PREVIEW and resets some meta.
+		/// </summary>
+		WpfPreview = 16,
 
 		///// <summary>
 		///// Used for file Properties dialog etc, not when compiling.

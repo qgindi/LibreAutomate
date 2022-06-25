@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Windows.Input;
 using Au.Controls;
 
@@ -26,7 +25,7 @@ class CiAutocorrect {
 	/// Call when added text with { } etc and want it behave like when the user types { etc.
 	/// </summary>
 	public void BracketsAdded(SciCode doc, int innerFrom, int innerTo, EBrackets operation) {
-		var r = doc.ZTempRanges_Add(this, innerFrom, innerTo);
+		var r = doc.ETempRanges_Add(this, innerFrom, innerTo);
 		if (operation == EBrackets.NewExpression) r.OwnerData = "new";
 		else r.OwnerData = "ac";
 	}
@@ -98,7 +97,7 @@ class CiAutocorrect {
 		default: return false;
 		}
 
-		var r = doc.ZTempRanges_Enum(pos, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
+		var r = doc.ETempRanges_Enum(pos, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
 		if (r == null) return false;
 		if (isOpenBrac && !(r.OwnerData == (object)"ac" || r.OwnerData == (object)"new")) return false;
 		r.GetCurrentFromTo(out int from, out int to, utf8: true);
@@ -139,7 +138,7 @@ class CiAutocorrect {
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' => "", _ => null };
+		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' or '.' => "", _ => null };
 		if (replaceText == null) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -203,6 +202,11 @@ class CiAutocorrect {
 			if (trivia.SpanStart != --pos) return;
 			if (pos > 0 && code[pos - 1] == '\n') replaceText = "\r\n*/";
 			tempRangeFrom = 0;
+		} else if (ch == '.') { //replace comment //... with // ..., because //... may corrupt folding
+			if (code.Eq(pos - 4, "//..") && root.FindTrivia(pos).IsKind(SyntaxKind.SingleLineCommentTrivia)) {
+				c.doc.zReplaceRange(true, pos - 2, pos + 1, " ...", true);
+			}
+			return;
 		} else {
 			var token = root.FindToken(pos);
 			var node = token.Parent;
@@ -285,7 +289,7 @@ class CiAutocorrect {
 					return;
 				case SyntaxKind.InterpolatedStringExpression:
 					//after next typed { in interpolated string remove } added after first {
-					if (ch == '{' && code.Eq(pos - 1, "{{}") && c.doc.ZTempRanges_Enum(cd.pos, this, endPosition: true).Any()) {
+					if (ch == '{' && code.Eq(pos - 1, "{{}") && c.doc.ETempRanges_Enum(cd.pos, this, endPosition: true).Any()) {
 						replaceLength = 1;
 						replaceText = null;
 						tempRangeFrom = 0;
@@ -338,7 +342,7 @@ class CiAutocorrect {
 		c.doc.zReplaceRange(true, cd.pos, cd.pos + replaceLength, replaceText, moveCurrentPos: ch == ';');
 		if (newPos > 0) c.doc.zCurrentPos16 = newPos;
 
-		if (tempRangeFrom > 0) c.doc.ZTempRanges_Add(this, tempRangeFrom, tempRangeTo);
+		if (tempRangeFrom > 0) c.doc.ETempRanges_Add(this, tempRangeFrom, tempRangeTo);
 		else c.ignoreChar = true;
 	}
 
@@ -466,7 +470,7 @@ class CiAutocorrect {
 					else if (!(k.Name?.IsMissing ?? true)) token = k.Name.GetLastToken();
 					else return false;
 					canExitBlock = block != null;
-					dontIndent = true;
+					//dontIndent = true;
 					break;
 				case BaseTypeDeclarationSyntax k: //class, struct, interface, enum
 					block = k;

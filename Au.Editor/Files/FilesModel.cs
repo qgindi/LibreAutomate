@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Xml.Linq;
 using System.IO.Compression;
 using System.Windows.Input;
@@ -650,6 +649,7 @@ partial class FilesModel {
 		if (r == 0) return;
 
 		foreach (var f in a) {
+			if (f.IsDeleted) continue; //deleted together with the parent folder
 			_Delete(f, dontDeleteFile: con.IsChecked); //info: and saves everything, now and/or later
 		}
 	}
@@ -1068,7 +1068,7 @@ partial class FilesModel {
 					var a = clipboardData.HdropToFiles_(h);
 					_DroppedOrPasted(null, a, false, target, pos);
 				} else if (clipboardData.GetText_(0) is string s && s.Length > 0) {
-					SciCode.IsForumCode_(s, newFile: true);
+					SciCode.EIsForumCode_(s, newFile: true);
 				}
 			}
 		}

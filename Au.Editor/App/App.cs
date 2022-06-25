@@ -2,7 +2,6 @@
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
-using System.Linq;
 
 static class App {
 	public const string

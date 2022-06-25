@@ -270,7 +270,9 @@ namespace Au.Controls
 		#region mouse/keyboard input and related events
 
 		///
-		protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters) => new PointHitTestResult(this, hitTestParameters.HitPoint); //enables mouse events
+		protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters)
+			=> new PointHitTestResult(this, hitTestParameters.HitPoint);
+		//enables mouse events
 
 		///
 		protected override void OnMouseDown(MouseButtonEventArgs e) {

@@ -35,7 +35,7 @@ class PanelEdit : Grid
 	/// See <see cref="ZOpenDocs"/>.
 	/// </summary>
 	public SciCode ZGetOpenDocOf(FileNode f) {
-		foreach (var v in _docs) if (v.ZFile == f) return v;
+		foreach (var v in _docs) if (v.EFile == f) return v;
 		return null;
 	}
 
@@ -53,7 +53,7 @@ class PanelEdit : Grid
 	public bool ZOpen(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
-		if (f == _activeDoc?.ZFile) return true;
+		if (f == _activeDoc?.EFile) return true;
 
 		//print.it(focusEditor, new StackTrace(true));
 		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.Hwnd.IsFocused ?? false));
@@ -73,7 +73,7 @@ class PanelEdit : Grid
 			_ShowHideActiveDoc(false);
 			_activeDoc = doc;
 			_ShowHideActiveDoc(true);
-			doc.OnOpenDocActivated();
+			doc.EOpenDocActivated();
 			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
@@ -90,7 +90,7 @@ class PanelEdit : Grid
 			_docs.Add(doc);
 			_activeDoc = doc;
 			Children.Add(doc);
-			doc.Init_(text, newFile, noTemplate);
+			doc.EInit_(text, newFile, noTemplate);
 			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
@@ -106,7 +106,7 @@ class PanelEdit : Grid
 			App.Timer025sWhenVisible += _Timer;
 			void _Timer() {
 				//print.it("timer");
-				if (--count > 0 && f == _activeDoc?.ZFile && Panels.Files.TreeControl.IsFocused) {
+				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.TreeControl.IsFocused) {
 					if (wnd.fromMouse() != doc.Hwnd
 						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
 						) return;
@@ -130,7 +130,7 @@ class PanelEdit : Grid
 	public void ZClose(FileNode f) {
 		Debug.Assert(f != null);
 		SciCode doc;
-		if (f == _activeDoc?.ZFile) {
+		if (f == _activeDoc?.EFile) {
 			App.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
@@ -164,11 +164,11 @@ class PanelEdit : Grid
 	}
 
 	public bool ZSaveText() {
-		return _activeDoc?.SaveText_() ?? true;
+		return _activeDoc?.ESaveText_() ?? true;
 	}
 
 	public void ZSaveEditorData() {
-		_activeDoc?._SaveEditorData();
+		_activeDoc?.ESaveEditorData_();
 	}
 
 	//public bool ZIsModified => _activeDoc?.IsModified ?? false;
@@ -224,6 +224,10 @@ class PanelEdit : Grid
 		App.Commands[nameof(Menus.Edit.View.Wrap_lines)].Checked = App.Settings.edit_wrap;
 		App.Commands[nameof(Menus.Edit.View.Images_in_code)].Checked = !App.Settings.edit_noImages;
 	}
+
+	//void _UpdateUI_ActiveDocChanged() {
+
+	//}
 
 	[Flags]
 	enum _EUpdateUI

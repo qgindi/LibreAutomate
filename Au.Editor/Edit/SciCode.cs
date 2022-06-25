@@ -3,12 +3,18 @@
 using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
+using System.Windows.Controls;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+using System.Text.RegularExpressions;
 
 partial class SciCode : KScintilla {
 	readonly FileLoaderSaver _fls;
 	readonly FileNode _fn;
 
-	public FileNode ZFile => _fn;
+	public FileNode EFile => _fn;
 
 	public override string ToString() => _fn.ToString();
 
@@ -131,12 +137,12 @@ partial class SciCode : KScintilla {
 	}
 
 	//Called by PanelEdit.ZOpen.
-	internal void Init_(byte[] text, bool newFile, bool noTemplate) {
+	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
-		SetLineNumberMarginWidth_();
+		ESetLineNumberMarginWidth_();
 
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
@@ -171,7 +177,7 @@ partial class SciCode : KScintilla {
 	//	base.Dispose(disposing);
 	//}
 
-	internal void OnOpenDocActivated() {
+	internal void EOpenDocActivated() {
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
 
@@ -216,7 +222,9 @@ partial class SciCode : KScintilla {
 				_modified = true;
 				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
 				App.Model.EditGoBack.OnTextModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
-				CodeInfo.SciModified(this, n);
+				if (CodeInfo.SciModified(this, n)) {
+					_CodeModifiedAndCodeinfoOK();
+				}
 				Panels.Find.ZUpdateQuickResults(true);
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
 				//	//print.it(n.Text);
@@ -224,7 +232,7 @@ partial class SciCode : KScintilla {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
 				//	//}
-				if (n.linesAdded != 0) SetLineNumberMarginWidth_(onModified: true);
+				if (n.linesAdded != 0) ESetLineNumberMarginWidth_(onModified: true);
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
@@ -266,7 +274,7 @@ partial class SciCode : KScintilla {
 		case NOTIF.SCN_STYLENEEDED:
 			//print.it("SCN_STYLENEEDED");
 			if (_fn.IsCodeFile) {
-				HideImages_(Call(SCI_GETENDSTYLED), n.position);
+				EHideImages_(Call(SCI_GETENDSTYLED), n.position);
 				Call(SCI_STARTSTYLING, n.position); //need this even if would not hide images
 			} else {
 				zSetStyled();
@@ -294,59 +302,59 @@ partial class SciCode : KScintilla {
 			if (!_noModelEnsureCurrentSelected) App.Model.EnsureCurrentSelected();
 			break;
 		case Api.WM_CHAR: {
-			int c = (int)wparam;
-			if (c < 32) {
-				if (c is not (9 or 10 or 13)) return true;
-			} else {
-				if (CodeInfo.SciBeforeCharAdded(this, (char)c)) return true;
+				int c = (int)wparam;
+				if (c < 32) {
+					if (c is not (9 or 10 or 13)) return true;
+				} else {
+					if (CodeInfo.SciBeforeCharAdded(this, (char)c)) return true;
+				}
 			}
-		}
-		break;
+			break;
 		case Api.WM_MBUTTONDOWN:
 			Api.SetFocus(w);
 			return true;
 		case Api.WM_RBUTTONDOWN: {
-			//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
-			POINT p = Math2.NintToPOINT(lparam);
-			int margin = zMarginFromPoint(p, false);
-			if (margin >= 0) {
-				var selStart = zSelectionStart8;
-				var (_, start, end) = zLineStartEndFromPos(false, zPosFromXY(false, p, false));
-				if (selStart >= start && selStart <= end) return true;
-				//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
-				if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
-					if (zSelectionEnd8 == start) zGoToPos(false, start); //clear selection above start
+				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
+				POINT p = Math2.NintToPOINT(lparam);
+				int margin = zMarginFromPoint(p, false);
+				if (margin >= 0) {
+					var selStart = zSelectionStart8;
+					var (_, start, end) = zLineStartEndFromPos(false, zPosFromXY(false, p, false));
+					if (selStart >= start && selStart <= end) return true;
+					//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
+					if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
+						if (zSelectionEnd8 == start) zGoToPos(false, start); //clear selection above start
+					}
 				}
 			}
-		}
-		break;
+			break;
 		case Api.WM_CONTEXTMENU: {
-			bool kbd = (int)lparam == -1;
-			int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lparam), true);
-			switch (margin) {
-			case -1:
-				var m = new KWpfMenu();
-				App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
-				m.Show(this, byCaret: kbd);
-				break;
-			case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
-				ModifyCode.CommentLines(null, notSlashStar: true);
-				break;
-			case c_marginFold:
-				int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful
-				if (fold >= 0) Call(SCI_FOLDALL, fold);
-				break;
+				bool kbd = (int)lparam == -1;
+				int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lparam), true);
+				switch (margin) {
+				case -1:
+					var m = new KWpfMenu();
+					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
+					m.Show(this, byCaret: kbd);
+					break;
+				case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
+					ModifyCode.CommentLines(null, notSlashStar: true);
+					break;
+				case c_marginFold:
+					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful
+					if (fold >= 0) Call(SCI_FOLDALL, fold);
+					break;
+				}
+				return true;
 			}
-			return true;
-		}
-		//case Api.WM_PAINT:
-		//	_Paint(false);
-		//	break;
-		//case Api.WM_PAINT: {
-		//		using var p1 = perf.local();
-		//		Call(msg, wparam, lparam);
-		//		return true;
-		//	}
+			//case Api.WM_PAINT:
+			//	_Paint(false);
+			//	break;
+			//case Api.WM_PAINT: {
+			//		using var p1 = perf.local();
+			//		Call(msg, wparam, lparam);
+			//		return true;
+			//	}
 		}
 
 		//Call(msg, wparam, lparam);
@@ -378,10 +386,10 @@ partial class SciCode : KScintilla {
 			var key = (KKey)msg.wParam;
 			switch ((key, mod)) {
 			case (KKey.C, ModifierKeys.Control):
-				ZCopy();
+				ECopy();
 				return true;
 			case (KKey.V, ModifierKeys.Control):
-				ZPaste();
+				EPaste();
 				return true;
 			case (KKey.F12, 0):
 				Menus.Edit.Go_to_definition();
@@ -410,7 +418,7 @@ partial class SciCode : KScintilla {
 	bool _isUnsaved;
 
 	//Called by PanelEdit.ZSaveText.
-	internal bool SaveText_() {
+	internal bool ESaveText_() {
 		if (_IsUnsaved) {
 			//print.qm2.write("saving");
 			_fn.UnCacheText();
@@ -423,16 +431,16 @@ partial class SciCode : KScintilla {
 	}
 
 	//Called by FileNode.UnCacheText.
-	internal void FileModifiedExternally_() {
+	internal void EFileModifiedExternally_() {
 		if (zIsReadonly) return;
 		var text = _fn.GetText(saved: true); if (text == this.zText) return;
-		ZReplaceTextGently(text);
+		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
 		if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
 	}
 
 	//never mind: not called when zoom changes.
-	internal void SetLineNumberMarginWidth_(bool onModified = false) {
+	internal void ESetLineNumberMarginWidth_(bool onModified = false) {
 		int c = 4, lines = zLineCount;
 		while (lines > 999) { c++; lines /= 10; }
 		if (!onModified || c != _prevLineNumberMarginWidth) zSetMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
@@ -446,7 +454,7 @@ partial class SciCode : KScintilla {
 	/// Caller must not copy text to clipboard, and must not pass the event to Scintilla.
 	/// </summary>
 	/// <param name="forum">Copy as bbcode for forum.</param>
-	public void ZCopy(bool forum = false) {
+	public void ECopy(bool forum = false) {
 		int i1 = zSelectionStart8, i2 = zSelectionEnd8, textLen = zLen8;
 		if (textLen == 0) return;
 		bool isCS = _fn.IsCodeFile;
@@ -480,10 +488,10 @@ partial class SciCode : KScintilla {
 	/// Called when pasting (menu or Ctrl+V). Inserts text, possibly with processed forum bbcode etc.
 	/// Caller must not insert text, and must not pass the event to Scintilla.
 	/// </summary>
-	public void ZPaste() {
+	public void EPaste() {
 		var s1 = clipboard.text; if (s1.NE()) return;
 
-		var (isFC, text, name, isClass) = IsForumCode_(s1, false);
+		var (isFC, text, name, isClass) = EIsForumCode_(s1, false);
 		if (isFC) {
 			string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
 				? "1 Create new file|0 Cancel"
@@ -506,7 +514,7 @@ partial class SciCode : KScintilla {
 		}
 	}
 
-	internal static (bool yes, string text, string filename, bool isClass) IsForumCode_(string s, bool newFile) {
+	internal static (bool yes, string text, string filename, bool isClass) EIsForumCode_(string s, bool newFile) {
 		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 		if (!s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return default;
 
@@ -546,7 +554,7 @@ partial class SciCode : KScintilla {
 
 	bool _indicHaveFind, _indicHaveDiag;
 
-	internal void InicatorsFind_(List<Range> a) {
+	internal void EInicatorsFind_(List<Range> a) {
 		if (_indicHaveFind) {
 			_indicHaveFind = false;
 			zIndicatorClear(c_indicFind);
@@ -557,7 +565,7 @@ partial class SciCode : KScintilla {
 		foreach (var v in a) zIndicatorAdd(true, c_indicFind, v);
 	}
 
-	internal void InicatorsDiag_(bool has) {
+	internal void EInicatorsDiag_(bool has) {
 		if (_indicHaveDiag) {
 			_indicHaveDiag = false;
 			zIndicatorClear(c_indicDiagHidden);
@@ -576,7 +584,7 @@ partial class SciCode : KScintilla {
 	[Flags]
 	public enum EView { Wrap = 1, Images = 2 }
 
-	internal static void ToggleView_call_from_menu_only_(EView what) {
+	internal static void EToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			App.Settings.edit_wrap ^= true;
 			foreach (var v in Panels.Editor.ZOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
@@ -591,9 +599,85 @@ partial class SciCode : KScintilla {
 		Panels.Editor._UpdateUI_EditView();
 	}
 
-	#endregion
+	void _CodeModifiedAndCodeinfoOK() {
+		if (!_wpfPreview) return;
+		s_timer1 ??= new(static t => {
+			var doc = Panels.Editor.ZActiveDoc;
+			if (doc == t.Tag) doc._WpfPreviewRun(false);
+		});
+		s_timer1.Tag = this;
+		s_timer1.After(500);
+	}
+	static timer s_timer1;
+	static bool s_wpfPreviewInited;
+	bool _wpfPreview;
+	internal bool IsWpfPreview => _wpfPreview;
 
-	#region temp ranges
+	void _WpfPreviewRun(bool starting) {
+		if (!_wpfPreview) return;
+		CompileRun.RunWpfPreview(_fn, k => {
+			bool hasWPF_PREVIEW = false;
+			for (int i = k.m.GlobalCount; i < k.trees.Length; i++) {
+				//print.it(m.CodeFiles[i]);
+				if (!k.m.CodeFiles[i].code.Contains("WPF_PREVIEW")) continue;
+				var cu = k.trees[i].GetCompilationUnitRoot();
+				if (!cu.GetDirectives(d => d is IfDirectiveTriviaSyntax di && di.Condition.ToString() == "WPF_PREVIEW").Any()) continue;
+				hasWPF_PREVIEW = true;
+				break;
+			}
+			if (!hasWPF_PREVIEW) {
+				if (starting) {
+					print.it("""
+<>To enable <help editor/Code editor>WPF preview<>, add #if WPF_PREVIEW with code that calls Preview(). Examples: <fold>
+<code>
+//code before b.ShowDialog
+#if WPF_PREVIEW
+b.Window.Preview();
+#endif
+
+//code near the start of the script file, when using dialog class DialogClass
+#if WPF_PREVIEW
+new DialogClass().Preview();
+#endif
+
+//code before dialog class DialogClass, when not using a script file
+#if WPF_PREVIEW
+class Program { static void Main() { new DialogClass().Preview(); }}
+#endif
+</code>
+</fold>
+""");
+				}
+				return false;
+			}
+			//print.it(k.compilation.GetDiagnostics());
+			return !k.compilation.GetDiagnostics().Any(o => o.Severity == DiagnosticSeverity.Error);
+		});
+	}
+
+	public static void WpfPreviewStartStop(MenuItem mi) {
+		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
+		bool start = mi.IsChecked;
+		if (start == doc._wpfPreview) return;
+		doc._wpfPreview = start;
+
+		if (start) doc._WpfPreviewRun(true);
+
+		if (!s_wpfPreviewInited) {
+			s_wpfPreviewInited = true;
+			Panels.Editor.ZActiveDocChanged += () => {
+				mi.IsChecked = Panels.Editor.ZActiveDoc?._wpfPreview ?? false;
+			};
+		}
+
+		//update #if WPF_PREVIEW: styling, errors.
+		CodeInfo.Stop();
+		CodeInfo._styling.Update();
+	}
+
+#endregion
+
+#region temp ranges
 
 	[Flags]
 	public enum ZTempRangeFlags {
@@ -622,19 +706,19 @@ partial class SciCode : KScintilla {
 		void Remove();
 
 		/// <summary>
-		/// Gets current start and end positions of this range added with <see cref="ZTempRanges_Add"/>.
+		/// Gets current start and end positions of this range added with <see cref="ETempRanges_Add"/>.
 		/// Returns false if the range is removed; then sets from = to = -1.
 		/// </summary>
 		bool GetCurrentFromTo(out int from, out int to, bool utf8 = false);
 
 		/// <summary>
-		/// Gets current start position of this range added with <see cref="ZTempRanges_Add"/>. UTF-16.
+		/// Gets current start position of this range added with <see cref="ETempRanges_Add"/>. UTF-16.
 		/// Returns -1 if the range is removed.
 		/// </summary>
 		int CurrentFrom { get; }
 
 		/// <summary>
-		/// Gets current end position of this range added with <see cref="ZTempRanges_Add"/>. UTF-16.
+		/// Gets current end position of this range added with <see cref="ETempRanges_Add"/>. UTF-16.
 		/// Returns -1 if the range is removed.
 		/// </summary>
 		int CurrentTo { get; }
@@ -735,7 +819,7 @@ partial class SciCode : KScintilla {
 	/// Can be null.
 	/// </param>
 	/// <param name="flags"></param>
-	public ITempRange ZTempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
+	public ITempRange ETempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
 		int fromUtf16 = from;
 		zNormalizeRange(true, ref from, ref to);
 		//print.it(fromUtf16, from, to, zCurrentPos8);
@@ -767,7 +851,7 @@ partial class SciCode : KScintilla {
 	/// <param name="owner">If not null, returns only ranges where ReferenceEquals(owner, range.owner).</param>
 	/// <param name="endPosition">position must be at the end of the range.</param>
 	/// <param name="utf8"></param>
-	public IEnumerable<ITempRange> ZTempRanges_Enum(int position, object owner = null, bool endPosition = false, bool utf8 = false) {
+	public IEnumerable<ITempRange> ETempRanges_Enum(int position, object owner = null, bool endPosition = false, bool utf8 = false) {
 		if (!utf8) position = zPos8(position);
 		for (int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
@@ -780,7 +864,7 @@ partial class SciCode : KScintilla {
 	/// It's safe to remove the retrieved ranges while enumerating.
 	/// </summary>
 	/// <param name="owner">Returns only ranges where ReferenceEquals(owner, range.owner).</param>
-	public IEnumerable<ITempRange> ZTempRanges_Enum(object owner) {
+	public IEnumerable<ITempRange> ETempRanges_Enum(object owner) {
 		for (int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
 			if (ReferenceEquals(owner, r.Owner)) yield return r;
@@ -809,9 +893,9 @@ partial class SciCode : KScintilla {
 	[Conditional("TRACE_TEMP_RANGES")]
 	static void _TraceTempRange(string action, object owner) => print.it(action, owner);
 
-	#endregion
+#endregion
 
-	#region acc
+#region acc
 
 	protected override ERole ZAccessibleRole => ERole.DOCUMENT;
 
@@ -819,5 +903,5 @@ partial class SciCode : KScintilla {
 
 	protected override string ZAccessibleDescription => _fn.FilePath;
 
-	#endregion
+#endregion
 }
