@@ -237,6 +237,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	public static void GoToDefinition() {
 		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out var cd, metaToo: true);
 		if (sym != null) {
+			if (sym is IParameterSymbol or ITypeParameterSymbol && !sym.IsInSource()) return;
 			if (_GetFoldersPath(token, out var fp, false)) {
 				run.it(fp);
 			} else {

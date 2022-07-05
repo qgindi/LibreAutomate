@@ -695,7 +695,8 @@ namespace Au {
 				style |= WS.VSCROLL;
 			}
 
-			if (byCaret && !flags.HasAny(MSFlags.AlignRight | MSFlags.AlignCenterH)) p.x = Math.Max(p.x - _z.image - _z.check - _z.textPaddingX - 3, rs.left);
+			if (byCaret && !flags.HasAny(MSFlags.AlignRight | MSFlags.AlignCenterH))
+				p.x = Math.Max(p.x - _z.image - _z.check - _z.paddingLeft - _z.textPaddingX - 3, rs.left);
 
 			RECT r = new(0, 0, z.width, z.height);
 			Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
@@ -870,10 +871,7 @@ namespace Au {
 				}
 			}
 
-			if (_iHot >= 0 != _mouse.track) {
-				var t = new Api.TRACKMOUSEEVENT(_w, _iHot >= 0 ? Api.TME_LEAVE : Api.TME_LEAVE | Api.TME_CANCEL);
-				_mouse.track = Api.TrackMouseEvent(ref t) && _iHot >= 0;
-			}
+			if (_iHot >= 0 != _mouse.track) _mouse.track = Api.TrackMouseLeave(_w, _iHot >= 0) && _iHot >= 0;
 
 			_sub.parent?._SubmenuMouseMove();
 		}
@@ -1132,7 +1130,15 @@ namespace Au.Types {
 		/// <summary>Do nothing.</summary>
 		None,
 
-		/// <summary>Execute the cocused item and close the menu.</summary>
+		/// <summary>Execute the focused item and close the menu.</summary>
 		ExecuteFocused,
 	}
+
+	/// <summary>
+	/// Used with <see cref="popupMenu.Metrics"/> and <see cref="popupMenu.DefaultMetrics"/>.
+	/// </summary>
+	/// <remarks>
+	/// All values are in logical pixels (1 pixel when DPI is 100%).
+	/// </remarks>
+	public record MMetrics(int ItemPaddingY = 0, int ItemPaddingLeft = 0, int ItemPaddingRight = 0);
 }

@@ -606,13 +606,10 @@ namespace Au {
 					if ((_iHot = i) >= 0) {
 						_Invalidate(_iHot);
 						var b = _a[i];
-						base._SetTooltip(b, b.rect, lParam);
+						_SetTooltip(b, b.rect, lParam);
 					}
 				}
-				if (_iHot >= 0 != _trackMouseEvent) {
-					var t = new Api.TRACKMOUSEEVENT(_w, _iHot >= 0 ? Api.TME_LEAVE : Api.TME_LEAVE | Api.TME_CANCEL);
-					_trackMouseEvent = Api.TrackMouseEvent(ref t) && _iHot >= 0;
-				}
+				if (_iHot >= 0 != _trackMouseEvent) _trackMouseEvent = Api.TrackMouseLeave(_w, _iHot >= 0) && _iHot >= 0;
 			}
 		}
 		int _iHot = -1, _iClick = -1;
@@ -810,22 +807,28 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 					RECT r = k.rcWindow;
 					int b = Border >= TBBorder.ThreeD ? k.cxWindowBorders : (_a.Count > 0 ? _BorderPadding() : Dpi.Scale(6, _dpi)); //make bigger if no buttons. Eg if auto-hide-at-screen-edge, border 1 is difficult to resize.
 					int bx = Math.Min(b, r.Width / 2), by = Math.Min(b, r.Height / 2);
+					if (bx == 0) bx = 1;
+					if (by == 0) by = 1;
 					//print.it(bx, by);
 					int x1 = r.left + bx, x2 = --r.right - bx, y1 = r.top + by, y2 = --r.bottom - by;
 					if (r.Width > bx * 8 && r.Height > by * 8) { //if toolbar isn't small, in corners allow to resize both width and height at the same time
-						if (x < x1) {
-							ht = y < y1 ? Api.HTTOPLEFT : (y > y2 ? Api.HTBOTTOMLEFT : Api.HTLEFT);
-						} else if (x > x2) {
-							ht = y < y1 ? Api.HTTOPRIGHT : (y > y2 ? Api.HTBOTTOMRIGHT : Api.HTRIGHT);
-						} else if (y < y1) {
-							ht = Api.HTTOP;
-						} else if (y > y2) {
-							ht = Api.HTBOTTOM;
-						} else return false;
+						if (x < x1) ht = y < y1 ? Api.HTTOPLEFT : (y > y2 ? Api.HTBOTTOMLEFT : Api.HTLEFT);
+						else if (x > x2) ht = y < y1 ? Api.HTTOPRIGHT : (y > y2 ? Api.HTBOTTOMRIGHT : Api.HTRIGHT);
+						else if (y < y1) ht = Api.HTTOP;
+						else if (y > y2) ht = Api.HTBOTTOM;
+						else return false;
 					} else if (r.Width >= r.Height) { //in corners prefer width
-						if (x < x1) ht = Api.HTLEFT; else if (x > x2) ht = Api.HTRIGHT; else if (y < y1) ht = Api.HTTOP; else if (y > y2) ht = Api.HTBOTTOM; else return false;
+						if (x < x1) ht = Api.HTLEFT;
+						else if (x > x2) ht = Api.HTRIGHT;
+						else if (y < y1) ht = Api.HTTOP;
+						else if (y > y2) ht = Api.HTBOTTOM;
+						else return false;
 					} else { //in corners prefer height
-						if (y < y1) ht = Api.HTTOP; else if (y > y2) ht = Api.HTBOTTOM; else if (x < x1) ht = Api.HTLEFT; else if (x > x2) ht = Api.HTRIGHT; else return false;
+						if (y < y1) ht = Api.HTTOP;
+						else if (y > y2) ht = Api.HTBOTTOM;
+						else if (x < x1) ht = Api.HTLEFT;
+						else if (x > x2) ht = Api.HTRIGHT;
+						else return false;
 					}
 				} else { //disable resizing if border is natively sizable
 					if (Border < TBBorder.Thick) return false;

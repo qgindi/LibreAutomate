@@ -82,7 +82,7 @@ partial class TriggersAndToolbars {
 
 		if (!w.ShowAndWait(App.Wmain)) return;
 
-		int ia = lbAction.SelectedIndex; if (iType != 2) ia += 4;
+		int ia = lbAction.SelectedIndex; if (iType != 2) ia += 5;
 		var sAction = aa[ia];
 		if (iType == 2) sAction = sAction.Replace("multiline replacement", "\r\n\r\n");
 		string s = null;

@@ -396,6 +396,7 @@ namespace Au.Controls {
 				if (CloseHides) { _w.ShowL(false); return 0; }
 				break;
 			case Api.WM_DPICHANGED:
+				if (!_inSizeMove) *(RECT*)lParam = _w.Rect; //prevent changing rect, it's already calculated for the DPI
 				_hs.DpiChangedWorkaround();
 				break;
 			case Api.WM_TIMER when wParam == c_ccTimer:

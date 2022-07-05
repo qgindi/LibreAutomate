@@ -33,7 +33,7 @@ partial class FilesModel
 			App.Commands[nameof(Menus.File.CopyPaste.MultiSelect_files)].Checked = multi;
 		}
 
-		private void _ItemActivated(object sender, TVItemEventArgs e) {
+		private void _ItemActivated(TVItemEventArgs e) {
 			var f = e.Item as FileNode;
 			if (f.IsFolder) return;
 			var m = App.Model;
@@ -41,10 +41,10 @@ partial class FilesModel
 			else m._SetCurrentFile(f, focusEditor: e.ClickCount switch { 1 => null, 2 => true, _ => false });
 		}
 
-		private void _ItemClick(object sender, TVItemEventArgs e) {
-			if (e.ModifierKeys != 0) return;
+		private void _ItemClick(TVItemEventArgs e) {
+			if (e.Mod != 0) return;
 			var f = e.Item as FileNode;
-			switch (e.MouseButton) {
+			switch (e.Button) {
 			case MouseButton.Right:
 				Dispatcher.InvokeAsync(() => App.Model._ItemRightClicked(f));
 				break;
@@ -77,8 +77,8 @@ partial class FilesModel
 
 		#region drag-drop
 
-		private void _ItemDragStart(object sender, TVItemEventArgs e) {
-			if (e.MouseButton != MouseButton.Left) return;
+		private void _ItemDragStart(TVItemEventArgs e) {
+			if (e.Button != MouseButton.Left) return;
 			//if(e.Item.IsFolder && e.Item.IsExpanded) Expand(e.Index, false);
 			var a = IsSelected(e.Index) ? SelectedItems : new FileNode[] { e.Item as FileNode };
 			DragDropFiles = a;

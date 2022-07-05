@@ -117,7 +117,7 @@ class CiPopupList
 	//	//m[""] = o => ;
 	//}
 
-	private void _tv_ItemActivated(object sender, TVItemEventArgs e) {
+	private void _tv_ItemActivated(TVItemEventArgs e) {
 		_compl.Commit(_doc, _av[e.Index]);
 		Hide();
 	}
