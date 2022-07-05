@@ -347,6 +347,16 @@ namespace Au.Types
 	}
 
 	/// <summary>
+	/// Used with <see cref="toolbar.Metrics"/> and <see cref="toolbar.DefaultMetrics"/>.
+	/// </summary>
+	/// <param name="ButtonPaddingX">Button padding left and right.</param>
+	/// <param name="ButtonPaddingY">Button padding top and bottom.</param>
+	/// <remarks>
+	/// All values are in logical pixels (1 pixel when DPI is 100%).
+	/// </remarks>
+	public record TBMetrics(int ButtonPaddingX = 0, int ButtonPaddingY = 0);
+
+	/// <summary>
 	/// Used with <see cref="toolbar.Show(wnd, ITBOwnerObject)"/>.
 	/// </summary>
 	/// <remarks>

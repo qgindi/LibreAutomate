@@ -77,7 +77,7 @@ Can be Pack.Icon, like Modern.List.")
 
 		//rejected: double-clicking an icon clicks the last clicked button. Unclear and not so useful.
 		//_Action lastAction = 0;
-		tv.ItemActivated += (o, e) => {
+		tv.ItemActivated += e => {
 			//	switch (lastAction) {
 			//	case 0: break;
 			//	case _Action.FileIcon: _SetIcon(tv); break;

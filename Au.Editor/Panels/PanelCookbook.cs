@@ -40,8 +40,8 @@ class PanelCookbook : UserControl {
 		b.End();
 
 #if DEBUG
-		_tv.ItemClick += (_, e) => {
-			if (e.MouseButton == MouseButton.Right) {
+		_tv.ItemClick += e => {
+			if (e.Button == MouseButton.Right) {
 				var m = new popupMenu();
 				m.Add("DEBUG", disable: true);
 				m["Reload"] = o => {
@@ -61,7 +61,7 @@ class PanelCookbook : UserControl {
 		if (!_loaded && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
 			_loaded = true;
 			_Load();
-			_tv.ItemActivated += (_, e) => _OpenRecipe(e.Item as _Item, false);
+			_tv.ItemActivated += e => _OpenRecipe(e.Item as _Item, false);
 		}
 		base.OnPropertyChanged(e);
 	}

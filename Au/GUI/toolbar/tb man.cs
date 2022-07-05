@@ -145,8 +145,8 @@ public partial class toolbar {
 	static _TBManager _Manager => t_man ??= new();
 
 	class _TBManager {
-		internal readonly List<toolbar> _atb = new List<toolbar>();
-		readonly List<_OwnerWindow> _aow = new List<_OwnerWindow>();
+		internal readonly List<toolbar> _atb = new();
+		readonly List<_OwnerWindow> _aow = new();
 		timer _timer;
 		int _timerPeriod;
 		WinEventHook _hook;
@@ -180,6 +180,7 @@ public partial class toolbar {
 			if (isOwned) {
 				_SetTimer(250);
 			} else {
+				//print.it(tb.Name, tb.Hwnd);//TODO
 				if (!_timer.IsRunning) _SetTimer(250);
 				tb._FollowRect();
 				//tb._Zorder();
@@ -568,6 +569,9 @@ public partial class toolbar {
 
 	unsafe void _WmDpiChanged(nint wParam, nint lParam) {
 		if (_os != null) {
+			//print.it(Environment.StackTrace);//TODO
+			//if(Name=="Toolbar_Test") print.it("_WmDpiChanged", _os.Screen.Dpi, Math2.NintToPOINT(wParam), *(RECT*)lParam);//TODO
+			//print.it("_WmDpiChanged", _os.Screen.Dpi, Math2.NintToPOINT(wParam), *(RECT*)lParam);//TODO
 			if (!_SetDpi()) return;
 			_Images(true);
 			//print.it("WM_DPICHANGED", _w.Rect);
@@ -583,7 +587,10 @@ public partial class toolbar {
 
 	void _WmDisplayChange() {
 		if (_os != null) {
+			//if(Name=="Toolbar_Test") print.it("_WmDisplayChange");
+			//print.it("_WmDisplayChange");//TODO
 			timer.after(200, _ => {
+				//print.it("_WmDisplayChange after 200ms");//TODO
 				if (_os == null || _closed) return;
 				_os.UpdateRect(out bool changed);
 				if (changed) _FollowRect();
@@ -610,3 +617,6 @@ public partial class toolbar {
 		}
 	}
 }
+
+//TODO: now toolbars are lost too often.
+//	Eg after removing autohide.

@@ -27,10 +27,10 @@ class PanelOpen : DockPanel
 		}
 	}
 
-	private void _tv_ItemClick(object sender, TVItemEventArgs e) {
-		if (e.ModifierKeys != 0 || e.ClickCount != 1) return;
+	private void _tv_ItemClick(TVItemEventArgs e) {
+		if (e.Mod != 0 || e.ClickCount != 1) return;
 		var f = (e.Item as _Item).f;
-		switch (e.MouseButton) {
+		switch (e.Button) {
 		case MouseButton.Left:
 			App.Model.SetCurrentFile(f);
 			break;

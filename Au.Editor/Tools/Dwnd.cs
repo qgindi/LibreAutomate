@@ -459,7 +459,7 @@ class Dwnd : KDialogWindow {
 
 	void _InitTree() {
 		_tree.SingleClickActivate = true;
-		_tree.ItemActivated += (_, e) => {
+		_tree.ItemActivated += e => {
 			var x = e.Item as _TreeItem;
 			_con = x.c == _wnd ? default : x.c;
 			if (!_FillProperties(false)) return;

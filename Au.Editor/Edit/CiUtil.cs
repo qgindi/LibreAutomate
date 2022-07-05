@@ -158,6 +158,7 @@ static class CiUtil {
 	public static string GetSymbolHelpUrl(ISymbol sym) {
 		//print.it(sym);
 		//print.it(sym.IsInSource(), sym.IsFromSource());
+		if (sym is IParameterSymbol or ITypeParameterSymbol) return null;
 		string query;
 		IModuleSymbol metadata = null;
 		foreach (var loc in sym.Locations) {
@@ -166,6 +167,7 @@ static class CiUtil {
 		if (metadata != null) {
 			bool au = metadata.Name == "Au.dll";
 			if (au && sym.IsEnumMember()) sym = sym.ContainingType;
+			//print.it(sym, sym.GetType(), sym.GetType().GetInterfaces());
 			if (sym is INamedTypeSymbol nt && nt.IsGenericType) {
 				var qn = sym.QualifiedName(noDirectName: true);
 				if (au) query = qn + "." + sym.MetadataName.Replace('`', '-');

@@ -929,7 +929,7 @@ class Delm : KDialogWindow {
 
 	void _InitTree() {
 		_tree.SingleClickActivate = true;
-		_tree.ItemActivated += (o, e) => {
+		_tree.ItemActivated += e => {
 			var ti = e.Item as _TreeItem;
 			_elm = ti.e;
 			//_screenshot = null;
@@ -941,8 +941,8 @@ class Delm : KDialogWindow {
 			TUtil.ShowOsdRect(_RunElmTask(1000, _elm, e => e.Rect));
 		};
 
-		_tree.ItemClick += (_, e) => {
-			if (e.MouseButton == MouseButton.Right) {
+		_tree.ItemClick += e => {
+			if (e.Button == MouseButton.Right) {
 				var ti = e.Item as _TreeItem;
 				var m = new popupMenu();
 				m["Navigate to this from the selected"] = _ => _NavigateTo(ti);

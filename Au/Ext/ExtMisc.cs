@@ -756,11 +756,16 @@ public static unsafe partial class ExtMisc {
 		if (r.NoArea) return;
 		//pen.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width.
 		//	MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
+		var r0 = r;
 		int w = (int)pen.Width, d = w / 2;
 		r.left += d; r.top += d;
 		r.right -= d = w - d; r.bottom -= d;
 		if (outset) r.Inflate(w, w);
-		t.DrawRectangle(pen, r);
+		if (!r.NoArea) {
+			t.DrawRectangle(pen, r);
+		} else { //DrawRectangle does not draw if width or height 0, even if pen alignment is Outset
+			t.FillRectangle(pen.Brush, r0); //never mind dash style etc
+		}
 	}
 
 	/// <summary>

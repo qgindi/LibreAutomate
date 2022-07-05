@@ -906,6 +906,16 @@ static unsafe partial class Api {
 	[DllImport("comctl32.dll", EntryPoint = "_TrackMouseEvent")]
 	internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
 
+	/// <summary>
+	/// Calls <b>TrackMouseEvent</b> with <b>TME_LEAVE</b>.
+	/// </summary>
+	/// <param name="w"></param>
+	/// <param name="track">true to start, false to cancel.</param>
+	internal static bool TrackMouseLeave(wnd w, bool track) {
+		var t = new TRACKMOUSEEVENT(w, track ? TME_LEAVE : TME_LEAVE | TME_CANCEL);
+		return TrackMouseEvent(ref t);
+	}
+
 	[DllImport("comctl32.dll", EntryPoint = "#380", PreserveSig = true)]
 	internal static extern int LoadIconMetric(IntPtr hinst, nint pszName, int lims, out IntPtr phico);
 
@@ -1239,7 +1249,15 @@ static unsafe partial class Api {
 	#region uxtheme
 
 	[DllImport("uxtheme.dll")]
-	internal static extern IntPtr OpenThemeData(wnd hwnd, string pszClassList);
+	static extern IntPtr OpenThemeData(wnd hwnd, string pszClassList);
+
+	[DllImport("uxtheme.dll")]
+	static extern IntPtr OpenThemeDataForDpi(wnd hwnd, string pszClassList, int dpi);
+
+	internal static IntPtr OpenThemeData(wnd hwnd, string classList, int dpi) {
+		if (osVersion.minWin10_1703) return OpenThemeDataForDpi(hwnd, classList, dpi);
+		return OpenThemeData(hwnd, classList); //never mind: bad on Win8.1 non-primary screen with different DPI than primary if hwnd==0
+	}
 
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int CloseThemeData(IntPtr hTheme);

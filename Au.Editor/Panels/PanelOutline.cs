@@ -17,7 +17,7 @@ class PanelOutline : DockPanel
 		//this.UiaSetName("Outline panel");
 
 		_tv = new KTreeView { Name = "Outline_list", SingleClickActivate = true, HotTrack = true };
-		_tv.ItemClick += (_, e) => { if (e.MouseButton == System.Windows.Input.MouseButton.Right) _ContextMenu(); };
+		_tv.ItemClick += e => { if (e.Button == System.Windows.Input.MouseButton.Right) _ContextMenu(); };
 		_tv.ContextMenuOpening += (_, _) => _ContextMenu(); //right-click in empty space
 		this.Children.Add(_tv);
 	}
@@ -127,7 +127,7 @@ class PanelOutline : DockPanel
 
 		if (!_once) {
 			_once = true;
-			_tv.ItemActivated += (_, e) => {
+			_tv.ItemActivated += e => {
 				_activeDoc.Focus();
 				var v = e.Item as _Item;
 				_activeDoc.zGoToPos(true, v._pos);

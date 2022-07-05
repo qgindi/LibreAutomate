@@ -174,7 +174,7 @@ namespace Au.Controls
 
 				var graphics = System.Drawing.Graphics.FromHdc(dc);
 				var tr = new GdiTextRenderer(dc, _dpi);
-				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button") : default;
+				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button", _dpi) : default;
 				try {
 					graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != Api.GetThemePartSize(checkTheme, dc, 3, 1, null, Api.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = More.Dpi.Scale(13, _dpi);

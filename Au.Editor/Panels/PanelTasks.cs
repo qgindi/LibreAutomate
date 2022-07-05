@@ -23,11 +23,11 @@ class PanelTasks : DockPanel
 		}
 	}
 
-	private void _tv_ItemClick(object sender, TVItemEventArgs e) {
-		if (e.ModifierKeys != 0 || e.ClickCount != 1) return;
+	private void _tv_ItemClick(TVItemEventArgs e) {
+		if (e.Mod != 0 || e.ClickCount != 1) return;
 		var t = e.Item as RunningTask;
 		var f = t.f;
-		switch (e.MouseButton) {
+		switch (e.Button) {
 		case MouseButton.Left:
 			App.Model.SetCurrentFile(f);
 			break;
