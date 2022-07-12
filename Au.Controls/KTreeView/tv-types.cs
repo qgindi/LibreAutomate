@@ -156,7 +156,7 @@ public struct TVHitTest {
 /// <param name="ClickCount">1 click, 2 double-click, 0 key or acc.</param>
 /// <param name="XY">Valid if clicked with mouse.</param>
 /// <param name="Mod"></param>
-public record TVItemEventArgs(ITreeViewItem Item, int Index, TVParts Part = 0, MouseButton Button = 0, int ClickCount = 0, POINT XY = default, ModifierKeys Mod = 0);
+public record class TVItemEventArgs(ITreeViewItem Item, int Index, TVParts Part = 0, MouseButton Button = 0, int ClickCount = 0, POINT XY = default, ModifierKeys Mod = 0);
 
 /// <summary>
 /// Custom-draw interface used with <see cref="KTreeView.CustomDraw"/>.

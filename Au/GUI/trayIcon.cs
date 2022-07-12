@@ -200,7 +200,7 @@
 			if (!_Update(n: new(title, text, flags, icon))) print.warning("ShowNotification() failed. " + lastError.message);
 		}
 
-		record _Notification(string title, string text, TINFlags flags, icon icon);
+		record class _Notification(string title, string text, TINFlags flags, icon icon);
 
 		/// <summary>
 		/// Hides notification.

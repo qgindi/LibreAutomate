@@ -899,7 +899,7 @@ void _WmDeclTextToCode() {
 			return new _SubclassCookie(w, sp);
 		}
 		[ThreadStatic] static List<Api.SUBCLASSPROC> t_asp; //GC
-		record _SubclassCookie(wnd w, Api.SUBCLASSPROC sp);
+		record class _SubclassCookie(wnd w, Api.SUBCLASSPROC sp);
 
 		/// <summary>
 		/// Unsubclasses window subclassed by <see cref="Subclass"/>.

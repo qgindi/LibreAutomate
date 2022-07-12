@@ -909,7 +909,7 @@ public class TASimpleReplace {
 /// <param name="Label">Menu item label. If null, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
 /// <param name="Text">The replacement text. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 /// <param name="Html">The replacement HTML. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
-public record TAMenuItem(string Label, string Text, string Html = null) {
+public record class TAMenuItem(string Label, string Text, string Html = null) {
 	/// <summary>
 	/// Creates <b>TAMenuItem</b> with only <b>Text</b>.
 	/// </summary>
