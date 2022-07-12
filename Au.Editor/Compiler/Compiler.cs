@@ -312,7 +312,7 @@ static partial class Compiler {
 
 			if (m.Role == ERole.classLibrary) MetaReferences.UncacheOldFiles();
 
-			if (notInCache) print.it($"<>Output folder: <link>{m.OutputPath}<>");
+			if (notInCache) print.it($"<>{f.SciLink()} output folder: <link>{m.OutputPath}<>");
 		}
 
 		r.name = m.Name;

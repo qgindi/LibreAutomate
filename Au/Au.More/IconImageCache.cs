@@ -11,7 +11,7 @@ namespace Au.More
 	/// </remarks>
 	public sealed class IconImageCache : IDisposable
 	{
-		record _DpiImages
+		record class _DpiImages
 		{
 			public readonly int dpi;
 			public readonly string table;

@@ -338,7 +338,7 @@ namespace Au.Types {
 	/// <remarks>
 	/// All values are in logical pixels (1 pixel when DPI is 100%).
 	/// </remarks>
-	public record TBMetrics(int ButtonPaddingX = 0, int ButtonPaddingY = 0);
+	public record class TBMetrics(int ButtonPaddingX = 0, int ButtonPaddingY = 0);
 
 	/// <summary>
 	/// Used with <see cref="toolbar.Show(wnd, ITBOwnerObject)"/>.
