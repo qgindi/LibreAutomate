@@ -18,170 +18,169 @@
 //	Tested: renaming a captionless toolwindow every 1-2 ms in loop:
 //		CPU usage with no winevent hooks is 4%. With 1 hook - 7%. With 10 hooks in different processes - 7%.
 
-namespace Au.Triggers
+namespace Au.Triggers;
+
+/// <summary>
+/// Thread containing low-level keyboard and mouse hooks.
+/// </summary>
+class HooksThread : IDisposable
 {
-	/// <summary>
-	/// Thread containing low-level keyboard and mouse hooks.
-	/// </summary>
-	class HooksThread : IDisposable
+	[Flags]
+	public enum UsedEvents
 	{
-		[Flags]
-		public enum UsedEvents
-		{
-			Keyboard = 1, //Hotkey and Autotext triggers
-			Mouse = 2, //Mouse and Autotext triggers. Just sets the hook and resets autotext; to receive events, also add other MouseX flags.
-			MouseClick = 0x10, //Mouse click triggers
-			MouseWheel = 0x20, //Mouse wheel triggers
-			MouseEdgeMove = 0x40, //Mouse edge and move triggers
+		Keyboard = 1, //Hotkey and Autotext triggers
+		Mouse = 2, //Mouse and Autotext triggers. Just sets the hook and resets autotext; to receive events, also add other MouseX flags.
+		MouseClick = 0x10, //Mouse click triggers
+		MouseWheel = 0x20, //Mouse wheel triggers
+		MouseEdgeMove = 0x40, //Mouse edge and move triggers
+	}
+
+	int _tid;
+	UsedEvents _usedEvents;
+	wnd _wMsg;
+	MouseTriggers.EdgeMoveDetector_ _emDetector;
+	Handle_ _eventStartStop = Api.CreateEvent(false);
+
+	public HooksThread(UsedEvents usedEvents, wnd wMsg) {
+		_usedEvents = usedEvents;
+		_wMsg = wMsg;
+		run.thread(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
+		Api.WaitForSingleObject(_eventStartStop, -1);
+	}
+
+	public void Dispose() {
+		Api.PostThreadMessage(_tid, Api.WM_QUIT, 0, 0);
+		Api.WaitForSingleObject(_eventStartStop, -1);
+		_eventStartStop.Dispose();
+		_eventSendData.Dispose();
+	}
+
+	void _Thread() {
+		_tid = Api.GetCurrentThreadId();
+
+		WindowsHook hookK = null, hookM = null;
+		if (_usedEvents.Has(UsedEvents.Keyboard)) {
+			hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: if lambda, very slow JIT on first hook event
 		}
-
-		int _tid;
-		UsedEvents _usedEvents;
-		wnd _wMsg;
-		MouseTriggers.EdgeMoveDetector_ _emDetector;
-		Handle_ _eventStartStop = Api.CreateEvent(false);
-
-		public HooksThread(UsedEvents usedEvents, wnd wMsg) {
-			_usedEvents = usedEvents;
-			_wMsg = wMsg;
-			run.thread(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
-			Api.WaitForSingleObject(_eventStartStop, -1);
+		if (_usedEvents.Has(UsedEvents.Mouse)) {
+			hookM = WindowsHook.MouseRaw_(_MouseHookProc);
 		}
-
-		public void Dispose() {
-			Api.PostThreadMessage(_tid, Api.WM_QUIT, 0, 0);
-			Api.WaitForSingleObject(_eventStartStop, -1);
-			_eventStartStop.Dispose();
-			_eventSendData.Dispose();
+		if (_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
+			_emDetector = new MouseTriggers.EdgeMoveDetector_();
 		}
+		//tested: don't need JIT-compiling.
 
-		void _Thread() {
-			_tid = Api.GetCurrentThreadId();
+		nint idTimer = (hookK != null || hookM != null) ? Api.SetTimer(default, 0, 10_000, null) : 0;
 
-			WindowsHook hookK = null, hookM = null;
-			if (_usedEvents.Has(UsedEvents.Keyboard)) {
-				hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: if lambda, very slow JIT on first hook event
+		Api.SetEvent(_eventStartStop);
+
+		while (Api.GetMessage(out var m) > 0) {
+			if (m.message == Api.WM_TIMER && m.wParam == idTimer) {
+				if (Debugger.IsAttached) continue;
+				hookK?.Restore();
+				hookM?.Restore();
+				continue;
 			}
-			if (_usedEvents.Has(UsedEvents.Mouse)) {
-				hookM = WindowsHook.MouseRaw_(_MouseHookProc);
-			}
+			Api.DispatchMessage(m);
+		}
+
+		//print.it("hooks thread ended");
+		hookK?.Dispose();
+		hookM?.Dispose();
+		_emDetector = null;
+		Api.SetEvent(_eventStartStop);
+	}
+
+	unsafe void _KeyboardHookProc(HookData.Keyboard k) {
+		_keyData = *k.NativeStructPtr_;
+		if (_Send(UsedEvents.Keyboard)) k.BlockEvent();
+	}
+
+	unsafe bool _MouseHookProc(nint wParam, nint lParam) {
+		int msg = (int)wParam;
+		if (msg == Api.WM_MOUSEMOVE) {
 			if (_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
-				_emDetector = new MouseTriggers.EdgeMoveDetector_();
-			}
-			//tested: don't need JIT-compiling.
-
-			nint idTimer = (hookK != null || hookM != null) ? Api.SetTimer(default, 0, 10_000, null) : 0;
-
-			Api.SetEvent(_eventStartStop);
-
-			while (Api.GetMessage(out var m) > 0) {
-				if (m.message == Api.WM_TIMER && m.wParam == idTimer) {
-					if (Debugger.IsAttached) continue;
-					hookK?.Restore();
-					hookM?.Restore();
-					continue;
-				}
-				Api.DispatchMessage(m);
-			}
-
-			//print.it("hooks thread ended");
-			hookK?.Dispose();
-			hookM?.Dispose();
-			_emDetector = null;
-			Api.SetEvent(_eventStartStop);
-		}
-
-		unsafe void _KeyboardHookProc(HookData.Keyboard k) {
-			_keyData = *k.NativeStructPtr_;
-			if (_Send(UsedEvents.Keyboard)) k.BlockEvent();
-		}
-
-		unsafe bool _MouseHookProc(nint wParam, nint lParam) {
-			int msg = (int)wParam;
-			if (msg == Api.WM_MOUSEMOVE) {
-				if (_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
-					var mll = (Api.MSLLHOOKSTRUCT*)lParam;
-					if (_emDetector.Detect(mll->pt)) {
-						_emData = _emDetector.result;
-						_Send(UsedEvents.MouseEdgeMove);
-					}
-				}
-			} else {
-				bool wheel = msg is Api.WM_MOUSEWHEEL or Api.WM_MOUSEHWHEEL;
-				if ((_usedEvents.Has(UsedEvents.MouseWheel) && wheel) || (_usedEvents.Has(UsedEvents.MouseClick) && !wheel)) {
-					_mouseMessage = (int)wParam;
-					_mouseData = *(Api.MSLLHOOKSTRUCT*)lParam;
-					return _Send(wheel ? UsedEvents.MouseWheel : UsedEvents.MouseClick);
+				var mll = (Api.MSLLHOOKSTRUCT*)lParam;
+				if (_emDetector.Detect(mll->pt)) {
+					_emData = _emDetector.result;
+					_Send(UsedEvents.MouseEdgeMove);
 				}
 			}
-			return false;
-		}
-
-		/// <summary>
-		/// Sends key/mouse event data (copied to _keyData etc) to the main thread.
-		/// Returns true to eat (block, discard) the event.
-		/// On 1100 ms timeout returns false.
-		/// </summary>
-		bool _Send(UsedEvents eventType) {
-			//using var p1 = perf.local();
-			bool ok=_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
-			bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
-			lock (this) {
-				if (timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
-				_messageId++;
-				return _eat && !timeout;
+		} else {
+			bool wheel = msg is Api.WM_MOUSEWHEEL or Api.WM_MOUSEHWHEEL;
+			if ((_usedEvents.Has(UsedEvents.MouseWheel) && wheel) || (_usedEvents.Has(UsedEvents.MouseClick) && !wheel)) {
+				_mouseMessage = (int)wParam;
+				_mouseData = *(Api.MSLLHOOKSTRUCT*)lParam;
+				return _Send(wheel ? UsedEvents.MouseWheel : UsedEvents.MouseClick);
 			}
-			//info: HookWin._HookProcLL will print warning if > LowLevelHooksTimeout-50. Max LowLevelHooksTimeout is 1000.
 		}
+		return false;
+	}
 
-		//fields for passing key/mouse event data to the main thread and getting its return value
-		Handle_ _eventSendData = Api.CreateEvent(false); //sync
-		int _messageId; //sync
-		bool _eat; //return value
-		Api.KBDLLHOOKSTRUCT _keyData;
-		Api.MSLLHOOKSTRUCT _mouseData;
-		int _mouseMessage;
-		MouseTriggers.EdgeMoveDetector_.Result _emData;
-
-		/// <summary>
-		/// Called by the main thread to resume the hooks thread (_Send) and pass the return value (eat).
-		/// Returns false on timeout.
-		/// </summary>
-		public bool Return(int messageId, bool eat) {
-			lock (this) {
-				if (messageId != _messageId) return false;
-				_eat = eat;
-				Api.SetEvent(_eventSendData);
-			}
-			return true;
+	/// <summary>
+	/// Sends key/mouse event data (copied to _keyData etc) to the main thread.
+	/// Returns true to eat (block, discard) the event.
+	/// On 1100 ms timeout returns false.
+	/// </summary>
+	bool _Send(UsedEvents eventType) {
+		//using var p1 = perf.local();
+		bool ok=_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
+		bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
+		lock (this) {
+			if (timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
+			_messageId++;
+			return _eat && !timeout;
 		}
+		//info: HookWin._HookProcLL will print warning if > LowLevelHooksTimeout-50. Max LowLevelHooksTimeout is 1000.
+	}
 
-		/// <summary>
-		/// Called by the main thread to get key event data sent by _Send.
-		/// Returns false on timeout.
-		/// </summary>
-		public bool GetKeyData(int messageId, out Api.KBDLLHOOKSTRUCT data) {
-			data = _keyData;
-			return messageId == _messageId;
-		}
+	//fields for passing key/mouse event data to the main thread and getting its return value
+	Handle_ _eventSendData = Api.CreateEvent(false); //sync
+	int _messageId; //sync
+	bool _eat; //return value
+	Api.KBDLLHOOKSTRUCT _keyData;
+	Api.MSLLHOOKSTRUCT _mouseData;
+	int _mouseMessage;
+	MouseTriggers.EdgeMoveDetector_.Result _emData;
 
-		/// <summary>
-		/// Called by the main thread to get mouse click/wheel event data sent by _Send.
-		/// Returns false on timeout.
-		/// </summary>
-		public bool GetClickWheelData(int messageId, out Api.MSLLHOOKSTRUCT data, out int message) {
-			data = _mouseData;
-			message = _mouseMessage;
-			return messageId == _messageId;
+	/// <summary>
+	/// Called by the main thread to resume the hooks thread (_Send) and pass the return value (eat).
+	/// Returns false on timeout.
+	/// </summary>
+	public bool Return(int messageId, bool eat) {
+		lock (this) {
+			if (messageId != _messageId) return false;
+			_eat = eat;
+			Api.SetEvent(_eventSendData);
 		}
+		return true;
+	}
 
-		/// <summary>
-		/// Called by the main thread to get mouse edge/move event data sent by _Send.
-		/// Returns false on timeout.
-		/// </summary>
-		public bool GetEdgeMoveData(int messageId, out MouseTriggers.EdgeMoveDetector_.Result data) {
-			data = _emData;
-			return messageId == _messageId;
-		}
+	/// <summary>
+	/// Called by the main thread to get key event data sent by _Send.
+	/// Returns false on timeout.
+	/// </summary>
+	public bool GetKeyData(int messageId, out Api.KBDLLHOOKSTRUCT data) {
+		data = _keyData;
+		return messageId == _messageId;
+	}
+
+	/// <summary>
+	/// Called by the main thread to get mouse click/wheel event data sent by _Send.
+	/// Returns false on timeout.
+	/// </summary>
+	public bool GetClickWheelData(int messageId, out Api.MSLLHOOKSTRUCT data, out int message) {
+		data = _mouseData;
+		message = _mouseMessage;
+		return messageId == _messageId;
+	}
+
+	/// <summary>
+	/// Called by the main thread to get mouse edge/move event data sent by _Send.
+	/// Returns false on timeout.
+	/// </summary>
+	public bool GetEdgeMoveData(int messageId, out MouseTriggers.EdgeMoveDetector_.Result data) {
+		data = _emData;
+		return messageId == _messageId;
 	}
 }

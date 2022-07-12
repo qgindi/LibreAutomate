@@ -294,7 +294,7 @@ struct DDData
 				else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
 				else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
 				else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
-				else if (getFileNodes && cf >= 0xC000 && clipboard.GetFormatName_(cf) == "FileNode[]") return scripts = true;
+				else if (getFileNodes && cf >= 0xC000 && ClipFormats.GetName(cf) == "FileNode[]") return scripts = true;
 			}
 			if (fHdrop.cfFormat != 0) files = _GetFiles(ref fHdrop);
 			else if (fShell.cfFormat != 0) shell = _GetBytes(ref fShell);

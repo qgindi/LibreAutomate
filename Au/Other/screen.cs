@@ -1,5 +1,4 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Represents a screen device. Gets its rectangle etc.
 	/// </summary>
@@ -13,8 +12,7 @@ namespace Au
 	/// 
 	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns a <b>screen</b> with fresh handle.
 	/// </remarks>
-	public struct screen : IEquatable<screen>
-	{
+	public struct screen : IEquatable<screen> {
 		readonly IntPtr _h;
 		readonly Func<screen> _func;
 
@@ -24,17 +22,17 @@ namespace Au
 		public screen(IntPtr handle) { _h = handle; _func = null; }
 
 		/// <summary>
-		/// Creates variable that calls your function to get screen when need.
+		/// Creates "lazy" variable that calls your function to get screen when need.
 		/// </summary>
 		public screen(Func<screen> f) { _h = default; _func = f; }
 
 		/// <summary>
-		/// Gets screen handle, aka HMONITOR. Returns default(IntPtr) if it wasn't set; see <see cref="Now"/>.
+		/// Gets the screen handle, aka HMONITOR. Returns default(IntPtr) if it wasn't set; see <see cref="Now"/>.
 		/// </summary>
 		public IntPtr Handle => _h;
 
 		/// <summary>
-		/// Gets callback function that gets screen when need. Returns null if it wasn't set.
+		/// Gets the callback function that returns screen when need. Returns null if it wasn't set.
 		/// </summary>
 		public Func<screen> LazyFunc => _func;
 
@@ -55,7 +53,7 @@ namespace Au
 		/// <remarks>
 		/// If this variable has <see cref="Handle"/>, returns its clone. Else if has <see cref="LazyFunc"/>, calls it. Else gets the primary screen.
 		/// </remarks>
-		public screen Now => new (_Handle());
+		public screen Now => new(_Handle());
 
 		/// <summary>
 		/// Gets the primary screen.
@@ -66,20 +64,26 @@ namespace Au
 		public static screen primary => new(Api.MonitorFromWindow(default, SODefault.Primary)); //fast
 
 		/// <summary>
-		/// Gets lazy <b>screen</b> variable that later will get the screen from the mouse cursor position at that time.
+		/// Returns a lazy <b>screen</b> variable that later will get the screen from the mouse cursor position at that time.
 		/// </summary>
 		/// <remarks>
-		/// If need non-lazy: <c>screen.of(mouse.xy)</c>.
+		/// If need non-lazy: <c>screen.of(mouse.xy)</c> or <c>screen.ofMouse.Now</c>.
 		/// </remarks>
-		public static screen ofMouse { get; } = new(() => of(mouse.xy));
+		public static screen ofMouse => new(s_ofMouse);
 
 		/// <summary>
-		/// Gets lazy <b>screen</b> variable that later will get the screen of the active window at that time.
+		/// Returns a lazy <b>screen</b> variable that later will get the screen of the active window at that time.
 		/// </summary>
 		/// <remarks>
-		/// If need non-lazy: <c>screen.of(wnd.active)</c>.
+		/// If need non-lazy: <c>screen.of(wnd.active)</c> or <c>screen.ofActiveWindow.Now</c>.
 		/// </remarks>
-		public static screen ofActiveWindow { get; } = new(() => of(wnd.active));
+		public static screen ofActiveWindow => new(s_ofActiveWindow);
+
+		static readonly Func<screen> s_ofMouse = () => of(mouse.xy);
+		static readonly Func<screen> s_ofActiveWindow = () => of(wnd.active);
+
+		internal bool IsOfMouse_ => ReferenceEquals(_func, s_ofMouse);
+		internal bool IsOfActiveWindow_ => ReferenceEquals(_func, s_ofActiveWindow);
 
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified window or nearest to it.
@@ -146,19 +150,11 @@ namespace Au
 		/// </summary>
 		/// <param name="p"></param>
 		/// <param name="defaultScreen"></param>
-		/// <remarks>
-		/// The returned variable has <see cref="Handle"/>. To create lazy variable (with <see cref="LazyFunc"/>), use constructor. Example: <c>new screen(() => screen.of(500, screen.primary.Rect.Height))</c>.
-		/// </remarks>
-		public static screen of(POINT p, SODefault defaultScreen = SODefault.Nearest)
-			=> new screen(Api.MonitorFromPoint(p, defaultScreen));
-
-		///// <summary>
-		///// Creates lazy <b>screen</b> variable that later will get screen containing a point or nearest to it.
-		///// </summary>
-		///// <param name="p">Function that returns point at that time. Example: <c>() => (500, screen.primary.Rect.Height)</c>.</param>
-		///// <param name="defaultScreen"></param>
-		//public static screen Of(Func<POINT> p, SODefault defaultScreen = SODefault.Nearest)
-		//	=> new screen(() => Of(p(), defaultScreen));
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		public static screen of(POINT p, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new screen(() => of(p, defaultScreen))
+			: new screen(Api.MonitorFromPoint(p, defaultScreen));
 
 		/// <summary>
 		/// Gets screen containing the specified point or nearest to it.
@@ -166,27 +162,64 @@ namespace Au
 		/// <param name="x"></param>
 		/// <param name="y"></param>
 		/// <param name="defaultScreen"></param>
-		public static screen of(int x, int y, SODefault defaultScreen = SODefault.Nearest)
-			=> of((x, y), defaultScreen);
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		public static screen of(int x, int y, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new screen(() => of(x, y, defaultScreen))
+			: of((x, y), defaultScreen);
 
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified rectangle or nearest to it.
 		/// </summary>
 		/// <param name="r"></param>
 		/// <param name="defaultScreen"></param>
-		/// <remarks>
-		/// The returned variable has <see cref="Handle"/>. To create lazy variable (with <see cref="LazyFunc"/>), use constructor. Example: <c>new screen(() => screen.of(new RECT(...)))</c>.
-		/// </remarks>
-		public static screen of(RECT r, SODefault defaultScreen = SODefault.Nearest)
-			=> new screen(Api.MonitorFromRect(r, defaultScreen));
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		public static screen of(RECT r, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new screen(() => of(r, defaultScreen))
+			: new screen(Api.MonitorFromRect(r, defaultScreen));
 
-		///// <summary>
-		///// Creates lazy <b>screen</b> variable that later will get screen containing the biggest part of a rectangle or nearest to it.
-		///// </summary>
-		///// <param name="r">Function that returns rectangle at that time.</param>
-		///// <param name="defaultScreen"></param>
-		//public static screen of(Func<RECT> r, SODefault defaultScreen = SODefault.Nearest)
-		//	=> new screen(() => of(r(), defaultScreen));
+		/// <summary>
+		/// Gets screens at various positions relative to the primary screen.
+		/// </summary>
+		public static class at {
+			/// <summary>Gets a screen nearest to the top edge of the primary screen.</summary>
+			public static screen top(bool lazy = false) => _S(0, -700, lazy);
+
+			/// <summary>Gets a screen nearest to the bottom edge of the primary screen.</summary>
+			public static screen bottom(bool lazy = false) => _S(0, 700, lazy);
+
+			/// <summary>Gets a screen nearest to the left edge of the primary screen.</summary>
+			public static screen left(bool lazy = false) => _S(-1000, 0, lazy);
+
+			/// <summary>Gets a screen nearest to the right edge of the primary screen.</summary>
+			public static screen right(bool lazy = false) => _S(1000, 0, lazy);
+
+			/// <summary>Gets a screen nearest to the top-left corner of the primary screen.</summary>
+			public static screen topLeft(bool lazy = false) => _S(-1000, -700, lazy);
+
+			/// <summary>Gets a screen nearest to the top-right corner of the primary screen.</summary>
+			public static screen topRight(bool lazy = false) => _S(1000, -700, lazy);
+
+			/// <summary>Gets a screen nearest to the bottom-left corner of the primary screen.</summary>
+			public static screen bottomLeft(bool lazy = false) => _S(-1000, 700, lazy);
+
+			/// <summary>Gets a screen nearest to the bottom-right corner of the primary screen.</summary>
+			public static screen bottomRight(bool lazy = false) => _S(1000, 700, lazy);
+		}
+
+		/// <summary>
+		/// Gets screen at (or nearest to) the specified offset from the primary screen (PS).
+		/// </summary>
+		/// <param name="dx">Horizontal offset. Negative is to the left from the left edge of PS. Positive is to the right from the right edge of PS. Zero is the horizontal center of PS.</param>
+		/// <param name="dy">Vertical offset. Negative is up from the top edge of PS. Positive is down from the bottom edge of PS. Zero is the vertical center of PS.</param>
+		/// <param name="lazy"></param>
+		static screen _S(int dx, int dy, bool lazy) {
+			var r = primary.Rect;
+			if (dx > 0) dx += r.right; else if (dx == 0) dx = r.CenterX;
+			if (dy > 0) dy += r.bottom; else if (dy == 0) dy = r.CenterY;
+			return of(dx, dy, lazy: lazy);
+		}
 
 		/// <summary>
 		/// Gets all screens.
@@ -377,13 +410,11 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Used with <see cref="screen.of"/> to specify what screen to return if the window/point/etc is not in a screen or if the window handle is invalid etc.
 	/// </summary>
-	public enum SODefault
-	{
+	public enum SODefault {
 		/// <summary>Create empty variable.</summary>
 		Zero, //MONITOR_DEFAULTTONULL
 

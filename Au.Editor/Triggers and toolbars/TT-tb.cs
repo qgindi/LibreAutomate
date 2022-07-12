@@ -34,7 +34,7 @@ partial class TriggersAndToolbars {
 
 	void _NewToolbar() {
 		var w = new KDialogWindow { Title = "New toolbar" };
-		var b = new wpfBuilder(w).WinSize(400).Columns(50, -1);
+		var b = new wpfBuilder(w).WinSize(450).Columns(50, -1);
 		b.WinProperties(WindowStartupLocation.CenterOwner, ResizeMode.NoResize, showInTaskbar: false);
 
 		b.R.Add("Name", out TextBox tName, "Toolbar_").Focus()
@@ -50,10 +50,10 @@ partial class TriggersAndToolbars {
 
 		b.R.Add("Code", out ComboBox cbTrigger).Items("Window trigger, attach to window|Window trigger, attach, auto-hide at screen edge|Show at startup, auto-hide at screen edge|Mouse trigger, auto-hide at screen edge|No trigger");
 		b.R.Skip().Add(out KCheckBox cLaterName, "Show/hide whenever window name changes");
-		b.R.StartGrid().Columns(50, -1.1, 20, 0, -1).Hidden(null)
+		b.R.StartGrid().Columns(50, -1, 20, 0, -1).Hidden(null)
 			.R.Add("Edge", out ComboBox cbEdge).Items(typeof(TMEdge).GetEnumNames()).Select(1)
 			.Skip();
-		var cbScreen = _TriggerScreenComboBox(b);
+		var cbScreen = _ScreenComboBoxInit(b);
 		b.End();
 		var pScreen = b.Last;
 		cbTrigger.SelectionChanged += (_, _) => {
@@ -84,10 +84,11 @@ partial class TriggersAndToolbars {
 		
 """;
 		} else if (iTrigger is 1 or 2) { //window+screen or screen
+			string sScreen = _ScreenComboBoxResult(cbScreen, false) ?? "default";
 			sAutoHide = $$"""
 		
 		//auto-hide at the specified screen edge. Above is the auto-hide part. Below is the always-visible part.
-		t = t.AutoHideScreenEdge(TMEdge.{{cbEdge.SelectedItem}}, TMScreen.{{cbScreen.SelectedItem}}, 5, ^5, 2);
+		t = t.AutoHideScreenEdge(TMEdge.{{cbEdge.SelectedItem}}, {{sScreen}}, 5, ^5, 2);
 		t.BorderColor = System.Drawing.Color.Orange;
 		//if (t.FirstTime) {
 			
@@ -182,7 +183,7 @@ partial class Program {
 			} else if (iTrigger == 2) { //startup
 				_AddTriggerStartup(t);
 			} else { //mouse
-				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen.SelectedItem as string);
+				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen);
 			}
 			_Update();
 			if (!_StillExists(ref t)) return;
@@ -231,7 +232,7 @@ partial class Program {
 		if (iTrigger == 2) {
 			b.R.Add("Screen edge", out cbEdge).Items(typeof(TMEdge).GetEnumNames()).Select(1)
 				.And(170).StartGrid();
-			cbScreen = _TriggerScreenComboBox(b);
+			cbScreen = _ScreenComboBoxInit(b);
 			b.End();
 		}
 		//b.R.Add(out KCheckBox cRestart, "Restart TT script").Checked(); //rejected
@@ -261,7 +262,7 @@ partial class Program {
 			} else if (iTrigger == 1) {
 				_AddTriggerStartup(t, pos);
 			} else if (iTrigger == 2) {
-				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen.SelectedItem as string, pos);
+				_AddTriggerMouse(t, cbEdge.SelectedItem as string, cbScreen, pos);
 			}
 		}
 	}
@@ -314,9 +315,10 @@ Please edit window name strings in the toolbar trigger code.
 		_AddTrigger(t, $"{t.Name}();", pos);
 	}
 
-	void _AddTriggerMouse(_Toolbar t, string edge, string screen, int pos = -1) {
-		if (!screen.Starts('(')) screen = "TMScreen." + screen;
-		_AddTrigger(t, $"Triggers.Mouse[TMEdge.{edge}, screen: {screen}] = {t.Name};", pos);
+	void _AddTriggerMouse(_Toolbar t, string edge, ComboBox cbScreen, int pos = -1) {
+		string s = _ScreenComboBoxResult(cbScreen, true);
+		if (s != null) s = ", screen: " + s;
+		_AddTrigger(t, $"Triggers.Mouse[TMEdge.{edge}{s}] = {t.Name};", pos);
 	}
 
 	void _AddTrigger(_Toolbar t, string s, int pos) {
@@ -343,21 +345,42 @@ Please edit window name strings in the toolbar trigger code.
 	//	return true;
 	//}
 
-	static ComboBox _TriggerScreenComboBox(wpfBuilder b) {
+	ComboBox _ScreenComboBoxInit(wpfBuilder b) {
 		b.Add("Screen", out ComboBox cb);
-		var a = screen.all;
-		for (int i = 0; i < a.Length; i++) {
-			cb.Items.Add(i == 0 ? "Primary" : i <= 5 ? "NonPrimary" + i : "(TMScreen)" + i);
-		}
+		cb.Items.Add("Primary");
 		cb.SelectedIndex = 0;
+
+		var a = screen.all;
 		if (a.Length > 1) {
-			cb.DropDownOpened += (_, _) => {
-				for(int i = 0; i < a.Length; i++) {
-					osdText.showTransparentText(cb.Items[i] as string, xy: new(screen: a[i]), showMode: OsdMode.ThisThread);
-				}
-			};
+			//add functions of screen.at
+			foreach (var v in typeof(screen.at).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public)) {
+				cb.Items.Add("screen.at." + v.Name);
+			}
+
+			//if defined type "screens", add its public static properties that return screen
+			//	This code works, but probably this feature would be rarely used. Now undocumented.
+			//if (_compilation.GetSymbolsWithName("screens", SymbolFilter.Type).FirstOrDefault() is INamedTypeSymbol screens) {
+			//	foreach (var v in screens.GetMembers()) {
+			//		if (v is not IPropertySymbol p || !v.IsStatic || v.DeclaredAccessibility is not Microsoft.CodeAnalysis.Accessibility.Public) continue;
+			//		if (p.Type.ToString() != "Au.screen") continue;
+			//		cb.Items.Add("screens." + v.Name);
+			//	}
+			//}
+
+			//if (a.Length == 2) cb.Items.Add("screen.index(1)"); //no. More screens may be added in the future, and indices may change then.
 		}
+
 		return cb;
+	}
+
+	static string _ScreenComboBoxResult(ComboBox cbScreen, bool trigger) {
+		int iScreen = cbScreen.SelectedIndex;
+		if (iScreen == 0) return null;
+		var s = cbScreen.Items[iScreen] as string;
+		//if (s.Starts("screens.")) return s;
+		//if (s.Starts("screen.at."))
+			return s + (trigger ? "(true)" : "()");
+		//return trigger ? s.Insert(^1, ", lazy: true") : s;
 	}
 
 	static bool _GetTriggerStatementFullRange2(_Trigger t, out TextSpan span, bool replacing) {

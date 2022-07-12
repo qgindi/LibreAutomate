@@ -119,12 +119,8 @@
 		<Resource Include="resources\ci\Snippet.xaml" />
 		<Resource Include="resources\ci\Structure.xaml" />
 		<Resource Include="resources\ci\TypeParameter.xaml" />
-		<Resource Include="resources\Images\ExpandDown_16x.xaml">
-			<Generator></Generator>
-		</Resource>
-		<Resource Include="resources\Images\ExpandRight_16x.xaml">
-			<Generator></Generator>
-		</Resource>
+		<Resource Include="resources\Images\ExpandDown_16x.xaml" />
+		<Resource Include="resources\Images\ExpandRight_16x.xaml" />
 		<Resource Include="resources\Images\SettingsGroup_16x.xaml" />
 	</ItemGroup>
 

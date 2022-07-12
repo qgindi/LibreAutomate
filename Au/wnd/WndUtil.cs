@@ -468,7 +468,7 @@
 			static (string name, int plus) _Name(ref int m, out bool reflect) {
 				reflect = false;
 				if (m >= 0x10000) return default; //reserved by the system
-				if (m >= 0xC000) return (clipboard.GetFormatName_(m, orNull: true), 0); //registered
+				if (m >= 0xC000) return (ClipFormats.GetName(m, orNull: true), 0); //registered
 				if (m >= Api.WM_APP) return ("WM_APP", m - Api.WM_APP); //0x8000
 				if (reflect = m >= Api.WM_REFLECT && m < Api.WM_REFLECT * 2) m -= Api.WM_REFLECT; //0x2000
 				if (m >= Api.WM_USER) return ("WM_USER", m - Api.WM_USER); //0x400

@@ -1,4 +1,3 @@
-
 namespace Au;
 
 public partial class toolbar {
@@ -103,7 +102,7 @@ public partial class toolbar {
 	class _OwnerScreen {
 		public _OwnerScreen(toolbar tb, screen scrn) {
 			_tb = tb;
-			_scrn = (_isAuto = scrn.IsEmpty) ? screen.index(_tb._sett.screen) : scrn.Now;
+			_scrn = (_isAuto = scrn.IsEmpty) ? screen.of(_tb._sett.screenx, _tb._sett.screeny) : scrn.Now;
 			UpdateRect(out _);
 		}
 
@@ -115,6 +114,8 @@ public partial class toolbar {
 
 		public screen Screen => _scrn;
 
+		//public bool IsAuto => _isAuto;
+
 		public bool UpdateRect(out bool changed) {
 			RECT r = _scrn.Rect;
 			if (changed = r != cachedRect) {
@@ -124,15 +125,23 @@ public partial class toolbar {
 			return true;
 		}
 
+		//called from _WmWindowPosChanged
 		public void UpdateIfAutoScreen() {
 			if (!_isAuto) return;
-			var k = screen.of(_tb._w);
-			int i = k.ScreenIndex;
-			if (i != _tb._sett.screen) {
-				_scrn = screen.index(i);
-				_tb._sett.screen = i;
+			var r = screen.of(_tb._w).Rect;
+			int x = 0, y = 0; if (r.left != 0 || r.top != 0) { x = r.CenterX; y = r.CenterY; }
+			if (x != _tb._sett.screenx || y != _tb._sett.screeny) {
+				_scrn = screen.of(_tb._sett.screenx = x, _tb._sett.screeny = y);
 				UpdateRect(out _);
 			}
+		}
+
+		public bool CloseIfScreenInvalid() {
+			if (!Screen.IsAlive) {
+				_tb.Close();
+				return true;
+			}
+			return false;
 		}
 	}
 
@@ -180,7 +189,6 @@ public partial class toolbar {
 			if (isOwned) {
 				_SetTimer(250);
 			} else {
-				//print.it(tb.Name, tb.Hwnd);//TODO
 				if (!_timer.IsRunning) _SetTimer(250);
 				tb._FollowRect();
 				//tb._Zorder();
@@ -236,7 +244,6 @@ public partial class toolbar {
 		void _Hook(HookData.WinEvent d) {
 			//print.it(d.event_, d.idObject, d.idChild, d.thread, d.w);
 			if (d.w.Is0 || d.idObject != (d.event_ == EEvent.OBJECT_REORDER ? EObjid.CLIENT : EObjid.WINDOW) || d.idChild != 0) return;
-			_OwnerWindow ow;
 			switch (d.event_) {
 			case EEvent.OBJECT_REORDER when d.w == wnd.getwnd.root: //the hook does not give the window, only its thread id
 #if true
@@ -264,7 +271,7 @@ public partial class toolbar {
 			case EEvent.OBJECT_UNCLOAKED:
 			case EEvent.SYSTEM_MINIMIZESTART:
 				//Debug_.PrintIf(_inHook, "_inHook"); //it's ok
-				if (!_inHook && _FindOW(d.w, out ow)) {
+				if (!_inHook && _FindOW(d.w, out _OwnerWindow ow)) {
 					//prevent reenter.
 					//	The ITBOwnerObject may retrieve sent messages, eg when getting acc rect.
 					//	It's ok if hook missed. We'll call it on timer or next OBJECT_LOCATIONCHANGE.
@@ -408,8 +415,6 @@ public partial class toolbar {
 			//	Possible workarounds:
 			//	1. Temporarily make wt nativaly owned by _ow.w. Restore after 500 ms. But fails with higher UAC IL windows and appstore windows.
 			//	2. Temporarily make wt topmost. Restore after 500 ms. But Windows makes it difficult and possibly unreliable.
-
-			//ONCE: when clicked another window, the owner window becomes over it again. Maybe because of the toolbar.
 		}
 	}
 	bool _zordered;
@@ -460,19 +465,28 @@ public partial class toolbar {
 		if (x == bounds.left && y == bounds.top) swp |= SWPFlags.NOMOVE;
 		if (cx == bounds.Width && cy == bounds.Height) swp |= SWPFlags.NOSIZE;
 		if (!swp.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE)) {
-			_ignorePosChanged = true;
+			_ignorePosChanged = (byte)(dpiChanged ? 2 : 1);
 			_w.SetWindowPos(swp, x, y, cx, cy);
-			_ignorePosChanged = false;
+			_ignorePosChanged = 0;
 		}
+
+		bool followedOnce = _followedOnce;
 		_followedOnce = true;
 
 		if (dpiChanged) {
 			_MeasureText();
 			_AutoSizeNow();
 		}
+
+		if (!followedOnce && _os != null) {
+			var sc = screen.of(_w, SODefault.Zero);
+			if (sc.Handle != _os.Screen.Handle) {
+				_w.EnsureInScreen(_os.Screen, workArea: !_w.IsTopmost);
+			}
+		}
 	}
 	bool _followedOnce;
-	bool _ignorePosChanged;
+	byte _ignorePosChanged;
 	bool _preferSize;
 
 	void _WmWindowPosChanging(ref Api.WINDOWPOS wp) {
@@ -498,19 +512,26 @@ public partial class toolbar {
 		//	return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
 		//}
 
-		if (!wp.flags.Has(SWPFlags.NOMOVE) && _IsSatellite) {
-			RECT r = _satPlanet._w.Rect;
-			if (wp.x > r.right) wp.x = r.right; else wp.x = Math.Max(wp.x, r.left - wp.cx);
-			if (wp.y > r.bottom) wp.y = r.bottom; else wp.y = Math.Max(wp.y, r.top - wp.cy);
+		//don't allow to move the satellite away from the planet.
+		//	Only when _inMoveSize. In other cases can create problems, eg when DPI changes.
+		if (!wp.flags.Has(SWPFlags.NOMOVE) && _IsSatellite && _inMoveSize) {
+			RECT r = _satPlanet._w.Rect, rs = _w.Rect;
+			if (wp.cx == rs.Width && wp.cy == rs.Height) { //only when moving. When resizing, it could collapse the toolbar; will snap finally.
+				if (wp.x > r.right) wp.x = r.right; else wp.x = Math.Max(wp.x, r.left - wp.cx);
+				if (wp.y > r.bottom) wp.y = r.bottom; else wp.y = Math.Max(wp.y, r.top - wp.cy);
+			}
 		}
 	}
 
 	void _WmWindowPosChanged(in Api.WINDOWPOS wp) {
 		if (!_created) return;
-		if (!wp.flags.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE)) {
+		if (!wp.flags.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE) && _ignorePosChanged < 2) {
 			bool resized = !wp.flags.Has(SWPFlags.NOSIZE);
-			if (!_ignorePosChanged) {
-				_os?.UpdateIfAutoScreen();
+			if (_ignorePosChanged == 0) {
+				if (_os != null) {
+					if (_os.CloseIfScreenInvalid()) return;
+					_os.UpdateIfAutoScreen();
+				}
 				_UpdateOffsets(wp.x, wp.y, wp.cx, wp.cy); //tested: if SWP_NOMOVE or SWP_NOSIZE, wp contains current values
 			} else {
 				if (resized && !_inMoveSize) _sett.size = _Unscale(_w.ClientRect.Size);
@@ -541,14 +562,14 @@ public partial class toolbar {
 		}
 	}
 
-	void _InMoveSize(bool start) {
+	void _SetInMoveSize(bool start) {
 		_inMoveSize = start;
 		if (!start) {
 			_sett.offsets = _offsets;
 			var z = _Unscale(_w.ClientRect.Size);
 			if (z != _sett.size) {
 				_sett.size = z;
-				_sett.wrapWidth = Math.Max(1, z.Width - _BorderPadding() * 2);
+				_sett.wrapWidth = z.Width - _BorderPadding(unscaled: true) * 2 + 2;
 				if (AutoSize) _AutoSizeNow();
 			}
 		}
@@ -567,14 +588,24 @@ public partial class toolbar {
 		return (_ow.GetCachedRect(this), _ow.GetPrevSize(this));
 	}
 
+	unsafe nint _WmGetDpiScaledSize(nint wParam, nint lParam) {
+		//a quick and not perfect workaround for: on DPI change sometimes incorrect wrap/autosize
+		if (_os != null && AutoSize && Layout == TBLayout.HorizontalWrap && _inMoveSize) {
+			ref var z = ref *(SIZE*)lParam;
+			int dpi = (int)wParam;
+			z.width = Math2.MulDiv(z.width, dpi, _dpi);
+			z.height = Math2.MulDiv(z.height, dpi, _dpi);
+			z.width += dpi / 8;
+			return 1;
+		}
+		return 0;
+	}
+
 	unsafe void _WmDpiChanged(nint wParam, nint lParam) {
 		if (_os != null) {
-			//print.it(Environment.StackTrace);//TODO
-			//if(Name=="Toolbar_Test") print.it("_WmDpiChanged", _os.Screen.Dpi, Math2.NintToPOINT(wParam), *(RECT*)lParam);//TODO
-			//print.it("_WmDpiChanged", _os.Screen.Dpi, Math2.NintToPOINT(wParam), *(RECT*)lParam);//TODO
+			//print.it(caller(), _w.Rect, *(RECT*)lParam);
 			if (!_SetDpi()) return;
 			_Images(true);
-			//print.it("WM_DPICHANGED", _w.Rect);
 			_MeasureText();
 			if (_inMoveSize) { //cannot autosize now, or something bad may happen, eg nested wm_dpichanged until stack overflow
 				_w.MoveL(*(RECT*)lParam);
@@ -587,10 +618,9 @@ public partial class toolbar {
 
 	void _WmDisplayChange() {
 		if (_os != null) {
-			//if(Name=="Toolbar_Test") print.it("_WmDisplayChange");
-			//print.it("_WmDisplayChange");//TODO
+			if (_os.CloseIfScreenInvalid()) return;
+
 			timer.after(200, _ => {
-				//print.it("_WmDisplayChange after 200ms");//TODO
 				if (_os == null || _closed) return;
 				_os.UpdateRect(out bool changed);
 				if (changed) _FollowRect();
@@ -618,5 +648,5 @@ public partial class toolbar {
 	}
 }
 
-//TODO: now toolbars are lost too often.
+//SHOULDDO: now toolbars are lost too often.
 //	Eg after removing autohide.
