@@ -1,5 +1,3 @@
-//TODO: on 200% DPI screen, edge toolbars are too small, horizontally and vertically.
-
 using System.Drawing;
 using System.Drawing.Drawing2D;
 

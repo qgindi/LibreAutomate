@@ -1,15 +1,12 @@
-namespace Au
-{
-	public partial class toolbar
-	{
+namespace Au {
+	public partial class toolbar {
 		/// <summary>
 		/// Represents a button or separator in <see cref="toolbar"/>.
 		/// </summary>
 		/// <remarks>
 		/// Most properties cannot be changed while the toolbar is open. Can be changed <b>Tag</b>, <b>Tooltip</b>.
 		/// </remarks>
-		public class ToolbarItem : MTItem
-		{
+		public class ToolbarItem : MTItem {
 			internal SIZE textSize;
 			internal readonly TBItemType type;
 			internal bool textAlways;
@@ -32,8 +29,7 @@ namespace Au
 			public Action<ToolbarItem> Clicked => base.clicked as Action<ToolbarItem>;
 		}
 
-		record _Settings : JSettings
-		{
+		record _Settings : JSettings {
 			public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
 
 			public TBAnchor anchor = TBAnchor.TopLeft;
@@ -44,18 +40,16 @@ namespace Au
 			public System.Windows.Size size = new(150, 24);
 			public double wrapWidth;
 			public TBOffsets offsets; // = new(150, 5, 7, 7);
-			public int screen;
+			public int screenx, screeny;
 		}
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Used with <see cref="toolbar.ToolbarItem.ItemType"/>.
 	/// </summary>
-	public enum TBItemType : byte
-	{
+	public enum TBItemType : byte {
 #pragma warning disable 1591 //doc
 		Button,
 		Menu,
@@ -68,8 +62,7 @@ namespace Au.Types
 	/// Used with <see cref="toolbar.MiscFlags"/>.
 	/// </summary>
 	[Flags]
-	public enum TBFlags
-	{
+	public enum TBFlags {
 		/// <summary>
 		/// Activate the owner window when the toolbar clicked. Default.
 		/// </summary>
@@ -92,8 +85,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="toolbar.Border"/>.
 	/// </summary>
-	public enum TBBorder
-	{
+	public enum TBBorder {
 		//note: don't reorder.
 
 		/// <summary>No border.</summary>
@@ -127,8 +119,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="toolbar.Anchor"/>.
 	/// </summary>
-	public enum TBAnchor
-	{
+	public enum TBAnchor {
 		//top 1, bottom 2, left 4, right 8
 
 		/// <summary>
@@ -196,8 +187,7 @@ namespace Au.Types
 		Screen = 128,
 	}
 
-	static partial class TBExt_
-	{
+	static partial class TBExt_ {
 		internal static bool HasTop(this TBAnchor a) => 0 != ((int)a & 1);
 		internal static bool HasBottom(this TBAnchor a) => 0 != ((int)a & 2);
 		internal static bool HasLeft(this TBAnchor a) => 0 != ((int)a & 4);
@@ -222,8 +212,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="toolbar.Offsets"/>.
 	/// </summary>
-	public record struct TBOffsets
-	{
+	public record struct TBOffsets {
 		/// <summary>
 		/// Horizontal distance from the owner's left edge (right if <see cref="TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
 		/// </summary>
@@ -256,8 +245,7 @@ namespace Au.Types
 	/// Reasons to hide a toolbar. Used with <see cref="toolbar.Hide"/>.
 	/// </summary>
 	[Flags]
-	public enum TBHide
-	{
+	public enum TBHide {
 		/// <summary>Owner window is hidden, minimized, etc.</summary>
 		Owner = 1,
 
@@ -273,8 +261,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="toolbar.Layout"/>.
 	/// </summary>
-	public enum TBLayout
-	{
+	public enum TBLayout {
 		/// <summary>Default layout. Buttons are in single row. Wrapped when exceeds maximal row width. More rows can be added with <see cref="toolbar.Group"/>.</summary>
 		HorizontalWrap,
 
@@ -289,8 +276,7 @@ namespace Au.Types
 	/// Used with <see cref="toolbar.NoContextMenu"/>.
 	/// </summary>
 	[Flags]
-	public enum TBNoMenu
-	{
+	public enum TBNoMenu {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		Menu = 1,
 		Edit = 1 << 1,
@@ -312,8 +298,7 @@ namespace Au.Types
 	/// Flags for <see cref="toolbar"/> constructor.
 	/// </summary>
 	[Flags]
-	public enum TBCtor
-	{
+	public enum TBCtor {
 		/// <summary>
 		/// Don't load saved settings. Delete the settings file of the toolbar, if exists.
 		/// </summary>
@@ -328,8 +313,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="toolbar.DpiScaling"/>.
 	/// </summary>
-	public struct TBScaling
-	{
+	public struct TBScaling {
 		///
 		public TBScaling(bool? size, bool? offsets) { this.size = size; this.offsets = offsets; }
 
@@ -364,8 +348,7 @@ namespace Au.Types
 	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="toolbar.Show(wnd, ITBOwnerObject)"/>.
 	/// The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
 	/// </remarks>
-	public interface ITBOwnerObject
-	{
+	public interface ITBOwnerObject {
 		/// <summary>
 		/// Returns false to close the toolbar.
 		/// </summary>

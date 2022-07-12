@@ -3,8 +3,7 @@
 
 using System.Drawing;
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Sets or gets clipboard data in multiple formats.
 	/// </summary>
@@ -33,8 +32,7 @@ namespace Au
 	/// print.it(html); print.it(text);
 	/// ]]></code>
 	/// </example>
-	public class clipboardData
-	{
+	public class clipboardData {
 		struct _Data { public object data; public int format; }
 		List<_Data> _a = new();
 
@@ -226,7 +224,7 @@ namespace Au
 			var v = (byte*)Api.GlobalLock(h); if (v == null) { Api.GlobalFree(h); goto ge; }
 			try { MemoryUtil.Copy(p, v, size); } finally { Api.GlobalUnlock(h); }
 			return h;
-			ge: throw new OutOfMemoryException();
+		ge: throw new OutOfMemoryException();
 		}
 
 		/// <summary>
@@ -316,8 +314,7 @@ EndFragment:0000000000
 
 		#region get
 
-		struct _GlobalLock : IDisposable
-		{
+		struct _GlobalLock : IDisposable {
 			IntPtr _hmem;
 
 			public _GlobalLock(IntPtr hmem, out IntPtr mem, out int size) {
@@ -548,14 +545,12 @@ EndFragment:0000000000
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Some clipboard format ids.
 	/// These and other standard and registered format ids can be used with <see cref="clipboardData"/> class functions.
 	/// </summary>
-	public static class ClipFormats
-	{
+	public static class ClipFormats {
 		/// <summary>The text format. Standard, API constant CF_UNICODETEXT. The default format of <see cref="clipboardData"/> add/get text functions.</summary>
 		public const int Text = Api.CF_UNICODETEXT;
 
@@ -609,6 +604,44 @@ namespace Au.Types
 			if (s_textEncoding.TryGetValue(format, out var enc)) return enc == Encoding.Unicode ? null : enc;
 			unknown = true;
 			return null;
+		}
+
+		/// <summary>
+		/// Gets clipboard format name.
+		/// </summary>
+		/// <param name="format">A registered or standard clipboard format. If standard, returns string like "CF_BITMAP".</param>
+		/// <param name="orNull">Return null if <i>format</i> is unknown. If false, returns <i>format</i> as string.</param>
+		/// <remarks>
+		/// Calls API <msdn>GetClipboardFormatName</msdn>. Although undocumented, it also can get other strings from the same system atom table, for example registered Windows message names and window class names.
+		/// </remarks>
+		[SkipLocalsInit]
+		public static unsafe string GetName(int format, bool orNull = false) {
+			//registered
+			if (format >= 0xC000 && format <= 0xffff) {
+				var b = stackalloc char[300];
+				int len = Api.GetClipboardFormatName(format, b, 300);
+				if (len > 0) return new string(b, 0, len);
+			}
+			//standard
+			var s = format switch { Api.CF_TEXT => "CF_TEXT", Api.CF_BITMAP => "CF_BITMAP", Api.CF_METAFILEPICT => "CF_METAFILEPICT", Api.CF_SYLK => "CF_SYLK", Api.CF_DIF => "CF_DIF", Api.CF_TIFF => "CF_TIFF", Api.CF_OEMTEXT => "CF_OEMTEXT", Api.CF_DIB => "CF_DIB", Api.CF_PALETTE => "CF_PALETTE", Api.CF_RIFF => "CF_RIFF", Api.CF_WAVE => "CF_WAVE", Api.CF_UNICODETEXT => "CF_UNICODETEXT", Api.CF_ENHMETAFILE => "CF_ENHMETAFILE", Api.CF_HDROP => "CF_HDROP", Api.CF_LOCALE => "CF_LOCALE", Api.CF_DIBV5 => "CF_DIBV5", _ => null };
+			return s ?? (orNull ? null : format.ToS());
+		}
+
+		/// <summary>
+		/// Gets formats currently in the clipboard.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// foreach (var f in ClipFormats.EnumClipboard()) {
+		/// 	print.it(ClipFormats.GetName(f));
+		/// }
+		/// ]]></code>
+		/// </example>
+		public static IEnumerable<int> EnumClipboard() {
+			using var oc = new clipboard.OpenClipboard_(true);
+			for (int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
+				yield return format;
+			}
 		}
 	}
 }

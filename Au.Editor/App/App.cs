@@ -428,5 +428,9 @@ enum ERegisteredHotkeyId {
 
 namespace Au.Editor {
 	partial class WpfApp : Application {
+		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
+			base.OnSessionEnding(e);
+			if (!App.Hmain.Is0) Menus.File.Exit();
+		}
 	}
 }
