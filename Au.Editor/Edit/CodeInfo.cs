@@ -441,6 +441,7 @@ static class CodeInfo {
 		}
 
 		//Workarounds for Roslyn bugs that break intellisense.
+		//FUTURE: test, maybe now some Roslyn bugs fixed.
 		void _ModifyTLS() {
 			var cu = syntaxRoot;
 			var members = cu.Members;
@@ -528,7 +529,7 @@ for (int i = 0; i < count; i++) { }
 
 				_solution = _solution.WithDocumentSyntaxRoot(_documentId, cu3);
 				document = _document = _solution.GetDocument(_documentId);
-				syntaxRoot = _syntaxRoot = cu3;
+				syntaxRoot = _syntaxRoot = _document.GetSyntaxRootAsync().Result as CompilationUnitSyntax; //not = cu3
 				return true;
 			}
 		}

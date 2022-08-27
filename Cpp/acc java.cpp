@@ -571,7 +571,7 @@ bool _IsJavaWindow(HWND w)
 	if(!!(wf & eWinFlags::AccJavaNo)) return false;
 
 	bool yes = false; DWORD pid = 0, pidJAB = 0;
-	for(HWND wJAB = 0; wJAB = FindWindowExW(0, wJAB, L"#32770", L"Access Bridge status");) {
+	for(HWND wJAB = 0; wJAB = wn::FindWndEx(0, wJAB, L"#32770", L"Access Bridge status");) {
 		if(pid == 0 && !GetWindowThreadProcessId(w, &pid)) break;
 		GetWindowThreadProcessId(wJAB, &pidJAB); if(pidJAB != pid) continue;
 		yes = pid != GetCurrentProcessId();

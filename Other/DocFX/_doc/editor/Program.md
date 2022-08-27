@@ -1,10 +1,10 @@
 ---
-uid: Uiscripter
+uid: Program
 ---
 
-# C# Uiscripter
+# LibreAutomate C#
 
-C# Uiscripter is an integrated scripting environment (ISE) for creating and executing automation scripts using its automation library and C# programming language.
+The program is an integrated scripting environment for creating and executing automation scripts using its automation library and C# programming language.
 
 ![window](../images/window.png "Editor window")
 
@@ -94,11 +94,11 @@ Code editing.
 #### Code
 Tools that help to create code.
 
-#### Run
-Execute current script.
-
 #### TT
 Triggers and toolbars.
+
+#### Run
+Execute current script.
 
 #### Tools
 Various tool windows.

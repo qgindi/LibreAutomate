@@ -309,9 +309,8 @@ namespace Au {
 		public unsafe (RECT rect, RECT workArea, bool isPrimary, bool isAlive) Info {
 			get {
 				var h = _func != null ? _Handle() : _h;
-				var m = new Api.MONITORINFO { cbSize = sizeof(Api.MONITORINFO) };
 				for (int i = h != default ? 0 : 1; i < 10; i++, h = primary._h) { //retry if fails
-					if (Api.GetMonitorInfo(h, ref m)) //fast
+					if (Api.GetMonitorInfo(h, out var m)) //fast
 						return (m.rcMonitor, m.rcWork, 0 != (m.dwFlags & 1), i == 0);
 				}
 				return default;
@@ -350,13 +349,7 @@ namespace Au {
 		/// <remarks>
 		/// Don't use with variables that hold a callback function. This function does not call it and returns false.
 		/// </remarks>
-		public unsafe bool IsAlive {
-			get {
-				if (_h == default) return false;
-				var m = new Api.MONITORINFO { cbSize = sizeof(Api.MONITORINFO) };
-				return Api.GetMonitorInfo(_h, ref m);
-			}
-		}
+		public unsafe bool IsAlive => _h != default && Api.GetMonitorInfo(_h, out _);
 
 		///
 		public override string ToString() => _h.ToString() + " " + Rect.ToString();

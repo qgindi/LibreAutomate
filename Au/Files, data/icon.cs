@@ -1,6 +1,5 @@
-﻿
+﻿using System.Drawing;
 using System.Reflection.Emit;
-using System.Drawing;
 
 namespace Au {
 	/// <summary>
@@ -775,6 +774,82 @@ namespace Au {
 			}
 			catch (Exception ex) { Debug_.Print(ex); }
 			return null;
+		}
+
+		/// <summary>
+		/// Gets image of a Windows Store App.
+		/// </summary>
+		/// <returns><b>Bitmap</b> object, or null if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
+		/// <param name="shellString">String like <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.</param>
+		/// <param name="size">Desired width and height.</param>
+		public static Bitmap winStoreAppImage(string shellString, int size = 16) {
+			using var idl = Pidl.FromString(shellString); if (idl == null) return null; //the slowest part, > 90%
+			return winStoreAppImage(idl, size);
+		}
+
+		/// <summary>
+		/// Gets image of a Windows Store App. This overload accepts a <b>Pidl</b> instead of a shell string.
+		/// </summary>
+		/// <returns><b>Bitmap</b> object, or null if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
+		public static Bitmap winStoreAppImage(Pidl pidl, int size = 16) {
+			var path = _GetWinStoreAppImagePath(pidl, size); if (path == null) return null;
+			var r = Image.FromFile(path) as Bitmap;
+			r?.SetResolution(96, 96);
+			return r;
+		}
+
+		static string _GetWinStoreAppImagePath(Pidl pidl, int size = 16) {
+			if (0 != Api.SHBindToParent(pidl.UnsafePtr, typeof(Api.IShellFolder).GUID, out var isf, out var idItem)) return null;
+			if (!isf.GetUIObjectOf(idItem, out Api.IExtractIcon extract)) return null;
+			var sb = new StringBuilder(1000);
+			if (0 != extract.GetIconLocation(0, sb, sb.Capacity, out int index, out uint rflags)) return null;
+			var loc = sb.ToString();
+			//print.it(loc);
+			if (loc.Ends(".png")) return loc; //Win 8.0, 8.1
+			Debug_.PrintIf(!loc.Ends(".png-100"), loc);
+			int ipng = loc.LastIndexOf(".png", StringComparison.OrdinalIgnoreCase); if (ipng < 0) return null;
+			loc = loc[..ipng];
+			if (!_GetPngPathFromIconLoc(out string path)) return null;
+			return path;
+
+			bool _GetPngPathFromIconLoc(out string path) {
+				path = null;
+				var dir = pathname.getDirectory(loc);
+				if (!filesystem.exists(dir).Directory) return false;
+				var a1 = Directory.GetFiles(dir, pathname.getName(loc) + "*.png");
+				int nTargetsize = 0, nScale = 0;
+				for (int i = 0; i < a1.Length; i++) {
+					var v = a1[i];
+					if (v.Find("contrast-", loc.Length, true) >= 0) a1[i] = null;
+					else if (v.Find("targetsize-", loc.Length, true) >= 0) nTargetsize++;
+					else if (v.Find("scale-", loc.Length, true) >= 0) nScale++;
+				}
+				if (nTargetsize == 0 && nScale == 0) {
+					path = a1.FirstOrDefault(o => o.Eqi(loc));
+					loc += ".png";
+					return path != null;
+				}
+				var a = new (string path, string q, int size)[nTargetsize > 0 ? nTargetsize : nScale];
+				int j = 0;
+				foreach (var v in a1) {
+					if (v == null) continue;
+					int i = v.Find(nTargetsize > 0 ? "targetsize-" : "scale-", loc.Length, true); if (i < 0) continue;
+					int z = v.ToInt(i + (nTargetsize > 0 ? 11 : 6));
+					if (nTargetsize == 0) z = Math2.MulDiv(z, 16, 100); //assume eg scale-100 == targetsize-16
+					a[j++] = (v, v[loc.Length..^4], z);
+				}
+				//foreach (var k in a) print.it("\t" + k.q, k.size);
+				int bestSize = int.MaxValue, maxSmallerSize = 0;
+				foreach (var v in a) if (v.size == size) { bestSize = size; break; } else if (v.size > size) bestSize = Math.Min(bestSize, v.size); else maxSmallerSize = Math.Max(maxSmallerSize, v.size);
+				if (bestSize == int.MaxValue) bestSize = maxSmallerSize;
+				//print.it(bestSize);
+				foreach (var v in a) if (v.size == bestSize && v.q.Find("altform-lightunplated", true) >= 0) { path = v.path; return true; }
+				//foreach (var v in a) if(v.size==bestSize && v.q.Find("altform-unplated", true)>=0 && v.q.Find("theme-light", true)>=0) { path=v.path; return true; }
+				//foreach (var v in a) if(v.size==bestSize && v.q.Find("theme-light", true)>=0) { path=v.path; return true; }
+				foreach (var v in a) if (v.size == bestSize && v.q.Find("altform-unplated", true) >= 0) { path = v.path; return true; }
+				foreach (var v in a) if (v.size == bestSize) { path = v.path; return true; }
+				return false;
+			}
 		}
 	}
 }

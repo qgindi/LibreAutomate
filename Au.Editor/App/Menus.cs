@@ -283,7 +283,7 @@ static class Menus {
 		public static void Windows_API() { new DWinapi().Show(); }
 	}
 
-	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
+	[Command("T\x2009T", target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
 	public static class TT {
 		[Command('k'/*, separator = true*/)]
 		public static void Hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
@@ -306,6 +306,9 @@ static class Menus {
 
 		//[Command("...")]
 		//public static void Active_triggers() {  }
+
+		[Command]
+		public static void Other_triggers() { TriggersAndToolbars.Edit(@"Triggers\Other triggers.cs"); Panels.Cookbook.OpenRecipe("Other triggers"); }
 
 		[Command(separator = true)]
 		public static void Toolbars() { TriggersAndToolbars.GoToToolbars(); }

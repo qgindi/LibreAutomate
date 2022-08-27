@@ -174,8 +174,8 @@ namespace Au {
 		/// <returns>0 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <example>
 		/// <code><![CDATA[
-		/// if(a.State.Has(EState.INVISIBLE)) print.it("has state INVISIBLE");
-		/// if(a.IsInvisible) print.it("invisible");
+		/// if(e.State.Has(EState.INVISIBLE)) print.it("has state INVISIBLE");
+		/// if(e.IsInvisible) print.it("invisible");
 		/// ]]></code>
 		/// </example>
 		public EState State {
@@ -832,10 +832,11 @@ namespace Au {
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// a = a.Navigate("parent next ch3");
+		/// a = e.Navigate("parent next ch3");
 		/// ]]></code>
 		/// </example>
-		public elm Navigate(string navig!!, double waitS = 0) {
+		public elm Navigate(string navig, double waitS = 0) {
+			Not_.Null(navig);
 			ThrowIfDisposed_();
 			int hr; Cpp.Cpp_Acc ca;
 			if (waitS == 0) {
@@ -1042,7 +1043,8 @@ namespace Au {
 
 			if (!GetRect(out var r)) throw new AuException(0, "*get UI element rectangle");
 			if (r.NoArea) throw new AuException(IsOffscreen ? "The UI element is offscreen. Try scroll." : "The UI element rectangle is empty");
-			var w = WndContainer; //need window for mouse functions, else could click another window etc
+			//var w = WndContainer; //need window for mouse functions, else could click another window etc
+			var w = WndTopLevel; //direct parent control may be zero-size etc, eg in Win11 Paint when found with UIA
 			bool retry = false; var r0 = r;
 		g1:
 			if (!w.GetRect(out var rw)) throw new AuException(0, "*get container window");
@@ -1061,7 +1063,8 @@ namespace Au {
 		//	Impossible to reliably detect whether need to scroll.
 		//	This was an attempt, but it does not work well. And can't click non-client elements.
 		//(wnd w, RECT r) _GetWndAndRectForClick() {
-		//	var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
+		//	//var w = WndContainer; //with window the mouse functions are more reliable, eg will not click another window
+		//	var w = WndTopLevel; //direct parent control may be zero-size etc, eg in Win11 Paint when found with UIA
 		//	if (w.Is0) throw new AuException(0, "*get container window");
 		//	RECT r = _GetRect(), rr = r;
 		//	print.it(r);

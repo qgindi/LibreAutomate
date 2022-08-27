@@ -460,10 +460,12 @@
 			/// Gets the first in Z order window of this thread.
 			/// </summary>
 			/// <param name="onlyVisible"></param>
-			internal static wnd TopThreadWindow_(bool onlyVisible) {
+			/// <param name="nonPopup">Skip WS.POPUP without WS.CAPTION.</param>
+			internal static wnd TopThreadWindow_(bool onlyVisible, bool nonPopup) {
 				wnd r = default;
 				Api.EnumThreadWindows(Api.GetCurrentThreadId(), (w, _) => {
 					if (onlyVisible && !w.IsVisible) return 1;
+					if (nonPopup) if ((w.Style & (WS.POPUP | WS.CAPTION)) == WS.POPUP) return 1;
 					r = w;
 					return 0;
 				});

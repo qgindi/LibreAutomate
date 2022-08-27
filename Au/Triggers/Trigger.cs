@@ -329,7 +329,8 @@ public class TriggerScopes
 	public TriggerScope NotWindows(params wndFinder[] any)
 		=> _Add(true, any);
 
-	TriggerScope _Add(bool not, wndFinder f!!) {
+	TriggerScope _Add(bool not, wndFinder f) {
+		Not_.Null(f);
 		Used = true;
 		return Current = new TriggerScope(f, not);
 	}

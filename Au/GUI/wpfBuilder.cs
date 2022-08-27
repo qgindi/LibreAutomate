@@ -2176,7 +2176,7 @@ namespace Au {
 		public wpfBuilder StartOkCancel() {
 			var pa = _p;
 			StartStack();
-			if (!(pa is _Canvas)) {
+			if (pa is not _Canvas) {
 				_p.panel.HorizontalAlignment = HorizontalAlignment.Right;
 				_p.panel.VerticalAlignment = VerticalAlignment.Bottom;
 				_p.panel.Margin = new Thickness(0, 2, 0, 0);

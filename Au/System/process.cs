@@ -767,6 +767,17 @@ namespace Au {
 			if (k != null) try { k(e); } catch { }
 		}
 
+		/// <summary>
+		/// Calls and removes all <see cref="thisProcessExit"/> event handlers.
+		/// </summary>
+		/// <remarks>
+		/// Call this if <b>thisProcessExit</b> event handlers don't run because this process is terminated before it. For example when current session is ending (shutdown, restart, logoff); to detect it can be used <b>Application.SessionEnding</b>, <b>Application.OnSessionEnding</b> or <b>WM_QUERYENDSESSION</b>.
+		/// </remarks>
+		public static void thisProcessExitInvoke() {
+			var k = _eventExit;
+			if (k != null) try { _eventExit = null; k(null); } catch { }
+		}
+
 		#endregion
 
 		#region this thread

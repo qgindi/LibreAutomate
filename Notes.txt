@@ -72,6 +72,8 @@ Install new .NET version.
 
 Update .NET version in all C# project files.
 
+Run script "Create dotnet_ref.txt.cs".
+
 Update .NET version in the C++ AppHost project. Build.
 	Note the .NET 6 bug workaround comment there.
 

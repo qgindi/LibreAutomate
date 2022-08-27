@@ -652,10 +652,14 @@ private:
 			//Also ocassionally fails in some pages, even if page is loaded, maybe when executing scripts.
 			//	Also fails in some tool windows, eg Browser Console. Sometimes always fails in full-screen mode.
 			//	Then FindDocumentSimple_ finds it.
-
-		//} else if(!!(_flags2 & eAF2::InChromePage)) {
-		//	return AccFinder::FindDocumentSimple_(ap, out ar, eAF2::InChromePage);
-		//	//note: the IAccessible of the Chrome_RenderWidgetHostHWND control is a DOCUMENT, but it's a random document, not the active.
+		} else if(!!(_flags2 & eAF2::InChromePage)) {
+			if((wn::Style(w) & WS_CHILD) && wn::ClassNameIs(w, c_CRW)) {
+				//ao::PrintAcc(ap);
+				ar.acc = ap;
+				ap_.acc = null;
+				return 0;
+				//note: this cannot be used with Chrome. ap is a DOCUMENT, but it's a random document, not the active.
+			}
 		}
 
 		return FindDocumentSimple_(ap, out ar, _flags2);
@@ -743,9 +747,13 @@ HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_A
 
 HRESULT AccEnableChrome2(HWND w, int i, HWND c)
 {
-	Smart<IAccessible> aw;
-	HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aw);
-	if(hr != 0) return (HRESULT)eError::NotFound;
+	Smart<IAccessible> aw, aDoc;
+	HRESULT hr;
+
+	if(i == 0 || c == 0) {
+		hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aw);
+		if(hr != 0) return (HRESULT)eError::NotFound;
+	}
 
 	if(i == 0) {
 		IAccessible2* aw2 = null;
@@ -753,11 +761,15 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c)
 		//tested: the IAccessible2 does not have relations or something that would give the document
 	}
 
-	AccDtorIfElem0 ar;
-	hr = AccFinder::FindDocumentSimple_(aw, out ar, eAF2::InChromePage);
-	PRINTF_IF(hr != 0 && c, L"DOCUMENT not found, i=%i", i);
-	if(hr != 0) return (HRESULT)eError::NotFound;
-	IAccessible* aDoc = ar.acc;
+	if(c) {
+		hr = AccessibleObjectFromWindow(c, OBJID_CLIENT, IID_IAccessible, (void**)&aDoc);
+		if(hr != 0) return (HRESULT)eError::NotFound;
+	} else {
+		AccRaw ar;
+		hr = AccFinder::FindDocumentSimple_(aw, out ar, eAF2::InChromePage);
+		if(hr != 0) return (HRESULT)eError::NotFound;
+		aDoc.Attach(ar.acc);
+	}
 
 	long cc = 0;
 	bool isEnabled = 0 == aDoc->get_accChildCount(&cc) && cc > 0;
@@ -776,14 +788,15 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c)
 
 namespace outproc
 {
-void AccEnableChrome(HWND w)
+void AccEnableChrome(HWND w, HWND c = 0)
 {
 	if(!!(WinFlags::Get(w) & eWinFlags::AccEnabled)) return;
 
 	assert(!(wn::Style(w) & WS_CHILD));
+	HWND wTL = w;
 
-	//I know 2 ways to auto-enable Chrome web page AOs:
-	//1. Send WM_GETOBJECT(0, 1) to the child window classnamed "Chrome_RenderWidgetHostHWND".
+	//I know 3 ways to auto-enable Chrome web page AOs:
+	//1. Send WM_GETOBJECT(0, 1) to the legacy control (child window classnamed "Chrome_RenderWidgetHostHWND").
 	//	It is documented, but was broken in many Chrome versions.
 	//  Now works again, but may stop working again. They want to get rid of the "legacy" control.
 	//	It does not enable by itself. Then need to get Name; faster if also DefaultAction. It's undocumented.
@@ -798,10 +811,25 @@ void AccEnableChrome(HWND w)
 	//	Need to wait. The time depends on how big is the webpage (which tab?). May be even 1 s.
 	//	It seems this way is slightly better, although undocumented.
 	//	When used in certain way, used to kill Chrome process on Win7 (or it depends on Chrome settings etc). Current code works well.
+	//3. Get a UIA element.
+	//	Chrome: of main window.
+	//	WebView2: of the legacy control. Then call its FindFirst with "true" condition. With Chrome it does not work.
+	//		Or from point.
+	//		It enables for entire process (or thread, not tested). Eg the window may have multiple WebView2 controls; need to enable just for one.
+	//	Bad: UIA at first is slow. And undocumented (or I don't know).
+	//	Need to wait like always.
 
-	HWND c = FindWindowEx(w, 0, L"Chrome_RenderWidgetHostHWND", null);
+	if(c) {
+		w = GetParent(c); //eg WebView2
+		if(!w) return;
+		PRINTS_IF(!wn::ClassNameIs(w, L"Chrome_WidgetWin_1"), L"parent not Chrome_WidgetWin_1");
+	} else c = wn::FindWndEx(w, 0, c_CRW, null);
+
 	if(c) SendMessage(c, WM_GETOBJECT, 0, 1);
 	else {
+		//Don't need to enable, because there is no true web content (and no DOCUMENT).
+		//	But try to enable anyway, because in the future Chrome may remove the legacy control. Unless it's a popup window.
+
 		DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
 		if(0 != (style & WS_POPUP) || style == 0) return; //a popup window, eg menu, tooltip, new bookmark. Or invalid window handle.
 #ifdef TRACE
@@ -836,48 +864,52 @@ void AccEnableChrome(HWND w)
 		if(hr == 0) break;
 		if(hr != (HRESULT)eError::NotFound) nNoDoc = 0; else if(++nNoDoc < 20) i = -1; else break;
 	}
-	WinFlags::Set(w, eWinFlags::AccEnabled);
+	WinFlags::Set(wTL, eWinFlags::AccEnabled);
 	//never mind: possible timeout with large pages or at Chrome startup. Can't wait so long here. Let scripts wait.
 }
 
 //Called by elmFinder before find or find-wait in window (not in elm).
-//If s is a role prefix like "web:", detects/returns browser type flags for Cpp_AccFindParams::flags2 (except IE unless w is IES).
+//If s is a role prefix like "web:", detects/returns browser type flags for Cpp_AccFindParams::flags2.
 //Else returns 0.
 //If detects Chrome, enables its acc.
 EXPORT eAF2 Cpp_AccRolePrefix(STR s, int len, HWND w)
 {
 	eAF2 R = (eAF2)0;
-	int prefix = str::Switch(s, len, { L"web", L"firefox", L"chrome" });
+	HWND c = 0;
+	int prefix = str::Switch(s, len, { L"web", L"chrome", L"firefox" });
 	if(prefix > 0) {
 		switch(prefix) {
 		case 1:
 			R |= eAF2::InWebPage;
-			if(wn::Style(w) & WS_CHILD) { //cannot be Chrome/FF
-				if(wn::ClassNameIs(w, c_IES)) R |= eAF2::InIES;
+			if(wn::Style(w) & WS_CHILD) {
+				switch(wn::ClassNameIs(w, { c_CRW, c_IES })) {
+				case 1: R |= eAF2::InChromePage; c = w; break;
+				case 2: R |= eAF2::InIES; break;
+				}
 			} else {
-				switch(wn::ClassNameIs(w, { L"Mozilla*", L"Chrome*" })) {
-				case 1: R |= eAF2::InFirefoxPage; break;
-				case 2: R |= eAF2::InChromePage; break;
+				switch(wn::ClassNameIs(w, { L"Chrome*", L"Mozilla*" })) {
+				case 1: R |= eAF2::InChromePage; break;
+				case 2: R |= eAF2::InFirefoxPage; break;
 				}
 			}
-			//info: if no InIES|InChromePage|InFirefoxPage, Cpp_AccFind will try to find IES in w and use it instead of w.
+			//info: if no InIES|InChromePage|InFirefoxPage, Cpp_AccFind will try to find IES or CRW in w and use it instead of w.
 			//	Not here, because need to seach in each Cpp_AccFind when waiting.
 			break;
 		case 2:
-			R |= eAF2::InFirefoxPage | eAF2::InWebPage;
+			R |= eAF2::InChromePage | eAF2::InWebPage;
+			if((wn::Style(w) & WS_CHILD) && wn::ClassNameIs(w, c_CRW)) c = w;
 			break;
 		case 3:
-			R |= eAF2::InChromePage | eAF2::InWebPage;
+			R |= eAF2::InFirefoxPage | eAF2::InWebPage;
 			break;
 		}
 
-		if(!!(R & eAF2::InChromePage)) AccEnableChrome(w);
+		if(!!(R & eAF2::InChromePage)) {
+			if(c) w = GetAncestor(c, GA_ROOT);
+			AccEnableChrome(w, c);
+		}
 	}
 	return R;
-
-	//FUTURE: some windows may use Chrome control in non-chrome-classnamed window.
-	//	Eg old version of Spotify, IIRC. Everything was OK; probably AOs not disabled.
-	//	Need to review/test more, but now I don't know such programs.
 }
 
 }

@@ -126,7 +126,8 @@ namespace Au
 		/// 
 		/// Examples in class help: <see cref="regexp"/>.
 		/// </remarks>
-		public regexp([ParamString(PSFormat.Regexp)] string rx!!, RXFlags flags = 0) {
+		public regexp([ParamString(PSFormat.Regexp)] string rx, RXFlags flags = 0) {
+			Not_.Null(rx);
 			_matchFlags = (byte)((ulong)flags >> 56); flags = (RXFlags)((ulong)flags & 0xffffff_ffffffff);
 			_codeUnsafe = Cpp.Cpp_RegexCompile(rx, rx.Length, flags, out int codeSize, out BSTR errStr);
 			if (_codeUnsafe == default) throw new ArgumentException(errStr.ToStringAndDispose());
@@ -215,7 +216,8 @@ namespace Au
 		/// <exception cref="ArgumentException">Multiple groups have this name.</exception>
 		/// <seealso cref="RXMatch.GroupNumberFromName(string)"/>
 		/// <seealso cref="RXMatch.GroupNumberFromName(string, out bool)"/>
-		public int GetGroupNumberOf(string groupName!!) {
+		public int GetGroupNumberOf(string groupName) {
+			Not_.Null(groupName);
 			fixed (char* p = groupName) {
 				int R = Cpp.pcre2_substring_nametable_scan(_CodeHR, p, null, null);
 				if (R <= 0) {
@@ -472,7 +474,7 @@ namespace Au
 
 			//Throws if s is null or if invalid start/end or used 'partial' flags.
 			public _MatchEnum(regexp rx, string s, int group, Range? range, RXMatchFlags matchFlags, int maxCount = -1) {
-				if (s == null) throw new ArgumentNullException(nameof(s));
+				Not_.Null(s);
 				(_from, _to) = range.GetStartEnd(s.Length);
 				_rx = rx;
 				_subject = s;

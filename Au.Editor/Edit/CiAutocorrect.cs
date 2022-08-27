@@ -8,12 +8,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Indentation;
-using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Indentation;
 
 //CONSIDER: menu command "Exit statement on Enter" and toolbar check-button [;].
 //	Would complete statement from anywhere in statement.
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
+
+//SHOULDDO: when auto-adding () after func call, also add ;. Now in some cases Roslyn throws exception if ; missing (bug).
 
 class CiAutocorrect {
 	public class BeforeCharContext {
@@ -218,7 +220,9 @@ class CiAutocorrect {
 				if (node is not (BlockSyntax or MemberDeclarationSyntax or AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax)) return;
 
 				int li = token.GetLocation().GetLineSpan().StartLinePosition.Line;
-				var ir = CSharpIndentationService.Instance.GetIndentation(cd.document, li, FormattingOptions.IndentStyle.Smart, default);
+				var pd = ParsedDocument.CreateSynchronously(cd.document, default);
+				var opt1 = IndentationOptions.GetDefault(cd.document.Project.Services);
+				var ir = CSharpIndentationService.Instance.GetIndentation(pd, li, opt1, default);
 
 				int ind = ir.Offset / 4; bool correct;
 				if (ind > 0) {
@@ -286,6 +290,7 @@ class CiAutocorrect {
 				case SyntaxKind.CompilationUnit:
 				case SyntaxKind.CharacterLiteralExpression:
 				case SyntaxKind.StringLiteralExpression:
+				case SyntaxKind.Utf8StringLiteralExpression:
 					return;
 				case SyntaxKind.InterpolatedStringExpression:
 					//after next typed { in interpolated string remove } added after first {
@@ -437,8 +442,10 @@ class CiAutocorrect {
 					token = k.CloseParenToken;
 					if (canExitBlock = block != null) {
 						block = k;
-					} else if (token.IsMissing && k.OpenParenToken.IsMissing && k.Expression is CastExpressionSyntax ce) {
-						//switch (...) without block is interpreted as switch castexpression
+					} else if (token.IsMissing && k.OpenParenToken.IsMissing) {
+						//if 'switch(word) no {}', Roslyn thinks '(word)...' is a cast expression.
+						var t1 = k.SwitchKeyword.GetNextToken();
+						if (!t1.IsKind(SyntaxKind.OpenParenToken) || t1.Parent is not CastExpressionSyntax ce) return false;
 						token = ce.CloseParenToken;
 					}
 					dontIndent = true;
@@ -855,7 +862,7 @@ class CiAutocorrect {
 		} else {
 			if (isSelection) return 0;
 			if (span.ContainsInside(pos) && token.IsKind(SyntaxKind.CharacterLiteralToken)) return 3;
-			bool? isString = token.IsInString(pos, cd.code, out var si);
+			bool? isString = token.IsInString(pos, cd.code, out var si, orU8: true);
 			if (isString == false) return 0;
 			if (si.isRawPrefixCenter) cd.sci.zInsertText(true, pos, "\r\n"); //let Enter in raw string prefix like """|""" add extra newline
 			if (isString == null || !si.isClassic) return 2;
@@ -931,7 +938,7 @@ class CiAutocorrect {
 		public SyntaxToken CloseBraceToken => _BraceToken(_b, true);
 	}
 
-	//currently unused
+	//currently unused. Created before "text"u8.
 	//static bool _GetNodeIfNotInNonblankTriviaOrStringOrChar(out SyntaxNode node, CodeInfo.Context cd)
 	//{
 	//	int pos = cd.position;

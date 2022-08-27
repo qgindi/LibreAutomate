@@ -58,6 +58,9 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
+		//if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var tok)) return;
+		//print.it(tok.IsInString(cd.pos, cd.code, out var x, true), x);
+
 		//ModifyCode.Format(true);
 
 

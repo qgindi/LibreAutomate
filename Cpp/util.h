@@ -378,6 +378,9 @@ using WNDENUMPROCL = const std::function <bool(HWND c)>;
 
 BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback);
 HWND FindChildByClassName(HWND w, STR className, bool visible);
+HWND FindChildByClassName(HWND w, STR className1, STR className2, OUT bool& second, bool visible);
+HWND FindWndEx(HWND wParent, HWND wAfter, STR cn, STR name = null);
+HWND FindWnd(STR cn, STR name = null);
 bool WinformsNameIs(HWND w, STR name);
 
 #if TRACE

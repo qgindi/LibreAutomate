@@ -1,6 +1,6 @@
 
 /// <summary>
-/// Creates and opens databases ref.db, doc.db, winapi.db.
+/// Creates and opens databases ref.db, doc.db. Also opens winapi.db.
 /// </summary>
 static class EdDatabases
 {
@@ -54,7 +54,7 @@ static class EdDatabases
 	///			
 	/// Need to run this after changing .NET version of C# projects (<TargetFramework>...</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
 	/// </remarks>
-	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data") {
+	public static void CreateRefAndDoc(string dataDir = @"C:\code\au\Other\Data") {
 		string dirPacks = pathname.Normalize_(folders.NetRuntimeBS + @"..\..\..\packs");
 		string dirCore = dirPacks + @"\Microsoft.NETCore.App.Ref\";
 		var a = new List<string>();
@@ -225,7 +225,7 @@ static class EdDatabases
 	/// <summary>
 	/// Creates SQLite database containing Windows API declarations.
 	/// </summary>
-	public static void CreateWinapi(string csDir = @"Q:\app\Au\Other\Api", string dataDir = @"Q:\app\Au\Other\Data") {
+	public static void CreateWinapi(string csDir = @"C:\code\au\Other\Api", string dataDir = @"C:\code\au\Other\Data") {
 		string dbFile = dataDir + @"\winapi.db";
 		filesystem.delete(dbFile);
 

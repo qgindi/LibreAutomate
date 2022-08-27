@@ -516,50 +516,55 @@
 		/// If not minimized, minimizes.
 		/// Also unhides.
 		/// </summary>
-		/// <param name="noAnimation">Visually fast, without animation.</param>
+		/// <param name="how">What API to use: 0 <msdn>ShowWindow</msdn>, 1 <msdn>SetWindowPlacement</msdn> (no animation), 2 <msdn>WM_SYSCOMMAND</msdn>.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowMinimized(bool noAnimation = false) {
-			_MinMaxRes(Api.SW_MINIMIZE, noAnimation);
-		}
+		public void ShowMinimized(int how = 0) => _MinMaxRes(Api.SW_MINIMIZE, how);
 
 		/// <summary>
 		/// If not minimized, minimizes.
 		/// Also unhides.
 		/// </summary>
-		/// <param name="noAnimation">Visually fast, without animation.</param>
+		/// <param name="how">What API to use: 0 <msdn>ShowWindow</msdn>, 1 <msdn>SetWindowPlacement</msdn> (no animation), 2 <msdn>WM_SYSCOMMAND</msdn>.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowMaximized(bool noAnimation = false) {
-			_MinMaxRes(Api.SW_SHOWMAXIMIZED, noAnimation);
-		}
+		public void ShowMaximized(int how = 0) => _MinMaxRes(Api.SW_SHOWMAXIMIZED, how);
 
 		/// <summary>
 		/// If maximized or minimized, makes normal (not min/max).
 		/// Also unhides.
 		/// </summary>
-		/// <param name="noAnimation">Visually fast, without animation.</param>
+		/// <param name="how">What API to use: 0 <msdn>ShowWindow</msdn>, 1 <msdn>SetWindowPlacement</msdn> (no animation), 2 <msdn>WM_SYSCOMMAND</msdn>.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowNotMinMax(bool noAnimation = false) {
-			_MinMaxRes(Api.SW_SHOWNORMAL, noAnimation);
-		}
+		public void ShowNotMinMax(int how = 0) => _MinMaxRes(Api.SW_SHOWNORMAL, how);
 
 		/// <summary>
 		/// If minimized, restores previous non-minimized state (maximized or normal).
 		/// Also unhides.
 		/// </summary>
-		/// <param name="noAnimation">Visually fast, without animation.</param>
+		/// <param name="how">What API to use: 0 <msdn>ShowWindow</msdn>, 1 <msdn>SetWindowPlacement</msdn> (no animation), 2 <msdn>WM_SYSCOMMAND</msdn>.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowNotMinimized(bool noAnimation = false) {
-			_MinMaxRes(Api.SW_RESTORE, noAnimation);
-		}
+		public void ShowNotMinimized(int how = 0) => _MinMaxRes(Api.SW_RESTORE, how);
+
+		///
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
+		public void ShowMinimized(bool noAnimation) => _MinMaxRes(Api.SW_MINIMIZE, noAnimation ? 1 : 0);
+		///
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
+		public void ShowMaximized(bool noAnimation) => _MinMaxRes(Api.SW_SHOWMAXIMIZED, noAnimation ? 1 : 0);
+		///
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
+		public void ShowNotMinMax(bool noAnimation) => _MinMaxRes(Api.SW_SHOWNORMAL, noAnimation ? 1 : 0);
+		///
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
+		public void ShowNotMinimized(bool noAnimation) => _MinMaxRes(Api.SW_RESTORE, noAnimation ? 1 : 0);
 
 		/// <summary>
 		/// Sets window min/max/normal/restore state.
 		/// Also unhides.
 		/// </summary>
 		/// <param name="state">Must be SW_MINIMIZE, SW_RESTORE (restores to normal/max if minimized), SW_SHOWNORMAL or SW_SHOWMAXIMIZED.</param>
-		/// <param name="noAnimation">Use SetWindowPlacement (no animation).</param>
+		/// <param name="how">0 ShowWindow, 1 SetWindowPlacement (no animation), 2 WM_SYSCOMMAND.</param>
 		/// <exception cref="AuWndException"/>
-		void _MinMaxRes(int state, bool noAnimation) {
+		void _MinMaxRes(int state, int how) {
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 			ThrowIfInvalid();
 
@@ -584,11 +589,17 @@
 				if (IsVisible) return;
 				Show(true);
 			} else {
-				if (!noAnimation) {
+				//WPF bug: if using SizeToContent, maximizing with ShowWindow/SetWindowPlacement sets incorrect size.
+				//	Example: if SizeToContent=vertical, resizes vertically for content, and horizontally for entire screen (not work area).
+				//		If inactive, resizes vertically for content, and horizontally does not resize.
+				//	Works well with WM_SYSCOMMAND.
+				//if(how!=2 && state == Api.SW_SHOWMAXIMIZED && ClassNameIs("HwndWrapper[*")) how=2; //no. Never mind.
+
+				if (how == 0) {
 					Api.ShowWindow(this, state);
 					//note: The API returns TRUE if was visible, not if succeeded. Tested: lastError can't be used.
 					ok = _IsState(this, state);
-				} else if (ok = GetWindowPlacement_(out var p, false)) {
+				} else if (how == 1 && (ok = GetWindowPlacement_(out var p, false))) {
 					int state2 = state;
 					switch (state) {
 					case Api.SW_MINIMIZE:
@@ -612,7 +623,7 @@
 				} && w.IsVisible;
 
 				if (!ok) {
-					if (UacAccessDenied) {
+					if (how == 2 || UacAccessDenied) {
 						var cmd = state switch {
 							Api.SW_MINIMIZE => Api.SC_MINIMIZE,
 							Api.SW_SHOWMAXIMIZED => Api.SC_MAXIMIZE, //fails, never mind
@@ -634,7 +645,7 @@
 				}
 			}
 
-			MinimalSleepIfOtherThread_();
+			if (how != 1) MinimalSleepIfOtherThread_();
 		}
 
 		/// <summary>
@@ -705,7 +716,7 @@
 				}
 
 				var wFore = active; bool retry = false;
-			g1: _EnableActivate_MinRes();
+				g1: _EnableActivate_MinRes();
 				if (!_EnableActivate_AllowSetFore()) return false;
 				if (!wFore.Is0 && !retry) {
 					Api.SetForegroundWindow(wFore);
@@ -841,7 +852,7 @@
 			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);
 
 			if (IsMinimized) {
-				ShowNotMinimized(true);
+				ShowNotMinimized(1);
 				isMinimized = IsMinimized;
 				if (forScreenCapture && !isMinimized && !ofThisThread) Thread.Sleep(250); //although we use noAnimation, in some cases still restores with animation
 			}
@@ -1047,10 +1058,10 @@
 
 			MinimalSleepNoCheckThread_();
 			return;
-		gDisabled: //SetFocus fails if disabled
+			gDisabled: //SetFocus fails if disabled
 			ThrowIfInvalid();
 			ThrowNoNative("*set focus. Disabled");
-		gFailed:
+			gFailed:
 			ThrowUseNative("*set focus");
 		}
 
@@ -1729,7 +1740,7 @@
 
 			//restore min/max, except if child or hidden
 			if (w.Is0 && (IsMinimized || IsMaximized) && IsVisible) {
-				ShowNotMinMax(true);
+				ShowNotMinMax(1);
 				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 
@@ -1759,87 +1770,124 @@
 		#region MoveInScreen, EnsureInScreen, Screen
 
 		internal static partial class Internal_ {
-			/// <summary>
-			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen. With inRect used by RECT.MoveInRect.
-			/// </summary>
-			internal static void MoveInScreen(bool bEnsureMethod,
-				Coord left, Coord top, bool useWindow, wnd w, ref RECT r,
-				screen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default) {
-				RECT rs;
-				screen scr;
-				if (inRect.HasValue) {
-					Debug.Assert(!useWindow);
-					rs = inRect.GetValueOrDefault();
-					scr = default;
-				} else {
-					if (!screen.IsEmpty) scr = screen.Now;
-					else if (useWindow) scr = screen.of(w);
-					else if (bEnsureMethod) scr = screen.of(r);
-					else scr = screen.primary;
 
-					rs = scr.GetRect(bWorkArea);
-
-					if (useWindow) {
-						if (!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
-					}
-				}
-
-				int x, y, wid = r.Width, hei = r.Height;
-				if (bEnsureMethod) {
-					Debug.Assert(bEnsureInScreen == true && left.IsEmpty && top.IsEmpty); //left/top unused
+			static void _MoveRect(ref RECT r, Coord left, Coord top, RECT rs, bool ensureIn, bool ensureMethod) {
+				int x, y;
+				if (ensureMethod) {
+					Debug.Assert(ensureIn && left.IsEmpty && top.IsEmpty); //left/top unused
 					x = r.left;
 					y = r.top;
 				} else {
 					if (left.IsEmpty) left = Coord.Center;
 					if (top.IsEmpty) top = Coord.Center;
-					var p = Coord.NormalizeInRect(left, top, rs);
-					x = p.x; y = p.y;
-					switch (left.Type) { case CoordType.Reverse: x -= wid; break; case CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
-					switch (top.Type) { case CoordType.Reverse: y -= hei; break; case CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
+					(x, y) = Coord.NormalizeInRect(left, top, rs);
+					switch (left.Type) { case CoordType.Reverse: x -= r.Width; break; case CoordType.Fraction: x -= (int)(r.Width * left.FractionValue); break; }
+					switch (top.Type) { case CoordType.Reverse: y -= r.Height; break; case CoordType.Fraction: y -= (int)(r.Height * top.FractionValue); break; }
 				}
 
-				if (bEnsureInScreen) {
-					x = Math.Max(Math.Min(x, rs.right - wid), rs.left);
-					y = Math.Max(Math.Min(y, rs.bottom - hei), rs.top);
+				if (ensureIn) {
+					x = Math.Max(Math.Min(x, rs.right - r.Width), rs.left);
+					y = Math.Max(Math.Min(y, rs.bottom - r.Height), rs.top);
 					if (r.Width > rs.Width) r.Width = rs.Width;
 					if (r.Height > rs.Height) r.Height = rs.Height;
 				}
 
 				r.Move(x, y);
+			}
 
-				if (useWindow) { //move window
-					w.GetWindowPlacement_(out var wp, false, "*move*");
-					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(screen.of(w));
-					if (r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
+			public static void MoveRectInRect(ref RECT r, Coord left, Coord top, RECT rs, bool ensureIn) {
+				_MoveRect(ref r, left, top, rs, ensureIn, false);
+			}
 
-					wnd hto = default; bool visible = w.IsVisible;
-					try {
-						//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
-						//There are several workarounds. The best of them - temporarily set owner window 0.
-						if (!visible) {
-							hto = w.Get.Owner;
-							if (!hto.Is0 && !WndUtil.SetOwnerWindow(w, default)) hto = default;
+			public static void MoveRectInScreen(bool ensureMethod, ref RECT r, Coord left, Coord top, screen screen, bool workArea, bool ensureIn) {
+				var scr2 = !screen.IsEmpty ? screen.Now : ensureMethod ? screen.of(r) : screen.primary;
+				var rs = scr2.GetRect(workArea);
+				_MoveRect(ref r, left, top, rs, ensureIn, ensureMethod);
+			}
+
+			/// <summary>
+			/// Moves w to left/top in screen, and/or ensures it's in screen.
+			/// </summary>
+			/// <param name="ensureMethod">Just ensure in screen. Not used parameters: left, top.</param>
+			/// <param name="w"></param>
+			/// <param name="left">If empty, uses center.</param>
+			/// <param name="top">If empty, uses center.</param>
+			/// <param name="screen">If empty, uses screen of w.</param>
+			/// <param name="workArea"></param>
+			/// <param name="ensureIn"></param>
+			public static void MoveWindowInScreen(bool ensureMethod, wnd w, Coord left, Coord top, screen screen, bool workArea, bool ensureIn) {
+				var scr2 = !screen.IsEmpty ? screen.Now : screen.of(w);
+				var rs = scr2.GetRect(workArea);
+				var scr1 = screen.of(w);
+				bool moveToOtherScreen = scr2 != scr1;
+
+				bool isMaximized = w.IsMaximized, isMinimized = !isMaximized && w.IsMinimized;
+				if (isMaximized || isMinimized) {
+					bool visible = w.IsVisible;
+					if (moveToOtherScreen) {
+						bool restoreMaximized = false;
+						if (isMinimized && w.GetWindowPlacement_(out var wp1, false, "*move*") && 0 != (wp1.flags & 2)) {
+							wp1.flags &= ~2u;
+							restoreMaximized = w.SetWindowPlacement_(ref wp1, false, "*move*");
 						}
+						Api.ShowWindow(w, Api.SW_SHOWNOACTIVATE); //less flickering than with SetWindowPlacement; same speed
+						_Move();
+						Api.ShowWindow(w, isMaximized ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWMINNOACTIVE);
+						if (restoreMaximized && w.GetWindowPlacement_(out var wp2, false)) {
+							wp2.flags |= 2;
+							w.SetWindowPlacement_(ref wp2, false);
+						}
+						if (!visible) w.ShowL(false);
 
-						wp.rcNormalPosition = r;
+						//With SetWindowPlacement could avoid restoring and showing, but then does not resize for different DPI.
+						//Also tested: temporarily remove WS_MAXIMIZE. With some windows does not work well, eg Firefox. Does not work with minimized. Dangerous, undocumented.
+
+						//never mind: old Dreamweaver maximizes to the old screen. Need to repeat or before maximizing wait ~300 ms.
+					} else {
+						w.GetWindowPlacement_(out var wp, true, "*move*");
+						_MoveRect(ref wp.rcNormalPosition, left, top, rs, ensureIn, ensureMethod);
 						wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
 						w.SetWindowPlacement_(ref wp, true, "*move*");
+					}
 
-						if (moveMaxWindowToOtherMonitor) {
-							//I found this way of moving max window to other screen by experimenting.
-							//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
-							//Must call SetWindowPos twice, or it may refuse to move at all.
-							//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
-							rs = scr.WorkArea;
-							if (!w.MoveL(rs.left, rs.top) || !w.ResizeL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
+					//would need this if using SetWindowPlacement when moving to other screen
+					//if (isMaximized && moveToOtherScreen) {
+					//	//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
+					//	//Must call SetWindowPos twice, or it may refuse to move at all.
+					//	//OS does this on Win+Shift+Left or Right.
+					//	//Some windows does not respond well. Eg old Dreamweaver.
+					//	//The biggest problem is DPI-scaling. Even the OS hotkey does not scale correctly (because the app does not have a chance to scale itself).
+					//	rs = scr2.WorkArea;
+					//	if (!w.MoveL(rs.left, rs.top) || !w.ResizeL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
+					//}
+				} else {
+					_Move();
+				}
+
+				void _Move() {
+					if (moveToOtherScreen) {
+						int dpi1 = scr1.Dpi, dpi2 = scr2.Dpi;
+						if (dpi2 != dpi1 || !ensureIn) {
+							//resize w if would be too big for that screen. Because DPI may change if bigger part will be in another screen.
+							int wid = rs.Width, hei = rs.Height;
+							if (dpi2 != dpi1) { wid = Math2.MulDiv(wid, dpi1, dpi2); hei = Math2.MulDiv(hei, dpi1, dpi2); }
+							var k = w.Rect;
+							if (k.Width > wid || k.Height > hei) {
+								w.ResizeL(Math.Min(k.Width, wid), Math.Min(k.Height, hei));
+							}
+						}
+						if (dpi2 != dpi1) {
+							//at first move to the screen, let it DPI-scale self. Some windows don't DPI-scale self when moving with resizing. Anyway would need to correct afterwards.
+							w.MoveL(rs.left, rs.top);
 						}
 					}
-					finally {
-						if (!hto.Is0) WndUtil.SetOwnerWindow(w, hto);
-					}
 
-					w.MinimalSleepIfOtherThread_();
+					var r = w.Rect;
+					_MoveRect(ref r, left, top, rs, ensureIn, ensureMethod);
+					w.MoveL(r);
 				}
+
+				w.MinimalSleepIfOtherThread_();
 			}
 		}
 
@@ -1857,8 +1905,7 @@
 		/// </remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
 		public void MoveInScreen(Coord x, Coord y, screen screen = default, bool workArea = true, bool ensureInScreen = true) {
-			RECT r = default;
-			Internal_.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
+			Internal_.MoveWindowInScreen(false, this, x, y, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -1872,8 +1919,7 @@
 		/// </remarks>
 		/// <seealso cref="RECT.EnsureInScreen"/>
 		public void EnsureInScreen(screen screen = default, bool workArea = true) {
-			RECT r = default;
-			Internal_.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
+			Internal_.MoveWindowInScreen(true, this, default, default, screen, workArea, true);
 		}
 
 		/// <summary>
@@ -1884,7 +1930,7 @@
 		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>. See <see cref="MoveInScreen"/>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
 		public void MoveToScreenCenter(screen screen = default) {
-			ShowNotMinMax(true);
+			ShowNotMinMax();
 			MoveInScreen(default, default, screen, true);
 		}
 
@@ -1940,7 +1986,7 @@
 				if (before || !w.Is0) {
 					if (!w.IsAlive || w == this) return false;
 					if (before) {
-					g1: var wp = w.Get.Previous();
+						g1: var wp = w.Get.Previous();
 						if (wp.Is0 && !w.IsAlive) return false; //w is at the very top?
 						w = wp;
 						for (wnd ow = Get.Owner; !ow.Is0; ow = ow.Get.Owner) if (w == ow) goto g1;

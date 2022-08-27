@@ -20,7 +20,7 @@ class CiErrors {
 		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return;
 		var doc = cd.sci;
 		var code = cd.code;
-		if (code.Eq(end16 - 1, '\n')) end16--; //don't include error from next line
+		if (end16 < code.Length && code.Eq(end16 - 1, '\n')) end16--; //don't include error from next line
 		if (end16 <= start16) return;
 		bool has = false;
 		var semo = cd.semanticModel;
@@ -112,11 +112,11 @@ class CiErrors {
 			if (usings != null) {
 				//remove some usings that are rarely used and cause errors
 				if (usings.Count > 1 && usings.Contains("System.Windows.Forms") && cd.code.FindWord("wpfBuilder") > 0) usings.Remove("System.Windows.Forms");
-				
+
 				doc.Dispatcher.InvokeAsync(() => { //this func is called from scintilla notification
 					if (!pastingSilent && !dialog.showYesNo("Add missing using directives?", string.Join('\n', usings), owner: doc)) return;
 					InsertCode.UsingDirective(string.Join(';', usings), true);
-					if (!pastingSilent && usings.Count > 1) print.it("Info: multiple using directives have been added. It may cause 'ambiguous reference' errors.\r\n\tTo fix it, remove one of usings displayed in the error tooltip. If that does not work, undo and remove other using.");
+					if (!pastingSilent && usings.Count > 1) print.it("Info: multiple using directives have been added. If it causes 'ambiguous reference' errors, remove one of usings displayed in the error tooltip. If that does not work, undo and remove other using.");
 				});
 			}
 		}
@@ -401,7 +401,7 @@ class CiErrors {
 						}
 						//p1.Next();
 					}
-				gNext:;
+					gNext:;
 
 					bool _AddNamespace(ISymbol sym) {
 						if (!sym.IsAccessibleWithin(compilation.Assembly)) return false;

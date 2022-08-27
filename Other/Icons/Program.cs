@@ -49,7 +49,7 @@ class Program
 	}
 
 	static void CreateDB() {
-		string dbFile = @"Q:\app\Au\_\icons.db";
+		string dbFile = @"C:\code\au\_\icons.db";
 		filesystem.delete(dbFile);
 
 		using var d = new sqlite(dbFile);

@@ -169,6 +169,14 @@ static class CommandLine {
 			case 20: //from Triggers.DisabledEverywhere
 				TriggersAndToolbars.OnDisableTriggers();
 				break;
+			case 30: //from script.debug()
+				if (App.Model.DebuggerScript is string s && s.Length > 0) {
+					if (App.Model.FindCodeFile(s) is FileNode f && f.IsScript) {
+						return CompileRun.CompileAndRun(true, f, new[] { lparam.ToS() });
+					}
+					print.warning($"Debugger script not found. See Options -> General -> Debugger script.", -1);
+				}
+				break;
 			}
 			return 0;
 		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
@@ -331,7 +339,7 @@ static class CommandLine {
 
 	//Initially for this was used native exe. Rejected because of AV false positives, including WD.
 	//	Speed with native exe 50 ms, now 85 ms. Never mind.
-	static int _LetEditorRunScript(string[] args) {
+	static unsafe int _LetEditorRunScript(string[] args) {
 		if (!_EnsureEditorRunningAndGetMsgWindow(out wnd w)) return (int)script.RunResult_.noEditor;
 
 		//If script name has prefix *, need to wait until script process ends.
@@ -345,10 +353,18 @@ static class CommandLine {
 			if ((default != Api.GetStdHandle(Api.STD_OUTPUT_HANDLE)) //redirected stdout
 				|| api.AttachConsole(api.ATTACH_PARENT_PROCESS) //parent process is console
 				) mode |= 2;
-			//note: in cmd execute this to change cmd console code page to UTF-8: chcp 65001
 		}
 
-		return script.RunCL_(w, mode, file, args, 0 != (mode & 2) ? (string o) => Console.Write(o) : null);
+		if (0 == (mode & 2)) return script.RunCL_(w, mode, file, args, null);
+
+		return script.RunCL_(w, mode, file, args, static o => {
+			var a = Encoding.UTF8.GetBytes(o);
+			bool ok = Api.WriteFile2(Api.GetStdHandle(Api.STD_OUTPUT_HANDLE), a, out int n);
+			if (!ok || n != a.Length) throw new AuException(0);
+			//tested: 100_000_000 bytes OK.
+		});
+		//note: Console.Write does not write UTF8 if redirected. Console.OutputEncoding and SetConsoleOutputCP fail.
+		//note: in cmd execute this to change cmd console code page to UTF-8: chcp 65001
 	}
 
 	static unsafe class api {

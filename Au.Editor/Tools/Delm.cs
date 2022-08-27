@@ -20,6 +20,10 @@ using System.Windows.Input;
 //	If now WebInvoke, and role not web:, and after executing action does not change window title for eg 5 s, suggest to stop waiting and use Invoke.
 //	Or just add pseudo action Auto. If "web:", use WebInvoke, else if has action, use Invoke, else MouseClick.
 
+//SHOULDDO: on Win11 capturing and finding in some places doesn't work because an element in the path is an invisible control.
+//	Examples: taskbar, Paint.
+//	Now by default auto-switches to UIA; it works, but then broken Invoke (in taskbar only).
+
 namespace Au.Tools;
 
 class Delm : KDialogWindow {
@@ -34,9 +38,10 @@ class Delm : KDialogWindow {
 	string _screenshot;
 
 	KSciInfoBox _info;
-	Button _bTest, _bInsert, _bSettings, _bWindow;
+	Button _bTest, _bInsert, _bWindow;
 	ComboBox _cbAction;
-	KCheckBox _cCapture, _cAutoTestAction, _cAutoInsert, _cControl, _cException, _cScroll;
+	KCheckBox _cCapture, _cAutoTestAction, _cAutoInsert, _cControl, _cException, _cScroll, _cSmaller;
+	CheckBox _cUIA;
 	KCheckTextBox _wait, _xy;
 	_PropPage _page, _commonPage;
 	Border _pageBorder;
@@ -122,7 +127,12 @@ class Delm : KDialogWindow {
 		b.xAddButtonIcon("*Material.CursorDefaultClickOutline #000000", _ => _Test(testAction: true), "Test action");
 		b.xAddButtonIcon("*Material.CursorDefaultClickOutline #008EEE", _ => _Test(testAction: true, actWin: true), "Activate window and test action");
 		b.AddSeparator(true);
-		_bSettings = b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _ => _ToolSettings(), "Tool settings");
+		b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _ => _ToolSettings(), "Tool settings");
+		b.AddSeparator(true);
+		b.Add(out _cUIA, "UIA").Checked(null, threeState: true).Tooltip("Capture UI Automation elements.\nChecked - always\nUnchecked - never\nIndeterminate - auto");
+		b.Add(out _cSmaller, "Smaller").Tooltip("Try to capture smaller element.\nNote: can be slow; some apps may crash (rare).");
+		//b.Add(out _cNIP, "NIP").Tooltip("Capture not in-process"); //no. Rare, confusing.
+
 		b.End();
 		//row 2
 		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Executes the 'find' part of the code now and shows the rectangle.\r\nRight-click for more options.");
@@ -392,9 +402,9 @@ class Delm : KDialogWindow {
 				} else if (c == _page.inPath) {
 					_PathAddRemove();
 				} else if (c == _page.uiaA) {
-					_uiaUserChecked = c.IsChecked;
 					_ClearTree();
 					_cCapture.IsChecked = true;
+					_cUIA.IsChecked = c.IsChecked;
 					TUtil.InfoTooltip(ref _ttRecapture, c, "Please capture the UI element again.");
 				}
 			} else if (source is TextBox t && t.Tag is KCheckTextBox k) {
@@ -555,7 +565,7 @@ class Delm : KDialogWindow {
 	void _InitCapturingWithHotkey() {
 		_capt = new TUtil.CapturingWithHotkey(_cCapture,
 			p => {
-				var flags = _GetXYFlags(p);
+				var flags = _GetXYFlags();
 				//bool xy = _ActionIsMouse(_iAction);
 				return _RunElmTask(500, (p, flags), static m => {
 					//don't show rects when a mouse button is pressed.
@@ -572,7 +582,7 @@ class Delm : KDialogWindow {
 					var s = e.Role;
 					//if (m.xy) s = $"{s}    {m.p.x - r.left}, {m.p.y - r.top}";
 
-					//rejected: if big etc, inform about CapsLock
+					//rejected: if big etc, inform about 'Smaller'
 					//if (!m.flags.HasAny(EXYFlags.TrySmaller | EXYFlags.NotInProc) && r.Width * r.Height > 5000) {
 					//	var ri = e.RoleInt;
 					//	if (!(_RoleIsLinkOrButton(ri) || ri is ERole.Custom or ERole.TEXT or ERole.STATICTEXT or ERole.IMAGE or ERole.DIAGRAM)) {
@@ -586,7 +596,7 @@ class Delm : KDialogWindow {
 					//				if (rr.Width * rr.Height < r.Width * r.Height / 2) big = true;
 					//			}
 					//		}
-					//		if (big) s += "\nCapsLock to try smaller";
+					//		if (big) s += "\nTry to check 'Smaller'";
 					//	}
 					//}
 
@@ -616,22 +626,19 @@ class Delm : KDialogWindow {
 		}
 	}
 
-	const EXYFlags c_EXYFlags_CanAddUIA = (EXYFlags)0x1000000;
-
-	EXYFlags _GetXYFlags(POINT p) {
+	EXYFlags _GetXYFlags() {
 		var flags = EXYFlags.PreferLink;
+		switch (_cUIA.IsChecked) { case true: flags |= EXYFlags.UIA; break; case null: flags |= EXYFlags.OrUIA; break; }
+		if (_cSmaller.IsChecked) flags |= EXYFlags.TrySmaller;
 		if (_page != null) {
-			if (_uiaUserChecked == true && _page.uiaA.IsChecked) flags |= EXYFlags.UIA;
 			if (_page.notInprocA.IsChecked) flags |= EXYFlags.NotInProc;
 		}
-		if (!flags.Has(EXYFlags.UIA) && _uiaUserChecked == null) flags |= c_EXYFlags_CanAddUIA;
-		if (keys.isCapsLock) flags |= EXYFlags.TrySmaller; //CONSIDER: need something better. Eg CapsLock may be remapped to a useful key without a possibility to toggle it. Also, users will forget to toggle off when finished using. But it should not be just a checkbox, because often need to quickly toggle without moving the mouse over other windows.
 		return flags;
 	}
 
 	static elm _ElmFromPointRaw(POINT p, EXYFlags flags) {
 		var hr = Cpp.Cpp_AccFromPoint(p, flags, static (flags, wFP, wTL) => {
-			if (!flags.Has(EXYFlags.UIA) && flags.Has(c_EXYFlags_CanAddUIA)) {
+			if (!flags.Has(EXYFlags.UIA) && flags.Has(EXYFlags.OrUIA)) {
 				//UIA was faster by ~20% in all tested Store apps.
 				//	Also, MSAA Invoke does not work with many controls, eg in Settings and XAML Gallery. The UIA wrapper tries various patterns (Toggle, Expand, Select) and usually it works.
 				//	Also, when eg window minimized, the Store process is suspended, and MSAA hangs when trying to get properties etc; UIA fails immediately (good).
@@ -647,7 +654,7 @@ class Delm : KDialogWindow {
 				if (dpiV) flags |= Enum_.EXYFlags_DpiScaled;
 			}
 
-			return flags & ~c_EXYFlags_CanAddUIA;
+			return flags;
 		}, out var a);
 		//Debug_.PrintIf(hr != 0, "failed");
 		if (hr != 0) return null;
@@ -657,7 +664,7 @@ class Delm : KDialogWindow {
 
 	//Called only when capturing, not to display rectangles of elements from mouse.
 	elm _ElmFromPoint(POINT p, bool ctor = false) {
-		var flags = _GetXYFlags(p);
+		var flags = _GetXYFlags();
 
 		var (e, e2, role1, role2, tt1, tt2, eRect, eRect2)
 			= _RunElmTask(2000, (p, flags, ctor), static m => _GetElm(m.p, m.flags, m.ctor));
@@ -769,7 +776,6 @@ class Delm : KDialogWindow {
 			return (e, e2, e.Role, e2.Role, tt1, tt2, e.Rect, e2.Rect);
 		}
 	}
-	bool? _uiaUserChecked; //not null if the UIA checkbox was user-changed and therefore the capturing code must obey
 	bool _waitAutoCheckedOnce; //if user unchecks, don't check next time
 
 	#endregion
@@ -1829,7 +1835,6 @@ class Delm : KDialogWindow {
 		_info.ZAddElem(this, _dialogInfo);
 		_info.ZTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		_info.ZTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
-		_info.ZTags.AddLinkTag("+uiaReset", _ => _uiaUserChecked = null);
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: true);
 
 		//note: for Test button etc it's better to use tooltip, not _info.
@@ -1868,7 +1873,7 @@ If unchecked, returns null.");
 
 How to find UI elements that don't have a name or other property with unique constant value? Capture another UI element near it, and use <b>navig<> to get it. Or try <b>skip<>. Or path.
 
-With CapsLock the tool tries to capture a smaller element. Note: in some cases it can be slow, and some apps may crash (rare).
+If checked 'Smaller', the tool tries to capture a smaller element. Note: in some cases it can be slow, and some apps may crash (rare).
 
 If the hotkey doesn't work when the target window is active, probably its process is admin and this process isn't. Or the process steals the hotkey; try another hotkey (Options -> Hotkeys).";
 
@@ -1918,8 +1923,9 @@ Some elements also support <u><i>up<> <i>down<> <i>left<> <i>right<><>.");
 			_info.InfoC(reverseA, "Flag <help>Au.Types.EFFlags<>.Reverse (search bottom to top).");
 			_info.InfoC(uiaA,
 @"Flag <help>Au.Types.EFFlags<>.UIA.
-This checkbox may change when capturing, depending on what is usually better in that case, unless you check or uncheck it (<+uiaReset>reset<>).");
-			_info.InfoC(notInprocA, "Flag <help>Au.Types.EFFlags<>.NotInProc.");
+This checkbox may change when capturing, depending on what is usually better in that case; it also depends on the above UIA checkbox.");
+			_info.InfoC(notInprocA, @"Flag <help>Au.Types.EFFlags<>.NotInProc.
+If checked, the tool also captures elements not in-proc; it is slower, disables 'Smaller', can't get HTML attributes.");
 			_info.InfoC(clientAreaA, "Flag <help>Au.Types.EFFlags<>.ClientArea.");
 			_info.InfoC(menuTooA,
 @"Flag <help>Au.Types.EFFlags<>.MenuToo.

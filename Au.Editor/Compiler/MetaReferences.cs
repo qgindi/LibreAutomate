@@ -212,15 +212,6 @@ namespace Au.Compiler {
 
 		//public static void CompactCache() => _MR.CompactCache();
 
-		/// <summary>
-		/// Returns true if the dll file is a .NET assembly (any, not only of the .NET library).
-		/// </summary>
-		public static bool IsNetAssembly(string path) {
-			using var stream = filesystem.loadStream(path);
-			using var pr = new System.Reflection.PortableExecutable.PEReader(stream);
-			return pr.HasMetadata;
-		}
-
 #if DEBUG
 		internal static void DebugPrintCachedRefs() {
 			foreach (var v in s_cache) if (v.IsCached) print.it(v.name);

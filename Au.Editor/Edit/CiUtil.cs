@@ -294,30 +294,31 @@ static class CiUtil {
 		return format;
 	}
 
-	public static string GetTextWithoutUnusedUsingDirectives() {
-		if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
-		var code = cd.code;
-		var semo = cd.semanticModel;
-		var a = semo.GetDiagnostics(null)
-			.Where(d => d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019)
-			.Select(d => d.Location.SourceSpan)
-			.OrderBy(span => span.Start);
-		if (!a.Any()) return code;
-		var b = new StringBuilder();
-		int i = 0;
-		foreach (var span in a) {
-			int start = span.Start;
-			if (start > i && code[start - 1] == ' ') start--;
-			if (start > i) b.Append(code, i, start - i);
-			i = span.End;
-			if (b.Length == 0 || b[^1] == '\n') {
-				if (code.Eq(i, "\r\n")) i += 2;
-				else if (code.Eq(i, ' ')) i++;
-			}
-		}
-		b.Append(code, i, code.Length - i);
-		return b.ToString();
-	}
+	//rejected. Was useful when we did not have global usings. May cause confusion. May remove directives needed in the future.
+	//public static string GetTextWithoutUnusedUsingDirectives() {
+	//	if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
+	//	var code = cd.code;
+	//	var semo = cd.semanticModel;
+	//	var a = semo.GetDiagnostics(null)
+	//		.Where(d => d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019)
+	//		.Select(d => d.Location.SourceSpan)
+	//		.OrderBy(span => span.Start);
+	//	if (!a.Any()) return code;
+	//	var b = new StringBuilder();
+	//	int i = 0;
+	//	foreach (var span in a) {
+	//		int start = span.Start;
+	//		if (start > i && code[start - 1] == ' ') start--;
+	//		if (start > i) b.Append(code, i, start - i);
+	//		i = span.End;
+	//		if (b.Length == 0 || b[^1] == '\n') {
+	//			if (code.Eq(i, "\r\n")) i += 2;
+	//			else if (code.Eq(i, ' ')) i++;
+	//		}
+	//	}
+	//	b.Append(code, i, code.Length - i);
+	//	return b.ToString();
+	//}
 
 	/// <summary>
 	/// Gets "global using Namespace;" directives from all files of compilation. Skips aliases and statics.

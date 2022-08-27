@@ -107,6 +107,7 @@ enum class eXYFlags
 	UIA = 2,
 	PreferLink = 4,
 	TrySmaller = 8,
+	OrUIA = 16,
 
 	//internal flags, used in the C# side too
 	DpiScaled_ = 0x10000,

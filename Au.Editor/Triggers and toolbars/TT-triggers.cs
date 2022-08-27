@@ -30,7 +30,9 @@ partial class TriggersAndToolbars {
 		var fn = App.Model.CurrentFile;
 		bool canRunThisScript = fn != null && fn.IsScript && !fn.ItemPath.Eqi(@"\@Triggers and toolbars\Triggers and toolbars.cs");
 
-		var w = new KDialogWindow { Title = "New trigger", ShowInTaskbar = false, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize };
+		var w = new KDialogWindow {
+			Title = "New trigger", ShowInTaskbar = false, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize
+		};
 		var b = new wpfBuilder(w).WinSize(360);
 
 		b.Add("Trigger", out ToolBar tb).Margin("LRT").Brush(SystemColors.ControlBrush);
@@ -40,6 +42,15 @@ partial class TriggersAndToolbars {
 		for (int i = 0; i < abc.Length; i++) {
 			tb.Items.Add(abc[i] = new RadioButton { Content = ats[i], Width = 60, Margin = new(0, 0, 3, 0), BorderBrush = SystemColors.ActiveBorderBrush });
 		}
+
+		var bMore = new Button { Content = "...", Width = 24, BorderBrush = SystemColors.ActiveBorderBrush };
+		bMore.Click += (_, _) => {
+			var m = new popupMenu();
+			m["Command line, shortcut, scheduler"] = o => { b.Window.Close(); Menus.TT.Script_triggers(); };
+			m["Open file \"Other triggers\""] = o => { b.Window.Close(); Menus.TT.Other_triggers(); };
+			m.Show(owner: b.Window);
+		};
+		tb.Items.Add(bMore);
 
 		string[] aa = {
 			"o => o.Replace(\"replacement\")",

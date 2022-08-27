@@ -126,6 +126,11 @@ public partial class toolbar {
 	ColorInt _borderColor;
 
 	/// <summary>
+	/// Don't display the default image (dot or triangle).
+	/// </summary>
+	public bool NoDefaultImage { get; set; }
+
+	/// <summary>
 	/// Sets some metrics of this toolbar, for example button padding.
 	/// </summary>
 	/// <remarks>
@@ -214,15 +219,17 @@ public partial class toolbar {
 			textPaddingR = Dpi.Scale(4, dpi);
 			textPaddingY = Dpi.Scale(1, dpi);
 			image = Dpi.Scale(16, dpi);
-			dot = Dpi.Scale(5, dpi);
-			triangle = Dpi.Scale(8, dpi);
+			if (!tb.NoDefaultImage) {
+				dot = Dpi.Scale(5, dpi);
+				triangle = Dpi.Scale(8, dpi);
+			} else dot = triangle = 0;
 			imagePaddingX = Dpi.Scale(2, dpi);
 
 			//tbBorder += 1; //test border thickness
 			//bBorder += 1;
 		}
 
-		public int ImageEtc(ToolbarItem b, bool vert) => vert ? image : (b.HasImage_ ? image : (b.IsMenu_ ? triangle : dot));
+		public int ImageEtc(ToolbarItem b, bool vert) => b.HasImage_ ? image : (dot == 0 ? 0 : (vert ? image : (b.IsMenu_ ? triangle : dot)));
 	}
 
 	/// <summary>
@@ -345,20 +352,21 @@ public partial class toolbar {
 
 					int x = xImage, y = b.rect.top;
 					if (!b.HasImage_) {
-						//CONSIDER: don't display the dot/triangle if DisplayText false and therefore displays 2 first chars. At least when vertical layout. Unless no text.
-						g.SmoothingMode = SmoothingMode.HighQuality;
-						y += (b.rect.Height - m.dot) / 2;
-						if (vert) x += m.image / 4;
-						if (b.IsMenu_) {
-							y += m.triangle / 6;
-							x -= m.triangle / 4; if (!vert) x++;
-							brushTriangle ??= new SolidBrush(Color.YellowGreen);
-							g.FillPolygon(brushTriangle, new Point[] { new(x, y), new(x + m.triangle, y), new(x + m.triangle / 2, y + m.triangle / 2) });
-						} else {
-							brushDot ??= new SolidBrush(Color.SkyBlue);
-							g.FillEllipse(brushDot, x - .5f, y, m.dot, m.dot);
+						if (m.dot > 0) {
+							g.SmoothingMode = SmoothingMode.HighQuality;
+							y += (b.rect.Height - m.dot) / 2;
+							if (vert) x += m.image / 4;
+							if (b.IsMenu_) {
+								y += m.triangle / 6;
+								x -= m.triangle / 4; if (!vert) x++;
+								brushTriangle ??= new SolidBrush(Color.YellowGreen);
+								g.FillPolygon(brushTriangle, new Point[] { new(x, y), new(x + m.triangle, y), new(x + m.triangle / 2, y + m.triangle / 2) });
+							} else {
+								brushDot ??= new SolidBrush(Color.SkyBlue);
+								g.FillEllipse(brushDot, x - .5f, y, m.dot, m.dot);
+							}
+							g.SmoothingMode = SmoothingMode.None;
 						}
-						g.SmoothingMode = SmoothingMode.None;
 					} else if (b.image2 != null) {
 						g.DrawImage(b.image2, x, y + (b.rect.Height - m.image) / 2, m.image, m.image);
 					}

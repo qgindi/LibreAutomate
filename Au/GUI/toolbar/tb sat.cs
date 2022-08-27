@@ -179,7 +179,8 @@ public partial class toolbar {
 	/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
-	public toolbar AutoHideScreenEdge(MouseTriggerArgs mta!!, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
+	public toolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
+		Not_.Null(mta);
 		if (mta.Trigger.Kind != TMKind.Edge) throw new ArgumentException("Not an edge trigger.");
 		return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.Screen, rangeStart, rangeEnd, thickness, ctorFlags, f_, l_);
 	}

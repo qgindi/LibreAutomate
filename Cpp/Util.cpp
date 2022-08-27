@@ -11,7 +11,7 @@ void Print(STR s)
 {
 #if true
 	if(!IsWindow(s_QM2)) {
-		s_QM2 = FindWindow(L"QM_Editor", 0); if(!s_QM2) return;
+		s_QM2 = wn::FindWnd(L"QM_Editor", 0); if(!s_QM2) return;
 	}
 	//SendMessageW(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""));
 	DWORD_PTR res;
@@ -233,6 +233,35 @@ HWND FindChildByClassName(HWND w, STR className, bool visible)
 		return 0;
 	});
 	return R;
+}
+
+HWND FindChildByClassName(HWND w, STR className1, STR className2, OUT bool& second, bool visible)
+{
+	HWND R = 0;
+	wn::EnumChildWindows(w, [&R, className1, className2, &second, visible, w](HWND c)
+	{
+		if(visible && !IsVisibleInWindow(c, w)) return 1;
+		int i = wn::ClassNameIs(c, { className1, className2 });
+		if(i == 0) return 1;
+		second = i == 2;
+		R = c;
+		return 0;
+	});
+	return R;
+}
+
+HWND FindWndEx(HWND wParent, HWND wAfter, STR cn, STR name) {
+	//see comments in Api.FindWindowEx.
+	//never mind: should repeat only on Win11. Anyway I guess MS soon will fix it.
+	for (int i = 5; --i >= 0;) {
+		HWND w = ::FindWindowEx(wParent, wAfter, cn, name);
+		if (w) return w;
+	}
+	return 0;
+}
+
+HWND FindWnd(STR cn, STR name) {
+	return FindWndEx(0, 0, cn, name);
 }
 
 bool WinformsNameIs(HWND w, STR name)

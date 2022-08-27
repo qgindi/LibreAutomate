@@ -6,7 +6,7 @@ namespace Au.Triggers;
 /// Flags of hotkey triggers.
 /// </summary>
 [Flags]
-public enum TKFlags : byte
+public enum TKFlags
 {
 	/// <summary>
 	/// Allow other apps to receive the key down message too.
@@ -37,6 +37,16 @@ public enum TKFlags : byte
 	/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 	/// </summary>
 	NoModOff = 16,
+
+	/// <summary>
+	/// The key must be an "extended key". Used mostly to distinguish numpad keys Enter, Home, End, PgUp, PgDown, arrows, Ins and Del from same non-numpad keys. Numpad Enter is extended, other numpad keys aren't. See <see cref="KKeyScan"/> example code.
+	/// </summary>
+	ExtendedYes = 32,
+
+	/// <summary>
+	/// The key must not be an "extended key". Used mostly to distinguish numpad keys Enter, Home, End, PgUp, PgDown, arrows, Ins and Del from same non-numpad keys. Numpad Enter is extended, other numpad keys aren't. See <see cref="KKeyScan"/> example code.
+	/// </summary>
+	ExtendedNo = 64,
 }
 
 /// <summary>
@@ -204,6 +214,11 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 				for (; v != null; v = v.next) {
 					var x = v as HotkeyTrigger;
 					if ((mod & x.modMask) != x.modMasked) continue;
+
+					switch (x.flags & (TKFlags.ExtendedYes | TKFlags.ExtendedNo)) {
+					case TKFlags.ExtendedYes: if (!k.IsExtended) continue; break;
+					case TKFlags.ExtendedNo: if (k.IsExtended) continue; break;
+					}
 
 					switch (x.flags & (TKFlags.LeftMod | TKFlags.RightMod)) {
 					case TKFlags.LeftMod: if (thc.ModL != mod) continue; break;

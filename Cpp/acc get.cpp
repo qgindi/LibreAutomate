@@ -4,16 +4,22 @@
 
 namespace outproc
 {
-void AccEnableChrome(HWND w);
+void AccEnableChrome(HWND w, HWND c = 0);
 }
 
 namespace {
 
-enum class _ESpecWnd { None, Chrome, Java, OO, Mozilla };
+enum class _ESpecWnd { None, Chrome, Java, OO, Mozilla, ChromeControl, ChromeControl2 };
 
 //Returns: 1 Chrome, 2 Java, 3 OpenOffice/LibreOffice, 4 Mozilla, 0 none.
 _ESpecWnd _IsSpecWnd(HWND wTL, HWND w)
 {
+	if(w != wTL) {
+		switch(wn::ClassNameIs(w, { c_CRW, L"Chrome_WidgetWin_1" })) {
+		case 1: return _ESpecWnd::ChromeControl; //eg WebView2
+		case 2: return _ESpecWnd::ChromeControl2;
+		}
+	}
 	int i = wn::ClassNameIs(wTL, { L"Chrome*", L"SunAwt*", L"SAL*FRAME", L"Mozilla*" });
 	if(i > 0 && w != wTL && i != (int)_IsSpecWnd(w, w)) i = 0; //if control, ignore if classname not similar
 	return (_ESpecWnd)i;
@@ -104,7 +110,7 @@ bool _FromPoint_DW1(POINT p, ref AccRaw& a, out AccRaw& ar, bool notThis) {
 		if(!(role == ROLE_SYSTEM_PAGETAB || role == ROLE_SYSTEM_OUTLINEITEM)) return false;
 		notThis = true;
 	}
-	if(!notThis) { //eg in powershell the pagetab has INVISIBLE style
+	if(!notThis) { //eg in Win10 powershell the pagetab has INVISIBLE style
 		long state;
 		if(0 == a.get_accState(out state) && (state & (STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_OFFSCREEN)) == STATE_SYSTEM_INVISIBLE) return false;
 	}
@@ -123,11 +129,20 @@ bool _FromPoint_DW1(POINT p, ref AccRaw& a, out AccRaw& ar, bool notThis) {
 			}
 		}
 	}
-	if(notThis) return false;
+	if (notThis) {
+		return false;
+	}
 	ar.acc = a.acc; a.acc = nullptr; ar.elem = a.elem;
 	return true;
 	//never mind: a smaller sibling could be on top of the found.
-	//	The sibling is near, and in the tool dialog it's easy to select it in the tree.
+	//	The sibling is near, and in the tool window it's easy to select it in the tree.
+
+	//never mind: may not show item rects even with 'Smaller', because they are in a sibling elm of the direct mouse elm.
+	//	Known cases: Chrome bookmarks sidepanel, PAD (the first window).
+	//	Workaround 1: If no children, try siblings whose rect contains the point.
+	//	Workaround 2: Start _FromPoint_DW1 from parent.
+	//	But the workarounds could make slower and less reliable in other cases where now works well.
+	//	It's rare, and users can browse the tree.
 }
 
 void _FromPoint_DescendantWorkaround(POINT p, ref IAccessible*& a, ref long& elem, ref BYTE& role)
@@ -218,8 +233,8 @@ g1:
 		VARIANT v;
 		HRESULT hr = AccessibleObjectFromPoint(p, &iacc, &v);
 		if(hr == 0 && !iacc) hr = E_FAIL;
-		if(hr != 0) { //rare. Eg treeview in HtmlHelp 2 (then UIA works).
-			if(trySmaller) { flags |= eXYFlags::UIA; goto g1; }
+		if(hr != 0) { //rare. Examples: treeview in HtmlHelp 2; Windows Security. Then UIA works.
+			if(trySmaller || !!(flags & eXYFlags::OrUIA)) { flags |= eXYFlags::UIA; goto g1; }
 			return hr;
 		}
 		assert(v.vt == VT_I4 || v.vt == 0);
@@ -230,7 +245,7 @@ g1:
 		//Perf.Next('r');
 
 		//UIA?
-		if(trySmaller && role != ROLE_CUSTOM) { //and ignore elem
+		if(role != ROLE_CUSTOM && (trySmaller || (!!(flags & eXYFlags::OrUIA) && _IsContainer(role)))) { //and ignore elem
 			RETRY_IF_CHANGED_WINDOW;
 			if(_FromPoint_UiaWorkaround(p, ref iacc, ref elem)) {
 				miscFlags |= eAccMiscFlags::UIA;
@@ -317,27 +332,27 @@ gRetry:
 			}
 		}
 		//specWnd = _ESpecWnd::None;
-	} else if(specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) {
-		if(specWnd == _ESpecWnd::Chrome) {
-			outproc::AccEnableChrome(wTL);
-			//note: now can get wrong AO, although the above func waits for new good DOCUMENT (max 3 s).
-			//	Chrome updates web page AOs lazily. The speed depends on web page. Can get wrong AO even after loong time.
-			//	Or eg can be good AO, but some its properties are still not set.
-			//	This func doesn't know what AO must be there, and cannot wait.
-			//	Instead, where need such reliability, the caller script can eg wait for certain AO (role LINK etc) at that point.
-		} else { //OpenOffice, LibreOffice
-			tsr.Set(wTL);
-			//OpenOffice bug: crashes on exit if AccessibleObjectFromPoint or AccessibleObjectFromWindow called with SPI_GETSCREENREADER.
-			//	Could not find a workaround.
-			//	Inspect.exe too.
-			//	Does not if SPI_GETSCREENREADER was when starting OO.
-			//	Does not if we get certain AO (eg DOCUMENT), eiher from point or when searching, now or later. Crashes eg if the AO is a toolbar button.
-			//	Tested only with Writer.
-			//	tested: inproc does not help.
-			//	This info is old, maybe now something changed. Anyway, OpenOffice often crashes when using its AO.
-		}
-		//CONSIDER: AccEnableFirefox
+	} else if(specWnd == _ESpecWnd::Chrome) {
+		AccEnableChrome(wTL);
+		//note: now can get wrong AO, although the above func waits for new good DOCUMENT (max 3 s).
+		//	Chrome updates web page AOs lazily. The speed depends on web page. Can get wrong AO even after loong time.
+		//	Or eg can be good AO, but some its properties are still not set.
+		//	This func doesn't know what AO must be there, and cannot wait.
+		//	Instead, where need such reliability, the caller script can eg wait for certain AO (role LINK etc) at that point.
+	} else if(specWnd == _ESpecWnd::ChromeControl) {
+		AccEnableChrome(wTL, wFP);
+	} else if(specWnd == _ESpecWnd::OO) { //OpenOffice, LibreOffice
+		tsr.Set(wTL);
+		//OpenOffice bug: crashes on exit if AccessibleObjectFromPoint or AccessibleObjectFromWindow called with SPI_GETSCREENREADER.
+		//	Could not find a workaround.
+		//	Inspect.exe too.
+		//	Does not if SPI_GETSCREENREADER was when starting OO.
+		//	Does not if we get certain AO (eg DOCUMENT), eiher from point or when searching, now or later. Crashes eg if the AO is a toolbar button.
+		//	Tested only with Writer.
+		//	tested: inproc does not help.
+		//	This info is old, maybe now something changed. Anyway, OpenOffice often crashes when using its AO.
 	}
+	//CONSIDER: AccEnableFirefox
 
 	//The caller may want to modify flags depending on window. Also need to detect DPI-scaled windows (I don't want to duplicate the code here).
 	//	Use callback because this func can retry with another window.
@@ -459,13 +474,17 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResu
 			aResult.misc.flags = eAccMiscFlags::Java;
 			return 0;
 		}
-	} else if(specWnd == _ESpecWnd::Chrome || specWnd == _ESpecWnd::OO) {
-		if(specWnd == _ESpecWnd::Chrome) {
-			AccEnableChrome(w);
-		} else { //OpenOffice, LibreOffice
-			tsr.Set(wTL);
-			//OpenOffice bug: crashes. More info in Cpp_AccFromPoint.
-		}
+	} else if(specWnd == _ESpecWnd::Chrome) {
+		AccEnableChrome(w);
+	} else if(specWnd == _ESpecWnd::ChromeControl) {
+		AccEnableChrome(wTL, w);
+	} else if(specWnd == _ESpecWnd::ChromeControl2) {
+		//if WebView, focused is parent control (class Chrome_WidgetWin_1) of the legacy control (class c_CRW). Need the legacy control to enable AO.
+		HWND w2 = wn::FindWndEx(w, 0, c_CRW, null);
+		if(w2) AccEnableChrome(wTL, w2);
+	} else if(specWnd == _ESpecWnd::OO) { //OpenOffice, LibreOffice
+		tsr.Set(wTL);
+		//OpenOffice bug: crashes. More info in Cpp_AccFromPoint.
 	}
 
 gNotinproc:

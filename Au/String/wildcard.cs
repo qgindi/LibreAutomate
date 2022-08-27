@@ -44,7 +44,8 @@ namespace Au {
 		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return false.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public wildex([ParamString(PSFormat.Wildex)] string wildcardExpression!!, bool matchCase = false, bool noException = false) {
+		public wildex([ParamString(PSFormat.Wildex)] string wildcardExpression, bool matchCase = false, bool noException = false) {
+			Not_.Null(wildcardExpression);
 			var w = wildcardExpression;
 			try {
 				_type = WXType.Wildcard;
@@ -261,7 +262,8 @@ namespace Au.Types {
 		}
 #else
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this string t, string pattern!!, bool ignoreCase = false) {
+		public static bool Like(this string t, string pattern, bool ignoreCase = false) {
+			Not_.Null(pattern);
 			int patLen = pattern.Length;
 			if (t == null) return false;
 			if (patLen == 0) return t.Length == 0;
@@ -278,7 +280,8 @@ namespace Au.Types {
 
 		/// <inheritdoc cref="Like(string, string, bool)"/>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this RStr t, string pattern!!, bool ignoreCase = false) {
+		public static bool Like(this RStr t, string pattern, bool ignoreCase = false) {
+			Not_.Null(pattern);
 			int patLen = pattern.Length;
 			if (patLen == 0) return t.Length == 0;
 			if (patLen == 1 && pattern[0] == '*') return true;

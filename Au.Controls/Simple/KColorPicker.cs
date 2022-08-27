@@ -28,7 +28,7 @@ namespace Au.Controls
 			var bColor = new Rectangle { Width = 9, Height = 9, Fill = Brushes.Black, Margin = new Thickness(4, 2, 4, 0) };
 			p2.Children.Add(bColor);
 
-			_tColor = new() { Width = 68, Text = "000000" };
+			_tColor = new() { Width = 68, Text = "000000", ToolTip = fColor.ToolTip };
 			_tColor.TextChanged += (o, e) => {
 				int col = _GetColor(bgr: true);
 				if (!_hlsChanging) {
@@ -56,7 +56,7 @@ namespace Au.Controls
 			//hls: 0 H, 1 L, 2 S.
 			TextBox _AddHLS(int hls, string label, string tooltip) {
 				p2.Children.Add(new TextBlock { Text = label, Margin = new Thickness(hls == 0 ? 18 : 12, 0, 4, 0), ToolTip = tooltip });
-				TextBox t = new() { Width = 34, Text = "0" };
+				TextBox t = new() { Width = 34, Text = "0", ToolTip = tooltip };
 				t.TextChanged += (o, e) => {
 					if (_hlsChanging) return;
 					var tb = o as TextBox;

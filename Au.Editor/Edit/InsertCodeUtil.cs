@@ -32,7 +32,7 @@ static class InsertCodeUtil {
 
 	/// <summary>
 	/// Appends C# code <i>s</i> to <i>b</i>.
-	/// For each line adds <i>indent</i> tabs, except in multiline @"string" or """string""".
+	/// For each line adds <i>indent</i> tabs, except in multiline @"string" or """string""" (same for u8).
 	/// Ignores the last empty line of <i>s</i>. Appends newline at the end if <b>andNewline</b>.
 	/// </summary>
 	public static void AppendCodeWithIndent(StringBuilder b, string s, int indent, bool andNewline) {
@@ -44,7 +44,7 @@ static class InsertCodeUtil {
 				if (s[v.start] == '#' && cu.FindTrivia(v.start).IsDirective) canIndent = false;
 				else {
 					var tok = cu.FindToken(v.start);
-					canIndent = tok.IsInString(v.start, s, out _) == false;
+					canIndent = tok.IsInString(v.start, s, out _, orU8: true) == false;
 				}
 				if (canIndent) b.Append('\t', indent);
 				b.Append(s, v.start, v.Length);

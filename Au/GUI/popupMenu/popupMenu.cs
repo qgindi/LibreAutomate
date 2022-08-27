@@ -746,6 +746,8 @@ namespace Au {
 				_w.Post(0);
 			}
 			_z?.Dispose(); _z = null;
+			_font?.Dispose(); _font = null;
+			_fontBold?.Dispose(); _fontBold = null;
 			_scroll = null;
 			_sub = default;
 			_size = default;

@@ -139,7 +139,7 @@ namespace Au.Types
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			//Cpp_Unload(0); //in Setup32.dll, it's 32-bit
-			run.it(@"Q:\app\Au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
+			run.it(@"C:\code\au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
 		}
 #endif
 
@@ -161,6 +161,9 @@ namespace Au.Types
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern nint Cpp_AccWorkaround(Api.IAccessible a, nint wParam, ref nint obj);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void Cpp_UEF(bool set);
 
 		// TEST
 

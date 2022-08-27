@@ -1,5 +1,5 @@
-- name: C# Uiscripter
-  href: Uiscripter.md
+- name: Program
+  href: Program.md
 - name: Code editor
   href: Code editor.md
 - name: Command line

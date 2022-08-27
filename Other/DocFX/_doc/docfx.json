@@ -1,81 +1,81 @@
 {
-    "metadata": [
+  "metadata": [
+    {
+      "src": [
         {
-            "src": [
-                {
-                    "src": "Q:/Temp/Au/DocFX/source/",
-                    //"src": "../../../_/",
-                  "files": [
-                    "Au.csproj"
-                    //"Au.dll" //DocFX bug: "Error extracting metadata for Q:/app/Au/_/Au.dll: System.ArgumentException: Illegal characters in path". Even if the XML file is almost empty.
-                  ]
-                }
-            ],
-            "dest": "api",
-            "filter": "filter.yml",
-            "disableGitFeatures": false,
-            "disableDefaultFilter": false
+          "src": "Q:/Temp/Au/DocFX/source/",
+          //"src": "../../../_/",
+          "files": [
+            "Au.csproj"
+            //"Au.dll" //DocFX bug: "Error extracting metadata for Q:/app/Au/_/Au.dll: System.ArgumentException: Illegal characters in path". Even if the XML file is almost empty.
+          ]
         }
-    ],
-    "build": {
-        "content": [
-            {
-                "files": [
-                    "api/**.yml",
-                    "api/index.md"
-                ]
-            },
-            {
-                "files": [
-                    "articles/**.md",
-                    "articles/**/toc.yml",
-                    "editor/**.md",
-                    "editor/**/toc.yml",
-                    "toc.yml",
-                    "*.md"
-                ]
-            }
-        ],
-        "resource": [
-            {
-                "files": [
-                    "images/**"
-                ]
-            }
-        ],
-        "overwrite": [
-            {
-                "files": [
-                    "apidoc/**.md"
-                ],
-                "exclude": [
-                    "obj/**",
-                    "_site/**"
-                ]
-            }
-        ],
-        "globalMetadata": {
-            "_appTitle": "C# Uiscripter",
-            "_enableNewTab": true,
-            "_disableBreadcrumb": true,
-            "_disableAffix": true,
-            "_disableContribution": true
-        },
-        "dest": "_site",
-        "globalMetadataFiles": [],
-        "fileMetadataFiles": [],
-        "template": [
-            "default",
-            "template1",
-            "C:/Users/G/.nuget/packages/memberpage/2.58.9/content",
-            "template2"
-        ],
-        "postProcessors": [],
-        "markdownEngineName": "markdig",
-        "noLangKeyword": false,
-        "keepFileLink": false,
-        "cleanupCacheHistory": false,
-        "disableGitFeatures": false,
-        "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ]
+      ],
+      "dest": "api",
+      "filter": "filter.yml",
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false
     }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "api/**.yml",
+          "api/index.md"
+        ]
+      },
+      {
+        "files": [
+          "articles/**.md",
+          "articles/**/toc.yml",
+          "editor/**.md",
+          "editor/**/toc.yml",
+          "toc.yml",
+          "*.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "overwrite": [
+      {
+        "files": [
+          "apidoc/**.md"
+        ],
+        "exclude": [
+          "obj/**",
+          "_site/**"
+        ]
+      }
+    ],
+    "globalMetadata": {
+      "_appTitle": "LibreAutomate",
+      "_enableNewTab": true,
+      "_disableBreadcrumb": true,
+      "_disableAffix": true,
+      "_disableContribution": true
+    },
+    "dest": "_site",
+    "globalMetadataFiles": [],
+    "fileMetadataFiles": [],
+    "template": [
+      "default",
+      "template1",
+      "C:/Users/G/.nuget/packages/memberpage/2.58.9/content",
+      "template2"
+    ],
+    "postProcessors": [],
+    "markdownEngineName": "markdig",
+    "noLangKeyword": false,
+    "keepFileLink": false,
+    "cleanupCacheHistory": false,
+    "disableGitFeatures": false,
+    "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ]
+  }
 }

@@ -2,7 +2,7 @@
 uid: index
 ---
 
-# C# Uiscripter
+# LibreAutomate C#
 
 The program consists of an automation library and a script editor.
 
@@ -13,14 +13,14 @@ Some features: Send keys and text to the active window. Find and click buttons, 
 
 Written mostly in C#, it is a .NET library.
 
-Free, open-source.
+Free, open-source. Can be used anywhere, not only with the editor program.
 
 #### Editor
 The editor program is an integrated scripting environment for creating and executing automation scripts that use the library.
 
 The programming language for writing scripts is C#.
 
-Can be used to create C# scripts, programs (.exe) and libraries (.dll) for any purpose, with or without the automation library. Like a mini Visual Studio.
+Can be used to create C# scripts, programs (.exe) and libraries (.dll) for any purpose. Like a mini Visual Studio.
 
 Free, open-source.
 
@@ -31,7 +31,7 @@ Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 The program and the library are very young. Need more testing. Some classes/functions/etc may be changed in the future.
 
 #### Links
-- [Download](https://www.quickmacros.com/au/Uiscripter.exe) v0.7.0, 2022-07-12, 24 MB
+- [Download](https://www.quickmacros.com/au/LibreAutomate.exe) v0.7.0, 2022-07-12, 24 MB
 - [Changes](https://github.com/qgindi/Au/blob/master/Other/DocFX/_doc/changes/)
 - [Source code](https://github.com/qgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)

@@ -119,7 +119,7 @@ public struct WndSavedRect
 			var v = scr.Info;
 			r.Offset(v.workArea.left - v.rect.left, v.workArea.top - v.rect.top);
 		}
-		r.EnsureInScreen(scr, !IsToolWindow); //SHOULDDO: use simple rect adjust. Or add EnsureInRect.
+		r.EnsureInScreen(scr, workArea: !IsToolWindow); //SHOULDDO: use simple rect adjust. Or add EnsureInRect.
 		return r;
 	}
 

@@ -124,8 +124,9 @@
 		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
 		/// </remarks>
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		public static wnd CreateWindow(WNDPROC wndProc!!, bool keepAlive, string className!!, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, wnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
+		public static wnd CreateWindow(WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, wnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+			Not_.Null(wndProc, className);
 
 			t_windows ??= new();
 			wnd w;

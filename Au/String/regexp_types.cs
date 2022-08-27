@@ -191,7 +191,8 @@ namespace Au.Types
 		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is true).
 		/// </remarks>
 		/// <seealso cref="regexp.GetGroupNumberOf"/>
-		public int GroupNumberFromName(string groupName!!) {
+		public int GroupNumberFromName(string groupName) {
+			Not_.Null(groupName);
 			fixed (char* p = groupName) return GroupNumberFromName_(p, groupName.Length, out _);
 		}
 
@@ -209,7 +210,8 @@ namespace Au.Types
 		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is true).
 		/// </remarks>
 		/// <seealso cref="regexp.GetGroupNumberOf"/>
-		public int GroupNumberFromName(string groupName!!, out bool notUnique) {
+		public int GroupNumberFromName(string groupName, out bool notUnique) {
+			Not_.Null(groupName);
 			fixed (char* p = groupName) return GroupNumberFromName_(p, groupName.Length, out notUnique);
 		}
 

@@ -192,7 +192,8 @@ public static unsafe class Hash {
 		/// <summary>Adds data.</summary>
 		/// <exception cref="ArgumentNullException">data is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">size &lt; 0.</exception>
-		public void Add(void* data!!, int size) {
+		public void Add(void* data, int size) {
+			Not_.Null(data);
 			if (size < 0) throw new ArgumentOutOfRangeException();
 			if (_state != 1) { Api.MD5Init(out this); _state = 1; }
 			Api.MD5Update(ref this, data, size);

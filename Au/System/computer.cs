@@ -92,6 +92,14 @@ namespace Au {
 			return Api.LockWorkStation();
 		}
 
+		/// <summary>
+		/// Returns true if the computer is using battery power.
+		/// </summary>
+		/// <seealso cref="System.Windows.Forms.SystemInformation.PowerStatus"/>
+		public static bool isOnBattery => System.Windows.Forms.SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline; //first time 4 ms
+
+		//public static bool isOnBattery => System.Windows.SystemParameters.PowerLineStatus == System.Windows.PowerLineStatus.Offline; //first time 21 ms
+
 		//FUTURE: events desktopSwitchEvent, sleepEvent. Like SystemEvents.
 		//public static event Action desktopSwitchEvent {
 		//	add {

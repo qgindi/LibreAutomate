@@ -69,7 +69,7 @@ namespace Au.More
 		/// false - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns null if no custom icon or if editor isn't running.
 		/// true - load image from xaml/png/etc file, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like "*Pack.Icon color" (see menu Tools -> Icons).
 		/// 
-		/// To detect whether as string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns true, it is image.
+		/// To detect whether a string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns true, it is image.
 		/// </param>
 		/// <param name="onException">Action to call when fails to load image. If null, then silently returns null. Parameters are image source string and exception.</param>
 		public unsafe Bitmap Get(string imageSource, int dpi, bool isImage, Action<string, Exception> onException = null) {
@@ -77,7 +77,8 @@ namespace Au.More
 			//var p1 = perf.local();
 			lock (this) {
 				bool isXaml = isImage && (imageSource.Starts('<') || imageSource.Ends(".xaml", true));
-				if (!isImage && imageSource.Ends(".cs", true) && !pathname.isFullPath(imageSource, orEnvVar: true)) {
+				bool isStore = !isImage && imageSource.Starts(@"shell:AppsFolder\"); //compare case-sensitive. Then users can pass eg "shell:appsFolder..." to display white icons in blue background.
+				if (!isImage && !isStore && imageSource.Ends(".cs", true) && !pathname.isFullPath(imageSource, orEnvVar: true)) {
 					imageSource = script.editor.GetIcon(imageSource, EGetIcon.PathToIconName);
 					//p1.Next('x');
 					if (imageSource == null) return null;
@@ -85,9 +86,9 @@ namespace Au.More
 					//SHOULDDO: use Dictionary<imageSource, iconName> to avoid frequent GetIcon for same imageSource. It seems currently don't need it for this library.
 					//rejected: Move this code to the caller that needs it (MTBase).
 				}
-				bool isIconName = isImage && !isXaml && imageSource.Starts('*');
+				bool isIconName = isImage && !isXaml && !isStore && imageSource.Starts('*');
 				if (isIconName) isXaml = true;
-				if (!isXaml) dpi = 96; //will scale when drawing, it's fast and not so bad
+				if (!isXaml && !isStore) dpi = 96; //will scale when drawing, it's fast and not so bad
 				string imageKey = imageSource;
 				if (!isIconName) {
 					if ((isXaml && imageKey.Starts('<')) || (isImage && ImageUtil.HasImageStringPrefix(imageKey))) imageKey = Hash.MD5(imageSource, base64: true);
@@ -158,7 +159,8 @@ namespace Au.More
 
 						try {
 							if (!isImage) {
-								b = icon.of(imageSource, _imageSize)?.ToGdipBitmap();
+								b = isStore ? icon.winStoreAppImage(imageSource, Dpi.Scale(_imageSize, dpi)) : null;
+								b ??= icon.of(imageSource, _imageSize)?.ToGdipBitmap();
 							} else {
 								if (isIconName) {
 									imageSource = script.editor.GetIcon(imageSource, EGetIcon.IconNameToXaml);

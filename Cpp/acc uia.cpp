@@ -254,6 +254,7 @@ public:
 		CONTROLTYPEID t;
 		HRESULT hr = _ae->get_CurrentControlType(&t);
 		if(hr == 0) {
+			//https://docs.microsoft.com/en-us/windows/win32/winauto/appendix-g--active-accessibility-bridge-to-ui-automation
 			int i = 0; STR s = L"unknown";
 			switch(t) {
 			case UIA_ButtonControlTypeId: i = ROLE_SYSTEM_PUSHBUTTON; break;
@@ -281,7 +282,7 @@ public:
 			case UIA_ToolTipControlTypeId: i = ROLE_SYSTEM_TOOLTIP; break;
 			case UIA_TreeControlTypeId: i = ROLE_SYSTEM_OUTLINE; break;
 			case UIA_TreeItemControlTypeId: i = ROLE_SYSTEM_OUTLINEITEM; break;
-			case UIA_CustomControlTypeId: s = L"Custom"; break;
+			case UIA_CustomControlTypeId: i = ROLE_SYSTEM_CLIENT; break; //documented as the default MSAA role. And it's good for _IsContainer.
 			case UIA_GroupControlTypeId: i = ROLE_SYSTEM_GROUPING; break;
 			case UIA_ThumbControlTypeId: i = ROLE_SYSTEM_INDICATOR; break;
 			case UIA_DataGridControlTypeId: i = ROLE_SYSTEM_LIST; break;

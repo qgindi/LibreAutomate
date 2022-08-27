@@ -759,7 +759,7 @@ namespace Au
 			//print.it(r);
 
 			if (XY != null) {
-				if (XY.inRect) r.MoveInRect(XY.rect, XY.x, XY.y, false);
+				if (XY.inRect) r.MoveInRect(XY.rect, XY.x, XY.y, ensureInRect: false);
 				else r.MoveInScreen(XY.x, XY.y, XY.screen, XY.workArea, ensureInScreen: false);
 				r.EnsureInScreen(workArea: XY.workArea);
 			} else {

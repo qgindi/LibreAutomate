@@ -66,7 +66,11 @@ class DOptions : KDialogWindow {
 		//right column
 		b.StartStack(vertical: true);
 		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(110, TextWrapping.NoWrap)
+			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs")
 			.Validation(_startupScripts_Validation);
+		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.DebuggerScript)
+			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.")
+			.Validation(_ => debuggerScript.Text is string s && !s.NE() && null == App.Model.FindCodeFile(s) ? "Debugger script not found" : null);
 		b.End();
 		b.End();
 
@@ -93,6 +97,8 @@ class DOptions : KDialogWindow {
 
 			var s = startupScripts.Text;
 			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;
+
+			App.Model.DebuggerScript = debuggerScript.Text.NullIfEmpty_();
 		};
 
 		static string _startupScripts_Validation(FrameworkElement fe) {

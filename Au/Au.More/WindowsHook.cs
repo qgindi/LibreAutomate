@@ -256,7 +256,8 @@ namespace Au.More
 		public static WindowsHook ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0, bool setNow = true)
 			=> new(Api.WH_CALLWNDPROCRET, hookProc, setNow, threadId);
 
-		WindowsHook(int hookType, Delegate hookProc!!, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string m_ = null) {
+		WindowsHook(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string m_ = null) {
+			Not_.Null(hookProc);
 			_proc2 = hookProc;
 			_hookType = hookType;
 			_hookTypeString = m_;

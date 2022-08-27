@@ -314,7 +314,7 @@ namespace Au.Types
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.MoveInScreen"/>.
 		/// </remarks>
 		public void MoveInScreen(Coord x, Coord y, screen screen = default, bool workArea = true, bool ensureInScreen = true) {
-			wnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
+			wnd.Internal_.MoveRectInScreen(false, ref this, x, y, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -325,7 +325,7 @@ namespace Au.Types
 		/// <param name="y">Y coordinate relative to <i>r</i>. Default - center.</param>
 		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>.</param>
 		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = false) {
-			wnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
+			wnd.Internal_.MoveRectInRect(ref this, x, y, r, ensureInRect);
 		}
 
 		/// <summary>
@@ -338,7 +338,7 @@ namespace Au.Types
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.EnsureInScreen"/>.
 		/// </remarks>
 		public void EnsureInScreen(screen screen = default, bool workArea = true) {
-			wnd.Internal_.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
+			wnd.Internal_.MoveRectInScreen(true, ref this, default, default, screen, workArea, true);
 		}
 
 		/// <summary>

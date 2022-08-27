@@ -1,5 +1,7 @@
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
+using System.Xml.Linq;
+
 namespace Au.Types {
 	static unsafe partial class Api {
 		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
@@ -70,7 +72,7 @@ namespace Au.Types {
 		internal const int SW_SHOWNORMAL = 1;
 		internal const int SW_SHOWMINIMIZED = 2;
 		internal const int SW_SHOWMAXIMIZED = 3;
-		//internal const int SW_SHOWNOACTIVATE = 4; //restores min/max window
+		internal const int SW_SHOWNOACTIVATE = 4; //restores min/max window
 		internal const int SW_SHOW = 5;
 		internal const int SW_MINIMIZE = 6;
 		internal const int SW_SHOWMINNOACTIVE = 7;
@@ -94,11 +96,29 @@ namespace Au.Types {
 		//	It is non-zero if was disabled, 0 if was enabled.
 		//	Declared void to avoid programming errors.
 
-		[DllImport("user32.dll", EntryPoint = "FindWindowW", SetLastError = true)]
-		internal static extern wnd FindWindow(string lpClassName, string lpWindowName);
-
 		[DllImport("user32.dll", EntryPoint = "FindWindowExW", SetLastError = true)]
-		internal static extern wnd FindWindowEx(wnd hWndParent, wnd hWndChildAfter, string lpszClass, string lpszWindow);
+		internal static extern wnd _FindWindowEx(wnd hWndParent, wnd hWndChildAfter, string lpszClass, string lpszWindow);
+
+		internal static wnd FindWindowEx(wnd wParent = default, wnd wAfter = default, string cn = null, string name = null) {
+			//Windows 11 bug: FindWindow[Ex] occasionally returns 0 for an existing window.
+			//	Second or third call usually succeeds.
+			//	More often fails when there is some activity, eg when Visual Studio compiles/launches an app, or when opening/closing Notepad++.
+			//	GetLastError 0.
+			//	To reproduce, call every 2 ms, eg to find Notepad by classname.
+			//	EnumWindows does not fail.
+			//	On Win10 never noticed and cannot reproduce.
+			//	Maybe FindWindowEx uses an unsafe loop like with GetWindow. When Z order changes, skips part of windows.
+			//	FUTURE: remove this workaround when API fixed. Also in wn::FindWndEx.
+			if (osVersion.minWin11) {
+				for (int i = 5; --i >= 0;) {
+					var w = _FindWindowEx(wParent, wAfter, cn, name);
+					if (!w.Is0) return w;
+				}
+				return default;
+			} else {
+				return _FindWindowEx(wParent, wAfter, cn, name);
+			}
+		}
 
 		internal struct WNDCLASSEX {
 			public int cbSize;
@@ -443,7 +463,12 @@ namespace Au.Types {
 		}
 
 		[DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
-		internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+		static extern bool _GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+		internal static bool GetMonitorInfo(IntPtr hMonitor, out MONITORINFO lpmi) {
+			lpmi = new MONITORINFO { cbSize = sizeof(MONITORINFO) };
+			return _GetMonitorInfo(hMonitor, ref lpmi);
+		}
 
 		internal delegate bool MONITORENUMPROC(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle dwData);
 
@@ -724,6 +749,7 @@ namespace Au.Types {
 		internal const int SPI_GETACTIVEWNDTRKTIMEOUT = 8194;
 		internal const int SPI_GETACTIVEWINDOWTRACKING = 4096;
 		internal const int SPI_GETACCESSTIMEOUT = 60;
+		internal const int SPI_GETMOUSEWHEELROUTING = 0x201C;
 
 		internal const uint SPIF_UPDATEINIFILE = 0x1;
 		internal const uint SPIF_SENDCHANGE = 0x2;

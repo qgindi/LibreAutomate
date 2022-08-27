@@ -205,7 +205,7 @@ namespace Au
 			public static bool useAppIcon { get; set; }
 
 			/// <summary>
-			/// If owner window not specified, use the active window of current thread as owner window (disable it, etc).
+			/// If owner window not specified, use the active or top window of current thread as owner window (disable it, etc).
 			/// </summary>
 			/// <seealso cref="SetOwnerWindow"/>
 			public static bool autoOwnerWindow { get; set; }
@@ -736,7 +736,11 @@ namespace Au
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
 
-			if (_c.hwndParent.Is0 && options.autoOwnerWindow) _c.hwndParent = wnd.thisThread.active; //info: MessageBox.Show also does it, but it also disables all thread windows
+			if (_c.hwndParent.Is0 && options.autoOwnerWindow) {
+				var wa = wnd.thisThread.active;
+				if (wa.Is0) wa = wnd.getwnd.TopThreadWindow_(onlyVisible: true, nonPopup: true);
+				_c.hwndParent = wa; //info: MessageBox.Show also does it, but it also disables all thread windows
+			}
 			if (_c.hwndParent.IsAlive) {
 				if (!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
 				if (_enableOwner && !_c.hwndParent.IsEnabled(false)) _enableOwner = false;
@@ -1435,6 +1439,7 @@ namespace Au
 		public static bool showOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
 			return 1 == show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
+		//TODO: add ///parameters everywhere. Now no intellisense.
 
 		/// <summary>
 		/// Shows dialog with Yes and No buttons.

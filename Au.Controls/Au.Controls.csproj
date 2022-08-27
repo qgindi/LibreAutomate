@@ -26,12 +26,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="Toolbars\**" />
-		<EmbeddedResource Remove="Toolbars\**" />
-		<None Remove="Toolbars\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <Compile Include="..\Au\Resources\global.cs" Link="resources\global.cs" />
 	</ItemGroup>
 

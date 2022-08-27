@@ -45,7 +45,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Use UI Automation API.
-		/// Need this flag to find UI elements in windows that don't support accessible objects but support UI Automation elements. For example JavaFX applications.
+		/// Need this flag to find UI elements in windows that don't support accessible objects but support UI Automation elements.
 		/// UI elements found with this flag never have HtmlX properties, but can have <see cref="elm.UiaId"/>.
 		/// This flag can be used with most other windows too.
 		/// Don't use this flag when searching in elm (then it is inherited from the elm variable) or web page (role prefix "web:" etc).
@@ -106,7 +106,6 @@ namespace Au.Types
 
 		/// <summary>
 		/// Use UI Automation API.
-		/// Need this flag with some windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
 		/// More info: <see cref="EFFlags.UIA"/>.
 		/// See also flag <b>TrySmaller</b>.
 		/// </summary>
@@ -119,23 +118,27 @@ namespace Au.Types
 		PreferLink = 4,
 
 		/// <summary>
-		/// Try to get smaller element.
-		/// 1. When no flag <b>UIA</b>, use UIA element from point if it's smaller. Because some elements have only UIA children.
-		/// 2. Try to find a descendant that is smaller. Becauses some UI elements don't give a child element from point (bug).
+		/// Try to get a smaller element.
+		/// 1. Try to get a smaller UI Automation element from point.
+		/// 2. Try to find a descendant that is smaller. Becauses some incorrectly implemented UI elements don't give a child element from point.
 		/// 
 		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its bahaviour may change in the future.
 		/// 
 		/// UI element capturing tools should use this flag only with user consent, because:
-		/// 1. It's impossible to get perfect UI element in all cases. Can get wrong element or use UIA when shouldn't.
+		/// 1. It's impossible to get perfect UI element in all cases. Can get wrong element.
 		/// 2. In some cases can be slow.
 		/// 3. In some apps some elements have bugs and the process can crash. Rare.
 		/// 
-		/// The "Find UI element" tool uses this flag when toggled CapsLock.
-		/// This flag is ignored when not in-process, because could be too slow.
+		/// The "Find UI element" tool uses this flag when checked 'Smaller'.
+		/// This flag is ignored when not in-process, because could be too slow. Also ignored in some windows, eg web browsers and Java apps.
 		/// </summary>
 		TrySmaller = 8,
-		//This flag is used in Delm tool dialog when Ctrl+Shift.
-		//Other tested similar apps fail to get/record these descendants. Even NVDA.
+
+		/// <summary>
+		/// Use UI Automation API if the default API fails and in some other cases.
+		/// The "Find UI element" tool uses this flag when 'UIA' is in indeterminate state.
+		/// </summary>
+		OrUIA = 16,
 
 		//note: don't change values. They are passed to the cpp function.
 	}

@@ -7,7 +7,7 @@ using System.IO;
 
 //This small program modifies the Roslyn solution.
 //Setup:
-//Download Roslyn solution to Q:\Downloads\roslyn-main.
+//Download Roslyn solution to C:\Downloads\roslyn-main.
 //Open Roslyn.sln.
 //To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree. It loads projects we need:
 //	In folder Compilers: Core\Microsoft.CodeAnalysis, CSharp\Microsoft.CodeAnalysis.CSharp.
@@ -17,13 +17,13 @@ using System.IO;
 //(skip this if can compile) From Microsoft.CodeAnalysis.Features dependencies remove Scripting. Unload Scripting project. Because it does not compile, and not useful.
 //Edit as described in the '#if false' block at the bottom of this file.
 //Run this project. It modifies Roslyn solution project files.
-//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 7 or 8 dlls to Q:\app\Au\Other\CompilerDlls.
+//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 8 dlls to C:\code\au\Other\CompilerDlls.
 //In editor project do this once:
-//	Add references to the 6 dlls from folder Q:\app\Au\Other\CompilerDlls (listed above).
+//	Add references to the main 6 dlls from folder C:\app\Au\Other\CompilerDlls (listed above).
 //	Add this in editor project for each Roslyn reference: <DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
 //	On build VS will copy the dlls to _\Roslyn.
 //	VS will detect when the dlls modified when building Roslyn.
-//	Edit AppHost.cpp, let it add subfolder Roslyn like it does for subfolder Libraries.
+//	(obsolete) Edit AppHost.cpp, let it add subfolder Roslyn like it does for subfolder Libraries.
 //To get other dlls:
 //	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
 //	Compile. Copy all dlls from the bin folder to _\Roslyn.
@@ -48,11 +48,11 @@ namespace CompilerDlls
 		{
 			bool writeFile = true;
 
-			string roslynDir = @"Q:\Downloads\roslyn-main\src\";
+			string roslynDir = @"C:\Downloads\roslyn-main\src\";
 
 			var project = @"</Project>";
 			var copy = @"  <Target Name=""PostBuild"" AfterTargets=""PostBuildEvent"">
-    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;Q:\app\Au\Other\CompilerDlls\$(TargetFileName)&quot; /y"" />
+    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;C:\code\au\Other\CompilerDlls\$(TargetFileName)&quot; /y"" />
   </Target>
 ";
 			_Mod(@"Features\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Features.csproj", (project, copy, -1));
@@ -119,7 +119,8 @@ namespace CompilerDlls
 
 // - In all 6 projects + Scripting .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
 
-// - Set Release config. Try to compile.
+// - Set Release config. Try to build Microsoft.CodeAnalysis.CSharp.Features (it builds all).
+//	May need to download the latest .NET SDK. Its version specified in global.json.
 
 //(skip this if can compile) - Remove code that uses Scripting project:
 //1. In Features\Core\Portable\Completion\Providers\Scripting\AbstractDirectivePathCompletionProvider.cs remove 2 Scripting usings and 1 code block that uses it.
@@ -204,8 +205,6 @@ namespace CompilerDlls
 
         //    return (result != null) ? result.Keys : SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
         //}
-
-// - (bug fix) In SyntaxTreeExtensions.cs, function AtEndOfIncompleteStringOrCharLiteral, in the first 'for' loop add i++.
 
 // - (bug fix) In SignatureHelpUtilities.cs, function GetSignatureHelpState, remove the 'if' block:
             //au: bug fix. This code replaces correct ArgumentIndex with incorrect. Then another function throws exception. Editor could handle the exception, but then no parameter info.

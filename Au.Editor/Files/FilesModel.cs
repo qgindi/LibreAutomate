@@ -1386,7 +1386,15 @@ partial class FilesModel {
 
 	#region watch folder
 
+	//SHOULDDO: watch links too. Maybe without a FileSystemWatcher.
+	//	Algorithm:
+	//	When getting link target text (when opening in editor or getting FileNode text), remember file mod time.
+	//	If it is current file in editor, use timer to watch for changed mod time.
+	//	Else, when getting FileNode text, don't use cached text if changed mod time.
+
 	FileSystemWatcher _watcher;
+	HashSet<string> _watcherQ;
+	int _watcherDelay;
 
 	public bool IsWatchingFileChanges => _watcher != null;
 
@@ -1404,40 +1412,48 @@ partial class FilesModel {
 				//_watcher.Deleted += _watcher_Event;
 				_watcher.Renamed += _watcher_Event;
 				_watcher.EnableRaisingEvents = true;
+				_watcherQ = new();
+				App.Timer1sOr025s += _watcher_Timer250;
 			}
 			catch (Exception ex) { init = false; Debug_.Print(ex); }
 		}
 		if (!init) {
 			_watcher?.Dispose(); //disables raising events and sets all events = null
 			_watcher = null;
+			App.Timer1sOr025s -= _watcher_Timer250;
 		}
-		//SHOULDDO: watch links too. Maybe without a FileSystemWatcher.
-		//	Algorithm:
-		//	When getting link target text (when opening in editor or getting FileNode text), remember file mod time.
-		//	If it is current file in editor, use timer to watch for changed mod time.
-		//	Else, when getting FileNode text, don't use cached text if changed mod time.
+
+		void _watcher_Event(object sender, FileSystemEventArgs e) { /*in thread pool*/
+			//if(e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f);
+			//else print.it(e.ChangeType, e.Name, e.FullPath, f);
+
+			//we receive 'directory changed' after every 'file changed' etc
+			if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).File) return;
+
+			lock (_watcherQ) {
+				_watcherQ.Add(e.Name);
+				_watcherDelay = 0;
+			}
+		}
 	}
 
-	private void _watcher_Event(object sender, FileSystemEventArgs e) { /*in thread pool*/
-		//if(e.Name.Ends("~temp") || e.Name.Ends("~backup")) return; //no such events, because we use other directory for temp files
-		if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).File) return; //we receive 'directory changed' after every 'file changed' etc
-
-		try { TreeControl?.Dispatcher.InvokeAsync(() => _watcher_Event2(e)); }
-		catch (Exception ex) { Debug_.Print(ex); }
-	}
-
-	private void _watcher_Event2(FileSystemEventArgs e) { //in main thread
-		var name = e.Name;
-		//var name = e is RenamedEventArgs ren ? ren.OldName : e.Name;
-		var f = Find("\\" + name);
-		//if(e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else print.it(e.ChangeType, e.Name, e.FullPath, f);
-		if (f == null || f.IsLink) return;
-		//Debug_.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
-		if (f.IsFolder) {
-			//if(e.ChangeType == WatcherChangeTypes.Changed) return;
-			foreach (var v in f.Descendants()) v.UnCacheText(fromWatcher: true);
-		} else {
-			f.UnCacheText(fromWatcher: true);
+	void _watcher_Timer250() {
+		if (_watcherQ.Count == 0) return;
+		if (_watcherDelay++ < 2) return; _watcherDelay = 0;
+		string[] a;
+		lock (_watcherQ) {
+			if (_watcherDelay > 0) return;
+			a = _watcherQ.ToArray();
+			_watcherQ.Clear();
+		}
+		foreach (var name in a) {
+			var f = Find("\\" + name);
+			if (f == null || f.IsLink) return;
+			if (f.IsFolder) {
+				foreach (var v in f.Descendants()) v.UnCacheText(fromWatcher: true);
+			} else {
+				f.UnCacheText(fromWatcher: true);
+			}
 		}
 	}
 
@@ -1543,26 +1559,30 @@ partial class FilesModel {
 		}
 	}
 
-	public class UserData {
-		public string guid { get; set; }
-		public string startupScripts { get; set; }
+	public record UserData {
+		public string guid { get; init; }
+		public string startupScripts, debuggerScript;
 	}
 
-	public UserData CurrentUser => WSSett?.users?.FirstOrDefault(o => o.guid == App.UserGuid);
+	public UserData CurrentUser(bool set) {
+		var u = WSSett?.users?.FirstOrDefault(o => o.guid == App.UserGuid);
+		if (u == null && set) {
+			u = new UserData { guid = App.UserGuid };
+			var a = WSSett.users ?? Array.Empty<UserData>();
+			a = a.InsertAt(0, u);
+			WSSett.users = a;
+		}
+		return u;
+	}
 
 	public string StartupScriptsCsv {
-		get => CurrentUser?.startupScripts;
-		set {
-			if (WSSett == null) return;
-			var u = CurrentUser;
-			if (u == null) {
-				u = new UserData { guid = App.UserGuid };
-				var a = WSSett.users ?? Array.Empty<UserData>();
-				a = a.InsertAt(0, u);
-				WSSett.users = a;
-			}
-			u.startupScripts = value;
-		}
+		get => CurrentUser(false)?.startupScripts;
+		set { CurrentUser(true).startupScripts = value; }
+	}
+
+	public string DebuggerScript {
+		get => CurrentUser(false)?.debuggerScript;
+		set { CurrentUser(true).debuggerScript = value; }
 	}
 
 	public void RunStartupScripts() {

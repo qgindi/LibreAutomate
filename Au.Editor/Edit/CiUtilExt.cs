@@ -28,7 +28,8 @@ static class CiUtilExt {
 	/// <param name="position">Where this token has been found using code like <c>var token = root.FindToken(position);</c>.</param>
 	/// <param name="code">All code. The function uses it to compare substrings easier and faster.</param>
 	/// <param name="x">If the function returns true, receives span etc.</param>
-	public static bool? IsInString(this ref SyntaxToken t, int position, string code, out CiStringInfo x) {
+	/// <param name="orU8">Support "text"u8 etc.</param>
+	public static bool? IsInString(this ref SyntaxToken t, int position, string code, out CiStringInfo x, bool orU8 = false) {
 		x = default;
 		var k = t.Kind();
 		if (k == SyntaxKind.EndOfFileToken) {
@@ -40,23 +41,29 @@ static class CiUtilExt {
 		var span = t.Span;
 		int start = span.Start, end = span.End;
 		if (position < start || position > end) return false;
-		bool isInterpolated = false, isVerbatim = false, isRaw = false, isRawPrefixCenter = false;
+		bool isInterpolated = false, isVerbatim = false, isRaw = false, isRawPrefixCenter = false, isU8 = false;
 		var node = t.Parent;
 
-		if (k is SyntaxKind.StringLiteralToken or SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken) {
+		if (node.IsKind(SyntaxKind.StringLiteralExpression) || (orU8 && (isU8 = node.IsKind(SyntaxKind.Utf8StringLiteralExpression)))) {
 			if (position == start) return false;
-			if (k != SyntaxKind.StringLiteralToken) isRaw = true;
+			if (k is not (SyntaxKind.StringLiteralToken or SyntaxKind.Utf8StringLiteralToken)) isRaw = true;
 			if (!isRaw) {
 				if (isVerbatim = code[start++] == '@') if (position == start++) return null; //inside @"
-				if (position < end) { end--; goto gTrue; }
-				if (code[end - 1] != '\"' || end == start || node.NoClosingQuote()) goto gTrue; //no closing "
+				if (!isU8) {
+					if (position < end) { end--; goto gTrue; }
+					if (code[end - 1] != '\"' || end == start || node.NoClosingQuote()) goto gTrue; //no closing "
+				} else if (position < end) {
+					end -= 3;
+					if (position > end) return null;
+					goto gTrue;
+				}
 				return false;
 			} else {
 				while (start < end && code[start] == '\"') start++; //skip """
 				int nq = start - span.Start;
-				bool ml = k == SyntaxKind.MultiLineRawStringLiteralToken;
+				bool ml = k is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.Utf8MultiLineRawStringLiteralToken;
 				if (position < start) { //inside """
-					if (_IsRawPrefixCenter(span.Start, nq)) goto gTrue;
+					if (!isU8 && _IsRawPrefixCenter(span.Start, nq)) goto gTrue;
 					return null;
 				}
 				if (ml) { //skip newline
@@ -67,10 +74,11 @@ static class CiUtilExt {
 				if (position < start) return null; //before newline
 
 				if (position == end) {
-					if (node.NoClosingQuote()) goto gTrue;
+					if (!isU8 && node.NoClosingQuote()) goto gTrue;
 					return false;
 				}
 
+				if (isU8) end -= 2;
 				while (nq > 0 && end > start && code[--end] == '\"') nq--;
 				if (nq > 0) goto gTrue; //unterminated
 				if (position > end) return null; //inside """, or """ not in its own line (error)
@@ -134,7 +142,7 @@ static class CiUtilExt {
 		}
 
 		return false;
-	gTrue:
+		gTrue:
 		x.textSpan = TextSpan.FromBounds(start, end);
 		x.stringNode = t.Parent;
 		if (isInterpolated && x.stringNode is not InterpolatedStringExpressionSyntax) x.stringNode = x.stringNode.Parent;
@@ -148,6 +156,7 @@ static class CiUtilExt {
 		x.isRaw = isRaw;
 		x.isClassic = !(isVerbatim | isRaw);
 		x.isRawPrefixCenter = isRawPrefixCenter;
+		x.isU8 = isU8;
 		return true;
 	}
 
@@ -280,7 +289,7 @@ static class CiUtilExt {
 	static ConditionalWeakTable<INamespaceSymbol, string> _namespaceNames = new();
 }
 
-struct CiStringInfo {
+record struct CiStringInfo {
 	/// <summary>
 	/// The text part of string literal or a text part of interpolated string. Without enclosing and prefix.
 	/// </summary>
@@ -291,5 +300,15 @@ struct CiStringInfo {
 	/// </summary>
 	public SyntaxNode stringNode;
 
-	public bool isInterpolated, isVerbatim, isRaw, isClassic, isRawPrefixCenter;
+	public bool isVerbatim, isRaw, isInterpolated, isU8;
+
+	/// <summary>
+	/// Not verbatim/raw. Can be "...", $"..." or "..."u8.
+	/// </summary>
+	public bool isClassic;
+
+	/// <summary>
+	/// At """|""".
+	/// </summary>
+	public bool isRawPrefixCenter;
 }

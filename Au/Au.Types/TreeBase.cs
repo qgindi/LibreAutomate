@@ -86,11 +86,11 @@ namespace Au.Types;
 /// 	</example>
 /// 	*/
 /// 
-/// 	var x = MyTree.Load(@"Q:\test\example.xml");
+/// 	var x = MyTree.Load(@"C:\test\example.xml");
 /// 	foreach(MyTree n in x.Descendants(true)) print.it(n);
 /// 	//print.it(x.Descendants().FirstOrDefault(k => k.Name == "seven")); //find a descendant
 /// 	//print.it(x.Descendants().Where(k => k.Level > 2)); //find some descendants
-/// 	x.Save(@"Q:\test\example2.xml");
+/// 	x.Save(@"C:\test\example2.xml");
 /// }
 /// ]]></code>
 /// </example>
@@ -420,7 +420,8 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <exception cref="XmlException">An error occurred while parsing the XML.</exception>
 	/// <remarks>More info: <see cref="XmlLoad(string, XmlNodeReader)"/>.</remarks>
 	/// <example><see cref="TreeBase{T}"/></example>
-	protected static T XmlLoad(XmlReader x!!, XmlNodeReader nodeReader!!) {
+	protected static T XmlLoad(XmlReader x, XmlNodeReader nodeReader) {
+		Not_.Null(x, nodeReader);
 		T root = null, parent = null;
 		while (x.Read()) {
 			var nodeType = x.NodeType;
@@ -470,7 +471,8 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <remarks>More info: <see cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})"/>.</remarks>
 	/// <exception cref="Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
 	/// <example><see cref="TreeBase{T}"/></example>
-	protected void XmlSave(XmlWriter x!!, XmlNodeWriter nodeWriter!!, IEnumerable<T> children = null) {
+	protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null) {
+		Not_.Null(x, nodeWriter);
 		x.WriteStartDocument();
 		if (children == null) {
 			_XmlWrite(x, nodeWriter);

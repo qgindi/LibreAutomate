@@ -40,28 +40,22 @@ public partial class KPanels {
 			//prevent changing focus when clicking a tabitem. In most cases.
 			tc.PreviewMouseLeftButtonDown += (_, e) => {
 				if (e.Source is TabItem ti) {
-					var fe = Keyboard.FocusedElement as FrameworkElement;
-					wnd fw = fe != null ? default : Api.GetFocus();
-					if (fe != null || (!fw.Is0 && fw.IsChild)) {
-						ti.Dispatcher.InvokeAsync(() => {
-							//allow to focus WPF elements and editable scintilla controls
-							var fe2 = Keyboard.FocusedElement;
-							if (fe2 != null) {
-								if (fe2 is not TabItem) return;
-							} else {
-								var fe3 = FocusManager.GetFocusedElement(FocusManager.GetFocusScope(ti));
-								if (fe3 is KScintilla sci && !sci.ZInitReadOnlyAlways) return;
-							}
+					if (FocusManager.GetFocusedElement(FocusManager.GetFocusScope(tc)) is not FrameworkElement fe) return;
+					if (!fe.IsDescendantOf(tc)) tc.prevFocus = fe;
+					else if (fe is TabItem || tc.prevFocus == null) return;
+					ti.Dispatcher.InvokeAsync(() => {
+						//allow to focus WPF elements and editable scintilla controls
+						var fe2 = Keyboard.FocusedElement;
+						if (fe2 != null) {
+							if (fe2 is not TabItem) return;
+						} else {
+							var fe3 = FocusManager.GetFocusedElement(FocusManager.GetFocusScope(tc));
+							if (fe3 is KScintilla sci && !sci.ZInitReadOnlyAlways) return;
+						}
 
-							if (fe != null) {
-								if (!fe.IsVisible) return; //eg in current tab
-								fe.Focus();
-							} else {
-								if (!fw.IsVisible) return; //eg in current tab
-								Api.SetFocus(fw);
-							}
-						});
-					}
+						if (!tc.prevFocus.IsVisible) return;
+						tc.prevFocus.Focus();
+					});
 				}
 			};
 		}
@@ -161,5 +155,7 @@ public partial class KPanels {
 			if (e.Key == Key.Tab && Keyboard.Modifiers is ModifierKeys.Control or (ModifierKeys.Control | ModifierKeys.Shift)) return;
 			base.OnKeyDown(e);
 		}
+
+		internal FrameworkElement prevFocus;
 	}
 }

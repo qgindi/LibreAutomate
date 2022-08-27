@@ -2,8 +2,7 @@
 /// Program settings.
 /// folders.ThisAppDocuments + @".settings\Settings.json"
 /// </summary>
-record AppSettings : JSettings
-{
+record AppSettings : JSettings {
 	//This is loaded at startup and therefore must be fast.
 	//	NOTE: Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
 	//	Speed tested with .NET 5: first time 40-60 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
@@ -21,8 +20,7 @@ record AppSettings : JSettings
 	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
 	//	Somehow .NET does not support struct and record struct, InvalidCastException.
 	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
-	public record hotkeys_t
-	{
+	public record hotkeys_t {
 		public string
 			tool_quick = "Ctrl+Shift+Q",
 			tool_wnd = "Ctrl+Shift+W",
@@ -46,18 +44,21 @@ record AppSettings : JSettings
 	public bool ci_complGroup = true, ci_unexpandPath = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 
+	//CONSIDER: option to specify completion keys/chars. See https://www.quickmacros.com/forum/showthread.php?tid=7263
+	//public byte ci_complOK = 15; //1 Enter, 2 Tab, 4 Space, 8 other
+	//public byte ci_complArgs = 4; //1 Enter, 2 Tab, 4 Space (instead of ci_complParen)
+	//maybe option to use Tab for Space, and disable Space. Tab would add space or/and () like now Space does.
+
 	public byte outline_flags;
 
-	public record delm_t
-	{
+	public record delm_t {
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
 		public string wait, actionn; //named actionn because once was int action
 		public int flags;
 	}
 	public delm_t delm = new();
 
-	public record recorder_t
-	{
+	public record recorder_t {
 		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
 		public int xyIn;
 		public string speed = "10";
@@ -79,8 +80,7 @@ record AppSettings : JSettings
 /// Workspace settings.
 /// WorkspaceDirectory + @"\settings.json"
 /// </summary>
-record WorkspaceSettings : JSettings
-{
+record WorkspaceSettings : JSettings {
 	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 
 	public FilesModel.UserData[] users;
