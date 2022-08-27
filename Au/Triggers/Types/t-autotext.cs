@@ -337,7 +337,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		for (int i = 0; i < n; i++) _Trigger(c[i], false, wFocus, thc);
 
 		return;
-	gReset:
+		gReset:
 		_Reset();
 	}
 
@@ -658,7 +658,8 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// 
 	/// If used flag <see cref="TAFlags.Confirm"/>, for label can be used first argument with prefix "!!"; else displays all string arguments.
 	/// </remarks>
-	public void Replace2([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc!!) {
+	public void Replace2([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
+		Not_.Null(keysEtc);
 		_Replace(null, null, keysEtc);
 	}
 
@@ -822,13 +823,15 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// - <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
 	/// </param>
 	/// <remarks>
-	/// The user can use these keyboard keys:
+	/// Keyboard:
 	/// - Esc - close the menu.
 	/// - Enter, Tab - select the focused or the first item.
 	/// - Down, Up, End, Home, PageDown, PageUp - focus menu items.
 	/// - Also to select menu items can type the number characters displayed at the right.
 	/// - Other keys close the menu and are passed to the active window.
 	/// </remarks>
+	/// <seealso cref="popupMenu.DefaultFont"/>
+	/// <seealso cref="popupMenu.DefaultMetrics"/>
 	/// <example>
 	/// Code in file "Autotext triggers".
 	/// <code><![CDATA[
@@ -836,15 +839,20 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// tt["m1"] = o => o.Menu(
 	/// 	"https://www.example.com",
 	/// 	"<tag>[[|]]</tag>",
-	/// 	new("Label example", "TEXT"),
-	/// 	new("HTML example", "TEXT", "<b>TEXT</b>")
+	/// 	new("Label example", "TEXT1"),
+	/// 	new("HTML example", "TEXT2", "<b>TEXT2</b>"),
+	/// 	new(null, "TEXT3")
 	/// 	);
 	/// ]]></code>
 	/// </example>
 	public void Menu(params TAMenuItem[] items) {
 		if (items.NE_()) return;
 
-		var m = new popupMenu { RawText = true };
+		var m = new popupMenu(null, Trigger.sourceFile, Trigger.sourceLine) {
+			ExtractIconPathFromCode = false,
+			RawText = true,
+		};
+
 		for (int i = 0; i < items.Length; i++) {
 			var v = items[i];
 			string lab = v.Label, text = v.Text ?? v.Html;
@@ -852,7 +860,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 				lab = text.Limit(50).RxReplace(@"\R", " ");
 				if (v.Text != null) lab = lab.Replace("[[|]]", null);
 			}
-			var mi = m.Add(i + 1, lab);
+			var mi = m.Add(i + 1, lab, l_: v.l_ > 0 ? v.l_ : Trigger.sourceLine);
 			if (text != lab) mi.Tooltip ??= text;
 			//if (i == 0) m.FocusedItem = mi; //then no tooltip
 			if (i < 9) mi.Hotkey = (i + 1).ToS();
@@ -906,12 +914,32 @@ public class TASimpleReplace {
 /// <summary>
 /// Used with <see cref="AutotextTriggerArgs.Menu"/>.
 /// </summary>
-/// <param name="Label">Menu item label. If null, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
-/// <param name="Text">The replacement text. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
-/// <param name="Html">The replacement HTML. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
-public record class TAMenuItem(string Label, string Text, string Html = null) {
+public class TAMenuItem {
+	///
+	public string Label { get; set; }
+	///
+	public string Text { get; set; }
+	///
+	public string Html { get; set; }
+
+	internal int l_;
+
+	/// <summary>
+	/// Sets menu item label and replacement text.
+	/// </summary>
+	/// <param name="label">Menu item label. If null, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
+	/// <param name="text">The replacement text. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	/// <param name="html">The replacement HTML. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	/// <param name="l_">[](xref:caller_info)</param>
+	public TAMenuItem(string label, string text, string html = null, [CallerLineNumber] int l_ = 0) {
+		Label = label;
+		Text = text;
+		Html = html;
+		this.l_ = l_;
+	}
+
 	/// <summary>
 	/// Creates <b>TAMenuItem</b> with only <b>Text</b>.
 	/// </summary>
-	public static implicit operator TAMenuItem(string text) => new(null, text);
+	public static implicit operator TAMenuItem(string text) => new(null, text, null, 0);
 }

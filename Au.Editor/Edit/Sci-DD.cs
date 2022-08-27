@@ -176,7 +176,17 @@ partial class SciCode {
 					IntPtr pidlFolder = (IntPtr)(p + *pi++);
 					for (int i = 0; i < n; i++) {
 						using var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]));
-						shells[i] = pidl.ToString();
+						//if from Winstore apps folder, get "shell:..."
+						if (folders.shell.pidlApps_Win8.ValueEquals(pidlFolder)) {
+							//var s11 = pidl.ToShellString(SIGDN.DESKTOPABSOLUTEPARSING); //same as PARENTRELATIVEPARSING, not full
+							var s1 = pidl.ToShellString(SIGDN.PARENTRELATIVEPARSING);
+							if (s1 != null && !s1.Starts('{') && s1.Contains('!')) shells[i] = @"shell:AppsFolder\" + s1;
+							//if (s1 != null) {
+							//	if (s1.Starts('{')) shells[i] = s1; //like "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\charmap.exe". run.it fails etc. Cannot get path. The ITEMIDLIST is insanely long.
+							//	else if (s1.Contains('!')) shells[i] = @"shell:AppsFolder\" + s1;
+							//}
+						}
+						shells[i] ??= pidl.ToString();
 						names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 					}
 				}

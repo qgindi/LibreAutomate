@@ -235,7 +235,7 @@ class DProperties : KDialogWindow {
 		if (!d.ShowOpen(out string[] a, this)) return;
 
 		foreach (var v in a) {
-			if (MetaReferences.IsNetAssembly(v)) continue;
+			if (CompilerUtil.IsNetAssembly(v)) continue;
 			dialog.showError("Not a .NET assembly.", v, owner: this);
 			return;
 		}
@@ -254,7 +254,11 @@ class DProperties : KDialogWindow {
 	}
 
 	void _ButtonClick_addNuget(WBButtonClickArgs e) {
-		var a = DNuget.GetInstalledPackages(); if (a == null) return;
+		var a = DNuget.GetInstalledPackages();
+		if (a == null) {
+			dialog.showInfo(null, "There are no NuGet packages installed in this workspace.\nTo install NuGet packages, use menu -> Tools -> NuGet.", owner: this);
+			return;
+		}
 		var sFind = findInLists.Text;
 		if (!sFind.NE()) {
 			a = a.Where(s => s.Contains(sFind, StringComparison.OrdinalIgnoreCase)).ToArray();

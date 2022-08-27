@@ -513,8 +513,8 @@ static unsafe partial class Api {
 	[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
 	internal static extern nint SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
-	[DllImport("shell32.dll", PreserveSig = true)]
-	internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
+	//[DllImport("shell32.dll", PreserveSig = true)]
+	//internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
 
 	[DllImport("shell32.dll")]
 	internal static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, uint* psfgaoOut);
@@ -530,8 +530,8 @@ static unsafe partial class Api {
 	//[DllImport("shell32.dll", PreserveSig = true)]
 	//internal static extern int SHCreateItemFromIDList(IntPtr pidl, in Guid riid, out IShellItem ppv); //or IShellItem2
 
-	//[DllImport("shell32.dll", PreserveSig = true)]
-	//internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
+	[DllImport("shell32.dll", PreserveSig = true)]
+	internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
 
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHGetPropertyStoreForWindow(wnd hwnd, in Guid riid, out IPropertyStore ppv);
@@ -714,6 +714,9 @@ static unsafe partial class Api {
 
 	[DllImport("shell32.dll", EntryPoint = "#25")]
 	internal static extern IntPtr ILCombine(IntPtr pidl1, IntPtr pidl2);
+
+	[DllImport("shell32.dll", EntryPoint = "#21")]
+	internal static extern bool ILIsEqual(IntPtr pidl1, IntPtr pidl2);
 
 	internal const uint FO_MOVE = 0x1;
 	internal const uint FO_COPY = 0x2;

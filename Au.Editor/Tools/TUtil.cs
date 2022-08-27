@@ -639,7 +639,7 @@ static class TUtil {
 			if (v2 = capt._ost.Visible) capt._ost.Hwnd.ShowL(false);
 		}
 		const int sh = 30;
-		var s = ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh), dpi: App.Hmain);
+		var s = ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh));
 		if (capt != null) {
 			if (v1) capt._osr.Hwnd.ShowL(true);
 			if (v2) capt._ost.Hwnd.ShowL(true);
@@ -849,8 +849,8 @@ static class TUtil {
 		sci.ZTags.AddLinkTag("+hotkey", _ => {
 			TextBox capture, insert = null;
 			var b = new wpfBuilder("Hotkey");
-			b.R.Add("Capture", out capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus();
-			if (insertToo) b.R.Add("Insert", out insert, App.Settings.delm.hk_insert).xValidateHotkey();
+			b.R.Add("Capture", out capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus().Tooltip("Used in wnd and elm tools");
+			b.R.Add("Insert", out insert, App.Settings.delm.hk_insert).xValidateHotkey().Tooltip("Used in only in elm tool"); //add even if not used in that dialog. Else users may enter the same hotkey for both.
 			b.R.Add<Label>("After changing hotkeys please restart the tool window.");
 			b.R.AddOkCancel();
 			b.End();
@@ -965,7 +965,7 @@ static class TUtil {
 			//if dlg covers the found object, temporarily minimize it (may be always-on-top) and activate object's window. Never mind owners.
 			var wTL = r.w.Window;
 			if (dlgMinimized = dlg.Rect.IntersectsWith(re) && !r.w.IsOfThisThread && !dlg.IsMinimized) {
-				dlg.ShowMinimized(noAnimation: true);
+				dlg.ShowMinimized(1);
 				wTL.ActivateL();
 				wait.doEvents(1000);
 			}
@@ -976,7 +976,7 @@ static class TUtil {
 			timer.after(after, t => {
 				if (!dlg.IsAlive) return;
 				if (restoreOwner == null) {
-					if (dlgMinimized) dlg.ShowNotMinimized(noAnimation: true);
+					if (dlgMinimized) dlg.ShowNotMinimized(1);
 					if (dlgWasActive) dlg.ActivateL();
 				} else if (restoreOwner[0] == 0) {
 					t.After(100);

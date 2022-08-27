@@ -1,4 +1,5 @@
 ﻿
+using Au.Types;
 using System.Runtime.Loader;
 
 //PROBLEM: slow startup.
@@ -39,231 +40,312 @@ print.it(perf.ms-Int64.Parse(args[0]));
 
 //FUTURE: option to start without preloading.
 
-namespace Au.More {
-	/// <summary>
-	/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
-	/// </summary>
-	static unsafe class MiniProgram_ {
-		//static long s_started;
-		internal static string s_scriptId;
+namespace Au.More;
 
-		struct _TaskInit {
-			public IntPtr asmFile;
-			public IntPtr* args;
-			public int nArgs;
+/// <summary>
+/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
+/// </summary>
+static unsafe class MiniProgram_ {
+	//static long s_started;
+	internal static string s_scriptId;
+
+	struct _TaskInit {
+		public IntPtr asmFile;
+		public IntPtr* args;
+		public int nArgs;
+	}
+
+	/// <summary>
+	/// Called by apphost.
+	/// </summary>
+	static void Init(nint pn, out _TaskInit r) {
+		r = default;
+		string pipeName = new((char*)pn);
+
+		script.s_role = SRole.MiniProgram;
+
+		process.ThisThreadSetComApartment_(ApartmentState.STA); //1.7 ms
+
+		script.AppModuleInit_(); //2.7 ms (1.8 if with process.thisProcessExit below)
+
+		//rejected. Now this is implemented in editor. To detect when failed uses process exit code. Never mind exception text, it is not very useful.
+		//process.thisProcessExit += e => { //0.9 ms
+		//	if (s_started != 0) print.TaskEvent_(e == null ? "TE" : "TF " + e.ToStringWithoutStack(), s_started);
+		//};
+
+		for (int i = 0; ; i++) {
+			if (Api.WaitNamedPipe(pipeName, i == 1 ? -1 : 25)) break;
+			if (Marshal.GetLastWin32Error() != Api.ERROR_SEM_TIMEOUT) return;
+			if (i == 1) break;
+
+			//rejected: ProfileOptimization. Now everything is JIT-ed and is as fast as can be.
+
+			run.thread(() => {
+				//using var p2 = perf.local();
+
+				//JIT
+				Jit_.Compile(typeof(Serializer_), "Deserialize");
+				Jit_.Compile(typeof(Api), nameof(Api.ReadFile), nameof(Api.CloseHandle), nameof(Api.SetEnvironmentVariable));
+				//p2.Next();
+				var h1 = Api.CreateFile(null, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0);
+				//p2.Next();
+				Marshal.StringToCoTaskMemUTF8("-");
+				folders.Workspace = new FolderPath("");
+				Jit_.Compile(typeof(script), nameof(script.setup), nameof(script.TrayIcon_));
+				//p2.Next();
+
+				//print.TaskEvent_(null, 0); //8-20 ms
+				Thread.Sleep(20);
+				"Au".ToLowerInvariant(); //15-40 ms
+
+				//if need to preload some assemblies, use code like this. But now .NET loads assemblies fast, not like in old framework.
+				//_ = typeof(TypeFromAssembly).Assembly;
+			}, sta: false);
+
+			_Hook();
 		}
 
-		/// <summary>
-		/// Called by apphost.
-		/// </summary>
-		static void Init(nint pn, out _TaskInit r) {
-			r = default;
-			string pipeName = new((char*)pn);
+		//Debug_.PrintLoadedAssemblies(true, true);
 
-			script.s_role = SRole.MiniProgram;
+		EFlags flags;
 
-			process.ThisThreadSetComApartment_(ApartmentState.STA); //1.7 ms
+		//using var p1 = perf.local();
+		using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
+			if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
+			//p1.Next();
+			int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
+			//p1.Next();
+			if (!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
+			//p1.Next();
+			var a = Serializer_.Deserialize(b);
+			//p1.Next('d');
+			script.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
+			flags = (EFlags)(int)a[2];
 
-			script.AppModuleInit_(); //2.7 ms (1.8 if with process.thisProcessExit below)
-
-			//rejected. Now this is implemented in editor. To detect when failed uses process exit code. Never mind exception text, it is not very useful.
-			//process.thisProcessExit += e => { //0.9 ms
-			//	if (s_started != 0) print.TaskEvent_(e == null ? "TE" : "TF " + e.ToStringWithoutStack(), s_started);
-			//};
-
-			for (int i = 0; ; i++) {
-				if (Api.WaitNamedPipe(pipeName, i == 1 ? -1 : 25)) break;
-				if (Marshal.GetLastWin32Error() != Api.ERROR_SEM_TIMEOUT) return;
-				if (i == 1) break;
-
-				//rejected: ProfileOptimization. Now everything is JIT-ed and is as fast as can be.
-
-				run.thread(() => {
-					//using var p2 = perf.local();
-
-					//JIT
-					Jit_.Compile(typeof(Serializer_), "Deserialize");
-					Jit_.Compile(typeof(Api), nameof(Api.ReadFile), nameof(Api.CloseHandle), nameof(Api.SetEnvironmentVariable));
-					//p2.Next();
-					var h1 = Api.CreateFile(null, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0);
-					//p2.Next();
-					Marshal.StringToCoTaskMemUTF8("-");
-					folders.Workspace = new FolderPath("");
-					Jit_.Compile(typeof(script), nameof(script.setup), nameof(script.TrayIcon_));
-					//p2.Next();
-
-					//print.TaskEvent_(null, 0); //8-20 ms
-					Thread.Sleep(20);
-					"Au".ToLowerInvariant(); //15-40 ms
-
-					//if need to preload some assemblies, use code like this. But now .NET loads assemblies fast, not like in old framework.
-					//_ = typeof(TypeFromAssembly).Assembly;
-				}, sta: false);
-
-				_Hook();
-			}
-
-			//Debug_.PrintLoadedAssemblies(true, true);
-
-			EFlags flags;
-
-			//using var p1 = perf.local();
-			using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-				if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
-				//p1.Next();
-				int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
-				//p1.Next();
-				if (!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
-				//p1.Next();
-				var a = Serializer_.Deserialize(b);
-				//p1.Next('d');
-				script.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
-				flags = (EFlags)(int)a[2];
-
-				r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
-				//p1.Next();
-				string[] args = a[3];
-				if (!args.NE_()) {
-					r.nArgs = args.Length;
-					r.args = (IntPtr*)Marshal.AllocHGlobal(args.Length * sizeof(IntPtr));
-					for (int i = 0; i < args.Length; i++) r.args[i] = Marshal.StringToCoTaskMemUTF8(args[i]);
-				}
-				//p1.Next();
-
-				string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("script.writeResult.pipe", wrp);
-				folders.Workspace = new FolderPath(a[5]);
-				s_scriptId = a[6];
-				//p1.Next();
-
-				script.ExitWhenEditorDies_(a[7]);
+			r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
+			//p1.Next();
+			string[] args = a[3];
+			if (!args.NE_()) {
+				r.nArgs = args.Length;
+				r.args = (IntPtr*)Marshal.AllocHGlobal(args.Length * sizeof(IntPtr));
+				for (int i = 0; i < args.Length; i++) r.args[i] = Marshal.StringToCoTaskMemUTF8(args[i]);
 			}
 			//p1.Next();
 
-			if (0 != (flags & EFlags.RefPaths))
-				AssemblyLoadContext.Default.Resolving += (alc, an)
-					=> ResolveAssemblyFromRefPathsAttribute_(alc, an, Assembly.GetEntryAssembly());
+			string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("script.writeResult.pipe", wrp);
+			folders.Workspace = new FolderPath(a[5]);
+			s_scriptId = a[6];
+			//p1.Next();
 
-			if (0 != (flags & EFlags.NativePaths))
-				AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
-					=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, Assembly.GetEntryAssembly());
+			script.ExitWhenEditorDies_(a[7]);
+		}
+		//p1.Next();
 
-			if (0 != (flags & EFlags.MTA))
-				process.ThisThreadSetComApartment_(ApartmentState.MTA);
+		if (0 != (flags & EFlags.RefPaths))
+			AssemblyLoadContext.Default.Resolving += (alc, an)
+				=> ResolveAssemblyFromRefPathsAttribute_(alc, an, Assembly.GetEntryAssembly());
 
-			if (0 != (flags & EFlags.Console)) {
-				Api.AllocConsole();
-			} else {
-				if (0 != (flags & EFlags.RedirectConsole)) print.redirectConsoleOutput = true;
-				//Compiler adds this flag if the script uses System.Console assembly.
-				//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
+		if (0 != (flags & EFlags.NativePaths))
+			AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
+				=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, Assembly.GetEntryAssembly());
+
+		if (0 != (flags & EFlags.MTA))
+			process.ThisThreadSetComApartment_(ApartmentState.MTA);
+
+		if (0 != (flags & EFlags.Console)) {
+			Api.AllocConsole();
+		} else {
+			if (0 != (flags & EFlags.RedirectConsole)) print.redirectConsoleOutput = true;
+			//Compiler adds this flag if the script uses System.Console assembly.
+			//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
+		}
+
+		if (0 != (flags & EFlags.FromEditor))
+			script.testing = true;
+
+		//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
+		//	var config = asmFile + ".config";
+		//	if(filesystem.exists(config, true).File) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+		//}
+
+		if (s_hook == null) _Hook();
+
+		//Api.QueryPerformanceCounter(out s_started);
+		//print.TaskEvent_("TS", s_started);
+	}
+
+	//for assemblies used in miniProgram and editorExtension scripts
+	internal static Assembly ResolveAssemblyFromRefPathsAttribute_(AssemblyLoadContext alc, AssemblyName an, Assembly scriptAssembly) {
+		//print.it("managed", an);
+		//note: don't cache GetCustomAttribute/split results. It's many times faster than LoadFromAssemblyPath and JIT.
+		var attr = scriptAssembly.GetCustomAttribute<RefPathsAttribute>();
+		if (attr != null) {
+			string name = an.Name;
+			foreach (var v in attr.Paths.Split('|')) {
+				//print.it(v);
+				int iName = v.Length - name.Length - 4;
+				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
+				if (!filesystem.exists(v).File) continue;
+				//try {
+				return alc.LoadFromAssemblyPath(v);
+				//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }
+			}
+		}
+		return null;
+	}
+
+	//for assemblies used in miniProgram and editorExtension scripts
+	internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(string name, Assembly scriptAssembly) {
+		//print.it("native", name);
+		var attr = scriptAssembly.GetCustomAttribute<NativePathsAttribute>();
+		if (attr != null) {
+			if (!name.Ends(".dll", true)) name += ".dll";
+			foreach (var v in attr.Paths.Split('|')) {
+				//print.it(v);
+				if (!v.Ends(name, true) || !v.Eq(v.Length - name.Length - 1, '\\')) continue;
+				var h = Api.LoadLibrary(v);
+				if (h != default) return h;
+			}
+		}
+		return default;
+	}
+
+	/// <summary>
+	/// Used by exeProgram.
+	/// </summary>
+	/// <param name="rootDir">Directory that may contain subdir "runtimes".</param>
+	internal static void ResolveNugetRuntimes_(string rootDir) {
+		var runtimesDir = pathname.combine(rootDir, "runtimes");
+		if (!filesystem.exists(runtimesDir).Directory) return;
+
+		//This code is similar as in Compiler._GetDllPaths:_AddGroup. There we get paths from XML, here from filesystem.
+
+		int verPC = osVersion.minWin10 ? 100 : osVersion.minWin8_1 ? 81 : osVersion.minWin8 ? 80 : 70; //don't need Win11
+
+		var flags = FEFlags.AllDescendants | FEFlags.IgnoreInaccessible | FEFlags.NeedRelativePaths | FEFlags.UseRawPath;
+		List<(FEFile f, int ver)> aNet = new(), aNative = new();
+		foreach (var f in filesystem.enumFiles(runtimesDir, "*.dll", flags)) {
+			var s = f.Name;
+			if (!s.Starts(@"\win", true) || s.Length < 10) continue;
+
+			int i = 4, verDll = 0;
+			if (s[i] != '-') {
+				verDll = s.ToInt(i, out i);
+				if (verDll != 81) verDll *= 10;
+				if (verDll > verPC) continue;
 			}
 
-			//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
-			//	var config = asmFile + ".config";
-			//	if(filesystem.exists(config, true).File) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
-			//}
+			if (s.Eq(i, osVersion.is32BitProcess ? @"-x64\" : @"-x86\", true)) continue;
 
-			if (s_hook == null) _Hook();
-
-			//Api.QueryPerformanceCounter(out s_started);
-			//print.TaskEvent_("TS", s_started);
+			var a = s.Eq(i + 5, @"native\", true) ? aNative : aNet;
+			a.Add((f, verDll));
 		}
 
-		//for assemblies used in miniProgram and editorExtension scripts
-		internal static Assembly ResolveAssemblyFromRefPathsAttribute_(AssemblyLoadContext alc, AssemblyName an, Assembly scriptAssembly) {
-			//print.it("managed", an);
-			//note: don't cache GetCustomAttribute/split results. It's many times faster than LoadFromAssemblyPath and JIT.
-			var attr = scriptAssembly.GetCustomAttribute<RefPathsAttribute>();
-			if (attr != null) {
-				string name = an.Name;
-				foreach (var v in attr.Paths.Split('|')) {
-					//print.it(v);
-					int iName = v.Length - name.Length - 4;
-					if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
-					if (!filesystem.exists(v).File) continue;
-					//try {
-					return alc.LoadFromAssemblyPath(v);
-					//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }
-				}
-			}
-			return null;
-		}
+		var dr = _Do(aNet);
+		var dn = _Do(aNative);
 
-		//for assemblies used in miniProgram and editorExtension scripts
-		internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(string name, Assembly scriptAssembly) {
-			//print.it("native", name);
-			var attr = scriptAssembly.GetCustomAttribute<NativePathsAttribute>();
-			if (attr != null) {
-				if (!name.Ends(".dll", true)) name += ".dll";
-				foreach (var v in attr.Paths.Split('|')) {
-					//print.it(v);
-					if (!v.Ends(name, true) || !v.Eq(v.Length - name.Length - 1, '\\')) continue;
-					var h = Api.LoadLibrary(v);
-					if (h != default) return h;
-				}
-			}
-			return default;
-		}
+		Dictionary<string, string> _Do(List<(FEFile f, int ver)> a) {
+			if (a.Count == 0) return null;
+			Dictionary<string, string> d = null;
+			foreach (var group in a.ToLookup(o => pathname.getNameNoExt(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
+				//print.it($"<><c blue>{group.Key}<>");
 
-		[Flags]
-		public enum EFlags {
-			/// <summary>Has [RefPaths] attribute. It is when using meta r or nuget.</summary>
-			RefPaths = 1,
-
-			/// <summary>Main() with [MTAThread].</summary>
-			MTA = 2,
-
-			/// <summary>Has meta console true.</summary>
-			Console = 4,
-
-			/// <summary>Uses System.Console assembly.</summary>
-			RedirectConsole = 8,
-
-			/// <summary>Has [NativePaths] attribute. It is when using nuget packages with native dlls.</summary>
-			NativePaths = 16,
-
-			//Config = 256, //meta hasConfig
-		}
-
-		static void _Hook() {
-			s_hook = WindowsHook.ThreadCbt(m => {
-				//print.it(m.code, m.wParam, m.lParam);
-				//switch(m.code) {
-				//case HookData.CbtEvent.ACTIVATE:
-				//case HookData.CbtEvent.SETFOCUS:
-				//	print.it((wnd)m.wParam);
-				//	print.it(wnd.active);
-				//	print.it(wnd.thisThread.active);
-				//	print.it(wnd.focused);
-				//	print.it(wnd.thisThread.focused);
-				//	break;
-				//}
-				if (m.code == HookData.CbtEvent.ACTIVATE) {
-					var w = (wnd)m.wParam;
-					if (!w.HasExStyle(WSE.NOACTIVATE)) {
-						//print.it(w);
-						//print.it(w.ExStyle);
-						//Api.SetForegroundWindow(w); //does not work
-						timer.after(1, _ => {
-							if (s_hook == null) return;
-							//print.it(wnd.active);
-							//print.it(wnd.thisThread.active);
-							bool isActive = w == wnd.active, activate = !isActive && w == wnd.thisThread.active;
-							if (isActive || activate) { s_hook.Dispose(); s_hook = null; }
-							if (activate) {
-								Api.SetForegroundWindow(w);
-								//w.ActivateL(); //no, it's against Windows rules, and works differently with meta outputPath
-								//Before starting task, editor calls AllowSetForegroundWindow. But if clicked etc a window after that:
-								//	SetForegroundWindow fails always or randomly;
-								//	Activate[L] fails if that window is of higher UAC IL, unless the foreground lock timeout is 0.
-							}
-						});
+				int verBest = -1;
+				string sBest = null;
+				foreach (var (f, verDll) in group) {
+					if (verDll > verBest) {
+						verBest = verDll;
+						sBest = f.FullPath;
 					}
 				}
-				return false;
-			});
-		}
-		static WindowsHook s_hook;
 
+				if (sBest != null) {
+					//print.it(sBest);
+					d ??= new(StringComparer.OrdinalIgnoreCase);
+					d[group.Key] = sBest;
+				}
+			}
+
+			return d;
+		}
+
+		if (dr != null) AssemblyLoadContext.Default.Resolving += (alc, an) => {
+			//print.it("lib", an.Name);
+			if (!dr.TryGetValue(an.Name, out var path)) return null;
+			return alc.LoadFromAssemblyPath(path);
+		};
+		if (dn != null) AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) => {
+			//print.it("native", name);
+			if (name.Ends(".dll", true)) name = name[..^4];
+			if (!dn.TryGetValue(name, out var path)) return default;
+			return Api.LoadLibrary(path);
+		};
 	}
+
+	[Flags]
+	public enum EFlags {
+		/// <summary>Has [RefPaths] attribute. It is when using meta r or nuget.</summary>
+		RefPaths = 1,
+
+		/// <summary>Main() with [MTAThread].</summary>
+		MTA = 2,
+
+		/// <summary>Has meta console true.</summary>
+		Console = 4,
+
+		/// <summary>Uses System.Console assembly.</summary>
+		RedirectConsole = 8,
+
+		/// <summary>Has [NativePaths] attribute. It is when using nuget packages with native dlls.</summary>
+		NativePaths = 16,
+
+		/// <summary>Started from editor with the Run button or menu command. Used for <see cref="script.testing"/>.</summary>
+		FromEditor = 32,
+
+		//Config = 256, //meta hasConfig
+	}
+
+	static void _Hook() {
+		//SHOULDDO: does not work if GUI is in other thread (rare).
+		//	Can be used WinEventHook(EEvent.SYSTEM_FOREGROUND...process.thisProcessId).
+
+		s_hook = WindowsHook.ThreadCbt(m => {
+			//print.it(m.code, m.wParam, m.lParam);
+			//switch(m.code) {
+			//case HookData.CbtEvent.ACTIVATE:
+			//case HookData.CbtEvent.SETFOCUS:
+			//	print.it((wnd)m.wParam);
+			//	print.it(wnd.active);
+			//	print.it(wnd.thisThread.active);
+			//	print.it(wnd.focused);
+			//	print.it(wnd.thisThread.focused);
+			//	break;
+			//}
+			if (m.code == HookData.CbtEvent.ACTIVATE) {
+				var w = (wnd)m.wParam;
+				if (!w.HasExStyle(WSE.NOACTIVATE)) {
+					//print.it(w);
+					//print.it(w.ExStyle);
+					//Api.SetForegroundWindow(w); //does not work
+					timer.after(1, _ => {
+						if (s_hook == null) return;
+						//print.it(wnd.active);
+						//print.it(wnd.thisThread.active);
+						bool isActive = w == wnd.active, activate = !isActive && w == wnd.thisThread.active;
+						if (isActive || activate) { s_hook.Dispose(); s_hook = null; }
+						if (activate) {
+							Api.SetForegroundWindow(w);
+							//w.ActivateL(); //no, it's against Windows rules, and works differently with meta outputPath
+							//Before starting task, editor calls AllowSetForegroundWindow. But if clicked etc a window after that:
+							//	SetForegroundWindow fails always or randomly;
+							//	Activate[L] fails if that window is of higher UAC IL, unless the foreground lock timeout is 0.
+						}
+					});
+				}
+			}
+			return false;
+		});
+	}
+	static WindowsHook s_hook;
+
 }

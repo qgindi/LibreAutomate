@@ -148,7 +148,7 @@ class DInputRecorder : KDialogWindow {
 		_scroller = _list.FindVisualDescendant(o => o is ScrollViewer) as ScrollViewer;
 		//_wThis.MoveInScreen(^1, ^1);
 		s_showing = true;
-		App.Hmain.ShowMinimized(noAnimation: true);
+		App.Hmain.ShowMinimized();
 
 		Dispatcher.InvokeAsync(() => { //set hooks when fully loaded
 			if (_closed) return;

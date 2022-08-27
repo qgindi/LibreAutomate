@@ -263,7 +263,7 @@ y - res
 			string sData = filesystem.loadText(_file);
 			foreach (var v in sData.Lines(.., noEmpty: true)) {
 				if (_data == null) {
-					//first line contains .NET version and Au.dll version, like 5.0.4|1.2.3.4
+					//first line contains .NET version, Au.dll version and OS version, like 5.0.4|1.2.3.4|A00-64
 					if (sData[v.Range] != s_versions) goto g1;
 					_data = new(sData.LineCount());
 					continue;
@@ -285,7 +285,9 @@ y - res
 			return false;
 		}
 
-		static readonly string s_versions = Environment.Version.ToString() + "|" + typeof(wnd).Assembly.GetName().Version.ToString();
+		static readonly string s_versions = Environment.Version.ToString()
+			+ "|" + typeof(wnd).Assembly.GetName().Version.ToString()
+			+ "|" + osVersion.winVer.ToS("X3") + (osVersion.is32BitOS ? "-32" : "-64");
 
 		void _Save() {
 			filesystem.createDirectory(CacheDirectory);

@@ -927,6 +927,9 @@ namespace Au.Types {
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool LockWorkStation();
 
+		[DllImport("kernel32.dll")]
+		internal static extern nint SetUnhandledExceptionFilter(nint _);
+
 
 
 

@@ -567,8 +567,9 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_A
 
 	if(useWnd) {
 		if((ap.flags2 & (eAF2::InWebPage | eAF2::InChromePage | eAF2::InFirefoxPage | eAF2::InIES)) == eAF2::InWebPage) {
-			HWND wIES = wn::FindChildByClassName(w, c_IES, true);
-			if(wIES) { w = wIES; ap.flags2 |= eAF2::InIES; }
+			bool chrome = false;
+			HWND c = wn::FindChildByClassName(w, c_IES, c_CRW, OUT chrome, true);
+			if(c) { w = c; ap.flags2 |= chrome ? eAF2::InChromePage : eAF2::InIES; }
 			//info: in Internet Explorer the web browser control is in another process.
 		}
 	}

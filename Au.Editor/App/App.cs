@@ -5,8 +5,8 @@ using System.Windows.Threading;
 
 static class App {
 	public const string
-		AppNameLong = "C# Uiscripter",
-		AppNameShort = "Uiscripter"; //must be without spaces etc
+		AppNameLong = "LibreAutomate C#",
+		AppNameShort = "LibreAutomate"; //must be without spaces etc
 
 	public static string UserGuid;
 	internal static print.Server PrintServer;
@@ -24,7 +24,7 @@ static class App {
 		//print.clear();
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 #endif
-
+		
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 
 		//restart as admin if started as non-admin on admin user account
@@ -64,7 +64,7 @@ static class App {
 		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls.
 									   //Debug_.PrintLoadedAssemblies(true, !true);
 		perf.next('s');
-		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
+		UserGuid = Settings.user ??= Guid.NewGuid().ToString();
 
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
 		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
@@ -72,14 +72,14 @@ static class App {
 		Tasks = new RunningTasks();
 		perf.next('t');
 
-		script.editor.IconNameToXaml_ = (s, what) => DIcons.GetIconString(s, what);
+		script.editor.IconNameToXaml_ = DIcons.GetIconString;
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
 		perf.next('W');
 		CommandLine.ProgramLoaded();
 		perf.next('c');
 		Loaded = EProgramState.LoadedWorkspace;
 
-		timer.every(1000, t => _TimerProc(t));
+		timer.every(1000, _TimerProc);
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
@@ -90,22 +90,24 @@ static class App {
 		_app = new() {
 			ShutdownMode = ShutdownMode.OnExplicitShutdown //will set OnMainWindowClose when creating main window. If now, would exit if a startup script shows/closes a WPF window.
 		};
-		_app.Dispatcher.InvokeAsync(() => Model.RunStartupScripts());
-		if (!Settings.runHidden || CommandLine.StartVisible) _app.Dispatcher.Invoke(() => ShowWindow());
+		_app.Dispatcher.InvokeAsync(Model.RunStartupScripts);
+		if (!Settings.runHidden || CommandLine.StartVisible) _app.Dispatcher.Invoke(ShowWindow);
 		try {
 			_app.Run();
 			//Hidden app should start as fast as possible, because usually starts with Windows.
 			//Tested with native message loop. Faster by 70 ms (240 vs 310 without the .NET startup time).
 			//	But then problems. Eg cannot auto-create main window synchronously, because need to exit native loop and start WPF loop.
 		}
-		finally {
-			Loaded = EProgramState.Unloading;
-			var fm = Model; Model = null;
-			fm.Dispose(); //stops tasks etc
-			Loaded = EProgramState.Unloaded;
+		finally { MainFinally_(); }
+	}
 
-			PrintServer.Stop();
-		}
+	internal static void MainFinally_() {
+		Loaded = EProgramState.Unloading;
+		var fm = Model; Model = null;
+		fm.Dispose(); //stops tasks etc
+		Loaded = EProgramState.Unloaded;
+
+		PrintServer.Stop();
 	}
 
 	/// <summary>
@@ -202,9 +204,22 @@ static class App {
 		if (!filesystem.exists(thisAppDoc)) {
 			try {
 				string s;
-				if (filesystem.exists(s = folders.Documents + "Automaticode")) filesystem.move(s, thisAppDoc);
-				else if (filesystem.exists(s = folders.Documents + "Autepad")) filesystem.move(s, thisAppDoc);
-				else if (filesystem.exists(s = folders.Documents + "Derobotizer")) filesystem.move(s, thisAppDoc);
+				foreach (var v in new[] { "Uiscripter", "Automaticode", "Autepad", "Derobotizer" }) {
+					if (filesystem.exists(s = folders.Documents + v)) {
+						filesystem.move(s, thisAppDoc);
+
+						//rejected.
+						//var f = Directory.CreateSymbolicLink(s, thisAppDoc);
+						//f.Attributes |= FileAttributes.Hidden /*| FileAttributes.System*/;
+
+						var f = thisAppDoc + @"\.settings\Settings.json";
+						var text = File.ReadAllText(f);
+						text = text.Replace($@"\\{v}\\", $@"\\{AppNameShort}\\");
+						File.WriteAllText(f, text);
+
+						break;
+					}
+				}
 			}
 			catch { }
 		}
@@ -276,7 +291,7 @@ static class App {
 
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
-				isAuHomePC ? "_Au.Editor" : "Au.Editor", //in Q:\app\Au\_ or <installed path>
+				isAuHomePC ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
 				true, args);
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense
 		}
@@ -322,7 +337,7 @@ static class App {
 			var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_MESSAGE | Api.NIF_ICON | Api.NIF_TIP /*| Api.NIF_SHOWTIP*/) { //need NIF_SHOWTIP if called NIM_SETVERSION(NOTIFYICON_VERSION_4)
 				uCallbackMessage = c_msgNotify,
 				hIcon = _GetIcon(),
-				szTip = App.AppNameLong
+				szTip = App.AppNameShort
 			};
 			if (Api.Shell_NotifyIcon(Api.NIM_ADD, d)) {
 				//d.uFlags = 0;
@@ -431,6 +446,8 @@ namespace Au.Editor {
 		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
 			base.OnSessionEnding(e);
 			if (!App.Hmain.Is0) Menus.File.Exit();
+			App.MainFinally_();
+			process.thisProcessExitInvoke(); //OS terminates this process before or during process.thisProcessExit event
 		}
 	}
 }

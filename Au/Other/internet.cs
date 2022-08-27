@@ -21,7 +21,7 @@ namespace Au {
 		///
 		/// Uses <see cref="Ping"/>.
 		/// </remarks>
-		public static bool ping(string hostNameOrAddress!! = "google.com", int timeout = 5000) {
+		public static bool ping(string hostNameOrAddress = "google.com", int timeout = 5000) {
 			try {
 				using var ping = new Ping();
 				var reply = ping.Send(hostNameOrAddress, timeout);
@@ -33,7 +33,7 @@ namespace Au {
 		/// <summary>
 		/// Sends an ICMP echo message to the specified website and returns true if successful. Gets the roundtrip time.
 		/// </summary>
-		public static bool ping(out int roundtripTime, string hostNameOrAddress!! = "google.com", int timeout = 5000) {
+		public static bool ping(out int roundtripTime, string hostNameOrAddress = "google.com", int timeout = 5000) {
 			roundtripTime = 0;
 			try {
 				using var ping = new Ping();
@@ -115,7 +115,7 @@ namespace Au {
 		/// Joins a URL address and parameters. Urlencodes parameters.
 		/// </summary>
 		/// <param name="address">URL part without parameters or with some parameters. The function does not modify it.</param>
-		/// <param name="parameters">URL parameters to append, like <c>"name1=value1", "name2=value2"</c>. The function urlencodes them.</param>
+		/// <param name="parameters">URL parameters to append, like <c>"name1=value1", "name2=value2"</c>. The function urlencodes them (<see cref="WebUtility.UrlEncode"/>).</param>
 		/// <returns>String like <c>"address?name1=value1&amp;name2=value2"</c>.</returns>
 		/// <exception cref="ArgumentException">Incorrect format of a parameters string.</exception>
 		public static string urlAppend(string address, params string[] parameters) {
@@ -281,7 +281,8 @@ namespace Au.Types {
 		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
 		/// ]]></code>
 		/// </example>
-		public static HttpResponseMessage Get(this HttpClient t, string url!!, bool dontWait = false, string[] headers = null) {
+		public static HttpResponseMessage Get(this HttpClient t, string url, bool dontWait = false, string[] headers = null) {
+			Not_.Null(url);
 			var m = new HttpRequestMessage(HttpMethod.Get, url);
 			if (headers != null) m.Headers.AddMany(headers);
 			return t.Send(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
@@ -305,7 +306,8 @@ namespace Au.Types {
 		/// print.it(r.Text());
 		/// ]]></code>
 		/// </example>
-		public static bool TryGet(this HttpClient t, out HttpResponseMessage r, string url!!, bool dontWait = false, string[] headers = null, bool printError = false) {
+		public static bool TryGet(this HttpClient t, out HttpResponseMessage r, string url, bool dontWait = false, string[] headers = null, bool printError = false) {
+			Not_.Null(url);
 			var m = new HttpRequestMessage(HttpMethod.Get, url);
 			if (headers != null) m.Headers.AddMany(headers);
 			try {
@@ -330,7 +332,8 @@ namespace Au.Types {
 		/// <returns>An <b>HttpResponseMessage</b> object that contains response headers etc. Rarely used.</returns>
 		/// <exception cref="Exception">Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/> and <see cref="Save"/>.</exception>
 		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
-		public static HttpResponseMessage Get(this HttpClient t, string url!!, string resultFile!!, string[] headers = null) {
+		public static HttpResponseMessage Get(this HttpClient t, string url, string resultFile, string[] headers = null) {
+			Not_.Null(url, resultFile);
 			var r = Get(t, url, true, headers).Save(resultFile);
 			r.Dispose();
 			return r;
@@ -354,7 +357,8 @@ namespace Au.Types {
 		/// ]]></code>
 		/// Note: the 'using' in the above example will close the file stream. Don't need it when content does not contain files.
 		/// </example>
-		public static HttpResponseMessage Post(this HttpClient t, string url!!, HttpContent content, string[] headers = null) {
+		public static HttpResponseMessage Post(this HttpClient t, string url, HttpContent content, string[] headers = null) {
+			Not_.Null(url);
 			var rm = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
 			if (headers != null) rm.Headers.AddMany(headers);
 			return t.Send(rm);
@@ -382,7 +386,8 @@ namespace Au.Types {
 		/// print.it(r.Text());
 		/// ]]></code>
 		/// </example>
-		public static bool TryPost(this HttpClient t, out HttpResponseMessage r, string url!!, HttpContent content, string[] headers = null, bool printError = false) {
+		public static bool TryPost(this HttpClient t, out HttpResponseMessage r, string url, HttpContent content, string[] headers = null, bool printError = false) {
+			Not_.Null(url);
 			var rm = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
 			if (headers != null) rm.Headers.AddMany(headers);
 			try {

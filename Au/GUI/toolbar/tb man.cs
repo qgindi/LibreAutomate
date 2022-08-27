@@ -112,13 +112,22 @@ public partial class toolbar {
 		public RECT cachedRect;
 		public SIZE prevSize;
 
+#if DEBUG
+		public screen Screen {
+			get {
+				Debug_.PrintIf(!_scrn.IsAlive, "screen not alive");
+				return _scrn;
+			}
+		}
+#else
 		public screen Screen => _scrn;
+#endif
 
 		//public bool IsAuto => _isAuto;
 
 		public bool UpdateRect(out bool changed) {
 			RECT r = _scrn.Rect;
-			if (changed = r != cachedRect) {
+			if (changed = r != cachedRect && !r.Is0) {
 				prevSize = (cachedRect.Width, cachedRect.Height);
 				cachedRect = r;
 			}
@@ -136,10 +145,13 @@ public partial class toolbar {
 			}
 		}
 
-		public bool CloseIfScreenInvalid() {
-			if (!Screen.IsAlive) {
-				_tb.Close();
-				return true;
+		//Called on WM_DISPLAYCHANGE. If screen detached, sets _scrn = 0. When reattached, sets _scrn = new screen handle.
+		public bool IsScreenInvalid() {
+			if (!_scrn.IsAlive) {
+				//Debug_.Print($"CloseIfScreenInvalid, {_tb.Name}, {screen.of(_tb._w, SODefault.Zero)}");
+
+				_scrn = screen.of(new POINT(cachedRect.CenterX, cachedRect.CenterY), SODefault.Zero);
+				return _scrn.Handle == default;
 			}
 			return false;
 		}
@@ -480,7 +492,7 @@ public partial class toolbar {
 
 		if (!followedOnce && _os != null) {
 			var sc = screen.of(_w, SODefault.Zero);
-			if (sc.Handle != _os.Screen.Handle) {
+			if (sc != _os.Screen) {
 				_w.EnsureInScreen(_os.Screen, workArea: !_w.IsTopmost);
 			}
 		}
@@ -529,7 +541,7 @@ public partial class toolbar {
 			bool resized = !wp.flags.Has(SWPFlags.NOSIZE);
 			if (_ignorePosChanged == 0) {
 				if (_os != null) {
-					if (_os.CloseIfScreenInvalid()) return;
+					if (_os.IsScreenInvalid()) return;
 					_os.UpdateIfAutoScreen();
 				}
 				_UpdateOffsets(wp.x, wp.y, wp.cx, wp.cy); //tested: if SWP_NOMOVE or SWP_NOSIZE, wp contains current values
@@ -618,7 +630,7 @@ public partial class toolbar {
 
 	void _WmDisplayChange() {
 		if (_os != null) {
-			if (_os.CloseIfScreenInvalid()) return;
+			if (_os.IsScreenInvalid()) return;
 
 			timer.after(200, _ => {
 				if (_os == null || _closed) return;

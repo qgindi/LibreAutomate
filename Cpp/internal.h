@@ -44,6 +44,7 @@ struct NameValue {
 
 //IE web browser control class name.
 const STR c_IES = L"Internet Explorer_Server";
+const STR c_CRW = L"Chrome_RenderWidgetHostHWND";
 
 //wParam of the injection message.
 //Also MarshalParams_Header::magic.

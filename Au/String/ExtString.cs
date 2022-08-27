@@ -340,7 +340,8 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-	public static int IndexOfNot(this RStr t, string chars!!) {
+	public static int IndexOfNot(this RStr t, string chars) {
+		Not_.Null(chars);
 		for (int i = 0; i < t.Length; i++) {
 			char c = t[i];
 			for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
@@ -356,7 +357,8 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-	public static int LastIndexOfNot(this RStr t, string chars!!) {
+	public static int LastIndexOfNot(this RStr t, string chars) {
+		Not_.Null(chars);
 		for (int i = t.Length; --i >= 0;) {
 			char c = t[i];
 			for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
@@ -451,7 +453,8 @@ public static unsafe partial class ExtString {
 	/// Word characters are those for which <see cref="char.IsLetterOrDigit"/> returns true plus those specified in <i>otherWordChars</i>.
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static int FindWord(this string t, string s!!, Range? range = null, bool ignoreCase = false, string otherWordChars = null) {
+	public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null) {
+		Not_.Null(s);
 		var (start, end) = range.GetStartEnd(t.Length);
 		int lens = s.Length;
 		if (lens == 0) return 0; //like IndexOf and Find

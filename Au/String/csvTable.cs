@@ -376,7 +376,8 @@
 		/// </summary>
 		/// <param name="d"></param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static csvTable fromDictionary(Dictionary<string, string> d!!) {
+		public static csvTable fromDictionary(Dictionary<string, string> d) {
+			Not_.Null(d);
 			var a = new List<string[]>(d.Count);
 			foreach (var v in d) a.Add(new string[] { v.Key, v.Value });
 			return new csvTable(a, 2);
@@ -388,7 +389,8 @@
 		/// <param name="d"></param>
 		/// <param name="valueToString">Callback function that converts value of type T to string.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static csvTable fromDictionary<T>(Dictionary<string, T> d!!, Func<T, string> valueToString!!) {
+		public static csvTable fromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString) {
+			Not_.Null(d, valueToString);
 			var a = new List<string[]>(d.Count);
 			foreach (var v in d) {
 				var t = valueToString(v.Value);
@@ -405,7 +407,8 @@
 		/// <param name="valueToCells">Callback function that converts value of type T to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentOutOfRangeException">columnCount less than 2.</exception>
-		public static csvTable fromDictionary<T>(Dictionary<string, T> d!!, int columnCount, Action<T, string[]> valueToCells!!) {
+		public static csvTable fromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells) {
+			Not_.Null(d, valueToCells);
 			if (columnCount < 2) throw new ArgumentOutOfRangeException();
 			var a = new List<string[]>(d.Count);
 			foreach (var v in d) {
@@ -443,7 +446,8 @@
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="InvalidOperationException"><b>ColumnCount</b> less than 2.</exception>
 		/// <exception cref="ArgumentException">Column 0 contains duplicate strings.</exception>
-		public Dictionary<string, T> ToDictionary<T>(bool ignoreCase, bool ignoreDuplicates, Func<string[], T> rowToValue!!) {
+		public Dictionary<string, T> ToDictionary<T>(bool ignoreCase, bool ignoreDuplicates, Func<string[], T> rowToValue) {
+			Not_.Null(rowToValue);
 			if (_columnCount < 2) throw new InvalidOperationException("ColumnCount must be >= 2");
 			var d = new Dictionary<string, T>(ignoreCase ? StringComparer.OrdinalIgnoreCase : null);
 			foreach (var v in _a) {

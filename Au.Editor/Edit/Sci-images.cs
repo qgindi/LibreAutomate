@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using static Au.Controls.KImageUtil;
 using System.Buffers;
 using CT = Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
+using Au.Types;
 
 partial class SciCode {
 	struct _Image {
@@ -83,7 +84,7 @@ partial class SciCode {
 			int start = a[i].TextSpan.Start;
 			int line = zLineFromPos(true, start), vi = Call(SCI_VISIBLEFROMDOCLINE, line);
 			if (vi >= vr.vlineFrom && vi < vr.vlineTo && 0 != Call(SCI_GETLINEVISIBLE, line))
-				maxWidth = Math.Max(maxWidth, _ImageDisplaySize(b, isComment).Width);
+				maxWidth = Math.Max(maxWidth, _ImageDisplaySize(!isImage, b, isComment).Width);
 
 			if (_im.a == null) {
 				_im.a = new();
@@ -243,9 +244,9 @@ partial class SciCode {
 				var v = _im.a[i];
 #if SMALLER_SCREENSHOTS
 				bool smaller = v.isComment;
-				var z = _ImageDisplaySize(v.image, smaller);
+				var z = _ImageDisplaySize(!v.isImage, v.image, smaller);
 #else
-				var z = v.image.Size;
+				var z = _ImageDisplaySize(!v.isImage, v.image, false);
 #endif
 				maxWidth = Math.Max(maxWidth, z.Width);
 				int x = c.rect.CenterX - z.Width / 2;
@@ -261,10 +262,7 @@ partial class SciCode {
 				g.IntersectClip(c.rect); //limit image width, because not clipped
 
 				if (v.isImage) g.DrawRectangleInset(Color.Green, 1, r, outset: true);
-#if SMALLER_SCREENSHOTS
-				if (smaller) g.DrawImage(v.image, r); else
-#endif
-				g.DrawImageUnscaled(v.image, x, y);
+				g.DrawImage(v.image, r);
 			}
 		}
 		finally {
@@ -301,8 +299,15 @@ partial class SciCode {
 		}
 	}
 
-	static Size _ImageDisplaySize(Bitmap b, bool smaller) {
+	Size _ImageDisplaySize(bool isIcon16, Bitmap b, bool smaller) {
 		var z = b.Size;
+		if (isIcon16) {
+			var k = Dpi.Scale(16, _dpi);
+			z = new(k, k);
+		} else {
+			int hr = b.HorizontalResolution.ToInt(), vr = b.VerticalResolution.ToInt();
+			if (hr >= 96 && vr >= 96) z = new(Math2.MulDiv(z.Width, _dpi, hr), Math2.MulDiv(b.Height, _dpi, vr));
+		}
 #if SMALLER_SCREENSHOTS
 		if (smaller) return new(z.Width * 3 / 4, z.Height * 3 / 4);
 #endif

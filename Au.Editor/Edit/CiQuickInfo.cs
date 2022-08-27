@@ -10,7 +10,7 @@ class CiQuickInfo {
 
 		//don't include <remarks>. Sometimes it takes too much space. Badly formatted if eg contains markdown.
 		var opt1 = QuickInfoOptions.Default with { ShowRemarksInQuickInfo = false, IncludeNavigationHintsInQuickInfo = false };
-		var opt2 = new Microsoft.CodeAnalysis.LanguageServices.SymbolDescriptionOptions(opt1, Microsoft.CodeAnalysis.Classification.ClassificationOptions.Default);
+		var opt2 = new Microsoft.CodeAnalysis.LanguageServices.SymbolDescriptionOptions { QuickInfoOptions = opt1 };
 
 		var service = QuickInfoService.GetService(cd.document);
 		var r = await Task.Run(async () => await service.GetQuickInfoAsync(cd.document, pos16, opt2, default));

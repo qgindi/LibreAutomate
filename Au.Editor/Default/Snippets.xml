@@ -384,7 +384,7 @@ b.R.Add(out CheckBox c1, "Check");
 b.R.AddButton("Button", _ => { print.it("Button clicked"); });
 b.R.AddOkCancel();
 b.End();
-#if WPF_PREVIEW
+#if WPF_PREVIEW //menu Edit -> View -> WPF preview
 b.Window.Preview();
 #endif
 if (!b.ShowDialog()) return;

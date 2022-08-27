@@ -29,7 +29,8 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// ]]></code>
 	/// </example>
 	/// <seealso cref="popupMenu.AddEnum{TEnum}"/>
-	public EnumUI(popupMenu m!!, TEnum init = default, (TEnum value, string text)[] items = null) {
+	public EnumUI(popupMenu m, TEnum init = default, (TEnum value, string text)[] items = null) {
+		Not_.Null(m);
 		_isFlags = typeof(TEnum).IsDefined(typeof(FlagsAttribute), false);
 		bool cns = m.CheckDontClose; if (_isFlags) m.CheckDontClose = true;
 		_InitArray(items);
@@ -80,7 +81,8 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// print.it(e.Result);
 	/// ]]></code>
 	/// </example>
-	public EnumUI(StackPanel container!!, TEnum init = default, (TEnum value, string text)[] items = null) {
+	public EnumUI(StackPanel container, TEnum init = default, (TEnum value, string text)[] items = null) {
+		Not_.Null(container);
 		_isFlags = true;
 		_InitArray(items);
 		Thickness margin = container.Orientation == Orientation.Vertical ? new(2) : new(2, 2, 12, 2);
@@ -112,7 +114,8 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// print.it(e.Result);
 	/// ]]></code>
 	/// </example>
-	public EnumUI(Selector container!!, TEnum init = default, (TEnum value, string text)[] items = null) {
+	public EnumUI(Selector container, TEnum init = default, (TEnum value, string text)[] items = null) {
+		Not_.Null(container);
 		_cb = container;
 		_InitArray(items);
 		int iSel = -1;

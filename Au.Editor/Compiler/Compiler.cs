@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 
 namespace Au.Compiler;
 
@@ -230,7 +231,7 @@ static partial class Compiler {
 		if (needOutputFiles) {
 			if (m.Role == ERole.miniProgram) {
 				//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
-				//TODO: C# 11 [assembly: MTAThread]
+				//FUTURE: C# 11/12 [assembly: MTAThread]
 				if (compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.EFlags.MTA;
 
 				if (m.Console) r.flags |= MiniProgram_.EFlags.Console;
@@ -238,7 +239,7 @@ static partial class Compiler {
 
 			//create assembly file
 			p1.Next();
-		gSave:
+			gSave:
 #if true
 			var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, default, Api.CREATE_ALWAYS);
 			if (hf.Is0) {
@@ -424,53 +425,147 @@ static partial class Compiler {
 		return rflags;
 	}
 
+	//Gets paths of used managed and unmanaged dlls (meta nuget, r, etc).
+	//Returns: dr - managed dlls, dn - other dlls. If compiling exeProgram, dn also contains other files from nuget.
+	//	Full paths are in dictionary values. Keys contain filenames or nuget relative paths, and for callers almost not useful.
+	//Called when:
+	//	Compiling exeProgram. The files will be copied to the output.
+	//	Compiling miniProgram or editorExtension. Dll paths will be added to an assembly attribute. At run time will use it to find dlls.
+	//Depending on meta properties, filters out unused dlls, eg 32-bit or dlls for other OS versions.
 	static (Dictionary<string, string> dr, Dictionary<string, string> dn) _GetDllPaths(MetaComments meta) {
 		Dictionary<string, string> dr = null, dn = null; //managed, native
 		_Project(meta);
 		void _Project(MetaComments m) {
-			//managed dlls from everywhere
-			var refs = m.References.Refs;
-			for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
-				var path = refs[k].FilePath;
-				_Add(ref dr, pathname.getName(path), path);
+			var ndir = App.Model.NugetDirectoryBS;
+
+			//managed dlls, except nuget
+			{
+				var refs = m.References.Refs;
+				for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
+					var path = refs[k].FilePath;
+					if (path.Starts(ndir, true)) continue;
+					_Add(ref dr, pathname.getName(path), path);
+				}
 			}
 
-			//native dlls from nuget
+			//managed and native dlls from nuget. If exeProgram, also non-dll files.
 			var xn = m.NugetXmlRoot;
 			if (xn != null) {
 				foreach (var package in m.NugetPackages) {
 					var xp = xn.Elem("package", "path", package, true);
 					if (xp != null) {
-						foreach (var f in xp.Elements("f")) {
-							string name = f.Value; // \64\name.dll or \32\name.dll
-							string skip = null;
-							if (meta.Role != ERole.exeProgram) skip = @"\32";
-							else if (meta.Bit32) skip = @"\64";
-							else if (!meta.Optimize) skip = @"\32";
-							if (skip != null && name.Starts(skip)) continue;
+						var dir = ndir + pathname.getDirectory(package);
+						if (xp.Attr(out int format, "format")) {
 
-							if (!name.Ends(".dll", true)) {
-								if (meta.Role != ERole.exeProgram) continue; //when creating exe, copy all files except XML doc
-								if (name.Ends(".xml", true) && (dr?.ContainsKey(pathname.getNameNoExt(name) + ".dll") ?? false)) continue; //XML doc
+							foreach (var f in xp.Elements()) {
+								switch (f.Name.LocalName) { //see DNuget._Build
+								case "r" or "rt":
+									_Add2(ref dr, f.Value);
+									break;
+								case "native":
+									_Add2(ref dn, f.Value);
+									break;
+								case "group":
+									_AddGroup(f, false);
+									break;
+								case "natives":
+									_AddGroup(f, true);
+									break;
+								case "other" when meta.Role == ERole.exeProgram:
+									//copy all other files. Except XML doc, they are not in nuget.xml.
+									_Add2(ref dn, f.Value, isDll: false);
+									break;
+								}
 							}
-							_Add(ref dn, name, App.Model.NugetDirectoryBS + pathname.getDirectory(package) + name);
+
+							void _AddGroup(XElement x, bool native) {
+								ref var d = ref (native ? ref dn : ref dr);
+
+								int verPC = osVersion.minWin10 ? 100 : osVersion.minWin8_1 ? 81 : osVersion.minWin8 ? 80 : 70; //don't need Win11
+								int verBest = -1;
+
+								string skip = null;
+								if (meta.Role != ERole.exeProgram) skip = @"-x86\";
+								else if (meta.Bit32) skip = @"-x64\";
+								else if (!meta.Optimize) skip = @"-x86\";
+
+								string sBest = null;
+								foreach (var f in x.Elements(native ? "native" : "rt")) {
+									string s = f.Value; //like \runtimes\win\..., \runtimes\win-x64\..., \runtimes\win10-x64\...
+									int i = 13, verDll = 0;
+									if (s[i] != '-') verDll = s.ToInt(i, out i);
+
+									if (skip != null && s.Eq(i, skip, true)) continue;
+
+									if (meta.Role == ERole.exeProgram) {
+										_Add2(ref d, s); //will select at run time
+									} else {
+										if (verDll != 81) verDll *= 10;
+										if (verDll > verPC) continue;
+										if (verDll > verBest) {
+											verBest = verDll;
+											sBest = s;
+										}
+									}
+								}
+
+								if (sBest != null) {
+									_Add2(ref d, sBest);
+								}
+							}
+						} else {
+							//old format (the very first)
+							//tags:
+							//	"r" - .NET dll (including ref-only)
+							//	"f" - all other (including native dll)
+							//native dlls are in \64 and \32.
+
+							foreach (var f in xp.Elements()) {
+								string s = f.Value, tag = f.Name.LocalName;
+								if (tag == "r") {
+									_Add2(ref dr, s);
+								} else if (tag == "f") {
+									if (s.Ends(".dll", true)) {
+										string skip = null;
+										if (meta.Role != ERole.exeProgram) skip = @"\32";
+										else if (meta.Bit32) skip = @"\64";
+										else if (!meta.Optimize) skip = @"\32";
+										if (skip != null && s.Starts(skip)) continue;
+									} else if (meta.Role != ERole.exeProgram) continue;
+									_Add2(ref dn, s);
+								}
+							}
 						}
+
+						void _Add2(ref Dictionary<string, string> d, string s, bool isDll = true)
+							=> _Add(ref d, s, dir + s, isDll);
 					}
 				}
 			}
 
-			void _Add(ref Dictionary<string, string> d, string name, string path) {
+			void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
+				if (isDll && meta.Role == ERole.exeProgram && meta.Name.Eqi(pathname.getNameNoExt(s)))
+					throw new InvalidOperationException($@"Can't use C# file name '{meta.Name}' because it is used by dll file '{path}'.
+	Rename this C# file: {meta.Name}");
+
 				d ??= new(StringComparer.OrdinalIgnoreCase);
-				if (d.TryAdd(name, path)) return;
-				var existing = d[name]; if (existing.Eqi(path)) return;
+				if (d.TryAdd(s, path)) return;
+				var existing = d[s]; if (existing.Eqi(path)) return;
 				if (filesystem.loadBytes(existing).AsSpan().SequenceEqual(filesystem.loadBytes(path))) return;
-				throw new InvalidOperationException($"Two different versions of file:\r\n\t{existing}\r\n\t{path}");
-				//CONSIDER: pick the newer version and show warning. But what if it is a completely different file?
+
+				throw new InvalidOperationException($@"Two different versions of file:
+	{existing}
+	{path}");
 			}
 
 			var pr = m.ProjectReferences;
 			if (pr != null) foreach (var v in pr) _Project(v.m);
 		}
+
+		//print.it("dr");
+		//print.it(dr);
+		//print.it("dn");
+		//print.it(dn);
 
 		return (dr, dn);
 	}
@@ -635,7 +730,8 @@ static partial class Compiler {
 
 	static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
-		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
+		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe"
+		//	and modifies it, eg copies native resources from the dll.
 		//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 
 		//var p1 = perf.local();
@@ -658,7 +754,6 @@ static partial class Compiler {
 				b[i] = 0;
 			}
 
-#if true
 			var res = new _Resources();
 			if (m.IconFile != null) {
 				_Resources.ICONCONTEXT ic = default;
@@ -680,6 +775,7 @@ static partial class Compiler {
 				res.AddIcon(stream.ToArray(), ref ic);
 			}
 			res.AddVersion(outFile);
+			res.AddDotnetRef();
 
 			string manifest = null;
 			if (m.ManifestFile != null) manifest = m.ManifestFile.FilePath;
@@ -689,35 +785,6 @@ static partial class Compiler {
 			res.WriteAll(exeFile, b, bit32, m.Console);
 
 			//speed: AV makes this slooow.
-#else
-				//if console, write IMAGE_SUBSYSTEM_WINDOWS_CUI
-				if(m.Console) b[0x14c] = 3; //todo: different if bit32
-
-				for(int i = 5; ; i += Math.Min(i, 100)) { //retry, because sometimes access violation, maybe is open by AV
-					try {
-						File.WriteAllBytes(exeFile, b);
-						//p1.Next('c');
-						//copy native resources from assembly dll. Don't need native resources in dll (only version), but this is how VS does.
-						using var u = new Microsoft.NET.HostModel.ResourceUpdater(exeFile);
-						u.AddResourcesFromPEImage(outFile).Update();
-					}
-					catch when(i < 700) { //WriteAllBytes usually throws IOException; ResourceUpdater undocumented.
-						Thread.Sleep(i);
-						continue;
-					}
-					break;
-				}
-
-				//speed: Windows Defender makes this the slowest part of the compilation.
-				//	Whole compilation 4 times slower if creating only 64bit or 32bit exe, and 6 times slower if both.
-				//	With the above code whole compilation in slowest cases is 2 times faster that with this, eg 180 -> 90 ms.
-				//	Workaround: add the output folder to AV exclusions.
-
-				//or
-				//Microsoft.NET.HostModel.AppHost.HostWriter.CreateAppHost(appHost, exeFile, fileName, !m.Console, outFile); //nuget Microsoft.NET.HostModel
-				//works, but: 1. Need nuget Microsoft.NET.HostModel, or copy more code from its source. 2. Apphost exe must be console; can't because used not only here.
-				//	Most of the above code is like in HostWriter.CreateAppHost.
-#endif
 			//p1.NW();
 			done = true;
 		}
@@ -772,7 +839,7 @@ static partial class Compiler {
 		}
 
 		var (dr, dn) = _GetDllPaths(m);
-		if (dr != null) { //copy managed dlls, including those from nuget
+		if (dr != null) { //copy managed dlls, including from nuget
 			foreach (var v in dr) {
 				_CopyFileIfNeed(v.Value, m.OutputPath + "\\" + v.Key);
 
@@ -858,7 +925,7 @@ static partial class Compiler {
 			if (Api.MoveFileEx(file, renamed, Api.MOVEFILE_REPLACE_EXISTING)) goto g1;
 		}
 		return false;
-	g1:
+		g1:
 		if (notInCache) {
 			if (s_renamedFiles == null) {
 				s_renamedFiles = new List<string>();

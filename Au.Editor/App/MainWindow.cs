@@ -8,7 +8,7 @@ partial class MainWindow : Window {
 	public void Init() {
 		//_StartProfileOptimization();
 
-		Title = App.AppNameLong; //don't append document name etc
+		Title = App.AppNameShort; //don't append document name etc
 
 		if (App.Settings.wndpos.main == null) {
 			Width = 1000;
@@ -40,6 +40,7 @@ partial class MainWindow : Window {
 
 		Panels.PanelManager.Container = g => { this.Content = g; };
 
+		_NormalizeMouseWheel();
 
 		//timer.after(100, _ => DOptions.ZShow());
 		//timer.after(100, _ => App.Model.Properties());
@@ -51,6 +52,7 @@ partial class MainWindow : Window {
 		//timer.after(500, _ => Au.Tools.Delm.Dialog());
 		//timer.after(400, _ => Au.Tools.Duiimage.Dialog());
 		//timer2.every(200, _ => { GC.Collect(); });
+		//timer.after(100, _ => Menus.Tools.NuGet());
 
 #if DEBUG
 		App.Timer1s += () => {
@@ -207,7 +209,21 @@ partial class MainWindow : Window {
 	public void ZShowAndActivate() {
 		Show();
 		var w = this.Hwnd();
-		w.ShowNotMinimized(true);
+		w.ShowNotMinimized();
 		w.ActivateL();
+	}
+
+	//If winver < 10 or disabled normal mouse scrolling, sets a mouse hook to scroll the mouse control.
+	//	Without it can't scroll any KTreeView even if focused.
+	static unsafe void _NormalizeMouseWheel() {
+		if (osVersion.minWin10 && Api.SystemParametersInfo(Api.SPI_GETMOUSEWHEELROUTING, 0) >= 2) return;
+		WindowsHook.ThreadGetMessage(k => {
+			if (k.PM_NOREMOVE) return;
+			if (k.msg->message is Api.WM_MOUSEWHEEL or Api.WM_MOUSEHWHEEL) {
+				var w = wnd.fromMouse(WXYFlags.Raw);
+				if (w.IsOfThisThread) k.msg->hwnd = w;
+			}
+		});
+		//never mind other threads. Eg the wnd and elm tools.
 	}
 }

@@ -210,6 +210,9 @@ bool UnmarshalAgentIAccessible(HWND wAgent, out IAccessible*& iacc) {
 	Smart<IStream> stream;
 	CreateStreamOnHGlobal(hg, true, &stream);
 	if(CoUnmarshalInterface(stream, IID_IAccessible, (void**)&iacc)) return false;
+	//SHOULDDO: once run.it in TT process started to always print warning "Failed to run as non-admin.".
+	//	Attached debugger shows that CoUnmarshalInterface fails.
+	//	OK in other processes. OK after restarting TT. Can't reproduce.
 
 	return true;
 }
@@ -544,7 +547,7 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 
 	//Perf.First();
 	wchar_t name[12]; _itow(tid, name, 10);
-	wa = FindWindowEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
+	wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
 	//Perf.Next();
 	if(!wa) {
 		bool ok = false, is64bit, differentBits = IsProcess64Bit(pid, out is64bit) && is64bit != IsThisProcess64Bit();
@@ -552,7 +555,7 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 		if(!differentBits) {
 			ok = InjectDll(w, out wa, tid, pid);
 		} else if(RunDll(w)) { //speed: 40-60 ms
-			wa = FindWindowEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
+			wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
 			ok = !!wa;
 		}
 		//Perf.Next();

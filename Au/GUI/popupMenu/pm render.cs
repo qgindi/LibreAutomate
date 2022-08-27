@@ -5,13 +5,13 @@ namespace Au;
 
 public unsafe partial class popupMenu {
 	/// <summary>
-	/// Sets some metrics of this menu, for example item padding.
+	/// Sets some metrics, for example item padding.
 	/// </summary>
 	/// <seealso cref="DefaultMetrics"/>
 	public MMetrics Metrics { get; set; }
 
 	/// <summary>
-	/// Sets default metrics of menus.
+	/// Sets or gets default metrics.
 	/// </summary>
 	/// <seealso cref="Metrics"/>
 	public static MMetrics DefaultMetrics {
@@ -19,6 +19,24 @@ public unsafe partial class popupMenu {
 		set { s_defaultMetrics = value; }
 	}
 	static MMetrics s_defaultMetrics;
+
+	/// <summary>
+	/// Sets or gets font.
+	/// </summary>
+	public FontNSS Font { get; set; }
+
+	/// <summary>
+	/// Sets or gets default font.
+	/// </summary>
+	public static FontNSS DefaultFont { get; set; }
+
+	NativeFont_ _GetFont(bool bold = false) {
+		var font = Font ?? DefaultFont;
+		if (font == null) return bold ? NativeFont_.BoldCached(_dpi) : NativeFont_.RegularCached(_dpi);
+		if(!bold) return _font ??= font.CreateFont(_dpi);
+		return _fontBold ??= (font with { Bold = true }).CreateFont(_dpi);
+	}
+	NativeFont_ _font, _fontBold; //disposing in _WmNcdestroy or ~NativeFont_
 
 	_Metrics _z;
 
@@ -96,7 +114,7 @@ public unsafe partial class popupMenu {
 		int buttonPlusX = (_z.border + _z.textPaddingX) * 2 + _z.check + _z.image + _z.submenu + _z.submenuMargin + _z.paddingLeft + _z.paddingRight;
 		int maxTextWidth = maxWidth - buttonPlusX;
 
-		var font = NativeFont_.RegularCached(_dpi);
+		var font = _GetFont();
 		using var dc = new FontDC_(font);
 		int textHeight = dc.MeasureEP(" ").height;
 
@@ -122,7 +140,7 @@ public unsafe partial class popupMenu {
 			} else {
 				var s = b.Text;
 				if (!s.NE()) {
-					if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
+					if (b.FontBold) Api.SelectObject(dc, _GetFont(true));
 					z = dc.MeasureDT(s, _TfFlags(b), maxTextWidth);
 					z.width = Math.Min(z.width, maxTextWidth);
 					if (b.FontBold) Api.SelectObject(dc, font);
@@ -158,7 +176,7 @@ public unsafe partial class popupMenu {
 
 		using var g = Graphics.FromHdc(dc);
 		g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-		var font = NativeFont_.RegularCached(_dpi);
+		var font = _GetFont();
 		using var soFont = new GdiSelectObject_(dc, font);
 		Api.SetBkMode(dc, 1);
 		int textColor = Api.GetSysColor(Api.COLOR_BTNTEXT), textColorDisabled = Api.GetSysColor(Api.COLOR_GRAYTEXT);
@@ -210,7 +228,7 @@ public unsafe partial class popupMenu {
 
 				Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));
 				if (!b.Text.NE()) {
-					if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
+					if (b.FontBold) Api.SelectObject(dc, _GetFont(true));
 					r.Width = _z.xTextEnd;
 					Api.DrawText(dc, b.Text, ref r, _TfFlags(b));
 					if (b.FontBold) Api.SelectObject(dc, font);

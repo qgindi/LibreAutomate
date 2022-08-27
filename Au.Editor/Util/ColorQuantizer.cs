@@ -6,20 +6,20 @@ using System.Drawing.Imaging;
 /// Uses color quantizer algorithm of Xiaolin Wu.
 /// Same instance can be reused to quantize multiple images and avoid 0.7 MB of garbage for each; the static functions use this.
 /// </summary>
-unsafe class ColorQuantizer
-{
+unsafe class ColorQuantizer {
 	/// <summary>
 	/// Takes screenshot of specified rectangle in screen, quantizes colors to make smaller, compresses, Base64 encodes and returns comment string like <c>" /*image:...*/"</c>.
 	/// If fails, prints warning and returns null.
 	/// </summary>
-	public static string MakeScreenshotComment(RECT r, DpiOf dpi = default) {
-		if (dpi != default) {
-			int i = dpi.Dpi;
-			if (i != 96) r.Inflate((Dpi.Scale(r.Width, i) - r.Width) / 2, (Dpi.Scale(r.Height, i) - r.Height) / 2);
+	/// <param name="r">Rectangle in screen. Must be not DPI-scaled. This function inflates it if need for DPI of that screen.</param>
+	public static string MakeScreenshotComment(RECT r) {
+		int dpi = screen.of(r).Dpi;
+		if (dpi != 96) {
+			r.Inflate((Dpi.Scale(r.Width, dpi) - r.Width) / 2, (Dpi.Scale(r.Height, dpi) - r.Height) / 2);
 		}
 		try {
 			var b = uiimage.capture(r);
-			var a = Quantize(b, 16);
+			var a = Quantize(b, 16, dpi);
 			var z = Convert2.BrotliCompress(a);
 			return "/*image:"
 				//+ "\r\n" //rejected
@@ -35,9 +35,10 @@ unsafe class ColorQuantizer
 	/// </summary>
 	/// <param name="b">Bitmap with pixel bit count 32 or 24. If 32, alpha is ignored.</param>
 	/// <param name="nColors">Max count of colors desired. Must be 2 to 256 inclusive. For example a 4-bit bitmap can have max 16 colors; 8-bit - max 256 colors.</param>
+	/// <param name="dpi">Image resolution as DPI. If more than 96, this function writes this info to the bitmap header.</param>
 	/// <returns>.bmp file data (BITMAPFILEHEADER, BITMAPINFOHEADER, color table, pixel bits) of quantized bitmap.</returns>
 	/// <exception cref="ArgumentException"></exception>
-	public static byte[] Quantize(Bitmap b, int nColors) {
+	public static byte[] Quantize(Bitmap b, int nColors, int dpi = 0) {
 		t_wr ??= new(null); if (!t_wr.TryGetTarget(out var q)) t_wr.SetTarget(q = new()); //avoid 0.7 MB of garbage each time
 
 		var d = b.LockBits(new(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, b.PixelFormat);
@@ -46,7 +47,7 @@ unsafe class ColorQuantizer
 			bool topDown = d.Stride >= 0;
 			if (!topDown) p -= -d.Stride * (d.Height - 1);
 
-			var a = q.Quantize(b.Width, b.Height, Image.GetPixelFormatSize(d.PixelFormat), p, ref nColors, topDown);
+			var a = q.Quantize(b.Width, b.Height, Image.GetPixelFormatSize(d.PixelFormat), p, ref nColors, topDown, dpi);
 
 			//print.it(a.Length, a);
 			//var z=Convert2.Compress(a);
@@ -63,9 +64,10 @@ unsafe class ColorQuantizer
 	/// </summary>
 	/// <param name="b">Bitmap with pixel bit count 32 or 24. If 32, alpha is ignored.</param>
 	/// <param name="nColors">Max count of colors desired. Must be 2 to 256 inclusive. For example a 4-bit bitmap can have max 16 colors; 8-bit - max 256 colors.</param>
+	/// <param name="dpi">Image resolution as DPI. If more than 96, this function writes this info to the bitmap header.</param>
 	/// <returns>Quantized bitmap.</returns>
 	/// <exception cref="ArgumentException"></exception>
-	public static Bitmap QuantizeB(Bitmap b, int nColors) => new(new MemoryStream(Quantize(b, nColors)));
+	public static Bitmap QuantizeB(Bitmap b, int nColors, int dpi = 0) => new(new MemoryStream(Quantize(b, nColors, dpi)));
 
 	// DIB data
 	int _width, _height, _lineSize, _colorBytes;
@@ -90,9 +92,10 @@ unsafe class ColorQuantizer
 	/// <param name="bits">Pixels.</param>
 	/// <param name="nColors">Input - max count of colors desired. Must be 2 to 256 inclusive. For example a 4-bit bitmap can have max 16 colors; 8-bit - max 256 colors. Output - actual count of colors in color table of the returned bitmap.</param>
 	/// <param name="topDown">Top-down bitmap. For example GDI+ (System.Drawing) bitmaps usually are top-down.</param>
+	/// <param name="dpi">Image resolution as DPI. If more than 96, this function writes this info to the bitmap header.</param>
 	/// <returns>.bmp file data (BITMAPFILEHEADER, BITMAPINFOHEADER, color table, pixel bits) of quantized bitmap.</returns>
 	/// <exception cref="ArgumentException"></exception>
-	public byte[] Quantize(int width, int height, int bitCount, byte* bits, ref int nColors, bool topDown) {
+	public byte[] Quantize(int width, int height, int bitCount, byte* bits, ref int nColors, bool topDown, int dpi = 0) {
 		if (!(bits != null && bitCount is (32 or 24) && width > 0 && height > 0 && nColors >= 2 && nColors <= 256)) throw new ArgumentException();
 
 		_width = width;
@@ -211,6 +214,7 @@ unsafe class ColorQuantizer
 			h2->biSize = sizeof(Api.BITMAPINFOHEADER); h2->biPlanes = 1;
 			h2->biBitCount = (ushort)bpp; h2->biClrUsed = nColors;
 			h2->biWidth = _width; h2->biHeight = _height;
+			if (dpi > 96) h2->biXPelsPerMeter = h2->biYPelsPerMeter = (dpi * 39.370079).ToInt();
 		}
 
 		//Debug_.MemoryPrint_();
@@ -516,8 +520,7 @@ unsafe class ColorQuantizer
 	}
 
 	[StructLayout(LayoutKind.Sequential, Pack = 2)]
-	internal struct BITMAPFILEHEADER
-	{
+	internal struct BITMAPFILEHEADER {
 		public ushort bfType;
 		public int bfSize;
 		public ushort bfReserved1;
@@ -527,8 +530,7 @@ unsafe class ColorQuantizer
 
 #pragma warning disable CS0649 //field never assigned
 
-	internal struct RGBQUAD
-	{
+	internal struct RGBQUAD {
 		public byte rgbBlue;
 		public byte rgbGreen;
 		public byte rgbRed;

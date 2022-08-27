@@ -1,16 +1,12 @@
-﻿namespace Au.Types
-{
-	static unsafe partial class Api
-	{
-		internal struct STRRET
-		{
+﻿namespace Au.Types {
+	static unsafe partial class Api {
+		internal struct STRRET {
 			public uint uType;
 
 			[StructLayout(LayoutKind.Explicit)]
-			internal struct TYPE_1
-			{
+			internal struct TYPE_1 {
 				[FieldOffset(0)]
-				public IntPtr pOleStr;
+				public char* pOleStr;
 				[FieldOffset(0)]
 				public uint uOffset;
 				[FieldOffset(0)]
@@ -19,48 +15,65 @@
 			public TYPE_1 _2;
 		}
 
-		internal static Guid IID_IShellFolder = new Guid(0x000214E6, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+		//internal static Guid IID_IShellFolder = new Guid(0x000214E6, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
 
 		[ComImport, Guid("000214E6-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IShellFolder
-		{
-			[PreserveSig] int ParseDisplayName(wnd hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, uint* pchEaten, out IntPtr ppidl, uint* pdwAttributes);
-			[PreserveSig] int EnumObjects(wnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
-			[PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
-			[PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
-			[PreserveSig] int CompareIDs(nint lParam, IntPtr pidl1, IntPtr pidl2);
-			[PreserveSig] int CreateViewObject(wnd hwndOwner, in Guid riid, out IntPtr ppv);
-			[PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, ref uint rgfInOut);
-			[PreserveSig] //int GetUIObjectOf(wnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
-			int GetUIObjectOf(wnd hwndOwner, uint cidl, IntPtr* apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.Interface)] out object ppv);
-			[PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint uFlags, out STRRET pName);
-			[PreserveSig] int SetNameOf(wnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
+		internal interface IShellFolder {
+			//[PreserveSig] int ParseDisplayName(wnd hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, uint* pchEaten, out IntPtr ppidl, uint* pdwAttributes);
+			//[PreserveSig] int EnumObjects(wnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
+			//[PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+			//[PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+			//[PreserveSig] int CompareIDs(nint lParam, IntPtr pidl1, IntPtr pidl2);
+			//[PreserveSig] int CreateViewObject(wnd hwndOwner, in Guid riid, out IntPtr ppv);
+			//[PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, ref uint rgfInOut);
+			void _0();
+			void _1();
+			void _2();
+			void _3();
+			void _4();
+			void _5();
+			void _6();
+			[PreserveSig] int GetUIObjectOf(wnd hwndOwner, uint cidl, in IntPtr pidl, in Guid riid, nint rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+			//[PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint uFlags, out STRRET pName);
+			//[PreserveSig] int SetNameOf(wnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
 		}
 
-		internal static Guid IID_IShellItem = new Guid(0x43826D1E, 0xE718, 0x42EE, 0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE);
+		internal static bool GetUIObjectOf<T>(this IShellFolder t, IntPtr pidl, out T result) where T : class {
+			result = null;
+			if (0 != t.GetUIObjectOf(default, 1, pidl, typeof(T).GUID, 0, out var o) || o is not T r) return false;
+			result = r;
+			return true;
+		}
+
+		//internal static Guid IID_IShellItem = new Guid(0x43826D1E, 0xE718, 0x42EE, 0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE);
 
 		[ComImport, Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IShellItem
-		{
-			[PreserveSig] int BindToHandler(IntPtr pbc, in Guid bhid, in Guid riid, out IntPtr ppv); //IBindCtx
-			[PreserveSig] int GetParent(out IShellItem ppsi);
+		internal interface IShellItem {
+			//[PreserveSig] int BindToHandler(IntPtr pbc, in Guid bhid, in Guid riid, out IntPtr ppv); //IBindCtx
+			//[PreserveSig] int GetParent(out IShellItem ppsi);
+			void _0();
+			void _1();
 			[PreserveSig] int GetDisplayName(SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
 			[PreserveSig] int GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
-			[PreserveSig] int Compare(IShellItem psi, uint hint, out int piOrder);
+			//[PreserveSig] int Compare(IShellItem psi, uint hint, out int piOrder);
 		}
 
-		[ComImport, Guid("000214F2-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IEnumIDList
-		{
-			[PreserveSig] int Next(int celt, [MarshalAs(UnmanagedType.LPArray)][Out] IntPtr[] rgelt, out int pceltFetched);
-			[PreserveSig] int Skip(int celt);
-			[PreserveSig] int Reset();
-			[PreserveSig] int Clone(out IEnumIDList ppenum);
+		//[ComImport, Guid("000214F2-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		//internal interface IEnumIDList {
+		//	[PreserveSig] int Next(int celt, [MarshalAs(UnmanagedType.LPArray)][Out] IntPtr[] rgelt, out int pceltFetched);
+		//	[PreserveSig] int Skip(int celt);
+		//	[PreserveSig] int Reset();
+		//	[PreserveSig] int Clone(out IEnumIDList ppenum);
+		//}
+
+		[ComImport, Guid("000214fa-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface IExtractIcon {
+			[PreserveSig] int GetIconLocation(uint uFlags, StringBuilder pszIconFile, int cchMax, out int piIndex, out uint pwFlags);
+			//[PreserveSig] int Extract([MarshalAs(UnmanagedType.LPWStr)] string pszFile, int nIconIndex, out IntPtr phiconLarge, out IntPtr phiconSmall, uint nIconSize);
 		}
 
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IShellLink
-		{
+		internal interface IShellLink {
 			[PreserveSig] int GetPath(char* pszFile, int cch, IntPtr pfd = default, uint fFlags = 0);
 			[PreserveSig] int GetIDList(out IntPtr ppidl);
 			[PreserveSig] int SetIDList(IntPtr pidl);
@@ -88,21 +101,19 @@
 		internal class ShellLink { }
 
 		[ComImport, Guid("0000010b-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IPersistFile
-		{
+		internal interface IPersistFile {
 			// IPersist
 			[PreserveSig] int GetClassID(out Guid pClassID);
 			// IPersistFile
 			[PreserveSig] int IsDirty();
 			[PreserveSig] int Load([MarshalAs(UnmanagedType.LPWStr)] string pszFileName, uint dwMode);
 			[PreserveSig] int Save([MarshalAs(UnmanagedType.LPWStr)] string pszFileName, [MarshalAs(UnmanagedType.Bool)] bool fRemember);
-			[PreserveSig] int SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string pszFileName);
-			[PreserveSig] int GetCurFile(out IntPtr ppszFileName);
+			//[PreserveSig] int SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string pszFileName);
+			//[PreserveSig] int GetCurFile(out IntPtr ppszFileName);
 		}
 
 		//see also VARIANT in Struct.cs
-		internal struct PROPVARIANT : IDisposable
-		{
+		internal struct PROPVARIANT : IDisposable {
 			public VARENUM vt; //ushort
 			ushort _u1;
 			uint _u2;
@@ -117,8 +128,7 @@
 			}
 		}
 
-		internal struct PROPERTYKEY
-		{
+		internal struct PROPERTYKEY {
 			public Guid fmtid;
 			public uint pid;
 		}
@@ -126,8 +136,7 @@
 		internal static Guid IID_IPropertyStore = new Guid(0x886D8EEB, 0x8CF2, 0x4446, 0x8D, 0x02, 0xCD, 0xBA, 0x1D, 0xBD, 0xCF, 0x99);
 
 		[ComImport, Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IPropertyStore
-		{
+		internal interface IPropertyStore {
 			[PreserveSig] int GetCount(out int cProps);
 			[PreserveSig] int GetAt(int iProp, out PROPERTYKEY pkey);
 			[PreserveSig] int GetValue(in PROPERTYKEY key, out PROPVARIANT pv);
@@ -142,8 +151,7 @@
 		internal class TaskScheduler { }
 
 		[ComImport, Guid("2faba4c7-4da9-4013-9697-20cc3fd40f85")]
-		internal interface ITaskService
-		{
+		internal interface ITaskService {
 			ITaskFolder GetFolder(string path);
 			//[PreserveSig] int GetRunningTasks(int flags, out IRunningTaskCollection ppRunningTasks);
 			//[PreserveSig] int NewTask(uint flags, out ITaskDefinition ppDefinition);
@@ -158,8 +166,7 @@
 		}
 
 		[ComImport, Guid("8cfac062-a080-4c15-9a88-aa7c2af80dfc")]
-		internal interface ITaskFolder
-		{
+		internal interface ITaskFolder {
 			//[PreserveSig] int get_Name(char** pName);
 			//[PreserveSig] int get_Path(char** pPath);
 			//[PreserveSig] int GetFolder(string path, out ITaskFolder ppFolder);
@@ -182,8 +189,7 @@
 		}
 
 		[ComImport, Guid("9c86f320-dee3-4dd1-b972-a303f26b061e")]
-		internal interface IRegisteredTask
-		{
+		internal interface IRegisteredTask {
 			//[PreserveSig] int get_Name(char** pName);
 			//[PreserveSig] int get_Path(char** pPath);
 			//[PreserveSig] int get_State(out TASK_STATE pState);
@@ -210,8 +216,7 @@
 		}
 
 		[ComImport, Guid("653758fb-7b9a-4f1e-a471-beeb8e9b834e")]
-		internal interface IRunningTask
-		{
+		internal interface IRunningTask {
 			//[PreserveSig] int get_Name(char** pName);
 			//[PreserveSig] int get_InstanceGuid(char** pGuid);
 			//[PreserveSig] int get_Path(char** pPath);
@@ -230,8 +235,7 @@
 		}
 
 		[Flags]
-		internal enum TASK_CREATION : uint
-		{
+		internal enum TASK_CREATION : uint {
 			TASK_VALIDATE_ONLY = 0x1,
 			TASK_CREATE,
 			TASK_UPDATE = 0x4,
@@ -241,8 +245,7 @@
 			TASK_IGNORE_REGISTRATION_TRIGGERS = 0x20
 		}
 
-		internal enum TASK_LOGON_TYPE
-		{
+		internal enum TASK_LOGON_TYPE {
 			TASK_LOGON_NONE,
 			TASK_LOGON_PASSWORD,
 			TASK_LOGON_S4U,
@@ -296,8 +299,7 @@
 		//}
 
 		[ComImport, Guid("a5cd92ff-29be-454c-8d04-d82879fb3f1b"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IVirtualDesktopManager
-		{
+		internal interface IVirtualDesktopManager {
 			[PreserveSig] int IsWindowOnCurrentVirtualDesktop(wnd topLevelWindow, [MarshalAs(UnmanagedType.Bool)] out bool onCurrentDesktop);
 			[PreserveSig] int GetWindowDesktopId(wnd topLevelWindow, out Guid desktopId);
 			[PreserveSig] int MoveWindowToDesktop(wnd topLevelWindow, in Guid desktopId);

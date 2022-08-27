@@ -303,21 +303,35 @@ namespace Au {
 			/// <remarks>
 			/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. Let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
 			/// 
-			/// If the dll does not exist in these folders, this function also looks in:
+			/// If the dll not found there, this function also looks in:
+			/// - subfolder "64" or "32" of folder of the caller dll.
 			/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
 			/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
 			/// </remarks>
 			internal static void loadDll64or32Bit_(string fileName) {
 				//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
-				string s = (osVersion.is32BitProcess ? @"32\" : @"64\") + fileName;
-				if (default != Api.LoadLibrary(folders.ThisAppBS + s)) return; //normal
-				var p = Environment.GetEnvironmentVariable("Au.Path"); if (p != null && default != Api.LoadLibrary(pathname.combine(p, s))) return; //%Au.Path%
-				if (default != Api.LoadLibrary(folders.ThisAppTemp + s)) return; //extracted from resources
+				string rel = (osVersion.is32BitProcess ? @"32\" : @"64\") + fileName;
+
+				//app path
+				if (default != Api.LoadLibrary(folders.ThisAppBS + rel)) return;
+
+				//dll path. Eg in PowerShell. Other scripting environments etc may copy the dll elsewhere; then need the environment variable.
+				var p = pathname.getDirectory(Assembly.GetCallingAssembly().Location, withSeparator: true) + rel;
+				if (default != Api.LoadLibrary(p)) return;
+
+				//environment variable
+				p = Environment.GetEnvironmentVariable("Au.Path");
+				if (p != null && default != Api.LoadLibrary(pathname.combine(p, rel))) return;
+				
+				//extracted from resources?
+				if (default != Api.LoadLibrary(folders.ThisAppTemp + rel)) return;
 
 				//if(default != Api.LoadLibrary(fileName)) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
 
-				throw new DllNotFoundException(fileName);
+				var bits = osVersion.is32BitProcess ? "32" : "64";
+				throw new DllNotFoundException($@"{fileName} must be in <this program>\{bits} or <this dll>\{bits} or <environment variable Au.Path>\{bits} or <folders.ThisAppTemp>\{bits}.
+  This program: {folders.ThisApp}");
 			}
 		}
 	}

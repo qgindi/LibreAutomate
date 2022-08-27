@@ -131,7 +131,7 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="click">Action called when the button clicked.</param>
-	/// <param name="image"></param>
+	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// More properties can be specified later (set properties of the returned <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
@@ -147,7 +147,7 @@ public partial class toolbar : MTBase {
 	/// Same as <see cref="Add(string, Action{ToolbarItem}, MTImage, int)"/>.
 	/// </summary>
 	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
-	/// <param name="image"></param>
+	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <value>Action called when the button clicked.</value>
 	/// <remarks>
@@ -178,7 +178,7 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
-	/// <param name="image"></param>
+	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// The submenu is a <see cref="popupMenu"/> object. It inherits these properties of this toolbar: <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ActionThread"/>, <see cref="MTBase.PathInTooltip"/>.
@@ -202,7 +202,7 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
-	/// <param name="image"></param>
+	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// The caller creates the menu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>popupMenu</b> and reuse same object.
@@ -345,17 +345,17 @@ public partial class toolbar : MTBase {
 	//used for normal and satellite toolbars
 	void _CreateWindow(bool owned, wnd owner, screen screen = default, bool isSatelite = false) {
 		_topmost = !owned || owner.IsTopmost;
-		if (!owned || Anchor.OfScreen()) _os = new _OwnerScreen(this, screen);
+		if (!owned || Anchor.OfScreen()) _os = new _OwnerScreen(this, screen); else screen = screen.of(owner);
 
 		_RegisterWinclass();
-		_SetDpi();
+		if (_os != null) _SetDpi(); else _SetDpi(screen.Dpi); //OwnerWindow still not set
 		_Images(false);
 		_MeasureText();
 		var size = _Measure();
 		var style = WS.POPUP | WS.CLIPCHILDREN | _BorderStyle(_sett.border);
 		var estyle = WSE.TOOLWINDOW | WSE.NOACTIVATE;
 		if (_topmost) estyle |= WSE.TOPMOST;
-		var r = owned ? owner.Rect : screen.Rect; //create in center of owner window or screen, to minimize possibility of DPI change when setting final position
+		var r = screen.Rect; //create in center of screen, to minimize possibility of DPI change when setting final position
 		r = new(r.CenterX - size.width / 2, r.CenterY - size.height / 2, size.width, size.height);
 		Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
 		WndUtil.CreateWindow(_WndProc, true, "Au.toolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height, isSatelite ? owner : default);

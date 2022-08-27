@@ -39,7 +39,7 @@ namespace Au.Controls
 
 			class _TabFields
 			{
-				public TabControl tc;
+				public _TabControl tc;
 				public bool isVerticalHeader; //vertical buttons at left/right
 			}
 

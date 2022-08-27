@@ -145,7 +145,7 @@ namespace Au {
 			w.ThrowIfInvalid();
 			var wTL = w.Window;
 			if (!wTL.IsVisible) throw new AuWndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
-			if (wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
+			if (wTL.IsMinimized) { wTL.ShowNotMinimized(1); _Sleep(500); } //never mind: if w is a control...
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
 			if (!w.MapClientToScreen(ref p)) w.ThrowUseNative();
 			_Move(p, fast: false);
@@ -1583,13 +1583,13 @@ namespace Au.Types {
 		/// Allows to specify coordinates in the rectangle of a UI element.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		public static implicit operator MObject(elm e!!) => new(e);
+		public static implicit operator MObject(elm e) => new(Not_.NullRet(e));
 
 		/// <summary>
 		/// Allows to specify coordinates in the rectangle of an image found in a window etc.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"/>
-		public static implicit operator MObject(uiimage i!!) => new(i);
+		public static implicit operator MObject(uiimage i) => new(Not_.NullRet(i));
 
 		/// <summary>
 		/// Allows to specify coordinates in a rectangle anywhere on screen.

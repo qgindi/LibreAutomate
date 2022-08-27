@@ -419,6 +419,7 @@ class RunningTasks {
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false) {
+
 	g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
@@ -489,7 +490,8 @@ class RunningTasks {
 			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
 
-			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)folders.Workspace, f.IdString, process.thisProcessId);
+			var f1 = r.flags; if (runFromEditor) f1 |= MiniProgram_.EFlags.FromEditor;
+			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, f.IdString, process.thisProcessId);
 			wrPipeName = null;
 
 			//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
@@ -505,7 +507,7 @@ class RunningTasks {
 				pre.hProcess = null; pre.pid = 0;
 			} else {
 				if (pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
-				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName);
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, runFromEditor);
 			}
 			Api.AllowSetForegroundWindow(pid);
 
@@ -584,7 +586,7 @@ class RunningTasks {
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
-	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName) {
+	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool runFromEditor = false) {
 		if (wrPipeName != null) wrPipeName = "script.writeResult.pipe=" + wrPipeName;
 		if (uac == _SpUac.admin) {
 			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable script.writeResult"); //cannot pass environment variables. //rare //FUTURE
@@ -594,7 +596,11 @@ class RunningTasks {
 			//	Normally Au.Editor runs as admin in admin user account, and don't need to go through this.
 		} else {
 			var ps = new ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
-			ps.si.dwX = -1446812571; ps.si.dwY = process.thisProcessId; //for script.ExitWhenEditorDies_ when role exeProgram
+
+			//for script.ExitWhenEditorDies_ when role exeProgram
+			ps.si.dwX = runFromEditor ? -1446812571 : -1446812572;
+			ps.si.dwY = process.thisProcessId;
+
 			var need = ProcessStarter_.Result.Need.WaitHandle;
 			var psr = uac == _SpUac.userFromAdmin ? ps.StartUserIL(need) : ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 			return (psr.pid, psr.waitHandle);

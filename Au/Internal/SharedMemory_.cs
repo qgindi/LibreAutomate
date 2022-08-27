@@ -9,8 +9,8 @@
 		#region variables used by our library classes
 		//Declare variables used by our library classes.
 		//Be careful:
-		//1. Some type sizes are different in 32 and 64 bit process, eg IntPtr.
-		//	Solution: Use long and cast to IntPtr etc.
+		//1. Some type sizes are different in 32 and 64 bit process.
+		//	Solution: Use long and cast to IntPtr etc. For wnd use int.
 		//2. The memory may be used by processes that use different library versions.
 		//	Solution: In new library versions don't change struct sizes and old members.
 		//		Maybe reserve some space for future members. If need more, add new struct.
@@ -24,6 +24,7 @@
 		internal Triggers.ActionTriggers.SharedMemoryData_ triggers;
 		internal WindowsHook.SharedMemoryData_ winHook;
 		internal perf.Instance perf;
+		//internal script.editor.SharedMemoryData_ editor;
 
 		//public const int TasksDataSize_ = 0x4000;
 		//internal struct TasksData_ { public int size; public fixed byte data[TasksDataSize_]; }

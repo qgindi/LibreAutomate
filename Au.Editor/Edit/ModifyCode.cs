@@ -177,22 +177,23 @@ static class ModifyCode {
 		//}
 
 		var od = CSharpSyntaxFormattingOptions.Default;
-		var options = new CSharpSyntaxFormattingOptions(
-			useTabs: true,
-			tabSize: 4,
-			indentationSize: 4,
-			newLine: "\r\n",
-			separateImportDirectiveGroups: false,
-			spacing: od.Spacing,
-			spacingAroundBinaryOperator: od.SpacingAroundBinaryOperator,
-			newLines: NewLinePlacement.BeforeCatch | NewLinePlacement.BeforeFinally | NewLinePlacement.BetweenQueryExpressionClauses,
-			labelPositioning: LabelPositionOptions.NoIndent,
-			indentation: IndentationPlacement.BlockContents | IndentationPlacement.SwitchCaseContents | IndentationPlacement.SwitchCaseContentsWhenBlock,
-			wrappingKeepStatementsOnSingleLine: true,
-			wrappingPreserveSingleLine: true);
+		var options = new CSharpSyntaxFormattingOptions {
+			Common = new SyntaxFormattingOptions.CommonOptions {
+				LineFormatting = new() { IndentationSize = 4, NewLine = "\r\n", TabSize = 4, UseTabs = true },
+				SeparateImportDirectiveGroups = false,
+			},
+			Indentation = IndentationPlacement.BlockContents | IndentationPlacement.SwitchCaseContents | IndentationPlacement.SwitchCaseContentsWhenBlock,
+			Spacing = od.Spacing,
+			SpacingAroundBinaryOperator = od.SpacingAroundBinaryOperator,
+			NewLines = NewLinePlacement.BeforeCatch | NewLinePlacement.BeforeFinally | NewLinePlacement.BetweenQueryExpressionClauses,
+			LabelPositioning = LabelPositionOptions.NoIndent,
+			WrappingKeepStatementsOnSingleLine = true,
+			WrappingPreserveSingleLine = true,
+			//PreferTopLevelStatements = ?, //SHOULDDO: test.
+		};
 
 		var span = TextSpan.FromBounds(from, to);
-		var services = cd.document.Project.Solution.Workspace.Services;
+		var services = cd.document.Project.Solution.Services;
 		var a1 = Formatter.GetFormattedTextChanges(root, span, services, options);
 		//perf.next();
 
@@ -264,7 +265,7 @@ partial class SciCode {
 			}
 		}
 		return;
-	gRaw:
+		gRaw:
 		if (range.HasValue) zReplaceRange(true, rFrom, rTo, s);
 		else zText = s;
 

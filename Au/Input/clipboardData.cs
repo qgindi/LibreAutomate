@@ -19,7 +19,7 @@ namespace Au {
 	/// ]]></code>
 	/// Set clipboard data in two formats: text and image.
 	/// <code><![CDATA[
-	/// new clipboardData().AddText("text").AddImage(Image.FromFile(@"q:\file.png")).SetClipboard();
+	/// new clipboardData().AddText("text").AddImage(Image.FromFile(@"C:\file.png")).SetClipboard();
 	/// ]]></code>
 	/// Paste data of two formats: HTML and text.
 	/// <code><![CDATA[
@@ -48,7 +48,8 @@ namespace Au {
 			if (badFormat) throw new ArgumentException("Invalid format id.");
 		}
 
-		clipboardData _Add(object data!!, int format, bool minimalCheckFormat = false) {
+		clipboardData _Add(object data, int format, bool minimalCheckFormat = false) {
+			Not_.Null(data);
 			_CheckFormat(format, minimalCheckFormat);
 
 			_a.Add(new _Data() { data = data, format = format });
@@ -138,7 +139,8 @@ namespace Au {
 		/// </summary>
 		/// <param name="files">One or more file paths.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public clipboardData AddFiles(params string[] files!!) {
+		public clipboardData AddFiles(params string[] files) {
+			Not_.Null(files);
 			var b = new StringBuilder("\x14\0\0\0\0\0\0\0\x1\0"); //struct DROPFILES
 			foreach (var s in files) { b.Append(s); b.Append('\0'); }
 			return _Add(b.ToString(), Api.CF_HDROP, false);
@@ -248,7 +250,8 @@ namespace Au {
 		/// "<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>"
 		/// ]]></code>
 		/// </example>
-		internal static unsafe byte[] CreateHtmlFormatData_(string html!!) {
+		internal static unsafe byte[] CreateHtmlFormatData_(string html) {
+			Not_.Null(html);
 			var b = new StringBuilder(c_headerTemplate);
 			//find "<body>...</body>" and "<!--StartFragment-->...<!--EndFragment-->" in it
 			int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment

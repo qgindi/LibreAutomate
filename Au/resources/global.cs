@@ -18,6 +18,7 @@ global using System.Threading.Tasks;
 global using System.Reflection;
 global using System.Globalization;
 
+global using SystemInformation = System.Windows.Forms.SystemInformation;
 global using RStr = System.ReadOnlySpan<char>;
 global using Win32Exception = System.ComponentModel.Win32Exception;
 global using EditorBrowsableAttribute = System.ComponentModel.EditorBrowsableAttribute;
@@ -35,12 +36,12 @@ using System.Runtime.InteropServices;
 [module: DefaultCharSet(CharSet.Unicode)]
 
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("C# Uiscripter")]
+[assembly: AssemblyProduct("LibreAutomate")]
 [assembly: AssemblyCopyright("Copyright 2022 Gintaras Didžgalvis")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.7.0")]
+[assembly: AssemblyVersion("0.8.0")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

@@ -520,7 +520,8 @@ namespace Au.Compiler {
 							return;
 						}
 						var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(value);
-						foreach (var x in xx.Elements("r")) {
+						foreach (var x in xx.Elements()) {
+							if (x.Name.LocalName is not ("r" or "ro")) continue;
 							var r = dir + x.Value;
 							if (!References.Resolve(r, false)) {
 								_ErrorV("nuget file not found: " + r);

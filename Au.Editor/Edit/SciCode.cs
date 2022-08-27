@@ -436,7 +436,7 @@ partial class SciCode : KScintilla {
 		var text = _fn.GetText(saved: true); if (text == this.zText) return;
 		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
+		if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been modified outside and therefore reloaded. You can Undo.");
 	}
 
 	//never mind: not called when zoom changes.
@@ -466,9 +466,11 @@ partial class SciCode : KScintilla {
 			if (isFragment) {
 				b.Append(zRangeText(false, i1, i2));
 			} else {
-				s = CiUtil.GetTextWithoutUnusedUsingDirectives();
+				//s = CiUtil.GetTextWithoutUnusedUsingDirectives();
+				s = zText;
+
 				var name = _fn.Name; if (name.RxIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
-				b.AppendFormat("// {0} \"{1}\"{2}{3}", isScript ? "script" : "class", name, s[0] == '/' ? " " : "\r\n", s);
+				b.AppendFormat("// {0} \"{1}\"\r\n{2}", isScript ? "script" : "class", name, s);
 			}
 			b.AppendLine(isCS ? "[/cs]" : "[/code]");
 			s = b.ToString();

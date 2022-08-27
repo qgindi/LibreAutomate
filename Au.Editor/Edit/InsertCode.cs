@@ -264,7 +264,8 @@ static class InsertCode {
 			while (h2.Contains(name2 = name + i) || !h1.Add(name2)) i++;
 			//print.it(sym.Name, name2);
 
-			sol = Renamer.RenameSymbolAsync(sol, sym, name2, null).Result;
+			var opt1 = new SymbolRenameOptions();
+			sol = Renamer.RenameSymbolAsync(sol, sym, opt1, name2).Result;
 			h2.Remove(sym.Name);
 			renamed = true;
 		}

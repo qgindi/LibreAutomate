@@ -516,7 +516,7 @@
 			/// <param name="s">If null, clears output.</param>
 			static void _WriteToQM2(string s) {
 				if (!_hwndQM2.IsAlive) {
-					_hwndQM2 = Api.FindWindow("QM_Editor", null);
+					_hwndQM2 = Api.FindWindowEx(cn: "QM_Editor");
 					if (_hwndQM2.Is0) return;
 				}
 				_hwndQM2.Send(Api.WM_SETTEXT, -1, s);

@@ -271,5 +271,10 @@ namespace Au.Types {
 			}
 			return s;
 		}
+
+		/// <summary>
+		/// Returns true if ITEMIDLIST values are equal.
+		/// </summary>
+		public bool ValueEquals(IntPtr pidl) => Api.ILIsEqual(_pidl, pidl);
 	}
 }

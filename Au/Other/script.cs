@@ -31,6 +31,14 @@ namespace Au {
 		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
 
 		/// <summary>
+		/// Returns true if started from editor with the Run button or menu command.
+		/// </summary>
+		/// <remarks>
+		/// Always false if script role is editorExtension. Always false if role is exeProgram and uac is admin and editor is not running as administrator (rare).
+		/// </remarks>
+		public static bool testing { get; internal set; }
+
+		/// <summary>
 		/// Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
 		/// </summary>
 		public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(Assembly.GetEntryAssembly());
@@ -45,10 +53,10 @@ namespace Au {
 				if (s_role != SRole.MiniProgram) return false;
 				var s = Environment.CommandLine;
 				//return s.Contains(" WPF_PREVIEW ") && s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$"); //slower JIT
-				return s.Contains(" WPF_PREVIEW ") && _IsisWpfPreviewMode2(s);
+				return s.Contains(" WPF_PREVIEW ") && _IsWpfPreview(s);
 
 				//[MethodImpl(MethodImplOptions.NoInlining)]
-				static bool _IsisWpfPreviewMode2(string s) => s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$");
+				static bool _IsWpfPreview(string s) => s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$");
 
 				//don't cache. It makes JIT slower. Now fast after JIT.
 			}
@@ -107,7 +115,10 @@ namespace Au {
 
 		static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null) {
 			resultS = null;
-			var w = WndMsg_; if (w.Is0) throw new AuException("Editor process not found."); //CONSIDER: run editor program, if installed
+
+			var w = WndMsg_; if (w.Is0) throw new AuException("Editor process not found.");
+			//CONSIDER: run editor program, if installed
+
 			bool wait = 0 != (mode & 1), needResult = 0 != (mode & 2);
 			using var tr = new _TaskResults();
 			if (needResult && !tr.Init()) throw new AuException("*get task results");
@@ -372,20 +383,26 @@ namespace Au {
 			//SEM_NOGPFAULTERRORBOX disables WER. //CONSIDER: add setup parameter enableWER.
 			//SEM_FAILCRITICALERRORS disables some error message boxes, eg when removable media not found; MSDN recommends too.
 
-			//#if !DEBUG
-			process.thisProcessCultureIsInvariant = true;
-			//#endif
-
-			AppDomain.CurrentDomain.ProcessExit += (_, _) => { Exiting_ = true; };
-
 			AppDomain.CurrentDomain.UnhandledException += (_, u) => {
 				if (!u.IsTerminating) return; //never seen, but anyway
 				Exiting_ = true;
+				Cpp.Cpp_UEF(false);
 				var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
 				s_unhandledException = e;
 				if (s_setupException.Has(UExcept.Print)) print.it(e);
 				if (s_setupException.Has(UExcept.Dialog)) dialog.showError("Task failed", e.ToStringWithoutStack(), flags: DFlags.Wider, expandedText: e.ToString());
 			};
+
+			AppDomain.CurrentDomain.ProcessExit += (_, _) => {
+				Exiting_ = true;
+				Cpp.Cpp_UEF(false);
+			};
+
+			Cpp.Cpp_UEF(true); //never mind: makes much slower now: 800 mcs -> 4500 mcs. Anyway many scripts will use the C++ dll.
+
+			//#if !DEBUG
+			process.thisProcessCultureIsInvariant = true;
+			//#endif
 
 			if (role == SRole.ExeProgram) {
 				//set STA thread if Main without [MTAThread]
@@ -394,6 +411,8 @@ namespace Au {
 						process.ThisThreadSetComApartment_(ApartmentState.STA); //1.6 ms
 					}
 				}
+
+				MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
 
 				ExitWhenEditorDies_();
 			}
@@ -583,6 +602,7 @@ namespace Au {
 
 		/// <summary>
 		/// Waits for a .NET debugger attached to this process.
+		/// Does nothing if already attached.
 		/// </summary>
 		/// <param name="showDialog">Show dialog with process name and id. If false, prints that info in the output pane.</param>
 		/// <remarks>
@@ -598,6 +618,8 @@ namespace Au {
 		/// Unlike <see cref="Debugger.Launch"/>, this function does not launch the Visual Studio debugger. It waits until you attach a debugger to this process. To attach:
 		/// - Visual Studio: menu Debug -> Attach to process. Then select the process (this function displays its name and id).
 		/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
+		/// 
+		/// This function can launch a script to automate attaching a debugger. See Options -> General -> Debugger script. More info in Cookbook.
 		/// 
 		/// <note>Script processes usually run as administrator, therefore the debugger process must run as administrator too.</note>
 		/// 
@@ -618,16 +640,18 @@ namespace Au {
 					wait.forCondition(0, () => Debugger.IsAttached);
 					d.Send.Close();
 				} else {
-					print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
-					wait.forCondition(0, () => Debugger.IsAttached);
-					print.it("Debugger attached.");
+					var w = WndMsg_;
+					if (!w.Is0 && 0 != w.Send(Api.WM_USER, 30, process.thisProcessId)) { //run debugger script specified in Options
+						wait.forCondition(0, () => Debugger.IsAttached);
+					} else {
+						print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
+						wait.forCondition(0, () => Debugger.IsAttached);
+						print.it("Debugger attached.");
+					}
 				}
 			}
 			//note: don't add Debugger.Break(); here. It creates problems.
 		}
-
-		//[DebuggerStepThrough]
-		//public static void debugLaunchVS() => Debugger.Launch(); //not better than Debugger.Launch
 
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
@@ -666,8 +690,9 @@ namespace Au {
 			//never mind: no startupinfo if UAC elevated (nonadmin parent starts admin child). It's rare and not so important.
 			//	I don't know a better way to pass this info to the child process. Cannot use command line parameters.
 			Api.GetStartupInfo(out var x);
-			if (x.dwX == -1446812571 && 0 == (x.dwFlags & 4)) { //STARTF_USEPOSITION
+			if (x.dwX is -1446812571 or 1446812572 && 0 == (x.dwFlags & 4)) { //STARTF_USEPOSITION
 				ExitWhenEditorDies_(x.dwY);
+				if (x.dwX is -1446812571) script.testing = true;
 			}
 		}
 
@@ -731,6 +756,28 @@ namespace Au {
 			/// Editor sets this. Library uses it to avoid sendmessage.
 			/// </summary>
 			internal static Func<string, EGetIcon, string> IconNameToXaml_;
+
+			//[StructLayout(LayoutKind.Sequential, Size = 64)] //note: this struct is in shared memory. Size must be same in all library versions.
+			//internal struct SharedMemoryData_ {
+			//	int _wndEditorMsg, _wndEditorMain;
+
+			//	internal wnd wndEditorMsg {
+			//		get {
+			//			if (_wndEditorMsg != 0) {
+			//				var w = (wnd)_wndEditorMsg;
+			//				if (w.ClassNameIs(c_msgWndClassName)) return w;
+			//				//_wndEditorMsg = 0; //no, unsafe
+			//			}
+			//			return default;
+			//		}
+			//		set { _wndEditorMsg = (int)value; }
+			//	}
+			//	internal wnd wndEditorMain {
+			//		get => wndEditorMsg.Is0 ? default : (wnd)_wndEditorMain;
+			//		set { _wndEditorMain = (int)value; }
+			//	}
+
+			//}
 		}
 	}
 }

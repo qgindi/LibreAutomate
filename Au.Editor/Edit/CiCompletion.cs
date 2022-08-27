@@ -15,6 +15,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
 //	Even on Ctrl+Space does not select the enum in list. And does not add enum members like "Enum.Member".
 
+//SHOULDDO: don't complete on ':' if it could be label. VS completes too.
+
 partial class CiCompletion {
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible
@@ -200,13 +202,13 @@ partial class CiCompletion {
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				var r1 = await completionService.GetCompletionsAsync(document, position, s_options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				p1.Next('C');
-				if (r1 != null && r1.Items.IsDefaultOrEmpty) r1 = null;
+				if (r1 != null && r1.ItemsList.Count == 0) r1 = null;
 				if (r1 != null) {
 					canGroup = true;
 					//is it member access?
 					if (node is InitializerExpressionSyntax) {
 						//if only properties and/or fields, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
-						isDot = !r1.Items.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));
+						isDot = !r1.ItemsList.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));
 						if (!isDot && ch == '{') return null; //eg 'new int[] {'
 					} else {
 						isDot = syncon.IsRightOfNameSeparator;
@@ -294,7 +296,7 @@ partial class CiCompletion {
 			if (position != doc.zCurrentPos16 || (object)code != doc.zText) return; //changed while awaiting
 			p1.Next('T');
 
-			var provider = _GetProvider(r.Items[0]);
+			var provider = _GetProvider(r.ItemsList[0]);
 			if (!isDot) isDot = provider == CiComplProvider.Override;
 			//print.it(provider, isDot, canGroup, r.Items[0].DisplayText);
 
@@ -307,7 +309,7 @@ partial class CiCompletion {
 				model = model,
 				codeLength = code.Length,
 				filterText = code.Substring(span.Start, span.Length),
-				items = new List<CiComplItem>(r.Items.Length),
+				items = new List<CiComplItem>(r.ItemsList.Count),
 				forced = isCommand,
 				noAutoSelect = r.SuggestionModeItem != null,
 			};
@@ -326,7 +328,7 @@ partial class CiCompletion {
 			Dictionary<INamespaceOrTypeSymbol, List<int>> groups = canGroup ? new(new CiNamespaceOrTypeSymbolEqualityComparer()) : null;
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			bool hasNamespaces = false;
-			foreach (var ci_ in r.Items) {
+			foreach (var ci_ in r.ItemsList) {
 				var ci = ci_;
 				Debug.Assert(ci.Symbols == null || ci.Symbols.Count > 0); //we may use code ci?.Symbols[0]. Roslyn uses this code in CompletionItem ctor: var firstSymbol = symbols[0];
 				var sym = ci.Symbols?[0];

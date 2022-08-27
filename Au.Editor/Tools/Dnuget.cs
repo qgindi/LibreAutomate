@@ -1,8 +1,10 @@
-﻿using System.Windows;
+﻿using System.Text.Json.Nodes;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Au.Compiler;
 using Au.Controls;
 using Au.Tools;
 
@@ -199,6 +201,8 @@ A script can use packages from multiple folders if they are compatible.");
 			}
 			building = true;
 
+			//dialog.show("nuget 1");
+
 			var sBuild = $@"build ""{proj}"" --nologo --output ""{folderPath}""";
 			if (!await _RunDotnet(sBuild)) return false;
 			//SHOULDDO: if fails, uninstall the package immediately.
@@ -207,31 +211,7 @@ A script can use packages from multiple folders if they are compatible.");
 			//	But problem: may fail because of ANOTHER package. How to know which package is bad?
 			//	Now just prints info in the finally block.
 
-			//Move managed dll+xml files from runtimes subdir to the root dir, replacing the invalid dlls there.
-			//	Also move native dlls from runtimes subdir to 64/32 subdir.
-			//	Or could use --runtime win-x64 --no-self-contained. Then all dlls are in folderPath.
-			//		But then native 32-bit dlls are missing. Need them for role exeProgram.
-			//			Need to build x86 too and get them from the output. Slow.
-			//			Or copy from nuget cache. Parse deps.json to get the package. Unreliable.
-			//			Tried all dotnet build and dotnet publish options. Nothing works as we need.
-			var feFlags = FEFlags.AllDescendants | FEFlags.SkipHidden | FEFlags.OnlyFiles | FEFlags.UseRawPath | FEFlags.NeedRelativePaths;
-			var rDir = folderPath + @"\runtimes";
-			if (filesystem.exists(rDir)) {
-				foreach (var f in filesystem.enumFiles(rDir, flags: feFlags)) {
-					var s = f.Name;
-					bool bit32 = false;
-					if (s.Starts(@"\win\lib\", true)) {
-						//print.it(s);
-						filesystem.moveTo(f.FullPath, folderPath, FIfExists.Delete);
-					} else if (s.Starts(@"\win-x64\native", true) || (bit32 = s.Starts(@"\win-x86\native", true))) {
-						//print.it("native", s);
-						var s2 = folderPath + (bit32 ? @"\32" : @"\64");
-						filesystem.createDirectory(s2);
-						filesystem.moveTo(f.FullPath, s2, FIfExists.Delete);
-					}
-				}
-				try { filesystem.delete(rDir); } catch { }
-			}
+			//dialog.show("nuget 2");
 
 			if (installing) {
 				//we need a list of installed files (managed dll, native dll, maybe more).
@@ -252,48 +232,132 @@ A script can use packages from multiple folders if they are compatible.");
 				sBuild = $@"build ""{proj2}"" --nologo --output ""{dirBin2}"""; //note: no --no-restore
 				if (!await _RunDotnet(sBuild, s => { }) //try silent, but print errors if fails (unlikely)
 					&& !await _RunDotnet(sBuild)) return false;
-#if DEBUG
-				if (keys.isScrollLock) dialog.show("Debug", "single build done"); //to inspect json files etc before deleting
-#endif
+//#if DEBUG
+//				if (keys.isScrollLock) dialog.show("Debug", "single build done"); //to inspect files before deleting
+//#endif
 
-				//and save relative paths of output files
+				//delete runtimes of unsupported OS or CPU. It seems cannot specify it in project file.
+				_DeleteOtherRuntimes(folderPath);
+				_DeleteOtherRuntimes(dirBin2);
+				void _DeleteOtherRuntimes(string dir) {
+					dir += @"\runtimes";
+					if (filesystem.exists(dir)) {
+						foreach (var v in filesystem.enumDirectories(dir)) {
+							var n = v.Name;
+							if (!n.Starts("win", true) || (n.Contains('-') && 0 == n.Ends(true, "-x64", "-x86"))) {
+								filesystem.delete(v.FullPath);
+							}
+						}
+					}
+				}
+
+				//save relative paths etc of output files in file "nuget.xml"
 				//	Don't use ~.deps.json. It contains only used dlls, but may also need other files, eg exe.
+				//	For testing can be used NuGet package Microsoft.PowerShell.SDK. It has dlls for testing all cases.
+
 				var npath = _nugetDir + @"\nuget.xml";
 				var xn = XmlUtil.LoadElemIfExists(npath, "nuget");
 				var packagePath = folder + "\\" + package;
 				xn.Elem("package", "path", packagePath, true)?.Remove();
-				var xx = new XElement("package", new XAttribute("path", packagePath));
+				var xx = new XElement("package", new XAttribute("path", packagePath), new XAttribute("format", "1"));
 				xn.AddFirst(xx);
-				string lastDll = null;
-				HashSet<string> moved = null;
-				foreach (var f in filesystem.enumFiles(dirBin2, flags: feFlags)
-					.OrderBy(o => -o.Level) //if \File.dll and \runtimes\win\lib\net6.0\File.dll, use the one from runtimes
-					) {
+
+				var dCompile = _GetCompileAssembliesFromAssetsJson(dirProj2 + @"\obj\project.assets.json", folderPath);
+
+				#region copied from script "Create NuGet xml.cs"
+
+				//get lists of .NET dlls, native dlls and other files
+				List<(FEFile f, bool ro)> aDllNet = new();
+				List<FEFile> aDllNative = new(), aOther = new();
+				var feFlags = FEFlags.AllDescendants | FEFlags.OnlyFiles | FEFlags.UseRawPath | FEFlags.NeedRelativePaths;
+				foreach (var f in filesystem.enumFiles(dirBin2, flags: feFlags).OrderBy(o => o.Level)) {
 					var s = f.Name; //like @"\file" or @"\dir\file"
-					bool level0;
-					if (level0 = f.Level == 0) {
+					bool runtimes = false;
+					if (f.Level == 0) {
 						if (s.Starts(@"\~.")) continue;
-						if (moved?.Contains(s) ?? false) continue; //replaced invalid dll
-					} else if (s.Starts(@"\runtimes\", true)) {
-						if (level0 = s.Eq(10, @"win\", true)) {
-							s = s[s.LastIndexOf('\\')..];
-							(moved ??= new(StringComparer.OrdinalIgnoreCase)).Add(s);
-						} else if (s.Eq(10, @"win-x64\", true)) {
-							s = s.ReplaceAt(0, s.LastIndexOf('\\'), @"\64");
-						} else if (s.Eq(10, @"win-x86\", true)) {
-							s = s.ReplaceAt(0, s.LastIndexOf('\\'), @"\32");
-						} else continue;
 					} else {
-						Debug_.Print(s);
+						runtimes = s.Starts(@"\runtimes\win", true);
+						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || (s.Starts(@"\ref\") && package == "Microsoft.PowerShell.SDK")), s);
 					}
-					if (s.Ends(".dll", true) && level0 && Au.Compiler.MetaReferences.IsNetAssembly(f.FullPath)) {
-						xx.Add(new XElement("r", s));
-						lastDll = s;
+					if (s.Ends(".dll", true) && (f.Level == 0 || runtimes)) {
+						if (Au.Compiler.CompilerUtil.IsNetAssembly(f.FullPath, out bool refOnly)) {
+							aDllNet.Add((f, refOnly));
+						} else {
+							aDllNative.Add(f);
+						}
 					} else {
-						if (s.Ends(".xml", true) && s.Eq(..^4, lastDll.AsSpan(..^4), true)) continue; //XML doc
-						xx.Add(new XElement("f", s));
+						aOther.Add(f);
 					}
 				}
+
+				//.NET dlls
+				HashSet<string> hsLib = new(StringComparer.OrdinalIgnoreCase);
+				foreach (var group in aDllNet.ToLookup(o => pathname.getName(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
+					//print.it($"<><Z #BBE3FF>{group.Key}<>");
+					var filename = group.Key;
+					int count = group.Count();
+					bool haveRO = dCompile.ContainsKey(filename);
+					if (haveRO) xx.Add(new XElement("ro", @"\_ref\" + filename));
+					XElement xGroup = null;
+					foreach (var (f, ro) in group) {
+						var s = f.Name; //like @"\file" or @"\dir\file"
+						hsLib.Add(s);
+						bool refOnly = ro || f.Level == 0 && count > 1;
+						if (refOnly) {
+							if (haveRO || f.Level > 0) continue;
+							xx.Add(new XElement("ro", s));
+						} else {
+							if (f.Level > 0 && s[13] != '\\') { //\runtimes\win... but not \runtimes\win\...
+								if (xGroup == null) xx.Add(xGroup = new("group"));
+								xGroup.Add(new XElement("rt", s));
+							} else if (!haveRO && f.Level == 0) {
+								xx.Add(new XElement("r", s));
+							} else {
+								xx.Add(new XElement("rt", s));
+							}
+						}
+						//print.it(s, f.Size, refOnly, haveRO);
+					}
+
+					//XML tags:
+					//	"r" - .NET dll used at compile time and run time. Not ref-only.
+					//	"ro" - .NET dll used only at compile time. Can be ref-only or not.
+					//	"rt" - .NET dll used only at run time.
+					//	"native" - native dll
+					//	"other" - all other (including dlls in folders other than root and runtimes)
+					//	"group" - group of "rt" dlls. Same dll for different OS versions/platforms.
+					//	"natives" - group of "native" dlls. Same dll for different OS versions/platforms.
+					//native dlls usually are in \runtimes\win-x64\native\x.dll etc, but also can be in \runtimes\win10-x64\native\x.dll etc.
+				}
+
+				//native dlls
+				foreach (var group in aDllNative.ToLookup(o => pathname.getName(o.Name), StringComparer.OrdinalIgnoreCase)) {
+					XElement xGroup = null;
+					foreach (var f in group) {
+						var s = f.Name;
+						if (f.Level > 0 && s[13] != '\\') {
+							if (xGroup == null) xx.Add(xGroup = new("natives"));
+							xGroup.Add(new XElement("native", s));
+						} else {
+							xx.Add(new XElement("native", s));
+						}
+					}
+				}
+
+				//print.it(xx);
+
+				//other files
+				foreach (var f in aOther) {
+					var s = f.Name;
+
+					//skip XML doc. When compiling exeProgram, other xml files will be copied to the output.
+					if (s.Ends(".xml", true) && hsLib.Contains(s.ReplaceAt(^3..^1, "dl"))) continue;
+
+					xx.Add(new XElement("other", s));
+				}
+
+				#endregion
+
 				xn.SaveElem(npath, backup: true);
 
 				//finally delete temp files
@@ -321,6 +385,62 @@ A script can use packages from multiple folders if they are compatible.");
 	If two packages can't coexist, try to move it to a new folder (see the combo box).<>");
 		}
 		return true;
+
+		static Dictionary<string, string> _GetCompileAssembliesFromAssetsJson(string file, string folderPath) {
+			string refDir = null;
+			var hsDotnet = _GetDotnetAssemblies();
+			Dictionary<string, string> d = new(StringComparer.OrdinalIgnoreCase);
+			var j = JsonNode.Parse(File.ReadAllBytes(file));
+			var packages = j["packageFolders"].AsObject().First().Key;
+			foreach (var (nameVersion, v1) in j["targets"].AsObject().First().Value.AsObject()) {
+				var k = v1.AsObject();
+				if (!k.TryGetPropertyValue("compile", out var v2)) continue;
+				foreach (var (s, _) in v2.AsObject()) {
+					if (s.NE() || s.Ends("/_._")) continue;
+					var name = pathname.getName(s);
+					if (hsDotnet.Contains(name)) continue;
+					var path = (packages + nameVersion + "\\" + s).Replace('/', '\\');
+					if (!filesystem.exists(path)) {
+						Debug_.Print($"<><c red>{path}<>");
+						continue;
+					}
+					if (d.TryGetValue(name, out var ppath)) {
+#if DEBUG
+						filesystem.getProperties(ppath, out var u1);
+						filesystem.getProperties(path, out var u2);
+						if (u2.Size != u1.Size) Debug_.Print($"<><c orange>\t{name}<>\n\t\t{u1.Size}  {ppath}\n\t\t{u2.Size}  {path}");
+						bool e1 = filesystem.exists(ppath.ReplaceAt(^3..^1, "xm")), e2 = filesystem.exists(path.ReplaceAt(^3..^1, "xm"));
+						Debug_.PrintIf(e2 != e1, "no xml");
+#endif
+						continue;
+					}
+					var path2 = folderPath + "\\" + name;
+					if (filesystem.getProperties(path2, out var p1, FAFlags.UseRawPath)
+						&& filesystem.getProperties(path, out var p2, FAFlags.UseRawPath)
+						&& p1.Size == p2.Size
+						&& p1.LastWriteTimeUtc == p2.LastWriteTimeUtc
+						) continue;
+					d.Add(name, path);
+					if (refDir == null) filesystem.createDirectory(refDir = folderPath + @"\_ref");
+					filesystem.copyTo(path, refDir);
+					var docPath = path.ReplaceAt(^3..^1, "xm");
+					if (filesystem.exists(docPath, useRawPath: true)) filesystem.copyTo(docPath, refDir);
+				}
+			}
+			return d;
+		}
+
+		static HashSet<string> _GetDotnetAssemblies() {
+			var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+			var a = s.Split(';');
+			var h = new HashSet<string>(a.Length, StringComparer.OrdinalIgnoreCase);
+			var thisApp = folders.ThisAppBS;
+			foreach (var v in a) {
+				if (v.Starts(thisApp, true)) break;
+				h.Add(pathname.getName(v));
+			}
+			return h;
+		}
 	}
 
 	async Task _Uninstall(bool uninstalling = false, bool updating = false) {

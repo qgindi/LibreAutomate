@@ -52,6 +52,15 @@ namespace Au.Types {
 		//}
 
 		/// <summary>
+		/// Gets <b>IWin32Window</b> of this window for <b>System.Windows.Forms</b> functions like <b>Form.ShowDialog</b> and <b>ColorDialog.ShowDialog</b>.
+		/// </summary>
+		public static System.Windows.Forms.IWin32Window FormOwner(this Window t) {
+			var nw = new System.Windows.Forms.NativeWindow();
+			nw.AssignHandle(t.Hwnd().Handle);
+			return nw;
+		}
+
+		/// <summary>
 		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
 		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
 		/// </summary>

@@ -4,7 +4,7 @@
 	/// </summary>
 	/// <remarks>
 	/// This class exists because the similar .NET classes have these problems:
-	/// - Stops working the <see cref="AppDomain.UnhandledException"/> event; in scripts it is used to display unhandled exception, remove tray icon, etc.
+	/// - May disable the <see cref="AppDomain.UnhandledException"/> event.
 	/// - As owner window they support only <b>Window</b> or <b>Form</b>. This class also supports window handles.
 	/// - They support only filesystem items.
 	/// - There is no option to not add the selected file to recent files that are displayed in the context menu of the taskbar button etc.
@@ -127,11 +127,12 @@
 			//API bug: after d.Show stops working AppDomain.UnhandledException event.
 			//	Same with .NET wrappers; same when the native API called in C++; same with API GetOpenFileName.
 			//	The API removes the .NET's unhandled exception filter and sets null filter. Need to restore it.
-
-			var uef = api.SetUnhandledExceptionFilter(0);
-			api.SetUnhandledExceptionFilter(uef);
+			//	AppModuleInit_ auto-restores, but in some apps it isn't called.
+			//	Fixed in Win11.
+			var uef = Api.SetUnhandledExceptionFilter(0);
+			Api.SetUnhandledExceptionFilter(uef);
 			try { if (0 != d.Show(w)) return null; }
-			finally { api.SetUnhandledExceptionFilter(uef); }
+			finally { Api.SetUnhandledExceptionFilter(uef); }
 
 			if (ft != null) FileTypeIndex = d.GetFileTypeIndex();
 			//FileNameText=d.GetFileName(); //fails here. And not useful.
@@ -382,9 +383,6 @@
 
 			[DllImport("shell32.dll", PreserveSig = true)]
 			internal static extern int SHCreateItemFromIDList(IntPtr pidl, in Guid riid, out IShellItem ppv);
-
-			[DllImport("kernel32.dll")]
-			internal static extern nint SetUnhandledExceptionFilter(nint _);
 		}
 	}
 }
