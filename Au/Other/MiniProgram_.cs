@@ -1,5 +1,4 @@
 ﻿
-using Au.Types;
 using System.Runtime.Loader;
 
 //PROBLEM: slow startup.
@@ -91,7 +90,7 @@ static unsafe class MiniProgram_ {
 				//p2.Next();
 				Marshal.StringToCoTaskMemUTF8("-");
 				folders.Workspace = new FolderPath("");
-				Jit_.Compile(typeof(script), nameof(script.setup), nameof(script.TrayIcon_));
+				Jit_.Compile(typeof(script), nameof(script.setup), "_AuxThread");
 				//p2.Next();
 
 				//print.TaskEvent_(null, 0); //8-20 ms
@@ -101,8 +100,6 @@ static unsafe class MiniProgram_ {
 				//if need to preload some assemblies, use code like this. But now .NET loads assemblies fast, not like in old framework.
 				//_ = typeof(TypeFromAssembly).Assembly;
 			}, sta: false);
-
-			_Hook();
 		}
 
 		//Debug_.PrintLoadedAssemblies(true, true);
@@ -119,7 +116,6 @@ static unsafe class MiniProgram_ {
 			//p1.Next();
 			var a = Serializer_.Deserialize(b);
 			//p1.Next('d');
-			script.s_name = a[0]; //would not need, because AppDomain.CurrentDomain.FriendlyName returns the same, but I don't trust it, it used to return a different string in the past
 			flags = (EFlags)(int)a[2];
 
 			r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
@@ -132,12 +128,12 @@ static unsafe class MiniProgram_ {
 			}
 			//p1.Next();
 
-			string wrp = a[4]; if (wrp != null) Api.SetEnvironmentVariable("script.writeResult.pipe", wrp);
+			script.s_wrPipeName = a[4];
 			folders.Workspace = new FolderPath(a[5]);
 			s_scriptId = a[6];
 			//p1.Next();
 
-			script.ExitWhenEditorDies_(a[7]);
+			script.Starting_(a[0], a[7]);
 		}
 		//p1.Next();
 
@@ -160,15 +156,7 @@ static unsafe class MiniProgram_ {
 			//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
 		}
 
-		if (0 != (flags & EFlags.FromEditor))
-			script.testing = true;
-
-		//if(0 != (flags & EFlags.Config)) { //this was with .NET 4
-		//	var config = asmFile + ".config";
-		//	if(filesystem.exists(config, true).File) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
-		//}
-
-		if (s_hook == null) _Hook();
+		if (0 != (flags & EFlags.FromEditor)) script.testing = true;
 
 		//Api.QueryPerformanceCounter(out s_started);
 		//print.TaskEvent_("TS", s_started);
@@ -304,48 +292,4 @@ static unsafe class MiniProgram_ {
 
 		//Config = 256, //meta hasConfig
 	}
-
-	static void _Hook() {
-		//SHOULDDO: does not work if GUI is in other thread (rare).
-		//	Can be used WinEventHook(EEvent.SYSTEM_FOREGROUND...process.thisProcessId).
-
-		s_hook = WindowsHook.ThreadCbt(m => {
-			//print.it(m.code, m.wParam, m.lParam);
-			//switch(m.code) {
-			//case HookData.CbtEvent.ACTIVATE:
-			//case HookData.CbtEvent.SETFOCUS:
-			//	print.it((wnd)m.wParam);
-			//	print.it(wnd.active);
-			//	print.it(wnd.thisThread.active);
-			//	print.it(wnd.focused);
-			//	print.it(wnd.thisThread.focused);
-			//	break;
-			//}
-			if (m.code == HookData.CbtEvent.ACTIVATE) {
-				var w = (wnd)m.wParam;
-				if (!w.HasExStyle(WSE.NOACTIVATE)) {
-					//print.it(w);
-					//print.it(w.ExStyle);
-					//Api.SetForegroundWindow(w); //does not work
-					timer.after(1, _ => {
-						if (s_hook == null) return;
-						//print.it(wnd.active);
-						//print.it(wnd.thisThread.active);
-						bool isActive = w == wnd.active, activate = !isActive && w == wnd.thisThread.active;
-						if (isActive || activate) { s_hook.Dispose(); s_hook = null; }
-						if (activate) {
-							Api.SetForegroundWindow(w);
-							//w.ActivateL(); //no, it's against Windows rules, and works differently with meta outputPath
-							//Before starting task, editor calls AllowSetForegroundWindow. But if clicked etc a window after that:
-							//	SetForegroundWindow fails always or randomly;
-							//	Activate[L] fails if that window is of higher UAC IL, unless the foreground lock timeout is 0.
-						}
-					});
-				}
-			}
-			return false;
-		});
-	}
-	static WindowsHook s_hook;
-
 }

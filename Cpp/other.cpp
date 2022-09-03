@@ -58,14 +58,44 @@ namespace other
 		return 0;
 	}
 
-	EXPORT void Cpp_UEF(BOOL set) {
-		if (set) { //called from AppModuleInit_
+	EXPORT void Cpp_UEF(BOOL on) {
+		if (on) { //called from AppModuleInit_
 			SetUnhandledExceptionFilter(s_ueh = SetUnhandledExceptionFilter(0)); //get current UEF
 			s_veh = AddVectoredExceptionHandler(1, _Veh); //restore on every exception, handled or not
 		} else if (s_veh) { //called on process exit
 			SetUnhandledExceptionFilter(s_ueh);
 			RemoveVectoredExceptionHandler(s_veh);
 			s_veh = null;
+		}
+	}
+
+	static HWINEVENTHOOK s_iww_hook;
+
+	void __stdcall _IWW_Hook(HWINEVENTHOOK hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD idEventThread, DWORD dwmsEventTime) {
+		if (!(wn::ExStyle(hwnd) & WS_EX_NOACTIVATE)) {
+			//wn::PrintWnd(hwnd);
+			//Print(hwnd == GetForegroundWindow());
+
+			bool isActive = hwnd == GetForegroundWindow(), activate = !isActive && hwnd == GetActiveWindow();
+			if (isActive || activate) {
+				UnhookWinEvent(hWinEventHook);
+				s_iww_hook = 0;
+				if (activate) SetForegroundWindow(hwnd);
+			}
+		}
+	}
+
+	//Workaround for: miniProgram window usually is inactive (eg MessageBox), and may be even under other windows (WPF).
+	//	It is because of task process preloading. OS does not activate the first window of an old process.
+	//	Workaround: set EVENT_SYSTEM_FOREGROUND hook for this process. It runs whenever a window wants to be active,
+	//		even if OS does not activate it. The hook activates the first window and uninstalls self.
+	//		It must run in the window's thread (because uses GetActiveWindow), therefore need WINEVENT_INCONTEXT+hmodule and cannot be in C#.
+	EXPORT void Cpp_InactiveWindowWorkaround(BOOL on) {
+		if (on) {
+			s_iww_hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, (HMODULE)&__ImageBase, _IWW_Hook, GetCurrentProcessId(), 0, WINEVENT_INCONTEXT);
+		} else if (s_iww_hook) {
+			UnhookWinEvent(s_iww_hook);
+			s_iww_hook = 0;
 		}
 	}
 }

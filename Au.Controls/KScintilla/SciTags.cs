@@ -177,9 +177,9 @@ public unsafe class SciTags {
 	}
 
 	/// <summary>
-	/// Displays <see cref="print.Server"/> messages that are currently in its queue.
+	/// Displays <see cref="PrintServer"/> messages that are currently in its queue.
 	/// </summary>
-	/// <param name="ps">The print.Server instance.</param>
+	/// <param name="ps">The <b>PrintServer</b> instance.</param>
 	/// <param name="onMessage">
 	/// A callback function that can be called when this function gets/removes a message from ps.
 	/// When message type is Write, it can change message text; if null, this function ignores the message.
@@ -191,8 +191,8 @@ public unsafe class SciTags {
 	/// Messages with tags must have prefix "&lt;&gt;".
 	/// Limits text length to about 4 MB (removes oldest text when exceeded).
 	/// </remarks>
-	/// <seealso cref="print.Server.SetNotifications"/>
-	public void PrintServerProcessMessages(print.Server ps, Action<PrintServerMessage> onMessage = null) {
+	/// <seealso cref="PrintServer.SetNotifications"/>
+	public void PrintServerProcessMessages(PrintServer ps, Action<PrintServerMessage> onMessage = null) {
 		//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 		//	If multiple messages, use StringBuilder.
 		//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.

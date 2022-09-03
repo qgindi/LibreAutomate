@@ -269,7 +269,7 @@ namespace Au
 
 		static bool _DoEvents(object msgCallback) {
 			bool R = false;
-			while (Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
+			while (Api.PeekMessage(out var m)) {
 				//WndUtil.PrintMsg(m);
 				if (msgCallback is WPMCallback callback1) {
 					if (callback1(ref m)) { msgCallback = null; R = true; }

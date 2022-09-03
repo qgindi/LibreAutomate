@@ -157,7 +157,7 @@ public abstract partial class MTBase {
 	private protected string _GetFullTooltip(MTItem b) {
 		var s = b.Tooltip;
 		if (this is toolbar tb) {
-			var v = b as toolbar.ToolbarItem;
+			var v = b as TBItem;
 			if (!(tb.DisplayText || v.textAlways)) {
 				if (s.NE()) s = v.Text;
 				else if (!v.Text.NE()) s = b.Text + "\n" + s;
@@ -183,7 +183,7 @@ public abstract partial class MTBase {
 				_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, screen.of(_w).WorkArea.Width / 3);
 			}
 
-			if (b is popupMenu.MenuItem) { //ensure the tooltip is above submenu in Z order
+			if (b is PMItem) { //ensure the tooltip is above submenu in Z order
 				_tt.tt.ZorderTopRaw_();
 				if (submenuDelay > 0) submenuDelay += 100;
 				_tt.tt.Send(0x403, 3, submenuDelay > (int)_tt.tt.Send(0x415, 3) ? submenuDelay : -1); //TTM_SETDELAYTIME,TTM_GETDELAYTIME,TTDT_INITIAL
@@ -211,136 +211,135 @@ public abstract partial class MTBase {
 			_tt.tt.Send(Api.TTM_DELTOOL, 0, &g);
 		}
 	}
+}
+
+/// <summary>
+/// Base of <see cref="PMItem"/> etc.
+/// </summary>
+public abstract class MTItem {
+	internal Delegate clicked;
+	internal object image;
+	/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
+	internal byte extractIconPath; //from MTBase.ExtractIconPathFromCode
+	internal bool actionThread; //from MTBase.ActionThread
+	internal bool actionException; //from MTBase.ActionException
+	internal bool pathInTooltip; //from MTBase.PathInTooltip
+	internal int sourceLine;
+	internal string file;
+	internal RECT rect;
+	internal Image image2;
+
+	internal bool HasImage_ => image2 != null;
 
 	/// <summary>
-	/// Base of <see cref="popupMenu.MenuItem"/> etc.
+	/// Item text.
 	/// </summary>
-	public abstract class MTItem {
-		internal Delegate clicked;
-		internal object image;
-		/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
-		internal byte extractIconPath; //from MTBase.ExtractIconPathFromCode
-		internal bool actionThread; //from MTBase.ActionThread
-		internal bool actionException; //from MTBase.ActionException
-		internal bool pathInTooltip; //from MTBase.PathInTooltip
-		internal int sourceLine;
-		internal string file;
-		internal RECT rect;
-		internal Image image2;
+	public string Text { get; set; }
 
-		internal bool HasImage_ => image2 != null;
+	/// <summary>
+	/// Item tooltip.
+	/// </summary>
+	public string Tooltip { get; set; }
 
-		/// <summary>
-		/// Item text.
-		/// </summary>
-		public string Text { get; set; }
+	/// <summary>
+	/// Any value. Not used by this library.
+	/// </summary>
+	public object Tag { get; set; }
 
-		/// <summary>
-		/// Item tooltip.
-		/// </summary>
-		public string Tooltip { get; set; }
+	///
+	public ColorInt TextColor { get; set; }
 
-		/// <summary>
-		/// Any value. Not used by this library.
-		/// </summary>
-		public object Tag { get; set; }
-
-		///
-		public ColorInt TextColor { get; set; }
-
-		/// <summary>
-		/// Gets file or script path extracted from item action code (see <see cref="ExtractIconPathFromCode"/>) or sets path as it would be extracted.
-		/// </summary>
-		/// <remarks>
-		/// Can be used to set file or script path when it cannot be extracted from action code.
-		/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file" or "Open script".
-		/// </remarks>
-		public string File {
-			get => file;
-			set {
-				file = value;
-				if (file == null) {
-					extractIconPath = 3;
-				} else {
-					image ??= file;
-					bool cs = file.Ends(".cs", true) && !pathname.isFullPath(file, orEnvVar: true);
-					extractIconPath = (byte)(cs ? 4 : 2);
-				}
+	/// <summary>
+	/// Gets file or script path extracted from item action code (see <see cref="MTBase.ExtractIconPathFromCode"/>) or sets path as it would be extracted.
+	/// </summary>
+	/// <remarks>
+	/// Can be used to set file or script path when it cannot be extracted from action code.
+	/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file" or "Open script".
+	/// </remarks>
+	public string File {
+		get => file;
+		set {
+			file = value;
+			if (file == null) {
+				extractIconPath = 3;
+			} else {
+				image ??= file;
+				bool cs = file.Ends(".cs", true) && !pathname.isFullPath(file, orEnvVar: true);
+				extractIconPath = (byte)(cs ? 4 : 2);
 			}
 		}
-
-		internal void GoToFile_() {
-			if (file.NE()) return;
-			if (extractIconPath == 2) run.selectInExplorer(file);
-			else script.editor.OpenAndGoToLine(file, 0);
-		}
-
-		internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {
-			if (_sourceFile != null) {
-				if (script.editor.Available) {
-					if (item?.file == null) return (true, false, null);
-					return (true, true, item.extractIconPath == 2 ? "Find file" : "Open script");
-				} else if (item != null && item.extractIconPath == 2) {
-					return (false, true, "Find file");
-				}
-			}
-			return default;
-		}
-
-		/// <summary>
-		/// Call when adding menu/toolbar item.
-		/// Sets text and tooltip (from text). Sets clicked, image and sourceLine fields.
-		/// Sets extractIconPath, actionThread and actionException fields from mt properties.
-		/// </summary>
-		internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_) {
-			if (!text.NE()) {
-				var mi = this as popupMenu.MenuItem;
-				bool rawText = mi?.rawText ?? false;
-				int i = text.IndexOf('\0');
-				if (i < 0 && !rawText) i = text.IndexOf('|');
-				if (i >= 0) {
-					var v = _Split(text, i);
-					text = v.Item1;
-					Tooltip = v.Item2;
-				}
-				int len = text.Lenn();
-				if (len > 0 && text[^1] == '\a') {
-					text = text[..^1]; //remove for menu too, because user may move items from toolbar to menu and forget to remove '\a'
-					len--;
-					if (this is toolbar.ToolbarItem ti) ti.textAlways = true; //note: textAlways of groups is already true
-				}
-				if (mi != null && !rawText && len > 1) {
-					i = text.IndexOf('\t', 1);
-					if (i > 0) {
-						var v = _Split(text, i);
-						text = v.Item1;
-						mi.Hotkey = v.Item2;
-					}
-				}
-				if (!text.NE()) Text = text;
-
-				static (string, string) _Split(string s, int i) {
-					int j = i + 1; if (s.Eq(j, ' ')) j++;
-					return (i > 0 ? s[..i] : null, j < s.Length ? s[j..] : null);
-				}
-			}
-
-			image = im.Value;
-			if (image is icon ic) { image = ic.ToGdipBitmap(); image ??= ""; } //DestroyIcon now; don't extract from code.
-
-			clicked = click;
-			sourceLine = l_;
-
-			extractIconPath = (byte)((mt.ExtractIconPathFromCode && clicked is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
-			actionThread = mt.ActionThread;
-			actionException = mt.ActionException;
-			pathInTooltip = mt.PathInTooltip;
-		}
-
-		///
-		public override string ToString() => Text;
 	}
 
+	internal void GoToFile_() {
+		if (file.NE()) return;
+		if (extractIconPath == 2) run.selectInExplorer(file);
+		else ScriptEditor.OpenAndGoToLine(file, 0);
+	}
+
+	internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {
+		if (_sourceFile != null) {
+			if (ScriptEditor.Available) {
+				if (item?.file == null) return (true, false, null);
+				return (true, true, item.extractIconPath == 2 ? "Find file" : "Open script");
+			} else if (item != null && item.extractIconPath == 2) {
+				return (false, true, "Find file");
+			}
+		}
+		return default;
+	}
+
+	/// <summary>
+	/// Call when adding menu/toolbar item.
+	/// Sets text and tooltip (from text). Sets clicked, image and sourceLine fields.
+	/// Sets extractIconPath, actionThread and actionException fields from mt properties.
+	/// </summary>
+	internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_) {
+		if (!text.NE()) {
+			var mi = this as PMItem;
+			bool rawText = mi?.rawText ?? false;
+			int i = text.IndexOf('\0');
+			if (i < 0 && !rawText) i = text.IndexOf('|');
+			if (i >= 0) {
+				var v = _Split(text, i);
+				text = v.Item1;
+				Tooltip = v.Item2;
+			}
+			int len = text.Lenn();
+			if (len > 0 && text[^1] == '\a') {
+				text = text[..^1]; //remove for menu too, because user may move items from toolbar to menu and forget to remove '\a'
+				len--;
+				if (this is TBItem ti) ti.textAlways = true; //note: textAlways of groups is already true
+			}
+			if (mi != null && !rawText && len > 1) {
+				i = text.IndexOf('\t', 1);
+				if (i > 0) {
+					var v = _Split(text, i);
+					text = v.Item1;
+					mi.Hotkey = v.Item2;
+				}
+			}
+			if (!text.NE()) Text = text;
+
+			static (string, string) _Split(string s, int i) {
+				int j = i + 1; if (s.Eq(j, ' ')) j++;
+				return (i > 0 ? s[..i] : null, j < s.Length ? s[j..] : null);
+			}
+		}
+
+		image = im.Value;
+		if (image is icon ic) { image = ic.ToGdipBitmap(); image ??= ""; } //DestroyIcon now; don't extract from code.
+
+		clicked = click;
+		sourceLine = l_;
+
+		extractIconPath = (byte)((mt.ExtractIconPathFromCode && clicked is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
+		actionThread = mt.ActionThread;
+		actionException = mt.ActionException;
+		pathInTooltip = mt.PathInTooltip;
+	}
+
+	///
+	public override string ToString() => Text;
 }
 
 /// <summary>

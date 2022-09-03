@@ -118,7 +118,7 @@
 		/// Be careful, this function is as dangerous as <b>Application.DoEvents</b>.
 		/// </remarks>
 		public static void doEvents() {
-			while (Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
+			while (Api.PeekMessage(out var m)) {
 				//WndUtil.PrintMsg(m);
 				if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); break; }
 				Api.TranslateMessage(m);

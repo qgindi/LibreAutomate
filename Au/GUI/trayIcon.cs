@@ -10,15 +10,13 @@
 	/// 
 	/// Can be used by multiple threads (eg one thread adds tray icon and other thread later changes its tooltip).
 	/// 
-	/// Creates a hidden window that receives tray icon events (click etc). Also, message WM_CLOSE with non-0 <i>wParam</i> removes the tray icon and calls <see cref="Environment.Exit"/> with <i>exitCode</i> = <i>wParam</i>. Example:
-	/// <c>var w = wnd.findFast("task name", "trayIcon"); if(!w.Is0) w.Post(0x10, 1); //WM_CLOSE</c>
+	/// Creates a hidden window that receives tray icon events (click etc).
 	/// </remarks>
 	public class trayIcon : IDisposable
 	{
 		readonly int _id;
 		readonly bool _disposeOnExit;
 		wnd _w;
-		WinEventHook _hookDesktopSwitch;
 
 		//rejected. Various problems, eg the program file cannot be moved. Unclear documentation.
 		//	Guid _guid;
@@ -34,12 +32,10 @@
 		/// </summary>
 		protected const int MsgNotify = Api.WM_USER + 145;
 
-		internal bool sleepExit_, lockExit_;
-
 		/// <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
 		/// <param name="disposeOnExit">
 		/// Remove tray icon when process exits (<see cref="process.thisProcessExit"/>).
-		/// Note: can't remove if process killed from outside or with <see cref="Environment.FailFast"/> or API <msdn>ExitProcess</msdn> etc. Removes only if process exits naturally or with <see cref="Environment.Exit"/> or because of an unhandled exception.
+		/// Note: can't remove if the process terminated or called <see cref="Environment.FailFast"/> or API <msdn>ExitProcess</msdn>.
 		/// </param>
 		public trayIcon(int id = 0, bool disposeOnExit = true) {
 			_disposeOnExit = disposeOnExit;
@@ -140,7 +136,6 @@
 			lock (this) {
 				if (_w.Is0) {
 					if (_disposeOnExit) process.thisProcessExit += _ => _Delete();
-					if (lockExit_) _hookDesktopSwitch = script.HookDesktopSwitch_();
 					_w = WndUtil.CreateWindow(WndProc, true, "trayIcon", script.name, WS.POPUP, WSE.NOACTIVATE);
 				}
 
@@ -277,8 +272,6 @@
 					}
 				} else if (msg == s_msgTaskbarCreated) { //explorer restarted or taskbar DPI changed
 					_Update(taskbarCreated: true);
-				} else if (msg == Api.WM_POWERBROADCAST) {
-					if (sleepExit_ && wParam == Api.PBT_APMSUSPEND) script.ExitOnSleepOrDesktopSwitch_(sleep: true);
 				}
 			}
 
@@ -286,9 +279,7 @@
 
 			if (msg == Api.WM_NCDESTROY) {
 				_Delete();
-				_hookDesktopSwitch?.Dispose(); _hookDesktopSwitch = null;
 			}
-			if (msg == Api.WM_CLOSE && wParam != 0) Environment.Exit((int)wParam);
 
 			return R;
 		}

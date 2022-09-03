@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Media;
 
+//SHOULDDO: now finding by name is inconvenient. Better add a 'find' textbox at the bottom of the items treeview.
+
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
 

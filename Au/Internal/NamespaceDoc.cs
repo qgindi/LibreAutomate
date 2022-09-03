@@ -2,8 +2,6 @@
 //These are not supported by DocFX, but used for code info.
 //rejected. Now code info for namespaces does not work.
 
-//using System.Runtime.CompilerServices;
-
 //namespace Au
 //{
 //	/// <summary>

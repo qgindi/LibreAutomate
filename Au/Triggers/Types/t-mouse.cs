@@ -762,6 +762,7 @@ public enum TMMove : byte
 	DownUp, DownUpInCenter50, DownUpInLeft25, DownUpInRight25,
 }
 
+//FUTURE: remove.
 ///
 [Obsolete("use code like screen.at.left(true) or screen.index(1, true) or screen.ofMouse"), EditorBrowsable(EditorBrowsableState.Never)]
 public static class TMScreen {

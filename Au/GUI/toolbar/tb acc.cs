@@ -103,7 +103,7 @@ partial class toolbar : IAccessible {
 
 	void IAccessible.put_accValue(VarInt varChild, string szValue) { }
 
-	bool _B(VarInt varChild, out ToolbarItem b) {
+	bool _B(VarInt varChild, out TBItem b) {
 		int i = varChild;
 		if (i == -1) { b = null; return false; }
 		b = _a[i]; return true;

@@ -18,7 +18,7 @@
 		/// <param name="wndProc">
 		/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
 		/// 
-		/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string)"/>.
+		/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string, string)"/>.
 		/// If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 		/// </param>
 		/// <param name="etc">
@@ -172,28 +172,30 @@
 		/// Creates native/unmanaged <msdn>message-only window</msdn>.
 		/// </summary>
 		/// <param name="className">Window class name. Can be any existing class.</param>
+		/// <param name="name">Window name or null.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
 		/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
 		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
 		/// </remarks>
-		public static wnd CreateMessageOnlyWindow(string className) {
-			return CreateWindow(className, null, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
+		public static wnd CreateMessageOnlyWindow(string className, string name = null) {
+			return CreateWindow(className, name, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
 			//note: WS_EX_NOACTIVATE is important.
 		}
 
 		/// <summary>
 		/// Creates native/unmanaged <msdn>message-only window</msdn> and sets its window procedure.
 		/// </summary>
-		/// <param name="className">Window class name.</param>
 		/// <param name="wndProc"></param>
+		/// <param name="className">Window class name.</param>
+		/// <param name="name">Window name or null.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
 		/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
 		/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> with <i>keepAlive</i>=true.
 		/// </remarks>
-		public static wnd CreateMessageOnlyWindow(WNDPROC wndProc, string className) {
-			return CreateWindow(wndProc, true, className, null, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
+		public static wnd CreateMessageOnlyWindow(WNDPROC wndProc, string className, string name = null) {
+			return CreateWindow(wndProc, true, className, name, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
 			//note: WS_EX_NOACTIVATE is important.
 		}
 

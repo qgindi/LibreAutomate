@@ -136,7 +136,7 @@ namespace Au.More
 		/// </remarks>
 		public static FrameworkElement LoadWpfImageElement(string image) {
 			if (image.Starts('*')) {
-				image = script.editor.GetIcon(image, EGetIcon.IconNameToXaml) ?? throw new AuException("*get icon " + image);
+				image = ScriptEditor.GetIcon(image, EGetIcon.IconNameToXaml) ?? throw new AuException("*get icon " + image);
 			}
 			if (image.Starts('<')) return (FrameworkElement)XamlReader.Parse(image);
 			if (image.Ends(".xaml", true)) {

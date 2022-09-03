@@ -6,7 +6,7 @@ uid: index
 
 The program consists of an automation library and a script editor.
 
-#### Library
+### Library
 The library (Au.dll) contains functions to automate various tasks on Windows computers.
 
 Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Floating toolbars, hotkeys and other triggers.
@@ -15,7 +15,7 @@ Written mostly in C#, it is a .NET library.
 
 Free, open-source. Can be used anywhere, not only with the editor program.
 
-#### Editor
+### Editor
 The editor program is an integrated scripting environment for creating and executing automation scripts that use the library.
 
 The programming language for writing scripts is C#.
@@ -24,14 +24,14 @@ Can be used to create C# scripts, programs (.exe) and libraries (.dll) for any p
 
 Free, open-source.
 
-#### Where can run
+### Where can run
 Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 
-#### Beta
+### Beta
 The program and the library are very young. Need more testing. Some classes/functions/etc may be changed in the future.
 
-#### Links
-- [Download](https://www.quickmacros.com/au/LibreAutomate.exe) v0.7.0, 2022-07-12, 24 MB
+### Links
+- [Download](https://www.quickmacros.com/au/LibreAutomate.exe) v0.8.0, 2022-09-03, 24 MB
 - [Changes](https://github.com/qgindi/Au/blob/master/Other/DocFX/_doc/changes/)
 - [Source code](https://github.com/qgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)

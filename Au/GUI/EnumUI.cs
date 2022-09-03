@@ -143,7 +143,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 				for (int i = 0; i < _a.Length; i++) {
 					var (e, c, _, _) = _a[i];
 					switch (c) {
-					case popupMenu.MenuItem mi:
+					case PMItem mi:
 						if (!mi.IsChecked) continue;
 						break;
 					case CheckBox ch:

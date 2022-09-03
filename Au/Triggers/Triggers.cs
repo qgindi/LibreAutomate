@@ -512,7 +512,8 @@ public class ActionTriggers
 		set {
 			if (value == DisabledEverywhere) return;
 			SharedMemory_.Ptr->triggers.disabled = value;
-			var w = script.WndMsg_; if (!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
+			var w = ScriptEditor.WndMsg_;
+			if (!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
 		}
 	}
 
@@ -548,7 +549,7 @@ public class ActionTriggers
 			}
 			var k = Api.MsgWaitForMultipleObjectsEx(nh, ha, slice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
 			if (k == nh) { //message, COM RPC, hook, etc
-				while (Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
+				while (Api.PeekMessage(out var m)) {
 					Api.TranslateMessage(m);
 					Api.DispatchMessage(m);
 				}

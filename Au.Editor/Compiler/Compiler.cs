@@ -87,7 +87,7 @@ static partial class Compiler {
 	static bool _Compile(ECompReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile) {
 		//print.it("COMPILE");
 
-		var p1 = perf.local();
+		//var p1 = perf.local();
 		r = new CompResults();
 		aFinally = null;
 
@@ -96,7 +96,7 @@ static partial class Compiler {
 		if (!m.Parse(f, projFolder, mflags)) return false;
 		var err = m.Errors;
 		r.meta = m;
-		p1.Next('m');
+		//p1.Next('m');
 
 		bool needOutputFiles = m.Role != ERole.classFile;
 
@@ -140,9 +140,9 @@ static partial class Compiler {
 			trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, encoding) as CSharpSyntaxTree;
 
 			//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), debuggers, etc.
-			//	Our print.Server.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
+			//	Our PrintServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 		}
-		p1.Next('t');
+		//p1.Next('t');
 
 		string asmName = m.Name;
 		if (m.Role == ERole.editorExtension) { //cannot load multiple assemblies with same name
@@ -165,12 +165,12 @@ static partial class Compiler {
 		if (needOutputFiles) { //before creating compilation. May modify trees[] elements.
 			resMan = _CreateManagedResources(m, asmName, trees);
 			if (err.ErrorCount != 0) { err.PrintAll(); return false; }
-			p1.Next('y');
+			//p1.Next('y');
 		}
 
 		var cOpt = m.CreateCompilationOptions();
 		var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, cOpt);
-		p1.Next('c');
+		//p1.Next('c');
 
 		if (canCompile != null && !canCompile(new(m, trees, compilation))) return false;
 
@@ -181,7 +181,7 @@ static partial class Compiler {
 
 		if (needOutputFiles) {
 			r.flags |= _AddAttributesEtc(ref compilation, m);
-			p1.Next('a');
+			//p1.Next('a');
 
 			//rejected: if empty script, add {} to avoid error "no Main". See AddErrorOrWarning.
 
@@ -199,7 +199,7 @@ static partial class Compiler {
 			//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
 		}
 
-		p1.Next();
+		//p1.Next();
 		var asmStream = new MemoryStream(16000);
 		var emitResult = compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 
@@ -207,7 +207,7 @@ static partial class Compiler {
 			xdStream?.Dispose();
 			resNat?.Dispose(); //info: compiler disposes resMan
 		}
-		p1.Next('e');
+		//p1.Next('e');
 
 		if (reason != ECompReason.WpfPreview) {
 			var diag = emitResult.Diagnostics;
@@ -238,7 +238,7 @@ static partial class Compiler {
 			}
 
 			//create assembly file
-			p1.Next();
+			//p1.Next();
 			gSave:
 #if true
 			var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, default, Api.CREATE_ALWAYS);
@@ -268,7 +268,7 @@ static partial class Compiler {
 			//saving would be fast, but with AV can take half of time.
 			//	With WD now fast, but used to be slow. Now on save WD scans async, and on load scans only if still not scanned, eg if loading soon after saving.
 			//	With Avast now the same as with WD.
-			p1.Next('s');
+			//p1.Next('s');
 			r.file = outFile;
 
 			if (m.Role == ERole.exeProgram) {
@@ -278,11 +278,11 @@ static partial class Compiler {
 				//copy app host template exe, add native resources, set assembly name, set console flag if need
 				if (need64) _AppHost(outFile, fileName, m, bit32: false);
 				if (need32) _AppHost(outFile, fileName, m, bit32: true);
-				p1.Next('h'); //very slow with AV. Eg with WD this part makes whole compilation several times slower.
+				//p1.Next('h'); //very slow with AV. Eg with WD this part makes whole compilation several times slower.
 
 				//copy dlls to the output directory
 				_CopyDlls(m, asmStream, need64: need64, need32: need32);
-				p1.Next('d');
+				//p1.Next('d');
 
 				//copy config file to the output directory
 				//var configFile = exeFile + ".config";

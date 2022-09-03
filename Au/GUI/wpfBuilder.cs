@@ -1859,7 +1859,12 @@ namespace Au {
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// b.R.Add<TextBlock>().Text("Text ", "<b>bold ", "<a>link", new Action(() => print.it("click")), " ", new Run("color") { Foreground=Brushes.Blue, Background=Brushes.Cornsilk, FontSize=20 }, ".");
+		/// b.R.Add<TextBlock>().Text(
+		/// 	"Text ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
+		/// 	new Run("color") { Foreground = Brushes.Blue, Background = Brushes.Cornsilk, FontSize = 20 }, "\n",
+		/// 	"controls", new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }, new CheckBox() { Content = "Check" }, "\n",
+		/// 	"image", ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")
+		/// 	);
 		/// ]]></code>
 		/// </example>
 		public wpfBuilder Text(params object[] inlines) {
@@ -1880,8 +1885,8 @@ namespace Au {
 					link.Click += (o, e) => x();
 					continue;
 				case UIElement x:
-					k.Add(x);
-					continue;
+					n = new InlineUIContainer(x) { BaselineAlignment = BaselineAlignment.Center };
+					break;
 				case string x:
 					if (x.Starts('<') && (i = x.Starts(false, "<a>", "<b>", "<i>", "<u>")) > 0) {
 						var run = new Run(x[3..]);

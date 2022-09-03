@@ -76,7 +76,6 @@ namespace Au {
 		/// For NTFS links, gets properties of the link, not of its target.
 		/// </remarks>
 		public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
-			attributes = 0;
 			if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path, true); //don't need NormalizeExpandEV_, the API itself supports .. etc
 			_DisableDeviceNotReadyMessageBox();
 			var a = Api.GetFileAttributes(path);

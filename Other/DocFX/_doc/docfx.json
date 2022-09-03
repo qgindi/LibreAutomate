@@ -3,11 +3,12 @@
     {
       "src": [
         {
-          "src": "Q:/Temp/Au/DocFX/source/",
+          "src": "C:/Temp/Au/DocFX/source/",
+          //"src": "C:/Temp/Au/DocFX/dll/",
           //"src": "../../../_/",
           "files": [
             "Au.csproj"
-            //"Au.dll" //DocFX bug: "Error extracting metadata for Q:/app/Au/_/Au.dll: System.ArgumentException: Illegal characters in path". Even if the XML file is almost empty.
+            //"Au.dll" //DocFX bug: "Error extracting metadata for Au.dll: System.ArgumentException: Illegal characters in path". Even if the XML file is almost empty.
           ]
         }
       ],
@@ -67,7 +68,7 @@
     "template": [
       "default",
       "template1",
-      "C:/Users/G/.nuget/packages/memberpage/2.58.9/content",
+      "C:/Users/G/.nuget/packages/memberpage/2.59.0/content",
       "template2"
     ],
     "postProcessors": [],

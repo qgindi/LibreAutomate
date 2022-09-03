@@ -83,7 +83,7 @@ static class CommandLine {
 		s_mutex = new Mutex(true, "Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ", out bool createdNew);
 		if (createdNew) return false;
 
-		var w = wnd.findFast(null, script.c_msgWndClassName, true);
+		var w = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true);
 		if (!w.Is0) {
 			w.Send(Api.WM_USER, 0, 1); //auto-creates, shows and activates main window
 
@@ -115,8 +115,8 @@ static class CommandLine {
 		WndUtil.UacEnableMessages(Api.WM_COPYDATA, /*Api.WM_DROPFILES, 0x0049,*/ Api.WM_USER, Api.WM_CLOSE);
 		//WM_COPYDATA, WM_DROPFILES and undocumented WM_COPYGLOBALDATA=0x0049 should enable drag/drop from lower UAC IL processes, but only through WM_DROPFILES/DragAcceptFiles, not OLE D&D.
 
-		WndUtil.RegisterWindowClass(script.c_msgWndClassName, _WndProc);
-		_msgWnd = WndUtil.CreateMessageOnlyWindow(script.c_msgWndClassName);
+		WndUtil.RegisterWindowClass(ScriptEditor.c_msgWndClassName, _WndProc);
+		_msgWnd = WndUtil.CreateMessageOnlyWindow(ScriptEditor.c_msgWndClassName);
 	}
 
 	/// <summary>
@@ -209,6 +209,10 @@ static class CommandLine {
 			if (App.Model.Find(s) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
 			else print.warning($"File not found: '{s}'.", -1);
 			break;
+		case 5:
+			if (App.Model.Find(s) is FileNode f2) return App.Tasks.EndTasksOf(f2) ? 1 : 2;
+			print.warning($"File not found: '{s}'.", -1);
+			return 0;
 		case 10:
 			s = DIcons.GetIconString(s, (EGetIcon)action2);
 			return s == null ? 0 : WndCopyData.Return<char>(s, wparam);
@@ -323,7 +327,7 @@ static class CommandLine {
 	static bool _EnsureEditorRunningAndGetMsgWindow(out wnd wMsg) {
 		wMsg = default;
 		for (int i = 0; i < 1000; i++) { //if we started editor process, wait until it fully loaded, then it creates the message-only window
-			wMsg = wnd.findFast(null, script.c_msgWndClassName, true);
+			wMsg = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true);
 			if (!wMsg.Is0) return true;
 			if (i == 0) {
 				var ps = new ProcessStarter_(process.thisExePath, rawExe: true);

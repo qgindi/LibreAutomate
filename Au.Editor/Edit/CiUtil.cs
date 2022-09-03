@@ -140,7 +140,7 @@ static class CiUtil {
 			//print.it(s); return;
 			url = _GoogleURL(s);
 		} else if (helpKind == HelpKind.String) {
-			int i = popupMenu.showSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", MSFlags.ByCaret);
+			int i = popupMenu.showSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", PMFlags.ByCaret);
 			switch (i) {
 			case 1: url = "C# strings"; break;
 			case 2: url = "C# string formatting"; break;

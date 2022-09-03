@@ -79,7 +79,7 @@ namespace Au.More
 				bool isXaml = isImage && (imageSource.Starts('<') || imageSource.Ends(".xaml", true));
 				bool isStore = !isImage && imageSource.Starts(@"shell:AppsFolder\"); //compare case-sensitive. Then users can pass eg "shell:appsFolder..." to display white icons in blue background.
 				if (!isImage && !isStore && imageSource.Ends(".cs", true) && !pathname.isFullPath(imageSource, orEnvVar: true)) {
-					imageSource = script.editor.GetIcon(imageSource, EGetIcon.PathToIconName);
+					imageSource = ScriptEditor.GetIcon(imageSource, EGetIcon.PathToIconName);
 					//p1.Next('x');
 					if (imageSource == null) return null;
 					isImage = true;
@@ -163,7 +163,7 @@ namespace Au.More
 								b ??= icon.of(imageSource, _imageSize)?.ToGdipBitmap();
 							} else {
 								if (isIconName) {
-									imageSource = script.editor.GetIcon(imageSource, EGetIcon.IconNameToXaml);
+									imageSource = ScriptEditor.GetIcon(imageSource, EGetIcon.IconNameToXaml);
 									//p1.Next('X');
 									if (imageSource == null) return null;
 								}

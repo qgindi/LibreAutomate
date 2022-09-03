@@ -20,11 +20,12 @@
 		[StructLayout(LayoutKind.Sequential, Size = 16)] struct _Header { }
 		_Header _h;
 
-		internal print.Server.SharedMemoryData_ outp;
+		internal PrintServer.SharedMemoryData_ outp;
 		internal Triggers.ActionTriggers.SharedMemoryData_ triggers;
 		internal WindowsHook.SharedMemoryData_ winHook;
 		internal perf.Instance perf;
-		//internal script.editor.SharedMemoryData_ editor;
+		internal script.SharedMemoryData_ script;
+		//internal ScriptEditor.SharedMemoryData_ editor;
 
 		//public const int TasksDataSize_ = 0x4000;
 		//internal struct TasksData_ { public int size; public fixed byte data[TasksDataSize_]; }

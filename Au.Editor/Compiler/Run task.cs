@@ -185,12 +185,12 @@ class RunningTask : ITreeViewItem {
 		if (p != null) {
 			var h = p.SafeWaitHandle.DangerousGetHandle();
 
-			//let it remove tray icon and call Environment.Exit
+			//let it call Environment.Exit. It removes tray icons etc.
 			int pid = process.processIdFromHandle(h);
 			if (pid != 0) {
-				var wti = wnd.find(null, "trayIcon", WOwner.Process(pid), WFlags.HiddenToo | WFlags.CloakedToo);
-				if (!wti.Is0 && wti.Post(Api.WM_CLOSE, 1)) {
-					if (0 == Api.WaitForSingleObject(h, onProgramExit ? 100 : 1000)) return true;
+				var w1 = wnd.findFast(pid.ToS(), script.c_auxWndClassName, messageOnly: true);
+				if (!w1.Is0 && w1.Post(Api.WM_CLOSE)) {
+					if (0 == Api.WaitForSingleObject(h, onProgramExit ? 200 : 1000)) return true;
 				}
 			}
 
@@ -420,7 +420,7 @@ class RunningTasks {
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false) {
 
-	g1:
+		g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
 			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
@@ -507,7 +507,7 @@ class RunningTasks {
 				pre.hProcess = null; pre.pid = 0;
 			} else {
 				if (pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
-				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, runFromEditor);
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor);
 			}
 			Api.AllowSetForegroundWindow(pid);
 
@@ -530,7 +530,7 @@ class RunningTasks {
 
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if (uac != _SpUac.admin) { //we don't want second UAC consent
-					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
+					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false); }
 					catch (Exception ex) { Debug_.Print(ex); }
 				}
 			}
@@ -586,15 +586,32 @@ class RunningTasks {
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
-	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool runFromEditor = false) {
-		if (wrPipeName != null) wrPipeName = "script.writeResult.pipe=" + wrPipeName;
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor) {
 		if (uac == _SpUac.admin) {
-			if (wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable script.writeResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
+			RResult k;
+			if (exeProgram) {
+				var p = &SharedMemory_.Ptr->script;
+				p->pidEditor = process.thisProcessId;
+				int flags = 1;
+				if (runFromEditor) flags |= 2;
+				if (wrPipeName != null) { flags |= 4; p->pipe = wrPipeName; }
+				p->flags = flags;
+
+				k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, (string)folders.NetRuntime);
+
+				if (0 != (p->flags & 1)) { //usually already 0
+					if (!wait.forCondition(-3, () => 0 != (p->flags & 1))) p->flags &= ~1;
+				}
+			} else {
+				k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
+			}
+
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au.Editor runs as admin in admin user account, and don't need to go through this.
 		} else {
+			if (wrPipeName != null) wrPipeName = "script.writeResult.pipe=" + wrPipeName;
+
 			var ps = new ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
 
 			//for script.ExitWhenEditorDies_ when role exeProgram

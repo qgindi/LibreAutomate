@@ -992,7 +992,7 @@ class DInputRecorder : KDialogWindow {
 		} else {
 #if SCRIPT
 			print.it("<><code>" + s + "</code>");
-			//script.editor.OpenAndGoToLine("recorded.cs", 0);
+			//ScriptEditor.OpenAndGoToLine("recorded.cs", 0);
 			//keys.send("Ctrl+End");
 			//clipboard.paste(s);
 #else

@@ -163,7 +163,10 @@ namespace Au.Types
 		internal static extern nint Cpp_AccWorkaround(Api.IAccessible a, nint wParam, ref nint obj);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_UEF(bool set);
+		internal static extern void Cpp_UEF(bool on);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void Cpp_InactiveWindowWorkaround(bool on);
 
 		// TEST
 
