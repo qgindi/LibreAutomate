@@ -10,7 +10,7 @@ More info and download: https://www.quickmacros.com/au/help/
 
 Editor window
 
-![window](https://www.quickmacros.com/au/help/images/window.png "Editor window")
+![window](https://www.quickmacros.com/au/help/images/window.png#1 "Editor window")
 
 ## How to build
 Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 SDK.
