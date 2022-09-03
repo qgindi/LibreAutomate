@@ -8,17 +8,17 @@ public unsafe partial class popupMenu {
 	/// Sets some metrics, for example item padding.
 	/// </summary>
 	/// <seealso cref="DefaultMetrics"/>
-	public MMetrics Metrics { get; set; }
+	public PMMetrics Metrics { get; set; }
 
 	/// <summary>
 	/// Sets or gets default metrics.
 	/// </summary>
 	/// <seealso cref="Metrics"/>
-	public static MMetrics DefaultMetrics {
+	public static PMMetrics DefaultMetrics {
 		get => s_defaultMetrics ??= new();
 		set { s_defaultMetrics = value; }
 	}
-	static MMetrics s_defaultMetrics;
+	static PMMetrics s_defaultMetrics;
 
 	/// <summary>
 	/// Sets or gets font.
@@ -164,8 +164,8 @@ public unsafe partial class popupMenu {
 		return R;
 	}
 
-	TFFlags _TfFlags(MenuItem b) {
-		var f = c_tff; if (b.rawText) f |= TFFlags.NOPREFIX; else if (!_flags.Has(MSFlags.Underline)) f |= TFFlags.HIDEPREFIX;
+	TFFlags _TfFlags(PMItem b) {
+		var f = c_tff; if (b.rawText) f |= TFFlags.NOPREFIX; else if (!_flags.Has(PMFlags.Underline)) f |= TFFlags.HIDEPREFIX;
 		return f;
 	}
 	const TFFlags c_tff = TFFlags.EXPANDTABS | TFFlags.WORDBREAK /*| TFFlags.PATH_ELLIPSIS*/;
@@ -264,14 +264,14 @@ public unsafe partial class popupMenu {
 		}
 	}
 
-	void _Invalidate(MenuItem k = null) {
+	internal void Invalidate_(PMItem k = null) {
 		_ThreadTrap();
 		if (_w.Is0) return;
 		if (k != null) Api.InvalidateRect(_w, _ItemRect(k));
 		else Api.InvalidateRect(_w);
 	}
 
-	void _Invalidate(int i) => _Invalidate(_a[i]);
+	void _Invalidate(int i) => Invalidate_(_a[i]);
 
 	void _Images() {
 		foreach (var v in _a) {
@@ -280,7 +280,7 @@ public unsafe partial class popupMenu {
 	}
 
 	//not used
-	//internal void ChangeImage_(MenuItem ti, Bitmap b) {
+	//internal void ChangeImage_(PMItem ti, Bitmap b) {
 	//	ti.image2 = b;
 	//	_Invalidate(ti);
 	//}

@@ -1354,7 +1354,7 @@ class Delm : KDialogWindow {
 			ia = m.Show(owner: this);
 		} else { //called when testing if no action selected
 			var r = _cbAction.RectInScreen();
-			ia = m.Show(MSFlags.AlignRectBottomTop, new POINT(r.left, r.bottom), r, owner: this);
+			ia = m.Show(PMFlags.AlignRectBottomTop, new POINT(r.left, r.bottom), r, owner: this);
 		}
 		if (--ia < 0) return 0;
 
@@ -1681,7 +1681,7 @@ class Delm : KDialogWindow {
 	//If r small, shows by r so that the menu does not cover the rectangle. Else shows by the mouse (else the user would not notice the menu easily).
 	int _ShowMenu(popupMenu m, RECT r) {
 		bool byMouse = r.Height > 200 || r.Is0;
-		var mf = byMouse ? MSFlags.Underline : MSFlags.Underline | MSFlags.AlignRectBottomTop | MSFlags.AlignCenterH;
+		var mf = byMouse ? PMFlags.Underline : PMFlags.Underline | PMFlags.AlignRectBottomTop | PMFlags.AlignCenterH;
 		return m.Show(mf, excludeRect: byMouse ? null : r, owner: this.IsLoaded ? this : default);
 	}
 

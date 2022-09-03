@@ -805,11 +805,11 @@ public class AutotextTriggerArgs : TriggerArgs {
 		m.KeyboardHook = (m, g) => {
 			if (g.Key is KKey.Enter or KKey.Tab or KKey.Escape) {
 				if (g.Key != KKey.Escape) m.FocusedItem = m.Items.First();
-				return MKHook.Default;
+				return PMKHook.Default;
 			}
-			return MKHook.Close;
+			return PMKHook.Close;
 		};
-		return 1 == m.Show(MSFlags.ByCaret);
+		return 1 == m.Show(PMFlags.ByCaret);
 	}
 
 	//CONSIDER: (QM2 user suggestion) if cannot show menu at the caret, option to show in the center of the active window or screen.
@@ -870,23 +870,23 @@ public class AutotextTriggerArgs : TriggerArgs {
 		m.KeyboardHook = (m, g) => {
 			if (g.Key is KKey.Enter or KKey.Tab) {
 				m.FocusedItem ??= m.ItemsAndSeparators[0];
-				return MKHook.Default;
+				return PMKHook.Default;
 			}
 			if (g.Key is KKey.Escape or KKey.Down or KKey.Up or KKey.End or KKey.Home or KKey.PageDown or KKey.PageUp) {
-				return MKHook.Default;
+				return PMKHook.Default;
 			}
-			if (g.Mod != 0) return MKHook.None;
+			if (g.Mod != 0) return PMKHook.None;
 			kt ??= new();
 			if (kt.Convert(out var c, g.vkCode, g.scanCode, keys.getMod(), Window.ThreadId) && c.c is >= '1' and <= '9') {
 				int i = c.c - '1';
-				if (i >= m.ItemsAndSeparators.Count) return MKHook.Default; //block
+				if (i >= m.ItemsAndSeparators.Count) return PMKHook.Default; //block
 				m.FocusedItem = m.ItemsAndSeparators[i];
-				return MKHook.ExecuteFocused;
+				return PMKHook.ExecuteFocused;
 			}
-			return MKHook.Close;
+			return PMKHook.Close;
 		};
 
-		int r = m.Show(MSFlags.ByCaret) - 1;
+		int r = m.Show(PMFlags.ByCaret) - 1;
 		if (r >= 0) Replace(items[r].Text, items[r].Html);
 	}
 }

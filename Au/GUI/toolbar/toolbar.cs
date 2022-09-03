@@ -12,8 +12,22 @@ namespace Au;
 /// Not thread-safe. All functions must be called from the same thread that created the <b>toolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 /// </remarks>
 public partial class toolbar : MTBase {
+	record _Settings : JSettings {
+		public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
+
+		public TBAnchor anchor = TBAnchor.TopLeft;
+		public TBLayout layout;
+		public TBBorder border = TBBorder.Width2;
+		public bool dispText = true, sizable = true, autoSize = true;
+		public TBFlags miscFlags = TBFlags.HideWhenFullScreen | TBFlags.ActivateOwnerWindow;
+		public System.Windows.Size size = new(150, 24);
+		public double wrapWidth;
+		public TBOffsets offsets; // = new(150, 5, 7, 7);
+		public int screenx, screeny;
+	}
+
 	readonly _Settings _sett;
-	readonly List<ToolbarItem> _a = new();
+	readonly List<TBItem> _a = new();
 	bool _created;
 	bool _closed;
 	bool _topmost; //no owner, or owner is topmost
@@ -117,7 +131,7 @@ public partial class toolbar : MTBase {
 
 	#region add item
 
-	void _Add(ToolbarItem item, string text, Delegate click, MTImage image, int l) {
+	void _Add(TBItem item, string text, Delegate click, MTImage image, int l) {
 		_ThreadTrap();
 		_CreatedTrap(_closed ? null : "cannot add items while the toolbar is open. To add to submenu, use the submenu variable.");
 		item.Set_(this, text, click, image, l);
@@ -134,24 +148,24 @@ public partial class toolbar : MTBase {
 	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// More properties can be specified later (set properties of the returned <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
+	/// More properties can be specified later (set properties of the returned <see cref="TBItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 	/// </remarks>
-	public ToolbarItem Add(string text, Action<ToolbarItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0) {
-		var item = new ToolbarItem(TBItemType.Button);
+	public TBItem Add(string text, Action<TBItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0) {
+		var item = new TBItem(TBItemType.Button);
 		_Add(item, text, click, image, l_);
 		return item;
 	}
 
 	/// <summary>
 	/// Adds button.
-	/// Same as <see cref="Add(string, Action{ToolbarItem}, MTImage, int)"/>.
+	/// Same as <see cref="Add(string, Action{TBItem}, MTImage, int)"/>.
 	/// </summary>
 	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <value>Action called when the button clicked.</value>
 	/// <remarks>
-	/// More properties can be specified later (set properties of <see cref="Last"/> <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
+	/// More properties can be specified later (set properties of <see cref="Last"/> <see cref="TBItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 	/// </remarks>
 	/// <example>
 	/// These two are the same.
@@ -167,7 +181,7 @@ public partial class toolbar : MTBase {
 	/// tb["Example"] = o => print.it(o); tb.Last.Tooltip="tt";
 	/// ]]></code>
 	/// </example>
-	public Action<ToolbarItem> this[string text, MTImage image = default, [CallerLineNumber] int l_ = 0] {
+	public Action<TBItem> this[string text, MTImage image = default, [CallerLineNumber] int l_ = 0] {
 		set { Add(text, value, image, l_); }
 	}
 
@@ -191,8 +205,8 @@ public partial class toolbar : MTBase {
 	/// });
 	/// ]]></code>
 	/// </example>
-	public ToolbarItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
-		var item = new ToolbarItem(TBItemType.Menu);
+	public TBItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
+		var item = new TBItem(TBItemType.Menu);
 		_Add(item, text, menu, image, l_);
 		return item;
 	}
@@ -214,8 +228,8 @@ public partial class toolbar : MTBase {
 	/// t.Menu("Menu", () => m);
 	/// ]]></code>
 	/// </example>
-	public ToolbarItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
-		var item = new ToolbarItem(TBItemType.Menu);
+	public TBItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
+		var item = new TBItem(TBItemType.Menu);
 		_Add(item, text, menu, image, l_);
 		return item;
 	}
@@ -223,10 +237,10 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Adds new vertical separator. Horizontal if vertical toolbar.
 	/// </summary>
-	public ToolbarItem Separator() {
+	public TBItem Separator() {
 		int i = _a.Count - 1;
 		if (i < 0 || _a[i].IsGroup_) throw new InvalidOperationException("first item is separator");
-		var item = new ToolbarItem(TBItemType.Separator);
+		var item = new TBItem(TBItemType.Separator);
 		_Add(item, null, null, default, 0);
 		return item;
 	}
@@ -235,8 +249,8 @@ public partial class toolbar : MTBase {
 	/// Adds new horizontal separator, optionally with text.
 	/// </summary>
 	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
-	public ToolbarItem Group(string text = null) {
-		var item = new ToolbarItem(TBItemType.Group);
+	public TBItem Group(string text = null) {
+		var item = new TBItem(TBItemType.Group);
 		_Add(item, text, null, default, 0);
 		return item;
 	}
@@ -244,7 +258,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Gets the last added item.
 	/// </summary>
-	public ToolbarItem Last { get; private set; }
+	public TBItem Last { get; private set; }
 
 	/// <summary>
 	/// Gets added buttons.
@@ -253,7 +267,7 @@ public partial class toolbar : MTBase {
 	/// Allows to set properties of multiple buttons in single place instead of after each 'add button' code line.
 	/// Skips separators and groups.
 	/// </remarks>
-	public IEnumerable<ToolbarItem> Items {
+	public IEnumerable<TBItem> Items {
 		get {
 			_ThreadTrap();
 			foreach (var v in _a) {
@@ -659,7 +673,7 @@ public partial class toolbar : MTBase {
 			if (m == null) return;
 
 			var r = b.rect; _w.MapClientToScreen(ref r);
-			m.Show(MSFlags.AlignRectBottomTop, new(r.left, r.bottom), r, owner: _w);
+			m.Show(PMFlags.AlignRectBottomTop, new(r.left, r.bottom), r, owner: _w);
 			_menuClosedIndex = i; _menuClosedTime = perf.ms;
 			//info: before wm_lbuttondown the menu is already closed and its message loop ended. Previous Show returns before new Show.
 		} else {
@@ -686,7 +700,7 @@ public partial class toolbar : MTBase {
 			if (b.actionThread) run.thread(() => _ExecItem(), background: false); //thread start speed: 250 mcs
 			else _ExecItem();
 			void _ExecItem() {
-				var action = b.clicked as Action<ToolbarItem>;
+				var action = b.clicked as Action<TBItem>;
 				try { action(b); }
 				catch (Exception ex) when (!b.actionException) { print.warning(ex.ToString(), -1); }
 			}
@@ -706,7 +720,7 @@ public partial class toolbar : MTBase {
 
 		if (!no.Has(TBNoMenu.Edit | TBNoMenu.File)) {
 			var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, item);
-			if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => script.editor.OpenAndGoToLine(_sourceFile, item?.sourceLine ?? _sourceLine);
+			if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => ScriptEditor.OpenAndGoToLine(_sourceFile, item?.sourceLine ?? _sourceLine);
 			if (!no.Has(TBNoMenu.File) && canGo) m[goText] = o => item.GoToFile_();
 		}
 		if (!no.Has(TBNoMenu.Close)) m.Add("Close", o => _SatPlanetOrThis.Close());

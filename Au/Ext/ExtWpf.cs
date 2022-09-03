@@ -548,7 +548,7 @@ namespace Au.Types {
 		/// If called not in preview mode, calls <b>Environment.Exit</b>.
 		/// </remarks>
 		public static void Preview(this Window t) {
-			wnd wMain = script.editor.MainWindow(); if (wMain.Is0) Environment.Exit(0);
+			wnd wMain = ScriptEditor.MainWindow(); if (wMain.Is0) Environment.Exit(0);
 			if (!Environment.CommandLine.RxMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$", out var m)) Environment.Exit(0);
 			int pid = m[1].Value.ToInt();
 			m[2].Value.ToInt(out long time);

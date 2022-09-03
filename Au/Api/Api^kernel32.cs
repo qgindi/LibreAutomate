@@ -726,6 +726,7 @@ namespace Au.Types {
 
 		//internal const uint THREAD_TERMINATE = 0x1;
 		internal const uint THREAD_SUSPEND_RESUME = 0x2;
+		internal const uint THREAD_SET_CONTEXT = 0x10;
 		internal const uint THREAD_QUERY_LIMITED_INFORMATION = 0x800;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -915,20 +916,16 @@ namespace Au.Types {
 		[DllImport("kernel32.dll")]
 		internal static extern nint GetStdHandle(int nStdHandle);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool SetSystemPowerState(bool fSuspend, bool fForce);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ExitWindowsEx(int uFlags, uint dwReason);
-
 		[DllImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownW", SetLastError = true)]
 		internal static extern bool InitiateSystemShutdown(string lpMachineName, string lpMessage, int dwTimeout, bool bForceAppsClosed, bool bRebootAfterShutdown);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool LockWorkStation();
-
 		[DllImport("kernel32.dll")]
 		internal static extern nint SetUnhandledExceptionFilter(nint _);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, nint dwData);
+
+		internal delegate void PAPCFUNC(nint Parameter);
 
 
 

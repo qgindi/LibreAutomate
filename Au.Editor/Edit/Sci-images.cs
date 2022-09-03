@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using static Au.Controls.KImageUtil;
 using System.Buffers;
 using CT = Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
-using Au.Types;
 
 partial class SciCode {
 	struct _Image {

@@ -216,7 +216,7 @@ static class CiSnippets {
 			var m = new popupMenu();
 			foreach (var v in a) m.Add(v.Attr("item"));
 			m.FocusedItem = m.Items.First();
-			int g = m.Show(MSFlags.ByCaret | MSFlags.Underline);
+			int g = m.Show(PMFlags.ByCaret | PMFlags.Underline);
 			if (g == 0) return;
 			x = a[g - 1];
 		}

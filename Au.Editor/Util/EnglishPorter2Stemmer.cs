@@ -1,7 +1,5 @@
 ﻿//https://github.com/nemec/porter2-stemmer
 
-using System.Linq;
-
 namespace Porter2Stemmer;
 
 /// <summary>

@@ -67,17 +67,26 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Performs computer sleep (suspend) or hibernate operation.
+		/// Computer sleep, hibernate or monitor off.
 		/// </summary>
 		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
-		/// <param name="hibernate"></param>
-		/// <param name="force">Don't allow programs to cancel.</param>
+		/// <param name="how"></param>
 		/// <remarks>
-		/// Uses API <msdn>SetSystemPowerState</msdn>.
+		/// To sleep or hibernate uses API <msdn>SetSuspendState</msdn>. To turn off display uses <msdn>WM_SYSCOMMAND</msdn>.
+		/// 
+		/// The <b>SetSuspendState</b> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation istead of sleep. About power states: <msdn>System+Power+States</msdn>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
 		/// </remarks>
-		public static bool sleep(bool hibernate = false, bool force = false) {
+		public static bool suspend(CSuspend how) {
+			if (how == CSuspend.SleepOrDisplay) how = 0 != Api.IsPwrSuspendAllowed() ? CSuspend.Sleep : CSuspend.Display;
+			if (how == CSuspend.Display) {
+				var w = WndUtil.CreateWindowDWP_(messageOnly: true);
+				Api.DefWindowProc(w, Api.WM_SYSCOMMAND, Api.SC_MONITORPOWER, 2);
+				Api.DestroyWindow(w);
+				return true;
+			}
 			SecurityUtil.SetPrivilege("SeShutdownPrivilege", true);
-			return Api.SetSystemPowerState(!hibernate, force);
+			return 0 != Api.SetSuspendState((byte)(how == CSuspend.Hibernate ? 1 : 0), 0, 0);
+			//documented: parameter bForce has no effect.
 		}
 
 		/// <summary>
@@ -116,3 +125,21 @@ namespace Au {
 	}
 }
 
+namespace Au.Types {
+	/// <summary>
+	/// Used with <see cref="computer.suspend"/>.
+	/// </summary>
+	public enum CSuspend {
+		/// <summary>Sleep (power state S1-S3). If these power states unavailable, the function may hibernate instead.</summary>
+		Sleep,
+
+		/// <summary>Hibernate.</summary>
+		Hibernate,
+
+		/// <summary>Turn off display. It should activate Modern Suspend S0 if available.</summary>
+		Display,
+
+		/// <summary>Sleep if power states S1-S3 available, else turn off display (it should activate Modern Suspend S0 if available).</summary>
+		SleepOrDisplay,
+	}
+}

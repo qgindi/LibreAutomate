@@ -24,21 +24,18 @@ public:
 	}
 
 	// Inherited via IInterface
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override
-	{
-		if(riid == __uuidof(IInterface) || riid == __uuidof(IUnknown)) {
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override {
+		if (riid == __uuidof(IInterface) || riid == __uuidof(IUnknown)) {
 			*ppvObject = this;
 			return 0;
 		}
 		*ppvObject = nullptr;
 		return E_NOINTERFACE;
 	}
-	virtual ULONG __stdcall AddRef(void) override
-	{
+	virtual ULONG __stdcall AddRef(void) override {
 		return 1;
 	}
-	virtual ULONG __stdcall Release(void) override
-	{
+	virtual ULONG __stdcall Release(void) override {
 		return 1;
 	}
 };
@@ -50,13 +47,12 @@ EXPORT IInterface* Cpp_GetInterface() { return new Inter(); }
 
 
 
-LRESULT CALLBACK KeyHookProc(int code, WPARAM wParam, LPARAM lParam)
-{
-	if(code < 0) goto g1;
-	if(wParam == 0x8F) {
+LRESULT CALLBACK KeyHookProc(int code, WPARAM wParam, LPARAM lParam) {
+	if (code < 0) goto g1;
+	if (wParam == 0x8F) {
 		//Print(L"<hook>");
 		HANDLE ev = OpenEventW(EVENT_MODIFY_STATE, false, L"ee57812345hh");
-		if(ev == 0) {
+		if (ev == 0) {
 			PRINTS(L"key sync hook: OpenEventW failed");
 			goto g1;
 		}
@@ -67,13 +63,12 @@ g1:
 	return CallNextHookEx(0, code, wParam, lParam);
 }
 
-EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
-{
-	if(action == 1) {
+EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh) {
+	if (action == 1) {
 		auto hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), tid);
-		if(hh == 0 && tid != 0) hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
+		if (hh == 0 && tid != 0) hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
 		return hh;
-	} else if(action == 2) {
+	} else if (action == 2) {
 		UnhookWindowsHookEx(hh);
 	}
 	return 0;
@@ -161,8 +156,7 @@ EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
 
 extern HMODULE s_moduleHandle;
 
-void TestStringBuilder()
-{
+void TestStringBuilder() {
 	Perf.First();
 	str::StringBuilder b;
 	//b.Append(L"one ");
@@ -189,7 +183,7 @@ void TestStringBuilder()
 	b << rundll;
 	t = b.GetBufferToAppend(out n); b.FixBuffer(GetModuleFileNameW(s_moduleHandle, t, n));
 	auto u = wcsrchr(t, '\\') - 5; u[0] = bits[0]; u[1] = bits[1]; //"32" to "64" or vice versa
-	if(GetFileAttributes(t) == INVALID_FILE_ATTRIBUTES) return; //avoid messagebox when our antimatter dll does not exist
+	if (GetFileAttributes(t) == INVALID_FILE_ATTRIBUTES) return; //avoid messagebox when our antimatter dll does not exist
 	b << L"\",Cpp_RunDll " << (__int64)ww; //note: without W
 
 	b << 'A';
@@ -200,32 +194,30 @@ void TestStringBuilder()
 	Perf.NW();
 }
 
-EXPORT void Cpp_TestWildex(STR s, STR w)
-{
+EXPORT void Cpp_TestWildex(STR s, STR w) {
 	auto lenS = wcslen(s);
 	auto lenW = wcslen(w);
 
 	Perf.First();
 	str::Wildex x;
 	Bstr es;
-	if(!x.Parse(w, lenW, false, &es)) { Print(es); return; }
+	if (!x.Parse(w, lenW, false, &es)) { Print(es); return; }
 	Perf.Next();
 
 	bool yes;
-	for(int i = 0; i < 1000; i++) yes = x.Match(s, lenS);
+	for (int i = 0; i < 1000; i++) yes = x.Match(s, lenS);
 	Perf.NW();
 
 	Print(yes);
 }
 
-EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
-{
+EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags) {
 	int rc = 0;
 
 	Perf.First();
 	int errNum; size_t errOffs;
 	auto re = pcre2_compile(p, -1, flags | PCRE2_UTF, &errNum, &errOffs, null);
-	if(re == null) {
+	if (re == null) {
 		PCRE2_UCHAR buffer[256];
 		pcre2_get_error_message(errNum, buffer, _countof(buffer));
 		Printf(L"error %s at %i", buffer, errOffs);
@@ -237,7 +229,7 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 	LPBYTE ser = null; size_t serSize = 0;
 	pcre2_code* a[2] = { re,re };
 	rc = pcre2_serialize_encode((const pcre2_code_16**)a, 2, &ser, &serSize, null);
-	if(rc <= 0) {
+	if (rc <= 0) {
 		Print(L"pcre2_serialize_encode error");
 		return;
 	}
@@ -247,7 +239,7 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 	Print(serSize);
 
 	rc = pcre2_serialize_decode(&re, 1, ser, null);
-	if(rc <= 0) {
+	if (rc <= 0) {
 		Print(L"pcre2_serialize_decode error");
 		return;
 	}
@@ -259,9 +251,9 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 	auto m = pcre2_match_data_create_from_pattern(re, null);
 	auto len = wcslen(s);
 
-	for(int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 1000; i++) {
 		rc = pcre2_match(re, s, len, 0, 0, m, null, null);
-		if(rc <= 0) {
+		if (rc <= 0) {
 			Print(rc);
 			return;
 		}
@@ -336,14 +328,12 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 //ENABLE_BITMASK_OPERATORS(eKKK);
 
 EXPORT
-int Cpp_TestInt(int a)
-{
+int Cpp_TestInt(int a) {
 	return sizeof(VARIANT);
 }
 
 EXPORT
-int Cpp_TestString(STR a)
-{
+int Cpp_TestString(STR a) {
 	return 1;
 }
 
@@ -361,23 +351,19 @@ class CppTest :public ICppTest
 {
 	STD_IUNKNOWN_METHODS_SIMPLE(ICppTest)
 public:
-	STDMETHODIMP TestInt(int a, int b, int c)
-	{
+	STDMETHODIMP TestInt(int a, int b, int c) {
 		return E_NOTIMPL;
 	}
-	STDMETHODIMP TestString(STR a, int b, int c)
-	{
+	STDMETHODIMP TestString(STR a, int b, int c) {
 		return E_NOTIMPL;
 	}
-	STDMETHODIMP TestBSTR(BSTR a, int b, int c)
-	{
+	STDMETHODIMP TestBSTR(BSTR a, int b, int c) {
 		return E_NOTIMPL;
 	}
 };
 
 EXPORT
-ICppTest* Cpp_Interface()
-{
+ICppTest* Cpp_Interface() {
 	return new CppTest();
 }
 
@@ -742,9 +728,13 @@ void _TestIAccessibleImpl();
 //	return 0;
 //}
 
-EXPORT void Cpp_Test()
-{
+//void _Wineventproc(HWINEVENTHOOK hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD idEventThread, DWORD dwmsEventTime) {
+//	Printf(L"pid=%i idEventThread=%i %i %i", GetCurrentProcessId(), idEventThread, GetWindowThreadProcessId(hwnd, null), GetCurrentThreadId());
+//}
 
+EXPORT void Cpp_Test() {
+	//auto hh = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0, _Wineventproc, GetCurrentProcessId(), 0, 0);
+	//auto hh = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, (HMODULE)&__ImageBase, _Wineventproc, GetCurrentProcessId(), 0, WINEVENT_INCONTEXT);
 
 	//TestFileDialog();
 
@@ -982,9 +972,8 @@ public:
 	}
 #pragma region
 	// Inherited via IAccessible
-	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override
-	{
-		if(riid == IID_IUnknown || riid == IID_IDispatch || riid == IID_IAccessible) {
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override {
+		if (riid == IID_IUnknown || riid == IID_IDispatch || riid == IID_IAccessible) {
 			*ppvObject = this;
 			_ref++;
 			return 0;
@@ -992,105 +981,83 @@ public:
 		*ppvObject = 0;
 		return E_NOINTERFACE;
 	}
-	virtual ULONG __stdcall AddRef(void) override
-	{
+	virtual ULONG __stdcall AddRef(void) override {
 		_ref++;
 		return 1;
 	}
-	virtual ULONG __stdcall Release(void) override
-	{
+	virtual ULONG __stdcall Release(void) override {
 		_ref--;
 		Printf(L"Release: %i", _ref);
 		return 1;
 	}
-	virtual HRESULT __stdcall GetTypeInfoCount(UINT* pctinfo) override
-	{
+	virtual HRESULT __stdcall GetTypeInfoCount(UINT* pctinfo) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) override
-	{
+	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) override
-	{
+	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) override
-	{
+	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) override {
 		return E_NOTIMPL;
 	}
 #pragma endregion
-	virtual HRESULT __stdcall get_accParent(IDispatch** ppdispParent) override
-	{
+	virtual HRESULT __stdcall get_accParent(IDispatch** ppdispParent) override {
 		//Print(__FUNCTION__);
 		return AccessibleObjectFromWindow(_w, 0, IID_IAccessible, (void**)ppdispParent);
 	}
-	virtual HRESULT __stdcall get_accChildCount(long* pcountChildren) override
-	{
+	virtual HRESULT __stdcall get_accChildCount(long* pcountChildren) override {
 		//Print(__FUNCTION__);
 		*pcountChildren = 0;
 		return 0;
 	}
-	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch** ppdispChild) override
-	{
+	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch** ppdispChild) override {
 		//Print(__FUNCTION__);
 		*ppdispChild = 0;
-		if(varChild.vt != VT_I4)return E_INVALIDARG;
+		if (varChild.vt != VT_I4)return E_INVALIDARG;
 		return S_FALSE;
 	}
-	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR* pszName) override
-	{
+	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR* pszName) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR* pszValue) override
-	{
+	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR* pszValue) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR* pszDescription) override
-	{
+	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR* pszDescription) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT* pvarRole) override
-	{
+	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT* pvarRole) override {
 		//Print(__FUNCTION__);
 		pvarRole->vt = VT_I4; pvarRole->lVal = varChild.lVal == 0 ? ROLE_SYSTEM_LIST : ROLE_SYSTEM_LISTITEM;
 		return 0;
 	}
-	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT* pvarState) override
-	{
+	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT* pvarState) override {
 		//Print(__FUNCTION__);
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR* pszHelp) override
-	{
+	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR* pszHelp) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild, long* pidTopic) override
-	{
+	virtual HRESULT __stdcall get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild, long* pidTopic) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR* pszKeyboardShortcut) override
-	{
+	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR* pszKeyboardShortcut) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accFocus(VARIANT* pvarChild) override
-	{
+	virtual HRESULT __stdcall get_accFocus(VARIANT* pvarChild) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accSelection(VARIANT* pvarChildren) override
-	{
+	virtual HRESULT __stdcall get_accSelection(VARIANT* pvarChildren) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR* pszDefaultAction) override
-	{
+	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR* pszDefaultAction) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall accSelect(long flagsSelect, VARIANT varChild) override
-	{
+	virtual HRESULT __stdcall accSelect(long flagsSelect, VARIANT varChild) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall accLocation(long* pxLeft, long* pyTop, long* pcxWidth, long* pcyHeight, VARIANT varChild) override
-	{
+	virtual HRESULT __stdcall accLocation(long* pxLeft, long* pyTop, long* pcxWidth, long* pcyHeight, VARIANT varChild) override {
 		//Print(__FUNCTION__);
 		WINDOWINFO wi = { sizeof(WINDOWINFO) }; GetWindowInfo(_w, &wi);
 		*pxLeft = wi.rcClient.left;
@@ -1099,27 +1066,22 @@ public:
 		*pcyHeight = wi.rcClient.bottom - wi.rcClient.top;
 		return 0;
 	}
-	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT* pvarEndUpAt) override
-	{
+	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT* pvarEndUpAt) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT* pvarChild) override
-	{
+	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT* pvarChild) override {
 		//Print(__FUNCTION__);
 		pvarChild->vt = VT_I4;
 		pvarChild->lVal = 0;
 		return 0;
 	}
-	virtual HRESULT __stdcall accDoDefaultAction(VARIANT varChild) override
-	{
+	virtual HRESULT __stdcall accDoDefaultAction(VARIANT varChild) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall put_accName(VARIANT varChild, BSTR szName) override
-	{
+	virtual HRESULT __stdcall put_accName(VARIANT varChild, BSTR szName) override {
 		return E_NOTIMPL;
 	}
-	virtual HRESULT __stdcall put_accValue(VARIANT varChild, BSTR szValue) override
-	{
+	virtual HRESULT __stdcall put_accValue(VARIANT varChild, BSTR szValue) override {
 		return E_NOTIMPL;
 	}
 };
@@ -1129,7 +1091,7 @@ MyAcc* m;
 LRESULT __stdcall _WndProc(HWND w, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 	//Print(msg);
-	switch(msg) {
+	switch (msg) {
 	case WM_DESTROY:
 		m = null;
 		//PostQuitMessage(0);
@@ -1137,9 +1099,9 @@ LRESULT __stdcall _WndProc(HWND w, UINT msg, WPARAM wParam, LPARAM lParam) {
 		break;
 	case WM_GETOBJECT:
 		//Print((int)lParam);
-		if((int)lParam == OBJID_CLIENT) {
+		if ((int)lParam == OBJID_CLIENT) {
 			Print("WM_GETOBJECT");
-			if(m == null) m = new MyAcc(w);
+			if (m == null) m = new MyAcc(w);
 			return LresultFromObject(IID_IAccessible, wParam, (LPUNKNOWN)m);
 		}
 		break;
@@ -1159,8 +1121,8 @@ void _TestIAccessibleImpl() {
 	auto atom = RegisterClassExW(&x);
 	auto w = CreateWindowExW(WS_EX_TOPMOST, (STR)atom, L"Gooo", WS_VISIBLE | WS_POPUPWINDOW | WS_CAPTION, 500, 300, 300, 300, 0, 0, 0, 0);
 	MSG m;
-	while(GetMessageW(&m, 0, 0, 0) > 0) {
-		if(m.message == WM_APP + 127) break;
+	while (GetMessageW(&m, 0, 0, 0) > 0) {
+		if (m.message == WM_APP + 127) break;
 		TranslateMessage(&m);
 		DispatchMessageW(&m);
 	}

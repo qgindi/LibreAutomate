@@ -108,7 +108,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.R.Add<Label>("Copy text: ");
 		b.StartStack();
 		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, _Action.CopyName)).Width(70).Disabled()
-			.Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars,\neditor menus and toolbars (edit Commands.xml),\nscript.editor.GetIcon, IconImageCache, ImageUtil,\noutput tag <image>.");
+			.Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars,\neditor menus and toolbars (edit Commands.xml),\nScriptEditor.GetIcon, IconImageCache, ImageUtil,\noutput tag <image>.");
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
 		//b.Add<Label>("Tip: double-clicking an icon clicks the same button.");

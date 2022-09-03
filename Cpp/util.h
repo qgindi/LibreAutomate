@@ -367,6 +367,7 @@ public:
 namespace wn
 {
 inline DWORD Style(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_STYLE); }
+inline DWORD ExStyle(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_EXSTYLE); }
 bool ClassName(HWND w, out Bstr& s);
 int ClassNameIs(HWND w, std::initializer_list<STR> a);
 bool ClassNameIs(HWND w, STR s);

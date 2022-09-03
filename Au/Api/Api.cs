@@ -1424,6 +1424,11 @@ static unsafe partial class Api {
 	[DllImport("msi.dll", EntryPoint = "#173")]
 	internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
 
+	[DllImport("powrprof.dll")]
+	internal static extern byte SetSuspendState(byte bHibernate, byte bForce, byte bWakeupEventsDisabled);
+
+	[DllImport("powrprof.dll")]
+	internal static extern byte IsPwrSuspendAllowed();
 
 	//[DllImport("urlmon.dll", PreserveSig = true)]
 	//internal static extern int FindMimeFromData(IntPtr pBC, string pwzUrl, byte[] pBuffer, int cbSize, string pwzMimeProposed, uint dwMimeFlags, out string ppwzMimeOut, uint dwReserved);

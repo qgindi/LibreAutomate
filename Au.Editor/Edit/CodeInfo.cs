@@ -37,7 +37,7 @@ static class CodeInfo {
 		//This code warms up Roslyn. It can take several s.
 		//	During that time the window is visible (except document) but disabled.
 
-		perf.next('u');
+		//perf.next('u');
 		//don't allow users to make any changes until Roslyn loaded. It can be dangerous.
 		App.Hmain.Enable(false);
 		wnd[] aEnable = null;

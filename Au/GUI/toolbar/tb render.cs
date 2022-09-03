@@ -168,7 +168,7 @@ public partial class toolbar {
 	}
 
 	//not used
-	//internal void ChangeImage_(ToolbarItem ti, Bitmap b) {
+	//internal void ChangeImage_(TBItem ti, Bitmap b) {
 	//	if (_closed) return;
 	//	ti.image2 = b;
 	//	_Invalidate(ti);
@@ -197,7 +197,7 @@ public partial class toolbar {
 		}
 	}
 
-	int _TextDispLen(ToolbarItem b) {
+	int _TextDispLen(TBItem b) {
 		var s = b.Text;
 		if (s.NE()) return 0;
 		if (DisplayText || b.textAlways) return s.Length;
@@ -229,7 +229,7 @@ public partial class toolbar {
 			//bBorder += 1;
 		}
 
-		public int ImageEtc(ToolbarItem b, bool vert) => b.HasImage_ ? image : (dot == 0 ? 0 : (vert ? image : (b.IsMenu_ ? triangle : dot)));
+		public int ImageEtc(TBItem b, bool vert) => b.HasImage_ ? image : (dot == 0 ? 0 : (vert ? image : (b.IsMenu_ ? triangle : dot)));
 	}
 
 	/// <summary>

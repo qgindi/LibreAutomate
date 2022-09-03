@@ -275,7 +275,7 @@ namespace Au.Controls
 				case ImageType.Ico or ImageType.IconLib or ImageType.ShellIcon or ImageType.Cur:
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				case ImageType.XamlIconName when xaml != null:
-					s = script.editor.GetIcon(s, EGetIcon.IconNameToXaml);
+					s = ScriptEditor.GetIcon(s, EGetIcon.IconNameToXaml);
 					if (s == null) break;
 					t = ImageType.Xaml;
 					goto g1;

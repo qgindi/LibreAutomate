@@ -70,7 +70,7 @@ public partial class toolbar {
 		}
 	}
 
-	void _Invalidate(ToolbarItem ti = null) {
+	void _Invalidate(TBItem ti = null) {
 		_ThreadTrap();
 		if (!IsOpen) return;
 		if (ti != null) Api.InvalidateRect(_w, ti.rect);

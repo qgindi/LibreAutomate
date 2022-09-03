@@ -115,7 +115,7 @@ partial class CiCompletion {
 		//print.clear();
 
 		//using
-		var p1 = perf.local(); //FUTURE: remove all p1 lines
+		//var p1 = perf.local();
 
 		//print.it(_cancelTS);
 		bool isCommand = ch == default, wasBusy = _cancelTS != null;
@@ -138,7 +138,7 @@ partial class CiCompletion {
 
 		if (!cd.GetDocument()) return; //returns false if fails (unlikely)
 		var document = cd.document;
-		p1.Next('d');
+		//p1.Next('d');
 
 		if (ch == '/') {
 			InsertCode.DocComment(cd);
@@ -182,7 +182,7 @@ partial class CiCompletion {
 
 				syncon = CSharpSyntaxContext.CreateContext(document, model, position, cancelToken);
 				var node = tok.Parent;
-				p1.Next('s');
+				//p1.Next('s');
 
 				//in some cases show list when typing a character where GetCompletionsAsync works only on command
 				if (ch == '[' && syncon.IsAttributeNameContext) ch = default;
@@ -201,7 +201,7 @@ partial class CiCompletion {
 
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				var r1 = await completionService.GetCompletionsAsync(document, position, s_options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
-				p1.Next('C');
+				//p1.Next('C');
 				if (r1 != null && r1.ItemsList.Count == 0) r1 = null;
 				if (r1 != null) {
 					canGroup = true;
@@ -285,7 +285,7 @@ partial class CiCompletion {
 
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
-					int i = popupMenu.showSimple("Regex|Keys", MSFlags.ByCaret);
+					int i = popupMenu.showSimple("Regex|Keys", PMFlags.ByCaret);
 					stringFormat = i switch { 1 => PSFormat.Regexp, 2 => PSFormat.Keys, _ => default };
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo);
@@ -294,7 +294,7 @@ partial class CiCompletion {
 
 			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
 			if (position != doc.zCurrentPos16 || (object)code != doc.zText) return; //changed while awaiting
-			p1.Next('T');
+			//p1.Next('T');
 
 			var provider = _GetProvider(r.ItemsList[0]);
 			if (!isDot) isDot = provider == CiComplProvider.Override;
@@ -443,7 +443,7 @@ partial class CiCompletion {
 
 				d.items.Add(v);
 			}
-			p1.Next('i');
+			//p1.Next('i');
 
 			if (canGroup) {
 				for (int i = 0; i < d.items.Count; i++) {
@@ -495,7 +495,7 @@ partial class CiCompletion {
 					}
 				}
 			}
-			p1.Next('+');
+			//p1.Next('+');
 
 			if (d.items.Count == 0) return;
 
@@ -626,10 +626,10 @@ partial class CiCompletion {
 				}
 				groupsList = g.Select(o => o.Item1).ToList();
 			}
-			p1.Next('g');
+			//p1.Next('g');
 
 			if (!span.IsEmpty) _FilterItems(d);
-			p1.Next('F');
+			//p1.Next('F');
 
 			d.tempRange = doc.ETempRanges_Add(this, span.Start, span.End, () => {
 				//print.it("leave", _data==d);
@@ -647,7 +647,7 @@ partial class CiCompletion {
 		//catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
 		finally {
 			if (_data == null) {
-				p1.Next('z');
+				//p1.Next('z');
 				//print.it($"{p1.ToString()}  |  ch='{(ch == default ? "" : ch.ToString())}', canceled={cancelTS.IsCancellationRequested}");
 			}
 			cancelTS.Dispose();

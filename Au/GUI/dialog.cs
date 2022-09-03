@@ -8,6 +8,8 @@ using System.Drawing;
 //rejected: by default show dialog in screen of mouse, like with <c>dialog.options.defaultScreen = screen.ofMouse;</c>.
 //	Some Windows etc dialogs do it, and for me it's probably better. Eg Explorer's Properties even is at mouse position (top-left corner).
 
+//BAD: initially 15 threads in process. After 1-2 minutes 7. With MessageBox 8, later 7.
+
 namespace Au
 {
 	/// <summary>

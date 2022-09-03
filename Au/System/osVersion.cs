@@ -127,10 +127,20 @@ namespace Au
 		/// </summary>
 		public static bool minWin10_21H2 => _win10build >= 19044;
 
+		///// <summary>
+		///// true if Windows 10 version 22H2 or later.
+		///// </summary>
+		//public static bool minWin10_22H2 => _win10build >= 19045;
+
 		/// <summary>
 		/// true if Windows 11 or later.
 		/// </summary>
 		public static bool minWin11 => _win10build >= 22000;
+
+		///// <summary>
+		///// true if Windows 11 version 22H2 or later.
+		///// </summary>
+		//public static bool minWin11_22H2 => _win10build >= 22621;
 
 		/// <summary>
 		/// true if this process is 32-bit, false if 64-bit.

@@ -17,12 +17,12 @@ _AddMenuItem("You can edit me too", o => print.it(2));
 _AddMenuItemWrongWay("But can be difficult to edit me", o => print.it(3));
 m.Show();
 
-void _AddMenuItem(string label, Action<popupMenu.MenuItem> action, [CallerLineNumber] int l_ = 0) {
+void _AddMenuItem(string label, Action<PMItem> action, [CallerLineNumber] int l_ = 0) {
 	m[label, l_: l_] = action;
 	m.Last.TextColor = 0x0000ff;
 }
 
-void _AddMenuItemWrongWay(string label, Action<popupMenu.MenuItem> action) {
+void _AddMenuItemWrongWay(string label, Action<PMItem> action) {
 	m[label] = action;
 	m.Last.TextColor = 0xff0000;
 }

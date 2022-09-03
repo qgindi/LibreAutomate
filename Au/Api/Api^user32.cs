@@ -204,7 +204,7 @@ namespace Au.Types {
 		internal const uint PM_QS_INPUT = 0x1C070000;
 
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW", SetLastError = true)]
-		internal static extern bool PeekMessage(out MSG lpMsg, wnd hWnd, int wMsgFilterMin, int wMsgFilterMax, uint wRemoveMsg);
+		internal static extern bool PeekMessage(out MSG lpMsg, wnd hWnd = default, int wMsgFilterMin = 0, int wMsgFilterMax = 0, uint wRemoveMsg = PM_REMOVE);
 
 		[DllImport("user32.dll")]
 		internal static extern bool WaitMessage();
@@ -1575,6 +1575,28 @@ namespace Au.Types {
 		internal static extern uint InSendMessageEx(nint lpReserved = 0);
 
 		public static bool InSendMessageBlocked => (InSendMessageEx() & (ISMEX_SEND | ISMEX_REPLIED)) == ISMEX_SEND;
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool ExitWindowsEx(int uFlags, uint dwReason);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool LockWorkStation();
+
+		[DllImport("user32.dll")]
+		internal static extern nint RegisterSuspendResumeNotification(IntPtr hRecipient, uint Flags);
+
+		//internal const uint DEVICE_NOTIFY_WINDOW_HANDLE = 0x0;
+		//internal const int DEVICE_NOTIFY_CALLBACK = 2;
+
+		[DllImport("user32.dll")]
+		internal static extern bool UnregisterSuspendResumeNotification(nint Handle);
+
+		//internal struct DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS {
+		//	public IntPtr Callback; //DEVICE_NOTIFY_CALLBACK_ROUTINE
+		//	public nint Context;
+		//}
+
+		//internal delegate uint DEVICE_NOTIFY_CALLBACK_ROUTINE(nint context, uint type, nint setting);
 
 	}
 

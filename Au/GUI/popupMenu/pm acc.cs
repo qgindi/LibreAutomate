@@ -128,7 +128,7 @@ namespace Au {
 
 		void IAccessible.put_accValue(VarInt varChild, string szValue) => throw new NotImplementedException();
 
-		bool _B(VarInt varChild, out popupMenu.MenuItem b) {
+		bool _B(VarInt varChild, out PMItem b) {
 			int i = varChild;
 			if (i == -1) { b = null; return false; }
 			b = _a[i]; return true;

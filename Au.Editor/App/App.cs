@@ -9,7 +9,7 @@ static class App {
 		AppNameShort = "LibreAutomate"; //must be without spaces etc
 
 	public static string UserGuid;
-	internal static print.Server PrintServer;
+	internal static PrintServer PrintServer;
 	public static AppSettings Settings;
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
@@ -53,30 +53,30 @@ static class App {
 
 		if (CommandLine.ProgramStarted2(args)) return;
 
-		PrintServer = new print.Server(true) { NoNewline = true };
+		PrintServer = new(true) { NoNewline = true };
 		PrintServer.Start();
 #if TRACE
 		print.qm2.use = !true;
 		//timer.after(1, _ => perf.nw());
 #endif
 
-		perf.next('o');
+		//perf.next('o');
 		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls.
 									   //Debug_.PrintLoadedAssemblies(true, !true);
-		perf.next('s');
+		//perf.next('s');
 		UserGuid = Settings.user ??= Guid.NewGuid().ToString();
 
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
 		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
 
 		Tasks = new RunningTasks();
-		perf.next('t');
+		//perf.next('t');
 
-		script.editor.IconNameToXaml_ = DIcons.GetIconString;
+		ScriptEditor.IconNameToXaml_ = DIcons.GetIconString;
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
-		perf.next('W');
+		//perf.next('W');
 		CommandLine.ProgramLoaded();
-		perf.next('c');
+		//perf.next('c');
 		Loaded = EProgramState.LoadedWorkspace;
 
 		timer.every(1000, _TimerProc);
@@ -85,7 +85,7 @@ static class App {
 		//Timer1sOr025s += () => print.it("0.25 s");
 
 		TrayIcon.Update_();
-		perf.next('i');
+		//perf.next('i');
 
 		_app = new() {
 			ShutdownMode = ShutdownMode.OnExplicitShutdown //will set OnMainWindowClose when creating main window. If now, would exit if a startup script shows/closes a WPF window.
@@ -394,7 +394,7 @@ static class App {
 			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
 			m.Separator();
 			m.Add("Exit", _ => _Exit());
-			m.Show(MSFlags.AlignBottom | MSFlags.AlignCenterH);
+			m.Show(PMFlags.AlignBottom | PMFlags.AlignCenterH);
 		}
 
 		static void _Exit() {

@@ -76,8 +76,8 @@
 		/// - If redirected, to wherever it is redirected. See <see cref="writer"/>.
 		/// - Else if using log file (<see cref="logFile"/> not null), writes to the file.
 		/// - Else if using console (<see cref="isWritingToConsole"/> returns true), writes to console.
-		/// - Else if using local <see cref="print.Server"/> (in this process), writes to it.
-		/// - Else if exists global <see cref="print.Server"/> (in any process), writes to it.
+		/// - Else if using local <see cref="PrintServer"/> (in this process), writes to it.
+		/// - Else if exists global <see cref="PrintServer"/> (in any process), writes to it.
 		/// - Else nowhere.
 		/// </remarks>
 		public static void it(string value) {
