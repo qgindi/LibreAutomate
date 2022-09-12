@@ -7,10 +7,10 @@
 	/// CSV is a text format used to store a single table of data in human-readable/editable way.
 	/// It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
 	/// There is no strictly defined CSV standard. <b>csvTable</b> uses these rules:
-	///		Fields containg separator characters (default ','), quote characters (default '"') and multiple lines are enclosed in quote characters. Example: "ab, cd".
-	///		Each quote character in such fields is escaped (replaced) with two quote characters. Example: "ab ""cd"" ef".
-	///		If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: " ab ". Or use parameter <i>trimSpaces</i> false when parsing.
-	///		Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
+	/// 	Fields containg separator characters (default ','), quote characters (default '"') and multiple lines are enclosed in quote characters. Example: "ab, cd".
+	/// 	Each quote character in such fields is escaped (replaced) with two quote characters. Example: "ab ""cd"" ef".
+	/// 	If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: " ab ". Or use parameter <i>trimSpaces</i> false when parsing.
+	/// 	Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
 	/// </remarks>
 	public class csvTable
 	{
@@ -56,7 +56,7 @@
 		/// </summary>
 		/// <param name="csv">
 		/// CSV text.
-		///	If rows in CSV text have different field count, the longest row sets the <see cref="ColumnCount"/> property and lenghts of all row arrays; array elements of missing CSV fields will be null.
+		/// If rows in CSV text have different field count, the longest row sets the <see cref="ColumnCount"/> property and lenghts of all row arrays; array elements of missing CSV fields will be null.
 		/// </param>
 		/// <param name="separator">Field separator character used in CSV text. Default ','.</param>
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>

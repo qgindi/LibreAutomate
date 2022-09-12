@@ -6,7 +6,7 @@
 	/// </summary>
 	/// <remarks>
 	/// Some constructors support Windows API error code. Then <see cref="Message"/> will contain its error description.
-	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
+	/// If the string passed to the constructor starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>. If does not end with <c>"."</c>, appends <c>"."</c>.
 	/// </remarks>
 	//[Serializable] //in .NET Framework would need for marshaling between appdomains. Probably don't need now.
 	public class AuException : Exception//, ISerializable
@@ -31,18 +31,18 @@
 		/// <summary> Gets error message. </summary>
 		public override string Message => FormattedMessage ?? FormatMessage();
 
-		/// <summary> String created by FormatMessage(), which should be called by the Message override if null. Initially null. </summary>
+		/// <summary> String created by <b>FormatMessage</b>, which should be called by the <b>Message</b> override if null. Initially null. </summary>
 		protected string FormattedMessage;
 
 		/// <summary>
-		/// Formats error message. Sets and returns FormattedMessage.
-		/// As base text, uses the text passed to the constructor (default "Failed.").
-		/// If it starts with "*", replaces the "*" with "Failed to ".
-		/// If it ends with "*", replaces the "*" with commonPostfix if it is not empty.
-		/// If then the message does not end with ".", appends ".".
-		/// If appendMessage is null, uses lastError.messageFor(NativeErrorCode) if NativeErrorCode not 0.
-		/// If then appendMessage is not empty, appends " " and appendMessage.
-		/// Also appends InnerException.Message in new tab-indented line if InnerException is not null.
+		/// Formats error message. Sets and returns <b>FormattedMessage</b>.
+		/// As base text, uses the text passed to the constructor (default <c>"Failed."</c>).
+		/// If it starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>.
+		/// If it ends with <c>"*"</c>, replaces the <c>"*"</c> with <i>commonPostfix</i> if it is not empty.
+		/// If then the message does not end with <c>"."</c>, appends <c>"."</c>.
+		/// If <i>appendMessage</i> is null, uses <c>lastError.messageFor(NativeErrorCode)</c> if <b>NativeErrorCode</b> not 0.
+		/// If then <i>appendMessage</i> is not empty, appends <c>" " + appendMessage</c>.
+		/// Also appends <b>InnerException.Message</b> in new tab-indented line if <b>InnerException</b> is not null.
 		/// </summary>
 		protected string FormatMessage(string appendMessage = null, string commonPostfix = null) {
 			var m = base.Message;
@@ -63,7 +63,7 @@
 		}
 
 		/// <summary>
-		/// If errorCode is not 0, throws AuException that includes the code and its message.
+		/// If errorCode is not 0, throws <b>AuException</b> that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
@@ -73,7 +73,7 @@
 		}
 
 		/// <summary>
-		/// If errorCode is less than 0, throws AuException that includes the code and its message.
+		/// If <i>errorCode</i> is less than 0, throws <b>AuException</b> that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
@@ -104,10 +104,10 @@
 	/// Exception thrown mostly by <see cref="wnd"/> functions.
 	/// </summary>
 	/// <remarks>
-	/// Some constructors support Windows API error code. Then Message also will contain its error description.
-	/// If error code ERROR_INVALID_WINDOW_HANDLE, Message also depends on whether the window handle is 0.
-	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
-	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
+	/// Some constructors support Windows API error code. Then <b>Message</b> also will contain its error description.
+	/// If error code <b>ERROR_INVALID_WINDOW_HANDLE</b>, <b>Message</b> also depends on whether the window handle is 0.
+	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses <b>ERROR_INVALID_WINDOW_HANDLE</b>.
+	/// If the string passed to the constructor starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>. If ends with <c>"*"</c>, replaces the <c>"*"</c> with <c>" window."</c>. If does not end with <c>"."</c>, appends <c>"."</c>.
 	/// </remarks>
 	//[Serializable]
 	public class AuWndException : AuException//, ISerializable
@@ -116,7 +116,7 @@
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
 
 		/// <summary>
-		/// Sets <b>Message</b> = <i>message</i> (default "Failed.").
+		/// Sets <b>Message</b> = <i>message</i> (default <b>"Failed."</b>).
 		/// Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
 		/// </summary>
 		public AuWndException(wnd w, string message = "Failed.", Exception innerException = null)

@@ -1196,7 +1196,6 @@ namespace Au {
 			}
 		}
 
-		/// <inheritdoc cref="Check(bool, string)"/>
 		/// <summary>
 		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. To check/uncheck calls callback function.
 		/// </summary>
@@ -1204,6 +1203,7 @@ namespace Au {
 		/// <param name="action">Callback function that should check or uncheck this UI element. Its parameter is this variable.</param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <remarks></remarks>
+		/// <inheritdoc cref="Check(bool, string)"/>
 		public void Check(bool check, Action<elm> action) {
 			if (!_CheckNeedToggle(check)) return;
 			action(this);
@@ -1231,17 +1231,16 @@ namespace Au {
 			_Expand(expand, keys, null, waitS, ignoreState);
 		}
 
-		/// <inheritdoc cref="Expand(bool, string, double, bool)"/>
-		/// <param name="expand"></param>
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <param name="action">Callback function that should expand or collapse this UI element. Its parameter is this variable.</param>
-		/// <param name="waitS"></param>
-		/// <param name="ignoreState"></param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <exception cref="TimeoutException"/>
 		/// <remarks></remarks>
+		/// <inheritdoc cref="Expand(bool, string, double, bool)"/>
 		public void Expand(bool expand, Action<elm> action, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, null, action, waitS, ignoreState);
 		}
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		void _Expand(bool expand, string keys, Action<elm> action, double waitS, bool ignoreState) {
 			ThrowIfDisposed_();
@@ -1362,21 +1361,15 @@ namespace Au {
 			return _ExpandPath(path, keys, null, waitS, notLast);
 		}
 
-		/// <inheritdoc cref="Expand(Strings, string, double, bool)"/>
-		/// <param name="path"></param>
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <param name="action">Callback function that should expand UI elements.</param>
-		/// <param name="waitS"></param>
-		/// <param name="notLast"></param>
-		/// <exception cref="ArgumentException"/>
-		/// <exception cref="NotFoundException"/>
-		/// <exception cref="AuException"/>
-		/// <exception cref="TimeoutException"/>
-		/// <exception cref="NotSupportedException"/>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <remarks></remarks>
+		/// <inheritdoc cref="Expand(Au.Types.Strings, string, double, bool)"/>
 		public elm Expand(Strings path, Action<elm> action, double waitS = 3, bool notLast = false) {
 			return _ExpandPath(path, null, action, waitS, notLast);
 		}
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		elm _ExpandPath(Strings path, string keys, Action<elm> action, double waitS, bool notLast) {
 			ThrowIfDisposed_();

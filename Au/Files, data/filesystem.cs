@@ -48,7 +48,7 @@ namespace Au {
 		/// </remarks>
 		public static unsafe bool getProperties(string path, out FileProperties properties, FAFlags flags = 0) {
 			properties = new FileProperties();
-			if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path, true); //don't need NormalizeExpandEV_, the API itself supports .. etc
+			if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
 			_DisableDeviceNotReadyMessageBox();
 			if (!Api.GetFileAttributesEx(path, 0, out Api.WIN32_FILE_ATTRIBUTE_DATA d)) {
 				if (!_GetAttributesOnError(path, flags, out _, out _, &d)) return false;
@@ -76,7 +76,7 @@ namespace Au {
 		/// For NTFS links, gets properties of the link, not of its target.
 		/// </remarks>
 		public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
-			if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path, true); //don't need NormalizeExpandEV_, the API itself supports .. etc
+			if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
 			_DisableDeviceNotReadyMessageBox();
 			var a = Api.GetFileAttributes(path);
 			if (a == (FileAttributes)(-1)) return _GetAttributesOnError(path, flags, out attributes, out _);
@@ -128,7 +128,7 @@ namespace Au {
 		/// Returns false if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
 		/// </summary>
 		static unsafe bool _GetAttributes(string path, out FileAttributes attr, out bool ntfsLink, bool useRawPath) {
-			if (!useRawPath) path = pathname.NormalizeMinimally_(path, false);
+			if (!useRawPath) path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
 			_DisableDeviceNotReadyMessageBox();
 			attr = Api.GetFileAttributes(path);
 			if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != _IsNtfsLink(path);
@@ -207,7 +207,7 @@ namespace Au {
 		/// <remarks>
 		/// If the path argument is full path, calls <see cref="exists"/> and returns normalized path if exists, null if not.
 		/// Else searches in these places:
-		///	1. <i>dirs</i>, if used.
+		/// 1. <i>dirs</i>, if used.
 		/// 2. <see cref="folders.ThisApp"/>.
 		/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
 		/// 4. If path ends with ".exe", tries to get path from registry "App Paths" keys.
@@ -242,7 +242,7 @@ namespace Au {
 					path = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string
 						?? Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string;
 					if (path != null) {
-						path = pathname.normalize(path.Trim('\"'));
+						path = _PreparePath(path.Trim('\"'));
 						if (exists(path, true)) return path;
 					}
 				}
@@ -305,7 +305,7 @@ namespace Au {
 			//	Bad: something we need is missing or difficult to return or need a workaround. Eg easily detect NTFS links, get relative path, prevent recursion to NTFS link target.
 
 			string path = directoryPath;
-			if (0 == (flags & FEFlags.UseRawPath)) path = pathname.normalize(path);
+			if (0 == (flags & FEFlags.UseRawPath)) path = _PreparePath(path);
 			path = path.RemoveSuffix('\\');
 
 			_DisableDeviceNotReadyMessageBox();
@@ -441,10 +441,10 @@ namespace Au {
 		/// <param name="pattern">
 		/// File name pattern. Format: [Wildcard expression](xref:wildcard_expression). Used only for files, not for subdirectories. Can be null.
 		/// Examples:
-		/// - "*.png" (only png files),
-		/// - "**m *.png||*.bmp" (only png and bmp files),
-		/// - "**nm *.png||*.bmp" (all files except png and bmp),
-		/// - @"**r \.html?$" (regular expression that matches .htm and .html files).
+		/// - <c>"*.png"</c> (only png files),
+		/// - <c>"**m *.png||*.bmp"</c> (only png and bmp files),
+		/// - <c>"**nm *.png||*.bmp"</c> (all files except png and bmp),
+		/// - <c>@"**r \.html?$"</c> (regular expression that matches .htm and .html files).
 		/// </param>
 		/// <param name="flags">Flags. The function also adds flag <b>OnlyFiles</b>.</param>
 		/// <exception cref="ArgumentException">
@@ -684,7 +684,7 @@ namespace Au {
 				}
 			}
 			return;
-		ge:
+			ge:
 			string se = $"*copy directory '{path1}' to '{path2}'";
 			if (s1 != null) se += $" ('{s1}' to '{s2}')";
 			throw new AuException(0, se);
@@ -759,9 +759,8 @@ namespace Au {
 		/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
 		/// When need to copy, does not copy security properties; sets default.
-		/// 
 		/// Creates the destination directory if does not exist (see <see cref="createDirectory"/>).
-		/// If path and newPath share the same parent directory, just renames the file.
+		/// If <i>path</i> and <i>newPath</i> share the same parent directory, just renames the file.
 		/// </remarks>
 		public static void move(string path, string newPath, FIfExists ifExists = FIfExists.Fail) {
 			_FileOperation(_FileOp.Move, false, path, newPath, ifExists);
@@ -783,7 +782,6 @@ namespace Au {
 		/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
 		/// When need to copy, does not copy security properties; sets default.
-		/// 
 		/// Creates the destination directory if does not exist (see <see cref="createDirectory"/>).
 		/// </remarks>
 		public static void moveTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail) {
@@ -820,19 +818,22 @@ namespace Au {
 		/// <summary>
 		/// Copies file or directory into another directory.
 		/// </summary>
+		/// <param name="path">Full path.</param>
 		/// <param name="newDirectory">Full path of the new parent directory.</param>
+		/// <param name="ifExists"></param>
+		/// <param name="copyFlags">Options used when copying directory.</param>
+		/// <param name="fileFilter">Callback function that decides which files to copy when copying directory. See <see cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>. Note: this function uses <see cref="FEFlags.NeedRelativePaths"/>.</param>
+		/// <param name="dirFilter">Callback function that decides which subdirectories to copy when copying directory. See <see cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>. Note: this function uses <see cref="FEFlags.NeedRelativePaths"/>.</param>
 		/// <exception cref="ArgumentException">
 		/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="pathname.isFullPath"/>).
 		/// - <i>path</i> is drive. To copy drive content, use <see cref="copy"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
-		/// <inheritdoc cref="copy(string, string, FIfExists, FCFlags, Func{FEFile, bool}, Func{FEFile, int})"/>
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		/// <inheritdoc cref="copy"/>
 		public static void copyTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail,
 			FCFlags copyFlags = 0, Func<FEFile, bool> fileFilter = null, Func<FEFile, int> dirFilter = null
 			) {
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			_FileOperation(_FileOp.Copy, true, path, newDirectory, ifExists, copyFlags, fileFilter, dirFilter);
 		}
 
@@ -1054,6 +1055,14 @@ namespace Au {
 			return _CreateDirectory(path, pathIsPrepared: true);
 		}
 
+		/// <summary>
+		/// Same as createDirectoryFor, but filePath must be prepared (_PreparePath or normalize).
+		/// </summary>
+		static bool _createDirectoryForPrepared(string filePath) {
+			var path = _RemoveFilename(filePath);
+			return _CreateDirectory(path, pathIsPrepared: true);
+		}
+
 		static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null) {
 			if (exists(path, pathIsPrepared).Directory) return false;
 			if (!pathIsPrepared) path = _PreparePath(path);
@@ -1070,7 +1079,7 @@ namespace Au {
 			while (stack.Count > 0) {
 				s = stack.Pop();
 				int retry = 0;
-			g1:
+				g1:
 				bool ok = (templateDirectory == null || stack.Count > 0)
 					? Api.CreateDirectory(s, default)
 					: Api.CreateDirectoryEx(templateDirectory, s, default);
@@ -1087,10 +1096,12 @@ namespace Au {
 		internal static void ShellNotify_(uint @event, string path, string path2 = null) {
 			//ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2)); //no, this process may end soon
 			Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2);
+			//SHOULDDO: test speed. If slow, use threadpool and the process exit event.
 		}
 
 		/// <summary>
-		/// Expands environment variables (see <see cref="pathname.expand"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds <c>'\\'</c> at the end.
+		/// The same as <c>pathname.normalize(path)</c>.
+		/// Expands environment variables, throws ArgumentException if not full path, normalizes, etc.
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		static string _PreparePath(string path) {
@@ -1165,7 +1176,7 @@ namespace Au {
 		/// </example>
 		public static T waitIfLocked<T>(Func<T> f, int millisecondsTimeout = 2000) {
 			var w = new _LockedWaiter(millisecondsTimeout);
-		g1:
+			g1:
 			try { return f(); }
 			catch (IOException e) when (w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 		}
@@ -1181,7 +1192,7 @@ namespace Au {
 		/// </example>
 		public static void waitIfLocked(Action f, int millisecondsTimeout = 2000) {
 			var w = new _LockedWaiter(millisecondsTimeout);
-		g1:
+			g1:
 			try { f(); }
 			catch (IOException e) when (w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 		}
@@ -1233,7 +1244,7 @@ namespace Au {
 		}
 
 		static string _LoadIntro(string file, int ms) {
-			file = pathname.NormalizeForNET_(file);
+			file = pathname.NormalizeMinimally_(file);
 			if (ms != 0) {
 				double t = ms > 0 ? ms / 1000d : ms == -1 ? 0d : throw new ArgumentOutOfRangeException();
 				wait.forCondition(t, () => exists(file, useRawPath: true));
@@ -1278,7 +1289,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="file">
 		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
-		/// The file can exist or not; this function overwrites it. If the directory does not exist, this function creates it.
+		/// If the file exists, this function overwrites it. If the directory does not exist, this function creates it.
 		/// </param>
 		/// <param name="writer">
 		/// Callback function (lambda etc) that creates/writes/closes a temporary file. Its parameter is the full path of the temporary file, which normally does not exist.
@@ -1289,10 +1300,9 @@ namespace Au {
 		/// Directory for backup file and temporary file. If null or "" - <i>file</i>'s directory. Can contain environment variales etc.
 		/// Must be in the same drive as <i>file</i>. If the directory does not exist, this function creates it.</param>
 		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
-		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="ArgumentOutOfRangeException"><i>lockedWaitMS</i> is less than -1.</exception>
-		/// <exception cref="Exception">Exceptions of the <i>writer</i> function.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>file</i> (eg not full path) or <i>lockedWaitMS</i> (less than -1).</exception>
 		/// <exception cref="IOException">Failed to replace file. The <i>writer</i> function also can thow it.</exception>
+		/// <exception cref="Exception">Exceptions of the <i>writer</i> function.</exception>
 		/// <remarks>
 		/// The file-write functions provided by .NET and Windows API are less reliable, because:
 		/// 1. Fails if the file is temporarily open by another process or thread without sharing.
@@ -1309,16 +1319,23 @@ namespace Au {
 			_Save(file, writer, backup, tempDirectory, lockedWaitMS);
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Writes text to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllText"/>.
 		/// </summary>
+		/// <param name="file">
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
+		/// If the file exists, this function overwrites it. If the directory does not exist, this function creates it.
+		/// </param>
 		/// <param name="text">Text to write.</param>
+		/// <param name="backup">Create backup file named <i>file</i> + "~backup".</param>
+		/// <param name="tempDirectory">
+		/// Directory for backup file and temporary file. If null or "" - <i>file</i>'s directory. Can contain environment variales etc.
+		/// Must be in the same drive as <i>file</i>. If the directory does not exist, this function creates it.</param>
+		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
 		/// <exception cref="ArgumentException" />
-		/// <exception cref="Exception" />
 		/// <exception cref="IOException" />
-		/// <inheritdoc cref="save"/>
+		/// <exception cref="Exception" />
 		public static void saveText(string file, string text, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000, Encoding encoding = null) {
 			_Save(file, text ?? "", backup, tempDirectory, lockedWaitMS, encoding);
 		}
@@ -1326,25 +1343,41 @@ namespace Au {
 		/// <summary>
 		/// Writes data to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllBytes"/>.
 		/// </summary>
+		/// <param name="file">
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
+		/// If the file exists, this function overwrites it. If the directory does not exist, this function creates it.
+		/// </param>
 		/// <param name="bytes">Data to write.</param>
+		/// <param name="backup">Create backup file named <i>file</i> + "~backup".</param>
+		/// <param name="tempDirectory">
+		/// Directory for backup file and temporary file. If null or "" - <i>file</i>'s directory. Can contain environment variales etc.
+		/// Must be in the same drive as <i>file</i>. If the directory does not exist, this function creates it.</param>
+		/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException" />
-		/// <exception cref="Exception" />
 		/// <exception cref="IOException" />
-		/// <inheritdoc cref="save"/>
+		/// <exception cref="Exception" />
 		public static void saveBytes(string file, byte[] bytes, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
 			Not_.Null(bytes);
 			_Save(file, bytes, backup, tempDirectory, lockedWaitMS);
 		}
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null) {
-			file = pathname.normalize(file, flags: PNFlags.DontPrefixLongPath);
-			string s1 = tempDirectory.NE() ? file : pathname.combine(pathname.normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), pathname.getName(file), prefixLongPath: false);
+			file = _PreparePath(file);
+
+			string s1 = file;
+			if (!tempDirectory.NE()) {
+				s1 = _PreparePath(tempDirectory);
+				_CreateDirectory(s1, pathIsPrepared: true);
+				s1 = pathname.combine(s1, pathname.getName(file));
+			}
+
+			_createDirectoryForPrepared(file);
+
 			string temp = s1 + "~temp";
 			string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 
 			var w = new _LockedWaiter(lockedWaitMS);
-		g1:
+			g1:
 			try {
 				switch (data) {
 				case string text:
@@ -1360,11 +1393,10 @@ namespace Au {
 					break;
 				}
 			}
-			catch (DirectoryNotFoundException) when (_AutoCreateDir(temp)) { goto g1; }
 			catch (IOException e) when (w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 
 			w = new _LockedWaiter(lockedWaitMS);
-		g2:
+			g2:
 			string es = null;
 			if (exists(file, true).File) {
 				if (!Api.ReplaceFile(file, temp, back, 6)) es = "save"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
@@ -1375,14 +1407,8 @@ namespace Au {
 			}
 			if (es != null) {
 				int ec = lastError.code;
-				if (ec == Api.ERROR_PATH_NOT_FOUND && _AutoCreateDir(file)) goto g2;
 				if (w.ExceptionFilter(ec)) { w.Sleep(); goto g2; }
 				throw new IOException($"Failed to {es} file '{file}'. {lastError.messageFor(ec)}", ec);
-			}
-
-			static bool _AutoCreateDir(string filePath) {
-				try { return createDirectoryFor(filePath); }
-				catch { return false; }
 			}
 		}
 

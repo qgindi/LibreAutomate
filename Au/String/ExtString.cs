@@ -822,14 +822,14 @@ public static unsafe partial class ExtString {
 	/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
 	/// 
 	/// Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
-	///		The number in string can be followed by more text, like <c>"123text"</c>.
-	///		Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
-	///		Gets the end of the number part.
-	///		No exception when cannot convert.
-	///		The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
-	///		Does not depend on current culture. As minus sign recognizes '-' and '−'.
-	///		Faster.
-	///	
+	/// 	The number in string can be followed by more text, like <c>"123text"</c>.
+	/// 	Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
+	/// 	Gets the end of the number part.
+	/// 	No exception when cannot convert.
+	/// 	The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
+	/// 	Does not depend on current culture. As minus sign recognizes '-' and '−'.
+	/// 	Faster.
+	/// 
 	/// The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
 	/// The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
 	/// Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).

@@ -492,9 +492,9 @@ partial class FilesModel {
 
 	/// <summary>
 	/// If f!=_currentFile and not folder:
-	///		Opens it in editor, adds to OpenFiles, sets _currentFile, saves state later, updates UI.
-	///		Saves and hides current document.
-	///	Returns false if fails to read file or if f is folder.
+	/// - Opens it in editor, adds to OpenFiles, sets _currentFile, saves state later, updates UI.
+	/// - Saves and hides current document.
+	/// Returns false if fails to read file or if f is folder.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>

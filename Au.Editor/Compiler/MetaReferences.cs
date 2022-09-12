@@ -10,9 +10,9 @@ namespace Au.Compiler {
 	/// Temporarily keeps PortableExecutableReference objects in a cache. Except Au and .NET design-time assemblies (they are small, without code).
 	/// Single static cache is used by all MetaReferences variables.
 	/// Cache may require many MB of unmanaged memory, therefore PortableExecutableReference objects are removed and GC-collected when not used anywhere for some time. Reloading is quite fast.
-	///		A reference to a PortableExecutableReference variable prevents removing it from cache and GC-collecting.
-	///		A reference to a MetaReferences variable prevents removing/disposing its Refs items.
-	///		CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
+	/// 	A reference to a PortableExecutableReference variable prevents removing it from cache and GC-collecting.
+	/// 	A reference to a MetaReferences variable prevents removing/disposing its Refs items.
+	/// 	CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
 	/// MetaReferences variables can be created in different threads, but a variable must be used in a single thread.
 	/// </remarks>
 	class MetaReferences {

@@ -163,7 +163,7 @@ namespace Au.Types {
 		/// <param name="fileName">Filename. If null, gets from <i>file</i>.</param>
 		/// <returns>This.</returns>
 		/// <remarks>
-		///	Opens the file and stores the stream in this <b>MultipartFormDataContent</b> object. Won't auto-close it after uploading. To close files, dispose this <b>MultipartFormDataContent</b> object, for example with the 'using' like in the example. Else the file will remain opened/locked until this process exits or until next garbage collection.
+		/// Opens the file and stores the stream in this <b>MultipartFormDataContent</b> object. Won't auto-close it after uploading. To close files, dispose this <b>MultipartFormDataContent</b> object, for example with the 'using' like in the example. Else the file will remain opened/locked until this process exits or until next garbage collection.
 		/// </remarks>
 		/// <exception cref="ArgumentException">See <see cref="MultipartFormDataContent.Add(HttpContent, string, string)"/>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="filesystem.loadStream"/>.</exception>
@@ -273,9 +273,11 @@ namespace Au.Types {
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
-		/// <exception cref="Exception">Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.</exception>
+		/// <exception cref="Exception">
+		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.
+		/// If <i>headers</i> used, exceptions of <see cref="AddMany"/>.
+		/// </exception>
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
-		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
@@ -330,8 +332,10 @@ namespace Au.Types {
 		/// <param name="resultFile">File path.</param>
 		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
 		/// <returns>An <b>HttpResponseMessage</b> object that contains response headers etc. Rarely used.</returns>
-		/// <exception cref="Exception">Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/> and <see cref="Save"/>.</exception>
-		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
+		/// <exception cref="Exception">
+		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/> and <see cref="Save"/>.
+		/// If <i>headers</i> used, exceptions of <see cref="AddMany"/>.
+		/// </exception>
 		public static HttpResponseMessage Get(this HttpClient t, string url, string resultFile, string[] headers = null) {
 			Not_.Null(url, resultFile);
 			var r = Get(t, url, true, headers).Save(resultFile);
@@ -348,8 +352,10 @@ namespace Au.Types {
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
 		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
-		/// <exception cref="Exception">Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.</exception>
-		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
+		/// <exception cref="Exception">
+		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.
+		/// If <i>headers</i> used, exceptions of <see cref="AddMany"/>.
+		/// </exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");

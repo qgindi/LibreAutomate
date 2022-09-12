@@ -64,7 +64,7 @@ public struct RegisteredHotkey : IDisposable {
 	/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
-	///	<exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
+	/// <exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
 	/// <remarks>
 	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 	/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>

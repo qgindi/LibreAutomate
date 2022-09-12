@@ -29,8 +29,8 @@ static partial class Compiler {
 	/// Adds <see cref="MetaReferences.DefaultReferences"/>.
 	/// 
 	/// If f role is classFile:
-	///		If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
-	///		Else compiles but does not create output files.
+	/// 	If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
+	/// 	Else compiles but does not create output files.
 	/// </remarks>
 	public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false, Func<CanCompileArgs, bool> canCompile = null) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);

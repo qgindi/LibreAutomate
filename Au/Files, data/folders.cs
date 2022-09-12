@@ -822,7 +822,7 @@ namespace Au {
 		/// If string starts with a known/special folder path, replaces that part with %folders.FolderName%. Else returns unchanged string.
 		/// For example if string is "C:\Windows\System32\notepad.exe", returns "%folders.System%\notepad.exe".
 		/// </summary>
-		/// <inheritdoc cref="unexpandPath(string, out string, out string)"/>
+		/// <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="Pidl.ToHexString"/>).</param>
 		public static string unexpandPath(string path) {
 			if (unexpandPath(path, out var s1, out var s2)) path = $@"%{s1}%\{s2}";
 			return path;

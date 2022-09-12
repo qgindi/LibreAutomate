@@ -129,7 +129,7 @@ public unsafe class elmFinder {
 	/// 
 	/// More info in <see cref="elm"/> topic.
 	/// 
-	/// ##### About the <i>role</i> parameter
+	/// <h5>About the <i>role</i> parameter</h5>
 	/// 
 	/// Can be standard role (see <see cref="ERole"/>) like <c>"LINK"</c> or custom role like <c>"div"</c>. See <see cref="elm.Role"/>.
 	/// 
@@ -147,7 +147,7 @@ public unsafe class elmFinder {
 	/// - with flags <b>UIA</b>, <b>ClientArea</b>;
 	/// - when searching in <b>elm</b>.
 	/// 
-	/// ##### About the <i>prop</i> parameter
+	/// <h5>About the <i>prop</i> parameter</h5>
 	/// 
 	/// Format: one or more <c>"name=value"</c> strings, like <c>new("key=xxx", "@href=yyy")</c> or <c>"key=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are wildcard expressions.
 	/// 
@@ -203,7 +203,7 @@ public unsafe class elmFinder {
 	/// </summary>
 	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b>.</exception>
 	/// <remarks>
-	/// The setter creates or modifies a path (a chain of linked finders). Unlike <see cref="this[string, string, Strings, EFFlags, Func{elm, bool}, int, string]"/>, which appends to the last finder in path, this function appends to this finder.
+	/// The setter creates or modifies a path (a chain of linked finders). Unlike <see cref="this"/>, which appends to the last finder in path, this function appends to this finder.
 	/// </remarks>
 	public elmFinder Next {
 		get => _next;
@@ -293,8 +293,8 @@ public unsafe class elmFinder {
 	/// Finds the first matching descendant UI element in the window or UI element. Like <see cref="Find"/>, just different return type.
 	/// </summary>
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
-	/// <inheritdoc cref="Find()" path="/exception"/>
 	/// <remarks></remarks>
+	/// <inheritdoc cref="Find()" path="/exception"/>
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 
 	/// <summary>

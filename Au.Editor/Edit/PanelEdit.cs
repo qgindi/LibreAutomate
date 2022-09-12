@@ -40,8 +40,8 @@ class PanelEdit : Grid
 	}
 
 	/// <summary>
-	///	If f is already open, unhides its control.
-	///	Else loads f text and creates control. If fails, does not change anything.
+	/// If f is already open, unhides its control.
+	/// Else loads f text and creates control. If fails, does not change anything.
 	/// Hides current file's control.
 	/// Returns false if failed to read file.
 	/// Does not save text of previously active document.

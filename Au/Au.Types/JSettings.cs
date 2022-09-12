@@ -28,7 +28,7 @@ namespace Au.Types
 	/// }
 	/// 
 	/// 
-	/// record MySettings : JSettings {
+	/// record class MySettings : JSettings {
 	/// 	public static readonly string File = folders.ThisAppDocuments + @"MySettings.json";
 	/// 
 	/// 	public static MySettings Load() => Load<MySettings>(File);

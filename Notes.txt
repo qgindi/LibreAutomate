@@ -42,6 +42,7 @@ Run the DocFX script just to catch XML documentation errors and test how it work
 Build solution if needed to edit in above steps.
 
 May need to update some info in README.md for github. Eg the screenshot and "how to build".
+	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version.
 
 Open the .iss file in Inno Script Studio. Review, compile.
 	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.

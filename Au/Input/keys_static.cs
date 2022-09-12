@@ -437,33 +437,22 @@ public partial class keys {
 	/// </summary>
 	/// <param name="keysEtc">
 	/// Arguments of these types:
-	/// <list type="bullet">
-	/// <item><description>string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.
+	/// <br/>• string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.
 	/// Tool: in <c>""</c> string press Ctrl+Space.
-	/// </description></item>
-	/// <item><description>string with prefix "!" - literal text.
+	/// <br/>• string with prefix "!" - literal text.
 	/// Example: <c>var p = "pass"; keys.send("!user", "Tab", "!" + p, "Enter");</c>
-	/// </description></item>
-	/// <item><description>string with prefix "%" - HTML to paste. Full or fragment.
-	/// </description></item>
-	/// <item><description><see cref="clipboardData"/> - clipboard data to paste.
-	/// </description></item>
-	/// <item><description><see cref="KKey"/> - a single key.
+	/// <br/>• string with prefix "%" - HTML to paste. Full or fragment.
+	/// <br/>• <see cref="clipboardData"/> - clipboard data to paste.
+	/// <br/>• <see cref="KKey"/> - a single key.
 	/// Example: <c>keys.send("Shift+", KKey.Left, "*3");</c> is the same as <c>keys.send("Shift+Left*3");</c>.
-	/// </description></item>
-	/// <item><description>int - sleep milliseconds. Max 10000.
+	/// <br/>• int - sleep milliseconds. Max 10000.
 	/// Example: <c>keys.send("Left", 500, "Right");</c>
-	/// </description></item>
-	/// <item><description><see cref="Action"/> - callback function.
+	/// <br/>• <see cref="Action"/> - callback function.
 	/// Example: <c>Action click = () => mouse.click(); keys.send("Shift+", click);</c>
-	/// </description></item>
-	/// <item><description><see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.
+	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.
 	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>
 	/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
-	/// </description></item>
-	/// <item><description>char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator ^.
-	/// </description></item>
-	/// </list>
+	/// <br/>• char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator ^.
 	/// </param>
 	/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
@@ -764,6 +753,7 @@ public partial class keys {
 	public static void send([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		new keys(opt.key).Add(keysEtc).SendIt();
 	}
+	//CONSIDER: move most of Remarks to Articles. Also make the param doc smaller, and move the big list to Remarks.
 
 	/// <summary>
 	/// Generates virtual keystrokes. Like <see cref="send"/>, but without reliability features: delays, user input blocking, resetting modifiers/CapsLock.

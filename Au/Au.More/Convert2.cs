@@ -251,9 +251,9 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// AES-encrypts a byte[] or string. Returns Base64 string.
+	/// AES-encrypts a byte[] or string.
+	/// Calls <see cref="AesEncryptB(object, object)"/> and converts the returned byte[] to Base64 string.
 	/// </summary>
-	/// <inheritdoc cref="AesEncryptB(object, object)"/>
 	/// <example>
 	/// <code><![CDATA[
 	/// var data = "Encryption example.";
@@ -264,13 +264,15 @@ public static unsafe class Convert2 {
 	/// print.it(dec);
 	/// ]]></code>
 	/// </example>
+	/// <inheritdoc cref="AesEncryptB(object, object)"/>
 	public static string AesEncryptS(object data, object key) {
 		Not_.Null(data, key);
 		return Convert.ToBase64String(AesEncryptB(data, key));
 	}
 
 	/// <summary>
-	/// AES-encrypts a byte[] or string. Returns Base64 string.
+	/// AES-encrypts a byte[] or string.
+	/// Calls <see cref="AesEncryptB(object, object, out byte[])"/> and converts the returned byte[] to Base64 string.
 	/// </summary>
 	/// <inheritdoc cref="AesEncryptB(object, object, out byte[])"/>
 	public static string AesEncryptS(object data, object key, out byte[] IV) {
@@ -296,7 +298,8 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// AES-decrypts data. Returns string.
+	/// AES-decrypts data.
+	/// Calls <see cref="AesDecryptB(object, object, byte[])"/> and converts the returned byte[] to string.
 	/// </summary>
 	/// <inheritdoc cref="AesDecryptB(object, object, byte[])"/>
 	public static string AesDecryptS(object data, object key, byte[] IV = null) {

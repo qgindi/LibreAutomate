@@ -4,15 +4,13 @@
       "src": [
         {
           "src": "C:/Temp/Au/DocFX/source/",
-          //"src": "C:/Temp/Au/DocFX/dll/",
-          //"src": "../../../_/",
           "files": [
             "Au.csproj"
-            //"Au.dll" //DocFX bug: "Error extracting metadata for Au.dll: System.ArgumentException: Illegal characters in path". Even if the XML file is almost empty.
           ]
         }
       ],
       "dest": "api",
+      "shouldSkipMarkup": true,
       "filter": "filter.yml",
       "disableGitFeatures": false,
       "disableDefaultFilter": false
@@ -50,8 +48,7 @@
           "apidoc/**.md"
         ],
         "exclude": [
-          "obj/**",
-          "_site/**"
+          "obj/**"
         ]
       }
     ],
@@ -62,7 +59,7 @@
       "_disableAffix": true,
       "_disableContribution": true
     },
-    "dest": "_site",
+    "dest": "C:/Temp/Au/DocFX/site-temp",
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [

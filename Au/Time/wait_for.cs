@@ -227,8 +227,8 @@ namespace Au
 		/// <summary>
 		/// The same as <see cref="Wait_(long, WHFlags, IntPtr[])"/> + can wait for message and variable.
 		/// If msgCallback is not null, calls it when dispatching messages. If returns true, stops waiting and returns handles?.Length.
-		///		If it is WPMCallback, calls it before dispatching a posted message.
-		///		If it is Func{bool}, calls it after dispatching one or more messages.
+		/// 	If it is WPMCallback, calls it before dispatching a posted message.
+		/// 	If it is Func{bool}, calls it after dispatching one or more messages.
 		/// If stopVar is not null, when it becomes true stops waiting and returns handles?.Length + 1.
 		/// </summary>
 		internal static unsafe int Wait_(long timeMS, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles) {

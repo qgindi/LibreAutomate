@@ -171,17 +171,20 @@
 			return result != null;
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Shows "Open" or "Select Folder" dialog that allows to select multiple items.
 		/// </summary>
 		/// <param name="result">Full paths of the selected files.</param>
-		/// <inheritdoc cref="ShowOpen(out string, AnyWnd, bool, bool, bool, bool)"/>
+		/// <param name="owner">Owner window. Optional.</param>
+		/// <param name="selectFolder">Select folders, not files.</param>
+		/// <param name="onlyFilesystem">The dialog allows to select only file system items (files, folders), not other shell items or URLs. Default true. If false, other shell items are returned like ":: ITEMIDLIST"; see <see cref="Pidl"/>.</param>
+		/// <param name="fileMustExist">The dialog can return only existing items. Default true.</param>
+		/// <param name="previewPane">Display the preview pane.</param>
+		/// <returns>true on OK, false on Cancel or error.</returns>
 		public bool ShowOpen(out string[] result, AnyWnd owner = default, bool selectFolder = false, bool onlyFilesystem = true, bool fileMustExist = true, bool previewPane = false) {
 			result = _ShowOpen(owner, true, selectFolder, onlyFilesystem, fileMustExist, previewPane) as string[];
 			return result != null;
 		}
-#pragma warning restore CS1573
 
 		/// <summary>
 		/// Shows "Save As" dialog.

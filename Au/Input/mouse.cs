@@ -139,6 +139,11 @@ namespace Au {
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
+		/// 
+		/// May fail to move the cursor to the specified x y. Some reasons:
+		/// - Another thread blocks or modifies mouse input (API <b>BlockInput</b>, mouse hooks, frequent API <b>SendInput</b> etc).
+		/// - The active window belongs to a process of higher [](xref:uac) integrity level.
+		/// - Some application called API <b>ClipCursor</b>. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).
 		/// </remarks>
 		public static POINT move(wnd w, Coord x = default, Coord y = default, bool nonClient = false) {
 			WaitForNoButtonsPressed_();
@@ -153,10 +158,13 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position <i>x y</i> relative to object <i>obj</i>, which can be <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).
+		/// Moves the cursor (mouse pointer) to the position <i>x y</i> relative to UI object <i>obj</i>.
 		/// </summary>
-		/// <returns></returns>
-		/// <inheritdoc cref="move(wnd, Coord, Coord, bool)"/>
+		/// <param name="obj">Can be <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>)</param>
+		/// <param name="x">X coordinate relative to <i>obj</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate relative to <i>obj</i>. Default - center.</param>
+		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
 		public static void move(MObject obj, Coord x = default, Coord y = default) {
 			switch (obj.Value) {
 			case wnd w:
@@ -205,14 +213,6 @@ namespace Au {
 		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
-		/// <remarks>
-		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
-		/// 
-		/// May fail to move the cursor to the specified x y. Some reasons:
-		/// - Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc).
-		/// - The active window belongs to a process of higher [](xref:uac) integrity level.
-		/// - Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).
-		/// </remarks>
 		public static POINT move(Coord x, Coord y) {
 			WaitForNoButtonsPressed_();
 			var p = Coord.Normalize(x, y);
@@ -230,9 +230,6 @@ namespace Au {
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
-		/// <remarks>
-		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
-		/// </remarks>
 		/// <example>
 		/// Save-restore mouse position.
 		/// <code><![CDATA[
@@ -565,9 +562,15 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button at position <i>x y</i> relative to object <i>obj</i>, which can be <b>wnd</b>, <b>elm</b> (<see cref="elm.MouseClick"/>), <b>uiimage</b> (<see cref="uiimage.MouseClick"/>), <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).
+		/// Clicks, double-clicks, presses or releases a mouse button at position <i>x y</i> relative to UI object <i>obj</i>.
 		/// </summary>
-		/// <inheritdoc cref="clickEx(MButton, wnd, Coord, Coord, bool)"/>
+		/// <param name="button">Button and action.</param>
+		/// <param name="obj">Can be <b>wnd</b>, <b>elm</b> (<see cref="elm.MouseClick"/>), <b>uiimage</b> (<see cref="uiimage.MouseClick"/>), <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).</param>
+		/// <param name="x">X coordinate relative to <i>obj</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate relative to <i>obj</i>. Default - center.</param>
+		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="move(wnd, Coord, Coord, bool)"/>.</exception>
+		/// <exception cref="AuWndException">x y is not in the window (read more in Remarks).</exception>
 		public static MRelease clickEx(MButton button, MObject obj, Coord x = default, Coord y = default) {
 			switch (obj.Value) {
 			case wnd w:
@@ -604,7 +607,6 @@ namespace Au {
 		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
 		/// <remarks>
 		/// To move the mouse cursor, calls <see cref="move(Coord, Coord)"/>.
-		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
 		/// </remarks>
 		public static MRelease clickEx(MButton button, Coord x, Coord y) {
 			POINT p = move(x, y);
@@ -622,7 +624,10 @@ namespace Au {
 		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="move(Coord, Coord)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="move(POINT)"/>.</exception>
+		/// <remarks>
+		/// To move the mouse cursor, calls <see cref="move(POINT)"/>.
+		/// </remarks>
 		/// <example>
 		/// Click at 100 200.
 		/// <code><![CDATA[

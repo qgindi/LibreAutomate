@@ -965,7 +965,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// Show toolbar Toolbar_Chrome1 on a Chrome window when window name starts with "NuGet".
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] =
-	///		ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome1, "NuGet*");
+	/// 	ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome1, "NuGet*");
 	/// ]]></code>
 	/// Toolbar Toolbar_Chrome1 for the above example.
 	/// <code><![CDATA[

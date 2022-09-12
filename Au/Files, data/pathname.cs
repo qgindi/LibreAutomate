@@ -217,10 +217,10 @@ namespace Au {
 		/// </summary>
 		/// <param name="s1">First part. Usually a directory.</param>
 		/// <param name="s2">Second part. Usually a filename or relative path.</param>
-		/// <param name="s2CanBeFullPath">s2 can be full path. If it is, ignore s1 and return s2 with expanded environment variables. If false (default), simply combines s1 and s2.</param>
+		/// <param name="s2CanBeFullPath"><i>s2</i> can be full path. If it is, ignore <i>s1</i> and return <i>s2</i> with expanded environment variables. If false (default), simply combines <i>s1</i> and <i>s2</i>.</param>
 		/// <param name="prefixLongPath">Call <see cref="prefixLongPathIfNeed"/> which may prepend <c>@"\\?\"</c> if the result path is very long. Default true.</param>
 		/// <remarks>
-		/// If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
+		/// If <i>s1</i> and <i>s2</i> are null or "", returns "". Else if <i>s1</i> is null or "", returns <i>s2</i>. Else if <i>s2</i> is null or "", returns <i>s1</i>.
 		/// Does not expand environment variables. For it use <see cref="expand"/> before, or <see cref="normalize"/> instead. Path that starts with an environment variable here is considerd not full path.
 		/// Similar to <see cref="Path.Combine"/>. Main differences: has some options; supports null arguments.
 		/// </remarks>
@@ -312,33 +312,32 @@ namespace Au {
 		/// Makes normal full path from path that can contain special substrings etc.
 		/// </summary>
 		/// <param name="path">Any path.</param>
-		/// <param name="defaultParentDirectory">If path is not full path, combine it with defaultParentDirectory to make full path.</param>
+		/// <param name="defaultParentDirectory">If <i>path</i> is not full path, combine it with <i>defaultParentDirectory</i> to make full path.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">path is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
 		/// <remarks>
 		/// The sequence of actions:
-		/// 1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="expand"/>.
-		/// 2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
-		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with <c>expand(defaultParentDirectory)</c>.
-		/// 4. If path is not full path, throws exception.
+		/// 1. If <i>path</i> starts with '%' character, expands environment variables and special folder names. See <see cref="expand"/>.
+		/// 2. If <i>path</i> is not full path but looks like URL, and used flag <b>CanBeUrl</b>, returns <i>path</i>.
+		/// 3. If <i>path</i> is not full path, and <i>defaultParentDirectory</i> is not null/"", combines path with <c>expand(defaultParentDirectory)</c>.
+		/// 4. If <i>path</i> is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
-		/// 6. If no flag DontExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
-		/// 7. If no flag DontRemoveEndSeparator, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
+		/// 6. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
+		/// 7. If no flag <b>DontRemoveEndSeparator</b>, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
 		/// 8. Appends <c>'\\'</c> character if ends with a drive name (eg <c>"C:"</c> -> <c>@"C:\"</c>).
-		/// 9. If no flag DontPrefixLongPath, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
+		/// 9. If no flag <b>DontPrefixLongPath</b>, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, trims <c>'\\'</c> at the end if need.
 		/// </remarks>
 		public static string normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0) {
-			path = expand(path);
-			if (!isFullPath(path)) { //note: not EEV
+			if (!isFullPathExpand(ref path)) {
 				if (0 != (flags & PNFlags.CanBeUrlOrShell)) if (IsShellPathOrUrl_(path)) return path;
 				if (defaultParentDirectory.NE()) goto ge;
 				path = Combine_(expand(defaultParentDirectory), path);
 				if (!isFullPath(path)) goto ge;
 			}
 
-			return Normalize_(path, flags, true);
+			return Normalize_(path, flags, noExpandEV: true);
 		ge:
 			throw new ArgumentException($"Not full path: '{path}'.");
 		}
@@ -370,29 +369,17 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Prepares path for passing to API that support "..", DOS path etc.
-		/// Calls Expand, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws exception if !IsFullPath(path).
+		/// Prepares path for passing to API and .NET functions that support "..", DOS path etc.
+		/// Calls expand, _AddRemoveSep, prefixLongPathIfNeed. By default throws exception if !isFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
-		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath) {
+		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath = true) {
 			var s = expand(path);
 			Debug_.PrintIf(IsShellPathOrUrl_(s), s);
 			if (throwIfNotFullPath && !isFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			s = _AddRemoveSep(s);
 			s = prefixLongPathIfNeed(s);
 			return s;
-		}
-
-		/// <summary>
-		/// Prepares path for passing to .NET file functions.
-		/// Calls Expand, _AddRemoveSep. Throws if !IsFullPath(path).
-		/// </summary>
-		/// <exception cref="ArgumentException">Not full path.</exception>
-		internal static string NormalizeForNET_(string path) {
-			var s = expand(path);
-			Debug_.PrintIf(IsShellPathOrUrl_(s), s);
-			if (!isFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
-			return _AddRemoveSep(s);
 		}
 
 		/// <summary>

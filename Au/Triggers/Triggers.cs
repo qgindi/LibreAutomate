@@ -14,8 +14,8 @@
 /// <code>
 /// Triggers.Hotkey["Ctrl+K"] = o => print.it(o);
 /// Triggers.Hotkey["Ctrl+Shift+K"] = o => {
-///		print.it("This is a trigger action (lambda function).");
-///		print.it($"It runs when you press {o}.");
+/// 	print.it("This is a trigger action (lambda function).");
+/// 	print.it($"It runs when you press {o}.");
 /// };
 /// Triggers.Run();
 /// </code>

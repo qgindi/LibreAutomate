@@ -513,7 +513,7 @@ namespace Au.Controls
 
 		///
 		public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
-			file = pathname.NormalizeForNET_(file);
+			file = pathname.NormalizeMinimally_(file);
 			using var stream = File.OpenWrite(file);
 			XamlImageToIconFile(stream, image, sizes);
 		}

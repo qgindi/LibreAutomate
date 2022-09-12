@@ -1,3 +1,5 @@
+//TODO: does not detect regex in code like: regexp _rxExample = new(@"...");
+
 using Au.Controls;
 
 using Microsoft.CodeAnalysis.CSharp;

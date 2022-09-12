@@ -1,5 +1,5 @@
 - name: Home
-  href: /
+  href: index.md
 - name: Library
   href: api/
   homepage: api/index.md

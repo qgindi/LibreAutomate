@@ -8,10 +8,10 @@ namespace Au.More
 	public static class StringUtil
 	{
 		/// <summary>
-		/// Parses a function parameter that can optionally have a "***name " prefix, like "***value xyz".
-		/// Returns: 0 - s does not start with "***"; i+1 - s starts with "***names[i] "; -1 - s is invalid.
+		/// Parses a function parameter that can optionally have a <c>"***name "</c> prefix, like <c>"***value xyz"</c>.
+		/// Returns: 0 - s does not start with <c>"***"</c>; i+1 - s starts with <c>"***names[i] "</c>; -1 - s is invalid.
 		/// </summary>
-		/// <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged. Can be null.</param>
+		/// <param name="s">Parameter. If starts with <c>"***"</c> and is valid, receives the 'value' part; else unchanged. Can be null.</param>
 		/// <param name="names">List of supported 'name'.</param>
 		/// <remarks>
 		/// Used to parse parameters like <i>name</i> of <see cref="wnd.Child"/>.

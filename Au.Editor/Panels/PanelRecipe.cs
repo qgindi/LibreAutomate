@@ -76,10 +76,13 @@ class PanelRecipe : DockPanel {
 		var ac = new List<(string code, int offset8, int len8)>();
 		int iCode = 0;
 		foreach (var m in code.RxFindAll(@"(?ms)^(?:///(?!=/)\N*\R*)+|^/\*\*.+?\*/\R*")) {
+			//print.it("--------");
 			//print.it(m);
+			if (code.Eq(m.Start, "/// <summary>")) continue;
+			int textTo = m.End, i = code.Find("\n/// <summary>", m.Start..m.End); if (i >= 0) textTo = i + 1;
+
 			_Code(iCode, m.Start);
-			iCode = m.End;
-			_Text(m.Start, m.End);
+			_Text(m.Start, iCode = textTo);
 		}
 		_Code(iCode, code.Length);
 		_usings = usings?.ToString();

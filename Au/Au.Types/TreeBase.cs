@@ -405,7 +405,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <exception cref="XmlException">An error occurred while parsing the XML.</exception>
 	/// <example><see cref="TreeBase{T}"/></example>
 	protected static T XmlLoad(string file, XmlNodeReader nodeReader) {
-		file = pathname.NormalizeForNET_(file);
+		file = pathname.NormalizeMinimally_(file);
 		var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
 		using var r = filesystem.waitIfLocked(() => XmlReader.Create(file, xs));
 		return XmlLoad(r, nodeReader);
@@ -454,7 +454,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// </remarks>
 	/// <example><see cref="TreeBase{T}"/></example>
 	protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null) {
-		file = pathname.NormalizeForNET_(file);
+		file = pathname.NormalizeMinimally_(file);
 		sett ??= new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
 		filesystem.save(file, temp => {
 			using var x = XmlWriter.Create(temp, sett);
