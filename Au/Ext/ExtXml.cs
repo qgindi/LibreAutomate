@@ -319,7 +319,7 @@ namespace Au.More
 
 		static XContainer _Load(string file, LoadOptions options, bool doc) {
 			if (file.Starts('<')) return _Load2(file, options, doc, true);
-			file = pathname.NormalizeForNET_(file);
+			file = pathname.NormalizeMinimally_(file);
 			return filesystem.waitIfLocked(() => _Load2(file, options, doc, false));
 
 			static XContainer _Load2(string file, LoadOptions options, bool doc, bool isString) {

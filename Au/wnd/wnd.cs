@@ -34,19 +34,19 @@
 	public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 #if false
 		/// Why wnd is struct, not class:
-		///		Advantages:
-		///		- Lightweight. Same as nint (8 or 4 bytes).
-		///		- Easier to create overloaded functions that have a window parameter. If it was a class, then a null argument could be ambiguous if eg could also be a string etc.
-		///		- When a find-window function does not find the window, calling next function (without checking the return value) does not throw null-reference exception. Instead the function can throw a more specific exception or just return false etc.
-		///		- The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.
-		///		- Code where a window argument is default(wnd) is more clear. If it would be null, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.
-		///		- In my experience, it makes programming/scripting easier that if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a 'not found' exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/nonthrowing overloads).
-		///		- Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET DateTime is struct.
-		///		
-		///		Disadvantages:
-		///		- Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because wnd has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like x.NewClassMethod() and x.w.WndMethod(); anyway, in most cases we'll need the new window classes only for the functions that they add, not for wnd functions, eg we would use a class ButtonWnd mostly only for button functions, not for general window functions.
-		///		- In some cases C# does not allow to call a property-set function. wnd has few such functions, maybe none.
-		///		
+		/// 	Advantages:
+		/// 	- Lightweight. Same as nint (8 or 4 bytes).
+		/// 	- Easier to create overloaded functions that have a window parameter. If it was a class, then a null argument could be ambiguous if eg could also be a string etc.
+		/// 	- When a find-window function does not find the window, calling next function (without checking the return value) does not throw null-reference exception. Instead the function can throw a more specific exception or just return false etc.
+		/// 	- The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.
+		/// 	- Code where a window argument is default(wnd) is more clear. If it would be null, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.
+		/// 	- In my experience, it makes programming/scripting easier that if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a 'not found' exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/nonthrowing overloads).
+		/// 	- Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET DateTime is struct.
+		/// 	
+		/// 	Disadvantages:
+		/// 	- Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because wnd has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like x.NewClassMethod() and x.w.WndMethod(); anyway, in most cases we'll need the new window classes only for the functions that they add, not for wnd functions, eg we would use a class ButtonWnd mostly only for button functions, not for general window functions.
+		/// 	- In some cases C# does not allow to call a property-set function. wnd has few such functions, maybe none.
+		/// 	
 		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when wnd used.
 #endif
 

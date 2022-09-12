@@ -34,8 +34,8 @@ static class CommandLine {
 	/// <summary>
 	/// Processes command line of this program. Called after partial initialization.
 	/// Returns true if this instance must exit:
-	///		1. If finds previous program instance; then sends the command line to it if need.
-	///		2. If incorrect command line.
+	/// 	1. If finds previous program instance; then sends the command line to it if need.
+	/// 	2. If incorrect command line.
 	/// </summary>
 	public static bool ProgramStarted2(string[] args) {
 		string s = null;

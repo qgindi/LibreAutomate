@@ -12,7 +12,7 @@ namespace Au;
 /// Not thread-safe. All functions must be called from the same thread that created the <b>toolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 /// </remarks>
 public partial class toolbar : MTBase {
-	record _Settings : JSettings {
+	record class _Settings : JSettings {
 		public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
 
 		public TBAnchor anchor = TBAnchor.TopLeft;
@@ -404,7 +404,7 @@ public partial class toolbar : MTBase {
 	}
 
 	/// <summary>
-	/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="Close"/>.
+	/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <see cref="Close"/>.
 	/// </summary>
 	/// <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
 	/// <param name="reason">A user-defined reason to hide/unhide. Can be <see cref="TBHide.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>

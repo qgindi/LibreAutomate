@@ -275,6 +275,8 @@ class CiAutocorrect {
 						//cd.pos--; //insert " before ", and let caret be after ""
 						//tempRangeFrom = 0;
 					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken && token.Parent.NoClosingQuote()) {
+						//TODO: often does not work. Depends on code after it.
+						//	Try to move this to SciBeforeCharAdded. And add "\n\n\"\"\""; now """""" is invalid.
 						int i = span.Start;
 						while (code[i] == '$') i++;
 						int iq = i;

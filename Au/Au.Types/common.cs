@@ -124,7 +124,7 @@
 namespace System.Runtime.CompilerServices //the attribute must be in this namespace
 {
 	///
-	[Au.Types.NoDoc]
+	[NoDoc]
 	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 	public class IgnoresAccessChecksToAttribute : Attribute
 	{

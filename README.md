@@ -13,7 +13,7 @@ Editor window
 ![window](https://www.quickmacros.com/au/help/images/window.png#1 "Editor window")
 
 ## How to build
-Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 SDK.
+Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 or 11 SDK.
 
 1. Open Au.sln in Visual Studio. Ignore "failed to load project" errors.
 2. Build solution (not just the startup project).

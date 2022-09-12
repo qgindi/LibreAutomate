@@ -337,10 +337,14 @@ static class CiUtil {
 	/// From C# code creates a Roslyn workspace+project+document for code analysis.
 	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
 	/// </summary>
-	public static Document CreateDocumentFromCode(string code, bool needSemantic) {
+	public static Document CreateDocumentFromCode(string code, bool needSemantic)
+		=> CreateDocumentFromCode(code, needSemantic, out _);
+
+	//TODO: need to dispose workspaces. Else huge memory leaks, never released.
+	public static Document CreateDocumentFromCode(string code, bool needSemantic, out AdhocWorkspace ws) {
 		ProjectId projectId = ProjectId.CreateNewId();
 		DocumentId documentId = DocumentId.CreateNewId(projectId);
-		var ws = new AdhocWorkspace();
+		ws = new AdhocWorkspace();
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
 			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
 			new CSharpParseOptions(LanguageVersion.Preview),
@@ -371,6 +375,45 @@ global using Au.More;
 		}
 		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
 	}
+
+//	/// <summary>
+//	/// From C# code creates a Roslyn workspace+project+document for code analysis.
+//	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
+//	/// </summary>
+//	public static Document CreateDocumentFromCode(string code, bool needSemantic) {
+//		ProjectId projectId = ProjectId.CreateNewId();
+//		DocumentId documentId = DocumentId.CreateNewId(projectId);
+//		var ws = new AdhocWorkspace();
+//		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
+//			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
+//			new CSharpParseOptions(LanguageVersion.Preview),
+//			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
+//			);
+//		var sol = ws.CurrentSolution.AddProject(pi);
+//		if (needSemantic) {
+//			string code2 = @"global using Au;
+//global using Au.Types;
+//global using System;
+//global using System.Collections.Generic;
+//global using System.Linq;
+//global using System.Collections.Concurrent;
+//global using System.Diagnostics;
+//global using System.Globalization;
+//global using System.IO;
+//global using System.IO.Compression;
+//global using System.Runtime.CompilerServices;
+//global using System.Runtime.InteropServices;
+//global using System.Text;
+//global using System.Text.RegularExpressions;
+//global using System.Threading;
+//global using System.Threading.Tasks;
+//global using Microsoft.Win32;
+//global using Au.More;
+//";
+//			sol = sol.AddDocument(DocumentId.CreateNewId(projectId), "g.cs", code2);
+//		}
+//		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
+//	}
 
 	/// <summary>
 	/// Creates Compilation from a file or project folder.

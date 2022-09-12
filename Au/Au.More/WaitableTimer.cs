@@ -27,7 +27,6 @@
 		/// </summary>
 		/// <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="Create"/>.</param>
 		/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
-		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		/// <param name="inheritHandle"></param>
 		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="lastError"/>.</param>
 		/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>

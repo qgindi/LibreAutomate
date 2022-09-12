@@ -51,27 +51,27 @@
 		/// </remarks>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
-		/// <code>
+		/// <code><![CDATA[
 		/// wnd w = wnd.find("* Notepad");
 		/// if(w.Is0) { print.it("not found"); return; }
-		/// </code>
+		/// ]]></code>
 		/// Try to find Notepad window. Throw NotFoundException if not found.
-		/// <code>
+		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(0, "* Notepad");
-		/// </code>
+		/// ]]></code>
 		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time.
-		/// <code>
+		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(3, "* Notepad");
-		/// </code>
+		/// ]]></code>
 		/// Wait for Notepad window max 3 seconds. Return if not found during that time.
-		/// <code>
+		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(-3, "* Notepad");
 		/// if(w.Is0) { print.it("not found"); return; }
-		/// </code>
+		/// ]]></code>
 		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time. When found, wait max 1 s until becomes active, then activate.
-		/// <code>
+		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(3, "* Notepad").Activate(1);
-		/// </code>
+		/// ]]></code>
 		/// </example>
 		public static wnd find(
 			[ParamString(PSFormat.Wildex)] string name = null,

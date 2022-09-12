@@ -1,7 +1,5 @@
 //SHOULDDO: winevents EEvent.SYSTEM_MENUSTART, EEvent.SYSTEM_MENUEND, EEvent.SYSTEM_MENUPOPUPSTART, EEvent.SYSTEM_MENUPOPUPEND
 
-//TODO: popupMenu.MenuItem -> PMItem. And TBItem.
-
 namespace Au;
 
 /// <summary>

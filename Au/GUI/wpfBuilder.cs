@@ -919,7 +919,7 @@ namespace Au {
 		}
 		//	/// <param name="clickSplit">
 		//	/// If not null, creates split-button. Action to call when the arrow part clicked. Example:
-		//	/// <para><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c></para>
+		//	/// <br/><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c>
 		//	/// </param>
 
 		/// <summary>
@@ -951,7 +951,7 @@ namespace Au {
 		}
 		//	/// <param name="clickSplit">
 		//	/// If not null, creates split-button. Action to call when the arrow part clicked. Example:
-		//	/// <para><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c></para>
+		//	/// <br/><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c>
 		//	/// </param>
 
 		/// <summary>
@@ -964,9 +964,6 @@ namespace Au {
 		/// <summary>
 		/// Adds OK and/or Cancel and/or Apply buttons.
 		/// </summary>
-		/// <param name="bOK">Variable of OK button.</param>
-		/// <param name="bCancel">Variable of Cancel button.</param>
-		/// <param name="bApply">Variable of Apply button.</param>
 		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
 		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
 		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
@@ -975,6 +972,19 @@ namespace Au {
 		/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
 		/// See also event <see cref="OkApply"/>.
 		/// </remarks>
+		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
+			=> AddOkCancel(out _, out _, out _, ok, cancel, apply, stackPanel);
+
+		/// <summary>
+		/// Adds OK and/or Cancel and/or Apply buttons.
+		/// </summary>
+		/// <param name="bOK">Variable of OK button.</param>
+		/// <param name="bCancel">Variable of Cancel button.</param>
+		/// <param name="bApply">Variable of Apply button.</param>
+		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
+		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
+		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
+		/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If null (default), adds if not already in a stack panel, except when there is 1 button.</param>
 		public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
 			if (n == 0) throw new ArgumentNullException();
@@ -986,10 +996,6 @@ namespace Au {
 			if (stack) End();
 			return this;
 		}
-
-		/// <inheritdoc cref="AddOkCancel(out Button, out Button, out Button, string, string, string, bool?)"/>
-		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
-			=> AddOkCancel(out _, out _, out _, ok, cancel, apply, stackPanel);
 
 		/// <summary>
 		/// Adds <see cref="Separator"/> control.
@@ -1376,11 +1382,11 @@ namespace Au {
 		/// <summary>
 		/// Sets tooltip text/content/object of the last added element. See <see cref="FrameworkElement.ToolTip"/>.
 		/// </summary>
+		/// <example>
 		/// Text box with simple tooltip.
 		/// <code><![CDATA[
 		/// b.R.Add("Example", out TextBox _).Tooltip("Tooltip text");
 		/// ]]></code>
-		/// <example>
 		/// Tooltip with content created by another wpfBuilder.
 		/// <code><![CDATA[
 		/// var btt = new wpfBuilder() //creates tooltip content
@@ -1554,7 +1560,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 		/// <param name="binding">A binding object.</param>
-		///	<param name="r">The return value of <b>SetBinding</b>.</param>
+		/// <param name="r">The return value of <b>SetBinding</b>.</param>
 		public wpfBuilder Bind(DependencyProperty property, BindingBase binding, out BindingExpressionBase r) {
 			r = Last.SetBinding(property, binding);
 			return this;
@@ -1822,7 +1828,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="index">0-based item index</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Selector</b>.</exception>
-		/// <seealso cref="Items"/>.
+		/// <seealso cref="Items"/>
 		public wpfBuilder Select(int index) {
 			var c = Last as Selector ?? throw new NotSupportedException("Items(): Last added must be Selector, for example ComboBox or ListBox");
 			c.SelectedIndex = index;
@@ -1834,7 +1840,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="item">An added item.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Selector</b>.</exception>
-		/// <seealso cref="Items"/>.
+		/// <seealso cref="Items"/>
 		public wpfBuilder Select(object item) {
 			var c = Last as Selector ?? throw new NotSupportedException("Items(): Last added must be Selector, for example ComboBox or ListBox");
 			c.SelectedItem = item;

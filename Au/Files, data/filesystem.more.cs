@@ -68,7 +68,7 @@ namespace Au {
 			/// <param name="path">Full path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 			/// <param name="fileId"></param>
 			public static unsafe bool getFileId(string path, out FileId fileId) {
-				path = pathname.NormalizeMinimally_(path, false);
+				path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
 				fileId = new FileId();
 				using var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
 				if (h.Is0) return false;
@@ -337,7 +337,7 @@ namespace Au {
 	}
 
 	namespace Types {
-#pragma warning disable CS1574 //VS bug: after converting this struct to simple record struct does not recognize getFileId
+#pragma warning disable CS1574 //VS bug: after converting this struct to this simple form does not recognize getFileId
 		/// <summary>
 		/// Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="filesystem.more.getFileId"/>.
 		/// </summary>

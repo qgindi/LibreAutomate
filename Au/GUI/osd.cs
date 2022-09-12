@@ -225,8 +225,6 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// This text is invisible. Can be used to find OSD window. The class name is "Au.OSD"; if with shadow - "Au.OSD2".
-		/// </remarks>
-		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public string Name { get; set; }

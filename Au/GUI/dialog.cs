@@ -1014,10 +1014,10 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// If the result is still unavailable (the dialog still not closed):
-		///	- If called from the same thread that called <see cref="ShowDialog"/>, returns 0.
-		///	- If called from another thread, waits until the dialog is closed.
-		///	
-		///	Note: <see cref="ShowDialogNoWait"/> calls <see cref="ShowDialog"/> in another thread.
+		/// - If called from the same thread that called <see cref="ShowDialog"/>, returns 0.
+		/// - If called from another thread, waits until the dialog is closed.
+		/// 
+		/// Note: <see cref="ShowDialogNoWait"/> calls <see cref="ShowDialog"/> in another thread.
 		/// </remarks>
 		public int Result {
 			get {
@@ -1348,7 +1348,7 @@ namespace Au
 		/// 
 		/// This function allows you to use many dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="dialog"/> class help.
 		/// 
-		/// ##### More info about the <i>buttons</i> parameter
+		/// <h5>More info about the <i>buttons</i> parameter</h5>
 		/// 
 		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
 		/// 
@@ -1360,12 +1360,12 @@ namespace Au
 		/// 
 		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
 		/// How common buttons are different:
-		///		1. DFlags.CommandLinks does not change their style.
-		///		2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
-		///		3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
-		///		4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
-		///		5. The displayed button label is localized, ie different when the Windows UI language is not English.
-		///	
+		/// 	1. DFlags.CommandLinks does not change their style.
+		/// 	2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
+		/// 	3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
+		/// 	4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
+		/// 	5. The displayed button label is localized, ie different when the Windows UI language is not English.
+		/// 
 		/// You can use flag <see cref="DFlags.CommandLinks"/> to change the style of custom buttons.
 		/// 
 		/// See also: <see cref="SetButtons"/>.
@@ -1375,7 +1375,7 @@ namespace Au
 		/// if(1 != dialog.show("Continue?", null, "1 OK|2 Cancel", icon: DIcon.Info)) return;
 		/// print.it("OK");
 		/// 
-		/// switch(dialog.show("Save changes?", "More info.", "1 Save|2 Don't Save|0 Cancel")) {
+		/// switch (dialog.show("Save changes?", "More info.", "1 Save|2 Don't Save|0 Cancel")) {
 		/// case 1: print.it("save"); break;
 		/// case 2: print.it("don't"); break;
 		/// default: print.it("cancel"); break;
@@ -1513,8 +1513,8 @@ namespace Au
 		/// print.it(r);
 		/// 
 		/// if(!dialog.showInput(out string s, "Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Set text", onButtonClick: e => {
-		///		if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; }
-		///	})) return;
+		/// 	if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; }
+		/// })) return;
 		/// 
 		/// if(!dialog.showInput(out string s2, "Example", "Try to click OK while text is empty.", onButtonClick: e => {
 		/// 	if(e.Button == 1 && e.EditText.NE()) {

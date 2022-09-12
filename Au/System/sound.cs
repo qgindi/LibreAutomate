@@ -50,7 +50,7 @@ namespace Au {
 		/// <param name="system">Use the sound volume channel "System Sounds". Then <see cref="volume"/> isn't used.</param>
 		/// <param name="orDefault">Play default sound if the specified sound not found or does not have a .wav file assigned.</param>
 		/// <remarks>
-		///	Sounds can be changed in the Control Panel's Sound dialog.
+		/// Sounds can be changed in the Control Panel's Sound dialog.
 		/// </remarks>
 		public static bool playEvent(string name, bool async = false, bool system = false, bool orDefault = false) {
 			if (name == null) {

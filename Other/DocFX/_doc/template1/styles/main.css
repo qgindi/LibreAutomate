@@ -179,6 +179,8 @@ code {
 pre code {
     color: black;
     border: none;
+}
+pre {
 	tab-size: 4;
 	-moz-tab-size: 4;
 }

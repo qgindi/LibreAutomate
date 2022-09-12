@@ -133,7 +133,7 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
-		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
 		/// </remarks>
 		public string Mark { get; private set; }
 
@@ -450,7 +450,7 @@ namespace Au.Types
 	//	/// </summary>
 	//	/// <remarks>
 	//	/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
-	//	/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: "^(*MARK:A)((*MARK:B)a|b)c". When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+	//	/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
 	//	/// </remarks>
 	//	public string Mark { get; private set; }
 
@@ -656,7 +656,7 @@ namespace Au.Types
 		public string callout_string => _p->callout_string == null ? null : new string(_p->callout_string, 0, (int)_p->callout_string_length);
 
 		/// <summary>
-		/// The most recently passed (*MARK), (*PRUNE), or (*THEN) item in the match, or null if no such items have been passed.
+		/// The most recently passed <c>(*MARK)</c>, <c>(*PRUNE)</c>, or <c>(*THEN)</c> item in the match, or null if no such items have been passed.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public string mark => _p->mark == null ? null : new string(_p->mark);
@@ -705,11 +705,11 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// Many options also can be specified in regular expression (RE):
-	/// - These can be anywhere in RE: (?i) CASELESS, (?m) MULTILINE, (?s) DOTALL, (?n) NO_AUTO_CAPTURE, (?x) EXTENDED, (?xx) EXTENDED_MORE, (?J) DUPNAMES, (?U) UNGREEDY. Can be multiple, like (?ms). Can be unset, like (?-i). RE "\Qtext\E" is like RE "text" with flag LITERAL.
-	/// - Instead of ANCHORED can be used \A or \G at the start of RE. Or ^, except in multiline mode.
-	/// - Instead of ENDANCHORED can be used \z at the end of RE. Or $, except in multiline mode.
-	/// - Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag NEVER_UTF.
-	/// - These must be at the very start and are named like flags: (*UTF), (*UCP), (*NOTEMPTY), (*NOTEMPTY_ATSTART), (*NO_AUTO_POSSESS), (*NO_DOTSTAR_ANCHOR), (*NO_START_OPT).
+	/// - These can be anywhere in RE: <c>(?i)</c> <b>CASELESS</b>, <c>(?m)</c> <b>MULTILINE</b>, <c>(?s)</c> <b>DOTALL</b>, <c>(?n)</c> <b>NO_AUTO_CAPTURE</b>, <c>(?x)</c> <b>EXTENDED</b>, <c>(?xx)</c> <b>EXTENDED_MORE</b>, <c>(?J)</c> <b>DUPNAMES</b>, <c>(?U)</c> <b>UNGREEDY</b>. Can be multiple, like <c>(?ms)</c>. Can be unset, like <c>(?-i)</c>. RE <c>"\Qtext\E"</c> is like RE <c>"text"</c> with flag <b>LITERAL</b>.
+	/// - Instead of <b>ANCHORED</b> can be used \A or \G at the start of RE. Or ^, except in multiline mode.
+	/// - Instead of <b>ENDANCHORED</b> can be used \z at the end of RE. Or $, except in multiline mode.
+	/// - Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
+	/// - These must be at the very start and are named like flags: <c>(*UTF)</c>, <c>(*UCP)</c>, <c>(*NOTEMPTY)</c>, <c>(*NOTEMPTY_ATSTART)</c>, <c>(*NO_AUTO_POSSESS)</c>, <c>(*NO_DOTSTAR_ANCHOR)</c>, <c>(*NO_START_OPT)</c>.
 	/// - More info in <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">PCRE syntax reference</see>.
 	/// 
 	/// Some of <b>RXFlags</b> flags also exist in <see cref="RXMatchFlags"/>. You can set them either when calling <b>regexp</b> constructor or when calling <b>regexp</b> functions that have parameter <i>more</i>. You can use different flags for each function call with the same <b>regexp</b> variable.

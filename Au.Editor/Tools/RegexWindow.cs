@@ -1,4 +1,7 @@
-﻿using Au.Controls;
+﻿//TODO: don't hide the window when clicked not a link. Users may want to select and copy text. Tested in the Find panel.
+//	Maybe better let it be a panel. The keys tool too.
+
+using Au.Controls;
 
 namespace Au.Tools;
 

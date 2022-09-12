@@ -1,89 +1,40 @@
 namespace Au.Types;
 
-#if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "all"; for just start index use 'i..'; many users know Range, and would have to learn about RANGE.
+#if false //test docfx preprocessing
 /// <summary>
-/// Represents a range that has start and end indexes.
+/// Sum.
+/// two
 /// </summary>
-/// <remarks>
-/// Similar to <see cref="Range"/>. Main differences:
-/// 1. The default value is whole range (like <see cref="Range.All"/>), not empty range.
-/// 2. Has implicit conversions from int and <see cref="Index"/>. It sets the start.
-/// 
-/// Used for parameters of functions that allow to specify a range (part) of a string, array or other collection. Callers can specify a range or just start index. Or callers can omit the optional parameter to use whole collection. The called function retrieves real start/end indexes with <see cref="GetRealRange"/>.
-/// </remarks>
-public record struct RANGE
-{
-	int _start;
-	int _endPlus1;
+/// <param name="A">A.</param>
+/// <param name="B">B.</param>
+public record class PublicRecord(int A, int B);
 
-	/// <summary>
-	/// Initializes a new <see cref="RANGE"/> instance with the specified starting and ending indexes.
-	/// </summary>
-	/// <param name="start">The start index of the range.</param>
-	/// <param name="end">The end index of the range. The default value -1 means that the end index will be equal to the length of the collection (string, array, etc) with which will be used this variable.</param>
-	/// <exception cref="ArgumentOutOfRangeException"><i>start</i> is less than 0 or <i>end</i> is less than -1.</exception>
-	public RANGE(int start, int end = -1)
-	{
-		if(start < 0 || end < -1) throw new ArgumentOutOfRangeException();
-		_start = start;
-		_endPlus1 = end + 1;
+record class InternalRecord_ {
+	public int A { get; set; }
+	public int B { get; set; }
+}
+
+record class InternalRecord2_(int A, int B) {
+	public int C { get; set; }
+}
+
+record class InternalRecord3_(int A, int B);
+
+public class NormalClass {
+
+	record class _Record4(int A, int B) {
+		public int C { get; set; }
 	}
 
 	/// <summary>
-	/// Initializes a new <see cref="RANGE"/> instance with the specified starting and ending indexes specified using <b>Index</b>.
+	/// Sum.
 	/// </summary>
-	public RANGE(Index start, Index end)
-	{
-		_start = start.IsFromEnd ? ~start.Value : start.Value;
-		_endPlus1 = (end.IsFromEnd ? ~end.Value : end.Value) + 1;
-	}
-
-	//rejected. Use GetRealRange instead. Now caller may not know how to interpret negative values.
-	//public int Start {
-	//	get => _start;
-	//	//set => _start = value; //not useful. Let it be immutable, like Range.
-	//}
-
-	//public int End {
-	//	get => _endPlus1 - 1;
-	//	//set => _endPlus1 = value + 1;
-	//}
-
-	/// <summary>
-	/// Gets real start and end offsets in a collection (string, array, etc) of specified length.
-	/// </summary>
-	/// <param name="length">Length of collection with which will be used this range.</param>
-	/// <exception cref="ArgumentOutOfRangeException">The result range is invalid: start is less than 0 or greater than <i>length</i>, or end is less than start or greater than length.</exception>
-	public (int start, int end) GetRealRange(int length)
-	{
-		//if(_start == 0 && _endPlus1 == 0) return (0, length); //does not make faster
-		int start = _start >= 0 ? _start : length + _start + 1;
-		int end = _endPlus1 > 0 ? _endPlus1 - 1 : length + _endPlus1;
-		if((uint)end > (uint)length || (uint)start > (uint)end) throw new ArgumentOutOfRangeException();
-		return (start, end);
-	}
-
-	///
-	public static implicit operator RANGE(int start) => new RANGE(start);
-
-	///
-	public static implicit operator RANGE(Range r) => new RANGE(r.Start, r.End);
-
-	///
-	public static implicit operator RANGE(Index start) => new RANGE(start, Index.End);
-
-	///
-	public override string ToString()
-	{
-		string op1 = _start >= 0 ? null : "^";
-		string num1 = _start == 0 ? null : (_start > 0 ? _start : ~_start).ToString();
-		string op2 = _endPlus1 >= 0 ? null : "^";
-		int end = _endPlus1 - 1;
-		string num2 = _endPlus1 == 0 ? null : (_endPlus1 > 0 ? end : ~end).ToString();
-		return op1 + num1 + ".." + op2 + num2;
-	}
+	/// <param name="i">Param.</param>
+	public void Meth(int i) { }
 }
 #endif
+
+
 
 /// <summary>
 /// Contains x or y coordinate in screen or some other rectangle that can be specified in various ways: normal, reverse, fraction, center, max.
@@ -412,22 +363,6 @@ public class PopupXY {
 }
 
 /// <summary>
-/// Font name, size and style.
-/// If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
-/// On high-DPI screen the font size will be scaled.
-/// </summary>
-public record class FontNSS(int Size = 0, string Name = null, bool Bold = false, bool Italic = false) {
-	/// <summary>
-	/// Creates font.
-	/// </summary>
-	/// <param name="dpi">DPI for scaling.</param>
-	internal NativeFont_ CreateFont(DpiOf dpi) {
-		if (Name == null) return new(dpi, Bold, Italic, Size);
-		return new(dpi, Name, Size, Bold, Italic);
-	}
-}
-
-/// <summary>
 /// Window handle.
 /// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: <b>System.Windows.DependencyObject</b> (WPF window or control), <b>System.Windows.Forms.Control</b> (<b>Form</b> or control), <b>IntPtr</b> (window handle).
 /// </summary>
@@ -504,5 +439,21 @@ public struct Strings {
 			List<string> a => a.ToArray(),
 			_ => Array.Empty<string>(), //null
 		};
+	}
+}
+
+/// <summary>
+/// Font name, size and style.
+/// If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+/// On high-DPI screen the font size will be scaled.
+/// </summary>
+public record class FontNSS(int Size = 0, string Name = null, bool Bold = false, bool Italic = false) {
+	/// <summary>
+	/// Creates font.
+	/// </summary>
+	/// <param name="dpi">DPI for scaling.</param>
+	internal NativeFont_ CreateFont(DpiOf dpi) {
+		if (Name == null) return new(dpi, Bold, Italic, Size);
+		return new(dpi, Name, Size, Bold, Italic);
 	}
 }

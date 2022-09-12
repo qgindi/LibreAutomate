@@ -492,9 +492,9 @@ namespace Au.Types {
 		/// <summary>
 		/// If this process runs as administrator, run new process as administrator too.
 		/// Without this flag, if this process runs as administrator:
-		///	- Starts new process as non-administrator from the shell process (explorer.exe).
-		///	- If it fails (for example if shell process isn't running), calls <see cref="print.warning"/> and starts new process as administrator.
-		///	- The new process does not inherit environment variables of this process.
+		/// - Starts new process as non-administrator from the shell process (explorer.exe).
+		/// - If it fails (for example if shell process isn't running), calls <see cref="print.warning"/> and starts new process as administrator.
+		/// - The new process does not inherit environment variables of this process.
 		/// </summary>
 		InheritAdmin = 16,
 

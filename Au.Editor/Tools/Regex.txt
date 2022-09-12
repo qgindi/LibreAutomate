@@ -301,7 +301,7 @@ Capturing groups have numbers starting from 1. Non-capturing groups don't have n
 
 Groups can be nested, like <.r>(group1(group2))<>.
 
-Atomic groups can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried smaller parts of it) when next regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
+Atomic groups can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried to find alternative matches) when next regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
 
 <b>Backreferences<>
 <+a \g%>\gn<>  -  reference to group n (1, 2, ...). Or <+a \%>\n<>, but can be ambiguous.
