@@ -60,10 +60,10 @@ namespace Au
 		/// </summary>
 		/// <param name="file">
 		/// Database file. Can be:
-		/// - Full path. Supports environment variables etc, see <see cref="pathname.expand"/>
-		/// - ":memory:" - create a private, temporary in-memory database.
-		/// - "" - create a private, temporary on-disk database.
-		/// - Starts with "file:" - see <google>sqlite3_open_v2</google>.
+		/// <br/>• Full path. Supports environment variables etc, see <see cref="pathname.expand"/>
+		/// <br/>• ":memory:" - create a private, temporary in-memory database.
+		/// <br/>• "" - create a private, temporary on-disk database.
+		/// <br/>• Starts with "file:" - see <google>sqlite3_open_v2</google>.
 		/// </param>
 		/// <param name="flags"><google>sqlite3_open_v2</google> flags. Default: read-write, create file if does not exist (and parent directory).</param>
 		/// <param name="sql">
@@ -608,15 +608,15 @@ namespace Au
 		/// Values that will replace <c>?</c> characters in sql.
 		/// Read about SQL parameters in SQLite website. Example: <see cref="sqlite"/>.
 		/// Supported types:
-		/// - int, uint, byte, sbyte, short, ushort - calls sqlite3_bind_int.
-		/// - bool - calls sqlite3_bind_int(true?1:0).
-		/// - long, ulong - calls sqlite3_bind_int64.
-		/// - double, float - calls sqlite3_bind_double.
-		/// - string - calls sqlite3_bind_text16.
-		/// - decimal - calls sqlite3_bind_blob64.
-		/// - Guid - calls sqlite3_bind_blob64.
-		/// - Array - calls sqlite3_bind_blob64.
-		/// - An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
+		/// <br/>• int, uint, byte, sbyte, short, ushort - calls sqlite3_bind_int.
+		/// <br/>• bool - calls sqlite3_bind_int(true?1:0).
+		/// <br/>• long, ulong - calls sqlite3_bind_int64.
+		/// <br/>• double, float - calls sqlite3_bind_double.
+		/// <br/>• string - calls sqlite3_bind_text16.
+		/// <br/>• decimal - calls sqlite3_bind_blob64.
+		/// <br/>• Guid - calls sqlite3_bind_blob64.
+		/// <br/>• Array - calls sqlite3_bind_blob64.
+		/// <br/>• An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
 		/// </param>
 		/// <exception cref="NotSupportedException">A value is of an unsupported type.</exception>
 		/// <exception cref="SLException">Failed.</exception>

@@ -139,7 +139,8 @@ class PanelRecipe : DockPanel {
 	void _SeeLinkClicked(string s) {
 		//add same namespaces as in default global.cs. Don't include global.cs because it may be modified.
 		string code = _usings + $"///<see cref='{s}'/>";
-		var document = CiUtil.CreateDocumentFromCode(code, needSemantic: true);
+		using var ws = new AdhocWorkspace();
+		var document = CiUtil.CreateDocumentFromCode(ws, code, needSemantic: true);
 		var syn = document.GetSyntaxRootAsync().Result;
 		var node = syn.FindToken(code.Length - 3 - s.Length, true).Parent.FirstAncestorOrSelf<CrefSyntax>();
 		if (node == null) return;

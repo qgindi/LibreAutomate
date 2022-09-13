@@ -28,10 +28,12 @@ public enum TAFlags : byte {
 
 	/// <summary>
 	/// Let <see cref="AutotextTriggerArgs.Replace"/> don't modify the replacement text. Without this flag it:
-	/// - If the first character of the typed text is uppercase, makes the first character of the replacement text uppercase.
-	/// - If all typed text is uppercase, makes the replacement text uppercase.
+	/// <br/>• If the first character of the typed text is uppercase, makes the first character of the replacement text uppercase.
+	/// <br/>• If all typed text is uppercase, makes the replacement text uppercase.
 	/// 
+	/// <para>
 	/// Also does not modify if used flag <b>MatchCase</b> or HTML.
+	/// </para>
 	/// </summary>
 	ReplaceRaw = 4,
 
@@ -819,8 +821,8 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// </summary>
 	/// <param name="items">
 	/// Menu items. Any number of arguments of types:
-	/// - string - the replacement text and menu item label. Can contain tooltip like <c>"Text\0 Tooltip"</c>.
-	/// - <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
+	/// <br/>• string - the replacement text and menu item label. Can contain tooltip like <c>"Text\0 Tooltip"</c>.
+	/// <br/>• <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
 	/// </param>
 	/// <remarks>
 	/// Keyboard:

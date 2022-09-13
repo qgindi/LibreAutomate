@@ -1,4 +1,4 @@
-﻿namespace Au.More {
+namespace Au.More {
 	/// <summary>
 	/// Memory buffer on stack with ability to expand and use heap memory.
 	/// Can be used for calling Windows API or building arrays.
@@ -148,9 +148,9 @@
 		/// <param name="s">Receives the result string if succeeded, else <i>sDefault</i> (default null).</param>
 		/// <param name="flags">
 		/// Use if the API function isn't like this:
-		/// - If succeeds, returns string length without terminating null character.
-		/// - If buffer too small, returns required buffer length.
-		/// - If fails, returns 0.
+		/// <br/>• If succeeds, returns string length without terminating null character.
+		/// <br/>• If buffer too small, returns required buffer length.
+		/// <br/>• If fails, returns 0.
 		/// </param>
 		/// <param name="sDefault">Set <i>s</i> = this string if buffer too small or <i>r</i> &lt; 1 or if the retrieved string == this string (avoid creating new string).</param>
 		/// <returns>

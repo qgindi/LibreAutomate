@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test Projects", "Test Proje
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{2C03BC9E-C857-44FF-8585-08DF42C687A3}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		Au.snk = Au.snk
 		LICENSE.txt = LICENSE.txt
@@ -75,7 +76,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sqlite", "Libraries\sqlite\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Au.Net4", "Other\Au.Net4\Au.Net4.csproj", "{2157BC47-A5E1-405C-A003-F44970DC3718}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDocFX", "Test Projects\TestDocFX\TestDocFX.csproj", "{2E2E73A9-E4C7-4321-B83C-6C158584080A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDocFX", "Test Projects\TestDocFX\TestDocFX.csproj", "{2E2E73A9-E4C7-4321-B83C-6C158584080A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -35,9 +35,9 @@ Build solution in config Release/AnyCPU. Build in config Release/x86.
 
 Review menu Help -> About. May need to update used libraries, beta.
 
-Run the DocFX script just to catch XML documentation errors and test how it works with current C# and .NET versions etc.
-	Don't upload. Fix errors if need. More info in DocFX.cs.
-	Review the generated local help. Eg DocFX doesn't work well with <inheritdoc>.
+Run script "Au docs" just to catch XML documentation errors and test how it works with current C#/.NET/DocFX versions etc.
+	Don't upload. Fix errors if need. More info in AuDocs.txt.
+	Review the generated local help.
 
 Build solution if needed to edit in above steps.
 
@@ -51,7 +51,7 @@ Open the .iss file in Inno Script Studio. Review, compile.
 Upload the setup file. For example with FileZilla.
 	May want to backup the old setup file at first.
 
-Run the DocFX script. Let it upload.
+Run script "Au docs". Click the upload link.
 
 Github commit all and push. The message could be like v1.2.3.
 

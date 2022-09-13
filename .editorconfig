@@ -14,3 +14,6 @@ dotnet_diagnostic.CA2014.severity = warning
 
 # CS1573: Parameter has no matching param tag in the XML comment (but other parameters do)
 dotnet_diagnostic.CS1573.severity = warning
+
+[*]
+charset = utf-8

@@ -1,4 +1,4 @@
-﻿namespace Au {
+namespace Au {
 	public unsafe partial struct wnd {
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
@@ -16,11 +16,13 @@
 		/// </param>
 		/// <param name="of">
 		/// Owner window, program or thread. Depends on argument type:
-		/// - <b>wnd</b> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
-		/// - <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [](xref:wildcard_expression). Cannot be "" or path.
-		/// - <b>WOwner</b> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
+		/// <br/>• <b>wnd</b> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
+		/// <br/>• <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [](xref:wildcard_expression). Cannot be "" or path.
+		/// <br/>• <b>WOwner</b> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
 		/// 
+		/// <para>
 		/// See <see cref="getwnd.Owner"/>, <see cref="ProcessId"/>, <see cref="process.thisProcessId"/>, <see cref="ThreadId"/>, <see cref="process.thisThreadId"/>.
+		/// </para>
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -31,9 +33,9 @@
 		/// </param>
 		/// <param name="contains">
 		/// Defines an object that must be in the client area of the window:
-		/// - UI element: <see cref="elmFinder"/> or string like <c>"name"</c> or <c>"e 'role' name"</c> or <c>"e 'role'"</c>.
-		/// - Child control: <see cref="wndChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
-		/// - Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <see cref="uiimage.find"/> with flag <see cref="IFFlags.WindowDC"/>).
+		/// <br/>• UI element: <see cref="elmFinder"/> or string like <c>"name"</c> or <c>"e 'role' name"</c> or <c>"e 'role'"</c>.
+		/// <br/>• Child control: <see cref="wndChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
+		/// <br/>• Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <see cref="uiimage.find"/> with flag <see cref="IFFlags.WindowDC"/>).
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is "". To match any, use null.

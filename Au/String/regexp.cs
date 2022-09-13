@@ -989,10 +989,13 @@ namespace Au
 		/// <param name="replFunc">
 		/// Callback function. Called for each found match. Returns the replacement.
 		/// Parameters:
-		/// - current match.
-		/// - group number g, if replacement is like ${+name(g)} or ${+name(g, v)}; else 0.
-		/// - string v, if replacement is like ${+name(g, v)}; else null.
+		/// <br/>• current match.
+		/// <br/>• group number g, if replacement is like ${+name(g)} or ${+name(g, v)}; else 0.
+		/// <br/>• string v, if replacement is like ${+name(g, v)}; else null.
+		/// 
+		/// <para>
 		/// In the callback function you can use <see cref="RXMatch.ExpandReplacement"/>.
+		/// </para>
 		/// </param>
 		/// <remarks>
 		/// Useful when there is no way to use <b>Replace</b> overloads with a <i>replFunc</i> parameter. For example in Find/Replace UI.

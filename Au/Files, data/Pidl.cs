@@ -143,10 +143,10 @@ namespace Au.Types {
 		/// <param name="stringType">
 		/// String format. API <msdn>SIGDN</msdn>.
 		/// Often used:
-		/// - SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
-		/// - SIGDN.FILESYSPATH - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns null.
-		/// - SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
-		/// - SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <b>ITEMIDLIST</b> again, therefore usually it's better to use <see cref="ToString"/> instead.
+		/// <br/>• SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
+		/// <br/>• SIGDN.FILESYSPATH - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns null.
+		/// <br/>• SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
+		/// <br/>• SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <b>ITEMIDLIST</b> again, therefore usually it's better to use <see cref="ToString"/> instead.
 		/// </param>
 		/// <param name="throwIfFailed">If failed, throw AuException.</param>
 		/// <exception cref="AuException">Failed, and throwIfFailed is true.</exception>

@@ -1,4 +1,4 @@
-﻿namespace Au {
+namespace Au {
 	/// <summary>
 	/// A variable of <b>wnd</b> type represents a window or control. It is a window handle, also known as HWND.
 	/// </summary>
@@ -2624,9 +2624,9 @@
 		/// </summary>
 		/// <param name="getText">
 		/// How to get text:
-		/// - false - use API <msdn>InternalGetWindowText</msdn>. This is used by <see cref="Name"/>.
-		/// - true - use API <msdn>WM_GETTEXT</msdn>. It is slow and prefers editable text. This is used by <see cref="ControlText"/>. Fails if the window is hung.
-		/// - null - try <b>InternalGetWindowText</b>. If it gets "" and this is a control, then try WM_GETTEXT.
+		/// <br/>• false - use API <msdn>InternalGetWindowText</msdn>. This is used by <see cref="Name"/>.
+		/// <br/>• true - use API <msdn>WM_GETTEXT</msdn>. It is slow and prefers editable text. This is used by <see cref="ControlText"/>. Fails if the window is hung.
+		/// <br/>• null - try <b>InternalGetWindowText</b>. If it gets "" and this is a control, then try WM_GETTEXT.
 		/// </param>
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.

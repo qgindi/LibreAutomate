@@ -1,4 +1,4 @@
-﻿
+
 //#define TEST_FINDFIRSTFILEEX
 
 using Microsoft.Win32;
@@ -441,10 +441,10 @@ namespace Au {
 		/// <param name="pattern">
 		/// File name pattern. Format: [Wildcard expression](xref:wildcard_expression). Used only for files, not for subdirectories. Can be null.
 		/// Examples:
-		/// - <c>"*.png"</c> (only png files),
-		/// - <c>"**m *.png||*.bmp"</c> (only png and bmp files),
-		/// - <c>"**nm *.png||*.bmp"</c> (all files except png and bmp),
-		/// - <c>@"**r \.html?$"</c> (regular expression that matches .htm and .html files).
+		/// <br/>• <c>"*.png"</c> (only png files),
+		/// <br/>• <c>"**m *.png||*.bmp"</c> (only png and bmp files),
+		/// <br/>• <c>"**nm *.png||*.bmp"</c> (all files except png and bmp),
+		/// <br/>• <c>@"**r \.html?$"</c> (regular expression that matches .htm and .html files).
 		/// </param>
 		/// <param name="flags">Flags. The function also adds flag <b>OnlyFiles</b>.</param>
 		/// <exception cref="ArgumentException">

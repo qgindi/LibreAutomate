@@ -130,6 +130,7 @@ static class CodeInfo {
 
 	static void _Uncache() {
 		//print.it("_Uncache");
+		CurrentWorkspace?.Dispose();
 		CurrentWorkspace = null;
 		_solution = null;
 		_projectId = null;

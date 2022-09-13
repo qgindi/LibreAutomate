@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Reflection.Emit;
 
 namespace Au {
@@ -72,11 +72,11 @@ namespace Au {
 		/// <returns>Returns null if failed.</returns>
 		/// <param name="file">
 		/// Can be:
-		/// - Path of any file or folder. Supports environment variables. If not full path, uses <see cref="folders.ThisAppImages"/> and <see cref="filesystem.searchPath"/>.
-		/// - Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
-		/// - File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
-		/// - Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
-		/// - URL.
+		/// <br/>• Path of any file or folder. Supports environment variables. If not full path, uses <see cref="folders.ThisAppImages"/> and <see cref="filesystem.searchPath"/>.
+		/// <br/>• Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
+		/// <br/>• File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
+		/// <br/>• Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
+		/// <br/>• URL.
 		/// </param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="flags"></param>
