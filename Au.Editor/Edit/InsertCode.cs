@@ -234,7 +234,8 @@ static class InsertCode {
 		//get symbols declared in s
 		List<ISymbol> a2 = new();
 		HashSet<string> h2 = new();
-		var doc2 = CiUtil.CreateDocumentFromCode(s, false);
+		using var ws = new AdhocWorkspace();
+		var doc2 = CiUtil.CreateDocumentFromCode(ws, s, false);
 		var semo2 = doc2.GetSemanticModelAsync().Result;
 		_GetDeclaredSymbols(semo2, semo2.Root, a2, h2);
 		//print.it("---- h2 ----"); foreach (var v in h2) print.it(v);

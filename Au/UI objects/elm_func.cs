@@ -716,21 +716,21 @@ namespace Au {
 		/// </summary>
 		/// <param name="props">
 		/// String that specifies properties to get, for example "nv" for name and value.
-		/// - R - <see cref="Role"/>.
-		/// - n - <see cref="Name"/>.
-		/// - v - <see cref="Value"/>.
-		/// - d - <see cref="Description"/>.
-		/// - h - <see cref="Help"/>.
-		/// - a - <see cref="DefaultAction"/>.
-		/// - k - <see cref="KeyboardShortcut"/>.
-		/// - u - <see cref="UiaId"/>.
-		/// - s - <see cref="State"/>.
-		/// - r - <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> true.
-		/// - D - <see cref="Rect"/> or <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> false. Don't use with r.
-		/// - w - <see cref="WndContainer"/>.
-		/// - o - <see cref="Html"/> outer.
-		/// - i - <see cref="Html"/> inner.
-		/// - @ - <see cref="HtmlAttributes"/>.
+		/// <br/>• R - <see cref="Role"/>.
+		/// <br/>• n - <see cref="Name"/>.
+		/// <br/>• v - <see cref="Value"/>.
+		/// <br/>• d - <see cref="Description"/>.
+		/// <br/>• h - <see cref="Help"/>.
+		/// <br/>• a - <see cref="DefaultAction"/>.
+		/// <br/>• k - <see cref="KeyboardShortcut"/>.
+		/// <br/>• u - <see cref="UiaId"/>.
+		/// <br/>• s - <see cref="State"/>.
+		/// <br/>• r - <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> true.
+		/// <br/>• D - <see cref="Rect"/> or <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> false. Don't use with r.
+		/// <br/>• w - <see cref="WndContainer"/>.
+		/// <br/>• o - <see cref="Html"/> outer.
+		/// <br/>• i - <see cref="Html"/> inner.
+		/// <br/>• @ - <see cref="HtmlAttributes"/>.
 		/// </param>
 		/// <param name="result">Receives results.</param>
 		/// <returns>false if fails, for example when the UI element's window is closed. Supports <see cref="lastError"/>.</returns>
@@ -809,15 +809,14 @@ namespace Au {
 		/// <returns>null if not found.</returns>
 		/// <param name="navig">
 		/// String consisting of one or more navigation direction strings separated by space, like <c>"parent next child4 first"</c>.
-		/// - <c>"next"</c> - next sibling UI element in the same parent UI element.
-		/// - <c>"previous"</c> - previous sibling UI element in the same parent UI element.
-		/// - <c>"first"</c> - first child UI element.
-		/// - <c>"last"</c> - last child UI element.
-		/// - <c>"parent"</c> - parent (container) UI element.
-		/// - <c>"child"</c> - child UI element by 1-based index. Example: <c>"child3"</c> (3-th child). Negative index means from end, for example -1 is the last child.
-		/// - <c>"#N"</c> - custom. More info in Remarks.
-		/// 
-		/// Some elements also support <c>"up"</c>, <c>"down"</c>, <c>"left"</c>, <c>"right"</c>.
+		/// <br/>• <c>"next"</c> - next sibling UI element in the same parent UI element.
+		/// <br/>• <c>"previous"</c> - previous sibling UI element in the same parent UI element.
+		/// <br/>• <c>"first"</c> - first child UI element.
+		/// <br/>• <c>"last"</c> - last child UI element.
+		/// <br/>• <c>"parent"</c> - parent (container) UI element.
+		/// <br/>• <c>"child"</c> - child UI element by 1-based index. Example: <c>"child3"</c> (3-th child). Negative index means from end, for example -1 is the last child.
+		/// <br/>• <c>"#N"</c> - custom. More info in Remarks.
+		/// <br/>• Some elements also support <c>"up"</c>, <c>"down"</c>, <c>"left"</c>, <c>"right"</c>.
 		/// </param>
 		/// <param name="waitS">Wait for the wanted UI element max this number of seconds. If negative, waits forever.</param>
 		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
@@ -1449,13 +1448,15 @@ namespace Au {
 		/// <param name="how">
 		/// Try this parameter if the function fails to select the item etc.
 		/// 
+		/// <para>
 		/// In the string can be used these characters to specify how to select the item and close the drop-down list:
-		/// - i - call <see cref="Invoke"/>.
-		/// - s - call <see cref="Select"/>.
-		/// - c - close the list with <see cref="Expand"/>.
-		/// - m - call <see cref="MouseClick"/>; often can't be used because fails to get correct rectangle or to scroll.
-		/// - k - call <see cref="Focus"/> and <see cref="keys.send"/> (Home, Down, Enter).
-		/// - space - nothing.
+		/// <br/>• i - call <see cref="Invoke"/>.
+		/// <br/>• s - call <see cref="Select"/>.
+		/// <br/>• c - close the list with <see cref="Expand"/>.
+		/// <br/>• m - call <see cref="MouseClick"/>; often can't be used because fails to get correct rectangle or to scroll.
+		/// <br/>• k - call <see cref="Focus"/> and <see cref="keys.send"/> (Home, Down, Enter).
+		/// <br/>• space - nothing.
+		/// </para>
 		/// 
 		/// If the string is null (default) or "" or does not contain these characters, the function tries to detect and use what usually works for this UI element type, but it's impossible to detect always.
 		/// 

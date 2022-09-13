@@ -22,9 +22,9 @@ namespace Au {
 		/// <param name="path">Any string. Can be null.</param>
 		/// <param name="strict">
 		/// What to do if path looks like starts with and environment variable or known folder but the variable/folder does not exist:
-		/// - true - throw <b>ArgumentException</b>;
-		/// - false - return unexpanded path;
-		/// - null (default) - call <see cref="print.warning"/> and return unexpanded path.
+		/// <br/>• true - throw <b>ArgumentException</b>;
+		/// <br/>• false - return unexpanded path;
+		/// <br/>• null (default) - call <see cref="print.warning"/> and return unexpanded path.
 		/// </param>
 		/// <remarks>
 		/// Supports known folder names. See <see cref="folders"/>.

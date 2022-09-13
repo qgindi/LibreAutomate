@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Markup;
 using System.Windows.Controls;
@@ -80,9 +80,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// - file path. Can have prefix "imagefile:".
-		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="ResourceUtil.GetGdipBitmap"/>)
-		/// - Base64 encoded image string with prefix "image:".
+		/// <br/>• file path. Can have prefix "imagefile:".
+		/// <br/>• resource path that starts with "resources/" or has prefix "resource:" (<see cref="ResourceUtil.GetGdipBitmap"/>)
+		/// <br/>• Base64 encoded image string with prefix "image:".
 		/// </param>
 		/// <param name="xaml">If not null, supports XAML images. See <see cref="LoadGdipBitmapFromXaml"/>.</param>
 		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="File.OpenRead(string)"/>, <see cref="System.Drawing.Bitmap(Stream)"/>, etc.</exception>
@@ -105,9 +105,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// - file path. Can have prefix "imagefile:".
-		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="ResourceUtil.GetWpfImage"/>)
-		/// - Base64 encoded image string with prefix "image:".
+		/// <br/>• file path. Can have prefix "imagefile:".
+		/// <br/>• resource path that starts with "resources/" or has prefix "resource:" (<see cref="ResourceUtil.GetWpfImage"/>)
+		/// <br/>• Base64 encoded image string with prefix "image:".
 		/// </param>
 		/// <exception cref="Exception"></exception>
 		public static BitmapFrame LoadWpfImage(string image) {
@@ -124,11 +124,11 @@ namespace Au.More
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="pathname.expand"/>; can have prefix "imagefile:".
-		/// - resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="ResourceUtil.GetXamlObject"/> if ends with ".xaml", else <see cref="ResourceUtil.GetWpfImage"/>.
-		/// - Base64 encoded image string with prefix "image:"; uses<see cref="LoadImageStreamFromString"/>.
-		/// - XAML string that starts with "&lt;".
-		/// - XAML icon name, like "*Pack.Icon color" (you can get it from the Icons dialog); if literal string and using default compiler, the compiler adds XAML to the assembly as a string resource, else this function tries to get XAML from database and fails if editor isn't running.
+		/// <br/>• file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="pathname.expand"/>; can have prefix "imagefile:".
+		/// <br/>• resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="ResourceUtil.GetXamlObject"/> if ends with ".xaml", else <see cref="ResourceUtil.GetWpfImage"/>.
+		/// <br/>• Base64 encoded image string with prefix "image:"; uses<see cref="LoadImageStreamFromString"/>.
+		/// <br/>• XAML string that starts with "&lt;".
+		/// <br/>• XAML icon name, like "*Pack.Icon color" (you can get it from the Icons dialog); if literal string and using default compiler, the compiler adds XAML to the assembly as a string resource, else this function tries to get XAML from database and fails if editor isn't running.
 		/// </param>
 		/// <exception cref="Exception"></exception>
 		/// <remarks>

@@ -488,7 +488,8 @@ void {{name}}() {
 		var a = new List<_Toolbar>();
 		var at = new List<_Trigger>();
 		var proj = global::TriggersAndToolbars.GetProject(create: true);
-		(_sln, _meta) = CiUtil.CreateSolutionFromFileNode(proj);
+		using var ws = new AdhocWorkspace();
+		(_sln, _meta) = CiUtil.CreateSolutionFromFileNode(ws, proj);
 		_compilation = _sln.Projects.First().GetCompilationAsync().Result;
 		var ttoolbar = _compilation.GetTypeByMetadataName("Au." + nameof(toolbar));
 

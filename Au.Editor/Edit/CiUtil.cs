@@ -337,14 +337,12 @@ static class CiUtil {
 	/// From C# code creates a Roslyn workspace+project+document for code analysis.
 	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
 	/// </summary>
-	public static Document CreateDocumentFromCode(string code, bool needSemantic)
-		=> CreateDocumentFromCode(code, needSemantic, out _);
-
-	//TODO: need to dispose workspaces. Else huge memory leaks, never released.
-	public static Document CreateDocumentFromCode(string code, bool needSemantic, out AdhocWorkspace ws) {
+	/// <param name="ws"><c>using var ws = new AdhocWorkspace(); //need to dispose</c></param>
+	/// <param name="code">Any C# code fragment, valid or not.</param>
+	/// <param name="needSemantic">Add default references (.NET and Au.dll) and global usings.</param>
+	public static Document CreateDocumentFromCode(AdhocWorkspace ws, string code, bool needSemantic) {
 		ProjectId projectId = ProjectId.CreateNewId();
 		DocumentId documentId = DocumentId.CreateNewId(projectId);
-		ws = new AdhocWorkspace();
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
 			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
 			new CSharpParseOptions(LanguageVersion.Preview),
@@ -352,7 +350,16 @@ static class CiUtil {
 			);
 		var sol = ws.CurrentSolution.AddProject(pi);
 		if (needSemantic) {
-			string code2 = @"global using Au;
+			sol = sol.AddDocument(DocumentId.CreateNewId(projectId), "g.cs", c_globalUsingsText);
+		}
+		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
+
+		//It seems it's important to dispose workspaces.
+		//	In the docs project at first didn't dispose. After maybe 300_000 times: much slower, process memory 3 GB, sometimes hangs.
+	}
+
+	public const string c_globalUsingsText = """
+global using Au;
 global using Au.Types;
 global using System;
 global using System.Collections.Generic;
@@ -370,50 +377,7 @@ global using System.Threading;
 global using System.Threading.Tasks;
 global using Microsoft.Win32;
 global using Au.More;
-";
-			sol = sol.AddDocument(DocumentId.CreateNewId(projectId), "g.cs", code2);
-		}
-		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
-	}
-
-//	/// <summary>
-//	/// From C# code creates a Roslyn workspace+project+document for code analysis.
-//	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
-//	/// </summary>
-//	public static Document CreateDocumentFromCode(string code, bool needSemantic) {
-//		ProjectId projectId = ProjectId.CreateNewId();
-//		DocumentId documentId = DocumentId.CreateNewId(projectId);
-//		var ws = new AdhocWorkspace();
-//		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
-//			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
-//			new CSharpParseOptions(LanguageVersion.Preview),
-//			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
-//			);
-//		var sol = ws.CurrentSolution.AddProject(pi);
-//		if (needSemantic) {
-//			string code2 = @"global using Au;
-//global using Au.Types;
-//global using System;
-//global using System.Collections.Generic;
-//global using System.Linq;
-//global using System.Collections.Concurrent;
-//global using System.Diagnostics;
-//global using System.Globalization;
-//global using System.IO;
-//global using System.IO.Compression;
-//global using System.Runtime.CompilerServices;
-//global using System.Runtime.InteropServices;
-//global using System.Text;
-//global using System.Text.RegularExpressions;
-//global using System.Threading;
-//global using System.Threading.Tasks;
-//global using Microsoft.Win32;
-//global using Au.More;
-//";
-//			sol = sol.AddDocument(DocumentId.CreateNewId(projectId), "g.cs", code2);
-//		}
-//		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
-//	}
+""";
 
 	/// <summary>
 	/// Creates Compilation from a file or project folder.
@@ -443,9 +407,10 @@ global using Au.More;
 	/// Creates Solution from a file or project folder.
 	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
 	/// </summary>
+	/// <param name="ws"><c>using var ws = new AdhocWorkspace(); //need to dispose</c></param>
 	/// <param name="f">A code file or a project folder. If in a project folder, creates from the project.</param>
 	/// <returns>null if can't create, for example if f isn't a code file or if meta contains errors.</returns>
-	public static (Solution sln, MetaComments meta) CreateSolutionFromFileNode(FileNode f) {
+	public static (Solution sln, MetaComments meta) CreateSolutionFromFileNode(AdhocWorkspace ws, FileNode f) {
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return default;
 
@@ -467,7 +432,6 @@ global using Au.More;
 			null,
 			m.References.Refs);
 
-		var ws = new AdhocWorkspace();
 		return (ws.CurrentSolution.AddProject(pi), m);
 	}
 
@@ -481,7 +445,8 @@ global using Au.More;
 	public static byte[] GetScintillaStylingBytes(string code) {
 		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
 		var map8 = Convert2.MapUtf8Offsets_(code);
-		var document = CreateDocumentFromCode(code, needSemantic: true);
+		using var ws = new AdhocWorkspace();
+		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
 		var semo = document.GetSemanticModelAsync().Result;
 		var a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, code.Length)).Result;
 		foreach (var v in a) {

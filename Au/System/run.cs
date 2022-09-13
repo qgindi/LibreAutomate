@@ -9,20 +9,23 @@ namespace Au {
 		/// </summary>
 		/// <param name="file">
 		/// Examples:
-		/// - <c>@"C:\file.txt"</c>
-		/// - <c>folders.Documents</c>
-		/// - <c>folders.System + "notepad.exe"</c>
-		/// - <c>@"%folders.System%\notepad.exe"</c>
-		/// - <c>@"%TMP%\file.txt"</c>
-		/// - <c>"notepad.exe"</c>
-		/// - <c>@"..\folder\x.exe"</c>
-		/// - <c>"http://a.b.c/d"</c>
-		/// - <c>"file:///path"</c>
-		/// - <c>"mailto:a@b.c"</c>
-		/// - <c>":: ITEMIDLIST"</c>
-		/// - <c>@"shell:::{CLSID}"</c>
-		/// - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
+		/// <br/>• <c>@"C:\file.txt"</c>
+		/// <br/>• <c>folders.Documents</c>
+		/// <br/>• <c>folders.System + "notepad.exe"</c>
+		/// <br/>• <c>@"%folders.System%\notepad.exe"</c>
+		/// <br/>• <c>@"%TMP%\file.txt"</c>
+		/// <br/>• <c>"notepad.exe"</c>
+		/// <br/>• <c>@"..\folder\x.exe"</c>
+		/// <br/>• <c>"http://a.b.c/d"</c>
+		/// <br/>• <c>"file:///path"</c>
+		/// <br/>• <c>"mailto:a@b.c"</c>
+		/// <br/>• <c>":: ITEMIDLIST"</c>
+		/// <br/>• <c>@"shell:::{CLSID}"</c>
+		/// <br/>• <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
+		/// 
+		/// <para>
 		/// More info in Remarks.
+		/// </para>
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
@@ -251,18 +254,20 @@ namespace Au {
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
-		/// - Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>folders.System + "x.exe"</c>, <c>@"%folders.System%\x.exe"</c>.
-		/// - Filename, like <c>"x.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
-		/// - Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
+		/// <br/>• Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>folders.System + "x.exe"</c>, <c>@"%folders.System%\x.exe"</c>.
+		/// <br/>• Filename, like <c>"x.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
+		/// <br/>• Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
 		/// 
+		/// <para>
 		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="pathname.expand"/>.
+		/// </para>
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
-		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-		/// - Else if "", calls <c>pathname.getDirectory(exe)</c>.
-		/// - Else calls <see cref="pathname.expand"/>.
+		/// <br/>• If null, uses <c>Directory.GetCurrentDirectory()</c>.
+		/// <br/>• Else if "", calls <c>pathname.getDirectory(exe)</c>.
+		/// <br/>• Else calls <see cref="pathname.expand"/>.
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
@@ -313,8 +318,8 @@ namespace Au {
 		/// <param name="output">
 		/// A callback function that receives the output text.
 		/// Unless <i>rawText</i> true:
-		/// - it isn't called until is retrieved full line with line break characters;
-		/// - it receives single full line at a time, without line break characters.
+		/// <br/>• it isn't called until is retrieved full line with line break characters;
+		/// <br/>• it receives single full line at a time, without line break characters.
 		/// </param>
 		/// <param name="exe"></param>
 		/// <param name="args"></param>
@@ -482,19 +487,19 @@ namespace Au.Types {
 		/// <summary>
 		/// Run new process as administrator.
 		/// If this process isn't admin:
-		/// - Shows UAC consent dialog.
-		/// - Uses verb "runas", therefore other verb cannot be specified.
-		/// - Cannot set current directory for the new process.
-		/// - The new process does not inherit environment variables of this process.
+		/// <br/>• Shows UAC consent dialog.
+		/// <br/>• Uses verb "runas", therefore other verb cannot be specified.
+		/// <br/>• Cannot set current directory for the new process.
+		/// <br/>• The new process does not inherit environment variables of this process.
 		/// </summary>
 		Admin = 8,
 
 		/// <summary>
 		/// If this process runs as administrator, run new process as administrator too.
 		/// Without this flag, if this process runs as administrator:
-		/// - Starts new process as non-administrator from the shell process (explorer.exe).
-		/// - If it fails (for example if shell process isn't running), calls <see cref="print.warning"/> and starts new process as administrator.
-		/// - The new process does not inherit environment variables of this process.
+		/// <br/>• Starts new process as non-administrator from the shell process (explorer.exe).
+		/// <br/>• If it fails (for example if shell process isn't running), calls <see cref="print.warning"/> and starts new process as administrator.
+		/// <br/>• The new process does not inherit environment variables of this process.
 		/// </summary>
 		InheritAdmin = 16,
 

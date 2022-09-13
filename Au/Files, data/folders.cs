@@ -1,4 +1,4 @@
-﻿#pragma warning disable 1591 //missing XML documentation
+#pragma warning disable 1591 //missing XML documentation
 
 namespace Au {
 	/// <summary>
@@ -725,9 +725,9 @@ namespace Au {
 		/// </summary>
 		/// <param name="folderName">
 		/// Can be:
-		/// - name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b>.
-		/// - name of a property of the nested class <see cref="shell"/>, like <c>"shell.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
-		/// - known folder canonical name. See <see cref="getKnownFolders"/>. If has prefix <c>"shell."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
+		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b>.
+		/// <br/>• name of a property of the nested class <see cref="shell"/>, like <c>"shell.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
+		/// <br/>• known folder canonical name. See <see cref="getKnownFolders"/>. If has prefix <c>"shell."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
 		/// <seealso cref="pathname.expand"/>
 		public static FolderPath getFolder(string folderName) {

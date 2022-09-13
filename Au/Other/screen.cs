@@ -93,8 +93,8 @@ namespace Au {
 		/// <param name="lazy">
 		/// Create variable with <see cref="LazyFunc"/> that later will get screen handle.
 		/// Other ways to create lazy:
-		/// - use <b>wndFinder</b>. Example: <c>screen.of(new wndFinder("* Notepad"))</c>.
-		/// - use constructor. Example: <c>new screen(() => screen.of(wnd.findFast(cn: "Notepad")))</c>.
+		/// <br/>• use <b>wndFinder</b>. Example: <c>screen.of(new wndFinder("* Notepad"))</c>.
+		/// <br/>• use constructor. Example: <c>new screen(() => screen.of(wnd.findFast(cn: "Notepad")))</c>.
 		/// </param>
 		public static screen of(wnd w, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
 			=> lazy
@@ -298,10 +298,10 @@ namespace Au {
 		/// </summary>
 		/// <returns>
 		/// Tuple containing:
-		/// - rect - screen rectangle.
-		/// - workArea - work area rectangle.
-		/// - isPrimary - true if it is the primary screen.
-		/// - isAlive - false if the screen handle is invalid; then the function gets info of the primary screen.
+		/// <br/>• rect - screen rectangle.
+		/// <br/>• workArea - work area rectangle.
+		/// <br/>• isPrimary - true if it is the primary screen.
+		/// <br/>• isAlive - false if the screen handle is invalid; then the function gets info of the primary screen.
 		/// </returns>
 		/// <remarks>
 		/// If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="Now"/>.

@@ -1,4 +1,4 @@
-﻿namespace Au
+namespace Au
 {
 	public unsafe partial struct wnd
 	{
@@ -13,9 +13,9 @@
 		/// 
 		/// By default to get control names this function uses <see cref="Name"/>.
 		/// Can start with these prefix strings:
-		/// - <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert '&amp;' before it.
-		/// - <c>"***elmName "</c> - use <see cref="NameElm"/>. Slower.
-		/// - <c>"***wfName "</c> - use .NET Forms control name (see <see cref="WinformsControlNames"/>). Slower and can fail because of [](xref:uac).
+		/// <br/>• <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert '&amp;' before it.
+		/// <br/>• <c>"***elmName "</c> - use <see cref="NameElm"/>. Slower.
+		/// <br/>• <c>"***wfName "</c> - use .NET Forms control name (see <see cref="WinformsControlNames"/>). Slower and can fail because of [](xref:uac).
 		/// </param>
 		/// <param name="cn">
 		/// Control class name.

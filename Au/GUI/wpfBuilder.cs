@@ -270,10 +270,10 @@ namespace Au {
 		/// <param name="widths">
 		/// Column widths.
 		/// An argument can be:
-		/// - an integer or double value specifies <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
-		/// - a range specifies <see cref="ColumnDefinition.MinWidth"/> and/or <see cref="ColumnDefinition.MaxWidth"/> and sets width value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
-		/// - tuple (double value, Range minMax) specifies width and min/max widths. Example: <c>(-2, 50..)</c>.
-		/// - <see cref="ColumnDefinition"/> can specify these and more properties.
+		/// <br/>• an integer or double value specifies <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
+		/// <br/>• a range specifies <see cref="ColumnDefinition.MinWidth"/> and/or <see cref="ColumnDefinition.MaxWidth"/> and sets width value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
+		/// <br/>• tuple (double value, Range minMax) specifies width and min/max widths. Example: <c>(-2, 50..)</c>.
+		/// <br/>• <see cref="ColumnDefinition"/> can specify these and more properties.
 		/// </param>
 		/// <exception cref="InvalidOperationException">Columns() in non-grid panel or after an <b>Add</b> function.</exception>
 		/// <remarks>
@@ -293,10 +293,10 @@ namespace Au {
 		/// </summary>
 		/// <param name="height">
 		/// Row height. Can be:
-		/// - integer or double value specifies <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
-		/// - range specifies <see cref="RowDefinition.MinHeight"/> and/or <see cref="RowDefinition.MaxHeight"/> and sets height value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
-		/// - tuple (double value, Range minMax) specifies height and min/max heights. Example: <c>(-2, 50..200)</c>.
-		/// - <see cref="RowDefinition"/> can specify these and more properties.
+		/// <br/>• integer or double value specifies <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
+		/// <br/>• range specifies <see cref="RowDefinition.MinHeight"/> and/or <see cref="RowDefinition.MaxHeight"/> and sets height value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
+		/// <br/>• tuple (double value, Range minMax) specifies height and min/max heights. Example: <c>(-2, 50..200)</c>.
+		/// <br/>• <see cref="RowDefinition"/> can specify these and more properties.
 		/// </param>
 		/// <exception cref="InvalidOperationException">In non-grid panel.</exception>
 		/// <remarks>
@@ -346,10 +346,10 @@ namespace Au {
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
 		/// <param name="setProperties">
 		/// Set some container's properties like other overload does. Default true. Currently sets these properties, and only if container is <b>Window</b>:
-		/// - <see cref="Window.SizeToContent"/>, except when container is <b>Canvas</b> or has properties <b>Width</b> and/or <b>Height</b> set.
-		/// - <b>SnapsToDevicePixels</b> = true.
-		/// - <b>WindowStartupLocation</b> = Center.
-		/// - <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="winTopmost"/> and <see cref="winWhite"/>.
+		/// <br/>• <see cref="Window.SizeToContent"/>, except when container is <b>Canvas</b> or has properties <b>Width</b> and/or <b>Height</b> set.
+		/// <br/>• <b>SnapsToDevicePixels</b> = true.
+		/// <br/>• <b>WindowStartupLocation</b> = Center.
+		/// <br/>• <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="winTopmost"/> and <see cref="winWhite"/>.
 		/// </param>
 		public wpfBuilder(FrameworkElement container = null, WBPanelType panelType = WBPanelType.Grid, bool setProperties = true) {
 			//_container=container; // ?? throw new ArgumentNullException("container"); //can be null
@@ -1852,11 +1852,11 @@ namespace Au {
 		/// </summary>
 		/// <param name="inlines">
 		/// Arguments of type:
-		/// - <see cref="Inline"/> of any type, eg <b>Run</b>, <b>Bold</b>, <b>Hyperlink</b>.
-		/// - <b>Action</b> - action to run when the last added <b>Hyperlink</b> clicked (see example).
-		/// - string that starts with "&lt;a>", "&lt;b>", "&lt;i>", "&lt;u>", like <c>"&lt;a>link"</c> - adds inline of type <see cref="Hyperlink"/>, <b>Bold</b>, <b>Italic</b>, <b>Underline</b>.
-		/// - other string - plain text.
-		/// - <see cref="UIElement"/>.
+		/// <br/>• <see cref="Inline"/> of any type, eg <b>Run</b>, <b>Bold</b>, <b>Hyperlink</b>.
+		/// <br/>• <b>Action</b> - action to run when the last added <b>Hyperlink</b> clicked (see example).
+		/// <br/>• string that starts with "&lt;a>", "&lt;b>", "&lt;i>", "&lt;u>", like <c>"&lt;a>link"</c> - adds inline of type <see cref="Hyperlink"/>, <b>Bold</b>, <b>Italic</b>, <b>Underline</b>.
+		/// <br/>• other string - plain text.
+		/// <br/>• <see cref="UIElement"/>.
 		/// </param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>TextBlock</b>.</exception>
 		/// <exception cref="ArgumentException">Unsupported argument type.</exception>
@@ -2264,8 +2264,8 @@ namespace Au.Types {
 	public enum WBAdd {
 		/// <summary>
 		/// Add as child of <see cref="wpfBuilder.Last"/>, which can be of type (or base type):
-		/// - <see cref="ContentControl"/>. Adds as its <see cref="ContentControl.Content"/> property. For example you can add a <b>CheckBox</b> in a <b>Button</b>.
-		/// - <see cref="Decorator"/>, for example <see cref="Border"/>. Adds as its <see cref="Decorator.Child"/> property.
+		/// <br/>• <see cref="ContentControl"/>. Adds as its <see cref="ContentControl.Content"/> property. For example you can add a <b>CheckBox</b> in a <b>Button</b>.
+		/// <br/>• <see cref="Decorator"/>, for example <see cref="Border"/>. Adds as its <see cref="Decorator.Child"/> property.
 		/// </summary>
 		ChildOfLast = 1,
 

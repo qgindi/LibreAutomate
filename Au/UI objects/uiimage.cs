@@ -217,23 +217,22 @@ namespace Au
 		/// </returns>
 		/// <param name="area">
 		/// Where to search:
-		/// - <see cref="wnd"/> - window or control. The search area is its client area.
-		/// - <see cref="elm"/> - UI element.
-		/// - <see cref="Bitmap"/> - another image.
-		/// - <see cref="RECT"/> - a rectangle area in screen.
-		/// - <see cref="IFArea"/> - can contain <b>wnd</b>, <b>elm</b> or <b>Bitmap</b>. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>uiimage.find(new(w, (left, top, width, height)), "image.png");</c>.
+		/// <br/>• <see cref="wnd"/> - window or control. The search area is its client area.
+		/// <br/>• <see cref="elm"/> - UI element.
+		/// <br/>• <see cref="Bitmap"/> - another image.
+		/// <br/>• <see cref="RECT"/> - a rectangle area in screen.
+		/// <br/>• <see cref="IFArea"/> - can contain <b>wnd</b>, <b>elm</b> or <b>Bitmap</b>. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>uiimage.find(new(w, (left, top, width, height)), "image.png");</c>.
 		/// </param>
 		/// <param name="image">Image or color to find. Or array of them. More info: <see cref="IFImage"/>.</param>
 		/// <param name="flags"></param>
 		/// <param name="diff">Maximal allowed color difference. Can be 0 - 100, but should be as small as possible. Use to find images with slightly different colors than the specified image.</param>
 		/// <param name="also">
 		/// Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="IFAlso"/> values.
-		/// 
-		/// Examples:
-		/// - Skip 2 matching images: <c>also: o => o.Skip(2)</c>
-		/// - Skip some matching images if some condition is false: <c>also: o => condition ? IFAlso.OkReturn : IFAlso.FindOther</c>
-		/// - Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return IFAlso.OkFindMore; }</c>.
-		/// - Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); uiimage.find(w, images, also: o => { found[o.ListIndex] = true; return IFAlso.OkFindMoreOfList; }); if(found[0]) print.it(0); if(found[1]) print.it(1);</c>
+		/// <br/>Examples:
+		/// <br/>• Skip 2 matching images: <c>also: o => o.Skip(2)</c>
+		/// <br/>• Skip some matching images if some condition is false: <c>also: o => condition ? IFAlso.OkReturn : IFAlso.FindOther</c>
+		/// <br/>• Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return IFAlso.OkFindMore; }</c>.
+		/// <br/>• Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); uiimage.find(w, images, also: o => { found[o.ListIndex] = true; return IFAlso.OkFindMoreOfList; }); if(found[0]) print.it(0); if(found[1]) print.it(1);</c>
 		/// </param>
 		/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
 		/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
@@ -452,11 +451,11 @@ namespace Au.Types
 		/// <summary>
 		/// Use API <msdn>PrintWindow</msdn> to get window pixels.
 		/// Like <b>WindowDC</b>, works with background windows, etc. Differences:
-		/// - On Windows 8.1 and later works with all windows and all window parts.
-		/// - Works without Aero theme too.
-		/// - Slower than with <b>WindowDC</b>. Usually same speed or faster than without these flags.
-		/// - Some windows may flicker.
-		/// - Does not work with windows of higher UAC integrity level. Then throws exception.
+		/// <br/>• On Windows 8.1 and later works with all windows and all window parts.
+		/// <br/>• Works without Aero theme too.
+		/// <br/>• Slower than with <b>WindowDC</b>. Usually same speed or faster than without these flags.
+		/// <br/>• Some windows may flicker.
+		/// <br/>• Does not work with windows of higher UAC integrity level. Then throws exception.
 		/// </summary>
 		PrintWindow = 2,
 

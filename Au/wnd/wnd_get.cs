@@ -1,4 +1,4 @@
-﻿namespace Au;
+namespace Au;
 
 public partial struct wnd {
 	/// <summary>
@@ -719,9 +719,9 @@ public partial struct wnd {
 	/// <param name="w"></param>
 	/// <param name="level">
 	/// Return true if:
-	/// - 0 - <i>w</i> is direct owner. See <see cref="getwnd.Owner"/>.
-	/// - 1 - <i>w</i> is direct or indirect owner (eg owner's owner).
-	/// - 2 - <i>w</i> is direct or indirect owner, or this is a menu-like window that looks like owned by <i>w</i> (same thread, topmost, etc).
+	/// <br/>• 0 - <i>w</i> is direct owner. See <see cref="getwnd.Owner"/>.
+	/// <br/>• 1 - <i>w</i> is direct or indirect owner (eg owner's owner).
+	/// <br/>• 2 - <i>w</i> is direct or indirect owner, or this is a menu-like window that looks like owned by <i>w</i> (same thread, topmost, etc).
 	/// </param>
 	/// <remarks>
 	/// Many popup menus and similar temporary windows don't have an owner window. Instead they have topmost style. If <i>level</i> is 2, this function tries to detect this case. In most cases it works, but not always (depends on styles).
