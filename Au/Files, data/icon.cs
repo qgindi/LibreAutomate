@@ -551,8 +551,8 @@ namespace Au {
 
 		/// <summary>
 		/// Creates <see cref="System.Drawing.Icon"/> object that shares native icon handle with this object.
-		/// Returns null if <i>Handle</i> is default(IntPtr).
 		/// </summary>
+		/// <returns>null if <i>Handle</i> is default(IntPtr).</returns>
 		public Icon ToGdipIcon() {
 			if (_handle == default) return null;
 			var R = Icon.FromHandle(_handle);
@@ -563,8 +563,8 @@ namespace Au {
 
 		/// <summary>
 		/// Converts native icon to GDI+ bitmap object.
-		/// Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
 		/// </summary>
+		/// <returns>null if <i>Handle</i> is default(IntPtr) or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If false, later will need to dispose this variable.
@@ -585,8 +585,8 @@ namespace Au {
 
 		/// <summary>
 		/// Converts native icon to WPF image object.
-		/// Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
 		/// </summary>
+		/// <returns>null if <i>Handle</i> is default(IntPtr) or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If false, later will need to dispose this variable.
@@ -608,8 +608,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets icon size.
-		/// Returns default if fails.
 		/// </summary>
+		/// <returns>default(SIZE) if failed.</returns>
 		public unsafe SIZE Size {
 			get {
 				if (_handle != default) {
@@ -625,8 +625,8 @@ namespace Au {
 
 		/// <summary>
 		/// Parses icon location string.
-		/// Returns true if it includes icon index or resource id.
 		/// </summary>
+		/// <returns>true if it includes icon index or resource id.</returns>
 		/// <param name="s">
 		/// Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path.
 		/// Supports path enclosed in "" like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.
@@ -707,8 +707,8 @@ namespace Au {
 		/// <summary>
 		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell.
 		/// Also supports code patterns like <c>folders.System + "notepad.exe"</c> or <c>folders.shell.RecycleBin</c>.
-		/// Returns null if no such string/pattern.
 		/// </summary>
+		/// <returns>null if no such string/pattern.</returns>
 		/// <param name="mi"></param>
 		/// <param name="cs">The string is .cs filename or relative path, but not full path.</param>
 		internal static string ExtractIconPathFromCode_(MethodInfo mi, out bool cs) {

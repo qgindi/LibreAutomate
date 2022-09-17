@@ -1,4 +1,4 @@
-﻿namespace Au.Types
+namespace Au.Types
 {
 	/// <summary>
 	/// The base exception class used in this library.
@@ -25,17 +25,19 @@
 			NativeErrorCode = (errorCode != 0) ? errorCode : lastError.code;
 		}
 
-		/// <summary> Gets the Windows API error code. </summary>
+		/// <summary>Gets the Windows API error code.</summary>
 		public int NativeErrorCode { get; protected set; }
 
-		/// <summary> Gets error message. </summary>
+		/// <summary>Gets error message.</summary>
 		public override string Message => FormattedMessage ?? FormatMessage();
 
-		/// <summary> String created by <b>FormatMessage</b>, which should be called by the <b>Message</b> override if null. Initially null. </summary>
+		/// <summary>String created by <b>FormatMessage</b>, which should be called by the <b>Message</b> override if null. Initially null.</summary>
 		protected string FormattedMessage;
 
 		/// <summary>
 		/// Formats error message. Sets and returns <b>FormattedMessage</b>.
+		/// </summary>
+		/// <remarks>
 		/// As base text, uses the text passed to the constructor (default <c>"Failed."</c>).
 		/// If it starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>.
 		/// If it ends with <c>"*"</c>, replaces the <c>"*"</c> with <i>commonPostfix</i> if it is not empty.
@@ -43,7 +45,7 @@
 		/// If <i>appendMessage</i> is null, uses <c>lastError.messageFor(NativeErrorCode)</c> if <b>NativeErrorCode</b> not 0.
 		/// If then <i>appendMessage</i> is not empty, appends <c>" " + appendMessage</c>.
 		/// Also appends <b>InnerException.Message</b> in new tab-indented line if <b>InnerException</b> is not null.
-		/// </summary>
+		/// </remarks>
 		protected string FormatMessage(string appendMessage = null, string commonPostfix = null) {
 			var m = base.Message;
 
@@ -134,10 +136,10 @@
 			return Api.ERROR_INVALID_WINDOW_HANDLE;
 		}
 
-		/// <summary> Gets the window passed to the constructor. </summary>
+		/// <summary>Gets the window passed to the constructor.</summary>
 		public wnd Window { get; }
 
-		/// <summary> Gets error message. </summary>
+		/// <summary>Gets error message.</summary>
 		public override string Message {
 			get {
 				if (FormattedMessage == null) {

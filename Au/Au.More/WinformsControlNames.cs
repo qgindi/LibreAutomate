@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Gets programming names of .NET Windows Forms controls.
@@ -33,8 +33,8 @@
 
 		/// <summary>
 		/// Gets control name.
-		/// Returns null if fails or the name is empty.
 		/// </summary>
+		/// <returns>null if failed or the name is empty.</returns>
 		/// <param name="c">The control. Can be a top-level window too. Must be of the same process as the window specified in the constructor.</param>
 		public string GetControlName(wnd c) {
 			if (_pm == null) return null;
@@ -56,8 +56,8 @@
 
 		/// <summary>
 		/// Gets the programming name of a Windows Forms control.
-		/// Returns null if it is not a Windows Forms control or if fails.
 		/// </summary>
+		/// <returns>null if it is not a Windows Forms control or if failed.</returns>
 		/// <param name="c">The control. Can be top-level window too.</param>
 		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WinformsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
 		public static string GetSingleControlName(wnd c) {
@@ -72,7 +72,7 @@
 		//Don't use this cached version, it does not make significantly faster. Also, keeping process handle in such a way is not good, would need to use other thread to close it after some time.
 		///// <summary>
 		///// Gets programming name of a Windows Forms control.
-		///// Returns null if it is not a Windows Forms control or if fails.
+		///// Returns null if it is not a Windows Forms control or if failed.
 		///// </summary>
 		///// <param name="c">The control. Can be top-level window too.</param>
 		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WinformsControlNames instance each time and calling its GetControlNameOrText method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>

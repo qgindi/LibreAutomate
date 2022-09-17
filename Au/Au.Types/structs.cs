@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace Au.Types
@@ -127,10 +127,6 @@ namespace Au.Types
 		/// <summary>
 		/// Sets all fields.
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="top"></param>
-		/// <param name="width">Width (not <i>right</i>).</param>
-		/// <param name="height">Height (not <i>bottom</i>).</param>
 		/// <remarks>
 		/// Sets <c>right = left + width; bottom = top + height;</c>. To specify right/bottom instead of width/height, use <see cref="FromLTRB"/> instead.
 		/// </remarks>
@@ -250,9 +246,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// Replaces this rectangle with the intersection of itself and the specified rectangle.
-		/// Returns true if the rectangles intersect.
-		/// If they don't intersect, makes this RECT empty.
+		/// If the rectangles don't intersect, makes this RECT empty.
 		/// </summary>
+		/// <returns>true if the rectangles intersect.</returns>
 		public bool Intersect(RECT r2) => Api.IntersectRect(out this, this, r2);
 
 		/// <summary>
@@ -280,9 +276,9 @@ namespace Au.Types
 		/// <summary>
 		/// Replaces this rectangle with the union of itself and the specified rectangle.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// Returns true if finally this rectangle is not empty.
 		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
+		/// <returns>true if finally this rectangle is not empty.</returns>
 		public bool Union(RECT r2) => Api.UnionRect(out this, this, r2);
 
 		/// <summary>
@@ -388,8 +384,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Converts string to RECT.
-		/// Returns false if invalid string format.
 		/// </summary>
+		/// <returns>false if invalid string format.</returns>
 		/// <param name="s">String in format "{L=left T=top W=width H=height}" (<see cref="ToString"/>) or "left top width height" (<see cref="ToStringSimple"/>).</param>
 		/// <param name="r"></param>
 		public static bool TryParse(string s, out RECT r) {

@@ -335,22 +335,15 @@ public partial class keys {
 		return 0 != _WaitForKey(secondsTimeout, key, up, block);
 	}
 
-	/// <summary>
-	/// Waits for key-down or key-up event of the specified key.
-	/// </summary>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <param name="secondsTimeout"></param>
 	/// <param name="key">Wait for this key. A single-key string like with <see cref="send"/>.</param>
-	/// <param name="up"></param>
-	/// <param name="block"></param>
 	/// <exception cref="ArgumentException">Invalid <i>key</i> string.</exception>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// keys.waitForKey(0, "Ctrl", up: false, block: true);
 	/// print.it("Ctrl");
 	/// ]]></code>
 	/// </example>
+	/// <inheritdoc cref="waitForKey(double, KKey, bool, bool)"/>
 	public static bool waitForKey(double secondsTimeout, string key, bool up = false, bool block = false) {
 		return 0 != _WaitForKey(secondsTimeout, more.ParseKeyNameThrow_(key), up, block);
 	}
@@ -362,9 +355,6 @@ public partial class keys {
 	/// Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
 	/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 	/// </returns>
-	/// <param name="secondsTimeout"></param>
-	/// <param name="up"></param>
-	/// <param name="block"></param>
 	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 	/// <example>
 	/// <code><![CDATA[
@@ -372,6 +362,7 @@ public partial class keys {
 	/// print.it(key);
 	/// ]]></code>
 	/// </example>
+	/// <inheritdoc cref="waitForKey(double, KKey, bool, bool)" path="/param"/>
 	public static KKey waitForKey(double secondsTimeout, bool up = false, bool block = false) {
 		return _WaitForKey(secondsTimeout, 0, up, block);
 	}
@@ -758,7 +749,6 @@ public partial class keys {
 	/// <summary>
 	/// Generates virtual keystrokes. Like <see cref="send"/>, but without reliability features: delays, user input blocking, resetting modifiers/CapsLock.
 	/// </summary>
-	/// <param name="keysEtc"></param>
 	/// <remarks>
 	/// Ignores <b>opt.key</b> and instead uses default options with these changes:
 	/// - SleepFinally = 0.
@@ -768,6 +758,7 @@ public partial class keys {
 	/// - NoModOff = true.
 	/// </remarks>
 	/// <seealso cref="more.sendKey"/>
+		/// <inheritdoc cref="keys.send" path="/param"/>
 	public static void sendL([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		var o = new OKey() { KeySpeed = 0, NoBlockInput = true, NoCapsOff = true, NoModOff = true, SleepFinally = 0 };
 		new keys(o).Add(keysEtc).SendIt();
@@ -800,14 +791,6 @@ public partial class keys {
 	public static void sendt(string text, string html = null) {
 		new keys(opt.key).AddText(text, html).SendIt();
 	}
-
-	//rejected: send -> k, sendt -> t.
-	//public static void k([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
-	//	new keys(opt.key).Add(keysEtc).SendIt();
-	//}
-	//public static void t(string text, string html = null) {
-	//	new keys(opt.key).AddText(text, html).SendIt();
-	//}
 }
 
 //FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); keys.send("!password", "Shift+Tab", "user", "Enter");

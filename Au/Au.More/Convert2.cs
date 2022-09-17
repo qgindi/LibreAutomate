@@ -10,15 +10,26 @@ public static unsafe class Convert2 {
 	#region hex
 
 	/// <summary>
-	/// Converts binary data in any memory to hex encoded string.
+	/// Converts data in byte[] or other memory to hex encoded string.
 	/// </summary>
-	/// <param name="data">The data. Can be any valid memory of specified size, for example a struct address.</param>
-	/// <param name="size">data memory size (bytes).</param>
+	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 	/// <remarks>
 	/// The result string length is 2 * data length.
 	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
 	/// </remarks>
+	public static string HexEncode(ReadOnlySpan<byte> data, bool upperCase = false) {
+		fixed (byte* p = data) {
+			return HexEncode(p, data.Length, upperCase);
+		}
+	}
+
+	/// <summary>
+	/// Converts binary data in any memory to hex encoded string.
+	/// </summary>
+	/// <param name="data">The data. Can be any valid memory of specified size, for example a struct address.</param>
+	/// <param name="size">data memory size (bytes).</param>
+	/// <inheritdoc cref="HexEncode(ReadOnlySpan{byte}, bool)"/>
 	public static string HexEncode(void* data, int size, bool upperCase = false) {
 		int u = (upperCase ? 'A' : 'a') - 10;
 		var bytes = (byte*)data;
@@ -39,29 +50,10 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts data in byte[] or other memory to hex encoded string.
-	/// </summary>
-	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-	/// <remarks>
-	/// The result string length is 2 * data length.
-	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
-	/// </remarks>
-	public static string HexEncode(ReadOnlySpan<byte> data, bool upperCase = false) {
-		fixed (byte* p = data) {
-			return HexEncode(p, data.Length, upperCase);
-		}
-	}
-
-	/// <summary>
 	/// Converts a struct variable to hex encoded string.
 	/// </summary>
 	/// <param name="x">Variable.</param>
-	/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-	/// <remarks>
-	/// The result string length is 2 * data length.
-	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
-	/// </remarks>
+	/// <inheritdoc cref="HexEncode(ReadOnlySpan{byte}, bool)"/>
 	public static string HexEncode<T>(T x, bool upperCase = false) where T : unmanaged
 		=> HexEncode(&x, sizeof(T), upperCase);
 
@@ -84,15 +76,11 @@ public static unsafe class Convert2 {
 
 	/// <summary>
 	/// Converts hex encoded string to binary data. Writes to caller's memory buffer.
-	/// Returns the number of bytes written in <i>decoded</i> memory. It is equal or less than <c>Math.Min(bufferSize, encoded.Length/2)</c>.
 	/// </summary>
-	/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
+	/// <returns>The number of bytes written in <i>decoded</i> memory. It is equal or less than <c>Math.Min(bufferSize, encoded.Length/2)</c>.</returns>
 	/// <param name="decoded">Memory buffer for result.</param>
 	/// <param name="bufferSize">Max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
-	/// <remarks>
-	/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
-	/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
-	/// </remarks>
+	/// <inheritdoc cref="HexDecode(ReadOnlySpan{char})"/>
 	public static int HexDecode(RStr encoded, void* decoded, int bufferSize) {
 		if (encoded.Length == 0) return 0;
 		var t = Tables_.Hex;
@@ -117,10 +105,10 @@ public static unsafe class Convert2 {
 
 	/// <summary>
 	/// Converts hex encoded string to a struct variable.
-	/// Returns false if decoded size != <c>sizeof(T)</c>.
 	/// </summary>
-	/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
+	/// <returns>false if decoded size != <c>sizeof(T)</c>.</returns>
 	/// <param name="decoded">The result variable.</param>
+	/// <inheritdoc cref="HexDecode(ReadOnlySpan{char})"/>
 	public static bool HexDecode<T>(RStr encoded, out T decoded) where T : unmanaged {
 		T t;
 		if (HexDecode(encoded, &t, sizeof(T)) != sizeof(T)) { decoded = default; return false; }
@@ -215,6 +203,8 @@ public static unsafe class Convert2 {
 	}
 
 	#endregion
+
+	#region encrypt
 
 	/// <summary>
 	/// AES-encrypts a byte[] or string. Returns byte[].
@@ -319,6 +309,8 @@ public static unsafe class Convert2 {
 		throw new ArgumentException("Expected byte[] or string", "key");
 	}
 
+	#endregion
+
 	#region utf8
 
 	/// <summary>
@@ -402,7 +394,7 @@ public static unsafe class Convert2 {
 	///// </summary>
 	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="result"></param>
-	///// <returns>false if fails.</returns>
+	///// <returns>false if failed.</returns>
 	///// <remarks>
 	///// Uses <see cref="Convert.TryFromBase64Chars"/>.
 	///// </remarks>

@@ -213,7 +213,7 @@ namespace Au.More
 		/// Sets a WH_CALLWNDPROC hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>A new <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
@@ -240,19 +240,7 @@ namespace Au.More
 		/// Sets a WH_CALLWNDPROCRET hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
-		/// <param name="hookProc">
-		/// The hook procedure (function that handles hook events).
-		/// Must return as soon as possible.
-		/// The event cannot be cancelled or modified.
-		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
-		/// </param>
-		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
-		/// <example>
-		/// <see cref="ThreadCallWndProc"/>
-		/// </example>
+		/// <inheritdoc cref="ThreadCallWndProc"/>
 		public static WindowsHook ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0, bool setNow = true)
 			=> new(Api.WH_CALLWNDPROCRET, hookProc, setNow, threadId);
 

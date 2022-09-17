@@ -84,6 +84,10 @@ article h4 {
 .toc-filter > .filter-icon {
     top: 6px;
 }
+
+.toc-filter > .clear-icon {
+    top: 6px;
+}
 .toc-filter {
     border-radius: 2px;
     padding: 0px 2px 2px 2px;
@@ -153,9 +157,6 @@ hr.overload:first-of-type,h2.overload:first-of-type {
 	display: none;
 }
 
-/* break adjacent lines like in XML comments */
-p { white-space: pre-wrap }
-
 td p { margin-bottom: 10px; }
 
 td > p:last-child, td > div > p:last-child, td > ul:last-child, td > ol:last-child, td > div > ul:last-child, td > div > ol:last-child {
@@ -167,7 +168,19 @@ tr td:first-child+td:last-child {
 	width: 75%;
 }
 
-div.codewrapper pre { background-color: #ffffe7 }
+/* break adjacent lines like in XML comments, but collapse multiple spaces and tabs (eg indentation made by XML formatting) */
+p { white-space: pre-line }
+
+pre {
+    white-space: pre;
+	tab-size: 4;
+}
+
+div.codewrapper pre {
+    background-color: #ffffe7;
+    word-wrap: normal;
+    word-break: normal;
+}
 
 code {
     color: #208020;
@@ -176,19 +189,6 @@ code {
     border-radius: 2px;
     padding: 1px 4px;
 }
-pre code {
-    color: black;
-    border: none;
-}
-pre {
-	tab-size: 4;
-	-moz-tab-size: 4;
-}
-
-.hljs-comment{color:#008000}
-.hljs-string{color:#a04020}
-.hljs-keyword,.hljs-literal{color:#0000ff}
-.hljs-title{color:#000000}
 
 span.parametername {
     font-style: italic;

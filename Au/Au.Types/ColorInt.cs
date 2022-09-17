@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace Au.Types
@@ -85,8 +85,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
-		/// Returns color in COLORREF format. Does not modify this variable.
 		/// </summary>
+		/// <returns>color in COLORREF format. Does not modify this variable.</returns>
 		/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
 		public int ToBGR(bool zeroAlpha = true) {
 			var r = SwapRB(argb);
@@ -131,11 +131,7 @@ namespace Au.Types
 		/// </summary>
 		public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 
-		/// <summary>
-		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
-		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows API; aka COLORREF.
-		/// </summary>
+		/// <inheritdoc cref="SwapRB(int)"/>
 		public static uint SwapRB(uint color) => (color & 0xff00ff00) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 
 		//rejected. Unclear usage. Instead let users call ToHLS, change L how they want, and call FromHLS.
@@ -188,8 +184,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Calculates color's perceived brightness.
-		/// Returns 0 to 1.
 		/// </summary>
+		/// <returns>0 to 1.</returns>
 		/// <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
 		/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If false, 0xRRGGBB.</param>
 		/// <remarks>

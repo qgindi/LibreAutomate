@@ -1,4 +1,4 @@
-﻿//SHOULDDO: it seems makes WPF window visible too early.
+//SHOULDDO: it seems makes WPF window visible too early.
 //SHOULDDO: if window not resizable, restore only position, not size.
 
 namespace Au.More;
@@ -53,8 +53,8 @@ public struct WndSavedRect
 
 	/// <summary>
 	/// Creates <b>WndSavedRect</b> from string created by <see cref="ToString"/>.
-	/// Returns false if the string is null or invalid.
 	/// </summary>
+	/// <returns>false if the string is null or invalid.</returns>
 	/// <param name="saved">String created by <see cref="ToString"/>.</param>
 	/// <param name="x">Result.</param>
 	public static bool FromString(string saved, out WndSavedRect x) {

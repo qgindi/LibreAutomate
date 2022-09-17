@@ -77,18 +77,19 @@ class CiAutocorrect {
 	}
 
 	/// <summary>
-	/// Called on WM_CHAR, before passing it to Scintilla. Won't pass if returns true, unless ch is ';'. Not called for chars below space.
+	/// Called on WM_CHAR, before passing it to Scintilla. Won't pass if returns true, unless ch is ';'. Not called if ch less than ' '.
 	/// If ch is ')' etc, and at current position is ')' etc previously added on '(' etc, clears the temp range, sets the out vars and returns true.
 	/// If ch is ';' inside '(...)' and the terminating ';' is missing, sets newPosUtf8 = where ';' should be and returns true.
+	/// If ch is '\"' after two '\"', may close raw string (add """) and return true.
 	/// Also called by SciBeforeKey on Backspace and Tab.
 	/// </summary>
 	public bool SciBeforeCharAdded(SciCode doc, char ch, out BeforeCharContext c) {
 		c = null;
 		bool isBackspace = false, isOpenBrac = false;
 
-		int pos = doc.zCurrentPos8;
-		if (pos == doc.zLen8 && ch != (char)KKey.Back && !doc.zHasSelection) { //if pos is at the end of text, add newline
-			doc.zInsertText(false, pos, "\r\n");
+		int pos8 = doc.zCurrentPos8;
+		if (pos8 == doc.zLen8 && ch != (char)KKey.Back && !doc.zHasSelection) { //if pos8 is at the end of text, add newline
+			doc.zInsertText(false, pos8, "\r\n");
 		}
 
 		switch (ch) {
@@ -99,21 +100,24 @@ class CiAutocorrect {
 		default: return false;
 		}
 
-		var r = doc.ETempRanges_Enum(pos, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
-		if (r == null) return false;
+		var r = doc.ETempRanges_Enum(pos8, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
+		if (r == null) {
+			if (ch == '\"') return _RawString();
+			return false;
+		}
 		if (isOpenBrac && !(r.OwnerData == (object)"ac" || r.OwnerData == (object)"new")) return false;
 		r.GetCurrentFromTo(out int from, out int to, utf8: true);
 
 		if (isBackspace || isOpenBrac) {
-			if (pos != from) return false;
+			if (pos8 != from) return false;
 		} else {
-			if (ch != (char)KKey.Tab && ch != (char)doc.Call(Sci.SCI_GETCHARAT, to)) return false; //info: '\0' if posUtf8 invalid
-			if (ch == (char)KKey.Tab && doc.Call(Sci.SCI_GETCHARAT, pos - 1) < 32) return false; //don't exit temp range if pos is after tab or newline
+			if (ch != (char)KKey.Tab && ch != doc.zCharAt(to)) return false; //info: '\0' if posUtf8 invalid
+			if (ch == (char)KKey.Tab && doc.zCharAt(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
 		}
-		for (int i = pos; i < to; i++) switch ((char)doc.Call(Sci.SCI_GETCHARAT, i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
+		for (int i = pos8; i < to; i++) switch (doc.zCharAt(i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
 
 		//rejected: ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion. Probably more annoying than useful, because than may want to type (cast) or ()=>lambda or (tup, le).
-		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == (char)doc.Call(Sci.SCI_GETCHARAT, pos - 1)) {
+		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == doc.zCharAt(pos8 - 1)) {
 		//	r.OwnerData = null;
 		//	return true;
 		//}
@@ -122,19 +126,56 @@ class CiAutocorrect {
 		r.Remove();
 
 		if (isBackspace || isOpenBrac) {
-			doc.Call(Sci.SCI_SETSEL, pos - 1, to + 1); //select and pass to Scintilla, let it delete or overtype
+			doc.Call(Sci.SCI_SETSEL, pos8 - 1, to + 1); //select and pass to Scintilla, let it delete or overtype
 			return false;
 		}
 
 		to++;
 		if (ch == (char)KKey.Tab) doc.zCurrentPos8 = to;
-		else c = new BeforeCharContext { oldPosUtf8 = pos, newPosUtf8 = to };
+		else c = new BeforeCharContext { oldPosUtf8 = pos8, newPosUtf8 = to };
 		return true;
+
+		bool _RawString() { //close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
+			if (pos8 > 3 && doc.zCharAt(pos8 - 1) == '\"' && doc.zCharAt(pos8 - 2) == '\"' && doc.zCharAt(pos8 - 3) != '@') {
+				if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
+				var pos16 = cd.pos;
+				var token = cd.syntaxRoot.FindToken(pos16 - 1);
+				var tkind = token.Kind();
+				if (tkind is SyntaxKind.StringLiteralToken or SyntaxKind.InterpolatedStringEndToken) {
+					//if pos is at ""|, make """|""" and append ; if missing
+					var span = token.Span;
+					if (pos16 == span.End && (tkind == SyntaxKind.StringLiteralToken ? span.Length == 2 : token.Parent.Span.Length == 3)) {
+						//never mind: does not work if $$"". Then code is already invalid, and can't detect correctly. VS ignores it too.
+						doc.zInsertText(false, pos8, "\"");
+						doc.zAddUndoPoint();
+						var nt = token.GetNextToken(includeZeroWidth: true);
+						bool semicolon = nt.IsKind(SyntaxKind.SemicolonToken) && nt.IsMissing;
+						doc.zInsertText(false, pos8 + 1, semicolon ? "\"\"\";" : "\"\"\"");
+						doc.zCurrentPos8 = pos8 + 1;
+						return true;
+					}
+				} else if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
+					//if pos it at """|""", make """"|""""
+					int q1 = 0, q2 = 0;
+					for (int i = pos8; doc.zCharAt(--i) == '\"';) q1++;
+					for (int i = pos8; doc.zCharAt(i++) == '\"';) q2++;
+					if (q1 == q2 && q1 >= 3) {
+						if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken && token.SpanStart != pos8 - q1) return false;
+						doc.zInsertText(false, pos8, "\"");
+						doc.zAddUndoPoint();
+						doc.zInsertText(false, pos8 + 1, "\"");
+						doc.zCurrentPos8 = pos8 + 1;
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
 
 	/// <summary>
 	/// Called on SCN_CHARADDED.
-	/// If ch is '(' etc, adds ')' etc. Similar with """ and /*.
+	/// If ch is '(' etc, adds ')' etc. Similar with /*.
 	/// At the start of line corrects indentation of '}'. Removes of '#'.
 	/// Replaces code like 5s with 5.s(); etc.
 	/// </summary>
@@ -267,24 +308,7 @@ class CiAutocorrect {
 					break;
 				default: return;
 				}
-
-				if (span.Start != pos - (isVerbatim ? 1 : 0) - (isInterpolated ? 1 : 0)) {
-					if (isVerbatim) {
-						//rejected: inside verbatim string replace " with "". Often more annoying than useful.
-						return;
-						//cd.pos--; //insert " before ", and let caret be after ""
-						//tempRangeFrom = 0;
-					} else if (token.Kind() is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken && token.Parent.NoClosingQuote()) {
-						//TODO: often does not work. Depends on code after it.
-						//	Try to move this to SciBeforeCharAdded. And add "\n\n\"\"\""; now """""" is invalid.
-						int i = span.Start;
-						while (code[i] == '$') i++;
-						int iq = i;
-						while (i < pos) if (code[i++] != '\"') return;
-						if (!code.Eq(cd.pos, '\"')) replaceText = code[iq..cd.pos]; //add eg """ at """|, else add " at """"|"""
-						if (pos - iq >= 2) tempRangeFrom = 0; //don't add temp range, else next typed " would just skip one " instead of inserting ""
-					} else return;
-				}
+				if (span.Start != pos - (isVerbatim ? 1 : 0) - (isInterpolated ? 1 : 0)) return;
 			} else {
 				//print.it(kind);
 				if (ch == '<' && !_IsGenericLessThan()) return; //can be operators
@@ -390,7 +414,6 @@ class CiAutocorrect {
 			}
 
 			int r = _InNonblankTriviaOrStringOrChar(cd, tok1, isSelection);
-			//print.it(r);
 			if (r == 1) return true; //yes and corrected
 			if (r == 2) return false; //yes and not corrected
 			if (isSelection) return false;
@@ -745,7 +768,7 @@ class CiAutocorrect {
 				//print.it(v.GetType().Name, v.Span, pos);
 				indent++;
 			}
-		endLoop1:
+			endLoop1:
 
 			//maybe need to add 1 line when breaking line inside '{  }', add tabs in current line, decrement indent in '}' line, etc
 			int iOB = 0, iCB = 0;
@@ -866,7 +889,11 @@ class CiAutocorrect {
 			if (span.ContainsInside(pos) && token.IsKind(SyntaxKind.CharacterLiteralToken)) return 3;
 			bool? isString = token.IsInString(pos, cd.code, out var si, orU8: true);
 			if (isString == false) return 0;
-			if (si.isRawPrefixCenter) cd.sci.zInsertText(true, pos, "\r\n"); //let Enter in raw string prefix like """|""" add extra newline
+			if (si.isRawPrefixCenter) {
+				cd.sci.zInsertText(true, pos, "\r\n\r\n"); //let Enter in raw string prefix like """|""" add extra newline
+				cd.sci.zCurrentPos16 = pos + 2;
+				return 1;
+			}
 			if (isString == null || !si.isClassic) return 2;
 			return 3;
 			//rejected: split string into "abc" + "" or "abc\r\n" + "". Rarely used. Better complete statement.

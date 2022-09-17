@@ -179,8 +179,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Finds a named group and returns its 1-based index.
-		/// Returns -1 if not found.
+		/// Finds a named group and returns its 1-based index. Returns -1 if not found.
 		/// </summary>
 		/// <param name="groupName">
 		/// Group name.
@@ -197,8 +196,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Finds a named group and returns its 1-based index.
-		/// Returns -1 if not found.
+		/// Finds a named group and returns its 1-based index. Returns -1 if not found.
 		/// </summary>
 		/// <param name="groupName">
 		/// Group name.
@@ -323,8 +321,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
-		/// Returns <c>default</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
+		/// <returns><c>default</c> if the group does not exist in the subject string (see <see cref="Exists"/>).</returns>
 		/// <remarks>
 		/// Unlike <see cref="Value"/>, does not create new string.
 		/// </remarks>
@@ -335,8 +333,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
-		/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
+		/// <returns>null if the group does not exist in the subject string (see <see cref="Exists"/>).</returns>
 		/// <remarks>
 		/// Creates new string each time. See also <see cref="Span"/>.
 		/// </remarks>

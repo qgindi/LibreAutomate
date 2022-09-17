@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Win32.SafeHandles;
 
 namespace Au.More;
@@ -37,8 +37,8 @@ internal struct Handle_ : IDisposable {
 	/// <summary>
 	/// Opens process handle.
 	/// Calls API OpenProcess.
-	/// Returns default if fails. Supports <see cref="lastError"/>.
 	/// </summary>
+	/// <returns>default if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="processId">Process id.</param>
 	/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
 	public static Handle_ OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) {
@@ -49,8 +49,8 @@ internal struct Handle_ : IDisposable {
 	/// <summary>
 	/// Opens window's process handle.
 	/// This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-	/// Returns default if fails. Supports <see cref="lastError"/>.
 	/// </summary>
+	/// <returns>default if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="w"></param>
 	/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
 	public static Handle_ OpenProcess(wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) {

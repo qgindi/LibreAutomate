@@ -1,4 +1,4 @@
-﻿namespace Au
+namespace Au
 {
 	public static partial class wait
 	{
@@ -203,8 +203,8 @@
 
 			/// <summary>
 			/// Gets current actual system time resolution (period).
-			/// The return value usually is between 0.5 and 15.625 milliseconds. Returns 0 if fails.
 			/// </summary>
+			/// <returns>The return value usually is between 0.5 and 15.625 milliseconds. Returns 0 if failed.</returns>
 			public static float Current {
 				get {
 					if (0 != Api.NtQueryTimerResolution(out _, out _, out var t)) return 0f;

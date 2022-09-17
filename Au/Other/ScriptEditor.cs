@@ -1,4 +1,4 @@
-﻿namespace Au.More;
+namespace Au.More;
 
 /// <summary>
 /// Contains static functions to interact with the script editor, if available.
@@ -34,7 +34,14 @@ public static class ScriptEditor {
 	public static wnd MainWindow(bool show = false) => WndMain_(show);
 
 	/// <summary>
-	/// Opens the specified source file (script etc) and sets code editor's current position at the start of the specified line.
+	/// Opens the specified source file (script etc).
+	/// Does nothing if editor isn't running.
+	/// </summary>
+	/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>
+	public static void Open(string file) => OpenAndGoToLine(file, 0);
+
+	/// <summary>
+	/// Opens the specified source file (script etc) and sets the editor's current position at the start of the specified line.
 	/// Does nothing if editor isn't running.
 	/// </summary>
 	/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>

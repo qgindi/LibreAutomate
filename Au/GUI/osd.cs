@@ -405,7 +405,7 @@ namespace Au
 
 		/// <summary>
 		/// Coordinates.
-		/// Default: null. Screen center.
+		/// Default: null (screen center).
 		/// </summary>
 		/// <remarks>
 		/// Not used if <see cref="Rect"/> is set.
@@ -467,7 +467,7 @@ namespace Au
 
 		/// <summary>
 		/// Font.
-		/// If not set, uses <see cref="defaultSmallFont"/>.
+		/// Default: <see cref="defaultSmallFont"/>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -770,15 +770,15 @@ namespace Au
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
 		/// </summary>
-		/// <param name="text">See <see cref="Text"/>.</param>
-		/// <param name="secondsTimeout">See <see cref="SecondsTimeout"/>.</param>
-		/// <param name="xy">See <see cref="XY"/>.</param>
-		/// <param name="icon">See <see cref="Icon"/>.</param>
-		/// <param name="textColor">See <see cref="TextColor"/>.</param>
-		/// <param name="backColor">See <see cref="BackColor"/>.</param>
-		/// <param name="font">Font. If null, uses <see cref="defaultSmallFont"/>.</param>
-		/// <param name="name">See <see cref="OsdWindow.Name"/>.</param>
-		/// <param name="showMode">See <see cref="ShowMode"/>.</param>
+		/// <param name="text">Text in OSD window.<br/>Sets <see cref="Text"/>.</param>
+		/// <param name="secondsTimeout"><inheritdoc cref="SecondsTimeout" path="/summary/node()"/><br/>Sets <see cref="SecondsTimeout"/>.</param>
+		/// <param name="xy"><inheritdoc cref="XY" path="/summary/node()"/><br/>Sets <see cref="XY"/>.</param>
+		/// <param name="icon"><inheritdoc cref="Icon" path="/summary/node()"/><br/>Sets <see cref="Icon"/>.</param>
+		/// <param name="textColor"><inheritdoc cref="TextColor" path="/summary/node()"/><br/>Sets <see cref="TextColor"/>.</param>
+		/// <param name="backColor"><inheritdoc cref="BackColor" path="/summary/node()"/><br/>Sets <see cref="BackColor"/>.</param>
+		/// <param name="font"><inheritdoc cref="Font" path="/summary/node()"/><br/>Sets <see cref="Font"/>.</param>
+		/// <param name="name">OSD window name.<br/>Sets <see cref="OsdWindow.Name"/>.</param>
+		/// <param name="showMode">Sets <see cref="ShowMode"/>.</param>
 		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
 		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
@@ -809,18 +809,12 @@ namespace Au
 		/// <summary>
 		/// Shows a big-font text with transparent background.
 		/// </summary>
-		/// <param name="text">See <see cref="Text"/>.</param>
-		/// <param name="secondsTimeout">See <see cref="SecondsTimeout"/>.</param>
-		/// <param name="xy">See <see cref="XY"/>.</param>
-		/// <param name="color">See <see cref="TextColor"/>. Default: <see cref="defaultTransparentTextColor"/>.</param>
-		/// <param name="font">Font. If null, uses <see cref="defaultBigFont"/>.</param>
-		/// <param name="name">See <see cref="OsdWindow.Name"/>.</param>
-		/// <param name="showMode">See <see cref="ShowMode"/>.</param>
-		/// <param name="dontShow">See <see cref="showText"/>.</param>
-		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
+		/// <param name="color">Sets <see cref="TextColor"/>. Default: <see cref="defaultTransparentTextColor"/>.</param>
+		/// <param name="font">Sets <see cref="Font"/>. Default: <see cref="defaultBigFont"/>.</param>
 		/// <remarks>
 		/// Also sets these properties: <see cref="OsdWindow.Opacity"/>=0.
 		/// </remarks>
+		/// <inheritdoc cref="showText(string, int, PopupXY, object, ColorInt?, ColorInt?, FontNSS, string, OsdMode, bool)"/>
 		public static osdText showTransparentText(string text,
 			int secondsTimeout = 0, PopupXY xy = null,
 			ColorInt? color = null, FontNSS font = null,
@@ -843,16 +837,11 @@ namespace Au
 		/// <summary>
 		/// Shows on-screen image.
 		/// </summary>
-		/// <param name="image">See <see cref="BackgroundImage"/>.</param>
-		/// <param name="secondsTimeout">See <see cref="SecondsTimeout"/>.</param>
-		/// <param name="xy">See <see cref="XY"/>.</param>
-		/// <param name="name">See <see cref="OsdWindow.Name"/>.</param>
-		/// <param name="showMode">See <see cref="ShowMode"/>.</param>
-		/// <param name="dontShow">See <see cref="showText"/>.</param>
-		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
+		/// <param name="image">Sets <see cref="BackgroundImage"/>.</param>
 		/// <remarks>
 		/// Also sets these properties: <see cref="IsOfImageSize"/>=true, <see cref="OsdWindow.Opacity"/>=0, <see cref="ClickToClose"/>=true.
 		/// </remarks>
+		/// <inheritdoc cref="showText(string, int, PopupXY, object, ColorInt?, ColorInt?, FontNSS, string, OsdMode, bool)"/>
 		public static osdText showImage(Image image,
 			int secondsTimeout = 0, PopupXY xy = null,
 			string name = null, OsdMode showMode = default, bool dontShow = false) {

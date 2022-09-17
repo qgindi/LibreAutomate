@@ -1,4 +1,4 @@
-﻿namespace Au;
+namespace Au;
 
 /// <summary>
 /// Contains static functions to get miscellaneous info not found in other classes of this library and .NET.
@@ -28,8 +28,8 @@ public static class miscInfo
 
 	/// <summary>
 	/// Gets text cursor (caret) position and size.
-	/// Returns false if fails.
 	/// </summary>
+	/// <returns>false if failed.</returns>
 	/// <param name="r">Receives the rectangle, in screen coordinates.</param>
 	/// <param name="w">Receives the control that contains the text cursor.</param>
 	/// <param name="orMouse">If fails, get mouse pointer coodinates.</param>

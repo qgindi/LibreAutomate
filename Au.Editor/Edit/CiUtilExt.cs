@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
@@ -98,11 +98,13 @@ static class CiUtilExt {
 			//most likely the user will write a raw string at """|""" and not at """"""|
 			if (nq < 6 || 0 != (nq & 1)) return false;
 			iq += nq / 2; if (iq != position) return false;
-			if (isRawPrefixCenter = node.NoClosingQuote()) start = end = iq;
-			return isRawPrefixCenter;
+			//if (isRawPrefixCenter = node.NoClosingQuote()) start = end = iq; //not always works
+			//return isRawPrefixCenter;
+			start = end = iq;
+			return isRawPrefixCenter = true;
 		}
 
-		if (k == SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
+		if (k is SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
 			int iq = start, nq = 0; while (code[iq] == '$') iq++;
 			while (code.Eq(iq + nq, '\"')) nq++;
 			if (_IsRawPrefixCenter(iq, nq)) goto gTrue;

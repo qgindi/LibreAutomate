@@ -105,9 +105,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Expands environment variables and calls <see cref="isFullPath"/>.
-		/// Returns true if the string is full path, like <c>@"C:\a\b.txt"</c> or <c>@"C:"</c> or <c>@"\\server\share\..."</c>:
+		/// Expands environment variables and calls/returns <see cref="isFullPath"/>.
 		/// </summary>
+		/// <returns>true if the string is full path, like <c>@"C:\a\b.txt"</c> or <c>@"C:"</c> or <c>@"\\server\share\..."</c>.</returns>
 		/// <param name="path">
 		/// Any string. Can be null.
 		/// If starts with '%' character, calls <see cref="isFullPath"/> with expanded environment variables (<see cref="expand"/>). If it returns true, replaces the passed variable with the expanded path string.
@@ -554,9 +554,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets filename from path. Does not remove extension.
-		/// Returns "" if there is no filename.
-		/// Returns null if path is null.
 		/// </summary>
+		/// <returns>Returns "" if there is no filename. Returns null if path is null.</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFileName"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
@@ -589,9 +588,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets filename without extension.
-		/// Returns "" if there is no filename.
-		/// Returns null if path is null.
 		/// </summary>
+		/// <returns>Returns "" if there is no filename. Returns null if path is null.</returns>
 		/// <param name="path">Path or filename (then just removes extension). Can be null.</param>
 		/// <remarks>
 		/// The same as <see cref="getName"/>, just removes extension.
@@ -619,9 +617,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets filename extension, like <c>".txt"</c>.
-		/// Returns "" if there is no extension.
-		/// Returns null if path is null.
 		/// </summary>
+		/// <returns>Returns "" if there is no extension. Returns null if path is null.</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
@@ -645,12 +642,9 @@ namespace Au {
 
 		/// <summary>
 		/// Finds filename extension, like <c>".txt"</c>.
-		/// Returns '.' character index, or -1 if there is no extension.
 		/// </summary>
+		/// <returns>Index of <c>'.'</c> character, or -1 if there is no extension.</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
-		/// <remarks>
-		/// Returns -1 if <c>'.'</c> is before <c>'\\'</c> or <c>'/'</c>.
-		/// </remarks>
 		public static int findExtension(RStr path) {
 			int i;
 			for (i = path.Length - 1; i >= 0; i--) {
@@ -665,9 +659,8 @@ namespace Au {
 		/// <summary>
 		/// Removes filename part from path.
 		/// By default also removes separator (<c>'\\'</c> or <c>'/'</c>) if it is not after drive name (eg <c>"C:"</c>).
-		/// Returns "" if the string is a filename.
-		/// Returns null if the string is null or a root (like <c>@"C:\"</c> or <c>"C:"</c> or <c>@"\\server\share"</c> or <c>"http:"</c>).
 		/// </summary>
+		/// <returns>Returns "" if the string is a filename. Returns null if the string is null or a root (like <c>@"C:\"</c> or <c>"C:"</c> or <c>@"\\server\share"</c> or <c>"http:"</c>).</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <param name="withSeparator">Don't remove separator character(s) (<c>'\\'</c> or <c>'/'</c>). See examples.</param>
 		/// <remarks>

@@ -151,8 +151,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets custom icon file path and icon index.
-		/// Returns null if the shortcut does not have a custom icon (then you see its target icon).
 		/// </summary>
+		/// <returns>null if the shortcut does not have a custom icon (then you see its target icon).</returns>
 		/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
 		[SkipLocalsInit]
 		public string GetIconLocation(out int iconIndex) {

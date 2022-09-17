@@ -116,16 +116,16 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets the first found descendant element.
-		/// Returns null if not found.
 		/// </summary>
+		/// <returns>null if not found.</returns>
 		public static XElement Desc(this XElement t, XName name) {
 			return t.Descendants(name).FirstOrDefault();
 		}
 
 		/// <summary>
 		/// Finds the first descendant element that has the specified attribute or value.
-		/// Returns null if not found.
 		/// </summary>
+		/// <returns>null if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
@@ -142,8 +142,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Finds all descendant elements that have the specified attribute or value.
-		/// Returns null if not found.
 		/// </summary>
+		/// <returns>null if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
@@ -157,8 +157,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute or value.
-		/// Returns null if not found.
 		/// </summary>
+		/// <returns>null if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
@@ -173,8 +173,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets all direct child elements that have the specified attribute or value.
-		/// Returns null if not found.
 		/// </summary>
+		/// <returns>null if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
 		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
@@ -198,8 +198,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets the first found direct child element. If not found, adds new empty child element.
-		/// Returns the found or added element.
 		/// </summary>
+		/// <returns>The found or added element.</returns>
 		public static XElement ElemOrAdd(this XElement t, XName name) {
 			var e = t.Element(name);
 			if (e == null) t.Add(e = new XElement(name));
@@ -208,9 +208,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute. If not found, adds new child element with the attribute.
-		/// Returns the found or added element.
 		/// More info: <see cref="Elem"/>
 		/// </summary>
+		/// <returns>The found or added element.</returns>
 		public static XElement ElemOrAdd(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			var e = t.Elem(name, attributeName, attributeValue, ignoreCase);
 			if (e == null) t.Add(e = new XElement(name, new XAttribute(attributeName, attributeValue)));
@@ -218,8 +218,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets previous sibling element.
-		/// Returns null if no element.
+		/// Returns previous sibling element or null.
 		/// </summary>
 		public static XElement PrevElem(this XElement t) {
 			for (XNode n = t.PreviousNode; n != null; n = n.PreviousNode) {
@@ -229,8 +228,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets next sibling element.
-		/// Returns null if no element.
+		/// Returns next sibling element or null.
 		/// </summary>
 		public static XElement NextElem(this XElement t) {
 			for (XNode n = t.NextNode; n != null; n = n.NextNode) {

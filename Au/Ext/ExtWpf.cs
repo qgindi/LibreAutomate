@@ -15,8 +15,11 @@ namespace Au.Types {
 	public static class ExtWpf {
 		/// <summary>
 		/// Gets native window handle of this <b>Window</b> or <b>Popup</b>, or container window handle of this child object.
-		/// Returns <c>default(wnd)</c> if: called before creating or after closing real window; failed; <i>t</i> is null.
 		/// </summary>
+		/// <returns><c>default(wnd)</c> if:
+		/// <br/>• called before creating or after closing real window;
+		/// <br/>• failed;
+		/// <br/>• <i>t</i> is null.</returns>
 		/// <param name="t"></param>
 		public static wnd Hwnd(this DependencyObject t) {
 			bool isPopup = false;
@@ -116,8 +119,8 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Calls callback function <i>f</i> for each visual ancestor (<see cref="VisualTreeHelper.GetParent"/>).
-		/// Returns ancestor for which <i>f</i> returns true. Also can return <i>last</i> or null.
+		/// Calls callback function <i>f</i> for each visual ancestor (<see cref="VisualTreeHelper.GetParent"/>), and returns the ancestor for which <i>f</i> returns true.
+		/// Also can return <i>last</i> or null.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="andThis">Include this object.</param>
@@ -134,7 +137,7 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Returns visual ancestor (<see cref="VisualTreeHelper.GetParent"/>) of type <i>T</i>.
+		/// Returns the nearest visual ancestor (<see cref="VisualTreeHelper.GetParent"/>) of type <i>T</i>.
 		/// Also can return <i>last</i> or null.
 		/// </summary>
 		/// <param name="t"></param>

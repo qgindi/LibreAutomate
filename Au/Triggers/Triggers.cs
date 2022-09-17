@@ -1,4 +1,4 @@
-﻿namespace Au.Triggers;
+namespace Au.Triggers;
 
 /// <summary>
 /// The main class of action triggers.
@@ -11,14 +11,14 @@
 /// Code syntax to add an action trigger:
 /// <code>Triggers.TriggerType[parameters] = action;</code>
 /// Examples:
-/// <code>
+/// <code><![CDATA[
 /// Triggers.Hotkey["Ctrl+K"] = o => print.it(o);
 /// Triggers.Hotkey["Ctrl+Shift+K"] = o => {
 /// 	print.it("This is a trigger action (lambda function).");
 /// 	print.it($"It runs when you press {o}.");
 /// };
 /// Triggers.Run();
-/// </code>
+/// ]]></code>
 /// 
 /// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for triggers added afterwards.
 /// 

@@ -145,10 +145,10 @@ public partial class toolbar {
 	#region auto-hide owner toolbars
 
 	/// <summary>
-	/// Creates new toolbar and sets its <see cref="Satellite"/> = this.
-	/// Returns the new toolbar.
+	/// Creates a new toolbar and sets its <see cref="Satellite"/> = this.
 	/// </summary>
-	/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
+	/// <returns>The new toolbar.</returns>
+	/// <param name="ctorFlags"><b>toolbar</b> constructor flags.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <exception cref="InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
@@ -169,14 +169,14 @@ public partial class toolbar {
 	}
 
 	/// <summary>
-	/// Creates new toolbar and sets its <see cref="Satellite"/> = this. Sets properties for showing at a screen edge.
-	/// Returns the new toolbar.
+	/// Creates a new toolbar and sets its <see cref="Satellite"/> = this. Sets properties for showing at a screen edge.
 	/// </summary>
+	/// <returns>The new toolbar.</returns>
 	/// <param name="mta">Mouse edge trigger arguments.</param>
 	/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, .5f, other with .5f, 1f.</param>
 	/// <param name="rangeEnd"></param>
 	/// <param name="thickness">The visible thickness. Pixels.</param>
-	/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
+	/// <param name="ctorFlags"><b>toolbar</b> constructor flags.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	public toolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
@@ -185,18 +185,9 @@ public partial class toolbar {
 		return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.Screen, rangeStart, rangeEnd, thickness, ctorFlags, f_, l_);
 	}
 
-	/// <summary>
-	/// Creates new toolbar and sets its <see cref="Satellite"/> = this. Sets properties for showing at a screen edge.
-	/// Returns the new toolbar.
-	/// </summary>
 	/// <param name="edge">Screen edge/part.</param>
 	/// <param name="scrn">Screen. Default: primary.</param>
-	/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, .5f, other with .5f, 1f.</param>
-	/// <param name="rangeEnd"></param>
-	/// <param name="thickness">The visible thickness. Pixels.</param>
-	/// <param name="ctorFlags">See <see cref="toolbar(string, TBCtor, string, int, string)"/>.</param>
-	/// <param name="f_">[](xref:caller_info)</param>
-	/// <param name="l_">[](xref:caller_info)</param>
+	/// <inheritdoc cref="AutoHideScreenEdge(MouseTriggerArgs, Coord, Coord, int, TBCtor, string, int)"/>
 	public toolbar AutoHideScreenEdge(TMEdge edge, screen scrn = default, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
 		_ThreadTrap();
 		var sh = scrn.Now;

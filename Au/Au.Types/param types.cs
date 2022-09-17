@@ -363,26 +363,29 @@ public class PopupXY {
 }
 
 /// <summary>
-/// Window handle.
+/// A window handle.
 /// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: <b>System.Windows.DependencyObject</b> (WPF window or control), <b>System.Windows.Forms.Control</b> (<b>Form</b> or control), <b>IntPtr</b> (window handle).
 /// </summary>
 public struct AnyWnd {
 	readonly object _o;
 	AnyWnd(object o) { _o = o; }
 
-	/// <summary> Assignment of a value of type wnd. </summary>
-	public static implicit operator AnyWnd(wnd w) => new AnyWnd(w);
-	/// <summary> Assignment of a window handle as IntPtr. </summary>
-	public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((wnd)hwnd);
-	/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
-	public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new AnyWnd(c);
-	/// <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
+	/// <summary>Assignment of a value of type wnd.</summary>
+	public static implicit operator AnyWnd(wnd w) => new(w);
+
+	/// <summary>Assignment of a window handle as IntPtr.</summary>
+	public static implicit operator AnyWnd(IntPtr hwnd) => new((wnd)hwnd);
+
+	/// <summary>Assignment of a value of type System.Windows.Forms.Control (Form or any control class).</summary>
+	public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new(c);
+
+	/// <summary>Assignment of a value of type System.Windows.DependencyObject (WPF window or control).</summary>
 	public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
 
 	/// <summary>
-	/// Gets the window or control handle as wnd.
-	/// Returns default(wnd) if not assigned.
+	/// Gets the window or control handle as <b>wnd</b>.
 	/// </summary>
+	/// <value>default(wnd) if not assigned.</value>
 	public wnd Hwnd => wnd.Internal_.FromObject(_o);
 
 	/// <summary>

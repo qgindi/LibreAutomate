@@ -1,4 +1,4 @@
-﻿
+
 using static Au.wnd.Internal_;
 
 namespace Au
@@ -115,9 +115,9 @@ namespace Au
 
 		/// <summary>
 		/// Finds the specified control in a list of controls.
-		/// Returns 0-based index, or -1 if not found.
 		/// The <see cref="Result"/> property will be the control.
 		/// </summary>
+		/// <returns>0-based index, or -1 if not found.</returns>
 		/// <param name="a">List of controls, for example returned by <see cref="wnd.getwnd.Children"/>.</param>
 		/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
 		public int FindInList(IEnumerable<wnd> a, wnd wParent = default) {
@@ -127,8 +127,8 @@ namespace Au
 
 		/// <summary>
 		/// Finds all matching child controls, like <see cref="wnd.ChildAll"/>.
-		/// Returns array containing 0 or more control handles as wnd.
 		/// </summary>
+		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 		/// <exception cref="AuWndException">Invalid wParent.</exception>
 		public wnd[] FindAll(wnd wParent) {
@@ -137,8 +137,8 @@ namespace Au
 
 		/// <summary>
 		/// Finds all matching controls in a list of controls.
-		/// Returns array containing 0 or more control handles as wnd.
 		/// </summary>
+		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 		/// <param name="a">List of controls, for example returned by <see cref="wnd.getwnd.Children"/>.</param>
 		/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
 		public wnd[] FindAllInList(IEnumerable<wnd> a, wnd wParent = default) {
@@ -155,7 +155,6 @@ namespace Au
 
 		/// <summary>
 		/// Returns index of matching element or -1.
-		/// Returns -1 if using getAll.
 		/// </summary>
 		/// <param name="wParent">Parent window. Can be default(wnd) if inList is true and no DirectChild flag and not using winforms name.</param>
 		/// <param name="a">List of wnd. Does not dispose it.</param>

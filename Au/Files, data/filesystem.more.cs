@@ -63,8 +63,8 @@ namespace Au {
 
 			/// <summary>
 			/// Gets <see cref="FileId"/> of a file or directory.
-			/// Returns false if fails. Supports <see cref="lastError"/>.
 			/// </summary>
+			/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 			/// <param name="path">Full path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 			/// <param name="fileId"></param>
 			public static unsafe bool getFileId(string path, out FileId fileId) {

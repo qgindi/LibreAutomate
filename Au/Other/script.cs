@@ -1,4 +1,4 @@
-﻿//CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
+//CONSIDER: script.canPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
 
 namespace Au;
 
@@ -91,7 +91,6 @@ public static class script {
 	public static int runWait([ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(1, script, args, out _);
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 	/// <summary>
 	/// Starts executing a script, waits until the task ends and then gets <see cref="writeResult"/> text.
 	/// </summary>
@@ -113,7 +112,6 @@ public static class script {
 	/// <inheritdoc cref="run"/>
 	public static int runWait(Action<string> results, [ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(3, script, args, out _, results);
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 	static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null) {
 		resultS = null;
@@ -271,8 +269,8 @@ public static class script {
 
 	/// <summary>
 	/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that started this task using command line like "Au.Editor.exe *Script5.cs".
-	/// Returns false if this task was not started in such a way. Returns false if failed to write, except when <i>s</i> is null/"".
 	/// </summary>
+	/// <returns>false if this task was not started in such a way. Or if failed to write, except when <i>s</i> is null/"".</returns>
 	/// <param name="s">A string. This function does not append newline characters.</param>
 	/// <remarks>
 	/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
@@ -346,7 +344,7 @@ public static class script {
 	/// Can end script processes started from the editor or not.
 	/// 
 	/// The process executes process exit event handlers. Does not execute <b>finally</b> code blocks. Does not execute GC.
-	///
+	/// 
 	/// Returns null if <i>processId</i> is invalid (probably because the script is already ended). Returns false if <i>processId</i> is valid but not of a script process (probably the script ended long time ago and the id is reused for another process).
 	/// </remarks>
 	public static bool? end(int processId) {
@@ -616,7 +614,7 @@ public static class script {
 			init?.Invoke(ti);
 			ti.Icon ??= icon.trayIcon();
 			bool canEdit = f_ != null && ScriptEditor.Available;
-			if (canEdit) ti.Click += _ => ScriptEditor.OpenAndGoToLine(f_, 0);
+			if (canEdit) ti.Click += _ => ScriptEditor.Open(f_);
 			ti.MiddleClick += _ => Environment.Exit(2);
 			ti.RightClick += e => {
 				var m = new popupMenu();
@@ -624,9 +622,9 @@ public static class script {
 					menu(ti, m);
 					if (m.Last != null && !m.Last.IsSeparator) m.Separator();
 				}
-				if (canEdit) m["Open script\tClick"] = _ => ScriptEditor.OpenAndGoToLine(f_, 0);
+				if (canEdit) m["Open script\tClick"] = _ => ScriptEditor.Open(f_);
 				m["End task\tM-click" + (s_sleepExit ? ", Sleep" : null) + (s_lockExit ? ", Win+L, Ctrl+Alt+Delete" : null)] = _ => Environment.Exit(2);
-				if (canEdit) m["End and open"] = _ => { ScriptEditor.OpenAndGoToLine(f_, 0); Environment.Exit(2); };
+				if (canEdit) m["End and open"] = _ => { ScriptEditor.Open(f_); Environment.Exit(2); };
 				m.Show(PMFlags.AlignCenterH | PMFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
 			};
 			ti.Visible = true;

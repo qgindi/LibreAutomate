@@ -1,4 +1,4 @@
-﻿//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
+//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
 //	QM2 has problems crossing non-screen corners at default speed. Au works well.
 
 namespace Au {
@@ -1177,9 +1177,6 @@ namespace Au {
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
 		/// <returns>Returns the button code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <param name="secondsTimeout"></param>
-		/// <param name="up"></param>
-		/// <param name="block"></param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -1187,6 +1184,7 @@ namespace Au {
 		/// print.it(button);
 		/// ]]></code>
 		/// </example>
+		/// <inheritdoc cref="waitForClick(double, MButtons, bool, bool)" path="/param"/>
 		public static MButtons waitForClick(double secondsTimeout, bool up = false, bool block = false) {
 			return _WaitForClick(secondsTimeout, 0, up, block);
 		}

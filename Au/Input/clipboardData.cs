@@ -58,8 +58,8 @@ namespace Au {
 
 		/// <summary>
 		/// Adds text.
-		/// Returns this.
 		/// </summary>
+		/// <returns>this.</returns>
 		/// <param name="text">Text.</param>
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (CF_UNICODETEXT).
@@ -76,8 +76,8 @@ namespace Au {
 
 		/// <summary>
 		/// Adds data of any format as byte[].
-		/// Returns this.
 		/// </summary>
+		/// <returns>this.</returns>
 		/// <param name="data">byte[] containing data.</param>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats.Register"/>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
@@ -90,8 +90,8 @@ namespace Au {
 #if SUPPORT_RAW_HANDLE
 			/// <summary>
 			/// Adds data of any format as raw clipboard object handle.
-			/// Returns this.
 			/// </summary>
+			/// <returns>this.</returns>
 			/// <param name="handle">Any handle supported by API <msdn>SetClipboardData</msdn>. The type depends on format. For most formats, after setting clipboard data the handle is owned and freed by Windows.</param>
 			/// <param name="format">Clipboard format id. See <see cref="RegisterClipboardFormat"/>.</param>
 			/// <exception cref="ArgumentNullException"></exception>
@@ -107,8 +107,8 @@ namespace Au {
 
 		/// <summary>
 		/// Adds image. Uses clipboard format <see cref="ClipFormats.Image"/> (CF_BITMAP).
-		/// Returns this.
 		/// </summary>
+		/// <returns>this.</returns>
 		/// <param name="image">Image. Must be <see cref="Bitmap"/>, else exception.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		public clipboardData AddImage(Image image) {
@@ -117,8 +117,8 @@ namespace Au {
 
 		/// <summary>
 		/// Adds HTML text. Uses clipboard format <see cref="ClipFormats.Html"/> ("HTML Format").
-		/// Returns this.
 		/// </summary>
+		/// <returns>this.</returns>
 		/// <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <example>
@@ -135,8 +135,8 @@ namespace Au {
 
 		/// <summary>
 		/// Adds list of files to copy/paste. Uses clipboard format <see cref="ClipFormats.Files"/> (CF_HDROP).
-		/// Returns this.
 		/// </summary>
+		/// <returns>this.</returns>
 		/// <param name="files">One or more file paths.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		public clipboardData AddFiles(params string[] files) {
@@ -381,8 +381,8 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets text from the clipboard.
-		/// Returns null if there is no text.
 		/// </summary>
+		/// <returns>null if there is no text.</returns>
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (CF_UNICODETEXT).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
@@ -397,8 +397,8 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets clipboard data of any format as byte[].
-		/// Returns null if there is no data of the specified format.
 		/// </summary>
+		/// <returns>null if there is no data of the specified format.</returns>
 		/// <exception cref="ArgumentException">Invalid format. Supported are all registered formats and standard formats &lt;CF_MAX except GDI handles.</exception>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static byte[] getBinary(int format) {
@@ -426,8 +426,8 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets image from the clipboard. Uses clipboard format <see cref="ClipFormats.Image"/> (CF_BITMAP).
-		/// Returns null if there is no data of this format.
 		/// </summary>
+		/// <returns>null if there is no data of this format.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/>.</exception>
 		public static Bitmap getImage() {
@@ -439,19 +439,15 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets HTML text from the clipboard. Uses clipboard format <see cref="ClipFormats.Html"/> ("HTML Format").
-		/// Returns null if there is no data of this format or if failed to parse it.
 		/// </summary>
+		/// <returns>null if there is no data of this format or if failed to parse it.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string getHtml() => getHtml(out _, out _, out _);
 
-		/// <summary>
-		/// Gets HTML text from the clipboard. Uses clipboard format <see cref="ClipFormats.Html"/> ("HTML Format").
-		/// Returns null if there is no data of this format or if failed to parse it.
-		/// </summary>
 		/// <param name="fragmentStart">Fragment start index in the returned string.</param>
 		/// <param name="fragmentLength">Fragment length.</param>
 		/// <param name="sourceURL">Source URL, or null if unavailable.</param>
-		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+		/// <inheritdoc cref="getHtml()"/>
 		public static string getHtml(out int fragmentStart, out int fragmentLength, out string sourceURL) {
 			return ParseHtmlFormatData_(getBinary(ClipFormats.Html), out fragmentStart, out fragmentLength, out sourceURL);
 		}
@@ -494,8 +490,8 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (CF_HDROP).
-		/// Returns null if there is no data of this format.
 		/// </summary>
+		/// <returns>null if there is no data of this format.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string[] getFiles() {
 			using (new clipboard.OpenClipboard_(false)) {
@@ -506,8 +502,8 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets file paths from HDROP.
-		/// Returns array of 0 or more non-null elements.
 		/// </summary>
+		/// <returns>Array of zero or more non-null elements.</returns>
 		internal static unsafe string[] HdropToFiles_(IntPtr hdrop) {
 			int n = Api.DragQueryFile(hdrop, -1, null, 0);
 			var a = new string[n];

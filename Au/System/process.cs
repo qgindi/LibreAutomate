@@ -1,4 +1,4 @@
-﻿//#define USE_WTS
+//#define USE_WTS
 
 //FUTURE: GetCpuUsage.
 
@@ -12,8 +12,8 @@ namespace Au {
 	public static unsafe class process {
 		/// <summary>
 		/// Gets process executable file name (like "notepad.exe") or full path.
-		/// Returns null if fails.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <param name="fullPath">
 		/// Get full path.
@@ -237,8 +237,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets process ids of all processes of the specified program.
-		/// Returns array containing 0 or more elements.
 		/// </summary>
+		/// <returns>Array containing zero or more elements.</returns>
 		/// <param name="processName">
 		/// Process executable file name, like "notepad.exe".
 		/// String format: [](xref:wildcard_expression).
@@ -261,8 +261,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets process id of the first found process of the specified program.
-		/// Returns 0 if not found.
 		/// </summary>
+		/// <returns>0 if not found.</returns>
 		/// <inheritdoc cref="getProcessIds"/>
 		public static int getProcessId([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
 			if (processName.NE()) throw new ArgumentException();
@@ -307,8 +307,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets version info of process executable file.
-		/// Return null if fails.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		public static FileVersionInfo getVersionInfo(int processId) {
 			var s = getName(processId, true);
@@ -320,8 +320,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets description of process executable file.
-		/// Return null if fails.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <remarks>
 		/// Calls <see cref="getVersionInfo"/> and <see cref="FileVersionInfo.FileDescription"/>.
@@ -330,8 +330,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets process id from handle (API <msdn>GetProcessId</msdn>).
-		/// Returns 0 if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>0 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processHandle">Process handle.</param>
 		public static int processIdFromHandle(IntPtr processHandle) => Api.GetProcessId(processHandle); //fast
 
@@ -344,8 +344,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets user session id of a process (API <msdn>ProcessIdToSessionId</msdn>).
-		/// Returns -1 if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>Returns -1 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
 		public static int getSessionId(int processId) {
 			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
@@ -369,7 +369,7 @@ namespace Au {
 
 		/// <summary>
 		/// Returns true if the process is 32-bit, false if 64-bit.
-		/// Also returns false if fails. Supports <see cref="lastError"/>.
+		/// Also returns false if failed. Supports <see cref="lastError"/>.
 		/// </summary>
 		/// <remarks>
 		/// <note>If you know it is current process, instead use <see cref="osVersion"/> functions or <c>IntPtr.Size==4</c>. This function is much slower.</note>
@@ -388,7 +388,7 @@ namespace Au {
 
 		/// <summary>
 		/// Returns true if the process is 32-bit, false if 64-bit.
-		/// Also returns false if fails. Supports <see cref="lastError"/>.
+		/// Also returns false if failed. Supports <see cref="lastError"/>.
 		/// </summary>
 		public static bool is32Bit(IntPtr processHandle) {
 			bool is32bit = osVersion.is32BitOS;
@@ -432,8 +432,8 @@ namespace Au {
 
 		/// <summary>
 		/// Terminates (ends) the specified process.
-		/// Returns false if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <param name="exitCode">Process exit code.</param>
 		/// <remarks>
@@ -462,8 +462,8 @@ namespace Au {
 
 		/// <summary>
 		/// Terminates (ends) all processes of the specified program or programs.
-		/// Returns the number of successfully terminated processes.
 		/// </summary>
+		/// <returns>The number of successfully terminated processes.</returns>
 		/// <param name="processName">
 		/// Process executable file name, like "notepad.exe".
 		/// String format: [](xref:wildcard_expression).
@@ -484,8 +484,8 @@ namespace Au {
 
 		/// <summary>
 		/// Suspends or resumes the specified process.
-		/// Returns false if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="suspend">true suspend, false resume.</param>
 		/// <param name="processId">Process id.</param>
 		/// <remarks>
@@ -503,8 +503,8 @@ namespace Au {
 
 		/// <summary>
 		/// Suspends or resumes all processes of the specified program or programs.
-		/// Returns the number of successfully suspended/resumed processes.
 		/// </summary>
+		/// <returns>The number of successfully suspended/resumed processes.</returns>
 		/// <param name="suspend">true suspend, false resume.</param>
 		/// <param name="processName">
 		/// Process executable file name, like "notepad.exe".

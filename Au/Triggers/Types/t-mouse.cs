@@ -123,7 +123,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <exception cref="ArgumentException">Invalid <i>modKeys</i> string or <i>flags</i>.</exception>
 	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-	/// <example> See <see cref="ActionTriggers"/>.</example>
+	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public Action<MouseTriggerArgs> this[TMClick button, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 		set {
 			_Add(value, TMKind.Click, (byte)button, modKeys, flags, default, button.ToString(), (f_, l_));
@@ -133,14 +133,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	/// <summary>
 	/// Adds a mouse wheel trigger.
 	/// </summary>
-	/// <param name="direction"></param>
-	/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags, string, int]"/>.</param>
-	/// <param name="flags"></param>
-	/// <param name="f_">[](xref:caller_info)</param>
-	/// <param name="l_">[](xref:caller_info)</param>
-	/// <exception cref="ArgumentException">Invalid <i>modKeys</i> string or <i>flags</i>.</exception>
-	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-	/// <example> See <see cref="ActionTriggers"/>.</example>
+	/// <inheritdoc cref="this[TMClick, string, TMFlags, string, int]"/>
 	public Action<MouseTriggerArgs> this[TMWheel direction, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 		set {
 			_Add(value, TMKind.Wheel, (byte)direction, modKeys, flags, default, direction.ToString(), (f_, l_));
@@ -150,21 +143,14 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	/// <summary>
 	/// Adds a mouse screen edge trigger.
 	/// </summary>
-	/// <param name="edge"></param>
-	/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags, string, int]"/>.</param>
-	/// <param name="flags"></param>
 	/// <param name="screen">
 	/// The trigger will work in this screen (display monitor). Default: the primary screen.
 	/// Should be lazy or default; else the function calls <see cref="print.warning"/>.
 	/// Examples: <c>screen.at.left(true)</c>, <c>screen.index(1, true)</c>.
 	/// If <c>screen.ofMouse</c>, the trigger will work in any screen.
 	/// </param>
-	/// <param name="f_">[](xref:caller_info)</param>
-	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="a1_">[](xref:caller_info)</param>
-	/// <exception cref="ArgumentException">Invalid <i>modKeys</i> string or <i>flags</i>. Or <i>screen</i> isn't lazy.</exception>
-	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-	/// <example>See <see cref="ActionTriggers"/>.</example>
+	/// <inheritdoc cref="this[TMClick, string, TMFlags, string, int]"/>
 	public Action<MouseTriggerArgs> this[TMEdge edge, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, screen screen = default, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerArgumentExpression("screen")] string a1_ = null] {
 		set {
 			_Add(value, TMKind.Edge, (byte)edge, modKeys, flags, screen, edge.ToString(), (f_, l_), a1_);
@@ -174,16 +160,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	/// <summary>
 	/// Adds a mouse move trigger.
 	/// </summary>
-	/// <param name="move"></param>
-	/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags, string, int]"/>.</param>
-	/// <param name="flags"></param>
-	/// <param name="screen">See <see cref="this[TMEdge, string, TMFlags, screen, string, int, string]"/>.</param>
-	/// <param name="f_">[](xref:caller_info)</param>
-	/// <param name="l_">[](xref:caller_info)</param>
-	/// <param name="a1_">[](xref:caller_info)</param>
-	/// <exception cref="ArgumentException">Invalid <i>modKeys</i> string or <i>flags</i>.</exception>
-	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-	/// <example>See <see cref="ActionTriggers"/>.</example>
+	/// <inheritdoc cref="this[TMEdge, string, TMFlags, screen, string, int, string]"/>
 	public Action<MouseTriggerArgs> this[TMMove move, [ParamString(PSFormat.TriggerMod)] string modKeys = null, TMFlags flags = 0, screen screen = default, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerArgumentExpression("screen")] string a1_ = null] {
 		set {
 			_Add(value, TMKind.Move, (byte)move, modKeys, flags, screen, move.ToString(), (f_, l_), a1_);
