@@ -32,8 +32,6 @@
 
   <ItemGroup>
     <PackageReference Include="memberpage" Version="2.59.0" />
-    <PackageReference Include="SSH.NET" Version="2020.0.1" />
-    <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
 
   <ItemGroup>

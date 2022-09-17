@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Wraps a waitable timer handle.
@@ -45,8 +45,8 @@
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="dueTime">
 		/// The time after which the state of the timer is to be set to signaled. It is relative time (from now).
 		/// If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds*10), see <msdn>FILETIME</msdn>.
@@ -60,8 +60,8 @@
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
 		/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
 		public bool SetAbsolute(DateTime dueTime, int period = 0) {

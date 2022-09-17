@@ -1,16 +1,14 @@
-﻿using Au.Controls;
+using Au.Controls;
 using Au.Tools;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Media;
 
-//SHOULDDO: now finding by name is inconvenient. Better add a 'find' textbox at the bottom of the items treeview.
-
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
 
-//CONSIDER: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex (now can use Wildex, Word, Regex; it's easier).
+//SHOULDDO: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex (now can use Wildex, Word, Regex; it's easier).
 //	Now in "Name" mode all the push buttons are not used. If clicked, they uncheck "Name". And the Replace textbox not used.
 
 class PanelFind : UserControl {
@@ -104,7 +102,7 @@ class PanelFind : UserControl {
 		case (Key.F1, 0):
 			//var osrc = e.OriginalSource;
 			//if (osrc == _tFind || osrc == _tReplace || osrc == _cRegex || osrc == _cWildex) {
-			if (_cRegex.IsChecked) _ShowRegexInfo((e.OriginalSource as TextBox) ?? _tFind, true);
+			if (_cRegex.IsChecked) _ShowRegexInfo((e.OriginalSource as TextBox) ?? _tFind, F1: true);
 			else if (_cWildex.IsChecked && _cName.IsChecked) HelpUtil.AuHelp("articles/Wildcard expression");
 			//}
 			break;
@@ -118,12 +116,14 @@ class PanelFind : UserControl {
 		var tb = sender as TextBox;
 		if (e.NewFocus == tb) {
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
-			timer.after(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
-		} else {
-			if ((_regexWindow?.IsVisible ?? false) && !_regexWindow.Hwnd.IsActive) {
-				var c = Keyboard.FocusedElement;
-				if (c != _tFind && c != _tReplace) _regexWindow.Hwnd.ShowL(false);
-			}
+			timer.after(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, F1: false); });
+		} else if ((_regexWindow?.IsVisible ?? false)) {
+			timer.after(70, _ => {
+				if ((_regexWindow?.IsVisible ?? false) && !_regexWindow.Hwnd.IsActive) {
+					var c = Keyboard.FocusedElement;
+					if (c != _tFind && c != _tReplace) _regexWindow.Hwnd.ShowL(false);
+				}
+			});
 		}
 	}
 
@@ -373,7 +373,7 @@ class PanelFind : UserControl {
 		int i, len = 0, from8 = replace ? doc.zSelectionStart8 : doc.zSelectionEnd8, from = doc.zPos16(from8);
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
-	g1:
+		g1:
 		if (f.rx != null) {
 			if (f.rx.Match(text, out rm, from..)) {
 				i = rm.Start;
@@ -601,7 +601,7 @@ class PanelFind : UserControl {
 				} else {
 					if (searchIn >= 1 && searchIn <= 3) continue;
 					if (v.IsFolder) continue;
-					if (0 != v.Name.Ends(true, _aSkipImages)) continue;
+					if (v.Name.Ends(true, _aSkipImages) > 0) continue;
 				}
 				var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
 				//p1.Start(v.Name);

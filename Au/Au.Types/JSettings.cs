@@ -51,12 +51,14 @@ namespace Au.Types
 		static int s_loadedOnce;
 
 		/// <summary>
-		/// Loads JSON file and deserializes to new object of type T.
-		/// Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, writes error info in the output.
-		/// Will auto-save soon after a property changed.
+		/// Loads a JSON file and deserializes to an object of type T, or creates a new object of type T.
 		/// </summary>
+		/// <returns>An object of type T. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, prints error info in the output.</returns>
 		/// <param name="file">Full path of .json file. If null, does not load and will not save.</param>
-		/// <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
+		/// <param name="useDefault">Use default settings, don't load from <i>file</i>. Delete <i>file</i> if exists.</param>
+		/// <remarks>
+		/// Will auto-save soon after a property changed.
+		/// </remarks>
 		protected static T Load<T>(string file, bool useDefault = false) where T : JSettings
 			=> (T)_Load(file, typeof(T), useDefault);
 

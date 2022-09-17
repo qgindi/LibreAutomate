@@ -352,8 +352,8 @@ public interface ITBOwnerObject {
 
 	/// <summary>
 	/// Gets object rectangle.
-	/// Returns false if failed.
 	/// </summary>
+	/// <returns>false if failed.</returns>
 	/// <param name="r">Rectangle in screen coordinates.</param>
 	/// <remarks>
 	/// Not called if the owner window is invisible or cloaked or minimized or if <see cref="IsVisible"/> returned false.

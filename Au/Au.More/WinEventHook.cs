@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Helps with UI element event hooks. See API <msdn>SetWinEventHook</msdn>.
@@ -54,12 +54,7 @@
 		/// Sets multiple hooks.
 		/// </summary>
 		/// <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
-		/// <param name="hookProc">The hook procedure (function that receives hook events).</param>
-		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
-		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed.</exception>
-		/// <example>See <see cref="WinEventHook"/>.</example>
+		/// <inheritdoc cref="WinEventHook(EEvent, EEvent, Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public WinEventHook(EEvent[] events, Action<HookData.WinEvent> hookProc, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			Not_.Null(hookProc);
 			_proc1 = _HookProc;
@@ -68,26 +63,16 @@
 			(t_antiGC ??= new()).Add(this);
 		}
 
-		/// <summary>
-		/// Sets a hook for an event or a range of events.
-		/// </summary>
 		/// <exception cref="InvalidOperationException">Hooks are already set and <see cref="Unhook"/> not called.</exception>
-		/// <remarks>
-		/// Parameters are the same as of the constructor, but values can be different.
-		/// </remarks>
+		/// <inheritdoc cref="WinEventHook(EEvent, EEvent, Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public void Hook(EEvent eventMin, EEvent eventMax = 0, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			_Throw1();
 			_a = new IntPtr[1];
 			_SetHook(0, eventMin, eventMax, idProcess, idThread, flags);
 		}
 
-		/// <summary>
-		/// Sets multiple hooks.
-		/// </summary>
 		/// <exception cref="InvalidOperationException">Hooks are already set and <see cref="Unhook"/> not called.</exception>
-		/// <remarks>
-		/// Parameters are the same as of the constructor, but values can be different.
-		/// </remarks>
+		/// <inheritdoc cref="WinEventHook(EEvent[], Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public void Hook(EEvent[] events, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			_Throw1();
 			_a = new IntPtr[events.Length];
@@ -113,8 +98,8 @@
 
 		/// <summary>
 		/// Adds a hook for an event or a range of events.
-		/// Returns an int value greater than 0 that can be used with <see cref="Remove"/>.
 		/// </summary>
+		/// <returns>an int value greater than 0 that can be used with <see cref="Remove"/>.</returns>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
@@ -211,14 +196,19 @@ namespace Au.Types
 
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly EEvent event_;
+
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly wnd w;
+
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly EObjid idObject;
+
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int idChild;
+
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int thread;
+
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int time;
 

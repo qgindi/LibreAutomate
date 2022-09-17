@@ -1,4 +1,4 @@
-﻿//note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
+//note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
 namespace Au.Types;
 
@@ -164,56 +164,6 @@ public static unsafe partial class ExtMisc {
 	//public static string ToHex(this int t)
 	//{
 	//	return "0x" + t.ToString("X");
-	//}
-
-	//rejected. Cannot use 'break' etc. Better add UI to create 'for' loop to "repeat n times".
-	///// <summary>
-	///// Executes code this number of times. Can be used instead of 'for' to "repeat code n times".
-	///// </summary>
-	///// <param name="t">This variable. Specifies the number of times to execute code.</param>
-	///// <param name="code">Lambda function containing code.</param>
-	///// <example>
-	///// <code><![CDATA[
-	///// for(int i = 0; i < 3; i++) {
-	///// 	print.it(1);
-	///// }
-	///// 
-	///// //this can be used instead of the above code with 'for'
-	///// 3.Times(() => {
-	///// 	print.it(2);
-	///// });
-	///// ]]></code>
-	///// </example>
-	//public static void Times(this int t, Action code)
-	//{
-	//	for(int i = 0; i < t; i++) {
-	//		code();
-	//	}
-	//}
-
-	///// <summary>
-	///// Executes code this number of times. Can be used instead of 'for' to "repeat code n times".
-	///// Use this overload when need a counter variable.
-	///// </summary>
-	///// <param name="t">This variable. Specifies the number of times to execute code.</param>
-	///// <param name="code">Lambda function containing code. The parameter is a counter variable; starts from 0.</param>
-	///// <example>
-	///// <code><![CDATA[
-	///// for(int i = 0; i < 3; i++) {
-	///// 	print.it(i);
-	///// }
-	///// 
-	///// //this can be used instead of the above code with 'for'
-	///// 3.Times(i => {
-	///// 	print.it(i);
-	///// });
-	///// ]]></code>
-	///// </example>
-	//public static void Times(this int t, Action<int> code)
-	//{
-	//	for(int i = 0; i < t; i++) {
-	//		code(i);
-	//	}
 	//}
 
 	#endregion
@@ -693,8 +643,8 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Appends string as new correctly formatted sentence.
-	/// Returns this.
 	/// </summary>
+	/// <returns>this.</returns>
 	/// <param name="t"></param>
 	/// <param name="s"></param>
 	/// <param name="noUcase">Don't make the first character uppercase.</param>

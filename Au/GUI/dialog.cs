@@ -1,4 +1,4 @@
-﻿
+
 using System.Drawing;
 
 #pragma warning disable 649 //unused fields in API structs
@@ -226,8 +226,11 @@ namespace Au
 
 		/// <summary>
 		/// Initializes a new <see cref="dialog"/> instance and sets main properties.
-		/// Parameters etc are of <see cref="show"/>.
 		/// </summary>
+		/// <remarks>
+		/// More info: <see cref="show"/>.
+		/// </remarks>
+		/// <inheritdoc cref="show" path="/param"/>
 		public dialog(
 			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
@@ -266,7 +269,7 @@ namespace Au
 
 		/// <summary>
 		/// Changes title bar text.
-		/// If you don't call this method or title is null or "", dialogs will use <see cref="options.defaultTitle"/>.
+		/// If <i>title</i> is null or "" or this function not called, will use <see cref="options.defaultTitle"/>.
 		/// </summary>
 		public void SetTitleBarText(string title) {
 			_c.pszWindowTitle = title.NE() ? options.defaultTitle : title;
@@ -636,20 +639,24 @@ namespace Au
 
 		/// <summary>
 		/// Sets the width of the dialog's client area.
+		/// </summary>
+		/// <remarks>
 		/// The actual width will depend on DPI (the Windows setting "scale" or "text size").
 		/// If less than default width, will be used default width.
-		/// </summary>
+		/// </remarks>
 		/// <seealso cref="DFlags.Wider"/>
 		public int Width { set { _c.cxWidth = value / 2; } }
 
 		/// <summary>
 		/// Sets owner window.
-		/// The owner window will be disabled, and this dialog will be on top of it.
-		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="dialog.options.defaultScreen"/> is ignored.
 		/// </summary>
 		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be <b>wnd</b>, WPF window or element, winforms window or control. Can be null.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="dontDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
+		/// <remarks>
+		/// The owner window will be disabled, and this dialog will be on top of it.
+		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="dialog.options.defaultScreen"/> is ignored.
+		/// </remarks>
 		/// <seealso cref="options.autoOwnerWindow"/>
 		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool dontDisable = false) {
 			_c.hwndParent = owner.IsEmpty ? default : owner.Hwnd.Window;
@@ -673,14 +680,15 @@ namespace Au
 
 		/// <summary>
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
+		/// </summary>
+		/// <remarks>
 		/// If not set, will be used owner window's screen or <see cref="options.defaultScreen"/>.
 		/// More info: <see cref="screen"/>, <see cref="wnd.MoveInScreen"/>.
-		/// </summary>
+		/// </remarks>
 		public screen Screen { set; get; }
 
 		/// <summary>
 		/// Let the dialog close itself after <i>closeAfterS</i> seconds. Then <see cref="ShowDialog"/> returns <see cref="Timeout"/>.
-		/// Example: <c>d.SetTimeout(30, "OK");</c>
 		/// </summary>
 		public void SetTimeout(int closeAfterS, string timeoutActionText = null, bool noInfo = false) {
 			_timeoutS = closeAfterS;
@@ -725,9 +733,9 @@ namespace Au
 
 		/// <summary>
 		/// Shows the dialog.
-		/// Returns selected button id.
 		/// Call this method after setting text and other properties.
 		/// </summary>
+		/// <returns>Selected button id.</returns>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public unsafe int ShowDialog() {
 			//info: named ShowDialog, not Show, to not confuse with the static Show() which is used almost everywhere in documentation.
@@ -1044,9 +1052,11 @@ namespace Au
 
 		/// <summary>
 		/// Can be used by other threads to wait until the dialog is open.
-		/// If returns true, the dialog is open and you can send messages to it.
-		/// If returns false, the dialog is already closed or failed to show.
 		/// </summary>
+		/// <returns>
+		/// <br/>• true - the dialog is open and you can send messages to it.
+		/// <br/>• false - the dialog is already closed or failed to show.
+		/// </returns>
 		public bool ThreadWaitForOpen() {
 			_AssertIsOtherThread();
 			while (!IsOpen) {
@@ -1091,9 +1101,9 @@ namespace Au
 		#region send messages
 
 		/// <summary>
-		/// Gets dialog window handle as wnd.
-		/// Returns default(wnd) if the dialog is not open.
+		/// Gets dialog window handle as <b>wnd</b>.
 		/// </summary>
+		/// <returns>default(wnd) if the dialog is not open.</returns>
 		public wnd DialogWindow => _dlg;
 
 		/// <summary>
@@ -1314,8 +1324,8 @@ namespace Au
 
 		/// <summary>
 		/// Shows dialog.
-		/// Returns selected button id.
 		/// </summary>
+		/// <returns>Selected button id.</returns>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
@@ -1360,7 +1370,7 @@ namespace Au
 		/// 
 		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
 		/// How common buttons are different:
-		/// 	1. DFlags.CommandLinks does not change their style.
+		/// 	1. <see cref="DFlags.CommandLinks"/> does not change their style.
 		/// 	2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
 		/// 	3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
 		/// 	4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
@@ -1406,49 +1416,53 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Shows dialog with DIcon.Info icon.
-		/// Calls <see cref="show"/>.
+		/// Shows dialog with <see cref="DIcon.Info"/> icon.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		/// <remarks>Calls <see cref="show"/>.</remarks>
+		/// <example></example>
+		/// <inheritdoc cref="show"/>
 		public static int showInfo(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
 			return show(text1, text2, buttons, flags, DIcon.Info, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
-		/// Shows dialog with DIcon.Warning icon.
-		/// Calls <see cref="show"/>.
+		/// Shows dialog with <see cref="DIcon.Warning"/> icon.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		/// <remarks>Calls <see cref="show"/>.</remarks>
+		/// <example></example>
+		/// <inheritdoc cref="show"/>
 		public static int showWarning(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
 			return show(text1, text2, buttons, flags, DIcon.Warning, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
-		/// Shows dialog with DIcon.Error icon.
-		/// Calls <see cref="show"/>.
+		/// Shows dialog with <see cref="DIcon.Error"/> icon.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		/// <remarks>Calls <see cref="show"/>.</remarks>
+		/// <example></example>
+		/// <inheritdoc cref="show"/>
 		public static int showError(string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
 			return show(text1, text2, buttons, flags, DIcon.Error, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
 
 		/// <summary>
 		/// Shows dialog with OK and Cancel buttons.
-		/// Returns true if selected OK.
-		/// Calls <see cref="show"/>.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		/// <returns>true if selected OK.</returns>
+		/// <remarks>Calls <see cref="show"/>.</remarks>
+		/// <example></example>
+		/// <inheritdoc cref="show"/>
 		public static bool showOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
 			return 1 == show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
-		//TODO: add ///parameters everywhere. Now no intellisense.
 
 		/// <summary>
 		/// Shows dialog with Yes and No buttons.
-		/// Returns true if selected Yes.
-		/// Calls <see cref="show"/>.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		/// <returns>true if selected Yes.</returns>
+		/// <remarks>Calls <see cref="show"/>.</remarks>
+		/// <example></example>
+		/// <inheritdoc cref="show"/>
 		public static bool showYesNo(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null, string title = null, int secondsTimeout = 0) {
 			return 1 == show(text1, text2, "Yes|No", flags, icon, owner, expandedText, title: title, secondsTimeout: secondsTimeout);
 		}
@@ -1460,8 +1474,8 @@ namespace Au
 
 		/// <summary>
 		/// Shows dialog with a text edit field and gets that text.
-		/// Returns true if selected OK (or a custom button with id 1), else false.
 		/// </summary>
+		/// <returns>true if selected OK (or a custom button with id 1).</returns>
 		/// <param name="s">Variable that receives the text.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
@@ -1550,8 +1564,8 @@ namespace Au
 
 		/// <summary>
 		/// Shows dialog with a number edit field and gets that number.
-		/// Returns true if selected OK, false if Cancel.
 		/// </summary>
+		/// <returns>true if selected OK.</returns>
 		/// <param name="i">Variable that receives the number.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
@@ -1584,9 +1598,9 @@ namespace Au
 		#region ShowList
 
 		/// <summary>
-		/// Shows dialog with a list of command-link buttons.
-		/// Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
+		/// Shows dialog with a list of command-link buttons, and returns 1-based button index or 0.
 		/// </summary>
+		/// <returns>1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.</returns>
 		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
@@ -1632,17 +1646,17 @@ namespace Au
 		#endregion ShowList
 
 		#region ShowProgress
-#pragma warning disable 1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in new thread and returns without waiting until it is closed.
-		/// Returns <see cref="dialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-		/// Most parameters are the same as with <see cref="show"/>.
 		/// </summary>
+		/// <returns>Variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the <b>Send</b> property you can set progress, modify controls and close the dialog (see example).</returns>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
 		/// <remarks>
 		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// 
+		/// More info: <see cref="show"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1655,7 +1669,7 @@ namespace Au
 		/// pd.Send.Close();
 		/// ]]></code>
 		/// </example>
-		/// <exception cref="AuException">Failed to show dialog.</exception>
+		/// <inheritdoc cref="show"/>
 		public static dialog showProgress(bool marquee,
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
@@ -1683,11 +1697,12 @@ namespace Au
 		/// <summary>
 		/// Shows dialog like <see cref="show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="dialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
-		/// Parameters are the same as with <see cref="show"/>.
 		/// </summary>
+		/// <returns>Variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the <b>Send</b> property you can modify controls and close the dialog (see example).</returns>
 		/// <remarks>
 		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// 
+		/// More info: <see cref="show"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1700,7 +1715,7 @@ namespace Au
 		/// d.ThreadWaitForClosed(); print.it(d.Result); //wait until the dialog is closed and get result. Optional, just an example.
 		/// ]]></code>
 		/// </example>
-		/// <exception cref="AggregateException">Failed to show dialog.</exception>
+		/// <inheritdoc cref="show"/>
 		public static dialog showNoWait(
 			string text1 = null, string text2 = null, Strings buttons = default, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footer = null, string title = null, DControls controls = null,
@@ -1713,7 +1728,6 @@ namespace Au
 			return d;
 		}
 
-#pragma warning restore 1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		#endregion ShowNoWait
 	}
 }

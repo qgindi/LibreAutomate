@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 
 namespace Au.Tools;
 
@@ -70,7 +70,7 @@ class KeysWindow : InfoWindow //KPopup
 				if (pos > from && k1 > ' ' && k1 != '(' && !(k1 == '+' && !code.Eq(pos - 2, '#'))) prefix = " ";
 			}
 		}
-		if (0 != s.Ends(false, "Alt", "Ctrl", "Shift", "Win")) suffix = "+";
+		if (s.Ends(false, "Alt", "Ctrl", "Shift", "Win") > 0) suffix = "+";
 		else if (!addArg && pos < to && k2 > ' ' && k2 is not (')' or '+' or '*')) suffix = "\b ";
 
 		bool ok = true;

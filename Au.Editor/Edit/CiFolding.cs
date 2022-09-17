@@ -1,4 +1,4 @@
-﻿//#if TRACE
+//#if TRACE
 //#define PRINT
 //#endif
 
@@ -419,7 +419,7 @@ partial class SciCode {
 						int k = Call(SCI_GETFOLDLEVEL, i);
 						if (0 != (k & SC_FOLDLEVELHEADERFLAG)) {
 							int j = zLineEnd(false, i);
-							if (Call(SCI_GETCHARAT, j - 1) == '.' && Call(SCI_GETCHARAT, j - 2) == '/') Call(SCI_FOLDLINE, i);
+							if (zCharAt(j - 1) == '.' && zCharAt(j - 2) == '/') Call(SCI_FOLDLINE, i);
 						}
 					}
 

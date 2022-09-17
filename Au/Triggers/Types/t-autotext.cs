@@ -654,12 +654,12 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <summary>
 	/// Replaces the user-typed text with the specified text, keys, cliboard data, etc.
 	/// </summary>
-	/// <param name="keysEtc">The same as with <see cref="keys.send"/>.</param>
 	/// <remarks>
 	/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. This function uses <see cref="TAFlags.Confirm"/>, <see cref="TAFlags.DontErase"/>, <see cref="TAFlags.ShiftLeft"/>, <see cref="TAFlags.RemovePostfix"/>.
 	/// 
 	/// If used flag <see cref="TAFlags.Confirm"/>, for label can be used first argument with prefix "!!"; else displays all string arguments.
 	/// </remarks>
+	/// <inheritdoc cref="keys.send" path="/param"/>
 	public void Replace2([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		Not_.Null(keysEtc);
 		_Replace(null, null, keysEtc);

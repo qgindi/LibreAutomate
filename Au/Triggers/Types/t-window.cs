@@ -213,11 +213,6 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// Adds a window trigger and its action.
 	/// </summary>
 	/// <param name="winEvent">Trigger event.</param>
-	/// <param name="name">See <see cref="wnd.find"/>.</param>
-	/// <param name="cn">See <see cref="wnd.find"/>.</param>
-	/// <param name="of">See <see cref="wnd.find"/>.</param>
-	/// <param name="also">See <see cref="wnd.find"/>.</param>
-	/// <param name="contains">See <see cref="wnd.find"/>.</param>
 	/// <param name="flags">Trigger flags.</param>
 	/// <param name="later">
 	/// Can optionally specify one or more additional events.
@@ -231,13 +226,17 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 	/// <exception cref="ArgumentException">See <see cref="wnd.find"/>.</exception>
 	/// <seealso cref="Last"/>
+	/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/param"/>
 	public Action<WindowTriggerArgs> this[TWEvent winEvent,
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
-			Func<wnd, bool> also = null, WContains contains = default,
-			TWFlags flags = 0, TWLater later = 0,
-			[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0
+			Func<wnd, bool> also = null,
+			WContains contains = default,
+			TWFlags flags = 0,
+			TWLater later = 0,
+			[CallerFilePath] string f_ = null,
+			[CallerLineNumber] int l_ = 0
 			] {
 		set {
 			var f = new wndFinder(name, cn, of, 0, also, contains);
@@ -249,6 +248,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// Adds a window trigger and its action.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
+	/// <inheritdoc cref="this[TWEvent, string, string, WOwner, Func{wnd, bool}, WContains, TWFlags, TWLater, string, int]" path="/param"/>
 	public Action<WindowTriggerArgs> this[TWEvent winEvent, wndFinder f, TWFlags flags = 0, TWLater later = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 		set {
 			_triggers.ThrowIfRunning_();

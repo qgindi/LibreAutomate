@@ -251,11 +251,9 @@ public class TriggerScopes
 	/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
 	/// </summary>
 	/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-	/// <remarks>
-	/// Parameters are like with <see cref="wnd.find"/>.
-	/// Example in class help.
-	/// </remarks>
-	/// <exception cref="ArgumentException">Exceptions of <see cref="wndFinder"/> constructor.</exception>
+	/// <example><see cref="TriggerScopes"/></example>
+	/// <inheritdoc cref="wnd.find" path="/param"/>
+	/// <inheritdoc cref="wnd.find" path="/exception"/>
 	public TriggerScope Window(
 		[ParamString(PSFormat.Wildex)] string name = null,
 		[ParamString(PSFormat.Wildex)] string cn = null,
@@ -266,12 +264,7 @@ public class TriggerScopes
 	/// <summary>
 	/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
 	/// </summary>
-	/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-	/// <remarks>
-	/// Parameters are like with <see cref="wnd.find"/>.
-	/// Example in class help.
-	/// </remarks>
-	/// <exception cref="ArgumentException">Exceptions of <see cref="wndFinder"/> constructor.</exception>
+	/// <inheritdoc cref="Window(string, string, WOwner, Func{wnd, bool}, WContains)"/>
 	public TriggerScope NotWindow(
 		[ParamString(PSFormat.Wildex)] string name = null,
 		[ParamString(PSFormat.Wildex)] string cn = null,

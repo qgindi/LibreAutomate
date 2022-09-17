@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace Au {
 	/// <summary>
@@ -113,8 +113,7 @@ namespace Au {
 		//rejected: ReadOnlySpan<char>. Then cannot use eg .NET Regex.
 
 		/// <summary>
-		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="wildex"/>.
-		/// Returns true if they match.
+		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
 		public bool Match(string s) {
@@ -358,7 +357,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
-		/// Returns 1-based index of matching pattern, or 0 if none.
+		/// Returns 1-based index of the matching pattern, or 0 if none.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreCase">Case-insensitive.</param>

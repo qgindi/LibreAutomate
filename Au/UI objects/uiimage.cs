@@ -278,18 +278,12 @@ namespace Au
 		/// If not found, throws exception or returns null (if <i>waitS</i> negative).
 		/// </returns>
 		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
-		/// <param name="area"></param>
-		/// <param name="image"></param>
-		/// <param name="flags"></param>
-		/// <param name="diff"></param>
-		/// <param name="also"></param>
 		/// <exception cref="NotFoundException" />
-		/// <exception cref="Exception">Exceptions of other overload.</exception>
 		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <inheritdoc cref="find(IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 		public static uiimage find(double waitS, IFArea area, IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null)
 			=> new uiimageFinder(image, flags, diff, also).Find(area, waitS);
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Finds image(s) or color(s) displayed in a window or other area. Waits until found.
 		/// More info: <see cref="find"/>.
@@ -298,7 +292,7 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
+		/// <inheritdoc cref="find(IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 		public static uiimage wait(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null)
 			=> new uiimageFinder(image, flags, diff, also).Wait(secondsTimeout, area);
 
@@ -307,10 +301,7 @@ namespace Au
 		/// More info: <see cref="find"/>.
 		/// </summary>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
+		/// <inheritdoc cref="wait(double, IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 		public static bool waitNot(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null)
 			=> new uiimageFinder(image, flags, diff, also).WaitNot(secondsTimeout, area);
 
@@ -318,19 +309,14 @@ namespace Au
 		/// Waits until something visually changes in a window or other area.
 		/// More info: <see cref="find"/>.
 		/// </summary>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
 		/// <remarks>
 		/// Like <see cref="waitNot"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.
 		/// </remarks>
+		/// <inheritdoc cref="waitNot(double, IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 		public static bool waitChanged(double secondsTimeout, IFArea area, IFFlags flags = 0, int diff = 0) {
 			var f = new uiimageFinder(default, flags, diff, null);
 			return f.Wait_(uiimageFinder.Action_.WaitChanged, secondsTimeout, area);
 		}
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 	}
 }
 

@@ -57,8 +57,8 @@ namespace Au.More
 
 		/// <summary>
 		/// Finds character used to underline next character when the text is displayed in UI.
-		/// Returns its index, or -1 if not found.
 		/// </summary>
+		/// <returns>Character index, or -1 if not found.</returns>
 		/// <param name="s">Can be null.</param>
 		/// <param name="underlineChar"></param>
 		public static int FindUnderlineChar(string s, char underlineChar = '&') {
@@ -74,8 +74,8 @@ namespace Au.More
 
 		/// <summary>
 		/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="run.it"/>, <see cref="Process.Start"/>.
-		/// Returns null if a is null or has 0 elements.
 		/// </summary>
+		/// <returns>null if <i>a</i> is null or empty.</returns>
 		/// <param name="a"></param>
 		public static string CommandLineFromArray(string[] a) {
 			if (a == null || a.Length == 0) return null;
@@ -103,8 +103,8 @@ namespace Au.More
 		/// <summary>
 		/// Parses command line arguments.
 		/// Calls API <msdn>CommandLineToArgvW</msdn>.
-		/// Returns empty array if s is null or "".
 		/// </summary>
+		/// <returns>Empty array if <i>s</i> is null or "".</returns>
 		public static unsafe string[] CommandLineToArray(string s) {
 			if (s.NE()) return Array.Empty<string>();
 			char** p = Api.CommandLineToArgvW(s, out int n);

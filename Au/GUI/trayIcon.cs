@@ -1,4 +1,4 @@
-﻿namespace Au
+namespace Au
 {
 	/// <summary>
 	/// Shows tray icon.
@@ -344,8 +344,8 @@
 
 		/// <summary>
 		/// Gets tray icon rectangle in screen.
-		/// Returns false if fails, for example if the icon is in hidden overflow area. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed, for example if the icon is in hidden overflow area. Supports <see cref="lastError"/>.</returns>
 		public unsafe bool GetRect(out RECT r) {
 			var x = new Api.NOTIFYICONIDENTIFIER { cbSize = sizeof(Api.NOTIFYICONIDENTIFIER), hWnd = _w, uID = _id };
 			//if (_guid!=default) x.guidItem=_guid;

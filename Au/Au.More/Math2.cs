@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Simple calculation functions.
@@ -10,18 +10,15 @@
 		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
 		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
 		/// </summary>
-		public static nint MakeLparam(uint loWord, uint hiWord) => (nint)(((hiWord & 0xffff) << 16) | (loWord & 0xffff));
+		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
 		//Returns nint, because usually used as sendmessage etc parameter. If uint, would need to explicitly cast to nint. If somebody casts to int, the result may be incorrect, ie negative.
 
 		//Why named MakeLparam, MakeWord, LoWord, HiWord:
 		//	1. Like C macros MAKELPARAM/MAKEWORD/LOWORD/HIWORD.
 		//	2. MakeLparam used mostly as lParam of sendmessage etc.
 
-		/// <summary>
-		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
-		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
-		/// </summary>
-		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
+		/// <inheritdoc cref="MakeLparam(int, int)"/>
+		public static nint MakeLparam(uint loWord, uint hiWord) => (nint)(((hiWord & 0xffff) << 16) | (loWord & 0xffff));
 
 		/// <summary>
 		/// Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
@@ -33,20 +30,17 @@
 		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
 		/// Like C macro MAKEWORD.
 		/// </summary>
-		public static ushort MakeWord(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
-
-		/// <summary>
-		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
-		/// Like C macro MAKEWORD.
-		/// </summary>
 		public static ushort MakeWord(int loByte, int hiByte) => MakeWord((uint)loByte, (uint)hiByte);
+
+		/// <inheritdoc cref="MakeWord(int, int)"/>
+		public static ushort MakeWord(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
 
 		/// <summary>
 		/// Gets bits 1-16 as ushort.
 		/// Like C macro LOWORD.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
+		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr.
 		/// </remarks>
 		public static ushort LoWord(nint x) => (ushort)((uint)x & 0xFFFF);
 
@@ -54,27 +48,21 @@
 		/// Gets bits 17-32 as ushort.
 		/// Like C macro HIWORD.
 		/// </summary>
-		/// <remarks>
-		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-		/// </remarks>
+		/// <inheritdoc cref="LoWord(nint)"/>
 		public static ushort HiWord(nint x) => (ushort)((uint)x >> 16);
 
 		/// <summary>
 		/// Gets bits 1-16 as short.
 		/// Like C macro GET_X_LPARAM.
 		/// </summary>
-		/// <remarks>
-		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-		/// </remarks>
+		/// <inheritdoc cref="LoWord(nint)"/>
 		public static short LoShort(nint x) => (short)((uint)x & 0xFFFF);
 
 		/// <summary>
 		/// Gets bits 17-32 as short.
 		/// Like C macro GET_Y_LPARAM.
 		/// </summary>
-		/// <remarks>
-		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr (and avoid OverflowException).
-		/// </remarks>
+		/// <inheritdoc cref="LoWord(nint)"/>
 		public static short HiShort(nint x) => (short)((uint)x >> 16);
 
 		/// <summary>
@@ -223,8 +211,8 @@
 
 		/// <summary>
 		/// Calculates distance between rectangle and point.
-		/// Returns 0 if point is in rectangle.
 		/// </summary>
+		/// <returns>If the point is outside, returns the nearest distance, else 0.</returns>
 		public static double Distance(RECT r, POINT p) {
 			r.Normalize(swap: true);
 			if (r.Contains(p)) return 0;

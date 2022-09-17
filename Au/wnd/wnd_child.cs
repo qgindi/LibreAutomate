@@ -53,15 +53,9 @@ namespace Au
 		/// </summary>
 		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
 		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
-		/// <param name="name"></param>
-		/// <param name="cn"></param>
-		/// <param name="flags"></param>
-		/// <param name="id"></param>
-		/// <param name="also"></param>
-		/// <param name="skip"></param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
-		/// <exception cref="ArgumentException" />
 		/// <exception cref="NotFoundException" />
+		/// <inheritdoc cref="Child(string, string, WCFlags, int?, Func{wnd, bool}, int)"/>
 		public wnd Child(
 			double waitS,
 			[ParamString(PSFormat.Wildex)] string name = null,
@@ -71,15 +65,15 @@ namespace Au
 
 		/// <summary>
 		/// Finds all matching child controls.
-		/// Everything except the return type is the same as with <see cref="Child"/>.
 		/// </summary>
-		/// <returns>List containing 0 or more control handles as <see cref="wnd"/>.</returns>
-		/// <exception cref="AuWndException"/>
-		/// <exception cref="ArgumentException"/>
+		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 		/// <remarks>
-		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
+		/// Everything except the return type is the same as with <see cref="Child"/>.
+		/// 
+		/// In the returned array, hidden controls (when using <see cref="WCFlags.HiddenToo"/>) are always after visible controls.
 		/// </remarks>
 		/// <seealso cref="getwnd.Children"/>
+		/// <inheritdoc cref="Child(string, string, WCFlags, int?, Func{wnd, bool}, int)"/>
 		public wnd[] ChildAll(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -96,8 +90,7 @@ namespace Au
 		/// Calling this function many times with same arguments is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.
 		/// </note>
 		/// </summary>
-		/// <exception cref="AuWndException"/>
-		/// <exception cref="ArgumentException"/>
+		/// <remarks></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// //find window that contains certain control, and get the control too
@@ -107,6 +100,7 @@ namespace Au
 		/// print.it(f.Result);
 		/// ]]></code>
 		/// </example>
+		/// <inheritdoc cref="Child(string, string, WCFlags, int?, Func{wnd, bool}, int)"/>
 		public bool HasChild(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -256,8 +250,8 @@ namespace Au
 		{
 			/// <summary>
 			/// Gets child controls, including all descendants.
-			/// Returns array containing 0 or more control handles as wnd.
 			/// </summary>
+			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			/// <param name="directChild">Need only direct children, not all descendants.</param>
@@ -274,7 +268,7 @@ namespace Au
 			/// <summary>
 			/// Gets child controls, including all descendants.
 			/// </summary>
-			/// <param name="a">Receives window handles as wnd. If null, this function creates new List, else clears before adding items.</param>
+			/// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			/// <param name="directChild">Need only direct children, not all descendants.</param>

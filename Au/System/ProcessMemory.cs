@@ -79,7 +79,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="processId">Process id.</param>
 		/// <param name="nBytes">If not 0, allocates memory of this size in that process.</param>
-		/// <param name="noException">Don't throw exception if fails. If fails, <see cref="ProcessHandle"/> == default.</param>
+		/// <param name="noException">Don't throw exceptions. If failed, sets <see cref="ProcessHandle"/> = default.</param>
 		/// <exception cref="AuException">Failed to open process handle (usually because of [](xref:uac)) or allocate memory.</exception>
 		public ProcessMemory(int processId, int nBytes, bool noException = false) {
 			_Alloc(processId, default, nBytes, noException);
@@ -90,7 +90,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="w">A window of that process.</param>
 		/// <param name="nBytes">If not 0, allocates memory of this size in that process.</param>
-		/// <param name="noException">Don't throw exception if fails. If fails, <see cref="ProcessHandle"/> == default.</param>
+		/// <param name="noException">Don't throw exceptions. If failed, sets <see cref="ProcessHandle"/> = default.</param>
 		/// <exception cref="AuWndException">w invalid.</exception>
 		/// <exception cref="AuException">Failed to open process handle or allocate memory.</exception>
 		public ProcessMemory(wnd w, int nBytes, bool noException = false) {
@@ -102,7 +102,7 @@ namespace Au.More {
 		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
 		/// In that process writes the string as '\0'-terminated char string (UTF-16).
 		/// </summary>
-		/// <returns>false if fails.</returns>
+		/// <returns>false if failed.</returns>
 		/// <param name="s">A string in this process.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <remarks>
@@ -120,7 +120,7 @@ namespace Au.More {
 		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
 		/// In that process writes the string as '\0'-terminated byte string.
 		/// </summary>
-		/// <returns>false if fails.</returns>
+		/// <returns>false if failed.</returns>
 		/// <param name="s">A string in this process. Normal C# string (UTF-16).</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="enc">Encoding for converting char string to byte string. If null, uses <see cref="Encoding.Default"/> (UTF-8).</param>
@@ -149,7 +149,7 @@ namespace Au.More {
 		/// Copies a char string from that process (memory address <see cref="Mem"/>) to this process.
 		/// In that process the string must be in Unicode UTF-16 format.
 		/// </summary>
-		/// <returns>The copied string, or null if fails.</returns>
+		/// <returns>The copied string, or null if failed.</returns>
 		/// <param name="length">Number of characters to copy, not including the terminating '\0'. In both processes a character is 2 bytes.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range. If false, the returned string is of <i>length</i> length even if contains '\0' characters.</param>
@@ -161,7 +161,7 @@ namespace Au.More {
 		/// Copies a byte string from that process (memory address <see cref="Mem"/>) to this process.
 		/// In that process the string must be array of bytes (not Unicode UTF-16).
 		/// </summary>
-		/// <returns>The copied string, or null if fails.</returns>
+		/// <returns>The copied string, or null if failed.</returns>
 		/// <param name="length">Number bytes to copy, not including the terminating '\0'. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range.</param>
@@ -173,7 +173,7 @@ namespace Au.More {
 		/// <summary>
 		/// Copies memory from this process to that process (memory address <see cref="Mem"/>).
 		/// </summary>
-		/// <returns>false if fails.</returns>
+		/// <returns>false if failed.</returns>
 		/// <param name="ptrFrom">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
@@ -185,7 +185,7 @@ namespace Au.More {
 		/// <summary>
 		/// Copies memory from this process to a known address in that process.
 		/// </summary>
-		/// <returns>false if fails.</returns>
+		/// <returns>false if failed.</returns>
 		/// <param name="ptrTo">Address of memory in that process.</param>
 		/// <param name="ptrFrom">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
@@ -196,7 +196,7 @@ namespace Au.More {
 		/// <summary>
 		/// Copies memory from that process (memory address <see cref="Mem"/>) to this process.
 		/// </summary>
-		/// <returns>false if fails.</returns>
+		/// <returns>false if failed.</returns>
 		/// <param name="ptrTo">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
@@ -208,7 +208,7 @@ namespace Au.More {
 		/// <summary>
 		/// Copies memory from a known address in that process to this process.
 		/// </summary>
-		/// <returns>false if fails.</returns>
+		/// <returns>false if failed.</returns>
 		/// <param name="ptrFrom">Address of memory in that process.</param>
 		/// <param name="ptrTo">Address of memory in this process.</param>
 		/// <param name="nBytes">Number of bytes to copy.</param>

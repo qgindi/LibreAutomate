@@ -186,20 +186,20 @@ namespace Au {
 			}
 		}
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state CHECKED. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state CHECKED.</summary>
 		public bool IsChecked => State.Has(EState.CHECKED);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state CHECKED, null if has state MIXED, else false. Use this function with 3-state checkboxes.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state CHECKED, null if has state MIXED, else false. Use this function with 3-state checkboxes.</summary>
 		public bool? IsChecked2 => (State & (EState.CHECKED | EState.MIXED)) switch { EState.CHECKED => true, 0 => false, _ => null };
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state UNAVAILABLE. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state UNAVAILABLE.</summary>
 		/// <remarks>Does not check whether this UI element is in a disabled parent/ancestor UI element.</remarks>
 		public bool IsDisabled => State.Has(EState.DISABLED);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state FOCUSED. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state FOCUSED.</summary>
 		public bool IsFocused => State.Has(EState.FOCUSED);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state INVISIBLE and does not have state OFFSCREEN. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state INVISIBLE and does not have state OFFSCREEN.</summary>
 		/// <remarks>
 		/// If the UI element has both INVISIBLE and OFFSCREEN states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most UI elements returns false (is visible), but for UI elements that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
 		/// Does not check whether this UI element is in an invisible parent/ancestor UI element.
@@ -222,20 +222,20 @@ namespace Au {
 			return false;
 		}
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state OFFSCREEN. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state OFFSCREEN.</summary>
 		public bool IsOffscreen => State.Has(EState.OFFSCREEN);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state PROTECTED. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state PROTECTED.</summary>
 		/// <remarks>This state is used for password fields.</remarks>
 		public bool IsPassword => State.Has(EState.PROTECTED);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state PRESSED. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state PRESSED.</summary>
 		public bool IsPressed => State.Has(EState.PRESSED);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state READONLY. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state READONLY.</summary>
 		public bool IsReadonly => State.Has(EState.READONLY);
 
-		/// <summary> Calls <see cref="State"/> and returns true if has state SELECTED. </summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state SELECTED.</summary>
 		public bool IsSelected => State.Has(EState.SELECTED);
 
 		/// <summary>
@@ -367,7 +367,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls <b>_InvokeL</b>, with <b>ButtonPostClickWorkaround_</b> if need. Exception if fails.
+		/// Calls <b>_InvokeL</b>, with <b>ButtonPostClickWorkaround_</b> if need. Exception if failed.
 		/// </summary>
 		void _Invoke(char action = 'a', string param = null, string errMsg = null) {
 			int hr;
@@ -386,7 +386,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>HRESULT</returns>
 		int _InvokeL(char action = 'a', string param = null) {
-			//UIA bug: if window inactive, in some cases tries to activate, and waits ~10 s if fails.
+			//UIA bug: if window inactive, in some cases tries to activate, and waits ~10 s if failed.
 			//	Eg ExpandCollapse pattern (always) and Invoke/Toggle patterns (buttons/checkboxes, not always).
 			//	Non-UIA servers also could try to activate, although now I don't remember such cases.
 			WndUtil.EnableActivate(-1); //usually quite fast, and often faster than WndContainer
@@ -733,7 +733,7 @@ namespace Au {
 		/// <br/>• @ - <see cref="HtmlAttributes"/>.
 		/// </param>
 		/// <param name="result">Receives results.</param>
-		/// <returns>false if fails, for example when the UI element's window is closed. Supports <see cref="lastError"/>.</returns>
+		/// <returns>false if failed, for example when the UI element's window is closed. Supports <see cref="lastError"/>.</returns>
 		/// <exception cref="ArgumentException">Unknown property character.</exception>
 		/// <remarks>
 		/// The returned variable contains values of properties specified in <i>props</i>. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
@@ -1139,8 +1139,8 @@ namespace Au {
 		/// <summary>
 		/// Makes this UI element focused (<see cref="Focus"/>) and calls <see cref="keys.send"/>.
 		/// </summary>
-		/// <param name="keysEtc">See <see cref="keys.send"/>.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Focus"/> and <see cref="keys.send"/>.</exception>
+		/// <inheritdoc cref="keys.send" path="/param"/>
 		public void SendKeys([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 			bool andSelect = RoleInt is ERole.TREEITEM or ERole.LISTITEM;
 			Focus(andSelect);
@@ -1152,8 +1152,8 @@ namespace Au {
 		///// Clicks this UI element and calls <see cref="keys.send"/>.
 		///// </summary>
 		///// <param name="doubleClick">If true, calls <see cref="MouseClickD"/>, else <see cref="MouseClick"/>.</param>
-		///// <param name="keysEtc">See <see cref="keys.send"/>.</param>
 		///// <exception cref="Exception">Exceptions of <see cref="MouseClick"/> and <see cref="keys.send"/>.</exception>
+		///// <inheritdoc cref="keys.send" path="/param"/>
 		//public void SendKeys(bool doubleClick, [ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) {
 		//	if (doubleClick) MouseClickD(); else MouseClick();
 		//	keys.send(keysEtc);
@@ -1198,10 +1198,8 @@ namespace Au {
 		/// <summary>
 		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. To check/uncheck calls callback function.
 		/// </summary>
-		/// <param name="check"></param>
 		/// <param name="action">Callback function that should check or uncheck this UI element. Its parameter is this variable.</param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
-		/// <remarks></remarks>
 		/// <inheritdoc cref="Check(bool, string)"/>
 		public void Check(bool check, Action<elm> action) {
 			if (!_CheckNeedToggle(check)) return;
@@ -1230,16 +1228,12 @@ namespace Au {
 			_Expand(expand, keys, null, waitS, ignoreState);
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <param name="action">Callback function that should expand or collapse this UI element. Its parameter is this variable.</param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
-		/// <exception cref="TimeoutException"/>
-		/// <remarks></remarks>
 		/// <inheritdoc cref="Expand(bool, string, double, bool)"/>
 		public void Expand(bool expand, Action<elm> action, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, null, action, waitS, ignoreState);
 		}
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		void _Expand(bool expand, string keys, Action<elm> action, double waitS, bool ignoreState) {
 			ThrowIfDisposed_();
@@ -1360,7 +1354,6 @@ namespace Au {
 			return _ExpandPath(path, keys, null, waitS, notLast);
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <param name="action">Callback function that should expand UI elements.</param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <remarks></remarks>
@@ -1368,7 +1361,6 @@ namespace Au {
 		public elm Expand(Strings path, Action<elm> action, double waitS = 3, bool notLast = false) {
 			return _ExpandPath(path, null, action, waitS, notLast);
 		}
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		elm _ExpandPath(Strings path, string keys, Action<elm> action, double waitS, bool notLast) {
 			ThrowIfDisposed_();

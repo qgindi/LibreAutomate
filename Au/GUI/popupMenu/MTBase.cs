@@ -19,7 +19,7 @@ namespace Au.Types;
 /// - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
 /// 
 /// Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
-///
+/// 
 /// Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="print.warning"/>).
 /// 
 /// For icon/image files use full path, unless they are in <see cref="folders.ThisAppImages"/>
@@ -273,7 +273,7 @@ public abstract class MTItem {
 	internal void GoToFile_() {
 		if (file.NE()) return;
 		if (extractIconPath == 2) run.selectInExplorer(file);
-		else ScriptEditor.OpenAndGoToLine(file, 0);
+		else ScriptEditor.Open(file);
 	}
 
 	internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {

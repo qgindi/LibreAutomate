@@ -242,7 +242,7 @@ namespace Au {
 
 		/// <summary>
 		/// <see cref="ThisApp"/> with appended backslash character.
-		/// Returns string, not <see cref="FolderPath"/> like other functions.
+		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="AppContext.BaseDirectory"/>.
@@ -310,11 +310,7 @@ namespace Au {
 		/// Gets or sets path of folder "user document files of this application".
 		/// Default is <c>folders.Documents + "Au"</c>.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
-		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
-		/// </remarks>
+		/// <inheritdoc cref="ThisAppTemp"/>
 		public static FolderPath ThisAppDocuments {
 			get => new(__thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppDocuments, value, create: true);
@@ -325,11 +321,7 @@ namespace Au {
 		/// Gets or sets path of folder "private files of this application of this user account".
 		/// Default is <c>folders.RoamingAppData + "Au"</c>.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
-		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
-		/// </remarks>
+		/// <inheritdoc cref="ThisAppTemp"/>
 		public static FolderPath ThisAppData {
 			get => new(__thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppData, value, create: true);
@@ -340,11 +332,7 @@ namespace Au {
 		/// Gets or sets path of folder "local (non-roaming) private files of this application of this user account".
 		/// Default is <c>folders.LocalAppData + "Au"</c>.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
-		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
-		/// </remarks>
+		/// <inheritdoc cref="ThisAppTemp"/>
 		public static FolderPath ThisAppDataLocal {
 			get => new(__thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppDataLocal, value, create: true);
@@ -384,6 +372,7 @@ namespace Au {
 
 		/// <summary>
 		/// Gets the root directory of this application, like @"C:\" or @"\\network\folder\".
+		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		public static string ThisAppDriveBS => __thisAppDrive ??= Path.GetPathRoot(ThisAppBS);
 		static string __thisAppDrive;
@@ -401,6 +390,7 @@ namespace Au {
 
 		/// <summary>
 		/// Gets the root directory of <see cref="Workspace"/>, like @"C:\" or @"\\network\folder\".
+		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		public static string WorkspaceDriveBS { get; private set; }
 
@@ -459,6 +449,7 @@ namespace Au {
 
 		/// <summary>
 		/// Gets .NET runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0\</c>.
+		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		public static string NetRuntimeBS => __netRuntimeBS ??= RuntimeEnvironment.GetRuntimeDirectory();
 		static string __netRuntimeBS;
@@ -471,14 +462,15 @@ namespace Au {
 
 		/// <summary>
 		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
+		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RxReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
 		static string __netRuntimeDesktopBS;
 
 		/// <summary>
 		/// Gets CD/DVD drive path, like <c>@"D:\"</c>.
-		/// Returns null if unavailable.
 		/// </summary>
+		/// <returns>null if unavailable.</returns>
 		public static FolderPath CdDvdDrive {
 			get {
 				foreach (var di in DriveInfo.GetDrives()) {
@@ -499,8 +491,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets removable/external/USB drive path, like <c>@"F:\"</c>.
-		/// Returns null if unavailable.
 		/// </summary>
+		/// <returns>null if unavailable.</returns>
 		/// <param name="driveIndex">0-based removable drive index.</param>
 		/// <remarks>Uses <see cref="DriveInfo.GetDrives"/> and counts only drives of type DriveType.Removable.</remarks>
 		public static FolderPath removableDrive(int driveIndex = 0) {
@@ -512,8 +504,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets removable/external/USB drive name (like <c>@"F:\"</c>) by its volume label.
-		/// Returns null if unavailable.
 		/// </summary>
+		/// <returns>null if unavailable.</returns>
 		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
 		public static FolderPath removableDrive(string volumeLabel) {
 			foreach (DriveInfo di in DriveInfo.GetDrives()) {
@@ -528,8 +520,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets the value of an environment variable in current process.
-		/// Returns null if variable not found.
 		/// </summary>
+		/// <returns>null if variable not found.</returns>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
 		/// <seealso cref="pathname.expand"/>
@@ -721,8 +713,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets path of a known folder by its name as string.
-		/// Returns null if unavailable.
 		/// </summary>
+		/// <returns>null if unavailable.</returns>
 		/// <param name="folderName">
 		/// Can be:
 		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b>.

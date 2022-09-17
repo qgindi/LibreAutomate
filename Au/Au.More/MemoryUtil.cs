@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Allocates memory from native heap of this process using heap API.
@@ -24,16 +24,8 @@
 		public static byte* Alloc(nint size, bool zeroInit = false)
 			=> _ReAllocBytes(null, size, zeroInit);
 
-		/// <summary>
-		/// Allocates new memory block and returns its address.
-		/// </summary>
 		/// <param name="count">Count of elements of type T.</param>
-		/// <param name="zeroInit">Set all bytes = 0.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably count is too big.</exception>
-		/// <remarks>
-		/// Calls API <msdn>HeapAlloc</msdn>.
-		/// The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done. Call <see cref="ReAlloc"/> or <see cref="FreeAlloc"/> if need to resize.
-		/// </remarks>
+		/// <inheritdoc cref="Alloc(nint, bool)"/>
 		public static T* Alloc<T>(nint count, bool zeroInit = false) where T : unmanaged
 			=> (T*)_ReAllocBytes(null, count * sizeof(T), zeroInit);
 

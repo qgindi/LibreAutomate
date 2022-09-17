@@ -249,8 +249,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload writes text lines to the output in real time.
+		/// Runs a console program, waits until its process ends, and prints its output text.
+		/// Writes text lines to the output in real time.
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
@@ -283,27 +283,25 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// string v = "example";
-		/// int r1 = run.console(@"C:\Test\console1.exe", $@"/an ""{v}"" /etc");
-		/// 
-		/// int r2 = run.console(s => print.it(s), @"C:\Test\console2.exe");
-		/// 
-		/// int r3 = run.console(out var text, @"C:\Test\console3.exe", encoding: Encoding.UTF8);
-		/// print.it(text);
+		/// run.console(@"C:\Test\console.exe", $@"/an ""{v}"" /etc");
 		/// ]]></code>
 		/// </example>
 		public static int console(string exe, string args = null, string curDir = null, Encoding encoding = null) {
-			return _RunConsole(s => print.it(s), null, exe, args, curDir, encoding, true);
+			return _RunConsole(print.it, null, exe, args, curDir, encoding, true);
 		}
 
 		/// <summary>
-		/// Runs a console program, waits until its process ends, and gets its output text when it ends.
+		/// Runs a console program, waits until its process ends, and gets its output text.
 		/// </summary>
 		/// <param name="output">A variable that receives the output text.</param>
-		/// <param name="exe"></param>
-		/// <param name="args"></param>
-		/// <param name="curDir"></param>
-		/// <param name="encoding"></param>
-		/// <exception cref="AuException">Failed, for example file not found.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// string v = "example";
+		/// run.console(out var text, @"C:\Test\console.exe", encoding: Encoding.UTF8);
+		/// print.it(text);
+		/// ]]></code>
+		/// </example>
+		/// <inheritdoc cref="console(string, string, string, Encoding)"/>
 		public static int console(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			var b = new StringBuilder();
 			var r = _RunConsole(null, b, exe, args, curDir, encoding, false);
@@ -313,7 +311,7 @@ namespace Au {
 
 		/// <summary>
 		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload uses a callback function that receives text lines in real time.
+		/// Uses a callback function that receives text lines in real time.
 		/// </summary>
 		/// <param name="output">
 		/// A callback function that receives the output text.
@@ -321,12 +319,14 @@ namespace Au {
 		/// <br/>• it isn't called until is retrieved full line with line break characters;
 		/// <br/>• it receives single full line at a time, without line break characters.
 		/// </param>
-		/// <param name="exe"></param>
-		/// <param name="args"></param>
-		/// <param name="curDir"></param>
-		/// <param name="encoding"></param>
 		/// <param name="rawText">Call the callback function whenever text is retrieved (don't wait for full line). Pass raw text, in chunks of any size.</param>
-		/// <exception cref="AuException">Failed, for example file not found.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// string v = "example";
+		/// run.console(s => print.it(s), @"C:\Test\console.exe");
+		/// ]]></code>
+		/// </example>
+		/// <inheritdoc cref="console(string, string, string, Encoding)"/>
 		public static int console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null, bool rawText = false) {
 			return _RunConsole(output, null, exe, args, curDir, encoding, !rawText);
 		}
@@ -430,7 +430,7 @@ namespace Au {
 		/// <summary>
 		/// Opens parent folder in File Explorer (folder window) and selects the file.
 		/// </summary>
-		/// <returns>false if fails, for example if the file does not exist.</returns>
+		/// <returns>false if failed, for example if the file does not exist.</returns>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
 		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="pathname.expand"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
@@ -443,8 +443,8 @@ namespace Au {
 
 		/// <summary>
 		/// Starts new thread: creates new <see cref="Thread"/> object, sets some properties and calls <see cref="Thread.Start"/>.
-		/// Returns the <b>Thread</b> variable.
 		/// </summary>
+		/// <returns>The <b>Thread</b> variable.</returns>
 		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
 		/// <param name="background">
 		/// If true (default), sets <see cref="Thread.IsBackground"/> = true.

@@ -2,7 +2,6 @@ namespace Au
 {
 	public partial struct wnd
 	{
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Waits until window exists or is active.
 		/// </summary>
@@ -40,7 +39,6 @@ namespace Au
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Wait(secondsTimeout, active);
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		/// <summary>
 		/// Waits until any of specified windows exists or is active.
@@ -82,7 +80,6 @@ namespace Au
 		}
 
 		//rejected. Not useful. Use the non-static WaitForClosed.
-		//#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//		/// <summary>
 		//		/// Waits until window does not exist.
 		//		/// </summary>
@@ -105,7 +102,6 @@ namespace Au
 		//			var f = new wndFinder(name, cn, of, flags, also, contains);
 		//			return WaitNot(secondsTimeout, out _, f);
 		//		}
-		//#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		//		/// <summary>
 		//		/// Waits until window does not exist.

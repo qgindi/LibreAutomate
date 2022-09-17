@@ -382,8 +382,8 @@ namespace Au
 
 		/// <summary>
 		/// Gets the keyboard-focused UI element.
-		/// Returns null if fails.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		public static elm focused(EFocusedFlags flags = 0) {
 			WarnInSendMessage_();
 
@@ -401,8 +401,8 @@ namespace Au
 
 		/// <summary>
 		/// Gets the UI element that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="WinEventHook"/>.
-		/// Returns null if failed. Suports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>null if failed. Suports <see cref="lastError"/>.</returns>
 		/// <param name="w"></param>
 		/// <param name="idObject"></param>
 		/// <param name="idChild"></param>
@@ -423,8 +423,8 @@ namespace Au
 #if false //rejected: not useful. Maybe in the future.
 		/// <summary>
 		/// Gets UI element from a COM object of any type that supports it.
-		/// Returns null if fails.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		/// <param name="x">Unmanaged COM object.</param>
 		/// <remarks>
 		/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
@@ -441,7 +441,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets UI element from a COM object of any type that supports it.
-		/// Returns null if fails.
+		/// Returns null if failed.
 		/// </summary>
 		/// <param name="x">Managed COM object.</param>
 		/// <remarks>

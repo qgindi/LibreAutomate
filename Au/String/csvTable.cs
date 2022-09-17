@@ -1,4 +1,4 @@
-﻿namespace Au
+namespace Au
 {
 	/// <summary>
 	/// Parses and composes CSV text. Stores CSV table data in memory as a <b>List</b> of string arrays.
@@ -479,11 +479,9 @@
 		/// <summary>
 		/// Sets an int number field.
 		/// </summary>
-		/// <param name="row">See <see cref="this[int, int]"/>.</param>
-		/// <param name="column">See <see cref="this[int, int]"/>.</param>
 		/// <param name="value">The number.</param>
 		/// <param name="hex">Let the number be in hexadecimal format, like 0x3A.</param>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <inheritdoc cref="this[int, int]"/>
 		public void SetInt(int row, int column, int value, bool hex = false) {
 			this[row, column] = hex ? "0x" + value.ToString("X") : value.ToString();
 		}
@@ -491,8 +489,8 @@
 		/// <summary>
 		/// Gets an int number field.
 		/// </summary>
-		/// <param name="row">See <see cref="this[int, int]"/>.</param>
-		/// <param name="column">See <see cref="this[int, int]"/>.</param>
+		/// <param name="row">0-based row index.</param>
+		/// <param name="column">0-based column index.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public int GetInt(int row, int column) {
 			return this[row, column].ToInt();
@@ -501,10 +499,7 @@
 		/// <summary>
 		/// Sets a double number field.
 		/// </summary>
-		/// <param name="row">See <see cref="this[int, int]"/>.</param>
-		/// <param name="column">See <see cref="this[int, int]"/>.</param>
-		/// <param name="value">The number.</param>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <inheritdoc cref="SetInt(int, int, int, bool)"/>
 		public void SetDouble(int row, int column, double value) {
 			this[row, column] = value.ToS();
 		}
@@ -512,9 +507,7 @@
 		/// <summary>
 		/// Gets a double number field.
 		/// </summary>
-		/// <param name="row">See <see cref="this[int, int]"/>.</param>
-		/// <param name="column">See <see cref="this[int, int]"/>.</param>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <inheritdoc cref="GetInt(int, int)"/>
 		public double GetDouble(int row, int column) {
 			this[row, column].ToNumber(out double R);
 			return R;

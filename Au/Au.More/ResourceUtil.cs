@@ -1,4 +1,4 @@
-﻿using System.Resources;
+using System.Resources;
 using System.Windows.Media.Imaging;
 using System.Windows.Markup;
 using System.Windows;
@@ -124,8 +124,8 @@ namespace Au.More {
 
 		/// <summary>
 		/// Gets WPF object from XAML resource, for example image.
-		/// Returns object of type of the XAML root object, for example Viewbox if image.
 		/// </summary>
+		/// <returns>An object of type of the XAML root object, for example <b>Viewbox</b> if <b>Image</b>.</returns>
 		/// <param name="name">Can be resource name like "file.xaml" or "sub/file.xaml" or "&lt;LoadedAssemblyName&gt;file.xaml". Can have prefix "resource:".</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>

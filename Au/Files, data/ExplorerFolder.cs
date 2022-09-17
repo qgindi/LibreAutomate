@@ -1,4 +1,4 @@
-﻿
+
 namespace Au.More {
 	/// <summary>
 	/// Gets some info of a folder window: path, selected items.
@@ -9,7 +9,7 @@ namespace Au.More {
 		/// <summary>
 		/// Creates <b>FolderWindow</b> from a folder window.
 		/// </summary>
-		/// <returns>null if fails.</returns>
+		/// <returns>null if failed.</returns>
 		/// <param name="w"></param>
 		public static ExplorerFolder Of(wnd w) {
 			var b = _GetIWebBrowserApp(w);
@@ -31,7 +31,7 @@ namespace Au.More {
 		/// Gets folder path.
 		/// For non-filesystem folder gets string like ":: ITEMIDLIST"; see <see cref="Pidl"/>.
 		/// </summary>
-		/// <returns>null if fails.</returns>
+		/// <returns>null if failed.</returns>
 		public string GetFolderPath() {
 			var s = _b.LocationURL;
 			if (!s.NE()) {

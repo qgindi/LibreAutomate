@@ -1,4 +1,4 @@
-﻿namespace Au;
+namespace Au;
 
 partial class keys
 {
@@ -9,8 +9,8 @@ partial class keys
 	{
 		/// <summary>
 		/// Converts key name to <see cref="KKey"/>.
-		/// Returns 0 if unknown key name.
 		/// </summary>
+		/// <returns>0 if unknown key name.</returns>
 		/// <param name="keyName">Key name, like with <see cref="keys.send"/>.</param>
 		public static KKey parseKeyName(string keyName) {
 			keyName ??= "";
@@ -29,8 +29,8 @@ partial class keys
 
 		/// <summary>
 		/// Converts key name to <see cref="KKey"/>.
-		/// Returns 0 if unknown key name.
 		/// </summary>
+		/// <returns>0 if unknown key name.</returns>
 		/// <param name="s">String containing key name, like with <see cref="keys.send"/>.</param>
 		/// <param name="startIndex">Key name start index in <i>s</i>.</param>
 		/// <param name="length">Key name length.</param>
@@ -59,8 +59,8 @@ partial class keys
 		/// <summary>
 		/// Converts string to <see cref="KKey"/> and <see cref="KMod"/>.
 		/// For example, if s is "Ctrl+Left", sets mod=KMod.Ctrl, key=KKey.Left.
-		/// Returns false if the string is invalid.
 		/// </summary>
+		/// <returns>false if the string is invalid.</returns>
 		/// <remarks>
 		/// Key names are like with <see cref="keys.send"/>.
 		/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
@@ -89,8 +89,8 @@ partial class keys
 		/// <summary>
 		/// Converts string to winforms <see cref="System.Windows.Forms.Keys"/>.
 		/// For example, if s is <c>"Ctrl+Left"</c>, sets hotkey=Keys.Control|Keys.Left.
-		/// Returns false if the string is invalid or contains "Win".
 		/// </summary>
+		/// <returns>false if the string is invalid or contains "Win".</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Forms.Keys hotkey) {
 			if (!parseHotkeyString(s, out var m, out var k)) { hotkey = 0; return false; }
 			hotkey = KModToWinforms(m) | (System.Windows.Forms.Keys)k;
@@ -103,9 +103,9 @@ partial class keys
 		/// <summary>
 		/// Converts string to WPF <see cref="System.Windows.Input.ModifierKeys"/> and <see cref="System.Windows.Input.Key"/> or <see cref="System.Windows.Input.MouseAction"/>.
 		/// For example, if s is <c>"Ctrl+Left"</c>, sets mod=ModifierKeys.Control and key=Key.Left.
-		/// Returns false if the string is invalid or contains incorrectly specified mouse buttons.
 		/// Supported mouse button strings: "Click", "D-click", "R-click", "M-click", "Wheel". Example: "Ctrl+R-click". The first character of a mouse word is case-insensitive.
 		/// </summary>
+		/// <returns>false if the string is invalid or contains incorrectly specified mouse buttons.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Input.ModifierKeys mod, out System.Windows.Input.Key key, out System.Windows.Input.MouseAction mouse) {
 			mod = 0; key = 0; mouse = 0;
 			if (s.Ends("lick") || s.Ends("heel")) {

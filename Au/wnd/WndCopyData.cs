@@ -1,4 +1,4 @@
-﻿namespace Au.More {
+namespace Au.More {
 	/// <summary>
 	/// Send/receive data to/from other process using message <msdn>WM_COPYDATA</msdn>.
 	/// </summary>
@@ -131,32 +131,28 @@
 		}
 
 		/// <summary>
-		/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the returned data as byte[].
+		/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the received data as byte[].
 		/// </summary>
-		public static bool SendReceive<T>(wnd w, int dataId, ReadOnlySpan<T> send, out byte[] receive) where T : unmanaged {
+		/// <param name="received">The received data.</param>
+		/// <inheritdoc cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/>
+		public static bool SendReceive<TSend>(wnd w, int dataId, ReadOnlySpan<TSend> send, out byte[] received) where TSend : unmanaged {
 			byte[] r = null;
-			bool R = SendReceive<T, byte>(w, dataId, send, span => r = span.ToArray());
-			receive = r;
+			bool R = SendReceive<TSend, byte>(w, dataId, send, span => r = span.ToArray());
+			received = r;
 			return R;
 		}
 
 		/// <summary>
-		/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the returned string.
+		/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the received string.
 		/// </summary>
-		public static bool SendReceive<T>(wnd w, int dataId, ReadOnlySpan<T> send, out string receive) where T : unmanaged {
+		/// <param name="received">The received data.</param>
+		/// <inheritdoc cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/>
+		public static bool SendReceive<TSend>(wnd w, int dataId, ReadOnlySpan<TSend> send, out string received) where TSend : unmanaged {
 			string r = null;
-			bool R = SendReceive<T, char>(w, dataId, send, span => r = span.ToString());
-			receive = r;
+			bool R = SendReceive<TSend, char>(w, dataId, send, span => r = span.ToString());
+			received = r;
 			return R;
 		}
-		//public static bool SendReceive_<T>(wnd w, int dataId, ReadOnlySpan<T> send, out string receive, bool utf8) where T : unmanaged {
-		//	string r = null;
-		//	bool R = utf8
-		//		? SendReceive_<T, byte>(w, dataId, send, span => r = Encoding.UTF8.GetString(span))
-		//		: SendReceive_<T, char>(w, dataId, send, span => r = span.ToString());
-		//	receive = r;
-		//	return R;
-		//}
 
 		/// <summary>
 		/// Returns data to <see cref="SendReceive"/>.

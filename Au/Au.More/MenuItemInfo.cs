@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Gets item id, text and other info of a classic menu.
@@ -14,8 +14,8 @@
 
 		/// <summary>
 		/// Gets info of a menu item from point.
-		/// Returns null if fails, eg the point is not in the menu or the window is hung.
 		/// </summary>
+		/// <returns>null if failed, eg the point is not in the menu or the window is hung.</returns>
 		/// <param name="pScreen">Point in screen coordinates.</param>
 		/// <param name="w">Popup menu window, class name "#32768".</param>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
@@ -28,8 +28,8 @@
 
 		/// <summary>
 		/// Gets info of a menu item from mouse.
-		/// Returns null if fails, eg the point is not in a menu or the window is hung.
 		/// </summary>
+		/// <returns>null if failed, eg the point is not in a menu or the window is hung.</returns>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
 		public static MenuItemInfo FromXY(int msTimeout = 5000) {
 			var p = mouse.xy;
@@ -68,16 +68,16 @@
 
 		/// <summary>
 		/// Gets menu item text.
-		/// Returns null if failed.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		/// <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
 		/// <param name="removeAmp">Call <see cref="StringUtil.RemoveUnderlineChar"/>.</param>
 		public string GetText(bool removeHotkey, bool removeAmp) => GetText(_hm, _id, false, removeHotkey, removeAmp);
 
 		/// <summary>
 		/// Gets menu item text.
-		/// Returns null if failed.
 		/// </summary>
+		/// <returns>null if failed.</returns>
 		/// <param name="menuHandle"></param>
 		/// <param name="id"></param>
 		/// <param name="byIndex">id is 0-based index. For example you can use it to get text of a submenu-item, because such items usually don't have id.</param>

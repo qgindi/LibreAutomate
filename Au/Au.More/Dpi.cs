@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Functions for high-DPI screen support.
@@ -28,8 +28,9 @@
 		static int _systemDPI;
 
 		/// <summary>
-		/// Gets the DPI of a window, as used by the window's process. It never changes for that window instance.
+		/// Gets the DPI of a window, as used in the window's process. It never changes for that window instance.
 		/// </summary>
+		/// <returns>If failed, returns the system DPI (<see cref="System"/>).</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <param name="supportWin81">
 		/// If true, works on Windows 8.1 and later; however on Windows 8.1 slower and less reliable.
@@ -45,8 +46,6 @@
 		/// - Works best on Windows 10 1607 and later. Uses API <msdn>GetDpiForWindow</msdn>.
 		/// - On Windows 8.1 works if <i>supportWin81</i> true. If false (default), returns <see cref="System"/>.
 		/// - On Windows 7 and 8.0 always returns <see cref="System"/>, because there are no Windows API. Most apps are system-DPI-aware and the result is correct; for unaware apps the result is incorrect. These Windows versions don't support per-monitor DPI.
-		/// 
-		/// Returns the system DPI (<see cref="System"/>) if fails.
 		/// </remarks>
 		public static int OfWindow(wnd w, bool supportWin81 = false) {
 			if (!osVersion.minWin8_1) return System;
@@ -66,18 +65,20 @@
 		/// <summary>
 		/// Returns <c>OfWindow(w.Hwnd())</c>.
 		/// </summary>
+		/// <param name="w">A Winforms window or control.</param>
 		public static int OfWindow(System.Windows.Forms.Control w) => OfWindow(w.Hwnd());
 		//rejected: supportWin81
 
 		/// <summary>
 		/// Returns <c>OfWindow(w.Hwnd())</c>.
 		/// </summary>
+		/// <param name="w">A WPF window or element.</param>
 		public static int OfWindow(System.Windows.DependencyObject w) => OfWindow(w.Hwnd());
 
 		/// <summary>
 		/// Gets DPI of a screen.
-		/// Returns <see cref="System"/> if fails or if not supported on this Windows version.
 		/// </summary>
+		/// <returns><see cref="System"/> if fails or if not supported on this Windows version.</returns>
 		/// <param name="hMonitor">Native screen handle (HMONITOR).</param>
 		/// <param name="supportWin81">Support Windows 8.1 and later. If false (default), supports Windows 10 1607 and later.</param>
 		/// <remarks>

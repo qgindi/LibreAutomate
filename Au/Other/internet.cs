@@ -1,4 +1,4 @@
-﻿using System.Net.NetworkInformation;
+using System.Net.NetworkInformation;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
@@ -16,9 +16,9 @@ namespace Au {
 		/// </summary>
 		/// <param name="hostNameOrAddress">Domain name like "google.com" or IP like "123.45.67.89".</param>
 		/// <param name="timeout">Timeout in milliseconds.</param>
-		/// <remarks>>
+		/// <remarks>
 		/// Not all websites support it.
-		///
+		/// 
 		/// Uses <see cref="Ping"/>.
 		/// </remarks>
 		public static bool ping(string hostNameOrAddress = "google.com", int timeout = 5000) {
@@ -33,6 +33,8 @@ namespace Au {
 		/// <summary>
 		/// Sends an ICMP echo message to the specified website and returns true if successful. Gets the roundtrip time.
 		/// </summary>
+		/// <param name="roundtripTime"><see cref="PingReply.RoundtripTime"/>.</param>
+		/// <inheritdoc cref="ping(string, int)"/>
 		public static bool ping(out int roundtripTime, string hostNameOrAddress = "google.com", int timeout = 5000) {
 			roundtripTime = 0;
 			try {
@@ -271,7 +273,10 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
-		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
+		/// <param name="headers">
+		/// null or an array of request headers in this format: <c>"name: value".</c>
+		/// Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.
+		/// </param>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
 		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.
@@ -294,10 +299,10 @@ namespace Au.Types {
 		/// Sends a GET request to the specified URL, and gets the response. Handles HTTP errors and exceptions.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="r">Receives an <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc. Will be null if failed because of an exception.</param>
+		/// <param name="r">Receives an <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be null if failed because of an exception.</param>
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
-		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
+		/// <inheritdoc cref="Get(HttpClient, string, bool, string[])" path="/param[@name='headers']"/>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
 		/// <returns>false if failed.</returns>
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
@@ -330,7 +335,7 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="resultFile">File path.</param>
-		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
+		/// <inheritdoc cref="Get(HttpClient, string, bool, string[])" path="/param[@name='headers']"/>
 		/// <returns>An <b>HttpResponseMessage</b> object that contains response headers etc. Rarely used.</returns>
 		/// <exception cref="Exception">
 		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/> and <see cref="Save"/>.
@@ -350,7 +355,7 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="url">URL.</param>
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
-		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
+		/// <inheritdoc cref="Get(HttpClient, string, bool, string[])" path="/param[@name='headers']"/>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
 		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.
@@ -377,10 +382,10 @@ namespace Au.Types {
 		/// Sends a POST request to the specified URL, and gets the response. Handles HTTP errors and exceptions.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="r">Receives an <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc. Will be null if failed because of an exception.</param>
+		/// <param name="r">Receives an <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be null if failed because of an exception.</param>
 		/// <param name="url">URL.</param>
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
-		/// <param name="headers">null or an array of request headers in this format: <c>"name: value".</c> Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.</param>
+		/// <inheritdoc cref="Get(HttpClient, string, bool, string[])" path="/param[@name='headers']"/>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
 		/// <returns>false if failed.</returns>
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>

@@ -1,4 +1,4 @@
-﻿namespace Au.More
+namespace Au.More
 {
 	/// <summary>
 	/// Security-related functions, such as enabling privileges.
@@ -7,8 +7,8 @@
 	{
 		/// <summary>
 		/// Enables or disables a privilege for this process.
-		/// Returns false if fails. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		public static bool SetPrivilege(string privilegeName, bool enable, string computer = null) {
 			bool ok = false;
 			var p = new Api.TOKEN_PRIVILEGES { PrivilegeCount = 1, Privileges = new Api.LUID_AND_ATTRIBUTES { Attributes = enable ? 2u : 0 } }; //SE_PRIVILEGE_ENABLED

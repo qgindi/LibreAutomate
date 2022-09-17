@@ -85,7 +85,6 @@ namespace Au {
 		//rejected: single overload with last parameter double? wait.
 		//	Then in scripts almost always would need eg ' , wait: 1'. Or would need ', wait: 0' just for 'exception if not found'.
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
@@ -101,7 +100,6 @@ namespace Au {
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find(waitS);
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		//rejected: probably most users will not understand/use it. It's easy and more clear to create and use wndFinder instances.
 		///// <summary>
@@ -124,16 +122,16 @@ namespace Au {
 
 		/// <summary>
 		/// Finds all matching windows.
-		/// Returns array containing 0 or more window handles as wnd.
-		/// Parameters etc are the same as <see cref="find"/>.
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
+		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 		/// <remarks>
 		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFlags.HiddenToo"/>) and IME windows are always after visible windows.
 		/// </remarks>
 		/// <seealso cref="getwnd.allWindows"/>
 		/// <seealso cref="getwnd.mainWindows"/>
 		/// <seealso cref="getwnd.threadWindows"/>
+		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/param"/>
+		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/exception"/>
 		public static wnd[] findAll(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -209,7 +207,6 @@ namespace Au {
 			}
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Finds a top-level window, like <see cref="find"/>. If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="run.it"/>.
 		/// </summary>
@@ -308,19 +305,9 @@ namespace Au {
 			return default;
 		}
 
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-
 		/// <summary>
-		/// Compares window name and other properties like <see cref="find"/> does.
-		/// Returns true if all specified (non-null/default) properties match.
+		/// Compares window name and other properties like <see cref="find"/> does. Returns true if all specified (non-null/default) properties match.
 		/// </summary>
-		/// <param name="name">See <see cref="find"/>.</param>
-		/// <param name="cn">See <see cref="find"/>.</param>
-		/// <param name="of">See <see cref="find"/>.</param>
-		/// <param name="flags">See <see cref="find"/>.</param>
-		/// <param name="also">See <see cref="find"/>.</param>
-		/// <param name="contains">See <see cref="find"/>.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="find"/>.</exception>
 		/// <remarks>
 		/// Creates new <see cref="wndFinder"/> and calls <see cref="wndFinder.IsMatch"/>.
 		/// To compare single parameter, use more lightweight code. Examples: <c>if (w.Name.Like("* Notepad"))</c>, <c>if (w.ClassNameIs("CabinetWClass"))</c>.
@@ -329,10 +316,16 @@ namespace Au {
 		/// <seealso cref="ClassName"/>
 		/// <seealso cref="ClassNameIs"/>
 		/// <seealso cref="ProgramName"/>
-		public bool IsMatch([ParamString(PSFormat.Wildex)] string name = null,
+		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/param"/>
+		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/exception"/>
+		public bool IsMatch(
+			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
-			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default) {
+			WFlags flags = 0,
+			Func<wnd, bool> also = null,
+			WContains contains = default
+			) {
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			return f.IsMatch(this);
 		}
@@ -342,7 +335,7 @@ namespace Au {
 			/// <summary>
 			/// Gets top-level windows.
 			/// </summary>
-			/// <returns>Array containing window handles as <b>wnd</b>.</returns>
+			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 			/// <param name="onlyVisible">
 			/// Need only visible windows.
 			/// Note: this function does not check whether windows are cloaked, as it is rather slow. Use <see cref="IsCloaked"/> if need.
@@ -364,15 +357,11 @@ namespace Au {
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
 
-			/// <summary>
-			/// Gets top-level windows.
-			/// </summary>
-			/// <param name="a">Receives window handles as <b>wnd</b>. If null, this function creates new List, else clears before adding items.</param>
-			/// <param name="onlyVisible"></param>
-			/// <param name="sortFirstVisible"></param>
+			/// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
 			/// <remarks>
-			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+			/// Use this overload to avoid much garbage when calling frequently with the same <b>List</b> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			/// </remarks>
+			/// <inheritdoc cref="allWindows(bool, bool)" path="/param"/>
 			public static void allWindows(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false) {
 				Internal_.EnumWindows2(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<wnd>());
 			}
@@ -380,7 +369,7 @@ namespace Au {
 			/// <summary>
 			/// Gets top-level windows ordered as in the Z order.
 			/// </summary>
-			/// <returns>Array containing window handles as <b>wnd</b>.</returns>
+			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 			/// <remarks>
 			/// Uses API <msdn>GetWindow</msdn> and ensures it is reliable.
 			/// </remarks>
@@ -430,8 +419,8 @@ namespace Au {
 
 			/// <summary>
 			/// Gets top-level windows of a thread.
-			/// Returns array containing 0 or more window handles as <b>wnd</b>.
 			/// </summary>
+			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
 			/// See <see cref="process.thisThreadId"/>, <see cref="ThreadId"/>.
@@ -449,10 +438,9 @@ namespace Au {
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 			}
 
-			/// <summary>
-			/// Gets top-level windows of a thread.
-			/// </summary>
+			/// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
 			/// <remarks>This overload can be used to avoid much garbage when caling frequently.</remarks>
+			/// <inheritdoc cref="threadWindows(int, bool, bool)"/>
 			public static void threadWindows(ref List<wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false) {
 				if (threadId == 0) throw new ArgumentException("0 threadId.");
 				Internal_.EnumWindows2(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<wnd>());

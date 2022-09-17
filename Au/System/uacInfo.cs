@@ -153,8 +153,8 @@ namespace Au
 
 		/// <summary>
 		/// Opens process access token and creates/returns new <see cref="uacInfo"/> variable that holds it. Then you can use its properties.
-		/// Returns null if failed. For example fails for services and some other processes if current process is not administrator.
 		/// </summary>
+		/// <returns>null if failed. For example fails for services and some other processes if current process is not administrator.</returns>
 		/// <param name="processId">Process id. If you have a window, use <see cref="wnd.ProcessId"/>.</param>
 		/// <remarks>
 		/// To get <b>uacInfo</b> of this process, use <see cref="ofThisProcess"/>.

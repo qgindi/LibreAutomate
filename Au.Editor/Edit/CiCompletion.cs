@@ -995,7 +995,7 @@ partial class CiCompletion {
 						}
 						break;
 					default:
-						if (0 != name.Eq(false, s_kwType)) _NewExpression();
+						if (name.Eq(false, s_kwType) > 0) _NewExpression();
 						break;
 					}
 					break;

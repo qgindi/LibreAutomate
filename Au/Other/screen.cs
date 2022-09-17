@@ -372,7 +372,7 @@ namespace Au {
 		///// <summary>Converts from <see cref="Screen"/>.</summary>
 		//public static implicit operator screen(Screen scrn) => new screen((IntPtr)scrn.GetHashCode());
 
-		///// <summary>Converts to <see cref="Screen"/>. Returns null if fails.</summary>
+		///// <summary>Converts to <see cref="Screen"/>. Returns null if failed.</summary>
 		//public static implicit operator Screen(screen scrn) { int h=(int)scrn._Handle(); return Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == h);
 
 		/// <summary>

@@ -798,7 +798,7 @@ namespace Au.Controls {
 			int pos0 = pos;
 			pos = _ParamPos(utf16, pos);
 			if (lineStartIsLineEnd) {
-				if (pos == 0 || Call(SCI_GETCHARAT, pos - 1) == '\n') return pos0;
+				if (pos == 0 || zCharAt(pos - 1) == '\n') return pos0;
 			}
 			return zLineEnd(utf16, zLineFromPos(false, pos), withRN);
 		}
@@ -1140,7 +1140,7 @@ namespace Au.Controls {
 			public byte[] Load(string file) {
 				_enc = _Encoding.Binary;
 				IsImage = false;
-				if (0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
+				if (file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani") > 0) {
 					if (!filesystem.exists(file).File) throw new FileNotFoundException($"Could not find file '{file}'.");
 					IsImage = true;
 					return Encoding.UTF8.GetBytes($"<image \"{file}\">\0");
@@ -1404,6 +1404,11 @@ namespace Au.Controls {
 			}
 			//tested: with SCI_SEARCHINTARGET slightly slower
 		}
+
+		/// <summary>
+		/// SCI_GETCHARAT.
+		/// </summary>
+		public char zCharAt(int i) => (char)Call(Sci.SCI_GETCHARAT, i);
 
 		public void zIndicatorClear(int indic) => zIndicatorClear(false, indic, ..);
 

@@ -1,4 +1,4 @@
-﻿namespace Au.More;
+namespace Au.More;
 
 /// <summary>
 /// Registers a hotkey using API <msdn>RegisterHotKey</msdn>. Unregisters when disposing.
@@ -58,8 +58,8 @@ public struct RegisteredHotkey : IDisposable {
 
 	/// <summary>
 	/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
-	/// Returns false if fails. Supports <see cref="lastError"/>.
 	/// </summary>
+	/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
 	/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>

@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 using Au.Compiler;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
@@ -27,7 +27,7 @@ static class CiUtil {
 		n ??= node.FirstAncestorOrSelf<SyntaxNode>(o => o.Parent is CompilationUnitSyntax); //using directive etc
 		return n;
 	}
-	
+
 	//not used
 	//public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd) {
 	//	(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
@@ -226,52 +226,31 @@ static class CiUtil {
 		PSFormat format = PSFormat.None;
 		if (parent is ArgumentSyntax asy) {
 			if (parent.Parent is ArgumentListSyntax alis) {
-				switch (alis.Parent) {
-				case ObjectCreationExpressionSyntax oce:
-					format = _GetFormat(oce, alis);
-					if (format == PSFormat.None) {
-						switch (oce.Type.ToString()) { //fast if single word
-						case "Regex":
-						case "System.Text.RegularExpressions.Regex":
-						case "RegexCompilationInfo":
-						case "System.Text.RegularExpressions.RegexCompilationInfo":
-							if ((object)asy == alis.Arguments[0]) format = PSFormat.NetRegex;
-							break;
+				if (alis.Parent is ExpressionSyntax es && es is BaseObjectCreationExpressionSyntax or InvocationExpressionSyntax) {
+					if (semo.GetSymbolInfo(es).Symbol is IMethodSymbol m) {
+						format = _GetFormat(m, alis);
+						if (format == 0) {
+							var ct = m.ContainingType.ToString();
+							if (es is BaseObjectCreationExpressionSyntax) {
+								if (ct is "System.Text.RegularExpressions.Regex" or "System.Text.RegularExpressions.RegexCompilationInfo")
+									format = PSFormat.NetRegex;
+							} else {
+								if (ct is "System.Text.RegularExpressions.Regex" && m.Name is "IsMatch" or "Match" or "Matches" or "Replace" or "Split") {
+									var aa = alis.Arguments;
+									if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.NetRegex;
+								}
+							}
 						}
 					}
-					break;
-				case InvocationExpressionSyntax ies:
-					format = _GetFormat(ies, alis);
-					if (format == PSFormat.None) {
-						switch (ies.Expression.ToString()) {
-						case "Regex.IsMatch":
-						case "Regex.Match":
-						case "Regex.Matches":
-						case "Regex.Replace":
-						case "Regex.Split":
-							var aa = alis.Arguments;
-							if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.NetRegex;
-							break;
-						}
-					}
-					break;
-					//default:
-					//	CiUtil.PrintNode(alis.Parent);
-					//	break;
 				}
 			} else if (parent.Parent is BracketedArgumentListSyntax balis && balis.Parent is ElementAccessExpressionSyntax eacc) {
 				if (semo.GetSymbolInfo(eacc).Symbol is IPropertySymbol ips && ips.IsIndexer) {
 					var ims = ips.SetMethod;
-					if (ims != null) format = _GetFormat2(ims, balis);
+					if (ims != null) format = _GetFormat(ims, balis);
 				}
 			}
 
-			PSFormat _GetFormat(ExpressionSyntax es, BaseArgumentListSyntax alis) {
-				if (semo.GetSymbolInfo(es).Symbol is IMethodSymbol ims) return _GetFormat2(ims, alis);
-				return PSFormat.None;
-			}
-
-			PSFormat _GetFormat2(IMethodSymbol ims, BaseArgumentListSyntax alis) {
+			PSFormat _GetFormat(IMethodSymbol ims, BaseArgumentListSyntax alis) {
 				IParameterSymbol p = null;
 				var pa = ims.Parameters;
 				var nc = asy.NameColon;

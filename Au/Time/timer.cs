@@ -154,8 +154,8 @@ namespace Au
 
 		/// <summary>
 		/// Creates and starts new one-time timer.
-		/// Returns new <see cref="timer"/> object. Usually you don't need it.
 		/// </summary>
+		/// <returns>New <see cref="timer"/> object. Usually you don't need it.</returns>
 		/// <param name="milliseconds">Time interval after which to call the callback function. The actual minimal interval is 10-20 ms.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
@@ -171,8 +171,8 @@ namespace Au
 
 		/// <summary>
 		/// Creates and starts new periodic timer.
-		/// Returns new <see cref="timer"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
+		/// <returns>New <see cref="timer"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.</returns>
 		/// <param name="milliseconds">Time interval (period) of calling the callback function. The actual minimal period is 10-20 ms.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>

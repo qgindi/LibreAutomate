@@ -307,57 +307,9 @@ public unsafe partial class popupMenu : MTBase {
 	#region show, close
 
 	/// <summary>
-	/// Creates and shows simple popup menu. Without images, actions, submenus.
-	/// Returns selected item id, or 0 if cancelled.
+	/// Shows the menu, waits until closed, and returns item id or 0.
 	/// </summary>
-	/// <param name="items">
-	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List.
-	/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-	/// For separators use null or empty strings: "One|Two||Three|Four".
-	/// </param>
-	/// <param name="flags"></param>
-	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
-	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
-	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
-	/// <remarks>
-	/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
-	/// </remarks>
-	/// <seealso cref="dialog.showList"/>
-	public static int showSimple(Strings items, PMFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
-		var a = items.ToArray();
-		var m = new popupMenu();
-		foreach (var v in a) {
-			var s = v;
-			if (s.NE()) {
-				m.Separator();
-			} else {
-				if (s.ToInt(out int id, 0, out int end)) {
-					if (s.Eq(end, ' ')) end++;
-					s = s[end..];
-					m.Add(id, s);
-				} else {
-					m.Add(s);
-				}
-			}
-		}
-		return m.Show(flags, xy, excludeRect, owner);
-	}
-	//these 2 have been moved to the top because of problems with DocFX
-
-	/// <summary>
-	/// Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
-	/// </summary>
-	/// <remarks>
-	/// The function is called on each key down event while the menu is open. Only if current thread is not in the foreground.
-	/// To block a key, call <see cref="HookData.Keyboard.BlockEvent"/>.
-	/// The function must be as fast as possible.
-	/// </remarks>
-	public Func<popupMenu, HookData.Keyboard, PMKHook> KeyboardHook { get; set; }
-
-	/// <summary>
-	/// Shows the menu and waits until closed.
-	/// Returns id of the selected item when closed, or 0 if cancelled.
-	/// </summary>
+	/// <returns>id of the selected item when closed, or 0 if cancelled.</returns>
 	/// <param name="flags"></param>
 	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
@@ -1007,4 +959,51 @@ public unsafe partial class popupMenu : MTBase {
 		=> k is KKey.Ctrl or KKey.Shift or KKey.CapsLock or KKey.NumLock or KKey.ScrollLock
 		or KKey.PrintScreen or KKey.Pause or KKey.Insert
 		or (>= KKey.F1 and <= KKey.F24) || keys.isMod(KMod.Ctrl | KMod.Alt | KMod.Win);
+
+	/// <summary>
+	/// Creates and shows a simple popup menu. Without images, actions, submenus. Returns item id or 0.
+	/// </summary>
+	/// <returns>id of the selected item when closed, or 0 if cancelled.</returns>
+	/// <param name="items">
+	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List.
+	/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+	/// For separators use null or empty strings: "One|Two||Three|Four".
+	/// </param>
+	/// <param name="flags"></param>
+	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
+	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
+	/// <remarks>
+	/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
+	/// </remarks>
+	/// <seealso cref="dialog.showList"/>
+	public static int showSimple(Strings items, PMFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
+		var a = items.ToArray();
+		var m = new popupMenu();
+		foreach (var v in a) {
+			var s = v;
+			if (s.NE()) {
+				m.Separator();
+			} else {
+				if (s.ToInt(out int id, 0, out int end)) {
+					if (s.Eq(end, ' ')) end++;
+					s = s[end..];
+					m.Add(id, s);
+				} else {
+					m.Add(s);
+				}
+			}
+		}
+		return m.Show(flags, xy, excludeRect, owner);
+	}
+
+	/// <summary>
+	/// Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
+	/// </summary>
+	/// <remarks>
+	/// The function is called on each key down event while the menu is open. Only if current thread is not in the foreground.
+	/// To block a key, call <see cref="HookData.Keyboard.BlockEvent"/>.
+	/// The function must be as fast as possible.
+	/// </remarks>
+	public Func<popupMenu, HookData.Keyboard, PMKHook> KeyboardHook { get; set; }
 }

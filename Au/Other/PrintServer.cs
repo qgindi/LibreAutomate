@@ -133,8 +133,8 @@ namespace Au.More {
 
 		/// <summary>
 		/// Starts server.
-		/// Returns false if server already exists (if global - in any process).
 		/// </summary>
+		/// <returns>false if server already exists (if global - in any process).</returns>
 		/// <exception cref="AuException">Failed.</exception>
 		public bool Start() {
 			lock (this) {
@@ -200,8 +200,6 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns false. See example in class help.</param>
 		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example WM_USER or WM_APP.</param>
-		/// <remarks>
-		/// </remarks>
 		public void SetNotifications(wnd w, int message) {
 			_notifMsg = message;
 			_notifWnd = w;
@@ -315,8 +313,8 @@ namespace Au.More {
 
 		/// <summary>
 		/// Gets next message and removes from the queue.
-		/// Returns false if there are no messages.
 		/// </summary>
+		/// <returns>false if there are no messages.</returns>
 		/// <remarks>
 		/// Messages are added to an internal queue when clients call <see cref="print.it"/> etc. They contain the text, time, etc. This function gets the oldest message and removes it from the queue.
 		/// </remarks>

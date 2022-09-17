@@ -1,4 +1,4 @@
-﻿//SHOULDDO: on exception release modifiers.
+//SHOULDDO: on exception release modifiers.
 
 namespace Au;
 
@@ -344,14 +344,10 @@ public partial class keys
 	/// Adds text or HTML. It will be sent by <see cref="SendIt"/>.
 	/// </summary>
 	/// <returns>This.</returns>
-	/// <param name="text">Text. Can be null.</param>
-	/// <param name="html">
-	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
-	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
-	/// </param>
 	/// <remarks>
 	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.
 	/// </remarks>
+	/// <inheritdoc cref="sendt" path="/param"/>
 	public keys AddText(string text, string html = null) {
 		_ThrowIfSending();
 		if (!html.NE()) {
@@ -465,7 +461,7 @@ public partial class keys
 	/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="SendIt"/>.
 	/// </summary>
 	/// <returns>This.</returns>
-	/// <param name="keysEtc">The same as with <see cref="send"/>.</param>
+	/// <inheritdoc cref="keys.send" path="/param"/>
 	public keys Add([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		_ThrowIfSending();
 		if (keysEtc != null) {

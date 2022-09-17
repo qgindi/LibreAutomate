@@ -407,7 +407,7 @@ namespace Au {
 		/// <summary>
 		/// Shows the window and waits until closed.
 		/// </summary>
-		/// <param name="owner"><see cref="Window.Owner"/>.</param>
+		/// <param name="owner">Owner window. Sets <see cref="Window.Owner"/>.</param>
 		/// <exception cref="InvalidOperationException">
 		/// - Container is not Window.
 		/// - Missing End() for a StartX() panel.
@@ -537,14 +537,14 @@ namespace Au {
 		/// <summary>
 		/// Changes various window properties.
 		/// </summary>
-		/// <param name="startLocation"><see cref="WindowStartupLocation"/>.</param>
-		/// <param name="resizeMode"><see cref="Window.ResizeMode"/>.</param>
-		/// <param name="showActivated"><see cref="Window.ShowActivated"/>.</param>
-		/// <param name="showInTaskbar"><see cref="Window.ShowInTaskbar"/>.</param>
-		/// <param name="topmost"><see cref="Window.Topmost"/>.</param>
-		/// <param name="state"><see cref="Window.WindowState"/>.</param>
-		/// <param name="style"><see cref="Window.WindowStyle"/>.</param>
-		/// <param name="icon"><see cref="Window.Icon"/>. Example: <c>.WinProperties(icon: BitmapFrame.Create(new Uri(@"d:\icons\file.ico")))</c>.</param>
+		/// <param name="startLocation">Sets <see cref="WindowStartupLocation"/>.</param>
+		/// <param name="resizeMode">Sets <see cref="Window.ResizeMode"/>.</param>
+		/// <param name="showActivated">Sets <see cref="Window.ShowActivated"/>.</param>
+		/// <param name="showInTaskbar">Sets <see cref="Window.ShowInTaskbar"/>.</param>
+		/// <param name="topmost">Sets <see cref="Window.Topmost"/>.</param>
+		/// <param name="state">Sets <see cref="Window.WindowState"/>.</param>
+		/// <param name="style">Sets <see cref="Window.WindowStyle"/>.</param>
+		/// <param name="icon">Sets <see cref="Window.Icon"/>. Example: <c>.WinProperties(icon: BitmapFrame.Create(new Uri(@"d:\icons\file.ico")))</c>.</param>
 		/// <param name="whiteBackground">Set background color = <b>SystemColors.WindowBrush</b> (normally white) if true or <b>SystemColors.ControlBrush</b> (dialog color) if false. See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
 		/// <exception cref="InvalidOperationException">
 		/// - Container is not Window.
@@ -574,8 +574,8 @@ namespace Au {
 
 		/// <summary>
 		/// Gets the top-level window.
-		/// Returns null if container is not <b>Window</b>.
 		/// </summary>
+		/// <returns>null if container is not <b>Window</b>.</returns>
 		public Window Window => _window;
 
 		/// <summary>
@@ -922,15 +922,7 @@ namespace Au {
 		//	/// <br/><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c>
 		//	/// </param>
 
-		/// <summary>
-		/// Adds button with <see cref="ButtonBase.Click"/> event handler.
-		/// </summary>
-		/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
-		/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button. Not called if validation fails.</param>
-		/// <param name="flags"></param>
-		/// <remarks>
-		/// If <i>flags</i> contains <b>OK</b> or <b>Apply</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
-		/// </remarks>
+		/// <inheritdoc cref="AddButton(out Button, object, Action{WBButtonClickArgs}, WBBFlags)"/>
 		public wpfBuilder AddButton(object text, Action<WBButtonClickArgs> click, WBBFlags flags = 0/*, Action<WBButtonClickArgs> clickSplit = null*/) {
 			return AddButton(out _, text, click, flags);
 		}
@@ -975,16 +967,10 @@ namespace Au {
 		public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
 			=> AddOkCancel(out _, out _, out _, ok, cancel, apply, stackPanel);
 
-		/// <summary>
-		/// Adds OK and/or Cancel and/or Apply buttons.
-		/// </summary>
 		/// <param name="bOK">Variable of OK button.</param>
 		/// <param name="bCancel">Variable of Cancel button.</param>
 		/// <param name="bApply">Variable of Apply button.</param>
-		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
-		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
-		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
-		/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If null (default), adds if not already in a stack panel, except when there is 1 button.</param>
+		/// <inheritdoc cref="AddOkCancel(string, string, string, bool?)"/>
 		public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
 			if (n == 0) throw new ArgumentNullException();
@@ -1738,7 +1724,7 @@ namespace Au {
 		/// Makes the last added <see cref="TextBox"/> multiline.
 		/// </summary>
 		/// <param name="height">If not null, sets height or/and min/max height.</param>
-		/// <param name="wrap"><see cref="TextBox.TextWrapping"/>.</param>
+		/// <param name="wrap">Sets <see cref="TextBox.TextWrapping"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>TextBox</b>.</exception>
 		public wpfBuilder Multiline(WBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
 			var c = Last as TextBox ?? throw new NotSupportedException("Multiline(): Last added must be TextBox");
@@ -1953,9 +1939,9 @@ namespace Au {
 		/// <summary>
 		/// Loads image into the last added <see cref="System.Windows.Controls.Image"/>.
 		/// </summary>
-		/// <param name="source"><see cref="Image.Source"/>.</param>
-		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
-		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
+		/// <param name="source">Sets <see cref="Image.Source"/>.</param>
+		/// <param name="stretch">Sets <see cref="Image.Stretch"/>.</param>
+		/// <param name="stretchDirection">Sets <see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 		/// <remarks>
 		/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
@@ -1982,8 +1968,8 @@ namespace Au {
 		/// Loads image from a file or URL into the last added <see cref="System.Windows.Controls.Image"/>.
 		/// </summary>
 		/// <param name="source">File path etc. See <see cref="ImageUtil.LoadWpfImage"/>. Sets <see cref="Image.Source"/>.</param>
-		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
-		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
+		/// <param name="stretch">Sets <see cref="Image.Stretch"/>.</param>
+		/// <param name="stretchDirection">Sets <see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 		/// <remarks>
 		/// If fails to load, prints warning. See <see cref="print.warning"/>.
@@ -2077,7 +2063,7 @@ namespace Au {
 		/// <summary>
 		/// Adds <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
-		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
 		/// <remarks>
 		/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> false, else its parent. The same with all <b>StartX</b> functions.
 		/// </remarks>
@@ -2097,22 +2083,19 @@ namespace Au {
 		/// </example>
 		public wpfBuilder StartGrid<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out T _, header);
 
-		/// <summary>
-		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
-		/// </summary>
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
-		/// <param name="header">Header text/content.</param>
 		/// <example>
 		/// <code><![CDATA[
 		/// b.StartGrid(out Expander g, "Expander"); g.IsExpanded=true;
 		/// ]]></code>
 		/// </example>
+		/// <inheritdoc cref="StartGrid{T}(object)"/>
 		public wpfBuilder StartGrid<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out container, header);
 
 		/// <summary>
 		/// Adds <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
-		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
 		/// <remarks>
 		/// For each added control call <see cref="XY"/> or use indexer like <c>[x, y]</c> or <c>[x, y, width, height]</c>.
 		/// </remarks>
@@ -2124,17 +2107,14 @@ namespace Au {
 		/// <param name="header">Header text/content.</param>
 		public wpfBuilder StartCanvas<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out T _, header);
 
-		/// <summary>
-		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
-		/// </summary>
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
-		/// <param name="header">Header text/content.</param>
+		/// <inheritdoc cref="StartCanvas{T}(object)"/>
 		public wpfBuilder StartCanvas<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out container, header);
 
 		/// <summary>
 		/// Adds <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
-		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
 		/// <remarks>
 		/// For added elements call <see cref="Dock"/>, maybe except for the last element that fills remaining space.
 		/// </remarks>
@@ -2146,18 +2126,15 @@ namespace Au {
 		/// <param name="header">Header text/content.</param>
 		public wpfBuilder StartDock<T>(object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out T _, header);
 
-		/// <summary>
-		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
-		/// </summary>
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
-		/// <param name="header">Header text/content.</param>
+		/// <inheritdoc cref="StartDock{T}(object)"/>
 		public wpfBuilder StartDock<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out container, header);
 
 		/// <summary>
 		/// Adds <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="vertical"></param>
-		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
 		public wpfBuilder StartStack(bool vertical = false, bool childOfLast = false) => _Start(new _StackPanel(this, vertical), childOfLast);
 
 		/// <summary>
@@ -2167,12 +2144,8 @@ namespace Au {
 		/// <param name="vertical"></param>
 		public wpfBuilder StartStack<T>(object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out T _, header);
 
-		/// <summary>
-		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
-		/// </summary>
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
-		/// <param name="header">Header text/content.</param>
-		/// <param name="vertical"></param>
+		/// <inheritdoc cref="StartStack{T}(object, bool)"/>
 		public wpfBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out container, header);
 
 		/// <summary>

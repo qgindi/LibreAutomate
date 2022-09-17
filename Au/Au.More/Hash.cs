@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace Au.More;
 
@@ -12,63 +12,48 @@ public static unsafe class Hash {
 	/// 32-bit FNV-1 hash.
 	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
 	/// </summary>
-	public static int Fnv1(string data) {
-		if (data == null) return 0;
+	public static int Fnv1(ReadOnlySpan<char> data) {
 		fixed (char* p = data) return Fnv1(p, data.Length);
 	}
 
-	/// <summary>
-	/// 32-bit FNV-1 hash.
-	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-	/// </summary>
+	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
 	public static int Fnv1(char* data, int lengthChars) {
-		uint hash = 2166136261;
+		if (data == null) return 0;
 
+		uint hash = 2166136261;
 		for (int i = 0; i < lengthChars; i++)
 			hash = (hash * 16777619) ^ data[i];
-
 		return (int)hash;
 
 		//note: using i is slightly faster than pointers. Compiler knows how to optimize.
 	}
 
-	/// <summary>
-	/// 32-bit FNV-1 hash.
-	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
+	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
 	public static int Fnv1(ReadOnlySpan<byte> data) {
-		if (data == null) return 0;
 		fixed (byte* p = data) return Fnv1(p, data.Length);
 	}
 
-	/// <summary>
-	/// 32-bit FNV-1 hash.
-	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-	/// </summary>
+	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
 	public static int Fnv1(byte* data, int lengthBytes) {
-		uint hash = 2166136261;
+		if (data == null) return 0;
 
+		uint hash = 2166136261;
 		for (int i = 0; i < lengthBytes; i++)
 			hash = (hash * 16777619) ^ data[i];
-
 		return (int)hash;
 
 		//note: could be void* data, then callers don't have to cast other types to byte*, but then can accidentally pick wrong overload when char*. Also now it's completely clear that it hashes bytes, not the passed type directly (like the char* overload does).
 	}
 
-	/// <summary>
-	/// 32-bit FNV-1 hash.
-	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-	/// </summary>
+	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
 	public static int Fnv1<T>(T data) where T : unmanaged
 			=> Fnv1((byte*)&data, sizeof(T));
 
 	/// <summary>
 	/// 64-bit FNV-1 hash.
 	/// </summary>
-	public static long Fnv1Long(string data) {
-		if (data == null) return 0;
+	public static long Fnv1Long(ReadOnlySpan<char> data) {
 		fixed (char* p = data) return Fnv1Long(p, data.Length);
 	}
 
@@ -76,11 +61,11 @@ public static unsafe class Hash {
 	/// 64-bit FNV-1 hash.
 	/// </summary>
 	public static long Fnv1Long(char* data, int lengthChars) {
-		ulong hash = 14695981039346656037;
+		if (data == null) return 0;
 
+		ulong hash = 14695981039346656037;
 		for (int i = 0; i < lengthChars; i++)
 			hash = (hash * 1099511628211) ^ data[i];
-
 		return (long)hash;
 
 		//speed: ~4 times slower than 32-bit
@@ -91,7 +76,6 @@ public static unsafe class Hash {
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	public static long Fnv1Long(ReadOnlySpan<byte> data) {
-		if (data == null) return 0;
 		fixed (byte* p = data) return Fnv1Long(p, data.Length);
 	}
 
@@ -99,11 +83,11 @@ public static unsafe class Hash {
 	/// 64-bit FNV-1 hash.
 	/// </summary>
 	public static long Fnv1Long(byte* data, int lengthBytes) {
-		ulong hash = 14695981039346656037;
+		if (data == null) return 0;
 
+		ulong hash = 14695981039346656037;
 		for (int i = 0; i < lengthBytes; i++)
 			hash = (hash * 1099511628211) ^ data[i];
-
 		return (long)hash;
 	}
 
@@ -117,6 +101,8 @@ public static unsafe class Hash {
 	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
 	/// </summary>
 	public static int Fast(char* data, int lengthChars) {
+		if (data == null) return 0;
+
 		//Also we take the last 1-2 characters (in the second loop), because often there are several strings like Chrome_WidgetWin_0, Chrome_WidgetWin_1...
 		//Also we hash uints, not chars, unless the string is very short.
 		//Tested speed with 400 unique strings (window/control names/classnames/programnames). The time was 7 mcs. For single call 17 ns.
@@ -146,24 +132,8 @@ public static unsafe class Hash {
 	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
 	/// </summary>
 	/// <param name="s">The string to hash. Can be null.</param>
-	public static int Fast(string s) {
-		if (s == null) return 0;
+	public static int Fast(ReadOnlySpan<char> s) {
 		fixed (char* p = s) return Fast(p, s.Length);
-	}
-
-	/// <summary>
-	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
-	/// This overload hashes a substring.
-	/// </summary>
-	/// <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>
-	/// <param name="startIndex">Start of substring in s.</param>
-	/// <param name="count">Length of substring.</param>
-	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	public static int Fast(string s, int startIndex, int count) {
-		int len = s?.Length ?? 0;
-		if ((uint)startIndex > len || (uint)count > len - startIndex) throw new ArgumentOutOfRangeException();
-		if (s == null) return 0;
-		fixed (char* p = s) return Fast(p + startIndex, count);
 	}
 
 	#endregion
@@ -272,8 +242,8 @@ public static unsafe class Hash {
 
 		/// <summary>
 		/// Creates <b>MD5Result</b> from hex string returned by <see cref="ToString"/>.
-		/// Returns false if <i>encoded</i> is invalid.
 		/// </summary>
+		/// <returns>false if <i>encoded</i> is invalid.</returns>
 		public static bool FromString(RStr encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);
 	}
 

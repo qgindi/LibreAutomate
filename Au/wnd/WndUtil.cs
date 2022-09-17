@@ -1,4 +1,4 @@
-﻿namespace Au.More {
+namespace Au.More {
 	/// <summary>
 	/// Miscellaneous window-related functions. Rarely used in automation scripts.
 	/// </summary>
@@ -123,9 +123,7 @@
 		/// 
 		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
 		/// </remarks>
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		public static wnd CreateWindow(WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, wnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			Not_.Null(wndProc, className);
 
 			t_windows ??= new();
@@ -242,8 +240,8 @@
 		/// <summary>
 		/// Destroys a native window of this thread.
 		/// Calls API <msdn>DestroyWindow</msdn>.
-		/// Returns false if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		/// <seealso cref="wnd.Close"/>
 		public static bool DestroyWindow(wnd w) {
 			return Api.DestroyWindow(w);
@@ -278,8 +276,8 @@
 
 		/// <summary>
 		/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-		/// Returns null if fails. Returns null if called on Windows 7 unless <i>getExePathIfNotWinStoreApp</i> true.
 		/// </summary>
+		/// <returns>null if failed. On Windows 7 returns null unless <i>getExePathIfNotWinStoreApp</i> true.</returns>
 		/// <param name="w">A top-level window.</param>
 		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
@@ -782,8 +780,8 @@ void _WmDeclTextToCode() {
 
 		/// <summary>
 		/// Simple non-OLE drag operation.
-		/// Returns true if dropped, false if cancelled.
 		/// </summary>
+		/// <returns>true if dropped, false if cancelled.</returns>
 		/// <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
@@ -857,8 +855,8 @@ void _WmDeclTextToCode() {
 
 		/// <summary>
 		/// Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
-		/// Returns false if fails.
 		/// </summary>
+		/// <returns>false if failed.</returns>
 		/// <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
 		/// <remarks>
 		/// In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
@@ -873,8 +871,8 @@ void _WmDeclTextToCode() {
 		/// <summary>
 		/// Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
 		/// Calls API <msdn>PostThreadMessage</msdn>. 
-		/// Returns false if failed. Supports <see cref="lastError"/>.
 		/// </summary>
+		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 		public static bool PostThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
 			return Api.PostThreadMessage(threadId, message, wParam, lParam);
 		}
@@ -884,7 +882,7 @@ void _WmDeclTextToCode() {
 		/// </summary>
 		/// <param name="w">A window or control of this thread.</param>
 		/// <param name="proc">The new window procedure. It is called on every message received by the window (unless blocked by another subclass added later). Let it call <see cref="DefSubclassProc"/>, except when you want to block the message.</param>
-		/// <returns>A cookie for <see cref="Unsubclass"/>. Returns null if fails.</returns>
+		/// <returns>A cookie for <see cref="Unsubclass"/>. Returns null if failed.</returns>
 		/// <remarks>
 		/// Uses API <msdn>SetWindowSubclass</msdn>.
 		/// Implicitly unsubclasses when the window is destroyed.

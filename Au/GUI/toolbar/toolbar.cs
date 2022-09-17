@@ -35,9 +35,6 @@ public partial class toolbar : MTBase {
 
 	static int s_treadId;
 
-	/// <summary>
-	/// 
-	/// </summary>
 	/// <param name="name">
 	/// Toolbar name. Must be valid filename.
 	/// Used for: toolbar window name, settings file name, <see cref="find"/>, some other functions.
@@ -112,8 +109,8 @@ public partial class toolbar : MTBase {
 
 	/// <summary>
 	/// Finds an open toolbar by <see cref="Name"/>.
-	/// Returns null if not found or closed or never shown (<see cref="Show"/> not called).
 	/// </summary>
+	/// <returns>null if not found or closed or never shown (<see cref="Show"/> not called).</returns>
 	/// <remarks>
 	/// Finds only toolbars created in the same script and thread.
 	/// 
@@ -160,9 +157,6 @@ public partial class toolbar : MTBase {
 	/// Adds button.
 	/// Same as <see cref="Add(string, Action{TBItem}, MTImage, int)"/>.
 	/// </summary>
-	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
-	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
-	/// <param name="l_">[](xref:caller_info)</param>
 	/// <value>Action called when the button clicked.</value>
 	/// <remarks>
 	/// More properties can be specified later (set properties of <see cref="Last"/> <see cref="TBItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
@@ -181,6 +175,7 @@ public partial class toolbar : MTBase {
 	/// tb["Example"] = o => print.it(o); tb.Last.Tooltip="tt";
 	/// ]]></code>
 	/// </example>
+	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int)"/>
 	public Action<TBItem> this[string text, MTImage image = default, [CallerLineNumber] int l_ = 0] {
 		set { Add(text, value, image, l_); }
 	}
@@ -190,10 +185,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Adds button with drop-down menu.
 	/// </summary>
-	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
-	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
-	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// The submenu is a <see cref="popupMenu"/> object. It inherits these properties of this toolbar: <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ActionThread"/>, <see cref="MTBase.PathInTooltip"/>.
 	/// </remarks>
@@ -205,6 +197,7 @@ public partial class toolbar : MTBase {
 	/// });
 	/// ]]></code>
 	/// </example>
+	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int)"/>
 	public TBItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
 		var item = new TBItem(TBItemType.Menu);
 		_Add(item, text, menu, image, l_);
@@ -214,10 +207,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Adds button with drop-down menu.
 	/// </summary>
-	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
-	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
-	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// The caller creates the menu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>popupMenu</b> and reuse same object.
 	/// The submenu does not inherit properties of this toolbar.
@@ -228,6 +218,7 @@ public partial class toolbar : MTBase {
 	/// t.Menu("Menu", () => m);
 	/// ]]></code>
 	/// </example>
+	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int)"/>
 	public TBItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
 		var item = new TBItem(TBItemType.Menu);
 		_Add(item, text, menu, image, l_);

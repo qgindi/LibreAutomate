@@ -1,4 +1,4 @@
-﻿namespace Au.Types;
+namespace Au.Types;
 
 /// <summary>
 /// Adds extension methods for <see cref="String"/>.
@@ -32,7 +32,7 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Compares this strings with multiple strings.
-	/// Returns 1-based index of matching string, or 0 if none.
+	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
 	/// <param name="t">This string. Can be null.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
@@ -71,7 +71,7 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Compares part of this string with multiple strings.
-	/// Returns 1-based index of matching string, or 0 if none.
+	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="startIndex">Offset in this string. If invalid, returns false.</param>
@@ -152,7 +152,7 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Compares end of this string with multiple strings.
-	/// Returns 1-based index of matching string, or 0 if none.
+	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
@@ -197,7 +197,7 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Compares beginning of this string with multiple strings.
-	/// Returns 1-based index of matching string, or 0 if none.
+	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
@@ -228,7 +228,7 @@ public static unsafe partial class ExtString {
 	//Like("*" + x + "*")						10 ms
 	//Like("*" + x + "*", true)					12 ms
 	//RxIsMatch(LITERAL)						13 ms
-	//RxIsMatch(LITERAL|CASELESS)			19 ms
+	//RxIsMatch(LITERAL|CASELESS)				19 ms
 	//Regex.Match(CultureInvariant)				4 ms (when no regex-special characters or if escaped)
 	//Regex.Match(CultureInvariant|IgnoreCase)	9 ms
 	//Find2(true)								10 ms
@@ -811,9 +811,9 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Converts part of this string to int number and gets the number end index.
-	/// Returns the number, or 0 if fails to convert.
 	/// </summary>
-	/// <param name="t">This string.</param>
+	/// <returns>The number, or 0 if failed to convert.</returns>
+	/// <param name="t">This string. Can be null.</param>
 	/// <param name="startIndex">Offset in this string where to start parsing.</param>
 	/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
 	/// <param name="flags"></param>
@@ -822,13 +822,13 @@ public static unsafe partial class ExtString {
 	/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
 	/// 
 	/// Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
-	/// 	The number in string can be followed by more text, like <c>"123text"</c>.
-	/// 	Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
-	/// 	Gets the end of the number part.
-	/// 	No exception when cannot convert.
-	/// 	The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
-	/// 	Does not depend on current culture. As minus sign recognizes '-' and '−'.
-	/// 	Faster.
+	/// - The number in string can be followed by more text, like <c>"123text"</c>.
+	/// - Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
+	/// - Gets the end of the number part.
+	/// - No exception when cannot convert.
+	/// - The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
+	/// - Does not depend on current culture. As minus sign recognizes '-' and '−'.
+	/// - Faster.
 	/// 
 	/// The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
 	/// The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
@@ -842,43 +842,34 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Converts part of this string to int number.
-	/// Returns the number, or 0 if fails to convert.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, int, out int, STIFlags)"/>
 	public static int ToInt(this string t, int startIndex = 0, STIFlags flags = 0) {
 		return (int)_ToInt(t, startIndex, out _, false, flags);
 	}
 
-	/// <summary>
-	/// Converts part of this string to int number and gets the number end index.
-	/// Returns false if fails.
-	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="startIndex">Offset in this string where to start parsing.</param>
-	/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
-	/// <param name="flags"></param>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <returns>false if failed.</returns>
+	/// <param name="result">Receives the result, or 0 if failed.</param>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, int, out int, STIFlags)"/>
 	public static bool ToInt(this string t, out int result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 		result = (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		return numberEndIndex != 0;
 	}
 
-#pragma warning disable CS3006 // Overloaded method differing only in ref or out, or in array rank, is not CLS-compliant
-	/// <summary>
-	/// Converts part of this string to int number.
-	/// Returns false if fails.
-	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <returns>false if failed.</returns>
+	/// <param name="result">Receives the result, or 0 if failed.</param>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, int, STIFlags)"/>
 	public static bool ToInt(this string t, out int result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
-#pragma warning restore CS3006 // Overloaded method differing only in ref or out, or in array rank, is not CLS-compliant
 
 	/// <summary>
 	/// Converts part of this string to uint number and gets the number end index.
-	/// Returns false if fails.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
 	public static bool ToInt(this string t, out uint result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 		result = (uint)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		return numberEndIndex != 0;
@@ -886,17 +877,17 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Converts part of this string to uint number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out uint result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
 
 	/// <summary>
 	/// Converts part of this string to long number and gets the number end index.
-	/// Returns false if fails.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
 	public static bool ToInt(this string t, out long result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 		result = _ToInt(t, startIndex, out numberEndIndex, true, flags);
 		return numberEndIndex != 0;
@@ -904,17 +895,17 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Converts part of this string to long number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out long result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
 
 	/// <summary>
 	/// Converts part of this string to ulong number and gets the number end index.
-	/// Returns false if fails.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
 	public static bool ToInt(this string t, out ulong result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 		result = (ulong)_ToInt(t, startIndex, out numberEndIndex, true, flags);
 		return numberEndIndex != 0;
@@ -922,16 +913,16 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Converts part of this string to ulong number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+	/// <remarks></remarks>
+	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out ulong result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
 
 	/// <summary>
 	/// Converts this string or its part to double number.
-	/// Returns the number, or 0 if fails to convert.
 	/// </summary>
+	/// <returns>The number, or 0 if failed to convert.</returns>
 	/// <param name="t">This string. Can be null.</param>
 	/// <param name="range">Part of this string or null (default).</param>
 	/// <param name="style">The permitted number format in the string.</param>
@@ -947,53 +938,31 @@ public static unsafe partial class ExtString {
 		return r;
 	}
 
-	/// <summary>
-	/// Converts this string or its part to double number.
-	/// Returns false if fails.
-	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="range">Part of this string or null (default).</param>
-	/// <param name="style">The permitted number format in the string.</param>
-	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
-	/// <remarks>
-	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
-	/// </remarks>
+	/// <returns>false if failed.</returns>
+	/// <param name="result">Receives the result, or 0 if failed.</param>
+	/// <inheritdoc cref="ToNumber(string, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out double result, Range? range = null, NumberStyles style = NumberStyles.Float) {
 		return double.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
 
 	/// <summary>
 	/// Converts this string or its part to float number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="range">Part of this string or null (default).</param>
-	/// <param name="style">The permitted number format in the string.</param>
-	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="float.TryParse(RStr, NumberStyles, IFormatProvider, out float)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 	/// </remarks>
+	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out float result, Range? range = null, NumberStyles style = NumberStyles.Float) {
 		return float.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
 
 	/// <summary>
 	/// Converts this string or its part to int number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="range">Part of this string or null (default).</param>
-	/// <param name="style">The permitted number format in the string.</param>
-	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="int.TryParse(RStr, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 	/// </remarks>
+	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out int result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return int.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 
@@ -1004,51 +973,33 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Converts this string or its part to uint number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="range">Part of this string or null (default).</param>
-	/// <param name="style">The permitted number format in the string.</param>
-	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="uint.TryParse(RStr, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 	/// </remarks>
+	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out uint result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return uint.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
 
 	/// <summary>
 	/// Converts this string or its part to long number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="range">Part of this string or null (default).</param>
-	/// <param name="style">The permitted number format in the string.</param>
-	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="long.TryParse(RStr, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 	/// </remarks>
+	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out long result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return long.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
 
 	/// <summary>
 	/// Converts this string or its part to ulong number.
-	/// Returns false if fails.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="result">Receives the result number.</param>
-	/// <param name="range">Part of this string or null (default).</param>
-	/// <param name="style">The permitted number format in the string.</param>
-	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="ulong.TryParse(RStr, NumberStyles, IFormatProvider, out ulong)"/>. Uses <see cref="CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
 	/// </remarks>
+	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out ulong result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return ulong.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
@@ -1260,10 +1211,10 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Replaces C# escape sequences to characters in this string.
-	/// Returns true if successful. Returns false if the string contains an invalid or unsupported escape sequence.
 	/// </summary>
+	/// <returns>false if the string contains an invalid or unsupported escape sequence.</returns>
 	/// <param name="t">This string.</param>
-	/// <param name="result">Receives the result string. It is this string if there are no escape sequences or if fails.</param>
+	/// <param name="result">Receives the result string. It is this string if there are no escape sequences or if failed.</param>
 	/// <remarks>
 	/// Supports all escape sequences of <see cref="Escape"/>: \\ \" \t \n \r \0 \uXXXX.
 	/// Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
@@ -1477,8 +1428,8 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Finds character <i>c</i> in this span, starting from <i>index</i>.
-	/// Returns its index in this span, or -1 if not found.
 	/// </summary>
+	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public static int IndexOf(this RStr t, int index, char c) {
 		int i = t[index..].IndexOf(c);
@@ -1487,8 +1438,8 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Finds character <i>c</i> in <i>range</i> of this span.
-	/// Returns its index in this span, or -1 if not found.
 	/// </summary>
+	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public static int IndexOf(this RStr t, Range range, char c) {
 		int i = t[range].IndexOf(c);
@@ -1498,8 +1449,8 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Finds string <i>s</i> in this span, starting from <i>index</i>.
-	/// Returns its index in this span, or -1 if not found.
 	/// </summary>
+	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	public static int IndexOf(this RStr t, int index, RStr s, bool ignoreCase = false) {
@@ -1510,8 +1461,8 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Finds string <i>s</i> in <i>range</i> of this span.
-	/// Returns its index in this span, or -1 if not found.
 	/// </summary>
+	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	public static int IndexOf(this RStr t, Range range, RStr s, bool ignoreCase = false) {

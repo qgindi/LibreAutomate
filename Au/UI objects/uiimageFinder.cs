@@ -1,4 +1,4 @@
-﻿//FUTURE: option to allow % of image completely different. Eg button with/without focus rectangle.
+//FUTURE: option to allow % of image completely different. Eg button with/without focus rectangle.
 
 //#define WI_DEBUG_PERF
 //#define WI_SIMPLE
@@ -121,20 +121,19 @@ public unsafe class uiimageFinder
 	/// See <see cref="uiimage.find"/>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>, else null.</returns>
-	/// <param name="area">See <see cref="uiimage.find"/>.</param>
 	/// <exception cref="AuWndException">Invalid window handle.</exception>
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
 	/// <remarks>
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
+	/// <inheritdoc cref="uiimage.find" path="/param"/>
 	public uiimage Find(IFArea area) => Exists(area) ? Result : null;
 
 	/// <summary>
 	/// Finds the first image displayed in the specified window or other area. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>waitS</i> negative).</returns>
-	/// <param name="area">See <see cref="uiimage.find"/>.</param>
 	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw <b>NotFoundException</b>.</param>
 	/// <exception cref="AuWndException">Invalid window handle.</exception>
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
@@ -143,6 +142,7 @@ public unsafe class uiimageFinder
 	/// <remarks>
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
+	/// <inheritdoc cref="uiimage.find" path="/param"/>
 	public uiimage Find(IFArea area, double waitS) => Exists(area, waitS) ? Result : null;
 
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
@@ -168,6 +168,7 @@ public unsafe class uiimageFinder
 	/// - 0 timeout means infinite.
 	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
 	/// </remarks>
+	/// <inheritdoc cref="Find(IFArea, double)" path="/param"/>
 	public uiimage Wait(double secondsTimeout, IFArea area)
 		=> Wait_(Action_.Wait, secondsTimeout, area) ? Result : null;
 	//SHOULDDO: suspend waiting while a mouse button is pressed.
@@ -177,6 +178,7 @@ public unsafe class uiimageFinder
 	/// See <see cref="uiimage.waitNot"/>.
 	/// </summary>
 	/// <exception cref="Exception">Exceptions of <see cref="uiimage.waitNot"/>, except those of the constructor.</exception>
+	/// <inheritdoc cref="Wait(double, IFArea)" path="/param"/>
 	public bool WaitNot(double secondsTimeout, IFArea area)
 		=> Wait_(Action_.WaitNot, secondsTimeout, area);
 

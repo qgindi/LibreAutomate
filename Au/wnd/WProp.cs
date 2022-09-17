@@ -1,4 +1,4 @@
-﻿namespace Au.Types
+namespace Au.Types
 {
 	/// <summary>
 	/// Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
@@ -78,9 +78,7 @@
 		/// Gets list of window properties.
 		/// Uses API <msdn>EnumPropsEx</msdn>.
 		/// </summary>
-		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="lastError"/>.
-		/// </remarks>
+		/// <returns>0-length list if failed. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="lastError"/>.</returns>
 		public Dictionary<string, nint> GetList() {
 			var a = new Dictionary<string, nint>();
 			Api.EnumPropsEx(_w, (w, name, data, p) => {

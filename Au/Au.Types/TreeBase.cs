@@ -396,8 +396,8 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 
 	/// <summary>
 	/// Loads XML file and creates tree of nodes from it.
-	/// Returns the root node.
 	/// </summary>
+	/// <returns>the root node.</returns>
 	/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
 	/// <param name="nodeReader">Callback function that reads current XML element and creates/returns new node. See example.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
@@ -413,12 +413,11 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 
 	/// <summary>
 	/// Reads XML and creates tree of nodes.
-	/// Returns the root node.
 	/// </summary>
+	/// <returns>the root node.</returns>
 	/// <param name="x"></param>
-	/// <param name="nodeReader"></param>
+	/// <param name="nodeReader">Callback function that reads current XML element and creates/returns new node.</param>
 	/// <exception cref="XmlException">An error occurred while parsing the XML.</exception>
-	/// <remarks>More info: <see cref="XmlLoad(string, XmlNodeReader)"/>.</remarks>
 	/// <example><see cref="TreeBase{T}"/></example>
 	protected static T XmlLoad(XmlReader x, XmlNodeReader nodeReader) {
 		Not_.Null(x, nodeReader);
@@ -465,12 +464,9 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <summary>
 	/// Writes tree of nodes (this and descendants) to an <see cref="XmlWriter"/>.
 	/// </summary>
-	/// <param name="x"></param>
-	/// <param name="nodeWriter"></param>
-	/// <param name="children"></param>
-	/// <remarks>More info: <see cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})"/>.</remarks>
 	/// <exception cref="Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
 	/// <example><see cref="TreeBase{T}"/></example>
+	/// <inheritdoc cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})" path="/param"/>
 	protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null) {
 		Not_.Null(x, nodeWriter);
 		x.WriteStartDocument();
