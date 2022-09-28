@@ -1,8 +1,11 @@
 namespace Au
 {
 	/// <summary>
-	/// Holds an access token (security info) of a process and provides various security info, eg [](xref:uac) integrity level.
+	/// Gets [](xref:uac) integrity level and other security info of this and other processes.
 	/// </summary>
+	/// <remarks>
+	/// An <b>uacInfo</b> variable contains a process access token handle that is used to get security info. Always dispose <b>uacInfo</b> variables to close the handle.
+	/// </remarks>
 	public sealed class uacInfo : IDisposable
 	{
 		///
@@ -246,7 +249,7 @@ namespace Au
 		*/
 
 		/// <summary>
-		/// Returns true if [](xref:uac) is disabled (turned off) completely (not just disabled UAC consent screeen/dialog).
+		/// Returns true if [](xref:uac) is disabled (turned off) completely (not just disabled UAC consent screen/dialog).
 		/// </summary>
 		public static bool isUacDisabled {
 			get {

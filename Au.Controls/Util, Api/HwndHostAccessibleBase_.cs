@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
 using NAVDIR = Au.Types.Api.NAVDIR;
@@ -6,7 +6,7 @@ using NAVDIR = Au.Types.Api.NAVDIR;
 namespace Au.Controls
 {
 	//public //if non-public, GetIDispatchForObject throws, and with GetIUnknownForObject does not work too.
-	//	See https://docs.microsoft.com/en-us/dotnet/standard/native-interop/qualify-net-types-for-interoperation.
+	//	See https://learn.microsoft.com/en-us/dotnet/standard/native-interop/qualify-net-types-for-interoperation.
 	//	But somehow works if implements IReflect, even if all functions just return default. Winforms use it.
 	//	Now with Cpp_AccWorkaround works without all that.
 	abstract class HwndHostAccessibleBase_ : IAccessible, IDisposable/*, IReflect*/

@@ -1,10 +1,9 @@
-﻿//#define PREPAREMETHOD //now slow anyway. Does not JIT everything.
+//#define PREPAREMETHOD //now slow anyway. Does not JIT everything.
 
 namespace Au
 {
 	/// <summary>
 	/// Code execution time measurement with high precision (API <msdn>QueryPerformanceCounter</msdn>).
-	/// Like <see cref="Stopwatch"/>, but easier to use.
 	/// </summary>
 	public static unsafe class perf
 	{
@@ -142,7 +141,7 @@ namespace Au
 			/// <summary>
 			/// Calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
-			/// <param name="cMark">A character to add to the results string like "A=150".</param>
+			/// <param name="cMark">A character to add to the results string like <c>"A=150"</c>.</param>
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public void NW(char cMark = '\0') { Next(cMark); Write(); }
 
@@ -351,15 +350,15 @@ namespace Au
 		/// Stores current time in next element of an internal array.
 		/// </summary>
 		/// <remarks>
-		/// Don't call <b>Next</b> more than 16 times after <b>First</b>, because the array has fixed size.
+		/// Don't call <b>Next</b> more than 16 times after <b>First</b>, because the array size is fixed.
 		/// </remarks>
-		/// <param name="cMark">A character to mark this time in the results string, like "A=150".</param>
+		/// <param name="cMark">A character to mark this time in the results string, like <c>"A=150"</c>.</param>
 		public static void next(char cMark = '\0') => s_static.Next(cMark);
 
 		/// <summary>
 		/// Calls <see cref="next"/> and <see cref="write"/>.
 		/// </summary>
-		/// <param name="cMark">A character to add to the results string like "A=150".</param>
+		/// <param name="cMark">A character to add to the results string like <c>"A=150"</c>.</param>
 		public static void nw(char cMark = '\0') => s_static.NW(cMark);
 
 		/// <summary>

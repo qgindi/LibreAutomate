@@ -4,7 +4,7 @@ namespace Au.Types;
 internal static unsafe partial class Cpp
 {
 	static Cpp() {
-		filesystem.more.loadDll64or32Bit_("AuCpp.dll");
+		filesystem.more.LoadDll64or32Bit_("AuCpp.dll");
 
 #if TRACE //remind to rebuild the 32-bit dll when the 64-bit dll updated
 		if (script.role == SRole.EditorExtension)

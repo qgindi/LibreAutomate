@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable: 6386 6385 6255 6305 6011 28251)
 
 #include <string>
@@ -159,7 +159,7 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 	if (n == 0) return false;
 
 	//get the best match
-	//	https://docs.microsoft.com/en-us/dotnet/core/versions/selection
+	//	https://learn.microsoft.com/en-us/dotnet/core/versions/selection
 	//	Like documented there, we roll forward to the nearest minor version and use the highest patch version.
 	//	But dotnet apphost doesn't, eg fails if need 3.1 but found 3.2, and even if need 3.1.2 but found 3.1.0. Only rolls forward patch version.
 	//		Tested long ago. Not tested with .NET 5. Maybe this was set in json by VS.

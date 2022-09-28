@@ -21,7 +21,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets nearest visible sibling control to the left from this.
 		/// </summary>
-		/// <returns>default(wnd) if not found.</returns>
+		/// <returns><c>default(wnd)</c> if not found.</returns>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
@@ -32,7 +32,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets nearest visible sibling control to the right from this.
 		/// </summary>
-		/// <returns>default(wnd) if not found.</returns>
+		/// <returns><c>default(wnd)</c> if not found.</returns>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
@@ -42,7 +42,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets nearest visible sibling control above this.
 		/// </summary>
-		/// <returns>default(wnd) if not found.</returns>
+		/// <returns><c>default(wnd)</c> if not found.</returns>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
@@ -52,7 +52,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets nearest visible sibling control to below this.
 		/// </summary>
-		/// <returns>default(wnd) if not found.</returns>
+		/// <returns><c>default(wnd)</c> if not found.</returns>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
@@ -62,7 +62,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets a visible sibling control to the left from this.
 		/// </summary>
-		/// <returns>default(wnd) if there is no sibling.</returns>
+		/// <returns><c>default(wnd)</c> if there is no sibling.</returns>
 		/// <param name="distance">Horizontal distance from the left of this control.</param>
 		/// <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
 		/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
@@ -75,7 +75,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets a visible sibling control to the right from this.
 		/// </summary>
-		/// <returns>default(wnd) if there is no sibling.</returns>
+		/// <returns><c>default(wnd)</c> if there is no sibling.</returns>
 		/// <param name="distance">Horizontal distance from the right of this control.</param>
 		/// <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
 		/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
@@ -88,7 +88,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets a visible sibling control above this.
 		/// </summary>
-		/// <returns>default(wnd) if there is no sibling.</returns>
+		/// <returns><c>default(wnd)</c> if there is no sibling.</returns>
 		/// <param name="distance">Vertical distance from the top of this control.</param>
 		/// <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
 		/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
@@ -101,7 +101,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets a visible sibling control below this.
 		/// </summary>
-		/// <returns>default(wnd) if there is no sibling.</returns>
+		/// <returns><c>default(wnd)</c> if there is no sibling.</returns>
 		/// <param name="distance">Vertical distance from the bottom of this control.</param>
 		/// <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
 		/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
@@ -123,11 +123,11 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets next sibling window or control in the Z order.
 		/// </summary>
-		/// <returns>default(wnd) if this is the last or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if this is the last or if failed.</returns>
 		/// <param name="skip">How many next windows to skip.</param>
 		/// <remarks>
 		/// If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(GW_HWNDNEXT).
+		/// Calls API <msdn>GetWindow</msdn>(<b>GW_HWNDNEXT</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Next(int skip = 0) => _GetWindow(Api.GW_HWNDNEXT, skip);
@@ -135,11 +135,11 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets previous sibling window or control in the Z order.
 		/// </summary>
-		/// <returns>default(wnd) if this is the first or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if this is the first or if failed.</returns>
 		/// <param name="skip">How many previous windows to skip.</param>
 		/// <remarks>
 		/// If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(GW_HWNDPREV).
+		/// Calls API <msdn>GetWindow</msdn>(<b>GW_HWNDPREV</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Previous(int skip = 0) => _GetWindow(Api.GW_HWNDPREV, skip);
@@ -150,18 +150,18 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// If this is a top-level window, gets the first top-level window, else gets the first control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
+		/// Calls API <msdn>GetWindow</msdn>(this, <b>GW_HWNDFIRST</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd FirstSibling => Api.GetWindow(_w, Api.GW_HWNDFIRST);
 
 		/// <summary>
 		/// Gets the last sibling window or control in the Z order.
-		/// If this is the last, returns this, not default(wnd).
+		/// If this is the last, returns this, not <c>default(wnd)</c>.
 		/// </summary>
 		/// <remarks>
 		/// If this is a top-level window, gets the last top-level window, else gets the last control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
+		/// Calls API <msdn>GetWindow</msdn>(this, <b>GW_HWNDLAST</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd LastSibling => Api.GetWindow(_w, Api.GW_HWNDLAST);
@@ -169,9 +169,9 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets the first direct child control in the Z order.
 		/// </summary>
-		/// <returns>default(wnd) if no children or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if no children or if failed.</returns>
 		/// <remarks>
-		/// Calls API <msdn>GetWindow</msdn>(GW_CHILD).
+		/// Calls API <msdn>GetWindow</msdn>(<b>GW_CHILD</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd FirstChild => Api.GetWindow(_w, Api.GW_CHILD);
@@ -179,7 +179,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets the last direct child control in the Z order.
 		/// </summary>
-		/// <returns>default(wnd) if no children or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if no children or if failed.</returns>
 		/// <remarks>
 		/// Calls API <msdn>GetWindow</msdn>.
 		/// Supports <see cref="lastError"/>.
@@ -189,7 +189,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets a direct child control by index.
 		/// </summary>
-		/// <returns>default(wnd) if no children or if index is invalid or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if no children or if index is invalid or if failed.</returns>
 		/// <param name="index">0-based index of the child control in the Z order.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetWindow</msdn>.
@@ -205,7 +205,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets the owner window of this top-level window.
 		/// </summary>
-		/// <returns>default(wnd) if this window isn't owned or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if this window isn't owned or if failed.</returns>
 		/// <remarks>
 		/// A window that has an owner window is always on top of it.
 		/// Controls don't have an owner window.
@@ -218,7 +218,7 @@ public partial struct wnd {
 		/// Gets the top-level parent window of this control.
 		/// If this is a top-level window, returns this.
 		/// </summary>
-		/// <returns>default(wnd) if failed.</returns>
+		/// <returns><c>default(wnd)</c> if failed.</returns>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
 		/// This function is the same as <see cref="wnd.Window"/>.
@@ -228,7 +228,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets the direct parent window of this control. It can be the top-level window or another control.
 		/// </summary>
-		/// <returns>default(wnd) if this is a top-level window or if failed.</returns>
+		/// <returns><c>default(wnd)</c> if this is a top-level window or if failed.</returns>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
 		/// Unlike API <msdn>GetParent</msdn>, this function never returns the owner window.
@@ -274,11 +274,11 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets the first (in Z order) enabled window owned by this window.
 		/// </summary>
-		/// <param name="orThis">Return this window if there are no enabled owned windows. If false, then returns default(wnd).</param>
+		/// <param name="orThis">Return this window if there are no enabled owned windows. If false, then returns <c>default(wnd)</c>.</param>
 		/// <remarks>
 		/// This window should be top-level, not child; see <see cref="wnd.Window"/>.
 		/// 
-		/// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP). Supports <see cref="lastError"/>.
+		/// Calls API <msdn>GetWindow</msdn>(<b>GW_ENABLEDPOPUP</b>). Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd EnabledOwned(bool orThis = false) {
 			var r = Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
@@ -294,7 +294,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets the most recently active window in the chain of windows owned by this window, or this window itself if there are no such windows.
 		/// </summary>
-		/// <returns>default(wnd) if failed.</returns>
+		/// <returns><c>default(wnd)</c> if failed.</returns>
 		/// <param name="includeOwners">Can return an owner (or owner's owner and so on) of this window too.</param>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
@@ -314,7 +314,7 @@ public partial struct wnd {
 		/// Gets the bottom-most owner window in the chain of owner windows of this window.
 		/// If this window is not owned, returns this window.
 		/// </summary>
-		/// <returns>default(wnd) if failed.</returns>
+		/// <returns><c>default(wnd)</c> if failed.</returns>
 		/// <param name="supportControls">If this is a child window, use its top-level parent window instead.</param>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
 		public wnd RootOwnerOrThis(bool supportControls = false) {
@@ -442,7 +442,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// Probably it is a topmost window. To get the first non-topmost window, use <see cref="top2"/>.
-		/// Calls API <msdn>GetTopWindow</msdn>(default(wnd)).
+		/// Calls API <msdn>GetTopWindow</msdn>.
 		/// </remarks>
 		public static wnd top => Api.GetTopWindow(default);
 
@@ -476,7 +476,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process "explorer", class name "Progman").
 		/// </summary>
-		/// <returns>default(wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.</returns>
+		/// <returns><c>default(wnd)</c> if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.</returns>
 		/// <remarks>
 		/// It can be the window that contains desktop icons (see <see cref="desktop"/>) or other window of the same thread.
 		/// </remarks>
@@ -518,12 +518,12 @@ public partial struct wnd {
 
 	public partial struct getwnd {
 		/// <summary>
-		/// Returns true if window w is considered a main window, ie probably is in the Windows taskbar.
+		/// Returns true if window <i>w</i> is considered a main window, ie probably is in the Windows taskbar.
 		/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
 		/// </summary>
 		/// <param name="w">A top-level window.</param>
 		/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="allWindows(bool, bool)"/>.</param>
-		/// <param name="skipMinimized">Return false if w is minimized.</param>
+		/// <param name="skipMinimized">Return false if <i>w</i> is minimized.</param>
 		public static bool isMainWindow(wnd w, bool allDesktops = false, bool skipMinimized = false) {
 			if (!w.IsVisible) return false;
 
@@ -587,11 +587,11 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets next window in the Z order, skipping invisible and other windows that probably are not in the Windows taskbar.
 		/// </summary>
-		/// <returns>default(wnd) if there are no such windows.</returns>
-		/// <param name="w">Start from this window. If default(wnd), starts from the top of the Z order.</param>
+		/// <returns><c>default(wnd)</c> if there are no such windows.</returns>
+		/// <param name="w">Start from this window. If <c>default(wnd)</c>, starts from the top of the Z order.</param>
 		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="allWindows(bool, bool)"/>.</param>
 		/// <param name="skipMinimized">Skip minimized windows.</param>
-		/// <param name="retryFromTop">If w is not default(wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
+		/// <param name="retryFromTop">If <i>w</i> is not <c>default(wnd)</c> and there are no matching windows after it, retry from the top of the Z order. Then can return <i>w</i>.</param>
 		/// <remarks>
 		/// Uses <see cref="isMainWindow"/>.
 		/// This function is quite slow. Does not match the order of buttons in the Windows taskbar.
@@ -652,7 +652,7 @@ public partial struct wnd {
 	/// Gets the top-level parent window of this control.
 	/// If this is a top-level window, returns this.
 	/// </summary>
-	/// <returns>default(wnd) if this window is invalid.</returns>
+	/// <returns><c>default(wnd)</c> if this window is invalid.</returns>
 	/// <remarks>Supports <see cref="lastError"/>.</remarks>
 	/// <seealso cref="Get"/>
 	public wnd Window {
@@ -669,13 +669,13 @@ public partial struct wnd {
 	/// </summary>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>.
-	/// Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
+	/// Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have <b>WS_CHILD</b> style and some child windows don't.
 	/// </remarks>
 	/// <seealso cref="getwnd.DirectParent"/>
 	public bool IsChild => !Get.DirectParent.Is0;
 
 	/// <summary>
-	/// Returns true if this is a child or descendant of window w.
+	/// Returns true if this is a child or descendant of window <i>w</i>.
 	/// </summary>
 	/// <remarks>
 	/// Calls API <msdn>IsChild</msdn>.
@@ -692,7 +692,7 @@ public partial struct wnd {
 	/// Gets the active (foreground) window.
 	/// Calls API <msdn>GetForegroundWindow</msdn>.
 	/// </summary>
-	/// <value>Returns default(wnd) if there is no active window; more info: <see cref="WndUtil.WaitForAnActiveWindow"/>.</value>
+	/// <value>Returns <c>default(wnd)</c> if there is no active window; more info: <see cref="WndUtil.WaitForAnActiveWindow"/>.</value>
 	public static wnd active => Api.GetForegroundWindow();
 
 	/// <summary>

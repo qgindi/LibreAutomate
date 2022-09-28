@@ -1,10 +1,10 @@
-﻿namespace Au;
+namespace Au;
 
 /// <summary>
 /// Finds UI elements (<see cref="elm"/>). Contains name and other parameters of elements to find.
 /// </summary>
 /// <example>
-/// Find link "Example" in web page, and click. Wait max 5 s. Exception if not found.
+/// Find link <c>"Example"</c> in web page, and click. Wait max 5 s. Exception if not found.
 /// <code><![CDATA[
 /// var w = wnd.find(0, "* Chrome");
 /// w.Elm["web:LINK", "Example"].Find(5).Invoke();
@@ -35,8 +35,8 @@ public unsafe class elmFinder {
 	public elm Result { get; private set; }
 
 	/// <summary>
-	/// The requested propery of the found UI element, depending on <see cref="ResultGetProperty"/>.
-	/// null if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is '-'. 3. Failed to get the property.
+	/// The requested property of the found UI element, depending on <see cref="ResultGetProperty"/>.
+	/// null if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is <c>'-'</c>. 3. Failed to get the property.
 	/// </summary>
 	/// <remarks>
 	/// The type depends on the property. Most properties are <b>String</b>. Others: <see cref="elm.Rect"/>, <see cref="elm.State"/>, <see cref="elm.WndContainer"/>, <see cref="elm.HtmlAttributes"/>.
@@ -45,7 +45,7 @@ public unsafe class elmFinder {
 
 	/// <summary>
 	/// Set this when you need only some property of the UI element (name, etc) and not the UI element itself.
-	/// The value is a character like with <see cref="elm.GetProperties"/>, for example 'n' for Name. Use '-' if you don't need any property.
+	/// The value is a character like with <see cref="elm.GetProperties"/>, for example <c>'n'</c> for Name. Use <c>'-'</c> if you don't need any property.
 	/// </summary>
 	/// <exception cref="ArgumentException">Used parameter <i>also</i>, <i>navig</i> or <i>next</i>.</exception>
 	public char ResultGetProperty {
@@ -64,7 +64,6 @@ public unsafe class elmFinder {
 
 	/// <summary>
 	/// Stores the specified UI element properties in this object.
-	/// Parameters are like of <see cref="this"/>.
 	/// </summary>
 	/// <inheritdoc cref="this" path="/param"/>
 	public elmFinder(string role = null,
@@ -96,13 +95,13 @@ public unsafe class elmFinder {
 	/// <param name="role">
 	/// UI element role (<see cref="elm.Role"/>), like <c>"LINK"</c>.
 	/// Can have prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c> which means "search only in web page" and enables Chrome UI elements.
-	/// Case-sensitive. Not wildcard. null means 'can be any'. Cannot be "".
+	/// Case-sensitive. Not wildcard. null means 'can be any'. Cannot be <c>""</c>.
 	/// More info in Remarks.
 	/// </param>
 	/// <param name="name">
 	/// UI element name (<see cref="elm.Name"/>).
 	/// String format: [](xref:wildcard_expression).
-	/// null means 'any'. "" means 'empty or unavailable'.
+	/// null means 'any'. <c>""</c> means 'empty or unavailable'.
 	/// </param>
 	/// <param name="prop">
 	/// Other UI element properties and search settings.
@@ -137,8 +136,8 @@ public unsafe class elmFinder {
 	/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Example: <c>"web:LINK"</c>.\
 	///   Supports Firefox, Chrome, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has DOCUMENT role.\
 	///   Tip: To search only NOT in web pages, use <i>prop</i> <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
-	/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used <c>"web:"</c> instead.
-	/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used <c>"web:"</c> instead.
+	/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If <i>w</i> window class name starts with "Mozilla", can be used <c>"web:"</c> instead.
+	/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If <i>w</i> window class name starts with "Chrome", can be used <c>"web:"</c> instead.
 	/// 
 	/// <note>Chrome web page UI elements normally are disabled (don't exist). Use prefix <c>"web:"</c> or <c>"chrome:"</c> to enable.</note>
 	/// 
@@ -177,7 +176,7 @@ public unsafe class elmFinder {
 	/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.\
 	///   Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.\
 	///   Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard. See also: <see cref="EFFlags.MenuToo"/>.
-	/// - <c>"@attr"</c> - <see cref="elm.HtmlAttribute"/>. Here "attr" is any attribute name. Example: <c>"@href=example"</c>.
+	/// - <c>"@attr"</c> - <see cref="elm.HtmlAttribute"/>. Here <c>"attr"</c> is any attribute name. Example: <c>"@href=example"</c>.
 	/// </remarks>
 	/// <seealso cref="elm.path"/>
 	/// <seealso cref="Next"/>
@@ -246,12 +245,12 @@ public unsafe class elmFinder {
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>, else null.</returns>
 	/// <exception cref="ArgumentException">
-	/// - <i>role</i> is "" or invalid.
+	/// - <i>role</i> is <c>""</c> or invalid.
 	/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
 	/// - <i>prop</i> contains unknown property names or errors in wildcard expressions.
 	/// - <i>navig</i> string is invalid.
 	/// - <i>flags</i> has <b>UIA</b> or <b>ClientArea</b> when searching in web page (role prefix <c>"web:"</c> etc) or <b>elm</b>.
-	/// - <i>role</i> has a prefix ("web:" etc) when searching in <b>elm</b>.
+	/// - <i>role</i> has a prefix (<c>"web:"</c> etc) when searching in <b>elm</b>.
 	/// - <see cref="elm.Item"/> not 0 when searching in <b>elm</b>.
 	/// </exception>
 	/// <exception cref="AuWndException">Invalid window handle (0 or closed). See also <see cref="In(wnd)"/>.</exception>
@@ -283,17 +282,14 @@ public unsafe class elmFinder {
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>waitS</i> negative).</returns>
 	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
-	/// <exception cref="ArgumentException"></exception>
-	/// <exception cref="AuWndException"></exception>
-	/// <exception cref="AuException"></exception>
 	/// <exception cref="NotFoundException" />
+	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Find(double waitS) => Exists(waitS) ? Result : null;
 
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Like <see cref="Find"/>, just different return type.
 	/// </summary>
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
-	/// <remarks></remarks>
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 
@@ -312,15 +308,13 @@ public unsafe class elmFinder {
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <exception cref="ArgumentException"></exception>
-	/// <exception cref="AuWndException"></exception>
-	/// <exception cref="AuException"></exception>
 	/// <exception cref="TimeoutException" />
 	/// <remarks>
 	/// Same as <see cref="Find(double)"/>, except:
 	/// - 0 timeout means infinite.
 	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
 	/// </remarks>
+	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Wait(double secondsTimeout) => Find_(_elm != null, _wnd, _elm, secondsTimeout) ? Result : null;
 
 	internal bool Find_(bool inElm, wnd w, elm eParent, double? waitS = null, bool isNext = false) {
@@ -372,7 +366,7 @@ public unsafe class elmFinder {
 			if (_also != null) also = _also2 ??= ca => _also(new elm(ca)) ? 1 : 0;
 		}
 
-		var to = new wait.Loop(waitS ?? -1, inProc ? s_owait10 : s_owait40);
+		var to = new WaitLoop(waitS ?? -1, inProc ? s_owait10 : s_owait40);
 		for (bool doneUAC = false, doneThread = false; ;) {
 			var hr = Cpp.Cpp_AccFind(w, pParent, ap, also, out var ca, out string sResult);
 
@@ -572,7 +566,7 @@ partial class elm {
 	public elmFinder Elm => new(default, this);
 }
 
-partial struct wnd {
+public partial struct wnd {
 	/// <summary>
 	/// Gets an <see cref="elmFinder"/> for finding UI elements in this window or control.
 	/// Example: <c>var e = w.Elm["ROLE", "Name"].Find();</c>.

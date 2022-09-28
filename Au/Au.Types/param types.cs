@@ -83,7 +83,7 @@ public record struct Coord {
 	public unsafe float FractionValue => BitConverter.Int32BitsToSingle((int)_v);
 
 	/// <summary>
-	/// Returns true if Type == None (no value assigned).
+	/// Returns true if <c>Type == CoordType.None</c> (no value assigned).
 	/// </summary>
 	public bool IsEmpty => Type == CoordType.None;
 
@@ -176,11 +176,11 @@ public record struct Coord {
 	/// <summary>
 	/// Converts fractional/reverse coordinates to normal coordinates in a rectangle.
 	/// </summary>
-	/// <param name="x">X coordinate relative to r.</param>
-	/// <param name="y">Y coordinate relative to r.</param>
+	/// <param name="x">X coordinate relative to <i>r</i>.</param>
+	/// <param name="y">Y coordinate relative to <i>r</i>.</param>
 	/// <param name="r">The rectangle.</param>
-	/// <param name="widthHeight">Use only width and height of r. If false (default), the function adds r offset (left and top).</param>
-	/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
+	/// <param name="widthHeight">Use only width and height of <i>r</i>. If false (default), the function adds <i>r</i> offset (left and top).</param>
+	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>. Not used with <i>widthHeight</i>.</param>
 	public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false) {
 		if (widthHeight) r.Move(0, 0);
 		else if (centerIfEmpty) {
@@ -193,11 +193,11 @@ public record struct Coord {
 	/// <summary>
 	/// Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
 	/// </summary>
-	/// <param name="x">X coordinate relative to the client area of w.</param>
-	/// <param name="y">Y coordinate relative to the client area of w.</param>
+	/// <param name="x">X coordinate relative to the client area of <i>w</i>.</param>
+	/// <param name="y">Y coordinate relative to the client area of <i>w</i>.</param>
 	/// <param name="w">The window.</param>
-	/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
-	/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+	/// <param name="nonClient"><i>x</i> <i>y</i> are relative to the entire <i>w</i> rectangle, not to its client area.</param>
+	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>.</param>
 	public static POINT NormalizeInWindow(Coord x, Coord y, wnd w, bool nonClient = false, bool centerIfEmpty = false) {
 		//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
 
@@ -222,12 +222,12 @@ public record struct Coord {
 	/// <summary>
 	/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
 	/// </summary>
-	/// <param name="x">X coordinate relative to the specified screen (default - primary).</param>
-	/// <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
-	/// <param name="workArea">x y are relative to the work area.</param>
-	/// <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
+	/// <param name="x">X coordinate relative to the specified screen (<c>default</c> - primary).</param>
+	/// <param name="y">Y coordinate relative to the specified screen (<c>default</c> - primary).</param>
+	/// <param name="workArea"><i>x</i> <i>y</i> are relative to the work area.</param>
+	/// <param name="screen">If used, <i>x</i> <i>y</i> are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
 	/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
-	/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>.</param>
 	public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default, bool widthHeight = false, bool centerIfEmpty = false) {
 		if (centerIfEmpty) {
 			if (x.IsEmpty) x = Center;
@@ -262,7 +262,7 @@ public record struct Coord {
 /// </summary>
 public enum CoordType {
 	/// <summary>
-	/// No value. The variable is default(Coord).
+	/// No value. The variable is <c>default(Coord)</c>.
 	/// </summary>
 	None,
 
@@ -299,10 +299,10 @@ public class PopupXY {
 	/// </summary>
 	/// <param name="x">X relative to the screen or work area. Default - center.</param>
 	/// <param name="y">X relative to the screen or work area. Default - center.</param>
-	/// <param name="workArea">x y are relative to the work area of the screen.</param>
+	/// <param name="workArea"><i>x y</i> are relative to the work area of the screen.</param>
 	/// <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>screen.index(1)</c>.</param>
 	/// <remarks>
-	/// Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
+	/// Also there is are implicit conversions from tuple (x, y) and <b>POINT</b>. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
 	/// </remarks>
 	public PopupXY(Coord x = default, Coord y = default, bool workArea = true, screen screen = default) {
 		this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
@@ -370,33 +370,33 @@ public struct AnyWnd {
 	readonly object _o;
 	AnyWnd(object o) { _o = o; }
 
-	/// <summary>Assignment of a value of type wnd.</summary>
+	/// <summary>Assignment of a value of type <b>wnd</b>.</summary>
 	public static implicit operator AnyWnd(wnd w) => new(w);
 
-	/// <summary>Assignment of a window handle as IntPtr.</summary>
+	/// <summary>Assignment of a window handle as <b>IntPtr</b>.</summary>
 	public static implicit operator AnyWnd(IntPtr hwnd) => new((wnd)hwnd);
 
-	/// <summary>Assignment of a value of type System.Windows.Forms.Control (Form or any control class).</summary>
+	/// <summary>Assignment of a value of type <b>System.Windows.Forms.Control</b> (<b>Form</b> or any control class).</summary>
 	public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new(c);
 
-	/// <summary>Assignment of a value of type System.Windows.DependencyObject (WPF window or control).</summary>
+	/// <summary>Assignment of a value of type <b>System.Windows.DependencyObject</b> (WPF window or control).</summary>
 	public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
 
 	/// <summary>
 	/// Gets the window or control handle as <b>wnd</b>.
 	/// </summary>
-	/// <value>default(wnd) if not assigned.</value>
+	/// <value><c>default(wnd)</c> if not assigned.</value>
 	public wnd Hwnd => wnd.Internal_.FromObject(_o);
 
 	/// <summary>
-	/// true if this is default(AnyWnd).
+	/// true if this is <c>default(AnyWnd)</c>.
 	/// </summary>
 	public bool IsEmpty => _o == null;
 }
 
 /// <summary>
 /// Used for function parameters to specify multiple strings.
-/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types. Also constructor with params string[].
+/// Contains a string like <c>"One|Two|Three"</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>. Has implicit conversions from these types. Also constructor with params <b>string[]</b>.
 /// </summary>
 public struct Strings {
 	readonly object _o;

@@ -39,7 +39,7 @@ public partial class toolbar {
 	}
 
 	/// <summary>
-	/// If this is a sattellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else null.
+	/// If this is a satellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else null.
 	/// </summary>
 	public toolbar SatelliteOwner => _satPlanet;
 

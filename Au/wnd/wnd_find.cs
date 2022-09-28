@@ -7,17 +7,17 @@ namespace Au {
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. "" means 'no name'.
+		/// null means 'can be any'. <c>""</c> means 'no name'.
 		/// </param>
 		/// <param name="cn">
 		/// Window class name.
 		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be "".
+		/// null means 'can be any'. Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="of">
 		/// Owner window, program or thread. Depends on argument type:
 		/// <br/>• <b>wnd</b> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
-		/// <br/>• <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [](xref:wildcard_expression). Cannot be "" or path.
+		/// <br/>• <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [](xref:wildcard_expression). Cannot be <c>""</c> or path.
 		/// <br/>• <b>WOwner</b> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
 		/// 
 		/// <para>
@@ -38,8 +38,8 @@ namespace Au {
 		/// <br/>• Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <see cref="uiimage.find"/> with flag <see cref="IFFlags.WindowDC"/>).
 		/// </param>
 		/// <exception cref="ArgumentException">
-		/// - <i>cn</i> is "". To match any, use null.
-		/// - <i>of</i> is "" or 0 or contains character \ or /. To match any, use null.
+		/// - <i>cn</i> is <c>""</c>. To match any, use null.
+		/// - <i>of</i> is <c>""</c> or 0 or contains character \ or /. To match any, use null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
@@ -57,11 +57,11 @@ namespace Au {
 		/// wnd w = wnd.find("* Notepad");
 		/// if(w.Is0) { print.it("not found"); return; }
 		/// ]]></code>
-		/// Try to find Notepad window. Throw NotFoundException if not found.
+		/// Try to find Notepad window. Throw <b>NotFoundException</b> if not found.
 		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(0, "* Notepad");
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time.
+		/// Wait for Notepad window max 3 seconds. Throw <b>NotFoundException</b> if not found during that time.
 		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(3, "* Notepad");
 		/// ]]></code>
@@ -70,7 +70,7 @@ namespace Au {
 		/// wnd w1 = wnd.find(-3, "* Notepad");
 		/// if(w.Is0) { print.it("not found"); return; }
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Throw NotFoundException if not found during that time. When found, wait max 1 s until becomes active, then activate.
+		/// Wait for Notepad window max 3 seconds. Throw <b>NotFoundException</b> if not found during that time. When found, wait max 1 s until becomes active, then activate.
 		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(3, "* Notepad").Activate(1);
 		/// ]]></code>
@@ -91,8 +91,7 @@ namespace Au {
 		/// <returns>Window handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
 		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 		/// <exception cref="NotFoundException" />
-		/// <exception cref="ArgumentException" />
-		/// <inheritdoc cref="find"/>
+		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
 		public static wnd find(
 			double waitS,
 			[ParamString(PSFormat.Wildex)] string name = null,
@@ -130,8 +129,7 @@ namespace Au {
 		/// <seealso cref="getwnd.allWindows"/>
 		/// <seealso cref="getwnd.mainWindows"/>
 		/// <seealso cref="getwnd.threadWindows"/>
-		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/param"/>
-		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/exception"/>
+		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
 		public static wnd[] findAll(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -150,12 +148,12 @@ namespace Au {
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. "" means 'no name'.
+		/// null means 'can be any'. <c>""</c> means 'no name'.
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. Cannot be "".
+		/// null means 'can be any'. Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="messageOnly">Search only message-only windows.</param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
@@ -212,10 +210,9 @@ namespace Au {
 		/// </summary>
 		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>waitS</i> &lt; 0 (else exception).</returns>
 		/// <param name="run">Callback function. See example.</param>
-		/// <param name="waitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="wait"/>.</param>
+		/// <param name="waitS">How long to wait for the window after calling the callback function. Seconds. Default 60.</param>
 		/// <param name="activate">Activate the window. Default: true.</param>
-		/// <exception cref="ArgumentException">See <see cref="find"/>.</exception>
-		/// <exception cref="TimeoutException"><i>waitS</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="NotFoundException"><i>waitS</i> time has expired (if &gt;= 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -223,7 +220,7 @@ namespace Au {
 		/// print.it(w);
 		/// ]]></code>
 		/// </example>
-		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)"/>
+		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
 		public static wnd findOrRun(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -265,12 +262,11 @@ namespace Au {
 		/// <summary>
 		/// Opens and finds new window. Ignores old windows. Activates.
 		/// </summary>
-		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>waitS</i> &lt; 0 (else exception).</returns>
-		/// <param name="waitS">How long to wait for the window. Seconds. See <see cref="wait"/>.</param>
+		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>secondsTimeout</i> &lt; 0 (else exception).</returns>
+		/// <param name="secondsTimeout">How long to wait for the window. Seconds. Can be 0 (infinite), &gt;0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="run">Callback function. Should open the window. See example.</param>
 		/// <param name="activate">Activate the window. Default: true.</param>
-		/// <exception cref="ArgumentException">See <see cref="find"/>.</exception>
-		/// <exception cref="TimeoutException"><i>waitS</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <remarks>
 		/// This function isn't the same as just two statements <b>run.it</b> and <b>wnd.find</b>. It never returns a window that already existed before calling it.
@@ -283,7 +279,8 @@ namespace Au {
 		/// print.it(w);
 		/// ]]></code>
 		/// </example>
-		public static wnd runAndFind(Action run, double waitS,
+		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
+		public static wnd runAndFind(Action run, double secondsTimeout,
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
@@ -294,7 +291,7 @@ namespace Au {
 
 			run();
 
-			var to = new wait.Loop(waitS);
+			var to = new WaitLoop(secondsTimeout);
 			while (to.Sleep()) {
 				var w = f.Find();
 				if (!w.Is0 && !a.Contains(w)) {
@@ -316,8 +313,7 @@ namespace Au {
 		/// <seealso cref="ClassName"/>
 		/// <seealso cref="ClassNameIs"/>
 		/// <seealso cref="ProgramName"/>
-		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/param"/>
-		/// <inheritdoc cref="wnd.find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="/exception"/>
+		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
 		public bool IsMatch(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -345,7 +341,7 @@ namespace Au {
 			/// Not used when <i>onlyVisible</i> is true.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
-			/// Although undocumented, the API retrieves most windows as in the Z order, however places IDE windows (hidden) at the end. See also: <see cref="allWindowsZorder"/>;
+			/// Although undocumented, the API retrieves most windows as in the Z order, however places IME windows (hidden) at the end. See also: <see cref="allWindowsZorder"/>;
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="mainWindows"/>.</note>
 			/// Skips message-only windows; use <see cref="findFast"/> if need.
 			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have disableWindowFiltering true in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
@@ -357,14 +353,15 @@ namespace Au {
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
 
-			/// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
-			/// <remarks>
-			/// Use this overload to avoid much garbage when calling frequently with the same <b>List</b> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
-			/// </remarks>
-			/// <inheritdoc cref="allWindows(bool, bool)" path="/param"/>
-			public static void allWindows(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false) {
-				Internal_.EnumWindows2(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<wnd>());
-			}
+			//rejected
+			///// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <remarks>
+			///// Use this overload to avoid much garbage when calling frequently with the same <b>List</b> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+			///// </remarks>
+			///// <inheritdoc cref="allWindows(bool, bool)" path="/param"/>
+			//public static void allWindows(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false) {
+			//	Internal_.EnumWindows2(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<wnd>());
+			//}
 
 			/// <summary>
 			/// Gets top-level windows ordered as in the Z order.
@@ -428,7 +425,7 @@ namespace Au {
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
-			/// <exception cref="ArgumentException">0 threadId.</exception>
+			/// <exception cref="ArgumentException"><i>threadId</i> is 0.</exception>
 			/// <remarks>
 			/// Calls API <msdn>EnumThreadWindows</msdn>.
 			/// </remarks>
@@ -438,13 +435,14 @@ namespace Au {
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 			}
 
-			/// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
-			/// <remarks>This overload can be used to avoid much garbage when caling frequently.</remarks>
-			/// <inheritdoc cref="threadWindows(int, bool, bool)"/>
-			public static void threadWindows(ref List<wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false) {
-				if (threadId == 0) throw new ArgumentException("0 threadId.");
-				Internal_.EnumWindows2(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<wnd>());
-			}
+			//rejected
+			///// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <remarks>This overload can be used to avoid much garbage when calling frequently.</remarks>
+			///// <inheritdoc cref="threadWindows(int, bool, bool)"/>
+			//public static void threadWindows(ref List<wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false) {
+			//	if (threadId == 0) throw new ArgumentException("0 threadId.");
+			//	Internal_.EnumWindows2(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<wnd>());
+			//}
 
 			/// <summary>
 			/// Gets the first in Z order window of this thread.
@@ -478,7 +476,7 @@ namespace Au {
 			/// <summary>
 			/// This version creates much less garbage.
 			/// The caller must dispose the returned ArrayBuilder_, unless list is not null.
-			/// If list is not null, adds windows there (clears at first) and returns default(ArrayBuilder_).
+			/// If list is not null, adds windows there (clears at first) and returns <c>default(ArrayBuilder_)</c>.
 			/// </summary>
 			internal static ArrayBuilder_<wnd> EnumWindows2(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible = false, wnd wParent = default, bool directChild = false, int threadId = 0,
@@ -627,7 +625,7 @@ namespace Au.Types {
 
 		WOwner(int i, byte what) : this() { _i = i; _what = what; }
 
-		/// <summary>Program name like "notepad.exe", or null. See <see cref="wnd.ProgramName"/>.</summary>
+		/// <summary>Program name like <c>"notepad.exe"</c>, or null. See <see cref="wnd.ProgramName"/>.</summary>
 		public static implicit operator WOwner([ParamString(PSFormat.Wildex)] string program) => new(program);
 
 		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
@@ -649,7 +647,7 @@ namespace Au.Types {
 		/// Gets program name or process id or thread id or owner window.
 		/// Other variables will be null/0.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value is "" or 0 or contains characters \ or / or is invalid wildcard expression.</exception>
+		/// <exception cref="ArgumentException">The value is <c>""</c> or 0 or contains characters \ or / or is invalid wildcard expression.</exception>
 		public void GetValue(out wildex program, out int pid, out int tid, out wnd owner) {
 			program = null; pid = 0; tid = 0; owner = default;
 			switch (_what) {

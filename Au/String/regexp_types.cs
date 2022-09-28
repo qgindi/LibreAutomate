@@ -5,11 +5,11 @@ namespace Au.Types
 {
 	/// <summary>
 	/// Regular expression match info.
-	/// Used with <see cref="regexp"/> class functions and String extension methods like <see cref="ExtString.RxMatch"/>.
+	/// Used with <see cref="regexp"/> class functions and <b>String</b> extension methods like <see cref="ExtString.RxMatch"/>.
 	/// </summary>
 	/// <remarks>
 	/// Contains info about a regular expression match found in the subject string: index, length, substring, etc.
-	/// Also contains an array of group matches, as <see cref="RXGroup"/>. Groups are regular expression parts enclosed in (), except (?...).
+	/// Also contains an array of group matches, as <see cref="RXGroup"/>. Groups are regular expression parts enclosed in <c>()</c>, except <c>(?...)</c>.
 	/// Group matches can be accessed like array elements. Group 0 is whole match. Group 1 is the first group. See examples.
 	/// </remarks>
 	/// <example>
@@ -26,7 +26,7 @@ namespace Au.Types
 	/// 		m[2].Value //"45"
 	/// 		);
 	/// ]]></code>
-	/// A group in the subject string may not exist even if whole match found. Then its Exists property is false, Index -1, Length 0, Value null.
+	/// A group in the subject string may not exist even if whole match found. Then its <b>Exists</b> property is false, <b>Index</b> -1, <b>Length</b> 0, <b>Value</b> null.
 	/// <code><![CDATA[
 	/// var s = "ab cd--ef gh";
 	/// if(s.RxMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
@@ -123,8 +123,8 @@ namespace Au.Types
 		internal RStr GetSpan_(RStr subject) => _groups[0].GetSpan_(subject);
 
 		/// <summary>
-		/// Gets start offset of whole match regardless of \K.
-		/// When the regular expression contains \K, this is less than <see cref="Start"/>.
+		/// Gets start offset of whole match regardless of <c>\K</c>.
+		/// When the regular expression contains <c>\K</c>, this is less than <see cref="Start"/>.
 		/// </summary>
 		public int StartNoK { get; private set; }
 
@@ -133,7 +133,7 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
-		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches "bc", the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match "bx", the mark is B.
+		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches <c>"bc"</c>, the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match <c>"bx"</c>, the mark is B.
 		/// </remarks>
 		public string Mark { get; private set; }
 
@@ -141,14 +141,14 @@ namespace Au.Types
 		/// Gets the return value of the <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/> call.
 		/// </summary>
 		/// <remarks>
-		/// Can be false only when the function returned false but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns flase, it returns null instead of a <b>RXMatch</b> object.
-		/// When false, all properties except Exists and Mark have undefined values or throw exception.
+		/// Can be false only when the function returned false but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns false, it returns null instead of a <b>RXMatch</b> object.
+		/// When false, all properties except <b>Exists</b> and <b>Mark</b> have undefined values or throw exception.
 		/// </remarks>
 		public bool Exists { get; private set; }
 
 		/// <summary>
 		/// Returns true if this match is partial.
-		/// Partial match is possible if used a PARTIAL_ flag.
+		/// Partial match is possible if used a <b>PARTIAL_</b> flag.
 		/// </summary>
 		public bool IsPartial { get; private set; }
 
@@ -241,12 +241,12 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="repl">
 		/// Replacement pattern.
-		/// Can consist of any combination of literal text and substitutions like $1.
-		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} and ${+func(n)} with the return value of a function registered with <see cref="regexp.addReplaceFunc"/>.
+		/// Can consist of any combination of literal text and substitutions like <c>$1</c>.
+		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces <c>$*</c> with the name of the last encountered mark; replaces <c>${+func}</c> and <c>${+func(n)}</c> with the return value of a function registered with <see cref="regexp.addReplaceFunc"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">
-		/// - Invalid $replacement.
-		/// - Used a PARTIAL_ flag.
+		/// - Invalid <c>$replacement</c>.
+		/// - Used a <b>PARTIAL_</b> flag.
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <remarks>
@@ -264,14 +264,14 @@ namespace Au.Types
 
 	/// <summary>
 	/// Regular expression group match info.
-	/// Used with <see cref="RXMatch"/>, <see cref="regexp"/> and some String extension methods.
+	/// Used with <see cref="RXMatch"/>, <see cref="regexp"/> and some <b>String</b> extension methods.
 	/// </summary>
 	/// <remarks>
-	/// Groups are regular expression parts enclosed in (). Except non-capturing parts, like (?:...) and (?options). A RXGroup variable contains info about a group found in the subject string: index, length, substring.
+	/// Groups are regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. A <b>RXGroup</b> variable contains info about a group found in the subject string: index, length, substring.
 	/// 
-	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression "A(\d+)?B" matches string "AB", but group (\d+) does not exist. Then <see cref="Exists"/> is false, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> null.
+	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression <c>"A(\d+)?B"</c> matches string <c>"AB"</c>, but group <c>(\d+)</c> does not exist. Then <see cref="Exists"/> is false, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> null.
 	/// 
-	/// When a group matches multiple times, the RXGroup variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="Regex"/> and <see cref="Group.Captures"/>. Also you can get all instances with <see cref="regexp.Callout"/>.
+	/// When a group matches multiple times, the <b>RXGroup</b> variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="Regex"/> and <see cref="Group.Captures"/>. Also you can get all instances with <see cref="regexp.Callout"/>.
 	/// 
 	/// Examples and more info: <see cref="RXMatch"/>, <see cref="regexp"/>.
 	/// </remarks>
@@ -315,7 +315,7 @@ namespace Au.Types
 		/// More info in <see cref="RXGroup"/> topic. Example in <see cref="RXMatch"/> topic.
 		/// </summary>
 		/// <remarks>
-		/// Other ways to detect it: if a group does not exist, its Index is -1 and Value is null.
+		/// Other ways to detect it: if a group does not exist, its <b>Index</b> is -1 and <b>Value</b> is null.
 		/// </remarks>
 		public bool Exists => _index >= 0;
 
@@ -585,7 +585,7 @@ namespace Au.Types
 		/// Sets the return value of the callout function, as documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// Default 0.
 		/// If 1, matching fails at the current point, but the testing of other matching possibilities goes ahead, just as if a lookahead assertion had failed.
-		/// If -1 (PCRE2_ERROR_NOMATCH), the match function returns false (no match). Values less tan -2 are PCRE error codes and cause exception.
+		/// If -1 (<b>PCRE2_ERROR_NOMATCH</b>), the match function returns false (no match). Values less tan -2 are PCRE error codes and cause exception.
 		/// </summary>
 		public int Result { set => _p->version = value; internal get => _p->version; }
 
@@ -595,7 +595,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Callout number, eg 5 for "(?C5)".
+		/// Callout number, eg 5 for <c>"(?C5)"</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_number => _p->callout_number;
@@ -642,13 +642,13 @@ namespace Au.Types
 		public int next_item_length => (int)_p->next_item_length;
 
 		/// <summary>
-		/// The callout string offset in the regular expression. Used with callouts like "(?C'calloutString')".
+		/// The callout string offset in the regular expression. Used with callouts like <c>"(?C'calloutString')"</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_string_offset => (int)_p->callout_string_offset;
 
 		/// <summary>
-		/// The callout string, eg "xyz" for "(?C'xyz')".
+		/// The callout string, eg <c>"xyz"</c> for <c>"(?C'xyz')"</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public string callout_string => _p->callout_string == null ? null : new string(_p->callout_string, 0, (int)_p->callout_string_length);
@@ -741,7 +741,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Fully support Unicode text (case-insensitivity etc). More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2unicode.html">pcre2unicode</see>.
-		/// This flag is implicitly added if regular expression contains non-ASCII characters and there is no flag NEVER_UTF.
+		/// This flag is implicitly added if regular expression contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
 		/// </summary>
 		UTF = 0x00080000,
 

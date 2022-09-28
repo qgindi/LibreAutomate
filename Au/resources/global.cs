@@ -1,4 +1,4 @@
-﻿//This file is used by several projects: Au, Au.Controls, Au.Editor.
+//This file is used by several projects: Au, Au.Controls, Au.Editor.
 
 #if !NO_GLOBAL
 global using Au;
@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.8.1")]
+[assembly: AssemblyVersion("0.8.2")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

@@ -27,7 +27,7 @@ namespace Au.More
 		/// <summary>
 		/// Calls <see cref="Create"/>.
 		/// </summary>
-		/// <exception cref="ArgumentException">width or height is less than 1.</exception>
+		/// <exception cref="ArgumentException"><i>width</i> or <i>height</i> is less than 1.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of specified size (need <c>with*height*4</c> bytes).</exception>
 		public MemoryBitmap(int width, int height) {
 			if (width <= 0 || height <= 0) throw new ArgumentException();
@@ -113,7 +113,7 @@ namespace Au.More
 
 		/// <summary>
 		/// Deletes memory DC, clears this variable and returns its bitmap (native bitmap handle).
-		/// The returned bitmap is not selected into a DC. Will need to delete it with API DeleteObject.
+		/// The returned bitmap is not selected into a DC. Will need to delete it with API <msdn>DeleteObject</msdn>.
 		/// </summary>
 		public IntPtr Detach() {
 			IntPtr bret = _bm;

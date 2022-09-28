@@ -649,7 +649,7 @@ private:
 			PRINTS(L"failed Firefox accNavigate(0x1009). It's OK first time after Firefox starts.");
 			//Fails when calling first time after starting Firefox. FindDocumentSimple_ too. Never mind, it is documented, let use Wait.
 			//In some Firefox versions (56, 57) accNavigate(0x1009) is broken.
-			//Also ocassionally fails in some pages, even if page is loaded, maybe when executing scripts.
+			//Also occasionally fails in some pages, even if page is loaded, maybe when executing scripts.
 			//	Also fails in some tool windows, eg Browser Console. Sometimes always fails in full-screen mode.
 			//	Then FindDocumentSimple_ finds it.
 		} else if(!!(_flags2 & eAF2::InChromePage)) {

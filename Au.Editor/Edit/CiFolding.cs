@@ -134,14 +134,12 @@ class CiFolding {
 		_PN();
 
 		//Find comments that need to fold:
-		//	1. Blocks of //comments of >= 4 lines. Include empty lines, but split at last empty line if last comments are followed by non-comments or other type of comments.
+		//	1. Blocks of //comments of >= 4 lines. Include empty lines, but split at the last empty line if last comments are followed by non-comments or other type of comments.
 		//	2. Blocks of ///comments of >= 2 lines.
-		//	3. /*...*/ comments of >= 2 lines. Same for /**..*/.
-		//	4. //. is like #region, but can be not at start of line too. Must not be followed by non-space character.
-		//	5. //.. is like #endregion, but can be not at start of line too. More . can be added (like //...) to decrement folding level more. Must not be followed by non-space character.
-		
-		//BAD: //.. isn't good. In code examples often used //... . Better would be eg //' or //\, but now can't change.
-		//	Workaround: autocorrect //... -> // ...
+		//	3. /*...*/ comments of >= 2 lines. Same for /**...*/.
+		//	4. //. is like #region, but can be not at the start of line too. Must not be followed by a non-space character.
+		//	5. //.. is like #endregion, but can be not at the start of line too. Must not be followed by a non-space character.
+		//		Rejected: //... unfolds 2 levels, //.... 3 levels and so on. Often //... comment used for "more code" or "etc". Also now not useful (was useful when C# did not have top-level statements).
 
 		//Since root.DescendantTrivia is slow, we parse code
 		//	and then use Roslyn just to verify that the found // etc is at start of trivia, ie isn't inside a string or other comments or #directive.
@@ -157,10 +155,9 @@ class CiFolding {
 
 					int i0 = i = s.IndexOf(i, '/'); if ((uint)i > s.Length - 4) break;
 					char c = s[++i]; if (c is not ('/' or '*')) continue;
-					if (c == '/' && _IsDotComment(s, ++i, out int nDots)) { //.
+					if (c == '/' && _IsDotComment(s, ++i, out bool closing)) { //.
 						if (!_IsStartOfTrivia(false)) continue;
-						int k = rangeStart + i0;
-						if (nDots == 1) _AddFoldPoint(k, true); else while (--nDots > 0) _AddFoldPoint(k, false);
+						_AddFoldPoint(rangeStart + i0, !closing);
 					} else if (c == '*' || _IsStartOfLine(s, i0)) {
 						i = i0 + 2;
 						bool isLineComment = c == '/';
@@ -220,12 +217,11 @@ class CiFolding {
 						return j == 0 || s[j - 1] == '\n';
 					}
 
-					static bool _IsDotComment(ReadOnlySpan<char> s, int j, out int nDots) {
-						nDots = 0;
+					static bool _IsDotComment(ReadOnlySpan<char> s, int j, out bool closing) {
 						if (s.Eq(j, '.')) {
-							nDots = 1; while (++j < s.Length && s[j] == '.') nDots++;
-							if (j == s.Length || s[j] <= ' ') return true; //must be at end of line or followed by space (like //. comment). Else could be like //.Member
-						}
+							if (closing = ++j < s.Length && s[j] == '.') j++;
+							if (j == s.Length || s[j] <= ' ') return true; //must be at the end of line or followed by space (like //. comment). Else could be like //.Member
+						} else closing = false;
 						return false;
 					}
 

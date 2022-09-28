@@ -70,7 +70,7 @@ namespace Au.More
 		/// Gets menu item text.
 		/// </summary>
 		/// <returns>null if failed.</returns>
-		/// <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
+		/// <param name="removeHotkey">If contains <c>'\t'</c> character, get substring before it.</param>
 		/// <param name="removeAmp">Call <see cref="StringUtil.RemoveUnderlineChar"/>.</param>
 		public string GetText(bool removeHotkey, bool removeAmp) => GetText(_hm, _id, false, removeHotkey, removeAmp);
 
@@ -81,7 +81,7 @@ namespace Au.More
 		/// <param name="menuHandle"></param>
 		/// <param name="id"></param>
 		/// <param name="byIndex">id is 0-based index. For example you can use it to get text of a submenu-item, because such items usually don't have id.</param>
-		/// <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
+		/// <param name="removeHotkey">If contains <c>'\t'</c> character, get substring before it.</param>
 		/// <param name="removeAmp">Call <see cref="StringUtil.RemoveUnderlineChar"/>.</param>
 		[SkipLocalsInit]
 		public static unsafe string GetText(IntPtr menuHandle, int id, bool byIndex, bool removeHotkey, bool removeAmp) {

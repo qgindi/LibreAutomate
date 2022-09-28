@@ -160,8 +160,8 @@ public static unsafe class Hash {
 		public bool IsEmpty => _state == 0;
 
 		/// <summary>Adds data.</summary>
-		/// <exception cref="ArgumentNullException">data is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">size &lt; 0.</exception>
+		/// <exception cref="ArgumentNullException"><i>data</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>size</i> &lt; 0.</exception>
 		public void Add(void* data, int size) {
 			Not_.Null(data);
 			if (size < 0) throw new ArgumentOutOfRangeException();
@@ -175,13 +175,13 @@ public static unsafe class Hash {
 
 		/// <summary>Adds data.</summary>
 		/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-		/// <exception cref="ArgumentNullException">data is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>data</i> is null.</exception>
 		public void Add(ReadOnlySpan<byte> data) {
 			fixed (byte* p = data) Add(p, data.Length);
 		}
 
 		/// <summary>Adds string converted to UTF8.</summary>
-		/// <exception cref="ArgumentNullException">data is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>data</i> is null.</exception>
 		public void Add(string data) => Add(Encoding.UTF8.GetBytes(data));
 
 		//rejected. Better use unsafe address, then will not need to copy data.
@@ -311,7 +311,7 @@ public static unsafe class Hash {
 	/// Computes data hash using the specified cryptographic algorithm.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
 	public static byte[] Crypto(ReadOnlySpan<byte> data, string algorithm) {
 		using var x = (HashAlgorithm)CryptoConfig.CreateFromName(algorithm);
 		var r = new byte[x.HashSize / 8];
@@ -323,7 +323,7 @@ public static unsafe class Hash {
 	/// Computes hash of string converted to UTF8, using the specified cryptographic algorithm.
 	/// </summary>
 	/// <param name="data"></param>
-	/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
 	public static byte[] Crypto(string data, string algorithm)
 		=> Crypto(Encoding.UTF8.GetBytes(data), algorithm);
 
@@ -331,7 +331,7 @@ public static unsafe class Hash {
 	/// Computes data hash using the specified cryptographic algorithm. Returns result as hex or base64 string.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
 	/// <param name="base64"></param>
 	public static string Crypto(ReadOnlySpan<byte> data, string algorithm, bool base64) {
 		var b = Crypto(data, algorithm);
@@ -342,7 +342,7 @@ public static unsafe class Hash {
 	/// Computes hash of string converted to UTF8, using the specified cryptographic algorithm. Returns result as hex or base64 string.
 	/// </summary>
 	/// <param name="data"></param>
-	/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
 	/// <param name="base64"></param>
 	public static string Crypto(string data, string algorithm, bool base64) {
 		var b = Crypto(data, algorithm);

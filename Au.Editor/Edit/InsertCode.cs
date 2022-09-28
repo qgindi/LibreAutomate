@@ -330,7 +330,7 @@ static class InsertCode {
 				var k = new keys(null);
 				k.AddText(s);
 				if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-				k.SendIt();
+				k.Send();
 			});
 		}
 	}

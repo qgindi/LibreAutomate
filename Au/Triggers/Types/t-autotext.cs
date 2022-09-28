@@ -107,7 +107,7 @@ public class AutotextTrigger : ActionTrigger {
 	internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
 
 	/// <summary>
-	/// Returns "Autotext".
+	/// Returns <c>"Autotext"</c>.
 	/// </summary>
 	public override string TypeString => "Autotext";
 
@@ -247,7 +247,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	/// Default: null.
 	/// </summary>
 	/// <remarks>
-	/// By default, only alpha-numeric characters (<see cref="char.IsLetterOrDigit"/> returns true) are considered word characters. You can use this property to add more word characters, for example "_#".
+	/// By default, only alpha-numeric characters (<see cref="char.IsLetterOrDigit"/> returns true) are considered word characters. You can use this property to add more word characters, for example <c>"_#"</c>.
 	/// This is used to avoid activating triggers when a trigger text found inside a word.
 	/// This property is applied to all triggers, not just to those added afterwards.
 	/// </remarks>
@@ -637,7 +637,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <remarks>
 	/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>.
 	/// 
-	/// If the replacement text contains substring "[[|]]", removes it and moves the text cursor (caret) there with the Left key. See example. Not if <i>html</i> specified.
+	/// If the replacement text contains substring <c>"[[|]]"</c>, removes it and moves the text cursor (caret) there with the Left key. See example. Not if <i>html</i> specified.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -652,12 +652,12 @@ public class AutotextTriggerArgs : TriggerArgs {
 	}
 
 	/// <summary>
-	/// Replaces the user-typed text with the specified text, keys, cliboard data, etc.
+	/// Replaces the user-typed text with the specified text, keys, clipboard data, etc.
 	/// </summary>
 	/// <remarks>
 	/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. This function uses <see cref="TAFlags.Confirm"/>, <see cref="TAFlags.DontErase"/>, <see cref="TAFlags.ShiftLeft"/>, <see cref="TAFlags.RemovePostfix"/>.
 	/// 
-	/// If used flag <see cref="TAFlags.Confirm"/>, for label can be used first argument with prefix "!!"; else displays all string arguments.
+	/// If used flag <see cref="TAFlags.Confirm"/>, for label can be used first argument with prefix <c>"!!"</c>; else displays all string arguments.
 	/// </remarks>
 	/// <inheritdoc cref="keys.send" path="/param"/>
 	public void Replace2([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
@@ -678,7 +678,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 
 			if (!flags.HasAny(TAFlags.ReplaceRaw | TAFlags.MatchCase)) {
 				int len = t.Length; if (this.HasPostfixChar) len--;
-				int i; for (i = 0; i < len; i++) if (char.IsLetterOrDigit(t[i])) break; //eg if t is "#abc", we need a, not #
+				int i; for (i = 0; i < len; i++) if (char.IsLetterOrDigit(t[i])) break; //eg if t is <c>"#abc"</c>, we need a, not #
 				if (i < len && char.IsUpper(t[i])) {
 					bool allUpper = false; //make r ucase if t contains 0 lcase chars and >=2 ucase chars
 					while (++i < len) {
@@ -771,14 +771,14 @@ public class AutotextTriggerArgs : TriggerArgs {
 			}
 		}
 
-		k.SendIt();
+		k.Send();
 	}
 
 	/// <summary>
 	/// If <see cref="HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="Text"/>) to the active window.
 	/// </summary>
 	public void SendPostfix() {
-		if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).SendIt();
+		if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).Send();
 		//CONSIDER: AddText -> AddChar. Also in other place. But the speed option is different.
 	}
 
@@ -786,7 +786,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
 	/// </summary>
 	/// <returns>Returns true if the user clicked the item or pressed Enter or Tab.</returns>
-	/// <param name="text">Text to display. This function limits it to 300 characters. Default "Replace".</param>
+	/// <param name="text">Text to display. This function limits it to 300 characters. Default: <c>"Replace"</c>.</param>
 	/// <remarks>
 	/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
 	/// 
@@ -893,7 +893,9 @@ public class AutotextTriggerArgs : TriggerArgs {
 	}
 }
 
-/// <remarks>Infrastructure.</remarks>
+/// <summary>
+/// See <see cref="AutotextTriggers.SimpleReplace"/>.
+/// </summary>
 public class TASimpleReplace {
 	AutotextTriggers _host;
 
@@ -903,9 +905,8 @@ public class TASimpleReplace {
 
 	/// <summary>
 	/// Adds an autotext trigger. Its action calls <see cref="AutotextTriggerArgs.Replace(string, string)"/>.
-	/// More info: <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>.
 	/// </summary>
-	/// <exception cref="Exception">Exceptions of <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>.</exception>
+	/// <inheritdoc cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>
 	public string this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 		set {
 			_host[text, flags, postfixType, postfixChars, f_, l_] = o => o.Replace(value);

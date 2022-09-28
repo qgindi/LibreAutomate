@@ -325,7 +325,7 @@ static class CiUtil {
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
 			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
 			new CSharpParseOptions(LanguageVersion.Preview),
-			metadataReferences: needSemantic ? new Au.Compiler.MetaReferences().Refs : null //tested: does not make slower etc
+			metadataReferences: needSemantic ? new MetaReferences().Refs : null //tested: does not make slower etc
 			);
 		var sol = ws.CurrentSolution.AddProject(pi);
 		if (needSemantic) {
@@ -356,6 +356,10 @@ global using System.Threading;
 global using System.Threading.Tasks;
 global using Microsoft.Win32;
 global using Au.More;
+global using Au.Triggers;
+global using System.Windows;
+global using System.Windows.Controls;
+global using System.Windows.Media;
 """;
 
 	/// <summary>

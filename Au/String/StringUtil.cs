@@ -30,12 +30,12 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Removes characters used to underline next character when the text is displayed in UI. Replaces two such caracters with single.
+		/// Removes characters used to underline next character when the text is displayed in UI. Replaces two such characters with single.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		/// <param name="underlineChar"></param>
 		/// <remarks>
-		/// Character '&amp;' (in WPF '_') is used to underline next character in displayed text of dialog controls and menu items. Two such characters are used to display single.
+		/// Character <c>'&amp;'</c> (in WPF <c>'_'</c>) is used to underline next character in displayed text of dialog controls and menu items. Two such characters are used to display single.
 		/// The underline is displayed when using the keyboard with Alt key to select dialog controls and menu items.
 		/// </remarks>
 		[SkipLocalsInit]
@@ -104,7 +104,7 @@ namespace Au.More
 		/// Parses command line arguments.
 		/// Calls API <msdn>CommandLineToArgvW</msdn>.
 		/// </summary>
-		/// <returns>Empty array if <i>s</i> is null or "".</returns>
+		/// <returns>Empty array if <i>s</i> is null or <c>""</c>.</returns>
 		public static unsafe string[] CommandLineToArray(string s) {
 			if (s.NE()) return Array.Empty<string>();
 			char** p = Api.CommandLineToArgvW(s, out int n);
@@ -115,13 +115,13 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// If string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
-		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
+		/// If string contains a number at <i>startIndex</i>, gets that number as int, also gets the string part that follows it, and returns true.
+		/// For example, for string <c>"25text"</c> or <c>"25 text"</c> gets <i>num</i> = <c>25</c>, <i>tail</i> = <c>"text"</c>.
 		/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="num">Receives the number. Receives 0 if no number.</param>
-		/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
+		/// <param name="tail">Receives the string part that follows the number, or <c>""</c>. Receives null if no number. Can be this variable.</param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="flags"></param>
 		public static bool ParseIntAndString(string s, out int num, out string tail, int startIndex = 0, STIFlags flags = 0) {
@@ -136,9 +136,9 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Creates int[] from string containing space-separated numbers, like "4 100 -8 0x10".
+		/// Creates int[] from string containing space-separated numbers, like <c>"4 100 -8 0x10"</c>.
 		/// </summary>
-		/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If null or "", returns empty array.</param>
+		/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If null or <c>""</c>, returns empty array.</param>
 		/// <remarks>
 		/// For vice versa use <c>string.Join(" ", array)</c>.
 		/// </remarks>
@@ -181,7 +181,7 @@ namespace Au.More
 		/// Calculates the Levenshtein distance between two strings, which tells how much they are different.
 		/// </summary>
 		/// <remarks>
-		/// It is the number of character edits (removals, inserts, replacements) that must occur to get from string s1 to string s2.
+		/// It is the number of character edits (removals, inserts, replacements) that must occur to get from string <i>s1</i> to string <i>s2</i>.
 		/// Can be used to measure similarity and match approximate strings with fuzzy logic.
 		/// Uses code and info from <see href="https://www.dotnetperls.com/levenshtein"/>.
 		/// </remarks>

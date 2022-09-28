@@ -1,4 +1,4 @@
-﻿namespace Au.More;
+namespace Au.More;
 
 /// <summary>
 /// Converts virtual-key codes to text characters.
@@ -14,7 +14,7 @@ public class KeyToTextConverter
 	/// <summary>
 	/// Converts a virtual-key code to text.
 	/// </summary>
-	/// <param name="text">Receives text. Can be 1 character c, or string s with 2 or more characters. Receives default if this function returns false or if the key is a dead key.</param>
+	/// <param name="text">Receives text. Can be 1 character <i>c</i>, or string <i>s</i> with 2 or more characters. Receives default if this function returns false or if the key is a dead key.</param>
 	/// <param name="vk">Virtual-key code.</param>
 	/// <param name="sc">Scan code.</param>
 	/// <param name="mod">Modifier keys (Shift etc). See <see cref="keys.getMod(KMod)"/>.</param>

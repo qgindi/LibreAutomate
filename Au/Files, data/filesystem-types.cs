@@ -116,8 +116,8 @@ public enum FAFlags {
 
 	///<summary>
 	///If failed, return false and don't throw exception.
-	///Then, if you need error info, you can use <see cref="lastError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
-	///If failed and the native error code is ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION, the returned attributes will be (FileAttributes)(-1). The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
+	///Then, if you need error info, you can use <see cref="lastError"/>. If the file/directory does not exist, it will return <b>ERROR_FILE_NOT_FOUND</b> or <b>ERROR_PATH_NOT_FOUND</b> or <b>ERROR_NOT_READY</b>.
+	///If failed and the native error code is <b>ERROR_ACCESS_DENIED</b> or <b>ERROR_SHARING_VIOLATION</b>, the returned attributes will be <c>(FileAttributes)(-1)</c>. The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
 	///</summary>
 	DontThrow = 2,
 }
@@ -192,7 +192,7 @@ public enum FEFlags {
 	UseRawPath = 0x40,
 
 	/// <summary>
-	/// Let <see cref="FEFile.Name"/> be path relative to the specified directory path. Like <c>@"\name.txt"</c> or <c>@"\subdirectory\name.txt"</c> instead of "name.txt".
+	/// Let <see cref="FEFile.Name"/> be path relative to the specified directory path. Like <c>@"\name.txt"</c> or <c>@"\subdirectory\name.txt"</c> instead of <c>"name.txt"</c>.
 	/// </summary>
 	NeedRelativePaths = 0x80,
 
@@ -215,7 +215,7 @@ public enum FCFlags {
 	//note: these values must match the corresponding FEFlags values.
 
 	/// <summary>
-	/// Skip descendant files and directories that have Hidden and System attributes (both).
+	/// Skip descendant files and directories that have <b>Hidden</b> and <b>System</b> attributes (both).
 	/// They usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 	/// They often are protected and would fail to copy, ruining whole copy operation.
 	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: "$Recycle.Bin", "System Volume Information", "Recovery".
@@ -319,7 +319,7 @@ public class FEFile {
 	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
 
 	/// <summary>
-	/// Returns FullPath.
+	/// Returns <see cref="FullPath"/>.
 	/// </summary>
 	public override string ToString() => FullPath;
 
@@ -333,7 +333,7 @@ public class FEFile {
 /// <summary>
 /// What to do if the destination directory contains a file or directory with the same name as the source file or directory when copying, moving or renaming.
 /// Used with <see cref="filesystem.copy"/>, <see cref="filesystem.move"/> and similar functions.
-/// When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming "file.txt" to "FILE.TXT".
+/// When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming <c>"file.txt"</c> to <c>"FILE.TXT"</c>.
 /// </summary>
 public enum FIfExists {
 	/// <summary>Throw exception. Default.</summary>

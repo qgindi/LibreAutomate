@@ -34,8 +34,8 @@ namespace Au.More
 		/// <summary>
 		/// Sets a hook for an event or a range of events.
 		/// </summary>
-		/// <param name="eventMin">The lowest event constant value in the range of events. Can be EEvent.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>. Value 0 is ignored.</param>
-		/// <param name="eventMax">The highest event constant value in the range of events. Can be EEvent.MAX to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
+		/// <param name="eventMin">The lowest event constant value in the range of events. Can be <b>EEvent.MIN</b> to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>. Value 0 is ignored.</param>
+		/// <param name="eventMax">The highest event constant value in the range of events. Can be <b>EEvent.MAX</b> to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
@@ -100,12 +100,12 @@ namespace Au.More
 		/// Adds a hook for an event or a range of events.
 		/// </summary>
 		/// <returns>an int value greater than 0 that can be used with <see cref="Remove"/>.</returns>
-		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// 
 		/// This function together with <see cref="Remove"/> can be used to temporarily add/remove one or more hooks while using the same <b>WinEventHook</b> variable and hook procedure. Don't need to call <b>Unhook</b> before.
 		/// </remarks>
+		/// <inheritdoc cref="WinEventHook(EEvent, EEvent, Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public int Add(EEvent eventMin, EEvent eventMax = 0, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			if (_proc1 == null) throw new ObjectDisposedException(nameof(WinEventHook));
 			int i = 0;

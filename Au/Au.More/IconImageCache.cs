@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 
 namespace Au.More
 {
@@ -63,11 +63,11 @@ namespace Au.More
 		/// <summary>
 		/// Gets image from memory cache or file or resource.
 		/// </summary>
-		/// <param name="imageSource">File path, or resource path that starts with "resources/" or has prefix "resource:", etc. See <i>isImage</i> parameter.</param>
+		/// <param name="imageSource">File path, or resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>, etc. See <i>isImage</i> parameter.</param>
 		/// <param name="dpi">DPI of window that will display the image. See <see cref="Dpi"/>.</param>
 		/// <param name="isImage">
 		/// false - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns null if no custom icon or if editor isn't running.
-		/// true - load image from xaml/png/etc file, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like "*Pack.Icon color" (see menu Tools -> Icons).
+		/// true - load image from xaml/png/etc file, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu Tools -> Icons).
 		/// 
 		/// To detect whether a string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns true, it is image.
 		/// </param>

@@ -45,10 +45,10 @@ class PanelRecipe : DockPanel {
 
 		_c.ZTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 		_c.ZTags.AddLinkTag("+see", _SeeLinkClicked);
-		//_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
+		//_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
 		_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + ", C# reference")));
-		//_c.ZTags.AddLinkTag("+guide", s => run.itSafe("https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
-		_c.ZTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + " site:docs.microsoft.com")));
+		//_c.ZTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
+		_c.ZTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s + " site:microsoft.com")));
 		_c.ZTags.AddLinkTag("+nuget", s => DNuget.ZShow(s));
 		_c.ZTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
 

@@ -38,7 +38,7 @@ namespace Au {
 		/// <param name="wildcardExpression">
 		/// [Wildcard expression](xref:wildcard_expression).
 		/// Cannot be null (throws exception).
-		/// "" will match "".
+		/// <c>""</c> will match <c>""</c>.
 		/// </param>
 		/// <param name="matchCase">Case-sensitive even if there is no **c.</param>
 		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return false.</param>
@@ -115,7 +115,7 @@ namespace Au {
 		/// <summary>
 		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns true if they match.
 		/// </summary>
-		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
+		/// <param name="s">String. If null, returns false. If <c>""</c>, returns true if it was <c>""</c> or <c>"*"</c> or a regular expression that matches <c>""</c>.</param>
 		public bool Match(string s) {
 			if (s == null) return false;
 
@@ -203,7 +203,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if string contains wildcard characters: '*', '?'.
+		/// Returns true if string contains wildcard characters: <c>'*'</c>, <c>'?'</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		public static bool hasWildcardChars(RStr s) {
@@ -221,15 +221,15 @@ namespace Au.Types {
 		/// Compares this string with a string that possibly contains wildcard characters.
 		/// Returns true if the strings match.
 		/// </summary>
-		/// <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
-		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
+		/// <param name="t">This string. If null, returns false. If <c>""</c>, returns true if <i>pattern</i> is <c>""</c> or <c>"*"</c>.</param>
+		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If <c>""</c>, returns true if this string is <c>""</c>. If <c>"*"</c>, always returns true except when this string is null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>pattern</i> is null.</exception>
 		/// <remarks>
 		/// Wildcard characters:
 		/// 
-		/// Character | Will match | Examples
-		/// | - | - | - |
+		/// | Character | Will match | Examples
+		/// | -
 		/// | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
 		/// | ? | Any single character. | <c>"date ????-??-??"</c>
 		/// 
@@ -251,7 +251,6 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="wildex"/>
-		/// <seealso cref="Like(RStr, string, bool)"/>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
 		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
@@ -277,7 +276,7 @@ namespace Au.Types {
 			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
 		}
 
-		/// <inheritdoc cref="Like(string, string, bool)"/>
+		/// <inheritdoc cref="Like(string, string, bool)" path="//summary|//param|//exception"/>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static bool Like(this RStr t, string pattern, bool ignoreCase = false) {
 			Not_.Null(pattern);
@@ -396,7 +395,7 @@ namespace Au.Types {
 		RegexPcre,
 
 		/// <summary>
-		/// .NET egular expression (option R).
+		/// .NET regular expression (option R).
 		/// <b>Match</b> calls <see cref="Regex.IsMatch(string)"/>.
 		/// </summary>
 		RegexNet,

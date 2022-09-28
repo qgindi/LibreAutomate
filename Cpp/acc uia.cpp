@@ -254,7 +254,7 @@ public:
 		CONTROLTYPEID t;
 		HRESULT hr = _ae->get_CurrentControlType(&t);
 		if(hr == 0) {
-			//https://docs.microsoft.com/en-us/windows/win32/winauto/appendix-g--active-accessibility-bridge-to-ui-automation
+			//https://learn.microsoft.com/en-us/windows/win32/winauto/appendix-g--active-accessibility-bridge-to-ui-automation
 			int i = 0; STR s = L"unknown";
 			switch(t) {
 			case UIA_ButtonControlTypeId: i = ROLE_SYSTEM_PUSHBUTTON; break;

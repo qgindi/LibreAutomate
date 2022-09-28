@@ -187,7 +187,7 @@ class CiPopupList
 		foreach (var v in _a) if (v.hidden == 0) _av.Add(v);
 		_SortAndSetControlItems();
 
-		//Ocassionally app used to crash without an error UI when typing a word and should show completions.
+		//Occasionally app used to crash without an error UI when typing a word and should show completions.
 		//	Windows event log shows exception with call stack, which shows that _av.Select called with _av=null.
 		//	The reason (reproduced):
 		//		in _SortAndSetControlItems -> _tv.SetItems -> ... -> _Measure, probably when setting scrollbar properties,

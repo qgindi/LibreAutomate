@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Au.Controls;
@@ -724,7 +724,7 @@ By default it receives full path of the output exe or dll file in args[0]. If ne
 Everything else is like with preBuild.
 ");
 		info.ZAddElem(addLibrary,
-@"<b>Assembly<> - add one or more .NET assemblies (.dll files) as references.
+@"<b>Library<> - add one or more .NET assemblies (.dll files) as references.
 Adds meta comment <c green>r DllFile<>.
 
 Don't need to add Au.dll and .NET runtime dlls.

@@ -299,13 +299,20 @@ class PanelFind : UserControl {
 	}
 	timer _timerUE;
 
-	record _TextToFind {
+	class _TextToFind {
 		public string findText;
 		public string replaceText;
 		public regexp rx;
 		public wildex wx;
 		public bool wholeWord;
 		public bool matchCase;
+
+		public bool IsSameFindTextAndOptions(_TextToFind f)
+			=> f.findText == findText
+			&& f.matchCase == matchCase
+			&& f.wholeWord == wholeWord
+			&& (f.rx != null) == (rx != null)
+			&& (f.wx != null) == (wx != null);
 	}
 
 	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false, bool names = false) {
@@ -370,14 +377,21 @@ class PanelFind : UserControl {
 		_ttNext?.Close();
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
 		var text = doc.zText; if (text.Length == 0) return;
-		int i, len = 0, from8 = replace ? doc.zSelectionStart8 : doc.zSelectionEnd8, from = doc.zPos16(from8);
+		int i, to, len = 0, from8 = replace ? doc.zSelectionStart8 : doc.zSelectionEnd8, from = doc.zPos16(from8), to8 = doc.zSelectionEnd8;
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
 		g1:
 		if (f.rx != null) {
+			//this code solves this problem: now will not match if the regex contains \K etc, because 'from' is different
+			if (replace && _lastFind.doc == doc && _lastFind.from8 == from8 && _lastFind.to8 == to8 && _lastFind.text == text && f.IsSameFindTextAndOptions(_lastFind.f)) {
+				i = from8; to = to8; rm = _lastFind.rm;
+				goto g2;
+			}
+
 			if (f.rx.Match(text, out rm, from..)) {
 				i = rm.Start;
 				len = rm.Length;
+				//print.it(i, len);
 				if (i == from && len == 0 && !(replace | retryRx | retryFromStart)) {
 					if (++i > text.Length) i = -1;
 					else {
@@ -394,15 +408,16 @@ class PanelFind : UserControl {
 		//print.it(from, i, len);
 		if (i < 0) {
 			SystemSounds.Asterisk.Play();
+			_lastFind.f = null;
 			if (retryFromStart || from8 == 0) return;
 			from = 0; retryFromStart = true; replace = false;
 			goto g1;
 		}
 		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: searching from start.");
-		int to = doc.zPos8(i + len);
+		to = doc.zPos8(i + len);
 		i = doc.zPos8(i);
-
-		if (replace && i == from8 && to == doc.zSelectionEnd8) {
+		g2:
+		if (replace && i == from8 && to == to8) {
 			var repl = f.replaceText;
 			if (rm != null) if (!_TryExpandRegexReplacement(rm, repl, out repl)) return;
 			//doc.zReplaceRange(i, to, repl); //also would need to set caret pos = to
@@ -419,8 +434,17 @@ class PanelFind : UserControl {
 
 			App.Model.EditGoBack.RecordNext();
 			doc.zSelect(false, i, to, true);
+
+			_lastFind.f = f;
+			_lastFind.doc = doc;
+			_lastFind.text = text;
+			_lastFind.from8 = i;
+			_lastFind.to8 = to;
+			_lastFind.rm = rm;
 		}
 	}
+
+	(_TextToFind f, SciCode doc, string text, int from8, int to8, RXMatch rm) _lastFind;
 
 	private void _bReplaceAll_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
@@ -666,7 +690,7 @@ class PanelFind : UserControl {
 			if (bSlow != null) {
 				time = perf.ms - time;
 				if (time >= timeSlow + (jited ? 0 : 100)) {
-					if (bSlow.Length == 0) bSlow.AppendLine("<Z orange>Slow files:<>");
+					if (bSlow.Length == 0) bSlow.AppendLine("<Z #FFC000>Slow files:<>");
 					bSlow.Append(time).Append(" ms <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
 				}
 				jited = true;
@@ -675,14 +699,14 @@ class PanelFind : UserControl {
 
 		if (nFound > 1) {
 			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
-			b.AppendFormat("<z orange>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
+			b.AppendFormat("<z #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
 			_lastFindAll = (f, aFiles, guid, null);
 		}
 
 		if (folder != App.Model.Root)
-			b.Append("<z orange>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
+			b.Append("<z #FFC000>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
 		if (searchIn > 0)
-			b.Append("<z orange>Note: searched only in ")
+			b.Append("<z #FFC000>Note: searched only in ")
 			   .Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
 			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);

@@ -4,6 +4,59 @@ namespace Au {
 		/// Miscellaneous rarely used file/directory functions.
 		/// </summary>
 		public static partial class more {
+			/// <summary>
+			/// Gets full normalized path of a file or directory or symbolic link target.
+			/// </summary>
+			/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+			/// <param name="path">Full or relative path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+			/// <param name="result">Receives full path, or null if failed.</param>
+			/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
+			/// <remarks>
+			/// Calls API <msdn>GetFinalPathNameByHandle</msdn>.
+			/// </remarks>
+			/// <seealso cref="shortcutFile.getTarget(string)"/>
+			public static bool getFinalPath(string path, out string result, bool ofSymlink = false) {
+				result = null;
+				path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
+				using Handle_ h = Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
+				//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
+				if (h.Is0 || !Api.GetFinalPathNameByHandle(h, out var s)) return false;
+				if (s.Length <= pathname.maxDirectoryPathLength) s = pathname.unprefixLongPath(s);
+				result = s;
+				return true;
+			}
+
+			/// <summary>
+			/// Gets <see cref="FileId"/> of a file or directory.
+			/// </summary>
+			/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+			/// <param name="path">Full or relative path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+			/// <param name="fileId"></param>
+			/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <b>FileId</b> of the link, not of its target.</param>
+			/// <remarks>
+			/// Calls API <msdn>GetFileInformationByHandle</msdn>.
+			/// </remarks>
+			public static unsafe bool getFileId(string path, out FileId fileId, bool ofSymlink = false) {
+				path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
+				fileId = new();
+				using var h = Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
+				if (h.Is0 || !Api.GetFileInformationByHandle(h, out var k)) return false;
+				fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
+				fileId.FileIndex = k.FileIndex;
+				return true;
+			}
+
+			/// <summary>
+			/// Calls <see cref="getFileId"/> for two paths and returns true if both calls succeed and the ids are equal.
+			/// Paths are passed to API unmodified.
+			/// </summary>
+			/// <param name="path1"></param>
+			/// <param name="path2"></param>
+			internal static bool IsSameFile_(string path1, string path2) {
+				if (getFileId(path1, out var fid1) && getFileId(path2, out var fid2)) return fid1 == fid2;
+				print.warning("GetFileId() failed"); //CONSIDER: throw
+				return false;
+			}
 
 #if false //currently not used
 			/// <summary>
@@ -60,44 +113,6 @@ namespace Au {
 				return path;
 			}
 #endif
-
-			/// <summary>
-			/// Gets <see cref="FileId"/> of a file or directory.
-			/// </summary>
-			/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
-			/// <param name="path">Full path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
-			/// <param name="fileId"></param>
-			public static unsafe bool getFileId(string path, out FileId fileId) {
-				path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
-				fileId = new FileId();
-				using var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
-				if (h.Is0) return false;
-				if (!Api.GetFileInformationByHandle(h, out var k)) return false;
-				fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
-				fileId.FileIndex = k.FileIndex;
-				return true;
-			}
-
-			/// <summary>
-			/// Calls <see cref="getFileId"/> for two paths and returns true if both calls succeed and the ids are equal.
-			/// Paths should be normalized. They are passed to API unmodified.
-			/// </summary>
-			/// <param name="path1"></param>
-			/// <param name="path2"></param>
-			internal static bool IsSameFile_(string path1, string path2) {
-				//try to optimize. No, unreliable.
-				//int i1 = path1.FindLastAny("\\/~"), i2 = path2.FindLastAny("\\/~");
-				//if(i1 >= 0 && i2 >= 0 && path1[i1] != '~' && path2[i2] != '~') {
-				//	i1++; i2++;
-				//	if()
-				//}
-
-				var ok1 = getFileId(path1, out var fid1);
-				var ok2 = getFileId(path2, out var fid2);
-				if (ok1 && ok2) return fid1 == fid2;
-				print.warning("GetFileId() failed"); //CONSIDER: throw
-				return false;
-			}
 
 #if false
 		//this is ~300 times slower than filesystem.move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished.
@@ -256,7 +271,7 @@ namespace Au {
 			/// <summary>
 			/// Empties the Recycle Bin.
 			/// </summary>
-			/// <param name="drive">If not null, empties the Recycle Bin on this drive only. Example: "D:".</param>
+			/// <param name="drive">If not null, empties the Recycle Bin on this drive only. Example: <c>"D:"</c>.</param>
 			/// <param name="progressUI">Show progress dialog if slow. Default true.</param>
 			public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
 				Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
@@ -308,7 +323,7 @@ namespace Au {
 			/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
 			/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
 			/// </remarks>
-			internal static void loadDll64or32Bit_(string fileName) {
+			internal static void LoadDll64or32Bit_(string fileName) {
 				//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
 				string rel = (osVersion.is32BitProcess ? @"32\" : @"64\") + fileName;
@@ -323,7 +338,7 @@ namespace Au {
 				//environment variable
 				p = Environment.GetEnvironmentVariable("Au.Path");
 				if (p != null && default != Api.LoadLibrary(pathname.combine(p, rel))) return;
-				
+
 				//extracted from resources?
 				if (default != Api.LoadLibrary(folders.ThisAppTemp + rel)) return;
 

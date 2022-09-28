@@ -6,7 +6,7 @@ using Microsoft.Win32;
 namespace Au;
 
 /// <summary>
-/// Contains static functions to work with files and directories, such as copy, move, delete, find, get properties, enumerate, create directory, safe load/save, wait if locked.
+/// File and directory functions. Copy, move, delete, find, get properties, enumerate, create directory, load/save, etc.
 /// </summary>
 /// <remarks>
 /// Also you can use .NET file system classes, such as <see cref="File"/> and <see cref="Directory"/> in <b>System.IO</b> namespace. In the past they were too limited and unsafe to use, for example no long paths, too many exceptions, difficult to recursively enumerate directories containing protected items. Later improved, but this class still has something they don't, for example environment variables in path, safe load/save. This class does not have low-level functions to open/read/write files.
@@ -38,11 +38,11 @@ public static partial class filesystem {
 	/// Calls API <msdn>GetFileAttributesEx</msdn>.
 	/// </summary>
 	/// <returns>false if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
 	/// <param name="properties">Receives properties.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-	/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DontThrow.</exception>
+	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
+	/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
 	/// For NTFS links, gets properties of the link, not of its target.
 	/// You can also get most of these properties with <see cref="enumerate"/>.
@@ -68,11 +68,11 @@ public static partial class filesystem {
 	/// Calls API <msdn>GetFileAttributes</msdn>.
 	/// </summary>
 	/// <returns>false if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
 	/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-	/// <exception cref="AuException">Failed. Not thrown if used flag DontThrow.</exception>
+	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
+	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
 	/// For NTFS links, gets properties of the link, not of its target.
 	/// </remarks>
@@ -155,11 +155,11 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, readonly, hidden, system, NTFS link. See examples.
 	/// </summary>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="pathname.expand"/>). Can be null.</param>
-	/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is false (default), supports environment variables (see <see cref="pathname.expand"/>). Can be null.</param>
+	/// <param name="useRawPath">Pass <i>path</i> to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
-	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/> and check attribute Directory.
-	/// Always use full path. If path is not full: if useRawPath is false (default), can't find the file; if useRawPath is true, searches in "current directory".
+	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/> and check attribute <b>Directory</b>.
+	/// Always use full path. If not full path: if <i>useRawPath</i> is false (default), can't find the file; if <i>useRawPath</i> is true, searches in "current directory".
 	/// For NTFS links gets attributes of the link, not of the target; does not care whether its target exists.
 	/// </remarks>
 	/// <example>
@@ -186,7 +186,7 @@ public static partial class filesystem {
 	/// Returns <b>NotFound</b> (0) if does not exist. Returns <b>AccessDenied</b> (&lt; 0) if exists but this process cannot access it and get attributes.
 	/// Calls API <msdn>GetFileAttributes</msdn>.
 	/// </summary>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="pathname.expand"/>). Can be null.</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is false (default), supports environment variables (see <see cref="pathname.expand"/>). Can be null.</param>
 	/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/>.
@@ -206,12 +206,12 @@ public static partial class filesystem {
 	/// </summary>
 	/// <returns>null if not found.</returns>
 	/// <remarks>
-	/// If the path argument is full path, calls <see cref="exists"/> and returns normalized path if exists, null if not.
+	/// If the <i>path</i> argument is full path, calls <see cref="exists"/> and returns normalized path if exists, null if not.
 	/// Else searches in these places:
 	/// 1. <i>dirs</i>, if used.
 	/// 2. <see cref="folders.ThisApp"/>.
 	/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
-	/// 4. If path ends with ".exe", tries to get path from registry "App Paths" keys.
+	/// 4. If <i>path</i> ends with <c>".exe"</c>, tries to get path from registry "App Paths" keys.
 	/// </remarks>
 	/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
 	/// <param name="dirs">0 or more directories where to search.</param>
@@ -281,7 +281,7 @@ public static partial class filesystem {
 	/// 
 	/// By default gets only direct children. Use flag <see cref="FEFlags.AllDescendants"/> to get all descendants.
 	/// 
-	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), "..", DOS path etc. Paths longer than <see cref="pathname.maxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
+	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), <c>".."</c>, DOS path etc. Paths longer than <see cref="pathname.maxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
 	/// 
 	/// For NTFS links (symbolic links, mounted folders) gets link info, not target info.
 	/// 
@@ -729,7 +729,7 @@ public static partial class filesystem {
 	/// Renames file or directory.
 	/// </summary>
 	/// <param name="path">Full path.</param>
-	/// <param name="newName">New name without path. Example: "name.txt".</param>
+	/// <param name="newName">New name without path. Example: <c>"name.txt"</c>.</param>
 	/// <param name="ifExists"></param>
 	/// <exception cref="ArgumentException">
 	/// - <i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).
@@ -750,7 +750,7 @@ public static partial class filesystem {
 	/// <param name="path">Full path.</param>
 	/// <param name="newPath">
 	/// New full path.
-	/// <note>It is not the new parent directory. Use <see cref="moveTo"/> for it.</note>
+	/// <para>NOTE: It is not the new parent directory. See <see cref="moveTo"/>.</para>
 	/// </param>
 	/// <param name="ifExists"></param>
 	/// <exception cref="ArgumentException"><i>path</i> or <i>newPath</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
@@ -795,7 +795,7 @@ public static partial class filesystem {
 	/// <param name="path">Full path.</param>
 	/// <param name="newPath">
 	/// Full path of the destination.
-	/// <note>It is not the new parent directory. Use <see cref="copyTo"/> for it.</note>
+	/// <para>NOTE: It is not the new parent directory. See <see cref="copyTo"/>.</para>
 	/// </param>
 	/// <param name="ifExists"></param>
 	/// <param name="copyFlags">Options used when copying directory.</param>
@@ -1024,7 +1024,7 @@ public static partial class filesystem {
 	/// <remarks>
 	/// If the directory already exists, this function does nothing, and returns false.
 	/// Else, at first it creates missing parent/ancestor directories, then creates the specified directory.
-	/// To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if templateDirectory is not null).
+	/// To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if <i>templateDirectory</i> is not null).
 	/// </remarks>
 	public static bool createDirectory(string path, string templateDirectory = null) {
 		return _CreateDirectory(path, templateDirectory: templateDirectory);
@@ -1289,11 +1289,11 @@ public static partial class filesystem {
 	/// </param>
 	/// <param name="writer">
 	/// Callback function (lambda etc) that creates/writes/closes a temporary file. Its parameter is the full path of the temporary file, which normally does not exist.
-	/// May be called multiple times, because this function retries if the file is locked or if the directory does not exist (if writer throws <b>DirectoryNotFoundException</b> exception).
+	/// May be called multiple times, because this function retries if the file is locked or if the directory does not exist (if <i>writer</i> throws <b>DirectoryNotFoundException</b> exception).
 	/// </param>
-	/// <param name="backup">Create backup file named <i>file</i> + "~backup".</param>
+	/// <param name="backup">Create backup file named <i>file</i> + <c>"~backup"</c>.</param>
 	/// <param name="tempDirectory">
-	/// Directory for backup file and temporary file. If null or "" - <i>file</i>'s directory. Can contain environment variales etc.
+	/// Directory for backup file and temporary file. If null or <c>""</c> - <i>file</i>'s directory. Can contain environment variables etc.
 	/// Must be in the same drive as <i>file</i>. If the directory does not exist, this function creates it.</param>
 	/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Invalid <i>file</i> (eg not full path) or <i>lockedWaitMS</i> (less than -1).</exception>

@@ -7,16 +7,16 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// <i>image</i> argument of "add item" functions can be:
-/// - icon name, like "*Pack.Icon color" (you can get it from the Icons dialog). See <see cref="ImageUtil.LoadWpfImageElement"/>.
-/// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like ".txt", etc.
-/// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
-/// - string with prefix "image:" - Base64 encoded image file. Can be created with the "Find image..." dialog.
+/// - icon name, like <c>"*Pack.Icon color"</c> (you can get it from the Icons dialog). See <see cref="ImageUtil.LoadWpfImageElement"/>.
+/// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like <c>".txt"</c>, etc.
+/// - file path with prefix <c>"imagefile:"</c> or resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - the "show" function loads .png or .xaml image file or resource.
+/// - string with prefix <c>"image:"</c> - Base64 encoded image file. Can be created with the "Find image..." dialog.
 /// - <see cref="FolderPath"/> - same as folder path string.
 /// - <see cref="Image"/> - image.
 /// - <see cref="icon"/> - icon. The "add item" function disposes it.
 /// - <see cref="StockIcon"/> - the "show" function calls <see cref="icon.stock"/>.
 /// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="icon.of"/>. Else no image.
-/// - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
+/// - string <c>""</c> - no image, even if <b>ExtractIconPathFromCode</b> true.
 /// 
 /// Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
 /// 
@@ -343,7 +343,7 @@ public abstract class MTItem {
 }
 
 /// <summary>
-/// Used for menu/toolbar function parameters to specify an image in different ways (file path, Image object, etc).
+/// Used for menu/toolbar function parameters to specify an image in different ways (file path, <b>Image</b> object, etc).
 /// </summary>
 /// <remarks>
 /// Has implicit conversions from string, <see cref="Image"/>, <see cref="icon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.

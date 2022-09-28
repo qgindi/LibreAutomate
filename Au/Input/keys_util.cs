@@ -1,7 +1,6 @@
-﻿namespace Au;
+namespace Au;
 
-public partial class keys
-{
+public partial class keys {
 	/// <summary>
 	/// Converts part of string to <see cref="KKey"/>.
 	/// The substring should contain single key name, eg "Esc", "A", "=".
@@ -216,8 +215,7 @@ public partial class keys
 	/// <summary>
 	/// Internal static functions.
 	/// </summary>
-	internal static class Internal_
-	{
+	internal static class Internal_ {
 		/// <summary>
 		/// Calls <see cref="wait.doEvents(int)"/>.
 		/// </summary>
@@ -357,10 +355,9 @@ public partial class keys
 		/// Caller gets optk and wFocus with GetOptionsAndWndFocused_ (it may want to know some options too).
 		/// Caller calls Press, waits until the target app gets clipboard data, then calls Release.
 		/// </summary>
-		internal unsafe struct SendCopyPaste
-		{
+		internal unsafe struct SendCopyPaste {
+			KHotkey _hk;
 			ushort _scan;
-			KKey _vk;
 			OKey _opt;
 			List<KKey> _andKeys;
 
@@ -368,14 +365,17 @@ public partial class keys
 			/// Presses Ctrl+key. Does not release.
 			/// If andKeys used, Release will press/relase them.
 			/// </summary>
-			public void Press(KKey key, OKey optk, wnd wFocus, List<KKey> andKeys = null) {
-				_scan = VkToSc(_vk = key, Api.GetKeyboardLayout(wFocus.ThreadId));
-				_andKeys = andKeys;
+			public void Press(KHotkey hk, OKey optk, wnd wFocus, List<KKey> andKeys = null) {
+				_hk = hk;
+				_scan = VkToSc(_hk.Key, Api.GetKeyboardLayout(wFocus.ThreadId));
 				_opt = optk;
+				_andKeys = andKeys;
 
-				SendCtrl(true);
+				if (_hk.Mod.Has(KMod.Ctrl)) SendCtrl(true);
+				if (_hk.Mod.Has(KMod.Alt)) SendAlt(true);
+				if (_hk.Mod.Has(KMod.Shift)) SendShift(true);
 				Internal_.Sleep(optk.KeySpeedClipboard); //need 1 ms for IE address bar, 100 ms for BlueStacks
-				SendKeyEventRaw(_vk, _scan, 0);
+				SendKeyEventRaw(_hk.Key, _scan, 0);
 			}
 
 			/// <summary>
@@ -383,11 +383,13 @@ public partial class keys
 			/// Does nothing if already released.
 			/// </summary>
 			public void Release() {
-				if (_vk == 0) return;
-				var vk = _vk; _vk = 0;
+				if (_hk.Key == 0) return;
+				var vk = _hk.Key; _hk.Key = 0;
 
 				SendKeyEventRaw(vk, _scan, Api.KEYEVENTF_KEYUP);
-				SendCtrl(false);
+				if (_hk.Mod.Has(KMod.Shift)) SendShift(false);
+				if (_hk.Mod.Has(KMod.Alt)) SendAlt(false);
+				if (_hk.Mod.Has(KMod.Ctrl)) SendCtrl(false);
 				if (_andKeys != null) AndSendKeys(_andKeys, _opt);
 			}
 
@@ -436,7 +438,7 @@ public partial class keys
 	/// - optk - <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 	/// - wFocus - the focused or active window.
 	/// </summary>
-	/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(wnd) if Hook is null.</param>
+	/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be <c>default(wnd)</c> if Hook is null.</param>
 	/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 	/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
 	internal (OKey optk, wnd wFocus) GetOptionsAndWndFocused_(bool getWndAlways, bool requireFocus = false) {
@@ -464,11 +466,9 @@ public partial class keys
 		if (_sending) throw new InvalidOperationException();
 	}
 
-	internal static class KeyTypes_
-	{
+	internal static class KeyTypes_ {
 		[Flags]
-		enum _KT : byte
-		{
+		enum _KT : byte {
 			Mod = 1,
 			Extended = 2,
 			Mouse = 4,
@@ -530,8 +530,7 @@ public partial class keys
 		}
 	}
 
-	struct _INPUTKEY2
-	{
+	struct _INPUTKEY2 {
 		public Api.INPUTK k0, k1;
 
 		public _INPUTKEY2(KKey vk, ushort sc, uint flags = 0) {

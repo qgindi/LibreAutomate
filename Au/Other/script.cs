@@ -3,17 +3,17 @@
 namespace Au;
 
 /// <summary>
-/// Contains static functions to work with script tasks: run, get properties.
+/// Script task functions. Run, get properties, set options, etc.
 /// A script task is a running script, except if role editorExtension. Each script task is a separate process.
 /// </summary>
 /// <seealso cref="process"/>
 public static class script {
 	/// <summary>
-	/// Gets the script name, like "Script123".
+	/// Gets the script name, like <c>"Script123"</c>.
 	/// </summary>
 	/// <remarks>
 	/// If role miniProgram (default), returns the script file name without extension.
-	/// Else returns <see cref="AppDomain.FriendlyName"/>, like "MainAssemblyName".
+	/// Else returns <see cref="AppDomain.FriendlyName"/>, like <c>"MainAssemblyName"</c>.
 	/// </remarks>
 	public static string name => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is the entry assembly name)
 	static string s_name;
@@ -69,8 +69,8 @@ public static class script {
 	/// <summary>
 	/// Starts executing a script. Does not wait.
 	/// </summary>
-	/// <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
-	/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
+	/// <param name="script">Script name like <c>"Script5.cs"</c>, or path like <c>@"\Folder\Script5.cs"</c>.</param>
+	/// <param name="args">Command line arguments. In the script it will be variable <i>args</i>. Should not contain <c>'\0'</c> characters.</param>
 	/// <returns>
 	/// Native process id of the task process.
 	/// Returns 0 if role editorExtension; then waits until the task ends.
@@ -268,21 +268,21 @@ public static class script {
 	};
 
 	/// <summary>
-	/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that started this task using command line like "Au.Editor.exe *Script5.cs".
+	/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c>.
 	/// </summary>
-	/// <returns>false if this task was not started in such a way. Or if failed to write, except when <i>s</i> is null/"".</returns>
+	/// <returns>false if this task was not started in such a way. Or if failed to write, except when <i>s</i> is null/<c>""</c>.</returns>
 	/// <param name="s">A string. This function does not append newline characters.</param>
 	/// <remarks>
 	/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
 	/// <see cref="runWait(out string, string, string[])"/> gets all strings joined when the task ends.
-	/// The program that started this task using command line like "Au.Editor.exe *Script5.cs" can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a .bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a .bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
 	/// </remarks>
 #if true
 	public static unsafe bool writeResult(string s) {
 		if (s_wrPipeName == null) return false;
 		if (s.NE()) return true;
 		if (Api.WaitNamedPipe(s_wrPipeName, 3000)) { //15 mcs
-			using var pipe = Api.CreateFile(s_wrPipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0); //7 mcs
+			using var pipe = Api.CreateFile(s_wrPipeName, Api.GENERIC_WRITE, 0, Api.OPEN_EXISTING, 0); //7 mcs
 			if (!pipe.Is0) {
 				fixed (char* p = s) if (Api.WriteFile(pipe, p, s.Length * 2, out _)) return true; //17 mcs
 			}
@@ -328,7 +328,7 @@ public static class script {
 	/// <remarks>
 	/// Calls <see cref="Environment.Exit"/>.
 	/// 
-	/// It executes process exit event handlers. Does not execute <b>finally</b> code blocks. Does not execute GC.
+	/// It executes process exit event handlers. Does not execute <c>finally</c> code blocks. Does not execute GC.
 	/// </remarks>
 	public static void end() {
 		Environment.Exit(0);
@@ -343,7 +343,7 @@ public static class script {
 	/// <remarks>
 	/// Can end script processes started from the editor or not.
 	/// 
-	/// The process executes process exit event handlers. Does not execute <b>finally</b> code blocks. Does not execute GC.
+	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks. Does not execute GC.
 	/// 
 	/// Returns null if <i>processId</i> is invalid (probably because the script is already ended). Returns false if <i>processId</i> is valid but not of a script process (probably the script ended long time ago and the id is reused for another process).
 	/// </remarks>
@@ -374,13 +374,13 @@ public static class script {
 	/// <summary>
 	/// Ends all task processes of a script.
 	/// </summary>
-	/// <param name="name">Script file name (like "Script43.cs") or path in workspace (like @"\Folder\Script43.cs"), or full file path.</param>
+	/// <param name="name">Script file name (like <c>"Script43.cs"</c>) or path in workspace (like <c>@"\Folder\Script43.cs"</c>), or full file path.</param>
 	/// <returns>true if ended, false if failed (probably file not found), null if wasn't running.</returns>
 	/// <exception cref="AuException">Editor process not found.</exception>
 	/// <remarks>
 	/// Can end only script processes started from the editor.
 	/// 
-	/// The process executes process exit event handlers. Does not execute <b>finally</b> code blocks. Does not execute GC.
+	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks. Does not execute GC.
 	/// </remarks>
 	public static bool? end(string name) {
 		var w = ScriptEditor.WndMsg_; if (w.Is0) throw new AuException("Editor process not found.");
@@ -476,7 +476,6 @@ public static class script {
 
 	/// <summary>
 	/// Adds various features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
-	/// Tip: in Options -> Templates you can set default code for new scripts.
 	/// </summary>
 	/// <param name="trayIcon">Add tray icon. See <see cref="trayIcon"/>.</param>
 	/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
@@ -485,12 +484,14 @@ public static class script {
 	/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 	/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
 	/// </param>
-	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/>(usePrint: true).</param>
+	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> true.</param>
 	/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
 	/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via tray icon.</param>
 	/// <exception cref="InvalidOperationException">Already called.</exception>
 	/// <remarks>
-	/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread, unhandled exception action).
+	/// Tip: in Options -> Templates you can set default code for new scripts.
+	/// 
+	/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, <b>STAThread</b>, unhandled exception action).
 	/// 
 	/// Does nothing if role editorExtension or if running in WPF preview mode.
 	/// </remarks>
@@ -547,11 +548,11 @@ public static class script {
 	}
 
 	/// <summary>
-	/// Ensures that multiple script tasks that call this function don't run simultaneously. Like C# 'lock' keyword for threads.
+	/// Ensures that multiple script tasks that call this function don't run simultaneously. Like C# <c>lock</c> keyword for threads.
 	/// </summary>
 	/// <param name="mutex">Mutex name. Only tasks that use same mutex cannot run simultaneously.</param>
 	/// <param name="wait">If a task is running (other or same), wait max this milliseconds. If 0 (default), does not wait. If -1, waits without a timeout.</param>
-	/// <param name="silent">Don't print "cannot run".</param>
+	/// <param name="silent">Don't print <c>"cannot run"</c>.</param>
 	/// <exception cref="InvalidOperationException">Already called.</exception>
 	/// <remarks>
 	/// If cannot run because a task is running (other or same), calls <c>Environment.Exit(3);</c>.

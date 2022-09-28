@@ -3,7 +3,7 @@
 namespace Au;
 
 /// <summary>
-/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
+/// Keyboard functions. Send virtual keystrokes and text to the active window, get key state, wait for key.
 /// </summary>
 /// <remarks>
 /// The main function is <see cref="send"/>. Most documentation is there. See also <see cref="sendt"/>. These functions use <see cref="opt.key"/>. Alternatively can be used <b>keys</b> variables, see <see cref="keys(OKey)"/>.
@@ -138,13 +138,13 @@ public partial class keys
 	bool? _antiCapsLock;
 
 	/// <summary>
-	/// Adds keystrokes to the internal collection. They will be sent by <see cref="SendIt"/>.
+	/// Adds keystrokes to the internal collection. They will be sent by <see cref="Send"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="keys_">
-	/// Key names and operators, like with <see cref="send"/>. Can be null or "".
+	/// Key names and operators, like with <see cref="send"/>. Can be null or <c>""</c>.
 	/// Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5"</c>.
-	/// If has prefix "!" or "%", calls <see cref="AddText(string, string)"/>; use "!" for text, "%" for HTML.
+	/// If has prefix <c>"!"</c> or <c>"%"</c>, calls <see cref="AddText(string, string)"/>; use <c>"!"</c> for text, <c>"%"</c> for HTML.
 	/// </param>
 	/// <exception cref="ArgumentException">Error in <i>keys_</i> string, for example an unknown key name.</exception>
 	public keys AddKeys([ParamString(PSFormat.Keys)] string keys_) {
@@ -251,7 +251,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="SendIt"/>.
+	/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="Send"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
@@ -269,7 +269,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="SendIt"/>.
+	/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="Send"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
@@ -341,7 +341,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds text or HTML. It will be sent by <see cref="SendIt"/>.
+	/// Adds text or HTML. It will be sent by <see cref="Send"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <remarks>
@@ -382,7 +382,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds clipboard data, for example several formats. It will be pasted by <see cref="SendIt"/>.
+	/// Adds clipboard data, for example several formats. It will be pasted by <see cref="Send"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="cd">Clipboard data.</param>
@@ -421,7 +421,7 @@ public partial class keys
 	/// <returns>This.</returns>
 	/// <param name="a"></param>
 	/// <remarks>
-	/// The callback function will be called by <see cref="SendIt"/> and can do anything except sending keys and copy/paste.
+	/// The callback function will be called by <see cref="Send"/> and can do anything except sending keys and copy/paste.
 	/// </remarks>
 	public keys AddAction(Action a) {
 		Not_.Null(a);
@@ -430,7 +430,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds the repeat operator. Then <see cref="SendIt"/> will send the last added key or character <i>count</i> times.
+	/// Adds the repeat operator. Then <see cref="Send"/> will send the last added key or character <i>count</i> times.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="count">The repeat count.</param>
@@ -445,7 +445,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds a short pause. Then <see cref="SendIt"/> will sleep (wait).
+	/// Adds a short pause. Then <see cref="Send"/> will sleep (wait).
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="timeMS">Time to sleep, milliseconds.</param>
@@ -458,7 +458,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="SendIt"/>.
+	/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <inheritdoc cref="keys.send" path="/param"/>
@@ -501,7 +501,7 @@ public partial class keys
 	/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
 	/// <exception cref="ArgumentException"><i>canSendAgain</i> is true and <i>keys_</i> end with + or (.</exception>
 	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
-	public void SendIt(bool canSendAgain = false) {
+	public void Send(bool canSendAgain = false) {
 		_ThrowIfSending();
 		if (_a.Count == 0) return;
 		if (canSendAgain) {

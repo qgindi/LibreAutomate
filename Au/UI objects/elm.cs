@@ -8,7 +8,7 @@ namespace Au
 	/// 
 	/// An <b>elm</b> variable contains a COM interface pointer (<msdn>IAccessible</msdn> or other) and uses methods of that interface or/and related API.
 	/// 
-	/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return "" (string properties), 0, false, null or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means an error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+	/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return <c>""</c> (string properties), 0, false, null or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means an error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 	/// 
 	/// You can dispose <b>elm</b> variables to release the COM object, but it is not necessary (GC will do it later).
 	/// 
@@ -31,8 +31,8 @@ namespace Au
 	///   <ol>
 	///    <li>Web page UI elements initially are disabled (missing). Workarounds:
 	///     <ul>
-	///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix "web:" or "chrome:". Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabing may fail with future Chrome versions.</li>
-	///      <li>Start Chrome with command line --force-renderer-accessibility.</li>
+	///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabling may fail with future Chrome versions.</li>
+	///      <li>Start Chrome with command line <c>--force-renderer-accessibility</c>.</li>
 	///     </ul>
 	///    </li>
 	///    <li>Some new web browser versions add new features or bugs that break something.</li>
@@ -45,7 +45,7 @@ namespace Au
 	///   <ol>
 	///    <li>By default, the <b>Find</b> function is about 50 times slower than it could be, and uses much CPU when waiting. And HTML attributes may be unavailable. See <see cref="EFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable MOZ_FORCE_DISABLE_E10S=1 and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
 	///    <li>When Firefox starts, its web page UI elements are unavailable. It creates them only when somebody asks (eg function <b>Find</b>), but does it lazily, and <b>Find</b> at first fails. Workaround: use parameter <i>waitS</i>.</li>
-	///    <li>Ocassionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>waitS</i>. With other web browsers also it's better to use <i>waitS</i>.</li>
+	///    <li>Occasionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>waitS</i>. With other web browsers also it's better to use <i>waitS</i>.</li>
 	///    <li>Some new web browser versions add new features or bugs that break something.</li>
 	///   </ol>
 	///  </td>
@@ -115,7 +115,7 @@ namespace Au
 	/// </div>
 	/// </remarks>
 	/// <example>
-	/// Click link "Example" in Chrome.
+	/// Click link <c>"Example"</c> in Chrome.
 	/// <code><![CDATA[
 	/// var w = wnd.find(0, "* Chrome");
 	/// var e = w.Elm["web:LINK", "Example"].Find(5);
@@ -288,11 +288,11 @@ namespace Au
 		/// Gets UI element of window or control. Or some its standard part - client area, titlebar etc.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="objid">Window part id. Default EObjid.WINDOW. Also can be a custom id supported by that window, cast int to EObjid.</param>
+		/// <param name="objid">Window part id. Default <b>EObjid.WINDOW</b>. Also can be a custom id supported by that window, cast <b>int</b> to <b>EObjid</b>.</param>
 		/// <param name="flags">Flags.</param>
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-		/// <exception cref="ArgumentException"><i>objid</i> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
+		/// <exception cref="ArgumentException"><i>objid</i> is <b>QUERYCLASSNAMEIDX</b> or <b>NATIVEOM</b>.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
 		/// </remarks>
@@ -402,15 +402,15 @@ namespace Au
 		/// <summary>
 		/// Gets the UI element that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="WinEventHook"/>.
 		/// </summary>
-		/// <returns>null if failed. Suports <see cref="lastError"/>.</returns>
+		/// <returns>null if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="w"></param>
 		/// <param name="idObject"></param>
 		/// <param name="idChild"></param>
 		/// <remarks>
 		/// The parameters are of the callback function.
 		/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
-		/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
-		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in the callback function kills this process.
+		/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <b>OBJECT_DESTROY</b>, <b>OBJECT_HIDE</b>, <b>SYSTEM_*END</b>.
+		/// Returns null if failed. Always check the return value, to avoid <b>NullReferenceException</b>. An exception in the callback function kills this process.
 		/// </remarks>
 		public static elm fromEvent(wnd w, EObjid idObject, int idChild) {
 			int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);

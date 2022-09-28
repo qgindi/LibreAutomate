@@ -44,7 +44,7 @@ public partial class toolbar : MTBase {
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="m_">[](xref:caller_info)</param>
-	/// <exception cref="ArgumentException">Invalid name.</exception>
+	/// <exception cref="ArgumentException">Invalid <i>name</i>.</exception>
 	/// <remarks>
 	/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="getSettingsFilePath"/>. If fails, writes warning to the output and uses default settings.
 	/// 
@@ -140,7 +140,7 @@ public partial class toolbar : MTBase {
 	/// Adds button.
 	/// Same as <see cref="this[string, MTImage, int]"/>.
 	/// </summary>
-	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
+	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="click">Action called when the button clicked.</param>
 	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -239,7 +239,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Adds new horizontal separator, optionally with text.
 	/// </summary>
-	/// <param name="text">Text. Or "Text|Tooltip", or "|Tooltip", or "Text|". Separator can be "|" or "\0 " (then "|" isn't a separator).</param>
+	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator).</param>
 	public TBItem Group(string text = null) {
 		var item = new TBItem(TBItemType.Group);
 		_Add(item, text, null, default, 0);
@@ -318,8 +318,8 @@ public partial class toolbar : MTBase {
 
 	/// <summary>
 	/// Shows the toolbar.
-	/// If ta is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
-	/// Else if ta != null, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(toolbar)"/>.
+	/// If <i>ta</i> is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
+	/// Else if <i>ta</i> != null, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(toolbar)"/>.
 	/// </summary>
 	public void Show(TriggerArgs ta) {
 		if (ta is WindowTriggerArgs wta) {
@@ -398,7 +398,7 @@ public partial class toolbar : MTBase {
 	/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <see cref="Close"/>.
 	/// </summary>
 	/// <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
-	/// <param name="reason">A user-defined reason to hide/unhide. Can be <see cref="TBHide.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
+	/// <param name="reason">A user-defined reason to hide/unhide. Can be <see cref="TBHide.User"/> or a bigger value, eg <c>(TBHide)0x20000</c>, <c>(TBHide)0x40000</c>.</param>
 	/// <exception cref="InvalidOperationException">
 	/// - The toolbar was never shown (<see cref="Show"/> not called).
 	/// - It is a satellite toolbar.
@@ -447,7 +447,7 @@ public partial class toolbar : MTBase {
 
 	/// <summary>
 	/// Returns the owner top-level window.
-	/// Returns default(wnd) if the toolbar is not owned. See <see cref="IsOwned"/>.
+	/// Returns <c>default(wnd)</c> if the toolbar is not owned. See <see cref="IsOwned"/>.
 	/// </summary>
 	public wnd OwnerWindow => _ow?.w ?? default;
 

@@ -4,14 +4,14 @@
 
 namespace Au {
 	/// <summary>
-	/// Contains static functions to work with processes (find, enumerate, get basic info, etc), current process (get info), current thread (get info).
+	/// Process functions. Find, enumerate, get basic info, terminate, triggers, etc. Also includes properties and events of current process and thread.
 	/// </summary>
 	/// <seealso cref="run"/>
 	/// <seealso cref="script"/>
 	/// <seealso cref="Process"/>
 	public static unsafe class process {
 		/// <summary>
-		/// Gets process executable file name (like "notepad.exe") or full path.
+		/// Gets process executable file name (like <c>"notepad.exe"</c>) or full path.
 		/// </summary>
 		/// <returns>null if failed.</returns>
 		/// <param name="processId">Process id.</param>
@@ -19,7 +19,7 @@ namespace Au {
 		/// Get full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
-		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <i>fullPath</i> is true.</param>
+		/// <param name="noSlowAPI">When the fast API <msdn>QueryFullProcessImageName</msdn> fails, don't try to use another much slower API <msdn>WTSEnumerateProcesses</msdn>. Not used if <i>fullPath</i> is true.</param>
 		/// <remarks>
 		/// This function is much slower than getting window name or class name.
 		/// </remarks>
@@ -240,7 +240,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Array containing zero or more elements.</returns>
 		/// <param name="processName">
-		/// Process executable file name, like "notepad.exe".
+		/// Process executable file name, like <c>"notepad.exe"</c>.
 		/// String format: [](xref:wildcard_expression).
 		/// </param>
 		/// <param name="fullPath">
@@ -249,7 +249,7 @@ namespace Au {
 		/// </param>
 		/// <param name="ofThisSession">Get processes only of this user session.</param>
 		/// <exception cref="ArgumentException">
-		/// - <i>processName</i> is "" or null.
+		/// - <i>processName</i> is <c>""</c> or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		public static int[] getProcessIds([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
@@ -406,8 +406,8 @@ namespace Au {
 		/// <param name="processId">Process id.</param>
 		/// <param name="removeProgram">Remove program path. Return only arguments, or empty string if there is no arguments.</param>
 		/// <remarks>
-		/// The string starts with program file path or name, often enclosed in "", and may be followed by arguments. Some processes may modify it; then this function gets the modified string.
-		/// Fails if the specified process is admin and this processs isn't. May fail with some system processes. Fails if this is a 32-bit process.
+		/// The string starts with program file path or name, often enclosed in <c>""</c>, and may be followed by arguments. Some processes may modify it; then this function gets the modified string.
+		/// Fails if the specified process is admin and this process isn't. May fail with some system processes. Fails if this is a 32-bit process.
 		/// </remarks>
 		public static unsafe string getCommandLine(int processId, bool removeProgram = false) {
 			if (osVersion.is32BitProcess) return null; //can't get PEB address of 64-bit processes. Never mind 32-bit OS.
@@ -465,13 +465,13 @@ namespace Au {
 		/// </summary>
 		/// <returns>The number of successfully terminated processes.</returns>
 		/// <param name="processName">
-		/// Process executable file name, like "notepad.exe".
+		/// Process executable file name, like <c>"notepad.exe"</c>.
 		/// String format: [](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
 		/// <param name="exitCode">Process exit code.</param>
 		/// <exception cref="ArgumentException">
-		/// - <i>processName</i> is "" or null.
+		/// - <i>processName</i> is <c>""</c> or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		public static int terminate(string processName, bool allSessions = false, int exitCode = 0) {
@@ -507,12 +507,12 @@ namespace Au {
 		/// <returns>The number of successfully suspended/resumed processes.</returns>
 		/// <param name="suspend">true suspend, false resume.</param>
 		/// <param name="processName">
-		/// Process executable file name, like "notepad.exe".
+		/// Process executable file name, like <c>"notepad.exe"</c>.
 		/// String format: [](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
 		/// <exception cref="ArgumentException">
-		/// - <i>processName</i> is "" or null.
+		/// - <i>processName</i> is <c>""</c> or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
@@ -559,7 +559,7 @@ namespace Au {
 		/// </returns>
 		/// <param name="started">Trigger events: true - started, false - ended, null (default) - both.</param>
 		/// <param name="processName">
-		/// Process executable file name, like "notepad.exe".
+		/// Process executable file name, like <c>"notepad.exe"</c>.
 		/// String format: [](xref:wildcard_expression).
 		/// null matches all.
 		/// </param>
@@ -674,7 +674,7 @@ namespace Au {
 		static string s_exePath, s_exeName;
 
 		/// <summary>
-		/// Gets file name of the program file of this process, like "name.exe".
+		/// Gets file name of the program file of this process, like <c>"name.exe"</c>.
 		/// </summary>
 		public static string thisExeName => s_exeName ??= pathname.getName(thisExePath);
 
@@ -689,7 +689,7 @@ namespace Au {
 		/// <remarks>
 		/// If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
 		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
-		/// Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
+		/// Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASCII <c>'-'</c> which is specified in Control Panel.
 		/// The default compiler sets this property = true; as well as <see cref="script.setup"/>.
 		/// </remarks>
 		public static bool thisProcessCultureIsInvariant {
@@ -786,7 +786,7 @@ namespace Au {
 		/// Gets native thread id of this thread (API <msdn>GetCurrentThreadId</msdn>).
 		/// </summary>
 		/// <remarks>
-		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
+		/// It is not the same as <see cref="Environment.CurrentManagedThreadId"/>.
 		/// </remarks>
 		/// <seealso cref="wnd.ThreadId"/>
 		public static int thisThreadId => Api.GetCurrentThreadId();
@@ -839,7 +839,7 @@ namespace Au {
 
 namespace Au.Types {
 	/// <summary>
-	/// Contains process name (like "notepad.exe"), id and user session id.
+	/// Contains process name (like <c>"notepad.exe"</c>), id and user session id.
 	/// </summary>
 	public record struct ProcessInfo(string Name, int Id, int SessionId);
 	//use record to auto-implement ==, eg for code like var a=process.allProcesses(); 5.s(); print.it(process.allProcesses().Except(a));

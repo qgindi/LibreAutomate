@@ -1,8 +1,11 @@
-﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 //FUTURE: GetCpuUsage.
 
 namespace Au {
+	/// <summary>
+	/// Computer shutdown etc.
+	/// </summary>
 	public static class computer {
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup, not including the time when the computer sleeps or hibernates.
@@ -74,7 +77,7 @@ namespace Au {
 		/// <remarks>
 		/// To sleep or hibernate uses API <msdn>SetSuspendState</msdn>. To turn off display uses <msdn>WM_SYSCOMMAND</msdn>.
 		/// 
-		/// The <b>SetSuspendState</b> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation istead of sleep. About power states: <msdn>System+Power+States</msdn>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
+		/// The <b>SetSuspendState</b> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation instead of sleep. About power states: <msdn>System Power States</msdn>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
 		/// </remarks>
 		public static bool suspend(CSuspend how) {
 			if (how == CSuspend.SleepOrDisplay) how = 0 != Api.IsPwrSuspendAllowed() ? CSuspend.Sleep : CSuspend.Display;

@@ -1591,7 +1591,7 @@ class Delm : KDialogWindow {
 
 		/// <summary>
 		/// Enables or disables Java Access Bridge for current user.
-		/// Returns: ok = false if failed or cancelled. results = null if cancelled.
+		/// Returns: ok = false if failed or canceled. results = null if canceled.
 		/// </summary>
 		public static (bool ok, string results) EnableDisableJab(bool enable/*, bool allUsers*/) {
 			if (!GetJavaPath(out var dir)) return (false, "Cannot find Java " + (osVersion.is32BitProcess ? "32" : "64") + "-bit. Make sure it is installed.");

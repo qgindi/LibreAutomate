@@ -7,8 +7,8 @@ namespace Au.More
 	public static class Math2
 	{
 		/// <summary>
-		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
-		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+		/// Creates <b>uint</b> by placing <c>(ushort)loWord</c> in bits 1-16 and <c>(ushort)hiWord</c> in bits 17-32. Returns it as <b>nint</b>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
+		/// Like C macro <b>MAKELONG</b>, <b>MAKEWPARAM</b>, <b>MAKELPARAM</b>, <b>MAKELRESULT</b>.
 		/// </summary>
 		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
 		//Returns nint, because usually used as sendmessage etc parameter. If uint, would need to explicitly cast to nint. If somebody casts to int, the result may be incorrect, ie negative.
@@ -21,14 +21,14 @@ namespace Au.More
 		public static nint MakeLparam(uint loWord, uint hiWord) => (nint)(((hiWord & 0xffff) << 16) | (loWord & 0xffff));
 
 		/// <summary>
-		/// Creates uint by placing (ushort)p.x in bits 1-16 and (ushort)p.y in bits 17-32. Returns it as nint, ready to use with Windows message API as lParam or wParam or return value.
-		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
+		/// Creates <b>uint</b> by placing <c>(ushort)p.x</c> in bits 1-16 and <c>(ushort)p.y</c> in bits 17-32. Returns it as <b>nint</b>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
+		/// Like C macro <b>MAKELONG</b>, <b>MAKEWPARAM</b>, <b>MAKELPARAM</b>, <b>MAKELRESULT</b>.
 		/// </summary>
 		public static nint MakeLparam(POINT p) => MakeLparam((uint)p.x, (uint)p.y);
 
 		/// <summary>
-		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
-		/// Like C macro MAKEWORD.
+		/// Creates <b>ushort</b> by placing <c>(byte)loByte</c> in bits 1-8 and <c>(byte)hiByte</c> in bits 9-16.
+		/// Like C macro <b>MAKEWORD</b>.
 		/// </summary>
 		public static ushort MakeWord(int loByte, int hiByte) => MakeWord((uint)loByte, (uint)hiByte);
 
@@ -36,44 +36,44 @@ namespace Au.More
 		public static ushort MakeWord(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
 
 		/// <summary>
-		/// Gets bits 1-16 as ushort.
-		/// Like C macro LOWORD.
+		/// Gets bits 1-16 as <b>ushort</b>.
+		/// Like C macro <b>LOWORD</b>.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as uint. The parameter type nint allows to avoid explicit cast from int and IntPtr.
+		/// The parameter is interpreted as <b>uint</b>. The parameter type <b>nint</b> allows to avoid explicit cast from int and <b>IntPtr</b>.
 		/// </remarks>
 		public static ushort LoWord(nint x) => (ushort)((uint)x & 0xFFFF);
 
 		/// <summary>
-		/// Gets bits 17-32 as ushort.
-		/// Like C macro HIWORD.
+		/// Gets bits 17-32 as <b>ushort</b>.
+		/// Like C macro <b>HIWORD</b>.
 		/// </summary>
 		/// <inheritdoc cref="LoWord(nint)"/>
 		public static ushort HiWord(nint x) => (ushort)((uint)x >> 16);
 
 		/// <summary>
-		/// Gets bits 1-16 as short.
-		/// Like C macro GET_X_LPARAM.
+		/// Gets bits 1-16 as <b>short</b>.
+		/// Like C macro <b>GET_X_LPARAM</b>.
 		/// </summary>
 		/// <inheritdoc cref="LoWord(nint)"/>
 		public static short LoShort(nint x) => (short)((uint)x & 0xFFFF);
 
 		/// <summary>
-		/// Gets bits 17-32 as short.
-		/// Like C macro GET_Y_LPARAM.
+		/// Gets bits 17-32 as <b>short</b>.
+		/// Like C macro <b>GET_Y_LPARAM</b>.
 		/// </summary>
 		/// <inheritdoc cref="LoWord(nint)"/>
 		public static short HiShort(nint x) => (short)((uint)x >> 16);
 
 		/// <summary>
-		/// Gets bits 1-8 as byte.
-		/// Like C macro LOBYTE.
+		/// Gets bits 1-8 as <b>byte</b>.
+		/// Like C macro <b>LOBYTE</b>.
 		/// </summary>
 		public static byte LoByte(ushort x) => (byte)((uint)x & 0xFF);
 
 		/// <summary>
-		/// Gets bits 9-16 as byte.
-		/// Like C macro HIBYTE.
+		/// Gets bits 9-16 as <b>byte</b>.
+		/// Like C macro <b>HIBYTE</b>.
 		/// </summary>
 		public static byte HiByte(ushort x) => (byte)((uint)x >> 8);
 
@@ -132,23 +132,12 @@ namespace Au.More
 			=> whole * percent / 100.0;
 
 		/// <summary>
-		/// If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
+		/// If <i>value</i> is divisible by <i>alignment</i>, returns <i>value</i>. Else returns the nearest bigger number that is divisible by <i>alignment</i>.
 		/// </summary>
 		/// <param name="value">An integer value.</param>
 		/// <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
 		/// <remarks>
-		/// For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
-		/// </remarks>
-		public static uint AlignUp(uint value, uint alignment) => (value + (alignment - 1)) & ~(alignment - 1);
-		//shorter: (value + --alignment) & ~alignment. But possibly less optimized. Now (alignment - 1) and ~(alignment - 1) usually are constants.
-
-		/// <summary>
-		/// If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
-		/// </summary>
-		/// <param name="value">An integer value.</param>
-		/// <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-		/// <remarks>
-		/// For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+		/// For example if <i>alignment</i> is 4, returns 4 if <i>value</i> is 1-4, returns 8 if <i>value</i> is 5-8, returns 12 if <i>value</i> is 9-10, and so on.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -157,8 +146,12 @@ namespace Au.More
 		/// </example>
 		public static int AlignUp(int value, uint alignment) => (int)AlignUp((uint)value, alignment);
 
+		/// <inheritdoc cref="AlignUp(int, uint)"/>
+		public static uint AlignUp(uint value, uint alignment) => (value + (alignment - 1)) & ~(alignment - 1);
+		//shorter: (value + --alignment) & ~alignment. But possibly less optimized. Now (alignment - 1) and ~(alignment - 1) usually are constants.
+
 		/// <summary>
-		/// Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
+		/// Swaps values of two variables: <c>T t = a; a = b; b = t;</c>
 		/// </summary>
 		public static void Swap<T>(ref T a, ref T b) {
 			T t = a; a = b; b = t;

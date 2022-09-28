@@ -88,7 +88,7 @@ namespace Au
 		public int ListIndex { get; internal set; }
 
 		/// <summary>
-		/// Can be used in <i>also</i> callback function to skip n matching images. Example: <c>also: o => o.Skip(n)</c>.
+		/// Can be used in <i>also</i> callback function to skip <i>n</i> matching images. Example: <c>also: o => o.Skip(n)</c>.
 		/// </summary>
 		/// <param name="n">How many matching images to skip.</param>
 		public IFAlso Skip(int n) => MatchIndex == n ? IFAlso.OkReturn : (MatchIndex < n ? IFAlso.FindOther : IFAlso.FindOtherOfList);
@@ -164,17 +164,9 @@ namespace Au
 		/// <summary>
 		/// Posts mouse-click messages to the window, using coordinates in the found image.
 		/// </summary>
-		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
-		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b> or <b>Screen</b>.</exception>
-		/// <exception cref="AuException">Failed to get UI element rectangle (when searched in a UI element).</exception>
 		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
-		/// <remarks>
-		/// Does not move the mouse.
-		/// Does not wait until the target application finishes processing the message.
-		/// Works not with all elements.
-		/// </remarks>
+		/// <inheritdoc cref="PostClickD(Coord, Coord)"/>
 		public void PostClick(Coord x = default, Coord y = default, MButton button = MButton.Left) {
 			if (_area.Type is IFArea.AreaType.Bitmap or IFArea.AreaType.Screen) throw new InvalidOperationException();
 
@@ -194,13 +186,21 @@ namespace Au
 		/// <summary>
 		/// Posts mouse-double-click messages to the window, using coordinates in the found image.
 		/// </summary>
-		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
+		/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the found image. Default - center.</param>
+		/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b> or <b>Screen</b>.</exception>
+		/// <exception cref="AuException">Failed to get UI element rectangle (when searched in a UI element).</exception>
+		/// <remarks>
+		/// Does not move the mouse.
+		/// Does not wait until the target application finishes processing the message.
+		/// Works not with all elements.
+		/// </remarks>
 		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
 
 		/// <summary>
 		/// Posts mouse-right-click messages to the window, using coordinates in the found image.
 		/// </summary>
-		/// <inheritdoc cref="PostClick(Coord, Coord, MButton)"/>
+		/// <inheritdoc cref="PostClickD(Coord, Coord)"/>
 		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
 
 		///
@@ -231,7 +231,7 @@ namespace Au
 		/// <br/>Examples:
 		/// <br/>• Skip 2 matching images: <c>also: o => o.Skip(2)</c>
 		/// <br/>• Skip some matching images if some condition is false: <c>also: o => condition ? IFAlso.OkReturn : IFAlso.FindOther</c>
-		/// <br/>• Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return IFAlso.OkFindMore; }</c>.
+		/// <br/>• Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return IFAlso.OkFindMore; }</c>
 		/// <br/>• Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); uiimage.find(w, images, also: o => { found[o.ListIndex] = true; return IFAlso.OkFindMoreOfList; }); if(found[0]) print.it(0); if(found[1]) print.it(1);</c>
 		/// </param>
 		/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
@@ -291,7 +291,7 @@ namespace Au
 		/// <returns>Returns <see cref="uiimage"/> object containing the rectangle of the found image. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument), or the window closed while waiting.</exception>
 		/// <inheritdoc cref="find(IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 		public static uiimage wait(double secondsTimeout, IFArea area, IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null)
 			=> new uiimageFinder(image, flags, diff, also).Wait(secondsTimeout, area);
@@ -386,9 +386,9 @@ namespace Au.Types
 	/// <remarks>
 	/// Has implicit conversions from:
 	/// - string - path of .png or .bmp file. If not full path, uses <see cref="folders.ThisAppImages"/>.
-	/// - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
-	/// - string with prefix <c>"image:"</c> - Base64 encoded .png image.
-	/// <br/>Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in Au.Controls.dll).
+	/// - string that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
+	/// - string with prefix <c>"image:"</c> - Base64 encoded .png image.\
+	///   Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in Au.Controls.dll).
 	/// - <see cref="ColorInt"/>, <b>int</b> or <b>uint</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
 	/// - <see cref="Bitmap"/> - image object.
 	/// - <b>IFImage[]</b> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
@@ -412,7 +412,7 @@ namespace Au.Types
 		//public static implicit operator IFImage(List<IFImage> list) => new(list); //rare, can use ToArray()
 
 		/// <summary>
-		/// Gets the raw value stored in this variable. Can be string, Bitmap, ColorInt, IFImage[], null.
+		/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Bitmap</b>, <b>ColorInt</b>, <b>IFImage[]</b>, null.
 		/// </summary>
 		public object Value => _o;
 	}

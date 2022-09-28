@@ -26,13 +26,13 @@ namespace Au {
 	/// <remarks>
 	/// This class uses WPF (Windows Presentation Foundation). Creates window at run time. No designer. No WPF and XAML knowledge required, unless you want something advanced.
 	/// 
-	/// To start, use snippet wpfSnippet or menu File -> New -> Dialogs.
+	/// To start, use snippet wpfSnippet or menu File -> New -> Dialogs. Also look in Cookbook.
 	/// 
 	/// Most functions return <c>this</c>, to enable method chaining, aka fluent interface, like with <b>StringBuilder</b>. See example.
 	/// 
 	/// A <b>wpfBuilder</b> object can be used to create whole window or some window part, for example a tab page.
 	/// 
-	/// The size/position unit in WPF is about 1/96 inch, regardless of screen DPI. For example, if DPI is 96 (100%), 1 unit = 1 physical pixel; if 150% - 1.5 pixel; if 200% - 2 pixels. WPF windows are DPI-scaled automatically when need. Your program's manifest should contain dpiAware=true/PM and dpiAwareness=PerMonitorV2; it is default for scripts/programs created with the script editor of this library.
+	/// The size/position unit in WPF is about 1/96 inch, regardless of screen DPI. For example, if DPI is 96 (100%), 1 unit = 1 physical pixel; if 150% - 1.5 pixel; if 200% - 2 pixels. WPF windows are DPI-scaled automatically when need. Your program's manifest should contain <c>dpiAware=true/PM</c> and <c>dpiAwareness=PerMonitorV2</c>; it is default for scripts/programs created with the script editor of this library.
 	/// 
 	/// Note: WPF starts slowly and uses much memory. It is normal if to show the first window in process takes 500-1000 ms and the process uses 30 MB of memory, whereas WinForms takes 250 ms / 10 MB and native takes 50 ms / 2 MB. However WinForms becomes slower than WPF if there are more than 100 controls in window. This library uses WPF because it is the most powerful and works well with high DPI screens.
 	/// 
@@ -43,40 +43,14 @@ namespace Au {
 	/// <example>
 	/// Dialog window with several controls for data input.
 	/// <code><![CDATA[
-	/// var b = new wpfBuilder("Example").WinSize(400) //create Window object with Grid control; set window width 400
-	/// 	.R.Add("Text", out TextBox text1).Focus() //add label and text box control in first row
-	/// 	.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three") //in second row add label and combo box control with items
-	/// 	.R.Add(out CheckBox c1, "Check") //in third row add check box control
-	/// 	.R.AddOkCancel() //finally add standard OK and Cancel buttons
-	/// 	.End();
+	/// var b = new wpfBuilder("Example").WinSize(400); //create Window object with Grid control; set window width 400
+	/// b.R.Add("Text", out TextBox text1).Focus(); //add label and text box control in first row
+	/// b.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three"); //in second row add label and combo box control with items
+	/// b.R.Add(out CheckBox c1, "Check"); //in third row add check box control
+	/// b.R.AddOkCancel(); //finally add standard OK and Cancel buttons
+	/// b.End();
 	/// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
 	/// print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
-	/// ]]></code>
-	/// Dialog window with TabControl.
-	/// <code><![CDATA[
-	/// var b = new wpfBuilder("Window").WinSize(400)
-	/// 	.Row(-1).Add(out TabControl tc).Height(300..)
-	/// 	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
-	/// 
-	/// wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
-	/// 	var tp = new TabItem { Header = name };
-	/// 	tc.Items.Add(tp);
-	/// 	return new wpfBuilder(tp, panelType);
-	/// }
-	/// 
-	/// _Page("Page1")
-	/// 	.R.Add("Text", out TextBox _)
-	/// 	.End();
-	/// 
-	/// _Page("Page2")
-	/// 	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-	/// 	.R.Add(out CheckBox _, "Check")
-	/// 	.End();
-	/// 
-	/// //tc.SelectedIndex = 1;
-	/// 
-	/// b.End();
-	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
 	/// </example>
 	public class wpfBuilder {
@@ -270,10 +244,10 @@ namespace Au {
 		/// <param name="widths">
 		/// Column widths.
 		/// An argument can be:
-		/// <br/>• an integer or double value specifies <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
-		/// <br/>• a range specifies <see cref="ColumnDefinition.MinWidth"/> and/or <see cref="ColumnDefinition.MaxWidth"/> and sets width value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
-		/// <br/>• tuple (double value, Range minMax) specifies width and min/max widths. Example: <c>(-2, 50..)</c>.
-		/// <br/>• <see cref="ColumnDefinition"/> can specify these and more properties.
+		/// <br/>• <b>int</b> or <b>double</b> - <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
+		/// <br/>• <b>Range</b> - <see cref="ColumnDefinition.MinWidth"/> and/or <see cref="ColumnDefinition.MaxWidth"/>. Sets width value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
+		/// <br/>• tuple <b>(double value, Range minMax)</b> - width and min/max widths. Example: <c>(-2, 50..)</c>.
+		/// <br/>• <see cref="ColumnDefinition"/>.
 		/// </param>
 		/// <exception cref="InvalidOperationException">Columns() in non-grid panel or after an <b>Add</b> function.</exception>
 		/// <remarks>
@@ -293,10 +267,10 @@ namespace Au {
 		/// </summary>
 		/// <param name="height">
 		/// Row height. Can be:
-		/// <br/>• integer or double value specifies <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
-		/// <br/>• range specifies <see cref="RowDefinition.MinHeight"/> and/or <see cref="RowDefinition.MaxHeight"/> and sets height value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
-		/// <br/>• tuple (double value, Range minMax) specifies height and min/max heights. Example: <c>(-2, 50..200)</c>.
-		/// <br/>• <see cref="RowDefinition"/> can specify these and more properties.
+		/// <br/>• <b>int</b> or <b>double</b> - <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
+		/// <br/>• <b>Range</b> - <see cref="RowDefinition.MinHeight"/> and/or <see cref="RowDefinition.MaxHeight"/>. Sets height value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
+		/// <br/>• tuple <b>(double value, Range minMax)</b> - height and min/max heights. Example: <c>(-2, 50..200)</c>.
+		/// <br/>• <see cref="RowDefinition"/>.
 		/// </param>
 		/// <exception cref="InvalidOperationException">In non-grid panel.</exception>
 		/// <remarks>
@@ -341,12 +315,12 @@ namespace Au {
 		/// </summary>
 		/// <param name="container">
 		/// Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be null.
-		/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="System.Windows.Window"/>, <see cref="TabItem"/>, ToolTip, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>container.Child = b.Panel;</c> or <c>container.Children.Add(b.Panel);</c> or <c>b.Tooltip(btt.Panel);</c> or <c>hwndSource.RootVisual = btt.Panel;</c> (the code depends on container type).
+		/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="System.Windows.Window"/>, <see cref="TabItem"/>, <see cref="ToolTip"/>, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>container.Child = b.Panel;</c> or <c>container.Children.Add(b.Panel);</c> or <c>b.Tooltip(btt.Panel);</c> or <c>hwndSource.RootVisual = btt.Panel;</c> (the code depends on <i>container</i> type).
 		/// </param>
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
 		/// <param name="setProperties">
-		/// Set some container's properties like other overload does. Default true. Currently sets these properties, and only if container is <b>Window</b>:
-		/// <br/>• <see cref="Window.SizeToContent"/>, except when container is <b>Canvas</b> or has properties <b>Width</b> and/or <b>Height</b> set.
+		/// Set some container's properties like other overload does. Default true. Currently sets these properties, and only if <i>container</i> is of type <b>Window</b>:
+		/// <br/>• <see cref="Window.SizeToContent"/>, except when <i>container</i> is <b>Canvas</b> or has properties <b>Width</b> and/or <b>Height</b> set.
 		/// <br/>• <b>SnapsToDevicePixels</b> = true.
 		/// <br/>• <b>WindowStartupLocation</b> = Center.
 		/// <br/>• <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="winTopmost"/> and <see cref="winWhite"/>.
@@ -409,8 +383,8 @@ namespace Au {
 		/// </summary>
 		/// <param name="owner">Owner window. Sets <see cref="Window.Owner"/>.</param>
 		/// <exception cref="InvalidOperationException">
-		/// - Container is not Window.
-		/// - Missing End() for a StartX() panel.
+		/// - Container is not of type <b>Window</b>.
+		/// - Missing <b>End</b> for a panel added with a <b>StartX</b> function.
 		/// </exception>
 		/// <remarks>
 		/// Calls <see cref="End"/>, sets <see cref="Window.Owner"/> and calls <see cref="Window.ShowDialog"/>.
@@ -431,9 +405,9 @@ namespace Au {
 		/// <param name="width">Width or/and min/max width.</param>
 		/// <param name="height">Height or/and min/max height.</param>
 		/// <exception cref="InvalidOperationException">
-		/// - Container is not Window.
-		/// - Cannot be after last End().
-		/// - Cannot be after WinRect or WinSaved.
+		/// - Container is not of type <b>Window</b>.
+		/// - Cannot be after the last <b>End</b>.
+		/// - Cannot be after <b>WinRect</b> or <b>WinSaved</b>.
 		/// </exception>
 		/// <remarks>
 		/// Use WPF logical device-independent units, not physical pixels.
@@ -465,8 +439,8 @@ namespace Au {
 		/// <param name="x">X coordinate in screen. Physical pixels.</param>
 		/// <param name="y">Y coordinate in screen. Physical pixels.</param>
 		/// <exception cref="InvalidOperationException">
-		/// - Container is not Window.
-		/// - Cannot be after WinXY, WinRect or WinSaved.
+		/// - Container is not of type <b>Window</b>.
+		/// - Cannot be after <b>WinXY</b>, <b>WinRect</b> or <b>WinSaved</b>.
 		/// </exception>
 		/// <remarks>
 		/// With this function use physical pixels, not WPF logical device-independent units.
@@ -486,8 +460,8 @@ namespace Au {
 		/// </summary>
 		/// <param name="r">Rectangle in screen. Physical pixels.</param>
 		/// <exception cref="InvalidOperationException">
-		/// - Container is not Window.
-		/// - Cannot be after WinXY, WinRect or WinSaved.
+		/// - Container is not of type <b>Window</b>.
+		/// - Cannot be after <b>WinXY</b>, <b>WinRect</b> or <b>WinSaved</b>.
 		/// </exception>
 		/// <remarks>
 		/// With this function use physical pixels, not WPF logical device-independent units.
@@ -505,11 +479,11 @@ namespace Au {
 		/// <summary>
 		/// Saves window xy/size/state when closing and restores when opening.
 		/// </summary>
-		/// <param name="saved">String that the <i>save</i> action received previously. Can be null or "", usually first time (still not saved).</param>
+		/// <param name="saved">String that the <i>save</i> action received previously. Can be null or <c>""</c>, usually first time (still not saved).</param>
 		/// <param name="save">Called when closing the window. Receives string containing window xy/size/state. Can save it in registry, file, anywhere.</param>
 		/// <exception cref="InvalidOperationException">
-		/// - Container is not Window.
-		/// - Cannot be after WinXY, WinRect or WinSaved.
+		/// - Container is not of type <b>Window</b>.
+		/// - Cannot be after <b>WinXY</b>, <b>WinRect</b> or <b>WinSaved</b>.
 		/// - Window is loaded.
 		/// </exception>
 		/// <remarks>
@@ -520,11 +494,11 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
-		/// var b = new wpfBuilder("Window").WinSize(300)
-		/// 	.Row(0).Add("Text", out TextBox _)
-		/// 	.R.AddOkCancel()
-		/// 	.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o))
-		/// 	.End();
+		/// var b = new wpfBuilder("Window").WinSize(300);
+		/// b.Row(0).Add("Text", out TextBox _);
+		/// b.R.AddOkCancel();
+		/// b.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o));
+		/// b.End();
 		/// ]]></code>
 		/// </example>
 		public wpfBuilder WinSaved(string saved, Action<string> save) {
@@ -547,8 +521,8 @@ namespace Au {
 		/// <param name="icon">Sets <see cref="Window.Icon"/>. Example: <c>.WinProperties(icon: BitmapFrame.Create(new Uri(@"d:\icons\file.ico")))</c>.</param>
 		/// <param name="whiteBackground">Set background color = <b>SystemColors.WindowBrush</b> (normally white) if true or <b>SystemColors.ControlBrush</b> (dialog color) if false. See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
 		/// <exception cref="InvalidOperationException">
-		/// - Container is not Window.
-		/// - <i>startLocation</i> or <i>state</i> used after WinXY, WinRect or WinSaved.
+		/// - Container is not of type <b>Window</b>.
+		/// - <i>startLocation</i> or <i>state</i> used after <b>WinXY</b>, <b>WinRect</b> or <b>WinSaved</b>.
 		/// </exception>
 		/// <remarks>
 		/// The function uses only non-null parameters.
@@ -575,7 +549,7 @@ namespace Au {
 		/// <summary>
 		/// Gets the top-level window.
 		/// </summary>
-		/// <returns>null if container is not <b>Window</b>.</returns>
+		/// <returns>null if container is not of type <b>Window</b>.</returns>
 		public Window Window => _window;
 
 		/// <summary>
@@ -1005,7 +979,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="e">Variable for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</param>
 		/// <param name="init">Initial value.</param>
-		/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, "text", "text|tooltip", "|tooltip".</param>
+		/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 		/// <param name="label">If not null, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a [Flags] enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
 		/// <param name="vertical">Vertical stack. Default true.</param>
 		/// <example>
@@ -1275,7 +1249,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="margin">
 		/// String containing uppercase or lowercase letters for margin sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
-		/// Examples: "tb" (top 0, bottom 0), "L5 R15" (left 5, right 15), "2" (all sides 2).
+		/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid string.</exception>
 		public wpfBuilder Margin(string margin) {
@@ -1335,7 +1309,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="padding">
 		/// String containing uppercase or lowercase letters for padding sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
-		/// Examples: "tb" (top 0, bottom 0), "L5 R15" (left 5, right 15), "2" (all sides 2).
+		/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 		/// </param>
 		/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
 		/// <exception cref="ArgumentException">Invalid string.</exception>
@@ -1350,7 +1324,7 @@ namespace Au {
 		/// <summary>
 		/// Sets <see cref="UIElement.IsEnabled"/> of the last added element.
 		/// </summary>
-		/// <param name="disabled">If true (default), sets IsEnabled=false, else sets IsEnabled=true.</param>
+		/// <param name="disabled">If true (default), sets <b>IsEnabled</b> = false, else sets <b>IsEnabled</b> = true.</param>
 		public wpfBuilder Disabled(bool disabled = true) {
 			Last.IsEnabled = !disabled;
 			return this;
@@ -1373,17 +1347,18 @@ namespace Au {
 		/// <code><![CDATA[
 		/// b.R.Add("Example", out TextBox _).Tooltip("Tooltip text");
 		/// ]]></code>
-		/// Tooltip with content created by another wpfBuilder.
+		/// Tooltip with content created by another <b>wpfBuilder</b>.
 		/// <code><![CDATA[
-		/// var btt = new wpfBuilder() //creates tooltip content
+		/// //tooltip content
+		/// var btt = new wpfBuilder()
 		/// 	.R.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
 		/// 	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
 		/// 	.End();
-		/// 
-		/// var b = new wpfBuilder("Window").WinSize(300) //creates dialog
-		/// 	.R.AddButton("Example", null).Tooltip(btt.Panel)
-		/// 	.R.AddOkCancel()
-		/// 	.End();
+		/// //dialog
+		/// var b = new wpfBuilder("Window").WinSize(300);
+		/// b.R.AddButton("Example", null).Tooltip(btt.Panel);
+		/// b.R.AddOkCancel();
+		/// b.End();
 		/// if (!b.ShowDialog()) return;
 		/// ]]></code>
 		/// </example>
@@ -1472,17 +1447,17 @@ namespace Au {
 
 		/// <summary>
 		/// Sets standard border properties of the last added element.
-		/// Thickness 1, color SystemColors.ActiveBorderBrush.
+		/// Thickness 1, color <b>SystemColors.ActiveBorderBrush</b>.
 		/// </summary>
 		public wpfBuilder Border() => Border(SystemColors.ActiveBorderBrush, 1);
 
 		/// <summary>
 		/// Sets font properties of the last added element and its descendants.
 		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="size"></param>
-		/// <param name="bold"></param>
-		/// <param name="italic"></param>
+		/// <param name="name">If not null, sets font name.</param>
+		/// <param name="size">If not null, sets font size.</param>
+		/// <param name="bold">If not null, sets font bold or not.</param>
+		/// <param name="italic">If not null, sets font italic or not.</param>
 		public wpfBuilder Font(string name = null, double? size = null, bool? bold = null, bool? italic = null) {
 			var c = Last;
 			if (name != null) TextElement.SetFontFamily(c, new FontFamily(name));
@@ -1574,11 +1549,13 @@ namespace Au {
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var b = new wpfBuilder("Window").WinSize(300)
-		/// 	.R.Add("Name", out TextBox tName).Validation(o => string.IsNullOrWhiteSpace(tName.Text) ? "Name cannot be empty" : null)
-		/// 	.R.Add("Count", out TextBox tCount).Validation(o => int.TryParse(tCount.Text, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100")
-		/// 	.R.AddOkCancel()
-		/// 	.End();
+		/// var b = new wpfBuilder("Window").WinSize(300);
+		/// b.R.Add("Name", out TextBox tName)
+		/// 	.Validation(o => string.IsNullOrWhiteSpace(tName.Text) ? "Name cannot be empty" : null);
+		/// b.R.Add("Count", out TextBox tCount)
+		/// 	.Validation(o => int.TryParse(tCount.Text, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100");
+		/// b.R.AddOkCancel();
+		/// b.End();
 		/// if (!b.ShowDialog()) return;
 		/// print.it(tName.Text, tCount.Text.ToInt());
 		/// ]]></code>
@@ -1783,7 +1760,7 @@ namespace Au {
 		/// <summary>
 		/// Adds items as <b>IEnumerable</b> to the last added <see cref="ItemsControl"/> (<see cref="ComboBox"/>, etc), with "lazy" option.
 		/// </summary>
-		/// <param name="items">An <b>IEnumerable</b> that contains items (eg array, List) or generates items (eg returned from a yield-return function).</param>
+		/// <param name="items">An <b>IEnumerable</b> that contains items (eg array, <b>List</b>) or generates items (eg returned from a yield-return function).</param>
 		/// <param name="lazy">Retrieve items when (if) showing the dropdown part of the <b>ComboBox</b> first time.</param>
 		/// <exception cref="NotSupportedException">
 		/// - The last added element is not <b>ItemsControl</b>.
@@ -1840,7 +1817,7 @@ namespace Au {
 		/// Arguments of type:
 		/// <br/>• <see cref="Inline"/> of any type, eg <b>Run</b>, <b>Bold</b>, <b>Hyperlink</b>.
 		/// <br/>• <b>Action</b> - action to run when the last added <b>Hyperlink</b> clicked (see example).
-		/// <br/>• string that starts with "&lt;a>", "&lt;b>", "&lt;i>", "&lt;u>", like <c>"&lt;a>link"</c> - adds inline of type <see cref="Hyperlink"/>, <b>Bold</b>, <b>Italic</b>, <b>Underline</b>.
+		/// <br/>• string that starts with <c>"&lt;a>"</c>, <c>"&lt;b>"</c>, <c>"&lt;i>"</c>, <c>"&lt;u>"</c>, like <c>"&lt;a>link"</c> - adds inline of type <see cref="Hyperlink"/>, <b>Bold</b>, <b>Italic</b>, <b>Underline</b>.
 		/// <br/>• other string - plain text.
 		/// <br/>• <see cref="UIElement"/>.
 		/// </param>
@@ -1911,7 +1888,7 @@ namespace Au {
 		/// </param>
 		/// <exception cref="NotSupportedException">
 		/// - Unsupported element type.
-		/// - <b>RichTextBox</b> source does not end with ".rtf".
+		/// - <b>RichTextBox</b> <i>source</i> does not end with <c>".rtf"</c>.
 		/// </exception>
 		/// <remarks>
 		/// If fails to load, prints warning. See <see cref="print.warning"/>.
@@ -2252,8 +2229,8 @@ namespace Au.Types {
 	/// Used with <see cref="wpfBuilder"/> functions for width/height parameters. Allows to specify minimal and/or maximal values too.
 	/// </summary>
 	/// <remarks>
-	/// Has implicit conversions from double, Range and tuple (double length, Range minMax).
-	/// To specify width or height, pass an integer or double value, like <c>100</c> or <c>15.25</c>.
+	/// Has implicit conversions from <b>double</b>, <b>Range</b> and tuple <b>(double length, Range minMax)</b>.
+	/// To specify width or height, pass an <b>int</b> or <b>double</b> value, like <c>100</c> or <c>15.25</c>.
 	/// To specify minimal value, pass a range like <c>100..</c>.
 	/// To specify maximal value, pass a range like <c>..100</c>.
 	/// To specify minimal and maximal values, pass a range like <c>100..500</c>.
@@ -2454,7 +2431,7 @@ namespace Au.More {
 	/// - Splitters must be on own rows/columns. Throws exception if <b>ResizeBehavior</b> is not <b>PreviousAndNext</b> (which is default).
 	/// - Throws exception is there are star-sized splitter rows.
 	/// - Does not resize auto-sized rows/columns. Only pixel-sized and star-sized.
-	/// - With UseLayoutRounding may flicker when resizing, especially when high DPI.
+	/// - With <b>UseLayoutRounding</b> may flicker when resizing, especially when high DPI.
 	/// </remarks>
 	public class GridSplitter2 : GridSplitter {
 		static GridSplitter2() {

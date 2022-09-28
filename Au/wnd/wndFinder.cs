@@ -10,12 +10,11 @@ namespace Au;
 /// <remarks>
 /// Can be used instead of <see cref="wnd.find"/> or <see cref="wnd.findAll"/>.
 /// These codes are equivalent:
-/// <code>wnd w = wnd.find(a, b, c, d, e); if(!w.Is0) print.it(w);</code>
-/// <code>var p = new wndFinder(a, b, c, d, e); if(p.Exists()) print.it(p.Result);</code>
+/// <code><![CDATA[wnd w = wnd.find(a, b, c, d, e); if(!w.Is0) print.it(w);]]></code>
+/// <code><![CDATA[var p = new wndFinder(a, b, c, d, e); if(p.Exists()) print.it(p.Result);]]></code>
 /// Also can find in a list of windows.
 /// </remarks>
-public class wndFinder
-{
+public class wndFinder {
 	readonly wildex _name;
 	readonly wildex _cn;
 	readonly wildex _program;
@@ -33,8 +32,7 @@ public class wndFinder
 	public TProps Props => new(this);
 
 	[NoDoc]
-	public struct TProps
-	{
+	public struct TProps {
 		readonly wndFinder _f;
 		internal TProps(wndFinder f) { _f = f; }
 
@@ -49,7 +47,7 @@ public class wndFinder
 		public WContains contains => _f._contains;
 
 		/// <summary>
-		/// After unsuccesful <see cref="IsMatch"/> indicates the parameter that does not match.
+		/// After unsuccessful <see cref="IsMatch"/> indicates the parameter that does not match.
 		/// </summary>
 		public EProps DoesNotMatch => _f._stopProp;
 	}
@@ -77,8 +75,7 @@ public class wndFinder
 	}
 #pragma warning restore CS1591
 
-/// <inheritdoc cref="wnd.find" path="/param"/>
-/// <inheritdoc cref="wnd.find" path="/exception"/>
+	/// <inheritdoc cref="wnd.find" path="//param|//exception"/>
 	public wndFinder(
 		[ParamString(PSFormat.Wildex)] string name = null,
 		[ParamString(PSFormat.Wildex)] string cn = null,
@@ -127,7 +124,7 @@ public class wndFinder
 	/// <summary>
 	/// Finds the specified window, like <see cref="wnd.find"/>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>, else default(wnd).</returns>
+	/// <returns>If found, returns <see cref="Result"/>, else <c>default(wnd)</c>.</returns>
 	/// <remarks>
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
@@ -136,7 +133,7 @@ public class wndFinder
 	/// <summary>
 	/// Finds the specified window, like <see cref="wnd.find"/>. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns default(wnd) (if <i>waitS</i> negative).</returns>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
 	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
 	/// <remarks>
@@ -161,7 +158,7 @@ public class wndFinder
 	/// <summary>
 	/// Waits until window exists or is active.
 	/// </summary>
-	/// <returns>Returns <see cref="Result"/>. On timeout returns default(wnd) if <i>secondsTimeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <see cref="Result"/>. On timeout returns <c>default(wnd)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="active">The window must be the active window (<see cref="wnd.active"/>), and not minimized.</param>
 	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
@@ -172,7 +169,7 @@ public class wndFinder
 	/// - has parameter <i>active</i>.
 	/// </remarks>
 	public wnd Wait(double secondsTimeout, bool active) {
-		var to = new wait.Loop(secondsTimeout);
+		var to = new WaitLoop(secondsTimeout);
 		for (; ; ) {
 			if (active) {
 				wnd w = wnd.active;
@@ -392,7 +389,7 @@ public class wndFinder
 	}
 
 	/// <summary>
-	/// Returns true if window w properties match the specified properties.
+	/// Returns true if window <i>w</i> properties match the specified properties.
 	/// </summary>
 	/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
 	/// <param name="cache">Can be used to make faster when multiple <b>wndFinder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>

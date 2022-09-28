@@ -14,7 +14,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// The UI element can be invisible.
-		/// Without this flag skips UI elements that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+		/// Without this flag skips UI elements that are invisible (have state <b>INVISIBLE</b>) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
 		/// Regardless of this flag, always skips invisible standard UI elements of nonclient area: TITLEBAR, MENUBAR, SCROLLBAR, GRIP.
 		/// </summary>
 		HiddenToo = 2,
@@ -29,7 +29,7 @@ namespace Au.Types
 		/// Search only in the client area of the window or control.
 		/// Skips the title bar, standard menubars and scrollbars. Searches only in the client area root UI element (but will not find the UI element itself).
 		/// When control class or id is specified in the <i>prop</i> argument, this flag is applied to these controls. Not applied to other controls.
-		/// Don't use this flag when searching in elm or web page (role prefix "web:" etc) or with flag UIA.
+		/// Don't use this flag when searching in elm or web page (role prefix <c>"web:"</c> etc) or with flag <b>UIA</b>.
 		/// </summary>
 		ClientArea = 8,
 
@@ -46,9 +46,9 @@ namespace Au.Types
 		/// <summary>
 		/// Use UI Automation API.
 		/// Need this flag to find UI elements in windows that don't support accessible objects but support UI Automation elements.
-		/// UI elements found with this flag never have HtmlX properties, but can have <see cref="elm.UiaId"/>.
+		/// UI elements found with this flag never have <b>HtmlX</b> properties, but can have <see cref="elm.UiaId"/>.
 		/// This flag can be used with most other windows too.
-		/// Don't use this flag when searching in elm (then it is inherited from the elm variable) or web page (role prefix "web:" etc).
+		/// Don't use this flag when searching in elm (then it is inherited from the elm variable) or web page (role prefix <c>"web:"</c> etc).
 		/// See also: <see cref="elm.MiscFlags"/>.
 		/// </summary>
 		UIA = 0x200,
@@ -112,7 +112,7 @@ namespace Au.Types
 		UIA = 2,
 
 		/// <summary>
-		/// Get the direct parent UI element if probaly it would be much more useful, for example if its role is LINK or BUTTON.
+		/// Get the direct parent UI element if probably it would be much more useful, for example if its role is LINK or BUTTON.
 		/// Usually links have one or more children of type TEXT, STATICTEXT, IMAGE or other.
 		/// </summary>
 		PreferLink = 4,
@@ -120,9 +120,9 @@ namespace Au.Types
 		/// <summary>
 		/// Try to get a smaller element.
 		/// 1. Try to get a smaller UI Automation element from point.
-		/// 2. Try to find a descendant that is smaller. Becauses some incorrectly implemented UI elements don't give a child element from point.
+		/// 2. Try to find a descendant that is smaller. Because some incorrectly implemented UI elements don't give a child element from point.
 		/// 
-		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its bahaviour may change in the future.
+		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its bahavior may change in the future.
 		/// 
 		/// UI element capturing tools should use this flag only with user consent, because:
 		/// 1. It's impossible to get perfect UI element in all cases. Can get wrong element.
@@ -200,7 +200,7 @@ namespace Au.Types
 	/// Used with <see cref="elm.fromWindow"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_".
+	/// Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix OBJID_.
 	/// </remarks>
 	public enum EObjid
 	{
@@ -242,7 +242,7 @@ namespace Au.Types
 	/// Used with <see cref="elm.RoleInt"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix "ROLE_SYSTEM_". These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON,
+	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix ROLE_SYSTEM_. These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON.
 	/// </remarks>
 	public enum ERole
 	{
@@ -323,7 +323,7 @@ namespace Au.Types
 	/// Used by <see cref="elm.State"/>.
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix "STATE_SYSTEM_".
+	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix STATE_SYSTEM_.
 	/// </remarks>
 	[Flags]
 	public enum EState
@@ -367,7 +367,7 @@ namespace Au.Types
 	/// Used by <see cref="elm.Select"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix "SELFLAG_".
+	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix SELFLAG_.
 	/// </remarks>
 	[Flags]
 	public enum ESelect
@@ -383,7 +383,7 @@ namespace Au.Types
 	/// Event constants for <see cref="More.WinEventHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix "EVENT_".
+	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix EVENT_.
 	/// </remarks>
 	public enum EEvent
 	{
@@ -520,8 +520,8 @@ namespace Au.Types
 	/// Flags for <see cref="More.WinEventHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix "WINEVENT_".
-	/// There are no flags for OUTOFCONTEXT and INCONTEXT. OUTOFCONTEXT is default (0). INCONTEXT cannot be used in managed code.
+	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix WINEVENT_.
+	/// There are no flags for <b>OUTOFCONTEXT</b> and <b>INCONTEXT</b>. <b>OUTOFCONTEXT</b> is default (0). <b>INCONTEXT</b> cannot be used in managed code.
 	/// </remarks>
 	[Flags]
 	public enum EHookFlags

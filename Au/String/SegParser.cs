@@ -1,4 +1,4 @@
-﻿//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
+//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
 //Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
 namespace Au.More
@@ -173,7 +173,7 @@ namespace Au.Types
 		public const string Word = "WWVL0EtrK0ShqYWb4n1CmA";
 
 		/// <summary>
-		/// Specifies that separators are substrings "\r\n", as well as single characters '\r' and '\n'.
+		/// Specifies that separators are substrings <c>"\r\n"</c>, as well as single characters <c>'\r'</c> and <c>'\n'</c>.
 		/// </summary>
 		public const string Line = "LLeg5AWCNkGTZDkWuyEa2g";
 
@@ -188,7 +188,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Don't return empty substrings.
-		/// For example, is string is "one  two " and separators is " ", return {"one", "two"} instead of {"one", "", "two", ""}.
+		/// For example, is string is <c>"one  two "</c> and separators is <c>" "</c>, return <c>{"one", "two"}</c> instead of <c>{"one", "", "two", ""}</c>.
 		/// </summary>
 		NoEmpty = 1,
 

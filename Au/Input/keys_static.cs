@@ -7,7 +7,7 @@ public partial class keys {
 	/// Gets key states for using in UI code (winforms, WPF, etc).
 	/// </summary>
 	/// <remarks>
-	/// Use functions of this class in user interface code (winforms, WPF, etc). In other code (automation scrits, etc) usually it's better to use functions of <see cref="keys"/> class.
+	/// Use functions of this class in user interface code (winforms, WPF, etc). In other code (automation scripts, etc) usually it's better to use functions of <see cref="keys"/> class.
 	/// 
 	/// In Windows there are two API to get key state - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>.
 	/// 
@@ -232,7 +232,7 @@ public partial class keys {
 	/// <seealso cref="mouse.isPressed"/>
 	/// <seealso cref="mouse.waitForNoButtonsPressed"/>
 	public static bool waitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
-		var to = new wait.Loop(secondsTimeout, new OWait(period: 2));
+		var to = new WaitLoop(secondsTimeout, new OWait(period: 2));
 		for (; ; ) {
 			if (!isMod(mod) && !mouse.isPressed(buttons)) return true;
 			if (!to.Sleep()) return false;
@@ -276,7 +276,7 @@ public partial class keys {
 	/// Registers a temporary hotkey and waits for it.
 	/// </summary>
 	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
@@ -428,20 +428,20 @@ public partial class keys {
 	/// </summary>
 	/// <param name="keysEtc">
 	/// Arguments of these types:
-	/// <br/>• string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.
+	/// <br/>• string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.\
 	/// Tool: in <c>""</c> string press Ctrl+Space.
-	/// <br/>• string with prefix "!" - literal text.
+	/// <br/>• string with prefix <c>"!"</c> - literal text.\
 	/// Example: <c>var p = "pass"; keys.send("!user", "Tab", "!" + p, "Enter");</c>
-	/// <br/>• string with prefix "%" - HTML to paste. Full or fragment.
+	/// <br/>• string with prefix <c>"%"</c> - HTML to paste. Full or fragment.
 	/// <br/>• <see cref="clipboardData"/> - clipboard data to paste.
-	/// <br/>• <see cref="KKey"/> - a single key.
-	/// Example: <c>keys.send("Shift+", KKey.Left, "*3");</c> is the same as <c>keys.send("Shift+Left*3");</c>.
-	/// <br/>• int - sleep milliseconds. Max 10000.
+	/// <br/>• <see cref="KKey"/> - a single key.\
+	/// Example: <c>keys.send("Shift+", KKey.Left, "*3");</c> is the same as <c>keys.send("Shift+Left*3");</c>
+	/// <br/>• int - sleep milliseconds. Max 10000.\
 	/// Example: <c>keys.send("Left", 500, "Right");</c>
-	/// <br/>• <see cref="Action"/> - callback function.
+	/// <br/>• <see cref="Action"/> - callback function.\
 	/// Example: <c>Action click = () => mouse.click(); keys.send("Shift+", click);</c>
-	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.
-	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>
+	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.\
+	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>\
 	/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
 	/// <br/>• char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator ^.
 	/// </param>
@@ -670,7 +670,7 @@ public partial class keys {
 	/// 
 	/// You can use a <see cref="keys"/> variable instead of this function. Example: <c>new keys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="keys(OKey)"/> topic.
 	/// 
-	/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddChar"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="SendIt"/>.
+	/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddChar"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="Send"/>.
 	/// 
 	/// Uses API <msdn>SendInput</msdn>.
 	/// </remarks>
@@ -742,7 +742,7 @@ public partial class keys {
 	/// ]]></code>
 	/// </example>
 	public static void send([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
-		new keys(opt.key).Add(keysEtc).SendIt();
+		new keys(opt.key).Add(keysEtc).Send();
 	}
 	//CONSIDER: move most of Remarks to Articles. Also make the param doc smaller, and move the big list to Remarks.
 
@@ -751,17 +751,17 @@ public partial class keys {
 	/// </summary>
 	/// <remarks>
 	/// Ignores <b>opt.key</b> and instead uses default options with these changes:
-	/// - SleepFinally = 0.
-	/// - KeySpeed = 0.
-	/// - NoBlockInput = true.
-	/// - NoCapsOff = true.
-	/// - NoModOff = true.
+	/// - <b>SleepFinally</b> = 0.
+	/// - <b>KeySpeed</b> = 0.
+	/// - <b>NoBlockInput</b> = true.
+	/// - <b>NoCapsOff</b> = true.
+	/// - <b>NoModOff</b> = true.
 	/// </remarks>
 	/// <seealso cref="more.sendKey"/>
 		/// <inheritdoc cref="keys.send" path="/param"/>
 	public static void sendL([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		var o = new OKey() { KeySpeed = 0, NoBlockInput = true, NoCapsOff = true, NoModOff = true, SleepFinally = 0 };
-		new keys(o).Add(keysEtc).SendIt();
+		new keys(o).Add(keysEtc).Send();
 	}
 
 	/// <summary>
@@ -774,7 +774,7 @@ public partial class keys {
 	/// </param>
 	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). Also fails if there is no focused window.</exception>
 	/// <remarks>
-	/// Calls <see cref="AddText(string, string)"/> and <see cref="SendIt"/>.
+	/// Calls <see cref="AddText(string, string)"/> and <see cref="Send"/>.
 	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.
 	/// </remarks>
 	/// <seealso cref="clipboard.paste"/>
@@ -782,14 +782,14 @@ public partial class keys {
 	/// <code><![CDATA[
 	/// keys.sendt("Text.\r\n");
 	/// ]]></code>
-	/// Or use function <see cref="send"/> and prefix "!". For HTML use prefix "%".
+	/// Or use function <see cref="send"/> and prefix <c>"!"</c>. For HTML use prefix <c>"%"</c>.
 	/// <code><![CDATA[
 	/// keys.send("!Send this text and press key", "Enter");
 	/// keys.send("%<b>bold</b> <i>italic</i>", "Enter");
 	/// ]]></code>
 	/// </example>
 	public static void sendt(string text, string html = null) {
-		new keys(opt.key).AddText(text, html).SendIt();
+		new keys(opt.key).AddText(text, html).Send();
 	}
 }
 

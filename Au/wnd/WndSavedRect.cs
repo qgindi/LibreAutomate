@@ -45,7 +45,7 @@ public struct WndSavedRect
 
 	/// <summary>
 	/// Converts this object to string for saving.
-	/// The string is very simple, like "1 2 3 4 5 6".
+	/// The string is very simple, like <c>"1 2 3 4 5 6"</c>.
 	/// </summary>
 	public override string ToString() {
 		return $"{_r.left} {_r.top} {_r.Width} {_r.Height} {Dpi} {(Maximize ? 1 : 0) | (IsToolWindow ? 2 : 0)}";
@@ -146,7 +146,7 @@ public struct WndSavedRect
 	}
 
 	/// <summary>
-	/// Calls <see cref="FromString"/>. If it returns true, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, StartPosition=Manual, and returns true.
+	/// Calls <see cref="FromString"/>. If it returns true, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, sets <b>StartPosition</b> = <b>Manual</b>, and returns true.
 	/// Call this function before showing window.
 	/// </summary>
 	/// <param name="form"></param>

@@ -56,7 +56,7 @@ namespace Au.Types
 		//public static POINT NormalizeIn(RECT r, Coord x = default, Coord y = default)
 		//	=> Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 
-		/// <summary>Adds x and y to this.x and this.y.</summary>
+		/// <summary><c>this.x += x; this.y += y;</c></summary>
 		public void Offset(int x, int y) { this.x += x; this.y += y; }
 
 		/// <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
@@ -240,13 +240,13 @@ namespace Au.Types
 
 		/// <summary>
 		/// Makes this rectangle bigger or smaller: <c>left-=dx; right+=dx; top-=dy; bottom+=dy;</c>
-		/// Use negative dx/dy to make the rectangle smaller. Note: too big negative dx/dy can make it invalid (right&lt;left or bottom&lt;top).
+		/// Use negative <i>dx</i>/<i>dy</i> to make the rectangle smaller. Note: too big negative <i>dx</i>/<i>dy</i> can make it invalid (<b>right</b>&lt;<b>left</b> or <b>bottom</b>&lt;<b>top</b>).
 		/// </summary>
 		public void Inflate(int dx, int dy) { left -= dx; right += dx; top -= dy; bottom += dy; }
 
 		/// <summary>
 		/// Replaces this rectangle with the intersection of itself and the specified rectangle.
-		/// If the rectangles don't intersect, makes this RECT empty.
+		/// If the rectangles don't intersect, makes this variable empty.
 		/// </summary>
 		/// <returns>true if the rectangles intersect.</returns>
 		public bool Intersect(RECT r2) => Api.IntersectRect(out this, this, r2);
@@ -264,7 +264,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>
-		/// Negative dx moves to the left. Negative dy moves up.
+		/// Negative <i>dx</i> moves to the left. Negative <i>dy</i> moves up.
 		/// </summary>
 		public void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
 
@@ -289,9 +289,9 @@ namespace Au.Types
 		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, r1, r2); return r; }
 
 		/// <summary>
-		/// If width or height are negative, modifies this rectangle so that they would not be negative.
+		/// If <b>width</b> or <b>height</b> are negative, modifies this rectangle so that they would not be negative.
 		/// </summary>
-		/// <param name="swap">true - swap right/left, bottom/top; false - set right = left, bottom = top.</param>
+		/// <param name="swap">true - swap <b>right</b>/<b>left</b>, <b>bottom</b>/<b>top</b>; false - set <b>right</b> = <b>left</b>, <b>bottom</b> = <b>top</b>.</param>
 		public void Normalize(bool swap) {
 			if (right < left) { if (swap) Math2.Swap(ref left, ref right); else right = left; }
 			if (bottom < top) { if (swap) Math2.Swap(ref top, ref bottom); else bottom = top; }
@@ -301,9 +301,9 @@ namespace Au.Types
 		/// Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
 		/// Final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If default(Coord) - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - center.</param>
-		/// <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
+		/// <param name="x">X coordinate in the specified screen. If <c>default</c> - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in the specified screen. If <c>default</c> - center.</param>
+		/// <param name="screen">Use this screen. If <c>default</c>, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
 		/// <remarks>
@@ -328,7 +328,7 @@ namespace Au.Types
 		/// Adjusts this rectangle to ensure that whole rectangle is in screen.
 		/// Initial and final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="screen">Use this screen (see <see cref="screen"/>). If default, uses screen of the rectangle (or nearest).</param>
+		/// <param name="screen">Use this screen (see <see cref="screen"/>). If <c>default</c>, uses screen of the rectangle (or nearest).</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.EnsureInScreen"/>.
@@ -349,7 +349,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Converts to string "{L=left T=top W=width H=height}".
+		/// Converts to string <c>"{L=left T=top W=width H=height}"</c>.
 		/// </summary>
 		/// <seealso cref="TryParse"/>
 		public override string ToString() {
@@ -361,7 +361,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Converts to string "left top width height".
+		/// Converts to string <c>"left top width height"</c>.
 		/// </summary>
 		/// <seealso cref="TryParse"/>
 		public string ToStringSimple() {
@@ -369,11 +369,11 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Formats string from RECT main fields and properties.
+		/// Formats string from <b>RECT</b> main fields and properties.
 		/// </summary>
 		/// <param name="format">
 		/// <see cref="StringBuilder.AppendFormat"/> format string. Example: <c>"({0}, {1}, {4}, {5})"</c>.
-		/// This function passes to AppendFormat 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
+		/// This function passes to <b>AppendFormat</b> 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
 		/// </param>
 		public string ToStringFormat(string format) {
 			using (new StringBuilder_(out var b)) {
@@ -383,10 +383,10 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Converts string to RECT.
+		/// Converts string to <b>RECT</b>.
 		/// </summary>
 		/// <returns>false if invalid string format.</returns>
-		/// <param name="s">String in format "{L=left T=top W=width H=height}" (<see cref="ToString"/>) or "left top width height" (<see cref="ToStringSimple"/>).</param>
+		/// <param name="s">String in format <c>"{L=left T=top W=width H=height}"</c> (<see cref="ToString"/>) or <c>"left top width height"</c> (<see cref="ToStringSimple"/>).</param>
 		/// <param name="r"></param>
 		public static bool TryParse(string s, out RECT r) {
 			r = default;

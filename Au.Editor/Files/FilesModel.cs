@@ -128,7 +128,7 @@ partial class FilesModel {
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = App.Model;
 		FilesModel m = null;
-	g1:
+		g1:
 		try {
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 
@@ -309,7 +309,7 @@ partial class FilesModel {
 	/// Returns <i>id</i> or the generated id.
 	/// </summary>
 	public uint AddGetId(FileNode f, uint id = 0) {
-	g1:
+		g1:
 		if (id == 0) {
 			//Normally we don't reuse ids of deleted items.
 			//	Would be problems with something that we cannot/fail/forget to delete when deleting items.
@@ -661,12 +661,19 @@ partial class FilesModel {
 		Uncut();
 		App.Model.EditGoBack.OnFileDeleted(f);
 
+		string filePath = f.FilePath;
 		if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
-			if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin ? FDFlags.RecycleBin : 0), deletion: true)) return false;
+			string symlinkTarget = null;
+			if (f.IsFolder && filesystem.exists(filePath).IsNtfsLink) filesystem.more.getFinalPath(filePath, out symlinkTarget);
+
+			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0), deletion: true)) return false;
+
+			if (symlinkTarget != null) print.it($"<>Info: The deleted folder was a link to <explore>{symlinkTarget}<>");
+
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		} else {
 			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
-			print.it($"<>Info: {s1} <explore>{f.FilePath}<>");
+			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		}
 
 		foreach (var k in e) {
@@ -1216,8 +1223,13 @@ partial class FilesModel {
 		} else if (fromWorkspaceDir) {
 			r = 3; //move
 		} else {
-			string buttons = (dirsDropped ? null : "1 Add as a link to the external file|") + "2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel";
-			r = dialog.show("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+			var ab = new List<string>();
+			if (!dirsDropped) ab.Add("1 Add as a link to the external file");
+			ab.Add("2 Copy to the workspace folder");
+			ab.Add("3 Move to the workspace folder");
+			if (dirsDropped) ab.Add("4 Add as a link to the external folder");
+			ab.Add("0 Cancel");
+			r = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
 			if (r == 0) return;
 		}
 
@@ -1250,13 +1262,14 @@ partial class FilesModel {
 				if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 
 				if (r == 1) { //add as link
-					k = new FileNode(this, name, path, false, path); //CONSIDER: unexpand
+					k = new FileNode(this, name, path, false, isLink: true);
 				} else {
 					k = new FileNode(this, name, path, isDir);
 					if (isDir) _AddDir(path, k);
 					if (!TryFileOperation(() => {
 						var newPath = newParentPath + name;
-						if (r == 2) filesystem.copy(path, newPath, FIfExists.Fail);
+						if (r == 4) Directory.CreateSymbolicLink(newPath, path);
+						else if (r == 2) filesystem.copy(path, newPath, FIfExists.Fail);
 						else filesystem.move(path, newPath, FIfExists.Fail);
 					})) continue;
 				}
@@ -1424,8 +1437,8 @@ partial class FilesModel {
 		}
 
 		void _watcher_Event(object sender, FileSystemEventArgs e) { /*in thread pool*/
-			//if(e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f);
-			//else print.it(e.ChangeType, e.Name, e.FullPath, f);
+			//if (e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath);
+			//else print.it(e.ChangeType, e.Name, e.FullPath);
 
 			//we receive 'directory changed' after every 'file changed' etc
 			if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).File) return;
@@ -1448,7 +1461,8 @@ partial class FilesModel {
 		}
 		foreach (var name in a) {
 			var f = Find("\\" + name);
-			if (f == null || f.IsLink) return;
+			//print.it(name, f);
+			if (f == null || f.IsLink) continue;
 			if (f.IsFolder) {
 				foreach (var v in f.Descendants()) v.UnCacheText(fromWatcher: true);
 			} else {

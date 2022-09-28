@@ -1,3 +1,6 @@
+//CONSIDER: move snippets from XML to a workspace, like now Cookbook and Templates.
+//	Maybe only code of some snippets, eg dialogs (big code).
+
 using System.Xml.Linq;
 
 using Microsoft.CodeAnalysis;

@@ -10,13 +10,13 @@ public static unsafe class Convert2 {
 	#region hex
 
 	/// <summary>
-	/// Converts data in byte[] or other memory to hex encoded string.
+	/// Converts data in byte[] or other memory to hex-encoded string.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 	/// <remarks>
 	/// The result string length is 2 * data length.
-	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character '/'. Both functions are fast.
+	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character <c>'/'</c>. Both functions are fast.
 	/// </remarks>
 	public static string HexEncode(ReadOnlySpan<byte> data, bool upperCase = false) {
 		fixed (byte* p = data) {
@@ -25,7 +25,7 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts binary data in any memory to hex encoded string.
+	/// Converts binary data in any memory to hex-encoded string.
 	/// </summary>
 	/// <param name="data">The data. Can be any valid memory of specified size, for example a struct address.</param>
 	/// <param name="size">data memory size (bytes).</param>
@@ -50,7 +50,7 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts a struct variable to hex encoded string.
+	/// Converts a struct variable to hex-encoded string.
 	/// </summary>
 	/// <param name="x">Variable.</param>
 	/// <inheritdoc cref="HexEncode(ReadOnlySpan{byte}, bool)"/>
@@ -58,11 +58,11 @@ public static unsafe class Convert2 {
 		=> HexEncode(&x, sizeof(T), upperCase);
 
 	/// <summary>
-	/// Converts hex encoded string to binary data.
+	/// Converts hex-encoded string to binary data.
 	/// </summary>
 	/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
 	/// <remarks>
-	/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
+	/// Skips spaces and other non-hex-digit characters. Example: <c>"01 23 46 67"</c> is the same as <c>"01234667"</c>.
 	/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
 	/// </remarks>
 	[SkipLocalsInit]
@@ -75,7 +75,7 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts hex encoded string to binary data. Writes to caller's memory buffer.
+	/// Converts hex-encoded string to binary data. Writes to caller's memory buffer.
 	/// </summary>
 	/// <returns>The number of bytes written in <i>decoded</i> memory. It is equal or less than <c>Math.Min(bufferSize, encoded.Length/2)</c>.</returns>
 	/// <param name="decoded">Memory buffer for result.</param>
@@ -104,7 +104,7 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts hex encoded string to a struct variable.
+	/// Converts hex-encoded string to a struct variable.
 	/// </summary>
 	/// <returns>false if decoded size != <c>sizeof(T)</c>.</returns>
 	/// <param name="decoded">The result variable.</param>
@@ -210,7 +210,7 @@ public static unsafe class Convert2 {
 	/// AES-encrypts a byte[] or string. Returns byte[].
 	/// </summary>
 	/// <param name="data">Data to encrypt. Can be byte[] or string.</param>
-	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of lenght 16 (eg a password hash).</param>
+	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
 	/// <returns>Encrypted data. The first 16 bytes is initialization vector (not secret).</returns>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="CryptographicException"></exception>
@@ -227,7 +227,7 @@ public static unsafe class Convert2 {
 	/// AES-encrypts a byte[] or string. Returns byte[].
 	/// </summary>
 	/// <param name="data">Data to encrypt. Can be byte[] or string.</param>
-	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of lenght 16 (eg a password hash).</param>
+	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
 	/// <param name="IV">Receives an initialization vector. The function generates a random value. Use it with decrypt functions. Don't need to keep it in secret.</param>
 	/// <returns>Encrypted data.</returns>
 	/// <exception cref="ArgumentException"></exception>
@@ -274,7 +274,7 @@ public static unsafe class Convert2 {
 	/// AES-decrypts data. Returns byte[].
 	/// </summary>
 	/// <param name="data">Encryped data as byte[] or Base64 string.</param>
-	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of lenght 16 (eg a password hash).</param>
+	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
 	/// <param name="IV">If used <b>AesEncryptX</b> that returns an initialization vector, pass it here. Else null.</param>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="CryptographicException"></exception>
@@ -314,10 +314,10 @@ public static unsafe class Convert2 {
 	#region utf8
 
 	/// <summary>
-	/// Converts string to UTF-8 byte[]. Can append "\0" (default) or some other string.
+	/// Converts string to UTF-8 byte[]. Can append <c>"\0"</c> (default) or some other string.
 	/// </summary>
 	/// <param name="chars">String or char[] or span of string/array/memory.</param>
-	/// <param name="append">A string to append, or null. For example "\0" (default) or "\r\n". Must contain only ASCII characters.</param>
+	/// <param name="append">A string to append, or null. For example <c>"\0"</c> (default) or <c>"\r\n"</c>. Must contain only ASCII characters.</param>
 	/// <exception cref="ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
 	public static byte[] Utf8Encode(RStr chars, string append = "\0") {
 		int n = Encoding.UTF8.GetByteCount(chars);
@@ -337,11 +337,11 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts '\0'-terminated UTF8 string to C# string (UTF16).
+	/// Converts <c>'\0'</c>-terminated UTF8 string to C# string (UTF16).
 	/// </summary>
 	/// <param name="utf8">UTF8 string. If null, returns null.</param>
 	/// <remarks>
-	/// Finds '\0' and calls <c>Encoding.UTF8.GetString</c>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
+	/// Finds <c>'\0'</c> and calls <see cref="Encoding.GetString"/>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
 	/// </remarks>
 	public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8));
 

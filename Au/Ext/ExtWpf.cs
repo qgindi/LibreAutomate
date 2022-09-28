@@ -360,7 +360,7 @@ namespace Au.Types {
 		/// <param name="x">X coordinate in screen. Physical pixels.</param>
 		/// <param name="y">Y coordinate in screen. Physical pixels.</param>
 		/// <remarks>
-		/// The unit is physical pixels. WPF provides <b>Left</b> and <b>Top</b> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are mutiple screens with different DPI.
+		/// The unit is physical pixels. WPF provides <b>Left</b> and <b>Top</b> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are multiple screens with different DPI.
 		/// 
 		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="wnd.MoveL"/>.
 		/// 
@@ -374,7 +374,7 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="r">Rectangle in screen. Physical pixels.</param>
 		/// <remarks>
-		/// The unit is physical pixels. WPF provides <b>Left</b>, <b>Top</b>, <b>Width</b> and <b>Height</b> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are mutiple screens with different DPI.
+		/// The unit is physical pixels. WPF provides <b>Left</b>, <b>Top</b>, <b>Width</b> and <b>Height</b> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are multiple screens with different DPI.
 		/// 
 		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="wnd.MoveL"/>.
 		/// 
@@ -482,13 +482,13 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Workaround for WPF bug: on DPI change tries to activate window.
-		/// Call on WM_DPICHANED message or in OnDpiChanged override.
+		/// Call on <b>WM_DPICHANED</b> message or in <b>OnDpiChanged</b> override.
 		/// </summary>
 		public static void DpiChangedWorkaround(this Window t) => _DCW(t.Dispatcher, t.Hwnd());
 
 		/// <summary>
 		/// Workaround for WPF bug: on DPI change tries to activate window.
-		/// Call on WM_DPICHANED message or in OnDpiChanged override. Only if top-level window.
+		/// Call on <b>WM_DPICHANED</b> message or in <b>OnDpiChanged</b> override. Only if top-level window.
 		/// </summary>
 		public static void DpiChangedWorkaround(this HwndSource t) => _DCW(t.Dispatcher, (wnd)t.Handle);
 

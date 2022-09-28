@@ -460,6 +460,7 @@ partial class SciCode : KScintilla {
 		bool isCS = _fn.IsCodeFile;
 		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !isCS;
 		if (forum) {
+			//TODO: now forum parses eg [i] as bbcode
 			bool isScript = _fn.IsScript;
 			var b = new StringBuilder(isCS ? "[cs]" : "[code]");
 			string s;

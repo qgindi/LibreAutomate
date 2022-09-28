@@ -4,11 +4,11 @@ namespace Au {
 	/// </summary>
 	/// <remarks>
 	/// A computer can have one or more screens (aka display devices, monitors). One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
-	/// To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique integer identifier, known as screen handle or HMONITOR. But it is a random variable value and therefore cannot be specified directly in script etc. Instead can be used screen index or some object on that screen (window, point, rectangle).
+	/// To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique integer identifier, known as screen handle or <b>HMONITOR</b>. But it is a random variable value and therefore cannot be specified directly in script etc. Instead can be used screen index or some object on that screen (window, point, rectangle).
 	/// 
 	/// A <b>screen</b> variable can contain either a screen handle or a callback function that returns a screen handle. If empty, most functions interpret it as the primary screen.
 	/// 
-	/// To create <b>screen</b> variables use static functions (like <c>screen.index(1)</c> or <c>screen.primary</c>) or constructors (like <c>new screen(()=>screen.index(1))</c>). Then call non-static functions to get screen properties.
+	/// To create <b>screen</b> variables use static functions (like <c>screen.index(1)</c> or <c>screen.primary</c>) or constructors (like <c>new screen(()=>screen.index(1))</c>) or <see cref="at"/>. Then call non-static functions to get screen properties.
 	/// 
 	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns a <b>screen</b> with fresh handle.
 	/// </remarks>
@@ -17,7 +17,7 @@ namespace Au {
 		readonly Func<screen> _func;
 
 		/// <summary>
-		/// Creates variable with screen handle, aka HMONITOR.
+		/// Creates variable with screen handle, aka <b>HMONITOR</b>.
 		/// </summary>
 		public screen(IntPtr handle) { _h = handle; _func = null; }
 
@@ -27,12 +27,12 @@ namespace Au {
 		public screen(Func<screen> f) { _h = default; _func = f; }
 
 		/// <summary>
-		/// Gets the screen handle, aka HMONITOR. Returns default(IntPtr) if it wasn't set; see <see cref="Now"/>.
+		/// Gets the screen handle, aka <b>HMONITOR</b>. Returns <c>default(IntPtr)</c> if it wasn't set; see <see cref="Now"/>.
 		/// </summary>
 		public IntPtr Handle => _h;
 
 		/// <summary>
-		/// Gets the callback function that returns screen when need. Returns null if it wasn't set.
+		/// Gets the callback function that returns <b>screen</b> when need. Returns null if it wasn't set.
 		/// </summary>
 		public Func<screen> LazyFunc => _func;
 
@@ -88,7 +88,7 @@ namespace Au {
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified window or nearest to it.
 		/// </summary>
-		/// <param name="w">Window or control. If default(wnd) or invalid, gets the primary screen.</param>
+		/// <param name="w">Window or control. If <c>default(wnd)</c> or invalid, gets the primary screen.</param>
 		/// <param name="defaultScreen"></param>
 		/// <param name="lazy">
 		/// Create variable with <see cref="LazyFunc"/> that later will get screen handle.
@@ -184,27 +184,35 @@ namespace Au {
 		/// </summary>
 		public static class at {
 			/// <summary>Gets a screen nearest to the top edge of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen top(bool lazy = false) => _S(0, -700, lazy);
 
 			/// <summary>Gets a screen nearest to the bottom edge of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen bottom(bool lazy = false) => _S(0, 700, lazy);
 
 			/// <summary>Gets a screen nearest to the left edge of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen left(bool lazy = false) => _S(-1000, 0, lazy);
 
 			/// <summary>Gets a screen nearest to the right edge of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen right(bool lazy = false) => _S(1000, 0, lazy);
 
 			/// <summary>Gets a screen nearest to the top-left corner of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen topLeft(bool lazy = false) => _S(-1000, -700, lazy);
 
 			/// <summary>Gets a screen nearest to the top-right corner of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen topRight(bool lazy = false) => _S(1000, -700, lazy);
 
 			/// <summary>Gets a screen nearest to the bottom-left corner of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen bottomLeft(bool lazy = false) => _S(-1000, 700, lazy);
 
 			/// <summary>Gets a screen nearest to the bottom-right corner of the primary screen.</summary>
+			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen bottomRight(bool lazy = false) => _S(1000, 700, lazy);
 		}
 
@@ -213,7 +221,6 @@ namespace Au {
 		/// </summary>
 		/// <param name="dx">Horizontal offset. Negative is to the left from the left edge of PS. Positive is to the right from the right edge of PS. Zero is the horizontal center of PS.</param>
 		/// <param name="dy">Vertical offset. Negative is up from the top edge of PS. Positive is down from the bottom edge of PS. Zero is the vertical center of PS.</param>
-		/// <param name="lazy"></param>
 		static screen _S(int dx, int dy, bool lazy) {
 			var r = primary.Rect;
 			if (dx > 0) dx += r.right; else if (dx == 0) dx = r.CenterX;
@@ -260,7 +267,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
 		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Negative index.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Negative <i>index</i>.</exception>
 		public static screen index(int index, bool lazy = false) {
 			if (index < 0) throw new ArgumentOutOfRangeException();
 			if (lazy) return new screen(() => screen.index(index));
@@ -298,10 +305,10 @@ namespace Au {
 		/// </summary>
 		/// <returns>
 		/// Tuple containing:
-		/// <br/>• rect - screen rectangle.
-		/// <br/>• workArea - work area rectangle.
-		/// <br/>• isPrimary - true if it is the primary screen.
-		/// <br/>• isAlive - false if the screen handle is invalid; then the function gets info of the primary screen.
+		/// <br/>• <b>rect</b> - screen rectangle.
+		/// <br/>• <b>workArea</b> - work area rectangle.
+		/// <br/>• <b>isPrimary</b> - true if it is the primary screen.
+		/// <br/>• <b>isAlive</b> - false if the screen handle is invalid; then the function gets info of the primary screen.
 		/// </returns>
 		/// <remarks>
 		/// If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="Now"/>.
@@ -376,17 +383,17 @@ namespace Au {
 		//public static implicit operator Screen(screen scrn) { int h=(int)scrn._Handle(); return Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == h);
 
 		/// <summary>
-		/// Returns true if point p is in some screen.
+		/// Returns true if point <i>p</i> is in some screen.
 		/// </summary>
 		public static bool isInAnyScreen(POINT p) => Api.MonitorFromPoint(p, SODefault.Zero) != default;
 
 		/// <summary>
-		/// Returns true if rectangle r intersects with some screen.
+		/// Returns true if rectangle <i>r</i> intersects with some screen.
 		/// </summary>
 		public static bool isInAnyScreen(RECT r) => Api.MonitorFromRect(r, SODefault.Zero) != default;
 
 		/// <summary>
-		/// Returns true if rectangle of window w intersects with some screen.
+		/// Returns true if rectangle of window <i>w</i> intersects with some screen.
 		/// </summary>
 		public static bool isInAnyScreen(wnd w) => Api.MonitorFromWindow(w, SODefault.Zero) != default;
 

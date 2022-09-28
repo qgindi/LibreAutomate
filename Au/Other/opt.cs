@@ -7,8 +7,7 @@
 //	But such options must be applied only in that file.
 //	Or something in the find function. Maybe overload or last parameter. Or findW.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Options for some functions of this library.
 	/// </summary>
@@ -19,8 +18,12 @@ namespace Au
 	/// - <b>opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>opt.init</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
 	/// - <b>opt.init</b> - static options. Contains initial property values for <b>opt</b>. Normally you change them when script starts. Don't change later, it's not thread-safe.
 	/// </remarks>
-	public static class opt
-	{
+	/// <example>
+	/// <code><![CDATA[
+	/// opt.key.KeySpeed = 50;
+	/// ]]></code>
+	/// </example>
+	public static class opt {
 		/// <summary>
 		/// Options for keyboard and clipboard functions (classes <see cref="keys"/>, <see cref="clipboard"/> and functions that use them).
 		/// </summary>
@@ -102,8 +105,7 @@ namespace Au
 		/// <remarks>
 		/// You can change these options at the start of your script/program. Don't change later.
 		/// </remarks>
-		public static class init
-		{
+		public static class init {
 			/// <summary>
 			/// Default option values for <see cref="opt.key"/> of a thread.
 			/// </summary>
@@ -153,8 +155,7 @@ namespace Au
 		/// Creates temporary scopes for options.
 		/// Example: <c>using(opt.scope.key()) { opt.key.KeySpeed=5; ... }</c>.
 		/// </summary>
-		public static class scope
-		{
+		public static class scope {
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.mouse"/> options. See example.
 			/// </summary>
@@ -303,13 +304,16 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Options for run-time warnings (<see cref="print.warning"/>).
 	/// </summary>
-	public class OWarnings
-	{
+	/// <example>
+	/// <code><![CDATA[
+	/// opt.warnings.Verbose = false;
+	/// ]]></code>
+	/// </example>
+	public class OWarnings {
 		bool? _verbose;
 		List<string> _disabledWarnings;
 
@@ -338,6 +342,11 @@ namespace Au.Types
 		/// If true, some library functions may display more warnings and other info.
 		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="AssemblyUtil_.IsDebug"/>.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.warnings.Verbose = false;
+		/// ]]></code>
+		/// </example>
 		public bool Verbose {
 			get => (_verbose ??= script.isDebug) == true;
 			set => _verbose = value;
@@ -394,8 +403,12 @@ namespace Au.Types
 	/// </remarks>
 	/// <seealso cref="opt.mouse"/>
 	/// <seealso cref="opt.init.mouse"/>
-	public class OMouse
-	{
+	/// <example>
+	/// <code><![CDATA[
+	/// opt.mouse.MoveSpeed = 30;
+	/// ]]></code>
+	/// </example>
+	public class OMouse {
 		struct _Options //makes easier to copy and reset fields
 		{
 			public int ClickSpeed, MoveSpeed, ClickSleepFinally, MoveSleepFinally;
@@ -440,6 +453,11 @@ namespace Au.Types
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="opt.init.mouse"/>: 0 - 100 (1 s).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.mouse.ClickSpeed = 30;
+		/// ]]></code>
+		/// </example>
 		public int ClickSpeed {
 			get => _o.ClickSpeed;
 			set => _o.ClickSpeed = _SetValue(value, 1000, 100);
@@ -456,6 +474,11 @@ namespace Au.Types
 		/// It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
 		/// Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.mouse.MoveSpeed = 30;
+		/// ]]></code>
+		/// </example>
 		public int MoveSpeed {
 			get => _o.MoveSpeed;
 			set => _o.MoveSpeed = _SetValue(value, 10000, 100);
@@ -470,6 +493,11 @@ namespace Au.Types
 		/// <remarks>
 		/// The 'click' functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.mouse.ClickSpeedFinally = 30;
+		/// ]]></code>
+		/// </example>
 		public int ClickSleepFinally {
 			get => _o.ClickSleepFinally;
 			set => _o.ClickSleepFinally = _SetValue(value, 10000, 100);
@@ -484,6 +512,11 @@ namespace Au.Types
 		/// <remarks>
 		/// Used by <see cref="mouse.move"/> (finally), <see cref="mouse.click"/> (between moving and clicking) and other functions that generate mouse movement events.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.mouse.MoveSpeedFinally = 30;
+		/// ]]></code>
+		/// </example>
 		public int MoveSleepFinally {
 			get => _o.MoveSleepFinally;
 			set => _o.MoveSleepFinally = _SetValue(value, 1000, 100);
@@ -495,16 +528,21 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// This option is used by these functions:
-		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):
-		/// <br/>false - throw exception if cannot move the cursor to the specified x y. For example if the x y is not in screen.
-		/// <br/>true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
-		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):
-		/// <br/>false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
-		/// <br/>true - do not wait.
-		/// - <see cref="mouse.click"/> and other functions that click or press a mouse button using window coordinates:
-		/// <br/>false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.
-		/// <br/>true - allow to click in another window. Don't activate the window and don't throw exception.
+		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):\
+		///   false - throw exception if cannot move the cursor to the specified x y. For example if the x y is not in screen.\
+		///   true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
+		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):\
+		///   false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.\
+		///   true - do not wait.
+		/// - <see cref="mouse.click"/> and other functions that click or press a mouse button using window coordinates:\
+		///   false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.\
+		///   true - allow to click in another window. Don't activate the window and don't throw exception.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.mouse.Relaxed = true;
+		/// ]]></code>
+		/// </example>
 		public bool Relaxed { get => _o.Relaxed; set => _o.Relaxed = value; }
 	}
 
@@ -514,8 +552,12 @@ namespace Au.Types
 	/// </summary>
 	/// <seealso cref="opt.key"/>
 	/// <seealso cref="opt.init.key"/>
-	public class OKey
-	{
+	/// <example>
+	/// <code><![CDATA[
+	/// opt.key.KeySpeed = 50;
+	/// ]]></code>
+	/// </example>
+	public class OKey {
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
@@ -593,6 +635,11 @@ namespace Au.Types
 		/// <remarks>
 		/// Used only for 'text' arguments, not for 'keys' arguments. See <see cref="KeySpeed"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.TextSpeed = 50;
+		/// ]]></code>
+		/// </example>
 		public int TextSpeed {
 			get => _textSpeed;
 			set => _textSpeed = _SetValue(value, 1000, 100);
@@ -608,6 +655,11 @@ namespace Au.Types
 		/// <remarks>
 		/// Used only for 'keys' arguments, not for 'text' arguments. See <see cref="TextSpeed"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.KeySpeed = 50;
+		/// ]]></code>
+		/// </example>
 		public int KeySpeed {
 			get => _keySpeed;
 			set => _keySpeed = _SetValue(value, 1000, 100);
@@ -623,6 +675,11 @@ namespace Au.Types
 		/// <remarks>
 		/// In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.KeySpeedClipboard = 50;
+		/// ]]></code>
+		/// </example>
 		public int KeySpeedClipboard {
 			get => _clipboardKeySpeed;
 			set => _clipboardKeySpeed = _SetValue(value, 1000, 100);
@@ -638,6 +695,11 @@ namespace Au.Types
 		/// <remarks>
 		/// Not used by <see cref="clipboard.copy"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.SleepFinally = 50;
+		/// ]]></code>
+		/// </example>
 		public int SleepFinally {
 			get => _sleepFinally;
 			set => _sleepFinally = _SetValue(value, 10000, 100);
@@ -662,6 +724,11 @@ namespace Au.Types
 		/// How to send text to the active window (keys, characters or clipboard).
 		/// Default: <see cref="OKeyText.Characters"/>.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.TextHow = OKeyText.Paste;
+		/// ]]></code>
+		/// </example>
 		public OKeyText TextHow { get; set; }
 
 		/// <summary>
@@ -669,6 +736,11 @@ namespace Au.Types
 		/// Default: 200.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.PasteLength = 50;
+		/// ]]></code>
+		/// </example>
 		public int PasteLength {
 			get => _pasteLength;
 			set => _pasteLength = _SetValue(value, int.MaxValue, int.MaxValue);
@@ -682,6 +754,11 @@ namespace Au.Types
 		/// <remarks>
 		/// Some apps trim these characters when pasting.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.PasteWorkaround = true;
+		/// ]]></code>
+		/// </example>
 		public bool PasteWorkaround { get; set; }
 
 		//rejected: rarely used. Eg can be useful for Python programmers. Let call clipboard.paste() explicitly or set the Paste option eg in hook.
@@ -698,6 +775,16 @@ namespace Au.Types
 		/// Default: true.
 		/// By default restores only text. See also <see cref="RestoreClipboardAllFormats"/>, <see cref="RestoreClipboardExceptFormats"/>.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.RestoreClipboard = true;
+		/// ]]></code>
+		/// </example>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.RestoreClipboard = false;
+		/// ]]></code>
+		/// </example>
 		public bool RestoreClipboard { get; set; }
 
 		#region static RestoreClipboard options
@@ -713,6 +800,11 @@ namespace Au.Types
 		/// </remarks>
 		/// <seealso cref="RestoreClipboard"/>
 		/// <seealso cref="RestoreClipboardExceptFormats"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// OKey.RestoreClipboardAllFormats = true;
+		/// ]]></code>
+		/// </example>
 		public static bool RestoreClipboardAllFormats { get; set; }
 
 		/// <summary>
@@ -725,13 +817,18 @@ namespace Au.Types
 		/// 
 		/// You can use function <see cref="PrintClipboard"/> to see format names and get-data times.
 		/// 
-		/// There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
-		/// These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
+		/// There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API constant names, like <c>"CF_WAVE"</c>. Private, display and metafile formats are never restored.
+		/// These formats are never restored: <b>CF_METAFILEPICT</b>, <b>CF_ENHMETAFILE</b>, <b>CF_PALETTE</b>, <b>CF_OWNERDISPLAY</b>, <b>CF_DSPx</b> formats, <b>CF_GDIOBJx</b> formats, <b>CF_PRIVATEx</b> formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
 		/// 
 		/// This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
 		/// </remarks>
 		/// <seealso cref="RestoreClipboard"/>
 		/// <seealso cref="PrintClipboard"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// OKey.RestoreClipboardExceptFormats = new[] { "CF_UNICODETEXT", "HTML Format" };
+		/// ]]></code>
+		/// </example>
 		public static string[] RestoreClipboardExceptFormats { get; set; }
 
 		/// <summary>
@@ -742,6 +839,11 @@ namespace Au.Types
 		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="clipboard.copy"/> and don't call this function in loop. Else it shows small times.</note>
 		/// The time depends on app, etc. More info: <see cref="RestoreClipboardExceptFormats"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// OKey.PrintClipboard();
+		/// ]]></code>
+		/// </example>
 		public static void PrintClipboard() => clipboard.PrintClipboard_();
 
 		#endregion
@@ -750,12 +852,22 @@ namespace Au.Types
 		/// When starting to send keys or text, don't release modifier keys.
 		/// Default: false.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.NoModOff = true;
+		/// ]]></code>
+		/// </example>
 		public bool NoModOff { get; set; }
 
 		/// <summary>
 		/// When starting to send keys or text, don't turn off CapsLock.
 		/// Default: false.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.NoCapsOff = true;
+		/// ]]></code>
+		/// </example>
 		public bool NoCapsOff { get; set; }
 
 		/// <summary>
@@ -765,6 +877,11 @@ namespace Au.Types
 		/// <remarks>
 		/// If false (default), user-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.NoBlockInput = true;
+		/// ]]></code>
+		/// </example>
 		public bool NoBlockInput { get; set; }
 
 		/// <summary>
@@ -772,22 +889,34 @@ namespace Au.Types
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="keys.send"/>, <see cref="keys.sendt"/>, <see cref="keys.SendIt"/>, <see cref="clipboard.paste"/> and similar functions. Not called by <see cref="clipboard.copy"/>.
+		/// The callback function is called by <see cref="keys.send"/>, <see cref="keys.sendt"/>, <see cref="keys.Send"/>, <see cref="clipboard.paste"/> and similar functions. Not called by <see cref="clipboard.copy"/>.
 		/// </remarks>
 		/// <seealso cref="OKeyHookData"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.key.Hook = k => {
+		/// 	print.it(k.w);
+		/// 	var w = k.w.Window; //if k.w is a control, get its top-level window
+		/// 	var name = w.Name;
+		/// 	if (name.Like("* Slow App")) {
+		/// 		k.optk.KeySpeed = 50;
+		/// 		k.optk.TextSpeed = 50;
+		/// 	}
+		/// };
+		/// 
+		/// for (int i = 0; i < 10; i++) {
+		/// 	1.s();
+		/// 	keys.send("Home");
+		/// }
+		/// ]]></code>
+		/// </example>
 		public Action<OKeyHookData> Hook { get; set; }
-
-		//#if DEBUG
-		//		public int Debug1 { get; set; }
-		//		public int Debug2 { get; set; }
-		//#endif
 	}
 
 	/// <summary>
 	/// Parameter type of the <see cref="OKey.Hook"/> callback function.
 	/// </summary>
-	public struct OKeyHookData
-	{
+	public struct OKeyHookData {
 		internal OKeyHookData(OKey optk, wnd w) { this.optk = optk; this.w = w; }
 
 		/// <summary>
@@ -807,19 +936,18 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// There are three ways to send text to the active app using keys:
-	/// - Characters (default) - use special key code VK_PACKET. Can send most characters.
+	/// - Characters (default) - use special key code <b>VK_PACKET</b>. Can send most characters.
 	/// - Keys - use virtual-key codes, with Shift etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
 	/// - Paste - use the clipboard and Ctrl+V. Can send any text.
 	/// 
 	/// Most but not all apps support all three ways.
 	/// </remarks>
-	public enum OKeyText
-	{
+	public enum OKeyText {
 		/// <summary>
-		/// Send most text characters using special key code VK_PACKET.
+		/// Send most text characters using special key code <b>VK_PACKET</b>.
 		/// This option is default. Few apps don't support it.
-		/// For newlines, tab and space sends keys (Enter, Tab, Space), because VK_PACKET often does not work well.
-		/// If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as WM_PACKET pairs.
+		/// For newlines, tab and space sends keys (Enter, Tab, Space), because <b>VK_PACKET</b> often does not work well.
+		/// If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as <b>WM_PACKET</b> pairs.
 		/// </summary>
 		Characters,
 		//Tested many apps/controls/frameworks. Works almost everywhere.
@@ -860,19 +988,18 @@ namespace Au.Types
 	/// </summary>
 	/// <seealso cref="opt.wait"/>
 	/// <seealso cref="wait.forCondition"/>
-	/// <seealso cref="wait.Loop"/>
-	public class OWait
-	{
+	/// <seealso cref="WaitLoop"/>
+	public class OWait {
 		/// <summary>
 		/// The sleep time between checking the wait condition. Milliseconds.
 		/// Default: 10.
 		/// </summary>
 		/// <value>Valid values: 1-1000.</value>
 		/// <remarks>
-		/// Most 'wait for' functions of this library use <see cref="wait.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
+		/// Most 'wait for' functions of this library use <see cref="WaitLoop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
 		/// This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
 		/// </remarks>
-		/// <seealso cref="wait.Loop.Period"/>
+		/// <seealso cref="WaitLoop.Period"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// opt.wait.Period = 100;

@@ -14,7 +14,7 @@ namespace Au {
 		/// <summary>
 		/// Sends an ICMP echo message to the specified website and returns true if successful. Can be used to check Internet connectivity.
 		/// </summary>
-		/// <param name="hostNameOrAddress">Domain name like "google.com" or IP like "123.45.67.89".</param>
+		/// <param name="hostNameOrAddress">Domain name like <c>"google.com"</c> or IP like <c>"123.45.67.89"</c>.</param>
 		/// <param name="timeout">Timeout in milliseconds.</param>
 		/// <remarks>
 		/// Not all websites support it.
@@ -161,7 +161,7 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="name">Field name.</param>
 		/// <param name="file">File path.</param>
-		/// <param name="contentType">Content-Type header, for example "image/png".</param>
+		/// <param name="contentType">Content-Type header, for example <c>"image/png"</c>.</param>
 		/// <param name="fileName">Filename. If null, gets from <i>file</i>.</param>
 		/// <returns>This.</returns>
 		/// <remarks>

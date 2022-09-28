@@ -62,11 +62,11 @@ namespace Au {
 		/// <returns>this.</returns>
 		/// <param name="text">Text.</param>
 		/// <param name="format">
-		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (CF_UNICODETEXT).
-		/// Text encoding depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
+		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException">Invalid format.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>format</i>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Encoding.GetBytes(string)"/>, which is called if encoding is not UTF-16.</exception>
 		public clipboardData AddText(string text, int format = ClipFormats.Text) {
 			Encoding enc = ClipFormats.GetTextEncoding_(format, out _);
@@ -81,7 +81,7 @@ namespace Au {
 		/// <param name="data">byte[] containing data.</param>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats.Register"/>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException">Invalid format. Supported are all registered formats and standard formats &lt;CF_MAX except GDI handles.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
 		public clipboardData AddBinary(byte[] data, int format) {
 			return _Add(data, format);
 		}
@@ -106,7 +106,7 @@ namespace Au {
 #endif
 
 		/// <summary>
-		/// Adds image. Uses clipboard format <see cref="ClipFormats.Image"/> (CF_BITMAP).
+		/// Adds image. Uses clipboard format <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="image">Image. Must be <see cref="Bitmap"/>, else exception.</param>
@@ -116,7 +116,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Adds HTML text. Uses clipboard format <see cref="ClipFormats.Html"/> ("HTML Format").
+		/// Adds HTML text. Uses clipboard format <see cref="ClipFormats.Html"/> (<c>"HTML Format"</c>).
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
@@ -134,7 +134,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Adds list of files to copy/paste. Uses clipboard format <see cref="ClipFormats.Files"/> (CF_HDROP).
+		/// Adds list of files to copy/paste. Uses clipboard format <see cref="ClipFormats.Files"/> (<b>CF_HDROP</b>).
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="files">One or more file paths.</param>
@@ -164,7 +164,7 @@ namespace Au {
 		/// <summary>
 		/// Copies the added data of all formats to the clipboard which is open/owned by this thread.
 		/// </summary>
-		/// <param name="renderLater">Call API <msdn>SetClipboardData</msdn>(format, default). When/if some app will try to get clipboard data, the first time your clipboard owner window will receive <msdn>WM_RENDERFORMAT</msdn> message and should call <c>SetOpenClipboard(false);</c>.</param>
+		/// <param name="renderLater">Call API <msdn>SetClipboardData</msdn>: <c>SetClipboardData(format, default)</c>. When/if some app will try to get clipboard data, the first time your clipboard owner window will receive <msdn>WM_RENDERFORMAT</msdn> message and should call <c>SetOpenClipboard(false);</c>.</param>
 		/// <param name="format">Copy data only of this format. If 0 (default), of all formats.</param>
 		/// <exception cref="OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
 		/// <exception cref="AuException">Failed to set clipboard data.</exception>
@@ -278,7 +278,7 @@ namespace Au {
 					b.Append(html);
 					isb = isf; ieb = ief; //reuse these vars to calc UTF8 lengths
 				}
-				//correct isf/ief if html part lenghts are different in UTF8
+				//correct isf/ief if html part lengths are different in UTF8
 				if (!html.IsAscii()) {
 					fixed (char* p = html) {
 						int lenDiff1 = Encoding.UTF8.GetByteCount(p, isb) - isb;
@@ -384,9 +384,9 @@ EndFragment:0000000000
 		/// </summary>
 		/// <returns>null if there is no text.</returns>
 		/// <param name="format">
-		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (CF_UNICODETEXT).
+		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
-		/// Text encoding depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string getText(int format = ClipFormats.Text) {
@@ -399,7 +399,7 @@ EndFragment:0000000000
 		/// Gets clipboard data of any format as byte[].
 		/// </summary>
 		/// <returns>null if there is no data of the specified format.</returns>
-		/// <exception cref="ArgumentException">Invalid format. Supported are all registered formats and standard formats &lt;CF_MAX except GDI handles.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static byte[] getBinary(int format) {
 			_CheckFormat(format);
@@ -425,7 +425,7 @@ EndFragment:0000000000
 #endif
 
 		/// <summary>
-		/// Gets image from the clipboard. Uses clipboard format <see cref="ClipFormats.Image"/> (CF_BITMAP).
+		/// Gets image from the clipboard. Uses clipboard format <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
 		/// </summary>
 		/// <returns>null if there is no data of this format.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
@@ -438,7 +438,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets HTML text from the clipboard. Uses clipboard format <see cref="ClipFormats.Html"/> ("HTML Format").
+		/// Gets HTML text from the clipboard. Uses clipboard format <see cref="ClipFormats.Html"/> (<c>"HTML Format"</c>).
 		/// </summary>
 		/// <returns>null if there is no data of this format or if failed to parse it.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
@@ -489,7 +489,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (CF_HDROP).
+		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (<b>CF_HDROP</b>).
 		/// </summary>
 		/// <returns>null if there is no data of this format.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
@@ -550,13 +550,13 @@ namespace Au.Types {
 	/// These and other standard and registered format ids can be used with <see cref="clipboardData"/> class functions.
 	/// </summary>
 	public static class ClipFormats {
-		/// <summary>The text format. Standard, API constant CF_UNICODETEXT. The default format of <see cref="clipboardData"/> add/get text functions.</summary>
+		/// <summary>The text format. Standard, API constant <b>CF_UNICODETEXT</b>. The default format of <see cref="clipboardData"/> add/get text functions.</summary>
 		public const int Text = Api.CF_UNICODETEXT;
 
-		/// <summary>The image format. Standard, API constant CF_BITMAP. Used by <see cref="clipboardData"/> add/get image functions.</summary>
+		/// <summary>The image format. Standard, API constant <b>CF_BITMAP</b>. Used by <see cref="clipboardData"/> add/get image functions.</summary>
 		public const int Image = Api.CF_BITMAP;
 
-		/// <summary>The file-list format. Standard, API constant CF_HDROP. Used by <see cref="clipboardData"/> add/get files functions.</summary>
+		/// <summary>The file-list format. Standard, API constant <b>CF_HDROP</b>. Used by <see cref="clipboardData"/> add/get files functions.</summary>
 		public const int Files = Api.CF_HDROP;
 
 		/// <summary>The HTML format. Registered, name "HTML Format". Used by <see cref="clipboardData"/> add/get HTML functions.</summary>
@@ -608,7 +608,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Gets clipboard format name.
 		/// </summary>
-		/// <param name="format">A registered or standard clipboard format. If standard, returns string like "CF_BITMAP".</param>
+		/// <param name="format">A registered or standard clipboard format. If standard, returns string like <c>"CF_BITMAP"</c>.</param>
 		/// <param name="orNull">Return null if <i>format</i> is unknown. If false, returns <i>format</i> as string.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetClipboardFormatName</msdn>. Although undocumented, it also can get other strings from the same system atom table, for example registered Windows message names and window class names.

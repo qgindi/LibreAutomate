@@ -11,13 +11,13 @@ namespace Au;
 /// PCRE regular expression syntax: <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">full</see>, <see href="https://www.pcre.org/current/doc/html/pcre2syntax.html">short</see>.
 /// Some websites with tutorials and info: <see href="https://www.rexegg.com/">rexegg</see>, <see href="https://www.regular-expressions.info/">regular-expressions.info</see>.
 /// 
-/// This class is an alternative to the .NET <see cref="Regex"/> class. The regular expression syntax is similar. PCRE has some features unavailable in .NET, and vice versa. In most cases PCRE is about 2 times faster. You can use any of these classes. Functions of <see cref="elm"/> class support only PCRE.
+/// This class is an alternative to the .NET <see cref="Regex"/> class. The regular expression syntax is similar. PCRE has some features unavailable in .NET, and vice versa. In most cases PCRE is faster. You can use any of these classes. Functions of <see cref="elm"/> class support only PCRE.
 /// 
 /// Terms used in this documentation and in names of functions and types:
 /// - <i>regular expression</i> - regular expression string. Also known as <i>pattern</i>.
 /// - <i>subject string</i> - the string in which to search for the regular expression. Also known as <i>input string</i>.
 /// - <i>match</i> - the part (substring) of the subject string that matches the regular expression.
-/// - <i>groups</i> - regular expression parts enclosed in (). Except non-capturing parts, like (?:...) and (?options). Also known as <i>capturing group</i>, <i>capturing subpattern</i>. Often term <i>group</i> also is used for group matches.
+/// - <i>groups</i> - regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. Also known as <i>capturing group</i>, <i>capturing subpattern</i>. Often term <i>group</i> also is used for group matches.
 /// - <i>group match</i> - the part (substring) of the subject string that matches the group. Also known as <i>captured substring</i>.
 /// 
 /// This library uses an unmanaged code dll AuCpp.dll that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <b>regexp</b> constructor calls <b>pcre2_compile</b> and stores the compiled code in the variable. Other <b>regexp</b> functions call <b>pcre2_match</b>. Compiling to native code (JIT) is not supported.
@@ -115,7 +115,7 @@ public unsafe class regexp
 	/// <param name="rx">Regular expression. Cannot be null.</param>
 	/// <param name="flags">
 	/// Options.
-	/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag NEVER_UTF.
+	/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
 	/// </param>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentException">Invalid regular expression. Or failed to compile it for some other reason (unlikely).</exception>
@@ -147,8 +147,12 @@ public unsafe class regexp
 	/// </summary>
 	/// <value>Callback delegate (eg lambda) or null.</value>
 	/// <remarks>
-	/// Callouts can be used to: 1. Track the matching progress. 2. Get all instances of a group that can match multiple times. 3. Evaluate and reject some matches or match parts. 4. Etc.
-	/// The callback function is called by <b>IsMatch</b>, <b>Match</b>, <b>FindAll</b>, <b>Replace</b>, <b>Split</b> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
+	/// Callouts can be used to:
+	/// <br/>• Track the matching progress.
+	/// <br/>• Get all instances of a group that can match multiple times.
+	/// <br/>• Evaluate and reject some matches or match parts.
+	/// <br/>• Etc.
+	/// The callback function is called by <b>IsMatch</b>, <b>Match</b>, <b>FindAll</b>, <b>Replace</b>, <b>Split</b> and similar functions, when they reach callout points in regular expression. To insert callout points use <c>(?C)</c>, <c>(?C1)</c>, <c>(?C2)</c>, <c>(?C'name')</c> etc or pass flag <b>AUTO_CALLOUT</b> to the constructor.
 	/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 	/// See also: <see href="https://www.rexegg.com/pcre-callouts.html"/>
 	/// </remarks>
@@ -161,7 +165,7 @@ public unsafe class regexp
 	/// x.Callout = o => { print.it(o.callout_number, o.start_match, o.current_position, s[o.start_match..o.current_position], rx.Substring(o.pattern_position, o.next_item_length)); };
 	/// print.it(x.IsMatch(s));
 	/// ]]></code>
-	/// Track the matching progress with flag AUTO_CALLOUT.
+	/// Track the matching progress with flag <b>AUTO_CALLOUT</b>.
 	/// <code><![CDATA[
 	/// var s = "one 'two' three";
 	/// var rx = @"'(.+?)'";
@@ -287,7 +291,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Returns true if string <i>s</i> matches this regular expression.
 	/// </summary>
-	/// <returns>true if full or partial match. Partial match is possible if used a PARTIAL_ flag.</returns>
+	/// <returns>true if full or partial match. Partial match is possible if used a <b>PARTIAL_</b> flag.</returns>
 	/// <param name="s">
 	/// Subject string.
 	/// If null, returns false, even if the regular expression matches empty string.
@@ -331,7 +335,7 @@ public unsafe class regexp
 	/// </summary>
 	/// <returns>
 	/// <br/>• If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
-	/// <br/>• If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
+	/// <br/>• If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a <b>PARTIAL_</b> flag.
 	/// <br/>• If no match, returns false, and <i>result</i> normally is null. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="RXMatch.Exists"/> (false) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
 	/// </returns>
 	/// <param name="result">Receives match info.</param>
@@ -361,8 +365,8 @@ public unsafe class regexp
 	/// Gets whole match or some group, as <see cref="RXGroup"/> (index, length, value).
 	/// </summary>
 	/// <returns>
-	/// <br/>• If full match, returns true, and <i>result</i> contains the match or the specifed group.
-	/// <br/>• If partial match, returns true. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+	/// <br/>• If full match, returns true, and <i>result</i> contains the match or the specified group.
+	/// <br/>• If partial match, returns true. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
 	/// <br/>• If no match, returns false, and <i>result</i> is empty.
 	/// </returns>
 	/// <param name="s">
@@ -403,7 +407,7 @@ public unsafe class regexp
 	/// </summary>
 	/// <returns>
 	/// <br/>• If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
-	/// <br/>• If partial match, returns true. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+	/// <br/>• If partial match, returns true. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
 	/// <br/>• If no match, returns false, and <i>result</i> is null.
 	/// </returns>
 	/// <param name="s">
@@ -511,7 +515,10 @@ public unsafe class regexp
 	/// <param name="s">Subject string. Cannot be null.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+	/// <exception cref="ArgumentException">
+	/// <br/>• Used a <b>PARTIAL_</b> flag.
+	/// <br/>• The regular expression contains <c>(?=...\K)</c>.
+	/// </exception>
 	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 	/// <remarks>
 	/// This function is similar to <see cref="Regex.Matches(string)"/>.
@@ -536,7 +543,10 @@ public unsafe class regexp
 	/// </param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+	/// <exception cref="ArgumentException">
+	/// <br/>• Used a <b>PARTIAL_</b> flag.
+	/// <br/>• The regular expression contains <c>(?=...\K)</c>.
+	/// </exception>
 	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 	/// <example>
 	/// <code><![CDATA[
@@ -668,15 +678,15 @@ public unsafe class regexp
 	/// <param name="s">Subject string. Cannot be null.</param>
 	/// <param name="repl">
 	/// Replacement pattern.
-	/// Can consist of any combination of literal text and substitutions like $1.
-	/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
+	/// Can consist of any combination of literal text and substitutions like <c>$1</c>.
+	/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces <c>$*</c> with the name of the last encountered mark; replaces <c>${+func}</c> etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
 	/// </param>
 	/// <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
-	/// - Invalid $replacement.
-	/// - Used a PARTIAL_ flag.
+	/// - Invalid <c>$replacement</c>.
+	/// - Used a <b>PARTIAL_</b> flag.
 	/// - The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
 	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
@@ -764,8 +774,8 @@ public unsafe class regexp
 	}
 
 	/// <summary>
-	/// Used by _ReplaceAll and RXMatch.ExpandReplacement.
-	/// Fully supports .NET regular expression substitution syntax. Also: replaces $* with the name of the last encountered mark; replaces ${+func} etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
+	/// Used by <b>_ReplaceAll</b> and <b>RXMatch.ExpandReplacement</b>.
+	/// Fully supports .NET regular expression substitution syntax. Also: replaces <c>$*</c> with the name of the last encountered mark; replaces <c>${+func}</c> etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	internal static void ExpandReplacement_(RXMatch m, string repl, StringBuilder b) {
@@ -866,15 +876,15 @@ public unsafe class regexp
 	}
 
 	/// <summary>
-	/// Adds or replaces a function that is called when a regular expression replacement string contains ${+name} or ${+name(g)} or ${+name(g, v)}, where g is group number or name and v is any string.
+	/// Adds or replaces a function that is called when a regular expression replacement string contains <c>${+name}</c> or <c>${+name(g)}</c> or <c>${+name(g, v)}</c>, where <i>g</i> is group number or name and <i>v</i> is any string.
 	/// </summary>
-	/// <param name="name">A string used to identify the function. Can contain any characters except '}', '(' and ')'.</param>
+	/// <param name="name">A string used to identify the function. Can contain any characters except <c>'}'</c>, <c>'('</c> and <c>')'</c>.</param>
 	/// <param name="replFunc">
 	/// Callback function. Called for each found match. Returns the replacement.
 	/// Parameters:
 	/// <br/>• current match.
-	/// <br/>• group number g, if replacement is like ${+name(g)} or ${+name(g, v)}; else 0.
-	/// <br/>• string v, if replacement is like ${+name(g, v)}; else null.
+	/// <br/>• group number <i>g</i>, if replacement is like <c>${+name(g)}</c> or <c>${+name(g, v)}</c>; else 0.
+	/// <br/>• string <i>v</i>, if replacement is like <c>${+name(g, v)}</c>; else null.
 	/// 
 	/// <para>
 	/// In the callback function you can use <see cref="RXMatch.ExpandReplacement"/>.
@@ -889,7 +899,7 @@ public unsafe class regexp
 	/// <code><![CDATA[
 	/// regexp.addReplaceFunc("Lower", (m, g, v) => m[g].Value.Lower()); //make lowercase
 	/// ]]></code>
-	/// Another example. Replacement could be like ${+mul(1, 10)}.
+	/// Another example. Replacement could be like <c>${+mul(1, 10)}</c>.
 	/// <code><![CDATA[
 	/// regexp.addReplaceFunc("mul", (m, g, v) => (m[g].Value.ToInt() * v.ToInt()).ToString()); //multiply by v
 	/// ]]></code>
@@ -908,7 +918,10 @@ public unsafe class regexp
 	/// <param name="maxCount">Maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
+	/// <exception cref="ArgumentException">
+	/// <br/>• Used a <b>PARTIAL_</b> flag.
+	/// <br/>• The regular expression contains <c>(?=...\K)</c>.
+	/// </exception>
 	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 	/// <remarks>
 	/// Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.

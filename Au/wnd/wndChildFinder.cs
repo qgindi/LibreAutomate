@@ -1,26 +1,31 @@
 
 using static Au.wnd.Internal_;
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Finds window controls (child windows). Contains name and other parameters of controls to find.
 	/// </summary>
 	/// <remarks>
 	/// Can be used instead of <see cref="wnd.Child"/> or <see cref="wnd.ChildAll"/>.
-	/// Also can be used to find window that contains certain control, like in the example.
+	/// Also can be used to find window that contains certain control, like in examples.
 	/// </remarks>
 	/// <example>
 	/// Find window that contains certain control, and get the control too.
 	/// <code><![CDATA[
-	/// var f = new wndChildFinder("Password*", "Static"); //control properties
-	/// wnd w = wnd.find(cn: "#32770", also: t => f.Exists(t));
+	/// var cf = new wndChildFinder("Password*", "Static");
+	/// wnd w = wnd.find(cn: "#32770", also: t => t.HasChild(cf));
 	/// print.it(w);
-	/// print.it(f.Result);
+	/// print.it(cf.Result);
+	/// ]]></code>
+	/// The same with parameter <i>contains</i>.
+	/// <code><![CDATA[
+	/// var cf = new wndChildFinder("Password*", "Static");
+	/// wnd w = wnd.find(cn: "#32770", contains: cf);
+	/// print.it(w);
+	/// print.it(cf.Result);
 	/// ]]></code>
 	/// </example>
-	public class wndChildFinder
-	{
+	public class wndChildFinder {
 		enum _NameIs : byte { name, text, elmName, wfName }
 
 		readonly wildex _name;
@@ -35,7 +40,12 @@ namespace Au
 		/// <summary>
 		/// See <see cref="wnd.Child"/>.
 		/// </summary>
-		/// <exception cref="ArgumentException">See <see cref="wnd.Child"/>.</exception>
+		/// <exception cref="ArgumentException">
+		/// - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
+		/// - <i>cn</i> is <c>""</c>. To match any, use null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// </exception>
+		/// <inheritdoc cref="wnd.Child(string, string, WCFlags, int?, Func{wnd, bool}, int)" path="/param"/>
 		public wndChildFinder(
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
@@ -69,7 +79,7 @@ namespace Au
 		/// <summary>
 		/// Finds the specified child control, like <see cref="wnd.Child"/>.
 		/// </summary>
-		/// <returns>If found, returns <see cref="Result"/>, else default(wnd).</returns>
+		/// <returns>If found, returns <see cref="Result"/>, else <c>default(wnd)</c>.</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 		/// <remarks>
@@ -80,7 +90,7 @@ namespace Au
 		/// <summary>
 		/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
-		/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns default(wnd) (if <i>waitS</i> negative).</returns>
+		/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
@@ -119,7 +129,7 @@ namespace Au
 		/// </summary>
 		/// <returns>0-based index, or -1 if not found.</returns>
 		/// <param name="a">List of controls, for example returned by <see cref="wnd.getwnd.Children"/>.</param>
-		/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
+		/// <param name="wParent">Direct or indirect parent window. Used only for flag <b>DirectChild</b>.</param>
 		public int FindInList(IEnumerable<wnd> a, wnd wParent = default) {
 			using var k = new WndList_(a);
 			return _FindInList(wParent, k);
@@ -130,7 +140,7 @@ namespace Au
 		/// </summary>
 		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 		/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
-		/// <exception cref="AuWndException">Invalid wParent.</exception>
+		/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 		public wnd[] FindAll(wnd wParent) {
 			return _FindAll(new WndList_(_AllChildren(wParent)), wParent);
 		}
@@ -140,7 +150,7 @@ namespace Au
 		/// </summary>
 		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 		/// <param name="a">List of controls, for example returned by <see cref="wnd.getwnd.Children"/>.</param>
-		/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
+		/// <param name="wParent">Direct or indirect parent window. Used only for flag <b>DirectChild</b>.</param>
 		public wnd[] FindAllInList(IEnumerable<wnd> a, wnd wParent = default) {
 			return _FindAll(new WndList_(a), wParent);
 		}
@@ -156,7 +166,7 @@ namespace Au
 		/// <summary>
 		/// Returns index of matching element or -1.
 		/// </summary>
-		/// <param name="wParent">Parent window. Can be default(wnd) if inList is true and no DirectChild flag and not using winforms name.</param>
+		/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if inList is true and no DirectChild flag and not using winforms name.</param>
 		/// <param name="a">List of wnd. Does not dispose it.</param>
 		/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
 		int _FindInList(wnd wParent, WndList_ a, Action<wnd> getAll = null) {
@@ -243,10 +253,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if control c properties match the specified properties.
+		/// Returns true if control <c>c</c> properties match the specified properties.
 		/// </summary>
 		/// <param name="c">A control. Can be 0/invalid, then returns false.</param>
-		/// <param name="wParent">Direct or indirect parent window. If used, returns false if it isn't parent (also depends on flag DirectChild).</param>
+		/// <param name="wParent">Direct or indirect parent window. If used, returns false if it isn't parent (also depends on flag <b>DirectChild</b>).</param>
 		public bool IsMatch(wnd c, wnd wParent = default) {
 			if (!wParent.Is0 && !c.IsChildOf(wParent)) {
 				Result = default;
