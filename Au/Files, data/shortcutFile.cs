@@ -10,7 +10,7 @@ namespace Au {
 		bool _changedHotkey;
 
 		/// <summary>
-		/// Releases internally used COM objects (IShellLink, IPersistFile).
+		/// Releases internally used COM objects (<b>IShellLink</b>, <b>IPersistFile</b>).
 		/// </summary>
 		public void Dispose() {
 			if (_isl != null) {
@@ -20,7 +20,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns the internally used IShellLink COM interface.
+		/// Returns the internally used <b>IShellLink</b> COM interface.
 		/// </summary>
 		internal Api.IShellLink IShellLink => _isl;
 		//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
@@ -47,24 +47,28 @@ namespace Au {
 
 		/// <summary>
 		/// Creates a new <see cref="shortcutFile"/> instance that can be used to create or replace a shortcut file.
-		/// You can set properties and finally call <see cref="Save"/>.
-		/// If the shortcut file already exists, <b>Save</b> replaces it.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <remarks>
+		/// You can set properties and finally call <see cref="Save"/>.
+		/// If the shortcut file already exists, <b>Save</b> replaces it.
+		/// </remarks>
 		public static shortcutFile create(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_WRITE);
 		}
 
 		/// <summary>
 		/// Creates a new <see cref="shortcutFile"/> instance that can be used to create or modify a shortcut file.
-		/// Exception if file exists but cannot open it for read-write access.
-		/// You can get and set properties and finally call <see cref="Save"/>.
-		/// If the shortcut file already exists, <b>Save</b> updates it.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="AuException">Failed to open existing .lnk file.</exception>
+		/// <remarks>
+		/// Exception if file exists but cannot open it for read-write access.
+		/// You can get and set properties and finally call <see cref="Save"/>.
+		/// If the shortcut file already exists, <b>Save</b> updates it.
+		/// </remarks>
 		public static shortcutFile openOrCreate(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_READWRITE);
 		}
@@ -85,9 +89,9 @@ namespace Au {
 
 		/// <summary>
 		/// Gets or sets shortcut target path.
-		/// This property is null if target isn't a file system object, eg Control Panel or URL.
 		/// </summary>
-		/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
+		/// <value>null if target isn't a file system object, eg Control Panel or URL.</value>
+		/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where <b>IShellLink.GetPath</b> lies.</remarks>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
 		/// <exception cref="ArgumentException">The 'set' function allows max length 259.</exception>
 		public string TargetPath {
@@ -103,7 +107,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets or sets a non-file-system target (eg Control Panel) through its ITEMIDLIST.
+		/// Gets or sets a non-file-system target (eg Control Panel) through its <b>ITEMIDLIST</b>.
 		/// </summary>
 		/// <remarks>
 		/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
@@ -118,8 +122,8 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets a URL target.
 		/// Note: it is a .lnk shortcut, not a .url shortcut.
-		/// The 'get' function returns string "file:///..." if target is a file.
 		/// </summary>
+		/// <value>The 'get' function returns string <c>"file:///..."</c> if target is a file.</value>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string TargetURL {
 			get {
@@ -228,9 +232,9 @@ namespace Au {
 
 		/// <summary>
 		/// Gets or sets the window show state.
-		/// The value can be 1 (normal, default), 2 (minimized) or 3 (maximized).
 		/// Most programs ignore it.
 		/// </summary>
+		/// <value>1 (normal, default), 2 (minimized) or 3 (maximized).</value>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public int ShowState {
 			get => (0 == _isl.GetShowCmd(out var R)) ? R : Api.SW_SHOWNORMAL;
@@ -244,7 +248,7 @@ namespace Au {
 		#region public static
 
 		/// <summary>
-		/// Gets shortcut target path or URL or virtual shell object ITEMIDLIST.
+		/// Gets shortcut target path or URL or virtual shell object <b>ITEMIDLIST</b>.
 		/// Uses <see cref="open"/> and <see cref="TargetAnyType"/>.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
@@ -266,6 +270,7 @@ namespace Au {
 		}
 
 		#endregion
+
 		#region private
 
 		/// <exception cref="AuException">Failed to open or save.</exception>

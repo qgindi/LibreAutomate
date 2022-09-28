@@ -5,7 +5,7 @@
 
 namespace Au {
 	/// <summary>
-	/// Contains static functions to work with file path strings. Parse, combine, make full, make unique, make valid, expand variables, etc.
+	/// File path string functions. Parse, combine, make full, make unique, make valid, expand variables, etc.
 	/// </summary>
 	/// <remarks>
 	/// Functions of this class work with strings, not with the file system. Some functions may just get file info, for example <see cref="makeUnique"/>.
@@ -16,12 +16,12 @@ namespace Au {
 	/// </remarks>
 	public static unsafe class pathname {
 		/// <summary>
-		/// If path starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns path.
+		/// If <i>path</i> starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns <i>path</i>.
 		/// Also supports known folder names, like <c>"%folders.Documents%"</c>. More info in Remarks.
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
 		/// <param name="strict">
-		/// What to do if path looks like starts with and environment variable or known folder but the variable/folder does not exist:
+		/// What to do if <i>path</i> looks like starts with and environment variable or known folder but the variable/folder does not exist:
 		/// <br/>• true - throw <b>ArgumentException</b>;
 		/// <br/>• false - return unexpanded path;
 		/// <br/>• null (default) - call <see cref="print.warning"/> and return unexpanded path.
@@ -85,7 +85,7 @@ namespace Au {
 		/// 
 		/// Supports <c>'/'</c> characters too.
 		/// 
-		/// Supports only file-system paths. Returns false if path is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
+		/// Supports only file-system paths. Returns false if <i>path</i> is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
 		public static bool isFullPath(RStr path, bool orEnvVar = false) {
 			int len = path.Length;
@@ -110,7 +110,7 @@ namespace Au {
 		/// <returns>true if the string is full path, like <c>@"C:\a\b.txt"</c> or <c>@"C:"</c> or <c>@"\\server\share\..."</c>.</returns>
 		/// <param name="path">
 		/// Any string. Can be null.
-		/// If starts with '%' character, calls <see cref="isFullPath"/> with expanded environment variables (<see cref="expand"/>). If it returns true, replaces the passed variable with the expanded path string.
+		/// If starts with <c>'%'</c> character, calls <see cref="isFullPath"/> with expanded environment variables (<see cref="expand"/>). If it returns true, replaces the passed variable with the expanded path string.
 		/// </param>
 		/// <param name="strict">See <see cref="expand"/>. Shortly: null (default) - warning; true - exception; false - ignore.</param>
 		/// <remarks>
@@ -118,8 +118,9 @@ namespace Au {
 		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
 		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
 		/// - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
-		/// Supports '/' characters too.
-		/// Supports only file-system paths. Returns false if path is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
+		/// 
+		/// Supports <c>'/'</c> characters too.
+		/// Supports only file-system paths. Returns false if <i>path</i> is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
 		public static bool isFullPathExpand(ref string path, bool? strict = null) {
 			var s = path;
@@ -133,7 +134,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets the length of the drive or network folder part in path, including its separator if any.
+		/// Gets the length of the drive or network folder part in <i>path</i>, including its separator if any.
 		/// If the string does not start with a drive or network folder path, returns 0 or prefix length (<c>@"\\?\"</c> or <c>@"\\?\UNC\"</c>).
 		/// </summary>
 		/// <param name="path">Full path or any string. Can be null. Should not be <c>@"%environmentVariable%\..."</c>.</param>
@@ -178,14 +179,14 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets the length of the URL protocol name (also known as URI scheme) in string, including ':'.
+		/// Gets the length of the URL protocol name (also known as URI scheme) in string, including <c>':'</c>.
 		/// If the string does not start with a protocol name, returns 0.
 		/// </summary>
 		/// <param name="s">A URL or path or any string. Can be null.</param>
 		/// <remarks>
 		/// URL examples: <c>"http:"</c> (returns 5), <c>"http://www.x.com"</c> (returns 5), <c>"file:///path"</c> (returns 5), <c>"shell:etc"</c> (returns 6).
 		/// 
-		/// The protocol can be unknown. The function just checks string format, which is an ASCII alpha character followed by one or more ASCII alpha-numeric, '.', '-', '+' characters, followed by ':' character.
+		/// The protocol can be unknown. The function just checks string format, which is an ASCII alpha character followed by one or more ASCII alpha-numeric, <c>'.'</c>, <c>'-'</c>, <c>'+'</c> characters, followed by <c>':'</c> character.
 		/// </remarks>
 		public static int getUrlProtocolLength(RStr s) {
 			int len = s.Length;
@@ -201,7 +202,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if the string starts with a URL protocol name (existing or not) and ':' character.
+		/// Returns true if the string starts with a URL protocol name (existing or not) and <c>':'</c> character.
 		/// Calls <see cref="getUrlProtocolLength"/> and returns true if it's not 0.
 		/// </summary>
 		/// <param name="s">A URL or path or any string. Can be null.</param>
@@ -220,8 +221,8 @@ namespace Au {
 		/// <param name="s2CanBeFullPath"><i>s2</i> can be full path. If it is, ignore <i>s1</i> and return <i>s2</i> with expanded environment variables. If false (default), simply combines <i>s1</i> and <i>s2</i>.</param>
 		/// <param name="prefixLongPath">Call <see cref="prefixLongPathIfNeed"/> which may prepend <c>@"\\?\"</c> if the result path is very long. Default true.</param>
 		/// <remarks>
-		/// If <i>s1</i> and <i>s2</i> are null or "", returns "". Else if <i>s1</i> is null or "", returns <i>s2</i>. Else if <i>s2</i> is null or "", returns <i>s1</i>.
-		/// Does not expand environment variables. For it use <see cref="expand"/> before, or <see cref="normalize"/> instead. Path that starts with an environment variable here is considerd not full path.
+		/// If <i>s1</i> and <i>s2</i> are null or <c>""</c>, returns <c>""</c>. Else if <i>s1</i> is null or <c>""</c>, returns <i>s2</i>. Else if <i>s2</i> is null or <c>""</c>, returns <i>s1</i>.
+		/// Does not expand environment variables. For it use <see cref="expand"/> before, or <see cref="normalize"/> instead. Path that starts with an environment variable here is considered not full path.
 		/// Similar to <see cref="Path.Combine"/>. Main differences: has some options; supports null arguments.
 		/// </remarks>
 		/// <seealso cref="normalize"/>
@@ -279,7 +280,7 @@ namespace Au {
 		internal static bool IsSepChar_(char c) { return c == '\\' || c == '/'; }
 
 		/// <summary>
-		/// Returns true if ends with ':' preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
+		/// Returns true if ends with <c>':'</c> preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
 		/// </summary>
 		static bool _EndsWithDriveWithoutSep(RStr s) {
 			if (s == null) return false;
@@ -314,12 +315,12 @@ namespace Au {
 		/// <param name="path">Any path.</param>
 		/// <param name="defaultParentDirectory">If <i>path</i> is not full path, combine it with <i>defaultParentDirectory</i> to make full path.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="ArgumentException">path is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
+		/// <exception cref="ArgumentException"><i>path</i> is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
 		/// <remarks>
 		/// The sequence of actions:
-		/// 1. If <i>path</i> starts with '%' character, expands environment variables and special folder names. See <see cref="expand"/>.
+		/// 1. If <i>path</i> starts with <c>'%'</c> character, expands environment variables and special folder names. See <see cref="expand"/>.
 		/// 2. If <i>path</i> is not full path but looks like URL, and used flag <b>CanBeUrl</b>, returns <i>path</i>.
-		/// 3. If <i>path</i> is not full path, and <i>defaultParentDirectory</i> is not null/"", combines path with <c>expand(defaultParentDirectory)</c>.
+		/// 3. If <i>path</i> is not full path, and <i>defaultParentDirectory</i> is not null/<c>""</c>, combines <i>path</i> with <c>expand(defaultParentDirectory)</c>.
 		/// 4. If <i>path</i> is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
 		/// 6. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
@@ -384,7 +385,7 @@ namespace Au {
 
 		/// <summary>
 		/// Calls API GetLongPathName.
-		/// Does not check whether s contains '~' character etc. Note: the API is slow.
+		/// Does not check whether s contains <c>'~'</c> character etc. Note: the API is slow.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		internal static string ExpandDosPath_(string s) {
@@ -433,8 +434,8 @@ namespace Au {
 		internal static bool IsShellPathOrUrl_(RStr s) => IsShellPath_(s) || isUrl(s);
 
 		/// <summary>
-		/// If path is full path (see <see cref="isFullPath"/>) and does not start with <c>@"\\?\"</c>, prepends <c>@"\\?\"</c>.
-		/// If path is network path (like <c>@"\\computer\folder\..."</c>), makes like <c>@"\\?\UNC\computer\folder\..."</c>.
+		/// If <i>path</i> is full path (see <see cref="isFullPath"/>) and does not start with <c>@"\\?\"</c>, prepends <c>@"\\?\"</c>.
+		/// If <i>path</i> is network path (like <c>@"\\computer\folder\..."</c>), makes like <c>@"\\?\UNC\computer\folder\..."</c>.
 		/// </summary>
 		/// <param name="path">
 		/// Path. Can be null.
@@ -453,22 +454,22 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls <see cref="prefixLongPath"/> if path is longer than <see cref="maxDirectoryPathLength"/> (247).
+		/// Calls <see cref="prefixLongPath"/> if <i>path</i> is longer than <see cref="maxDirectoryPathLength"/> (247).
 		/// </summary>
 		/// <param name="path">
 		/// Path. Can be null.
 		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="expand"/>.
 		/// </param>
 		public static string prefixLongPathIfNeed(string path) {
-			if (path != null && path.Length > maxDirectoryPathLength) path = prefixLongPath(path);
+			if (path.Lenn() > maxDirectoryPathLength) path = prefixLongPath(path);
 			return path;
 
 			//info: MaxDirectoryPathLength is max length supported by API CreateDirectory.
 		}
 
 		/// <summary>
-		/// If path starts with <c>@"\\?\"</c> prefix, removes it.
-		/// If path starts with <c>@"\\?\UNC\"</c> prefix, removes <c>@"?\UNC\"</c>.
+		/// If <i>path</i> starts with <c>@"\\?\"</c> prefix, removes it.
+		/// If <i>path</i> starts with <c>@"\\?\UNC\"</c> prefix, removes <c>@"?\UNC\"</c>.
 		/// </summary>
 		/// <param name="path">
 		/// Path. Can be null.
@@ -501,13 +502,13 @@ namespace Au {
 
 		/// <summary>
 		/// Maximal file (not directory) path length supported by all functions (native, .NET and this library).
-		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by: most native kernel API (but not shell API), most functions of this library, some .NET functions.
+		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and most functions of this library and .NET.
 		/// </summary>
 		public const int maxFilePathLength = 259;
 
 		/// <summary>
 		/// Maximal directory path length supported by all functions (native, .NET and this library).
-		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by: most native kernel API (but not shell API), most functions of this library, some .NET functions.
+		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and most functions of this library and .NET.
 		/// </summary>
 		public const int maxDirectoryPathLength = 247;
 
@@ -517,7 +518,7 @@ namespace Au {
 		/// <param name="name">Initial filename.</param>
 		/// <param name="invalidCharReplacement">A string that will replace each invalid character. Default <c>"-"</c>.</param>
 		/// <remarks>
-		/// Also corrects other forms of invalid or problematic filename: trims spaces and other blank characters; replaces <c>"."</c> at the end; prepends <c>"@"</c> if a reserved name like <c>"CON"</c> or <c>"CON.txt"</c>; returns <c>"-"</c> if name is null/empty/whitespace.
+		/// Also corrects other forms of invalid or problematic filename: trims spaces and other blank characters; replaces <c>"."</c> at the end; prepends <c>"@"</c> if a reserved name like <c>"CON"</c> or <c>"CON.txt"</c>; returns <c>"-"</c> if <i>name</i> is null/empty/whitespace.
 		/// Usually returns valid filename, however it can be too long (itself or when combined with a directory path).
 		/// </remarks>
 		public static string correctName(string name, string invalidCharReplacement = "-") {
@@ -534,28 +535,28 @@ namespace Au {
 		/// Returns true if name cannot be used for a file name, eg contains <c>'\\'</c> etc characters or is empty.
 		/// More info: <see cref="correctName"/>.
 		/// </summary>
-		/// <param name="name">Any string. Example: "name.txt". Can be null.</param>
+		/// <param name="name">Any string. Example: <c>"name.txt"</c>. Can be null.</param>
 		public static bool isInvalidName(string name) {
 			if (name == null || (name = name.Trim()).Length == 0) return true;
 			return name.RxIsMatch(_rxInvalidFN1) || name.RxIsMatch(_rxInvalidFN2);
 		}
 
 		/// <summary>
-		/// Returns true if haracter <i>c</i> is invalid in file names (the filename part).
+		/// Returns true if character <i>c</i> is invalid in file names (the filename part).
 		/// </summary>
 		public static bool isInvalidNameChar(char c)
 			=> c is < ' ' or '\"' or '<' or '>' or '|'or '*' or '?' or ':'  or '\\' or '/';
 
 		/// <summary>
-		/// Returns true if haracter <i>c</i> is invalid in file paths.
+		/// Returns true if character <i>c</i> is invalid in file paths.
 		/// </summary>
 		public static bool isInvalidPathChar(char c)
 			=> c is < ' ' or '\"' or '<' or '>' or '|' or '*' or '?';
 
 		/// <summary>
-		/// Gets filename from path. Does not remove extension.
+		/// Gets filename from <i>path</i>. Does not remove extension.
 		/// </summary>
-		/// <returns>Returns "" if there is no filename. Returns null if path is null.</returns>
+		/// <returns>Returns <c>""</c> if there is no filename. Returns null if <i>path</i> is null.</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFileName"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
@@ -565,8 +566,8 @@ namespace Au {
 		/// 
 		/// Examples:
 		/// 
-		/// | path | result
-		/// | - | -
+		/// | <i>path</i> | result
+		/// | -
 		/// | <c>@"C:\A\B\file.txt"</c> | <c>"file.txt"</c>
 		/// | <c>"file.txt"</c> | <c>"file.txt"</c>
 		/// | <c>"file"</c> | <c>"file"</c>
@@ -589,7 +590,7 @@ namespace Au {
 		/// <summary>
 		/// Gets filename without extension.
 		/// </summary>
-		/// <returns>Returns "" if there is no filename. Returns null if path is null.</returns>
+		/// <returns>Returns <c>""</c> if there is no filename. Returns null if <i>path</i> is null.</returns>
 		/// <param name="path">Path or filename (then just removes extension). Can be null.</param>
 		/// <remarks>
 		/// The same as <see cref="getName"/>, just removes extension.
@@ -600,8 +601,8 @@ namespace Au {
 		/// 
 		/// Examples:
 		/// 
-		/// | path | result
-		/// | - | -
+		/// | <i>path</i> | result
+		/// | -
 		/// | <c>@"C:\A\B\file.txt"</c> | <c>"file"</c>
 		/// | <c>"file.txt"</c> | <c>"file"</c>
 		/// | <c>"file"</c> | <c>"file"</c>
@@ -618,7 +619,7 @@ namespace Au {
 		/// <summary>
 		/// Gets filename extension, like <c>".txt"</c>.
 		/// </summary>
-		/// <returns>Returns "" if there is no extension. Returns null if path is null.</returns>
+		/// <returns>Returns <c>""</c> if there is no extension. Returns null if <i>path</i> is null.</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
@@ -632,7 +633,7 @@ namespace Au {
 		/// More info: <see cref="getExtension(string)"/>.
 		/// </summary>
 		/// <param name="path">Path or filename. Can be null.</param>
-		/// <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as path.</param>
+		/// <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as <i>path</i>.</param>
 		public static string getExtension(string path, out string pathWithoutExtension) {
 			var ext = getExtension(path);
 			if (ext != null && ext.Length > 0) pathWithoutExtension = path[..^ext.Length];
@@ -657,10 +658,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Removes filename part from path.
+		/// Removes filename part from <i>path</i>.
 		/// By default also removes separator (<c>'\\'</c> or <c>'/'</c>) if it is not after drive name (eg <c>"C:"</c>).
 		/// </summary>
-		/// <returns>Returns "" if the string is a filename. Returns null if the string is null or a root (like <c>@"C:\"</c> or <c>"C:"</c> or <c>@"\\server\share"</c> or <c>"http:"</c>).</returns>
+		/// <returns>Returns <c>""</c> if the string is a filename. Returns null if the string is null or a root (like <c>@"C:\"</c> or <c>"C:"</c> or <c>@"\\server\share"</c> or <c>"http:"</c>).</returns>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <param name="withSeparator">Don't remove separator character(s) (<c>'\\'</c> or <c>'/'</c>). See examples.</param>
 		/// <remarks>
@@ -673,8 +674,8 @@ namespace Au {
 		/// 
 		/// Examples:
 		/// 
-		/// | path | result
-		/// | - | -
+		/// | <i>path</i> | result
+		/// | -
 		/// | <c>@"C:\A\B\file.txt"</c> | <c>@"C:\A\B"</c>
 		/// | <c>"file.txt"</c> | <c>""</c>
 		/// | <c>@"C:\A\B\"</c> | <c>@"C:\A"</c>
@@ -690,8 +691,8 @@ namespace Au {
 		/// 
 		/// Examples when <i>withSeparator</i> true:
 		/// 
-		/// | path | result
-		/// | - | -
+		/// | <i>path</i> | result
+		/// | -
 		/// | <c>@"C:\A\B"</c> | <c>@"C:\A\"</c> (not <c>@"C:\A"</c>)
 		/// | <c>"http://x.y"</c> | <c>"http://"</c> (not <c>"http:"</c>)
 		/// </remarks>
@@ -760,7 +761,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c> and does not start/end with whitespace.
+		/// Returns true if <i>s</i> is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c> and does not start/end with whitespace.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		internal static bool IsExtension_(RStr s) {
@@ -775,7 +776,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if s is like "protocol:" and not like "c:" or "protocol:more".
+		/// Returns true if <i>s</i> is like <c>"protocol:"</c> and not like <c>"c:"</c> or <c>"protocol:more"</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		internal static bool IsProtocol_(RStr s) {
@@ -783,8 +784,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets path with unique filename for a new file or directory. 
-		/// If the specified path is of an existing file or directory, returns path where the filename part is modified like "file 2.txt", "file 3.txt" etc. Else returns unchanged path.
+		/// Creates path with unique filename for a new file or directory. 
+		/// If the specified path is of an existing file or directory, returns path where the filename part is modified like <c>"file 2.txt"</c>, <c>"file 3.txt"</c> etc. Else returns unchanged <i>path</i>.
 		/// </summary>
 		/// <param name="path">Suggested full path.</param>
 		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>

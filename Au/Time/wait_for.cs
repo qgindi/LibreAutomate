@@ -1,151 +1,7 @@
 namespace Au
 {
-	/// <summary>
-	/// Contains functions to wait for a condition/variable/etc or simply wait (sleep).
-	/// </summary>
-	/// <remarks>
-	/// Specialized 'wait for' functions are in other classes, for example <see cref="wnd.wait"/>.
-	/// 
-	/// All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
-	/// 
-	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Window/Form/Control event handler, the window would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OWait.DoEvents"/>.
-	/// </remarks>
-	/// <example>
-	/// <code><![CDATA[
-	/// wait.forCondition(0, () => keys.isScrollLock);
-	/// print.it("ScrollLock now is toggled");
-	/// ]]></code>
-	/// Using in a WPF window with async/await.
-	/// <code><![CDATA[
-	/// using System.Windows;
-	/// var b = new wpfBuilder("Window").WinSize(250);
-	/// b.R.AddButton("Wait", async _ => {
-	/// 	  print.it("waiting for ScrollLock...");
-	/// 	  var result = await Task.Run(() => wait.forCondition(-10, () => keys.isScrollLock));
-	/// 	  print.it(result);
-	/// });
-	/// if (!b.ShowDialog()) return;
-	/// ]]></code>
-	/// </example>
 	public static partial class wait
 	{
-		/// <summary>
-		/// Can be used to easily implement 'wait for' functions with a timeout.
-		/// </summary>
-		/// <remarks>
-		/// See examples. The code works like most 'wait for' functions of this library: on timeout throws exception, unless secondsTimeout is negative.
-		/// Similar code is used by most 'wait for' functions of this library.
-		/// See also <see cref="forCondition"/>; usually it's easier; internally it uses similar code too.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// public static bool WaitForMouseLeftButtonDown(double secondsTimeout) {
-		/// 	var x = new wait.Loop(secondsTimeout);
-		/// 	for(; ; ) {
-		/// 		if(mouse.isPressed(MButtons.Left)) return true;
-		/// 		if(!x.Sleep()) return false;
-		/// 	}
-		/// }
-		/// ]]></code>
-		/// The same with wait.forCondition.
-		/// <code><![CDATA[
-		/// static bool WaitForMouseLeftButtonDown2(double secondsTimeout) {
-		/// 	return wait.forCondition(secondsTimeout, () => mouse.isPressed(MButtons.Left));
-		/// }
-		/// ]]></code>
-		/// </example>
-		public struct Loop
-		{
-			long _timeRemaining, _timePrev;
-			bool _hasTimeout, _throw, _doEvents, _precisionIsSet;
-			float _step;
-
-			/// <summary>
-			/// Current period (<see cref="Sleep"/> sleep time), milliseconds.
-			/// Initially it is <see cref="OWait.Period"/>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
-			/// </summary>
-			public float Period { get; set; }
-
-			/// <summary>
-			/// Maximal period (<see cref="Sleep"/> sleep time), milliseconds.
-			/// It is <see cref="Period"/>*50 (default 500).
-			/// </summary>
-			public float MaxPeriod { get; set; }
-
-			/// <summary>
-			/// Gets or sets the remaining time, milliseconds.
-			/// </summary>
-			public long TimeRemaining { get => _timeRemaining; set => _timeRemaining = value; }
-
-			/// <param name="secondsTimeout">
-			/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="Sleep"/> throws <see cref="TimeoutException"/>. If &lt;0, then <see cref="Sleep"/> returns false.
-			/// </param>
-			/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
-			public Loop(double secondsTimeout, OWait options = null) {
-				var to = opt.wait;
-				Period = to.Period;
-				_doEvents = to.DoEvents;
-				if (options != null) {
-					Period = Period * options.Period / 10f;
-					if (options.DoEvents) _doEvents = true;
-				}
-				Period = Math.Max(Period, 1f);
-				MaxPeriod = Period * 50f;
-				_step = Period / 10f;
-
-				if (secondsTimeout == 0d || secondsTimeout > 9223372036854775d || secondsTimeout < -9223372036854775d) { //long.MaxValue/1000 = 292_471_208 years
-					_hasTimeout = _throw = false;
-					_timeRemaining = _timePrev = 0;
-				} else {
-					_hasTimeout = true;
-					if (secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
-					_timeRemaining = (long)(secondsTimeout * 1000d);
-					_timePrev = computer.tickCountWithoutSleep;
-				}
-				_precisionIsSet = false;
-			}
-
-			/// <summary>
-			/// Calls <see cref="IsTimeout"/>. If it returns true, returns false.
-			/// Else sleeps for <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns true.
-			/// </summary>
-			/// <exception cref="TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			public bool Sleep() {
-				if (IsTimeout()) return false;
-
-				if (Period < 9.9f && !_precisionIsSet) { //default Period is 10
-					_precisionIsSet = true;
-					SleepPrecision_.TempSet1();
-				}
-
-				int t = (int)Period;
-				if (_doEvents) {
-					SleepDoEvents_(t, noSetPrecision: true);
-				} else {
-					Thread.Sleep(t);
-				}
-
-				if (Period < MaxPeriod) Period += _step;
-				return true;
-			}
-
-			/// <summary>
-			/// If the <i>secondsTimeout</i> time is not expired, returns false.
-			/// Else if <i>secondsTimeout</i> is negative, returns true.
-			/// Else throws <see cref="TimeoutException"/>.
-			/// </summary>
-			/// <exception cref="TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			public bool IsTimeout() {
-				if (!_hasTimeout) return false;
-				var t = computer.tickCountWithoutSleep;
-				_timeRemaining -= t - _timePrev;
-				_timePrev = t;
-				if (_timeRemaining > 0) return false;
-				if (_throw) throw new TimeoutException();
-				return true;
-			}
-		}
-
 		/// <summary>
 		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
@@ -156,7 +12,7 @@ namespace Au
 		/// <example>See <see cref="wait"/>.</example>
 		/// <seealso cref="wait"/>
 		public static T forCondition<T>(double secondsTimeout, Func<T> condition, OWait options = null) {
-			var to = new Loop(secondsTimeout, options);
+			var to = new WaitLoop(secondsTimeout, options);
 			for (; ; ) {
 				T r = condition();
 				if (!EqualityComparer<T>.Default.Equals(r, default)) return r;
@@ -357,7 +213,7 @@ namespace Au
 		///// ]]></code>
 		///// </example>
 		//public static bool forVariable(double secondsTimeout, in bool variable, OWait options = null) {
-		//	var to = new Loop(secondsTimeout, options);
+		//	var to = new WaitLoop(secondsTimeout, options);
 		//	for (; ; ) {
 		//		if (variable) return true;
 		//		if (!to.Sleep()) return false;

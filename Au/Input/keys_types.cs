@@ -5,9 +5,6 @@ namespace Au.Types;
 /// <summary>
 /// Modifier keys as flags.
 /// </summary>
-/// <remarks>
-/// The values don't match those in the .NET enum <see cref="System.Windows.Forms.Keys"/>. This library does not use the .NET enum for modifier keys, mostly because it: does not have Win as modifier flag; confusing names, for example Alt and Menu.
-/// </remarks>
 /// <seealso cref="keys.more.KModToWinforms"/>
 /// <seealso cref="keys.more.KModFromWinforms"/>
 /// <seealso cref="KKey"/>
@@ -24,10 +21,8 @@ public enum KMod : byte
 /// Virtual-key codes.
 /// </summary>
 /// <remarks>
-/// The values are the same as the native VK_ constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
-/// Some key names are different than VK_/Keys, for example Alt instead of VK_MENU/Menu.
-/// Most rare and obsolete keys are not included. You can use Keys or VK_ (int) like <c>(KKey)Keys.Attn</c>.
-/// This library does not use the .NET <b>Keys</b> enum, mostly because it includes modifier key flags and it's easy to confuse eg Shift (flag) with ShiftKey (key). Also this library does not use the WPF <b>Key</b> enum; its values don't match the native VK_ constants that must be used with API functions.
+/// The values are the same as the native <b>VK_</b> constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
+/// Most rare and obsolete keys are not included. You can use <b>Keys</b> or <b>VK_</b> (int) like <c>(KKey)Keys.Attn</c>.
 /// </remarks>
 /// <seealso cref="KMod"/>
 public enum KKey : byte
@@ -223,7 +218,7 @@ public enum KKey : byte
 	//VK_OEM_8 ... VK_ICO_00
 	IMEProcessKey = 0xE5,
 	//VK_ICO_CLEAR
-	///<summary>VK_PACKET. Not a key.</summary>
+	///<summary><b>VK_PACKET</b>. Not a key.</summary>
 	Packet = 0xE7,
 	//VK_OEM_RESET ... VK_OEM_BACKTAB
 	//Attn = 0xF6,
@@ -264,7 +259,7 @@ public struct KKeyScan
 
 /// <summary>
 /// Parameter type of <see cref="keys.send"/> and similar functions.
-/// Has implicit conversions from string, clipboardData, KKey, KKeyScan, char, int (sleep time) and Action.
+/// Has implicit conversions from <b>string</b>, <b>clipboardData</b>, <b>KKey</b>, <b>KKeyScan</b>, <b>char</b>, <b>int</b> (sleep time) and <b>Action</b>.
 /// </summary>
 public struct KKeysEtc
 {
@@ -301,7 +296,7 @@ public class PastingEventArgs : EventArgs
 
 /// <summary>
 /// Defines a hotkey as <see cref="KMod"/> and <see cref="KKey"/>.
-/// Has implicit conversion operators from string like "Ctrl+Shift+K", tuple (KMod, KKey), enum KKey, enum Keys.
+/// Has implicit conversion operators from string like <c>"Ctrl+Shift+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>.
 /// </summary>
 public struct KHotkey
 {
@@ -318,14 +313,14 @@ public struct KHotkey
 	///
 	public KHotkey(KMod mod, KKey key) { Mod = mod; Key = key; }
 
-	/// <summary>Implicit conversion from string like "Ctrl+Shift+K".</summary>
-	/// <exception cref="ArgumentException">"Error in hotkey."</exception>
+	/// <summary>Implicit conversion from string like <c>"Ctrl+Shift+K"</c>.</summary>
+	/// <exception cref="ArgumentException">Error in hotkey.</exception>
 	public static implicit operator KHotkey(string hotkey) {
 		if (!keys.more.parseHotkeyString(hotkey, out var mod, out var key)) throw new ArgumentException("Error in hotkey.");
 		return new KHotkey(mod, key);
 	}
 
-	/// <summary>Implicit conversion from tuple (KMod, KKey).</summary>
+	/// <summary>Implicit conversion from tuple <b>(KMod, KKey)</b>.</summary>
 	public static implicit operator KHotkey((KMod, KKey) hotkey) => new KHotkey(hotkey.Item1, hotkey.Item2);
 
 	/// <summary>Implicit conversion from <see cref="KKey"/> (hotkey without modifiers).</summary>

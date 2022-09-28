@@ -1,4 +1,4 @@
-﻿namespace Au.Types;
+namespace Au.Types;
 
 /// <summary>
 /// <see cref="script.role"/>.
@@ -43,8 +43,8 @@ public enum UExcept {
 /// </summary>
 public enum EGetIcon {
 	/// <summary>
-	/// Input is a file or folder in current workspace. Can be relative path in workspace (like @"\Folder\File.cs") or full path or filename.
-	/// Output must be icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. See menu Tools -> Icons.
+	/// Input is a file or folder in current workspace. Can be relative path in workspace (like <c>@"\Folder\File.cs"</c>) or full path or filename.
+	/// Output must be icon name, like <c>"*Pack.Icon color"</c>, where color is like <c>#RRGGBB</c> or color name. See menu Tools -> Icons.
 	/// </summary>
 	PathToIconName,
 

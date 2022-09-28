@@ -12,7 +12,7 @@ namespace Au.Types
 	public class AuException : Exception//, ISerializable
 	{
 		/// <summary>
-		/// Sets <b>Message</b> = <i>message</i> (default "Failed.").
+		/// Sets <b>Message</b> = <i>message</i> (default <c>"Failed."</c>).
 		/// Sets <b>NativeErrorCode</b> = 0.
 		/// </summary>
 		public AuException(string message = "Failed.", Exception innerException = null) : base(message, innerException) { }
@@ -65,10 +65,10 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// If errorCode is not 0, throws <b>AuException</b> that includes the code and its message.
+		/// If <i>errorCode</i> is not 0, throws <b>AuException</b> that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
-		/// <param name="errorCode">Windows API error code or HRESULT.</param>
+		/// <param name="errorCode">Windows API error code or <b>HRESULT</b>.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
 		public static void ThrowIfHresultNot0(int errorCode, string message = null) {
 			if (errorCode != 0) throw new AuException(errorCode, message);
@@ -78,7 +78,7 @@ namespace Au.Types
 		/// If <i>errorCode</i> is less than 0, throws <b>AuException</b> that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
-		/// <param name="errorCode">Windows API error code or HRESULT.</param>
+		/// <param name="errorCode">Windows API error code or <b>HRESULT</b>.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
 		public static void ThrowIfHresultNegative(int errorCode, string message = null) {
 			if (errorCode < 0) throw new AuException(errorCode, message);
@@ -118,7 +118,7 @@ namespace Au.Types
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
 
 		/// <summary>
-		/// Sets <b>Message</b> = <i>message</i> (default <b>"Failed."</b>).
+		/// Sets <b>Message</b> = <i>message</i> (default <c>"Failed."</c>).
 		/// Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
 		/// </summary>
 		public AuWndException(wnd w, string message = "Failed.", Exception innerException = null)
@@ -178,12 +178,12 @@ namespace Au.Types
 	public class NotFoundException : Exception
 	{
 		/// <summary>
-		/// Sets Message = "Not found.".
+		/// Sets <c>Message = "Not found."</c>.
 		/// </summary>
 		public NotFoundException() : base("Not found.") { }
 
 		/// <summary>
-		/// Sets Message = message.
+		/// Sets <c>Message = message</c>.
 		/// </summary>
 		public NotFoundException(string message) : base(message) { }
 

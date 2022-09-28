@@ -199,7 +199,7 @@ namespace Au.More {
 		/// Sets window/message to be notified about server events.
 		/// </summary>
 		/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns false. See example in class help.</param>
-		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example WM_USER or WM_APP.</param>
+		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example <b>WM_USER</b> or <b>WM_APP</b>.</param>
 		public void SetNotifications(wnd w, int message) {
 			_notifMsg = message;
 			_notifWnd = w;
@@ -330,7 +330,7 @@ namespace Au.More {
 		public int MessageCount => _messages.Count;
 
 		/// <summary>
-		/// Let messages don't end with "\r\n".
+		/// Let messages don't end with <c>"\r\n"</c>.
 		/// </summary>
 		/// <remarks>
 		/// This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
@@ -622,7 +622,7 @@ namespace Au.Types {
 		public string Text { get; set; }
 
 		/// <summary>
-		/// Message time in FILETIME format, UTC.
+		/// Message time in <b>FILETIME</b> format, UTC.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
 		/// To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
 		/// </summary>

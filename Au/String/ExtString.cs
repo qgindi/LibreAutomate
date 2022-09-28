@@ -5,7 +5,7 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// Some .NET <see cref="String"/> methods use <see cref="StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
-/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
+/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See <see href="https://msdn.microsoft.com/en-us/library/ms973919.aspx"/>.
 /// This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
 /// See also <see cref="process.thisProcessCultureIsInvariant"/>.
 /// 
@@ -90,7 +90,7 @@ public static unsafe partial class ExtString {
 	/// Compares part of this string with other string. Returns true if equal.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="range">Range of this string. Can return true only if its length == s.Length. If invalid, returns false.</param>
+	/// <param name="range">Range of this string. Can return true only if its length <c>== s.Length</c>. If invalid, returns false.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
@@ -444,7 +444,7 @@ public static unsafe partial class ExtString {
 	/// <param name="s">Subtring to find.</param>
 	/// <param name="range">The search range.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <param name="otherWordChars">Additional word characters, for which <see cref="char.IsLetterOrDigit"/> returns false. For example "_".</param>
+	/// <param name="otherWordChars">Additional word characters, for which <see cref="char.IsLetterOrDigit"/> returns false. For example <c>"_"</c>.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <remarks>
@@ -496,7 +496,7 @@ public static unsafe partial class ExtString {
 	public static int Lenn(this string t) => t?.Length ?? 0;
 
 	/// <summary>
-	/// Returns true if this string is null or empty ("").
+	/// Returns true if this string is null or empty (<c>""</c>).
 	/// </summary>
 	/// <param name="t">This string.</param>
 	[DebuggerStepThrough]
@@ -550,7 +550,7 @@ public static unsafe partial class ExtString {
 
 	//rejected. 30% slower than the fast Lines() overload. The slow overload rarely used. Range rarely used; can use SegSplit instead.
 	///// <summary>
-	///// Splits this string into lines using separators "\r\n", "\n", "\r".
+	///// Splits this string into lines using separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>.
 	///// </summary>
 	///// <param name="t">This string.</param>
 	///// <param name="noEmptyLines">Don't need empty lines.</param>
@@ -563,7 +563,7 @@ public static unsafe partial class ExtString {
 	//}
 
 	/// <summary>
-	/// Splits this string using newline separators "\r\n", "\n", "\r".
+	/// Splits this string using newline separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>.
 	/// </summary>
 	/// <returns>Array containing lines as strings. Does not include the last empty line.</returns>
 	/// <param name="t">This string.</param>
@@ -596,7 +596,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Splits this string or its range using newline separators "\r\n", "\n", "\r". Gets start/end offsets of lines.
+	/// Splits this string or its range using newline separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>. Gets start/end offsets of lines.
 	/// </summary>
 	/// <returns>Array containing start/end offsets of lines in the string (not in the range). Does not include the last empty line.</returns>
 	/// <param name="t">This string.</param>
@@ -616,7 +616,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Splits this string using newline separators "\r\n", "\n", "\r". Gets start/end offsets of lines.
+	/// Splits this string using newline separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>. Gets start/end offsets of lines.
 	/// </summary>
 	/// <returns>Array containing start/end offsets of lines. Does not include the last empty line.</returns>
 	/// <param name="t">This string.</param>
@@ -648,7 +648,7 @@ public static unsafe partial class ExtString {
 
 	/// <summary>
 	/// Returns the number of lines.
-	/// Counts line separators "\r\n", "\n", "\r".
+	/// Counts line separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
@@ -819,7 +819,7 @@ public static unsafe partial class ExtString {
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
 	/// <remarks>
-	/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
+	/// Fails to convert when string is null, <c>""</c>, does not start with a number or the number is too big.
 	/// 
 	/// Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
 	/// - The number in string can be followed by more text, like <c>"123text"</c>.
@@ -827,7 +827,7 @@ public static unsafe partial class ExtString {
 	/// - Gets the end of the number part.
 	/// - No exception when cannot convert.
 	/// - The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
-	/// - Does not depend on current culture. As minus sign recognizes '-' and '−'.
+	/// - Does not depend on current culture. As minus sign recognizes <c>'-'</c> and <c>'−'</c>.
 	/// - Faster.
 	/// 
 	/// The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
@@ -930,8 +930,8 @@ public static unsafe partial class ExtString {
 	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
-	/// Fails if the string is null or "" or isn't a valid floating-point number.
-	/// Examples of valid numbers: "12", " -12.3 ", ".12", "12.", "12E3", "12.3e-45", "1,234.5" (with style <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like "2text" is invalid, unless range is <c>0..1</c>.
+	/// Fails if the string is null or <c>""</c> or isn't a valid floating-point number.
+	/// Examples of valid numbers: <c>"12"</c>, <c>" -12.3 "</c>, <c>".12"</c>, <c>"12."</c>, <c>"12E3"</c>, <c>"12.3e-45"</c>, <c>"1,234.5"</c> (with <i>style</i> <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like <c>"2text"</c> is invalid, unless <i>range</i> is <c>0..1</c>.
 	/// </remarks>
 	public static double ToNumber(this string t, Range? range = null, NumberStyles style = NumberStyles.Float) {
 		ToNumber(t, out double r, range, style);
@@ -1109,12 +1109,12 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
+	/// If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended <c>'…'</c> character.
 	/// Else returns this string.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="limit">Maximal length of the result string. If less than 1, uses 1.</param>
-	/// <param name="middle">Let "…" be in the middle. For example it is useful when the string is a file path, to avoid removing the filename.</param>
+	/// <param name="middle">Let <c>"…"</c> be in the middle. For example it is useful when the string is a file path, to avoid removing the filename.</param>
 	/// <param name="lines"><i>limit</i> is lines, not characters.</param>
 	public static string Limit(this string t, int limit, bool middle = false, bool lines = false) {
 		if (limit < 1) limit = 1;
@@ -1162,8 +1162,8 @@ public static unsafe partial class ExtString {
 	/// If the string contains these characters, replaces and returns new string. Else returns this string.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
-	/// <param name="quote">Enclose in "".</param>
+	/// <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended <c>'…'</c> character. The enclosing <c>""</c> are not counted.</param>
+	/// <param name="quote">Enclose in <c>""</c>.</param>
 	/// <remarks>
 	/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
 	/// </remarks>
@@ -1271,7 +1271,7 @@ public static unsafe partial class ExtString {
 
 	//rejected
 	///// <summary>
-	///// Replaces all "'" with "''".
+	///// Replaces all <c>"'"</c> with <c>"''"</c>.
 	///// </summary>
 	//public static string SqlEscape(this string t) => t.Replace("'", "''");
 
@@ -1299,7 +1299,7 @@ public static unsafe partial class ExtString {
 
 
 	/// <summary>
-	/// Reverses this string, like "Abc" -> "cbA".
+	/// Reverses this string, like <c>"Abc"</c> -> <c>"cbA"</c>.
 	/// </summary>
 	/// <returns>The result string.</returns>
 	/// <param name="t"></param>
@@ -1490,12 +1490,12 @@ public static unsafe partial class ExtString {
 [Flags]
 public enum STIFlags {
 	/// <summary>
-	/// Don't support hexadecimal numbers (numbers with prefix "0x").
+	/// Don't support hexadecimal numbers (numbers with prefix <c>"0x"</c>).
 	/// </summary>
 	NoHex = 1,
 
 	/// <summary>
-	/// The number in string is hexadecimal without a prefix, like "1A".
+	/// The number in string is hexadecimal without a prefix, like <c>"1A"</c>.
 	/// </summary>
 	IsHexWithout0x = 2,
 

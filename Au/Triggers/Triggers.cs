@@ -256,7 +256,7 @@ public class ActionTriggers
 	/// Makes triggers alive.
 	/// </summary>
 	/// <remarks>
-	/// This function monitors hotkeys, activated windows and other events. When an event matches an added trigger, launches the thrigger's action, which runs in other thread by default.
+	/// This function monitors hotkeys, activated windows and other events. When an event matches an added trigger, launches the trigger's action, which runs in other thread by default.
 	/// Does not return immediately. Runs until this process is terminated or <see cref="Stop"/> called.
 	/// </remarks>
 	/// <example>See <see cref="ActionTriggers"/>.</example>
@@ -436,7 +436,7 @@ public class ActionTriggers
 	/// Does not abort threads of trigger actions that are still running.
 	/// </remarks>
 	/// <example>
-	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Hotkey["Ctrl+T"] = o => print.it("Ctrl+T");
 	/// Triggers.Hotkey["Ctrl+Q"] = o => { print.it("Ctrl+Q (stop)"); Triggers.Stop(); };
@@ -475,7 +475,7 @@ public class ActionTriggers
 	}
 
 	/// <summary>
-	/// Throws InvalidOperationException if not thread of <see cref="Run"/>.
+	/// Throws <b>InvalidOperationException</b> if not thread of <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotMainThread_() {
 		if (Api.GetCurrentThreadId() != _mainThreadId) throw new InvalidOperationException("Must be in thread of Run, for example in a FuncOf function.");
@@ -491,7 +491,7 @@ public class ActionTriggers
 	/// <seealso cref="ActionTrigger.EnabledAlways"/>
 	/// <seealso cref="TriggerOptions.EnabledAlways"/>
 	/// <example>
-	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Hotkey["Ctrl+T"] = o => print.it("Ctrl+T");
 	/// Triggers.Hotkey["Ctrl+D"] = o => { print.it("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle

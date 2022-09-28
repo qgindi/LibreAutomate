@@ -61,7 +61,7 @@ public struct RegisteredHotkey : IDisposable {
 	/// </summary>
 	/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
-	/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>

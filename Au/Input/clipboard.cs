@@ -1,7 +1,7 @@
 namespace Au;
 
 /// <summary>
-/// Clipboard functions: copy, paste, get and set clipboard text and other data.
+/// Clipboard functions. Copy, paste, get and set clipboard text and other data.
 /// </summary>
 /// <remarks>
 /// This class is similar to the .NET <see cref="System.Windows.Forms.Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
@@ -76,6 +76,7 @@ public static class clipboard {
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.KeySpeedClipboard"/>. Does not use <see cref="OKey.Hook"/>.
 	/// </param>
 	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
+	/// <param name="hotkey">Keys to use instead of Ctrl+C or Ctrl+X. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
 	/// <remarks>
 	/// Also can get file paths, as multiline text.
 	/// 
@@ -83,8 +84,9 @@ public static class clipboard {
 	/// Fails if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
 	/// Works with console windows too, even if they don't support Ctrl+C.
 	/// </remarks>
-	public static string copy(bool cut = false, OKey options = null) {
-		return _Copy(cut, options, null);
+	public static string copy(bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+		if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, cut ? KKey.X : KKey.C);
+		return _Copy(cut, hotkey, options);
 		//rejected: 'format' parameter. Not useful.
 	}
 
@@ -95,11 +97,10 @@ public static class clipboard {
 	/// <param name="text">Receives the copied text.</param>
 	/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
 	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to copy text". Default true.</param>
-	/// <inheritdoc cref="copy" path="/param"/>
-	/// <inheritdoc cref="copy" path="/remarks"/>
-	public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true) {
+	/// <inheritdoc cref="copy" path="//param|//remarks"/>
+	public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
 		try {
-			text = copy(cut, options);
+			text = _Copy(cut, hotkey, options);
 			return true;
 		}
 		catch (Exception e1) {
@@ -129,12 +130,12 @@ public static class clipboard {
 	/// ]]></code>
 	/// </example>
 	/// <inheritdoc cref="copy"/>
-	public static void copyData(Action callback, bool cut = false, OKey options = null) {
+	public static void copyData(Action callback, bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
 		Not_.Null(callback);
-		_Copy(cut, options, callback);
+		_Copy(cut, hotkey, options, callback);
 	}
 
-	static string _Copy(bool cut, OKey options, Action callback) {
+	static string _Copy(bool cut, KHotkey hotkey, OKey options, Action callback = null) {
 		string R = null;
 		var optk = options ?? opt.key;
 		bool restore = optk.RestoreClipboard;
@@ -164,7 +165,8 @@ public static class clipboard {
 					wFocus.Post(Api.WM_SYSCOMMAND, 65520);
 					//system menu -> &Edit -> &Copy; tested on all OS; Windows 10 supports Ctrl+C, but it may be disabled.
 				} else {
-					ctrlC.Press(cut ? KKey.X : KKey.C, optk, wFocus);
+					if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, cut ? KKey.X : KKey.C);
+					ctrlC.Press(hotkey, optk, wFocus);
 				}
 
 				//wait until the app sets clipboard text
@@ -209,6 +211,7 @@ public static class clipboard {
 	/// Options. If null (default), uses <see cref="opt.key"/>.
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.SleepFinally"/>, <see cref="OKey.Hook"/>, <see cref="OKey.KeySpeedClipboard"/>.
 	/// </param>
+	/// <param name="hotkey">Keys to use instead of Ctrl+V. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
 	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 	/// <remarks>
 	/// Sets clipboard data, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
@@ -224,11 +227,11 @@ public static class clipboard {
 	/// clipboard.paste("Example\r\n");
 	/// ]]></code>
 	/// </example>
-	public static void paste(string text, string html = null, OKey options = null) {
+	public static void paste(string text, string html = null, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
 		if (text.NE() && html.NE()) return;
 		object data = text;
 		if (html != null) data = new clipboardData().AddHtml(html).AddText(text ?? html);
-		_Paste(data, options);
+		_Paste(data, options, hotkey);
 	}
 	//problem: fails to paste in VMware player. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
@@ -238,11 +241,10 @@ public static class clipboard {
 	/// <returns>Returns false if failed.</returns>
 	/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
 	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to paste text". Default true.</param>
-	/// <inheritdoc cref="paste" path="/param"/>
-	/// <inheritdoc cref="paste" path="/remarks"/>
-	public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true) {
+	/// <inheritdoc cref="paste" path="//param|//remarks"/>
+	public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
 		try {
-			clipboard.paste(text, html, options);
+			paste(text, html, options, hotkey);
 			return true;
 		}
 		catch (Exception e1) {
@@ -262,9 +264,9 @@ public static class clipboard {
 	/// ]]></code>
 	/// </example>
 	/// <inheritdoc cref="paste"/>
-	public static void pasteData(clipboardData data, OKey options = null) {
+	public static void pasteData(clipboardData data, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
 		Not_.Null(data);
-		_Paste(data, options);
+		_Paste(data, options, hotkey);
 	}
 
 	//rejected. Should use some UI-created/saved data containing all three formats.
@@ -278,14 +280,14 @@ public static class clipboard {
 	//	_Paste(a, options);
 	//}
 
-	static void _Paste(object data, OKey options = null) {
+	static void _Paste(object data, OKey options, KHotkey hotkey = default) {
 		var wFocus = keys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 		var optk = options ?? opt.key;
 		using (var bi = new inputBlocker { ResendBlockedKeys = true }) {
 			if (!optk.NoBlockInput) bi.Start(BIEvents.Keys);
 			keys.Internal_.ReleaseModAndDisableModMenu();
 			optk = optk.GetHookOptionsOrThis_(wFocus);
-			Paste_(data, optk, wFocus);
+			Paste_(data, optk, wFocus, hotkey);
 		}
 
 		int sleepFinally = optk.SleepFinally;
@@ -296,10 +298,8 @@ public static class clipboard {
 	/// Used by <see cref="clipboard"/> and <see cref="keys"/>.
 	/// The caller should block user input (if need), release modifier keys, get optk/wFocus, sleep finally (if need).
 	/// </summary>
-	/// <param name="data">string or clipboardData.</param>
-	/// <param name="optk"></param>
-	/// <param name="wFocus"></param>
-	internal static void Paste_(object data, OKey optk, wnd wFocus) {
+	/// <param name="data">string or <b>clipboardData</b>.</param>
+	internal static void Paste_(object data, OKey optk, wnd wFocus, KHotkey hotkey = default) {
 		bool isConsole = wFocus.IsConsole;
 		List<KKey> andKeys = null;
 
@@ -350,7 +350,8 @@ public static class clipboard {
 					wFocus.Post(Api.WM_SYSCOMMAND, 65521);
 					//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it can be disabled.
 				} else {
-					ctrlV.Press(KKey.V, optk, wFocus, andKeys);
+					if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, KKey.V);
+					ctrlV.Press(hotkey, optk, wFocus, andKeys: andKeys);
 				}
 
 				//wait until the app gets clipboard text
@@ -552,7 +553,7 @@ public static class clipboard {
 		/// <exception cref="AuException">Failed to open.</exception>
 		public bool Reopen(bool noThrow = false) {
 			Debug.Assert(!_isOpen);
-			var to = new wait.Loop(noThrow ? -1 : -10, new OWait(period: 1));
+			var to = new WaitLoop(noThrow ? -1 : -10, new OWait(period: 1));
 			while (!Api.OpenClipboard(_w)) {
 				int ec = lastError.code;
 				if (!to.Sleep()) {

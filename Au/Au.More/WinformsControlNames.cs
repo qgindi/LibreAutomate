@@ -4,7 +4,7 @@ namespace Au.More
 	/// Gets programming names of .NET Windows Forms controls.
 	/// </summary>
 	/// <remarks>
-	/// Usually each control has a unique name. It's the Control.Name property. Useful to identify controls without a classic name/text.
+	/// Usually each control has a unique name. It's the <b>Control.Name</b> property. Useful to identify controls without a classic name/text.
 	/// The control id of these controls is not useful, it is not constant.
 	/// </remarks>
 	public sealed class WinformsControlNames : IDisposable
@@ -24,7 +24,7 @@ namespace Au.More
 		/// Prepares to get control names.
 		/// </summary>
 		/// <param name="w">Any top-level or child window of that process.</param>
-		/// <exception cref="AuWndException">w invalid.</exception>
+		/// <exception cref="AuWndException"><i>w</i> invalid.</exception>
 		/// <exception cref="AuException">Failed to allocate process memory (see <see cref="ProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
 		public WinformsControlNames(wnd w) {
 			_pm = new ProcessMemory(w, 4096); //throws
@@ -46,8 +46,8 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Returns true if window class name starts with "WindowsForms".
-		/// Usually it means that we can get Windows Forms control name of w and its child controls.
+		/// Returns true if window class name starts with <c>"WindowsForms"</c>.
+		/// Usually it means that we can get Windows Forms control name of <i>w</i> and its child controls.
 		/// </summary>
 		/// <param name="w">The window. Can be top-level or control.</param>
 		public static bool IsWinformsControl(wnd w) {
@@ -59,7 +59,8 @@ namespace Au.More
 		/// </summary>
 		/// <returns>null if it is not a Windows Forms control or if failed.</returns>
 		/// <param name="c">The control. Can be top-level window too.</param>
-		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WinformsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
+		/// <remarks>
+		/// This function is easy to use and does not throw exceptions. However, when you need names of multiple controls of a single window, better create a <b>WinformsControlNames</b> instance (once) and for each control call its <b>GetControlName</b> method, it will be faster.</remarks>
 		public static string GetSingleControlName(wnd c) {
 			if (!IsWinformsControl(c)) return null;
 			try {
@@ -75,7 +76,7 @@ namespace Au.More
 		///// Returns null if it is not a Windows Forms control or if failed.
 		///// </summary>
 		///// <param name="c">The control. Can be top-level window too.</param>
-		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WinformsControlNames instance each time and calling its GetControlNameOrText method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
+		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WinformsControlNames instance each time and calling its <b>GetControlName</b> method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
 		//public static string GetSingleControlName(wnd c)
 		//{
 		//	if(!IsWinformsControl(c)) return null;
@@ -88,7 +89,7 @@ namespace Au.More
 		//		} //else print.it("cached");
 		//		_prevPID = pid; _prevTime = perf.ms;
 		//		if(_prev == null) return null;
-		//		return _prev.GetControlNameOrText(c);
+		//		return _prev.GetControlName(c);
 		//	}
 		//}
 		//static WinformsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache

@@ -29,7 +29,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Gets folder path.
-		/// For non-filesystem folder gets string like ":: ITEMIDLIST"; see <see cref="Pidl"/>.
+		/// For non-filesystem folder gets string like <c>":: ITEMIDLIST"</c>; see <see cref="Pidl"/>.
 		/// </summary>
 		/// <returns>null if failed.</returns>
 		public string GetFolderPath() {
@@ -54,7 +54,7 @@ namespace Au.More {
 		/// </summary>
 		/// <returns>Array containing 0 or more items.</returns>
 		/// <remarks>
-		/// For non-file-system items gets ":: ITEMIDLIST"; see <see cref="Pidl"/>.
+		/// For non-file-system items gets <c>":: ITEMIDLIST"</c>; see <see cref="Pidl"/>.
 		/// </remarks>
 		public string[] GetSelectedItems() {
 			var d = _b.Document as api.IShellFolderView;

@@ -60,7 +60,7 @@ public abstract class ActionTrigger
 	private protected void RunT<T>(T args) => (action as Action<T>)(args);
 
 	/// <summary>
-	/// Returns a trigger type string, like "Hotkey", "Mouse", "Window.ActiveNew".
+	/// Returns a trigger type string, like <c>"Hotkey"</c>, <c>"Mouse"</c>, <c>"Window.ActiveNew"</c>.
 	/// </summary>
 	public abstract string TypeString { get; }
 
@@ -70,7 +70,7 @@ public abstract class ActionTrigger
 	public abstract string ParamsString { get; }
 
 	/// <summary>
-	/// Returns TypeString + " " + ParamsString.
+	/// Returns <c>TypeString + " " + ParamsString</c>.
 	/// </summary>
 	public override string ToString() => TypeString + " " + ParamsString;
 
@@ -170,7 +170,7 @@ public abstract class ActionTrigger
 	/// Starts the action like when its trigger is activated.
 	/// </summary>
 	/// <param name="args"></param>
-	/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
+	/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Remarks.</exception>
 	/// <remarks>
 	/// Call while <see cref="ActionTriggers.Run"/> is running, from the same thread.
 	/// </remarks>
@@ -205,7 +205,7 @@ public abstract class TriggerArgs
 /// Allows to specify working windows for multiple triggers of these types: hotkey, autotext, mouse.
 /// </summary>
 /// <example>
-/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 /// <code><![CDATA[
 /// Triggers.Hotkey["Ctrl+K"] = o => print.it("this trigger works with all windows");
 /// Triggers.Of.Window("* Notepad"); //specifies a working window for triggers added afterwards
@@ -252,8 +252,7 @@ public class TriggerScopes
 	/// </summary>
 	/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 	/// <example><see cref="TriggerScopes"/></example>
-	/// <inheritdoc cref="wnd.find" path="/param"/>
-	/// <inheritdoc cref="wnd.find" path="/exception"/>
+	/// <inheritdoc cref="wnd.find" path="//param|//exception"/>
 	public TriggerScope Window(
 		[ParamString(PSFormat.Wildex)] string name = null,
 		[ParamString(PSFormat.Wildex)] string cn = null,
@@ -396,7 +395,7 @@ public class TriggerScope
 /// In CF never use functions that generate keyboard or mouse events or activate windows.
 /// </remarks>
 /// <example>
-/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 /// <code><![CDATA[
 /// //examples of assigning a callback function (CF) to a single trigger
 /// Triggers.FuncOf.NextTrigger = o => keys.isCapsLock; //o => keys.isCapsLock is the callback function (lambda)

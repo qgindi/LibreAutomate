@@ -74,8 +74,8 @@ namespace Au.More {
 		/// <typeparam name="T">Type of data elements. For example, char for string, byte for byte[].</typeparam>
 		/// <param name="w">The window.</param>
 		/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-		/// <param name="data">Data. For example string or byte[]. String can contain '\0' characters.</param>
-		/// <param name="wParam">wParam. Can be any value. Optional.</param>
+		/// <param name="data">Data. For example string or byte[]. String can contain <c>'\0'</c> characters.</param>
+		/// <param name="wParam">Can be any value. Optional.</param>
 		/// <returns><b>SendMessage</b>'s return value.</returns>
 		public static unsafe nint Send<T>(wnd w, int dataId, ReadOnlySpan<T> data, nint wParam = 0) where T : unmanaged {
 			fixed (T* p = data) {
@@ -102,7 +102,7 @@ namespace Au.More {
 		/// <typeparam name="TReceive">Type of received data elements. For example, char for string, byte for byte[].</typeparam>
 		/// <param name="w">The window.</param>
 		/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-		/// <param name="send">Data to send. For example string or byte[]. String can contain '\0' characters.</param>
+		/// <param name="send">Data to send. For example string or byte[]. String can contain <c>'\0'</c> characters.</param>
 		/// <param name="receive">Callback function that can convert the received data to desired format.</param>
 		/// <returns>false if failed.</returns>
 		public static unsafe bool SendReceive<TSend, TReceive>(wnd w, int dataId, ReadOnlySpan<TSend> send, ResultReader<TReceive> receive) where TSend : unmanaged where TReceive : unmanaged {

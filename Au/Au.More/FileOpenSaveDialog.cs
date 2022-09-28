@@ -47,8 +47,8 @@ namespace Au.More {
 
 		/// <summary>
 		/// Default extension to add to file names.
-		/// Must be like "txt", not like ".txt".
-		/// If null (default), gets from <see cref="FileTypes"/>; set "" to prevent it.
+		/// Must be like <c>"txt"</c>, not like <c>".txt"</c>.
+		/// If null (default), gets from <see cref="FileTypes"/>; set <c>""</c> to prevent it.
 		/// </summary>
 		public string DefaultExt { get; set; }
 
@@ -162,7 +162,7 @@ namespace Au.More {
 		/// <param name="result">Full path of the selected file.</param>
 		/// <param name="owner">Owner window. Optional.</param>
 		/// <param name="selectFolder">Select folders, not files.</param>
-		/// <param name="onlyFilesystem">The dialog allows to select only file system items (files, folders), not other shell items or URLs. Default true. If false, other shell items are returned like ":: ITEMIDLIST"; see <see cref="Pidl"/>.</param>
+		/// <param name="onlyFilesystem">The dialog allows to select only file system items (files, folders), not other shell items or URLs. Default true. If false, other shell items are returned like <c>":: ITEMIDLIST"</c>; see <see cref="Pidl"/>.</param>
 		/// <param name="fileMustExist">The dialog can return only existing items. Default true.</param>
 		/// <param name="previewPane">Display the preview pane.</param>
 		/// <returns>true on OK, false on Cancel or error.</returns>

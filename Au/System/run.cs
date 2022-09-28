@@ -1,12 +1,12 @@
 namespace Au {
 	/// <summary>
-	/// Contains static functions to execute or open programs, files, folders, web pages, etc, start new threads.
+	/// Execute or open programs, files, folders, web pages, etc, start new threads.
 	/// </summary>
 	public static class run {
 		/// <summary>
-		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
-		/// The returned <see cref="RResult"/> variable contains some process info - process id etc.
+		/// Runs/opens a program, document, directory (folder), URL, new email, etc.
 		/// </summary>
+		/// <returns>Process info (id etc).</returns>
 		/// <param name="file">
 		/// Examples:
 		/// <br/>• <c>@"C:\file.txt"</c>
@@ -22,10 +22,6 @@ namespace Au {
 		/// <br/>• <c>":: ITEMIDLIST"</c>
 		/// <br/>• <c>@"shell:::{CLSID}"</c>
 		/// <br/>• <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
-		/// 
-		/// <para>
-		/// More info in Remarks.
-		/// </para>
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
@@ -34,7 +30,7 @@ namespace Au {
 		/// <param name="flags"></param>
 		/// <param name="dirEtc">
 		/// Allows to specify more parameters: current directory, verb, etc.
-		/// If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
+		/// If string, it sets initial current directory for the new process. If <c>""</c>, gets it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">Used both <b>ROptions.Verb</b> and <b>RFlags.Admin</b> and this process isn't admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
@@ -49,7 +45,7 @@ namespace Au {
 		/// - Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// - URL. Examples: <c>"https://www.example.com"</c>, <c>"file:///path"</c>.
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - Shell object's <b>ITEMIDLIST</b> like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - Shell object's parsing name, like <c>@"shell:::{CLSID}"</c> or <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Example: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>. To discover the string use hotkey Ctrl+Shift+Q or function <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
 		/// - To open a Windows Settings page can be used <google>ms-settings</google>, like <c>"ms-settings:display"</c>. To open Settings use <c>"ms-settings:"</c>.
@@ -193,25 +189,26 @@ namespace Au {
 			return R;
 
 			//tested: works well in MTA thread.
-			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use wnd.findOrRun or Find/Run/Wait like in the examples.
+			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use wnd.findOrRun etc like in the examples.
 			//rejected: in QM2, run also has 'autodelay'. Better don't add such hidden things. Let the script decide what to do.
 		}
 
 		/// <summary>
-		/// Calls <see cref="it"/> and handles exceptions. All parameters are the same.
-		/// If <b>Run</b> throws exception, writes it to the output as warning and returns null.
+		/// Calls <see cref="it"/> and handles exceptions.
+		/// If <b>it</b> throws exception, writes it to the output as warning and returns null.
 		/// </summary>
 		/// <remarks>
-		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
+		/// This function is useful when you don't care whether <b>it</b> succeeded and don't want to use try/catch.
 		/// Handles only exception of type <see cref="AuException"/>. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="print.warning"/>
 		/// <seealso cref="OWarnings.Disable"/>
 		/// <seealso cref="wnd.findOrRun"/>
+		/// <inheritdoc cref="it" path="/param"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static RResult itSafe(string s, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
+		public static RResult itSafe(string file, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
 			try {
-				return it(s, args, flags, dirEtc);
+				return it(file, args, flags, dirEtc);
 			}
 			catch (AuException e) {
 				print.warning(e.Message, 1);
@@ -266,7 +263,7 @@ namespace Au {
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
 		/// <br/>• If null, uses <c>Directory.GetCurrentDirectory()</c>.
-		/// <br/>• Else if "", calls <c>pathname.getDirectory(exe)</c>.
+		/// <br/>• Else if <c>""</c>, calls <c>pathname.getDirectory(exe)</c>.
 		/// <br/>• Else calls <see cref="pathname.expand"/>.
 		/// </param>
 		/// <param name="encoding">
@@ -488,7 +485,7 @@ namespace Au.Types {
 		/// Run new process as administrator.
 		/// If this process isn't admin:
 		/// <br/>• Shows UAC consent dialog.
-		/// <br/>• Uses verb "runas", therefore other verb cannot be specified.
+		/// <br/>• Uses verb <c>"runas"</c>, therefore other verb cannot be specified.
 		/// <br/>• Cannot set current directory for the new process.
 		/// <br/>• The new process does not inherit environment variables of this process.
 		/// </summary>
@@ -523,14 +520,14 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Initial current directory for the new process.
-		/// If null (default), the new process will inherit the curent directory of this process.
-		/// If "", the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
-		/// <note>Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
+		/// If null (default), the new process will inherit the current directory of this process.
+		/// If <c>""</c>, the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
+		/// <para>NOTE: Some programs look for their files in current directory and fail to start if it is not the program's directory.</para>
 		/// </summary>
 		public string CurrentDirectory;
 
 		/// <summary>
-		/// File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
+		/// File's right-click menu command, also known as verb. For example <c>"edit"</c>, <c>"print"</c>, <c>"properties"</c>. The default verb is bold in the menu.
 		/// Not all menu items will work. Some may have different name than in the menu.
 		/// </summary>
 		public string Verb;
@@ -549,7 +546,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Flags to add to <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
-		/// Default flags: SEE_MASK_NOZONECHECKS, SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS, SEE_MASK_CONNECTNETDRV, SEE_MASK_UNICODE, SEE_MASK_FLAG_NO_UI (if no flag <b>ShowErrorUI</b>), SEE_MASK_NO_CONSOLE (if no flag <b>WaitForExit</b>), SEE_MASK_FLAG_LOG_USAGE (if flag <b>MostUsed</b>); also SEE_MASK_INVOKEIDLIST if need.
+		/// Default flags: <b>SEE_MASK_NOZONECHECKS</b>, <b>SEE_MASK_NOASYNC</b>, <b>SEE_MASK_NOCLOSEPROCESS</b>, <b>SEE_MASK_CONNECTNETDRV</b>, <b>SEE_MASK_UNICODE</b>, <b>SEE_MASK_FLAG_NO_UI</b> (if no flag <b>ShowErrorUI</b>), <b>SEE_MASK_NO_CONSOLE</b> (if no flag <b>WaitForExit</b>), <b>SEE_MASK_FLAG_LOG_USAGE</b> (if flag <b>MostUsed</b>); also <b>SEE_MASK_INVOKEIDLIST</b> if need.
 		/// </summary>
 		public uint FlagsAdd;
 

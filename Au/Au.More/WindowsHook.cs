@@ -32,7 +32,7 @@ namespace Au.More
 		[ThreadStatic] static List<WindowsHook> t_antiGC;
 
 		/// <summary>
-		/// Sets a low-level keyboard hook (WH_KEYBOARD_LL).
+		/// Sets a low-level keyboard hook (<b>WH_KEYBOARD_LL</b>).
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -41,7 +41,7 @@ namespace Au.More
 		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
 		/// If calls <see cref="HookData.Keyboard.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
 		/// Event data cannot be modified.
-		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+		/// <para>NOTE: When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</para>
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -63,7 +63,7 @@ namespace Au.More
 			=> new(Api.WH_KEYBOARD_LL, hookProc, setNow, 0, ignoreAuInjected);
 
 		/// <summary>
-		/// Sets a low-level mouse hook (WH_MOUSE_LL).
+		/// Sets a low-level mouse hook (<b>WH_MOUSE_LL</b>).
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -72,7 +72,7 @@ namespace Au.More
 		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
 		/// If calls <see cref="HookData.Mouse.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
 		/// Event data cannot be modified.
-		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+		/// <para>NOTE: When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</para>
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -97,15 +97,15 @@ namespace Au.More
 			=> new(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected, "Mouse");
 
 		/// <summary>
-		/// Sets a WH_CBT hook for a thread of this process.
+		/// Sets a <b>WH_CBT</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// Hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// If returns true, the event is cancelled. For some events you can modify some fields of event data.
-		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not the variable.</note>
+		/// If returns true, the event is canceled. For some events you can modify some fields of event data.
+		/// <para>NOTE: When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not the variable.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -134,15 +134,15 @@ namespace Au.More
 			=> new(Api.WH_CBT, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a WH_GETMESSAGE hook for a thread of this process.
+		/// Sets a <b>WH_GETMESSAGE</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// The event cannot be cancelled. As a workaround, you can set msg->message=0. Also can modify other fields.
-		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// The event cannot be canceled. As a workaround, you can set <c>msg->message=0</c>. Also can modify other fields.
+		/// <para>NOTE: When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -159,14 +159,14 @@ namespace Au.More
 			=> new(Api.WH_GETMESSAGE, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a WH_GETMESSAGE hook for a thread of this process.
+		/// Sets a <b>WH_GETMESSAGE</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// If returns true, the event is cancelled.
+		/// If returns true, the event is canceled.
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -184,15 +184,15 @@ namespace Au.More
 			=> new(Api.WH_KEYBOARD, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a WH_MOUSE hook for a thread of this process.
+		/// Sets a <b>WH_MOUSE</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// If returns true, the event is cancelled.
-		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// If returns true, the event is canceled.
+		/// <para>NOTE: When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -210,15 +210,15 @@ namespace Au.More
 			=> new(Api.WH_MOUSE, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a WH_CALLWNDPROC hook for a thread of this process.
+		/// Sets a <b>WH_CALLWNDPROC</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <returns>A new <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// The event cannot be cancelled or modified.
-		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// The event cannot be canceled or modified.
+		/// <para>NOTE: When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -237,7 +237,7 @@ namespace Au.More
 			=> new(Api.WH_CALLWNDPROC, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a WH_CALLWNDPROCRET hook for a thread of this process.
+		/// Sets a <b>WH_CALLWNDPROCRET</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <inheritdoc cref="ThreadCallWndProc"/>
@@ -273,7 +273,7 @@ namespace Au.More
 		/// <param name="threadId">If the hook type is a thread hook - thread id, or 0 for current thread. Else not used and must be 0.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="InvalidOperationException">The hook is already set.</exception>
-		/// <exception cref="ArgumentException">threadId not 0 and the hook type is not a thread hook.</exception>
+		/// <exception cref="ArgumentException"><i>threadId</i> not 0 and the hook type is not a thread hook.</exception>
 		/// <remarks>
 		/// Usually don't need to call this function, because the <b>WindowsHook</b> static methods that return a new <b>WindowsHook</b> object by default call it.
 		/// </remarks>
@@ -517,7 +517,7 @@ namespace Au.More
 		/// Gets the max time in milliseconds allowed by Windows for low-level keyboard and mouse hook procedures.
 		/// </summary>
 		/// <remarks>
-		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout. If it is missing, returns 300; it is the default value used by Windows. If greater than 1000, returns 1000, because Windows 10 ignores bigger values.
+		/// Gets registry value <c>HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout</c>. If it is missing, returns 300; it is the default value used by Windows. If greater than 1000, returns 1000, because Windows 10 ignores bigger values.
 		/// 
 		/// If a hook procedure takes more time, Windows does not wait. Then its return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then restores the hook and writes a warning to the output. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow.
 		/// 
@@ -888,7 +888,7 @@ namespace Au.Types
 			/// <summary>
 			/// Gets <see cref="CbtEvent.ACTIVATE"/> event info.
 			/// </summary>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.ACTIVATE.</exception>
+			/// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.ACTIVATE</b>.</exception>
 			public unsafe CBTACTIVATESTRUCT* ActivationInfo => code == CbtEvent.ACTIVATE ? (CBTACTIVATESTRUCT*)lParam : throw new InvalidOperationException();
 
 			/// <summary>
@@ -904,9 +904,9 @@ namespace Au.Types
 
 			/// <summary>
 			/// Gets <see cref="CbtEvent.CREATEWND"/> event info.
-			/// You can modify x, y, cx, cy, and hwndInsertAfter.
+			/// You can modify <b>x</b>, <b>y</b>, <b>cx</b>, <b>cy</b>, and <b>hwndInsertAfter</b>.
 			/// </summary>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
+			/// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.CREATEWND</b>.</exception>
 			public unsafe CBT_CREATEWND* CreationInfo => code == CbtEvent.CREATEWND ? (CBT_CREATEWND*)lParam : throw new InvalidOperationException();
 
 			/// <summary>
@@ -946,7 +946,7 @@ namespace Au.Types
 			///// <summary>
 			///// Gets <see cref="CbtEvent.SETFOCUS"/> event info. Returns the window handle.
 			///// </summary>
-			///// <param name="wLostFocus">The previously focused window, or default(wnd).</param>
+			///// <param name="wLostFocus">The previously focused window, or <c>default(wnd)</c>.</param>
 			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
 			//public wnd FocusInfo(out wnd wLostFocus) {
 			//	if (code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
@@ -997,7 +997,7 @@ namespace Au.Types
 			public readonly WindowsHook hook;
 
 			/// <summary>
-			/// The message has not been removed from the queue, because called API <msdn>PeekMessage</msdn> with flag PM_NOREMOVE.
+			/// The message has not been removed from the queue, because called API <msdn>PeekMessage</msdn> with flag <b>PM_NOREMOVE</b>.
 			/// </summary>
 			public readonly bool PM_NOREMOVE;
 
@@ -1024,7 +1024,7 @@ namespace Au.Types
 			public readonly WindowsHook hook;
 
 			/// <summary>
-			/// The message has not been removed from the queue, because called API <msdn>PeekMessage</msdn> with flag PM_NOREMOVE.
+			/// The message has not been removed from the queue, because called API <msdn>PeekMessage</msdn> with flag <b>PM_NOREMOVE</b>.
 			/// </summary>
 			public readonly bool PM_NOREMOVE;
 
@@ -1061,12 +1061,12 @@ namespace Au.Types
 			public readonly WindowsHook hook;
 
 			/// <summary>
-			/// The message has not been removed from the queue, because called API <msdn>PeekMessage</msdn> with flag PM_NOREMOVE.
+			/// The message has not been removed from the queue, because called API <msdn>PeekMessage</msdn> with flag <b>PM_NOREMOVE</b>.
 			/// </summary>
 			public readonly bool PM_NOREMOVE;
 
 			/// <summary>
-			/// The mouse message, for example WM_MOUSEMOVE.
+			/// The mouse message, for example <b>WM_MOUSEMOVE</b>.
 			/// </summary>
 			public readonly uint message;
 

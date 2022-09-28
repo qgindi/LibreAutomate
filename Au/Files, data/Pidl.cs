@@ -3,11 +3,11 @@ namespace Au.Types {
 	/// Manages an <b>ITEMIDLIST</b> structure that is used to identify files and other shell objects instead of a file-system path.
 	/// </summary>
 	/// <remarks>
-	/// Wraps an <b>ITEMIDLIST*</b>, also known as PIDL or <b>LPITEMIDLIST</b>.
+	/// Wraps an <b>ITEMIDLIST*</b>, also known as <i>PIDL</i> or <b>LPITEMIDLIST</b>.
 	/// 
 	/// When calling native shell API, virtual objects can be identified only by <b>ITEMIDLIST*</b>. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by <b>ITEMIDLIST*</b>. URLs can be identified by URL as well as by <b>ITEMIDLIST*</b>.
 	/// 
-	/// The <b>ITEMIDLIST</b> structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later.
+	/// The <b>ITEMIDLIST</b> structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later. Always dispose if creating many.
 	/// 
 	/// This class has only <b>ITEMIDLIST</b> functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like <b>ILClone</b>, <b>ILGetSize</b>, <b>ILFindLastID</b>.
 	/// </remarks>
@@ -15,7 +15,7 @@ namespace Au.Types {
 		IntPtr _pidl;
 
 		/// <summary>
-		/// Gets the <b>ITEMIDLIST*</b> (PIDL).
+		/// Gets the <b>ITEMIDLIST*</b>.
 		/// </summary>
 		/// <remarks>
 		/// The <b>ITEMIDLIST</b> memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
@@ -23,7 +23,7 @@ namespace Au.Types {
 		public IntPtr UnsafePtr => _pidl;
 
 		/// <summary>
-		/// Gets the <b>ITEMIDLIST*</b> (PIDL).
+		/// Gets the <b>ITEMIDLIST*</b>.
 		/// </summary>
 		/// <remarks>
 		/// Use to pass to API where the parameter type is <b>HandleRef</b>. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
@@ -31,7 +31,7 @@ namespace Au.Types {
 		public HandleRef HandleRef => new HandleRef(this, _pidl);
 
 		/// <summary>
-		/// Returns true if the PIDL is null.
+		/// Returns true if the <b>ITEMIDLIST*</b> is null.
 		/// </summary>
 		public bool IsNull => _pidl == default;
 
@@ -39,16 +39,16 @@ namespace Au.Types {
 		/// Assigns an <b>ITEMIDLIST</b> to this variable.
 		/// </summary>
 		/// <param name="pidl">
-		/// <b>ITEMIDLIST*</b> (PIDL).
-		/// It can be created by any API that creates <b>ITEMIDLIST</b>. They allocate the memory with API CoTaskMemAlloc. This variable will finally free it with Marshal.FreeCoTaskMem which calls API CoTaskMemFree.
+		/// <b>ITEMIDLIST*</b>.
+		/// It can be created by any API that creates <b>ITEMIDLIST</b>. They allocate the memory with API <b>CoTaskMemAlloc</b>. This variable will finally free it with <b>Marshal.FreeCoTaskMem</b> which calls API <b>CoTaskMemFree</b>.
 		/// </param>
 		public Pidl(IntPtr pidl) => _pidl = pidl;
 
 		/// <summary>
 		/// Combines two <b>ITEMIDLIST</b> (parent and child) and assigns the result to this variable.
 		/// </summary>
-		/// <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
-		/// <param name="pidlRelative">Relative PIDL (child object).</param>
+		/// <param name="pidlAbsolute">Absolute <b>ITEMIDLIST*</b> (parent folder).</param>
+		/// <param name="pidlRelative">Relative <b>ITEMIDLIST*</b> (child object).</param>
 		/// <remarks>
 		/// Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
 		/// </remarks>
@@ -74,7 +74,7 @@ namespace Au.Types {
 		~Pidl() { Dispose(false); }
 
 		/// <summary>
-		/// Gets the <b>ITEMIDLIST</b> and clears this variable so that it cannot be used and will not free the <b>ITEMIDLIST</b> memory. To free it use Marshal.FreeCoTaskMem.
+		/// Gets the <b>ITEMIDLIST</b> and clears this variable so that it cannot be used and will not free the <b>ITEMIDLIST</b> memory. To free it use <see cref="Marshal.FreeCoTaskMem"/>.
 		/// </summary>
 		public IntPtr Detach() {
 			var R = _pidl;
@@ -83,16 +83,15 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Converts string to <b>ITEMIDLIST</b> and creates new Pidl variable that holds it.
+		/// Converts string to <b>ITEMIDLIST</b> and creates new <b>Pidl</b> variable that holds it.
 		/// </summary>
 		/// <returns>null if failed.</returns>
-		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: ITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="throwIfFailed">Throw exception if failed.</param>
-		/// <exception cref="AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
+		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is true. Probably invalid s.</exception>
 		/// <remarks>
-		/// Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: ITEMIDLIST".
-		/// When ":: ITEMIDLIST", does not check whether the shell object exists.
-		/// Note: Pidl is disposable.
+		/// Calls <msdn>SHParseDisplayName</msdn>, except when string is <c>":: ITEMIDLIST"</c>.
+		/// If <c>":: ITEMIDLIST"</c>, does not check whether the shell object exists.
 		/// </remarks>
 		public static Pidl FromString(string s, bool throwIfFailed = false) {
 			IntPtr R = FromString_(s, throwIfFailed);
@@ -142,10 +141,10 @@ namespace Au.Types {
 		/// <param name="stringType">
 		/// String format. API <msdn>SIGDN</msdn>.
 		/// Often used:
-		/// <br/>• SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
-		/// <br/>• SIGDN.FILESYSPATH - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns null.
-		/// <br/>• SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
-		/// <br/>• SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <b>ITEMIDLIST</b> again, therefore usually it's better to use <see cref="ToString"/> instead.
+		/// <br/>• <b>SIGDN.NORMALDISPLAY</b> - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
+		/// <br/>• <b>SIGDN.FILESYSPATH</b> - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns null.
+		/// <br/>• <b>SIGDN.URL</b> - if URL, returns URL. If file system object, returns its path like <c>"file:///C:/a/b.txt"</c>. Else returns null.
+		/// <br/>• <b>SIGDN.DESKTOPABSOLUTEPARSING</b> - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <b>ITEMIDLIST</b> again, therefore usually it's better to use <see cref="ToString"/> instead.
 		/// </param>
 		/// <param name="throwIfFailed">If failed, throw <b>AuException</b>.</param>
 		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is true.</exception>
@@ -161,7 +160,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Converts an <b>ITEMIDLIST</b> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
 		/// </summary>
-		/// <returns>Returns null if <i>pidl</i> is default(IntPtr). If failed, returns null or throws exception.</returns>
+		/// <returns>Returns null if <i>pidl</i> is <c>default(IntPtr)</c>. If failed, returns null or throws exception.</returns>
 		/// <inheritdoc cref="ToShellString(SIGDN, bool)"/>
 		public static string ToShellString(IntPtr pidl, SIGDN stringType, bool throwIfFailed = false) {
 			if (pidl == default) return null;
@@ -173,7 +172,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Converts the <b>ITEMIDLIST</b> to string.
-		/// If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="ToHexString"/>).
+		/// If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>).
 		/// </summary>
 		/// <returns>null if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).</returns>
 		public override string ToString() {
@@ -184,7 +183,7 @@ namespace Au.Types {
 
 #if true
 		/// <summary>
-		/// This overload uses an <b>ITEMIDLIST*</b> that is not stored in a Pidl variable.
+		/// This overload uses an <b>ITEMIDLIST*</b> that is not stored in a <b>Pidl</b> variable.
 		/// </summary>
 		public static string ToString(IntPtr pidl) {
 			if (pidl == default) return null;
@@ -237,7 +236,7 @@ namespace Au.Types {
 #endif
 
 		/// <summary>
-		/// Returns string ":: ITEMIDLIST".
+		/// Returns string <c>":: ITEMIDLIST"</c>.
 		/// Returns null if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).
 		/// </summary>
 		/// <remarks>
@@ -250,8 +249,8 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Returns string ":: ITEMIDLIST".
-		/// This overload uses an <b>ITEMIDLIST*</b> that is not stored in a Pidl variable.
+		/// Returns string <c>":: ITEMIDLIST"</c>.
+		/// This overload uses an <b>ITEMIDLIST*</b> that is not stored in a <b>Pidl</b> variable.
 		/// </summary>
 		public static string ToHexString(IntPtr pidl) {
 			if (pidl == default) return null;
@@ -263,7 +262,7 @@ namespace Au.Types {
 		//rejected: use base64 <b>ITEMIDLIST</b>. Shorter, but cannot easily split, for example in folders.UnexpandPath.
 
 		/// <summary>
-		/// If s starts with "::{", converts to ":: ITEMIDLIST". Else returns s.
+		/// If s starts with "::{", converts to <c>":: ITEMIDLIST"</c>. Else returns s.
 		/// </summary>
 		internal static string ClsidToItemidlist_(string s) {
 			if (s != null && s.Starts("::{")) {

@@ -241,7 +241,7 @@ static partial class Compiler {
 			//p1.Next();
 			gSave:
 #if true
-			var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, default, Api.CREATE_ALWAYS);
+			var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, Api.CREATE_ALWAYS);
 			if (hf.Is0) {
 				var ec = lastError.code;
 				if (ec == Api.ERROR_SHARING_VIOLATION && _RenameLockedFile(outFile, notInCache: notInCache)) goto gSave;

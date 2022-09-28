@@ -32,9 +32,9 @@ public enum TKFlags
 
 	/// <summary>
 	/// Don't release modifier keys.
-	/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-	/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is true and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</note>
+	/// Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
 	/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
+	/// <para>NOTE: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is true and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</para>
 	/// </summary>
 	NoModOff = 16,
 
@@ -70,7 +70,7 @@ public class HotkeyTrigger : ActionTrigger
 	internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
 
 	/// <summary>
-	/// Returns "Hotkey".
+	/// Returns <c>"Hotkey"</c>.
 	/// </summary>
 	public override string TypeString => "Hotkey";
 
@@ -102,9 +102,9 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 	/// <param name="hotkey">
 	/// A hotkey, like with <see cref="keys.send"/>.
 	/// Can contain 0 to 4 modifier keys (Ctrl, Shift, Alt, Win) and 1 non-modifier key.
-	/// Examples: "F11", "Ctrl+K", "Ctrl+Shift+Alt+Win+A".
-	/// To ignore modifiers: "?+K". Then the trigger works with any combination of modifiers.
-	/// To ignore a modifier: "Ctrl?+K". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?+K", "Ctrl+Shift?+K".
+	/// Examples: <c>"F11"</c>, <c>"Ctrl+K"</c>, <c>"Ctrl+Shift+Alt+Win+A"</c>.
+	/// To ignore modifiers: <c>"?+K"</c>. Then the trigger works with any combination of modifiers.
+	/// To ignore a modifier: <c>"Ctrl?+K"</c>. Then the trigger works with or without the modifier. More examples: <c>"Ctrl?+Shift?+K"</c>, <c>"Ctrl+Shift?+K"</c>.
 	/// </param>
 	/// <param name="flags"></param>
 	/// <param name="f_">[](xref:caller_info)</param>
@@ -138,14 +138,14 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 	/// <param name="key"></param>
 	/// <param name="modKeys">
 	/// Modifier keys, like with <see cref="keys.send"/>.
-	/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
-	/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
-	/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
+	/// Examples: <c>"Ctrl"</c>, <c>"Ctrl+Shift+Alt+Win"</c>.
+	/// To ignore modifiers: <c>"?"</c>. Then the trigger works with any combination of modifiers.
+	/// To ignore a modifier: <c>"Ctrl?"</c>. Then the trigger works with or without the modifier. More examples: <c>"Ctrl?+Shift?"</c>, <c>"Ctrl+Shift?"</c>.
 	/// </param>
 	/// <param name="flags"></param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
-	/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
+	/// <exception cref="ArgumentException">Invalid <i>modKeys</i> string or <i>flags</i>.</exception>
 	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 	public Action<HotkeyTriggerArgs> this[KKey key, [ParamString(PSFormat.TriggerMod)] string modKeys, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 		set {
@@ -323,7 +323,7 @@ public class HotkeyTriggerArgs : TriggerArgs
 	/// The pressed modifier keys.
 	/// </summary>
 	/// <remarks>
-	/// Can be useful when the trigger ignores modifiers. For example "?+F11" or "Shift?+A".
+	/// Can be useful when the trigger ignores modifiers. For example <c>"?+F11"</c> or <c>"Shift?+A"</c>.
 	/// </remarks>
 	public KMod Mod { get; }
 

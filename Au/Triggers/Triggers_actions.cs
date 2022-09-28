@@ -47,8 +47,8 @@ public class TriggerOptions {
 	/// Run actions always in the same dedicated thread that does not end when actions end.
 	/// </summary>
 	/// <param name="thread">A number that you want to use to identify the thread. Can be 0-127. Default 0.</param>
-	/// <param name="wait">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
-	/// <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
+	/// <param name="wait">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queued actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
+	/// <param name="noWarning">No warning when cannot start an action because an action is running and <i>wait</i> == 0.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
 	/// Multiple actions in same thread cannot run simultaneously. Actions in different threads can run simultaneously.

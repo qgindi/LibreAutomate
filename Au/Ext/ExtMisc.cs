@@ -56,7 +56,7 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Converts double to string.
-	/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 	/// </summary>
 	public static string ToS(this double t, string format = null) {
@@ -65,7 +65,7 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Converts double to string.
-	/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
 	/// </summary>
 	public static string ToS(this float t, string format = null) {
@@ -74,7 +74,7 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Converts double to string.
-	/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
 	/// </summary>
 	public static string ToS(this decimal t, string format = null) {
@@ -83,7 +83,7 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Converts int to string.
-	/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
+	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-',</c> not <c>'−'</c> etc.
 	/// Calls <see cref="int.ToString(string, IFormatProvider)"/>.
 	/// </summary>
 	public static string ToS(this int t, string format = null) {
@@ -92,7 +92,7 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Converts long to string.
-	/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
+	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
 	/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 	/// </summary>
 	public static string ToS(this long t, string format = null) {
@@ -101,7 +101,7 @@ public static unsafe partial class ExtMisc {
 
 	/// <summary>
 	/// Converts nint to string.
-	/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
+	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
 	/// Calls <see cref="IntPtr.ToString(string, IFormatProvider)"/>.
 	/// </summary>
 	public static string ToS(this nint t, string format = null) {
@@ -395,17 +395,17 @@ public static unsafe partial class ExtMisc {
 	#region char
 
 	/// <summary>
-	/// Returns true if character is ASCII '0' to '9'.
+	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
 
 	/// <summary>
-	/// Returns true if character is ASCII 'A' to 'Z' or 'a' to 'z'.
+	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
 	/// </summary>
 	public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 
 	/// <summary>
-	/// Returns true if character is ASCII 'A' to 'Z' or 'a' to 'z' or '0' to '9'.
+	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
 
@@ -649,10 +649,10 @@ public static unsafe partial class ExtMisc {
 	/// <param name="s"></param>
 	/// <param name="noUcase">Don't make the first character uppercase.</param>
 	/// <remarks>
-	/// If s is null or "", does nothing.
+	/// If <i>s</i> is null or <c>""</c>, does nothing.
 	/// If this is not empty, appends space.
-	/// If s starts with a lowercase character, makes it uppercase, unless this ends with a character other than '.'.
-	/// Appends '.' if s does not end with '.', ';', ':', ',', '!' or '?'.
+	/// If <i>s</i> starts with a lowercase character, makes it uppercase, unless this ends with a character other than <c>'.'</c>.
+	/// Appends <c>'.'</c> if <i>s</i> does not end with <c>'.'</c>, <c>';'</c>, <c>':'</c>, <c>','</c>, <c>'!'</c> or <c>'?'</c>.
 	/// </remarks>
 	public static StringBuilder AppendSentence(this StringBuilder t, string s, bool noUcase = false) {
 		if (!s.NE()) {
@@ -679,7 +679,7 @@ public static unsafe partial class ExtMisc {
 	/// </summary>
 	/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
 	/// <param name="create">
-	/// Create handle if still not created. Default false (return default(wnd)).
+	/// Create handle if still not created. Default false (return <c>default(wnd)</c>).
 	/// Unlike <see cref="System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
 	/// </param>
 	/// <remarks>

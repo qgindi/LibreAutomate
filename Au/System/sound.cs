@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using SpeechLib;
 
 namespace Au {
@@ -114,7 +114,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="text">Text to speak. If null, stops speaking.</param>
 		/// <param name="async">Don't wait. Note: the sound ends when this process exits.</param>
-		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: "Zira". If null, uses default voice.</param>
+		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
 		/// <param name="rate">Speed adjustment, +- 10.</param>
 		/// <param name="volume">Volume, 0-100. See also <see cref="volume"/>.</param>
 		/// <seealso cref="SpeakVoice"/>
@@ -171,7 +171,7 @@ namespace Au.More {
 		/// <summary>
 		/// Creates a text-to-speech (speech synthesis) voice instance.
 		/// </summary>
-		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: "Zira". If null, uses default voice.</param>
+		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
 		public SpeakVoice(string voice = null) {
 			//PROBLEM: slow. Ctor first time ~130 ms, sometimes 200; then ~70.
 			//	Native code cocreateinstance fast, but Speak starts slower. Total time until the real sound comes is similar. Tested with hot CPU too.

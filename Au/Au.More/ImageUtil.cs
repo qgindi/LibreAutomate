@@ -13,20 +13,20 @@ namespace Au.More
 	public static class ImageUtil
 	{
 		/// <summary>
-		/// Returns true if string starts with "image:".
+		/// Returns true if string starts with <c>"image:"</c>.
 		/// </summary>
 		public static bool HasImageStringPrefix(string s) => s.Starts("image:");
 
 		/// <summary>
-		/// Returns true if string starts with "resource:", "resources/", "image:" (Base64 encoded image), "imagefile:" (file path), "*" (XAML icon name) or "&lt;" (possibly XAML image).
+		/// Returns true if string starts with <c>"resource:"</c>, <c>"resources/"</c>, <c>"image:"</c> (Base64 encoded image), <c>"imagefile:"</c> (file path), <c>"*"</c> (XAML icon name) or <c>"&lt;"</c> (possibly XAML image).
 		/// </summary>
 		public static bool HasImageOrResourcePrefix(string s) => s.Starts('*') || s.Starts('<') || s.Starts("image:") || s.Starts("imagefile:") || ResourceUtil.HasResourcePrefix(s);
 
 		/// <summary>
 		/// Loads image file data as stream from Base64 string.
 		/// </summary>
-		/// <param name="s">Base64 encoded image string with prefix "image:".</param>
-		/// <exception cref="ArgumentException">String does not start with "image:" or is invalid Base64.</exception>
+		/// <param name="s">Base64 encoded image string with prefix <c>"image:"</c>.</param>
+		/// <exception cref="ArgumentException">String does not start with <c>"image:"</c> or is invalid Base64.</exception>
 		/// <exception cref="Exception"><see cref="Convert2.BrotliDecompress"/> exceptions (when compressed .bmp).</exception>
 		public static MemoryStream LoadImageStreamFromString(string s) {
 			if (!HasImageStringPrefix(s)) throw new ArgumentException("String must start with \"image:\".");
@@ -43,7 +43,7 @@ namespace Au.More
 		/// <summary>
 		/// Loads GDI+ image from Base64 string.
 		/// </summary>
-		/// <param name="s">Base64 encoded image string with prefix "image:".</param>
+		/// <param name="s">Base64 encoded image string with prefix <c>"image:"</c>.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="LoadImageStreamFromString"/> and <see cref="System.Drawing.Bitmap(Stream)"/>.</exception>
 		static System.Drawing.Bitmap _LoadGdipBitmapFromString(string s)
 			=> new(LoadImageStreamFromString(s));
@@ -51,7 +51,7 @@ namespace Au.More
 		/// <summary>
 		/// Loads WPF image from Base64 string.
 		/// </summary>
-		/// <param name="s">Base64 encoded image string with prefix "image:".</param>
+		/// <param name="s">Base64 encoded image string with prefix <c>"image:"</c>.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="LoadImageStreamFromString"/> and <see cref="BitmapFrame.Create(Stream)"/>.</exception>
 		static BitmapFrame _LoadWpfImageFromString(string s)
 			=> BitmapFrame.Create(LoadImageStreamFromString(s));
@@ -80,9 +80,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// <br/>• file path. Can have prefix "imagefile:".
-		/// <br/>• resource path that starts with "resources/" or has prefix "resource:" (<see cref="ResourceUtil.GetGdipBitmap"/>)
-		/// <br/>• Base64 encoded image string with prefix "image:".
+		/// <br/>• file path. Can have prefix <c>"imagefile:"</c>.
+		/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> (<see cref="ResourceUtil.GetGdipBitmap"/>)
+		/// <br/>• Base64 encoded image string with prefix <c>"image:"</c>.
 		/// </param>
 		/// <param name="xaml">If not null, supports XAML images. See <see cref="LoadGdipBitmapFromXaml"/>.</param>
 		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="File.OpenRead(string)"/>, <see cref="System.Drawing.Bitmap(Stream)"/>, etc.</exception>
@@ -105,9 +105,9 @@ namespace Au.More
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// <br/>• file path. Can have prefix "imagefile:".
-		/// <br/>• resource path that starts with "resources/" or has prefix "resource:" (<see cref="ResourceUtil.GetWpfImage"/>)
-		/// <br/>• Base64 encoded image string with prefix "image:".
+		/// <br/>• file path. Can have prefix <c>"imagefile:"</c>.
+		/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> (<see cref="ResourceUtil.GetWpfImage"/>)
+		/// <br/>• Base64 encoded image string with prefix <c>"image:"</c>.
 		/// </param>
 		/// <exception cref="Exception"></exception>
 		public static BitmapFrame LoadWpfImage(string image) {
@@ -124,15 +124,15 @@ namespace Au.More
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// <br/>• file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="pathname.expand"/>; can have prefix "imagefile:".
-		/// <br/>• resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="ResourceUtil.GetXamlObject"/> if ends with ".xaml", else <see cref="ResourceUtil.GetWpfImage"/>.
-		/// <br/>• Base64 encoded image string with prefix "image:"; uses<see cref="LoadImageStreamFromString"/>.
-		/// <br/>• XAML string that starts with "&lt;".
-		/// <br/>• XAML icon name, like "*Pack.Icon color" (you can get it from the Icons dialog); if literal string and using default compiler, the compiler adds XAML to the assembly as a string resource, else this function tries to get XAML from database and fails if editor isn't running.
+		/// <br/>• file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="pathname.expand"/>; can have prefix <c>"imagefile:"</c>.
+		/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>; uses <see cref="ResourceUtil.GetXamlObject"/> if ends with <c>".xaml"</c>, else <see cref="ResourceUtil.GetWpfImage"/>.
+		/// <br/>• Base64 encoded image string with prefix <c>"image:"</c>; uses<see cref="LoadImageStreamFromString"/>.
+		/// <br/>• XAML string that starts with <c>"&lt;"</c>.
+		/// <br/>• XAML icon name, like <c>"*Pack.Icon color"</c> (you can get it from the Icons dialog); if literal string and using default compiler, the compiler adds XAML to the assembly as a string resource, else this function tries to get XAML from database and fails if editor isn't running.
 		/// </param>
 		/// <exception cref="Exception"></exception>
 		/// <remarks>
-		/// If <i>image</i> is XAML icon name or starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
+		/// If <i>image</i> is XAML icon name or starts with <c>"&lt;"</c> or ends with <c>".xaml"</c> (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
 		/// </remarks>
 		public static FrameworkElement LoadWpfImageElement(string image) {
 			if (image.Starts('*')) {

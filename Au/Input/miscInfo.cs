@@ -1,7 +1,7 @@
 namespace Au;
 
 /// <summary>
-/// Contains static functions to get miscellaneous info not found in other classes of this library and .NET.
+/// Contains functions to get miscellaneous info not found in other classes of this library and .NET.
 /// </summary>
 /// <seealso cref="osVersion"/>
 /// <seealso cref="folders"/>
@@ -32,7 +32,7 @@ public static class miscInfo
 	/// <returns>false if failed.</returns>
 	/// <param name="r">Receives the rectangle, in screen coordinates.</param>
 	/// <param name="w">Receives the control that contains the text cursor.</param>
-	/// <param name="orMouse">If fails, get mouse pointer coodinates.</param>
+	/// <param name="orMouse">If fails, get mouse pointer coordinates.</param>
 	/// <remarks>
 	/// Can get only standard text cursor. Many apps use non-standard cursor; then fails.
 	/// Also fails if the text cursor currently is not displayed.

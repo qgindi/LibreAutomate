@@ -10,8 +10,7 @@ using System.Drawing;
 
 //BAD: initially 15 threads in process. After 1-2 minutes 7. With MessageBox 8, later 7.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Standard dialogs to show information or get user input.
 	/// </summary>
@@ -21,7 +20,7 @@ namespace Au
 	/// 
 	/// Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
 	/// 
-	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
+	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option <b>ServiceNotification</b> or <b>DefaultDesktopOnly</b>, or API <msdn>MessageBox</msdn> with corresponding flags.
 	/// </remarks>
 	/// <example>
 	/// Simple examples.
@@ -33,7 +32,7 @@ namespace Au
 	/// 
 	/// if(!dialog.showYesNo("Continue?", "More info.")) return;
 	/// 
-	/// switch(dialog.show("Save?", "More info.", "1 Save|2 Don't Save|0 Cancel")) {
+	/// switch(dialog.show("Save?", "More info.", "1 Save|2 Don't save|0 Cancel")) {
 	/// case 1: print.it("save"); break;
 	/// case 2: print.it("don't"); break;
 	/// default: print.it("cancel"); break;
@@ -46,7 +45,7 @@ namespace Au
 	/// This example creates a class instance, sets properties, shows dialog, uses events, uses result.
 	/// <code><![CDATA[
 	/// var d = new dialog();
-	/// d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClicked event.");
+	/// d.SetText("Main text.", "More text.\nSupports <a href=\"link data\">links</a> if you subscribe to HyperlinkClicked event.");
 	/// d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
 	/// d.SetIcon(DIcon.Warning);
 	/// d.SetExpandedText("Expanded info\nand more info.", true);
@@ -62,8 +61,7 @@ namespace Au
 	/// switch(r) { case 1: print.it("OK"); break; case dialog.Timeout: print.it("timeout"); break; }
 	/// ]]></code>
 	/// </example>
-	public class dialog
-	{
+	public class dialog {
 		#region private API
 
 		//[DllImport("comctl32.dll")]
@@ -83,8 +81,7 @@ namespace Au
 
 		//TASKDIALOGCONFIG flags.
 		[Flags]
-		enum _TDF
-		{
+		enum _TDF {
 			ENABLE_HYPERLINKS = 0x0001,
 			USE_HICON_MAIN = 0x0002,
 			USE_HICON_FOOTER = 0x0004,
@@ -107,23 +104,19 @@ namespace Au
 
 		//TASKDIALOGCONFIG buttons.
 		[Flags]
-		enum _TDCBF
-		{
+		enum _TDCBF {
 			OK = 1, Yes = 2, No = 4, Cancel = 8, Retry = 0x10, Close = 0x20,
 		}
 
-		static class _Api
-		{
+		static class _Api {
 			[StructLayout(LayoutKind.Sequential, Pack = 1)]
-			internal unsafe struct TASKDIALOG_BUTTON
-			{
+			internal unsafe struct TASKDIALOG_BUTTON {
 				public int id;
 				public char* text;
 			}
 
 			[StructLayout(LayoutKind.Sequential, Pack = 1)]
-			internal unsafe struct TASKDIALOGCONFIG
-			{
+			internal unsafe struct TASKDIALOGCONFIG {
 				public int cbSize;
 				public wnd hwndParent;
 				public IntPtr hInstance;
@@ -160,11 +153,10 @@ namespace Au
 		/// <summary>
 		/// Default options used by <see cref="dialog"/> class functions.
 		/// </summary>
-		public static class options
-		{
+		public static class options {
 			/// <summary>
 			/// Default title bar text.
-			/// Default value - <see cref="script.name"/>. In exe it is exe file name like "Example.exe".
+			/// Default value - <see cref="script.name"/>. In exe it is exe file name like <c>"Example.exe"</c>.
 			/// </summary>
 			public static string defaultTitle {
 				get => _defaultTitle ?? script.name;
@@ -269,7 +261,7 @@ namespace Au
 
 		/// <summary>
 		/// Changes title bar text.
-		/// If <i>title</i> is null or "" or this function not called, will use <see cref="options.defaultTitle"/>.
+		/// If <i>title</i> is null or <c>""</c> or this function not called, will use <see cref="options.defaultTitle"/>.
 		/// </summary>
 		public void SetTitleBarText(string title) {
 			_c.pszWindowTitle = title.NE() ? options.defaultTitle : title;
@@ -287,7 +279,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets common icon. Or custom icom from app resources.
+		/// Sets common icon. Or custom icon from app resources.
 		/// </summary>
 		public void SetIcon(DIcon icon) {
 			_c.hMainIcon = (IntPtr)(int)icon;
@@ -334,10 +326,8 @@ namespace Au
 
 		_Buttons _buttons;
 
-		struct _Buttons
-		{
-			struct _Button
-			{
+		struct _Buttons {
+			struct _Button {
 				internal int id;
 				internal string s;
 
@@ -376,7 +366,7 @@ namespace Au
 			}
 
 			_TDCBF _ParseButtons(Strings buttons, bool onlyCustom) {
-				var ba = buttons.ToArray(); if(ba.NE_()) return 0;
+				var ba = buttons.ToArray(); if (ba.NE_()) return 0;
 
 				_TDCBF commonButtons = 0;
 				int id = 0, nextNativeId = 100;
@@ -422,7 +412,7 @@ namespace Au
 
 			internal void SetRadioButtons(Strings buttons) {
 				_radioButtons = null;
-				var ba = buttons.ToArray(); if(ba.NE_()) return;
+				var ba = buttons.ToArray(); if (ba.NE_()) return;
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
@@ -432,8 +422,7 @@ namespace Au
 				}
 			}
 
-			struct _IdMapItem
-			{
+			struct _IdMapItem {
 				internal int userId, nativeId;
 
 				internal _IdMapItem(int userId, int nativeId) { this.userId = userId; this.nativeId = nativeId; }
@@ -510,8 +499,8 @@ namespace Au
 		/// </param>
 		/// <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">
-		/// Additional custom buttons. All will be custom, even if named "OK" etc.
-		/// List of labels without ids. Can be string like "One|Two|..." or string[] or List&lt;string&gt;.
+		/// Additional custom buttons. All will be custom, even if named <c>"OK"</c> etc.
+		/// List of labels without ids. Can be string like <c>"One|Two|..."</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>.
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
@@ -530,7 +519,7 @@ namespace Au
 		/// <summary>
 		/// Adds radio buttons.
 		/// </summary>
-		/// <param name="buttons">A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
+		/// <param name="buttons">A list of strings <c>"id text"</c> separated by |, like <c>"1 One|2 Two|3 Three"</c>.</param>
 		/// <param name="defaultId">Check the radio button that has this id. If omitted or 0, checks the first. If negative, does not check.</param>
 		/// <remarks>
 		/// To get selected radio button id after closing the dialog, use <see cref="Controls"/>.
@@ -545,7 +534,7 @@ namespace Au
 		#endregion buttons
 
 		/// <summary>
-		/// Adds check box (if text is not null/empty).
+		/// Adds check box (if <i>text</i> is not null/empty).
 		/// </summary>
 		/// <remarks>
 		/// To get check box state after closing the dialog, use <see cref="Controls"/>.
@@ -584,7 +573,7 @@ namespace Au
 		/// <summary>
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
-		/// <param name="text">Text, optionally preceded by an icon character and |, like "i|Text". Icons: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="text">Text, optionally preceded by an icon character and |, like <c>"i|Text"</c>. Icons: x error, ! warning, i info, v shield, a app.</param>
 		public void SetFooter(string text) {
 			DIcon i = 0;
 			if (text?.Eq(1, '|') ?? false) {
@@ -668,9 +657,9 @@ namespace Au
 		/// <summary>
 		/// Sets dialog position in screen.
 		/// </summary>
-		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) - screen center.</param>
-		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc).</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If <c>default</c> - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If <c>default</c> - screen center.</param>
+		/// <param name="rawXY"><i>x y</i> are relative to the primary screen (ignore <see cref="Screen"/> etc).</param>
 		public void SetXY(Coord x, Coord y, bool rawXY = false) {
 			_x = x; _y = y;
 			_rawXY = rawXY;
@@ -997,10 +986,67 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
+		/// After the dialog has been created and before it is displayed.
 		/// </summary>
-		public event Action<DEventArgs>
-			Created, Destroyed, Timer, ButtonClicked, HyperlinkClicked, HelpF1, OtherEvents;
+		public event Action<DEventArgs> Created;
+
+		/// <summary>
+		/// When the dialog is closed and its window handle is no longer valid.
+		/// </summary>
+		public event Action<DEventArgs> Destroyed;
+
+		/// <summary>
+		/// Every 200 ms.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// var d = new dialog("test");
+		/// d.Timer += e => { print.it(e.TimerTimeMS); };
+		/// d.ShowDialog();
+		/// ]]></code>
+		/// </example>
+		public event Action<DEventArgs> Timer;
+
+		/// <summary>
+		/// When the user selects a button.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// var d = new dialog("test", buttons: "1 Can close|2 Can't close");
+		/// d.ButtonClicked += e => { print.it(e.Button); e.DontCloseDialog = e.Button == 2; };
+		/// d.ShowDialog();
+		/// ]]></code>
+		/// </example>
+		public event Action<DEventArgs> ButtonClicked;
+
+		/// <summary>
+		/// When the user clicks a hyperlink in the dialog text.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// var d = new dialog("test", "Text with <a href=\"link data\">links</a>.");
+		/// d.HyperlinkClicked += e => { print.it(e.LinkHref); };
+		/// d.ShowDialog();
+		/// ]]></code>
+		/// </example>
+		public event Action<DEventArgs> HyperlinkClicked;
+
+		/// <summary>
+		/// When the user presses F1.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// var d = new dialog("test", "Some info.", footer: "Press F1 for more info.");
+		/// d.HelpF1 += e => { run.it("https://www.google.com/search?q=more+info"); };
+		/// d.ShowDialog();
+		/// ]]></code>
+		/// </example>
+		public event Action<DEventArgs> HelpF1;
+
+		/// <summary>
+		/// Events other than <see cref="Created"/>, <see cref="Destroyed"/>, <see cref="Timer"/>, <see cref="ButtonClicked"/>, <see cref="HyperlinkClicked"/>, <see cref="HelpF1"/>. See API <msdn>TaskDialogCallbackProc</msdn>.
+		/// </summary>
+		public event Action<DEventArgs> OtherEvents;
 
 		#region async etc
 
@@ -1103,7 +1149,7 @@ namespace Au
 		/// <summary>
 		/// Gets dialog window handle as <b>wnd</b>.
 		/// </summary>
-		/// <returns>default(wnd) if the dialog is not open.</returns>
+		/// <returns><c>default(wnd)</c> if the dialog is not open.</returns>
 		public wnd DialogWindow => _dlg;
 
 		/// <summary>
@@ -1290,7 +1336,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets edit control handle as wnd.
+		/// Gets edit control handle as <b>wnd</b>.
 		/// </summary>
 		public wnd EditControl => _editWnd;
 		wnd _editWnd, _editParent;
@@ -1329,8 +1375,8 @@ namespace Au
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
-		/// Button ids and labels. Examples: "OK|Cancel", "1 &amp;Save|2 Do&amp;n't Save|0 Cancel".
-		/// If omitted, null or "", the dialog will have OK button, id 1.
+		/// Button ids and labels. Examples: <c>"OK|Cancel"</c>, <c>"1 &amp;Save|2 Do&amp;n't Save|0 Cancel"</c>.
+		/// If omitted, null or <c>""</c>, the dialog will have OK button, id 1.
 		/// Common buttons: OK, Yes, No, Retry, Cancel, Close.
 		/// More info in Remarks.
 		/// </param>
@@ -1338,8 +1384,8 @@ namespace Au
 		/// <param name="icon"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="options.defaultTitle"/>.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -1360,21 +1406,21 @@ namespace Au
 		/// 
 		/// <h5>More info about the <i>buttons</i> parameter</h5>
 		/// 
-		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
+		/// Missing ids are auto-generated, for example <c>"OK|Cancel|100 Custom1|Custom2"</c> is the same as <c>"1 OK|2 Cancel|100 Custom1|101 Custom2"</c>.
 		/// 
-		/// The first in the list button is default, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
+		/// The first in the list button is default, ie responds to the Enter key. For example, <c>"2 No|1 Yes"</c> adds Yes and No buttons and makes No default.
 		/// 
-		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: "1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday".
+		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: <c>"1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday"</c>.
 		/// 
-		/// Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
+		/// Trims newlines around ids and labels. For example, <c>"\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n"</c> is the same as <c>"1 One|2 Two"</c>.
 		/// 
 		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
 		/// How common buttons are different:
-		/// 	1. <see cref="DFlags.CommandLinks"/> does not change their style.
-		/// 	2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
-		/// 	3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
-		/// 	4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
-		/// 	5. The displayed button label is localized, ie different when the Windows UI language is not English.
+		/// 1. <see cref="DFlags.CommandLinks"/> does not change their style.
+		/// 2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
+		/// 3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
+		/// 4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use <c>"2 No|1 Yes"</c> to set default button = No.
+		/// 5. The displayed button label is localized, ie different when the Windows UI language is not English.
 		/// 
 		/// You can use flag <see cref="DFlags.CommandLinks"/> to change the style of custom buttons.
 		/// 
@@ -1479,14 +1525,14 @@ namespace Au
 		/// <param name="s">Variable that receives the text.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type. It can be simple text (DEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <param name="editType">Edit field type. It can be simple text (default), multiline, number, password or combo box.</param>
 		/// <param name="editText">Initial edit field text.</param>
-		/// <param name="comboItems">Combo box items used when <i>editType</i> is Combo.</param>
+		/// <param name="comboItems">Combo box items used when <i>editType</i> is <b>DEdit.Combo</b>.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="options.defaultTitle"/>.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
@@ -1494,7 +1540,7 @@ namespace Au
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <param name="buttons">
-		/// Buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="show"/>.
+		/// Buttons. A list of strings <c>"id text"</c> separated by |, like <c>"1 OK|2 Cancel|10 Browse..."</c>. See <see cref="show"/>.
 		/// Note: this function returns true only when clicked button with id 1.
 		/// Usually custom buttons are used with <i>onButtonClick</i> function, which for example can get button id or disable closing the dialog.
 		/// </param>
@@ -1601,14 +1647,14 @@ namespace Au
 		/// Shows dialog with a list of command-link buttons, and returns 1-based button index or 0.
 		/// </summary>
 		/// <returns>1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.</returns>
-		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List. See <see cref="SetButtons"/>.</param>
+		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="options.defaultTitle"/>.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -1617,7 +1663,7 @@ namespace Au
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call ShowDialog. Example in <see cref="dialog"/> class help.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="dialog"/> class help.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1732,15 +1778,13 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 #pragma warning disable 1591 //missing XML documentation
 
 	/// <summary>
 	/// Standard icons for <see cref="dialog.show"/> and similar functions.
 	/// </summary>
-	public enum DIcon
-	{
+	public enum DIcon {
 		Warning = 0xffff,
 		Error = 0xfffe,
 		Info = 0xfffd,
@@ -1757,7 +1801,7 @@ namespace Au.Types
 		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or main assembly.
 		/// If there are no icons - default program icon.
 		/// C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
-		/// If this program file contains multiple native icons in range DIcon.App to 0xf000, you can specify them like <c>DIcon.App+1</c>.
+		/// If this program file contains multiple native icons in range <b>DIcon.App</b> to 0xf000, you can specify them like <c>DIcon.App+1</c>.
 		/// </summary>
 		App = Api.IDI_APPLICATION
 	}
@@ -1781,8 +1825,7 @@ namespace Au.Types
 	/// <summary>
 	/// Text edit field type for <see cref="dialog.showInput"/>, <see cref="dialog.SetEditControl"/>, etc.
 	/// </summary>
-	public enum DEdit
-	{
+	public enum DEdit {
 		None, Text, Multiline, Password, Number, Combo
 	}
 #pragma warning restore 1591 //missing XML documentation
@@ -1791,8 +1834,7 @@ namespace Au.Types
 	/// Flags for <see cref="dialog.show"/> and similar functions.
 	/// </summary>
 	[Flags]
-	public enum DFlags
-	{
+	public enum DFlags {
 		/// <summary>
 		/// Display custom buttons as a column of command-links, not as a row of classic buttons.
 		/// Command links can have multi-line text. The first line has bigger font.
@@ -1848,8 +1890,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="dialog.show"/> and similar functions to add more controls and get their final values.
 	/// </summary>
-	public class DControls
-	{
+	public class DControls {
 		/// <summary>
 		/// If not null, adds checkbox with this text.
 		/// </summary>
@@ -1862,7 +1903,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Adds radio buttons.
-		/// A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".
+		/// A list of strings <c>"id text"</c> separated by |, like <c>"1 One|2 Two|3 Three"</c>.
 		/// </summary>
 		public Strings RadioButtons { get; set; }
 
@@ -1896,8 +1937,7 @@ namespace Au.Types
 	/// To return a non-zero value from the callback function, assign the value to the <b>returnValue</b> field.
 	/// More info: <msdn>TaskDialogCallbackProc</msdn>.
 	/// </remarks>
-	public class DEventArgs : EventArgs
-	{
+	public class DEventArgs : EventArgs {
 		internal DEventArgs(dialog obj_, wnd hwnd_, DNative.TDN message_, nint wParam_, nint lParam_) {
 			d = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
 			LinkHref = (message_ == DNative.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
@@ -1948,8 +1988,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Example (in an event handler): <c>e.d.Close();</c>
 	/// </remarks>
-	public class DSend
-	{
+	public class DSend {
 		volatile dialog _tdo;
 
 		internal DSend(dialog tdo) { _tdo = tdo; }
@@ -1963,7 +2002,7 @@ namespace Au.Types
 		/// Example (in an event handler): <c>e.d.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c>
 		/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
 		/// Reference: <msdn>task dialog messages</msdn>.
-		/// NAVIGATE_PAGE currently not supported.
+		/// <b>NAVIGATE_PAGE</b> currently not supported.
 		/// </remarks>
 		public int Message(DNative.TDM message, nint wParam = 0, nint lParam = 0) {
 			return _tdo?.SendMessage_(message, wParam, lParam) ?? 0;
@@ -2017,7 +2056,7 @@ namespace Au.Types
 		/// <summary>
 		/// Applies new properties to the dialog while it is already open.
 		/// Call this method while the dialog is open, eg in an event handler, after setting new properties.
-		/// Sends message DNative.TDM.NAVIGATE_PAGE.
+		/// Sends message <b>DNative.TDM.NAVIGATE_PAGE</b>.
 		/// </summary>
 		public void Reconstruct()
 		{
@@ -2031,10 +2070,10 @@ namespace Au.Types
 		/// <summary>
 		/// Clicks a button. Normally it closes the dialog.
 		/// </summary>
-		/// <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
+		/// <param name="buttonId">A button id or some other number that will be returned by <b>ShowDialog</b>.</param>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Sends message DNative.TDM.CLICK_BUTTON.
+		/// Sends message <b>DNative.TDM.CLICK_BUTTON</b>.
 		/// </remarks>
 		public bool Close(int buttonId = 0) {
 			return 0 != Message(DNative.TDM.CLICK_BUTTON, buttonId);
@@ -2046,7 +2085,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// Example: <c>d.Created += e => { e.d.Send.EnableButton(4, false); };</c>
-		/// Sends message DNative.TDM.ENABLE_BUTTON.
+		/// Sends message <b>DNative.TDM.ENABLE_BUTTON</b>.
 		/// </remarks>
 		public void EnableButton(int buttonId, bool enable) {
 			Message(DNative.TDM.ENABLE_BUTTON, buttonId, enable ? 1 : 0);
@@ -2057,7 +2096,7 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Sends message DNative.TDM.SET_PROGRESS_BAR_POS.
+		/// Sends message <b>DNative.TDM.SET_PROGRESS_BAR_POS</b>.
 		/// </remarks>
 		public int Progress(int percent) {
 			return Message(DNative.TDM.SET_PROGRESS_BAR_POS, percent);
@@ -2072,13 +2111,11 @@ namespace Au.Types
 	/// <remarks>
 	/// Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <b>TDM_CLICK_BUTTON</b> use <c>DNative.TDM.CLICK_BUTTON</c>.
 	/// </remarks>
-	public static partial class DNative
-	{
+	public static partial class DNative {
 		/// <summary>
 		/// Messages that your <see cref="dialog"/> event handler can send to the dialog.
 		/// </summary>
-		public enum TDM : uint
-		{
+		public enum TDM : uint {
 			NAVIGATE_PAGE = WM_USER + 101,
 			CLICK_BUTTON = WM_USER + 102, // wParam = button id
 			SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
@@ -2100,8 +2137,7 @@ namespace Au.Types
 		/// <summary>
 		/// Notification messages that your <see cref="dialog"/> event handler receives.
 		/// </summary>
-		public enum TDN : uint
-		{
+		public enum TDN : uint {
 			CREATED = 0,
 			NAVIGATED = 1,
 			BUTTON_CLICKED = 2,
@@ -2116,11 +2152,9 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Constants for DNative.TDM.SET_ELEMENT_TEXT and DNative.TDM.UPDATE_ELEMENT_TEXT messages and dialog.Send.Text().
-		/// Used with <see cref="dialog"/>.
+		/// Constants for <b>DNative.TDM.SET_ELEMENT_TEXT</b> and <b>DNative.TDM.UPDATE_ELEMENT_TEXT</b> messages used with <see cref="dialog"/>.
 		/// </summary>
-		public enum TDE
-		{
+		public enum TDE {
 			CONTENT,
 			EXPANDED_INFORMATION,
 			FOOTER,
@@ -2128,10 +2162,9 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Constants for DNative.TDM.UPDATE_ICON message used with <see cref="dialog"/>.
+		/// Constants for <b>DNative.TDM.UPDATE_ICON</b> message used with <see cref="dialog"/>.
 		/// </summary>
-		public enum TDIE
-		{
+		public enum TDIE {
 			ICON_MAIN,
 			ICON_FOOTER
 		}

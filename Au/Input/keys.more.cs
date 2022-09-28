@@ -34,7 +34,7 @@ partial class keys
 		/// <param name="s">String containing key name, like with <see cref="keys.send"/>.</param>
 		/// <param name="startIndex">Key name start index in <i>s</i>.</param>
 		/// <param name="length">Key name length.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid start index or length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>length</i>.</exception>
 		public static KKey parseKeyName(string s, int startIndex, int length) {
 			s ??= "";
 			if ((uint)startIndex > s.Length || (uint)length > s.Length - startIndex) throw new ArgumentOutOfRangeException();
@@ -58,14 +58,14 @@ partial class keys
 
 		/// <summary>
 		/// Converts string to <see cref="KKey"/> and <see cref="KMod"/>.
-		/// For example, if s is "Ctrl+Left", sets mod=KMod.Ctrl, key=KKey.Left.
+		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = KMod.Ctrl</c>, <c>key = KKey.Left</c>.
 		/// </summary>
 		/// <returns>false if the string is invalid.</returns>
 		/// <remarks>
 		/// Key names are like with <see cref="keys.send"/>.
 		/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
 		/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
-		/// Invalid hotkey examples: null, "", <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
+		/// Invalid hotkey examples: null, <c>""</c>, <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
 		/// </remarks>
 		public static bool parseHotkeyString(string s, out KMod mod, out KKey key) {
 			key = 0; mod = 0;
@@ -88,9 +88,9 @@ partial class keys
 
 		/// <summary>
 		/// Converts string to winforms <see cref="System.Windows.Forms.Keys"/>.
-		/// For example, if s is <c>"Ctrl+Left"</c>, sets hotkey=Keys.Control|Keys.Left.
+		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>hotkey = Keys.Control | Keys.Left</c>.
 		/// </summary>
-		/// <returns>false if the string is invalid or contains "Win".</returns>
+		/// <returns>false if the string is invalid or contains <c>"Win"</c>.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Forms.Keys hotkey) {
 			if (!parseHotkeyString(s, out var m, out var k)) { hotkey = 0; return false; }
 			hotkey = KModToWinforms(m) | (System.Windows.Forms.Keys)k;
@@ -102,8 +102,8 @@ partial class keys
 
 		/// <summary>
 		/// Converts string to WPF <see cref="System.Windows.Input.ModifierKeys"/> and <see cref="System.Windows.Input.Key"/> or <see cref="System.Windows.Input.MouseAction"/>.
-		/// For example, if s is <c>"Ctrl+Left"</c>, sets mod=ModifierKeys.Control and key=Key.Left.
-		/// Supported mouse button strings: "Click", "D-click", "R-click", "M-click", "Wheel". Example: "Ctrl+R-click". The first character of a mouse word is case-insensitive.
+		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = ModifierKeys.Control</c> and <c>key = Key.Left</c>.
+		/// Supported mouse button strings: <c>"Click"</c>, <c>"D-click"</c>, <c>"R-click"</c>, <c>"M-click"</c>, <c>"Wheel"</c>. Example: <c>"Ctrl+R-click"</c>. The first character of a mouse word is case-insensitive.
 		/// </summary>
 		/// <returns>false if the string is invalid or contains incorrectly specified mouse buttons.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Input.ModifierKeys mod, out System.Windows.Input.Key key, out System.Windows.Input.MouseAction mouse) {
@@ -129,13 +129,13 @@ partial class keys
 
 		/// <summary>
 		/// Parses hotkey trigger string or mouse trigger modifiers string.
-		/// Like <see cref="parseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and <i>noKey</i>.
+		/// Like <see cref="parseHotkeyString"/>, but supports 'any mod' (like <c>"Shift?+K"</c> or <c>"?+K"</c>) and <i>noKey</i>.
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="mod"></param>
 		/// <param name="modAny"></param>
 		/// <param name="key"></param>
-		/// <param name="noKey">Modifiers only. If true, s must be "modifiers" or null/"". If false, s must be "key" or "modifiers+key".</param>
+		/// <param name="noKey">Modifiers only. If true, s must be "modifiers" or null/<c>""</c>. If false, <i>s</i> must be "key" or "modifiers+key".</param>
 		public static bool parseTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey) {
 			key = 0; mod = 0; modAny = 0;
 			if (s.NE()) return noKey;
@@ -162,7 +162,7 @@ partial class keys
 		}
 
 		/// <summary>
-		/// Formats hotkey string like "Ctrl+Shift+K".
+		/// Formats hotkey string like <c>"Ctrl+Shift+K"</c>.
 		/// </summary>
 		/// <param name="b">Append to this <b>StringBuilder</b>.</param>
 		/// <param name="mod"></param>
@@ -176,7 +176,7 @@ partial class keys
 		}
 
 		/// <summary>
-		/// Formats hotkey string like "Ctrl+Shift+K".
+		/// Formats hotkey string like <c>"Ctrl+Shift+K"</c>.
 		/// </summary>
 		public static string hotkeyToString(KMod mod, KKey key) {
 			if (mod == 0) return keyToString(key);

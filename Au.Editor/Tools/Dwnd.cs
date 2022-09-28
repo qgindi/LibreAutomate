@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 
@@ -51,7 +51,7 @@ class Dwnd : KDialogWindow {
 		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Executes the 'find' part of the code now and shows the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
-		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind").Tooltip("Function").Width(90); //rejected: |wndFinder. Rare, etc. //SHOULDDO: add, sometimes need it.
+		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind").Tooltip("Function").Width(90); //rejected: |wndFinder/childFinder. Rare, etc. //TODO: add, sometimes need it.
 		_cbFunc.SelectionChanged += _cbFunc_SelectionChanged;
 		b.Add(out _cActivate, "Activate").Tooltip("Activate the found window");
 		b.Add(out _cException, "Fail if not found").Checked(!_forTrigger).Tooltip("Throw exception if not found");

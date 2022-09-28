@@ -1,4 +1,4 @@
-﻿namespace Au.Types
+namespace Au.Types
 {
 	/// <summary>
 	/// Taskbar button flash, progress, add/delete.
@@ -45,7 +45,7 @@
 		/// Sets the value of the progress indicator displayed on the taskbar button of this window.
 		/// Calls <msdn>ITaskbarList3.SetProgressValue</msdn>.
 		/// </summary>
-		/// <param name="progressValue">Progress indicator value, 0 to progressTotal.</param>
+		/// <param name="progressValue">Progress indicator value, 0 to <i>progressTotal</i>.</param>
 		/// <param name="progressTotal">Max progress indicator value.</param>
 		public void SetProgressValue(int progressValue, int progressTotal = 100) {
 			_TaskbarButton.taskbarInstance.SetProgressValue(_w, progressValue, progressTotal);

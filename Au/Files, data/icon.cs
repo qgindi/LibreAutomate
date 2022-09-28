@@ -6,7 +6,7 @@ namespace Au {
 	/// Gets icons from/of files etc. Contains native icon handle.
 	/// </summary>
 	/// <remarks>
-	/// Native icons must be destroyed. An <b>icon</b> variable destroys its native icon when disposing. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Or use functions like <see cref="ToGdipBitmap"/>, <see cref="ToWpfImage"/>; by default they dispose the <b>icon</b> variable. It's OK to not dispose if you use few icons; GC will do it.
+	/// Native icons must be destroyed. An <b>icon</b> variable destroys its native icon when disposing. To dispose, call <b>Dispose</b> or use <c>using</c> statement. Or use functions like <see cref="ToGdipBitmap"/>, <see cref="ToWpfImage"/>; by default they dispose the <b>icon</b> variable. It's OK to not dispose if you use few icons; GC will do it.
 	/// </remarks>
 	public class icon : IDisposable //rejected: base SafeHandle.
 	{
@@ -74,14 +74,14 @@ namespace Au {
 		/// Can be:
 		/// <br/>• Path of any file or folder. Supports environment variables. If not full path, uses <see cref="folders.ThisAppImages"/> and <see cref="filesystem.searchPath"/>.
 		/// <br/>• Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
-		/// <br/>• File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
-		/// <br/>• Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
+		/// <br/>• File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get folder icon.
+		/// <br/>• Path with icon resource index or negative id, like <c>"c:\file.dll,4"</c>, <c>"c:\file.exe,-4"</c>.
 		/// <br/>• URL.
 		/// </param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="Pidl.ToHexString"/>.
+		/// <b>ITEMIDLIST</b> can be of any file, folder, URL or a non-filesystem shell object. See <see cref="Pidl.ToHexString"/>.
 		/// </remarks>
 		public static icon of(string file, int size = 16, IconGetFlags flags = 0) {
 			using var ds = new _DebugSpeed(file);
@@ -95,10 +95,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
+		/// Gets icon of a file or other shell object specified as <b>ITEMIDLIST</b>.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
-		/// <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
+		/// <param name="pidl"><b>ITEMIDLIST</b>.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static icon ofPidl(Pidl pidl, int size = 16) {
 			using var ds = new _DebugSpeed(pidl);
@@ -366,7 +366,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Extracts icon directly from file that contains it.
+		/// Extracts icon directly from file.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
 		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="pathname.expand"/>).</param>
@@ -519,7 +519,7 @@ namespace Au {
 		/// Sends <msdn>WM_SETICON</msdn> message.
 		/// </summary>
 		/// <param name="w"></param>
-		/// <param name="big"></param>
+		/// <param name="big"><b>ICON_BIG</b>.</param>
 		public void SetWindowIcon(wnd w, bool big) {
 			w.Send(Api.WM_SETICON, big ? 1 : 0, _handle);
 		}
@@ -552,7 +552,7 @@ namespace Au {
 		/// <summary>
 		/// Creates <see cref="System.Drawing.Icon"/> object that shares native icon handle with this object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is default(IntPtr).</returns>
+		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
 		public Icon ToGdipIcon() {
 			if (_handle == default) return null;
 			var R = Icon.FromHandle(_handle);
@@ -564,7 +564,7 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to GDI+ bitmap object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is default(IntPtr) or if fails to convert.</returns>
+		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If false, later will need to dispose this variable.
@@ -586,7 +586,7 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to WPF image object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is default(IntPtr) or if fails to convert.</returns>
+		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If false, later will need to dispose this variable.
@@ -609,7 +609,7 @@ namespace Au {
 		/// <summary>
 		/// Gets icon size.
 		/// </summary>
-		/// <returns>default(SIZE) if failed.</returns>
+		/// <returns><c>default(SIZE)</c> if failed.</returns>
 		public unsafe SIZE Size {
 			get {
 				if (_handle != default) {
@@ -629,9 +629,9 @@ namespace Au {
 		/// <returns>true if it includes icon index or resource id.</returns>
 		/// <param name="s">
 		/// Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path.
-		/// Supports path enclosed in "" like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.
+		/// Supports path enclosed in <c>""</c> like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.
 		/// </param>
-		/// <param name="path">Receives path without index and without "". Can be same variable as <i>s</i>.</param>
+		/// <param name="path">Receives path without index and without <c>""</c>. Can be the same variable as <i>s</i>.</param>
 		/// <param name="index">Receives index/id or 0.</param>
 		public static bool parsePathIndex(string s, out string path, out int index) {
 			path = s; index = 0;
@@ -861,7 +861,7 @@ namespace Au.Types {
 	[Flags]
 	public enum IconGetFlags {
 		/// <summary>
-		/// The <i>file</i> argument is literal full path. Don't parse "path,index", don't support ".ext" (file type icon), don't make fully-qualified, etc.
+		/// The <i>file</i> argument is literal full path. Don't parse <c>"path,index"</c>, don't support <c>".ext"</c> (file type icon), don't make fully-qualified, etc.
 		/// </summary>
 		LiteralPath = 1,
 
@@ -877,7 +877,7 @@ namespace Au.Types {
 		/// <summary>
 		/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
 		/// </summary>
-		DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns default(IntPtr).
+		DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns <c>default(IntPtr)</c>.
 #endif
 	}
 

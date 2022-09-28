@@ -1,4 +1,4 @@
-﻿namespace Au.More;
+namespace Au.More;
 
 /// <summary>
 /// File system redirection functions. Can temporarily disable redirection, to allow this 32-bit process access the 64-bit System32 directory.
@@ -10,7 +10,7 @@ public struct FileSystemRedirection : IDisposable {
 	/// <summary>
 	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/>, calls API <msdn>Wow64DisableWow64FsRedirection</msdn>, which disables file system redirection.
 	/// The caller can call this without checking OS and process bitness. This function checks it and it is fast.
-	/// Always call <see cref="Revert"/> or <b>Dispose</b>, for example use <b>finally</b> or <b>using</b> statement. Not calling it is more dangerous than a memory leak. It is not called by GC.
+	/// Always call <see cref="Revert"/> or <b>Dispose</b>, for example use <c>finally</c> or <c>using</c> statement. Not calling it is more dangerous than a memory leak. It is not called by GC.
 	/// </summary>
 	public void Disable() {
 		if (osVersion.is32BitProcessAnd64BitOS)
@@ -44,11 +44,11 @@ public struct FileSystemRedirection : IDisposable {
 	}
 
 	/// <summary>
-	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="folders.System"/>, replaces that path part with <see cref="folders.SystemX64"/>.
+	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/> is true and <i>path</i> starts with <see cref="folders.System"/>, replaces that path part with <see cref="folders.SystemX64"/>.
 	/// It disables redirection to <see cref="folders.SystemX86"/> for that path.
 	/// </summary>
 	/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
-	/// <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>
+	/// <param name="ifExistsOnlyThere">Don't replace <i>path</i> if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>
 	public static string GetNonRedirectedSystemPath(string path, bool ifExistsOnlyThere = false) {
 		int i = _IsSystem64PathIn32BitProcess(path);
 		if (i == 0) return path;

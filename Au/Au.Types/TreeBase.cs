@@ -130,7 +130,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	}
 
 	/// <summary>
-	/// Returns true if this node is a descendant of node n.
+	/// Returns true if this node is a descendant of node <i>n</i>.
 	/// </summary>
 	/// <param name="n">Can be null.</param>
 	public bool IsDescendantOf(T n) {
@@ -147,7 +147,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	}
 
 	/// <summary>
-	/// Returns true if this node is an ancestor of node n.
+	/// Returns true if this node is an ancestor of node <i>n</i>.
 	/// </summary>
 	/// <param name="n">Can be null.</param>
 	public bool IsAncestorOf(T n) => n?.IsDescendantOf(this as T) ?? false;
@@ -228,11 +228,11 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	}
 
 	/// <summary>
-	/// Adds node n to this node as a child.
+	/// Adds node <i>n</i> to this node as a child.
 	/// </summary>
 	/// <param name="n"></param>
-	/// <param name="first">Insert n as the first child node. If false (default), appends to the end.</param>
-	/// <exception cref="ArgumentException">n is null, or has parent (need to <see cref="Remove"/> at first), or is this node, or an ancestor of this node.</exception>
+	/// <param name="first">Insert <i>n</i> as the first child node. If false (default), appends to the end.</param>
+	/// <exception cref="ArgumentException"><i>n</i> is null, or has parent (need to <see cref="Remove"/> at first), or is this node, or an ancestor of this node.</exception>
 	public void AddChild(T n, bool first = false) {
 		_AddCommon(n);
 		if (_lastChild == null) { //our first child!
@@ -246,10 +246,10 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	}
 
 	/// <summary>
-	/// Inserts node n before or after this node as a sibling.
+	/// Inserts node <i>n</i> before or after this node as a sibling.
 	/// </summary>
 	/// <param name="n"></param>
-	/// <param name="after">Insert n after this node. If false (default), inserts before this node.</param>
+	/// <param name="after">Insert <i>n</i> after this node. If false (default), inserts before this node.</param>
 	/// <exception cref="ArgumentException">See <see cref="AddChild"/>.</exception>
 	/// <exception cref="InvalidOperationException">This node does not have parent (<see cref="Parent"/> is null).</exception>
 	public void AddSibling(T n, bool after) {

@@ -5,7 +5,7 @@ namespace Au
 		/// <summary>
 		/// Sets window transparency attributes (opacity and/or transparent color).
 		/// </summary>
-		/// <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
+		/// <param name="allowTransparency">Set or remove <b>WS_EX_LAYERED</b> style that is required for transparency. If false, other parameters are not used.</param>
 		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
 		/// <param name="colorKey">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
 		/// <param name="noException">Don't throw exception when fails.</param>
@@ -171,7 +171,7 @@ namespace Au
 		/// If this control is (or is based on) a standard control provided by Windows, such as button or treeview, returns the control type. Else returns <b>None</b>.
 		/// </summary>
 		/// <remarks>
-		/// Sends message WM_GETOBJECT <msdn>QUERYCLASSNAMEIDX</msdn>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
+		/// Sends message <b>WM_GETOBJECT</b> <msdn>QUERYCLASSNAMEIDX</msdn>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
 		/// </remarks>
 		public WControlType CommonControlType => (WControlType)Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX);
 	}

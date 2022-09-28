@@ -51,7 +51,7 @@ namespace Au.More {
 		public static implicit operator T*(in FastBuffer<T> b) => b._p;
 
 		/// <summary>
-		/// Gets reference to p[i]. Does not check bounds.
+		/// Gets reference to <c>p[i]</c>. Does not check bounds.
 		/// </summary>
 		public ref T this[int i] => ref _p[i];
 
@@ -61,7 +61,7 @@ namespace Au.More {
 		public int n => _n;
 
 		/// <summary>
-		/// Allocates first buffer of default size. It is on stack (in this variable), and its length is StackSize/sizeof(T) elements of type T (2048 bytes or 1024 chars or 512 ints...).
+		/// Allocates first buffer of default size. It is on stack (in this variable), and its length is <c>StackSize/sizeof(T)</c> elements of type T (2048 bytes or 1024 chars or 512 ints...).
 		/// </summary>
 		public FastBuffer() {
 			//With this overload slightly faster. Also, the int overload is confusing when need buffer of default size.
@@ -78,7 +78,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="n">
 		/// Buffer length (number of elements of type T).
-		/// If &lt;= StackSize/sizeof(T), the buffer contains StackSize/sizeof(T) elements on stack (in this variable); it is 2048 bytes or 1024 chars or 512 ints... Else allocates native memory (much slower).
+		/// If <c>&lt;= StackSize/sizeof(T)</c>, the buffer contains<c> StackSize/sizeof(T)</c> elements on stack (in this variable); it is 2048 bytes or 1024 chars or 512 ints... Else allocates native memory (much slower).
 		/// </param>
 		public FastBuffer(int n) {
 			_stack = 0;
@@ -108,7 +108,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="n">Number of elements of type T.</param>
 		/// <param name="preserve">Copy previous buffer contents to the new buffer.</param>
-		/// <exception cref="ArgumentException"><i>n</i> &lt;= current buffer lenght.</exception>
+		/// <exception cref="ArgumentException"><i>n</i> &lt;= current buffer length.</exception>
 		public void More(int n, bool preserve = false) {
 			if (_n == 0) throw new ArgumentNullException(null, "No buffer. Use another constructor."); //with many API would still work, but very slow
 			if (n <= _n) throw new ArgumentException("n <= this.n");
@@ -182,19 +182,19 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Finds length of '\0'-terminated UTF-16 string in buffer and converts to C# string.
+		/// Finds length of <c>'\0'</c>-terminated UTF-16 string in buffer and converts to C# string.
 		/// This function can be used when T is char. Use when length is unknown.
 		/// </summary>
 		/// <remarks>
-		/// If there is no '\0' character, gets whole buffer, and the string probably is truncated.
+		/// If there is no <c>'\0'</c> character, gets whole buffer, and the string probably is truncated.
 		/// </remarks>
 		public string GetStringFindLength() {
 			return new((char*)_p, 0, FindStringLength());
 		}
 
 		/// <summary>
-		/// Finds length of '\0'-terminated char string in buffer.
-		/// Returns <see cref="n"/> if there is no '\0' character.
+		/// Finds length of <c>'\0'</c>-terminated char string in buffer.
+		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
 		/// </summary>
 		public int FindStringLength() {
 			if (sizeof(T) != 2) throw new InvalidOperationException();
@@ -202,8 +202,8 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Finds length of '\0'-terminated byte string in buffer.
-		/// Returns <see cref="n"/> if there is no '\0' character.
+		/// Finds length of <c>'\0'</c>-terminated byte string in buffer.
+		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
 		/// </summary>
 		public int FindByteStringLength() {
 			if (sizeof(T) != 1) throw new InvalidOperationException();

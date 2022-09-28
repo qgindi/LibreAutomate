@@ -426,6 +426,11 @@ public unsafe class SciTags {
 				if (!BytePtr_.AsciiStarts(tag + 1, "mage")) goto ge;
 				hideTag = noEndTag = true;
 				break;
+			case 4 << 16 | 'n': //<nonl>
+				if (!BytePtr_.AsciiStarts(tag + 1, "onl")) goto ge;
+				if (s[0] == 13) s++;
+				if (s[0] == 10) s++;
+				continue;
 			case 1 << 16 | '_': //<_>text where tags are ignored</_>
 			case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
 				i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if (i2 < 0) goto ge;

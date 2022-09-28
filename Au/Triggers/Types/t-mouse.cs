@@ -64,7 +64,7 @@ public class MouseTrigger : ActionTrigger
 	internal override void Run(TriggerArgs args) => RunT(args as MouseTriggerArgs);
 
 	/// <summary>
-	/// Returns "Mouse".
+	/// Returns <c>"Mouse"</c>.
 	/// </summary>
 	public override string TypeString => "Mouse";
 
@@ -114,9 +114,9 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	/// <param name="button"></param>
 	/// <param name="modKeys">
 	/// Modifier keys, like with the <see cref="keys.send"/> function.
-	/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
-	/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
-	/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
+	/// Examples: <c>"Ctrl"</c>, <c>"Ctrl+Shift+Alt+Win"</c>.
+	/// To ignore modifiers: <c>"?"</c>. Then the trigger works with any combination of modifiers.
+	/// To ignore a modifier: <c>"Ctrl?"</c>. Then the trigger works with or without the modifier. More examples: <c>"Ctrl?+Shift?"</c>, <c>"Ctrl+Shift?"</c>.
 	/// </param>
 	/// <param name="flags"></param>
 	/// <param name="f_">[](xref:caller_info)</param>
@@ -678,7 +678,7 @@ public class MouseTriggerArgs : TriggerArgs
 	/// The pressed modifier keys.
 	/// </summary>
 	/// <remarks>
-	/// Can be useful when the trigger ignores modifiers. For example <i>modKeys</i> is "?" or "Shift?".
+	/// Can be useful when the trigger ignores modifiers. For example <i>modKeys</i> is <c>"?"</c> or <c>"Shift?"</c>.
 	/// </remarks>
 	public KMod Mod { get; }
 

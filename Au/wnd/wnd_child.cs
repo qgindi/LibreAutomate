@@ -1,7 +1,5 @@
-namespace Au
-{
-	public unsafe partial struct wnd
-	{
+namespace Au {
+	public unsafe partial struct wnd {
 		/// <summary>
 		/// Finds a child control and returns its handle as <see cref="wnd"/>.
 		/// </summary>
@@ -9,18 +7,18 @@ namespace Au
 		/// <param name="name">
 		/// Control name.
 		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. "" means 'no name'.
+		/// null means 'can be any'. <c>""</c> means 'no name'.
 		/// 
 		/// By default to get control names this function uses <see cref="Name"/>.
 		/// Can start with these prefix strings:
-		/// <br/>• <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert '&amp;' before it.
+		/// <br/>• <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert <c>'&amp;'</c> before it.
 		/// <br/>• <c>"***elmName "</c> - use <see cref="NameElm"/>. Slower.
 		/// <br/>• <c>"***wfName "</c> - use .NET Forms control name (see <see cref="WinformsControlNames"/>). Slower and can fail because of [](xref:uac).
 		/// </param>
 		/// <param name="cn">
 		/// Control class name.
 		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be "".
+		/// null means 'can be any'. Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="id">Control id. See <see cref="ControlId"/>. Not used if null (default).</param>
@@ -36,7 +34,7 @@ namespace Au
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
 		/// - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
-		/// - <i>cn</i> is "". To match any, use null.
+		/// - <i>cn</i> is <c>""</c>. To match any, use null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
@@ -85,44 +83,42 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if this window contains the specified control.
-		/// Calls <see cref="Child"/>.
-		/// <note>
-		/// Calling this function many times with same arguments is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.
-		/// </note>
-		/// </summary>
-		/// <remarks></remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// //find window that contains certain control, and get the control too
-		/// var f = new wndChildFinder("Password*", "Static"); //control properties
-		/// wnd w = wnd.find(cn: "#32770", also: t => t.HasChild(f));
-		/// print.it(w);
-		/// print.it(f.Result);
-		/// ]]></code>
-		/// </example>
-		/// <inheritdoc cref="Child(string, string, WCFlags, int?, Func{wnd, bool}, int)"/>
-		public bool HasChild(
-			[ParamString(PSFormat.Wildex)] string name = null,
-			[ParamString(PSFormat.Wildex)] string cn = null,
-			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0) {
-			return default != Child(name, cn, flags, id, also, skip);
-		}
-
-		/// <summary>
-		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="wndChildFinder.Exists"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
 		/// <example>
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
-		/// var cf = new wndChildFinder("Password*", "Static"); //control properties
+		/// var cf = new wndChildFinder("Password*", "Static");
 		/// wnd w = wnd.find(cn: "#32770", also: t => t.HasChild(cf));
 		/// print.it(w);
-		/// print.it(f.Result);
+		/// print.it(cf.Result);
+		/// ]]></code>
+		/// The same with parameter <i>contains</i>.
+		/// <code><![CDATA[
+		/// var cf = new wndChildFinder("Password*", "Static");
+		/// wnd w = wnd.find(cn: "#32770", contains: cf);
+		/// print.it(w);
+		/// print.it(cf.Result);
 		/// ]]></code>
 		/// </example>
 		public bool HasChild(wndChildFinder f) => f.Exists(this);
+
+		//rejected. Rare. Can use w.HasChild(new("Apply", "Button")) or !w.Child(...).Is0 etc. Or would also need HasElm(string...).
+		///// <summary>
+		///// Returns true if this window contains the specified control.
+		///// Calls <see cref="Child"/>.
+		///// <para>NOTE: Calling this function many times with same arguments is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.</para>
+		///// </summary>
+		///// <remarks></remarks>
+		///// <example></example>
+		///// <inheritdoc cref="Child(string, string, WCFlags, int?, Func{wnd, bool}, int)"/>
+		//public bool HasChild(
+		//	[ParamString(PSFormat.Wildex)] string name = null,
+		//	[ParamString(PSFormat.Wildex)] string cn = null,
+		//	WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0) {
+		//	return default != Child(name, cn, flags, id, also, skip);
+		//}
 
 		/// <summary>
 		/// Returns true if this window contains the specified UI element.
@@ -132,8 +128,15 @@ namespace Au
 		/// <example>
 		/// Find window that contains certain UI element, and get the UI element too.
 		/// <code><![CDATA[
-		/// var f = new elmFinder("BUTTON", "OK"); //UI element properties
+		/// var f = new elmFinder("BUTTON", "OK");
 		/// wnd w = wnd.find(cn: "#32770", also: t => t.HasElm(f));
+		/// print.it(w);
+		/// print.it(f.Result);
+		/// ]]></code>
+		/// The same with parameter <i>contains</i>.
+		/// <code><![CDATA[
+		/// var f = new elmFinder("BUTTON", "OK");
+		/// wnd w = wnd.find(cn: "#32770", contains: f);
 		/// print.it(w);
 		/// print.it(f.Result);
 		/// ]]></code>
@@ -186,7 +189,7 @@ namespace Au
 		//	if (waitS == 0) {
 		//		r = ChildById(id, flags);
 		//	} else {
-		//		var to = new wait.Loop(waitS < 0 ? waitS : -waitS);
+		//		var to = new WaitLoop(waitS < 0 ? waitS : -waitS);
 		//		do { r = ChildById(id, flags); if (!r.Is0) break; } while (to.Sleep());
 		//	}
 		//	return !r.Is0 || double.IsNegative(waitS) ? r : throw new NotFoundException();
@@ -206,13 +209,13 @@ namespace Au
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. "" means 'no name'.
-		/// Must include the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
+		/// null means 'can be any'. <c>""</c> means 'no name'.
+		/// Must include the invisible <c>'&amp;'</c> characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. Cannot be "".
+		/// null means 'can be any'. Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
@@ -246,8 +249,7 @@ namespace Au
 			return Api.GetDlgItem(this, id);
 		}
 
-		public partial struct getwnd
-		{
+		public partial struct getwnd {
 			/// <summary>
 			/// Gets child controls, including all descendants.
 			/// </summary>
@@ -265,21 +267,22 @@ namespace Au
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
 			}
 
-			/// <summary>
-			/// Gets child controls, including all descendants.
-			/// </summary>
-			/// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
-			/// <param name="onlyVisible">Need only visible controls.</param>
-			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
-			/// <param name="directChild">Need only direct children, not all descendants.</param>
-			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
-			/// <remarks>
-			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
-			/// </remarks>
-			public void Children(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false) {
-				_w.ThrowIfInvalid();
-				Internal_.EnumWindows2(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ??= new List<wnd>());
-			}
+			//rejected
+			///// <summary>
+			///// Gets child controls, including all descendants.
+			///// </summary>
+			///// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <param name="onlyVisible">Need only visible controls.</param>
+			///// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+			///// <param name="directChild">Need only direct children, not all descendants.</param>
+			///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+			///// <remarks>
+			///// Use this overload to avoid much garbage when calling frequently with the same <b>List</b> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+			///// </remarks>
+			//public void Children(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false) {
+			//	_w.ThrowIfInvalid();
+			//	Internal_.EnumWindows2(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ??= new List<wnd>());
+			//}
 
 			//rejected: unreliable.
 			///// <summary>
@@ -357,10 +360,10 @@ namespace Au
 		/// <param name="itemId">Menu item id. Must be in range 1 to 0xffff.</param>
 		/// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar. Posts <msdn>WM_SYSCOMMAND</msdn> instead.</param>
 		/// <exception cref="AuWndException">Invalid window.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid itemId.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>itemId</i>.</exception>
 		/// <remarks>
 		/// Works only with classic menus. The drop-down menu window class name must be "#32768". Works with menu items in window menu bar, system menu and some context menus.
-		/// Does not use the menu itself. Just posts WM_COMMAND or WM_SYSCOMMAND message. Even if a menu item with this id does not exist.
+		/// Does not use the menu itself. Just posts <b>WM_COMMAND</b> or <b>WM_SYSCOMMAND</b> message. Even if a menu item with this id does not exist.
 		/// This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class "#32768") that contains the menu item.
 		/// </remarks>
 		public void MenuClick(int itemId, bool systemMenu = false) {
@@ -398,14 +401,12 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="wnd.Child"/>.
 	/// </summary>
 	[Flags]
-	public enum WCFlags
-	{
+	public enum WCFlags {
 		/// <summary>Can find hidden controls.</summary>
 		HiddenToo = 1,
 

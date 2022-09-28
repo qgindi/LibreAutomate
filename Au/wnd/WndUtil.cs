@@ -24,7 +24,7 @@ namespace Au.More {
 		/// <param name="etc">
 		/// Can be used to specify API <msdn>WNDCLASSEX</msdn> fields.
 		/// To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
-		/// If null, this function sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
+		/// If null, this function sets arrow cursor and style <c>CS_VREDRAW | CS_HREDRAW</c>.
 		/// </param>
 		/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="CreateWindow"/>.</exception>
 		/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
@@ -115,11 +115,11 @@ namespace Au.More {
 		/// <param name="wndProc">Window procedure.</param>
 		/// <param name="keepAlive">
 		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> recived or thread ended).
-		/// <note type="important">In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy HwndHost-ed controls. Then let <i>keepAlive</i>=false and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</note>
+		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <b>HwndHost</b>-ed controls. Then let <i>keepAlive</i>=false and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
 		/// </param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// If the class was registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (WM_CREATE etc).
+		/// If the class was registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (<b>WM_CREATE</b> etc).
 		/// 
 		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
 		/// </remarks>
@@ -173,7 +173,7 @@ namespace Au.More {
 		/// <param name="name">Window name or null.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
+		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
 		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
 		/// </remarks>
 		public static wnd CreateMessageOnlyWindow(string className, string name = null) {
@@ -189,7 +189,7 @@ namespace Au.More {
 		/// <param name="name">Window name or null.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
+		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
 		/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> with <i>keepAlive</i>=true.
 		/// </remarks>
 		public static wnd CreateMessageOnlyWindow(WNDPROC wndProc, string className, string name = null) {
@@ -253,7 +253,7 @@ namespace Au.More {
 		/// <param name="w"></param>
 		/// <param name="font">
 		/// Native font handle.
-		/// If default(IntPtr), sets font that is used by most windows and controls on this computer, usually Segoe UI, 9, DPI-scaled for w screen.
+		/// If <c>default(IntPtr)</c>, sets font that is used by most windows and controls on this computer, usually Segoe UI, 9, DPI-scaled for <i>w</i> screen.
 		/// </param>
 		/// <remarks>
 		/// Sends <msdn>WM_SETFONT</msdn> message.
@@ -275,7 +275,7 @@ namespace Au.More {
 		//}
 
 		/// <summary>
-		/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+		/// Gets window Windows Store app user model id, like <c>"Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
 		/// </summary>
 		/// <returns>null if failed. On Windows 7 returns null unless <i>getExePathIfNotWinStoreApp</i> true.</returns>
 		/// <param name="w">A top-level window.</param>
@@ -335,7 +335,7 @@ namespace Au.More {
 		/// </summary>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
-		/// For index can be used constants from <see cref="GCL"/>. All values are the same in 32-bit and 64-bit process.
+		/// For <i>index</i> can be used constants from <see cref="GCL"/>. All values are the same in 32-bit and 64-bit process.
 		/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 		/// </remarks>
 		public static nint GetClassLong(wnd w, int index) => Api.GetClassLongPtr(w, index);
@@ -781,7 +781,7 @@ void _WmDeclTextToCode() {
 		/// <summary>
 		/// Simple non-OLE drag operation.
 		/// </summary>
-		/// <returns>true if dropped, false if cancelled.</returns>
+		/// <returns>true if dropped, false if canceled.</returns>
 		/// <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
@@ -941,7 +941,7 @@ namespace Au.Types {
 		public bool Number { get; set; } = true;
 
 		/// <summary>
-		/// Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
+		/// Prepend one or more tabs if the caller function (usually a window procedure) is called recursively.
 		/// Default true.
 		/// </summary>
 		public bool Indent { get; set; } = true;

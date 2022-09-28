@@ -169,7 +169,7 @@ tr td:first-child+td:last-child {
 }
 
 /* break adjacent lines like in XML comments, but collapse multiple spaces and tabs (eg indentation made by XML formatting) */
-p { white-space: pre-line }
+p { white-space: pre-line; }
 
 pre {
     white-space: pre;
@@ -178,6 +178,7 @@ pre {
 
 div.codewrapper pre {
     background-color: #ffffe7;
+    white-space: pre-line;
     word-wrap: normal;
     word-break: normal;
 }

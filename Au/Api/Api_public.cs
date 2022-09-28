@@ -8,7 +8,7 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// Reference: <msdn>Window Styles</msdn>.
-/// Here names are without prefix WS_. For example, instead of WS_BORDER use WS.BORDER. Not included constants that are 0 (eg WS_TILED) or are duplicate (eg WS_SIZEBOX is same as WS_THICKFRAME) or consist of multiple other constants (eg WS_TILEDWINDOW).
+/// Here names are without prefix WS_. For example, instead of <c>WS_BORDER</c> <c>use WS.BORDER</c>. Not included constants that are 0 (eg <c>WS_TILED</c>) or are duplicate (eg <c>WS_SIZEBOX</c> is same as <c>WS_THICKFRAME</c>) or consist of multiple other constants (eg <c>WS_TILEDWINDOW</c>).
 /// </remarks>
 [Flags]
 public enum WS : uint
@@ -42,7 +42,7 @@ public enum WS : uint
 /// </summary>
 /// <remarks>
 /// Reference: <msdn>Extended Window Styles</msdn>.
-/// Here names are without prefix WS_EX_. For example, instead of WS_EX_TOOLWINDOW use WSE.TOOLWINDOW. Not included constants that are 0 (eg WS_EX_LEFT).
+/// Here names are without prefix WS_EX_. For example, instead of <c>WS_EX_TOOLWINDOW</c> <c>use WSE.TOOLWINDOW</c>. Not included constants that are 0 (eg <c>WS_EX_LEFT</c>).
 /// </remarks>
 [Flags]
 public enum WSE : uint
@@ -142,7 +142,7 @@ public unsafe struct CREATESTRUCT
 	//public string Name => lpszName == default ? null : new string(lpszName);
 
 	/// <summary>
-	/// If lpszClass is atom, returns string with # prefix and atom value, like "#32770".
+	/// If <b>lpszClass</b> is atom, returns string with # prefix and atom value, like <c>"#32770"</c>.
 	/// </summary>
 	public RStr ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS()
 		: new RStr(lpszClass, CharPtr_.Length(lpszClass));

@@ -5,7 +5,7 @@ namespace Au
 		/// <summary>
 		/// Waits until window exists or is active.
 		/// </summary>
-		/// <returns>Window handle. On timeout returns default(wnd) if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <returns>Window handle. On timeout returns <c>default(wnd)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="active"/>), and not minimized.</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
@@ -60,7 +60,7 @@ namespace Au
 		public static (int index, wnd w) waitAny(double secondsTimeout, bool active, params wndFinder[] windows) {
 			foreach (var f in windows) f.Result = default;
 			WFCache cache = active && windows.Length > 1 ? new WFCache() : null;
-			var to = new wait.Loop(secondsTimeout);
+			var to = new WaitLoop(secondsTimeout);
 			for (; ; ) {
 				if (active) {
 					wnd w = wnd.active;
@@ -113,7 +113,7 @@ namespace Au
 		//		public static bool waitNot(double secondsTimeout, out wnd wFound, wndFinder f)
 		//		{
 		//			wFound = default;
-		//			var to = new wait.Loop(secondsTimeout);
+		//			var to = new WaitLoop(secondsTimeout);
 		//			wnd w = default;
 		//			for(; ; ) {
 		//				if(!w.IsAlive || !f.IsMatch(w)) { //if first time, or closed (!IsAlive), or changed properties (!IsMatch)
@@ -175,7 +175,7 @@ namespace Au
 		/// </example>
 		public T WaitFor<T>(double secondsTimeout, Func<wnd, T> condition, bool dontThrowIfClosed = false) {
 			bool wasInvalid = false;
-			var to = new wait.Loop(secondsTimeout);
+			var to = new WaitLoop(secondsTimeout);
 			for (; ; ) {
 				if (!dontThrowIfClosed) ThrowIfInvalid();
 				T r = condition(this);

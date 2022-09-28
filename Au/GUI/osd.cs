@@ -25,7 +25,7 @@ namespace Au.Types
 		/// <summary>Destroys the OSD window.</summary>
 		public void Close() => Dispose(true);
 
-		/// <summary>OSD window handle or default(wnd).</summary>
+		/// <summary>OSD window handle or <c>default(wnd)</c>.</summary>
 		public wnd Hwnd => _w;
 
 		/// <summary>
@@ -164,7 +164,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Called when the OSD window receives a message.
-		/// If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
+		/// If your derived class overrides this function, it must call <c>base.WndProc</c> and return its return value, except when don't need default processing.
 		/// </summary>
 		protected virtual nint WndProc(wnd w, int message, nint wParam, nint lParam) {
 			switch (message) {
@@ -196,7 +196,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn.
-		/// Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="OsdWindow"/>, it does nothing.
+		/// Derived classes should override this function and draw anything. Don't need to call <c>base.OnPaint</c> of <see cref="OsdWindow"/>, it does nothing.
 		/// </summary>
 		/// <remarks>
 		/// If <see cref="Opacity"/> is 0 (default), <i>g</i> is filled with <see cref="TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
@@ -317,7 +317,7 @@ namespace Au.Types
 namespace Au
 {
 	/// <summary>
-	/// Shows a mouse-transparent rectangle on screen. Its interior can be visually transparent or opaque.
+	/// Shows a mouse-transparent rectangle on screen. Just visible outline, or filled but partially transparent.
 	/// </summary>
 	/// <remarks>
 	/// Creates a temporary partially transparent window, and draws rectangle in it.
@@ -387,7 +387,7 @@ namespace Au
 	}
 
 	/// <summary>
-	/// Shows mouse-transparent text on screen. Its background can be visually transparent or opaque.
+	/// Shows text on screen, like a tooltip or with transparent background.
 	/// </summary>
 	/// <remarks>
 	/// Creates a temporary partially transparent window, and draws text in it.
@@ -545,7 +545,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets text format flags.
-		/// Default: TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS.
+		/// Default: <c>TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS</c>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -554,7 +554,7 @@ namespace Au
 
 		/// <summary>
 		/// Icon or image at the left. Can be <see cref="icon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
-		/// For example <i>System.Drawing.SystemIcons.Information</i> or <c>icon.stock(StockIcon.INFO)</c>.
+		/// For example <b>System.Drawing.SystemIcons.Information</b> or <c>icon.stock(StockIcon.INFO)</c>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -771,12 +771,12 @@ namespace Au
 		/// Shows a tooltip-like OSD window with text and optionally icon.
 		/// </summary>
 		/// <param name="text">Text in OSD window.<br/>Sets <see cref="Text"/>.</param>
-		/// <param name="secondsTimeout"><inheritdoc cref="SecondsTimeout" path="/summary/node()"/><br/>Sets <see cref="SecondsTimeout"/>.</param>
-		/// <param name="xy"><inheritdoc cref="XY" path="/summary/node()"/><br/>Sets <see cref="XY"/>.</param>
-		/// <param name="icon"><inheritdoc cref="Icon" path="/summary/node()"/><br/>Sets <see cref="Icon"/>.</param>
-		/// <param name="textColor"><inheritdoc cref="TextColor" path="/summary/node()"/><br/>Sets <see cref="TextColor"/>.</param>
-		/// <param name="backColor"><inheritdoc cref="BackColor" path="/summary/node()"/><br/>Sets <see cref="BackColor"/>.</param>
-		/// <param name="font"><inheritdoc cref="Font" path="/summary/node()"/><br/>Sets <see cref="Font"/>.</param>
+		/// <param name="secondsTimeout"><inheritdoc cref="SecondsTimeout" path="/summary/node()"/>Sets <see cref="SecondsTimeout"/>.</param>
+		/// <param name="xy"><inheritdoc cref="XY" path="/summary/node()"/>Sets <see cref="XY"/>.</param>
+		/// <param name="icon"><inheritdoc cref="Icon" path="/summary/node()"/>Sets <see cref="Icon"/>.</param>
+		/// <param name="textColor"><inheritdoc cref="TextColor" path="/summary/node()"/>Sets <see cref="TextColor"/>.</param>
+		/// <param name="backColor"><inheritdoc cref="BackColor" path="/summary/node()"/>Sets <see cref="BackColor"/>.</param>
+		/// <param name="font"><inheritdoc cref="Font" path="/summary/node()"/>Sets <see cref="Font"/>.</param>
 		/// <param name="name">OSD window name.<br/>Sets <see cref="OsdWindow.Name"/>.</param>
 		/// <param name="showMode">Sets <see cref="ShowMode"/>.</param>
 		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
@@ -880,7 +880,7 @@ namespace Au
 		/// <summary>Default background color for <see cref="showText"/> and <b>osdText</b>. Default: 0xFFFFF0 (light yellow).</summary>
 		public static ColorInt defaultBackColor { get; set; } = 0xFFFFF0;
 
-		/// <summary>Default text color for <see cref="showTransparentText"/>. Default: 0x8A2BE2 (Color.BlueViolet).</summary>
+		/// <summary>Default text color for <see cref="showTransparentText"/>. Default: 0x8A2BE2 (<b>Color.BlueViolet</b>).</summary>
 		public static ColorInt defaultTransparentTextColor { get; set; } = 0x8A2BE2;
 
 		/// <summary>

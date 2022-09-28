@@ -164,7 +164,7 @@ namespace Au
 		/// <remarks>
 		/// The timer will be stopped before calling the callback function. The callback function can start it again.
 		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or dialog.show(). The callback function is not called while this thread does not do it.
+		/// This thread must get/dispatch posted messages, eg call <b>Application.Run</b> or <b>Form.ShowModal</b> or <b>dialog.show</b>. The callback function is not called while this thread does not do it.
 		/// </remarks>
 		public static timer after(int milliseconds, Action<timer> timerAction, object tag = null)
 			=> _StartNew(true, milliseconds, timerAction, tag);
@@ -181,7 +181,7 @@ namespace Au
 		/// <remarks>
 		/// The callback function can stop the timer or restart with different period.
 		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or dialog.show(). The callback function is not called while this thread does not do it.
+		/// This thread must get/dispatch posted messages, eg call <b>Application.Run</b> or <b>Form.ShowModal</b> or <b>dialog.show</b>. The callback function is not called while this thread does not do it.
 		/// </remarks>
 		public static timer every(int milliseconds, Action<timer> timerAction, object tag = null)
 			=> _StartNew(false, milliseconds, timerAction, tag);

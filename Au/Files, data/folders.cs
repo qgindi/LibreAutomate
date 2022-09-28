@@ -1,17 +1,22 @@
 #pragma warning disable 1591 //missing XML documentation
 
+using System.Security.Cryptography;
+
 namespace Au {
 	/// <summary>
 	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
 	/// <remarks>
-	/// Most functions return <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
+	/// Most functions return <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example:
+	/// 
+	/// <code><![CDATA[string s = folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt]]></code>
+	/// 
 	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw <b>ArgumentException</b>.
 	///
 	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
-	/// Some known folders, although supported and registerd, may be still not created.
+	/// Some known folders, although supported and registered, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="shell"/> return it as <see cref="Pidl"/> or string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (<see cref="run.it"/>, <see cref="icon.of"/>, <see cref="icon.ofPidl(Pidl, int)"/>) but not with .NET functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure <b>ITEMIDLIST</b>. Functions of the nested class <see cref="shell"/> return it as <see cref="Pidl"/> or string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (<see cref="run.it"/>, <see cref="icon.of"/>, <see cref="icon.ofPidl(Pidl, int)"/>) but not with .NET functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -167,8 +172,7 @@ namespace Au {
 		static FolderPath _Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
 
 		/// <summary>
-		/// Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as string like ":: 12345678..." or as <see cref="Pidl"/>.
-		/// Functions with suffix "Pidl" gets
+		/// Gets <b>ITEMIDLIST</b> of known/special virtual folders (eg Control Panel), as string like <c>":: 12345678..."</c> or as <see cref="Pidl"/>.
 		/// </summary>
 		public static class shell {
 			public static FolderPath AddNewPrograms => _GetV(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04);
@@ -242,7 +246,6 @@ namespace Au {
 
 		/// <summary>
 		/// <see cref="ThisApp"/> with appended backslash character.
-		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="AppContext.BaseDirectory"/>.
@@ -264,6 +267,7 @@ namespace Au {
 		#region set auto/once
 
 		[ThreadStatic] static bool _noGetAutoCreate;
+		static readonly object _lock = new();
 
 		static string _SetAuto(ref string propVar, string value, bool create) {
 			lock (_lock) {
@@ -274,7 +278,6 @@ namespace Au {
 			}
 			return propVar;
 		}
-		static readonly object _lock = new object();
 
 		static void _SetOnce(ref string propVar, string value, bool create, [CallerMemberName] string m_ = null) {
 			lock (_lock) {
@@ -371,8 +374,7 @@ namespace Au {
 		static string __thisAppImages;
 
 		/// <summary>
-		/// Gets the root directory of this application, like @"C:\" or @"\\network\folder\".
-		/// Note: it's string, not <see cref="FolderPath"/>.
+		/// Gets the root directory of this application, like <c>@"C:\"</c> or <c>@"\\network\folder\"</c>.
 		/// </summary>
 		public static string ThisAppDriveBS => __thisAppDrive ??= Path.GetPathRoot(ThisAppBS);
 		static string __thisAppDrive;
@@ -389,8 +391,7 @@ namespace Au {
 		static FolderPath __workspace;
 
 		/// <summary>
-		/// Gets the root directory of <see cref="Workspace"/>, like @"C:\" or @"\\network\folder\".
-		/// Note: it's string, not <see cref="FolderPath"/>.
+		/// Gets the root directory of <see cref="Workspace"/>, like <c>@"C:\"</c> or <c>@"\\network\folder\"</c>.
 		/// </summary>
 		public static string WorkspaceDriveBS { get; private set; }
 
@@ -449,7 +450,6 @@ namespace Au {
 
 		/// <summary>
 		/// Gets .NET runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0\</c>.
-		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		public static string NetRuntimeBS => __netRuntimeBS ??= RuntimeEnvironment.GetRuntimeDirectory();
 		static string __netRuntimeBS;
@@ -462,7 +462,6 @@ namespace Au {
 
 		/// <summary>
 		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
-		/// Note: it's string, not <see cref="FolderPath"/>.
 		/// </summary>
 		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RxReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
 		static string __netRuntimeDesktopBS;
@@ -494,7 +493,9 @@ namespace Au {
 		/// </summary>
 		/// <returns>null if unavailable.</returns>
 		/// <param name="driveIndex">0-based removable drive index.</param>
-		/// <remarks>Uses <see cref="DriveInfo.GetDrives"/> and counts only drives of type DriveType.Removable.</remarks>
+		/// <remarks>
+		/// Calls <see cref="DriveInfo.GetDrives"/> and counts drives of type <see cref="DriveType.Removable"/>.
+		/// </remarks>
 		public static FolderPath removableDrive(int driveIndex = 0) {
 			foreach (DriveInfo di in DriveInfo.GetDrives()) {
 				if (di.DriveType == DriveType.Removable && driveIndex-- == 0) return new(di.Name);
@@ -673,7 +674,7 @@ namespace Au {
 		#region public methods
 
 		/// <summary>
-		/// Gets canonical names and paths of all known folders, including custom known folders registerd by applications.
+		/// Gets canonical names and paths of all known folders, including custom known folders registered by applications.
 		/// These names can be used with <see cref="getFolder"/>.
 		/// </summary>
 		public static unsafe Dictionary<string, string> getKnownFolders() {
@@ -772,9 +773,9 @@ namespace Au {
 
 		/// <summary>
 		/// If string starts with a known/special folder path, gets folder name + relative path and returns true.
-		/// For example if string is "C:\Windows\System32\notepad.exe", gets "folders.System" and "notepad.exe".
+		/// For example if string is <c>"C:\Windows\System32\notepad.exe"</c>, gets <c>"folders.System"</c> and <c>"notepad.exe"</c>.
 		/// </summary>
-		/// <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="Pidl.ToHexString"/>).</param>
+		/// <param name="path">Any string. Can be null. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
 		/// <param name="folder">Receives special folder string like <c>"folders.System"</c>.</param>
 		/// <param name="name">Receives filename or relative path in the folder.</param>
 		/// <remarks>
@@ -811,25 +812,37 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// If string starts with a known/special folder path, replaces that part with %folders.FolderName%. Else returns unchanged string.
-		/// For example if string is "C:\Windows\System32\notepad.exe", returns "%folders.System%\notepad.exe".
+		/// If string starts with a known/special folder path, replaces that part with <c>%folders.FolderName%</c>. Else returns unchanged string.
+		/// For example if string is <c>"C:\Windows\System32\notepad.exe"</c>, returns <c>"%folders.System%\notepad.exe"</c>.
 		/// </summary>
-		/// <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="Pidl.ToHexString"/>).</param>
+		/// <param name="path">Any string. Can be null. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
 		public static string unexpandPath(string path) {
-			if (unexpandPath(path, out var s1, out var s2)) path = $@"%{s1}%\{s2}";
+			if (unexpandPath(path, out var s1, out var s2)) path = s2.NE() ? $@"%{s1}%" : $@"%{s1}%\{s2}";
 			return path;
 		}
 
 		static readonly Lazy<List<(string path, string name)>> _up = new(() => {
 			var a = new List<(string path, string name)>(120); //105
-			_noGetAutoCreate = true;
-			foreach (var pi in typeof(folders).GetProperties()) {
-				if (pi.PropertyType == typeof(FolderPath) && pi.GetValue(null) is FolderPath fp) {
-					var s = fp.ToString();
-					if (!s.NE()) a.Add((s.Lower(), pi.Name));
+			lock (_lock) {
+				_noGetAutoCreate = true;
+				foreach (var pi in typeof(folders).GetProperties()) {
+					if (pi.PropertyType == typeof(FolderPath)
+						&& !pi.Name.Starts("ThisApp") //different in processes
+						&& pi.GetValue(null) is FolderPath fp) {
+						var s = fp.ToString();
+						if (!s.NE()) a.Add((s.Lower(), pi.Name));
+					}
 				}
+				_noGetAutoCreate = false;
 			}
-			_noGetAutoCreate = false;
+			a.Sort((s1, s2) => {
+				var r = s2.path.Length - s1.path.Length; //prefer longer path, eg C:\A\B to C:\A
+				if (r == 0) { //prefer shorter name, eg System to SystemX64
+					r = string.CompareOrdinal(s1.path, s2.path); //sorting does not work without this
+					if (r == 0 && s1.path == s2.path) r = s1.name.Length - s2.name.Length;
+				}
+				return r;
+			});
 			return a;
 		});
 
@@ -842,7 +855,7 @@ namespace Au {
 					if (!s.NE()) a.Add((s, pi.Name));
 				}
 			}
-			return a;
+			return a.OrderByDescending(o => o.path.Length).ToList();
 		});
 	}
 }
@@ -878,7 +891,7 @@ namespace Au.Types {
 		public bool IsNull => _path == null;
 
 		/// <summary>
-		/// Calls <see cref="pathname.combine"/>(fp, append).
+		/// Calls <see cref="pathname.combine"/>.
 		/// Example: <c>string s = folders.Desktop + "file.txt";</c>
 		/// </summary>
 		/// <exception cref="ArgumentException"><i>fp</i> is empty.</exception>

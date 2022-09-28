@@ -1,7 +1,7 @@
 namespace Au.More;
 
 /// <summary>
-/// Contains static functions to interact with the script editor, if available.
+/// Contains functions to interact with the script editor, if available.
 /// </summary>
 public static class ScriptEditor {
 	/// <summary>
@@ -30,22 +30,22 @@ public static class ScriptEditor {
 	/// The main editor window.
 	/// </summary>
 	/// <param name="show">Show the window (if the editor program is running).</param>
-	/// <returns>default(wnd) if the editor program isn't running or its main window still wasn't visible.</returns>
+	/// <returns><c>default(wnd)</c> if the editor program isn't running or its main window still wasn't visible.</returns>
 	public static wnd MainWindow(bool show = false) => WndMain_(show);
 
 	/// <summary>
 	/// Opens the specified source file (script etc).
 	/// Does nothing if editor isn't running.
 	/// </summary>
-	/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>
+	/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with <c>".cs"</c>.</param>
 	public static void Open(string file) => OpenAndGoToLine(file, 0);
 
 	/// <summary>
 	/// Opens the specified source file (script etc) and sets the editor's current position at the start of the specified line.
 	/// Does nothing if editor isn't running.
 	/// </summary>
-	/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>
-	/// <param name="line">1-based line index. If 0, just opens file.</param>
+	/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with <c>".cs"</c>.</param>
+	/// <param name="line">1-based line index. If 0, just opens the file.</param>
 	public static void OpenAndGoToLine(string file, int line) {
 		var w = WndMsg_; if (w.Is0) return;
 		Api.AllowSetForegroundWindow(w.ProcessId);
@@ -55,7 +55,7 @@ public static class ScriptEditor {
 	/// <summary>
 	/// Gets icon string in specified format.
 	/// </summary>
-	/// <returns>Returns null if editor isn't running or if file does not exist. Read more in Remarks.</returns>
+	/// <returns>Returns null if editor isn't running or if the file does not exist. Read more in Remarks.</returns>
 	/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
 	/// <param name="what">The format of input and output strings.</param>
 	/// <remarks>

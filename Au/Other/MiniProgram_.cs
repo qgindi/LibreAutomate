@@ -1,4 +1,4 @@
-﻿
+
 using System.Runtime.Loader;
 
 //PROBLEM: slow startup.
@@ -86,7 +86,7 @@ static unsafe class MiniProgram_ {
 				Jit_.Compile(typeof(Serializer_), "Deserialize");
 				Jit_.Compile(typeof(Api), nameof(Api.ReadFile), nameof(Api.CloseHandle), nameof(Api.SetEnvironmentVariable));
 				//p2.Next();
-				var h1 = Api.CreateFile(null, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0);
+				var h1 = Api.CreateFile(null, Api.GENERIC_READ, 0, Api.OPEN_EXISTING, 0);
 				//p2.Next();
 				Marshal.StringToCoTaskMemUTF8("-");
 				folders.Workspace = new FolderPath("");
@@ -107,7 +107,7 @@ static unsafe class MiniProgram_ {
 		EFlags flags;
 
 		//using var p1 = perf.local();
-		using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
+		using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, Api.OPEN_EXISTING, 0)) {
 			if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
 			//p1.Next();
 			int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;

@@ -9,7 +9,7 @@ namespace Au;
 /// Can be used everywhere: in automation scripts, WPF apps, other apps, etc.
 /// Also can be used as a popup list and supports many items with scrollbar.
 /// 
-/// Menu item text can include hotkey after '\t' character and/or tooltip after '|' or '\0' character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text|Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg 'A' in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="PMFlags"/>) and can be used to select the item with keyboard.
+/// Menu item text can include hotkey after <c>'\t'</c> character and/or tooltip after <c>'|'</c> or <c>'\0'</c> character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text|Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg <c>'A'</c> in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="PMFlags"/>) and can be used to select the item with keyboard.
 /// 
 /// Keyboard, mouse:
 /// - Enter, Tab, Space - close the menu and execute the focused item. Or show the submenu.
@@ -285,7 +285,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </summary>
 	/// <returns>Object for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</returns>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, "text", "text|tooltip", "|tooltip".</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new popupMenu();
@@ -309,9 +309,9 @@ public unsafe partial class popupMenu : MTBase {
 	/// <summary>
 	/// Shows the menu, waits until closed, and returns item id or 0.
 	/// </summary>
-	/// <returns>id of the selected item when closed, or 0 if cancelled.</returns>
+	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="flags"></param>
-	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
+	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on <i>flags</i>.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
 	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
 	/// <exception cref="InvalidOperationException">The menu is open or is submenu.</exception>
@@ -487,7 +487,7 @@ public unsafe partial class popupMenu : MTBase {
 	public bool IsOpen => !_w.Is0;
 
 	/// <summary>
-	/// After closing the menu gets the selected item, or null if cancelled.
+	/// After closing the menu gets the selected item, or null if canceled.
 	/// </summary>
 	public PMItem Result => _result;
 
@@ -963,14 +963,14 @@ public unsafe partial class popupMenu : MTBase {
 	/// <summary>
 	/// Creates and shows a simple popup menu. Without images, actions, submenus. Returns item id or 0.
 	/// </summary>
-	/// <returns>id of the selected item when closed, or 0 if cancelled.</returns>
+	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="items">
-	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or List.
-	/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-	/// For separators use null or empty strings: "One|Two||Three|Four".
+	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>.
+	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> //1|2|100|101.
+	/// For separators use null or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>
 	/// <param name="flags"></param>
-	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on flags.</param>
+	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on <i>flags</i>.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
 	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
 	/// <remarks>

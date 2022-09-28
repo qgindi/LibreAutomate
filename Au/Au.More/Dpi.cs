@@ -6,7 +6,7 @@ namespace Au.More
 	/// <remarks>
 	/// To find DPI % on Windows 10: Settings -> System -> Display -> Scale and layout. If not 100%, it means high DPI. On older Windows versions it is in Control Panel -> Display.
 	/// 
-	/// This program must be per-monitor-DPI-aware. Alse the results are undefined.
+	/// This program must be per-monitor-DPI-aware. Else results are undefined.
 	/// </remarks>
 	public static class Dpi
 	{
@@ -79,7 +79,7 @@ namespace Au.More
 		/// Gets DPI of a screen.
 		/// </summary>
 		/// <returns><see cref="System"/> if fails or if not supported on this Windows version.</returns>
-		/// <param name="hMonitor">Native screen handle (HMONITOR).</param>
+		/// <param name="hMonitor">Native screen handle (<b>HMONITOR</b>).</param>
 		/// <param name="supportWin81">Support Windows 8.1 and later. If false (default), supports Windows 10 1607 and later.</param>
 		/// <remarks>
 		/// Uses API <msdn>GetDpiForMonitor</msdn>.
@@ -94,24 +94,24 @@ namespace Au.More
 		//public static int OfScreen(screen s, bool supportWin81 = false) => OfScreen(s.Now, supportWin81);
 
 		/// <summary>
-		/// Scales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Scales <b>int</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static int Scale(int i, DpiOf dpiOf) => Math2.MulDiv(i, dpiOf, 96);
 
 		//no. Eg also would be used for uint, long... Or name eg ScaleD. Or add double extension method.
 		///// <summary>
-		///// Scales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		///// Scales <b>int</b> if the specified DPI isn't 96 (100%).
 		///// </summary>
 		//public static int Scale(double i, DpiOf dpiOf) => (i*(int)dpiOf/96).ToInt();
 
 		/// <summary>
-		/// Unscales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Unscales <b>int</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static double Unscale(int i, DpiOf dpiOf) => i * (96d / dpiOf);
 		//Unscaling sometimes useful with WPF. Unscale to double, not int, else result often incorrect.
 
 		/// <summary>
-		/// Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Scales <b>SIZE</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static SIZE Scale(SIZE z, DpiOf dpiOf) {
 			int dpi = dpiOf;
@@ -121,7 +121,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Scales <b>System.Windows.Size</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Scales <b>System.Windows.Size</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static SIZE Scale(System.Windows.Size z, DpiOf dpiOf) {
 			double f = (int)dpiOf / 96d;
@@ -131,7 +131,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Unscales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Unscales <b>SIZE</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static System.Windows.Size Unscale(SIZE z, DpiOf dpiOf) {
 			double f = 96d / dpiOf;
@@ -139,7 +139,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Scales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Scales <b>RECT</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static RECT Scale(RECT r, DpiOf dpiOf) {
 			int dpi = dpiOf;
@@ -151,7 +151,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Unscales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// Unscales <b>RECT</b> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static System.Windows.Rect Unscale(RECT r, DpiOf dpiOf) {
 			double f = 96d / dpiOf;
@@ -168,7 +168,7 @@ namespace Au.More
 
 		/// <summary>
 		/// Calls API <msdn>SystemParametersInfoForDpi</msdn> if available, else <msdn>SystemParametersInfo</msdn>.
-		/// Use only with <i>uiAction</i> = SPI_GETICONTITLELOGFONT, SPI_GETICONMETRICS, SPI_GETNONCLIENTMETRICS.
+		/// Use only with <i>uiAction</i> = <b>SPI_GETICONTITLELOGFONT</b>, <b>SPI_GETICONMETRICS</b>, <b>SPI_GETNONCLIENTMETRICS</b>.
 		/// </summary>
 		public static unsafe bool SystemParametersInfo(uint uiAction, int uiParam, void* pvParam, DpiOf dpiOf)
 			=> osVersion.minWin10_1607
@@ -360,7 +360,7 @@ namespace Au.More
 		/// Does nothing if the API is unavailable (added in Windows 10 version 1607).
 		/// </summary>
 		/// <remarks>
-		/// Programs that use this library should use manifest with dpiAwareness = PerMonitorV2 and dpiAware = True/PM. Then default DPI awareness context is DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2.
+		/// Programs that use this library should use manifest with <c>dpiAwareness = PerMonitorV2</c> and <c>dpiAware = True/PM</c>. Then default DPI awareness context is <b>DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2</b>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -374,7 +374,7 @@ namespace Au.More
 			/// <summary>
 			/// Calls API <msdn>SetThreadDpiAwarenessContext</msdn> if available.
 			/// </summary>
-			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 unaware, -2 system, -3 per-monitor, -4 per-monitor-v2, -5 unaware-gdiscaled. Or a DPI_AWARENESS_CONTEXT handle.</param>
+			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 unaware, -2 system, -3 per-monitor, -4 per-monitor-v2, -5 unaware-gdiscaled. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
 			public AwarenessContext(nint dpiContext) {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
@@ -410,7 +410,7 @@ namespace Au.Types
 {
 	/// <summary>
 	/// Used for <i>DPI</i> parameter of functions.
-	/// Has implicit conversions from int (DPI), wnd (DPI of window), IntPtr (DPI of screen handle), POINT (DPI of screen containing point), RECT (DPI of screen containing rectangle), forms Control, WPF DependencyObject. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
+	/// Has implicit conversions from <b>int</b> (DPI), <b>wnd</b> (DPI of window), <b>IntPtr</b> (DPI of screen handle), <b>POINT</b> (DPI of screen containing point), <b>RECT</b> (DPI of screen containing rectangle), forms <b>Control</b>, WPF <b>DependencyObject</b>. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
 	/// </summary>
 	public struct DpiOf
 	{

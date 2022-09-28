@@ -46,13 +46,14 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 
 	//this ctor is used when importing items from files etc.
 	//name is filename with extension.
-	//sourcePath is used to get file text to detect type when !isFolder.
-	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, string linkTarget = null) {
+	//sourcePath is used when !isFolder: 1. To detect type. 2. If isLink, to set link target.
+	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, bool isLink = false) {
 		_model = model;
 		_type = isFolder ? EFileType.Folder : _DetectFileType(sourcePath);
 		_SetName(name);
 		_id = _model.AddGetId(this);
-		if (!linkTarget.NE() && !isFolder) _linkTarget = linkTarget;
+		//if (isLink && !isFolder) _linkTarget = folders.unexpandPath(sourcePath); //rejected. Too much trouble with it.
+		if (isLink && !isFolder) _linkTarget = sourcePath;
 	}
 
 	//this ctor is used when copying or importing a workspace.

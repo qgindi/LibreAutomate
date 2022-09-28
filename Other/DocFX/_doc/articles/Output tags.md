@@ -1,4 +1,4 @@
-﻿---
+---
 uid: output_tags
 ---
 
@@ -10,7 +10,7 @@ For most tags use this format: `<tag>text<>` or `<tag attribute>text<>`.
 
 For these tags use `<tag>text</tag>`: `<code>`, `<_>`, `<\a>`, `<fold>`.
 
-This tag does not have a closing tag: `<image "attribute">`.
+These tags does not have a closing tag: `<image "attribute">`, `<nonl>`.
 
 Attribute can be enclosed in `'` or `"`. If attribute omitted, text is used as attribute if need for that tag.
 
@@ -52,6 +52,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<_>text</_>` or `<\a>text</\a>` | Literal text. Tags in it are ignored.<br/>Here `\a` is escape sequence for character code 7.
 | `<code>var s="example";</code>` | Colored C# code. Tags in it are ignored.
 | `<fold>text</fold>` | Folded (hidden) lines. Adds a link to unfold (show).
+| `<nonl>` | No new line. Next time will write in the same line.<br/>Must be at the end of string.
 
 #### Images
 Images are displayed below current line. Examples:

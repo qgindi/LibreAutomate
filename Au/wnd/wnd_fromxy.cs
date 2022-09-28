@@ -1,4 +1,4 @@
-﻿namespace Au
+namespace Au
 {
 	public partial struct wnd
 	{
@@ -11,7 +11,7 @@
 		/// </param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// Unlike API <msdn>WindowFromPhysicalPoint</msdn> etc, this function: does not skip disabled controls; always skips transparent control like group box if a smaller sibling is there. All this is not true with flag Raw.
+		/// Unlike API <msdn>WindowFromPhysicalPoint</msdn> etc, this function: does not skip disabled controls; always skips transparent control like group box if a smaller sibling is there. All this is not true with flag <b>Raw</b>.
 		/// </remarks>
 		/// <example>
 		/// Find window at 100 200.
@@ -64,8 +64,8 @@
 
 		/// <summary>
 		/// Gets descendant control from point.
-		/// By default returns default(wnd) if the point is not in a child control; it depends on <i>flags</i>.
 		/// </summary>
+		/// <returns>By default returns <c>default(wnd)</c> if the point is not in a child control; it depends on <i>flags</i>.</returns>
 		/// <param name="x">X coordinate in client area or screen (if flag <b>ScreenXY</b>). Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <param name="flags"></param>
@@ -78,8 +78,8 @@
 
 		/// <summary>
 		/// Gets descendant control from point.
-		/// By default returns default(wnd) if the point is not in a child control; it depends on <i>flags</i>.
 		/// </summary>
+		/// <returns>By default returns <c>default(wnd)</c> if the point is not in a child control; it depends on <i>flags</i>.</returns>
 		/// <param name="p">Coordinates in client area or screen (if flag <b>ScreenXY</b>).</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -173,7 +173,7 @@
 
 		/// <summary>
 		/// Gets window or control from point.
-		/// Returns default(wnd) if failed (unlikely).
+		/// Returns <c>default(wnd)</c> if failed (unlikely).
 		/// </summary>
 		/// <param name="p">Point in screen.</param>
 		/// <param name="isChild">Receives true if control, false if top-level or failed.</param>
@@ -237,7 +237,7 @@
 
 		/// <summary>
 		/// Gets sibling control in space: left, right, above or below.
-		/// Returns default(wnd) if there is no sibling.
+		/// Returns <c>default(wnd)</c> if there is no sibling.
 		/// </summary>
 		/// <param name="direction"></param>
 		/// <param name="distance">Distance from this control (from its edge) in the specified direction.</param>
@@ -310,21 +310,21 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Need top-level window. If at that point is a control, gets its top-level parent.
-		/// Don't use together with NeedControl.
+		/// Don't use together with <b>NeedControl</b>.
 		/// </summary>
 		NeedWindow = 1,
 
 		/// <summary>
-		/// Need a control (child window). Returns default(wnd) if there is no control at that point.
-		/// Don't use together with NeedWindow.
-		/// Without flags NeedWindow and NeedControl the function gets control or top-level window.
+		/// Need a control (child window). Returns <c>default(wnd)</c> if there is no control at that point.
+		/// Don't use together with <b>NeedWindow</b>.
+		/// Without flags <b>NeedWindow</b> and <b>NeedControl</b> the function gets control or top-level window.
 		/// </summary>
 		NeedControl = 2,
 
 		/// <summary>
 		/// Just call API <msdn>WindowFromPhysicalPoint</msdn>.
 		/// Faster, but skips disabled controls and in some cases gets transparent control like group box although a smaller visible sibling is there.
-		/// Not used with flag NeedWindow.
+		/// Not used with flag <b>NeedWindow</b>.
 		/// </summary>
 		Raw = 4,
 	}
@@ -336,7 +336,7 @@ namespace Au.Types
 	public enum WXYCFlags
 	{
 		/// <summary>
-		/// If the point is in this window but not in a descendant control, return this. Default - return default(wnd).
+		/// If the point is in this window but not in a descendant control, return this. Default - return <c>default(wnd)</c>.
 		/// </summary>
 		OrThis = 1,
 
@@ -351,7 +351,7 @@ namespace Au.Types
 		DirectChild = 4,
 
 		/// <summary>
-		/// If the point is not in client area, don't look for descendants; if with flag <b>OrThis</b> and the point is in this (non-client area), return this, else return default(wnd).
+		/// If the point is not in client area, don't look for descendants; if with flag <b>OrThis</b> and the point is in this (non-client area), return this, else return <c>default(wnd)</c>.
 		/// </summary>
 		Inside = 8,
 	}

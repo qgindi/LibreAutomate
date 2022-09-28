@@ -230,7 +230,7 @@ public class KWpfMenu : ContextMenu
 
 	/// <summary>
 	/// Creates and shows popup menu where items use ids instead of actions.
-	/// Returns selected item id, or 0 if cancelled.
+	/// Returns selected item id, or 0 if canceled.
 	/// </summary>
 	/// <param name="items">
 	/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".

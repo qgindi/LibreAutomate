@@ -288,7 +288,7 @@ namespace Au
 		/// When received any message from the tray icon.
 		/// </summary>
 		/// <remarks>
-		/// Receives mouse messages, NIN_ messages and some other. See <msdn>Shell_NotifyIconW</msdn>.
+		/// Receives mouse messages, <b>NIN_</b> messages and some other. See <msdn>Shell_NotifyIconW</msdn>.
 		/// </remarks>
 		public event Action<TIEventArgs> Message;
 
@@ -296,7 +296,7 @@ namespace Au
 		/// When default action should be invoked (on click, Space/Enter, automation/accessibility API).
 		/// </summary>
 		/// <remarks>
-		/// If clicked, the parameter contains message NIN_SELECT (1024) and mouse coordinates. Else NIN_KEYSELECT (1025) and top-left of the tray icon.
+		/// If clicked, the parameter contains message <b>NIN_SELECT</b> (1024) and mouse coordinates. Else <b>NIN_KEYSELECT</b> (1025) and top-left of the tray icon.
 		/// On double click there are two <b>Click</b> events. To distinguish click and double click events, use <see cref="Message"/> instead.
 		/// </remarks>
 		public event Action<TIEventArgs> Click;
@@ -366,7 +366,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="trayIcon.ShowNotification"/>. See NIIF_ flags of API <msdn>NOTIFYICONDATAW</msdn>.
+	/// Flags for <see cref="trayIcon.ShowNotification"/>. See <b>NIIF_</b> flags of API <msdn>NOTIFYICONDATAW</msdn>.
 	/// </summary>
 	[Flags]
 	public enum TINFlags

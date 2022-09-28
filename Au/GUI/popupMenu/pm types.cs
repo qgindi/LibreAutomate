@@ -1,4 +1,4 @@
-﻿
+
 namespace Au.Types;
 
 /// <summary>
@@ -106,7 +106,7 @@ public enum PMFlags {
 	/// <summary>Vertically align the menu so that the show position would be at its bottom.</summary>
 	AlignBottom = 0x20,
 
-	/// <summary>Show at the bottom or top of <i>excludeRect</i>, not at the righ/left.</summary>
+	/// <summary>Show at the bottom or top of <i>excludeRect</i>, not at the right/left.</summary>
 	AlignRectBottomTop = 0x40,
 }
 

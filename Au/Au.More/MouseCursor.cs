@@ -42,7 +42,7 @@ namespace Au.More
 		/// <summary>
 		/// Loads cursor from file.
 		/// </summary>
-		/// <returns>default(MouseCursor) if failed.</returns>
+		/// <returns><c>default(MouseCursor)</c> if failed.</returns>
 		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="folders.ThisAppImages"/>.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
 		public static MouseCursor Load(string file, int size = 0) {
@@ -55,7 +55,7 @@ namespace Au.More
 		/// <summary>
 		/// Creates cursor from cursor file data in memory, for example from a managed resource.
 		/// </summary>
-		/// <returns>default(MouseCursor) if failed.</returns>
+		/// <returns><c>default(MouseCursor)</c> if failed.</returns>
 		/// <param name="cursorData">Data of .cur or .ani file.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
 		/// <remarks>
@@ -78,7 +78,7 @@ namespace Au.More
 		/// <summary>
 		/// Creates <see cref="System.Windows.Forms.Cursor"/> object that shares native cursor handle with this object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is default(IntPtr).</returns>
+		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
 		public System.Windows.Forms.Cursor ToGdipCursor() {
 			if (_handle == default) return null;
 			var R = new System.Windows.Forms.Cursor(_handle);
@@ -91,7 +91,7 @@ namespace Au.More
 		///// <summary>
 		///// Creates WPF <b>Cursor</b> object from this native cursor.
 		///// </summary>
-		///// <returns>null if <i>Handle</i> is default(IntPtr).</returns>
+		///// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
 		///// <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
 		//public System.Windows.Input.Cursor ToWpfCursor(bool destroyCursor = true) {
 		//	if (_handle == default) return null;

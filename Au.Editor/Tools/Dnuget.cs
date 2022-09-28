@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -141,10 +141,7 @@ A script can use packages from multiple folders if they are compatible.");
 	async void _Install() {
 		var package = _tPackage.Text.Trim();
 		if (package.Starts("dotnet add package ")) package = package[19..];
-		else {
-			if (package.Starts("PM> ")) package = package[4..];
-			if (package.Starts("Install-Package ")) package = package[16..].Replace("-Version ", "--version ");
-		}
+		else if (package.RxReplace(@"^.+?\bInstall-Package ", "", out package) > 0) package = package.Replace("-Version ", "--version ");
 
 		await _Install(package, _cbFolder.SelectedItem as string);
 	}
@@ -232,9 +229,9 @@ A script can use packages from multiple folders if they are compatible.");
 				sBuild = $@"build ""{proj2}"" --nologo --output ""{dirBin2}"""; //note: no --no-restore
 				if (!await _RunDotnet(sBuild, s => { }) //try silent, but print errors if fails (unlikely)
 					&& !await _RunDotnet(sBuild)) return false;
-//#if DEBUG
-//				if (keys.isScrollLock) dialog.show("Debug", "single build done"); //to inspect files before deleting
-//#endif
+				//#if DEBUG
+				//				if (keys.isScrollLock) dialog.show("Debug", "single build done"); //to inspect files before deleting
+				//#endif
 
 				//delete runtimes of unsupported OS or CPU. It seems cannot specify it in project file.
 				_DeleteOtherRuntimes(folderPath);

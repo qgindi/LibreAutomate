@@ -5,7 +5,7 @@ namespace Au {
 		/// <summary>
 		/// Gets the container window or control of this UI element.
 		/// </summary>
-		/// <returns>default(wnd) if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>default(wnd)</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// All UI elements must support this property, but some have bugs and can fail or return a wrong window.
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
@@ -32,9 +32,9 @@ namespace Au {
 		/// <summary>
 		/// Gets the top-level window that contains this UI element.
 		/// </summary>
-		/// <returns>default(wnd) if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>default(wnd)</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// All UI elements must support this property, but some have bugs and can return default(wnd).
+		/// All UI elements must support this property, but some have bugs and can return <c>default(wnd)</c>.
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </remarks>
 		public wnd WndTopLevel => WndContainer.Window;
@@ -125,10 +125,10 @@ namespace Au {
 		/// <summary>
 		/// Gets standard or custom role, as string.
 		/// </summary>
-		/// <returns>"" if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox.
-		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
+		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like <c>"0"</c> or <c>"500"</c>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// </remarks>
 		public string Role {
@@ -186,22 +186,22 @@ namespace Au {
 			}
 		}
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state CHECKED.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>CHECKED</b>.</summary>
 		public bool IsChecked => State.Has(EState.CHECKED);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state CHECKED, null if has state MIXED, else false. Use this function with 3-state checkboxes.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>CHECKED</b>, null if has state <b>MIXED</b>, else false. Use this function with 3-state checkboxes.</summary>
 		public bool? IsChecked2 => (State & (EState.CHECKED | EState.MIXED)) switch { EState.CHECKED => true, 0 => false, _ => null };
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state UNAVAILABLE.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>UNAVAILABLE</b>.</summary>
 		/// <remarks>Does not check whether this UI element is in a disabled parent/ancestor UI element.</remarks>
 		public bool IsDisabled => State.Has(EState.DISABLED);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state FOCUSED.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>FOCUSED</b>.</summary>
 		public bool IsFocused => State.Has(EState.FOCUSED);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state INVISIBLE and does not have state OFFSCREEN.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>INVISIBLE</b> and does not have state <b>OFFSCREEN</b>.</summary>
 		/// <remarks>
-		/// If the UI element has both INVISIBLE and OFFSCREEN states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most UI elements returns false (is visible), but for UI elements that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+		/// If the UI element has both <b>INVISIBLE</b> and <b>OFFSCREEN</b> states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most UI elements returns false (is visible), but for UI elements that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
 		/// Does not check whether this UI element is in an invisible parent/ancestor UI element.
 		/// </remarks>
 		public bool IsInvisible => IsInvisible_(State);
@@ -222,20 +222,20 @@ namespace Au {
 			return false;
 		}
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state OFFSCREEN.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>OFFSCREEN</b>.</summary>
 		public bool IsOffscreen => State.Has(EState.OFFSCREEN);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state PROTECTED.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>PROTECTED</b>.</summary>
 		/// <remarks>This state is used for password fields.</remarks>
 		public bool IsPassword => State.Has(EState.PROTECTED);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state PRESSED.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>PRESSED</b>.</summary>
 		public bool IsPressed => State.Has(EState.PRESSED);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state READONLY.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>READONLY</b>.</summary>
 		public bool IsReadonly => State.Has(EState.READONLY);
 
-		/// <summary>Calls <see cref="State"/> and returns true if has state SELECTED.</summary>
+		/// <summary>Calls <see cref="State"/> and returns true if has state <b>SELECTED</b>.</summary>
 		public bool IsSelected => State.Has(EState.SELECTED);
 
 		/// <summary>
@@ -264,7 +264,7 @@ namespace Au {
 		/// <summary>
 		/// Gets name.
 		/// </summary>
-		/// <returns>"" if name is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if name is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// UI element name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the UI element.
 		/// </remarks>
@@ -278,8 +278,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets <see cref="Name"/> of window/control w.
-		/// Returns null if w invalid. Returns "" if failed to get name.
+		/// Gets <see cref="Name"/> of window/control <i>w</i>.
+		/// Returns null if <i>w</i> invalid. Returns <c>""</c> if failed to get name.
 		/// </summary>
 		internal static string NameOfWindow_(wnd w) {
 			if (!w.IsAlive) return null;
@@ -295,7 +295,7 @@ namespace Au {
 		/// <exception cref="AuException">Failed to set value.</exception>
 		/// <remarks>
 		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the UI element reliably.
-		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="lastError"/>.
+		/// The 'get' function returns <c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.
 		/// Most UI elements don't support 'set'.
 		/// </remarks>
 		public string Value {
@@ -309,7 +309,7 @@ namespace Au {
 		/// <summary>
 		/// Gets description.
 		/// </summary>
-		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		public string Description {
 			get => _GetStringProp('d');
 		}
@@ -317,15 +317,15 @@ namespace Au {
 		/// <summary>
 		/// Gets help text.
 		/// </summary>
-		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		public string Help {
 			get => _GetStringProp('h');
 		}
 
 		/// <summary>
-		/// Gets UI Automation element AutomationId property.
+		/// Gets the UI Automation <b>AutomationId</b> property.
 		/// </summary>
-		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Only UI elements found with flag <see cref="EFFlags.UIA"/> can have this property.
 		/// </remarks>
@@ -336,7 +336,7 @@ namespace Au {
 		/// <summary>
 		/// Gets keyboard shortcut.
 		/// </summary>
-		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		public string KeyboardShortcut {
 			get => _GetStringProp('k');
 		}
@@ -344,9 +344,9 @@ namespace Au {
 		/// <summary>
 		/// Gets default action of <see cref="Invoke"/>.
 		/// </summary>
-		/// <returns>"" if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// If this is a Java UI element, returns all actions that can be used with <see cref="JavaInvoke"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="Invoke"/>.
+		/// If this is a Java UI element, returns all actions that can be used with <see cref="JavaInvoke"/>, like <c>"action1, action2, action3"</c>, from which the first is considered default and is used by <see cref="Invoke"/>.
 		/// Note: the string is supposed to be localized, ie depends on UI language; except Java.
 		/// </remarks>
 		public string DefaultAction {
@@ -470,7 +470,7 @@ namespace Au {
 			if (action == null) Invoke(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order.
-			var to = new wait.Loop(secondsTimeout, new OWait(period: 25));
+			var to = new WaitLoop(secondsTimeout, new OWait(period: 25));
 			while (to.Sleep()) {
 				w.ThrowIfInvalid();
 				if (!wndOK) {
@@ -604,8 +604,8 @@ namespace Au {
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
-		/// Not all UI elements support it. Most UI elements support not all flags. It depends on <see cref="EState"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
-		/// Many UI elements have bugs, especially with flag TAKEFOCUS. More bugs when the UI element has been found with flag <see cref="EFFlags.NotInProc"/>.
+		/// Not all UI elements support it. Most UI elements support not all flags. It depends on <see cref="EState"/> <b>FOCUSABLE</b>, <b>SELECTABLE</b>, <b>MULTISELECTABLE</b>, <b>EXTSELECTABLE</b>, <b>DISABLED</b>.
+		/// Many UI elements have bugs, especially with flag <b>TAKEFOCUS</b>. More bugs when the UI element has been found with flag <see cref="EFFlags.NotInProc"/>.
 		/// </remarks>
 		public void Select(ESelect how = ESelect.TAKESELECTION) {
 			ThrowIfDisposed_();
@@ -715,7 +715,7 @@ namespace Au {
 		/// Gets multiple properties.
 		/// </summary>
 		/// <param name="props">
-		/// String that specifies properties to get, for example "nv" for name and value.
+		/// String that specifies properties to get, for example <c>"nv"</c> for name and value.
 		/// <br/>• R - <see cref="Role"/>.
 		/// <br/>• n - <see cref="Name"/>.
 		/// <br/>• v - <see cref="Value"/>.
@@ -736,7 +736,7 @@ namespace Au {
 		/// <returns>false if failed, for example when the UI element's window is closed. Supports <see cref="lastError"/>.</returns>
 		/// <exception cref="ArgumentException">Unknown property character.</exception>
 		/// <remarks>
-		/// The returned variable contains values of properties specified in <i>props</i>. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
+		/// The returned variable contains values of properties specified in <i>props</i>. When a property is empty or failed to get, the member variable is <c>""</c>, empty dictionary or default value of that type; never null.
 		/// 
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this UI element was found with flag <see cref="EFFlags.NotInProc"/> etc.
 		/// </remarks>
@@ -841,7 +841,7 @@ namespace Au {
 			if (waitS == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
-				var to = new wait.Loop(waitS > 0 ? -waitS : 0d);
+				var to = new WaitLoop(waitS > 0 ? -waitS : 0d);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 				while (hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}
@@ -854,7 +854,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets parent element. Same as <see cref="Navigate"/> with argument "pa".
+		/// Gets parent element. Same as <see cref="Navigate"/> with argument <c>"pa"</c>.
 		/// </summary>
 		/// <returns>null if failed.</returns>
 		public elm Parent => Navigate("pa");
@@ -865,10 +865,10 @@ namespace Au {
 		/// <summary>
 		/// Gets HTML.
 		/// </summary>
-		/// <returns>"" if this is not a HTML element or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this is not a HTML element or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
 		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
 		/// </remarks>
 		public string Html(bool outer) {
@@ -881,12 +881,12 @@ namespace Au {
 		/// <summary>
 		/// Gets a HTML attribute.
 		/// </summary>
-		/// <returns>"" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>""</c> if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">Attribute name, for example <c>"href"</c>, <c>"id"</c>, <c>"class"</c>. Full, case-sensitive.</param>
 		/// <remarks>
-		/// Works with Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag NotInProc.
+		/// Works with Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
 		/// </remarks>
-		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
+		/// <exception cref="ArgumentException"><i>name</i> is null/<c>""</c>/invalid.</exception>
 		public string HtmlAttribute(string name) {
 			ThrowIfDisposed_();
 			if (name.NE() || name[0] == '\'') throw new ArgumentException("Invalid name.");
@@ -900,7 +900,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag NotInProc.
+		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes() {
 			ThrowIfDisposed_();
@@ -917,7 +917,7 @@ namespace Au {
 		/// <exception cref="AuException">Failed to scroll, or the UI element does not support scrolling.</exception>
 		/// <remarks>
 		/// This function works with these UI elements:
-		/// - Web page elements in Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="EFFlags.NotInProc"/>.
+		/// - Web page elements in Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). With Find use role prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c>, and don't use flag <see cref="EFFlags.NotInProc"/>.
 		/// - Standard treeview, listview and listbox controls.
 		/// - Some other controls if found with flag <see cref="EFFlags.UIA"/>.
 		/// 
@@ -966,7 +966,7 @@ namespace Au {
 		/// <exception cref="AuWndException">Failed to get container window (<see cref="WndContainer"/>), or it was closed while waiting.</exception>
 		public T WaitFor<T>(double secondsTimeout, Func<elm, T> condition) {
 			var w = WndContainer; //calls ThrowIfDisposed_
-			var to = new wait.Loop(secondsTimeout);
+			var to = new WaitLoop(secondsTimeout);
 			for (; ; ) {
 				w.ThrowIfInvalid();
 				T r = condition(this);
@@ -1127,13 +1127,17 @@ namespace Au {
 		/// <summary>
 		/// Posts mouse-double-click messages to the container window, using coordinates in this UI element.
 		/// </summary>
-		/// <inheritdoc cref="PostClick(Coord, Coord, MButton, int)"/>
+		/// <exception cref="AuException">
+		/// - Failed to get rectangle or container window.
+		/// - The element is invisible/offscreen.
+		/// </exception>
+		/// <inheritdoc cref="PostClick(Coord, Coord, MButton, int)" path="//param|//remarks"/>
 		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
 
 		/// <summary>
 		/// Posts mouse-right-click messages to the container window, using coordinates in this UI element.
 		/// </summary>
-		/// <inheritdoc cref="PostClick(Coord, Coord, MButton, int)"/>
+		/// <inheritdoc cref="PostClickD(Coord, Coord)"/>
 		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
 
 		/// <summary>
@@ -1179,12 +1183,12 @@ namespace Au {
 		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. Uses <see cref="Invoke"/> or <see cref="SendKeys"/>.
 		/// </summary>
 		/// <param name="check">true to check, false to uncheck.</param>
-		/// <param name="keys">Keys for <see cref="SendKeys"/>. If "", uses "Space". If null (default), uses <see cref="Invoke"/>.</param>
+		/// <param name="keys">Keys for <see cref="SendKeys"/>. If <c>""</c>, uses <c>"Space"</c>. If null (default), uses <see cref="Invoke"/>.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Invoke"/> or <see cref="SendKeys"/>.</exception>
 		/// <remarks>
 		/// Does nothing if the UI element already has the requested checked/unchecked state. Else tries to change the state and does not verify whether it actually worked.
 		/// 
-		/// Does not work with 3-state checkboxes and with elements that never have CHECKED state.
+		/// Does not work with 3-state checkboxes and with elements that never have <b>CHECKED</b> state.
 		/// </remarks>
 		public void Check(bool check = true, [ParamString(PSFormat.Keys)] string keys = null) {
 			if (!_CheckNeedToggle(check)) return;
@@ -1214,15 +1218,15 @@ namespace Au {
 		/// Expands or collapse this expandable UI element (tree item, combo box, expander, dropdown button).
 		/// </summary>
 		/// <param name="expand">true to expand, false to collapse.</param>
-		/// <param name="keys">If not null, makes this element focused and presses these keys. See <see cref="keys.send"/>. If "", uses keys commonly used for that UI element type, for example Right/Left for treeitem, Alt+Down for combobox. If null, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> "".</param>
+		/// <param name="keys">If not null, makes this element focused and presses these keys. See <see cref="keys.send"/>. If <c>""</c>, uses keys commonly used for that UI element type, for example Right/Left for treeitem, Alt+Down for combobox. If null, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> <c>""</c>.</param>
 		/// <param name="waitS">If not 0, waits for new expanded/collapsed state max this number of seconds; on timeout throws exception, unless negative.</param>
-		/// <param name="ignoreState">Ignore initial EXPANDED/COLLAPSED state and always perform the expand/collapse action. Can be useful when <see cref="State"/> EXPANDED/COLLAPSED is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
+		/// <param name="ignoreState">Ignore initial <b>EXPANDED</b>/<b>COLLAPSED</b> state and always perform the expand/collapse action. Can be useful when <see cref="State"/> <b>EXPANDED</b>/<b>COLLAPSED</b> is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
 		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if &gt; 0).</exception>
 		/// <remarks>
 		/// Does nothing if the UI element already has the requested expanded/collapsed state.
 		/// 
-		/// Works with UI elements that have <see cref="State"/> EXPANDED when expanded and COLLAPSED when collapsed. Also with UI elements that have state CHECKED or PRESSED when expanded and don't have this state when collapsed.
+		/// Works with UI elements that have <see cref="State"/> <b>EXPANDED</b> when expanded and <b>COLLAPSED</b> when collapsed. Also with UI elements that have state <b>CHECKED</b> or <b>PRESSED</b> when expanded and don't have this state when collapsed.
 		/// </remarks>
 		public void Expand(bool expand = true, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, keys, null, waitS, ignoreState);
@@ -1450,15 +1454,15 @@ namespace Au {
 		/// <br/>• space - nothing.
 		/// </para>
 		/// 
-		/// If the string is null (default) or "" or does not contain these characters, the function tries to detect and use what usually works for this UI element type, but it's impossible to detect always.
+		/// If the string is null (default) or <c>""</c> or does not contain these characters, the function tries to detect and use what usually works for this UI element type, but it's impossible to detect always.
 		/// 
-		/// Usually need just a single character (string like "i" or "m"). If there are more characters, the functions are called in the specified order.
+		/// Usually need just a single character (string like <c>"i"</c> or <c>"m"</c>). If there are more characters, the functions are called in the specified order.
 		/// 
-		/// The string also can contain sleep times. For example "300m" will wait 300 ms and click; the first sleep will be between expanding and finding.
+		/// The string also can contain sleep times. For example <c>"300m"</c> will wait 300 ms and click; the first sleep will be between expanding and finding.
 		/// 
 		/// If the string starts with ~, the function does not expand the drop-down list (it should be already expanded).
 		/// 
-		/// If the string isn't null/empty but does not contain characters iscmk (for example is " " or "~ " or "200 "), the function does not select/close. For example these codes do the same: <c>e.ComboSelect("Red", "i");</c> and <c>e.ComboSelect("Red", " ").Invoke();</c>.
+		/// If the string isn't null/empty but does not contain characters <c>iscmk</c> (for example is <c>" "</c> or <c>"~ "</c> or <c>"200 "</c>), the function does not select/close. For example these codes do the same: <c>e.ComboSelect("Red", "i");</c> and <c>e.ComboSelect("Red", " ").Invoke();</c>.
 		/// </param>
 		/// <param name="waitS">Seconds to wait for expanded state (if not 0) and for the item. Can be negative to avoid timeout exceptions.</param>
 		/// <returns>The item.</returns>
@@ -1540,7 +1544,7 @@ namespace Au {
 			if (iw is 1 or 2 && RoleInt is not ERole.COMBOBOX) {
 				_FindWebNotCOMBOBOX();
 			} else {
-				var to = new wait.Loop(waitS);
+				var to = new WaitLoop(waitS);
 				for (; ; ) {
 					e = f.Find();
 					if (e == null) {
@@ -1628,7 +1632,7 @@ namespace Au {
 				//		The list is a MENUPOPUP/MENUITEM in its parent.
 
 				elm pa = null, doc = null;
-				var to = new wait.Loop(waitS);
+				var to = new WaitLoop(waitS);
 				for (; ; ) {
 					e = f.Find(); //if the item is already selected, the dropdown list may not contain it, and this finds it
 					if (e != null) break;

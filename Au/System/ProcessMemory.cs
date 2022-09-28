@@ -31,7 +31,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Process handle.
-		/// Opened with access PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE.
+		/// Opened with access <c>PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE</c>.
 		/// </summary>
 		public IntPtr ProcessHandle => _hproc;
 
@@ -91,7 +91,7 @@ namespace Au.More {
 		/// <param name="w">A window of that process.</param>
 		/// <param name="nBytes">If not 0, allocates memory of this size in that process.</param>
 		/// <param name="noException">Don't throw exceptions. If failed, sets <see cref="ProcessHandle"/> = default.</param>
-		/// <exception cref="AuWndException">w invalid.</exception>
+		/// <exception cref="AuWndException"><i>w</i> invalid.</exception>
 		/// <exception cref="AuException">Failed to open process handle or allocate memory.</exception>
 		public ProcessMemory(wnd w, int nBytes, bool noException = false) {
 			if (!noException) w.ThrowIfInvalid();
@@ -100,13 +100,13 @@ namespace Au.More {
 
 		/// <summary>
 		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
-		/// In that process writes the string as '\0'-terminated char string (UTF-16).
+		/// In that process writes the string as <c>'\0'</c>-terminated char string (UTF-16).
 		/// </summary>
 		/// <returns>false if failed.</returns>
 		/// <param name="s">A string in this process.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <remarks>
-		/// In that process is used (s.Length+1)*2 bytes of memory (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
+		/// In that process is used <c>(s.Length+1)*2</c> bytes of memory (+1 for the <c>'\0'</c>, *2 because UTF-16 character size is 2 bytes).
 		/// </remarks>
 		public bool WriteCharString(string s, int offsetBytes = 0) {
 			if (Mem == default) return false;
@@ -118,7 +118,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
-		/// In that process writes the string as '\0'-terminated byte string.
+		/// In that process writes the string as <c>'\0'</c>-terminated byte string.
 		/// </summary>
 		/// <returns>false if failed.</returns>
 		/// <param name="s">A string in this process. Normal C# string (UTF-16).</param>
@@ -150,9 +150,9 @@ namespace Au.More {
 		/// In that process the string must be in Unicode UTF-16 format.
 		/// </summary>
 		/// <returns>The copied string, or null if failed.</returns>
-		/// <param name="length">Number of characters to copy, not including the terminating '\0'. In both processes a character is 2 bytes.</param>
+		/// <param name="length">Number of characters to copy, not including the terminating <c>'\0'</c>. In both processes a character is 2 bytes.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
-		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range. If false, the returned string is of <i>length</i> length even if contains '\0' characters.</param>
+		/// <param name="findLength">Find string length by searching for <c>'\0'</c> character in <i>length</i> range. If false, the returned string is of <i>length</i> length even if contains <c>'\0'</c> characters.</param>
 		public string ReadCharString(int length, int offsetBytes = 0, bool findLength = false) {
 			return _ReadString(false, length, offsetBytes, findLength);
 		}
@@ -162,9 +162,9 @@ namespace Au.More {
 		/// In that process the string must be array of bytes (not Unicode UTF-16).
 		/// </summary>
 		/// <returns>The copied string, or null if failed.</returns>
-		/// <param name="length">Number bytes to copy, not including the terminating '\0'. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
+		/// <param name="length">Number bytes to copy, not including the terminating <c>'\0'</c>. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
-		/// <param name="findLength">Find string length by searching for '\0' character in <i>length</i> range.</param>
+		/// <param name="findLength">Find string length by searching for <c>'\0'</c> character in <i>length</i> range.</param>
 		/// <param name="enc">Encoding for converting byte string to char string. If null, uses <see cref="Encoding.Default"/> (UTF-8).</param>
 		public string ReadByteString(int length, int offsetBytes = 0, bool findLength = false, Encoding enc = null) {
 			return _ReadString(true, length, offsetBytes, findLength, enc);

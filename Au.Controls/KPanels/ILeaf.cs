@@ -33,7 +33,7 @@ namespace Au.Controls
 			/// <param name="after"></param>
 			/// <param name="type"></param>
 			/// <param name="name"></param>
-			/// <param name="canClose">Add "Close    M-click" item in context menu. It will fire <see cref="Closing"/> event and call <see cref="Delete"/> if not cancelled.</param>
+			/// <param name="canClose">Add "Close    M-click" item in context menu. It will fire <see cref="Closing"/> event and call <see cref="Delete"/> if not canceled.</param>
 			/// <returns>Returns interface of the new item.</returns>
 			/// <exception cref="ArgumentException"><i>type</i> is not Panel/Toolbar/Document, or <i>name</i> is null, or <i>name</i> panel already exists.</exception>
 			/// <remarks>

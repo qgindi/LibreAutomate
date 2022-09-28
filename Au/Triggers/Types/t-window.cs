@@ -168,7 +168,7 @@ public class WindowTrigger : ActionTrigger {
 	internal override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
 
 	/// <summary>
-	/// Returns a trigger type string, like "Window.ActiveNew".
+	/// Returns a trigger type string, like <c>"Window.ActiveNew"</c>.
 	/// </summary>
 	public override string TypeString => _typeString ??= "Window." + (IsVisible ? "Visible" : "Active") + (IsNew ? "New" : (IsOnce ? "Once" : ""));
 
@@ -190,7 +190,7 @@ public class WindowTrigger : ActionTrigger {
 /// Window triggers.
 /// </summary>
 /// <example>
-/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 /// <code><![CDATA[
 /// var wt = Triggers.Window; //wt is a WindowTriggers instance
 /// wt[TWEvent.ActiveNew, "Window name"] = o => print.it(o.Window);
@@ -219,7 +219,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// This starts to work when the primary trigger is activated, and works only for that window.
 	/// For example, to be notified when the window is closed or renamed, specify <c>later: TWLater.Destroyed | TWLater.Name</c>.
 	/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
-	/// The "later" trigers are not disabled when primary triggers are disabled.
+	/// The "later" triggers are not disabled when primary triggers are disabled.
 	/// </param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -776,10 +776,10 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// <remarks>
 	/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like <b>ActiveNew</b> and <b>ActiveOnce</b> will run once, as usually.
 	/// This function must be called while the main triggers thread is in <see cref="ActionTriggers.Run"/>, for example from another trigger action. It is asynchronous (does not wait).
-	/// If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queed. Else both actions cannot run simultaneously. See example.
+	/// If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queued. Else both actions cannot run simultaneously. See example.
 	/// </remarks>
 	/// <example>
-	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Options.ThreadNew(true);
 	/// Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
@@ -930,10 +930,10 @@ public class WindowTriggerArgs : TriggerArgs {
 	public wnd Window { get; }
 
 	/// <summary>
-	/// The "later" event, or 0 if it is the primary trigger (ActiveNew etc). See example.
+	/// The "later" event, or 0 if it is the primary trigger (<b>ActiveNew</b> etc). See example.
 	/// </summary>
 	/// <example>
-	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => print.it(o.Later, o.Window);
 	/// Triggers.Run();
@@ -962,7 +962,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// The trigger must have argument <c>, later: TWLater.Name</c> (see <see cref="TWLater"/>) and match the window with any name.
 	/// </remarks>
 	/// <example>
-	/// Show toolbar Toolbar_Chrome1 on a Chrome window when window name starts with "NuGet".
+	/// Show toolbar Toolbar_Chrome1 on a Chrome window when window name starts with <c>"NuGet"</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] =
 	/// 	ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome1, "NuGet*");
@@ -971,7 +971,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// <code><![CDATA[
 	/// toolbar Toolbar_Chrome1(WindowTriggerArgs ta) { var t = new toolbar(); /* add buttons */ t.Show(ta); return t; }
 	/// ]]></code>
-	/// Show Toolbar_A when window name starts with "A -", Toolbar_B when "B -", and Toolbar_C always.
+	/// Show Toolbar_A when window name starts with <c>"A -"</c>, Toolbar_B when <c>"B -"</c>, and Toolbar_C always.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] = ta => {
 	/// 	ta.ShowToolbarWhenWindowName(Toolbar_A, "A -*");
@@ -995,7 +995,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
 	/// <param name="windowName">Callback function that returns true if the toolbar should be visible.</param>
 	/// <example>
-	/// Show toolbar Toolbar_Chrome2 on a Chrome window when web page URL starts with "https://www.youtube.com/".
+	/// Show toolbar Toolbar_Chrome2 on a Chrome window when web page URL starts with <c>"https://www.youtube.com/"</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] = ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome2, w => {
 	/// 	var e = w.Elm["web:DOCUMENT"].Find(-1);

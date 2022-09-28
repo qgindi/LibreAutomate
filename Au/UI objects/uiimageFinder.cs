@@ -90,6 +90,7 @@ public unsafe class uiimageFinder
 	/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
 	/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmap"/>.</exception>
+	/// <inheritdoc cref="uiimage.find(IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})" path="/param"/>
 	public uiimageFinder(IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null) {
 		_flags = flags;
 		uint d = (uint)diff; _diff = d switch { <= 30 => d, <= 60 => 30 + (d - 30) * 2, <= 100 => 90 + (d - 60) * 3, _ => throw new ArgumentOutOfRangeException("diff range: 0 - 100") }; //make slightly exponential, 0 - 210
@@ -162,6 +163,7 @@ public unsafe class uiimageFinder
 	/// <summary>
 	/// See <see cref="uiimage.wait"/>.
 	/// </summary>
+	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="Exception">Exceptions of <see cref="uiimage.wait"/>, except those of the constructor.</exception>
 	/// <remarks>
 	/// Same as <see cref="Find(IFArea, double)"/>, except:

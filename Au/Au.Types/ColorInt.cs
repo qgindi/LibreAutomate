@@ -5,7 +5,7 @@ namespace Au.Types
 {
 	/// <summary>
 	/// Color, as int in 0xAARRGGBB format.
-	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
+	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows <b>COLORREF</b> (0xBBGGRR), string.
 	/// </summary>
 	public record struct ColorInt
 	{
@@ -27,14 +27,14 @@ namespace Au.Types
 		public ColorInt(uint colorARGB, bool makeOpaque) : this((int)colorARGB, makeOpaque) { }
 
 		/// <summary>
-		/// Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+		/// Converts from an int color value in 0xRRGGBB or 0xAARRGGBB format.
 		/// Sets alpha 0xFF.
 		/// </summary>
 		//[Obsolete] //to find all references
 		public static implicit operator ColorInt(int color) => new(color, true);
 
 		/// <summary>
-		/// Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+		/// Converts from an int color value in 0xRRGGBB or 0xAARRGGBB format.
 		/// Sets alpha 0xFF.
 		/// </summary>
 		//[Obsolete] //to find all references
@@ -52,11 +52,11 @@ namespace Au.Types
 			=> new((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
 
 		/// <summary>
-		/// Converts from color name (<see cref="Color.FromName(string)"/>) or string "0xRRGGBB" or "#RRGGBB".
+		/// Converts from a color name (<see cref="Color.FromName(string)"/>) or string <c>"0xRRGGBB"</c> or <c>"#RRGGBB"</c>.
 		/// </summary>
 		/// <remarks>
-		/// If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
-		/// If s is null or invalid, sets c.argb = 0 and returns false.
+		/// If <i>s</i> is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
+		/// If <i>s</i> is null or invalid, sets <c>c.argb = 0</c> and returns false.
 		/// </remarks>
 		public static bool FromString(string s, out ColorInt c) {
 			c.argb = 0;
@@ -77,16 +77,16 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Converts from Windows native COLORREF (0xBBGGRR to 0xAARRGGBB).
+		/// Converts from Windows native <b>COLORREF</b> (0xBBGGRR to 0xAARRGGBB).
 		/// </summary>
 		/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
 		/// <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 		public static ColorInt FromBGR(int colorBGR, bool makeOpaque = true) => new(SwapRB(colorBGR), makeOpaque);
 
 		/// <summary>
-		/// Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
+		/// Converts to Windows native <b>COLORREF</b> (0xBBGGRR from 0xAARRGGBB).
 		/// </summary>
-		/// <returns>color in COLORREF format. Does not modify this variable.</returns>
+		/// <returns>color in <b>COLORREF</b> format. Does not modify this variable.</returns>
 		/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
 		public int ToBGR(bool zeroAlpha = true) {
 			var r = SwapRB(argb);
@@ -127,7 +127,7 @@ namespace Au.Types
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows API; aka COLORREF.
+		/// ABGR is used by most Windows API; aka <b>COLORREF</b>.
 		/// </summary>
 		public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 

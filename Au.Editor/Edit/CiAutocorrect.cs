@@ -170,6 +170,7 @@ class CiAutocorrect {
 				}
 			}
 			return false;
+			//TODO: does not work after typeing ("""), eg int n=s.RxReplace(""") at the last line. Only if typed ( now.
 		}
 	}
 
@@ -181,7 +182,7 @@ class CiAutocorrect {
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' or '.' => "", _ => null };
+		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' => "", _ => null };
 		if (replaceText == null) return;
 
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -245,11 +246,6 @@ class CiAutocorrect {
 			if (trivia.SpanStart != --pos) return;
 			if (pos > 0 && code[pos - 1] == '\n') replaceText = "\r\n*/";
 			tempRangeFrom = 0;
-		} else if (ch == '.') { //replace comment //... with // ..., because //... may corrupt folding
-			if (code.Eq(pos - 4, "//..") && root.FindTrivia(pos).IsKind(SyntaxKind.SingleLineCommentTrivia)) {
-				c.doc.zReplaceRange(true, pos - 2, pos + 1, " ...", true);
-			}
-			return;
 		} else {
 			var token = root.FindToken(pos);
 			var node = token.Parent;

@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.DocumentationComments;
@@ -772,7 +772,7 @@ class CiText
 	}
 
 	public static Section FromKeyword(string name) {
-		//var url = "https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/";
+		//var url = "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/";
 		var url = "https://www.google.com/search?q=C%23+keyword";
 		var x = new CiText();
 		x.StartParagraph();
