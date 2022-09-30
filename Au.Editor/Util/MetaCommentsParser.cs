@@ -19,7 +19,7 @@ class MetaCommentsParser
 
 	bool _multiline;
 
-	public MetaCommentsParser(FileNode f) : this(f.GetText()) { _fn = f; }
+	public MetaCommentsParser(FileNode f) : this(f.GetCurrentText()) { _fn = f; }
 
 	public MetaCommentsParser(string code) {
 		var meta = MetaComments.FindMetaComments(code);

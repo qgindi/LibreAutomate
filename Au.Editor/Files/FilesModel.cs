@@ -91,7 +91,6 @@ partial class FilesModel {
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}
 		Save?.Dispose();
-		_InitWatcher(false);
 		DB?.Dispose();
 		WSSett?.Dispose();
 		EditGoBack.DisableUI();
@@ -183,7 +182,6 @@ partial class FilesModel {
 		} else {
 			LoadState(openFiles: true);
 		}
-		_InitWatcher(true);
 		WorkspaceLoadedAndDocumentsOpened?.Invoke();
 		if (!onUiLoaded) RunStartupScripts();
 	}
@@ -666,7 +664,7 @@ partial class FilesModel {
 			string symlinkTarget = null;
 			if (f.IsFolder && filesystem.exists(filePath).IsNtfsLink) filesystem.more.getFinalPath(filePath, out symlinkTarget);
 
-			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0), deletion: true)) return false;
+			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 
 			if (symlinkTarget != null) print.it($"<>Info: The deleted folder was a link to <explore>{symlinkTarget}<>");
 
@@ -932,7 +930,7 @@ partial class FilesModel {
 
 		if (text != null && f == CurrentFile) {
 			Debug.Assert(f.IsScript);
-			s = f.GetText();
+			s = f.GetCurrentText();
 			var me = Au.Compiler.MetaComments.FindMetaComments(s).end;
 			if (!text.meta.NE()) {
 				if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
@@ -1256,15 +1254,12 @@ partial class FilesModel {
 
 				FileNode k;
 				var name = pathname.getName(path);
-				if (r == 1) {
-					if (name.Ends(".cs", true)) name = name.Insert(^3, " (link)"); else name += " (link)";
-				}
 				if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 
 				if (r == 1) { //add as link
-					k = new FileNode(this, name, path, false, isLink: true);
+					k = new FileNode(this, name, path, false, isFileLink: true);
 				} else {
-					k = new FileNode(this, name, path, isDir);
+					k = new FileNode(this, name, path, isDir, isSymlink: r == 4);
 					if (isDir) _AddDir(path, k);
 					if (!TryFileOperation(() => {
 						var newPath = newParentPath + name;
@@ -1293,7 +1288,7 @@ partial class FilesModel {
 		void _AddDir(string path, FileNode parent) {
 			foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isDir = u.IsDirectory;
-				var k = new FileNode(this, u.Name, u.FullPath, isDir);
+				var k = new FileNode(this, u.Name, u.FullPath, isDir, isSymlink: u.IsNtfsLink);
 				parent.AddChild(k);
 				if (isDir) _AddDir(u.FullPath, k);
 			}
@@ -1392,97 +1387,6 @@ partial class FilesModel {
 		}
 
 		print.it($"<>Exported to <explore>{wsDir}<>");
-		return true;
-	}
-
-	#endregion
-
-	#region watch folder
-
-	//SHOULDDO: watch links too. Maybe without a FileSystemWatcher.
-	//	Algorithm:
-	//	When getting link target text (when opening in editor or getting FileNode text), remember file mod time.
-	//	If it is current file in editor, use timer to watch for changed mod time.
-	//	Else, when getting FileNode text, don't use cached text if changed mod time.
-
-	FileSystemWatcher _watcher;
-	HashSet<string> _watcherQ;
-	int _watcherDelay;
-
-	public bool IsWatchingFileChanges => _watcher != null;
-
-	void _InitWatcher(bool init) {
-		if (init) {
-			try {
-				_watcher = new FileSystemWatcher(FilesDirectory) {
-					IncludeSubdirectories = true,
-					NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-				};
-				//we need to know only when files are modified. Not when deleted/created/renamed.
-				//	But may save using temp file etc, therefore also need 'created' and 'renamed' events.
-				_watcher.Changed += _watcher_Event;
-				_watcher.Created += _watcher_Event;
-				//_watcher.Deleted += _watcher_Event;
-				_watcher.Renamed += _watcher_Event;
-				_watcher.EnableRaisingEvents = true;
-				_watcherQ = new();
-				App.Timer1sOr025s += _watcher_Timer250;
-			}
-			catch (Exception ex) { init = false; Debug_.Print(ex); }
-		}
-		if (!init) {
-			_watcher?.Dispose(); //disables raising events and sets all events = null
-			_watcher = null;
-			App.Timer1sOr025s -= _watcher_Timer250;
-		}
-
-		void _watcher_Event(object sender, FileSystemEventArgs e) { /*in thread pool*/
-			//if (e is RenamedEventArgs r) print.it(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath);
-			//else print.it(e.ChangeType, e.Name, e.FullPath);
-
-			//we receive 'directory changed' after every 'file changed' etc
-			if (e.ChangeType == WatcherChangeTypes.Changed && !filesystem.exists(e.FullPath, true).File) return;
-
-			lock (_watcherQ) {
-				_watcherQ.Add(e.Name);
-				_watcherDelay = 0;
-			}
-		}
-	}
-
-	void _watcher_Timer250() {
-		if (_watcherQ.Count == 0) return;
-		if (_watcherDelay++ < 2) return; _watcherDelay = 0;
-		string[] a;
-		lock (_watcherQ) {
-			if (_watcherDelay > 0) return;
-			a = _watcherQ.ToArray();
-			_watcherQ.Clear();
-		}
-		foreach (var name in a) {
-			var f = Find("\\" + name);
-			//print.it(name, f);
-			if (f == null || f.IsLink) continue;
-			if (f.IsFolder) {
-				foreach (var v in f.Descendants()) v.UnCacheText(fromWatcher: true);
-			} else {
-				f.UnCacheText(fromWatcher: true);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Calls Action a in try/catch. On exception prints message and returns false.
-	/// Temporarily disables the file system watcher if need.
-	/// </summary>
-	public bool TryFileOperation(Action a, bool deletion = false) {
-		bool pause = _watcher != null && !deletion;
-		try {
-			if (pause) _watcher.EnableRaisingEvents = false;
-			a();
-		}
-		catch (Exception ex) { print.it(ex); return false; }
-		finally { if (pause) _watcher.EnableRaisingEvents = true; } //fast
 		return true;
 	}
 
@@ -1629,6 +1533,15 @@ partial class FilesModel {
 	#endregion
 
 	#region util
+
+	/// <summary>
+	/// Calls Action a in try/catch. On exception prints message and returns false.
+	/// </summary>
+	public bool TryFileOperation(Action a) {
+		try { a(); }
+		catch (Exception ex) { print.it(ex); return false; }
+		return true;
+	}
 
 	/// <summary>
 	/// Returns true if FileNode f is not null and belongs to this FilesModel and is not deleted.

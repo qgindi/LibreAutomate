@@ -501,7 +501,7 @@ class PanelFind : UserControl {
 
 	bool _ValidateReplacement(_TextToFind f, FileNode file) {
 		//SHOULDDO: add a ValidateReplacement function to the regex class.
-		if (f.rx != null && f.rx.Match(file.GetText(), out RXMatch m) && !_TryExpandRegexReplacement(m, _tReplace.Text, out _)) return false;
+		if (f.rx != null && f.rx.Match(file.GetCurrentText(notImportant: true), out RXMatch m) && !_TryExpandRegexReplacement(m, _tReplace.Text, out _)) return false;
 		return true;
 	}
 
@@ -629,7 +629,7 @@ class PanelFind : UserControl {
 				}
 				var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
 				//p1.Start(v.Name);
-				text = v.GetText();
+				text = v.GetCurrentText(notImportant: true);
 				if (text.Length == 0) continue;
 				if (text.Contains('\0')) continue;
 				//perf.nw();

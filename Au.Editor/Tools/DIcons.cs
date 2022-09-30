@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 using Au.Tools;
@@ -313,7 +313,7 @@ Can be Pack.Icon, like Modern.List.")
 		//string ITreeViewItem.DisplayText => s_dialog._withCollection ? (_name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")") : _name;
 		string ITreeViewItem.DisplayText => _name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")";
 
-		System.Drawing.Bitmap ITreeViewItem.Image {
+		object ITreeViewItem.Image {
 			//note: don't store UIElement or Bitmap. They can use hundreds MB of memory and it does not make faster/better. Let GC dispose unused objects asap.
 			get {
 				try {
@@ -415,7 +415,13 @@ Can be Pack.Icon, like Modern.List.")
 #endif
 
 	public static string GetIconString(string s, EGetIcon what) {
-		if (what != EGetIcon.IconNameToXaml) s = App.Model.Find(s, silent: true)?.ImageSource;
+		if (what != EGetIcon.IconNameToXaml) {
+			s = App.Model.Find(s, silent: true)?.Image switch {
+				string v => v,
+				IEnumerable<object> v => v.First() as string,
+				_ => null
+			};
+		}
 		if (what != EGetIcon.PathToIconName && s != null) TryGetIconFromBigDB(s, out s);
 		return s;
 	}

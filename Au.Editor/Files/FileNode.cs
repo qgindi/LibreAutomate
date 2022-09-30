@@ -3,22 +3,19 @@ using Au.Compiler;
 using System.Xml;
 using System.Xml.Linq;
 
-partial class FileNode : TreeBase<FileNode>, ITreeViewItem
-{
+partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	#region types
 
 	//Not saved in file.
 	[Flags]
-	enum _State : byte
-	{
+	enum _State : byte {
 		Deleted = 1,
 	}
 
 	//Saved in file.
 	[Flags]
-	enum _Flags : byte
-	{
-		// = 1,
+	enum _Flags : byte {
+		Symlink = 1,
 	}
 
 	#endregion
@@ -46,14 +43,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 
 	//this ctor is used when importing items from files etc.
 	//name is filename with extension.
-	//sourcePath is used when !isFolder: 1. To detect type. 2. If isLink, to set link target.
-	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, bool isLink = false) {
+	//sourcePath is used when !isFolder: 1. To detect type. 2. If isFileLink, to set link target.
+	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, bool isFileLink = false, bool isSymlink = false) {
 		_model = model;
 		_type = isFolder ? EFileType.Folder : _DetectFileType(sourcePath);
 		_SetName(name);
 		_id = _model.AddGetId(this);
-		//if (isLink && !isFolder) _linkTarget = folders.unexpandPath(sourcePath); //rejected. Too much trouble with it.
-		if (isLink && !isFolder) _linkTarget = sourcePath;
+		if (isFolder) {
+			if (isSymlink) _flags |= _Flags.Symlink;
+		} else {
+			if (isFileLink) _linkTarget = sourcePath;
+			//if (isFileLink) _linkTarget = folders.unexpandPath(sourcePath); //rejected. Too much trouble with it.
+		}
 	}
 
 	//this ctor is used when copying or importing a workspace.
@@ -313,71 +314,81 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	}
 
 	/// <summary>
-	/// Gets text from file or editor.
-	/// Returns "" if file not found.
-	/// </summary>
-	/// <param name="saved">Always get text from file. If false (default), gets editor text if this is current file.</param>
-	/// <param name="warningIfNotFound">Print warning if file not found. If false, prints only other exceptions.</param>
-	/// <param name="cache">Cache text. Next time return that text. Not used if gets text from editor.</param>
-	public string GetText(bool saved = false, bool warningIfNotFound = false, bool cache = false) {
-		if (IsFolder) return "";
-		if (!saved && this == _model.CurrentFile) {
-			return Panels.Editor.ZActiveDoc.zText;
-		}
-		//if(cache) print.it("GetText", Name, _text != null);
-		if (_text != null) return _text;
-		string r = null, es = null, path = FilePath;
-		if (path == null) { //IsDeleted
-			if (warningIfNotFound) print.warning($"Cannot get text of {Name}. The file is deleted.", -1);
-			r = "";
-		} else {
-			try {
-				using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
-				if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
-				else r = sr.ReadToEnd();
-			}
-			catch (Exception ex) {
-				if (warningIfNotFound || !(ex is FileNotFoundException or DirectoryNotFoundException)) es = ex.ToStringWithoutStack();
-			}
-			r ??= "";
-			if (es != null) {
-				print.warning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
-			} else if (cache && Model.IsWatchingFileChanges && !this.IsLink && r.Length < 1_000_000) { //don't cache links because we don't watch their file folders
-				_text = r; //FUTURE: set = null after some time if not used
-			}
-		}
-		return r;
-	}
-	string _text;
-
-	public void UnCacheText(bool fromWatcher = false) {
-		//print.it("UnCacheText", Name, _text != null);
-		_text = null;
-		if (fromWatcher) {
-			var doc = Panels.Editor.ZGetOpenDocOf(this);
-			if (doc != null) doc.EFileModifiedExternally_();
-			else this.Model.EditGoBack.OnTextReplaced(this);
-		}
-	}
-
-	///// <summary>
-	///// Gets or sets 'has triggers' flag.
-	///// The setter will save workspace.
-	///// </summary>
-	//public bool HasTriggers {
-	//	get => 0 != (_flags & _Flags.HasTriggers);
-	//	set {
-	//		if(value != HasTriggers) {
-	//			_flags.SetFlag(_Flags.HasTriggers, value);
-	//			_model.Save.WorkspaceLater();
-	//		}
-	//	}
-	//}
-
-	/// <summary>
 	/// Returns Name.
 	/// </summary>
 	public override string ToString() => _name;
+
+	#endregion
+
+	#region text
+
+	/// <summary>
+	/// Gets text from editor (if this is the active open document) or file (<see cref="GetFileText"/>).
+	/// </summary>
+	/// <returns>"" if failed (eg file not found).</returns>
+	/// <param name="notImportant">Don't print warning if fails. Eg this is used for 'find in files'.</param>
+	public string GetCurrentText(bool notImportant = false) {
+		if (this == _model.CurrentFile) return Panels.Editor.ZActiveDoc.zText;
+		return GetFileText(notImportant);
+	}
+
+	/// <summary>
+	/// Gets text from file.
+	/// Does not get editor text like <see cref="GetCurrentText"/>.
+	/// </summary>
+	/// <returns>"" if failed (eg file not found).</returns>
+	/// <param name="notImportant">Don't print warning if fails. Eg this is used for 'find in files'.</param>
+	public string GetFileText(bool notImportant = false) {
+		if (IsFolder) return "";
+
+		//rejected: cache text. OS caching isn't too slow.
+
+		var path = FilePath;
+		if (path == null) { //IsDeleted
+			if (!notImportant) print.warning($"Cannot get text of {Name}. The file is deleted.", -1);
+			return "";
+		}
+
+		string r = null, es = null;
+		try {
+			using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
+
+			if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
+			else r = sr.ReadToEnd();
+
+			//rejected: update _fileModTime. Would need to call OnAppActivatedAndThisIsOpen if changed.
+			//var fs = (FileStream)sr.BaseStream;
+			//if (fs.Length > 100_000_000) es = "File too big, > 100_000_000.";
+			//else {
+			//	r = sr.ReadToEnd();
+			//	if (!notImportant) _fileModTime = Api.GetFileInformationByHandle(fs.SafeFileHandle.DangerousGetHandle(), out var fi) ? fi.ftLastWriteTime : 0;
+			//}
+		}
+		catch (Exception ex) {
+			if (notImportant) {
+				Debug_.PrintIf(!(ex is FileNotFoundException or DirectoryNotFoundException), ex);
+				return "";
+			}
+			es = ex.ToStringWithoutStack();
+		}
+		if (es != null) print.warning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
+		return r ?? "";
+	}
+
+	long _fileModTime;
+
+	//called when SciDoc loaded or saved the file
+	internal void UpdateFileModTime() {
+		_fileModTime = Api.GetFileAttributesEx(FilePath, 0, out var d) ? d.ftLastWriteTime : 0;
+	}
+
+	internal void OnAppActivatedAndThisIsOpen(SciCode doc) {
+		if (doc.EIsBinary) return;
+		Debug_.PrintIf(_fileModTime == 0);
+		if (!Api.GetFileAttributesEx(FilePath, 0, out var d) || d.ftLastWriteTime == _fileModTime) return;
+		_fileModTime = d.ftLastWriteTime;
+		doc.EFileModifiedExternally_(); //calls GetFileText
+	}
 
 	#endregion
 
@@ -412,7 +423,13 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			_ => null
 		};
 
-	public string ImageSource => CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
+	public object Image {
+		get {
+			var s = CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
+			if (!(IsLink || _flags.Has(_Flags.Symlink))) return s;
+			return new object[] { s, "link:" };
+		}
+	}
 
 	//TVCheck ITreeViewItem.CheckState { get; }
 
@@ -620,7 +637,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 	/// </summary>
 	public EClassFileRole GetClassFileRole() {
 		if (_type != EFileType.Class) return EClassFileRole.None;
-		var code = GetText();
+		var code = GetCurrentText(notImportant: true);
 		var meta = MetaComments.FindMetaComments(code);
 		if (meta.end == 0) return EClassFileRole.Class;
 		foreach (var v in MetaComments.EnumOptions(code, meta)) {
@@ -632,8 +649,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		return EClassFileRole.Class;
 	}
 
-	public enum EClassFileRole
-	{
+	public enum EClassFileRole {
 		/// <summary>Not a class file.</summary>
 		None,
 		/// <summary>Has meta role miniProgram/exeProgram/editorExtension.</summary>
@@ -677,8 +693,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 		}
 	}
 
-	public static class Templates
-	{
+	public static class Templates {
 		public static readonly string DefaultDirBS = folders.ThisAppBS + @"Templates\files\";
 		public static readonly string UserDirBS = AppSettings.DirBS + @"Templates\";
 
@@ -910,7 +925,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 			type = EFileType.Class;
 			try {
 				var code = filesystem.loadText(path);
-				if(CiUtil.IsScript(code)) type = EFileType.Script;
+				if (CiUtil.IsScript(code)) type = EFileType.Script;
 			}
 			catch (Exception ex) { Debug_.Print(ex); }
 
@@ -926,8 +941,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem
 /// File type of a <see cref="FileNode"/>.
 /// Saved in XML as tag name: d folder, s script, c class, n other.
 /// </summary>
-enum EFileType : byte
-{
+enum EFileType : byte {
 	Folder, //must be 0
 	Script,
 	Class,

@@ -51,7 +51,7 @@ public static partial class filesystem {
 		properties = new FileProperties();
 		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
 		_DisableDeviceNotReadyMessageBox();
-		if (!Api.GetFileAttributesEx(path, 0, out Api.WIN32_FILE_ATTRIBUTE_DATA d)) {
+		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
 			if (!_GetAttributesOnError(path, flags, out _, out _, &d)) return false;
 		}
 		properties.Attributes = d.dwFileAttributes;

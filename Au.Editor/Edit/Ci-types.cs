@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -84,7 +84,7 @@ class CiComplItem : ITreeViewItem
 	#region ITreeViewItem
 	string ITreeViewItem.DisplayText => _dtext;
 
-	string ITreeViewItem.ImageSource => ImageResource(kind);
+	object ITreeViewItem.Image => ImageResource(kind);
 
 	#endregion
 

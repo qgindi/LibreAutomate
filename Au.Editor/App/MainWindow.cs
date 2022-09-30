@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -140,10 +140,21 @@ partial class MainWindow : Window {
 			case ERegisteredHotkeyId.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
 			}
 			break;
+		case Api.WM_ACTIVATEAPP:
+			if (wParam != 0) {
+				_appActivatedTimer ??= new(_ => {
+					Panels.Editor.OnAppActivated();
+				});
+				_appActivatedTimer.After(250);
+			} else {
+				_appActivatedTimer?.Stop();
+			}
+			break;
 		}
 
 		return default;
 	}
+	timer _appActivatedTimer;
 
 	//this could be a workaround for the inactive window at startup, but probably don't need when we call Activete() in OnSourceInitialized
 	//protected override void OnActivated(EventArgs e) {

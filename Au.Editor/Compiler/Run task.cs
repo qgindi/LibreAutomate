@@ -110,10 +110,10 @@ static class CompileRun {
 
 				//extract code from /// <example>
 				string example = null;
-				var s = f.GetText();
+				var s = f.GetCurrentText();
 				if (s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
 					if (s.RxMatch(@"(?m)^\h*/// *<code>(<!\[CDATA\[)?\s+((\h*/// ?.*\R)+?)^\h*/// *(?(1)\]\]>)</code>", 2, out g, range: g)) {
-						example = s[(Range)g].RxReplace(@"(?m)^\h*/// ?", "");
+						example = g.Value.RxReplace(@"(?m)^\h*/// ?", "");
 					}
 				}
 
@@ -212,7 +212,7 @@ class RunningTask : ITreeViewItem {
 
 	string ITreeViewItem.DisplayText => f.DisplayName;
 
-	string ITreeViewItem.ImageSource => f.ImageSource;
+	object ITreeViewItem.Image => f.Image;
 
 	///TVCheck ITreeViewItem.CheckState { get; }
 

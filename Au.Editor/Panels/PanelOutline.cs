@@ -296,7 +296,7 @@ class PanelOutline : DockPanel
 
 		string ITreeViewItem.DisplayText => _text;
 
-		string ITreeViewItem.ImageSource => CiComplItem.ImageResource(_kind);
+		object ITreeViewItem.Image => CiComplItem.ImageResource(_kind);
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
 

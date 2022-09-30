@@ -397,7 +397,7 @@ namespace Au.Compiler {
 		void _ParseFile(FileNode f, bool isMain, bool isC, bool isGlobalSc = false) {
 			if (!isMain && _CodeFilesContains(f)) return;
 			//var p1 = perf.local();
-			string code = f.GetText(cache: true);
+			string code = f.GetCurrentText();
 			//p1.Next();
 			bool isScript = f.IsScript;
 			var cf = new MetaCodeFile(f, code, isMain, isC);

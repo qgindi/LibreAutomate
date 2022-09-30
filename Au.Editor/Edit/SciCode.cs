@@ -142,6 +142,7 @@ partial class SciCode : KScintilla {
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
+		if(!EIsBinary) _fn.UpdateFileModTime();
 		ESetLineNumberMarginWidth_();
 
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
@@ -417,26 +418,32 @@ partial class SciCode : KScintilla {
 	}
 	bool _isUnsaved;
 
+	public bool EIsBinary => _fls.IsBinary;
+
 	//Called by PanelEdit.ZSaveText.
 	internal bool ESaveText_() {
+		Debug.Assert(!EIsBinary);
 		if (_IsUnsaved) {
 			//print.qm2.write("saving");
-			_fn.UnCacheText();
 			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
-			//info: with tempDirectory less noise for FileSystemWatcher
+			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
+			_fn.UpdateFileModTime();
 		}
 		return true;
 	}
 
-	//Called by FileNode.UnCacheText.
+	//Called by FileNode.OnAppActivatedAndThisIsOpen.
 	internal void EFileModifiedExternally_() {
-		if (zIsReadonly) return;
-		var text = _fn.GetText(saved: true); if (text == this.zText) return;
+		Debug.Assert(!EIsBinary); //caller must check it
+		var text = _fn.GetFileText();
+		if (text == this.zText) return;
 		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been modified outside and therefore reloaded. You can Undo.");
+
+		//rejected. VS and VSCode reload silently.
+		//if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
 	}
 
 	//never mind: not called when zoom changes.
