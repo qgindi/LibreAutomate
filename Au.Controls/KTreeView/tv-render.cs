@@ -1,7 +1,7 @@
-namespace Au.Controls
-{
-	public unsafe partial class KTreeView
-	{
+using System.Drawing;
+
+namespace Au.Controls {
+	public unsafe partial class KTreeView {
 		bool _dontMeasure;
 
 		//Called on resize, scroll, set visible items (replace, clear, expand/collapse, add/remove/move).
@@ -253,7 +253,7 @@ namespace Au.Controls
 						//checkboxes
 						if (HasCheckboxes && item.CheckState != TVCheck.None) {
 							if (cd == null || !cd.DrawCheckbox()) {
-								//							if(1==(i&3)) item.CheckState=TVCheck.Checked; if(2==(i&3)) item.CheckState=TVCheck.Mixed; if(3==(i&3)) item.CheckState=TVCheck.Excluded; if(0!=(i&4)) v.IsDisabled=true;
+								//if(1==(i&3)) item.CheckState=TVCheck.Checked; if(2==(i&3)) item.CheckState=TVCheck.Mixed; if(3==(i&3)) item.CheckState=TVCheck.Excluded; if(0!=(i&4)) v.IsDisabled=true;
 								int k = (_itemHeight - cSize.height) / 2;
 								var rr = new RECT(xLeft - _itemHeight + k, y + k, cSize.width, cSize.height);
 								var ch = item.CheckState;
@@ -271,16 +271,26 @@ namespace Au.Controls
 						}
 
 						//image
-						var b = item.Image;
-						if (b == null) {
-							var imageSource = item.ImageSource;
-							if (!imageSource.NE()) {
-								b = ImageCache.Get(imageSource, _dpi, ImageUtil.HasImageOrResourcePrefix(imageSource));
+						_DrawImage(item.Image);
+
+						void _DrawImage(object imo) {
+							Bitmap b = null;
+							switch (imo) {
+							case Bitmap v:
+								b = v;
+								break;
+							case string v:
+								if (v == "link:") { v = s_stockLinkIcon.Value; if (v == null) break; }
+								b = ImageCache.Get(v, _dpi, ImageUtil.HasImageOrResourcePrefix(v));
+								break;
+							case IEnumerable<object> v:
+								foreach (var o in v) _DrawImage(o);
+								break;
 							}
-						}
-						if (b != null) {
-							if (cd == null || !cd.DrawImage(b)) {
-								graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
+							if (b != null) {
+								if (cd == null || !cd.DrawImage(b)) {
+									graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
+								}
 							}
 						}
 
@@ -320,6 +330,12 @@ namespace Au.Controls
 				}
 			}
 		}
+
+		static string _StockLinkLocation() {
+			if (!icon.GetStockIconLocation_(StockIcon.LINK, out var ipath, out int iindex)) return null;
+			return ipath + "," + iindex.ToS();
+		}
+		static Lazy<string> s_stockLinkIcon = new(_StockLinkLocation);
 
 		/// <summary>
 		/// Gets or sets image cache.

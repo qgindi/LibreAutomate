@@ -398,13 +398,24 @@ namespace Au {
 		/// <param name="id">Shell stock icon id.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static unsafe icon stock(StockIcon id, int size = 16) {
-			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
-			if (0 != Api.SHGetStockIconInfo(id, 0, ref x)) return null;
-			var s = new string(x.szPath);
-			return load(s, size, x.iIcon);
+			if (!GetStockIconLocation_(id, out var path, out int index)) return null;
+			return load(path, size, index);
 			//note: don't cache, because of the quota of handles a process can have. Maybe only exe and document icons; maybe also folder and open folder.
 
 			//tested: always gets 32x32 icon: Api.LoadImage(default, 32516, Api.IMAGE_ICON, 16, 16, Api.LR_SHARED); //OIC_INFORMATION
+		}
+
+		internal static unsafe bool GetStockIconLocation_(StockIcon id, out string path, out int index) {
+			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
+			if (0 == Api.SHGetStockIconInfo(id, 0, ref x)) {
+				path = new string(x.szPath);
+				index = x.iIcon;
+				return true;
+			} else {
+				path = null;
+				index = 0;
+				return false;
+			}
 		}
 
 		/// <summary>

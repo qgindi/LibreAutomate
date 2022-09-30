@@ -278,7 +278,7 @@ class PanelCookbook : UserControl {
 
 		string ITreeViewItem.DisplayText => name;
 
-		string ITreeViewItem.ImageSource => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie #EABB00");
+		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie #EABB00");
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 

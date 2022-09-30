@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Runtime.Loader;
 
@@ -40,7 +40,7 @@ namespace Au.Compiler
 
 			SyntaxTree treeGlobal = null;
 			if (addGlobalCs) {
-				static string _GetClobalCsCode() => App.Model.Find("global.cs", FNFind.Class)?.GetText(cache: true);
+				static string _GetClobalCsCode() => App.Model.Find("global.cs", FNFind.Class)?.GetCurrentText();
 				var gcode = Environment.CurrentManagedThreadId == 1 ? _GetClobalCsCode() : App.Dispatcher.Invoke(_GetClobalCsCode);
 				if (gcode != null) treeGlobal = CSharpSyntaxTree.ParseText(gcode, parseOpt);
 				//SHOULDDO: also recursively add files etc specified in meta c, r, etc.

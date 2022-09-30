@@ -613,7 +613,7 @@ A script can use packages from multiple folders if they are compatible.");
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		public bool IsFolder { get; }
 		public string DisplayText { get; }
-		string ITreeViewItem.ImageSource => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (IsFolder ? @"resources/images/expandright_16x.xaml" : null);
+		object ITreeViewItem.Image => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (IsFolder ? @"resources/images/expandright_16x.xaml" : null);
 		//public TVCheck CheckState { get; }
 
 		#endregion

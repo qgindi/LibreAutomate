@@ -58,6 +58,14 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
+		//var f = App.Model.Find(@"\@Au docs\AuDocs text.cs");
+		//for(int i = 0; i < 5; i++) {
+		//	wait.doEvents(100);
+		//	perf.first();
+		//	var s = f.GetText(cache: true);
+		//	perf.nw();
+		//}
+
 		//if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var tok)) return;
 		//print.it(tok.IsInString(cd.pos, cd.code, out var x, true), x);
 

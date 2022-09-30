@@ -41,27 +41,25 @@ public interface ITreeViewItem {
 	void SetNewText(string text) { }
 
 	/// <summary>
-	/// Image to display.
-	/// Alternatively use <see cref="ImageSource"/>.
+	/// Image as:
+	/// <br/>• string - image source.
+	/// <br/>• <b>System.Drawing.Bitmap</b>.
+	/// <br/>• <b>IEnumerable&lt;object&gt;</b> of these, to draw image and overlay(s).
+	/// <para>
+	/// If string, will use <see cref="IconImageCache.Get"/>; see <see cref="KTreeView.ImageCache"/>.
+	/// <br/>String prefix:
+	/// <br/>• none - gets file icon; see <see cref="icon.of"/>.
+	/// <br/>• <c>"*"</c> - icon name like <c>"*Pack.Icon color"</c>.
+	/// <br/>• <c>"imagefile:"</c> - path of png/bmp/jpg/gif/tif or xaml file.
+	/// <br/>• <c>"resource:"</c> - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
+	/// <br/>• <c>"image:"</c> - Base64 encoded image file.
+	/// <br/>• <c>"link:"</c> (and nothing more) - link overlay image.
+	/// </para>
+	/// <para>
+	/// If <b>Bitmap</b>, and its DPI does not match control's DPI (<see cref="KTreeView.Dpi"/>), draws it auto-scaled.
+	/// </para>
 	/// </summary>
-	/// <remarks>
-	/// If image's DPI does not match control's DPI (<see cref="KTreeView.Dpi"/>), draws it auto-scaled.
-	/// </remarks>
-	System.Drawing.Bitmap Image => null;
-
-	/// <summary>
-	/// Where to find image or icon to display.
-	/// Can have prefix:
-	/// "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
-	/// "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
-	/// "image:" - Base64 encoded image file.
-	/// If without prefix, gets file icon; see <see cref="icon.of"/>.
-	/// </summary>
-	/// <remarks>
-	/// To load image the control calls <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>.
-	/// The control uses <see cref="IconImageCache"/>; see <see cref="KTreeView.ImageCache"/>.
-	/// </remarks>
-	string ImageSource => null;
+	object Image => null;
 
 	/// <summary>
 	/// How to draw checkbox when <see cref="KTreeView.HasCheckboxes"/> true. Default <b>Unchecked</b>.

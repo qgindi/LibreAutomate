@@ -173,6 +173,12 @@ class PanelEdit : Grid
 
 	//public bool ZIsModified => _activeDoc?.IsModified ?? false;
 
+	internal void OnAppActivated() {
+		foreach (var doc in _docs) {
+			doc.EFile.OnAppActivatedAndThisIsOpen(doc);
+		}
+	}
+
 	/// <summary>
 	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
 	/// </summary>

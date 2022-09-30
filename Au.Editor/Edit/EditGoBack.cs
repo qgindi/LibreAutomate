@@ -1,4 +1,4 @@
-﻿class EditGoBack {
+class EditGoBack {
 	record struct _Location(FileNode fn, int pos);
 
 	List<_Location> _a = new();
@@ -65,21 +65,21 @@
 		}
 	}
 
-	//eg when modified externally
-	internal void OnTextReplaced(FileNode fn) {
-		//print.it("replaced", fn);
-		_time = 0;
-		if (_i < 0) return;
-		int iFirst = _a.FindIndex(o => o.fn == fn); if (iFirst < 0) return;
-		_a[iFirst] = new(fn, 0);
-		for (int i = _a.Count; --i > iFirst;) {
-			if (_a[i].fn == fn) {
-				_a.RemoveAt(i);
-				if (i <= _i) _i--;
-			}
-		}
-		_UpdateUI();
-	}
+	//when file modified externally. Currently not used.
+	//internal void OnTextReplaced(FileNode fn) {
+	//	//print.it("replaced", fn);
+	//	_time = 0;
+	//	if (_i < 0) return;
+	//	int iFirst = _a.FindIndex(o => o.fn == fn); if (iFirst < 0) return;
+	//	_a[iFirst] = new(fn, 0);
+	//	for (int i = _a.Count; --i > iFirst;) {
+	//		if (_a[i].fn == fn) {
+	//			_a.RemoveAt(i);
+	//			if (i <= _i) _i--;
+	//		}
+	//	}
+	//	_UpdateUI();
+	//}
 
 	internal void OnRestoringSavedPos() {
 		_time = Environment.TickCount64;
