@@ -1,6 +1,6 @@
-/*/ role editorExtension; testInternal Au,Au.Editor; r Au.Editor.dll; /*/
+/*/ testInternal Au,Au.Editor; r Au.Editor.dll; /*/
 
-string dbFile = @"C:\code\au\Other\Data\winapi.db";
+string dbFile = folders.ThisAppBS + @"winapi.db.new";
 filesystem.delete(dbFile);
 
 string s = File.ReadAllText(@"C:\code\au\Other\Api\Api.cs");
@@ -44,7 +44,5 @@ void _Add(RXMatch m) {
 
 trans.Commit();
 d.Execute("VACUUM");
-
-App.Settings.db_copy_winapi = dbFile;
 
 print.it("DONE");

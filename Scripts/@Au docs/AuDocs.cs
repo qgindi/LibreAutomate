@@ -1,5 +1,3 @@
-#define ANALYZE_SYMBOLS_BOLD
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;

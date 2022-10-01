@@ -67,8 +67,6 @@ record AppSettings : JSettings {
 
 	public sbyte recipe_zoom;
 
-	public string db_copy_ref, db_copy_doc, db_copy_winapi;
-
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
 
 	public string find_skip;

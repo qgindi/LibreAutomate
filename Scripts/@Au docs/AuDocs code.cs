@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Classification;
-using EToken = CiStyling.EToken;
+using EStyle = CiStyling.EStyle;
 
 partial class AuDocs {
 	static void _CreateCodeCss(string siteDir) {
@@ -62,11 +62,11 @@ partial class AuDocs {
 		//	Can't format text directly because GetClassifiedSpansAsync results may be overlapped, eg at first entire string and then its escape sequences.
 		//	And it simplifies formatting.
 		var a = new byte[s.Length];
-		int prevEnd = 0; EToken prevStyle = 0;
+		int prevEnd = 0; EStyle prevStyle = 0;
 		foreach (var v in Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, s.Length)).Result) {
 			var ct = v.ClassificationType;
 			if (ct == ClassificationTypeNames.StaticSymbol) continue;
-			EToken style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
 			int start = v.TextSpan.Start, end = v.TextSpan.End;
 			//print.it(style, s[start..end]);
 			if (style == prevStyle && start > prevEnd && a[prevEnd] == 0) start = prevEnd; //join adjacent styles separated by whitespace
@@ -81,24 +81,24 @@ partial class AuDocs {
 			if (u == 0) {
 				b.Append(text);
 			} else {
-				var k = (EToken)u switch {
-					EToken.Comment => "c",
-					EToken.Constant => "const",
-					EToken.Excluded => "ex",
-					EToken.Function => "f",
-					EToken.Keyword => "k",
-					EToken.Label => "label",
-					EToken.Namespace => "ns",
-					EToken.Number => "n",
-					EToken.Operator => "o",
-					EToken.Preprocessor => "pre",
-					EToken.Punctuation => "p",
-					EToken.String => "s",
-					EToken.StringEscape => "se",
-					EToken.Type => "t",
-					EToken.Variable => "v",
-					EToken.XmlDocTag => "x1",
-					EToken.XmlDocText => "x2",
+				var k = (EStyle)u switch {
+					EStyle.Comment => "c",
+					EStyle.Constant => "const",
+					EStyle.Excluded => "ex",
+					EStyle.Function => "f",
+					EStyle.Keyword => "k",
+					EStyle.Label => "label",
+					EStyle.Namespace => "ns",
+					EStyle.Number => "n",
+					EStyle.Operator => "o",
+					EStyle.Preprocessor => "pre",
+					EStyle.Punctuation => "p",
+					EStyle.String => "s",
+					EStyle.StringEscape => "se",
+					EStyle.Type => "t",
+					EStyle.Variable => "v",
+					EStyle.XmlDocTag => "x1",
+					EStyle.XmlDocText => "x2",
 					_ => null,
 				};
 				b.AppendFormat("<span class=\"{0}\">", k);

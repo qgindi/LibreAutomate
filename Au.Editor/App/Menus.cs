@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 using Au.Tools;
 using System.Windows.Controls;
 
@@ -163,8 +163,26 @@ static class Menus {
 		[Command(keysText = "Ctrl+V", image = "*Material.ContentPaste #9F5300")]
 		public static void Paste() { Panels.Editor.ZActiveDoc.EPaste(); }
 
-		[Command(image = "*Material.ForumOutline #9F5300")]
-		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ECopy(forum: true); }
+		[Command]
+		public static class Other_formats {
+			[Command(image = "*Material.ForumOutline #9F5300", text = "Copy _forum code")]
+			public static void Forum_copy() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.Forum); }
+
+			[Command("Copy HTML <span style>")]
+			public static void Copy_HTML_span_style() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanStyle); }
+
+			[Command("Copy HTML <span class> and CSS")]
+			public static void Copy_HTML_span_class_CSS() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanClassCss); }
+
+			[Command("Copy HTML <span class>")]
+			public static void Copy_HTML_span_class() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanClass); }
+
+			[Command]
+			public static void Copy_markdown() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.Markdown); }
+
+			[Command]
+			public static void Copy_without_screenshots() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
+		}
 
 		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace #008EEE")]
 		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
