@@ -17,7 +17,7 @@ nuget -\WeCantSpell.Hunspell;
 
 var siteDir = @"C:\Temp\Au\DocFX\site";
 
-Task.Run(() => {
+run.thread(() => {
 	try {
 		if (args.Length == 0) {
 			_Build();
@@ -39,8 +39,8 @@ void _Build() {
 	bool preprocess = false, postprocess = false, build = false, serve = false;
 	//preprocess = true;
 	//postprocess = true;
-	//postprocess = serve = true;
-	preprocess = postprocess = build = serve = true;
+	postprocess = serve = true;
+	//preprocess = postprocess = build = serve = true;
 	bool onlyMetadata = !true;
 	//preprocess = true; build = true; onlyMetadata = true;
 	

@@ -226,7 +226,7 @@ Line number";
 				if (i < 0) { //Font, Background
 
 				} else {
-					if (i == (int)CiStyling.EToken.countUserDefined) i = Sci.STYLE_LINENUMBER;
+					if (i == (int)CiStyling.EStyle.countUserDefined) i = Sci.STYLE_LINENUMBER;
 					//print.it(i, s[v.start..v.end]);
 					sciStyles.Call(Sci.SCI_STARTSTYLING, v.start);
 					sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, i);
@@ -295,7 +295,7 @@ Line number";
 
 			int _SciStylesLineToTok(int line) {
 				line -= 2; if (line < 0) return line;
-				int tok = line, nu = (int)CiStyling.EToken.countUserDefined;
+				int tok = line, nu = (int)CiStyling.EStyle.countUserDefined;
 				if (tok >= nu) tok = tok - nu + Sci.STYLE_LINENUMBER;
 				return tok;
 			}

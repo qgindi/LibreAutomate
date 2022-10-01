@@ -219,9 +219,9 @@ partial class CiStyling
 			foreach (var (a, r) in ar) {
 				foreach (var v in a) {
 					//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
-					EToken style = StyleFromClassifiedSpan(v, semo);
+					EStyle style = StyleFromClassifiedSpan(v, semo);
 
-					if (style == EToken.None) {
+					if (style == EStyle.None) {
 #if DEBUG
 						switch (v.ClassificationType) {
 						case ClassificationTypeNames.Identifier: break;
@@ -292,70 +292,70 @@ partial class CiStyling
 	//static bool s_debugPerf;
 #endif
 
-	public static EToken StyleFromClassifiedSpan(ClassifiedSpan cs, SemanticModel semo) {
+	public static EStyle StyleFromClassifiedSpan(ClassifiedSpan cs, SemanticModel semo) {
 		return cs.ClassificationType switch {
-			ClassificationTypeNames.ClassName => EToken.Type,
-			ClassificationTypeNames.Comment => EToken.Comment,
-			ClassificationTypeNames.ConstantName => EToken.Constant,
-			ClassificationTypeNames.ControlKeyword => EToken.Keyword,
-			ClassificationTypeNames.DelegateName => EToken.Type,
-			ClassificationTypeNames.EnumMemberName => EToken.Constant,
-			ClassificationTypeNames.EnumName => EToken.Type,
-			ClassificationTypeNames.EventName => EToken.Function,
-			ClassificationTypeNames.ExcludedCode => EToken.Excluded,
-			ClassificationTypeNames.ExtensionMethodName => EToken.Function,
-			ClassificationTypeNames.FieldName => EToken.Variable,
+			ClassificationTypeNames.ClassName => EStyle.Type,
+			ClassificationTypeNames.Comment => EStyle.Comment,
+			ClassificationTypeNames.ConstantName => EStyle.Constant,
+			ClassificationTypeNames.ControlKeyword => EStyle.Keyword,
+			ClassificationTypeNames.DelegateName => EStyle.Type,
+			ClassificationTypeNames.EnumMemberName => EStyle.Constant,
+			ClassificationTypeNames.EnumName => EStyle.Type,
+			ClassificationTypeNames.EventName => EStyle.Function,
+			ClassificationTypeNames.ExcludedCode => EStyle.Excluded,
+			ClassificationTypeNames.ExtensionMethodName => EStyle.Function,
+			ClassificationTypeNames.FieldName => EStyle.Variable,
 			ClassificationTypeNames.Identifier => _TryResolveMethod(),
-			ClassificationTypeNames.InterfaceName => EToken.Type,
-			ClassificationTypeNames.Keyword => EToken.Keyword,
-			ClassificationTypeNames.LabelName => EToken.Label,
-			ClassificationTypeNames.LocalName => EToken.Variable,
-			ClassificationTypeNames.MethodName => EToken.Function,
-			ClassificationTypeNames.NamespaceName => EToken.Namespace,
-			ClassificationTypeNames.NumericLiteral => EToken.Number,
-			ClassificationTypeNames.Operator => EToken.Operator,
-			ClassificationTypeNames.OperatorOverloaded => EToken.Function,
-			ClassificationTypeNames.ParameterName => EToken.Variable,
-			ClassificationTypeNames.PreprocessorKeyword => EToken.Preprocessor,
+			ClassificationTypeNames.InterfaceName => EStyle.Type,
+			ClassificationTypeNames.Keyword => EStyle.Keyword,
+			ClassificationTypeNames.LabelName => EStyle.Label,
+			ClassificationTypeNames.LocalName => EStyle.Variable,
+			ClassificationTypeNames.MethodName => EStyle.Function,
+			ClassificationTypeNames.NamespaceName => EStyle.Namespace,
+			ClassificationTypeNames.NumericLiteral => EStyle.Number,
+			ClassificationTypeNames.Operator => EStyle.Operator,
+			ClassificationTypeNames.OperatorOverloaded => EStyle.Function,
+			ClassificationTypeNames.ParameterName => EStyle.Variable,
+			ClassificationTypeNames.PreprocessorKeyword => EStyle.Preprocessor,
 			//ClassificationTypeNames.PreprocessorText => EStyle.None,
-			ClassificationTypeNames.PropertyName => EToken.Function,
-			ClassificationTypeNames.Punctuation => EToken.Punctuation,
-			ClassificationTypeNames.RecordClassName or ClassificationTypeNames.RecordStructName => EToken.Type,
-			ClassificationTypeNames.StringEscapeCharacter => EToken.StringEscape,
-			ClassificationTypeNames.StringLiteral => EToken.String,
-			ClassificationTypeNames.StructName => EToken.Type,
+			ClassificationTypeNames.PropertyName => EStyle.Function,
+			ClassificationTypeNames.Punctuation => EStyle.Punctuation,
+			ClassificationTypeNames.RecordClassName or ClassificationTypeNames.RecordStructName => EStyle.Type,
+			ClassificationTypeNames.StringEscapeCharacter => EStyle.StringEscape,
+			ClassificationTypeNames.StringLiteral => EStyle.String,
+			ClassificationTypeNames.StructName => EStyle.Type,
 			//ClassificationTypeNames.Text => EStyle.None,
-			ClassificationTypeNames.VerbatimStringLiteral => EToken.String,
-			ClassificationTypeNames.TypeParameterName => EToken.Type,
+			ClassificationTypeNames.VerbatimStringLiteral => EStyle.String,
+			ClassificationTypeNames.TypeParameterName => EStyle.Type,
 			//ClassificationTypeNames.WhiteSpace => EStyle.None,
 
-			ClassificationTypeNames.XmlDocCommentText => EToken.XmlDocText,
-			ClassificationTypeNames.XmlDocCommentAttributeName => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentAttributeQuotes => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentAttributeValue => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentCDataSection => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentComment => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentDelimiter => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentEntityReference => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentName => EToken.XmlDocTag,
-			ClassificationTypeNames.XmlDocCommentProcessingInstruction => EToken.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentText => EStyle.XmlDocText,
+			ClassificationTypeNames.XmlDocCommentAttributeName => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentAttributeQuotes => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentAttributeValue => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentCDataSection => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentComment => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentDelimiter => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentEntityReference => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentName => EStyle.XmlDocTag,
+			ClassificationTypeNames.XmlDocCommentProcessingInstruction => EStyle.XmlDocTag,
 
 			//FUTURE: Regex. But how to apply it to regexp?
 			//ClassificationTypeNames. => EStyle.,
-			_ => EToken.None
+			_ => EStyle.None
 		};
 
-		EToken _TryResolveMethod() { //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
+		EStyle _TryResolveMethod() { //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
 			var node = semo.Root.FindNode(cs.TextSpan);
-			if (node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EToken.Function; //not too slow
-			return EToken.None;
+			if (node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EStyle.Function; //not too slow
+			return EStyle.None;
 		}
 	}
 
 	/// <summary>
 	/// Scintilla style indices of token types.
 	/// </summary>
-	public enum EToken : byte
+	public enum EStyle : byte
 	{
 		None,
 		Comment,
@@ -520,32 +520,32 @@ partial class CiStyling
 		public TStyles(KScintilla sci) {
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
 
-			TStyle _Get(EToken tok) {
+			TStyle _Get(EStyle tok) {
 				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)tok));
 				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)tok);
 				return new TStyle(color, bold);
 			}
 
-			None = _Get(EToken.None);
-			Comment = _Get(EToken.Comment);
-			String = _Get(EToken.String);
-			StringEscape = _Get(EToken.StringEscape);
-			Number = _Get(EToken.Number);
-			Punctuation = _Get(EToken.Punctuation);
-			Operator = _Get(EToken.Operator);
-			Keyword = _Get(EToken.Keyword);
-			Namespace = _Get(EToken.Namespace);
-			Type = _Get(EToken.Type);
-			Function = _Get(EToken.Function);
-			Variable = _Get(EToken.Variable);
-			Constant = _Get(EToken.Constant);
-			Label = _Get(EToken.Label);
-			Preprocessor = _Get(EToken.Preprocessor);
-			Excluded = _Get(EToken.Excluded);
-			XmlDocText = _Get(EToken.XmlDocText);
-			XmlDocTag = _Get(EToken.XmlDocTag);
+			None = _Get(EStyle.None);
+			Comment = _Get(EStyle.Comment);
+			String = _Get(EStyle.String);
+			StringEscape = _Get(EStyle.StringEscape);
+			Number = _Get(EStyle.Number);
+			Punctuation = _Get(EStyle.Punctuation);
+			Operator = _Get(EStyle.Operator);
+			Keyword = _Get(EStyle.Keyword);
+			Namespace = _Get(EStyle.Namespace);
+			Type = _Get(EStyle.Type);
+			Function = _Get(EStyle.Function);
+			Variable = _Get(EStyle.Variable);
+			Constant = _Get(EStyle.Constant);
+			Label = _Get(EStyle.Label);
+			Preprocessor = _Get(EStyle.Preprocessor);
+			Excluded = _Get(EStyle.Excluded);
+			XmlDocText = _Get(EStyle.XmlDocText);
+			XmlDocTag = _Get(EStyle.XmlDocTag);
 
-			LineNumber = _Get(EToken.LineNumber);
+			LineNumber = _Get(EStyle.LineNumber);
 		}
 
 		/// <param name="multiFont">Set font only for code styles.</param>
@@ -555,81 +555,81 @@ partial class CiStyling
 			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			sci.zStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
 
-			void _Set(EToken tok, TStyle sty) {
+			void _Set(EStyle tok, TStyle sty) {
 				sci.zStyleForeColor((int)tok, sty.color);
 				if (sty.bold) sci.zStyleBold((int)tok, true);
 				if (multiFont) sci.zStyleFont((int)tok, FontName, FontSize);
 			}
 
-			_Set(EToken.None, None);
-			_Set(EToken.Comment, Comment);
-			_Set(EToken.String, String);
-			_Set(EToken.StringEscape, StringEscape);
-			_Set(EToken.Number, Number);
-			_Set(EToken.Punctuation, Punctuation);
-			_Set(EToken.Operator, Operator);
-			_Set(EToken.Keyword, Keyword);
-			_Set(EToken.Namespace, Namespace);
-			_Set(EToken.Type, Type);
-			_Set(EToken.Function, Function);
-			_Set(EToken.Variable, Variable);
-			_Set(EToken.Constant, Constant);
-			_Set(EToken.Label, Label);
-			_Set(EToken.Preprocessor, Preprocessor);
-			_Set(EToken.Excluded, Excluded);
-			_Set(EToken.XmlDocText, XmlDocText);
-			_Set(EToken.XmlDocTag, XmlDocTag);
+			_Set(EStyle.None, None);
+			_Set(EStyle.Comment, Comment);
+			_Set(EStyle.String, String);
+			_Set(EStyle.StringEscape, StringEscape);
+			_Set(EStyle.Number, Number);
+			_Set(EStyle.Punctuation, Punctuation);
+			_Set(EStyle.Operator, Operator);
+			_Set(EStyle.Keyword, Keyword);
+			_Set(EStyle.Namespace, Namespace);
+			_Set(EStyle.Type, Type);
+			_Set(EStyle.Function, Function);
+			_Set(EStyle.Variable, Variable);
+			_Set(EStyle.Constant, Constant);
+			_Set(EStyle.Label, Label);
+			_Set(EStyle.Preprocessor, Preprocessor);
+			_Set(EStyle.Excluded, Excluded);
+			_Set(EStyle.XmlDocText, XmlDocText);
+			_Set(EStyle.XmlDocTag, XmlDocTag);
 
-			_Set((EToken)STYLE_LINENUMBER, LineNumber);
+			_Set((EStyle)STYLE_LINENUMBER, LineNumber);
 		}
 
 		//not used
-		//public TStyle GetStyle(EToken token) {
+		//public TStyle GetStyle(EStyle token) {
 		//	return token switch {
-		//		EToken.None => None,
-		//		EToken.Comment => Comment,
-		//		EToken.String => String,
-		//		EToken.StringEscape => StringEscape,
-		//		EToken.Number => Number,
-		//		EToken.Punctuation => Punctuation,
-		//		EToken.Operator => Operator,
-		//		EToken.Keyword => Keyword,
-		//		EToken.Namespace => Namespace,
-		//		EToken.Type => Type,
-		//		EToken.Function => Function,
-		//		EToken.Variable => Variable,
-		//		EToken.Constant => Constant,
-		//		EToken.Label => Label,
-		//		EToken.Preprocessor => Preprocessor,
-		//		EToken.Excluded => Excluded,
-		//		EToken.XmlDocText => XmlDocText,
-		//		EToken.XmlDocTag => XmlDocTag,
-		//		EToken.LineNumber => LineNumber,
+		//		EStyle.None => None,
+		//		EStyle.Comment => Comment,
+		//		EStyle.String => String,
+		//		EStyle.StringEscape => StringEscape,
+		//		EStyle.Number => Number,
+		//		EStyle.Punctuation => Punctuation,
+		//		EStyle.Operator => Operator,
+		//		EStyle.Keyword => Keyword,
+		//		EStyle.Namespace => Namespace,
+		//		EStyle.Type => Type,
+		//		EStyle.Function => Function,
+		//		EStyle.Variable => Variable,
+		//		EStyle.Constant => Constant,
+		//		EStyle.Label => Label,
+		//		EStyle.Preprocessor => Preprocessor,
+		//		EStyle.Excluded => Excluded,
+		//		EStyle.XmlDocText => XmlDocText,
+		//		EStyle.XmlDocTag => XmlDocTag,
+		//		EStyle.LineNumber => LineNumber,
 		//		_ => default,
 		//	};
 		//}
 
-		//public void SetStyle(EToken token, TStyle style) {
+		//public void SetStyle(EStyle token, TStyle style) {
 		//	switch(token) {
-		//	case EToken.None: None = style; break;
-		//	case EToken.Comment: Comment = style; break;
-		//	case EToken.String: String = style; break;
-		//	case EToken.StringEscape: StringEscape = style; break;
-		//	case EToken.Number: Number = style; break;
-		//	case EToken.Punctuation: Punctuation = style; break;
-		//	case EToken.Operator: Operator = style; break;
-		//	case EToken.Keyword: Keyword = style; break;
-		//	case EToken.Namespace: Namespace = style; break;
-		//	case EToken.Type: Type = style; break;
-		//	case EToken.Function: Function = style; break;
-		//	case EToken.Variable: Variable = style; break;
-		//	case EToken.Constant: Constant = style; break;
-		//	case EToken.Label: Label = style; break;
-		//	case EToken.Preprocessor: Preprocessor = style; break;
-		//	case EToken.Excluded: Excluded = style; break;
-		//	case EToken.XmlDocText: XmlDocText = style; break;
-		//	case EToken.XmlDocTag: XmlDocTag = style; break;
-		//	case EToken.LineNumber: LineNumber = style; break;
+		//	case EStyle.None: None = style; break;
+		//	case EStyle.Comment: Comment = style; break;
+		//	case EStyle.String: String = style; break;
+		//	case EStyle.StringEscape: StringEscape = style; break;
+		//	case EStyle.Number: Number = style; break;
+		//	case EStyle.Punctuation: Punctuation = style; break;
+		//	case EStyle.Operator: Operator = style; break;
+		//	case EStyle.Keyword: Keyword = style; break;
+		//	case EStyle.Namespace: Namespace = style; break;
+		//	case EStyle.Type: Type = style; break;
+		//	case EStyle.Function: Function = style; break;
+		//	case EStyle.Variable: Variable = style; break;
+		//	case EStyle.Constant: Constant = style; break;
+		//	case EStyle.Label: Label = style; break;
+		//	case EStyle.Preprocessor: Preprocessor = style; break;
+		//	case EStyle.Excluded: Excluded = style; break;
+		//	case EStyle.XmlDocText: XmlDocText = style; break;
+		//	case EStyle.XmlDocTag: XmlDocTag = style; break;
+		//	case EStyle.LineNumber: LineNumber = style; break;
 		//	}
 		//}
 	}

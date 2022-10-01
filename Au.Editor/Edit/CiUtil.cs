@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Classification;
-using EToken = CiStyling.EToken;
+using EStyle = CiStyling.EStyle;
 
 static class CiUtil {
 	/// <summary>
@@ -435,8 +435,8 @@ global using System.Windows.Media;
 		foreach (var v in a) {
 			var ct = v.ClassificationType; if (ct == ClassificationTypeNames.StaticSymbol) continue; /*duplicate*/
 			//print.it(v.TextSpan, ct, code[v.TextSpan.Start..v.TextSpan.End]);
-			EToken style = CiStyling.StyleFromClassifiedSpan(v, semo);
-			if (style == EToken.None) continue;
+			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			if (style == EStyle.None) continue;
 			int i = v.TextSpan.Start, end = v.TextSpan.End; if (map8 != null) { i = map8[i]; end = map8[end]; }
 			for (; i < end; i++) styles8[i] = (byte)style;
 		}

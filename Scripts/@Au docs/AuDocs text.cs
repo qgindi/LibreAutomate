@@ -1,4 +1,7 @@
 //In this file: functions that preprocess or postprocess file text without Roslyn.
+
+#define DISQUS
+
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -192,6 +195,36 @@ partial class AuDocs {
 		s = _rxCss.Replace(s, "$1$2\n$1<link rel=\"stylesheet\" href=\"../styles/code.css\">", 1);
 		s = _rxCode2.Replace(s, m => _Code(m[1].Value, true)); //syntax in api, and ```code``` in conceptual
 		if (isApi) s = _rxCode.Replace(s, m => _Code(m[1].Value, false)); //<code> in api
+		
+#if DISQUS
+		//add this at the bottom of help pages
+		var disqus = """
+
+<hr/>
+<h2>User comments</h2>
+<div id="disqus_thread"></div>
+<script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://libreautomate.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+</script>
+
+""";
+		int i1=s.LastIndexOf("</article>");
+		s = s.Insert(i1, disqus);
+#endif
 		
 		//print.it(s);
 		filesystem.saveText(file2, s);

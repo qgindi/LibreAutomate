@@ -142,7 +142,7 @@ partial class SciCode : KScintilla {
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
-		if(!EIsBinary) _fn.UpdateFileModTime();
+		if (!EIsBinary) _fn.UpdateFileModTime();
 		ESetLineNumberMarginWidth_();
 
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
@@ -460,39 +460,41 @@ partial class SciCode : KScintilla {
 	/// Called when copying (menu or Ctrl+C).
 	/// Caller must not copy text to clipboard, and must not pass the event to Scintilla.
 	/// </summary>
-	/// <param name="forum">Copy as bbcode for forum.</param>
-	public void ECopy(bool forum = false) {
+	public void ECopy(ECopyAs copyAs = ECopyAs.Text) {
 		int i1 = zSelectionStart8, i2 = zSelectionEnd8, textLen = zLen8;
 		if (textLen == 0) return;
-		bool isCS = _fn.IsCodeFile;
-		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !isCS;
-		if (forum) {
-			//TODO: now forum parses eg [i] as bbcode
-			bool isScript = _fn.IsScript;
-			var b = new StringBuilder(isCS ? "[cs]" : "[code]");
-			string s;
-			if (isFragment) {
-				b.Append(zRangeText(false, i1, i2));
-			} else {
-				//s = CiUtil.GetTextWithoutUnusedUsingDirectives();
-				s = zText;
-
-				var name = _fn.Name; if (name.RxIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
-				b.AppendFormat("// {0} \"{1}\"\r\n{2}", isScript ? "script" : "class", name, s);
+		if (copyAs == ECopyAs.Text) {
+			if (i2 != i1) Call(SCI_COPY);
+		} else {
+			bool isCS = _fn.IsCodeFile, isFragment = i2 != i1 && !(i1 == 0 && i2 == textLen);
+			string s = isFragment ? zRangeText(false, i1, i2) : zText;
+			if (isCS) s = _ImageRemoveScreenshots(s);
+			switch (copyAs) {
+			case ECopyAs.Forum:
+				var b = new StringBuilder("[code]");
+				if (isCS) {
+					if (!isFragment) {
+						var name = _fn.Name; if (name.RxIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
+						b.AppendFormat("// {0} \"{1}\"\r\n", _fn.IsScript ? "script" : "class", name);
+					}
+					s = CodeExporter.ExportForum(s);
+				}
+				s = b.Append(s).AppendLine("[/code]").ToString();
+				break;
+			case ECopyAs.HtmlSpanStyle or ECopyAs.HtmlSpanClass or ECopyAs.HtmlSpanClassCss:
+				s = CodeExporter.ExportHtml(s, spanClass: copyAs != ECopyAs.HtmlSpanStyle, withCss: copyAs == ECopyAs.HtmlSpanClassCss);
+				new clipboardData().AddText(s).AddHtml(s).SetClipboard();
+				return;
+			case ECopyAs.Markdown:
+				s = $"```csharp\r\n{s}\r\n```\r\n";
+				break;
+				//case ECopyAs.TextWithoutScreenshots:
 			}
-			b.AppendLine(isCS ? "[/cs]" : "[/code]");
-			s = b.ToString();
-			s = _ImageRemoveScreenshots(s);
-			new clipboardData().AddText(s).SetClipboard();
-		} else if (i2 != i1) {
-			//if (!(isFragment || s_infoCopy)) {
-			//	s_infoCopy = true;
-			//	print.it("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
-			//}
-			Call(SCI_COPY);
+			clipboard.text = s;
 		}
 	}
-	//static bool s_infoCopy; //rejected. Often prints this info unnecessarily.
+
+	public enum ECopyAs { Text, Forum, HtmlSpanStyle, HtmlSpanClassCss, HtmlSpanClass, Markdown, TextWithoutScreenshots }
 
 	/// <summary>
 	/// Called when pasting (menu or Ctrl+V). Inserts text, possibly with processed forum bbcode etc.
@@ -525,7 +527,6 @@ partial class SciCode : KScintilla {
 	}
 
 	internal static (bool yes, string text, string filename, bool isClass) EIsForumCode_(string s, bool newFile) {
-		if (s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 		if (!s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return default;
 
 		bool isClass = s[3] == 'c';
@@ -685,9 +686,9 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 		CodeInfo._styling.Update();
 	}
 
-#endregion
+	#endregion
 
-#region temp ranges
+	#region temp ranges
 
 	[Flags]
 	public enum ZTempRangeFlags {
@@ -903,9 +904,9 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	[Conditional("TRACE_TEMP_RANGES")]
 	static void _TraceTempRange(string action, object owner) => print.it(action, owner);
 
-#endregion
+	#endregion
 
-#region acc
+	#region acc
 
 	protected override ERole ZAccessibleRole => ERole.DOCUMENT;
 
@@ -913,5 +914,5 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 	protected override string ZAccessibleDescription => _fn.FilePath;
 
-#endregion
+	#endregion
 }

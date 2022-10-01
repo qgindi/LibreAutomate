@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
@@ -24,7 +24,7 @@ static class App {
 		//print.clear();
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 #endif
-		
+
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 
 		//restart as admin if started as non-admin on admin user account
@@ -63,7 +63,7 @@ static class App {
 		//perf.next('o');
 		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls.
 									   //Debug_.PrintLoadedAssemblies(true, !true);
-		//perf.next('s');
+									   //perf.next('s');
 		UserGuid = Settings.user ??= Guid.NewGuid().ToString();
 
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
@@ -281,17 +281,17 @@ static class App {
 		}
 	}
 
+	public static bool IsAuHomePC { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
+
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		try {
 			string sesId = process.thisProcessSessionId.ToS();
 			args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
 
-			bool isAuHomePC = Api.EnvironmentVariableExists("Au.Home<PC>") && !folders.ThisAppBS.Starts(@"C:\Program Files", true);
-
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
-				isAuHomePC ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
+				IsAuHomePC ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
 				true, args);
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense
 		}

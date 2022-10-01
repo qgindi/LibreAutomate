@@ -80,7 +80,7 @@ Update .NET version in the C++ AppHost project. Build.
 
 Build solution.
 
-Run EdDatabases.CreateRefAndDoc. Currently I do it from Tests.cs.
+Run script "Create .NET ref and doc databases.cs".
 
 Build/run the editor.
 
