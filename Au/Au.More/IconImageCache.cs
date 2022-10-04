@@ -1,7 +1,6 @@
 using System.Drawing;
 
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Gets <see cref="Bitmap"/> images of same logical size to be displayed as icons. Can get file icons or load from files/resources/strings.
 	/// </summary>
@@ -9,10 +8,8 @@ namespace Au.More
 	/// Uses memory cache and optionally file cache to avoid loading same image multiple times. Getting images from cache is much faster.
 	/// Thread-safe.
 	/// </remarks>
-	public sealed class IconImageCache : IDisposable
-	{
-		record class _DpiImages
-		{
+	public sealed class IconImageCache : IDisposable {
+		record class _DpiImages {
 			public readonly int dpi;
 			public readonly string table;
 			public readonly Dictionary<string, Bitmap> images = new(); //case-sensitive, because we have not only paths but also base64 MD5. For paths we call Lower.
@@ -110,6 +107,7 @@ namespace Au.More
 						try {
 							if (_sqlite == null) {
 								_sqlite = new(_dbFile, sql: @"PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=100;");
+								_AutoClearDB();
 								process.thisProcessExit += _ => _Close();
 							}
 
@@ -231,27 +229,26 @@ namespace Au.More
 			GC.SuppressFinalize(this);
 		}
 
+		/// <summary>
+		/// Removes images from memory cache and database file.
+		/// </summary>
+		/// <param name="redrawWindows">Redraw (asynchronously) all visible windows of this thread.</param>
+		public unsafe void Clear(bool redrawWindows = false) {
+			if (_disposed) throw new ObjectDisposedException(nameof(IconImageCache));
+			_Close(clear: true);
+			if (redrawWindows) {
+				foreach (var w in wnd.getwnd.threadWindows(process.thisThreadId, onlyVisible: true))
+					Api.RedrawWindow(w, flags: Api.RDW_INVALIDATE | Api.RDW_ALLCHILDREN);
+				//FUTURE: redraw all windows that use this cache, of all processes. Not only redraw, but let they dispose their bitmaps and get from cache again. Now eg toolbars get bitmaps once.
+			}
+		}
+
 		///
 		~IconImageCache() => _Close();
 
 		void _Close(bool clear = false) {
 			lock (this) {
-				if (clear && _dbFile != null) {
-					//note: cannot simply delete file after closing DB. Fails if used by another process.
-					try {
-						_sqlite ??= new(_dbFile, sql: @"PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=100;");
-						//_sqlite.Execute("DELETE FROM (SELECT name FROM sqlite_master WHERE type='table'); VACUUM;"); //error. SELECT is not supported here.
-						using var tra = _sqlite.Transaction();
-						using var sTables = _sqlite.Statement("SELECT name FROM sqlite_master WHERE type='table'");
-						while (sTables.Step()) {
-							//print.it(sTables.GetText(0));
-							_sqlite.Execute("DELETE FROM " + sTables.GetText(0));
-						}
-						tra.Commit();
-						_sqlite.Execute("VACUUM");
-					}
-					catch (Exception e1) { print.warning("Failed to clear icon cache. " + e1.ToStringWithoutStack()); }
-				}
+				if (clear && _dbFile != null) _ClearDB();
 
 				if (_sqlite != null) {
 					foreach (var v in _aDpi) v.DisposeDB();
@@ -265,18 +262,36 @@ namespace Au.More
 			}
 		}
 
-		/// <summary>
-		/// Removes images from memory cache and database file.
-		/// </summary>
-		/// <param name="redrawWindows">Redraw (asynchronously) all visible windows of this thread.</param>
-		public unsafe void Clear(bool redrawWindows = false) {
-			if (_disposed) throw new ObjectDisposedException(nameof(IconImageCache));
-			_Close(clear: true);
-			if (redrawWindows) {
-				foreach (var w in wnd.getwnd.threadWindows(process.thisThreadId, onlyVisible: true))
-					Api.RedrawWindow(w, flags: Api.RDW_INVALIDATE | Api.RDW_ALLCHILDREN);
-				//FUTURE: redraw all windows that use this cache, of all processes. Not only redraw, but let they dispose their bitmaps and get from cache again. Now eg toolbars get bitmaps once.
+		void _ClearDB() {
+			//note: cannot simply delete file after closing DB. Fails if used by another process.
+			try {
+				_sqlite ??= new(_dbFile, sql: @"PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=100;");
+				//_sqlite.Execute("DELETE FROM (SELECT name FROM sqlite_master WHERE type='table'); VACUUM;"); //error. SELECT is not supported here.
+				using var tra = _sqlite.Transaction();
+				using var sTables = _sqlite.Statement("SELECT name FROM sqlite_master WHERE type='table'");
+				while (sTables.Step()) {
+					var table = sTables.GetText(0);
+					//print.it(table);
+					if (table == "misc") continue;
+					_sqlite.Execute("DELETE FROM " + table);
+				}
+				tra.Commit();
+				_sqlite.Execute("VACUUM");
 			}
+			catch (Exception e1) { print.warning("Failed to clear icon cache. " + e1); }
+		}
+
+		void _AutoClearDB() {
+			try {
+				string ona = null;
+				try { _sqlite.Get(out ona, "SELECT data FROM misc WHERE key='ona'"); }
+				catch (SLException) { _sqlite.Execute($"CREATE TABLE IF NOT EXISTS misc (key TEXT PRIMARY KEY, data TEXT)"); }
+				if (ona != osVersion.onaString) {
+					_sqlite.Execute($"REPLACE INTO misc VALUES('ona', '{osVersion.onaString}')");
+					_ClearDB();
+				}
+			}
+			catch (Exception e1) { Debug_.Print(e1); }
 		}
 	}
 }

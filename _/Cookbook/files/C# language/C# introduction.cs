@@ -45,4 +45,4 @@ void Example(string s, int i) {
 /// - Every statement ends with a semicolon (;). Unless it starts a block of code enclosed in { }.
 /// - Function arguments are enclosed in ( ) and separated with comma (,).
 /// - Blocks of related code are enclosed in {  }.
-/// - C# does not care about the type and amount of whitespace (spaces, tabs, newlines), except in //comment, "string" and #directive.
+/// - C# does not care about the type and amount of whitespace (spaces, tabs, newlines) between statements, arguments, etc.
