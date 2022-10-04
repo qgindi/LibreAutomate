@@ -264,7 +264,7 @@ y - res
 			foreach (var v in sData.Lines(.., noEmpty: true)) {
 				if (_data == null) {
 					//first line contains .NET version, Au.dll version and OS version, like 5.0.4|1.2.3.4|A00-64
-					if (sData[v.Range] != s_versions) goto g1;
+					if (sData[v.Range] != osVersion.onaString) goto g1;
 					_data = new(sData.LineCount());
 					continue;
 				}
@@ -285,14 +285,10 @@ y - res
 			return false;
 		}
 
-		static readonly string s_versions = Environment.Version.ToString()
-			+ "|" + typeof(wnd).Assembly.GetName().Version.ToString()
-			+ "|" + osVersion.winVer.ToS("X3") + (osVersion.is32BitOS ? "-32" : "-64");
-
 		void _Save() {
 			filesystem.createDirectory(CacheDirectory);
 			using var b = filesystem.waitIfLocked(() => File.CreateText(_file));
-			b.WriteLine(s_versions);
+			b.WriteLine(osVersion.onaString);
 			foreach (var v in _data) {
 				if (v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
 			}

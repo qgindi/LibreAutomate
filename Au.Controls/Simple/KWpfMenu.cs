@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -172,7 +172,6 @@ public class KWpfMenu : ContextMenu
 		//	Also tried to remove focus in OnOpened, but it closes the menu.
 		//	Never mind: hides caret. In notepad etc menus don't hide caret. But eg in VS hide too.
 		if (owner is HwndHost hh && hh.IsFocused && Api.GetFocus() == (wnd)hh.Handle && FocusManager.GetFocusScope(hh) is UIElement fs) {
-			_hh = hh;
 			fs.Focus();
 		}
 
@@ -184,7 +183,6 @@ public class KWpfMenu : ContextMenu
 		}
 	}
 	DispatcherFrame _dispFrame;
-	HwndHost _hh;
 
 	void _EndModal() {
 		if (_dispFrame != null) {
@@ -195,11 +193,6 @@ public class KWpfMenu : ContextMenu
 
 	///
 	protected override void OnClosed(RoutedEventArgs e) {
-		if (_hh != null) {
-			Api.SetFocus((wnd)_hh.Handle);
-			_hh = null;
-		}
-
 		_EndModal();
 		base.OnClosed(e);
 	}

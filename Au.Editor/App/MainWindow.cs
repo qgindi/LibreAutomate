@@ -69,7 +69,7 @@ partial class MainWindow : Window {
 			Panels.PanelManager.Save();
 
 			if (IsVisible) {
-				if (App.Settings.runHidden) e.Cancel = true;
+				if (App.Settings.runHidden || tempHideWhenClosing) e.Cancel = true;
 				Hide();
 			}
 			if (e.Cancel) {
@@ -80,6 +80,7 @@ partial class MainWindow : Window {
 		}
 		base.OnClosing(e); //note: must be at the end, after we set Cancel
 	}
+	internal bool tempHideWhenClosing;
 
 	protected override void OnClosed(EventArgs e) {
 		App.Loaded = EProgramState.Unloading;

@@ -1,6 +1,7 @@
 using Au.Controls;
 using Au.Tools;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 //CONSIDER: Add top menu item "Insert". Move there the "Add ..." items from the "Code" menu.
 //	Also add "Add script.setup", "Add try/catch (surround selected code)", etc.
@@ -12,13 +13,13 @@ static class Menus {
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
-			[Command('s', keys = "Ctrl+N", image = FileNode.c_imageScript)]
+			[Command('s', keys = "Ctrl+N", image = FileNode.c_iconScript)]
 			public static void New_script() { _New("Script.cs"); }
 
-			[Command('c', image = FileNode.c_imageClass)]
+			[Command('c', image = FileNode.c_iconClass)]
 			public static void New_class() { _New("Class.cs"); }
 
-			[Command('f', image = FileNode.c_imageFolder)]
+			[Command('f', image = FileNode.c_iconFolder)]
 			public static void New_folder() { _New(null); }
 		}
 
@@ -477,4 +478,55 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 		GC.Collect();
 	}
 #endif
+
+	//Used by ScriptEditor.InvokeCommand/GetCommandState.
+	//flags: 1 check, 2 uncheck, 4 activate window, 8 dontWait, 16 editorExtension.
+	internal static int Invoke(string command, bool getState, int flags = 0) {
+		var w = App.Hmain;
+		bool loading = w.Is0;
+		if (loading) {
+			//this func can't work if the main window still not created
+			App.ShowWindow();
+			//let the script wait and retry. Some commands don't work until inited codeinfo etc. Until then w is disabled.
+		} else {
+			//few commands work or have sense when the window is invisible. Show it even when getState.
+			if (0 != (flags & 4)) App.ShowWindow(); //show and activate
+			else { //just show
+				WndUtil.EnableActivate(); //enable activating if need, eg tool windows
+				if (!App.Wmain.IsVisible) App.Wmain.Show();
+			}
+		}
+
+		if (App.Commands.TryFind(command, out var c)) {
+			if (loading || !w.IsEnabled()) {
+				if (0 != (flags & 16)) return getState ? (int)ECommandState.Disabled : 0; //editorExtension, can't wait
+				return -1; //let the script wait while disabled, even if getState
+			}
+
+			if (getState) {
+				ECommandState r = c.CanExecute(null) ? 0 : ECommandState.Disabled;
+				if (c.Checked) r |= ECommandState.Checked;
+				return (int)r;
+			} else if (c.CanExecute(null)) {
+				if (0 != (flags & 8)) { //dontWait
+					if (0 != (flags & 16)) { //editorExtension
+						App.Dispatcher.InvokeAsync(_Invoke);
+						return 1;
+					}
+					Api.ReplyMessage(1);
+				}
+				_Invoke();
+				return 1;
+
+				void _Invoke() {
+					int check = flags & 3;
+					if (check is 1 or 2) c.Checked = check == 1; else c.Execute(null);
+				}
+			}
+		} else {
+			var names = App.Commands.CommandNames;
+			print.it(command.NE() ? "Commands:\r\n" + names : $"Unknown command '{command}'. Commands:\r\n{names}");
+		}
+		return 0;
+	}
 }
