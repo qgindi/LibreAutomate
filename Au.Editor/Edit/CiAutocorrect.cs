@@ -111,7 +111,10 @@ class CiAutocorrect {
 		if (isBackspace || isOpenBrac) {
 			if (pos8 != from) return false;
 		} else {
-			if (ch != (char)KKey.Tab && ch != doc.zCharAt(to)) return false; //info: '\0' if posUtf8 invalid
+			if (ch != (char)KKey.Tab && ch != doc.zCharAt(to)) { //info: '\0' if posUtf8 invalid
+				if (ch == '\"') return _RawString();
+				return false;
+			}
 			if (ch == (char)KKey.Tab && doc.zCharAt(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
 		}
 		for (int i = pos8; i < to; i++) switch (doc.zCharAt(i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
@@ -170,7 +173,6 @@ class CiAutocorrect {
 				}
 			}
 			return false;
-			//TODO: does not work after typeing ("""), eg int n=s.RxReplace(""") at the last line. Only if typed ( now.
 		}
 	}
 

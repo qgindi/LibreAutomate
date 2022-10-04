@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
@@ -80,6 +80,7 @@ public class KMenuCommands
 	readonly Dictionary<string, Command> _d = new(200);
 	readonly Action<FactoryParams> _itemFactory;
 	readonly bool _autoUnderline;
+	readonly string _names;
 	string _defaultFile, _customizedFile;
 
 	/// <summary>
@@ -95,9 +96,11 @@ public class KMenuCommands
 		_itemFactory = itemFactory;
 		_autoUnderline = autoUnderline;
 
-		_Menu(commands, menu, null);
+		var bNames = new StringBuilder();
+		_Menu(commands, menu, null, 0);
+		_names = bNames.ToString();
 
-		void _Menu(Type type, ItemsControl parentMenu, string inheritTarget) {
+		void _Menu(Type type, ItemsControl parentMenu, string inheritTarget, int level) {
 			var am = type.GetMembers(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
 
 			if (am.Length == 0) { //dynamic submenu
@@ -118,6 +121,7 @@ public class KMenuCommands
 				string name = ca.name ?? mi.Name;
 				var c = new Command(name, mi, ca);
 				_d.Add(name, c);
+				bNames.Append('\t', level).AppendLine(name);
 
 				if (ca.separator && !ca.hide) parentMenu.Items.Add(new Separator());
 
@@ -151,7 +155,7 @@ public class KMenuCommands
 				if (ca.checkable) c.MenuItem.IsCheckable = true;
 
 				if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
-				if (mi is TypeInfo ti) _Menu(ti, c.MenuItem, ca.target);
+				if (mi is TypeInfo ti) _Menu(ti, c.MenuItem, ca.target, level + 1);
 			}
 
 			if (_autoUnderline) {
@@ -562,9 +566,9 @@ public class KMenuCommands
 
 #region ICommand
 
-		bool ICommand.CanExecute(object parameter) => _enabled;
+		public bool CanExecute(object parameter) => _enabled;
 
-		void ICommand.Execute(object parameter) {
+		public void Execute(object parameter) {
 			switch (_del) {
 			case Action a0: a0(); break;
 			case Action<MenuItem> a1: a1(_mi); break;
@@ -714,7 +718,7 @@ public class KMenuCommands
 				foreach (var v in xtb.Elements()) {
 					var name = v.Name.LocalName;
 					if (_d.TryGetValue(name, out var c)) c.Customize_(v, tb, context);
-					else print.it($"<><explore>{xmlFile}<>: unknown command '{name}'. Commands: {string.Join(", ", _d.Keys)}.");
+					else print.it($"<><explore>{xmlFile}<>: unknown command '{name}'. Commands:\r\n{CommandNames}");
 				}
 			}
 		}
@@ -726,6 +730,8 @@ public class KMenuCommands
 				=> e.Handled = _GetCommandFromMouseEventArgs(sender, e, out var command, out var control) && ToolBar.GetIsOverflowItem(control);
 		}
 	}
+
+	public string CommandNames => _names;
 
 	internal class _CustomizeContext
 	{

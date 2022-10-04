@@ -410,16 +410,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	void ITreeViewItem.SetNewText(string text) { FileRename(text); }
 
 	public const string
-		c_imageScript = "*Material.ScriptOutline #73BF00",
-		c_imageClass = "*Codicons.SymbolClass #008EEE",
-		c_imageFolder = "*Material.FolderOutline #EABB00",
-		c_imageFolderOpen = "*Material.FolderOpenOutline #EABB00";
+		c_iconScript = "*Material.ScriptOutline #73BF00",
+		c_iconClass = "*Codicons.SymbolClass #008EEE",
+		c_iconFolder = "*Material.FolderOutline #EABB00",
+		c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
 
 	public static string GetFileTypeImageSource(EFileType ft, bool openFolder = false)
 		=> ft switch {
-			EFileType.Script => c_imageScript,
-			EFileType.Class => c_imageClass,
-			EFileType.Folder => openFolder ? c_imageFolderOpen : c_imageFolder,
+			EFileType.Script => App.Settings.icons.ft_script ?? c_iconScript,
+			EFileType.Class => App.Settings.icons.ft_class ?? c_iconClass,
+			EFileType.Folder => openFolder
+				? App.Settings.icons.ft_folderOpen ?? c_iconFolderOpen
+				: App.Settings.icons.ft_folder ?? c_iconFolder,
 			_ => null
 		};
 

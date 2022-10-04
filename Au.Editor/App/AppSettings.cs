@@ -39,6 +39,16 @@ record AppSettings : JSettings {
 	public int templ_use;
 	//public int templ_flags;
 
+	public record icons_t {
+		public string
+			ft_script,
+			ft_class,
+			ft_folder,
+			ft_folderOpen
+			;
+	}
+	public icons_t icons = new();
+
 	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
 	public bool ci_complGroup = true, ci_unexpandPath = true;

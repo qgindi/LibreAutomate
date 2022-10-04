@@ -160,16 +160,26 @@ static class CommandLine {
 		case Api.WM_USER:
 			if (App.Loaded >= EProgramState.Unloading) return default;
 			switch (wparam) {
-			case 0:
+			case 0: //ScriptEditor.MainWindow, etc
 				if (lparam == 1) App.ShowWindow(); //else returns default(wnd) if never was visible
 				return App.Hmain.Handle;
+			case 1: //ScriptEditor.ShowMainWindow
+				if (lparam == 0) lparam = App.Wmain.IsVisible ? 2 : 1; //toggle
+				if (lparam == 1) {
+					App.ShowWindow();
+				} else if (App.Wmain.IsVisible) {
+					App.Wmain.tempHideWhenClosing = true; //hide regardless of App.Settings.runHidden
+					App.Wmain.Close();
+					App.Wmain.tempHideWhenClosing = false;
+				}
+				return 0;
 			case 10:
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
 				break;
-			case 20: //from Triggers.DisabledEverywhere
+			case 20: //Triggers.DisabledEverywhere
 				TriggersAndToolbars.OnDisableTriggers();
 				break;
-			case 30: //from script.debug()
+			case 30: //script.debug()
 				if (App.Model.DebuggerScript is string s && s.Length > 0) {
 					if (App.Model.FindCodeFile(s) is FileNode f && f.IsScript) {
 						return CompileRun.CompileAndRun(true, f, new[] { lparam.ToS() });
@@ -204,19 +214,23 @@ static class CommandLine {
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show dialog
 			App.Model.ImportFiles(s.Split('\0'));
 			break;
-		case 4:
+		case 4: //ScriptEditor.OpenAndGoToLine
 			Api.ReplyMessage(1);
 			if (App.Model.Find(s) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
 			else print.warning($"File not found: '{s}'.", -1);
 			break;
-		case 5:
+		case 5: //script.end(name)
 			if (App.Model.Find(s) is FileNode f2) return App.Tasks.EndTasksOf(f2) ? 1 : 2;
 			print.warning($"File not found: '{s}'.", -1);
 			return 0;
-		case 10:
+		case 10: //ScriptEditor.GetIcon
 			s = DIcons.GetIconString(s, (EGetIcon)action2);
 			return s == null ? 0 : WndCopyData.Return<char>(s, wparam);
-		case 100: //run script from script (script.run/runWait)
+		case 11: //ScriptEditor.InvokeMenuCommand
+			return Menus.Invoke(s, false, (int)wparam);
+		case 12: //ScriptEditor.GetMenuCommandState
+			return Menus.Invoke(s, true, (int)wparam);
+		case 100: //script.run/runWait
 		case 101: //run script from command line
 			return _RunScript();
 		case 110: //received from our non-admin drop-target process on OnDragEnter

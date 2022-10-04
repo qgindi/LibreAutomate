@@ -76,21 +76,14 @@ Can be Pack.Icon, like Modern.List.")
 		b.AddSeparator().Margin("B20");
 
 		//rejected: double-clicking an icon clicks the last clicked button. Unclear and not so useful.
-		//_Action lastAction = 0;
-		tv.ItemActivated += e => {
-			//	switch (lastAction) {
-			//	case 0: break;
-			//	case _Action.FileIcon: _SetIcon(tv); break;
-			//	default: _InsertCodeOrExport(tv, lastAction); break;
-			//	}
-			_InsertCodeOrExport(tv, _Action.MenuIcon);
-		};
 
-		b.StartStack<Expander>(out var exp1, "Set icon of selected files");
-		b.AddButton(out var bThis, "This", _ => { _SetIcon(tv); /*lastAction = _Action.FileIcon;*/ }).Width(70).Disabled();
-		b.AddButton("Default", _ => _SetIcon(null)).Width(70);
-		//b.AddButton("Random", null).Width(70); //idea: set random icons for multiple selected files. Probably too crazy.
-		b.AddButton("Show current", _ => _tName.Text = FilesModel.TreeControl.SelectedItems.FirstOrDefault()?.CustomIconName).Margin("L20");
+		b.StartGrid<Expander>(out var exp1, "Set file icon").Columns(0, 76, 76, -1);
+		b.R.Add("File", out ComboBox cbIconOf).Items("Selected file(s)", "Script files", "Class files", "Folders", "Open folders").Span(2);
+		b.R.Add<Label>("Icon");
+		b.AddButton(out var bThis, "This", _ => { _SetIcon(tv); /*lastAction = _Action.FileIcon;*/ }).Disabled();
+		b.AddButton("Default", _ => _SetIcon(null));
+		//b.AddButton("Random", null); //idea: set random icons for multiple selected files. Probably too crazy.
+		b.AddButton("Show current", _ => _ShowCurrent()).Margin("L20");
 		b.End();
 		if (expandFileIcon) exp1.IsExpanded = true;
 
@@ -111,7 +104,6 @@ Can be Pack.Icon, like Modern.List.")
 			.Tooltip("Shorter string than XAML.\nCan be used with custom menus and toolbars,\neditor menus and toolbars (edit Commands.xml),\nScriptEditor.GetIcon, IconImageCache, ImageUtil,\noutput tag <image>.");
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
-		//b.Add<Label>("Tip: double-clicking an icon clicks the same button.");
 		b.End();
 
 		b.StartStack<Expander>("Export to current workspace folder");
@@ -122,7 +114,6 @@ Can be Pack.Icon, like Modern.List.")
 
 		b.StartStack<Expander>("Other actions");
 		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
-		//SHOULDDO: clear when app version changes.
 		b.End();
 
 		//b.StartGrid<Expander>("List display options");
@@ -211,9 +202,28 @@ Can be Pack.Icon, like Modern.List.")
 
 		void _SetIcon(KTreeView tv) {
 			string icon = tv?.SelectedItem is _Item k ? _ColorName(k) : null;
-			foreach (var v in FilesModel.TreeControl.SelectedItems) {
-				v.CustomIconName = icon;
+			int si = cbIconOf.SelectedIndex;
+			if (si == 0) {
+				foreach (var v in FilesModel.TreeControl.SelectedItems) v.CustomIconName = icon;
+			} else {
+				switch (si) {
+				case 1: App.Settings.icons.ft_script = icon; break;
+				case 2: App.Settings.icons.ft_class = icon; break;
+				case 3: App.Settings.icons.ft_folder = icon; break;
+				case 4: App.Settings.icons.ft_folderOpen = icon; break;
+				}
+				FilesModel.Redraw();
 			}
+		}
+
+		void _ShowCurrent() {
+			_tName.Text = cbIconOf.SelectedIndex switch {
+				1 => App.Settings.icons.ft_script,
+				2 => App.Settings.icons.ft_class,
+				3 => App.Settings.icons.ft_folder,
+				4 => App.Settings.icons.ft_folderOpen,
+				_ => FilesModel.TreeControl.SelectedItems.FirstOrDefault()?.CustomIconName
+			};
 		}
 
 		void _InsertCodeOrExport(KTreeView tv, _Action what) {
