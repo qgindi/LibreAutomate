@@ -2,8 +2,8 @@
 uid: qm2
 ---
 
-# Compared with Quick Macros 2
-LibreAutomate is like new major version of Quick Macros (QM). It has most of QM features. But it is very different.
+# Compared with Quick Macros
+LibreAutomate is like a new major version of [Quick Macros](https://www.quickmacros.com) (QM). It has most of QM features. But it is very different.
 
 The script language now is C#. It is one of most popular programming languages.
 
@@ -53,7 +53,7 @@ To create dialogs now can be used class **wpfBuilder** and snippet wpfSnippet.
 
 Currently LibreAutomate has only the most important tools for creating code.
 
-In LibreAutomate each script is a separate .cs file. [Read more](xref:Program).
+In LibreAutomate each script is a separate .cs file.
 
 In LibreAutomate each script runs in a separate process.
 

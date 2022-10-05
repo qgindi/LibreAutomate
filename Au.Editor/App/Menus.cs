@@ -451,7 +451,7 @@ static class Menus {
 		}
 
 		[Command(separator = true)]
-		public static void Forum() { run.itSafe("https://www.quickmacros.com/forum/forumdisplay.php?fid=19"); }
+		public static void Forum() { run.itSafe("https://www.quickmacros.com/forum/forumdisplay.php?fid=19"); }//TODO: change URL here and elsewhere
 
 		[Command]
 		public static void Email() { run.itSafe("mailto:support@quickmacros.com?subject=" + App.AppNameShort); }
@@ -460,9 +460,9 @@ static class Menus {
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
 Version: {Assembly.GetExecutingAssembly().GetName().Version}, beta.
-Download: <link>https://www.quickmacros.com/au/help/<>
-Source code: <link>https://github.com/qgindi/Au<>
-Libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, Wu's Color Quantizer, Cantatore wildcard.
+Download: <link>https://www.libreautomate.com/<>
+Source code: <link>https://github.com/qgindi/LibreAutomate<>
+Libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, Wu's Color Quantizer, Cantatore wildcard.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 -----------------------");

@@ -27,7 +27,7 @@ May need to test something. Eg some changes could break some main features.
 May need to undefine TRACE in some projects. Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
 
 May need to delete test code. Or use #if TRACE, like in Tests.cs.
-	Review perf.nw, perf.write, perf.local.
+	Review perf.
 
 Change version info (see above).
 

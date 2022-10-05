@@ -15,6 +15,7 @@ nuget -\Markdig;
 nuget -\WeCantSpell.Hunspell;
 /*/
 
+//args = new[] { "/upload" };
 var siteDir = @"C:\Temp\Au\DocFX\site";
 
 run.thread(() => {
@@ -39,8 +40,8 @@ void _Build() {
 	bool preprocess = false, postprocess = false, build = false, serve = false;
 	//preprocess = true;
 	//postprocess = true;
-	postprocess = serve = true;
-	//preprocess = postprocess = build = serve = true;
+	//postprocess = serve = true;
+	preprocess = postprocess = build = serve = true;
 	bool onlyMetadata = !true;
 	//preprocess = true; build = true; onlyMetadata = true;
 	
@@ -65,6 +66,7 @@ void _Build() {
 	if (build) {
 		filesystem.delete(siteDirTemp);
 		using var sdkwa = new SdkWorkaround();
+		//TODO: now creates 30000/300mb of garbage in C:\code\au\Other\DocFX\_doc\obj\.cache
 		r = run.console(o => { print.it(o); }, docfx, "metadata");
 		if (r != 0) { print.it("docfx metadata", r); return; }
 		if (onlyMetadata) { print.it("metadata ok"); return; }

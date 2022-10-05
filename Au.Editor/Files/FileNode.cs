@@ -412,8 +412,10 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public const string
 		c_iconScript = "*Material.ScriptOutline #73BF00",
 		c_iconClass = "*Codicons.SymbolClass #008EEE",
-		c_iconFolder = "*Material.FolderOutline #EABB00",
-		c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
+		c_iconFolder = "*Material.Folder #EABB00",
+		c_iconFolderOpen = "*Material.FolderOpen #EABB00";
+		//c_iconFolder = "*Material.FolderOutline #EABB00",
+		//c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
 
 	public static string GetFileTypeImageSource(EFileType ft, bool openFolder = false)
 		=> ft switch {

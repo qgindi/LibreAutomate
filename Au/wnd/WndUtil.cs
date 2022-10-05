@@ -726,26 +726,25 @@ namespace Au.More {
 		[ThreadStatic] static uint s_pm_counter;
 
 #if !true //this script creates the switch { ... }
-void _WmDeclTextToCode() {
-//	var a=new List<string>();
-	var b = new StringBuilder("var s = m switch {\r\n");
-	var s1=File.ReadAllText(@"?:\?\au\other\api\api.cs");
-	foreach (var m in s1.RxFindAll(@"(?m)^internal const uint (WM_\w+) = (\w+);")) {
-		var s=m[1].Value;
-		if(s.Ends("FIRST") || s.Ends("LAST") || s.Starts("WM_PSD_") || s.Starts("WM_DDE_") || s.Starts("WM_CHOOSEFONT_") || s=="WM_WININICHANGE") {
-//			print.it(s);
-			continue;
-		}
-//		print.it(s, m[2]);
-//		a.Add(s);
-		b.AppendFormat("{0} => \"{1}\",\r\n", m[2].Value, s);
+//var a=new List<string>();
+print.clear();
+var b = new StringBuilder("var s = m switch {\r\n");
+var s1 = File.ReadAllText(@"C:\code\au\Au\Api\Api_const.cs");
+foreach (var m in s1.RxFindAll(@"(?m)^\h*internal const int (WM_\w+) *= *(\w+);")) {
+	var s = m[1].Value;
+	if (s.Ends("FIRST") || s.Ends("LAST") || s.Starts("WM_PSD_") || s.Starts("WM_DDE_") || s.Starts("WM_CHOOSEFONT_") || s == "WM_WININICHANGE") {
+		//print.it(s);
+		continue;
 	}
-	b.Append("_ => null};\r\nreturn (s, 0);");
-//	a.Sort();
-//	print.it(a);
-	var s2 = b.ToString();
-	print.it(s2);
+	//print.it(s, m[2]);
+	//a.Add(s);
+	b.AppendFormat("{0} => \"{1}\",\r\n", m[2].Value, s);
 }
+b.Append("_ => null};\r\nreturn (s, 0);");
+//a.Sort();
+//print.it(a);
+var s2 = b.ToString();
+print.it(s2);
 #endif
 
 		/// <summary>
