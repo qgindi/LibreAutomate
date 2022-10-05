@@ -6,11 +6,11 @@ The library contains classes/functions to automate various tasks on Windows comp
 
 In scripts also can be used Windows API, .NET and zillion of programming libraries, as well as code examples and info from the internet. The program can create programs and libraries, and not just for automation. You'll gradually learn C#, one of top 5 programming languages. Then creating automations with this code editor is faster than with no-code RPA apps, and less limitations.
 
-More info and download: https://www.quickmacros.com/au/help/
+More info and download: https://www.libreautomate.com/
 
 Editor window
 
-![window](https://www.quickmacros.com/au/help/images/window.png#1 "Editor window")
+![window](https://www.libreautomate.com/images/window.png#1 "Editor window")
 
 ## How to build
 Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 or 11 SDK.

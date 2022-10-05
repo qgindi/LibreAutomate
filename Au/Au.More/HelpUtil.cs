@@ -22,7 +22,7 @@ namespace Au.More
 			else if (topic.Ends(".this")) topic = topic.ReplaceAt(^5.., ".Item");
 			else if (topic.Ends("[]")) topic = topic.ReplaceAt(^2.., ".Item");
 
-			var url = "https://www.quickmacros.com/au/help/";
+			var url = "https://www.libreautomate.com/";
 			if (!topic.NE()) url = url + (topic.Contains('/') ? null : (topic.Starts("Au.") ? "api/" : "api/Au.")) + topic + (topic.Ends('/') || topic.Ends(".html") ? null : ".html");
 			return url;
 		}
