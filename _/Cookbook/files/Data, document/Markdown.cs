@@ -1,4 +1,4 @@
-/// To process markdown text use <link https://github.com/xoofx/markdig>Markdig<>. Install NuGet package <+nuget>Markdig<>.
+/// Library info: <link https://github.com/xoofx/markdig>Markdig<>. NuGet: <+nuget>Markdig<>.
 
 /*/ nuget -\Markdig; /*/
 

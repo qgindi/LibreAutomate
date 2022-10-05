@@ -1,4 +1,4 @@
-/// Use NuGet package <+nuget>SSH.NET<>.
+/// Library info: <link https://github.com/sshnet/SSH.NET/>SSH.NET<>. NuGet: <+nuget>SSH.NET<>.
 
 /*/ nuget -\SSH.NET; /*/
 using Renci.SshNet;

@@ -1,4 +1,4 @@
-/// To parse HTML can be used <link https://html-agility-pack.net/>HtmlAgilityPack<>. Use NuGet package <+nuget>HtmlAgilityPack<>.
+/// Library info: <link https://html-agility-pack.net/>HtmlAgilityPack<>. NuGet: <+nuget>HtmlAgilityPack<>.
 
 /*/ nuget -\HtmlAgilityPack; /*/
 using HtmlAgilityPack;

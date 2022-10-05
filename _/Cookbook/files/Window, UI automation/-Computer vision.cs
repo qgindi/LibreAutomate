@@ -1,1 +1,1 @@
-/// Use NuGet package <+nuget><>.
+/// Library info: <link ><>. NuGet: <+nuget><>.

@@ -49,9 +49,9 @@ class Dwnd : KDialogWindow {
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
 		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
-		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Executes the 'find' part of the code now and shows the rectangle");
+		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
-		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind").Tooltip("Function").Width(90);
+		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
 		_cbFunc.SelectionChanged += _cbFunc_SelectionChanged;
 		b.Add(out _cActivate, "Activate").Tooltip("Activate the found window");
 		b.Add(out _cException, "Fail if not found").Checked(!_forTrigger).Tooltip("Throw exception if not found");
@@ -96,9 +96,9 @@ class Dwnd : KDialogWindow {
 		b.R.AddSeparator(false);
 
 		if (_forTrigger) {
+			_cbFunc.Visibility = Visibility.Hidden;
 			_cActivate.Visibility = Visibility.Hidden;
 			_cException.Visibility = Visibility.Hidden;
-			_cbFunc.Visibility = Visibility.Hidden;
 			waitW.Visible = false;
 		}
 
@@ -263,7 +263,10 @@ class Dwnd : KDialogWindow {
 	private void _cbFunc_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 		int iFunc = _cbFunc.SelectedIndex;
 		_noeventValueChanged = true;
-		_cActivate.IsChecked = iFunc is 1 or 2;
+		var vis = iFunc == 3 ? Visibility.Hidden : Visibility.Visible;
+		_cActivate.Visibility = vis;
+		_cException.Visibility = vis;
+		if (iFunc is 1 or 2) _cActivate.IsChecked = true;
 		waitW.Visible = iFunc is 0 or 2;
 		if (iFunc == 2) {
 			if (waitW.t.Text == "1") waitW.t.Text = "30";
@@ -311,9 +314,11 @@ class Dwnd : KDialogWindow {
 
 	(string code, string wndVar) _FormatCode(bool forTest = false) {
 		if (!_scroller.IsVisible) return default; //still not captured, or failed to get window props
+		int iFunc = _cbFunc.SelectedIndex;
 
 		var f = new TUtil.WindowFindCodeFormatter {
 			Test = forTest,
+			Finder = iFunc == 3,
 			NeedControl = !_con.Is0 && _cControl.IsChecked,
 			Throw = _cException.IsChecked,
 			Activate = _cActivate.IsChecked,
@@ -322,7 +327,6 @@ class Dwnd : KDialogWindow {
 			hiddenTooC = cHiddenTooC.IsChecked,
 		};
 
-		int iFunc = _cbFunc.SelectedIndex;
 		if (!forTest && iFunc is 1 or 2) {
 			var pi = TUtil.PathInfo.FromWindow(_wnd);
 			if (pi != null) {

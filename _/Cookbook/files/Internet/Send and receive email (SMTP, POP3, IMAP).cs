@@ -1,4 +1,4 @@
-/// Use NuGet package <+nuget>MailKit<>. Links: <link https://github.com/jstedfast/MailKit>info and examples<>, <link https://github.com/jstedfast/MailKit/blob/master/FAQ.md>FAQ<>.
+/// Library info: <link https://github.com/jstedfast/MailKit>MailKit<>, <link https://github.com/jstedfast/MailKit/blob/master/FAQ.md>FAQ<>. NuGet: <+nuget>MailKit<>.
 /// 
 /// This recipe shows how to connect to Gmail and send/receive. See also Gmail setup in recipe <+recipe>send email<>.
 

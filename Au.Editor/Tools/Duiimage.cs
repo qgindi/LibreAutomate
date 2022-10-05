@@ -1,4 +1,4 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 using Au.Controls;
 using Microsoft.Win32;
 using System.Windows.Input;
@@ -44,7 +44,7 @@ class Duiimage : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 76, -1);
 		//row 1
 		b.R.AddButton("Capture", _bCapture_Click);
-		b.AddButton(out _bTest, "Test", _Test).Disabled().Tooltip("Executes the code now (except wait/fail/mouse) and shows the found image");
+		b.AddButton(out _bTest, "Test", _Test).Disabled().Tooltip("Execute the code now (except wait/fail/mouse) and show the rectangle");
 		b.AddButton(out _bInsert, "Insert", _Insert).Disabled();
 		b.Add(out _cbAction).Align("L").Width(140).Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|PostClickD|PostClickR|waitNot|new uiimageFinder").Select(2);
 		//row 3

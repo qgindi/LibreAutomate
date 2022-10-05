@@ -1,4 +1,4 @@
-/// <link https://epplussoftware.com/>EPPlus<> is a library for reading/writing/etc Excel files (.xlsx, .xlsm). Free for non-commercial. Use NuGet package <+nuget>EPPlus<>.
+/// <link https://epplussoftware.com/>EPPlus<> is a library for reading/writing/etc Excel files (.xlsx, .xlsm). Free for non-commercial. NuGet: <+nuget>EPPlus<>.
 
 /*/ nuget -\EPPlus; /*/
 using OfficeOpenXml;

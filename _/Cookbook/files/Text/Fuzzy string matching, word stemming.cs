@@ -1,6 +1,6 @@
-/// Use fuzzy string matching to compare or find approximately matching words, for example misspelled. We'll use library <link https://github.com/JakeBayer/FuzzySharp>FuzzySharp<>. NuGet package <+nuget>FuzzySharp<>.
+/// Use fuzzy string matching to compare or find approximately matching words, for example misspelled. We'll use library <link https://github.com/JakeBayer/FuzzySharp>FuzzySharp<>. NuGet: <+nuget>FuzzySharp<>.
 ///
-/// Use word stemming (remove suffix) to find all word forms (with/without any suffix). We'll use library <link https://github.com/nemec/porter2-stemmer>porter2-stemmer<>. NuGet package <+nuget>Porter2Stemmer<>. English only.
+/// Use word stemming (remove suffix) to find all word forms (with/without any suffix). We'll use library <link https://github.com/nemec/porter2-stemmer>porter2-stemmer<>. NuGet: <+nuget>Porter2Stemmer<>. English only.
 
 /*/ nuget -\FuzzySharp; nuget -\Porter2Stemmer; /*/
 

@@ -1,4 +1,4 @@
-/// <link https://github.com/ExcelDataReader/ExcelDataReader>ExcelDataReader<> is a lightweight, fast and free library for reading Excel files (.xlsx, .xls, .csv). Use NuGet package <+nuget>ExcelDataReader<> or <+nuget>ExcelDataReader.DataSet<>.
+/// <link https://github.com/ExcelDataReader/ExcelDataReader>ExcelDataReader<> is a lightweight, fast and free library for reading Excel files (.xlsx, .xls, .csv). NuGet: <+nuget>ExcelDataReader<> or <+nuget>ExcelDataReader.DataSet<>.
 
 /*/ nuget -\ExcelDataReader; /*/
 using ExcelDataReader;

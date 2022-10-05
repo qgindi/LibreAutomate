@@ -116,7 +116,7 @@ class Delm : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 130, 0, 70, -1);
 		//row 1
 		b.R.StartStack();
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, also {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
+		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, and {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
 		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline #FF4040", "Auto test action when captured.\r\nIf no action selected, will show menu.");
 		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert #9F5300", "Auto insert code when captured");
 		b.AddSeparator(true);
@@ -135,7 +135,7 @@ class Delm : KDialogWindow {
 
 		b.End();
 		//row 2
-		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Executes the 'find' part of the code now and shows the rectangle.\r\nRight-click for more options.");
+		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Execute the 'find' part of the code now and show the rectangle.\r\nRight-click for more options.");
 		_bTest.ContextMenuOpening += _bTest_ContextMenuOpening;
 		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {App.Settings.delm.hk_insert} (while capturing).");
 		b.Add(out _cbAction).Tooltip("Action. Call this function when found.");

@@ -182,7 +182,7 @@ static class TUtil {
 		public bool hiddenTooW, cloakedTooW, programNotStringW;
 		public string idC, nameC, classC, alsoC, skipC, nameC_comments, classC_comments;
 		public bool hiddenTooC;
-		public bool NeedWindow = true, NeedControl, Throw, Activate, Test;
+		public bool NeedWindow = true, NeedControl, Throw, Activate, Test, Finder;
 		public string CodeBefore, VarWindow = "w", VarControl = "c";
 
 		public string Format() {
@@ -190,29 +190,37 @@ static class TUtil {
 			var b = new StringBuilder(CodeBefore);
 			if (CodeBefore != null && !CodeBefore.Ends('\n')) b.AppendLine();
 
-			bool orThrow = false, orRun = false, andRun = false, activate = false;
-			if (!Test) {
+			bool orThrow = false, orRun = false, andRun = false, activate = false, needWndFinder = false, needChildFinder = false;
+			if (!(Test || Finder)) {
 				orThrow = Throw;
 				orRun = orRunW != null;
 				andRun = andRunW != null;
 				activate = Activate;
 			}
+			if(Finder && !Test) {
+				needChildFinder = NeedControl;
+				needWndFinder = !needChildFinder;
+			}
 
-			if (NeedWindow) {
+			if (NeedWindow && !needChildFinder) {
 				bool orThrowW = orThrow || NeedControl;
 
-				b.Append(Test ? "wnd " : "var ").Append(VarWindow);
-				if (Test) b.AppendLine(";").Append(VarWindow);
-
-				if (orRun) {
-					b.Append(" = wnd.findOrRun(");
-				} else if (andRun) {
-					b.Append(" = wnd.runAndFind(() => { ").Append(andRunW).Append(" }, ");
-					b.AppendWaitTime(waitW, orThrowW);
+				if (needWndFinder) {
+					b.Append("wndFinder f = new(");
 				} else {
-					b.Append(" = wnd.find(");
-					if (waitW != null && !Test) b.AppendWaitTime(waitW, orThrowW);
-					else if (orThrowW) b.Append('0');
+					b.Append(Test ? "wnd " : "var ").Append(VarWindow);
+					if (Test) b.AppendLine(";").Append(VarWindow);
+
+					if (orRun) {
+						b.Append(" = wnd.findOrRun(");
+					} else if (andRun) {
+						b.Append(" = wnd.runAndFind(() => { ").Append(andRunW).Append(" }, ");
+						b.AppendWaitTime(waitW, orThrowW);
+					} else {
+						b.Append(" = wnd.find(");
+						if (waitW != null && !Test) b.AppendWaitTime(waitW, orThrowW);
+						else if (orThrowW) b.Append('0');
+					}
 				}
 
 				b.AppendStringArg(nameW);
@@ -243,12 +251,16 @@ static class TUtil {
 			}
 
 			if (NeedControl) {
-				if (NeedWindow) b.AppendLine();
-				if (!Test) b.Append("var ").Append(VarControl).Append(" = ");
-				b.Append(VarWindow).Append(".Child(");
-				if (!Test) {
-					if (waitW is not (null or "0") || orRun || andRun) b.Append(orThrow ? "1" : "-1");
-					else if (orThrow) b.Append('0');
+				if (needChildFinder) {
+					b.Append("wndChildFinder cf = new(");
+				} else {
+					if (NeedWindow) b.AppendLine();
+					if (!Test) b.Append("var ").Append(VarControl).Append(" = ");
+					b.Append(VarWindow).Append(".Child(");
+					if (!Test) {
+						if (waitW is not (null or "0") || orRun || andRun) b.Append(orThrow ? "1" : "-1");
+						else if (orThrow) b.Append('0');
+					}
 				}
 				if (nameC != null) b.AppendStringArg(nameC);
 				if (classC != null) b.AppendStringArg(classC, nameC == null ? "cn" : null);
@@ -272,7 +284,7 @@ static class TUtil {
 				}
 			}
 
-			if (!orThrow && !Test) {
+			if (!orThrow && !Test && !Finder) {
 				b.Append("\r\nif(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
 				if (activate) b.Append(" else { ").Append(VarWindow).Append(".Activate(); }");
 			}
