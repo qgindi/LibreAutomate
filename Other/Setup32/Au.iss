@@ -3,7 +3,7 @@
 
 #define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "0.9.0"
+#define MyAppVersion "0.10.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"

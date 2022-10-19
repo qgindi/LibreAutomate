@@ -59,7 +59,7 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
-		print.it(Keyboard.FocusedElement);
+		//print.it(Keyboard.FocusedElement);
 
 		//App.Restart();
 

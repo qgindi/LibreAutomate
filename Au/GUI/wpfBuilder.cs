@@ -1645,8 +1645,23 @@ public class wpfBuilder {
 		return this;
 	}
 
+	/// <summary>
+	/// Sets watermark/hint/cue text of the last added <b>TextBox</b> or editable <b>ComboBox</b> control.
+	/// The text is visible only when the control text is empty.
+	/// </summary>
+	/// <param name="text">Watermark text.</param>
+	/// <remarks>
+	/// The control must be a child/descendant of an <b>AdornerDecorator</b>.
+	/// 
+	/// Example in Cookbook.
+	/// </remarks>
+	/// <exception cref="NotSupportedException">The last added element isn't <b>TextBox</b> or editable <b>ComboBox</b> control.</exception>
+	/// <exception cref="InvalidOperationException">The control isn't in an <b>AdornerDecorator</b>.</exception>
 	public wpfBuilder Watermark(string text) => Watermark(out _, text);
 
+	/// <param name="adorner">Receives the adorner. It can be used to change watermark text later.</param>
+	/// <param name="text"></param>
+	/// <inheritdoc cref="Watermark(string)"/>
 	public wpfBuilder Watermark(out WatermarkAdorner adorner, string text) {
 		var c = Last as Control;
 		if (c is not TextBox && !(c is ComboBox k && k.IsEditable)) throw new NotSupportedException("Watermark(): Last added must be TextBox or editable ComboBox");
