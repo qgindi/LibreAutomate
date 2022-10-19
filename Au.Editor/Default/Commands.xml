@@ -1,12 +1,4 @@
-﻿<!--
-If this is NOT the default commands file, you can edit it to customize menu commands and toolbars. Then restart the program.
-	To add a command to a toolbar, add command's XML element to the toolbar's XML element.
-	To reset everything, delete this file. To reset some toolbars, delete all commands in their XML elements.
-
-Most command names are like default menu item text, with _ instead of space and without ....
-	For example, if text in menu is "Open file...", command is Open_file.
-	The program prints all available command names if this file contains unknown commands. The same for toolbar names.
-
+<!--
 Command XML attributes:
 	color - text color. Value: .NET color name or #RRGGBB or #RGB.
 	text - menu item text and toolbar button text. Insert _ before Alt-underlined character.
@@ -20,14 +12,18 @@ These attributes are used only for toolbar buttons:
 	btext - button text. Use if it is different than menu item text.
 
 All attributes are optional. The Example command contains all.
-<Example color="green" text="Ab" image="*Material.Forum #A6C639" keys="Ctrl+H" separator="1" hide="1" imageAt="left" btext="Bc"/>
+<Example color="green" text="Ab" image="*Material.Forum #A6C639" keys="Ctrl+H" separator="" hide="never" imageAt="left" btext="Bc"/>
 -->
 <commands>
-	<!-- Customized commands that don't have a toolbar button. -->
+	<!-- Customized commands that maybe don't have a toolbar button. -->
 	<menu>
 		
 	</menu>
-	<!-- Toolbars. Commands added here will have a toolbar button. -->
+	<!-- Toolbars. Commands added here will have a toolbar button.
+	Attributes can be specified here or/and in <menu>.
+	Toolbars missing in the user file are automatically added from the default file.
+	Unknown toolbars and commands in the user file are ignored.
+	-->
 	<File>
 		<New />
 		<Properties />
@@ -40,6 +36,7 @@ All attributes are optional. The Example command contains all.
 		<Compile />
 		<Run_script />
 		<End_task />
+		<Recent separator="" />
 	</Run>
 	<Edit>
 		<Undo />

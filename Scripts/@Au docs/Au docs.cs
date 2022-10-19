@@ -49,6 +49,7 @@ void _Build() {
 	var sourceDirPreprocessed = @"C:\Temp\Au\DocFX\source";
 	var docDir = testSmall ? @"C:\code\au\Test Projects\TestDocFX\docfx_project" : @"C:\code\au\Other\DocFX\_doc";
 	var siteDirTemp = siteDir + "-temp";
+	var objDir = siteDir + "-obj";
 	
 	var d = new AuDocs();
 	if (preprocess) {
@@ -66,15 +67,15 @@ void _Build() {
 	if (build) {
 		filesystem.delete(siteDirTemp);
 		using var sdkwa = new SdkWorkaround();
-		//TODO: now creates 30000/300mb of garbage in C:\code\au\Other\DocFX\_doc\obj\.cache
 		r = run.console(o => { print.it(o); }, docfx, "metadata");
 		if (r != 0) { print.it("docfx metadata", r); return; }
 		if (onlyMetadata) { print.it("metadata ok"); return; }
-		r = run.console(o => { print.it(o); }, docfx, "build");
+		r = run.console(o => { print.it(o); }, docfx, $@"build --intermediateFolder ""{objDir}""");
 		if (r != 0) { print.it("docfx build", r); return; }
 		//print.it("build ok");
 		postprocess |= serve;
 		filesystem.delete(Directory.EnumerateFiles(docDir + @"\api", "*.yml")); //garbage for VS search
+		filesystem.delete(objDir);
 	}
 	
 	if (postprocess) {

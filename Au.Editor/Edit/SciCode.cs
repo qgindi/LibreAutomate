@@ -226,7 +226,7 @@ partial class SciCode : KScintilla {
 				if (CodeInfo.SciModified(this, n)) {
 					_CodeModifiedAndCodeinfoOK();
 				}
-				Panels.Find.ZUpdateQuickResults(true);
+				Panels.Find.ZUpdateQuickResults();
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
 				//	//print.it(n.Text);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {

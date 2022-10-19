@@ -189,8 +189,8 @@ class CiErrors {
 					if (!keys.more.parseTriggerString(s, out _, out _, out _, true))
 						_AddError(node, "Invalid modifiers string.");
 					break;
-				case PSFormat.CodeFile:
-					if (null == App.Model.Find(s, FNFind.CodeFile, silent: true)) {
+				case PSFormat.CodeFile or PSFormat.FileInWorkspace:
+					if (null == App.Model.Find(s, format == PSFormat.CodeFile ? FNFind.CodeFile : FNFind.Any, silent: true)) {
 						var ae = App.Model.FoundMultiple;
 						if (ae != null) {
 							var paths = string.Join('\n', ae.Select(o => o.ItemPath));

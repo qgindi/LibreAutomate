@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
@@ -22,7 +22,7 @@ namespace Au.Controls
 					_owner = _node._pm._ContainerWindow;
 					_isToolbar = _node._IsToolbarsNode;
 
-					//workaround for: if a HwndHost-ed native control in this panel is focused, WPF will activate the floating panel and disable next mouse click
+					//workaround for: if a HwndHost-ed native control in this panel is focused, WPF may activate the floating panel and disable next mouse click
 					if (Keyboard.FocusedElement == null) {
 						var wFocus = Api.GetFocus();
 						if (!wFocus.Is0 && wFocus.IsChildOf(_owner.Hwnd())) {

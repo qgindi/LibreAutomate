@@ -34,7 +34,7 @@ class DNuget : KDialogWindow {
 		base.OnClosed(e);
 	}
 
-	readonly KTextBox _tPackage;
+	readonly TextBox _tPackage;
 	readonly ComboBox _cbFolder;
 	readonly CheckBox _cPrerelease;
 	readonly KTreeView _tv;
@@ -56,8 +56,12 @@ class DNuget : KDialogWindow {
 		b.R.StartGrid<GroupBox>("Install").Columns(0, 76, 0, -1, 0);
 		Action gotoNuget = () => run.it("https://www.nuget.org");
 		b.R.Add(out TextBlock _).Text("<a>NuGet", gotoNuget, " package name or PM text:");
-		b.R.Add<AdornerDecorator>().Add(out _tPackage, flags: WBAdd.ChildOfLast).Focus();
-		_tPackage.Watermark = "Package";
+		b.R.Add<AdornerDecorator>().Add(out _tPackage, flags: WBAdd.ChildOfLast)
+			.Watermark("Package").Tooltip(@"Can be just name, or name with version, or PM string, or dotnet string.
+You can copy the string from the NuGet website.
+If just name, installs the latest compatible version.
+To specify source: PackageName --source URL or folder path")
+			.Focus();
 
 		b.R.xAddButtonIcon("*Material.ContentPaste #9F5300", _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
 		b.AddButton(out var bInstall, "Install", _ => _Install()).Disabled();
@@ -613,7 +617,7 @@ A script can use packages from multiple folders if they are compatible.");
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		public bool IsFolder { get; }
 		public string DisplayText { get; }
-		object ITreeViewItem.Image => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (IsFolder ? @"resources/images/expandright_16x.xaml" : null);
+		object ITreeViewItem.Image => _isExpanded ? @"*Material.FolderOpen #EABB00" : (IsFolder ? @"*Material.Folder #EABB00" : null);
 		//public TVCheck CheckState { get; }
 
 		#endregion

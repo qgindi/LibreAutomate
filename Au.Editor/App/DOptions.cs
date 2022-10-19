@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 using Microsoft.Win32;
@@ -32,7 +32,8 @@ class DOptions : KDialogWindow {
 
 		_b = new wpfBuilder(this).WinSize(550);
 		_b.Row(-1).Add(out _tc).Height(300..);
-		_b.R.AddOkCancel(apply: "_Apply");
+		_b.R.AddOkCancel(out var bOK, out var bCancel, out _, apply: "_Apply");
+		bOK.IsDefault = false; bCancel.IsCancel = false;
 
 		_General();
 		//_Files();
@@ -391,7 +392,6 @@ To apply changes after deleting etc, restart this application.
 		b.StartGrid<GroupBox>("Completion list").Columns(300, 20, -1);
 		b.R.StartGrid(); //left
 		b.R.Add(out ComboBox complParen).Items("Spacebar|Always|Never").Select(App.Settings.ci_complParen).Add<Label>("adds ( )");
-		b.R.AddButton("Snippets ▾", _SnippetsButton).Width(70).Align("L");
 		b.End();
 		b.Skip().StartGrid(); //right
 		b.End();
@@ -419,13 +419,6 @@ To apply changes after deleting etc, restart this application.
 			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 		};
-
-		static void _SnippetsButton(WBButtonClickArgs o) {
-			switch (popupMenu.showSimple("1 Edit snippets|2 Find default snippets")) {
-			case 1: run.selectInExplorer(folders.ThisAppDocuments + @".settings\Snippets.xml"); break;
-			case 2: run.selectInExplorer(folders.ThisApp + @"Default\Snippets.xml"); break;
-			}
-		}
 	}
 
 	void _Hotkeys() {

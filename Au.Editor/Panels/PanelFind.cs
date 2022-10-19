@@ -4,17 +4,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Media;
+using System.Windows.Documents;
 
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
 
-//SHOULDDO: remove "Name" checkbox. Instead add textbox at the bottom of Files panel. Use wildex (now can use Wildex, Word, Regex; it's easier).
-//	Now in "Name" mode all the push buttons are not used. If clicked, they uncheck "Name". And the Replace textbox not used.
-
 class PanelFind : UserControl {
 	TextBox _tFind, _tReplace;
-	KCheckBox _cFolder, _cName, _cCase, _cWord, _cRegex, _cWildex;
+	KCheckBox _cFolder, _cCase, _cWord, _cRegex;
 	KPopup _ttRegex, _ttNext;
+	WatermarkAdorner _adorner1;
 
 	public PanelFind() {
 		this.UiaSetName("Find panel");
@@ -22,8 +21,10 @@ class PanelFind : UserControl {
 		var b = new wpfBuilder(this).Columns(-1).Brush(SystemColors.ControlBrush);
 		b.Options(modifyPadding: false, margin: new Thickness(2));
 		b.AlsoAll((b, _) => { if (b.Last is Button k) k.Padding = new(1, 0, 1, 1); });
-		b.Row((-1, 22..)).Add(out _tFind).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Text to find");
-		b.Row((-1, 22..)).Add(out _tReplace).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Replacement text");
+		b.Row((-1, 22..)).Add<AdornerDecorator>()
+			.Add(out _tFind, flags: WBAdd.ChildOfLast).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Name("Find_text", true).Watermark(out _adorner1, "Find");
+		b.Row((-1, 22..)).Add<AdornerDecorator>()
+			.Add(out _tReplace, flags: WBAdd.ChildOfLast).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Name("Replace_text", true).Watermark("Replace");
 		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0);
 		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next in editor");
 		b.AddButton(out var bReplace, "Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
@@ -43,20 +44,16 @@ class PanelFind : UserControl {
 
 		b.End();
 
-		b.Add(out _cName, "Name").Tooltip("Search in filenames, not in text");
-
-		b.R.Add(out _cCase, "Case").Tooltip("Match case")
-			.And(0).Add(out _cWildex, "Wildex").Hidden().Tooltip("Wildcard expression.\nExamples: start*.cs, *end.cs, *middle*.cs, **m green.cs||blue.cs.\nF1 - Wildex help.");
+		b.R.Add(out _cCase, "Case").Tooltip("Match case");
 		b.Add(out _cWord, "Word").Tooltip("Whole word");
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression.\nF1 - Regex tool and help.");
 		b.End().End();
 
-		//this.AccessibleName = this.Name = "Find";
 		this.IsVisibleChanged += (_, _) => {
-			if (!_cName.IsChecked) Panels.Editor.ZActiveDoc?.EInicatorsFind_(IsVisible ? _aEditor : null);
+			Panels.Editor.ZActiveDoc?.EInicatorsFind_(IsVisible ? _aEditor : null);
 		};
 
-		_tFind.TextChanged += (_, _) => ZUpdateQuickResults(false);
+		_tFind.TextChanged += (_, _) => ZUpdateQuickResults();
 
 		//prevent tooltip on set focus.
 		//	Broken in .NET 6:  AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
@@ -77,7 +74,7 @@ class PanelFind : UserControl {
 			};
 		}
 
-		foreach (var v in new KCheckBox[] { _cCase, _cWildex, _cWord, _cRegex, _cName }) v.CheckChanged += _CheckedChanged;
+		foreach (var v in new KCheckBox[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
 	}
 
 	#region control events
@@ -100,11 +97,7 @@ class PanelFind : UserControl {
 		base.OnKeyDown(e);
 		switch ((e.Key, Keyboard.Modifiers)) {
 		case (Key.F1, 0):
-			//var osrc = e.OriginalSource;
-			//if (osrc == _tFind || osrc == _tReplace || osrc == _cRegex || osrc == _cWildex) {
 			if (_cRegex.IsChecked) _ShowRegexInfo((e.OriginalSource as TextBox) ?? _tFind, F1: true);
-			else if (_cWildex.IsChecked && _cName.IsChecked) HelpUtil.AuHelp("articles/Wildcard expression");
-			//}
 			break;
 		default: return;
 		}
@@ -128,37 +121,19 @@ class PanelFind : UserControl {
 	}
 
 	private void _CheckedChanged(object sender, RoutedEventArgs e) {
-		if (sender == _cWildex) {
-			if (_cWildex.IsChecked) {
-				_cRegex.IsChecked = false;
-				_cWord.IsChecked = false;
-			}
-		} else if (sender == _cWord) {
-			if (_cWord.IsChecked) {
-				_cRegex.IsChecked = false;
-				_cWildex.IsChecked = false;
-			}
+		if (sender == _cWord) {
+			if (_cWord.IsChecked) _cRegex.IsChecked = false;
 		} else if (sender == _cRegex) {
 			if (_cRegex.IsChecked) {
 				_cWord.IsChecked = false;
-				_cWildex.IsChecked = false;
+				_adorner1.Text = "Find  (F1 - regex tool)";
 			} else {
 				_regexWindow?.Close();
 				_regexWindow = null;
-			}
-		} else if (sender == _cName) {
-			Panels.Found.ZControl.zClearText();
-			if (_cName.IsChecked) {
-				_aEditor.Clear();
-				Panels.Editor.ZActiveDoc?.EInicatorsFind_(null);
-				_cCase.Visibility = Visibility.Hidden;
-				_cWildex.Visibility = Visibility.Visible;
-			} else {
-				_cWildex.Visibility = Visibility.Hidden;
-				_cCase.Visibility = Visibility.Visible;
+				_adorner1.Text = "Find";
 			}
 		}
-		ZUpdateQuickResults(false);
+		ZUpdateQuickResults();
 	}
 
 	RegexWindow _regexWindow;
@@ -191,22 +166,19 @@ class PanelFind : UserControl {
 	}
 
 	private void _bFind_Click(WBButtonClickArgs e) {
-		_cName.IsChecked = false;
 		if (!_GetTextToFind(out var f)) return;
 		_FindNextInEditor(f, false);
 	}
 
 	private void _bFindIF_Click(WBButtonClickArgs e) {
-		_cName.IsChecked = false;
 		//using var _ = new _TempDisableControl(_bFindIF);
-		_FindAllInFiles(false);
+		_FindAllInFiles();
 
 		//SHOULDDO: disabled button view now not updated because UI is blocked.
-		//	When in text, should search in other thread; at least get text.
+		//	Should search in other thread; at least get text.
 	}
 
 	private void _bReplace_Click(WBButtonClickArgs e) {
-		_cName.IsChecked = false;
 		if (!_GetTextToFind(out var f, forReplace: true)) return;
 		_FindNextInEditor(f, true);
 	}
@@ -248,7 +220,6 @@ class PanelFind : UserControl {
 			_tFind.SelectAll(); //often user wants to type new text
 			return;
 		}
-		_cName.IsChecked = false;
 		_tFind.Text = s;
 		//_tFind.SelectAll(); //no, somehow WPF makes selected text gray like disabled when non-focused
 		//if (findInFiles) _FindAllInFiles(false); //rejected. Not so useful.
@@ -279,31 +250,24 @@ class PanelFind : UserControl {
 
 	/// <summary>
 	/// Called when changed find text or options. Also when activated another document.
-	/// Async-updates find-hiliting in editor or 'find name' results.
+	/// Async-updates find-hiliting in editor.
 	/// </summary>
-	public void ZUpdateQuickResults(bool onlyEditor) {
+	public void ZUpdateQuickResults() {
 		if (!IsVisible) return;
-		if (onlyEditor && _cName.IsChecked) return;
-		//print.it("UpdateQuickResults", Visible);
 
-		_timerUE ??= new timer(_ => {
-			if (_cName.IsChecked) {
-				_FindAllInFiles(true);
-			} else {
-				_FindAllInEditor();
-				Panels.Editor.ZActiveDoc?.EInicatorsFind_(_aEditor);
-			}
+		_timerUQR ??= new timer(_ => {
+			_FindAllInEditor();
+			Panels.Editor.ZActiveDoc?.EInicatorsFind_(_aEditor);
 		});
 
-		_timerUE.After(150);
+		_timerUQR.After(150);
 	}
-	timer _timerUE;
+	timer _timerUQR;
 
 	class _TextToFind {
 		public string findText;
 		public string replaceText;
 		public regexp rx;
-		public wildex wx;
 		public bool wholeWord;
 		public bool matchCase;
 
@@ -311,26 +275,23 @@ class PanelFind : UserControl {
 			=> f.findText == findText
 			&& f.matchCase == matchCase
 			&& f.wholeWord == wholeWord
-			&& (f.rx != null) == (rx != null)
-			&& (f.wx != null) == (wx != null);
+			&& (f.rx != null) == (rx != null);
 	}
 
-	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false, bool names = false) {
+	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false) {
 		_ttRegex?.Close();
 		string text = _tFind.Text; if (text.NE()) { f = null; return false; }
-		f = new() { findText = text, matchCase = !names && _cCase.IsChecked };
+		f = new() { findText = text, matchCase = _cCase.IsChecked };
 		try {
 			if (_cRegex.IsChecked) {
 				var fl = RXFlags.MULTILINE;
 				if (!f.matchCase) fl |= RXFlags.CASELESS;
 				f.rx = new regexp(f.findText, flags: fl);
-			} else if (names && _cWildex.IsChecked) {
-				f.wx = new wildex(f.findText);
 			} else {
 				f.wholeWord = _cWord.IsChecked;
 			}
 		}
-		catch (ArgumentException e) { //regexp and wildex ctors throw if invalid
+		catch (ArgumentException e) { //regexp ctor throws if invalid
 			if (!noErrorTooltip) TUtil.InfoTooltip(ref _ttRegex, _tFind, e.Message);
 			return false;
 		}
@@ -352,20 +313,6 @@ class PanelFind : UserControl {
 				if (i < 0) break;
 				a.Add(i..(i + f.findText.Length));
 			}
-		}
-	}
-
-	//Used to find text in filenames.
-	//If found, adds single element to a. In the future a may be used to highlight all matching parts of names in the found list.
-	static void _FindFirstInString(string text, _TextToFind f, List<Range> a) {
-		a.Clear();
-		if (f.rx != null) {
-			if (f.rx.Match(text, 0, out RXGroup g)) a.Add(g.Start..g.End);
-		} else if (f.wx != null) {
-			if (f.wx.Match(text)) a.Add(..);
-		} else {
-			int i = f.wholeWord ? text.FindWord(f.findText, ignoreCase: true, otherWordChars: "_") : text.Find(f.findText, ignoreCase: true);
-			if (i >= 0) a.Add(i..(i + f.findText.Length));
 		}
 	}
 
@@ -447,7 +394,6 @@ class PanelFind : UserControl {
 	(_TextToFind f, SciCode doc, string text, int from8, int to8, RXMatch rm) _lastFind;
 
 	private void _bReplaceAll_Click(WBButtonClickArgs e) {
-		_cName.IsChecked = false;
 		if (!_GetTextToFind(out var f, forReplace: true)) return;
 		_ReplaceAllInEditor(f);
 	}
@@ -527,15 +473,15 @@ class PanelFind : UserControl {
 	bool _init1;
 	const int c_indic = 0;
 
-	void _FindAllInFiles(bool names/*, bool forReplace*/) {
+	public KScintilla PrepareFindResultsPanel() {
 		Panels.PanelManager["Found"].Visible = true;
+
 		var cFound = Panels.Found.ZControl;
 		cFound.zClearText();
 
-		if (!_GetTextToFind(out var f, noRecent: names, names: names)) return;
-
 		if (!_init1) {
 			_init1 = true;
+
 			App.Model.WorkspaceLoadedAndDocumentsOpened += () => cFound.zClearText();
 
 			cFound.ZTags.AddLinkTag("+open", s => {
@@ -584,27 +530,35 @@ class PanelFind : UserControl {
 				App.Model.CollapseAll(exceptWithOpenFiles: true);
 			});
 
+			cFound.ZTags.AddLinkTag("+caff", s => Panels.Files.CloseAll());
+
 			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
 			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
 		}
 
-		if (!names) {
-			cFound.zText = "<c 0xA0A0A0>... searching ...<>";
-			//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
-			wait.doEvents();
-		}
+		return cFound;
+	}
+
+	void _FindAllInFiles(/*, bool forReplace*/) {
+		var cFound = PrepareFindResultsPanel();
+
+		if (!_GetTextToFind(out var f)) return;
+
+		cFound.zText = "<c 0xA0A0A0>... searching ...<>";
+		//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
+		wait.doEvents();
 
 		var b = new StringBuilder();
 		var a = new List<Range>();
 		int timeSlow = App.Settings.find_printSlow;
-		StringBuilder bSlow = !names && timeSlow > 0 ? new() : null;
+		StringBuilder bSlow = timeSlow > 0 ? new() : null;
 		bool jited = false;
-		int searchIn = names ? 0 : _SearchIn;
+		int searchIn = _SearchIn;
 		int nFound = 0;
-		List<FileNode> aFiles = names ? null : new();
+		List<FileNode> aFiles = new();
 
 		var folder = App.Model.Root;
-		if (!names && _cFolder.IsChecked && Panels.Editor.ZActiveDoc?.EFile is FileNode fn) {
+		if (_cFolder.IsChecked && Panels.Editor.ZActiveDoc?.EFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}
@@ -612,77 +566,63 @@ class PanelFind : UserControl {
 		foreach (var v in folder.Descendants()) {
 			//using var p1 = new _Perf();
 			string text = null, path = null;
-			if (names) {
-				text = v.Name;
-			} else {
-				//perf.first();
-				if (v.IsCodeFile) {
-					switch (searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
-					case 4: continue;
-					case 2 when !v.IsScript: continue;
-					case 3 when !v.IsClass: continue;
-					}
-				} else {
-					if (searchIn >= 1 && searchIn <= 3) continue;
-					if (v.IsFolder) continue;
-					if (v.Name.Ends(true, _aSkipImages) > 0) continue;
+			//perf.first();
+			if (v.IsCodeFile) {
+				switch (searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
+				case 4: continue;
+				case 2 when !v.IsScript: continue;
+				case 3 when !v.IsClass: continue;
 				}
-				var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
-				//p1.Start(v.Name);
-				text = v.GetCurrentText(notImportant: true);
-				if (text.Length == 0) continue;
-				if (text.Contains('\0')) continue;
-				//perf.nw();
+			} else {
+				if (searchIn >= 1 && searchIn <= 3) continue;
+				if (v.IsFolder) continue;
+				if (v.Name.Ends(true, _aSkipImages) > 0) continue;
 			}
+			var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
+			//p1.Start(v.Name);
+			text = v.GetCurrentText(notImportant: true);
+			if (text.Length == 0) continue;
+			if (text.Contains('\0')) continue;
+			//perf.nw();
 
 			long time = bSlow != null ? perf.ms : 0;
 
-			if (names) _FindFirstInString(text, f, a);
-			else _FindAllInString(text, f, a);
+			_FindAllInString(text, f, a);
 
 			if (a.Count != 0) {
-				if (!names) b.Append("<Z 0xC0E0C0>");
+				b.Append("<Z 0xC0E0C0>");
 				path ??= v.ItemPath;
 				string link = v.IdStringWithWorkspace;
 				if (v.IsFolder) {
 					b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
 				} else {
-					int i1 = path.LastIndexOf('\\') + 1;
+					int i1 = path.Length - v.Name.Length;
 					string s1 = path[..i1], s2 = path[i1..];
-					if (names) {
-						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>{2}<>", link, s1, s2);
-					} else {
-						aFiles.Add(v); nFound += a.Count;
-						int ns = 120 - path.Length * 7 / 4;
+					aFiles.Add(v); nFound += a.Count;
+					int ns = 120 - path.Length * 7 / 4;
 #if true //open and select the first found text
-						b.AppendFormat("<+f \"{0} {1} {2}\"><c 0x808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
-							link, a[0].Start.Value, a[0].End.Value, s1, s2, ns > 0 ? new string(' ', ns) : null);
+					b.AppendFormat("<+f \"{0} {1} {2}\"><c 0x808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
+						link, a[0].Start.Value, a[0].End.Value, s1, s2, ns > 0 ? new string(' ', ns) : null);
 #else //just open
 						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
 							link, s1, s2, ns > 0 ? new string(' ', ns) : null);
 #endif
-					}
 				}
-				if (!names) b.Append("<>");
-				b.AppendLine();
-				if (names) {
-					//FUTURE: icon; maybe hilite.
-				} else {
-					if (b.Length < 10_000_000) {
-						for (int i = 0; i < a.Count; i++) {
-							var range = a[i];
-							int start = range.Start.Value, end = range.End.Value, lineStart = start, lineEnd = end;
-							int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
-							for (; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if (c == '\n' || c == '\r') break; }
-							bool limitStart = lineStart == lsMax && lineStart > 0;
-							for (; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if (c == '\r' || c == '\n') break; }
-							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
-							b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
-								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
-								.Append("<z 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
-								.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
-								.AppendLine("<>");
-						}
+				b.AppendLine("<>");
+				if (b.Length < 10_000_000) {
+					for (int i = 0; i < a.Count; i++) {
+						var range = a[i];
+						int start = range.Start.Value, end = range.End.Value, lineStart = start, lineEnd = end;
+						int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
+						for (; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if (c == '\n' || c == '\r') break; }
+						bool limitStart = lineStart == lsMax && lineStart > 0;
+						for (; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if (c == '\r' || c == '\n') break; }
+						bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
+						b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
+							.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
+							.Append("<z 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
+							.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
+							.AppendLine("<>");
 					}
 				}
 			}
@@ -813,7 +753,6 @@ Opens files to enable Undo.",
 	string _recentPrevFind, _recentPrevReplace;
 	int _recentPrevOptions;
 
-	//Not used when Name checked.
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
 	void _AddToRecent(_TextToFind f, bool onlyRepl = false) {
 		if (!onlyRepl) {

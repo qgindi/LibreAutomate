@@ -4,7 +4,7 @@
 //using System.Windows.Controls;
 //using System.Windows.Media;
 //using System.Windows.Interop;
-//using System.Windows.Input;
+using System.Windows.Input;
 
 //using Au.Controls;
 using static Au.Controls.Sci;
@@ -24,6 +24,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
+//using Microsoft.VisualBasic.Devices;
 //using Microsoft.CodeAnalysis.Options;
 //using Microsoft.CodeAnalysis.Formatting;
 
@@ -57,6 +58,10 @@ static unsafe class Test {
 	/// </summary>
 	public static void FromMenubar() {
 		print.clear();
+
+		print.it(Keyboard.FocusedElement);
+
+		//App.Restart();
 
 		//var f = App.Model.Find(@"\@Au docs\AuDocs text.cs");
 		//for(int i = 0; i < 5; i++) {

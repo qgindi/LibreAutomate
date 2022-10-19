@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 
@@ -50,7 +50,7 @@ for example at the end of script). It adds a special class. Then anywhere in scr
 and select from the list. It adds the declaration to the class, and more declarations if need.
 
 The database contains ~51000 declarations. They are not perfect. You can edit.
-If some really useful API are missing, tell about it: https://www.quickmacros.com/forum or support@quickmacros.com.
+If some really useful API are missing, tell about it: https://www.libreautomate.com/forum/ or support@quickmacros.com.
 */";
 			code.ZSetText(s);
 		}

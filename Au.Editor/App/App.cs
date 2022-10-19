@@ -302,6 +302,14 @@ static class App {
 		return true;
 	}
 
+	public static void Restart() {
+		Debug.Assert(Loaded == EProgramState.LoadedUI);
+		var cl = Hmain.IsVisible ? "/n /v /restart " : "/n /restart";
+		Menus.File.Exit();
+		if (Loaded < EProgramState.Unloading) return;
+		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, RFlags.InheritAdmin); };
+	}
+
 	internal static class TrayIcon {
 		static IntPtr[] _icons;
 		static bool _disabled;

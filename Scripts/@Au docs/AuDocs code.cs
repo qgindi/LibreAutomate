@@ -40,18 +40,21 @@ partial class AuDocs {
 	}
 	
 	//note: runs in parallel threads.
-	static string _Code(string s, bool syntax) {
-		if (syntax) {
+	//where: 0 api <code>, 1 api syntax, 2 non-api
+	static string _Code(string s, int where) {
+		if (where == 0) {
+			s = Encoding.UTF8.GetString(Convert.FromBase64String(s));
+		} else {
 			s = System.Net.WebUtility.HtmlDecode(s); //eg &lt; in generic parameters
 			
 			//remove/fix something in parameters
-			s = s.RxReplace(@"\(\w+\)0", "0"); //(Enum)0 => 0
-			s = s.RxReplace(@"\bdefault\([^)?]+\? *\)", "null"); //default(Nullable?) => null
-			s = s.RxReplace(@"\bdefault\(.+?\)", "default"); //default(Struct) => default
-			s = s.RxReplace(@"\[ParamString\(PSFormat\.\w+\)\] ", "");
-			s = s.RxReplace(@" ?\*(?=\w)", "* ");
-		} else {
-			s = Encoding.UTF8.GetString(Convert.FromBase64String(s));
+			if (where == 1) {
+				s = s.RxReplace(@"\(\w+\)0", "0"); //(Enum)0 => 0
+				s = s.RxReplace(@"\bdefault\([^)?]+\? *\)", "null"); //default(Nullable?) => null
+				s = s.RxReplace(@"\bdefault\(.+?\)", "default"); //default(Struct) => default
+				s = s.RxReplace(@"\[ParamString\(PSFormat\.\w+\)\] ", "");
+				s = s.RxReplace(@" ?\*(?=\w)", "* ");
+			}
 		}
 		
 		using var ws = new AdhocWorkspace();

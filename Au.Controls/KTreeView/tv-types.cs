@@ -246,3 +246,18 @@ public struct TVDropInfo {
 	public bool intoFolder;
 }
 
+/// <summary>
+/// Used with <see cref="KTreeView.SetFocusedItem"/> and functions that call it.
+/// </summary>
+[Flags]
+public enum TVFocus {
+	/// <summary>
+	/// Call <see cref="EnsureVisible"/>. Default.
+	/// </summary>
+	EnsureVisible = 1,
+	
+	/// <summary>
+	/// Scroll if need so that the item would be at the top of really visible range.
+	/// </summary>
+	ScrollTop = 2,
+}

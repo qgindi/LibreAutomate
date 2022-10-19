@@ -28,7 +28,7 @@ class PanelCookbook : UserControl {
 		this.UiaSetName("Cookbook panel");
 
 		var b = new wpfBuilder(this).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
-		b.R.Add(out _search).Tooltip("Part of recipe name.\nMiddle-click to clear.");
+		b.R.Add(out _search).Tooltip("Part of recipe name.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };

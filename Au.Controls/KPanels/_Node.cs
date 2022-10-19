@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+using System.Xml.Linq;
 using System.Xml;
 using System.Windows;
 using System.Windows.Controls;
@@ -469,6 +469,8 @@ namespace Au.Controls
 					_SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
 				}
 			}
+
+			public bool DontFocusTab { get; set; }
 
 			ParentInfo ILeaf.Parent => new ParentInfo(_leaf.panel.Panel, Parent._elem, _index);
 
