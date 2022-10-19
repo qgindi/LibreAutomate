@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Au.Controls
@@ -26,6 +26,11 @@ namespace Au.Controls
 			/// false if docked or hidden.
 			/// </summary>
 			bool Floating { get; set; }
+
+			/// <summary>
+			/// Don't change focus when this is in a tab and the tab header clicked.
+			/// </summary>
+			bool DontFocusTab { get; set; }
 
 			/// <summary>
 			/// Adds new leaf item (panel, toolbar or document) before or after this.

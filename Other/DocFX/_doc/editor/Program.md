@@ -62,12 +62,12 @@ Running scripts.
 Right-click - context menu (end process etc). Middle-click - close.
 
 #### Find
-Find and replace text in the code editor. Find files and text in files.
+Find and replace text in the code editor or in multiple files.
 
 Right-click an edit field - context menu. Middle-click - clear text; if empty - recent.
 
 #### Found
-Results of "Find in text". Displays files and text lines containing the text. With links to found text instances and to replace all found in a file. 
+Results of "Find in files" or "Find file".
 
 #### Output
 The program writes various info here. For example script compilation errors. Scripts use [print.it]() for it.
@@ -101,7 +101,7 @@ Triggers and toolbars.
 Execute current script.
 
 #### Tools
-Various tool windows.
+Tool windows.
 
 #### Help
 Program help and library reference.

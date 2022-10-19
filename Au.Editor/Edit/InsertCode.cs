@@ -468,6 +468,21 @@ static class InsertCode {
 		return end;
 	}
 
+	//rejected. Difficult etc.
+	///// <summary>
+	///// Inserts meta option(s).
+	///// </summary>
+	///// <param name="s">One or more meta options, like <c>"r A; r B;"</c>.</param>
+	///// <returns>false if all specified meta options already exist.</returns>
+	//public static bool MetaOption(string s) {
+	//	Debug.Assert(Environment.CurrentManagedThreadId == 1);
+	//	var doc = Panels.Editor.ZActiveDoc; if (doc == null || !doc.EFile.IsCodeFile) return false;
+	//	var meta = new MetaCommentsParser(doc.zText);
+	//	//meta.nuget.Add(...);
+	//	meta.Apply();
+	//	return false;
+	//}
+
 	/// <summary>
 	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
 	/// </summary>

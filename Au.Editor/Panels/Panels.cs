@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;
 
@@ -108,15 +108,21 @@ static class Panels
 		var pm = PanelManager;
 
 		pm["Files"].Content = Files = new();
-		pm["Outline"].Content = Outline = new();
+		_AddDontFocus("Outline", Outline = new());
 		pm["Cookbook"].Content = Cookbook = new();
-		pm["Open"].Content = Open = new();
-		pm["Tasks"].Content = Tasks = new();
+		_AddDontFocus("Open", Open = new());
+		_AddDontFocus("Tasks", Tasks = new());
 		pm["Find"].Content = Find = new();
-		pm["Output"].Content = Output = new();
-		pm["Mouse"].Content = Mouse = new();
-		pm["Found"].Content = Found = new();
-		pm["Recipe"].Content = Recipe = new();
+		_AddDontFocus("Output", Output = new());
+		_AddDontFocus("Mouse", Mouse = new());
+		_AddDontFocus("Found", Found = new());
+		_AddDontFocus("Recipe", Recipe = new());
+
+		void _AddDontFocus(string panel, FrameworkElement content) {
+			var p = pm[panel];
+			p.Content = content;
+			p.DontFocusTab = true;
+		}
 
 		pm["documents"].Content = Editor = new();
 		//DocPlaceholder_ = pm["documents"];

@@ -1,7 +1,8 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Input;
+using System.Windows.Interop;
 
 namespace Au.Controls;
 
@@ -37,27 +38,23 @@ public partial class KPanels {
 				v.TabSelected?.Invoke(v, EventArgs.Empty);
 			};
 
-			//prevent changing focus when clicking a tabitem. In most cases.
+			//implement DontFocusTab (prevent changing focus when clicking a tabitem)
 			tc.PreviewMouseLeftButtonDown += (_, e) => {
-				if (e.Source is TabItem ti) {
-					if (FocusManager.GetFocusedElement(FocusManager.GetFocusScope(tc)) is not FrameworkElement fe) return;
-					if (!fe.IsDescendantOf(tc)) tc.prevFocus = fe;
-					else if (fe is TabItem || tc.prevFocus == null) return;
-					ti.Dispatcher.InvokeAsync(() => {
-						//allow to focus WPF elements and editable scintilla controls
-						var fe2 = Keyboard.FocusedElement;
-						if (fe2 != null) {
-							if (fe2 is not TabItem) return;
-						} else {
-							var fe3 = FocusManager.GetFocusedElement(FocusManager.GetFocusScope(tc));
-							if (fe3 is KScintilla sci && !sci.ZInitReadOnlyAlways) return;
-						}
+				if (e.Source is TabItem ti && ti.Tag is _Node n && n.DontFocusTab) {
+					if (Keyboard.FocusedElement != null) {
+						if (tc.IsKeyboardFocusWithin) return;
+					} else {
+						wnd w = Api.GetFocus();
+						if (!w.IsChildOf(ti.Hwnd())) return;
+						if (null != tc.FindVisualDescendant(o => o is HwndHost hh && hh.Handle == w.Handle)) return;
+					}
 
-						if (!tc.prevFocus.IsVisible) return;
-						tc.prevFocus.Focus();
-					});
+					ti.PreviewGotKeyboardFocus += _PreviewGotKeyboardFocus;
+					ti.Dispatcher.InvokeAsync(() => { ti.PreviewGotKeyboardFocus -= _PreviewGotKeyboardFocus; });
+					//note: cannot implement it in _AddToTab, because then we don't know whether the tab header clicked or some descendant.
 				}
 			};
+			static void _PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) { e.Handled = true; }
 		}
 
 		void _VerticalTabHeader(double height = -1, bool onMove = false) {
@@ -155,7 +152,5 @@ public partial class KPanels {
 			if (e.Key == Key.Tab && Keyboard.Modifiers is ModifierKeys.Control or (ModifierKeys.Control | ModifierKeys.Shift)) return;
 			base.OnKeyDown(e);
 		}
-
-		internal FrameworkElement prevFocus;
 	}
 }

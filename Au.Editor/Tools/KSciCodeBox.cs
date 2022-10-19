@@ -3,7 +3,7 @@ namespace Au.Controls;
 
 /// <summary>
 /// Scintilla-based control that shows colored C# code.
-/// Also can be used anywhere to edit partially styled C# code. To make editable and set text use <see cref="ZSetText"/> with readonlyFrom=-1.
+/// Also can be used anywhere to edit styled C# code. To make editable and set text use <see cref="ZSetText"/> with readonlyFrom=-1.
 /// </summary>
 public class KSciCodeBox : KScintilla {
 	public KSciCodeBox() {

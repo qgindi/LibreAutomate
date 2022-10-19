@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 
 namespace Au.Controls;
 
@@ -39,7 +38,7 @@ public unsafe partial class KTreeView {
 	void _SetDpiAndItemSize(int dpi) {
 		_dpi = dpi;
 		_imageSize = _dpi / 6;
-		_imageMarginX = _DpiScale(3);
+		_imageMarginX = _DpiScale(4);
 		_marginLeft = _DpiScale(ItemMarginLeft);
 		_marginRight = _DpiScale(ItemMarginRight);
 		_itemHeight = _imageSize + _DpiScale(2);
@@ -227,7 +226,7 @@ public unsafe partial class KTreeView {
 		if (!_IsValid(index)) throw new IndexOutOfRangeException();
 		if (!_hasHwnd || !IsVisible) { _ensureVisible = (index + 1, scrollTop); return; }
 		bool retry = false;
-	g1:
+		g1:
 		_ensureVisible = default;
 		var r = GetRectPhysical(index);
 		if (scrollTop) {
@@ -484,7 +483,10 @@ public unsafe partial class KTreeView {
 	/// <exception cref="IndexOutOfRangeException"></exception>
 	public void Select(int index, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
 		if (!_IsValid(index)) throw new IndexOutOfRangeException();
-		if (focus) SetFocusedItem(index, scrollTop); else if (scrollTop) _vscroll.Pos = index;
+
+		if (focus) SetFocusedItem(index, scrollTop ? TVFocus.EnsureVisible | TVFocus.ScrollTop : TVFocus.EnsureVisible);
+		else if (scrollTop) _vscroll.Pos = index;
+
 		Select(index..(index + 1), select, unselectOther);
 		if (select && unselectOther) SelectedSingle?.Invoke(this, index);
 	}
@@ -616,22 +618,6 @@ public unsafe partial class KTreeView {
 	public int FocusedIndex => _focusedIndex;
 
 	/// <summary>
-	/// Sets item that has logical focus within the control.
-	/// </summary>
-	/// <param name="index">Can be -1.</param>
-	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
-	/// <exception cref="IndexOutOfRangeException"></exception>
-	/// <remarks>
-	/// Used with keyboard actions (Enter-activate, arrows, page down/up), range selection (Shift+click when <see cref="MultiSelect"/> true), optionally <see cref="Select"/>.
-	/// Calls <see cref="EnsureVisible"/>.
-	/// </remarks>
-	public void SetFocusedItem(int index, bool scrollTop = false) {
-		if (!_IsValid(index) && index != -1) throw new IndexOutOfRangeException();
-		_focusedIndex = index;
-		if (index >= 0) EnsureVisible(index, scrollTop);
-	}
-
-	/// <summary>
 	/// Gets item that has logical focus within the control. Can be null.
 	/// </summary>
 	public ITreeViewItem FocusedItem => _IndexToItem(_focusedIndex);
@@ -639,10 +625,26 @@ public unsafe partial class KTreeView {
 	/// <summary>
 	/// Sets item that has logical focus within the control.
 	/// </summary>
+	/// <param name="index">Can be -1.</param>
+	/// <param name="flags"></param>
+	/// <exception cref="IndexOutOfRangeException"></exception>
+	/// <remarks>
+	/// Used with keyboard actions (Enter-activate, arrows, page down/up), range selection (Shift+click when <see cref="MultiSelect"/> true), optionally <see cref="Select"/>.
+	/// </remarks>
+	public void SetFocusedItem(int index, TVFocus flags = TVFocus.EnsureVisible) {
+		if (!_IsValid(index) && index != -1) throw new IndexOutOfRangeException();
+		_focusedIndex = index;
+		if (flags.HasAny(TVFocus.EnsureVisible | TVFocus.ScrollTop)) if (index >= 0) EnsureVisible(index, flags.Has(TVFocus.ScrollTop));
+	}
+
+	/// <summary>
+	/// Sets item that has logical focus within the control.
+	/// </summary>
 	/// <param name="item">Can be null.</param>
-	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
+	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException">The item is not a visible item in this control.</exception>
-	public void SetFocusedItem(ITreeViewItem item, bool scrollTop = false) => SetFocusedItem(_IndexOfOrThrow(item, canBeNull: true), scrollTop);
+	public void SetFocusedItem(ITreeViewItem item, TVFocus flags = TVFocus.EnsureVisible)
+		=> SetFocusedItem(_IndexOfOrThrow(item, canBeNull: true), flags);
 
 	///
 	protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e) {
@@ -771,8 +773,12 @@ public unsafe partial class KTreeView {
 		var r = GetRectPhysical(index, TVParts.Text, inScreen: true);
 		r.left -= _imageMarginX;
 		double f = 96d / _dpi;
-		_leTB = new TextBox { Height = r.Height * f, MinWidth = r.Width * f + 12, Text = item.DisplayText };
-		_leTB.Padding = osVersion.minWin8 ? new Thickness(0, -1, 0, 0) : new Thickness(-1, -2, 0, 0);
+		_leTB = new TextBox {
+			Height = r.Height * f,
+			MinWidth = r.Width * f + 12,
+			Text = item.DisplayText,
+			Padding = osVersion.minWin8 ? new Thickness(1, -1, 0, 0) : new Thickness(0, -2, 0, 0)
+		};
 		_leTB.SelectAll();
 		_leTB.KeyDown += (_, e) => {
 			switch (e.Key) {

@@ -77,6 +77,8 @@ record AppSettings : JSettings {
 
 	public sbyte recipe_zoom;
 
+	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
+
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
 
 	public string find_skip;

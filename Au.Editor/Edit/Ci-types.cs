@@ -74,7 +74,7 @@ class CiComplItem : ITreeViewItem
 	public ISymbol FirstSymbol => _symbols switch { ISymbol sym => sym, IEnumerable<ISymbol> en => en.FirstOrDefault(), _ => null };
 
 	/// <summary>
-	/// Gets displayed text without prefix, suffix (eg geric) and green comments (group or inline description).
+	/// Gets displayed text without prefix, suffix (eg generic) and green comments (group or inline description).
 	/// In most cases it is simple name, but in some cases can be eg "Namespace.Name", "Name(parameters)", etc.
 	/// </summary>
 	public string Text => _ci.DisplayText;

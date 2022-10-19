@@ -34,5 +34,13 @@ The program and the library are very young. Need more testing. Some classes/func
 - [Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.9.0, 2022-10-05, 24 MB
 - [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
 - [Source code](https://github.com/qgindi/LibreAutomate)
-- [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
+- [Forum](https://www.libreautomate.com/forum/)
 - [Email](mailto:support@quickmacros.com)
+
+### Developers
+
+Gintaras Didžgalvis, an independent software developer from Lithuania.
+
+### Why?
+
+This software replaces [Quick Macros](https://www.quickmacros.com). The same developer. [More info](xref:qm2).

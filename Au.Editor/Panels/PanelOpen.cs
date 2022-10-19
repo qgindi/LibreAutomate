@@ -6,6 +6,7 @@ class PanelOpen : DockPanel
 {
 	KTreeView _tv;
 	bool _updatedOnce;
+	bool _closing;
 
 	public PanelOpen() {
 		//this.UiaSetName("Open panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
@@ -18,7 +19,10 @@ class PanelOpen : DockPanel
 		//_tv.SetItems(App.Model.OpenFiles, _updatedOnce); //this would be ok, but displays yellow etc
 		var a = App.Model.OpenFiles;
 		_tv.SetItems(a.Select(o => new _Item { f = o }), _updatedOnce);
-		if (a.Count > 0) _tv.SelectSingle(0, andFocus: true);
+		if (a.Count > 0) {
+			_tv.SetFocusedItem(0, _closing ? 0 : TVFocus.EnsureVisible);
+			_tv.SelectSingle(0, andFocus: false);
+		}
 		if (!_updatedOnce) {
 			_updatedOnce = true;
 			FilesModel.NeedRedraw += v => { _tv.Redraw(v.remeasure); };
@@ -35,8 +39,11 @@ class PanelOpen : DockPanel
 			App.Model.SetCurrentFile(f);
 			break;
 		case MouseButton.Right:
-			_tv.Select(e.Item);
+			_tv.SelectSingle(e.Item, andFocus: false);
 			switch (popupMenu.showSimple("Close\tM-click|Close all other|Close all")) {
+			case 0:
+				_tv.SelectSingle(0, andFocus: false);
+				break;
 			case 1:
 				_CloseFile();
 				break;
@@ -54,7 +61,9 @@ class PanelOpen : DockPanel
 		}
 
 		void _CloseFile() {
+			_closing = true; //prevent scrolling to top when closing an item near the bottom
 			App.Model.CloseFile(f, selectOther: true);
+			_closing = false;
 		}
 	}
 

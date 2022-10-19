@@ -1,17 +1,86 @@
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Documents;
 
-partial class PanelFiles : DockPanel
-{
+using Au.Controls;
+
+partial class PanelFiles : UserControl {
 	FilesModel.FilesView _tv;
+	TextBox _tFind;
+	timer _timerFind;
+	List<FileNode> _aClose;
 
 	public PanelFiles() {
-		//this.UiaSetName("Files panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		this.UiaSetName("Files panel");
+		this.Background = SystemColors.ControlBrush;
 
-		_tv = new() { Name = "Files_list" };
-		this.Children.Add(_tv);
+		var b = new wpfBuilder(this).Columns(-1).Options(margin: new());
+		b.Row(-1).Add(out _tv).Name("Files_list", true);
+
+		b.Row(4).Add<Border>().Border(thickness2: new(0, 1, 0, 1));
+
+		_tFind = new() { BorderThickness = default };
+		b.R.Add<AdornerDecorator>().Add(_tFind, flags: WBAdd.ChildOfLast).Name("Find_file", true)
+			.Watermark("Find file").Tooltip(@"Part of file name, or wildcard expression.
+Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
+
+		b.End();
+
+		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(200); };
+		_tFind.GotKeyboardFocus += (_, _) => Dispatcher.InvokeAsync(() => _tFind.SelectAll());
+		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
 
 		EditGoBack.DisableUI();
 	}
 
 	public FilesModel.FilesView TreeControl => _tv;
+
+	private void _Find() {
+		var cFound = Panels.Find.PrepareFindResultsPanel();
+		_aClose = new();
+
+		var s = _tFind.Text; if (s.NE()) return;
+		var wild = wildex.hasWildcardChars(s) ? new wildex(s, noException: true) : null;
+		var b = new StringBuilder();
+
+		foreach (var f in App.Model.Root.Descendants()) {
+			var text = f.Name;
+			int i = -1;
+			if (wild != null) {
+				if (!wild.Match(text)) continue;
+			} else {
+				i = text.Find(s, true);
+				if (i < 0) continue;
+			}
+
+			var path = f.ItemPath;
+			string link = f.IdStringWithWorkspace;
+			int i1 = path.Length - text.Length;
+			string s1 = path[..i1], s2 = path[i1..];
+			b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>", link, s1);
+			if (i < 0) {
+				b.Append(s2);
+			} else { //hilite
+				int to = i + s.Length;
+				b.Append(s2, 0, i).Append("<z 0xffff5f>").Append(s2, i, s.Length).Append("<>").Append(s2, to, s2.Length - to);
+			}
+			if (f.IsFolder) b.Append("    <c 0x008000>//folder<>");
+			b.AppendLine("<>");
+
+			_aClose.Add(f);
+		}
+
+		if (b.Length == 0) return;
+
+		if (_aClose.Count > 0) b.AppendLine("<z #FFC000><+caff><c 0x80ff>Close all<><><>");
+
+		cFound.zSetText(b.ToString());
+	}
+
+	public void CloseAll() { //TODO: use same func for the Find results
+		App.Model.CloseFiles(_aClose);
+		App.Model.CollapseAll(exceptWithOpenFiles: true);
+	}
 }

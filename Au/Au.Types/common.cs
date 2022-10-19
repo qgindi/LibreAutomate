@@ -1,4 +1,4 @@
-﻿namespace Au.Types
+namespace Au.Types
 {
 	/// <summary>
 	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
@@ -89,6 +89,11 @@
 		/// Name or path of a script or class file in current workspace.
 		/// </summary>
 		CodeFile,
+
+		/// <summary>
+		/// Name or path of any file or folder in current workspace.
+		/// </summary>
+		FileInWorkspace,
 	}
 
 	/// <summary>

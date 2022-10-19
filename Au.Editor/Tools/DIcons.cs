@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Au.Controls;
 using Au.Tools;
 
@@ -54,6 +55,7 @@ Part of icon name, or wildcard expression.
 Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
 Can be Pack.Icon, like Modern.List.")
 			.Dock(Dock.Top).Focus();
+		_tName.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tName.Clear(); };
 		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
 		b.xAddInBorder(out KTreeView tv); //tv.SingleClickActivate = true;
 		b.End();
@@ -87,17 +89,18 @@ Can be Pack.Icon, like Modern.List.")
 		b.End();
 		if (expandFileIcon) exp1.IsExpanded = true;
 
-		b.StartGrid<Expander>("Insert code for menu/toolbar/etc icon");
+		b.StartGrid<Expander>("Code for menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
 		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled()
-			.Tooltip("To assign the selected icon to a toolbar button or menu item,\nin the code editor click its line (anywhere except action code)\nand then click this button. Or double-click an icon.");
+			.Tooltip("To assign the selected icon to a toolbar button or menu item,\nin the code editor click its line (anywhere except action code)\nand then click this button.\n\nIf the 'Customize' window is open, this button sets Image text.");
 		b.End();
-		b.R.Add<Label>("Insert line: ");
-		b.StartStack();
-		b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, _Action.InsertXamlVar)).Disabled();
-		b.AddButton(out var bCodeField, "Field = XAML", _ => _InsertCodeOrExport(tv, _Action.InsertXamlField)).Disabled();
-		b.End();
+		//rejected. Rarely used. Can copy-paste XAML.
+		//b.R.Add<Label>("Insert line: ");
+		//b.StartStack();
+		//b.AddButton(out var bCodeVar, "Variable = XAML", _ => _InsertCodeOrExport(tv, _Action.InsertXamlVar)).Disabled();
+		//b.AddButton(out var bCodeField, "Field = XAML", _ => _InsertCodeOrExport(tv, _Action.InsertXamlField)).Disabled();
+		//b.End();
 		b.R.Add<Label>("Copy text: ");
 		b.StartStack();
 		b.AddButton(out var bCodeName, "Name", _ => _InsertCodeOrExport(tv, _Action.CopyName)).Width(70).Disabled()
@@ -192,8 +195,8 @@ Can be Pack.Icon, like Modern.List.")
 		void _EnableControls(bool enable) {
 			bThis.IsEnabled = enable;
 			bMenuItem.IsEnabled = enable;
-			bCodeVar.IsEnabled = enable;
-			bCodeField.IsEnabled = enable;
+			//bCodeVar.IsEnabled = enable;
+			//bCodeField.IsEnabled = enable;
 			bCodeXaml.IsEnabled = enable;
 			bCodeName.IsEnabled = enable;
 			bExportXaml.IsEnabled = enable;
@@ -231,7 +234,9 @@ Can be Pack.Icon, like Modern.List.")
 			if (tv.SelectedItem is not _Item k) return;
 			string code = null;
 			if (what == _Action.MenuIcon) {
-				InsertCode.SetMenuToolbarItemIcon(_ColorName(k));
+				var s = _ColorName(k);
+				if (DCommands.ZSetImage(s)) return;
+				InsertCode.SetMenuToolbarItemIcon(s);
 			} else if (what == _Action.CopyName) {
 				code = _ColorName(k);
 			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {

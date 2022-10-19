@@ -40,6 +40,7 @@ static class CommandLine {
 	public static bool ProgramStarted2(string[] args) {
 		string s = null;
 		int cmd = 0;
+		bool restarting = false;
 		if (args.Length > 0) {
 			//print.it(args);
 
@@ -53,11 +54,14 @@ static class CommandLine {
 				for (int i = 0; i < args.Length; i++) {
 					s = args[i];
 					switch (s) {
-					case "/test":
-						if (++i < args.Length) TestArg = args[i];
+					case "/restart":
+						restarting = true;
 						break;
 					case "/v":
 						StartVisible = true;
+						break;
+					case "/test":
+						if (++i < args.Length) TestArg = args[i];
 						break;
 					default:
 						dialog.showError("Unknown command line parameter", s);
@@ -82,6 +86,7 @@ static class CommandLine {
 		//single instance
 		s_mutex = new Mutex(true, "Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ", out bool createdNew);
 		if (createdNew) return false;
+		if (restarting) return Api.WaitForSingleObject(s_mutex.SafeWaitHandle.DangerousGetHandle(), 5000) is Api.WAIT_TIMEOUT or Api.WAIT_FAILED;
 
 		var w = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true);
 		if (!w.Is0) {
@@ -96,7 +101,7 @@ static class CommandLine {
 		}
 		return true;
 	}
-	static object s_mutex; //GC
+	static Mutex s_mutex; //GC
 
 	/// <summary>
 	/// null or argument after "/test".

@@ -379,7 +379,7 @@ static class Menus {
 		[Command(image = "*VaadinIcons.Compile #008EEE")]
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
-		[Command("...")]
+		[Command("...", image="*BoxIcons.RegularHistory #008EEE")]
 		public static void Recent() { RecentTT.Show(); } //CONSIDER: toolbar button
 
 		[Command(separator = true)]
@@ -405,6 +405,12 @@ static class Menus {
 
 		[Command(image = "*SimpleIcons.NuGet #99BF00")]
 		public static void NuGet() { DNuget.ZShow(); }
+
+		[Command(image = "*Codicons.SymbolSnippet #99BF00")]
+		public static void Snippets() { DSnippets.ZShow(); }
+
+		[Command]
+		public static void Customize() { DCommands.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
 		public static class Output {
@@ -451,7 +457,7 @@ static class Menus {
 		}
 
 		[Command(separator = true)]
-		public static void Forum() { run.itSafe("https://www.quickmacros.com/forum/forumdisplay.php?fid=19"); }//TODO: change URL here and elsewhere
+		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 
 		[Command]
 		public static void Email() { run.itSafe("mailto:support@quickmacros.com?subject=" + App.AppNameShort); }

@@ -1,7 +1,15 @@
-﻿<Au.Snippets>
+<Au.Snippets>
 
 	<group context="Function">
 		<!-- snippets that are valid in functions -->
+
+		<snippet name="ifElseSnippet" info="if { code } else { code }.">
+			<![CDATA[if ($end$) {
+	
+} else {
+	
+}]]>
+		</snippet>
 
 		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="There are 4 parts: for (part1; part2; part3) { part4 }. Each can be empty. Part1 sets variable(s), like i=0 or int i=0 or int i=0, j=-1. Part2 is an expression evaluated before each loop; repeats while it is true. Part3 increments or decrements variable(s) after each loop, like i++ or i+=10 or i++, j--. Part4 can be any code; it is executed repeatedly; if single statement, the { } are optional.&#10;&#10;The first snippet in human language: set variable i = 0; while i &lt; count, repeat code in { }; incremet i after each loop.&#10;&#10;Tip: the script editor replaces code like 5t with for (int i = 0; i &lt; 5; i++) {  } when typing.">
 			<list item="Increment variable i">
@@ -19,14 +27,6 @@
 	$end$
 }]]>
 			</list>
-		</snippet>
-
-		<snippet name="ifElseSnippet" info="if { code } else { code }.">
-			<![CDATA[if ($end$) {
-	
-} else {
-	
-}]]>
 		</snippet>
 
 		<snippet name="switchSnippet" info="Go to a case that matches a variable, or default if none.">
@@ -290,14 +290,14 @@ opt.mouse.MoveSleepFinally = 10;]]>
 		</snippet>
 
 		<snippet name="perfSnippet" info="Measure code speed.">
-			<list item ="Static">
+			<list item="Static">
 				<![CDATA[perf.first();$end$
 perf.next();
 perf.next();
 perf.next();
 perf.nw();]]>
 			</list>
-			<list item ="Local, auto-NW">
+			<list item="Local, auto-NW">
 				<![CDATA[using var p1 = perf.local();$end$
 p1.Next();
 p1.Next();
@@ -415,13 +415,6 @@ script.setup(trayIcon: true, sleepExit: true);
 ]]>
 		</snippet>
 
-	</group>
-	<!-- end of Function -->
-
-
-	<group context="Function|Arrow">
-		<!-- single-statement snippets that are valid in functions, =>lambdaExpression and =>methodExpression -->
-
 		<snippet name="piPrintItSnippet" info="Display text and variables in the output window.">
 			<![CDATA[print.it($end$);]]>
 		</snippet>
@@ -463,7 +456,7 @@ script.setup(trayIcon: true, sleepExit: true);
 		</snippet>
 
 	</group>
-	<!-- end of Function|Arrow -->
+	<!-- end of Function -->
 
 
 	<group context="Type">
@@ -553,13 +546,6 @@ string _field;
 
 	</group>
 	<!-- end of Type -->
-
-
-	<group context="Type|Function">
-		<!-- snippets that are valid in types and functions -->
-
-	</group>
-	<!-- end of Type|Function -->
 
 
 	<group context="Namespace|Type|Line">

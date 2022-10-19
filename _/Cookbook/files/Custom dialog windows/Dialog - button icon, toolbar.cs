@@ -1,5 +1,3 @@
-/// <see cref="wpfBuilder.Brush"/> sets the background and/or text color (or gradient, pattern, etc) of the last added element.
-
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
