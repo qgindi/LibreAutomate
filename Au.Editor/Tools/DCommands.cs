@@ -1,3 +1,5 @@
+//FUTURE: allow to add scripts to toolbars.
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -429,12 +431,12 @@ The data is in these files: <explore {defFile}>default<>, <explore {userFile}>us
 	}
 	
 	void _Save() {
-		//TODO: remove non-customized entries from <menu>?
 		var xr = new XElement("commands");
 		foreach (var t in _tree) {
 			var xt = new XElement(t.displayText);
 			xr.Add(xt);
 			foreach (var c in t.Children()) {
+				if (c.isMenu && !c.IsCustomized()) continue;
 				var x = new XElement(c.def.name);
 				xt.Add(x);
 				if (c.separator) x.SetAttributeValue("separator", "");
@@ -494,14 +496,14 @@ The data is in these files: <explore {defFile}>default<>, <explore {userFile}>us
 		
 		int ITreeViewItem.Color => Level > 0 ? -1 : isMenu ? 0x80C0F0 : 0xA0E0C0;
 		
-		int ITreeViewItem.TextColor => this == _d._clip ? 0xFF : (hide == "always" ? 0x808080 : _IsCustomized() ? 0xFF0000 : -1);
+		int ITreeViewItem.TextColor => this == _d._clip ? 0xFF : (hide == "always" ? 0x808080 : IsCustomized() ? 0xFF0000 : -1);
 		
 		#endregion
 		
-		bool _IsCustomized() {
+		public bool IsCustomized() {
 			if (def == null) return false;
+			if (separator && isMenu) return true; //never mind: or may be specified in the default XML file, but that info now is lost.
 			return ctext != null || color != null || image != null || keys != null || btext != null || imageAt != null || hide != null;
-			//never mind separator. It may be specified in the default XML file, but that info now is lost.
 		}
 	}
 	

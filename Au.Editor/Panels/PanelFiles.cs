@@ -79,7 +79,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		cFound.zSetText(b.ToString());
 	}
 
-	public void CloseAll() { //TODO: use same func for the Find results
+	public void CloseAll() {
 		App.Model.CloseFiles(_aClose);
 		App.Model.CollapseAll(exceptWithOpenFiles: true);
 	}
