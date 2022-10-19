@@ -1222,10 +1222,9 @@ partial class FilesModel {
 			r = 3; //move
 		} else {
 			var ab = new List<string>();
-			if (!dirsDropped) ab.Add("1 Add as a link to the external file");
+			ab.Add(dirsDropped ? "4 Add as a link to the external folder" : "1 Add as a link to the external file");
 			ab.Add("2 Copy to the workspace folder");
 			ab.Add("3 Move to the workspace folder");
-			if (dirsDropped) ab.Add("4 Add as a link to the external folder");
 			ab.Add("0 Cancel");
 			r = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
 			if (r == 0) return;

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Input;
 
 namespace Au.Controls;
 
@@ -134,6 +135,12 @@ public unsafe partial class KTreeView : HwndHost {
 		//print.it(e.Property);
 		if (_lePopup != null && e.Property.Name == "IsVisible" && e.NewValue is bool y && !y) EndEditLabel(true);
 		base.OnPropertyChanged(e);
+	}
+
+	///
+	protected override bool TabIntoCore(TraversalRequest r) {
+		Focus();
+		return true;
 	}
 
 	///

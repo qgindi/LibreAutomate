@@ -116,7 +116,7 @@ class PanelEdit : Grid
 			}
 		}
 
-		Panels.Find.ZUpdateQuickResults(true);
+		Panels.Find.ZUpdateQuickResults();
 		return true;
 	}
 

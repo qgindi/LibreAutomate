@@ -86,19 +86,19 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Opens the specified source file (script etc).
+		/// Opens a script or other file.
 		/// Does nothing if editor isn't running.
 		/// </summary>
-		/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with <c>".cs"</c>.</param>
-		public static void Open(string file) => OpenAndGoToLine(file, 0);
+		/// <param name="file">A file in current workspace. Can be full path, or relative path in workspace, or file name with extension (<c>".cs"</c> etc). If folder, selects it.</param>
+		public static void Open([ParamString(PSFormat.FileInWorkspace)] string file) => OpenAndGoToLine(file, 0);
 
 		/// <summary>
-		/// Opens the specified source file (script etc) and sets the editor's current position at the start of the specified line.
+		/// Opens a script or other file, and moves the text cursor.
 		/// Does nothing if editor isn't running.
 		/// </summary>
-		/// <param name="file">Source file. Can be full path, or relative path in workspace, or file name with <c>".cs"</c>.</param>
+		/// <param name="file">A file in current workspace. Can be full path, or relative path in workspace, or file name with extension (<c>".cs"</c> etc).</param>
 		/// <param name="line">1-based line index. If 0, just opens the file.</param>
-		public static void OpenAndGoToLine(string file, int line) {
+		public static void OpenAndGoToLine([ParamString(PSFormat.FileInWorkspace)] string file, int line) {
 			var w = WndMsg_; if (w.Is0) return;
 			Api.AllowSetForegroundWindow(w.ProcessId);
 			WndCopyData.Send<char>(w, 4, file, line);

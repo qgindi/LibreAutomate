@@ -14,7 +14,7 @@
                     <style>
                         .gsc-control-cse {
                             padding: 0;
-                            margin: 8px;
+                            margin: 9px 0px 0px 0px;
                             width: 20em;
                         }
 

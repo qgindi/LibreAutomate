@@ -814,11 +814,7 @@ static partial class Compiler {
 	static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32) {
 		asmStream.Position = 0;
 
-		//using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
-		//var mr = pr.GetMetadataReader();
-		//var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
-		//print.it(usedRefs.Contains(pathname.getNameNoExt(sFrom), StringComparer.OrdinalIgnoreCase));
-
+		//note: need Au.dll and AuCpp.dll even if not used in code. It contains script.AppModuleInit_.
 		_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", m.OutputPath + @"\Au.dll");
 		if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
 		if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
@@ -828,6 +824,10 @@ static partial class Compiler {
 		static bool _UsesSqlite(Stream asmStream) {
 			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
 			var mr = pr.GetMetadataReader();
+
+			//var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
+			//print.it(usedRefs);
+
 			foreach (var handle in mr.TypeReferences) {
 				var tr = mr.GetTypeReference(handle);
 				//print.it(mr.GetString(tr.Name), mr.GetString(tr.Namespace));

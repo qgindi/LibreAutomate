@@ -12,3 +12,6 @@ info: we don't use the full text search feature.
 With some VS versions fails. Error "... Method not found: 'System.ReadOnlySpan1<Char> Microsoft.IO.Path.GetFileName(System.ReadOnlySpan1)'".
 Workaround: https://github.com/dotnet/docfx/issues/8136#issuecomment-1219512721
 Apply the same workaround to the memberpage package in C:\Users\G\.nuget\packages\memberpage\
+
+Fails after a Windows update: failed to load System.Memory.dll.
+Workaround: delete System.Memory.dll from docfx folder.

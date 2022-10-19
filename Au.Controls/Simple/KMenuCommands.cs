@@ -75,13 +75,9 @@ namespace Au.Controls;
 /// }
 /// ]]></code>
 /// </example>
-public class KMenuCommands
-{
+public class KMenuCommands {
 	readonly Dictionary<string, Command> _d = new(200);
-	readonly Action<FactoryParams> _itemFactory;
-	readonly bool _autoUnderline;
 	readonly string _names;
-	string _defaultFile, _customizedFile;
 
 	/// <summary>
 	/// Builds a WPF window menu with submenus and items that execute static methods defined in a class and nested classes.
@@ -93,9 +89,6 @@ public class KMenuCommands
 	/// <param name="itemFactory">Optional callback function that is called for each menu item. Can create menu items, set properties, create toolbar buttons, etc.</param>
 	/// <exception cref="ArgumentException">Duplicate name. Use <see cref="CommandAttribute.name"/>.</exception>
 	public KMenuCommands(Type commands, Menu menu, bool autoUnderline = true, Action<FactoryParams> itemFactory = null) {
-		_itemFactory = itemFactory;
-		_autoUnderline = autoUnderline;
-
 		var bNames = new StringBuilder();
 		_Menu(commands, menu, null, 0);
 		_names = bNames.ToString();
@@ -119,7 +112,7 @@ public class KMenuCommands
 
 			foreach (var (mi, ca) in list.OrderBy(o => o.a.order_)) {
 				string name = ca.name ?? mi.Name;
-				var c = new Command(name, mi, ca);
+				var c = new Command(this, name, mi, ca);
 				_d.Add(name, c);
 				bNames.Append('\t', level).AppendLine(name);
 
@@ -127,38 +120,27 @@ public class KMenuCommands
 
 				ca.target ??= inheritTarget;
 
-				string text = ca.text, dots = null; //menu item text, possibly with _ for Alt-underline
-				if (text == "...") { dots = text; text = null; }
-				if (text != null) {
-					c.ButtonText = StringUtil.RemoveUnderlineChar(text, '_');
-				} else {
-					text = mi.Name.Replace('_', ' ') + dots;
-					c.ButtonText = text;
-					char u = ca.underlined;
-					if (u != default) {
-						int i = text.IndexOf(u);
-						if (i >= 0) text = text.Insert(i, "_"); else print.it($"Alt-underline character '{u}' not found in \"{text}\"");
-					}
-				}
+				var (text, buttonText) = GetTextFromAttributes(ca, mi);
+				c.ButtonText = buttonText;
 				c.ButtonTooltip = ca.tooltip;
 
 				FactoryParams f = null;
-				if (_itemFactory != null) {
+				if (itemFactory != null) {
 					f = new FactoryParams(c, mi) { text = text, image = ca.image, param = ca.param };
-					_itemFactory(f);
+					itemFactory(f);
 					if (c.MenuItem == null) c.SetMenuItem_(f.text, f.image); //did not call SetMenuItem
 				} else {
 					if (c.MenuItem == null) c.SetMenuItem_(text, ca.image);
 				}
 				if (!ca.keysText.NE()) c.MenuItem.InputGestureText = ca.keysText;
-				if (_autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
+				if (autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
 				if (ca.checkable) c.MenuItem.IsCheckable = true;
 
 				if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
 				if (mi is TypeInfo ti) _Menu(ti, c.MenuItem, ca.target, level + 1);
 			}
 
-			if (_autoUnderline) {
+			if (autoUnderline) {
 				foreach (var v in parentMenu.Items) {
 					if (v is MenuItem m && m.Header is string s && s.Length > 0 && !_FindUnderlined(s, out _)) {
 						int i = 0;
@@ -183,8 +165,23 @@ public class KMenuCommands
 				return true;
 			}
 		}
-
-		menu.ContextMenuOpening += _ContextMenu;
+	}
+	
+	//Also used by the Customize tool.
+	public static (string text, string buttonText) GetTextFromAttributes(CommandAttribute ca, MemberInfo mi) {
+		string text = ca.text, buttonText, dots = null; //menu item text, possibly with _ for Alt-underline
+		if (text == "...") { dots = text; text = null; }
+		if (text != null) {
+			buttonText = StringUtil.RemoveUnderlineChar(text, '_');
+		} else {
+			buttonText = text = mi.Name.Replace('_', ' ') + dots;
+			char u = ca.underlined;
+			if (u != default) {
+				int i = text.IndexOf(u);
+				if (i >= 0) text = text.Insert(i, "_"); else print.it($"Alt-underline character '{u}' not found in \"{text}\"");
+			}
+		}
+		return (text, buttonText);
 	}
 
 	/// <summary>
@@ -218,11 +215,11 @@ public class KMenuCommands
 				if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);
 				void _Add(string s) {
 					if (!Au.keys.more.parseHotkeyString(s, out var mod, out var key, out var mouse)) {
-						print.warning("Invalid key or mouse shortcut: " + s);
+						c.CustomizingError("invalid keys: " + s);
 						return;
 					}
 					if (key != default) target.InputBindings.Add(new KeyBinding(c, key, mod));
-					else if (target is System.Windows.Interop.HwndHost) print.warning(s + ": mouse shortcuts don't work with HwndHost controls");
+					else if (target is System.Windows.Interop.HwndHost) c.CustomizingError(s + ": mouse shortcuts don't work in the target control");
 					else target.InputBindings.Add(new MouseBinding(c, new MouseGesture(mouse, mod)));
 
 					//FUTURE: support mouse shortcuts in HwndHost
@@ -288,14 +285,15 @@ public class KMenuCommands
 	/// Contains a method delegate and a menu item that executes it. Implements <see cref="ICommand"/> and can have one or more attached buttons etc and key/mouse shortcuts that execute it. All can be disabled/enabled with single function call.
 	/// Also used for submenu-items (created from nested types); it allows for example to enable/disable all descendants with single function call.
 	/// </summary>
-	public class Command : ICommand
-	{
+	public class Command : ICommand {
+		readonly KMenuCommands _mc;
 		readonly Delegate _del; //null if submenu
 		readonly CommandAttribute _ca;
 		MenuItem _mi;
 		bool _enabled;
 
-		internal Command(string name, MemberInfo mi, CommandAttribute ca) {
+		internal Command(KMenuCommands mc, string name, MemberInfo mi, CommandAttribute ca) {
+			_mc = mc;
 			_enabled = true;
 			Name = name;
 			_ca = ca;
@@ -517,8 +515,7 @@ public class KMenuCommands
 			return null;
 		}
 
-		bool _SetImage(string image, _CustomizeContext customizing = null) {
-			bool custom = customizing != null;
+		bool _SetImage(string image, bool custom = false) {
 			try {
 #if DEBUG
 				bool res = !(custom || image.Starts('*') || pathname.isFullPath(image));
@@ -533,7 +530,7 @@ public class KMenuCommands
 				return true;
 			}
 			catch (Exception ex) {
-				if (custom) customizing.Error("failed to load image", ex);
+				if (custom) CustomizingError("failed to load image", ex);
 				else print.it($"Failed to load image {image}. {ex.ToStringWithoutStack()}");
 			}
 			return false;
@@ -564,7 +561,7 @@ public class KMenuCommands
 			set { if (value != _Mi.IsChecked) _mi.IsChecked = value; }
 		}
 
-#region ICommand
+		#region ICommand
 
 		public bool CanExecute(object parameter) => _enabled;
 
@@ -572,7 +569,7 @@ public class KMenuCommands
 			switch (_del) {
 			case Action a0: a0(); break;
 			case Action<MenuItem> a1: a1(_mi); break;
-			//case Action<object> a1: a1(parameter); break;
+				//case Action<object> a1: a1(parameter); break;
 				//default: throw new InvalidOperationException("Submenu");
 			}
 		}
@@ -582,7 +579,7 @@ public class KMenuCommands
 		/// </summary>
 		public event EventHandler CanExecuteChanged;
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Finds and returns toolbar button that has this command. Returns null if not found.
@@ -593,7 +590,7 @@ public class KMenuCommands
 		/// Finds and returns toolbar menu-button that has this command. Returns null if not found.
 		/// </summary>
 		public MenuItem FindMenuButtonInToolbar(ToolBar tb) {
-			foreach(var e in tb.Items) {
+			foreach (var e in tb.Items) {
 				if (e is Decorator d && d.Child is Menu m && m.Items[0] is MenuItem mi && mi.Command == this) return mi;
 			}
 			return null;
@@ -605,9 +602,7 @@ public class KMenuCommands
 		//	}
 		//}
 
-		internal void Customize_(XElement x, ToolBar toolbar, _CustomizeContext context) {
-			context.command = this;
-
+		internal void Customize_(XElement x, ToolBar toolbar) {
 			OverflowMode hide = default;
 			bool separator = false;
 			string text = null, btext = null;
@@ -624,7 +619,7 @@ public class KMenuCommands
 						_mi.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(av));
 						break;
 					case "image":
-						_SetImage(av, context);
+						_SetImage(av, custom: true);
 						break;
 					case "text":
 						_mi.Header = text = av;
@@ -642,17 +637,21 @@ public class KMenuCommands
 						imageAt = Enum.Parse<Dock>(av, true);
 						break;
 					default:
-						context.Error($"attribute '{an}' can't be used here");
+						CustomizingError($"attribute '{an}' can't be used here");
 						break;
 					}
 				}
-				catch (Exception ex) { context.Error($"invalid '{an}' value", ex); }
+				catch (Exception ex) { CustomizingError($"invalid '{an}' value", ex); }
 			}
 			if ((btext ?? text) != null) ButtonText = btext ?? StringUtil.RemoveUnderlineChar(text, '_');
 
 			if (toolbar != null) {
 				try {
-					if (separator) toolbar.Items.Add(new Separator());
+					if (separator) {
+						var sep = new Separator();
+						if (hide != default) ToolBar.SetOverflowMode(sep, hide);
+						toolbar.Items.Add(sep);
+					}
 					DependencyObject o;
 					if (IsSubmenu) {
 						var b = new MenuItem();
@@ -676,8 +675,12 @@ public class KMenuCommands
 					if (hide != default) ToolBar.SetOverflowMode(o, hide);
 					toolbar.Items.Add(o);
 				}
-				catch (Exception ex) { context.Error("failed to create button", ex); }
+				catch (Exception ex) { CustomizingError("failed to create button", ex); }
 			}
+		}
+
+		public void CustomizingError(string s, Exception ex = null) {
+			_mc.OnCustomizingError?.Invoke(this, s, ex);
 		}
 	}
 
@@ -688,91 +691,71 @@ public class KMenuCommands
 	/// <param name="xmlFileCustomized">XML file containing user-modified commands and toolbar buttons. Can be null.</param>
 	/// <param name="toolbars">Empty toolbars where to add buttons. XML tag = <b>Name</b> property.</param>
 	public void InitToolbarsAndCustomize(string xmlFileDefault, string xmlFileCustomized, ToolBar[] toolbars) {
-		string xmlFile = _defaultFile = xmlFileDefault;
-		_customizedFile = xmlFileCustomized;
+		var ax = LoadFiles(xmlFileDefault, xmlFileCustomized);
+		if (ax == null) return;
+		foreach (var xt in ax) {
+			ToolBar tb = null;
+			var tbname = xt.Name.LocalName;
+			if (tbname != "menu") {
+				tb = toolbars.FirstOrDefault(o => o.Name == tbname);
+				if (tb == null) { Debug_.Print("Unknown toolbar " + tbname); continue; }
+			}
+			foreach (var v in xt.Elements()) {
+				if (_d.TryGetValue(v.Name.LocalName, out var c)) c.Customize_(v, tb);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Loads and merges default and customized commands files.
+	/// </summary>
+	/// <returns></returns>
+	public static XElement[] LoadFiles(string xmlFileDefault, string xmlFileCustomized) {
 		try {
 			var a = XmlUtil.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
-			if (xmlFileCustomized != null && filesystem.exists(xmlFileCustomized, true).File) {
-				try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
+			try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
+				if (xmlFileCustomized != null && filesystem.exists(xmlFileCustomized, true).File) {
 					var ac = XmlUtil.LoadElem(xmlFileCustomized).Elements().ToArray();
 					for (int i = 0; i < a.Length; i++) {
 						var name = a[i].Name.LocalName;
-						foreach (var y in ac) if (y.Name.LocalName == name && y.HasElements) { a[i] = y; break; }
+						foreach (var y in ac) if (y.Name.LocalName == name && y.HasElements) { _AddMissingButtons(a[i], y); a[i] = y; break; }
 					}
-					xmlFile = _customizedFile = xmlFileCustomized;
-					//FUTURE: auto-update documentation comments in xmlFileCustomized
-				}
-				catch (Exception ex) { print.it($"Failed to load file '{xmlFileCustomized}'. {ex.ToStringWithoutStack()}"); }
-			}
 
-			var context = new _CustomizeContext { xmlFile = xmlFile };
-			foreach (var xtb in a) {
-				ToolBar tb = null;
-				var tbname = xtb.Name.LocalName;
-				if (tbname != "menu") {
-					foreach (var v in toolbars) if (v.Name == tbname) { tb = v; goto g1; }
-					print.it($"<><explore>{xmlFile}<>: unknown toolbar '{tbname}'. Toolbars: {string.Join(", ", toolbars.Select(o => o.Name))}.");
-					continue;
-					g1:;
-				}
-				foreach (var v in xtb.Elements()) {
-					var name = v.Name.LocalName;
-					if (_d.TryGetValue(name, out var c)) c.Customize_(v, tb, context);
-					else print.it($"<><explore>{xmlFile}<>: unknown command '{name}'. Commands:\r\n{CommandNames}");
+					static void _AddMissingButtons(XElement xDef, XElement xUser) {
+						//SHOULDDO: also remove unknown commands, eg those deleted in this version.
+						if (xUser.Name.LocalName == "menu") return;
+						foreach (var v in xDef.Elements().Except(xUser.Elements(), s_xmlNameComparer)) {
+							//v.Remove();
+							v.SetAttributeValue("hide", "always");
+							xUser.Add(v);
+						}
+					}
 				}
 			}
+			catch (Exception ex) { print.it($"<>Failed to load file <explore>{xmlFileCustomized}<>. <_>{ex.ToStringWithoutStack()}</_>"); }
+			return a;
 		}
-		catch (Exception ex) { print.it($"Failed to load file '{xmlFile}'. {ex.ToStringWithoutStack()}"); }
-
-		foreach (var tb in toolbars) {
-			tb.ContextMenuOpening += _ContextMenu;
-			tb.PreviewMouseRightButtonDown += (sender, e) //workaround for: on right-down closes overflow. Currently would not need, but then on right-up would open another menu etc in an unrelated element.
-				=> e.Handled = _GetCommandFromMouseEventArgs(sender, e, out var command, out var control) && ToolBar.GetIsOverflowItem(control);
-		}
+		catch (Exception ex) { print.it($"<>Failed to load file <explore>{xmlFileDefault}<>. <_>{ex.ToStringWithoutStack()}</_>"); }
+		return null;
 	}
+
+	class _XElementNameEqualityComparer : IEqualityComparer<XElement> {
+		bool IEqualityComparer<XElement>.Equals(XElement x, XElement y) => x.Name == y.Name;
+		int IEqualityComparer<XElement>.GetHashCode(XElement x) => x.Name.GetHashCode();
+	}
+	static _XElementNameEqualityComparer s_xmlNameComparer = new();
 
 	public string CommandNames => _names;
 
-	internal class _CustomizeContext
-	{
-		public string xmlFile;
-		public Command command;
-
-		public void Error(string s, Exception ex = null) {
-			print.it($"{xmlFile}, command {command.Name}: {s}. {ex?.ToStringWithoutStack()}");
-		}
-	}
-
-	void _Customize() {
-		if (!filesystem.exists(_customizedFile, true).File) filesystem.copy(_defaultFile, _customizedFile);
-		run.selectInExplorer(_customizedFile);
-	}
-
-	void _ContextMenu(object sender, ContextMenuEventArgs e) {
-		if (_customizedFile == null) return;
-		if (_GetCommandFromMouseEventArgs(sender, e, out _, out _)) {
-			e.Handled = true;
-			if (sender is ToolBar tb) tb.IsOverflowOpen = false; //this was some workaround when using WPF menu, now don't know
-			switch (popupMenu.showSimple("Edit commands file|Find default commands file")) {
-			case 1: _Customize(); break;
-			case 2: run.selectInExplorer(_defaultFile); break;
-			}
-		}
-	}
-
-	static bool _GetCommandFromMouseEventArgs(object sender, RoutedEventArgs e, out Command command, out Control control) {
-		for (var v = e.Source as DependencyObject; v != null && v != sender; v = VisualTreeHelper.GetParent(v)) {
-			if (v is ICommandSource u && u.Command is Command c) { command = c; control = (Control)v; return true; }
-		}
-		command = null; control = null;
-		return false;
-	}
+	/// <summary>
+	/// Called on error in a custom attribute.
+	/// </summary>
+	public Action<Command, string, Exception> OnCustomizingError;
 
 	/// <summary>
 	/// Parameters for factory action of <see cref="KMenuCommands"/>.
 	/// </summary>
-	public class FactoryParams
-	{
+	public class FactoryParams {
 		internal FactoryParams(Command command, MemberInfo member) { this.command = command; this.member = member; }
 
 		/// <summary>
@@ -817,8 +800,7 @@ public class KMenuCommands
 /// Allows to add menu items in the same order as methods and nested types, and optionally specify menu item text etc.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-public class CommandAttribute : Attribute
-{
+public class CommandAttribute : Attribute {
 	internal readonly int order_;
 
 	/// <summary>

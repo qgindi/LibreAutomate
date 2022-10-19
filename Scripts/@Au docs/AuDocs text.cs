@@ -193,8 +193,8 @@ partial class AuDocs {
 		nr = s.RxReplace(@"<p>\s+", "<p>", out s); //<p>\n makes new line before. This is in notes only.
 		
 		s = _rxCss.Replace(s, "$1$2\n$1<link rel=\"stylesheet\" href=\"../styles/code.css\">", 1);
-		s = _rxCode2.Replace(s, m => _Code(m[1].Value, true)); //syntax in api, and ```code``` in conceptual
-		if (isApi) s = _rxCode.Replace(s, m => _Code(m[1].Value, false)); //<code> in api
+		s = _rxCode2.Replace(s, m => _Code(m[1].Value, isApi ? 1 : 2)); //syntax in api, and ```code``` in conceptual
+		if (isApi) s = _rxCode.Replace(s, m => _Code(m[1].Value, 0)); //<code> in api
 		
 #if DISQUS
 		//add this at the bottom of help pages
