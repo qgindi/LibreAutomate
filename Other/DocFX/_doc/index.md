@@ -31,7 +31,7 @@ Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 The program and the library are very young. Need more testing. Some classes/functions/etc may be changed in the future.
 
 ### Links
-- [Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.9.0, 2022-10-05, 24 MB
+- [Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.10.0, 2022-10-19, 24 MB
 - [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
 - [Source code](https://github.com/qgindi/LibreAutomate)
 - [Forum](https://www.libreautomate.com/forum/)

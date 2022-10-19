@@ -227,8 +227,8 @@ static class Menus {
 			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease #9F5300")]
 			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
 
-			[Command(keysText = "Ctrl+D")]
-			public static void Duplicate() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
+			//[Command(keysText = "Ctrl+D")]
+			//public static void Duplicate() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
 
 			[Command]
 			public static void Format_selection() { ModifyCode.Format(true); }
@@ -242,16 +242,16 @@ static class Menus {
 
 		[Command]
 		public static class Surround {
-			[Command("for (repeat)")]
+			[Command("for (repeat)", image = "*Typicons.ArrowLoop #9F5300")]
 			public static void Surround_for() { InsertCode.SurroundFor(); }
 
-			[Command("try (catch exceptions)")]
+			[Command("try (catch exceptions)", image = "*MaterialDesign.ErrorOutline #9F5300")]
 			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
 		}
 
 		[Command]
 		public static class Generate {
-			[Command(keys = "Ctrl+Shift+D")]
+			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda #9F5300")]
 			public static void Create_delegate() { InsertCode.CreateDelegate(); }
 
 			[Command(tooltip = "Implement interface or abstract class")]
