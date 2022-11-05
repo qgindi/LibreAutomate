@@ -173,7 +173,6 @@ namespace Au.Types {
 		/// <summary>
 		/// Returns true if <c>IsChecked == true</c>.
 		/// </summary>
-		/// <param name="t"></param>
 		[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 		//[Obsolete("use code IsChecked == true")]
 		public static bool True(this CheckBox t) => t.IsChecked == true;
@@ -474,10 +473,28 @@ namespace Au.Types {
 		/// <summary>
 		/// Adds a child element in specified row/column.
 		/// </summary>
-		public static void AddChild(this Grid g, UIElement e, int row, int column) {
+		public static void AddChild(this Grid g, UIElement e, int row, int column, int rowSpan = 1, int columnSpan = 1) {
 			Grid.SetRow(e, row);
 			Grid.SetColumn(e, column);
+			if (rowSpan > 1) Grid.SetRowSpan(e, rowSpan);
+			if (columnSpan > 1) Grid.SetColumnSpan(e, columnSpan);
 			g.Children.Add(e);
+		}
+
+		/// <summary>
+		/// Adds one or more columns. Like <see cref="wpfBuilder.Columns"/>, but does not clear existing columns.
+		/// </summary>
+		/// <inheritdoc cref="wpfBuilder.Columns" path="/param"/>
+		public static void AddColumns(this Grid g, params WBGridLength[] widths) {
+			foreach (var v in widths) g.ColumnDefinitions.Add(v.Column);
+		}
+
+		/// <summary>
+		/// Adds one or more rows. Like <see cref="wpfBuilder.Row"/>.
+		/// </summary>
+		/// <param name="heights"><inheritdoc cref="wpfBuilder.Row" path="/param[@name='height']/node()"/></param>
+		public static void AddRows(this Grid g, params WBGridLength[] heights) {
+			foreach (var v in heights) g.RowDefinitions.Add(v.Row);
 		}
 
 		/// <summary>
@@ -563,7 +580,7 @@ namespace Au.Types {
 			t.WindowState = WindowState.Normal;
 			t.Loaded += (_, _) => {
 				var w = t.Hwnd();
-				//unsafe { int BOOL = 1; api.DwmSetWindowAttribute(w, api.DWMWINDOWATTRIBUTE.DWMWA_TRANSITIONS_FORCEDISABLED, &BOOL, 0); } //does not disable the inflate/deflate animation; and don't need, with it even better
+				//unsafe { int BOOL = 1; Api.DwmSetWindowAttribute(w, Api.DWMWINDOWATTRIBUTE.DWMWA_TRANSITIONS_FORCEDISABLED, &BOOL, 0); } //does not disable the inflate/deflate animation; and don't need, with it even better
 				if (Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au", "WPFpreview xy", null) is int xy) {
 					var p = Math2.NintToPOINT(xy);
 					w.MoveL(p.x, p.y);

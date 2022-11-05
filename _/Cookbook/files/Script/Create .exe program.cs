@@ -21,3 +21,5 @@
 /// To get program/OS/computer info can be used classes <see cref="script"/>, <see cref="process"/>, <see cref="uacInfo"/>, <see cref="osVersion"/>, <see cref="folders"/>, <see cref="Environment"/>.
 ///
 /// Antivirus programs and OS may block or block-scan-restart unknown (new) program files. To avoid it on the development computer, in the AV program add the output directory to the list of exclusions. To avoid it anywhere, need to sign program files with a code signing certificate; it isn't cheap and isn't easy to get.
+///
+/// See also <help editor/Scripts>Scripts<>.

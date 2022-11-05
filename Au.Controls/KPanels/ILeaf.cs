@@ -39,13 +39,14 @@ namespace Au.Controls
 			/// <param name="type"></param>
 			/// <param name="name"></param>
 			/// <param name="canClose">Add "Close    M-click" item in context menu. It will fire <see cref="Closing"/> event and call <see cref="Delete"/> if not canceled.</param>
-			/// <returns>Returns interface of the new item.</returns>
+			/// <param name="isExtension">Save layout etc in file.</param>
+			/// <returns>Interface of the new item.</returns>
 			/// <exception cref="ArgumentException"><i>type</i> is not Panel/Toolbar/Document, or <i>name</i> is null, or <i>name</i> panel already exists.</exception>
 			/// <remarks>
-			/// Added items can be deleted with <see cref="Delete"/>. Will not be saved.
+			/// Added items can be deleted with <see cref="Delete"/>.
 			/// Add documents only by the document placeholder or by added documents. Don't add other nodes by documents.
 			/// </remarks>
-			ILeaf AddSibling(bool after, LeafType type, string name, bool canClose);
+			ILeaf AddSibling(bool after, LeafType type, string name, bool canClose, bool isExtension);
 
 			/// <summary>
 			/// Deletes this leaf item added with <see cref="AddSibling"/>.

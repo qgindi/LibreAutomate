@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Controls.Primitives;
@@ -39,12 +39,23 @@ namespace Au.Controls
 						m.AddRadio(ca.ToString(), ca == thisOrParentTab._captionAt, o => thisOrParentTab._SetCaptionAt(ca));
 					}
 				});
+
 				_ContextMenu_Move(m);
+
+				if(_leaf?.isExtension ?? false) {
+					m["Remove..."] = o => {
+						var s1 = _leafType == LeafType.Toolbar ? "toolbar" : "panel";
+						if (!dialog.showYesNo($"Remove this extension {s1}?", this.Name, owner: _pm._ContainerWindow)) return;
+						Delete();
+						print.it($"Info: extension {s1} {this.Name} has been removed. To uninstall the extension, also remove its script from startup scripts in Options and delete the script.");
+					};
+				}
+
 				_ShowSubmenus();
 
 				//ContextMenuOpening?.Invoke(this, m);
 
-				m.Show();
+				m.Show(owner: _pm._ContainerWindow);
 
 				void _DockStateItem(_DockState state, string text) {
 					m[text] = o => _SetDockState(state);

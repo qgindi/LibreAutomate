@@ -153,8 +153,15 @@ public unsafe partial class KTreeView {
 	//		_Invalidate();
 	//	}
 
-	//shoulddo: support custom background color
+	/// <summary>
+	/// Image background brush.
+	/// Does not redraw.
+	/// </summary>
+	public Brush ImageBrush { get; set; }
+
+	//CONSIDER: custom background and text colors.
 	//public ColorInt? BackgroundColor { get; set; }
+	//public ColorInt? TextColor { get; set; }
 
 	void _Render(IntPtr dc, RECT rUpdate) {
 		//if (BackgroundColor != null) {
@@ -270,6 +277,12 @@ public unsafe partial class KTreeView {
 						}
 					}
 
+					//image background
+					if (ImageBrush != null) {
+						int imm = (_imageMarginX + 1) / 2;
+						graphics.FillRectangle(ImageBrush, xImage - imm, y, _imageSize + imm * 2, _itemHeight);
+					}
+
 					//image
 					_DrawImage(item.Image);
 
@@ -287,6 +300,7 @@ public unsafe partial class KTreeView {
 							foreach (var o in v) _DrawImage(o);
 							break;
 						}
+
 						if (b != null) {
 							if (cd == null || !cd.DrawImage(b)) {
 								graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));

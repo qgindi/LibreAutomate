@@ -25,7 +25,7 @@ partial class MainWindow : Window {
 		App.Commands[nameof(Menus.File.New)].SubmenuOpened = (o, _) => FilesModel.FillMenuNew(o as MenuItem);
 		App.Commands[nameof(Menus.File.Workspace)].SubmenuOpened = (o, _) => FilesModel.FillMenuRecentWorkspaces(o as MenuItem);
 
-		App.Commands.OnCustomizingError = (c, s, ex) => print.it($"<>Customization error in <+DCommands>{c.Name}<>: {s}. {ex?.ToStringWithoutStack()}");
+		App.Commands.OnCustomizingError = (c, s, ex) => print.it($"<>Customization error in <+DCustomize>{c.Name}<>: {s}. {ex?.ToStringWithoutStack()}");
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
 		App.Commands.InitToolbarsAndCustomize(folders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
 

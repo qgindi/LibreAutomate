@@ -3,10 +3,8 @@ using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
 
-partial class FilesModel
-{
-	public class FilesView : KTreeView
-	{
+partial class FilesModel {
+	public class FilesView : KTreeView {
 		public FilesView() {
 			SetMultiSelect(toggle: false);
 			AllowDrop = true;
@@ -145,7 +143,9 @@ partial class FilesModel
 				var files = nodes == null ? e.Data.GetData(DataFormats.FileDrop) as string[] : null;
 				GetDropInfo(out var d);
 				var pos = d.intoFolder ? FNPosition.Inside : (d.insertAfter ? FNPosition.After : FNPosition.Before);
-				App.Model._DroppedOrPasted(nodes, files, e.Effects == DragDropEffects.Copy, d.targetItem as FileNode, pos);
+				bool copy = e.Effects == DragDropEffects.Copy;
+				var fn = d.targetItem as FileNode;
+				Dispatcher.InvokeAsync(() => App.Model._DroppedOrPasted(nodes, files, copy, fn, pos));
 			}
 			return true;
 		}

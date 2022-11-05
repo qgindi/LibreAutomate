@@ -1,10 +1,10 @@
-﻿<files max-i="350">
-  <d n="-" i="244">
-    <s n="Test.cs" i="121" />
-    <s n="TODO.cs" i="292" />
-    <c n="How to write the cookbook.cs" i="1" />
-    <c n="global.cs" i="24" />
-    <s n="init.cs" i="344" />
+﻿<files max-i="363">
+  <d n="-" i="357">
+    <s n="How to write the cookbook.cs" i="360" />
+    <s n="Test.cs" i="362" />
+    <s n="TODO.cs" i="363" />
+    <s n="init.cs" i="361" />
+    <c n="global.cs" i="359" />
   </d>
   <s n="Introduction, finding info.cs" i="3" />
   <d n="C# language" i="4">
@@ -113,8 +113,8 @@
     <s n="Create .exe program.cs" i="188" />
   </d>
   <d n="Triggers, toolbars" i="17">
-    <s n="Keyboard triggers (hotkeys).cs" i="160" />
-    <s n="Autotext triggers, text replacement.cs" i="162" />
+    <s n="Keyboard triggers (hotkeys), remap keys.cs" i="160" />
+    <s n="Autotext triggers, expand text.cs" i="162" />
     <s n="Mouse triggers.cs" i="161" />
     <s n="Window triggers, auto-close popup windows.cs" i="163" />
     <s n="Floating toolbars.cs" i="164" />
@@ -193,6 +193,7 @@
     <s n="WMI.cs" i="102" />
     <s n="PowerShell, VBScript.cs" i="103" />
     <s n="Use C# compiler at run time.cs" i="346" />
+    <s n="Editor extension - modify UI.cs" i="351" />
   </d>
   <s n="Frequently asked questions.cs" i="91" />
 </files>

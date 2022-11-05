@@ -18,7 +18,8 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={commonpf}\{#MyAppNameShort}
-OutputDir=..\..\_
+SourceDir=..\..\_
+OutputDir=.
 OutputBaseFilename=LibreAutomateSetup
 Compression=lzma/normal
 SolidCompression=yes
@@ -29,7 +30,7 @@ DisableProgramGroupPage=yes
 AppMutex=Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ
 UsePreviousGroup=False
 DisableDirPage=no
-SetupIconFile=..\..\Au.Editor\resources\ico\app.ico
+SetupIconFile=..\Au.Editor\resources\ico\app.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
@@ -38,42 +39,48 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "C:\code\au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "C:\code\au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\Au.Net4.exe.config"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Net4.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "C:\code\au\_\Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
-Source: "C:\code\au\_\64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "C:\code\au\_\64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "C:\code\au\_\64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "C:\code\au\_\64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "C:\code\au\_\32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
-Source: "C:\code\au\_\32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
-Source: "C:\code\au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
+Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 
-Source: "C:\code\au\_\Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\code\au\_\Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
-Source: "C:\code\au\_\Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
-Source: "C:\code\au\_\Cookbook\files\*"; DestDir: "{app}\Cookbook\files"; Flags: ignoreversion recursesubdirs
-Source: "C:\code\au\_\Cookbook\files.xml"; DestDir: "{app}\Cookbook"; Flags: ignoreversion
+Source: "Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
+Source: "Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
+Source: "Cookbook\files\*"; DestDir: "{app}\Cookbook\files"; Excludes: "-*"; Flags: ignoreversion recursesubdirs
+Source: "Cookbook\files.xml"; DestDir: "{app}\Cookbook"; Flags: ignoreversion
 
-Source: "C:\code\au\_\default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\doc.db"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\ref.db"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\icons.db"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\code\au\_\dotnet_ref.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
+Source: "doc.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ref.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "winapi.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "icons.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dotnet_ref.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [InstallDelete]
 ;Type: files; Name: "{app}\file.ext"
 ;Type: filesandordirs; Name: "{app}\dir"
+Type: filesandordirs; Name: "{app}\Roslyn"
+Type: filesandordirs; Name: "{app}\64"
+Type: filesandordirs; Name: "{app}\32"
+Type: filesandordirs; Name: "{app}\Default"
+Type: filesandordirs; Name: "{app}\Templates"
+Type: filesandordirs; Name: "{app}\Cookbook"
 Type: filesandordirs; Name: "{commonprograms}\C# Uiscripter"
 Type: filesandordirs; Name: "{commonprograms}\Automaticode C#"
 Type: filesandordirs; Name: "{commonprograms}\Autepad C#"

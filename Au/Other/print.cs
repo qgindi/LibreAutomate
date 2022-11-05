@@ -7,12 +7,13 @@ namespace Au;
 public static partial class print
 {
 	/// <summary>
-	/// Returns true if this is a console process.
+	/// Returns true if this process is attached to a console.
 	/// </summary>
-	public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //fast, don't cache
+	public static bool isConsoleProcess => Api.GetConsoleOutputCP() != 0; //fast
+	//public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //no, may be true even if not attached to a console, eg if this non-console program started from cmd/bat on Win7
 
 	/// <summary>
-	/// Returns true if is writing to console, false if to the output window or log file (assuming that <see cref="writer"/> isn't changed).
+	/// Returns true if is writing to console, false if to the output window etc.
 	/// </summary>
 	/// <remarks>
 	/// Does not write to console in these cases:
@@ -240,7 +241,7 @@ public static partial class print
 	static void _ConsoleWriteLine(string value) => Console.WriteLine(value);
 
 	/// <summary>
-	/// Writes warning text to the output.
+	/// Writes a warning text to the output.
 	/// By default appends the stack trace.
 	/// </summary>
 	/// <param name="text">Warning text.</param>

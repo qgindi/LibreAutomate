@@ -66,6 +66,7 @@ Can be Pack.Icon, like Modern.List.")
 		colors.ColorChanged += color => {
 			_random = null;
 			_color = _ColorToString(color);
+			tv.ImageBrush = ColorInt.GetPerceivedBrightness(color, false) > .8 ? System.Drawing.Brushes.DimGray : null;
 			tv.Redraw();
 		};
 		b.StartStack();
@@ -235,7 +236,7 @@ Can be Pack.Icon, like Modern.List.")
 			string code = null;
 			if (what == _Action.MenuIcon) {
 				var s = _ColorName(k);
-				if (DCommands.ZSetImage(s)) return;
+				if (DCustomize.ZSetImage(s)) return;
 				InsertCode.SetMenuToolbarItemIcon(s);
 			} else if (what == _Action.CopyName) {
 				code = _ColorName(k);
@@ -297,6 +298,7 @@ Can be Pack.Icon, like Modern.List.")
 			}
 			//}
 			//perf.nw(); //4 ms
+			tv.ImageBrush = middleL > 200 ? System.Drawing.Brushes.DimGray : null;
 			tv.Redraw();
 		}
 
@@ -335,6 +337,13 @@ Can be Pack.Icon, like Modern.List.")
 					//using var p1 = perf.local();
 					if (GetIconFromBigDB(_table, _name, s_dialog._ItemColor(this), out string xaml)) {
 						//p1.Next('d');
+
+						//rejected: if very bright, use dark background for icon.
+						//	This works, but looks not good. Instead we set tv.ImageBrush when all icons are bright.
+						//var e = ImageUtil.LoadWpfImageElement(xaml);
+						//e = new Border { Child = e, Background = System.Windows.Media.Brushes.DimGray };
+						//return ImageUtil.ConvertWpfImageElementToGdipBitmap(e, s_dialog._dpi, (16, 16));
+
 						return ImageUtil.LoadGdipBitmapFromXaml(xaml, s_dialog._dpi, (16, 16));
 					}
 				}

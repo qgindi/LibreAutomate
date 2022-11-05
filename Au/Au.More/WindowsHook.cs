@@ -370,7 +370,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Writes warning if the variable is not disposed. Cannot dispose in finalizer.
+		/// Prints a warning if the variable is not disposed. Cannot dispose in finalizer.
 		/// </summary>
 		~WindowsHook() {
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
@@ -519,7 +519,7 @@ namespace Au.More
 		/// <remarks>
 		/// Gets registry value <c>HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout</c>. If it is missing, returns 300; it is the default value used by Windows. If greater than 1000, returns 1000, because Windows 10 ignores bigger values.
 		/// 
-		/// If a hook procedure takes more time, Windows does not wait. Then its return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then restores the hook and writes a warning to the output. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow.
+		/// If a hook procedure takes more time, Windows does not wait. Then its return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then restores the hook and prints a warning. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow.
 		/// 
 		/// Callback functions of keyboard and mouse triggers are called in a hook procedure, therefore must be as fast as possible. More info: <see cref="Triggers.TriggerFuncs"/>.
 		/// 

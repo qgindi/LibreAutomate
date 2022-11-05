@@ -1,10 +1,10 @@
-﻿---
+---
 uid: code_editor
 ---
 
 # Code editor
 
-In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, bracket completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, go back/forward, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, format code, drag/drop files, find/replace text, find namespace, find Windows API, insert keys/regex/etc, implement interface, capture UI elements, WPF preview.
+In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, bracket completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, go back/forward, error info, code coloring, text folding, separators between functions, images in code, snippets, comment/uncomment/indent/unindent lines, format code, drag-drop files, find-replace text, find namespace, find Windows API, insert keys/regex/etc, implement interface, capture UI elements, WPF preview.
 
 C# code may look like this:
 ```csharp
@@ -66,6 +66,9 @@ If the symbol is from the automation library, it opens the online documentation 
 Click a symbol and press F12. Or click the "source code" link in the autocompletion item info or parameter info window.
 
 If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET runtime, it can help to find the source code online.
+
+#### Go to script, file, URL
+Click a file path string and press F12 to select it in File Explorer. In the same way you can open folders, script files and web pages. It also works in meta comments, other comments and in code like `folders.System + @"notepad.exe"`. If the path etc does not start and end with ", at first select it.
 
 #### Error info
 Errors are detected in editor, as well as when compiling the code. Code parts with errors have red squiggly underlines, warnings green. A tooltip shows error/warning description. Also can contain links to fix the error: add missing `using namespace` or Windows API declaration.

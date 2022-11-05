@@ -5,9 +5,6 @@
     <d n="@Script" i="7">
       <s n="Script.cs" i="8" />
     </d>
-    <d n="@Exe" i="64">
-      <s n="Exe.cs" i="65" />
-    </d>
     <d n="@Library" i="9">
       <c n="Library.cs" i="10" />
     </d>

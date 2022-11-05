@@ -36,7 +36,7 @@ All attributes are optional. The Example command contains all.
 		<Compile />
 		<Run_script />
 		<End_task />
-		<Recent separator="" />
+		<Recent />
 	</Run>
 	<Edit>
 		<Undo />
@@ -59,8 +59,8 @@ All attributes are optional. The Example command contains all.
 		<uiimage />
 		<Keys />
 		<New_trigger separator="" />
-		<Icons separator="" />
-		<Options />
+		<Options separator="" />
+		<Icons />
 	</Tools>
 	<Help>
 		

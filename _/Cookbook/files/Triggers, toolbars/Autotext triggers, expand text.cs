@@ -1,6 +1,6 @@
-/// To execute some code or auto-replace text when you type some text, can be used autotext <help Au.Triggers.ActionTriggers>triggers<>.
+/// Autotext <help Au.Triggers.ActionTriggers>triggers<> can be used to execute some code or auto-replace text when you type an abbreviation or an incorrectly spelled word. Also known as text expanding, auto-correction, hotstrings.
 ///
-/// To add a trigger can be used snippet triggerSnippet or menu TT -> New trigger. Add triggers in function <b>AutotextTriggers</b> in file "Autotext triggers".
+/// To add a trigger can be used snippet triggerSnippet or menu TT -> New trigger. Add triggers in function <b>AutotextTriggers</b> in file "Autotext triggers"; you'll find examples there.
 ///
 /// To open a triggers file for editing can be used the TT menu.
 /// 

@@ -337,9 +337,9 @@ void _CreateCppFile(string cppFile, bool is64bit) {
 	string sal = Shared_Include + @"\sal.h";
 	s = File.ReadAllText(sal);
 	if (!s.Contains("AU")) {
-		string incl = $"#ifdef AU\r\n#include ''{catsal}''\r\n#endif\r\n";
+		string incl = $"#ifdef AU\r\n#include \"{catsal}\"\r\n#endif\r\n";
 		if (0 == s.RxReplace(@"(?m)^#define _SA_annotes3\(n,pp1,pp2,pp3\)\R", "$0" + incl, out s, 1)) throw new AuException();
-		filesystem.saveText(sal, s);
+		filesystem.saveText(sal, s, backup: true);
 	}
 	
 	string appmodel = SDK_Include + @"\appmodel.h";

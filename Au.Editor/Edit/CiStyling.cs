@@ -520,9 +520,9 @@ partial class CiStyling
 		public TStyles(KScintilla sci) {
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
 
-			TStyle _Get(EStyle tok) {
-				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)tok));
-				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)tok);
+			TStyle _Get(EStyle k) {
+				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)k));
+				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)k);
 				return new TStyle(color, bold);
 			}
 
@@ -555,10 +555,10 @@ partial class CiStyling
 			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			sci.zStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
 
-			void _Set(EStyle tok, TStyle sty) {
-				sci.zStyleForeColor((int)tok, sty.color);
-				if (sty.bold) sci.zStyleBold((int)tok, true);
-				if (multiFont) sci.zStyleFont((int)tok, FontName, FontSize);
+			void _Set(EStyle k, TStyle sty) {
+				sci.zStyleForeColor((int)k, sty.color);
+				if (sty.bold) sci.zStyleBold((int)k, true);
+				if (multiFont) sci.zStyleFont((int)k, FontName, FontSize);
 			}
 
 			_Set(EStyle.None, None);
@@ -583,9 +583,32 @@ partial class CiStyling
 			_Set((EStyle)STYLE_LINENUMBER, LineNumber);
 		}
 
+		//rejected
+		//public void InvertAllColors() {
+		//	None.color ^= 0xffffff;
+		//	Comment.color ^= 0xffffff;
+		//	String.color ^= 0xffffff;
+		//	StringEscape.color ^= 0xffffff;
+		//	Number.color ^= 0xffffff;
+		//	Punctuation.color ^= 0xffffff;
+		//	Operator.color ^= 0xffffff;
+		//	Keyword.color ^= 0xffffff;
+		//	Namespace.color ^= 0xffffff;
+		//	Type.color ^= 0xffffff;
+		//	Function.color ^= 0xffffff;
+		//	Variable.color ^= 0xffffff;
+		//	Constant.color ^= 0xffffff;
+		//	Label.color ^= 0xffffff;
+		//	Preprocessor.color ^= 0xffffff;
+		//	Excluded.color ^= 0xffffff;
+		//	XmlDocText.color ^= 0xffffff;
+		//	XmlDocTag.color ^= 0xffffff;
+		//	BackgroundColor ^= 0xffffff;
+		//}
+
 		//not used
-		//public TStyle GetStyle(EStyle token) {
-		//	return token switch {
+		//public TStyle GetStyle(EStyle k) {
+		//	return k switch {
 		//		EStyle.None => None,
 		//		EStyle.Comment => Comment,
 		//		EStyle.String => String,
@@ -609,8 +632,8 @@ partial class CiStyling
 		//	};
 		//}
 
-		//public void SetStyle(EStyle token, TStyle style) {
-		//	switch(token) {
+		//public void SetStyle(EStyle k, TStyle style) {
+		//	switch(k) {
 		//	case EStyle.None: None = style; break;
 		//	case EStyle.Comment: Comment = style; break;
 		//	case EStyle.String: String = style; break;

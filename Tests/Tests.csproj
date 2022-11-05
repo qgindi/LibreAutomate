@@ -18,6 +18,7 @@
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

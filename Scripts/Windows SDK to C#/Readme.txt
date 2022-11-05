@@ -6,4 +6,4 @@
 
 External tools:
 1. dumpbin.exe from Visual Studio. Used by scripts "SDK get dll names" and "SDK get GUID".
-2. clang.exe from LLVM. Used by script "SDK preprocessor".
+2. clang.exe from LLVM (setup file LLVM-3.9.1-win64.exe). Used by script "SDK preprocessor".

@@ -101,7 +101,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls <sqlite>sqlite3_close_v2</sqlite>.
-		/// If fails, writes warning to the output.
+		/// If fails, prints a warning.
 		/// </summary>
 		public void Dispose() {
 			Dispose(true);

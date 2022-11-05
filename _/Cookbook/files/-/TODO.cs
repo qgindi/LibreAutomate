@@ -11,13 +11,11 @@ Intro
 	Recording
 	Frequently asked questions
 
-CONSIDER: Recipe "Other C# features". Shortly about directives, reflection, attributes, inheritance, access, generic, dynamic, async, unsafe, span, range/index, interop, GC, module initializers, etc.
+CONSIDER: Recipe "Other C# features". Shortly about directives, disposing, reflection, attributes, inheritance, access, generic, dynamic, async, unsafe, span, range/index, interop, GC, module initializers, etc.
 
 Log.
 
 PDF.
-
-Disposing, using statement.
 
 Test Excel libraries more. Maybe use ClosedXML (free) instead of EPPlus (free for non-commercial).
 

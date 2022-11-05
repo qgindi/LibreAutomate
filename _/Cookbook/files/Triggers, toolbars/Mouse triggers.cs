@@ -1,6 +1,6 @@
 /// To execute some code or run a script, can be used mouse <help Au.Triggers.ActionTriggers>triggers<>. Examples: Alt+click, Shift+wheel, touch a screen edge in certain area, mouse movements in certain area.
 ///
-/// To add a trigger can be used snippet triggerSnippet or menu TT -> New trigger. Add triggers in function <b>MouseTriggers</b> in file "Mouse triggers".
+/// To add a trigger can be used snippet triggerSnippet or menu TT -> New trigger. Add triggers in function <b>MouseTriggers</b> in file "Mouse triggers"; you'll find examples there.
 ///
 /// To open a triggers file for editing can be used the TT menu.
 /// 

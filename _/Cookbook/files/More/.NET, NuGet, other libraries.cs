@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 var x = XElement.Load(@"C:\Test\file.xml");
 
-/// Many other managed libraries can be downloaded, for example from <google>NuGet</google> or <google>GitHub</google>. To install NuGet packages, use menu Tools -> NuGet. For it at first need to install .NET SDK.
+/// Many other managed libraries can be downloaded, for example from <google>NuGet</google> or <google GitHub .NET libraries>GitHub</google>. To install NuGet packages, use menu Tools -> NuGet. For it at first need to install .NET SDK.
 ///
 /// NuGet packages also can be used without installing SDK, but then installing them isn't so easy. Need to download and extract packages and their dependencies. NuGet packages are .zip files with file extension .nupkg. Usually need just the .dll file, and .xml if exists. In .nupkg files usually they are in /lib/netX or /lib/netstandardX or /runtimes/win/lib/netX. Extract them for example to the Libraries subfolder of the editor's folder, or to the dll subfolder of the workspace folder, or anywhere.
 ///

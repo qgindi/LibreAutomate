@@ -58,7 +58,7 @@ namespace Au.More
 
 		//not used in library
 		///// <summary>
-		///// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
+		///// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns null and optionally prints a warning.
 		///// </summary>
 		//public static System.Drawing.Bitmap TryLoadGdipBitmapFromString(string s, bool warning) {
 		//	try { return LoadGdipBitmapFromString(s); }
@@ -67,7 +67,7 @@ namespace Au.More
 		//}
 
 		///// <summary>
-		///// Calls <see cref="LoadWpfImageFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
+		///// Calls <see cref="LoadWpfImageFromString"/> and handles exceptions. On exception returns null and optionally prints warning.
 		///// </summary>
 		//public static BitmapFrame TryLoadWpfImageFromString(string s, bool warning) {
 		//	try { return LoadWpfImageFromString(s); }

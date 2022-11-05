@@ -5,8 +5,6 @@
 /// 2. Put the classes in one or more class library projects. Add these projects to code files where you want to use them: Properties -> Project. It will create dll files that also can be used in other workspaces, as well as in other .NET programs and libraries.
 ///
 /// 3. Put the classes in file <open>global.cs<>. Or in class files added to global.cs. Use this only for classes that should be available in ALL code files (script, class) of current workspace. Also in global.cs you can add library references: Properties -> Library.
-/// 
-/// 4. Copy-paste them into each script (just kidding).
 
 /// Read more about <help editor/Class files%2C projects>class files and libraries<>.
 

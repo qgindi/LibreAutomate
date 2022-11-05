@@ -140,7 +140,7 @@ class PanelOutput : DockPanel {
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
-			ZTags.AddLinkTag("+DCommands", DCommands.ZShow);
+			ZTags.AddLinkTag("+DCustomize", DCustomize.ZShow);
 
 			App.PrintServer.SetNotifications(Hwnd, Api.WM_APP);
 

@@ -847,7 +847,7 @@ public unsafe partial class popupMenu : MTBase {
 		var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, b);
 		if (canEdit || canGo) {
 			var m = new popupMenu();
-			if (canEdit) m["Edit menu item"] = _ => ScriptEditor.OpenAndGoToLine(_sourceFile, b.sourceLine);
+			if (canEdit) m["Edit menu item"] = _ => ScriptEditor.Open(_sourceFile, b.sourceLine);
 			if (canGo) m[goText] = _ => b.GoToFile_();
 			_ShowSubmenu(b, m: m);
 		}

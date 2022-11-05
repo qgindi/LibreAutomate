@@ -557,9 +557,8 @@ string _field;
 /// Then, whenever you need an API function etc, type the class name and dot (api.). The completion list contains API names and adds declarations to this class.
 /// </summary>
 #pragma warning disable 649, 169 //field never assigned/used
-unsafe class api : NativeApi {}
-#pragma warning restore 649, 169 //field never assigned/used
-]]>
+unsafe class $end$api$end$ : NativeApi {}
+#pragma warning restore 649, 169 //field never assigned/used]]>
 		</snippet>
 
 		<snippet name="settingsSnippet" info="Adds a class for settings used by this script/program/library/etc.">
@@ -583,8 +582,7 @@ internal record class MySettings : JSettings {
 //internal static readonly MySettings sett = MySettings.Load();
 
 //or in script as local variable:
-//using var sett = MySettings.Load();
-]]>
+//using var sett = MySettings.Load();]]>
 		</snippet>
 
 	</group>

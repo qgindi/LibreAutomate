@@ -7,8 +7,7 @@ using System.Runtime.Loader;
 /// <summary>
 /// Executes scripts with role editorExtension.
 /// </summary>
-static unsafe class RunAssembly
-{
+static unsafe class RunAssembly {
 	/// <summary>
 	/// Executes assembly in this thread.
 	/// </summary>
@@ -70,6 +69,12 @@ static unsafe class RunAssembly
 				//p1.Next('L');
 
 				lsa.Add(asmFile, asm);
+
+				//this event will be here for editorExtension assemblies only.
+				//	Libraries used by editorExtension scripts are loaded by AssemblyLoadContext.Default.
+				//	Dlls used by meta pr libraries are resolved in app project -> _UnmanagedDll_Resolving.
+				//	Don't need alc.Resolving here. Libraries are always loaded in default context.
+				alc.ResolvingUnmanagedDll += (asm, name) => MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
 			}
 
 			var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
@@ -90,10 +95,8 @@ static unsafe class RunAssembly
 	/// <summary>
 	/// Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.
 	/// </summary>
-	struct _LoadedScriptAssembly
-	{
-		class _Asm
-		{
+	struct _LoadedScriptAssembly {
+		class _Asm {
 			public DateTime time;
 			public Assembly asm;
 		}

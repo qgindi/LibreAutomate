@@ -1,10 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Controls.Primitives;
 using System.Xml.Linq;
-using System.Windows.Media;
-using System.Windows.Data;
 
 //SHOULDDO: when a checkbox button command invoked with a hotkey, now does not change check state in menu and toolbar.
 //	Only in Edit menu. Even if target="" and scintilla not focused. Works well in other menus. Don't know why.
@@ -75,9 +72,9 @@ namespace Au.Controls;
 /// }
 /// ]]></code>
 /// </example>
-public class KMenuCommands {
+public partial class KMenuCommands {
 	readonly Dictionary<string, Command> _d = new(200);
-	readonly string _names;
+	Menu _menubar;
 
 	/// <summary>
 	/// Builds a WPF window menu with submenus and items that execute static methods defined in a class and nested classes.
@@ -89,99 +86,94 @@ public class KMenuCommands {
 	/// <param name="itemFactory">Optional callback function that is called for each menu item. Can create menu items, set properties, create toolbar buttons, etc.</param>
 	/// <exception cref="ArgumentException">Duplicate name. Use <see cref="CommandAttribute.name"/>.</exception>
 	public KMenuCommands(Type commands, Menu menu, bool autoUnderline = true, Action<FactoryParams> itemFactory = null) {
-		var bNames = new StringBuilder();
-		_Menu(commands, menu, null, 0);
-		_names = bNames.ToString();
-
-		void _Menu(Type type, ItemsControl parentMenu, string inheritTarget, int level) {
-			var am = type.GetMembers(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
-
-			if (am.Length == 0) { //dynamic submenu
-				parentMenu.Items.Add(new Separator());
-				return;
-			}
-
-			var list = new List<(MemberInfo mi, CommandAttribute a)>(am.Length);
-			foreach (var mi in am) {
-				var ca = mi.GetCustomAttribute<CommandAttribute>(false);
-				//var ca = mi.GetCustomAttributes().OfType<CommandAttribute>().FirstOrDefault(); //CommandAttribute and inherited. Similar speed. Don't need because factory action receives MemberInfo an can get other attributes from it.
-				if (ca != null) list.Add((mi, ca));
-			}
-
-			var au = new List<char>();
-
-			foreach (var (mi, ca) in list.OrderBy(o => o.a.order_)) {
-				string name = ca.name ?? mi.Name;
-				var c = new Command(this, name, mi, ca);
-				_d.Add(name, c);
-				bNames.Append('\t', level).AppendLine(name);
-
-				if (ca.separator && !ca.hide) parentMenu.Items.Add(new Separator());
-
-				ca.target ??= inheritTarget;
-
-				var (text, buttonText) = GetTextFromAttributes(ca, mi);
-				c.ButtonText = buttonText;
-				c.ButtonTooltip = ca.tooltip;
-
-				FactoryParams f = null;
-				if (itemFactory != null) {
-					f = new FactoryParams(c, mi) { text = text, image = ca.image, param = ca.param };
-					itemFactory(f);
-					if (c.MenuItem == null) c.SetMenuItem_(f.text, f.image); //did not call SetMenuItem
-				} else {
-					if (c.MenuItem == null) c.SetMenuItem_(text, ca.image);
-				}
-				if (!ca.keysText.NE()) c.MenuItem.InputGestureText = ca.keysText;
-				if (autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
-				if (ca.checkable) c.MenuItem.IsCheckable = true;
-
-				if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
-				if (mi is TypeInfo ti) _Menu(ti, c.MenuItem, ca.target, level + 1);
-			}
-
-			if (autoUnderline) {
-				foreach (var v in parentMenu.Items) {
-					if (v is MenuItem m && m.Header is string s && s.Length > 0 && !_FindUnderlined(s, out _)) {
-						int i = 0;
-						for (; i < s.Length; i++) {
-							char ch = s[i]; if (!char.IsLetterOrDigit(ch)) continue;
-							ch = char.ToLower(ch);
-							if (!au.Contains(ch)) { au.Add(ch); break; }
-						}
-						if (i == s.Length) i = 0;
-						m.Header = s.Insert(i, "_");
-					}
-				}
-			}
-
-			static bool _FindUnderlined(string s, out char u) {
-				u = default;
-				int i = 0;
-				g1: i = s.IndexOf('_', i) + 1;
-				if (i == 0 || i == s.Length) return false;
-				u = s[i++];
-				if (u == '_') goto g1;
-				return true;
-			}
-		}
+		_menubar = menu;
+		_CreateMenu(commands, menu, autoUnderline, itemFactory);
 	}
-	
-	//Also used by the Customize tool.
-	public static (string text, string buttonText) GetTextFromAttributes(CommandAttribute ca, MemberInfo mi) {
-		string text = ca.text, buttonText, dots = null; //menu item text, possibly with _ for Alt-underline
-		if (text == "...") { dots = text; text = null; }
-		if (text != null) {
-			buttonText = StringUtil.RemoveUnderlineChar(text, '_');
-		} else {
-			buttonText = text = mi.Name.Replace('_', ' ') + dots;
-			char u = ca.underlined;
-			if (u != default) {
-				int i = text.IndexOf(u);
-				if (i >= 0) text = text.Insert(i, "_"); else print.it($"Alt-underline character '{u}' not found in \"{text}\"");
+
+	void _CreateMenu(Type type, ItemsControl parentMenu, bool autoUnderline, Action<FactoryParams> itemFactory, List<string> added = null, string namePrefix_ = null, string inheritTarget_ = null) {
+		var am = type.GetMembers(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
+
+		if (am.Length == 0) { //dynamic submenu
+			parentMenu.Items.Add(new Separator());
+			return;
+		}
+
+		var list = new List<(MemberInfo mi, CommandAttribute a)>(am.Length);
+		foreach (var mi in am) {
+			var ca = mi.GetCustomAttribute<CommandAttribute>(false);
+			//var ca = mi.GetCustomAttributes().OfType<CommandAttribute>().FirstOrDefault(); //CommandAttribute and inherited. Similar speed. Don't need because factory action receives MemberInfo an can get other attributes from it.
+			if (ca != null) list.Add((mi, ca));
+		}
+
+		var au = new List<char>();
+
+		foreach (var (mi, ca) in list.OrderBy(o => o.a.order_)) {
+			if (ca.separator && !ca.hide) parentMenu.Items.Add(new Separator());
+
+			ca.target ??= inheritTarget_;
+
+			string text = ca.text, buttonText, dots = null; //menu item text, possibly with _ for Alt-underline
+			if (text == "...") { dots = text; text = null; }
+			if (text != null) {
+				buttonText = StringUtil.RemoveUnderlineChar(text, '_');
+			} else {
+				buttonText = text = mi.Name.Replace('_', ' ') + dots;
+				char u = ca.underlined;
+				if (u != default) {
+					int i = text.IndexOf(u);
+					if (i >= 0) text = text.Insert(i, "_"); else print.it($"Alt-underline character '{u}' not found in \"{text}\"");
+				}
+			}
+
+			var namePrefix = ca.namePrefix ?? namePrefix_;
+			string name = namePrefix + (ca.name ?? mi.Name);
+			var c = new Command(this, name, text, mi, ca);
+			_d.Add(name, c);
+			added?.Add(name);
+
+			c.ButtonText = buttonText;
+			c.ButtonTooltip = ca.tooltip;
+
+			FactoryParams f = null;
+			if (itemFactory != null) {
+				f = new FactoryParams(c, mi) { text = text, image = ca.image, param = ca.param };
+				itemFactory(f);
+				if (c.MenuItem == null) c.SetMenuItem_(f.text, f.image); //did not call SetMenuItem
+			} else {
+				if (c.MenuItem == null) c.SetMenuItem_(text, ca.image);
+			}
+			if (!ca.keysText.NE()) c.MenuItem.InputGestureText = ca.keysText;
+			if (autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
+			if (ca.checkable) c.MenuItem.IsCheckable = true;
+
+			if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
+			if (mi is TypeInfo ti) _CreateMenu(ti, c.MenuItem, autoUnderline, itemFactory, added, namePrefix, ca.target);
+		}
+
+		if (autoUnderline) {
+			foreach (var v in parentMenu.Items) {
+				if (v is MenuItem m && m.Header is string s && s.Length > 0 && !_FindUnderlined(s, out _)) {
+					int i = 0;
+					for (; i < s.Length; i++) {
+						char ch = s[i]; if (!char.IsLetterOrDigit(ch)) continue;
+						ch = char.ToLower(ch);
+						if (!au.Contains(ch)) { au.Add(ch); break; }
+					}
+					if (i == s.Length) i = 0;
+					m.Header = s.Insert(i, "_");
+				}
 			}
 		}
-		return (text, buttonText);
+
+		static bool _FindUnderlined(string s, out char u) {
+			u = default;
+			int i = 0;
+			g1: i = s.IndexOf('_', i) + 1;
+			if (i == 0 || i == s.Length) return false;
+			u = s[i++];
+			if (u == '_') goto g1;
+			return true;
+		}
 	}
 
 	/// <summary>
@@ -281,608 +273,79 @@ public class KMenuCommands {
 		}
 	}
 
-	/// <summary>
-	/// Contains a method delegate and a menu item that executes it. Implements <see cref="ICommand"/> and can have one or more attached buttons etc and key/mouse shortcuts that execute it. All can be disabled/enabled with single function call.
-	/// Also used for submenu-items (created from nested types); it allows for example to enable/disable all descendants with single function call.
-	/// </summary>
-	public class Command : ICommand {
-		readonly KMenuCommands _mc;
-		readonly Delegate _del; //null if submenu
-		readonly CommandAttribute _ca;
-		MenuItem _mi;
-		bool _enabled;
-
-		internal Command(KMenuCommands mc, string name, MemberInfo mi, CommandAttribute ca) {
-			_mc = mc;
-			_enabled = true;
-			Name = name;
-			_ca = ca;
-			if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<MenuItem>));
-			//if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<object>));
-		}
-
-		internal void SetMenuItem_(object text, string image, MenuItem miFactory = null) {
-			_mi = miFactory ?? new MenuItem { Header = text }; //factory action may have set it
-			_mi.Command = this;
-			if (image != null && miFactory?.Icon == null) _SetImage(image);
-		}
-
-		MenuItem _Mi => _mi ?? throw new InvalidOperationException("Call FactoryParams.SetMenuItem before.");
-
-		///
-		public MenuItem MenuItem => _mi;
-
-		/// <summary>
-		/// true if this is a submenu-item.
-		/// </summary>
-		public bool IsSubmenu => _del == null;
-
-		/// <summary>
-		/// Method name. If submenu-item - type name. Or <see cref="CommandAttribute.name"/>.
-		/// </summary>
-		public string Name { get; internal set; }
-
-		///
-		public override string ToString() => Name;
-
-		public CommandAttribute Attribute => _ca;
-
-		/// <summary>
-		/// Button text or tooltip. Same as menu item text but without _ for Alt-underline.
-		/// </summary>
-		public string ButtonText { get; set; }
-
-		/// <summary>
-		/// <see cref="CommandAttribute.tooltip"/>.
-		/// </summary>
-		public string ButtonTooltip { get; set; }
-
-		/// <summary>
-		/// Setter subscribes to <see cref="MenuItem.SubmenuOpened"/> event.
-		/// Will propagate to copied submenus.
-		/// Call once.
-		/// </summary>
-		public RoutedEventHandler SubmenuOpened {
-			get => _submenuOpened;
-			set {
-				Debug.Assert(_submenuOpened == null);
-				_Mi.SubmenuOpened += _submenuOpened = value;
-			}
-		}
-		RoutedEventHandler _submenuOpened;
-
-		/// <summary>
-		/// Something to attach to this object. Not used by this class.
-		/// </summary>
-		public object Tag { get; set; }
-
-		/// <summary>
-		/// Sets properties of a button to match properties of this menu item.
-		/// </summary>
-		/// <param name="b">Button or checkbox etc.</param>
-		/// <param name="imageAt">If menu item has image, set <b>Content</b> = <b>DockPanel</b> with image and text and dock image at this side. If null (default), sets image without text. Not used if there is no image.</param>
-		/// <param name="image">Button image element, if different than menu item image. Must not be a child of something.</param>
-		/// <param name="text">Button text, if different than menu item text.</param>
-		/// <param name="skipImage">Don't change image.</param>
-		/// <exception cref="InvalidOperationException">This is a submenu. Or called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		/// <remarks>
-		/// Sets these properties:
-		/// - <b>Content</b> (image or/and text),
-		/// - <b>ToolTip</b>,
-		/// - <b>Foreground</b>,
-		/// - <b>Command</b> (to execute same method and automatically enable/disable together),
-		/// - Automation Name (if with image),
-		/// - if checkable, synchronizes checked state (the button should be a ToggleButton (CheckBox or RadioButton)).
-		/// </remarks>
-		public void CopyToButton(ButtonBase b, Dock? imageAt = null, UIElement image = null, string text = null, bool skipImage = false) {
-			if (IsSubmenu) throw new InvalidOperationException("Submenu. Use CopyToMenu.");
-			_ = _Mi;
-			text ??= ButtonText;
-
-			if (skipImage) {
-				switch (b.Content) {
-				case DockPanel dp: image = dp.Children[0]; dp.Children.Clear(); break;
-				case UIElement ue: image = ue; break;
-				default: image = null; break;
-				}
-				b.Content = null;
-			} else {
-				image ??= CopyImage();
-			}
-
-			if (image == null) {
-				b.Content = text;
-				b.Padding = new Thickness(4, 1, 4, 2);
-				b.ToolTip = ButtonTooltip;
-			} else if (imageAt != null) {
-				var v = new DockPanel();
-				var dock = imageAt.Value;
-				DockPanel.SetDock(image, dock);
-				v.Children.Add(image);
-				var t = new TextBlock { Text = text };
-				if (dock == Dock.Left || dock == Dock.Right) t.Margin = new Thickness(2, -1, 2, 1);
-				v.Children.Add(t);
-				b.Content = v;
-				b.ToolTip = ButtonTooltip;
-			} else { //only image
-				b.Content = image;
-				b.ToolTip = ButtonTooltip ?? text;
-			}
-			b.Foreground = _mi.Foreground;
-			if (image != null && !text.NE()) System.Windows.Automation.AutomationProperties.SetName(b, text);
-			b.Command = this;
-
-			if (_mi.IsCheckable) {
-				if (b is ToggleButton tb) tb.SetBinding(ToggleButton.IsCheckedProperty, new Binding("IsChecked") { Source = _mi });
-				else print.warning($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
-			}
-		}
-
-		//public void CopyToButton<T>(out T b, Dock? imageAt = null) where T : ButtonBase, new() => CopyToButton(b = new T(), imageAt);
-
-		/// <summary>
-		/// Sets properties of another menu item (not in this menu) to match properties of this menu item.
-		/// If this is a submenu-item, copies with descendants.
-		/// </summary>
-		/// <param name="m"></param>
-		/// <param name="image">Image element (<see cref="MenuItem.Icon"/>), if different. Must not be a child of something.</param>
-		/// <param name="text">Text (<see cref="HeaderedItemsControl.Header"/>), if different.</param>
-		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		/// <remarks>
-		/// Sets these properties:
-		/// - <b>Header</b> (if string),
-		/// - <b>Icon</b> (if possible),
-		/// - <b>InputGestureText</b>,
-		/// - <b>ToolTip</b>,
-		/// - <b>Foreground</b>,
-		/// - <b>Command</b> (to execute same method and automatically enable/disable together),
-		/// - <b>IsCheckable</b> (and synchronizes checked state).
-		/// </remarks>
-		public void CopyToMenu(MenuItem m, UIElement image = null, object text = null) => _CopyToMenu(_Mi, m, image, text);
-
-		static MenuItem _CopyToMenu(MenuItem from, MenuItem to, UIElement image = null, object text = null) {
-			if (from.Command is not Command c) return null;
-			to ??= new();
-
-			to.Icon = image ?? _CopyImage(from);
-			if (text != null) to.Header = text; else if (from.Header is string s) to.Header = s;
-			to.InputGestureText = from.InputGestureText;
-			//never mind: no gesture text from input bindings. Currently need it for 1 item (New_script) and we specify it explicitly (keysText in attribute).
-			to.ToolTip = from.ToolTip;
-			to.Foreground = from.Foreground;
-			to.Command = c;
-
-			bool checkable = from.IsCheckable;
-			to.IsCheckable = checkable;
-			if (checkable) to.SetBinding(MenuItem.IsCheckedProperty, new Binding("IsChecked") { Source = from });
-
-			if (from.HasItems) {
-				if (c._submenuOpened != null) to.SubmenuOpened += c._submenuOpened;
-				_CopyDescendants(from, to);
-			}
-
-			return to;
-		}
-
-		static void _CopyDescendants(ItemsControl from, ItemsControl to) {
-			int n = 0;
-			foreach (var v in from.Items) {
-				object k;
-				switch (v) {
-				case Separator:
-					k = new Separator();
-					break;
-				case MenuItem g:
-					k = _CopyToMenu(g, null);
-					if (k == null) { //not Command. Added dynamically. Will add again.
-						if (n == 0) to.Items.Add(new Separator()); //let it be submenu
-						return;
-					}
-					break;
-				default: continue;
-				}
-				to.Items.Add(k);
-				n++;
-			}
-		}
-
-		/// <summary>
-		/// Copies descendants of this submenu to a context menu.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">This is not a submenu. Or called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		/// <remarks>
-		/// For each new item sets the same properties as other overload.
-		/// </remarks>
-		public void CopyToMenu(ContextMenu cm) {
-			if (!IsSubmenu) throw new InvalidOperationException("Not submenu");
-			_CopyDescendants(_Mi, cm);
-		}
-
-		/// <summary>
-		/// Copies menu item image element. Returns null if no image or cannot copy.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		public UIElement CopyImage() => _CopyImage(_Mi);
-
-		static UIElement _CopyImage(MenuItem from) {
-			switch (from.Icon) {
-			case Image im: return new Image { Source = im.Source };
-			case UIElement e when e.Uid is string res: //see _SetImage
-				if (ResourceUtil.HasResourcePrefix(res)) return ResourceUtil.GetXamlObject(res) as UIElement;
-				if (res.Starts("source:")) return ImageUtil.LoadWpfImageElement(res[7..]);
-				break;
-			}
-			return null;
-		}
-
-		bool _SetImage(string image, bool custom = false) {
-			try {
-#if DEBUG
-				bool res = !(custom || image.Starts('*') || pathname.isFullPath(image));
-#else
-				bool res = !(custom || image.Starts('*'));
-#endif
-				var ie = res
-					? ResourceUtil.GetWpfImageElement(image)
-					: ImageUtil.LoadWpfImageElement(image);
-				if (ie is not Image) ie.Uid = (res ? "resource:" : "source:") + image; //xaml source for _CopyImage
-				_mi.Icon = ie;
-				return true;
-			}
-			catch (Exception ex) {
-				if (custom) CustomizingError("failed to load image", ex);
-				else print.it($"Failed to load image {image}. {ex.ToStringWithoutStack()}");
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Gets or sets enabled/disabled state of this command, menu item and all controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
-		/// If submenu-item, the 'set' function also enables/disables all descendants.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		public bool Enabled {
-			get => _enabled;
-			set {
-				_ = _Mi;
-				if (value == _enabled) return;
-				_enabled = value;
-				CanExecuteChanged?.Invoke(this, EventArgs.Empty); //enables/disables this menu item and all buttons etc with Command=this
-				if (IsSubmenu) foreach (var v in _mi.Items) if (v is MenuItem m && m.Command is Command c) c.Enabled = value;
-			}
-		}
-
-		/// <summary>
-		/// Gets or sets checked state of this checkable menu item and all checkable controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
-		/// </summary>
-		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		public bool Checked {
-			get => _Mi.IsChecked;
-			set { if (value != _Mi.IsChecked) _mi.IsChecked = value; }
-		}
-
-		#region ICommand
-
-		public bool CanExecute(object parameter) => _enabled;
-
-		public void Execute(object parameter) {
-			switch (_del) {
-			case Action a0: a0(); break;
-			case Action<MenuItem> a1: a1(_mi); break;
-				//case Action<object> a1: a1(parameter); break;
-				//default: throw new InvalidOperationException("Submenu");
-			}
-		}
-
-		/// <summary>
-		/// When disabled or enabled with <see cref="Enabled"/>.
-		/// </summary>
-		public event EventHandler CanExecuteChanged;
-
-		#endregion
-
-		/// <summary>
-		/// Finds and returns toolbar button that has this command. Returns null if not found.
-		/// </summary>
-		public ButtonBase FindButtonInToolbar(ToolBar tb) => tb.Items.OfType<ButtonBase>().FirstOrDefault(o => o.Command == this);
-
-		/// <summary>
-		/// Finds and returns toolbar menu-button that has this command. Returns null if not found.
-		/// </summary>
-		public MenuItem FindMenuButtonInToolbar(ToolBar tb) {
-			foreach (var e in tb.Items) {
-				if (e is Decorator d && d.Child is Menu m && m.Items[0] is MenuItem mi && mi.Command == this) return mi;
-			}
-			return null;
-		}
-
-		//public void Test() {
-		//	foreach (var v in CanExecuteChanged.GetInvocationList()) {
-		//		print.it(v.Target);
-		//	}
-		//}
-
-		internal void Customize_(XElement x, ToolBar toolbar) {
-			OverflowMode hide = default;
-			bool separator = false;
-			string text = null, btext = null;
-			Dock? imageAt = null;
-
-			foreach (var a in x.Attributes()) {
-				string an = a.Name.LocalName, av = a.Value;
-				try {
-					switch (an) {
-					case "keys":
-						_ca.keys = av;
-						break;
-					case "color":
-						_mi.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(av));
-						break;
-					case "image":
-						_SetImage(av, custom: true);
-						break;
-					case "text":
-						_mi.Header = text = av;
-						break;
-					case "btext" when toolbar != null:
-						btext = av;
-						break;
-					case "separator" when toolbar != null:
-						separator = true;
-						break;
-					case "hide" when toolbar != null:
-						hide = Enum.Parse<OverflowMode>(av, true);
-						break;
-					case "imageAt" when toolbar != null:
-						imageAt = Enum.Parse<Dock>(av, true);
-						break;
-					default:
-						CustomizingError($"attribute '{an}' can't be used here");
-						break;
-					}
-				}
-				catch (Exception ex) { CustomizingError($"invalid '{an}' value", ex); }
-			}
-			if ((btext ?? text) != null) ButtonText = btext ?? StringUtil.RemoveUnderlineChar(text, '_');
-
-			if (toolbar != null) {
-				try {
-					if (separator) {
-						var sep = new Separator();
-						if (hide != default) ToolBar.SetOverflowMode(sep, hide);
-						toolbar.Items.Add(sep);
-					}
-					DependencyObject o;
-					if (IsSubmenu) {
-						var b = new MenuItem();
-						var image = _mi.Icon;
-						bool onlyImage = image != null && imageAt == null;
-						if (image == null || onlyImage) b.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. SHOULDDO: not good on Win7
-						CopyToMenu(b, text: btext);
-						if (onlyImage) { b.Header = b.Icon; b.Icon = null; } //make narrower
-						if (ButtonTooltip != null) b.ToolTip = ButtonTooltip; else if (onlyImage) b.ToolTip = ButtonText;
-						var m = new Menu { UseLayoutRounding = true };
-						m.Items.Add(b); //parent must be Menu, else wrong Role (must be TopLevelHeader, we can't change) and does not work
-						o = new Border { Child = m }; //workaround for: descendant icon part black when checked, with or without icon
-					} else {
-						var b = _mi.IsCheckable ? (ButtonBase)new CheckBox() : new Button(); //rejected: support RadioButton
-						b.Focusable = false;
-						b.Padding = new Thickness(4, 2, 4, 2);
-						b.UseLayoutRounding = true;
-						CopyToButton(b, imageAt);
-						o = b;
-					}
-					if (hide != default) ToolBar.SetOverflowMode(o, hide);
-					toolbar.Items.Add(o);
-				}
-				catch (Exception ex) { CustomizingError("failed to create button", ex); }
-			}
-		}
-
-		public void CustomizingError(string s, Exception ex = null) {
-			_mc.OnCustomizingError?.Invoke(this, s, ex);
-		}
-	}
+	public string DefaultFile { get; private set; }
+	public string UserFile { get; private set; }
 
 	/// <summary>
-	/// Adds toolbar buttons specified in <i>xmlFileCustomized</i> or <i>xmlFileDefault</i>. Applies customizations specified there.
+	/// Adds toolbar buttons specified in <i>xmlFileCustomized</i> and <i>xmlFileDefault</i>. Applies customizations specified there.
 	/// </summary>
 	/// <param name="xmlFileDefault">XML file containing default toolbar buttons. See Default\Commands.xml in editor project.</param>
-	/// <param name="xmlFileCustomized">XML file containing user-modified commands and toolbar buttons. Can be null.</param>
+	/// <param name="xmlFileCustomized">XML file containing user-modified commands and toolbar buttons. Can be null. The file can exist or not.</param>
 	/// <param name="toolbars">Empty toolbars where to add buttons. XML tag = <b>Name</b> property.</param>
 	public void InitToolbarsAndCustomize(string xmlFileDefault, string xmlFileCustomized, ToolBar[] toolbars) {
-		var ax = LoadFiles(xmlFileDefault, xmlFileCustomized);
-		if (ax == null) return;
-		foreach (var xt in ax) {
+		DefaultFile = xmlFileDefault;
+		UserFile = xmlFileCustomized;
+
+		var a = LoadFiles(); if (a == null) return;
+
+		foreach (var x in a) {
 			ToolBar tb = null;
-			var tbname = xt.Name.LocalName;
+			var tbname = x.Name.LocalName;
 			if (tbname != "menu") {
 				tb = toolbars.FirstOrDefault(o => o.Name == tbname);
 				if (tb == null) { Debug_.Print("Unknown toolbar " + tbname); continue; }
 			}
-			foreach (var v in xt.Elements()) {
+
+			foreach (var v in x.Elements()) {
 				if (_d.TryGetValue(v.Name.LocalName, out var c)) c.Customize_(v, tb);
 			}
 		}
+
 	}
 
 	/// <summary>
 	/// Loads and merges default and customized commands files.
 	/// </summary>
-	/// <returns></returns>
-	public static XElement[] LoadFiles(string xmlFileDefault, string xmlFileCustomized) {
-		try {
-			var a = XmlUtil.LoadElem(xmlFileDefault).Elements().ToArray(); //menu and toolbars
-			try { //replace a elements with elements that exist in xmlFileCustomized. If some toolbar does not exist there, use default.
-				if (xmlFileCustomized != null && filesystem.exists(xmlFileCustomized, true).File) {
-					var ac = XmlUtil.LoadElem(xmlFileCustomized).Elements().ToArray();
-					for (int i = 0; i < a.Length; i++) {
-						var name = a[i].Name.LocalName;
-						foreach (var y in ac) if (y.Name.LocalName == name && y.HasElements) { _AddMissingButtons(a[i], y); a[i] = y; break; }
-					}
+	public XElement[] LoadFiles() {
+		XElement[] _LoadFile(string file) {
+			try { return XmlUtil.LoadElem(file).Elements().ToArray(); }
+			catch (Exception ex) { print.it($"<>Failed to load file <explore>{file}<>. <_>{ex.ToStringWithoutStack()}</_>"); return null; }
+		}
 
-					static void _AddMissingButtons(XElement xDef, XElement xUser) {
-						//SHOULDDO: also remove unknown commands, eg those deleted in this version.
-						if (xUser.Name.LocalName == "menu") return;
-						foreach (var v in xDef.Elements().Except(xUser.Elements(), s_xmlNameComparer)) {
-							//v.Remove();
-							v.SetAttributeValue("hide", "always");
-							xUser.Add(v);
-						}
-					}
+		var a = _LoadFile(DefaultFile); if (a == null) return null;
+		var ac = UserFile != null && filesystem.exists(UserFile, true).File ? _LoadFile(UserFile) : null;
+
+		if (ac != null) { //replace a elements with elements that exist in ac. If some toolbar does not exist there, use default.
+			for (int i = 0; i < a.Length; i++) {
+				var name = a[i].Name;
+				foreach (var x in ac) if (x.Name == name && x.HasElements) { _AddMissingButtons(a[i], x); a[i] = x; break; }
+			}
+
+			static void _AddMissingButtons(XElement xDef, XElement xUser) {
+				if (xUser.Name.LocalName == "menu") return;
+				foreach (var v in xDef.Elements().Except(xUser.Elements(), s_xmlNameComparer)) {
+					//v.SetAttributeValue("hide", "always");
+					xUser.Add(v);
 				}
 			}
-			catch (Exception ex) { print.it($"<>Failed to load file <explore>{xmlFileCustomized}<>. <_>{ex.ToStringWithoutStack()}</_>"); }
-			return a;
 		}
-		catch (Exception ex) { print.it($"<>Failed to load file <explore>{xmlFileDefault}<>. <_>{ex.ToStringWithoutStack()}</_>"); }
-		return null;
+
+		return a;
 	}
 
-	class _XElementNameEqualityComparer : IEqualityComparer<XElement> {
-		bool IEqualityComparer<XElement>.Equals(XElement x, XElement y) => x.Name == y.Name;
-		int IEqualityComparer<XElement>.GetHashCode(XElement x) => x.Name.GetHashCode();
-	}
-	static _XElementNameEqualityComparer s_xmlNameComparer = new();
-
-	public string CommandNames => _names;
-
-	/// <summary>
-	/// Called on error in a custom attribute.
-	/// </summary>
-	public Action<Command, string, Exception> OnCustomizingError;
-
-	/// <summary>
-	/// Parameters for factory action of <see cref="KMenuCommands"/>.
-	/// </summary>
-	public class FactoryParams {
-		internal FactoryParams(Command command, MemberInfo member) { this.command = command; this.member = member; }
-
-		/// <summary>
-		/// The new command.
-		/// <see cref="Command.MenuItem"/> is still null and you can call <see cref="SetMenuItem"/>.
-		/// </summary>
-		public readonly Command command;
-
-		/// <summary>
-		/// <see cref="MethodInfo"/> of method or <see cref="TypeInfo"/> of nested class.
-		/// For example allows to get attributes of any type.
-		/// </summary>
-		public readonly MemberInfo member;
-
-		/// <summary>
-		/// Text or a WPF element to add to the text part of the menu item. In/out parameter.
-		/// Text may contain _ for Alt-underline, whereas <c>command.Text</c> is without it.
-		/// </summary>
-		public object text;
-
-		/// <summary><see cref="CommandAttribute.image"/>. In/out parameter.</summary>
-		public string image;
-
-		/// <summary><see cref="CommandAttribute.param"/>. In/out parameter. This class does not use it.</summary>
-		public object param;
-
-		/// <summary>
-		/// Sets <see cref="Command.MenuItem"/> property.
-		/// If your factory action does not call this function, the menu item will be created after it returns.
-		/// </summary>
-		/// <param name="mi">Your created menu item. If null, this function creates standard menu item.</param>
-		/// <remarks>
-		/// Uses the <i>text</i> and <i>image</i> fields; you can change them before. Sets menu item's <b>Icon</b> property if image!=null and mi?.Image==null. Sets <b>Header</b> property only if creates new item.
-		/// The menu item will be added to the parent menu after your factory action returns.
-		/// </remarks>
-		public void SetMenuItem(MenuItem mi = null) => command.SetMenuItem_(text, image, mi);
-	}
-}
-
-/// <summary>
-/// Used with <see cref="KMenuCommands"/>.
-/// Allows to add menu items in the same order as methods and nested types, and optionally specify menu item text etc.
-/// </summary>
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-public class CommandAttribute : Attribute {
-	internal readonly int order_;
-
-	/// <summary>
-	/// Command name to use instead of method/type name. Use to resolve duplicate name conflict.
-	/// </summary>
-	public string name;
-
-	/// <summary>
-	/// Menu item text. Use _ to Alt-underline a character. If "...", appends it to default text.
-	/// </summary>
-	public string text;
-
-	/// <summary>
-	/// Alt-underlined character in menu item text.
-	/// </summary>
-	public char underlined;
-
-	/// <summary>
-	/// Add separator before the menu item.
-	/// </summary>
-	public bool separator;
-
-	/// <summary>
-	/// Checkable menu item.
-	/// </summary>
-	public bool checkable;
-
-	/// <summary>
-	/// Default hotkey etc. See <see cref="KMenuCommands.BindKeysTarget"/>.
-	/// </summary>
-	public string keys;
-
-	/// <summary>
-	/// Element where the hotkey etc (default or customized) will work. See <see cref="KMenuCommands.BindKeysTarget"/>.
-	/// If this property applied to a class (submenu), all descendant commands without this property inherit it from the ancestor class.
-	/// </summary>
-	public string target;
-
-	/// <summary>
-	/// Text for <see cref="MenuItem.InputGestureText"/>. If not set, will use <b>keys</b>.
-	/// </summary>
-	public string keysText;
-
-	/// <summary>
-	/// Image string.
-	/// The factory action receives this string in parameters. It can load image and set menu item's <b>Icon</b> property.
-	/// If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="Au.More.ResourceUtil"/>.
-	/// </summary>
-	public string image;
-
-	/// <summary>
-	/// Let <see cref="KMenuCommands.Command.CopyToButton"/> use this text for tooltip.
-	/// </summary>
-	public string tooltip;
-
-	/// <summary>
-	/// A string or other value to pass to the factory action.
-	/// </summary>
-	public object param;
-
-	/// <summary>
-	/// Don't add the <b>MenuItem</b> to menu.
-	/// </summary>
-	public bool hide;
-
-	/// <summary>
-	/// Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
-	/// </summary>
-	/// <param name="l_">[](xref:caller_info)</param>
-	public CommandAttribute([CallerLineNumber] int l_ = 0) { order_ = l_; }
-
-	/// <summary>
-	/// Specifies menu item text.
-	/// </summary>
-	/// <param name="text">Menu item text. Use _ to Alt-underline a character, like "_Copy".</param>
-	/// <param name="l_">[](xref:caller_info)</param>
-	public CommandAttribute(string text, [CallerLineNumber] int l_ = 0) { this.text = text; order_ = l_; }
-
-	/// <summary>
-	/// Specifies Alt-underlined character. Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
-	/// </summary>
-	/// <param name="underlined">Character to underline.</param>
-	/// <param name="l_">[](xref:caller_info)</param>
-	public CommandAttribute(char underlined, [CallerLineNumber] int l_ = 0) { this.underlined = underlined; order_ = l_; }
+	//currently not used.
+	//public void AddExtensionMenus(Type commands, MenuItem parentMenu = null, bool autoUnderline = true) {
+	//	ItemsControl pa = parentMenu ?? _menubar as ItemsControl;
+	//	_extensions ??= new();
+	//	if (_extensions.Remove(commands.Name, out var t)) {
+	//		foreach (var v in t.menus) pa.Items.Remove(v);
+	//		foreach (var v in t.commands) _d.Remove(v);
+	//	}
+	//	int n = pa.Items.Count;
+	//	List<string> added = new();
+	//	_CreateMenu(commands, pa, autoUnderline, null, added);
+	//	_extensions.Add(commands.Name, (pa.Items.OfType<object>().Skip(n).ToArray(), added));
+	//}
+	//Dictionary<string, (object[] menus, List<string> commands)> _extensions;
+	////_extensions used to support updating the same extension. Remove the code if don't need.
 }

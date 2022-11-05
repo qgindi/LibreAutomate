@@ -447,7 +447,11 @@ class PanelFind : UserControl {
 
 	bool _ValidateReplacement(_TextToFind f, FileNode file) {
 		//SHOULDDO: add a ValidateReplacement function to the regex class.
-		if (f.rx != null && f.rx.Match(file.GetCurrentText(notImportant: true), out RXMatch m) && !_TryExpandRegexReplacement(m, _tReplace.Text, out _)) return false;
+		if (f.rx != null
+			&& file.GetCurrentText(out var s, silent: true)
+			&& f.rx.Match(s, out RXMatch m)
+			&& !_TryExpandRegexReplacement(m, _tReplace.Text, out _)
+			) return false;
 		return true;
 	}
 
@@ -513,7 +517,7 @@ class PanelFind : UserControl {
 				if (f == null) return false;
 				if (f.IsFolder) f.SelectSingle();
 				else {
-					if (replaceAll && !_ValidateReplacement(_lastFindAll.f, f)) return false; //avoid opening the file when invalid regex replacement
+					if (replaceAll && !_ValidateReplacement(_lastFindAll.f, f)) return false; //avoid opening the file in editor when invalid regex replacement
 					if (!App.Model.SetCurrentFile(f)) return false;
 				}
 				//add indicator to make it easier to find later
@@ -580,9 +584,7 @@ class PanelFind : UserControl {
 			}
 			var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
 			//p1.Start(v.Name);
-			text = v.GetCurrentText(notImportant: true);
-			if (text.Length == 0) continue;
-			if (text.Contains('\0')) continue;
+			if (!v.GetCurrentText(out text, silent: true) || text.Length == 0 || text.Contains('\0')) continue;
 			//perf.nw();
 
 			long time = bSlow != null ? perf.ms : 0;
@@ -637,7 +639,7 @@ class PanelFind : UserControl {
 			}
 		}
 
-		if (nFound > 1) {
+		if (nFound > 0) {
 			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
 			b.AppendFormat("<z #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
 			_lastFindAll = (f, aFiles, guid, null);
@@ -659,7 +661,7 @@ class PanelFind : UserControl {
 	void _ReplaceAllInFiles(string sGuid) {
 		var (f, files, guid, _) = _lastFindAll;
 		if (guid != sGuid) return;
-		if (!_ValidateReplacement(f, files[0])) return; //avoid opening files when invalid regex replacement
+		if (!_ValidateReplacement(f, files[0])) return; //avoid opening files in editor when invalid regex replacement
 		if (!_CanReplaceInFiles()) return;
 
 		if (1 != dialog.show("Replace text in files",

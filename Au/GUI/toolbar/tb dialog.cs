@@ -97,7 +97,7 @@ public partial class toolbar {
 			};
 			void _Edit() {
 				//window.Close();
-				ScriptEditor.OpenAndGoToLine(tb._sourceFile, tb._sourceLine);
+				ScriptEditor.Open(tb._sourceFile, tb._sourceLine);
 				timer.after(100, _ => window.Hwnd().ZorderTop());
 			}
 		}

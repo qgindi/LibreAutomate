@@ -883,21 +883,36 @@ partial class TestScript {
 	//	print.it(result);
 	//}
 
-HashSet<string> _GetDotnetAssemblies() {
-	var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
-	var a = s.Split(';');
-	var h = new HashSet<string>(a.Length);
-	foreach (var v in a) {
-		int i = v.LastIndexOfAny(new[] { '\\', '/' }) + 1;
-		var s1 = pathname.getNameNoExt(v);
-		//if (s1.Starts("Au.")) break;
-		h.Add(s1);
+	HashSet<string> _GetDotnetAssemblies() {
+		var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+		var a = s.Split(';');
+		var h = new HashSet<string>(a.Length);
+		foreach (var v in a) {
+			int i = v.LastIndexOfAny(new[] { '\\', '/' }) + 1;
+			var s1 = pathname.getNameNoExt(v);
+			//if (s1.Starts("Au.")) break;
+			h.Add(s1);
+		}
+		return h;
 	}
-	return h;
-}
+
+	//static unsafe class _Api {
+	//	[DllImport("FreeImage")]
+	//	//[DllImport(@"sub\FreeImage")]
+	//	//[DllImport(@"m\sub\FreeImage")]
+	//	public static extern int FreeImage_ZLibCRC32(int crc, byte[] data, int size);
+
+	//}
 
 	void _Main() {
-		TestScript ts = null;
+
+		//var a = new byte[] { 1, 2, 3, 4 };
+		//print.it(_Api.FreeImage_ZLibCRC32(0, a, a.Length));
+
+		//var rx = new regexp("a");
+		//dialog.show("");
+
+		//TestScript ts = null;
 
 		//print.clear();
 		//var h = _GetDotnetAssemblies();

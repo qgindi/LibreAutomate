@@ -132,16 +132,7 @@ static unsafe class API
 			}
 		}
 		//#if !TEST_SMALL
-		catch (ConverterException e) {
-			print.it(e);
-			wnd.findFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
-			throw;
-		}
-		catch (Exception e) {
-			print.it(e);
-			wnd.findFast(null, "QM_Editor").Send(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
-			throw;
-		}
+		catch (Exception e) { _OnCatchException(e); throw; }
 		//#endif
 		finally {
 			Marshal.FreeHGlobal((IntPtr)_keywordMemory);

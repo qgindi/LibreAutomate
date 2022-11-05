@@ -41,8 +41,14 @@ partial class Program {
 			
 			// ...
 			
-			//disable/enable triggers
 			Triggers.Of.AllWindows();
+			
+			//disable or remap keys
+			
+			//hk["CapsLock"] = o => {  }; //just disable. Does not disable Ctrl+CapsLock etc.
+			//hk["?+Ins"] = o => keys.more.sendKey(KKey.Apps); //remap key. Also Ctrl+Ins etc. To remap keys, use keys.more.sendKey or keys.sendL, not keys.send.
+			
+			//disable/enable triggers
 			hk["Ctrl+Alt+Win+D"] = o => ActionTriggers.DisabledEverywhere ^= true;
 			hk.Last.EnabledAlways = true;
 		}
