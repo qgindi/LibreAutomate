@@ -86,23 +86,22 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Opens a script or other file.
+		/// Opens a script or other file. Also can move the text cursor.
 		/// Does nothing if editor isn't running.
 		/// </summary>
 		/// <param name="file">A file in current workspace. Can be full path, or relative path in workspace, or file name with extension (<c>".cs"</c> etc). If folder, selects it.</param>
-		public static void Open([ParamString(PSFormat.FileInWorkspace)] string file) => OpenAndGoToLine(file, 0);
-
-		/// <summary>
-		/// Opens a script or other file, and moves the text cursor.
-		/// Does nothing if editor isn't running.
-		/// </summary>
-		/// <param name="file">A file in current workspace. Can be full path, or relative path in workspace, or file name with extension (<c>".cs"</c> etc).</param>
-		/// <param name="line">1-based line index. If 0, just opens the file.</param>
-		public static void OpenAndGoToLine([ParamString(PSFormat.FileInWorkspace)] string file, int line) {
+		/// <param name="line">If not null, goes to this 1-based line index.</param>
+		/// <param name="offset">If not null, goes to this 0-based column index in line (if <i>line</i> not null) or to this 0-based position in text (if <i>line</i> null).</param>
+		public static void Open([ParamString(PSFormat.FileInWorkspace)] string file, int? line = null, int? offset = null) {
 			var w = WndMsg_; if (w.Is0) return;
 			Api.AllowSetForegroundWindow(w.ProcessId);
-			WndCopyData.Send<char>(w, 4, file, line);
+			WndCopyData.Send<char>(w, 4, $"{file}|{line}|{offset}");
 		}
+
+		//rejected
+		///
+		[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), Obsolete("use Open")]
+		public static void OpenAndGoToLine([ParamString(PSFormat.FileInWorkspace)] string file, int line) => Open(file, line);
 
 		/// <summary>
 		/// Gets icon string in specified format.

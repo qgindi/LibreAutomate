@@ -51,6 +51,7 @@ namespace Au.Controls
 				public string name; //used by the indexer to find it, also as caption/tabitem text
 				public bool addedLater; //added with AddSibling
 				public bool canClose; //AddSibling(canClose). Adds context menu item "Close".
+				public bool isExtension; //AddSibling(isExtension). Saves.
 			}
 
 			[Flags]
@@ -93,6 +94,7 @@ namespace Au.Controls
 					_elem = _leaf.panel = new();
 					_leafType = tag[0] switch { 'p' => LeafType.Panel, 't' => LeafType.Toolbar, _ => LeafType.Document };
 					_leaf.name = x.Attr("name") ?? throw new ArgumentException("XML element without 'name'");
+					_leaf.isExtension = x.HasAttr("ext");
 					_Dictionary.Add(_leaf.name, this);
 					break;
 				default: throw new ArgumentException("unknown XML tag");
@@ -214,12 +216,12 @@ namespace Au.Controls
 			/// <summary>
 			/// Used when creating new leaf node later (after loading).
 			/// </summary>
-			_Node(_Node target, bool after, LeafType type, string name, bool canClose) {
+			_Node(_Node target, bool after, LeafType type, string name, bool canClose, bool isExtension) {
 				_pm = target._pm;
-				_leaf = new() { addedLater = true, name = name, canClose = canClose };
+				_leaf = new() { addedLater = true, name = name, canClose = canClose, isExtension = isExtension };
 				_elem = _leaf.panel = new() { Tag = this, UseLayoutRounding = true };
 				_leafType = type;
-				_dontSave = true;
+				_dontSave = !isExtension;
 				_Dictionary.Add(name, this);
 				_AddToParentWhenMovingOrAddingLater(target, after);
 			}
@@ -244,7 +246,10 @@ namespace Au.Controls
 				if (_IsStack) x.WriteAttributeString("o", _stack.isVertical ? "v" : "h");
 
 				if (Parent != null) {
-					if (_IsLeaf) x.WriteAttributeString("name", _leaf.name);
+					if (_IsLeaf) {
+						x.WriteAttributeString("name", _leaf.name);
+						if (_leaf.isExtension) x.WriteAttributeString("ext", "");
+					}
 
 					if (_ParentIsStack) {
 						if (!_dockedSize.IsAuto) {
@@ -474,13 +479,13 @@ namespace Au.Controls
 
 			ParentInfo ILeaf.Parent => new ParentInfo(_leaf.panel.Panel, Parent._elem, _index);
 
-			ILeaf ILeaf.AddSibling(bool after, LeafType type, string name, bool canClose) {
-				if (name == null || (type != LeafType.Panel && type != LeafType.Toolbar && type != LeafType.Document)) throw new ArgumentException();
-				return new _Node(this, after, type, name, canClose);
+			ILeaf ILeaf.AddSibling(bool after, LeafType type, string name, bool canClose, bool isExtension) {
+				if (name == null || (type is not (LeafType.Panel or LeafType.Toolbar or LeafType.Document))) throw new ArgumentException();
+				return new _Node(this, after, type, name, canClose, isExtension);
 			}
 
 			public void Delete() {
-				if (!_leaf.addedLater) throw new InvalidOperationException();
+				if (!_leaf.addedLater && !_leaf.isExtension) throw new InvalidOperationException();
 				if (_state == _DockState.Float) _SetDockState(0);
 				var oldParent = Parent;
 				_RemoveFromParentWhenMovingOrDeleting();

@@ -263,8 +263,9 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 				var code = cd.code;
 				var span = trivia.Span;
 				int from = pos, to = from;
-				while (to < span.End && !pathname.isInvalidPathChar(code[to])) to++;
-				while (from > span.Start && !pathname.isInvalidPathChar(code[from - 1])) from--;
+				static bool _IsPathOrUrlChar(char c) => !pathname.isInvalidPathChar(c) || c == '?';
+				while (to < span.End && _IsPathOrUrlChar(code[to])) to++;
+				while (from > span.Start && _IsPathOrUrlChar(code[from - 1])) from--;
 				while (to > pos && code[to - 1] is <= ' ' or '.' or ';' or ',') to--; //trim right
 				while (from < pos && code[from] <= ' ') from++; //trim left
 				if (to == from) return;
@@ -274,18 +275,24 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 			}
 		}
 
-		//if s is script, opens it. If file path, selects in Explorer. If folder path, opens the folder.
+		//if s is script, opens it. If file path, selects in Explorer. If folder path, opens the folder. If URL, opens the web page.
 		static bool _Open(string s, SyntaxToken token = default) {
 			if (s.NE()) return false;
-			if (!pathname.isFullPathExpand(ref s, strict: false)) {
-				var f = App.Model.Find(s);
-				if (f != null) { App.Model.SetCurrentFile(f); return true; }
-				if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, true)) return false;
-				s = pathname.combine(fp, s);
+			if (pathname.isUrl(s)) {
+				print.it(s);
+				if (0 == s.Starts(false, "http:", "https:")) return false;
+				run.itSafe(s);
+			} else {
+				if (!pathname.isFullPathExpand(ref s, strict: false)) {
+					var f = App.Model.Find(s);
+					if (f != null) { App.Model.SetCurrentFile(f); return true; }
+					if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, true)) return false;
+					s = pathname.combine(fp, s);
+				}
+				var fe = filesystem.exists(s); if (!fe) return false;
+				if (fe.Directory) run.itSafe(s);
+				else run.selectInExplorer(s);
 			}
-			var fe = filesystem.exists(s); if (!fe) return false;
-			if (fe.Directory) run.it(s);
-			else run.selectInExplorer(s);
 			return true;
 		}
 

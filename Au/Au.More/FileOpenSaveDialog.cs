@@ -89,19 +89,19 @@ namespace Au.More {
 		/// </summary>
 		public string Title { private get; set; }
 
-		object _Show(bool save, api.FOS f, AnyWnd owner, string saveFile = null) {
+		object _Show(bool save, _Api.FOS f, AnyWnd owner, string saveFile = null) {
 			var w = owner.Hwnd;
 			if (w.Is0) {
 				w = wnd.active;
 				if (!w.IsOfThisThread) w = default;
 			}
 
-			var d = (api.IFileDialog)Activator.CreateInstance(Type.GetTypeFromCLSID(save ? api.CLSID_FileSaveDialog : api.CLSID_FileOpenDialog));
+			var d = (_Api.IFileDialog)Activator.CreateInstance(Type.GetTypeFromCLSID(save ? _Api.CLSID_FileSaveDialog : _Api.CLSID_FileOpenDialog));
 
 			if (_clientGuid != null) d.SetClientGuid(new(_clientGuid));
 			if (_clearClientData) d.ClearClientData();
 
-			f |= (api.FOS)CommonFlags ^ (api.FOS.FOS_DONTADDTORECENT | api.FOS.FOS_PATHMUSTEXIST); //print.it(f);
+			f |= (_Api.FOS)CommonFlags ^ (_Api.FOS.FOS_DONTADDTORECENT | _Api.FOS.FOS_PATHMUSTEXIST); //print.it(f);
 			d.SetOptions(f);
 
 			var defExt = DefaultExt;
@@ -120,7 +120,7 @@ namespace Au.More {
 			if (OkButtonLabel != null) d.SetOkButtonLabel(OkButtonLabel);
 			if (Title != null) d.SetTitle(Title);
 
-			if (saveFile != null && d is api.IFileSaveDialog sd && _ShellItemFromString(saveFile, out var si3)) sd.SetSaveAsItem(si3);
+			if (saveFile != null && d is _Api.IFileSaveDialog sd && _ShellItemFromString(saveFile, out var si3)) sd.SetSaveAsItem(si3);
 
 			//if (0!=d.Show(w)) return null;
 
@@ -137,8 +137,8 @@ namespace Au.More {
 			if (ft != null) FileTypeIndex = d.GetFileTypeIndex();
 			//FileNameText=d.GetFileName(); //fails here. And not useful.
 
-			if (!f.Has(api.FOS.FOS_ALLOWMULTISELECT)) return _ShellItemToString(d.GetResult());
-			var r = ((api.IFileOpenDialog)d).GetResults();
+			if (!f.Has(_Api.FOS.FOS_ALLOWMULTISELECT)) return _ShellItemToString(d.GetResult());
+			var r = ((_Api.IFileOpenDialog)d).GetResults();
 			var a = new string[r.GetCount()];
 			for (int i = 0; i < a.Length; i++) a[i] = _ShellItemToString(r.GetItemAt(i));
 			return a;
@@ -146,12 +146,12 @@ namespace Au.More {
 
 		object _ShowOpen(AnyWnd owner = default, bool multiSelect = false, bool selectFolder = false, bool onlyFilesystem = true, bool fileMustExist = true, bool previewPane = false) {
 			//default FOS_NOCHANGEDIR, FOS_PATHMUSTEXIST, FOS_FILEMUSTEXIST
-			var f = api.FOS.FOS_NOCHANGEDIR;
-			if (multiSelect) f |= api.FOS.FOS_ALLOWMULTISELECT;
-			if (selectFolder) f |= api.FOS.FOS_PICKFOLDERS;
-			if (onlyFilesystem) f |= api.FOS.FOS_FORCEFILESYSTEM; else f |= api.FOS.FOS_ALLNONSTORAGEITEMS;
-			if (fileMustExist) f |= api.FOS.FOS_FILEMUSTEXIST;
-			if (previewPane) f |= api.FOS.FOS_FORCEPREVIEWPANEON;
+			var f = _Api.FOS.FOS_NOCHANGEDIR;
+			if (multiSelect) f |= _Api.FOS.FOS_ALLOWMULTISELECT;
+			if (selectFolder) f |= _Api.FOS.FOS_PICKFOLDERS;
+			if (onlyFilesystem) f |= _Api.FOS.FOS_FORCEFILESYSTEM; else f |= _Api.FOS.FOS_ALLNONSTORAGEITEMS;
+			if (fileMustExist) f |= _Api.FOS.FOS_FILEMUSTEXIST;
+			if (previewPane) f |= _Api.FOS.FOS_FORCEPREVIEWPANEON;
 
 			return _Show(false, f, owner);
 		}
@@ -191,23 +191,23 @@ namespace Au.More {
 		/// <returns>true on OK, false on Cancel or error.</returns>
 		public bool ShowSave(out string result, AnyWnd owner = default, bool overwritePrompt = true, string initFile = null) {
 			//default FOS_OVERWRITEPROMPT, FOS_NOCHANGEDIR, FOS_PATHMUSTEXIST, FOS_NOREADONLYRETURN
-			var f = api.FOS.FOS_NOCHANGEDIR;
-			if (overwritePrompt) f |= api.FOS.FOS_OVERWRITEPROMPT;
+			var f = _Api.FOS.FOS_NOCHANGEDIR;
+			if (overwritePrompt) f |= _Api.FOS.FOS_OVERWRITEPROMPT;
 			/*if(!overwriteReadonly)*/
-			f |= api.FOS.FOS_NOREADONLYRETURN; //always works like with this flag
+			f |= _Api.FOS.FOS_NOREADONLYRETURN; //always works like with this flag
 
-			//if(createPrompt) f|=api.FOS.FOS_CREATEPROMPT; //does not work. The .NET wrapper shows messagebox explicitly.
-			//if(!testCreate) f|=api.FOS.FOS_NOTESTFILECREATE; //not important, not tested
-			//if(strictFileTypes) f|=api.FOS.FOS_STRICTFILETYPES; //does not work
+			//if(createPrompt) f|=_Api.FOS.FOS_CREATEPROMPT; //does not work. The .NET wrapper shows messagebox explicitly.
+			//if(!testCreate) f|=_Api.FOS.FOS_NOTESTFILECREATE; //not important, not tested
+			//if(strictFileTypes) f|=_Api.FOS.FOS_STRICTFILETYPES; //does not work
 
 			result = _Show(true, f, owner, initFile) as string;
 			return result != null;
 		}
 
-		static string _ShellItemToString(api.IShellItem r) {
-			//if(!f.Has(api.FOS.FOS_FORCEFILESYSTEM)) {
+		static string _ShellItemToString(_Api.IShellItem r) {
+			//if(!f.Has(_Api.FOS.FOS_FORCEFILESYSTEM)) {
 			//	var k=r.GetAttributes(0xffffffff);
-			//	if(0==(k&api.SFGAO_FILESYSTEM)) {
+			//	if(0==(k&_Api.SFGAO_FILESYSTEM)) {
 			//		print.it(k);
 			//	}
 			//}
@@ -216,16 +216,16 @@ namespace Au.More {
 			return Pidl.ClsidToItemidlist_(s);
 		}
 
-		static bool _ShellItemFromString(string path, out api.IShellItem si) {
+		static bool _ShellItemFromString(string path, out _Api.IShellItem si) {
 			if (path.Starts(":: ")) {
 				var p = Pidl.FromString(path); if (p == null) { si = null; return false; }
-				return 0 == api.SHCreateItemFromIDList(p.UnsafePtr, typeof(api.IShellItem).GUID, out si);
+				return 0 == _Api.SHCreateItemFromIDList(p.UnsafePtr, typeof(_Api.IShellItem).GUID, out si);
 			} else {
-				return 0 == api.SHCreateItemFromParsingName(path, default, typeof(api.IShellItem).GUID, out si);
+				return 0 == _Api.SHCreateItemFromParsingName(path, default, typeof(_Api.IShellItem).GUID, out si);
 			}
 		}
 
-		unsafe class api : NativeApi {
+		unsafe class _Api {
 			internal static Guid CLSID_FileOpenDialog = new(0xDC1C5A9C, 0xE88A, 0x4DDE, 0xA5, 0xA1, 0x60, 0xF8, 0x2A, 0x20, 0xAE, 0xF7);
 
 			internal static Guid CLSID_FileSaveDialog = new(0xC0B4E2F3, 0xBA21, 0x4773, 0x8D, 0xBA, 0x33, 0x5E, 0xC9, 0x46, 0xEB, 0x8B);
@@ -240,8 +240,8 @@ namespace Au.More {
 				new int GetFileTypeIndex();
 				[PreserveSig] new int Advise(/*IFileDialogEvents pfde, out uint pdwCookie*/);
 				[PreserveSig] new int Unadvise(uint dwCookie);
-				new void SetOptions(api.FOS fos);
-				new api.FOS GetOptions();
+				new void SetOptions(_Api.FOS fos);
+				new _Api.FOS GetOptions();
 				new void SetDefaultFolder(IShellItem psi);
 				new void SetFolder(IShellItem psi);
 				new IShellItem GetFolder();
@@ -273,8 +273,8 @@ namespace Au.More {
 				new int GetFileTypeIndex();
 				[PreserveSig] new int Advise(/*IFileDialogEvents pfde, out uint pdwCookie*/);
 				[PreserveSig] new int Unadvise(uint dwCookie);
-				new void SetOptions(api.FOS fos);
-				new api.FOS GetOptions();
+				new void SetOptions(_Api.FOS fos);
+				new _Api.FOS GetOptions();
 				new void SetDefaultFolder(IShellItem psi);
 				new void SetFolder(IShellItem psi);
 				new IShellItem GetFolder();
@@ -309,8 +309,8 @@ namespace Au.More {
 				int GetFileTypeIndex();
 				[PreserveSig] int Advise(/*IFileDialogEvents pfde, out uint pdwCookie*/);
 				[PreserveSig] int Unadvise(uint dwCookie);
-				void SetOptions(api.FOS fos);
-				api.FOS GetOptions();
+				void SetOptions(_Api.FOS fos);
+				_Api.FOS GetOptions();
 				void SetDefaultFolder(IShellItem psi);
 				void SetFolder(IShellItem psi);
 				IShellItem GetFolder();

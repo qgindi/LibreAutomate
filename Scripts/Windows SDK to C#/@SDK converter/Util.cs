@@ -503,8 +503,14 @@ unsafe partial class Converter {
 	
 	void __ThrowConverterException(int pos, string errorText, string callerName, string callerFile, int callerLine) {
 		throw new ConverterException(
-			$"{errorText}\r\n\tin {callerName}, {Path.GetFileName(callerFile)}:({callerLine})"
+			$"{errorText}\r\n\tin <open {callerFile}|{callerLine}>{callerName}<>"
 			, pos);
+	}
+	
+	void _OnCatchException(Exception e) {
+		//print.it(e);
+		int i = e is ConverterException ce ? ce.Offset : _Pos(_i);
+		ScriptEditor.Open(_cppFile, offset: i);
 	}
 }
 

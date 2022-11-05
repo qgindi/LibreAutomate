@@ -59,6 +59,9 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
+		//App.Model.ImportFiles(new string[] { @"\\?\C:\code\ok\files\NtSetTimerResolution, timeBeginPeriod\Script103 - Copy.cs" });
+
+
 		//print.it(Keyboard.FocusedElement);
 
 		//App.Restart();

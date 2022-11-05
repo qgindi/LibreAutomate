@@ -110,8 +110,7 @@ static class CompileRun {
 
 				//extract code from /// <example>
 				string example = null;
-				var s = f.GetCurrentText();
-				if (s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
+				if (f.GetCurrentText(out var s) && s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
 					if (s.RxMatch(@"(?m)^\h*/// *<code>(<!\[CDATA\[)?\s+((\h*/// ?.*\R)+?)^\h*/// *(?(1)\]\]>)</code>", 2, out g, range: g)) {
 						example = g.Value.RxReplace(@"(?m)^\h*/// ?", "");
 					}

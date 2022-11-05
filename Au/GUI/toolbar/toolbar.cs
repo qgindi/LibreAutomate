@@ -46,7 +46,7 @@ public partial class toolbar : MTBase {
 	/// <param name="m_">[](xref:caller_info)</param>
 	/// <exception cref="ArgumentException">Invalid <i>name</i>.</exception>
 	/// <remarks>
-	/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="getSettingsFilePath"/>. If fails, writes warning to the output and uses default settings.
+	/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="getSettingsFilePath"/>. If fails, prints a warning and uses default settings.
 	/// 
 	/// Sets properties:
 	/// - <see cref="MTBase.ActionThread"/> = true.
@@ -711,7 +711,7 @@ public partial class toolbar : MTBase {
 
 		if (!no.Has(TBNoMenu.Edit | TBNoMenu.File)) {
 			var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, item);
-			if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => ScriptEditor.OpenAndGoToLine(_sourceFile, item?.sourceLine ?? _sourceLine);
+			if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => ScriptEditor.Open(_sourceFile, item?.sourceLine ?? _sourceLine);
 			if (!no.Has(TBNoMenu.File) && canGo) m[goText] = o => item.GoToFile_();
 		}
 		if (!no.Has(TBNoMenu.Close)) m.Add("Close", o => _SatPlanetOrThis.Close());

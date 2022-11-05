@@ -1,11 +1,10 @@
-﻿using System.Xml.Linq;
+using System.Xml.Linq;
 using System.Xml;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Au.Controls
-{
+namespace Au.Controls {
 	/// <summary>
 	/// Creates and manages window layout like in Visual Studio.
 	/// Multiple docked movable/sizable/tabable/floatable/hidable/savable panels/toolbars/documents with splitters.
@@ -20,8 +19,7 @@ namespace Au.Controls
 	/// - set <see cref="Container"/> like <c>_panels.Container = g => this.Content = g;</c>. The action is called immediately and also may be called later if need to create new root element when moving a panel etc.
 	/// If want to save user-customized layout, call <see cref="Save"/> when closing window or at any time before it.
 	/// </remarks>
-	public partial class KPanels
-	{
+	public partial class KPanels {
 		readonly Dictionary<string, _Node> _dictLeaf = new();
 		readonly Dictionary<string, _Node> _dictUserDoc = new();
 		_Node _rootStack;
@@ -101,6 +99,7 @@ namespace Au.Controls
 			var removed = eOld.Except(eNew, cmp);
 			if (removed.Any()) {
 				foreach (var x in removed.ToArray()) {
+					if (x.HasAttr("ext")) continue;
 					_Remove(x);
 					print.it($"Info: {x.Name} {x.Attr("name")} has been removed in this app version.");
 				}
@@ -125,7 +124,7 @@ namespace Au.Controls
 				foreach (var x in added) {
 					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
 					rootStack.Add(x);
-					print.it($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can right-click its caption and move it to a better place.");
+					print.it($"Info: {x.Name} {x.Attr("name")} has been added in this app version. It is at the bottom of the window. Right-click its caption and move it to a better place.");
 				}
 			}
 			//print.it(rootStack);
@@ -157,10 +156,16 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets interface of a leaf item (panel, toolbar or document).
 		/// </summary>
+		/// <value>null if not found.</value>
 		/// <param name="name"></param>
 		/// <param name="userDocument">It is a document (not panel/toolbar) added with <see cref="ILeaf.AddSibling"/>. User documents are in a separate dictionary, to avoid name conflicts.</param>
-		/// <exception cref="KeyNotFoundException"></exception>
-		public ILeaf this[string name, bool userDocument = false] => (userDocument ? _dictUserDoc : _dictLeaf)[name];
+		public ILeaf this[string name, bool userDocument = false] {
+			get {
+				var d = userDocument ? _dictUserDoc : _dictLeaf;
+				d.TryGetValue(name, out var v);
+				return v;
+			}
+		}
 
 		/// <summary>
 		/// Gets interface of container leaf item (panel, toolbar or document).
@@ -175,6 +180,16 @@ namespace Au.Controls
 				}
 				throw new NotFoundException();
 			}
+		}
+
+		public ILeaf AddNewExtension(bool toolbar, string name, ILeaf where = null, bool after = false) {
+			if (name.NE()) throw new ArgumentException();
+			if(where == null) {
+				where = _rootStack.LastChild as ILeaf;
+				after = true;
+				print.it($"Info: added new {(toolbar ? "toolbar" : "panel")} {name}. It is at the bottom of the window. Right-click its caption and move it to a better place.");
+			}
+			return where.AddSibling(after, toolbar ? LeafType.Toolbar : LeafType.Panel, name, canClose: false, isExtension: true);
 		}
 
 		//rejected. Rarely used. Can set in Container action.
@@ -220,8 +235,7 @@ namespace Au.Controls
 		Window _ContainerWindow => _window ??= Window.GetWindow(_rootStack.Elem);
 		Window _window;
 
-		class _XmlNameAttrComparer : IEqualityComparer<XElement>
-		{
+		class _XmlNameAttrComparer : IEqualityComparer<XElement> {
 			public bool Equals(XElement x, XElement y) => x.Attr("name") == y.Attr("name");
 			public int GetHashCode(XElement obj) => obj.Attr("name").GetHashCode();
 			//fast, same as with XName _name.

@@ -26,6 +26,8 @@ partial class PanelFiles : UserControl {
 			.Watermark("Find file").Tooltip(@"Part of file name, or wildcard expression.
 Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 
+		//CONSIDER: File bookmarks. And/or tags. Probably not very useful. Unless many users will want it.
+
 		b.End();
 
 		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(200); };

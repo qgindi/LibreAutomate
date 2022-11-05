@@ -98,7 +98,7 @@ partial class FilesModel {
 
 	#region tree control
 
-	public static FilesView TreeControl => Panels.Files.TreeControl;
+	public static FilesView TreeControl => Panels.Files?.TreeControl;
 
 	/// <summary>
 	/// Updates control when changed number or order of visible items (added, removed, moved, etc).
@@ -145,7 +145,7 @@ partial class FilesModel {
 			//print.it($"Failed to load '{wsDir}'. {ex.Message}");
 			switch (dialog.showError("Failed to load workspace", wsDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
-				owner: App.Hmain, expandedText: ex.ToString())) {
+				owner: TreeControl, expandedText: ex.ToString())) {
 			case 1: goto g1;
 			case 2: OpenWorkspaceUI(); break;
 			case 3: NewWorkspaceUI(); break;
@@ -197,7 +197,7 @@ partial class FilesModel {
 	public static void OpenWorkspaceUI() {
 		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Open workspace" };
 		if (!d.ShowOpen(out string s, App.Hmain, selectFolder: true)) return;
-		if (!filesystem.exists(s + @"\files.xml").File) dialog.showError("The folder must contain file files.xml");
+		if (!filesystem.exists(s + @"\files.xml").File) dialog.showError(null, "The folder must contain file files.xml", owner: TreeControl);
 		else LoadWorkspace(s);
 	}
 
@@ -749,7 +749,15 @@ partial class FilesModel {
 	/// <param name="how">1 open, 2 open in new window (not impl), 3 open in default app, 4 select in Explorer.</param>
 	public void OpenSelected(int how) {
 		var a = TreeControl.SelectedItems; if (a.Length == 0) return;
+
 		foreach (var f in a) {
+			var path = f.FilePath;
+			if (how is 3 or 4) {
+				var e = filesystem.exists(path, useRawPath: true);
+				if (!e) { print.it(f.IsFolder ? "The folder does not exist" : "The file does not exist"); continue; }
+				if (how == 4 && e.IsNtfsLink && e.Directory && filesystem.more.getFinalPath(path, out var s1)) path = s1;
+			}
+
 			switch (how) {
 			case 1:
 				if (f.IsFolder) TreeControl.Expand(f, true);
@@ -760,10 +768,10 @@ partial class FilesModel {
 			//	//FUTURE
 			//	break;
 			case 3:
-				run.it(f.FilePath);
+				run.itSafe(path);
 				break;
 			case 4:
-				run.selectInExplorer(f.FilePath);
+				run.selectInExplorer(path);
 				break;
 			}
 		}
@@ -837,7 +845,7 @@ partial class FilesModel {
 
 	/// <summary>
 	/// Gets the place where item should be added in operations such as new, paste, import.
-	/// If in context menu or atSelection (true when pasting), uses selection and may show dialog "Into the folder?". Else first item in workspace.
+	/// If in context menu or atSelection (true when pasting), uses selection and may show a context menu to select the place. Else first item in workspace.
 	/// </summary>
 	(FileNode target, FNPosition pos) _GetInsertPos(bool atSelection = false) {
 		FileNode target; FNPosition pos = FNPosition.Before;
@@ -930,7 +938,7 @@ partial class FilesModel {
 
 		if (text != null && f == CurrentFile) {
 			Debug.Assert(f.IsScript);
-			s = f.GetCurrentText();
+			f.GetCurrentText(out s);
 			var me = Au.Compiler.MetaComments.FindMetaComments(s).end;
 			if (!text.meta.NE()) {
 				if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
@@ -1162,7 +1170,7 @@ partial class FilesModel {
 			folder.SelectSingle();
 			if (isZip) filesystem.delete(wsDir);
 		}
-		catch (Exception ex) { print.it(ex.Message); }
+		catch (Exception ex) { print.it(ex); }
 	}
 
 	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNPosition pos, bool importingWorkspace = false) {
@@ -1191,113 +1199,124 @@ partial class FilesModel {
 				}
 			}
 		}
-		catch (Exception ex) { print.it(ex.Message); }
+		catch (Exception e1) { print.it(e1); }
 
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 
 	public void ImportFiles(string[] a, FileNode target, FNPosition pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
-		bool fromWorkspaceDir = false, dirsDropped = false;
-		for (int i = 0; i < a.Length; i++) {
-			var s = a[i] = pathname.normalize(a[i]);
-			if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
-				dialog.show("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
-					icon: DIcon.Info, owner: TreeControl, onLinkClick: e => run.itSafe(e.LinkHref));
-				return;
-			}
-			var fd = FilesDirectory;
-			if (!fromWorkspaceDir) {
-				if (s.Starts(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
-				else if (!dirsDropped) dirsDropped = filesystem.exists(s).Directory;
-			}
-		}
-		int r;
-		if (copySilently) {
-			if (fromWorkspaceDir) {
-				dialog.showInfo("Files from workspace folder", "Ctrl not supported."); //not implemented
-				return;
-			}
-			r = 2; //copy
-		} else if (fromWorkspaceDir) {
-			r = 3; //move
-		} else {
-			var ab = new List<string>();
-			ab.Add(dirsDropped ? "4 Add as a link to the external folder" : "1 Add as a link to the external file");
-			ab.Add("2 Copy to the workspace folder");
-			ab.Add("3 Move to the workspace folder");
-			ab.Add("0 Cancel");
-			r = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
-			if (r == 0) return;
-		}
-
-		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
-		bool select = !dontSelect && (pos != FNPosition.Inside || target.IsExpanded), focus = select;
-		if (select) TreeControl.UnselectAll();
 		try {
-			var newParentPath = newParent.FilePath + "\\";
-			var (nf1, nd1, nc1) = dontPrint ? default : _CountFilesFolders();
+			a = a.Select(s => filesystem.more.getFinalPath(s, out s) ? s : null).OfType<string>().ToArray();
+			if (a.Length == 0) return;
+			var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
 
-			foreach (var path in a) {
-				var g = filesystem.exists(path, true);
-				if (!g.Exists || g.IsNtfsLink) continue;
-				bool isDir = g.Directory && r != 1;
+			//need to detect files coming from the workspace dir. When copying to a symlink folder - from that folder.
+			var rootDir = newParent.Ancestors(andSelf: true, noRoot: true).FirstOrDefault(o => filesystem.exists(o.FilePath).IsNtfsLink)?.FilePath ?? FilesDirectory;
+			if (!filesystem.more.getFinalPath(rootDir, out rootDir)) return;
+			//CONSIDER: folder symlink: later auto-update files in workspace when files added/removed not through this app.
 
+			bool fromWorkspaceDir = false, dirsDropped = false;
+			for (int i = 0; i < a.Length; i++) {
+				var s = a[i];
+				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
+					var s1 = $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.";
+					dialog.show("Files from Recycle Bin", s1, icon: DIcon.Info, owner: TreeControl, onLinkClick: e => run.itSafe(e.LinkHref));
+					return;
+				}
+				if (s.Eqi(rootDir) || (rootDir.Starts(s, true) && rootDir[s.Length] == '\\')) return; //s is rootDir or ancestor of rootDir
+				if (!fromWorkspaceDir) {
+					if (s.Starts(rootDir, true) && s[rootDir.Length] == '\\') fromWorkspaceDir = true;
+					else if (!dirsDropped) dirsDropped = filesystem.exists(s).Directory;
+				}
+			}
+			int r;
+			if (copySilently) {
 				if (fromWorkspaceDir) {
-					var relPath = path[FilesDirectory.Length..];
-					var fExists = this.Find(relPath);
-					if (fExists != null) {
-						fExists.FileMove(target, pos);
-						continue;
+					dialog.showInfo("Files from workspace folder", "Ctrl not supported.", owner: TreeControl); //not implemented
+					return;
+				}
+				r = 2; //copy
+			} else if (fromWorkspaceDir) {
+				r = 3; //move
+			} else {
+				var ab = new List<string>();
+				ab.Add(dirsDropped ? "4 Add as a link to the external folder" : "1 Add as a link to the external file");
+				ab.Add("2 Copy to the workspace folder");
+				ab.Add("3 Move to the workspace folder");
+				ab.Add("0 Cancel");
+				r = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+				if (r == 0) return;
+			}
+
+			bool select = !dontSelect && (pos != FNPosition.Inside || target.IsExpanded), focus = select;
+			if (select) TreeControl.UnselectAll();
+			try {
+				var newParentPath = newParent.FilePath + "\\";
+				var (nf1, nd1, nc1) = dontPrint ? default : _CountFilesFolders();
+
+				foreach (var path in a) {
+					var g = filesystem.exists(path, true);
+					if (!g.Exists || g.IsNtfsLink) continue;
+					bool isDir = g.Directory && r != 1;
+
+					if (fromWorkspaceDir) {
+						var relPath = path[FilesDirectory.Length..];
+						var fExists = this.Find(relPath);
+						if (fExists != null) {
+							fExists.FileMove(target, pos);
+							continue;
+						}
+					}
+
+					FileNode k;
+					var name = pathname.getName(path);
+					if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
+
+					if (r == 1) { //add as link
+						k = new FileNode(this, name, path, false, isFileLink: true);
+					} else {
+						k = new FileNode(this, name, path, isDir, isSymlink: r == 4);
+						if (isDir) _AddDir(path, k);
+						if (!TryFileOperation(() => {
+							var newPath = newParentPath + name;
+							if (r == 4) Directory.CreateSymbolicLink(newPath, path);
+							else if (r == 2) filesystem.copy(path, newPath, FIfExists.Fail);
+							else filesystem.move(path, newPath, FIfExists.Fail);
+						})) continue;
+					}
+					target.AddChildOrSibling(k, pos, false);
+					if (select) {
+						k.IsSelected = true;
+						if (focus) { focus = false; TreeControl.SetFocusedItem(k); }
 					}
 				}
 
-				FileNode k;
-				var name = pathname.getName(path);
-				if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
-
-				if (r == 1) { //add as link
-					k = new FileNode(this, name, path, false, isFileLink: true);
-				} else {
-					k = new FileNode(this, name, path, isDir, isSymlink: r == 4);
-					if (isDir) _AddDir(path, k);
-					if (!TryFileOperation(() => {
-						var newPath = newParentPath + name;
-						if (r == 4) Directory.CreateSymbolicLink(newPath, path);
-						else if (r == 2) filesystem.copy(path, newPath, FIfExists.Fail);
-						else filesystem.move(path, newPath, FIfExists.Fail);
-					})) continue;
+				if (!dontPrint) {
+					var (nf2, nd2, nc2) = _CountFilesFolders();
+					int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
+					if (nf + nd > 0) print.it($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
 				}
-				target.AddChildOrSibling(k, pos, false);
-				if (select) {
-					k.IsSelected = true;
-					if (focus) { focus = false; TreeControl.SetFocusedItem(k); }
+			}
+			catch (Exception ex) { print.it(ex.Message); }
+			Save.WorkspaceLater();
+			CodeInfo.FilesChanged();
+
+			void _AddDir(string path, FileNode parent) {
+				foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+					bool isDir = u.IsDirectory;
+					var k = new FileNode(this, u.Name, u.FullPath, isDir, isSymlink: u.IsNtfsLink);
+					parent.AddChild(k);
+					if (isDir) _AddDir(u.FullPath, k);
 				}
 			}
 
-			if (!dontPrint) {
-				var (nf2, nd2, nc2) = _CountFilesFolders();
-				int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
-				if (nf + nd > 0) print.it($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
+			(int nf, int nd, int nc) _CountFilesFolders() {
+				int nf = 0, nd = 0, nc = 0;
+				foreach (var v in Root.Descendants()) if (v.IsFolder) nd++; else { nf++; if (v.IsCodeFile) nc++; }
+				return (nf, nd, nc);
 			}
 		}
-		catch (Exception ex) { print.it(ex.Message); }
-		Save.WorkspaceLater();
-		CodeInfo.FilesChanged();
-
-		void _AddDir(string path, FileNode parent) {
-			foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
-				bool isDir = u.IsDirectory;
-				var k = new FileNode(this, u.Name, u.FullPath, isDir, isSymlink: u.IsNtfsLink);
-				parent.AddChild(k);
-				if (isDir) _AddDir(u.FullPath, k);
-			}
-		}
-
-		(int nf, int nd, int nc) _CountFilesFolders() {
-			int nf = 0, nd = 0, nc = 0;
-			foreach (var v in Root.Descendants()) if (v.IsFolder) nd++; else { nf++; if (v.IsCodeFile) nc++; }
-			return (nf, nd, nc);
-		}
+		catch (Exception e1) { print.it(e1); }
 	}
 
 	/// <summary>
@@ -1574,7 +1593,7 @@ partial class FilesModel {
 		if (!IsWorkspaceDirectoryOrZip(path, out bool zip)) return false;
 		var text1 = zip ? "Import files from zip" : "Workspace";
 		var buttons = zip ? "2 Import|0 Cancel" : "1 Open|2 Import|0 Cancel";
-		dialogResult = dialog.show(text1, path, buttons, footer: GetSecurityInfo("v|"));
+		dialogResult = dialog.show(text1, path, buttons, footer: GetSecurityInfo("v|"), owner: TreeControl);
 		return true;
 	}
 

@@ -1,0 +1,1 @@
+LibreAutomate is an automation library for Windows. Mostly desktop and web UI automation. To get the most of it, install the LibreAutomate C# app.

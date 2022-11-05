@@ -215,7 +215,7 @@ A script can use packages from multiple folders if they are compatible.");
 			//dialog.show("nuget 2");
 
 			if (installing) {
-				//we need a list of installed files (managed dll, native dll, maybe more).
+				//we need a list of installed files (managed dll, unmanaged dll, maybe more).
 				//	When compiling miniProgram or editorExtension, will need dll paths to resolve at run time.
 				//	When compiling exeProgram, will need to copy them to the output directory.
 
@@ -324,7 +324,7 @@ A script can use packages from multiple folders if they are compatible.");
 					//	"r" - .NET dll used at compile time and run time. Not ref-only.
 					//	"ro" - .NET dll used only at compile time. Can be ref-only or not.
 					//	"rt" - .NET dll used only at run time.
-					//	"native" - native dll
+					//	"native" - unmanaged dll
 					//	"other" - all other (including dlls in folders other than root and runtimes)
 					//	"group" - group of "rt" dlls. Same dll for different OS versions/platforms.
 					//	"natives" - group of "native" dlls. Same dll for different OS versions/platforms.

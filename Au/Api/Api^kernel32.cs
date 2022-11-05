@@ -205,7 +205,7 @@ static unsafe partial class Api {
 		using FastBuffer<char> b = new();
 		for (; ; ) if (b.GetString(_GetLongPathName(s, b.p, b.n), out r, 0, s)) return (object)r != s;
 	}
-	
+
 	[DllImport("kernel32.dll", EntryPoint = "GetFinalPathNameByHandleW")]
 	static extern int _GetFinalPathNameByHandle(IntPtr hFile, char* lpszFilePath, int cchFilePath, uint dwFlags);
 
@@ -928,11 +928,14 @@ static unsafe partial class Api {
 
 	internal const int RT_GROUP_ICON = 14;
 
-	internal const int STD_INPUT_HANDLE = -10;
+	//internal const int STD_INPUT_HANDLE = -10;
 	internal const int STD_OUTPUT_HANDLE = -11;
 
 	[DllImport("kernel32.dll")]
 	internal static extern nint GetStdHandle(int nStdHandle);
+
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern uint GetConsoleOutputCP();
 
 	[DllImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownW", SetLastError = true)]
 	internal static extern bool InitiateSystemShutdown(string lpMachineName, string lpMessage, int dwTimeout, bool bForceAppsClosed, bool bRebootAfterShutdown);

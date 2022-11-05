@@ -433,7 +433,7 @@ static partial class Compiler {
 	//	Compiling miniProgram or editorExtension. Dll paths will be added to an assembly attribute. At run time will use it to find dlls.
 	//Depending on meta properties, filters out unused dlls, eg 32-bit or dlls for other OS versions.
 	static (Dictionary<string, string> dr, Dictionary<string, string> dn) _GetDllPaths(MetaComments meta) {
-		Dictionary<string, string> dr = null, dn = null; //managed, native
+		Dictionary<string, string> dr = null, dn = null, dr2 = null; //managed, native
 		_Project(meta);
 		void _Project(MetaComments m) {
 			var ndir = App.Model.NugetDirectoryBS;
@@ -445,6 +445,26 @@ static partial class Compiler {
 					var path = refs[k].FilePath;
 					if (path.Starts(ndir, true)) continue;
 					_Add(ref dr, pathname.getName(path), path);
+
+					//add managed dlls used by that dll but not specified in meta
+					_Deps(path);
+					void _Deps(string path) {
+						string dir = null;
+						using var stream = filesystem.loadStream(path);
+						using var peReader = new PEReader(stream);
+						var mr = peReader.GetMetadataReader();
+						foreach (var arh in mr.AssemblyReferences) {
+							var ar = mr.GetAssemblyReference(arh);
+							var an = mr.GetString(ar.Name);
+							if (MetaReferences.DefaultReferences.ContainsKey(an) || an == "System.Private.CoreLib") continue;
+							if (dr2?.ContainsKey(an) ?? false) continue;
+							dir ??= pathname.getDirectory(path, withSeparator: true);
+							var path2 = dir + an + ".dll";
+							if (!filesystem.exists(path2, useRawPath: true).File) continue;
+							(dr2 ??= new()).Add(an, path2);
+							_Deps(path2);
+						}
+					}
 				}
 			}
 
@@ -517,7 +537,7 @@ static partial class Compiler {
 							//old format (the very first)
 							//tags:
 							//	"r" - .NET dll (including ref-only)
-							//	"f" - all other (including native dll)
+							//	"f" - all other (including unmanaged dll)
 							//native dlls are in \64 and \32.
 
 							foreach (var f in xp.Elements()) {
@@ -543,23 +563,48 @@ static partial class Compiler {
 				}
 			}
 
-			void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
-				if (isDll && meta.Role == ERole.exeProgram && meta.Name.Eqi(pathname.getNameNoExt(s)))
-					throw new InvalidOperationException($@"Can't use C# file name '{meta.Name}' because it is used by dll file '{path}'.
-	Rename this C# file: {meta.Name}");
+			//unmanaged dlls specified in meta file
+			if (m.OtherFiles != null && meta.Role != ERole.exeProgram) {
+				foreach (var v in m.OtherFiles) {
+					if (v.f.IsFolder) {
+						foreach (var des in v.f.Descendants()) if (!des.IsFolder) _AddOther(des);
+					} else {
+						_AddOther(v.f);
+					}
+				}
 
-				d ??= new(StringComparer.OrdinalIgnoreCase);
-				if (d.TryAdd(s, path)) return;
-				var existing = d[s]; if (existing.Eqi(path)) return;
-				if (filesystem.loadBytes(existing).AsSpan().SequenceEqual(filesystem.loadBytes(path))) return;
-
-				throw new InvalidOperationException($@"Two different versions of file:
-	{existing}
-	{path}");
+				void _AddOther(FileNode f) {
+					var path = f.FilePath;
+					if (!path.Ends(".dll", true)) return;
+					dn ??= new(StringComparer.OrdinalIgnoreCase);
+					dn.TryAdd(path, path);
+				}
 			}
 
-			var pr = m.ProjectReferences;
-			if (pr != null) foreach (var v in pr) _Project(v.m);
+			if (m.ProjectReferences is var pr && pr != null)
+				foreach (var v in pr) _Project(v.m);
+		}
+
+		void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
+			if (isDll && meta.Role == ERole.exeProgram && meta.Name.Eqi(pathname.getNameNoExt(s)))
+				throw new InvalidOperationException($@"Can't use C# file name '{meta.Name}' because it is used by dll file '{path}'.
+	Rename this C# file: {meta.Name}");
+
+			d ??= new(StringComparer.OrdinalIgnoreCase);
+			if (d.TryAdd(s, path)) return;
+			var existing = d[s]; if (existing.Eqi(path)) return;
+			Debug_.Print($"compares file data of '{path}' and '{existing}'");
+			if (filesystem.loadBytes(existing).AsSpan().SequenceEqual(filesystem.loadBytes(path))) return;
+
+			throw new InvalidOperationException($@"Two different versions of file:
+	{existing}
+	{path}");
+		}
+
+		if (dr2 != null) {
+			foreach (var (k, v) in dr2) {
+				_Add(ref dr, k + ".dll", v);
+			}
 		}
 
 		//print.it("dr");
@@ -811,13 +856,13 @@ static partial class Compiler {
 		ms.Position = 0;
 	}
 
-	static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32) {
+	static void _CopyDlls(MetaComments meta, Stream asmStream, bool need64, bool need32) {
 		asmStream.Position = 0;
 
 		//note: need Au.dll and AuCpp.dll even if not used in code. It contains script.AppModuleInit_.
-		_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", m.OutputPath + @"\Au.dll");
-		if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
-		if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
+		_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", meta.OutputPath + @"\Au.dll");
+		if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", meta.OutputPath + @"\64\AuCpp.dll");
+		if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", meta.OutputPath + @"\32\AuCpp.dll");
 
 		bool usesSqlite = _UsesSqlite(asmStream);
 
@@ -838,10 +883,11 @@ static partial class Compiler {
 			return false;
 		}
 
-		var (dr, dn) = _GetDllPaths(m);
-		if (dr != null) { //copy managed dlls, including from nuget
+		//copy managed dlls, including from nuget
+		var (dr, dn) = _GetDllPaths(meta);
+		if (dr != null) {
 			foreach (var v in dr) {
-				_CopyFileIfNeed(v.Value, m.OutputPath + "\\" + v.Key);
+				_CopyFileIfNeed(v.Value, meta.OutputPath + "\\" + v.Key);
 
 				if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) {
 					using var fs = filesystem.loadStream(v.Value);
@@ -850,16 +896,43 @@ static partial class Compiler {
 			}
 		}
 
-		if (dn != null) { //copy other files from nuget
+		//copy other files from nuget
+		if (dn != null) {
 			foreach (var v in dn) {
-				_CopyFileIfNeed(v.Value, m.OutputPath + v.Key);
+				_CopyFileIfNeed(v.Value, meta.OutputPath + v.Key);
 			}
+		}
+
+		//copy files specified in meta file
+		_OtherFilesOfProject(meta);
+		void _OtherFilesOfProject(MetaComments m) {
+			if (m.OtherFiles != null) {
+				foreach (var v in m.OtherFiles) {
+					var dest = meta.OutputPath;
+					if (!v.s.NE()) dest = pathname.combine(dest, v.s, s2CanBeFullPath: true);
+
+					_CopyOther(v.f, dest);
+
+					static void _CopyOther(FileNode f, string dest) {
+						if (f.IsFolder) {
+							if (!f.Name.Ends('-')) dest = dest + "\\" + f.Name;
+							foreach (var c in f.Children()) _CopyOther(c, dest);
+						} else {
+							var path = f.FilePath;
+							_CopyFileIfNeed(path, dest + "\\" + pathname.getName(path));
+						}
+					}
+				}
+			}
+
+			if (m.ProjectReferences is var pr && pr != null)
+				foreach (var v in pr) _OtherFilesOfProject(v.m);
 		}
 
 		//print.it(usesSqlite);
 		if (usesSqlite) {
-			if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", m.OutputPath + @"\64\sqlite3.dll");
-			if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", m.OutputPath + @"\32\sqlite3.dll");
+			if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", meta.OutputPath + @"\64\sqlite3.dll");
+			if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", meta.OutputPath + @"\32\sqlite3.dll");
 		}
 	}
 
@@ -882,7 +955,7 @@ static partial class Compiler {
 
 			//replace variables like $(variable)
 			var f = m.MainFile.f;
-			if (s_rx1 == null) s_rx1 = new regexp(@"\$\((\w+)\)");
+			s_rx1 ??= new regexp(@"\$\((\w+)\)");
 			string _ReplFunc(RXMatch k) {
 				switch (k[1].Value) {
 				case "outputFile": return _OutputFile();
@@ -900,7 +973,7 @@ static partial class Compiler {
 		string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Bit32) : outFile;
 
 		bool ok = Compile(ECompReason.Run, out var r, x.f);
-		if (r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
+		if (r.role != ERole.editorExtension) throw new ArgumentException($"'{x.f.Name}' role must be editorExtension");
 		if (!ok) return false;
 
 		RunAssembly.Run(r.file, args, handleExceptions: false);

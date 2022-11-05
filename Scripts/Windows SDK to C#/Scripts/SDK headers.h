@@ -99,7 +99,6 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #include <commdlg.h> //common dialogs
 #include <dde.h> //DDE
 #include <ddeml.h> //DDE
-#include <wininet.h> //internet. We can instead use System.Net.Http namespace and System.Net.FtpWebRequest classes, but maybe this still can be useful.
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h> //sockets (TCP etc) //future: test System.Net.Sockets
 #include <nspapi.h> //MS extensions for sockets
@@ -115,9 +114,7 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #include <lm.h> //LAN management, NetServerEnum
 #include <Wlanapi.h> //WiFi
 #include <adhoc.h> //WiFi
-//#include <mscoree.h> //unmanaged .NET API. Somehow this file disappeared.
 #include <Pla.h> //performance logs and alerts
-#include <uiribbon.h>
 #include <werapi.h> //error reporting
 #include <physicalmonitorenumerationapi.h>
 
@@ -129,6 +126,10 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #include <Endpointvolume.h>
 
 #if 0
+//temporary. Used in the library, but don't need to include in the public database.
+//#include <sapi.h> //note: will be several errors when converting. Edit the preprocessed files in several places.
+////#include <sphelper.h> //C++ code, impossible to convert
+
 //these are little tested and probably not useful
 #include <iphlpapi.h> //IP helper, eg list network adapters. Use System.Net.NetworkInformation namespace.
 #include <icmpapi.h> //ICMP, eg to implement a Ping(). Use System.Net.NetworkInformation namespace.
@@ -156,4 +157,7 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #include <winspool.h> //printer API. Big. Use System.Drawing.Printing namespace. See also System.Printing namespace.
 #include <wincrypt.h> //cryptography. Large. Use System.Security.Cryptography namespace.
 #include <Esent.h> //Windows native database API. Use ESENT.NET instead; tested, slooow, better use SQLite.
+#include <wininet.h> //internet. We can instead use System.Net.Http namespace and System.Net.FtpWebRequest classes, but maybe this still can be useful.
+#include <uiribbon.h>
+//#include <mscoree.h> //unmanaged .NET API. Somehow this file disappeared.
 #endif

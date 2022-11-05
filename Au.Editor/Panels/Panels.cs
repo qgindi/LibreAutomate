@@ -2,8 +2,7 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;
 
-static class Panels
-{
+static class Panels {
 	public static KPanels PanelManager;
 	//internal static KPanels.ILeaf DocPlaceholder_;
 	//panels
@@ -47,61 +46,33 @@ static class Panels
 		pm.Load(folders.ThisAppBS + @"Default\Layout.xml", customLayoutPath);
 
 		pm["Menu"].Content = Menu = new Menu();
-		TFile = _TB("File");
-		TEdit = _TB("Edit");
-		TRun = _TB("Run");
-		TTools = _TB("Tools");
-		THelp = _TB("Help", true);
-		TCustom1 = _TB("Custom1");
-		TCustom2 = _TB("Custom2");
+		TFile = CreateToolbar("File");
+		TEdit = CreateToolbar("Edit");
+		TRun = CreateToolbar("Run");
+		TTools = CreateToolbar("Tools");
+		THelp = CreateToolbar("Help", dp => {
+			//dp.Children.Add(TBoxHelp = new TextBox { Height = 20, Margin = new Thickness(3, 1, 0, 2) }); //FUTURE
+			return Dock.Right;
+		});
+		TCustom1 = CreateToolbar("Custom1");
+		TCustom2 = CreateToolbar("Custom2");
+	}
 
-		ToolBar _TB(string name, bool isHelp = false) {
-			var c = new ToolBar { Name = name };
-			c.UiaSetName(name);
-			c.HideGripAndOverflow(false);
-			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
-			tt.ToolBars.Add(c);
-#if true
-			if (isHelp) {
-				var p = new DockPanel { Background = tt.Background };
-				DockPanel.SetDock(tt, Dock.Right);
-				p.Children.Add(tt);
-				//FUTURE
-				//var box = new TextBox { Height = 20, Margin = new Thickness(3, 1, 3, 2), Padding = new Thickness(1, 1, 1, 0) };
-				//p.Children.Add(box);
-				pm[name].Content = p;
-			} else {
-				pm[name].Content = tt;
-			}
-#else
-			if (name == "Help") c.Items.Add(new TextBox { Width = 150, Padding = new Thickness(1, 0, 1, 0) });
-			pm[name].Content = tt;
-#endif
-			return c;
+	public static ToolBar CreateToolbar(string name, Func<DockPanel, Dock> dockPanel = null) {
+		var c = new ToolBar { Name = name };
+		c.UiaSetName(name);
+		c.HideGripAndOverflow(false);
+		var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
+		tt.ToolBars.Add(c);
+		FrameworkElement content = tt;
+		if (dockPanel != null) {
+			var p = new DockPanel { Background = tt.Background };
+			p.Children.Add(tt);
+			DockPanel.SetDock(tt, dockPanel(p));
+			content = p;
 		}
-		//		ToolBar _TB(string name, bool isHelp = false) {
-		//			var c = new ToolBar { Name = name };
-		//			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
-		//			c.UiaSetName(name);
-		//			tt.ToolBars.Add(c);
-		//#if true
-		//			if (isHelp) {
-		//				var p = new DockPanel { Background = tt.Background };
-		//				DockPanel.SetDock(tt, Dock.Right);
-		//				p.Children.Add(tt);
-		//				//FUTURE
-		//				//var box = new TextBox { Height = 20, Margin = new Thickness(3, 1, 3, 2), Padding = new Thickness(1, 1, 1, 0) };
-		//				//p.Children.Add(box);
-		//				pm[name].Content = p;
-		//			} else {
-		//				pm[name].Content = tt;
-		//			}
-		//#else
-		//			if (name == "Help") c.Items.Add(new TextBox { Width = 150, Padding = new Thickness(1, 0, 1, 0) });
-		//			pm[name].Content = tt;
-		//#endif
-		//			return c;
-		//		}
+		PanelManager[name].Content = content;
+		return c;
 	}
 
 	public static void CreatePanels() {
