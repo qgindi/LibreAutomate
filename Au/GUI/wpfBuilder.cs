@@ -251,7 +251,7 @@ public class wpfBuilder {
 	/// <remarks>
 	/// If this function not called, the table has 2 columns like <c>.Columns(0, -1)</c>.
 	/// 
-	/// If there are star-sized columns, grid width should be defined. Call <see cref="Width"/> or <see cref="Size"/>. But if the grid is in a cell of another grid, usually it's better to set column width of that grid to a non-zero value, ie let it be not auto-sized.
+	/// If there are star-sized columns, should be set width of the grid or of its container. Call <see cref="Width"/> or <see cref="Size"/> or <see cref="WinSize"/>. But if the grid is in a cell of another grid, usually it's better to set column width of that grid to a non-zero value, ie let it be not auto-sized.
 	/// </remarks>
 	public wpfBuilder Columns(params WBGridLength[] widths) {
 		var g = Last as Grid ?? throw new InvalidOperationException("Columns() in wrong place");

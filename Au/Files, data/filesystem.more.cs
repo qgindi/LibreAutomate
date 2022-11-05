@@ -311,14 +311,16 @@ namespace Au {
 			//}
 
 			/// <summary>
-			/// Loads an unmanaged dll from subfolder "64" or "32" depending on whether this process is 64-bit or 32-bit.
+			/// Loads unmanaged dll of correct 64/32 bitness.
 			/// </summary>
 			/// <param name="fileName">Dll file name like "name.dll".</param>
 			/// <exception cref="DllNotFoundException"></exception>
 			/// <remarks>
-			/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. Let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
+			/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. If not using deps.json, let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
 			/// 
-			/// If the dll not found there, this function also looks in:
+			/// Looks in:
+			/// - subfolder "64" or "32" of the app folder.
+			/// - calls NativeLibrary.TryLoad, which works like [DllImport], eg may use info from deps.json.
 			/// - subfolder "64" or "32" of folder of the caller dll.
 			/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
 			/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
@@ -330,6 +332,9 @@ namespace Au {
 
 				//app path
 				if (default != Api.LoadLibrary(folders.ThisAppBS + rel)) return;
+
+				//like DllImport. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
+				if (NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out _)) return;
 
 				//dll path. Eg in PowerShell. Other scripting environments etc may copy the dll elsewhere; then need the environment variable.
 				var p = pathname.getDirectory(Assembly.GetCallingAssembly().Location, withSeparator: true) + rel;

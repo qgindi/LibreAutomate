@@ -1,4 +1,4 @@
-﻿namespace Au.More;
+namespace Au.More;
 
 /// <summary>
 /// Wraps buffered paint API <msdn>BeginBufferedPaint</msdn> etc.
@@ -19,7 +19,7 @@ public struct BufferedPaint : IDisposable
 	[ThreadStatic] static bool s_inited;
 	//never mind: should BufferedPaintUnInit before thread exits.
 	//	Not very important. Usually a process has single UI thread. Tested: 10000 threads without BufferedPaintUnInit don't leak much.
-	//	To detect thread exit could use eg FlsAlloc(callback)+FlsSetValue, or native dll thread detach.
+	//	To detect thread exit could use eg FlsAlloc(callback)+FlsSetValue, or unmanaged dll thread detach.
 	//		But it can be dangerous (too late, eg C# thread variables are already cleared).
 
 	wnd _w;

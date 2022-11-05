@@ -1,10 +1,22 @@
 # LibreAutomate C#
 
-LibreAutomate C# is a C# script editor/manager/launcher with an automation library and UI automation tools.
+LibreAutomate is a C# script editor/manager with an automation library and UI automation tools. For Windows. Uses .NET 6.
 
-The library contains classes/functions to automate various tasks on Windows computers. Written mostly in C#, it is a .NET library. Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Create custom dialog windows. Hotkeys and other triggers.
+Some features of the automation library:
+- Automate desktop and web UI using keys, mouse and API. Find and click buttons, links, images.
+- Launch programs. Manage files and windows. Transfer and process text and other data.
+- Hotkeys, autotext and other triggers. Auto-replace/expand text when typing. Auto-close windows. Remap keys.
+- Custom toolbars that can be attached to windows or screen edges. And menus.
+- Custom dialog windows of any complexity can be created easily in code.
+- All classes/functions are documented.
+- The library can be used in other programs too. Can be installed from [NuGet](https://www.nuget.org/packages/LibreAutomate).
 
-In scripts also can be used Windows API, .NET and zillion of programming libraries, as well as code examples and info from the internet. The program can create programs and libraries, and not just for automation. You'll gradually learn C#, one of top 5 programming languages. Then creating automations with this code editor is faster than with no-code RPA apps, and less limitations.
+Some features of the script editor program:
+- The scripting language is C#. The program is a good way to learn it.
+- C# code editor with intellisense. Script manager, cookbook.
+- Tools for recording keyboard/mouse and selecting UI objects such as buttons, links and images.
+- Also you can use .NET and other libraries. Tools and databases for NuGet, Windows API, icons.
+- Can create independent .exe programs and .NET libraries.
 
 More info and download: https://www.libreautomate.com/
 

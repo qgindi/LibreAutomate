@@ -158,7 +158,11 @@ class DOptions : KDialogWindow {
 		b.R.Add(out KCheckBox bold, "Bold");
 		b.End();
 		b.Row(-1);
-		b.R.Add(out Button bInfo, "?").Align("r").Width(20);
+		b.R.AddSeparator();
+		b.R.StartStack();
+		//b.Add(out Button bInvert, "Invert");
+		b.Add(out Button bInfo, "?").Width(20);
+		b.End().Align("r");
 		b.End();
 		b.End();
 
@@ -172,7 +176,7 @@ class DOptions : KDialogWindow {
 			List<string> fonts = new(), fontsMono = new(), fontsVar = new();
 			using (var dc = new ScreenDC_()) {
 				unsafe {
-					api.EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
+					_Api.EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
 						if (lf->lfFaceName[0] != '@') {
 							var fn = new string(lf->lfFaceName);
 							if ((lf->lfPitchAndFamily & 0xf0) == 48) fontsMono.Add(fn); else fontsVar.Add(fn); //FF_MODERN=48
@@ -241,8 +245,8 @@ Line number";
 					int line = c.zLineFromPos(false, c.zCurrentPos8);
 					if (line != currentLine) {
 						currentLine = line;
-						int tok = _SciStylesLineToTok(line);
-						if (tok == -2) { //Font
+						int k = _SciStylesLineToStyleIndex(line);
+						if (k == -2) { //Font
 							pColor.Visibility = Visibility.Collapsed;
 							pFont.Visibility = Visibility.Visible;
 						} else {
@@ -250,12 +254,12 @@ Line number";
 							pColor.Visibility = Visibility.Visible;
 							ignoreColorEvents = true;
 							int col;
-							if (tok == -1) {
+							if (k == -1) {
 								col = backColor;
 								bold.Visibility = Visibility.Collapsed;
 							} else {
-								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, tok));
-								bold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, tok);
+								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k));
+								bold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k);
 								bold.Visibility = Visibility.Visible;
 							}
 							color.Color = col;
@@ -283,23 +287,25 @@ Line number";
 			bold.CheckChanged += (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
 			color.ColorChanged += col => { if (!ignoreColorEvents) _UpdateSci(); };
 			void _UpdateSci(object control = null) {
-				int tok = _SciStylesLineToTok(sciStyles.zLineFromPos(false, sciStyles.zCurrentPos8));
+				int k = _SciStylesLineToStyleIndex(sciStyles.zLineFromPos(false, sciStyles.zCurrentPos8));
 				int col = color.Color;
-				if (tok >= 0) {
-					if (control == bold) sciStyles.zStyleBold(tok, bold.IsChecked);
-					else sciStyles.zStyleForeColor(tok, col);
-				} else if (tok == -1) {
+				if (k >= 0) {
+					if (control == bold) sciStyles.zStyleBold(k, bold.IsChecked);
+					else sciStyles.zStyleForeColor(k, col);
+				} else if (k == -1) {
 					backColor = col;
 					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.zStyleBackColor(i, col);
 				}
 			}
 
-			int _SciStylesLineToTok(int line) {
+			int _SciStylesLineToStyleIndex(int line) {
 				line -= 2; if (line < 0) return line;
-				int tok = line, nu = (int)CiStyling.EStyle.countUserDefined;
-				if (tok >= nu) tok = tok - nu + Sci.STYLE_LINENUMBER;
-				return tok;
+				int k = line, nu = (int)CiStyling.EStyle.countUserDefined;
+				if (k >= nu) k = k - nu + Sci.STYLE_LINENUMBER;
+				return k;
 			}
+
+			bool inverted = false;
 
 			_b.OkApply += e => {
 				var styles = new CiStyling.TStyles(sciStyles); //gets colors and bold
@@ -307,7 +313,8 @@ Line number";
 				styles.FontName = fname;
 				styles.FontSize = fsize;
 
-				if (styles != CiStyling.TStyles.Settings) {
+				print.it(styles != CiStyling.TStyles.Settings);
+				if (styles != CiStyling.TStyles.Settings || inverted) {
 					CiStyling.TStyles.Settings = styles;
 					foreach (var v in Panels.Editor.ZOpenDocs) {
 						styles.ToScintilla(v);
@@ -315,6 +322,13 @@ Line number";
 					}
 				}
 			};
+
+			//rejected. This code is unfinished, just to test. The inverted colors aren't good.
+			//bInvert.Click += (_, _) => {
+			//	styles.InvertAllColors();
+			//	styles.ToScintilla(sciStyles);
+			//	inverted = true;
+			//};
 
 			//[?] button
 			bInfo.Click += (_, _) => {
@@ -461,7 +475,7 @@ To apply changes after deleting etc, restart this application.
 		};
 	}
 
-	static class api {
+	static class _Api {
 		[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
 		internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, nint lParam, uint dwFlags);
 		internal unsafe delegate int FONTENUMPROC(Api.LOGFONT* lf, IntPtr tm, uint fontType, nint lParam);

@@ -33,7 +33,7 @@ class PanelCookbook : UserControl {
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
 		b.xAddButtonIcon("*Material.TextSearch #EABB00", _ => _Search(true), "Find in recipe text");
-		b.xAddButtonIcon("*Material.History #EABB00", _ => _HistoryMenu(), "History");
+		b.xAddButtonIcon("*EvaIcons.ArrowBack #EABB00", _ => _HistoryMenu(), "Go back...");
 		b.Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
 		b.Row(-1).Add(_tv);
@@ -106,7 +106,7 @@ class PanelCookbook : UserControl {
 
 		if (recipe.GetBodyText() is string code) {
 			Panels.Recipe.Display(recipe.name, code);
-			AddToHistory(recipe.name);
+			AddToHistory_(recipe.name);
 		}
 	}
 
@@ -201,7 +201,7 @@ class PanelCookbook : UserControl {
 	}
 	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a) _stem;
 
-	internal void OpenRecipe(string s) {
+	public void OpenRecipe(string s) {
 		Panels.PanelManager[this].Visible = true;
 		_OpenRecipe(_FindRecipe(s), true);
 	}
@@ -213,7 +213,7 @@ class PanelCookbook : UserControl {
 			?? d.FirstOrDefault(o => !o.dir && o.name.Find(s, true) >= 0);
 	}
 
-	internal void AddToHistory(string recipe) {
+	internal void AddToHistory_(string recipe) {
 		_history.Remove(recipe);
 		_history.Add(recipe);
 		if (_history.Count > 20) _history.RemoveAt(0);

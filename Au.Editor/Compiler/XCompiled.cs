@@ -100,9 +100,9 @@ static partial class Compiler {
 					case 'l':
 					case 'c':
 					case 'x':
+					case 'y':
 					case 'k':
 					case 'm':
-					//case 'y':
 					case 's':
 						//case 'o':
 						value.ToInt(out uint u1, offs);
@@ -159,7 +159,7 @@ static partial class Compiler {
 			if (_data == null && !_Open()) _data = new();
 
 			/*
-IDmain|=path.exe|tN|nN|uN|fN|b|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
+IDmain|=path.exe|tN|nN|uN|fN|b|pMD5project|cIDcode|lIDlibrary|xIDresource|yIDfile|kIDicon|mIDmanifest|sIDsign|*ref
 = - outFile
 t - role
 n - ifRunning
@@ -170,14 +170,12 @@ p - MD5 of Id of all project files except main
 c - c
 l - pr
 x - resource
+y - file
 k - icon
 m - manifest
 s - sign
 o - config (now removed)
 * - r
-
-rejected:
-y - res
 			*/
 
 			string value = null;
@@ -198,11 +196,10 @@ y - res
 
 				if (m.ProjectReferences != null) foreach (var (v, _) in m.ProjectReferences) _AppendFile("|l", v); //ids of meta 'pr' files
 				if (m.Resources != null) foreach (var v in m.Resources) _AppendFile("|x", v.f); //ids of meta 'resource' files
+				if (m.OtherFiles != null) foreach (var v in m.OtherFiles) _AppendFile("|y", v.f); //ids of meta 'file' files
 				_AppendFile("|k", m.IconFile);
 				_AppendFile("|m", m.ManifestFile);
-				//_AppendFile("|y", m.ResFile);
 				_AppendFile("|s", m.SignFile);
-				//_AppendFile("|o", m.ConfigFile);
 
 				//references
 				var refs = m.References.Refs;
@@ -225,13 +222,13 @@ y - res
 
 				if (b.Length != 0) value = b.ToString();
 
-				void _AppendFile(string m, FileNode f_) {
-					if (f_ == null) return;
-					if (f_.IsFolder) {
-						Debug.Assert(m is "|x" or "|k");
-						foreach (var des in f_.Descendants()) if (!des.IsFolder) b.Append(m).Append(des.IdString);
+				void _AppendFile(string m, FileNode f) {
+					if (f == null) return;
+					if (f.IsFolder) {
+						Debug.Assert(m is "|x" or "|y" or "|k");
+						foreach (var des in f.Descendants()) if (!des.IsFolder) b.Append(m).Append(des.IdString);
 					} else {
-						b.Append(m).Append(f_.IdString);
+						b.Append(m).Append(f.IdString);
 					}
 				}
 			}
@@ -280,7 +277,7 @@ y - res
 			}
 
 			return true;
-		g1:
+			g1:
 			_ClearCache();
 			return false;
 		}

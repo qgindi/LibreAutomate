@@ -282,10 +282,17 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	public string ItemPath => _ItemPath();
 
+	/// <summary>
+	/// Returns item path relative to <i>ancestor</i>, like @"Folder\Name.cs" or @"Name.cs".
+	/// Returns null if this item is deleted or not in <i>ancestor</i>.
+	/// If <i>ancestor</i> is null or <b>Root</b>, the result is the same as <b>ItemPath</b>.
+	/// </summary>
+	public string ItemPathIn(FileNode ancestor) => _ItemPath(null, ancestor);
+
 	[SkipLocalsInit]
-	unsafe string _ItemPath(string prefix = null) {
+	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null) {
 		int len = prefix.Lenn();
-		var root = Root;
+		var root = ancestor ?? Root;
 		for (var f = this; f != root; f = f.Parent) {
 			if (f == null) { Debug.Assert(IsDeleted); return null; }
 			len += f._name.Length + 1;
@@ -297,6 +304,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			*(--e) = '\\';
 		}
 		if (e > p) prefix.CopyTo_(p);
+		if (ancestor != null && ancestor.Parent != null) return new string(p, 1, len - 1);
 		return new string(p, 0, len);
 	}
 
@@ -324,55 +332,57 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	/// <summary>
 	/// Gets text from editor (if this is the active open document) or file (<see cref="GetFileText"/>).
+	/// If fails (eg file not found), sets text="" and returns (false, error). Else returns (true, null).
+	/// If folder, sets text="" and returns (true, null).
 	/// </summary>
-	/// <returns>"" if failed (eg file not found).</returns>
-	/// <param name="notImportant">Don't print warning if fails. Eg this is used for 'find in files'.</param>
-	public string GetCurrentText(bool notImportant = false) {
-		if (this == _model.CurrentFile) return Panels.Editor.ZActiveDoc.zText;
-		return GetFileText(notImportant);
+	/// <param name="text">"" if failed (eg file not found) or folder.</param>
+	public BoolError GetCurrentText(out string text, bool silent = false) {
+		if (this == _model.CurrentFile) { text = Panels.Editor.ZActiveDoc.zText; return true; }
+		return GetFileText(out text, silent);
 	}
 
 	/// <summary>
 	/// Gets text from file.
 	/// Does not get editor text like <see cref="GetCurrentText"/>.
+	/// If fails (eg file not found), sets text="" and returns (false, error). Else returns (true, null).
+	/// If folder, sets text="" and returns (true, null).
 	/// </summary>
-	/// <returns>"" if failed (eg file not found).</returns>
-	/// <param name="notImportant">Don't print warning if fails. Eg this is used for 'find in files'.</param>
-	public string GetFileText(bool notImportant = false) {
-		if (IsFolder) return "";
+	/// <param name="text">"" if failed (eg file not found) or folder.</param>
+	public BoolError GetFileText(out string text, bool silent = false) {
+		text = "";
+		if (IsFolder) return true;
 
 		//rejected: cache text. OS caching isn't too slow.
 
-		var path = FilePath;
+		string path = FilePath, es = null;
 		if (path == null) { //IsDeleted
-			if (!notImportant) print.warning($"Cannot get text of {Name}. The file is deleted.", -1);
-			return "";
-		}
+			es = "Deleted.";
+			path = "unknown";
+		} else {
+			try {
+				using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
 
-		string r = null, es = null;
-		try {
-			using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
+				if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
+				else text = sr.ReadToEnd();
 
-			if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
-			else r = sr.ReadToEnd();
-
-			//rejected: update _fileModTime. Would need to call OnAppActivatedAndThisIsOpen if changed.
-			//var fs = (FileStream)sr.BaseStream;
-			//if (fs.Length > 100_000_000) es = "File too big, > 100_000_000.";
-			//else {
-			//	r = sr.ReadToEnd();
-			//	if (!notImportant) _fileModTime = Api.GetFileInformationByHandle(fs.SafeFileHandle.DangerousGetHandle(), out var fi) ? fi.ftLastWriteTime : 0;
-			//}
-		}
-		catch (Exception ex) {
-			if (notImportant) {
-				Debug_.PrintIf(!(ex is FileNotFoundException or DirectoryNotFoundException), ex);
-				return "";
+				//rejected: update _fileModTime. Would need to call OnAppActivatedAndThisIsOpen if changed.
+				//var fs = (FileStream)sr.BaseStream;
+				//if (fs.Length > 100_000_000) es = "File too big, > 100_000_000.";
+				//else {
+				//	text = sr.ReadToEnd();
+				//	if (!silent) _fileModTime = Api.GetFileInformationByHandle(fs.SafeFileHandle.DangerousGetHandle(), out var fi) ? fi.ftLastWriteTime : 0;
+				//}
 			}
-			es = ex.ToStringWithoutStack();
+			catch (Exception ex) {
+				Debug_.PrintIf(silent && !(ex is FileNotFoundException or DirectoryNotFoundException), ex);
+				es = ex.ToStringWithoutStack();
+			}
 		}
-		if (es != null) print.warning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
-		return r ?? "";
+
+		if (es == null) return true;
+		es = $"Failed to get text of <open>{ItemPath}<>, file <explore>{path}<>\r\n\t{es}";
+		if (!silent) print.warning(es, -1);
+		return new(false, es);
 	}
 
 	long _fileModTime;
@@ -414,8 +424,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		c_iconClass = "*Codicons.SymbolClass #008EEE",
 		c_iconFolder = "*Material.Folder #EABB00",
 		c_iconFolderOpen = "*Material.FolderOpen #EABB00";
-		//c_iconFolder = "*Material.FolderOutline #EABB00",
-		//c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
+	//c_iconFolder = "*Material.FolderOutline #EABB00",
+	//c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
 
 	public static string GetFileTypeImageSource(EFileType ft, bool openFolder = false)
 		=> ft switch {
@@ -509,7 +519,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	FileNode _FindRelative(string name, FNFind kind, bool orAnywhere = false) {
 #if true //fast, but allocates
 		int i = name.LastIndexOf('\\');
-		var lastName = name[(i + 1)..]; //never mind: allocation. To avoid allocation would need to enumerate without dictionary, and in big workspace it can be 100 times slower.
+		var lastName = i < 0 ? name : name[(i + 1)..]; //never mind: allocation. To avoid allocation would need to enumerate without dictionary, and in big workspace it can be 100 times slower.
 		if (_model._nameMap.MultiGet_(lastName, out FileNode v, out var a)) {
 			if (a != null) {
 				foreach (var f in a) if (_Cmp(f)) return f;
@@ -641,14 +651,16 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	public EClassFileRole GetClassFileRole() {
 		if (_type != EFileType.Class) return EClassFileRole.None;
-		var code = GetCurrentText(notImportant: true);
-		var meta = MetaComments.FindMetaComments(code);
-		if (meta.end == 0) return EClassFileRole.Class;
-		foreach (var v in MetaComments.EnumOptions(code, meta)) {
-			if (!v.NameIs("role")) continue;
-			if (v.ValueIs("classLibrary")) return EClassFileRole.Library;
-			if (v.ValueIs("classFile")) break;
-			return EClassFileRole.App;
+		if (GetCurrentText(out var code, silent: true)) {
+			var meta = MetaComments.FindMetaComments(code);
+			if (meta.end > 0) {
+				foreach (var v in MetaComments.EnumOptions(code, meta)) {
+					if (!v.NameIs("role")) continue;
+					if (v.ValueIs("classLibrary")) return EClassFileRole.Library;
+					if (v.ValueIs("classFile")) break;
+					return EClassFileRole.App;
+				}
+			}
 		}
 		return EClassFileRole.Class;
 	}

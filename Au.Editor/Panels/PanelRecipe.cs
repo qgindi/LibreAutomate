@@ -204,7 +204,7 @@ class PanelRecipe : DockPanel {
 					});
 			} else {
 				prevDoc = doc;
-				Panels.Cookbook.AddToHistory(doc.EFile.DisplayName);
+				Panels.Cookbook.AddToHistory_(doc.EFile.DisplayName);
 			}
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
 		};

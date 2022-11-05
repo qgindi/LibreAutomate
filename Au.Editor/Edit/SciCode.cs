@@ -410,7 +410,7 @@ partial class SciCode : KScintilla {
 		return base.TranslateAcceleratorCore(ref msg, mod);
 	}
 
-	bool _IsUnsaved {
+	internal bool EIsUnsaved_ {
 		get => _isUnsaved || 0 != Call(SCI_GETMODIFY);
 		set {
 			if (_isUnsaved = value) App.Model.Save.TextLater(1);
@@ -423,7 +423,7 @@ partial class SciCode : KScintilla {
 	//Called by PanelEdit.ZSaveText.
 	internal bool ESaveText_() {
 		Debug.Assert(!EIsBinary);
-		if (_IsUnsaved) {
+		if (EIsUnsaved_) {
 			//print.qm2.write("saving");
 			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
@@ -437,12 +437,11 @@ partial class SciCode : KScintilla {
 	//Called by FileNode.OnAppActivatedAndThisIsOpen.
 	internal void EFileModifiedExternally_() {
 		Debug.Assert(!EIsBinary); //caller must check it
-		var text = _fn.GetFileText();
-		if (text == this.zText) return;
+		if (!_fn.GetFileText(out var text) || text == this.zText) return;
 		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
 
-		//rejected. VS and VSCode reload silently.
+		//rejected: print info. VS and VSCode reload silently.
 		//if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
 	}
 

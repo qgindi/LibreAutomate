@@ -192,8 +192,10 @@ static class CiUtil {
 			query = "C# " + sym.ToString().RxReplace(@"\(.+\)$", "", 1).Replace('.', ' '); //eg C# string operator +, not bad
 		} else if (sym.IsExtern) { //[DllImport]
 			query = sym.Name + " function";
-		} else if (sym is INamedTypeSymbol ints && ints.IsComImport) { //[ComImport]
+		} else if (sym is INamedTypeSymbol ints && ints.IsComImport) { //[ComImport] interface
 			query = sym.Name + " " + ints.TypeKind.ToString().Lower();
+		} else if (sym.ContainingType?.IsComImport ?? false) { //[ComImport] method
+			query = sym.ContainingType.Name + "." + sym.Name;
 		} else {
 			return null;
 		}

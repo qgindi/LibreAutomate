@@ -40,8 +40,11 @@ namespace Au.Compiler
 
 			SyntaxTree treeGlobal = null;
 			if (addGlobalCs) {
-				static string _GetClobalCsCode() => App.Model.Find("global.cs", FNFind.Class)?.GetCurrentText();
-				var gcode = Environment.CurrentManagedThreadId == 1 ? _GetClobalCsCode() : App.Dispatcher.Invoke(_GetClobalCsCode);
+				static string _GetGlobalCsCode() {
+					var f = App.Model.Find("global.cs", FNFind.Class);
+					return f != null && f.GetCurrentText(out var s) ? s : null;
+				}
+				var gcode = Environment.CurrentManagedThreadId == 1 ? _GetGlobalCsCode() : App.Dispatcher.Invoke(_GetGlobalCsCode);
 				if (gcode != null) treeGlobal = CSharpSyntaxTree.ParseText(gcode, parseOpt);
 				//SHOULDDO: also recursively add files etc specified in meta c, r, etc.
 				//	Now it is not important, because this func used only in "find UI object" tools, and global.cs can be useful only in 'also' field.

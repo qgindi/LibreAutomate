@@ -32,7 +32,7 @@ public static class script {
 	/// </remarks>
 	public static string path => s_pathInWorkspace ??= Assembly.GetEntryAssembly()?.GetCustomAttribute<PathInWorkspaceAttribute>()?.Path;
 	static string s_pathInWorkspace;
-	//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+	//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate. 
 
 	/// <summary>
 	/// Returns true if this script task was started from editor with the Run button or menu command.
@@ -393,7 +393,7 @@ public static class script {
 	/// <summary>
 	/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>script.setup</b>.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never), NoDoc]
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe void AppModuleInit_() {
 		if (s_appModuleInit) return;
 		s_appModuleInit = true;

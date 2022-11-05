@@ -759,6 +759,9 @@ unsafe partial class Converter {
 				csTypename = _is32bit ? "int" : "long";
 				return _is32bit ? 32 : 64;
 				//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using nint is difficult because of its variable size.
+			} else if(t is _Enum te) {
+				csTypename = "int";
+				return 32;
 			}
 		}
 		_Err(_i, "unexpected");

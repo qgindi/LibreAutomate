@@ -1,4 +1,4 @@
-﻿using System.Windows.Interop;
+using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -19,16 +19,18 @@ namespace Au.Controls
 			StackPanel p1 = new();
 			StackPanel p2 = new() { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 3) };
 			p1.Children.Add(p2);
+			StackPanel p3 = new() { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 4, 0), Background = Brushes.White };
+			p2.Children.Add(p3);
 
 			TextBox tH = null, tL = null, tS = null;
 
 			var fColor = new TextBlock { Text = "Color", ToolTip = "Color RRGGBB", Foreground = Brushes.Black };
-			p2.Children.Add(fColor);
+			p3.Children.Add(fColor);
 
 			var bColor = new Rectangle { Width = 9, Height = 9, Fill = Brushes.Black, Margin = new Thickness(4, 2, 4, 0) };
-			p2.Children.Add(bColor);
+			p3.Children.Add(bColor);
 
-			_tColor = new() { Width = 68, Text = "000000", ToolTip = fColor.ToolTip };
+			_tColor = new() { Width = 64, Text = "000000", ToolTip = fColor.ToolTip };
 			_tColor.TextChanged += (o, e) => {
 				int col = _GetColor(bgr: true);
 				if (!_hlsChanging) {
@@ -45,6 +47,7 @@ namespace Au.Controls
 				var brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb((byte)col, (byte)(col >> 8), (byte)(col >> 16)));
 				fColor.Foreground = brush;
 				bColor.Fill = brush;
+				p3.Background = ColorInt.GetPerceivedBrightness(col, bgr: true) <= .8 ? Brushes.White : Brushes.DimGray;
 
 				if (ColorChanged != null) {
 					if (!BGR) col = ColorInt.SwapRB(col);

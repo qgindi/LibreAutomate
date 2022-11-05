@@ -1,5 +1,4 @@
 using Microsoft.Win32;
-using SpeechLib;
 
 namespace Au {
 	/// <summary>
@@ -114,7 +113,11 @@ namespace Au {
 		/// </summary>
 		/// <param name="text">Text to speak. If null, stops speaking.</param>
 		/// <param name="async">Don't wait. Note: the sound ends when this process exits.</param>
-		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
+		/// <param name="voice">
+		/// A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>.
+		/// If null, uses default voice.
+		/// Voice attributes can be specified using string format <c>"voice|reqAttr"</c> or <c>"voice|reqAttr|optAttr"</c>. Here <i>reqAttr</i> and <i>optAttr</i> are arguments for <google>ISpObjectTokenCategory.EnumTokens</google>. Each part can be empty. Example: <c>"|Gender=Female"</c>.
+		/// </param>
 		/// <param name="rate">Speed adjustment, +- 10.</param>
 		/// <param name="volume">Volume, 0-100. See also <see cref="volume"/>.</param>
 		/// <seealso cref="SpeakVoice"/>
@@ -166,31 +169,38 @@ namespace Au.More {
 	/// </summary>
 	/// <seealso cref="sound.speak"/>
 	public class SpeakVoice : IDisposable {
-		SpVoice _v;
-
+		SAPI.ISpVoice _v;
+		
 		/// <summary>
 		/// Creates a text-to-speech (speech synthesis) voice instance.
 		/// </summary>
 		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
 		public SpeakVoice(string voice = null) {
-			//PROBLEM: slow. Ctor first time ~130 ms, sometimes 200; then ~70.
-			//	Native code cocreateinstance fast, but Speak starts slower. Total time until the real sound comes is similar. Tested with hot CPU too.
-
-			_v = new SpeechLib.SpVoice();
+			_v = new SAPI.SpVoice() as SAPI.ISpVoice;
 			GC.AddMemoryPressure(250_000);
 			if (voice != null) SetVoice_(voice);
 		}
-
+		
 		internal void SetVoice_(string voice) {
 			if (!voice.NE()) {
-				foreach (SpObjectToken v in _v.GetVoices()) {
-					var sd = v.GetDescription();
-					//print.it(sd);
-					if (sd.Find(voice, true) >= 0) { _v.Voice = v; break; }
+				var cat = new SAPI.SpObjectTokenCategory() as SAPI.ISpObjectTokenCategory;
+				cat.SetId(SAPI.SPCAT_VOICES, false);
+				var a = voice.Split('|');
+				voice = a[0];
+				var et = cat.EnumTokens(a.Length > 1 && !a[1].NE() ? a[1] : null, a.Length > 2 && !a[2].NE() ? a[2] : null);
+				for (int i = 0, n = et.GetCount(); i < n; i++) {
+					var v = et.Item(i);
+					if (!voice.NE()) {
+						if (0 != v.OpenKey("Attributes", out var k)) continue;
+						if (0 != k.GetStringValue("Name", out var s)) continue;
+						if (s.Find(voice, true) < 0) continue;
+					}
+					_v.SetVoice(v);
+					break;
 				}
-			} else _v.Voice = null;
+			} else _v.SetVoice(null);
 		}
-
+		
 		///
 		protected void Dispose(bool disposing) {
 			if (_v != null) {
@@ -199,79 +209,84 @@ namespace Au.More {
 				GC.RemoveMemoryPressure(250_000);
 			}
 		}
-
+		
 		///
 		public void Dispose() {
 			Stop();
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
-
+		
 		///
 		~SpeakVoice() {
 			//print.it("~");
 			Dispose(false);
 		}
-
+		
 		/// <summary>
 		/// Gets or sets the speed adjustment, +- 10.
 		/// </summary>
 		public int Rate {
-			get => _v.Rate;
-			set { _v.Rate = value; }
+			get => _v.GetRate();
+			set { _v.SetRate(value); }
 		}
-
+		
 		/// <summary>
 		/// Gets or sets the volume, 0-100. See also <see cref="sound.volume"/>.
 		/// </summary>
 		public int Volume {
-			get => _v.Volume;
-			set { _v.Volume = value; }
+			get => _v.GetVolume();
+			set { _v.SetVolume((ushort)value); }
 		}
-
+		
 		/// <summary>
 		/// Pauses speaking.
 		/// </summary>
 		public void Pause() => _v.Pause();
-
+		
 		/// <summary>
 		/// Resumes speaking.
 		/// </summary>
 		public void Resume() => _v.Resume();
-
+		
 		/// <summary>
 		/// Skips <i>count</i> milliseconds of speech.
 		/// </summary>
 		/// <param name="count">Forward if positive, else backward.</param>
 		public void SkipMilliseconds(int count) => _v.Skip("MILLISECOND", count);
-
+		
 		/// <summary>
 		/// Skips <i>count</i> sentences of speech.
 		/// </summary>
 		/// <param name="count">Forward if positive, else backward. If 0, repeats current sentence.</param>
 		public void SkipSentence(int count) => _v.Skip("SENTENCE", count);
-
+		
 		/// <summary>
 		/// Stops speaking.
 		/// </summary>
 		public void Stop() => SkipSentence(int.MaxValue);
-
+		
 		/// <summary>
 		/// Returns true if currently is speaking. Returns false if finished or not started.
 		/// </summary>
-		public bool IsSpeaking => _v.Status.RunningState == SpeechRunState.SRSEIsSpeaking;
-
+		public bool IsSpeaking => _RunningState() == SAPI.SpeechRunState.SRSEIsSpeaking;
+		
 		/// <summary>
 		/// Returns true if finished speaking.
 		/// </summary>
-		public bool IsDone => _v.Status.RunningState == SpeechRunState.SRSEDone;
-
+		public bool IsDone => _RunningState() == SAPI.SpeechRunState.SRSEDone;
+		
+		SAPI.SpeechRunState _RunningState() {
+			_v.GetStatus(out var r);
+			return r.RunningState;
+		}
+		
 		/// <summary>
 		/// Waits until the async speech ends.
 		/// </summary>
 		/// <param name="msTimeout">Timeout milliseconds, or -1.</param>
-		public bool WaitUntilDone(int msTimeout) => _v.WaitUntilDone(msTimeout);
-
+		public bool WaitUntilDone(int msTimeout) => 0 == _v.WaitUntilDone(msTimeout);
+		
 		/// <summary>
 		/// Speaks the specified text.
 		/// </summary>
@@ -280,7 +295,7 @@ namespace Au.More {
 		public void Speak(string text, bool async = false) {
 			Speak(text, async ? SVFlags.ASYNC : 0);
 		}
-
+		
 		/// <summary>
 		/// Speaks the specified text.
 		/// </summary>
@@ -288,12 +303,117 @@ namespace Au.More {
 		/// <param name="flags"></param>
 		public void Speak(string text, SVFlags flags) {
 			if (flags.Has(SVFlags.IS_FILENAME)) text = pathname.expand(text);
-			_v.Speak(text, (SpeechVoiceSpeakFlags)flags);
+			_v.Speak(text, (uint)flags);
 			GC.KeepAlive(this);
 			if (flags.Has(SVFlags.ASYNC)) { //protect from GC while speaking
 				Task.Run(() => { _v.WaitUntilDone(-1); GC.KeepAlive(this); });
 			}
 		}
+	}
+	
+	//Easier would be to use the SAPI type library, but it creates problems, eg dotnet pack fails.
+	unsafe class SAPI : NativeApi {
+		[ComImport, Guid("6C44DF74-72B9-4992-A1EC-EF996E0422D4"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface ISpVoice {
+			void _0();
+			void _1();
+			void _2();
+			void _3();
+			void _4();
+			void _5();
+			void _6();
+			void _7();
+			void _8();
+			void _9();
+			void _a();
+			void _b();
+			void _c();
+			void Pause();
+			void Resume();
+			void SetVoice(ISpObjectToken pToken);
+			void _d();
+			int Speak([MarshalAs(UnmanagedType.LPWStr)] string pwcs, uint dwFlags);
+			void _e();
+			void GetStatus(out SPVOICESTATUS pStatus, nint ppszLastBookmark = 0);
+			int Skip([MarshalAs(UnmanagedType.LPWStr)] string pItemType, int lNumItems);
+			void _f();
+			void _g();
+			void _h();
+			void _i();
+			void SetRate(int RateAdjust);
+			int GetRate();
+			void SetVolume(ushort usVolume);
+			ushort GetVolume();
+			[PreserveSig] int WaitUntilDone(int msTimeout);
+		}
+		
+		internal struct SPVOICESTATUS {
+			fixed uint _1[3];
+			public SpeechRunState RunningState;
+			fixed uint _2[9];
+		}
+		
+		[ComImport, Guid("14056589-E16C-11D2-BB90-00C04F8EE6C0"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface ISpObjectToken {
+			void _0();
+			void _1();
+			void _2();
+			void _3();
+			void _4();
+			void _5();
+			[PreserveSig] int OpenKey([MarshalAs(UnmanagedType.LPWStr)] string pszSubKeyName, out ISpDataKey ppSubKey);
+		}
+		
+		[ComImport, Guid("2D3D3845-39AF-4850-BBF9-40B49780011D"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface ISpObjectTokenCategory {
+			void _0();
+			void _1();
+			void _2();
+			void _3();
+			void _4();
+			void _5();
+			void _6();
+			void _7();
+			void _8();
+			void _9();
+			void _a();
+			void _b();
+			void SetId([MarshalAs(UnmanagedType.LPWStr)] string pszCategoryId, [MarshalAs(UnmanagedType.Bool)] bool fCreateIfNotExist);
+			void _c();
+			void _d();
+			IEnumSpObjectTokens EnumTokens([MarshalAs(UnmanagedType.LPWStr)] string pzsReqAttribs, [MarshalAs(UnmanagedType.LPWStr)] string pszOptAttribs);
+		}
+		
+		[ComImport, Guid("14056581-E16C-11D2-BB90-00C04F8EE6C0"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface ISpDataKey {
+			void _0();
+			void _1();
+			void _2();
+			[PreserveSig] int GetStringValue([MarshalAs(UnmanagedType.LPWStr)] string pszValueName, [MarshalAs(UnmanagedType.LPWStr)] out string s);
+		}
+		
+		[ComImport, Guid("06B64F9E-7FDA-11D2-B4F2-00C04F797396"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface IEnumSpObjectTokens {
+			void _0();
+			void _1();
+			void _2();
+			void _3();
+			ISpObjectToken Item(int Index);
+			int GetCount();
+		}
+		
+		[ComImport, Guid("96749377-3391-11D2-9EE3-00C04F797396"), ClassInterface(ClassInterfaceType.None)]
+		internal class SpVoice { }
+		
+		internal enum SpeechRunState {
+			SRSEDone = 1,
+			SRSEIsSpeaking
+		}
+		
+		[ComImport, Guid("A910187F-0C7A-45AC-92CC-59EDAFB77B53"), ClassInterface(ClassInterfaceType.None)]
+		internal class SpObjectTokenCategory { }
+		
+		internal const string SPCAT_VOICES = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices";
 	}
 }
 

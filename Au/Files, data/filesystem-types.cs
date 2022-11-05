@@ -175,7 +175,7 @@ public enum FEFlags {
 	SkipHiddenSystem = 8, //note: must match FCFlags
 
 	/// <summary>
-	/// If fails to get contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
+	/// If fails to get the contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
 	/// Without this flag then throws exception or calls <i>errorHandler</i>.
 	/// </summary>
 	IgnoreInaccessible = 0x10, //note: must match FCFlags
@@ -223,7 +223,7 @@ public enum FCFlags {
 	SkipHiddenSystem = 8,
 
 	/// <summary>
-	/// If fails to get contents of the directory or a subdirectory because of its security settings, don't throw exception but assume that the [sub]directory is empty.
+	/// If fails to get the contents of the directory or a subdirectory because of its security settings, don't throw exception but assume that the [sub]directory is empty.
 	/// </summary>
 	IgnoreInaccessible = 0x10,
 

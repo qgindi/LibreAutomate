@@ -8,7 +8,7 @@ namespace Au;
 /// It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
 /// 
 /// There is no strictly defined CSV standard. <b>csvTable</b> uses these rules:
-/// <br/>• Fields containg separator characters (default <c>','</c>), quote characters (default <c>'"'</c>) and multiple lines are enclosed in quote characters. Example: <c>"ab, cd"</c>.
+/// <br/>• Fields containing separator characters (default <c>','</c>), quote characters (default <c>'"'</c>) and multiple lines are enclosed in quote characters. Example: <c>"ab, cd"</c>.
 /// <br/>• Each quote character in such fields is escaped (replaced) with two quote characters. Example: <c>"ab ""cd"" ef"</c>.
 /// <br/>• If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: <c>" ab "</c>. Or use parameter <i>trimSpaces</i> false when parsing.
 /// <br/>• Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.

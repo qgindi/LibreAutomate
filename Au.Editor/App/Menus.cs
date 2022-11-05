@@ -1,10 +1,6 @@
 using Au.Controls;
 using Au.Tools;
 using System.Windows.Controls;
-using System.Windows.Input;
-
-//CONSIDER: Add top menu item "Insert". Move there the "Add ..." items from the "Code" menu.
-//	Also add "Add script.setup", "Add try/catch (surround selected code)", etc.
 
 static class Menus {
 	[Command(target = "Files")]
@@ -73,10 +69,10 @@ static class Menus {
 			[Command(target = "")]
 			public static void Close_all() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll); }
 
-			[Command(target = "")]
+			[Command(target = "", image = "*Codicons.CollapseAll #585858")]
 			public static void Collapse_all_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseAllFolders); }
 
-			[Command(target = "")]
+			[Command(target = "", image = "*Codicons.CollapseAll #585858")]
 			public static void Collapse_inactive_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseInactiveFolders); }
 
 			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
@@ -208,8 +204,10 @@ static class Menus {
 			[Command(image = "*Codicons.SymbolClass #9F5300")]
 			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 
-			[Command(image = "*PixelartIcons.AlignLeft #9F5300")]
+			[Command(image = "*PixelartIcons.AlignLeft #9F5300", separator = true)]
 			public static void Format_document() { ModifyCode.Format(false); }
+
+			//CONSIDER: script.setup.
 		}
 
 		[Command]
@@ -380,7 +378,7 @@ static class Menus {
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
 		[Command("...", image="*BoxIcons.RegularHistory #008EEE")]
-		public static void Recent() { RecentTT.Show(); } //CONSIDER: toolbar button
+		public static void Recent() { RecentTT.Show(); }
 
 		[Command(separator = true)]
 		public static class Debugger {
@@ -410,7 +408,7 @@ static class Menus {
 		public static void Snippets() { DSnippets.ZShow(); }
 
 		[Command]
-		public static void Customize() { DCommands.ZShow(); }
+		public static void Customize() { DCustomize.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
 		public static class Output {
@@ -465,7 +463,7 @@ static class Menus {
 		[Command]
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
-Version: {Assembly.GetExecutingAssembly().GetName().Version}, beta.
+Version: {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
 Libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, Wu's Color Quantizer, Cantatore wildcard.
@@ -530,7 +528,15 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 				}
 			}
 		} else {
-			var names = App.Commands.CommandNames;
+			var names = new StringBuilder();
+			foreach (var v in Panels.Menu.Items) _Menu(v, 0);
+			void _Menu(object o, int level) {
+				if(o is MenuItem mi && mi.Command is KMenuCommands.Command c) {
+					names.Append('\t', level).AppendLine(c.Name);
+					foreach (var v in mi.Items) _Menu(v, level + 1);
+				}
+			}
+
 			print.it(command.NE() ? "Commands:\r\n" + names : $"Unknown command '{command}'. Commands:\r\n{names}");
 		}
 		return 0;

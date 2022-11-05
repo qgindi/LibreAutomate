@@ -292,9 +292,10 @@ void BuildTpaList(const std::wstring& dir, std::string& tpaList, bool onlyAu = f
 	//note: don't use stringstream, it makes file size *= 2.
 }
 
-//Get .NET assemblies from resource added with ResourceHacker from file dotnet_ref.txt.
+//Get .NET assemblies from resource added from file dotnet_ref.txt.
 //The file is created by script "Create dotnet_ref.txt.cs". Need to run it for each major .NET version.
 //The script parses .NET deps.json, like dotnet does it at run time.
+//For Au.Editor.exe and Au.Task.exe the resource is added with ResourceHacker. For exe - Compiler._Resources.AddDotnetRef.
 void BuildTpaListDotnet(const PATHS& p, std::string& tpaList) {
 	std::string dirC, dirD;
 	_ToUtf8(p.netCore, dirC); dirC += '\\';

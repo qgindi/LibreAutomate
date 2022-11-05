@@ -7,8 +7,8 @@ class MetaCommentsParser
 	FileNode _fn;
 	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,
-		outputPath, console, icon, manifest, /*resFile,*/ sign, xmlDoc;
-	List<string> _pr, _r, _com, _nuget, _c, _resource;
+		outputPath, console, icon, manifest, sign, xmlDoc;
+	List<string> _pr, _r, _com, _nuget, _c, _resource, _file;
 
 	public List<string> pr => _pr ??= new();
 	public List<string> r => _r ??= new();
@@ -16,17 +16,16 @@ class MetaCommentsParser
 	public List<string> nuget => _nuget ??= new();
 	public List<string> c => _c ??= new();
 	public List<string> resource => _resource ??= new();
+	public List<string> file => _file ??= new();
 
-	bool _multiline;
-
-	public MetaCommentsParser(FileNode f) : this(f.GetCurrentText()) { _fn = f; }
+	public MetaCommentsParser(FileNode f) : this(f.GetCurrentText(out var s) ? s : "") { _fn = f; }
 
 	public MetaCommentsParser(string code) {
 		var meta = MetaComments.FindMetaComments(code);
 		if (meta.end == 0) return;
 		MetaRange = meta;
 		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name(), t.Value());
-		_multiline = code[meta.start..meta.end].Contains('\n');
+		Multiline = code[meta.start..meta.end].Contains('\n');
 	}
 
 	public StartEnd MetaRange { get; private set; }
@@ -48,7 +47,6 @@ class MetaCommentsParser
 		case "console": console = value; break;
 		case "icon": icon = value; break;
 		case "manifest": manifest = value; break;
-		//case "resFile": resFile = value; break;
 		case "sign": sign = value; break;
 		case "xmlDoc": xmlDoc = value; break;
 		case "pr": pr.Add(value); break;
@@ -57,6 +55,7 @@ class MetaCommentsParser
 		case "nuget": nuget.Add(value); break;
 		case "c": c.Add(value); break;
 		case "resource": resource.Add(value); break;
+		case "file": file.Add(value); break;
 		}
 	}
 
@@ -74,7 +73,7 @@ class MetaCommentsParser
 		}
 
 		var b = new StringBuilder();
-		b.Append(prepend).Append(_multiline ? "/*/\r\n" : "/*/ ");
+		b.Append(prepend).Append(Multiline ? "/*/\r\n" : "/*/ ");
 		_Append("role", role);
 
 		_Append("ifRunning", ifRunning);
@@ -91,7 +90,6 @@ class MetaCommentsParser
 		_Append("outputPath", outputPath);
 		_Append("icon", icon, true);
 		_Append("manifest", manifest, true);
-		//_Append("resFile", resFile, true);
 		_Append("sign", sign, true);
 		_Append("bit32", bit32);
 		_Append("console", console);
@@ -103,6 +101,7 @@ class MetaCommentsParser
 		_AppendList("nuget", _nuget);
 		_AppendList("c", _c, true);
 		_AppendList("resource", _resource, true);
+		_AppendList("file", _file, true);
 
 		if (b.Length <= 5) return "";
 		b.Append("/*/");
@@ -112,7 +111,7 @@ class MetaCommentsParser
 		void _Append(string name, string value, bool relativePath = false) {
 			if (value != null) {
 				if (relativePath && dir != null && value.Starts(dir, true)) value = value[dir.Length..];
-				b.Append(name).Append(' ').Append(value).Append(_multiline ? ";\r\n" : "; ");
+				b.Append(name).Append(' ').Append(value).Append(Multiline ? ";\r\n" : "; ");
 			}
 		}
 
@@ -120,6 +119,8 @@ class MetaCommentsParser
 			if (a != null) foreach (var v in a.Distinct()) _Append(name, v, relativePath);
 		}
 	}
+
+	public bool Multiline { get; set; }
 
 	public void Apply() {
 		var doc = Panels.Editor.ZActiveDoc;

@@ -58,7 +58,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unused", "Test Projects\Unu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHostTestApp", "Test Projects\AppHostTestApp\AppHostTestApp.csproj", "{1A8A8590-2D47-44E1-820E-28ED976688DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Test Projects\Tests\Tests.csproj", "{55C9E760-5732-4623-B30B-A9D8BA01D3AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests old", "Test Projects\Tests\Tests old.csproj", "{55C9E760-5732-4623-B30B-A9D8BA01D3AE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test old", "Test Projects\Test\Test old.csproj", "{E40D1949-97DE-43E0-80AE-D7EBFFD18C32}"
 EndProject

@@ -165,7 +165,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Writes warning if the variable is not disposed. Cannot dispose in finalizer.
+		/// Prints a warning if the variable is not disposed. Cannot dispose in finalizer.
 		/// </summary>
 		~WinEventHook() {
 			//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.

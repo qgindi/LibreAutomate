@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -992,7 +992,7 @@ class DInputRecorder : KDialogWindow {
 		} else {
 #if SCRIPT
 			print.it("<><code>" + s + "</code>");
-			//ScriptEditor.OpenAndGoToLine("recorded.cs", 0);
+			//ScriptEditor.Open("recorded.cs");
 			//keys.send("Ctrl+End");
 			//clipboard.paste(s);
 #else

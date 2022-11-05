@@ -118,7 +118,7 @@ static class CommandLine {
 	/// </summary>
 	public static void ProgramLoaded() {
 		WndUtil.UacEnableMessages(Api.WM_COPYDATA, /*Api.WM_DROPFILES, 0x0049,*/ Api.WM_USER, Api.WM_CLOSE);
-		//WM_COPYDATA, WM_DROPFILES and undocumented WM_COPYGLOBALDATA=0x0049 should enable drag/drop from lower UAC IL processes, but only through WM_DROPFILES/DragAcceptFiles, not OLE D&D.
+		//WM_COPYDATA, WM_DROPFILES and undocumented WM_COPYGLOBALDATA=0x0049 should enable drag-drop from lower UAC IL processes, but only through WM_DROPFILES/DragAcceptFiles, not OLE D&D.
 
 		WndUtil.RegisterWindowClass(ScriptEditor.c_msgWndClassName, _WndProc);
 		_msgWnd = WndUtil.CreateMessageOnlyWindow(ScriptEditor.c_msgWndClassName);
@@ -219,10 +219,9 @@ static class CommandLine {
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show dialog
 			App.Model.ImportFiles(s.Split('\0'));
 			break;
-		case 4: //ScriptEditor.OpenAndGoToLine
+		case 4: //ScriptEditor.Open
 			Api.ReplyMessage(1);
-			if (App.Model.Find(s) is FileNode f1) App.Model.OpenAndGoTo(f1, (int)wparam - 1);
-			else print.warning($"File not found: '{s}'.", -1);
+			_OpenFile();
 			break;
 		case 5: //script.end(name)
 			if (App.Model.Find(s) is FileNode f2) return App.Tasks.EndTasksOf(f2) ? 1 : 2;
@@ -257,13 +256,23 @@ static class CommandLine {
 			}
 			return CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		}
+
+		void _OpenFile() {
+			var a = s.Split('|'); //"file|line|offset". line and/or offset is empty if was null.
+			s = a[0];
+			if (App.Model.Find(s) is FileNode f1) {
+				int line = a[1].NE() ? -1 : a[1].ToInt() - 1;
+				int offset = a[2].NE() ? -1 : a[2].ToInt();
+				App.Model.OpenAndGoTo(f1, line, offset);
+			} else print.warning($"File not found: '{s}'.", -1);
+		}
 	}
 
 	//Called when command line starts with "/s". This process is running as SYSTEM in session 0.
 	//This process is started by the Task Scheduler task installed by the setup program. The task started by App._RestartAsAdmin.
 	[MethodImpl(MethodImplOptions.NoOptimization)]
 	static unsafe int _RunEditorAsAdmin() {
-		var s1 = api.GetCommandLine();
+		var s1 = _Api.GetCommandLine();
 		//_MBox(new string(s1));
 		//Normally it is like "C:\...\Au.Editor.exe /s sessionId" or "C:\...\Au.Editor.exe /s sessionId arguments",
 		//	but if started from Task Scheduler it is "C:\...\Au.Editor.exe /s $(Arg0)".
@@ -282,13 +291,13 @@ static class CommandLine {
 			else for (int j = (int)(se - s1); j < len;) s2[i++] = s2[j++];
 		} else { //$(Arg0) not replaced. Probably started from Task Scheduler.
 			s2[i] = '\0';
-			sesId = api.WTSGetActiveConsoleSessionId();
+			sesId = _Api.WTSGetActiveConsoleSessionId();
 			if (sesId < 1) return 1;
 		}
 		//_MBox(new string(s2));
 
-		if (!api.WTSQueryUserToken(sesId, out var hToken)) return 2;
-		if (api.GetTokenInformation(hToken, Api.TOKEN_INFORMATION_CLASS.TokenLinkedToken, out var hToken2, sizeof(nint), out _)) { //fails if non-admin user or if UAC turned off
+		if (!_Api.WTSQueryUserToken(sesId, out var hToken)) return 2;
+		if (_Api.GetTokenInformation(hToken, Api.TOKEN_INFORMATION_CLASS.TokenLinkedToken, out var hToken2, sizeof(nint), out _)) { //fails if non-admin user or if UAC turned off
 			Api.CloseHandle(hToken);
 			hToken = hToken2;
 
@@ -306,13 +315,13 @@ static class CommandLine {
 
 		} //else MBox(L"GetTokenInformation failed");
 
-		if (!api.CreateEnvironmentBlock(out var eb, hToken, false)) return 3;
+		if (!_Api.CreateEnvironmentBlock(out var eb, hToken, false)) return 3;
 
 		var si = new Api.STARTUPINFO { cb = sizeof(Api.STARTUPINFO), dwFlags = Api.STARTF_FORCEOFFFEEDBACK };
 		var desktop = stackalloc char[] { 'w', 'i', 'n', 's', 't', 'a', '0', '\\', 'd', 'e', 'f', 'a', 'u', 'l', 't', '\0' }; //"winsta0\\default"
 		si.lpDesktop = desktop;
 
-		if (!api.CreateProcessAsUser(hToken, null, s2, null, null, false, Api.CREATE_UNICODE_ENVIRONMENT, eb, null, si, out var pi)) {
+		if (!_Api.CreateProcessAsUser(hToken, null, s2, null, null, false, Api.CREATE_UNICODE_ENVIRONMENT, eb, null, si, out var pi)) {
 			_MBox("CreateProcessAsUserW: " + lastError.message);
 			return 4;
 		}
@@ -321,7 +330,7 @@ static class CommandLine {
 		Api.CloseHandle(pi.hProcess);
 		//Api.AllowSetForegroundWindow(pi.dwProcessId); //fails
 
-		api.DestroyEnvironmentBlock(eb);
+		_Api.DestroyEnvironmentBlock(eb);
 
 		Api.CloseHandle(hToken);
 		return 0;
@@ -335,7 +344,7 @@ static class CommandLine {
 #if DEBUG
 		var s = o.ToString();
 		var title = "Debug";
-		api.WTSSendMessage(default, api.WTSGetActiveConsoleSessionId(), title, title.Length * 2, s, s.Length * 2, api.MB_TOPMOST | api.MB_SETFOREGROUND, 0, out _, true);
+		_Api.WTSSendMessage(default, _Api.WTSGetActiveConsoleSessionId(), title, title.Length * 2, s, s.Length * 2, _Api.MB_TOPMOST | _Api.MB_SETFOREGROUND, 0, out _, true);
 #endif
 	}
 
@@ -374,7 +383,7 @@ static class CommandLine {
 			file = file[1..];
 			mode |= 1;
 			if ((default != Api.GetStdHandle(Api.STD_OUTPUT_HANDLE)) //redirected stdout
-				|| api.AttachConsole(api.ATTACH_PARENT_PROCESS) //parent process is console
+				|| _Api.AttachConsole(_Api.ATTACH_PARENT_PROCESS) //parent process is console
 				) mode |= 2;
 		}
 
@@ -390,7 +399,7 @@ static class CommandLine {
 		//note: in cmd execute this to change cmd console code page to UTF-8: chcp 65001
 	}
 
-	static unsafe class api {
+	static unsafe class _Api {
 		[DllImport("kernel32.dll")]
 		internal static extern int WTSGetActiveConsoleSessionId();
 

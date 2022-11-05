@@ -167,31 +167,31 @@ static class App {
 			.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
 
-		//is it used by an editorExtension script?
-		var st = new StackTrace(2); //not too slow
-		for (int i = 0; ; i++) {
-			var f = st.GetFrame(i); if (f == null) break;
-			var asm = f.GetMethod()?.DeclaringType?.Assembly;
-			if (asm.GetName().Name.Contains('|')) //ScriptName|GUID
-				return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
-		}
+		if(_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
 
 		//print.qm2.write(an);
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
 	static Dictionary<string, string> s_arDlls;
 
+	//resolve native dlls used by meta pr libraries that are used by editorExtension scripts.
+	//	These libraries are loaded in default context.
+	//	editorExtension assemblies are loaded in other contexts.
+	//	Dlls directly used by editorExtension assemblies are resolved in RunAssembly.Run.
 	private static IntPtr _UnmanagedDll_Resolving(Assembly _, string name) {
-		//is it used by an editorExtension script?
+		if(_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
+		return default;
+	}
+
+	static bool _FindEditorExtensionInStack(out Assembly asm) {
 		var st = new StackTrace(2); //not too slow
 		for (int i = 0; ; i++) {
 			var f = st.GetFrame(i); if (f == null) break;
-			var asm = f.GetMethod()?.DeclaringType?.Assembly;
-			if (asm.GetName().Name.Contains('|')) //ScriptName|GUID
-				return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
+			asm = f.GetMethod()?.DeclaringType?.Assembly;
+			if (asm != null && asm.GetName().Name.Contains('|')) return true; //ScriptName|GUID
 		}
-
-		return default;
+		asm = null;
+		return false;
 	}
 
 	static void _SetThisAppDocuments() {
