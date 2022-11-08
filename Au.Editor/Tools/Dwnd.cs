@@ -558,14 +558,14 @@ class Dwnd : KDialogWindow {
 			if (wcp == 2 && c.Is0) wcp = 1;
 			if (!w.IsAlive) return "";
 			if (wcp == 1) { //window
-				b.AppendLine("<Z #B0E0B0><b>Window<>    <+switch 2>Control<>    <+switch 3>Process<><>");
+				b.AppendLine("<BC #B0E0B0><b>Window<>    <+switch 2>Control<>    <+switch 3>Process<><>");
 				if (wClass == null) {
 					wClass = w.ClassName;
 					wName = w.Name;
 				}
 				_Common(false, b, w, wName, wClass);
 			} else if (wcp == 2) { //control
-				b.AppendLine("<Z #B0E0B0><+switch 1>Window<>    <b>Control<>    <+switch 3>Process<><>");
+				b.AppendLine("<BC #B0E0B0><+switch 1>Window<>    <b>Control<>    <+switch 3>Process<><>");
 				if (c.IsAlive) {
 					if (cClass == null) {
 						cClass = c.ClassName;
@@ -579,7 +579,7 @@ class Dwnd : KDialogWindow {
 					_Common(true, b, c, cName, cClass);
 				}
 			} else { //program
-				b.AppendLine("<Z #B0E0B0><+switch 1>Window<>    <+switch 2>Control<>    <b>Process<><>");
+				b.AppendLine("<BC #B0E0B0><+switch 1>Window<>    <+switch 2>Control<>    <b>Process<><>");
 			g1:
 				if (wProg == null) {
 					wProg = w.ProgramName;

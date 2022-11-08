@@ -46,7 +46,7 @@ partial class TriggersAndToolbars {
 						if (isFolder && (name == "Scripts" || name == "Functions")) continue;
 						var ff = fParent.Children().FirstOrDefault(o => o.Name.Eqi(name));
 						if (ff == null) {
-							ff = App.Model.NewItemLX(x, (fParent, FNPosition.Inside));
+							ff = App.Model.NewItemLX(x, (fParent, FNInsert.Inside));
 						} else if (isFolder) {
 							_Folder(x, ff);
 						}

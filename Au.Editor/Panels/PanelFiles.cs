@@ -66,7 +66,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 				b.Append(s2);
 			} else { //hilite
 				int to = i + s.Length;
-				b.Append(s2, 0, i).Append("<z 0xffff5f>").Append(s2, i, s.Length).Append("<>").Append(s2, to, s2.Length - to);
+				b.Append(s2, 0, i).Append("<bc 0xffff5f>").Append(s2, i, s.Length).Append("<>").Append(s2, to, s2.Length - to);
 			}
 			if (f.IsFolder) b.Append("    <c 0x008000>//folder<>");
 			b.AppendLine("<>");
@@ -76,7 +76,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 
 		if (b.Length == 0) return;
 
-		if (_aClose.Count > 0) b.AppendLine("<z #FFC000><+caff><c 0x80ff>Close all<><><>");
+		if (_aClose.Count > 0) b.AppendLine("<bc #FFC000><+caff><c 0x80ff>Close all<><><>");
 
 		cFound.zSetText(b.ToString());
 	}

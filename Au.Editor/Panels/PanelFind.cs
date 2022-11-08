@@ -592,7 +592,7 @@ class PanelFind : UserControl {
 			_FindAllInString(text, f, a);
 
 			if (a.Count != 0) {
-				b.Append("<Z 0xC0E0C0>");
+				b.Append("<BC 0xC0E0C0>");
 				path ??= v.ItemPath;
 				string link = v.IdStringWithWorkspace;
 				if (v.IsFolder) {
@@ -622,7 +622,7 @@ class PanelFind : UserControl {
 						bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
 						b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
 							.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
-							.Append("<z 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
+							.Append("<bc 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
 							.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
 							.AppendLine("<>");
 					}
@@ -632,7 +632,7 @@ class PanelFind : UserControl {
 			if (bSlow != null) {
 				time = perf.ms - time;
 				if (time >= timeSlow + (jited ? 0 : 100)) {
-					if (bSlow.Length == 0) bSlow.AppendLine("<Z #FFC000>Slow files:<>");
+					if (bSlow.Length == 0) bSlow.AppendLine("<BC #FFC000>Slow files:<>");
 					bSlow.Append(time).Append(" ms <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
 				}
 				jited = true;
@@ -641,14 +641,14 @@ class PanelFind : UserControl {
 
 		if (nFound > 0) {
 			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
-			b.AppendFormat("<z #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
+			b.AppendFormat("<bc #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
 			_lastFindAll = (f, aFiles, guid, null);
 		}
 
 		if (folder != App.Model.Root)
-			b.Append("<z #FFC000>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
+			b.Append("<bc #FFC000>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
 		if (searchIn > 0)
-			b.Append("<z #FFC000>Note: searched only in ")
+			b.Append("<bc #FFC000>Note: searched only in ")
 			   .Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
 			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);

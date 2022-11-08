@@ -261,7 +261,7 @@ Can be Pack.Icon, like Modern.List.")
 					} else {
 						filesystem.saveText(path, xaml);
 					}
-					var fn = App.Model.ImportFromWorkspaceFolder(path, cf, FNPosition.Inside);
+					var fn = App.Model.ImportFromWorkspaceFolder(path, cf, FNInsert.Inside);
 					if (fn == null) print.it("failed");
 					else print.it($"<>Icon exported to <open>{fn.ItemPath}<>");
 				}

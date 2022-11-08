@@ -97,7 +97,7 @@ static class CompileRun {
 			FileNode f2;
 			if (action == 2) { //create project
 				if (!_NewItem(out f2, @"New project\@Script")) return;
-				f.FileMove(f2, FNPosition.After);
+				f.FileMove(f2, FNInsert.After);
 			} else { //create test script
 				if (!_NewItem(out f2, "Script.cs", "test " + f.Name)) return;
 				f.TestScript = f2;
@@ -116,7 +116,7 @@ static class CompileRun {
 					}
 				}
 
-				var text = new EdNewFileText();
+				var text = new NewFileText();
 				if (action == 2) {
 					text.text = example ?? "//Class1.Function1();\r\n";
 				} else {
@@ -124,7 +124,7 @@ static class CompileRun {
 					text.text = example ?? $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
 
-				ni = App.Model.NewItem(template, (target, FNPosition.Before), name, text: text);
+				ni = App.Model.NewItem(template, (target, FNInsert.Before), name, text: text);
 				return ni != null;
 			}
 		}

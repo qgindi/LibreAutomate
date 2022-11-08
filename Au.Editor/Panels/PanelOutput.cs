@@ -175,7 +175,7 @@ class PanelOutput : DockPanel {
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
-				if (s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
+				if (s.Starts("<><BC #") && s.Eq(13, ">Compilation: ")) { //compilation
 					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = App.Model?.FindByFilePath(x[1].Value);
@@ -208,7 +208,7 @@ class PanelOutput : DockPanel {
 							int i1 = g.End + 6, len1 = k.end - i1;
 							b.Append("   at ")
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
-							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
+							.Append("line ").Append(s, i1, len1).Append("<> in <bc 0xFAFAD2>").Append(f.Name).Append("<>");
 
 							isMain
 								= s.Eq(k.start, "   at Program.<Main>$(String[] args) in ") //top-level statements

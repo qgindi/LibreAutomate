@@ -26,7 +26,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	string _name;
 	string _displayName;
 	uint _id;
-	EFileType _type;
+	FNType _type;
 	_State _state;
 	_Flags _flags;
 	string _linkTarget;
@@ -34,7 +34,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	uint _testScriptId;
 
 	//this ctor is used when creating new item of known type
-	public FileNode(FilesModel model, string name, EFileType type) {
+	public FileNode(FilesModel model, string name, FNType type) {
 		_model = model;
 		_type = type;
 		_SetName(name);
@@ -43,17 +43,17 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	//this ctor is used when importing items from files etc.
 	//name is filename with extension.
-	//sourcePath is used when !isFolder: 1. To detect type. 2. If isFileLink, to set link target.
-	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, bool isFileLink = false, bool isSymlink = false) {
+	//filePath is used when !isDir: 1. To detect type. 2. If isLink, to set link target.
+	public FileNode(FilesModel model, string name, string filePath, bool isDir, bool isLink = false) {
 		_model = model;
-		_type = isFolder ? EFileType.Folder : _DetectFileType(sourcePath);
+		_type = isDir ? FNType.Folder : _DetectFileType(filePath);
 		_SetName(name);
 		_id = _model.AddGetId(this);
-		if (isFolder) {
-			if (isSymlink) _flags |= _Flags.Symlink;
+		if (isDir) {
+			if (isLink) _flags |= _Flags.Symlink;
 		} else {
-			if (isFileLink) _linkTarget = sourcePath;
-			//if (isFileLink) _linkTarget = folders.unexpandPath(sourcePath); //rejected. Too much trouble with it.
+			if (isLink) _linkTarget = filePath;
+			//if (isLink) _linkTarget = folders.unexpandPath(filePath); //rejected. Too much trouble with it.
 		}
 	}
 
@@ -107,9 +107,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		} else {
 			string t = "n";
 			switch (_type) {
-			case EFileType.Folder: t = "d"; break;
-			case EFileType.Script: t = "s"; break;
-			case EFileType.Class: t = "c"; break;
+			case FNType.Folder: t = "d"; break;
+			case FNType.Script: t = "s"; break;
+			case FNType.Class: t = "c"; break;
 			}
 			x.WriteStartElement(t);
 			x.WriteAttributeString("n", _name);
@@ -147,33 +147,33 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// File type.
 	/// </summary>
-	public EFileType FileType => _type;
+	public FNType FileType => _type;
 
 	/// <summary>
 	/// true if folder or root.
 	/// </summary>
-	public bool IsFolder => _type == EFileType.Folder;
+	public bool IsFolder => _type == FNType.Folder;
 
 	/// <summary>
 	/// true if script file.
 	/// </summary>
-	public bool IsScript => _type == EFileType.Script;
+	public bool IsScript => _type == FNType.Script;
 
 	/// <summary>
 	/// true if class file.
 	/// </summary>
-	public bool IsClass => _type == EFileType.Class;
+	public bool IsClass => _type == FNType.Class;
 
 	/// <summary>
 	/// true if script or class file.
 	/// false if folder or not a code file.
 	/// </summary>
-	public bool IsCodeFile => _type == EFileType.Script || _type == EFileType.Class;
+	public bool IsCodeFile => _type == FNType.Script || _type == FNType.Class;
 
 	/// <summary>
 	/// true if not script/class/folder.
 	/// </summary>
-	public bool IsOtherFileType => _type == EFileType.Other;
+	public bool IsOtherFileType => _type == FNType.Other;
 
 	/// <summary>
 	/// File name with extension.
@@ -216,7 +216,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public string SciLink(bool path = false) => $"<open \"{IdStringWithWorkspace}\">{(path ? ItemPath : _name)}<>";
 
 	/// <summary>
-	/// true if is external file, ie not in this workspace folder.
+	/// true if is an external file, ie not in this workspace folder.
 	/// </summary>
 	public bool IsLink => _linkTarget != null;
 
@@ -224,6 +224,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// If <see cref="IsLink"/>, returns target path, else null.
 	/// </summary>
 	public string LinkTarget => _linkTarget;
+
+	/// <summary>
+	/// true if is a symlink to an external directory.
+	/// </summary>
+	public bool IsSymlink => _flags.Has(_Flags.Symlink);
 
 	/// <summary>
 	/// Gets or sets custom icon name (like "*Pack.Icon color") or null.
@@ -427,11 +432,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	//c_iconFolder = "*Material.FolderOutline #EABB00",
 	//c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
 
-	public static string GetFileTypeImageSource(EFileType ft, bool openFolder = false)
+	public static string GetFileTypeImageSource(FNType ft, bool openFolder = false)
 		=> ft switch {
-			EFileType.Script => App.Settings.icons.ft_script ?? c_iconScript,
-			EFileType.Class => App.Settings.icons.ft_class ?? c_iconClass,
-			EFileType.Folder => openFolder
+			FNType.Script => App.Settings.icons.ft_script ?? c_iconScript,
+			FNType.Class => App.Settings.icons.ft_class ?? c_iconClass,
+			FNType.Folder => openFolder
 				? App.Settings.icons.ft_folderOpen ?? c_iconFolderOpen
 				: App.Settings.icons.ft_folder ?? c_iconFolder,
 			_ => null
@@ -440,8 +445,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public object Image {
 		get {
 			var s = CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
-			if (!(IsLink || _flags.Has(_Flags.Symlink))) return s;
-			return new object[] { s, "link:" };
+			if (IsLink || IsSymlink) return new object[] { s, "link:" };
+			return s;
 		}
 	}
 
@@ -641,7 +646,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	public IEnumerable<FileNode> EnumProjectClassFiles(FileNode fSkip = null) {
 		foreach (var f in Descendants()) {
-			if (f._type == EFileType.Class && f != fSkip) yield return f;
+			if (f._type == FNType.Class && f != fSkip) yield return f;
 		}
 	}
 
@@ -650,7 +655,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// Note: can be slow, because loads file text if this is a class file.
 	/// </summary>
 	public EClassFileRole GetClassFileRole() {
-		if (_type != EFileType.Class) return EClassFileRole.None;
+		if (_type != FNType.Class) return EClassFileRole.None;
 		if (GetCurrentText(out var code, silent: true)) {
 			var meta = MetaComments.FindMetaComments(code);
 			if (meta.end > 0) {
@@ -807,19 +812,19 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// For example, cannot move parent into child etc.
 	/// Does not check whether can move the file.
 	/// </summary>
-	public bool CanMove(FileNode target, FNPosition pos) {
+	public bool CanMove(FileNode target, FNInsert pos) {
 		//cannot move into self or descendants
 		if (target == this || target.IsDescendantOf(this)) return false;
 
 		//cannot move into a non-folder or before/after self
 		switch (pos) {
-		case FNPosition.Inside:
+		case FNInsert.Inside:
 			if (!target.IsFolder) return false;
 			break;
-		case FNPosition.Before:
+		case FNInsert.Before:
 			if (Next == target) return false;
 			break;
-		case FNPosition.After:
+		case FNInsert.After:
 			if (Previous == target) return false;
 			break;
 		}
@@ -832,11 +837,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
-	public bool FileMove(FileNode target, FNPosition pos) {
-		if (target == null) { target = Root; pos = FNPosition.Inside; }
+	public bool FileMove(FileNode target, FNInsert pos) {
+		if (target == null) { target = Root; pos = FNInsert.Inside; }
 		if (!CanMove(target, pos)) return false;
 
-		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+		var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 		if (newParent != Parent) {
 			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder, moving: true);
 
@@ -854,7 +859,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		return true;
 	}
 
-	public void Common_MoveCopyNew(FileNode target, FNPosition pos) {
+	public void Common_MoveCopyNew(FileNode target, FNInsert pos) {
 		target.AddChildOrSibling(this, pos, true);
 		CodeInfo.FilesChanged();
 	}
@@ -862,8 +867,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// Adds f to the tree, updates control, optionally sets to save workspace.
 	/// </summary>
-	public void AddChildOrSibling(FileNode f, FNPosition inBeforeAfter, bool setSaveWorkspace) {
-		if (inBeforeAfter == FNPosition.Inside) AddChild(f); else AddSibling(f, inBeforeAfter == FNPosition.After);
+	public void AddChildOrSibling(FileNode f, FNInsert inBeforeAfter, bool setSaveWorkspace) {
+		if (inBeforeAfter == FNInsert.Inside) AddChild(f); else AddSibling(f, inBeforeAfter == FNInsert.After);
 		_model.UpdateControlItems();
 		if (setSaveWorkspace) _model.Save.WorkspaceLater();
 	}
@@ -876,12 +881,12 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
 	/// <param name="newModel">Used when importing workspace.</param>
-	internal FileNode FileCopy(FileNode target, FNPosition pos, FilesModel newModel = null) {
+	internal FileNode FileCopy(FileNode target, FNInsert pos, FilesModel newModel = null) {
 		_model.Save?.TextNowIfNeed(true);
-		if (target == null) { target = Root; pos = FNPosition.Inside; }
+		if (target == null) { target = Root; pos = FNInsert.Inside; }
 
 		//create unique name
-		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+		var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 		string name = CreateNameUniqueInFolder(newParent, _name, IsFolder);
 
 		//copy file or directory
@@ -920,14 +925,14 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	/// <summary>
 	/// Gets file type from XML tag which should be "d", "s", "c" or "n".
-	/// If none, throws ArgumentException if canThrow, else returns EFileType.Other.
+	/// If none, throws ArgumentException if canThrow, else returns FNType.Other.
 	/// </summary>
-	public static EFileType XmlTagToFileType(string tag, bool canThrow) => tag switch {
-		"d" => EFileType.Folder,
-		"s" => EFileType.Script,
-		"c" => EFileType.Class,
-		"n" => EFileType.Other,
-		_ => !canThrow ? EFileType.Other : throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'")
+	public static FNType XmlTagToFileType(string tag, bool canThrow) => tag switch {
+		"d" => FNType.Folder,
+		"s" => FNType.Script,
+		"c" => FNType.Class,
+		"n" => FNType.Other,
+		_ => !canThrow ? FNType.Other : throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'")
 	};
 
 	/// <summary>
@@ -935,13 +940,13 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// If .cs, returns Class, else Other.
 	/// Must be not folder.
 	/// </summary>
-	static EFileType _DetectFileType(string path) {
-		var type = EFileType.Other;
+	static FNType _DetectFileType(string path) {
+		var type = FNType.Other;
 		if (path.Ends(".cs", true)) {
-			type = EFileType.Class;
+			type = FNType.Class;
 			try {
 				var code = filesystem.loadText(path);
-				if (CiUtil.IsScript(code)) type = EFileType.Script;
+				if (CiUtil.IsScript(code)) type = FNType.Script;
 			}
 			catch (Exception ex) { Debug_.Print(ex); }
 
@@ -951,15 +956,4 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 
 	#endregion
-}
-
-/// <summary>
-/// File type of a <see cref="FileNode"/>.
-/// Saved in XML as tag name: d folder, s script, c class, n other.
-/// </summary>
-enum EFileType : byte {
-	Folder, //must be 0
-	Script,
-	Class,
-	Other,
 }
