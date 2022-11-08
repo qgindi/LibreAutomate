@@ -939,7 +939,7 @@ static class TUtil {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
 				Debug_.Print("---- CODE ----\r\n" + code + "--------------");
 				//shows code too, because it may be different than in the code box
-				return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
+				return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<BC #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
 			}
 			//object ro = invoke?.Invoke(c.method) ?? c.method.Invoke(null, null);
 			object ro = c.method.Invoke(null, null);
@@ -1028,7 +1028,7 @@ obj.{code};
 
 		try {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true))
-				return new(true, "Errors:", $"{c.errors}\r\n\r\n<Z #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
+				return new(true, "Errors:", $"{c.errors}\r\n\r\n<BC #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
 			c.method.Invoke(null, new[] { obj });
 			return null;
 		}
@@ -1043,12 +1043,12 @@ obj.{code};
 	#region info
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
-		t.zText = $"<Z #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
+		t.zText = $"<BC #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
 	}
 
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
-		t.zText = $"<Z #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
+		t.zText = $"<BC #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
 	}
 

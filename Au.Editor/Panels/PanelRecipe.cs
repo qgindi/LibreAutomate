@@ -64,7 +64,7 @@ class PanelRecipe : DockPanel {
 
 	void _SetText(string name, string code) {
 		_c.zClearText();
-		if (!name.NE() && !code.Starts("/// <Z")) code = $"/// <Z YellowGreen><b>{name}</b><>\r\n\r\n{code}";
+		if (!name.NE() && !code.Starts("/// <BC")) code = $"/// <BC YellowGreen><b>{name}</b><>\r\n\r\n{code}";
 
 		//rejected:
 		//	1. Ignore code before the first ///. Not really useful, just forces to always start with ///.

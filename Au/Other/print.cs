@@ -4,13 +4,12 @@ namespace Au;
 /// Writes text to the output window, console, log file or custom writer.
 /// </summary>
 [DebuggerStepThrough]
-public static partial class print
-{
+public static partial class print {
 	/// <summary>
 	/// Returns true if this process is attached to a console.
 	/// </summary>
 	public static bool isConsoleProcess => Api.GetConsoleOutputCP() != 0; //fast
-	//public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //no, may be true even if not attached to a console, eg if this non-console program started from cmd/bat on Win7
+																		  //public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //no, may be true even if not attached to a console, eg if this non-console program started from cmd/bat on Win7
 
 	/// <summary>
 	/// Returns true if is writing to console, false if to the output window etc.
@@ -48,19 +47,42 @@ public static partial class print
 		if (logFile != null) {
 			_ClearToLogFile();
 		} else if (isWritingToConsole) {
-			_ConsoleClear();
+			_ConsoleAction(PrintServerMessageType.Clear);
 		} else if (qm2.use) {
 			qm2.clear();
 		} else {
-			_ClearToServer();
+			_ServerAction(PrintServerMessageType.Clear);
+		}
+	}
+
+	/// <summary>
+	/// Scrolls the output window or console to the top.
+	/// </summary>
+	public static void scrollToTop() {
+		if (logFile != null) {
+		} else if (isWritingToConsole) {
+			_ConsoleAction(PrintServerMessageType.ScrollToTop);
+		} else if (qm2.use) {
+		} else {
+			_ServerAction(PrintServerMessageType.ScrollToTop);
 		}
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
-	static void _ConsoleClear() {
-		//exception if redirected, it is documented
-		//if (!Console.IsOutputRedirected) Console.Clear(); //no, Clear does something more than if(IsOutputRedirected)
-		try { Console.Clear(); } catch { }
+	static void _ConsoleAction(PrintServerMessageType action) {
+		try {
+			switch (action) {
+			case PrintServerMessageType.Clear:
+				//exception if redirected, it is documented.
+				//if (!Console.IsOutputRedirected) Console.Clear(); //no, Clear does something more than if(IsOutputRedirected)
+				Console.Clear();
+				break;
+			case PrintServerMessageType.ScrollToTop:
+				Console.SetCursorPosition(0, 0);
+				break;
+			}
+		}
+		catch { }
 	}
 
 	/// <summary>
@@ -216,8 +238,7 @@ public static partial class print
 	/// <summary>
 	/// Our default writer class for the Writer property.
 	/// </summary>
-	class _OutputWriter : LineWriter_
-	{
+	class _OutputWriter : LineWriter_ {
 		public override Encoding Encoding => Encoding.Unicode;
 
 		protected override void WriteLineNow(string s) => directly(s);
@@ -234,7 +255,7 @@ public static partial class print
 		if (logFile != null) _WriteToLogFile(value);
 		else if (isWritingToConsole) _ConsoleWriteLine(value);
 		else if (qm2.use) qm2.write(value);
-		else _WriteToServer(value);
+		else _ServerWrite(value);
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
@@ -393,8 +414,7 @@ public static partial class print
 		}
 	}
 
-	unsafe class _LogFile
-	{
+	unsafe class _LogFile {
 		//info: We don't use StreamWriter. It creates more problems than would make easier.
 		//	Eg its finalizer does not write to file. If we try to Close it in our finalizer, it throws 'already disposed'.
 		//	Also we don't need such buffering. Better to write to the OS file buffer immediately, it's quite fast.
@@ -483,8 +503,7 @@ public static partial class print
 #else
 	internal
 #endif
-	static class qm2
-	{
+	static class qm2 {
 		/// <summary>
 		/// Sets to use QM2 as the output server.
 		/// </summary>

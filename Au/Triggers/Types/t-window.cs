@@ -507,7 +507,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 			}
 			//perf.nw();
 		}
-		//if(n1 + n2 > 0) print.it($"<><z yellow>added {n2}, removed {n1}<>");
+		//if(n1 + n2 > 0) print.it($"<><bc yellow>added {n2}, removed {n1}<>");
 
 		void _Added(int i) {
 			//n2++; //print.it("added", aNew[i]);

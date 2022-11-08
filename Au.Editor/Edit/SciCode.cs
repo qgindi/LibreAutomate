@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using System.Text.RegularExpressions;
+using System.Windows;
 
 partial class SciCode : KScintilla {
 	readonly FileLoaderSaver _fls;
@@ -299,9 +300,6 @@ partial class SciCode : KScintilla {
 
 	bool _WndProc(wnd w, int msg, nint wparam, nint lparam, ref nint lresult) {
 		switch (msg) {
-		case Api.WM_SETFOCUS:
-			if (!_noModelEnsureCurrentSelected) App.Model.EnsureCurrentSelected();
-			break;
 		case Api.WM_CHAR: {
 				int c = (int)wparam;
 				if (c < 32) {
@@ -380,7 +378,6 @@ partial class SciCode : KScintilla {
 
 		return false;
 	}
-	bool _noModelEnsureCurrentSelected;
 
 	protected override bool TranslateAcceleratorCore(ref System.Windows.Interop.MSG msg, ModifierKeys mod) {
 		if (msg.message is Api.WM_KEYDOWN or Api.WM_SYSKEYDOWN) {
@@ -409,6 +406,12 @@ partial class SciCode : KScintilla {
 		}
 		return base.TranslateAcceleratorCore(ref msg, mod);
 	}
+
+	protected override void OnGotFocus(RoutedEventArgs e) {
+		if (!_noModelEnsureCurrentSelected) App.Model.EnsureCurrentSelected();
+		base.OnGotFocus(e);
+	}
+	bool _noModelEnsureCurrentSelected;
 
 	internal bool EIsUnsaved_ {
 		get => _isUnsaved || 0 != Call(SCI_GETMODIFY);
@@ -504,7 +507,7 @@ partial class SciCode : KScintilla {
 
 		var (isFC, text, name, isClass) = EIsForumCode_(s1, false);
 		if (isFC) {
-			string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
+			string buttons = _fn.FileType != (isClass ? FNType.Class : FNType.Script)
 				? "1 Create new file|0 Cancel"
 				: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
 			switch (dialog.show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
@@ -539,7 +542,7 @@ partial class SciCode : KScintilla {
 	}
 
 	static void _NewFileFromForumCode(string text, string name, bool isClass) {
-		App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, text));
+		App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new NewFileText(replaceTemplate: true, text));
 	}
 
 	#endregion

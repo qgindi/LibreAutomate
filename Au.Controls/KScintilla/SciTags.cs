@@ -8,14 +8,17 @@ NEW TAGS:
    <fold> - collapsed lines.
    <explore> - select file in File Explorer.
    <\a>text</\a> - alternative for <_>text</_>.
+   <nonl> - no newline.
 
 NEW PARAMETERS:
    <c ColorName> - .NET color name for text color. Also color can be #RRGGBB.
-   <z ColorName> - .NET color name for background color. Also color can be #RRGGBB.
-   <Z ColorName> - .NET color name for background color, whole line. Also color can be #RRGGBB.
+   <bc ColorName> - .NET color name for background color. Also color can be #RRGGBB.
+   <BC ColorName> - .NET color name for background color, whole line. Also color can be #RRGGBB.
 
 RENAMED TAGS:
 	<script>, was <macro>.
+	<bc>, was <z>.
+	<BC>, was <Z>.
 
 REMOVED TAGS:
 	<tip>.
@@ -35,7 +38,7 @@ OTHER CHANGES:
 	These link tags are not implemented by this class, but you can provide delegates of functions that implement them:
 		<open>, <script>.
 	<help> by default calls Au.More.HelpUtil.AuHelp, which opens a topic in web browser. You can override it with SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
-	<code> attributes are not used. Currently supports only C# code; for it uses the C++ lexer.
+	<code> attributes are not used.
 
 CHANGES IN <image>:
 	Don't need the closing tag (</image>).
@@ -199,7 +202,7 @@ public unsafe class SciTags {
 
 		string s = null;
 		StringBuilder b = null;
-		bool hasTags = false, hasTagsPrev = false;
+		bool hasTags = false, hasTagsPrev = false, scrollToTop = false;
 		while (ps.GetMessage(out var m)) {
 			onMessage?.Invoke(m);
 			switch (m.Type) {
@@ -208,12 +211,15 @@ public unsafe class SciTags {
 				s = null;
 				b?.Clear();
 				break;
+			case PrintServerMessageType.ScrollToTop:
+				scrollToTop = true;
+				break;
 			case PrintServerMessageType.Write when m.Text != null:
 				if (s == null) {
 					s = m.Text;
 					hasTags = hasTagsPrev = s.Starts("<>");
 				} else {
-					if (b == null) b = new StringBuilder();
+					b ??= new StringBuilder();
 					if (b.Length == 0) b.Append(s);
 
 					s = m.Text;
@@ -225,7 +231,7 @@ public unsafe class SciTags {
 						b.Append("\r\n");
 					} else if (hasTagsThis) {
 						b.Append("\r\n<\x15\x0\x4");
-						//info: add "\r\n" here, not later, because later it would make more difficult <Z> tag
+						//info: add "\r\n" here, not later, because later it would make more difficult <BC> tag
 					} else {
 						b.Append(hasTagsPrev ? "\r\n<\x15\x0\x4" : "\r\n");
 					}
@@ -235,26 +241,27 @@ public unsafe class SciTags {
 				break;
 			}
 		}
-		if (s == null) return; //0 messages, or the last message is Clear
-		if (b != null && b.Length > 0) s = b.ToString();
 
-		//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
+		if (s != null) { //else 0 messages or the last message is Clear
+			if (b != null) s = b.ToString();
 
-		//_c.zAppendText(s, true, true, true); return;
+			//limit
+			int len = _c.zLen8;
+			if (len > 4 * 1024 * 1024) {
+				len = _c.zLineStartFromPos(false, len / 2);
+				if (len > 0) _c.zReplaceRange(false, 0, len, "...\r\n");
+			}
 
-		//limit
-		int len = _c.zLen8;
-		if (len > 4 * 1024 * 1024) {
-			len = _c.zLineStartFromPos(false, len / 2);
-			if (len > 0) _c.zReplaceRange(false, 0, len, "...\r\n");
+			if (hasTags) AddText(s, true, true);
+			else _c.zAppendText(s, true, true, true);
+
+			//test slow client
+			//Thread.Sleep(500);
+			//print.qm2.write(s.Length / 1048576d);
 		}
 
-		if (hasTags) AddText(s, true, true);
-		else _c.zAppendText(s, true, true, true);
-
-		//test slow client
-		//Thread.Sleep(500);
-		//print.qm2.write(s.Length / 1048576d);
+		if(scrollToTop) _c.Call(SCI_SETFIRSTVISIBLELINE);
+		//never mind: more print.it() may be after print.scrollToTop().
 	}
 
 	/// <summary>
@@ -374,11 +381,11 @@ public unsafe class SciTags {
 
 			//tags
 			_TagStyle style = default;
-			bool hideTag = false, noEndTag = false, userLinkTag = false;
-			string linkTag = null;
+			bool hideTag = false, noEndTag = false, linkTag = false;
 			int stackInt = 0;
 			int i2;
 			ch = *tag;
+			var span = new ReadOnlySpan<byte>(tag, tagLen);
 			switch (tagLen << 16 | ch) {
 			case 1 << 16 | 'b':
 				style.Bold = true;
@@ -386,16 +393,16 @@ public unsafe class SciTags {
 			case 1 << 16 | 'i':
 				style.Italic = true;
 				break;
-			case 2 << 16 | 'b':
-				if (tag[1] == 'i') style.Bold = style.Italic = true;
-				else goto ge;
+			case 2 << 16 | 'b' when tag[1] == 'i':
+				style.Bold = style.Italic = true;
 				break;
 			case 1 << 16 | 'u':
 				style.Underline = true;
 				break;
 			case 1 << 16 | 'c':
-			case 1 << 16 | 'z':
-			case 1 << 16 | 'Z':
+			case 2 << 16 | 'b' when tag[1] == 'c':
+			case 2 << 16 | 'B' when tag[1] == 'C':
+			case 1 << 16 | 'z' or 1 << 16 | 'Z': //fbc
 				if (attr == null) goto ge;
 				int color;
 				if (((char)*attr).IsAsciiDigit()) color = Api.strtoi(attr);
@@ -406,28 +413,21 @@ public unsafe class SciTags {
 					color = c.ToArgb() & 0xffffff;
 				}
 				if (ch == 'c') style.Color = color; else style.BackColor = color;
-				if (ch == 'Z') style.Eol = true;
+				if (ch == 'B' || ch == 'Z') style.Eol = true;
 				break;
-			case 4 << 16 | 's':
-				if (attr == null) goto ge;
-				if (BytePtr_.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
-				else goto ge;
+			case 4 << 16 | 's' when span.SequenceEqual("size"u8) && attr != null:
+				style.Size = Api.strtoi(attr);
 				break;
-			case 4 << 16 | 'm':
-				if (BytePtr_.AsciiStarts(tag + 1, "ono")) style.Mono = true;
-				else goto ge;
+			case 4 << 16 | 'm' when span.SequenceEqual("mono"u8):
+				style.Mono = true;
 				break;
-			//case 6 << 16 | 'h': //rejected. Not useful; does not hide newlines.
-			//	if(CharPtr_.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
-			//	else goto ge;
+			//case 6 << 16 | 'h' when span.SequenceEqual("hidden"u8): //rejected. Not useful; does not hide newlines.
+			//	style.Hidden = true;
 			//	break;
-			case 5 << 16 | 'i':
-				if (attr == null) goto ge;
-				if (!BytePtr_.AsciiStarts(tag + 1, "mage")) goto ge;
+			case 5 << 16 | 'i' when span.SequenceEqual("image"u8) && attr != null:
 				hideTag = noEndTag = true;
 				break;
-			case 4 << 16 | 'n': //<nonl>
-				if (!BytePtr_.AsciiStarts(tag + 1, "onl")) goto ge;
+			case 4 << 16 | 'n' when span.SequenceEqual("nonl"u8):
 				if (s[0] == 13) s++;
 				if (s[0] == 10) s++;
 				continue;
@@ -438,8 +438,7 @@ public unsafe class SciTags {
 				s += 4;
 				//hasTags = true;
 				continue;
-			case 4 << 16 | 'c': //<code>code</code>
-				if (!BytePtr_.AsciiStarts(tag + 1, "ode")) goto ge;
+			case 4 << 16 | 'c' when span.SequenceEqual("code"u8): //<code>code</code>
 				i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), "</code>"); if (i2 < 0) goto ge;
 				if (CodeStylesProvider != null) {
 					int iStartCode = (int)(t - s0);
@@ -449,8 +448,7 @@ public unsafe class SciTags {
 				while (i2-- > 0) _Write(*s++, STYLE_DEFAULT);
 				s += 7;
 				continue;
-			case 4 << 16 | 'f': //<fold>text</fold>
-				if (!BytePtr_.AsciiStarts(tag + 1, "old")) goto ge;
+			case 4 << 16 | 'f' when span.SequenceEqual("fold"u8): //<fold>text</fold>
 				stackInt = (int)(t - s0);
 				//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
 				_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
@@ -459,42 +457,28 @@ public unsafe class SciTags {
 				var s1 = s; if (s1[0] == '<' && (s1[1] == '_' || s1[1] == '\a') && s1[2] == '>') s1 += 3;
 				switch (*s1) { case 10: case 13: break; default: _WriteString("\r\n", currentStyle); break; }
 				break;
-			case 4 << 16 | 'l':
-				linkTag = "link";
-				break;
-			case 6 << 16 | 'g':
-				linkTag = "google";
-				break;
-			case 4 << 16 | 'h':
-				linkTag = "help";
-				break;
-			case 7 << 16 | 'e':
-				linkTag = "explore";
-				break;
-			case 4 << 16 | 'o':
-				linkTag = "open";
-				break;
-			case 6 << 16 | 's':
-				linkTag = "script";
+			case 4 << 16 | 'l' when span.SequenceEqual("link"u8):
+			case 6 << 16 | 'g' when span.SequenceEqual("google"u8):
+			case 4 << 16 | 'h' when span.SequenceEqual("help"u8):
+			case 7 << 16 | 'e' when span.SequenceEqual("explore"u8):
+			case 4 << 16 | 'o' when span.SequenceEqual("open"u8):
+			case 6 << 16 | 's' when span.SequenceEqual("script"u8):
+				linkTag = true;
 				break;
 			default:
 				//user-defined tag or unknown.
 				//user-defined tags must start with '+' (links) or '.' (styles).
 				//don't hide unknown tags, unless start with '+' etc. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
 				if (ch == '+') {
-					//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
-					//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at A.<>c.<_Main>b__1_0() ...".
-					linkTag = "";
-					userLinkTag = true;
+					//if(!_userLinkTags.ContainsKey(new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
+					linkTag = true;
 				} else if (ch == '.' && (_userStyles?.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style) ?? false)) {
 					//userStyleTag = true;
 				} else goto ge;
 				break;
 			}
 
-			if (linkTag != null) {
-				if (!userLinkTag && !BytePtr_.AsciiStarts(tag, linkTag)) goto ge;
-				//if(attr == null) goto ge; //no, use text as attribute
+			if (linkTag) {
 				if (_linkStyle != null) style = new _TagStyle(_linkStyle);
 				else {
 					style.Color = 0x0080FF;

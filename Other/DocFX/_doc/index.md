@@ -39,10 +39,14 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 
 ### Is it stable
-The program and the library are very young. Need more testing.
+The program and the library are very young. They don't have any known problems, but need more testing everywhere.
+
+### Download
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.11.0, 2022-11-08, 24 MB
+
+Note: the program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed. Antivirus false positives are common to this type of software.
 
 ### Links
-- [Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.10.0, 2022-10-19, 24 MB
 - [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
 - [Source code](https://github.com/qgindi/LibreAutomate)
 - [Forum](https://www.libreautomate.com/forum/)

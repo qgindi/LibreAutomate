@@ -636,7 +636,7 @@ class Program {
 
 		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
 			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol || t.TypeKind != TypeKind.Delegate) return false;
-			var b = new StringBuilder("<><Z #A0C0A0>Delegate method and lambda<>\r\n<code>");
+			var b = new StringBuilder("<><BC #A0C0A0>Delegate method and lambda<>\r\n<code>");
 			var m = t.DelegateInvokeMethod;
 
 			//method

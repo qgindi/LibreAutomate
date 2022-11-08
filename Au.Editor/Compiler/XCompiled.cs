@@ -263,11 +263,11 @@ o - config (now removed)
 					//first line contains .NET version, Au.dll version and OS version, like 5.0.4|1.2.3.4|A00-64
 					if (sData[v.Range] != osVersion.onaString) goto g1;
 					_data = new(sData.LineCount());
-					continue;
+				} else {
+					sData.ToInt(out uint id, v.start, out int idEnd);
+					if (null != _model.FindById(id))
+						_data[id] = v.end > idEnd ? sData[idEnd..v.end] : null;
 				}
-				sData.ToInt(out uint id, v.start, out int idEnd);
-				Debug.Assert(null != _model.FindById(id));
-				_data[id] = v.end > idEnd ? sData[idEnd..v.end] : null;
 			}
 			if (_data == null) return false; //empty file
 

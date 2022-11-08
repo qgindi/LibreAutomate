@@ -1,6 +1,7 @@
 ﻿<files max-i="110">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
+  <n n="File.txt" i="67" />
   <d n="New project" i="6">
     <d n="@Script" i="7">
       <s n="Script.cs" i="8" />
@@ -8,10 +9,6 @@
     <d n="@Library" i="9">
       <c n="Library.cs" i="10" />
     </d>
-  </d>
-  <d n="More" i="66">
-    <c n="Partial.cs" i="3" />
-    <n n="File.txt" i="67" />
   </d>
   <d n="Dialogs" i="68">
     <s n="Dialog.cs" i="77" />
