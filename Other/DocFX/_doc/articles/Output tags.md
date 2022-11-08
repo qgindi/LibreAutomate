@@ -10,7 +10,7 @@ For most tags use this format: `<tag>text<>` or `<tag attribute>text<>`.
 
 For these tags use `<tag>text</tag>`: `<code>`, `<_>`, `<\a>`, `<fold>`.
 
-These tags does not have a closing tag: `<image "attribute">`, `<nonl>`.
+These tags don't have a closing tag: `<image "attribute">`, `<nonl>`.
 
 Attribute can be enclosed in `'` or `"`. If attribute omitted, text is used as attribute if need for that tag.
 
@@ -31,8 +31,8 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<bi>text<>` | Bold italic.
 | `<u>text<>` | Underline.
 | `<c 0xE0A000>text<>`<br/>`<c #E0A000>text<>`<br/>`<c green>text<>` | Text color.<br/>Can be 0xRRGGBB, #RRGGBB or .NET color name.
-| `<z yellow>text<>` | Text background color.
-| `<Z wheat>line text<>` | Line background color.
+| `<bc yellow>text<>` | Text background color.
+| `<BC wheat>line text<>` | Line background color.
 | `<size 10>text<>` |  Font height.<br/>Note: it can increase height of all lines.
 | `<mono>text<>` | Monospace font.
 
@@ -43,7 +43,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<explore>C:\files\example<>` | Selects a file or folder in File Explorer.<br/>Calls function [run.selectInExplorer]().
 | `<google s1>text<>`<br/>`<google>s1<>`<br/>`<google s1|s2>text<>` | Google. Opens this URL:<br/>`$"http://www.google.com/search?q={s1}{s2}"`<br/>Don't need to URL-encode.
 | `<help>Class.Function<>`<br/>`<help Au.Namespace.Class>text<>`<br/>`<help articles/Output tags>text<>` | Opens a help page of this library.
-| `<open>Script5.cs<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>`<br/>`<open Script5.cs||100>text<>`<br/>`<open Script5.cs|||word>text<>` | Opens a script or other file of current workspace in the code editor. Optionally moves text cursor.<br/>Can be file name, relative path in workspace, or full path.<br/>The 10 is 1-based line index.<br/>The 15 is 1-based character index in line.<br/>The 100 is 0-based character index in text.<br/>The word is text to find, whole word(s).
+| `<open>Script5.cs<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>`<br/>`<open Script5.cs||100>text<>`<br/>`<open Script5.cs|||word>text<>`<br/>`<open Folder|expand>text<>` | Opens a script or other file of current workspace in the code editor. Optionally moves the text cursor.<br/>Can be file name, relative path in workspace, or full path.<br/>10 is 1-based line index.<br/>15 is 1-based character index in line.<br/>100 is 0-based character index in text.<br/>The word is text to find, whole word(s).<br/>Selects and expands a folder.
 | `<script>Script5.cs<>`<br/>`<script \Folder\Script5.cs>text<>`<br/>`<script Script5.cs|args0|args1>text<>` | Runs a script.
 
 #### Other tags
@@ -57,9 +57,11 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 #### Images
 Images are displayed below current line. Examples:
 
-`<image "c:\images\example.png">`
-`<image "c:\files\example.txt">`
+`<image "c:\images\example.png">`\
+`<image "c:\files\example.txt">`\
 `<image "image:PngBase64">`
+
+Note: image path must be enclosed in "".
 
 Supports images of formats: png, bmp, jpg, gif, ico (only 16x16). For other file types and folders displays small file icon.
 

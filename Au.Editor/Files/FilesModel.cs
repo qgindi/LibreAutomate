@@ -1,7 +1,6 @@
 using System.Xml.Linq;
 using System.IO.Compression;
 using System.Windows.Input;
-using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -598,16 +597,18 @@ partial class FilesModel {
 	/// Returns false if failed to find or select.
 	/// </summary>
 	/// <param name="fileOrFolder">See <see cref="Find"/>.</param>
-	/// <param name="line1Based">If not empty, goes to this 1-based line.</param>
+	/// <param name="line1Based">If not empty, goes to this 1-based line. Or can be "expand" to find and expand a folder.</param>
 	/// <param name="column1BasedOrPos">If not empty, goes to this 0-based position in text (if line empty) or to this 1-based column in line.</param>
 	/// <remarks>
 	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
 	/// </remarks>
 	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null) {
-		var f = Find(fileOrFolder, line1Based.NE() && column1BasedOrPos.NE() ? FNFind.Any : FNFind.CodeFile);
+		bool expand = line1Based == "expand"; if (expand) line1Based = "";
+		var f = Find(fileOrFolder, expand ? FNFind.Folder : line1Based.NE() && column1BasedOrPos.NE() ? FNFind.Any : FNFind.CodeFile);
 		if (f == null) return false;
 		if (f.IsFolder) {
 			f.SelectSingle();
+			if (expand) TreeControl.Expand(f, true);
 			return true;
 		}
 		int line = line1Based.NE() ? -1 : line1Based.ToInt() - 1;
@@ -652,7 +653,7 @@ partial class FilesModel {
 		}
 	}
 
-	bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true, bool canDeleteLinkTarget = false) {
+	bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true) {
 		var e = f.Descendants(true);
 
 		CloseFiles(e);
@@ -660,18 +661,18 @@ partial class FilesModel {
 		App.Model.EditGoBack.OnFileDeleted(f);
 
 		string filePath = f.FilePath;
-		if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
+		if (dontDeleteFile || f.IsLink) {
+			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
+			print.it($"<>Info: {s1} <explore>{filePath}<>");
+		} else {
 			string symlinkTarget = null;
-			if (f.IsFolder && filesystem.exists(filePath).IsNtfsLink) filesystem.more.getFinalPath(filePath, out symlinkTarget);
+			if (f.IsSymlink) filesystem.more.getFinalPath(filePath, out symlinkTarget);
 
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 
-			if (symlinkTarget != null) print.it($"<>Info: The deleted folder was a link to <explore>{symlinkTarget}<>");
+			if (symlinkTarget != null) print.it($"<>Info: The deleted item was a link to <explore>{symlinkTarget}<>");
 
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
-		} else {
-			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
-			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		}
 
 		foreach (var k in e) {
@@ -847,26 +848,26 @@ partial class FilesModel {
 	/// Gets the place where item should be added in operations such as new, paste, import.
 	/// If in context menu or atSelection (true when pasting), uses selection and may show a context menu to select the place. Else first item in workspace.
 	/// </summary>
-	(FileNode target, FNPosition pos) _GetInsertPos(bool atSelection = false) {
-		FileNode target; FNPosition pos = FNPosition.Before;
+	(FileNode target, FNInsert pos) _GetInsertPos(bool atSelection = false) {
+		FileNode target; FNInsert pos = FNInsert.Before;
 
 		if (atSelection || s_inContextMenu) {
 			target = TreeControl.FocusedItem as FileNode;
-			if (target == null) return (Root, FNPosition.Inside);
+			if (target == null) return (Root, FNInsert.Inside);
 
 			int i;
 			bool isFolder = target.IsFolder && target.IsSelected && TreeControl.SelectedIndices.Count == 1;
-			if (isFolder && !target.HasChildren) pos = FNPosition.Inside;
+			if (isFolder && !target.HasChildren) pos = FNInsert.Inside;
 			else if (isFolder && (i = popupMenu.showSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below")) > 0) {
 				switch (i) {
 				case 1: target = target.FirstChild; break;
-				case 2: pos = FNPosition.Inside; break;
-				case 4: pos = FNPosition.After; break;
+				case 2: pos = FNInsert.Inside; break;
+				case 4: pos = FNInsert.After; break;
 				}
-			} else if (target.Next == null) pos = FNPosition.After; //usually users want to add after the last, not before
+			} else if (target.Next == null) pos = FNInsert.After; //usually users want to add after the last, not before
 		} else { //top
 			target = Root.FirstChild;
-			if (target == null) { target = Root; pos = FNPosition.Inside; }
+			if (target == null) { target = Root; pos = FNInsert.Inside; }
 		}
 
 		return (target, pos);
@@ -885,7 +886,7 @@ partial class FilesModel {
 	/// </param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
-	public FileNode NewItem(string template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
+	public FileNode NewItem(string template, (FileNode target, FNInsert pos)? where = null, string name = null, bool beginRenaming = false, NewFileText text = null) {
 		XElement x = null;
 		if (template != null) {
 			x = FileNode.Templates.LoadXml(template); if (x == null) return null;
@@ -901,7 +902,7 @@ partial class FilesModel {
 	/// <param name="template">See <see cref="NewItem"/>.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
-	public FileNode NewItemL(string template, (FileNode target, FNPosition pos)? where = null, string name = null) {
+	public FileNode NewItemL(string template, (FileNode target, FNInsert pos)? where = null, string name = null) {
 		XElement x = null;
 		if (template != null) {
 			x = FileNode.Templates.LoadXml(template); if (x == null) return null;
@@ -917,7 +918,7 @@ partial class FilesModel {
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	/// </summary>
-	public FileNode NewItemX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
+	public FileNode NewItemX(XElement template, (FileNode target, FNInsert pos)? where = null, string name = null, bool beginRenaming = false, NewFileText text = null) {
 		string s = null;
 		if (text != null && text.replaceTemplate) {
 			s = text.meta.NE() ? text.text : _MetaPlusText(text.text);
@@ -967,9 +968,9 @@ partial class FilesModel {
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name (eg "name.cs"). Else gets name from template. In any case makes unique name.</param>
 	/// <param name="text">If not null, sets this text. If null, sets default text (template etc). Not used for folders.</param>
-	public FileNode NewItemLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, string text = null) {
+	public FileNode NewItemLX(XElement template, (FileNode target, FNInsert pos)? where = null, string name = null, string text = null) {
 		var (target, pos) = where ?? _GetInsertPos();
-		FileNode newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+		FileNode newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 
 		//create unique name
 		bool isFolder = template == null || template.Name.LocalName == "d";
@@ -993,14 +994,14 @@ partial class FilesModel {
 		return _NewItem(target, pos, template, name, text);
 	}
 
-	FileNode _NewItem(FileNode target, FNPosition pos, XElement template, string name, string text) {
-		var fileType = template == null ? EFileType.Folder : FileNode.XmlTagToFileType(template.Name.LocalName, canThrow: false);
-		Debug.Assert(fileType is not (EFileType.Script or EFileType.Class) || name.Ends(".cs"));
+	FileNode _NewItem(FileNode target, FNInsert pos, XElement template, string name, string text) {
+		var fileType = template == null ? FNType.Folder : FileNode.XmlTagToFileType(template.Name.LocalName, canThrow: false);
+		Debug.Assert(fileType is not (FNType.Script or FNType.Class) || name.Ends(".cs"));
 
-		if (text == null && fileType != EFileType.Folder) {
+		if (text == null && fileType != FNType.Folder) {
 			string relPath = template.Attr("n");
 			for (var p = template; (p = p.Parent).Name.LocalName != "files";) relPath = p.Attr("n") + "\\" + relPath;
-			if (fileType == EFileType.Other) {
+			if (fileType == FNType.Other) {
 				text = filesystem.loadText(FileNode.Templates.DefaultDirBS + relPath);
 			} else if (FileNode.Templates.IsStandardTemplateName(relPath, out var tt)) {
 				text = FileNode.Templates.Load(tt);
@@ -1014,10 +1015,10 @@ partial class FilesModel {
 			}
 		}
 
-		FileNode parent = (pos == FNPosition.Inside) ? target : target.Parent;
+		FileNode parent = (pos == FNInsert.Inside) ? target : target.Parent;
 		var path = parent.FilePath + "\\" + name;
 		if (!TryFileOperation(() => {
-			if (fileType == EFileType.Folder) filesystem.createDirectory(path);
+			if (fileType == FNType.Folder) filesystem.createDirectory(path);
 			else filesystem.saveText(path, text, tempDirectory: TempDirectory);
 		})) return null;
 
@@ -1027,9 +1028,9 @@ partial class FilesModel {
 		if (template != null) {
 			if (template.Attr(out string icon, "icon")) f.CustomIconName = icon;
 
-			if (fileType == EFileType.Folder) {
+			if (fileType == FNType.Folder) {
 				foreach (var x in template.Elements()) {
-					_NewItem(f, FNPosition.Inside, x, x.Attr("n"), null);
+					_NewItem(f, FNInsert.Inside, x, x.Attr("n"), null);
 				}
 			}
 		}
@@ -1105,11 +1106,11 @@ partial class FilesModel {
 
 	#region import, move, copy
 
-	void _DroppedOrPasted(FileNode[] nodes, string[] files, bool copy, FileNode target, FNPosition pos) {
+	void _DroppedOrPasted(FileNode[] nodes, string[] files, bool copy, FileNode target, FNInsert pos) {
 		if (nodes != null) {
 			_MultiCopyMove(copy, nodes, target, pos);
 		} else {
-			if (target == null) { target = Root; pos = FNPosition.Inside; }
+			if (target == null) { target = Root; pos = FNInsert.Inside; }
 			if (files.Length == 1 && IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(files[0], out int dialogResult)) {
 				switch (dialogResult) {
 				case 1: timer.after(1, _ => LoadWorkspace(files[0])); break;
@@ -1137,7 +1138,7 @@ partial class FilesModel {
 	/// </summary>
 	/// <param name="wsDirOrZip">Workspace directory or any .zip file.</param>
 	/// <param name="where">If null, calls _GetInsertPos.</param>
-	public void ImportWorkspace(string wsDirOrZip = null, (FileNode target, FNPosition pos)? where = null) {
+	public void ImportWorkspace(string wsDirOrZip = null, (FileNode target, FNInsert pos)? where = null) {
 		try {
 			string wsDir, folderName;
 			bool isZip = wsDirOrZip.Ends(".zip") && filesystem.exists(wsDirOrZip).File, notWorkspace = false;
@@ -1158,11 +1159,11 @@ partial class FilesModel {
 			if (folder == null) return;
 
 			if (notWorkspace) {
-				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNPosition.Inside, copySilently: true);
+				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNInsert.Inside, copySilently: true);
 			} else {
 				var m = new FilesModel(wsDir + @"\files.xml", importing: true);
 				var a = m.Root.Children().ToArray();
-				_MultiCopyMove(true, a, folder, FNPosition.Inside, true);
+				_MultiCopyMove(true, a, folder, FNInsert.Inside, true);
 				m.Dispose(); //currently does nothing
 				print.it($"Info: Imported '{wsDirOrZip}' to folder '{folder.Name}'.\r\n\t{GetSecurityInfo()}");
 			}
@@ -1173,12 +1174,12 @@ partial class FilesModel {
 		catch (Exception ex) { print.it(ex); }
 	}
 
-	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNPosition pos, bool importingWorkspace = false) {
+	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNInsert pos, bool importingWorkspace = false) {
 		if (copy) TreeControl.UnselectAll();
 		try {
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
-			foreach (var f in (pos == FNPosition.After) ? a.Reverse() : a) {
+			foreach (var f in (pos == FNInsert.After) ? a.Reverse() : a) {
 				if (!importingWorkspace && !this.IsMyFileNode(f)) continue; //deleted?
 				if (copy) {
 					var fCopied = f.FileCopy(target, pos, this);
@@ -1191,7 +1192,7 @@ partial class FilesModel {
 				}
 			}
 			if (movedCurrentFile) TreeControl.EnsureVisible(_currentFile);
-			if (copy && (pos != FNPosition.Inside || target.IsExpanded)) {
+			if (copy && (pos != FNInsert.Inside || target.IsExpanded)) {
 				bool focus = true;
 				foreach (var f in a2) {
 					f.IsSelected = true;
@@ -1204,18 +1205,18 @@ partial class FilesModel {
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 
-	public void ImportFiles(string[] a, FileNode target, FNPosition pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
+	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
 		try {
 			a = a.Select(s => filesystem.more.getFinalPath(s, out s) ? s : null).OfType<string>().ToArray();
 			if (a.Length == 0) return;
-			var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+			var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 
 			//need to detect files coming from the workspace dir. When copying to a symlink folder - from that folder.
 			var rootDir = newParent.Ancestors(andSelf: true, noRoot: true).FirstOrDefault(o => filesystem.exists(o.FilePath).IsNtfsLink)?.FilePath ?? FilesDirectory;
 			if (!filesystem.more.getFinalPath(rootDir, out rootDir)) return;
 			//CONSIDER: folder symlink: later auto-update files in workspace when files added/removed not through this app.
 
-			bool fromWorkspaceDir = false, dirsDropped = false;
+			bool fromWorkspaceDir = false;
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
 				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
@@ -1226,29 +1227,29 @@ partial class FilesModel {
 				if (s.Eqi(rootDir) || (rootDir.Starts(s, true) && rootDir[s.Length] == '\\')) return; //s is rootDir or ancestor of rootDir
 				if (!fromWorkspaceDir) {
 					if (s.Starts(rootDir, true) && s[rootDir.Length] == '\\') fromWorkspaceDir = true;
-					else if (!dirsDropped) dirsDropped = filesystem.exists(s).Directory;
 				}
 			}
-			int r;
+			int action;
 			if (copySilently) {
 				if (fromWorkspaceDir) {
 					dialog.showInfo("Files from workspace folder", "Ctrl not supported.", owner: TreeControl); //not implemented
 					return;
 				}
-				r = 2; //copy
+				action = 2; //copy
 			} else if (fromWorkspaceDir) {
-				r = 3; //move
+				action = 3; //move
 			} else {
-				var ab = new List<string>();
-				ab.Add(dirsDropped ? "4 Add as a link to the external folder" : "1 Add as a link to the external file");
-				ab.Add("2 Copy to the workspace folder");
-				ab.Add("3 Move to the workspace folder");
-				ab.Add("0 Cancel");
-				r = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
-				if (r == 0) return;
+				var ab = new[] {
+					"1 Add as a link",
+					"2 Copy to the workspace folder",
+					"3 Move to the workspace folder",
+					"0 Cancel"
+				};
+				action = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+				if (action == 0) return;
 			}
 
-			bool select = !dontSelect && (pos != FNPosition.Inside || target.IsExpanded), focus = select;
+			bool select = !dontSelect && (pos != FNInsert.Inside || target.IsExpanded), focus = select;
 			if (select) TreeControl.UnselectAll();
 			try {
 				var newParentPath = newParent.FilePath + "\\";
@@ -1257,7 +1258,7 @@ partial class FilesModel {
 				foreach (var path in a) {
 					var g = filesystem.exists(path, true);
 					if (!g.Exists || g.IsNtfsLink) continue;
-					bool isDir = g.Directory && r != 1;
+					bool isDir = g.Directory;
 
 					if (fromWorkspaceDir) {
 						var relPath = path[FilesDirectory.Length..];
@@ -1272,17 +1273,17 @@ partial class FilesModel {
 					var name = pathname.getName(path);
 					if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 
-					if (r == 1) { //add as link
-						k = new FileNode(this, name, path, false, isFileLink: true);
+					if (action == 1 && !isDir) { //add as file link
+						k = new FileNode(this, name, path, isDir: false, isLink: true);
 					} else {
-						k = new FileNode(this, name, path, isDir, isSymlink: r == 4);
-						if (isDir) _AddDir(path, k);
+						var newPath = newParentPath + name;
 						if (!TryFileOperation(() => {
-							var newPath = newParentPath + name;
-							if (r == 4) Directory.CreateSymbolicLink(newPath, path);
-							else if (r == 2) filesystem.copy(path, newPath, FIfExists.Fail);
-							else filesystem.move(path, newPath, FIfExists.Fail);
+							if (action == 1) Directory.CreateSymbolicLink(newPath, path);
+							else if (action == 2) filesystem.copy(path, newPath, FIfExists.Fail);
+							else if (newPath != path) filesystem.move(path, newPath, FIfExists.Fail);
 						})) continue;
+						k = new FileNode(this, name, newPath, isDir, isLink: action == 1);
+						if (isDir) _AddDir(newPath, k);
 					}
 					target.AddChildOrSibling(k, pos, false);
 					if (select) {
@@ -1304,7 +1305,7 @@ partial class FilesModel {
 			void _AddDir(string path, FileNode parent) {
 				foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 					bool isDir = u.IsDirectory;
-					var k = new FileNode(this, u.Name, u.FullPath, isDir, isSymlink: u.IsNtfsLink);
+					var k = new FileNode(this, u.Name, u.FullPath, isDir, isLink: isDir && u.IsNtfsLink);
 					parent.AddChild(k);
 					if (isDir) _AddDir(u.FullPath, k);
 				}
@@ -1322,7 +1323,7 @@ partial class FilesModel {
 	/// <summary>
 	/// Adds to workspace 1 file (not folder) that exists in workspace folder in filesystem.
 	/// </summary>
-	public FileNode ImportFromWorkspaceFolder(string path, FileNode target, FNPosition pos) {
+	public FileNode ImportFromWorkspaceFolder(string path, FileNode target, FNInsert pos) {
 		FileNode R = null;
 		try {
 			if (!filesystem.exists(path, true).File) return null;
@@ -1334,7 +1335,7 @@ partial class FilesModel {
 				R = fExists;
 			} else {
 				var name = pathname.getName(path);
-				R = new FileNode(this, name, path, false);
+				R = new FileNode(this, name, path, isDir: false);
 				target.AddChildOrSibling(R, pos, false);
 			}
 		}
@@ -1465,7 +1466,7 @@ partial class FilesModel {
 				} else {
 					item.Click += (_, e) => App.Model.NewItemX(x, beginRenaming: true);
 					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
-					item.Icon = ft == EFileType.Other
+					item.Icon = ft == FNType.Other
 						? new Image { Source = icon.of(templDir + relPath)?.ToWpfImage() }
 						: ImageUtil.LoadWpfImageElement(FileNode.GetFileTypeImageSource(ft));
 				}
@@ -1490,8 +1491,8 @@ partial class FilesModel {
 		}
 		if (globalCs && null == Find("global.cs", FNFind.Class)) {
 			var folder = Find(@"\Classes", FNFind.Folder);
-			if (folder == null) folder = NewItemL(null, (Root, FNPosition.Inside), "Classes");
-			NewItemL(@"Default\global.cs", (folder, FNPosition.Inside));
+			if (folder == null) folder = NewItemL(null, (Root, FNInsert.Inside), "Classes");
+			NewItemL(@"Default\global.cs", (folder, FNInsert.Inside));
 		}
 	}
 
@@ -1605,26 +1606,4 @@ partial class FilesModel {
 	}
 
 	#endregion
-}
-
-enum FNPosition {
-	//note: must match Aga.Controls.Tree.NodePosition
-	Inside, Before, After
-}
-
-enum FNFind {
-	Any, File, Folder, CodeFile, Class/*, Script*/ //Script not useful because class files can be executable too
-}
-
-class EdNewFileText {
-	public bool replaceTemplate;
-	public string text, meta;
-
-	public EdNewFileText() { }
-
-	public EdNewFileText(bool replaceTemplate, string text, string meta = null) {
-		this.replaceTemplate = replaceTemplate;
-		this.text = text;
-		this.meta = meta;
-	}
 }

@@ -294,7 +294,7 @@ A script can use packages from multiple folders if they are compatible.");
 				//.NET dlls
 				HashSet<string> hsLib = new(StringComparer.OrdinalIgnoreCase);
 				foreach (var group in aDllNet.ToLookup(o => pathname.getName(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
-					//print.it($"<><Z #BBE3FF>{group.Key}<>");
+					//print.it($"<><BC #BBE3FF>{group.Key}<>");
 					var filename = group.Key;
 					int count = group.Count();
 					bool haveRO = dCompile.ContainsKey(filename);

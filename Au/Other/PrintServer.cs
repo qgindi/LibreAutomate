@@ -275,8 +275,7 @@ namespace Au.More {
 					}
 					s = new string((char*)p, 0, len);
 					break;
-				case PrintServerMessageType.Clear:
-					if (size != 1) ok = false;
+				case PrintServerMessageType.Clear or PrintServerMessageType.ScrollToTop when size == 1:
 					break;
 				default:
 					ok = false;
@@ -293,19 +292,28 @@ namespace Au.More {
 		/// Adds s directly to _messages and sets timer.
 		/// If s is null, it is 'Clear' command.
 		/// Else if !NoNewline, appends "\r\n".
-		/// Used with local server; also with global server when writes server's process.
+		/// Used with local server; also with global server when writes the server's process.
 		/// </summary>
 		internal void LocalWrite_(string s, long time = 0, string caller = null) {
 			//Debug.Assert(!_isGlobal);
 			if (!NoNewline && s != null) s += "\r\n";
 			var m = new PrintServerMessage(s == null ? PrintServerMessageType.Clear : PrintServerMessageType.Write, s, time, caller);
-			_AddMessage(m);
-			if (!_isLocalTimer) { _timer?.Set(10); _isLocalTimer = true; }
+			_AddMessage(m, true);
 		}
 
-		void _AddMessage(PrintServerMessage m) {
+		/// <summary>
+		/// Adds action directly to _messages and sets timer.
+		/// Used with local server; also with global server when writes the server's process.
+		/// </summary>
+		internal void LocalAction_(PrintServerMessageType action) {
+			//Debug.Assert(!_isGlobal);
+			_AddMessage(new(action), true);
+		}
+
+		void _AddMessage(PrintServerMessage m, bool setTimer = false) {
 			//_memSize += _GetMessageMemorySize(m);
 			_messages.Enqueue(m);
+			if (setTimer && !_isLocalTimer) { _timer?.Set(10); _isLocalTimer = true; }
 		}
 
 		//static int _GetMessageMemorySize(PrintServerMessage m) => 50 + m.Text.Lenn() * 2;
@@ -392,7 +400,7 @@ namespace Au {
 	public static partial class print {
 
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace
-		static void _WriteToServer(string s) {
+		static void _ServerWrite(string s) {
 			Debug.Assert(s != null);
 
 			Api.GetSystemTimeAsFileTime(out var time);
@@ -421,10 +429,11 @@ namespace Au {
 			else s_client.WriteLine(s, PrintServerMessageType.Write, caller, time);
 		}
 
-		static void _ClearToServer() {
+		static void _ServerAction(PrintServerMessageType action) {
 			var loc = s_localServer;
-			if (loc != null) loc.LocalWrite_(null);
-			else s_client.Clear();
+			if (loc == null) s_client.AddAction(action);
+			else if (action == PrintServerMessageType.Clear) loc.LocalWrite_(null);
+			else loc.LocalAction_(action);
 		}
 
 		static readonly _ClientOfGlobalServer s_client = new();
@@ -501,12 +510,12 @@ namespace Au {
 				}
 			}
 
-			public void Clear() {
+			public void AddAction(PrintServerMessageType action) {
 				lock (_lockObj1) {
 					if (!_Connect()) return;
 
 					g1:
-					byte b = (byte)PrintServerMessageType.Clear;
+					byte b = (byte)action;
 					bool ok = Api.WriteFile(_mailslot, &b, 1, out _);
 					if (!ok && _ReopenMailslot()) goto g1;
 					Debug.Assert(ok);
@@ -602,6 +611,12 @@ namespace Au.Types {
 		/// Used internally to log events such as start/end of trigger actions.
 		/// </summary>
 		TaskEvent,
+
+		/// <summary>
+		/// Scroll the output window to the top.
+		/// Only <see cref="PrintServerMessage.Type"/> is used.
+		/// </summary>
+		ScrollToTop,
 	}
 
 	/// <summary>
@@ -629,20 +644,20 @@ namespace Au.Types {
 		public long TimeUtc { get; }
 
 #if NEED_CALLER
-			/// <summary>
-			/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
-			/// Used with <see cref="PrintServerMessageType.Write"/>.
-			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
-			/// </summary>
-			public string Caller { get; }
+		/// <summary>
+		/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
+		/// Used with <see cref="PrintServerMessageType.Write"/>.
+		/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
+		/// </summary>
+		public string Caller { get; }
 
-			internal PrintServerMessage(PrintServerMessageType type, string text, long time, string caller)
-			{
-				Type = type;
-				Text = text;
-				TimeUtc = time;
-				Caller = caller;
-			}
+		internal PrintServerMessage(PrintServerMessageType type, string text, long time, string caller)
+		{
+			Type = type;
+			Text = text;
+			TimeUtc = time;
+			Caller = caller;
+		}
 #else
 		/// <summary>
 		/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
@@ -650,13 +665,14 @@ namespace Au.Types {
 		/// </summary>
 		public string Caller { get; }
 
-		internal PrintServerMessage(PrintServerMessageType type, string text, long time, string caller) {
+		internal PrintServerMessage(PrintServerMessageType type, string text = null, long time = 0, string caller = null) {
 			Type = type;
 			Text = text;
 			TimeUtc = time;
 			Caller = caller;
 		}
 #endif
+
 		///
 		public override string ToString() {
 			//in editor used for output history

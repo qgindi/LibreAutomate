@@ -131,6 +131,15 @@ static class Menus {
 
 			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #585858")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
+
+			[Command]
+			public static class Repair_workspace {
+				[Command]
+				public static void Find_missing_files() { RepairWorkspace.MissingFiles(); }
+
+				[Command]
+				public static void Find_orphaned_files() { RepairWorkspace.OrphanedFiles(); }
+			}
 		}
 
 		[Command(separator = true, target = "", keysText = "Alt+F4")]
@@ -377,7 +386,7 @@ static class Menus {
 		[Command(image = "*VaadinIcons.Compile #008EEE")]
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
-		[Command("...", image="*BoxIcons.RegularHistory #008EEE")]
+		[Command("...", image = "*BoxIcons.RegularHistory #008EEE")]
 		public static void Recent() { RecentTT.Show(); }
 
 		[Command(separator = true)]
@@ -531,7 +540,7 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 			var names = new StringBuilder();
 			foreach (var v in Panels.Menu.Items) _Menu(v, 0);
 			void _Menu(object o, int level) {
-				if(o is MenuItem mi && mi.Command is KMenuCommands.Command c) {
+				if (o is MenuItem mi && mi.Command is KMenuCommands.Command c) {
 					names.Append('\t', level).AppendLine(c.Name);
 					foreach (var v in mi.Items) _Menu(v, level + 1);
 				}

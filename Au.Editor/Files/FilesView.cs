@@ -142,7 +142,7 @@ partial class FilesModel {
 			if (drop) {
 				var files = nodes == null ? e.Data.GetData(DataFormats.FileDrop) as string[] : null;
 				GetDropInfo(out var d);
-				var pos = d.intoFolder ? FNPosition.Inside : (d.insertAfter ? FNPosition.After : FNPosition.Before);
+				var pos = d.intoFolder ? FNInsert.Inside : (d.insertAfter ? FNInsert.After : FNInsert.Before);
 				bool copy = e.Effects == DragDropEffects.Copy;
 				var fn = d.targetItem as FileNode;
 				Dispatcher.InvokeAsync(() => App.Model._DroppedOrPasted(nodes, files, copy, fn, pos));
