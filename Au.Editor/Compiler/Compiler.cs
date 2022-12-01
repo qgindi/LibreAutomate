@@ -231,7 +231,7 @@ static partial class Compiler {
 		if (needOutputFiles) {
 			if (m.Role == ERole.miniProgram) {
 				//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
-				//FUTURE: C# 11/12 [assembly: MTAThread]
+				//FUTURE: C# 12 [assembly: MTAThread]
 				if (compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.EFlags.MTA;
 
 				if (m.Console) r.flags |= MiniProgram_.EFlags.Console;
@@ -679,14 +679,16 @@ static partial class Compiler {
 					var root = tree.GetCompilationUnitRoot();
 					foreach (var v in root.DescendantNodes()) {
 						if (v is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression)
-							&& les.Token.Value is string s && s.Length >= 10 && s[0] == '*'
-							&& DIcons.TryGetIconFromBigDB(s, out var xaml)) {
-							s = s.Lower();
-							if (!(hs ??= new()).Add(s)) continue;
-							R ??= new();
-							rw ??= new(stream = new());
-							rw.AddResource(s, xaml);
-							if (m.Role == ERole.classLibrary) (ai ??= new()).Add(les);
+							&& les.Token.Value is string s && s.Length >= 10 && s[0] == '*') {
+							int j = s.IndexOf(' '); if (j > 0) s = s[..j]; //remove color
+							if (DIcons.TryGetIconFromBigDB(s, out var xaml)) {
+								s = s.Lower();
+								if (!(hs ??= new()).Add(s)) continue;
+								R ??= new();
+								rw ??= new(stream = new());
+								rw.AddResource(s, xaml);
+								if (m.Role == ERole.classLibrary) (ai ??= new()).Add(les);
+							}
 						}
 					}
 					if (ai != null) { //in library need "*<asmName>*name #color"

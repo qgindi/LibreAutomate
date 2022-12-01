@@ -517,7 +517,7 @@ namespace Au
 			t_debugNoRecurse = true;
 			try {
 				var s = ToString();
-				print.it($"<><c 0xff>-{funcId}, 0x{hr:X} - {lastError.messageFor(hr)}    {s}</c>");
+				print.it($"<><c #ff>-{funcId}, 0x{hr:X} - {lastError.messageFor(hr)}    {s}</c>");
 			}
 			finally { t_debugNoRecurse = false; }
 		}

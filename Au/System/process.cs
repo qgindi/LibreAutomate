@@ -241,7 +241,7 @@ namespace Au {
 		/// <returns>Array containing zero or more elements.</returns>
 		/// <param name="processName">
 		/// Process executable file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="fullPath">
 		/// <i>processName</i> is full path.
@@ -466,7 +466,7 @@ namespace Au {
 		/// <returns>The number of successfully terminated processes.</returns>
 		/// <param name="processName">
 		/// Process executable file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
 		/// <param name="exitCode">Process exit code.</param>
@@ -508,7 +508,7 @@ namespace Au {
 		/// <param name="suspend">true suspend, false resume.</param>
 		/// <param name="processName">
 		/// Process executable file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
 		/// <exception cref="ArgumentException">
@@ -560,7 +560,7 @@ namespace Au {
 		/// <param name="started">Trigger events: true - started, false - ended, null (default) - both.</param>
 		/// <param name="processName">
 		/// Process executable file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// null matches all.
 		/// </param>
 		/// <param name="ofThisSession">Watch processes only of this user session.</param>

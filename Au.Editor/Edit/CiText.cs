@@ -165,6 +165,7 @@ class CiText
 
 	public Hyperlink Hyperlink(string uri, string text, string append = null) {
 		var h = StartHyperlink(uri);
+		if (WpfUtil_.IsHighContrastDark) h.Foreground = Brushes.RoyalBlue;
 		Append(text);
 		EndHyperlink();
 		if (append != null) Append(append);

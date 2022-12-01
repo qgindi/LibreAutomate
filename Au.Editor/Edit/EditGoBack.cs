@@ -133,6 +133,7 @@ class EditGoBack {
 	}
 
 	internal static void DisableUI() {
+		if (App.Commands == null) return;
 		App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)].Enabled = false;
 		App.Commands[nameof(Menus.File.OpenCloseGo.Go_forward)].Enabled = false;
 	}

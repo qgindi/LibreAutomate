@@ -62,14 +62,16 @@ static unsafe partial class Api {
 	internal static Handle_ CreateEvent(bool bManualReset)
 		=> CreateEvent2(default, bManualReset, false, null);
 
-	//[DllImport("kernel32.dll", EntryPoint = "OpenEventW", SetLastError = true)]
-	//internal static extern IntPtr OpenEvent(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+	[DllImport("kernel32.dll", EntryPoint = "OpenEventW", SetLastError = true)]
+	internal static extern IntPtr OpenEvent(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+
+	internal const uint EVENT_MODIFY_STATE = 0x2;
 
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool SetEvent(IntPtr hEvent);
 
-	//[DllImport("kernel32.dll", SetLastError = true)]
-	//internal static extern bool ResetEvent(IntPtr hEvent);
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool ResetEvent(IntPtr hEvent);
 
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern int WaitForSingleObject(IntPtr hHandle, int dwMilliseconds);
@@ -206,13 +208,19 @@ static unsafe partial class Api {
 		for (; ; ) if (b.GetString(_GetLongPathName(s, b.p, b.n), out r, 0, s)) return (object)r != s;
 	}
 
-	[DllImport("kernel32.dll", EntryPoint = "GetFinalPathNameByHandleW")]
+	[DllImport("kernel32.dll", EntryPoint = "GetFinalPathNameByHandleW", SetLastError = true)]
 	static extern int _GetFinalPathNameByHandle(IntPtr hFile, char* lpszFilePath, int cchFilePath, uint dwFlags);
 
 	[SkipLocalsInit]
 	internal static bool GetFinalPathNameByHandle(IntPtr h, out string r, uint dwFlags = 0) {
 		using FastBuffer<char> b = new();
-		for (; ; ) if (b.GetString(_GetFinalPathNameByHandle(h, b.p, b.n, dwFlags), out r, 0)) return r.Length > 0;
+		for (; ; ) {
+			g1: if (b.GetString(_GetFinalPathNameByHandle(h, b.p, b.n, dwFlags), out r, 0)) {
+				if (r != null) return r.Length > 0;
+				if (0u != (dwFlags & 3u)) { dwFlags &= ~3u; goto g1; } //if VOLUME_NAME_GUID, fails if network path
+				return false;
+			}
+		}
 	}
 
 	[DllImport("kernel32.dll", SetLastError = true)]
@@ -948,6 +956,8 @@ static unsafe partial class Api {
 
 	internal delegate void PAPCFUNC(nint Parameter);
 
+	[DllImport("kernel32.dll", EntryPoint = "GetDriveTypeW")]
+	internal static extern int GetDriveType(string lpRootPathName);
 
 
 

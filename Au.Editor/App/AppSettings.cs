@@ -75,7 +75,15 @@ record AppSettings : JSettings {
 	}
 	public recorder_t recorder = new();
 
+	public int dicons_listColor;
+	public bool dicons_contrastUse;
+	public string dicons_contrastColor = "#E0E000";
+
 	public sbyte recipe_zoom;
+
+	public int wpfpreview_xy;
+
+	public string portable_dir;
 
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
 

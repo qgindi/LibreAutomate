@@ -1,6 +1,5 @@
-﻿---
+---
 uid: wildcard_expression
-title: wildcard expression
 ---
 
 # Wildcard expression

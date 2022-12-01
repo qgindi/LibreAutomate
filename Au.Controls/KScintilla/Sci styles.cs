@@ -98,6 +98,7 @@ namespace Au.Controls
 			else Call(SCI_STYLECLEARALL);
 			zStyleHidden(STYLE_HIDDEN, true);
 			Call(SCI_SETHOTSPOTACTIVEFORE, true, 0xFF0080); //inactive 0x0080FF
+			//Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_HOT_SPOT_ACTIVE, 0xFF0080); //why no underline? Can't use this, although SCI_SETHOTSPOTACTIVEFORE is deprecated.
 
 			//STYLE_HOTSPOT currently unused
 			//zStyleHotspot(STYLE_HOTSPOT, true);

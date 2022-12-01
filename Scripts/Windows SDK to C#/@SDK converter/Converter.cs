@@ -86,7 +86,6 @@ unsafe partial class Converter {
 			}
 			
 			string sh = @"// Windows API declarations for C#.
-// Download and more info: https://www.quickmacros.com/download.html
 // Don't add this file to your project. Copy-paste only declarations that you need.
 // Not all declarations can be compiled without editing.
 //    For example, cannot declare some struct pointer (use IntPtr instead, or in struct replace non-blittable types with IntPtr etc), cannot use undefined struct pointer/ref/out (use IntPtr instead).

@@ -1,4 +1,4 @@
-﻿Add these functions and classes. All are in QM2.
+Add these functions and classes. All are in QM2.
 
 computer:
 	isLoggedOn. Maybe .NET has it, eg Environment.UserName/UserInteractive.
@@ -11,5 +11,4 @@ outb, DetectStringEncoding.
 Review functions/classes in QM2 Archive. Now reviewed all in qm.exe and System.
 
 CONSIDER
-TempFile class. Already created, in script "TempFile". Not sure is it so useful.
 WaitIdle, ResumeWhenIdle. But in my QM2 workspace used 0 times.

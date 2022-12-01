@@ -74,21 +74,29 @@ public enum TAPostfix : byte {
 }
 
 /// <summary>
+/// See <see cref="AutotextTriggers.MenuOptions"/>;
+/// </summary>
+/// <param name="pmFlags"></param>
+public record class TAMenuOptions(PMFlags pmFlags = PMFlags.ByCaret);
+
+/// <summary>
 /// Represents an autotext trigger.
 /// </summary>
 public class AutotextTrigger : ActionTrigger {
-	internal string text;
-	internal TAFlags flags;
-	internal TAPostfix postfixType;
-	internal string postfixChars;
-	string _paramsString;
+	internal readonly string text;
+	internal readonly TAFlags flags;
+	internal readonly TAPostfix postfixType;
+	internal readonly string postfixChars;
+	internal readonly TAMenuOptions menuOptions;
+	readonly string _paramsString;
 
-	internal AutotextTrigger(ActionTriggers triggers, Action<AutotextTriggerArgs> action, string text, TAFlags flags, TAPostfix postfixType, string postfixChars, (string, int) source)
+	internal AutotextTrigger(ActionTriggers triggers, Action<AutotextTriggerArgs> action, string text, TAFlags flags, TAPostfix postfixType, string postfixChars, TAMenuOptions menuOptions, (string, int) source)
 		: base(triggers, action, true, source) {
 		this.text = text;
 		this.flags = flags;
 		this.postfixType = postfixType;
 		this.postfixChars = postfixChars;
+		this.menuOptions = menuOptions;
 
 		if (flags == 0 && postfixType == 0 && postfixChars == null) {
 			_paramsString = text;
@@ -153,7 +161,11 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 			TAFlags fl = flags ?? DefaultFlags;
 			bool matchCase = 0 != (fl & TAFlags.MatchCase);
 			if (!matchCase) text = text.Lower();
-			var t = new AutotextTrigger(_triggers, value, text, fl, postfixType ?? DefaultPostfixType, _CheckPostfixChars(postfixChars) ?? DefaultPostfixChars, (f_, l_));
+			var t = new AutotextTrigger(_triggers, value, text, fl,
+				postfixType ?? DefaultPostfixType,
+				_CheckPostfixChars(postfixChars) ?? DefaultPostfixChars,
+				MenuOptions,
+				(f_, l_));
 			//create dictionary key from 1-4 last characters lowercase
 			int k = 0;
 			for (int i = len - 1, j = 0; i >= 0 && j <= 24; i--, j += 8) {
@@ -254,6 +266,18 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	public string WordCharsPlus { get; set; }
 
 	/// <summary>
+	/// Options for menus shown by <see cref="AutotextTriggerArgs.Menu"/> and <see cref="AutotextTriggerArgs.Confirm"/>.
+	/// Used for triggers added afterwards.
+	/// </summary>
+	/// <example>
+	/// Show menus by the text cursor. If impossible - in the center of the active window.
+	/// <code><![CDATA[
+	/// tt.MenuOptions = new(PMFlags.ByCaret | PMFlags.WindowCenter);
+	/// ]]></code>
+	/// </example>
+	public TAMenuOptions MenuOptions { get; set; }
+
+	/// <summary>
 	/// Clears all options.
 	/// </summary>
 	public void ResetOptions() {
@@ -262,6 +286,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		this._defaultPostfixChars = null;
 		this.PostfixKey = KKey.Ctrl;
 		this.WordCharsPlus = null;
+		this.MenuOptions = null;
 	}
 
 	#endregion
@@ -771,14 +796,14 @@ public class AutotextTriggerArgs : TriggerArgs {
 			}
 		}
 
-		k.Send();
+		k.SendNow();
 	}
 
 	/// <summary>
 	/// If <see cref="HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="Text"/>) to the active window.
 	/// </summary>
 	public void SendPostfix() {
-		if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).Send();
+		if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).SendNow();
 		//CONSIDER: AddText -> AddChar. Also in other place. But the speed option is different.
 	}
 
@@ -792,6 +817,9 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// 
 	/// The user can close the menu with Enter, Tab or Esc. Other keys close the menu and are passed to the active window.
 	/// </remarks>
+	/// <seealso cref="AutotextTriggers.MenuOptions"/>
+	/// <seealso cref="popupMenu.DefaultFont"/>
+	/// <seealso cref="popupMenu.DefaultMetrics"/>
 	/// <example>
 	/// Code in file "Autotext triggers".
 	/// <code><![CDATA[
@@ -811,10 +839,9 @@ public class AutotextTriggerArgs : TriggerArgs {
 			}
 			return PMKHook.Close;
 		};
-		return 1 == m.Show(PMFlags.ByCaret);
-	}
 
-	//CONSIDER: (QM2 user suggestion) if cannot show menu at the caret, option to show in the center of the active window or screen.
+		return 1 == _ShowMenu(m);
+	}
 
 	/// <summary>
 	/// Creates and shows a menu below the text cursor (caret) or mouse cursor, and calls <see cref="Replace(string, string)"/>.
@@ -832,6 +859,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// - Also to select menu items can type the number characters displayed at the right.
 	/// - Other keys close the menu and are passed to the active window.
 	/// </remarks>
+	/// <seealso cref="AutotextTriggers.MenuOptions"/>
 	/// <seealso cref="popupMenu.DefaultFont"/>
 	/// <seealso cref="popupMenu.DefaultMetrics"/>
 	/// <example>
@@ -888,8 +916,13 @@ public class AutotextTriggerArgs : TriggerArgs {
 			return PMKHook.Close;
 		};
 
-		int r = m.Show(PMFlags.ByCaret) - 1;
+		int r = _ShowMenu(m) - 1;
 		if (r >= 0) Replace(items[r].Text, items[r].Html);
+	}
+
+	int _ShowMenu(popupMenu m) {
+		var mo = Trigger.menuOptions;
+		return m.Show(mo?.pmFlags ?? PMFlags.ByCaret);
 	}
 }
 

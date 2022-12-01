@@ -3,6 +3,9 @@ using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
 
+[assembly: AssemblyTitle(App.AppNameLong)]
+//more in global.cs
+
 static class App {
 	public const string
 		AppNameLong = "LibreAutomate C#",
@@ -17,7 +20,7 @@ static class App {
 
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
-#if TRACE //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app, eg recorder. The ctor would run there.
+#if TRACE //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
 		perf.first();
 		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
@@ -39,6 +42,7 @@ static class App {
 		return 0;
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _Main(string[] args) {
 		//Debug_.PrintLoadedAssemblies(true, !true);
 
@@ -49,7 +53,7 @@ static class App {
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
-		_SetThisAppDocuments();
+		_SetThisAppFoldersEtc();
 
 		if (CommandLine.ProgramStarted2(args)) return;
 
@@ -137,6 +141,7 @@ static class App {
 				_app.MainWindow = _wmain = new MainWindow();
 				_app.ShutdownMode = ShutdownMode.OnMainWindowClose;
 				_wmain.Init();
+				_OnShowWindow();
 			}
 			return _wmain;
 		}
@@ -167,7 +172,7 @@ static class App {
 			.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
 
-		if(_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
+		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
 
 		//print.qm2.write(an);
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
@@ -179,7 +184,7 @@ static class App {
 	//	editorExtension assemblies are loaded in other contexts.
 	//	Dlls directly used by editorExtension assemblies are resolved in RunAssembly.Run.
 	private static IntPtr _UnmanagedDll_Resolving(Assembly _, string name) {
-		if(_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
+		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
 		return default;
 	}
 
@@ -194,37 +199,88 @@ static class App {
 		return false;
 	}
 
-	static void _SetThisAppDocuments() {
-		string thisAppDoc = folders.Documents + AppNameShort;
+	static void _SetThisAppFoldersEtc() {
+		if (filesystem.exists(folders.ThisAppBS + "data").Directory) {
+			IsPortable = true;
+			ScriptEditor.IsPortable = true;
+		} else {
+			//The app name was changed several times during the preview period.
+			//	If was installed with an old name, rename the app doc directory instead of creating new.
+			//	It contains app settings and probably the workspace folder.
+			//	FUTURE: delete this code.
+			var doc = folders.Documents + AppNameShort;
+			if (!filesystem.exists(doc)) {
+				try {
+					foreach (var v in new[] { "Uiscripter", "Automaticode", "Autepad", "Derobotizer" }) {
+						var s = folders.Documents + v;
+						if (filesystem.exists(s)) {
+							filesystem.move(s, doc);
 
-		//The app name was changed several times during the preview period.
-		//	If was installed with an old name, rename the app doc directory instead of creating new.
-		//	It contains app settings and probably the workspace folder.
-		//	FUTURE: delete this code.
-		if (!filesystem.exists(thisAppDoc)) {
-			try {
-				string s;
-				foreach (var v in new[] { "Uiscripter", "Automaticode", "Autepad", "Derobotizer" }) {
-					if (filesystem.exists(s = folders.Documents + v)) {
-						filesystem.move(s, thisAppDoc);
+							//rejected.
+							//var f = Directory.CreateSymbolicLink(s, thisAppDoc);
+							//f.Attributes |= FileAttributes.Hidden /*| FileAttributes.System*/;
 
-						//rejected.
-						//var f = Directory.CreateSymbolicLink(s, thisAppDoc);
-						//f.Attributes |= FileAttributes.Hidden /*| FileAttributes.System*/;
+							var f = doc + @"\.settings\Settings.json";
+							var text = File.ReadAllText(f);
+							text = text.Replace($@"\\{v}\\", $@"\\{AppNameShort}\\");
+							File.WriteAllText(f, text);
 
-						var f = thisAppDoc + @"\.settings\Settings.json";
-						var text = File.ReadAllText(f);
-						text = text.Replace($@"\\{v}\\", $@"\\{AppNameShort}\\");
-						File.WriteAllText(f, text);
+							break;
+						}
+					}
+				}
+				catch { }
+			}
+		}
 
-						break;
+		script.role = SRole.EditorExtension;
+		folders.Editor = folders.ThisApp;
+
+		try {
+			//create now if does not exist
+			_ = folders.ThisAppDocuments;
+			_ = folders.ThisAppDataLocal;
+			_ = folders.ThisAppTemp;
+			//these are currently not used in editor and library, but may be used in role editorExtension scripts. Just prevent changing.
+			folders.noAutoCreate = true;
+			_ = folders.ThisAppDataRoaming;
+			_ = folders.ThisAppDataCommon;
+			_ = folders.ThisAppImages;
+			folders.noAutoCreate = false;
+		}
+		catch (Exception e1) {
+			dialog.showError("Failed to set app folders", e1.ToString());
+			//throw;
+			Environment.Exit(1);
+		}
+	}
+
+	static void _OnShowWindow() {
+		if (IsPortable) {
+			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.ThisAppBS + "data"}>data<> folder.");
+		} else {
+			//in v0.12 changed some spec folders from "...\Au" to "...\LibreAutomate\_script"
+			//	FUTURE: delete this code.
+			_Folder(folders.Documents, "folders.ThisAppDocuments");
+			_Folder(folders.LocalAppData, "folders.ThisAppDataLocal");
+			void _Folder(string dir, string name) {
+				var dir1 = dir + @"\Au";
+				if (filesystem.exists(dir1, useRawPath: true)) {
+					var dir2 = dir + @"\LibreAutomate\_script";
+					if (!filesystem.exists(dir2, useRawPath: true)) {
+						try {
+							filesystem.copy(dir1, dir2);
+							print.it($"""
+							<>Note: in this program version has been changed <help>{name}<> path.
+								Old: <explore>{dir1}<>. The folder is no longer used. You can delete it.
+								New: <explore>{dir2}<>. The old folder has been copied here.
+							""");
+						}
+						catch { }
 					}
 				}
 			}
-			catch { }
 		}
-
-		folders.ThisAppDocuments = (FolderPath)thisAppDoc; //creates if does not exist
 	}
 
 	/// <summary>
@@ -283,22 +339,21 @@ static class App {
 
 	public static bool IsAuHomePC { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
 
+	public static bool IsPortable { get; private set; }
+
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
-		try {
-			string sesId = process.thisProcessSessionId.ToS();
-			args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
-
-			//int pid = 
-			WinTaskScheduler.RunTask("Au",
-				IsAuHomePC ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
-				true, args);
-			//Api.AllowSetForegroundWindow(pid); //fails and has no sense
-		}
-		catch (Exception ex) { //probably this program is not installed (no scheduled task)
-			print.qm2.write(ex);
+		bool home = IsAuHomePC;
+		string sesId = process.thisProcessSessionId.ToS();
+		args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
+		int pid = WinTaskScheduler.RunTask("Au",
+			home ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
+			process.thisExePath, true, args);
+		if (pid == 0) { //probably this program is not installed (no scheduled task)
+			if (home) print.qm2.write("failed to run as admin");
 			return false;
 		}
+		//Api.AllowSetForegroundWindow(pid); //fails and has no sense
 		return true;
 	}
 

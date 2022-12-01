@@ -24,6 +24,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
+using System.Text.RegularExpressions;
 //using Microsoft.VisualBasic.Devices;
 //using Microsoft.CodeAnalysis.Options;
 //using Microsoft.CodeAnalysis.Formatting;
@@ -53,12 +54,15 @@ static unsafe class Test {
 	//		print.it(html);
 	//	}
 
+	//static void clipboarMikelandzeloLosAngelesWashingtonAfghanistanLithuania() { }
+
 	/// <summary>
-	/// one two three four five six seven eith none ten
+	/// one two three four five six seven eith none ten 
 	/// </summary>
 	public static void FromMenubar() {
 		print.clear();
 
+		//var rx = new Regex(@"");
 		//App.Model.ImportFiles(new string[] { @"\\?\C:\code\ok\files\NtSetTimerResolution, timeBeginPeriod\Script103 - Copy.cs" });
 
 

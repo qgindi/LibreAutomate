@@ -6,7 +6,7 @@ namespace Au {
 		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
 		/// Control name.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// null means 'can be any'. <c>""</c> means 'no name'.
 		/// 
 		/// By default to get control names this function uses <see cref="Name"/>.
@@ -17,7 +17,7 @@ namespace Au {
 		/// </param>
 		/// <param name="cn">
 		/// Control class name.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="flags"></param>
@@ -327,13 +327,13 @@ namespace Au {
 		/// <summary>
 		/// Finds and clicks a button in this window. Does not use the mouse.
 		/// </summary>
-		/// <param name="name">Button name. String format: [](xref:wildcard_expression).</param>
+		/// <param name="name">Button name. String format: [wildcard expression](xref:wildcard_expression).</param>
 		/// <param name="asControl">
 		/// If true, finds/clicks as child control: <c>mouse.postClick(this.Child(1, name, roleCN ?? "*Button*"));</c>.
 		/// If false, finds/clicks as UI element: <c>this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();</c>.
 		/// Default is false; it's slower but works with more windows.
 		/// </param>
-		/// <param name="roleCN">UI element role or control class name (if <i>asControl</i> true). String format: [](xref:wildcard_expression). Default role is <c>"BUTTON"</c>, class name <c>"*Button*"</c>.</param>
+		/// <param name="roleCN">UI element role or control class name (if <i>asControl</i> true). String format: [wildcard expression](xref:wildcard_expression). Default role is <c>"BUTTON"</c>, class name <c>"*Button*"</c>.</param>
 		/// <remarks>
 		/// This function is just a shorter way to call other functions that have more options but require more code to call. If <i>asControl</i> true, it calls <see cref="Child"/> and <see cref="mouse.postClick"/>. Else <see cref="Elm"/>, <see cref="elmFinder.this"/>, <see cref="elmFinder.Find"/> and <see cref="elm.Invoke"/>.
 		/// </remarks>
@@ -382,7 +382,7 @@ namespace Au {
 		///// </summary>
 		///// <param name="itemName">
 		///// Menu item name.
-		///// String format: [](xref:wildcard_expression).
+		///// String format: [wildcard expression](xref:wildcard_expression).
 		///// </param>
 		///// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar.</param>
 		//public void Click([ParamString(PSFormat.wildex)] string itemName, bool systemMenu = false)

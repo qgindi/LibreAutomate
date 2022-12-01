@@ -6,18 +6,18 @@ namespace Au {
 		/// <returns>Window handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// null means 'can be any'. <c>""</c> means 'no name'.
 		/// </param>
 		/// <param name="cn">
 		/// Window class name.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="of">
 		/// Owner window, program or thread. Depends on argument type:
 		/// <br/>• <b>wnd</b> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
-		/// <br/>• <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [](xref:wildcard_expression). Cannot be <c>""</c> or path.
+		/// <br/>• <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [wildcard expression](xref:wildcard_expression). Cannot be <c>""</c> or path.
 		/// <br/>• <b>WOwner</b> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
 		/// 
 		/// <para>

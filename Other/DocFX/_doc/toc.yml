@@ -2,10 +2,13 @@
   href: index.md
 - name: Library
   href: api/
-  homepage: api/index.md
+  topicHref: api/index.md
 - name: Editor
   href: editor/
-  homepage: editor/Program.md
+  topicUid: Program
 - name: Articles
   href: articles/
-  homepage: articles/index.md
+  topicHref: articles/index.md
+- name: Cookbook
+  href: cookbook/
+  topicHref: cookbook/index.md

@@ -27,8 +27,8 @@ All attributes are optional. The Example command contains all.
 	<File>
 		<New />
 		<Properties />
-		<MultiSelect_files />
 		<Save_now />
+		<MultiSelect_files />
 		<Go_back separator="" />
 		<Go_forward />
 	</File>

@@ -8,6 +8,7 @@ static partial class Compiler {
 		readonly FilesModel _model;
 		readonly string _file;
 		Dictionary<uint, string> _data;
+		string _environmentString;
 
 		public string CacheDirectory { get; }
 
@@ -21,6 +22,14 @@ static partial class Compiler {
 			_model = m;
 			CacheDirectory = _model.WorkspaceDirectory + @"\.compiled";
 			_file = CacheDirectory + @"\compiled.log";
+
+			//The first line in the log file contains .NET version, Au.dll version, OS version and workspace path,
+			//	like 5.0.4|1.2.3.4|A00-64|\\?\Volume{GUID}\Path
+			//	Volume GUID for a removable drive is:
+			//		The same on the same computer/OS, regardless of drive letter and USB port.
+			//		Different on each computer/OS. It's good.
+			filesystem.getFinalPath(folders.Workspace, out var ws, format: FPFormat.VolumeGuid);
+			_environmentString = osVersion.onaString + "|" + ws;
 		}
 
 		/// <summary>
@@ -44,11 +53,13 @@ static partial class Compiler {
 			string asmFile;
 			if (r.notInCache = value?.Starts("|=") ?? false) {
 				iPipe = value.IndexOf('|', 2); if (iPipe < 0) iPipe = value.Length;
-				asmFile = value[2..iPipe];
-			} else asmFile = CacheDirectory + "\\" + f.IdString + ".dll";
+				asmFile = pathname.NormalizeMinimally_(value[2..iPipe]);
+			} else {
+				asmFile = CacheDirectory + "\\" + f.IdString + ".dll";
+			}
 			//print.it(asmFile);
 
-			if (!filesystem.getProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
+			if (!filesystem.getProperties(asmFile, out var asmProp, FAFlags.UseRawPath | FAFlags.DontThrow)) return false;
 			DateTime asmTime = asmProp.LastWriteTimeUtc;
 
 			if (_IsFileModified(f)) return false;
@@ -94,6 +105,7 @@ static partial class Compiler {
 						else {
 							dll = value[offs..v.end];
 							if (!pathname.isFullPath(dll)) dll = folders.ThisAppBS + dll;
+							else dll = pathname.NormalizeMinimally_(dll);
 						}
 						if (_IsFileModified2(dll)) return false;
 						break;
@@ -140,7 +152,7 @@ static partial class Compiler {
 			bool _IsFileModified(FileNode f_) => _IsFileModified2(f_.FilePath);
 
 			bool _IsFileModified2(string path_) {
-				if (!filesystem.getProperties(path_, out var prop_, FAFlags.UseRawPath)) return true;
+				if (!filesystem.getProperties(path_, out var prop_, FAFlags.UseRawPath | FAFlags.DontThrow)) return true;
 				Debug.Assert(!prop_.Attributes.Has(FileAttributes.Directory));
 				//print.it(prop_.LastWriteTimeUtc, asmDate);
 				if (prop_.LastWriteTimeUtc > asmTime) return true;
@@ -180,7 +192,7 @@ o - config (now removed)
 
 			string value = null;
 			using (new StringBuilder_(out var b)) {
-				if (m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
+				if (m.OutputPath != null) b.Append("|=").Append(folders.unexpandPath(outFile)); //else f.Id in cache
 				if (m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
 				if (m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
 				if (m.Uac != default) b.Append("|u").Append((int)m.Uac);
@@ -208,13 +220,16 @@ o - config (now removed)
 					string appDir = folders.ThisAppBS, nugetDir = App.Model.NugetDirectoryBS, dllDir = App.Model.DllDirectoryBS;
 					for (; j < refs.Count; j++) {
 						string s1 = refs[j].FilePath, prefix = "|*";
-						if (s1.Starts(appDir, true)) s1 = s1[appDir.Length..];
-						else if (s1.Starts(nugetDir, true)) {
+						if (s1.Starts(appDir, true)) {
+							s1 = s1[appDir.Length..];
+						} else if (s1.Starts(nugetDir, true)) {
 							s1 = s1[nugetDir.Length..];
 							prefix = "|**";
 						} else if (s1.Starts(dllDir, true)) {
 							s1 = s1[dllDir.Length..];
 							prefix = "|*?";
+						} else {
+							s1 = folders.unexpandPath(s1);
 						}
 						b.Append(prefix).Append(s1);
 					}
@@ -260,8 +275,7 @@ o - config (now removed)
 			string sData = filesystem.loadText(_file);
 			foreach (var v in sData.Lines(.., noEmpty: true)) {
 				if (_data == null) {
-					//first line contains .NET version, Au.dll version and OS version, like 5.0.4|1.2.3.4|A00-64
-					if (sData[v.Range] != osVersion.onaString) goto g1;
+					if (sData[v.Range] != _environmentString) goto g1;
 					_data = new(sData.LineCount());
 				} else {
 					sData.ToInt(out uint id, v.start, out int idEnd);
@@ -282,10 +296,12 @@ o - config (now removed)
 			return false;
 		}
 
+
+
 		void _Save() {
 			filesystem.createDirectory(CacheDirectory);
 			using var b = filesystem.waitIfLocked(() => File.CreateText(_file));
-			b.WriteLine(osVersion.onaString);
+			b.WriteLine(_environmentString);
 			foreach (var v in _data) {
 				if (v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
 			}

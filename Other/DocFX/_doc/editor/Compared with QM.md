@@ -76,6 +76,3 @@ Some of these will be added in the future.
 #### Some features LibreAutomate will never have
 - Encrypt scripts.
 - Unlock computer.
-
-#### Portable
-LibreAutomate should be able to run as a portable app, but it is not tested and there is no tool to create a portable app folder like in QM. Copy all files from the installed LibreAutomate folder and run Au.Editor.exe. LibreAutomate does not modify the Registry, but writes files in folders like Temp and Documents. By default runs not as administrator and therefore cannot automate windows of admin processes without invoking the UAC consent screen.

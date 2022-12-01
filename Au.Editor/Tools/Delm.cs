@@ -116,18 +116,18 @@ class Delm : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 130, 0, 70, -1);
 		//row 1
 		b.R.StartStack();
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, and {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
-		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline #FF4040", "Auto test action when captured.\r\nIf no action selected, will show menu.");
-		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert #9F5300", "Auto insert code when captured");
+		_cCapture = b.xAddCheckIcon("*Unicons.Capture" + Menus.red, $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, and {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
+		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline" + Menus.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
+		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert" + Menus.brown, "Auto insert code when captured");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*Ionicons.UndoiOS #9F5300", _ => App.Dispatcher.InvokeAsync(() => Menus.Edit.Undo()), "Undo in editor");
-		b.xAddButtonIcon("*Material.SquareEditOutline #008EEE", _ => App.Hmain.ActivateL(true), "Activate editor window");
-		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular #008EEE", _ => _wnd.ActivateL(true), "Activate captured window");
+		b.xAddButtonIcon(Menus.iconUndo, _ => App.Dispatcher.InvokeAsync(() => Menus.Edit.Undo()), "Undo in editor");
+		b.xAddButtonIcon("*Material.SquareEditOutline" + Menus.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");
+		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular" + Menus.blue, _ => _wnd.ActivateL(true), "Activate captured window");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline #000000", _ => _Test(testAction: true), "Test action");
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline #008EEE", _ => _Test(testAction: true, actWin: true), "Activate window and test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.blue, _ => _Test(testAction: true), "Test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.blue, _ => _Test(testAction: true, actWin: true), "Activate window and test action");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _ => _ToolSettings(), "Tool settings");
+		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _ToolSettings(), "Tool settings");
 		b.AddSeparator(true);
 		b.Add(out _cUIA, "UIA").Checked(null, threeState: true).Tooltip("Capture UI Automation elements.\nChecked - always\nUnchecked - never\nIndeterminate - auto");
 		b.Add(out _cSmaller, "Smaller").Tooltip("Try to capture smaller element.\nNote: can be slow; some apps may crash (rare).");
@@ -1144,7 +1144,7 @@ class Delm : KDialogWindow {
 
 		object ITreeViewItem.Image => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
 
-		int ITreeViewItem.TextColor => _isFailed ? 0xff : (_isInvisible ? Api.GetSysColor(Api.COLOR_GRAYTEXT) : Api.GetSysColor(Api.COLOR_WINDOWTEXT));
+		int ITreeViewItem.TextColor => _isFailed ? 0xff0000 : ColorInt.SwapRB(_isInvisible ? Api.GetSysColor(Api.COLOR_GRAYTEXT) : Api.GetSysColor(Api.COLOR_WINDOWTEXT));
 
 		int ITreeViewItem.BorderColor {
 			get {

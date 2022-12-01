@@ -1,9 +1,4 @@
-﻿using System.Windows;
-
-[assembly: AssemblyTitle("Au.Editor")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-//more in global.cs
+using System.Windows;
 
 [assembly: System.Resources.NeutralResourcesLanguage("en-US")]
 

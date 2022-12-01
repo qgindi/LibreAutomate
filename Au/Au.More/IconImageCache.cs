@@ -64,7 +64,7 @@ namespace Au.More {
 		/// <param name="dpi">DPI of window that will display the image. See <see cref="Dpi"/>.</param>
 		/// <param name="isImage">
 		/// false - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns null if no custom icon or if editor isn't running.
-		/// true - load image from xaml/png/etc file, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu Tools -> Icons).
+		/// true - load image from xaml/png/etc file, databse, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu Tools -> Icons).
 		/// 
 		/// To detect whether a string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns true, it is image.
 		/// </param>
@@ -84,7 +84,10 @@ namespace Au.More {
 					//rejected: Move this code to the caller that needs it (MTBase).
 				}
 				bool isIconName = isImage && !isXaml && !isStore && imageSource.Starts('*');
-				if (isIconName) isXaml = true;
+				if (isIconName) {
+					isXaml = true;
+					imageSource = WpfUtil_.NormalizeIconStringColor(imageSource, false); //color can be "normal|highContrast"
+				}
 				if (!isXaml && !isStore) dpi = 96; //will scale when drawing, it's fast and not so bad
 				string imageKey = imageSource;
 				if (!isIconName) {

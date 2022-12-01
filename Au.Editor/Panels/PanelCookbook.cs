@@ -32,10 +32,10 @@ class PanelCookbook : UserControl {
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
-		b.xAddButtonIcon("*Material.TextSearch #EABB00", _ => _Search(true), "Find in recipe text");
-		b.xAddButtonIcon("*EvaIcons.ArrowBack #EABB00", _ => _HistoryMenu(), "Go back...");
+		b.xAddButtonIcon("*Material.TextSearch" + Menus.orange, _ => _Search(true), "Find in recipe text");
+		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.orange, _ => _HistoryMenu(), "Go back...");
 		b.Margin(right: 3);
-		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true };
+		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true, BackgroundColor = 0xf8fff0 };
 		b.Row(-1).Add(_tv);
 		b.End();
 
@@ -48,7 +48,7 @@ class PanelCookbook : UserControl {
 					Menus.File.Workspace.Save_now();
 					_Load();
 				};
-				m["Check links"] = o => _DebugCheckLinks();
+				//m["Check links"] = o => _DebugCheckLinks();
 				m["Print name words"] = o => _DebugGetWords(false);
 				m["Print body words"] = o => _DebugGetWords(true);
 				m.Show();
@@ -231,18 +231,19 @@ class PanelCookbook : UserControl {
 	}
 
 #if DEBUG
-	void _DebugCheckLinks() {
-		print.clear();
-		foreach (var recipe in _root.Descendants().Where(o => !o.dir)) {
-			var text = recipe.GetBodyText();
-			if (text == null) { print.it("Failed to load the recipe. Probably renamed. Try to reload the tree."); return; }
-			foreach (var m in text.RxFindAll(@"<\+recipe>(.+?)<>")) {
-				var s = m[1].Value;
-				//print.it(s);
-				if (null == _FindRecipe(s)) print.it($"Invalid link '{s}' in {recipe.name}");
-			}
-		}
-	}
+	//rejected. Now checks when building online help.
+	//void _DebugCheckLinks() {
+	//	print.clear();
+	//	foreach (var recipe in _root.Descendants().Where(o => !o.dir)) {
+	//		var text = recipe.GetBodyText();
+	//		if (text == null) { print.it("Failed to load the recipe. Probably renamed. Try to reload the tree."); return; }
+	//		foreach (var m in text.RxFindAll(@"<\+recipe>(.+?)<>")) { //todo: can be <+recipe attr>text<>
+	//			var s = m[1].Value;
+	//			//print.it(s);
+	//			if (null == _FindRecipe(s)) print.it($"Invalid link '{s}' in {recipe.name}");
+	//		}
+	//	}
+	//}
 
 	void _DebugGetWords(bool body) {
 		print.clear();
@@ -278,7 +279,7 @@ class PanelCookbook : UserControl {
 
 		string ITreeViewItem.DisplayText => name;
 
-		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie #EABB00");
+		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie" + Menus.orange);
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 

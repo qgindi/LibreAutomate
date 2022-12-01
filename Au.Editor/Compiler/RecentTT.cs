@@ -90,15 +90,19 @@ static class RecentTT
 
 	public static void Show() {
 		if (s_a.Count == 0) return;
+		bool highContrast = System.Windows.SystemParameters.HighContrast;
 		var m = new popupMenu();
 		for (int i = s_a.Count; --i >= 0;) {
 			var v = s_a[i];
 			var s = $"{v.trigger ?? v.file.DisplayName}\t{_Time(v.startTime)} - {_Time(v.endTime)}";
 			if (v.repeated > 0) s = $"{s} ({v.repeated + 1} times)";
-			var k = m.Add(s);
+			var k = m.Add(s, v.trigger != null ? Menus.iconTrigger : v.file.IconString);
 			k.Tag = v;
-			k.BackgroundColor = v.trigger != null ? 0xe0ffe8 : 0xffffff; //FUTURE: instead draw icon
-			if (v.endTime == 0) k.TextColor = 0x0000ff; else if (v.failed) k.TextColor = 0xff0000;
+			if (highContrast) {
+				if (v.failed) k.TextColor = 0xff0000;
+			} else {
+				if (v.endTime == 0) k.TextColor = 0x0000ff; else if (v.failed) k.TextColor = 0xff0000;
+			}
 		}
 		m.Show();
 		if(m.Result?.Tag is _Item r) App.Model.OpenAndGoTo(r.file, r.line - 1);

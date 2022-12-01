@@ -23,9 +23,10 @@ public partial class KMenuCommands {
 		internal Command(KMenuCommands mc, string name, string text, MemberInfo mi, CommandAttribute ca) {
 			_mc = mc;
 			_enabled = true;
-			Text = text;
 			Name = name;
+			Text = text;
 			_ca = ca;
+			Keys = ca.keys;
 			if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<MenuItem>));
 			//if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<object>));
 		}
@@ -72,6 +73,11 @@ public partial class KMenuCommands {
 		/// <see cref="CommandAttribute.tooltip"/>.
 		/// </summary>
 		public string ButtonTooltip { get; set; }
+
+		/// <summary>
+		/// Default or custom hotkey etc.
+		/// </summary>
+		public string Keys { get; private set; }
 
 		/// <summary>
 		/// Setter subscribes to <see cref="MenuItem.SubmenuOpened"/> event.
@@ -253,16 +259,20 @@ public partial class KMenuCommands {
 
 		bool _SetImage(string image, bool custom = false) {
 			try {
+				if (image.NE()) {
+					_mi.Icon = null;
+				} else {
 #if DEBUG
-				bool res = !(custom || image.Starts('*') || pathname.isFullPath(image));
+					bool res = !(custom || image.Starts('*') || pathname.isFullPath(image));
 #else
-				bool res = !(custom || image.Starts('*'));
+					bool res = !(custom || image.Starts('*'));
 #endif
-				var ie = res
-					? ResourceUtil.GetWpfImageElement(image)
-					: ImageUtil.LoadWpfImageElement(image);
-				if (ie is not Image) ie.Uid = (res ? "resource:" : "source:") + image; //xaml source for _CopyImage
-				_mi.Icon = ie;
+					var ie = res
+						? ResourceUtil.GetWpfImageElement(image)
+						: ImageUtil.LoadWpfImageElement(image);
+					if (ie is not Image) ie.Uid = (res ? "resource:" : "source:") + image; //xaml source for _CopyImage
+					_mi.Icon = ie;
+				}
 				return true;
 			}
 			catch (Exception ex) {
@@ -349,7 +359,7 @@ public partial class KMenuCommands {
 				try {
 					switch (an) {
 					case "keys":
-						_ca.keys = av;
+						Keys = av;
 						break;
 					case "color":
 						_mi.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(av));
@@ -531,7 +541,7 @@ public class CommandAttribute : Attribute {
 	/// <summary>
 	/// Image string.
 	/// The factory action receives this string in parameters. It can load image and set menu item's <b>Icon</b> property.
-	/// If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="Au.More.ResourceUtil"/>.
+	/// If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from database or exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="Au.More.ResourceUtil"/>.
 	/// </summary>
 	public string image;
 

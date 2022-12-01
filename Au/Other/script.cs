@@ -21,8 +21,7 @@ public static class script {
 	/// <summary>
 	/// Gets the script role (miniProgram, exeProgram or editorExtension).
 	/// </summary>
-	public static SRole role => s_role;
-	internal static SRole s_role;
+	public static SRole role { get; internal set; }
 
 	/// <summary>
 	/// Gets the script file path in the workspace.
@@ -52,7 +51,7 @@ public static class script {
 	/// </summary>
 	public static bool isWpfPreview {
 		get {
-			if (s_role != SRole.MiniProgram) return false;
+			if (role != SRole.MiniProgram) return false;
 			var s = Environment.CommandLine;
 			//return s.Contains(" WPF_PREVIEW ") && s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$"); //slower JIT
 			return s.Contains(" WPF_PREVIEW ") && _IsWpfPreview(s);
@@ -73,9 +72,9 @@ public static class script {
 	/// <param name="args">Command line arguments. In the script it will be variable <i>args</i>. Should not contain <c>'\0'</c> characters.</param>
 	/// <returns>
 	/// Native process id of the task process.
-	/// Returns 0 if role editorExtension; then waits until the task ends.
-	/// Returns 0 if task start is deferred because the script is running (ifRunning wait/wait_restart).
 	/// Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
+	/// Returns 0 if task start is deferred because the script is running (ifRunning wait/wait_restart).
+	/// If role editorExtension, waits until the script ends, then returns 0.
 	/// </returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
 	public static int run([ParamString(PSFormat.CodeFile)] string script, params string[] args)
@@ -276,6 +275,8 @@ public static class script {
 	/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
 	/// <see cref="runWait(out string, string, string[])"/> gets all strings joined when the task ends.
 	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a .bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+	/// 
+	/// Does not work if script role is editorExtension.
 	/// </remarks>
 #if true
 	public static unsafe bool writeResult(string s) {
@@ -341,9 +342,9 @@ public static class script {
 	/// <returns>true if ended, false if failed, null if wasn't running.</returns>
 	/// <exception cref="ArgumentException"><i>processId</i> is 0 or id of this process.</exception>
 	/// <remarks>
-	/// Can end script processes started from the editor or not.
+	/// The script process can be started from editor or not.
 	/// 
-	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks. Does not execute GC.
+	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks and GC.
 	/// 
 	/// Returns null if <i>processId</i> is invalid (probably because the script is already ended). Returns false if <i>processId</i> is valid but not of a script process (probably the script ended long time ago and the id is reused for another process).
 	/// </remarks>
@@ -355,9 +356,10 @@ public static class script {
 			if (lastError.code == Api.ERROR_INVALID_PARAMETER) return null;
 			return false;
 		}
+		if (Api.WaitForSingleObject(h, 0) == 0) return null;
 
 		//var w1 = wnd.findFast(processId.ToS(), script.c_auxWndClassName, messageOnly: true);
-		var w1 = wait.forCondition(-1, () => wnd.findFast(processId.ToS(), script.c_auxWndClassName, messageOnly: true));
+		var w1 = wait.forCondition(-1d, () => wnd.findFast(processId.ToS(), script.c_auxWndClassName, messageOnly: true));
 		if (!w1.Is0) {
 			w1.Post(Api.WM_CLOSE);
 			if (0 == Api.WaitForSingleObject(h, 1000)) return true;
@@ -380,12 +382,39 @@ public static class script {
 	/// <remarks>
 	/// Can end only script processes started from the editor.
 	/// 
-	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks. Does not execute GC.
+	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks and GC.
 	/// </remarks>
-	public static bool? end(string name) {
+	public static bool? end([ParamString(PSFormat.CodeFile)] string name) {
 		var w = ScriptEditor.WndMsg_; if (w.Is0) throw new AuException("Editor process not found.");
 		int r = (int)WndCopyData.Send<char>(w, 5, name);
 		return r == 1 ? true : r == 2 ? null : false;
+	}
+
+	/// <summary>
+	/// Returns true if the specified script task is running.
+	/// </summary>
+	/// <param name="name">Script file name (like <c>"Script43.cs"</c>) or path in workspace (like <c>@"\Folder\Script43.cs"</c>), or full file path.</param>
+	public static bool isRunning([ParamString(PSFormat.CodeFile)] string name) {
+		var w = ScriptEditor.WndMsg_; if (w.Is0) return false;
+		return 0 != WndCopyData.Send<char>(w, 6, name);
+	}
+
+	/// <summary>
+	/// Returns true if the specified script task is running.
+	/// </summary>
+	/// <param name="processId">Script process id, for example returned by <see cref="script.run"/>.</param>
+	/// <exception cref="ArgumentException"><i>processId</i> is 0 or id of this process.</exception>
+	/// <remarks>
+	/// The script process can be started from editor or not.
+	/// </remarks>
+	public static bool isRunning(int processId) {
+		if (processId == 0 || processId == Api.GetCurrentProcessId()) throw new ArgumentException();
+
+		using var h = Handle_.OpenProcess(processId, Api.SYNCHRONIZE);
+		if (h.Is0 || Api.WaitForSingleObject(h, 0) == 0) return false;
+
+		var w1 = wait.forCondition(-0.5, () => wnd.findFast(processId.ToS(), script.c_auxWndClassName, messageOnly: true));
+		return !w1.Is0;
 	}
 
 	#endregion
@@ -432,44 +461,57 @@ public static class script {
 			MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
 
 			int pidEditor = 0;
-			Api.GetStartupInfo(out var x);
-			if (x.dwX is -1446812571 or -1446812572 && 0 == (x.dwFlags & 4)) { //STARTF_USEPOSITION
-				pidEditor = x.dwY;
-				if (x.dwX is -1446812571) script.testing = true;
-				s_wrPipeName = Environment.GetEnvironmentVariable("script.writeResult.pipe");
-			} else if (Environment.CurrentDirectory == folders.NetRuntime) {
-				//this admin exeProgram was launched from nonadmin editor through UAC consent with shellexecute(verb: runas).
-				//	Cannot pass data directly (environment block or startupinfo). And cannot use command line parameters.
+			var cd = Environment.CurrentDirectory;
+			const string c_ep = "\\Roslyn\\.exeProgram";
+			if (cd.Ends(c_ep, true)) { //started from editor
+				Environment.CurrentDirectory = folders.ThisApp;
+
 				var p = &SharedMemory_.Ptr->script;
 				pidEditor = p->pidEditor;
-				if (0 != (p->flags & 1)) {
-					if (0 != (p->flags & 2)) script.testing = true;
-					if (0 != (p->flags & 4)) s_wrPipeName = p->pipe;
-					p->flags &= ~1;
-				}
-				Environment.CurrentDirectory = folders.ThisApp;
-			} //else started not from editor
+				s_wndMsg = (wnd)p->hwndMsg;
+				if (0 != (p->flags & 2)) script.testing = true;
+				if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
+				if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
+				folders.Editor = new(cd[..^c_ep.Length]);
+				folders.Workspace = new(p->workspace);
+
+				var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.exeProgram.1");
+				if(!Api.SetEvent(hevent)) Environment.Exit(4);
+				Api.CloseHandle(hevent);
+			}
 			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
 		}
 	}
 	static bool s_appModuleInit;
 	static UExcept s_setupException = UExcept.Print;
 	internal static Exception s_unhandledException; //for process.thisProcessExit
+	internal static wnd s_wndMsg;
 
 	internal static bool Exiting_ { get; private set; }
 
-	[StructLayout(LayoutKind.Sequential, Size = 256)] //note: this struct is in shared memory. Size must be same in all library versions.
+	[StructLayout(LayoutKind.Sequential, Size = 256 + 1024)] //note: this struct is in shared memory. Size must be same in all library versions.
 	internal unsafe struct SharedMemoryData_ {
-		public int flags; //1 not received (let editor wait), 2 testing, 4 has pipe
+		public int flags; //1 not received (let editor wait), 2 testing, 4 isPortable, 8 has pipe
 		public int pidEditor;
+		public int hwndMsg;
 		int _pipeLen;
 		fixed char _pipeData[64];
+		int _workspaceLen;
+		fixed char _workspaceData[1024];
 
 		public string pipe {
 			get { fixed (char* p = _pipeData) return new(p, 0, _pipeLen); }
 			set {
 				fixed (char* p = _pipeData) value.AsSpan().CopyTo(new Span<char>(p, 64));
 				_pipeLen = value.Length;
+			}
+		}
+
+		public string workspace {
+			get { fixed (char* p = _workspaceData) return new(p, 0, _workspaceLen); }
+			set {
+				fixed (char* p = _workspaceData) value.AsSpan().CopyTo(new Span<char>(p, 1024));
+				_workspaceLen = value.Length;
 			}
 		}
 	}

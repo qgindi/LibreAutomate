@@ -90,9 +90,12 @@ static class CiSnippets {
 			context = _Context.Type;
 			break;
 		case NamespaceDeclarationSyntax ns when pos > ns.OpenBraceToken.Span.Start:
+		case FileScopedNamespaceDeclarationSyntax ns2 when pos >= ns2.SemicolonToken.Span.End:
+			context = _Context.Namespace;
+			break;
 		case CompilationUnitSyntax:
 		case null:
-			context = _Context.Namespace | _Context.Function; //Function for C# 9 top-level statements. //FUTURE: only if in correct place.
+			context = _Context.Namespace | _Context.Function; //Function for top-level statements. SHOULDDO: only if in correct place.
 			break;
 		case LambdaExpressionSyntax:
 		case ArrowExpressionClauseSyntax: //like void F() =>here

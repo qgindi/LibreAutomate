@@ -1,0 +1,45 @@
+## Version 0.12.0 (2022-?-?)
+
+### Editor
+Can run as a [portable](xref:portable) app.
+
+
+### Library
+New functions:
+- **ScriptEditor.IsPortable**.
+- **script.isRunning**.
+- **AutotextTriggers.MenuOptions**.
+- **filesystem.getFinalPath**.
+- **filesystem.comparePaths**.
+- **filesystem.more.isSameFile**.
+- **folders.Editor**.
+- **folders.noAutoCreate**.
+- **folders.unexpandPath**: added 1 overload.
+- **clipboard.copyData**: added 1 overload.
+
+New classes:
+- **TempFile**.
+- **TAMenuOptions** (for autotext triggers).
+
+New parameters:
+- **clipboard** functions: *timeoutMS*.
+
+Added flag **PMFlags.WindowCenter** to show popup menu in the center of the active window.
+
+**folders.getFolder** and functions that support paths like `@"%folders.Documents%\file.txt"` now also support properties that return string.
+
+### Bug fixes and improvements
+
+Editor:
+- Several small improvements.
+- Fixed several bugs.
+
+Library:
+- Improved: **miscInfo.getTextCursorRect** supports more windows. It is used to get menu position, for example with autotext triggers.
+- Fixed regression: **pathname.unprefixLongPath** and functions that use it don't support paths like "\\?\UNC\...".
+- Improved: **pathname.getRootLength** supports more path types.
+
+
+### Breaking changes
+
+Default **folders.ThisAppX** subfolders used in scripts changed from `"Au"` to `@"LibreAutomate\_script"`. If the old folder exists and the new doesn't, editor when starting copies files and prints a note.

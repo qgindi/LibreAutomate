@@ -37,11 +37,12 @@ void _Build() {
 	var time0 = perf.ms;
 	
 	bool testSmall = !true;
-	bool preprocess = false, postprocess = false, build = false, serve = false;
+	bool preprocess = false, postprocess = false, build = false, serve = false, cookbook = false;
+	//cookbook = true;
 	//preprocess = true;
 	//postprocess = true;
 	//postprocess = serve = true;
-	preprocess = postprocess = build = serve = true;
+	preprocess = postprocess = build = serve = cookbook = true;
 	bool onlyMetadata = !true;
 	//preprocess = true; build = true; onlyMetadata = true;
 	
@@ -50,6 +51,11 @@ void _Build() {
 	var docDir = testSmall ? @"C:\code\au\Test Projects\TestDocFX\docfx_project" : @"C:\code\au\Other\DocFX\_doc";
 	var siteDirTemp = siteDir + "-temp";
 	var objDir = siteDir + "-obj";
+	
+	if(cookbook) {
+		AuDocs.Cookbook(docDir);
+		print.it("DONE cookbook");
+	}
 	
 	var d = new AuDocs();
 	if (preprocess) {
@@ -82,6 +88,10 @@ void _Build() {
 		d.Postprocess(siteDirTemp, siteDir);
 		print.it("DONE postprocessing");
 		if(!testSmall) print.it($"<><script Au docs.cs|/upload>Upload Au docs...<>");
+	}
+	
+	if(cookbook) {
+		AuDocs.CookbookClear(docDir);
 	}
 	
 	print.it((perf.ms - time0) / 1000d);
