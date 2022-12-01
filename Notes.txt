@@ -61,6 +61,7 @@ Download and test the setup file.
 	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
 
 Occasionally test the setup file at virustotal.com. And separately other exe files.
+	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
 
 Announce in forum.
 

@@ -63,7 +63,7 @@ If just name, installs the latest compatible version.
 To specify source: PackageName --source URL or folder path")
 			.Focus();
 
-		b.R.xAddButtonIcon("*Material.ContentPaste #9F5300", _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
+		b.R.xAddButtonIcon(Menus.iconPaste, _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
 		b.AddButton(out var bInstall, "Install", _ => _Install()).Disabled();
 		b.Add<TextBlock>("into folder");
 
@@ -294,7 +294,7 @@ A script can use packages from multiple folders if they are compatible.");
 				//.NET dlls
 				HashSet<string> hsLib = new(StringComparer.OrdinalIgnoreCase);
 				foreach (var group in aDllNet.ToLookup(o => pathname.getName(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
-					//print.it($"<><BC #BBE3FF>{group.Key}<>");
+					//print.it($"<><lc #BBE3FF>{group.Key}<>");
 					var filename = group.Key;
 					int count = group.Count();
 					bool haveRO = dCompile.ContainsKey(filename);
@@ -617,7 +617,7 @@ A script can use packages from multiple folders if they are compatible.");
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		public bool IsFolder { get; }
 		public string DisplayText { get; }
-		object ITreeViewItem.Image => _isExpanded ? @"*Material.FolderOpen #EABB00" : (IsFolder ? @"*Material.Folder #EABB00" : null);
+		object ITreeViewItem.Image => _isExpanded ? FileNode.c_iconFolderOpen : (IsFolder ? FileNode.c_iconFolder : null);
 		//public TVCheck CheckState { get; }
 
 		#endregion

@@ -360,3 +360,73 @@ public enum FIfExists {
 	Ask,
 #endif
 }
+
+/// <summary>
+/// Used with <see cref="filesystem.getFinalPath"/>
+/// </summary>
+public enum FPFormat {
+	/// <summary>
+	/// With long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>) if path length &gt; <see cref="pathname.maxDirectoryPathLength"/>. This is default.
+	/// </summary>
+	PrefixIfLong,
+
+	/// <summary>
+	/// Always with long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>).
+	/// </summary>
+	PrefixAlways,
+
+	/// <summary>
+	/// Without long-path prefix, even if the path is very long.
+	/// </summary>
+	PrefixNever,
+
+	/// <summary>
+	/// With volume GUID (API <msdn>GetFinalPathNameByHandle</msdn> flag <b>VOLUME_NAME_GUID</b>).
+	/// If it fails (eg network path), gets path with prefix, like <b>PrefixAlways</b>.
+	/// </summary>
+	VolumeGuid
+}
+
+/// <summary>
+/// See <see cref="filesystem.comparePaths"/>.
+/// </summary>
+public enum CPResult {
+	/// <summary>
+	/// The paths are unrelated.
+	/// Example: <c>pathA: @"C:\Dir1\File1.txt"</c>, <c>pathB: @"C:\Dir2\File1.txt"</c>.
+	/// </summary>
+	None,
+
+	/// <summary>
+	/// Both paths are of the same file or directory.
+	/// Example: <c>pathA: @"C:\Dir1\File1.txt"</c>, <c>pathB: @"C:\Dir2\..\Dir1\File1.txt"</c>.
+	/// </summary>
+	Same,
+
+	/// <summary>
+	/// <i>pathA</i> is of a directory that contains file or directory specified by <i>pathB</i>.
+	/// Example: <c>pathA: @"C:\Dir1"</c>, <c>pathB: @"C:\Dir1\Dir2\File1.txt"</c>.
+	/// </summary>
+	AContainsB,
+
+	/// <summary>
+	/// <i>pathB</i> is of a directory that contains file or directory specified by <i>pathA</i>.
+	/// Example: <c>pathA: <c>pathB: @"C:\Dir1\Dir2\File1.txt"</c>, @"C:\Dir1"</c>.
+	/// </summary>
+	BContainsA,
+
+	/// <summary>
+	/// Failed. Probably one (or both) of specified files does not exist.
+	/// The function supports <see cref="lastError"/>.
+	/// </summary>
+	Failed,
+}
+
+/// <summary>
+/// Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="filesystem.more.getFileId"/>.
+/// </summary>
+/// <remarks>
+/// Can be used with files and directories.
+/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
+/// </remarks>
+public record struct FileId(int VolumeSerialNumber, long FileIndex);

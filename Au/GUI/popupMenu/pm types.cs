@@ -79,18 +79,21 @@ public class PMItem : MTItem {
 /// Flags for <see cref="popupMenu"/> <b>ShowX</b> methods.
 /// </summary>
 /// <remarks>
-/// Most flags are for API <msdn>TrackPopupMenuEx</msdn>.
+/// The <b>AlignX</b> flags are for API <msdn>TrackPopupMenuEx</msdn>.
 /// </remarks>
 [Flags]
 public enum PMFlags {
-	/// <summary>Show by caret (text cursor) position. If not possible, depends on flag <b>ScreenCenter</b> or parameter <i>xy</i>.</summary>
+	/// <summary>Show by the caret (text cursor) position. If not possible, use flag <b>WindowCenter</b> or <b>ScreenCenter</b> or <i>xy</i> or mouse position.</summary>
 	ByCaret = 0x1000000,
 
-	/// <summary>Show in center of screen containing mouse pointer.</summary>
+	/// <summary>Show in the center of the screen that contains the mouse pointer.</summary>
 	ScreenCenter = 0x2000000,
 
+	/// <summary>Show in the center of the active window.</summary>
+	WindowCenter = 0x4000000,
+
 	/// <summary>Underline characters preceded by &amp;, regardless of Windows settings. More info: <see cref="StringUtil.RemoveUnderlineChar"/>.</summary>
-	Underline = 0x4000000,
+	Underline = 0x8000000,
 
 	//TPM_ flags
 

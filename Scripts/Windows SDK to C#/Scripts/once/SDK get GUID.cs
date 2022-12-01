@@ -39,7 +39,7 @@ string _CreateGuidMap(int flags) {
 		}
 		
 		if (!s.Contains("COMDAT; sym=")) return;
-		//print.it($"<><Z green>{fn}<>");
+		//print.it($"<><lc green>{fn}<>");
 		//print.it(s);
 		
 		var rx = @"(?m) +COMDAT; sym= *((?:[A-Z]|guid)\w+)\R(?: .+\R)+\RRAW DATA #\w+\R  \w+: (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w) (\w\w)  .*\R\R";

@@ -12,9 +12,9 @@
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<OutDir>$(SolutionDir)_</OutDir>
 		<LangVersion>preview</LangVersion>
-		<NoWin32Manifest>true</NoWin32Manifest>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -163,7 +163,7 @@
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\ResourceHacker.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
+	  <Exec Command="&quot;$(SolutionDir)Other\Programs\PostBuild.exe&quot;&#xD;&#xA;" />
 	</Target>
 
 </Project>

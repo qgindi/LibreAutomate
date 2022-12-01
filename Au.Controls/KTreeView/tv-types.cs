@@ -82,18 +82,18 @@ public interface ITreeViewItem {
 	bool IsSelectable => true;
 
 	/// <summary>
-	/// Background color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, selected, hot).
+	/// Background color 0xRRGGBB. If -1 (default), uses default colors, depending on state (normal, selected, hot).
 	/// If alpha is 1 - 3: if contains flag 1, draws selection color when selected; if 2, draws hot color when hot.
 	/// </summary>
 	int Color => -1;
 
 	/// <summary>
-	/// Text color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, disabled).
+	/// Text color 0xRRGGBB. If -1 (default), uses default colors, depending on state (normal, disabled).
 	/// </summary>
 	int TextColor => -1;
 
 	/// <summary>
-	/// Border color in 0xBBGGRR format. No border if -1 (default).
+	/// Border color 0xRRGGBB. No border if -1 (default).
 	/// If alpha is 1, draws left edge between text and icon.
 	/// </summary>
 	int BorderColor => -1;

@@ -46,7 +46,7 @@ class DNewWorkspace : KDialogWindow {
 
 		var b = new wpfBuilder(this).WinSize(600);
 		TextBox tName, tLocation = null;
-		b.R.Add("Folder name", out tName, _name).Validation(_Validate);
+		b.R.Add("Folder name", out tName, _name).Validation(_Validate).Focus();
 		b.R.Add("Parent folder", out tLocation, _location).Validation(_Validate);
 		b.R.AddButton("Browse...", _Browse).Width(70).Align("L");
 		b.R.AddOkCancel();
@@ -60,11 +60,11 @@ class DNewWorkspace : KDialogWindow {
 		}
 
 		string _Validate(FrameworkElement e) {
-			var s = (e as TextBox).Text;
+			var s = (e as TextBox).Text.Trim();
 			if (e == tLocation) {
 				if (!filesystem.exists(s).Directory) return "Folder does not exist";
 			} else {
-				if (pathname.isInvalidName(s)) return "Invalid filename";
+				if (pathname.isInvalidName(s) || s[0] is '.' or '_') return "Invalid filename";
 				ResultPath = pathname.combine(tLocation.Text, s); //validation is when OK clicked
 				if (filesystem.exists(ResultPath)) return s + " already exists";
 			}
@@ -81,7 +81,7 @@ class RepairWorkspace {
 
 	public static void MissingFiles() {
 		print.clear();
-		print.it("<><BC DarkSeaGreen>Missing files<>\r\nThese items represent files that already don't exist. You may want to delete them from the Files panel.\r\n");
+		print.it("<><lc YellowGreen>Missing files<>\r\nThese items represent files that already don't exist. You may want to delete them from the Files panel.\r\n");
 
 		_Folder(App.Model.Root);
 		void _Folder(FileNode folder) {
@@ -123,7 +123,7 @@ class RepairWorkspace {
 		});
 
 		print.clear();
-		print.it("<><BC DarkSeaGreen>Orphaned files<>\r\nThese files are in the workspace folder but not in the Files panel. You may want to import or delete them.\r\n");
+		print.it("<><lc YellowGreen>Orphaned files<>\r\nThese files are in the workspace folder but not in the Files panel. You may want to import or delete them.\r\n");
 
 		_clickedLinks.Clear();
 		var hs = App.Model.Root.Descendants().Where(o => !o.IsLink).Select(o => o.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);

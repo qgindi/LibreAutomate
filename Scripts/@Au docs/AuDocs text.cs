@@ -1,6 +1,6 @@
 //In this file: functions that preprocess or postprocess file text without Roslyn.
 
-#define DISQUS
+//#define DISQUS
 
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -21,7 +21,7 @@ partial class AuDocs {
 		//	Then warning if the type is used somewhere in parameters or cref.
 		//	Also need to convert 'record class X(...)' to the classic format before we can process it correctly.
 		if (s.Contains("record ")) {
-			//print.it($"<><Z greenyellow>{path}");
+			//print.it($"<><lc greenyellow>{path}");
 			s = _rxRecord.Replace(s, m => {
 				if (!m[5].Exists) return m.ExpandReplacement("$1 $2");
 				//print.it($"<><c blue>{m.Value}<>");
@@ -98,7 +98,7 @@ partial class AuDocs {
 	}
 	
 	void _PostprocessFile(FEFile f, string file2, string siteDirTemp) {
-		//print.it($"<><Z green>{f.Name}<>");
+		//print.it($"<><lc green>{f.Name}<>");
 		string name = f.Name, s = filesystem.loadText(f.FullPath);
 		bool isApi = name.Starts(@"\api");
 		
@@ -197,6 +197,8 @@ partial class AuDocs {
 		if (isApi) s = _rxCode.Replace(s, m => _Code(m[1].Value, 0)); //<code> in api
 		
 #if DISQUS
+		//SHOULDDO: Now shows Disqus content when page loaded (if small) or scrolled to the bottom. Should show only when clicked <h2>User comments</h2>.
+		
 		//add this at the bottom of help pages
 		var disqus = """
 
@@ -223,7 +225,8 @@ partial class AuDocs {
 
 """;
 		int i1=s.LastIndexOf("</article>");
-		s = s.Insert(i1, disqus);
+		if(i1>0) s = s.Insert(i1, disqus);
+		else print.warning("no </article> in " + name);
 #endif
 		
 		//print.it(s);

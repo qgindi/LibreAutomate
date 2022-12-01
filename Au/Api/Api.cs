@@ -1,4 +1,4 @@
-﻿//[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
+//[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
 
 #pragma warning disable 649, 169 //field never assigned/used
 
@@ -1278,6 +1278,12 @@ static unsafe partial class Api {
 
 	//[DllImport("uxtheme.dll", PreserveSig = true)]
 	//internal static extern int SetWindowTheme(wnd hwnd, string pszSubAppName, string pszSubIdList);
+
+	[DllImport("uxtheme.dll")]
+	internal static extern int GetThemeSysColor(IntPtr hTheme, int iColorId);
+
+	[DllImport("uxtheme.dll")]
+	internal static extern IntPtr GetThemeSysColorBrush(IntPtr hTheme, int iColorId);
 
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int BufferedPaintInit();

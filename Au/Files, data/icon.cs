@@ -90,7 +90,7 @@ namespace Au {
 
 		static icon _OfFile(string file, int size = 16, IconGetFlags flags = 0) {
 			if (file.NE()) return null;
-			file = pathname.expand(file);
+			file = pathname.expand(file, strict: false);
 			return _GetFileIcon(file, size, flags);
 		}
 

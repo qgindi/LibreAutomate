@@ -529,7 +529,7 @@ public unsafe partial class popupMenu : MTBase {
 		}
 	}
 
-	void _Show(PMFlags flags, POINT? xy, RECT? excludeRect, wnd owner) { //CONSIDER: _Show(MSPosition pos = null) //then could precisely specify offsets etc
+	void _Show(PMFlags flags, POINT? xy, RECT? excludeRect, wnd owner) { //CONSIDER: _Show(PMPosition pos = null) //then could precisely specify offsets etc
 		if (_a.Count == 0) return;
 
 		_result = null;
@@ -551,10 +551,15 @@ public unsafe partial class popupMenu : MTBase {
 				flags |= PMFlags.AlignRectBottomTop;
 			}
 		} else {
-			if (flags.Has(PMFlags.ScreenCenter)) {
+			if (flags.Has(PMFlags.WindowCenter) && wnd.active is wnd wa && wa.GetRect(out var rw)) {
+				p = new(rw.CenterX, rw.CenterY);
+				flags |= PMFlags.AlignCenterH | PMFlags.AlignCenterV;
+			} else if (flags.Has(PMFlags.ScreenCenter)) {
 				p = new(rs.CenterX, rs.CenterY);
 				flags |= PMFlags.AlignCenterH | PMFlags.AlignCenterV;
-			} else if (excludeRect == null && !flags.Has(PMFlags.AlignCenterH | PMFlags.AlignCenterV)) excludeRect = new(p.x, p.y, 1, 1);
+			} else if (excludeRect == null && !flags.Has(PMFlags.AlignCenterH | PMFlags.AlignCenterV)) {
+				excludeRect = new(p.x, p.y, 1, 1);
+			}
 		}
 
 		if (_addedNewItems) {
@@ -575,7 +580,7 @@ public unsafe partial class popupMenu : MTBase {
 		}
 
 		if (byCaret && !flags.HasAny(PMFlags.AlignRight | PMFlags.AlignCenterH))
-			p.x = Math.Max(p.x - _z.image - _z.check - _z.paddingLeft - _z.textPaddingX - 3, rs.left);
+			p.x = Math.Max(p.x - _met.image - _met.check - _met.paddingLeft - _met.textPaddingX - 3, rs.left);
 
 		RECT r = new(0, 0, z.width, z.height);
 		Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
@@ -624,7 +629,7 @@ public unsafe partial class popupMenu : MTBase {
 		} else {
 			_w.Post(0);
 		}
-		_z?.Dispose(); _z = null;
+		_met?.Dispose(); _met = null;
 		_font?.Dispose(); _font = null;
 		_fontBold?.Dispose(); _fontBold = null;
 		_scroll = null;
@@ -939,17 +944,25 @@ public unsafe partial class popupMenu : MTBase {
 	void _WmChar(char c) { //called for top menu
 		if (c <= ' ') return;
 		char cl = char.ToLowerInvariant(c), cu = char.ToUpperInvariant(c);
+		int iUnderlined = -1; List<int> aUnderlined = null;
 		for (int i = 0; i < _a.Count; i++) {
-			var b = _a[i];
-			if (b.rawText || b.IsDisabled) continue;
-			string s = b.Text;
+			var v = _a[i];
+			if (v.rawText || v.IsDisabled) continue;
+			string s = v.Text;
 			int j = StringUtil.FindUnderlineChar(s);
-			if (j < 0) continue;
-			c = s[j];
-			if (c == cu || c == cl) {
-				_Click(i, keyboard: true);
-				break;
+			if (j >= 0 && (s[j] == cu || s[j] == cl)) {
+				if (iUnderlined < 0) iUnderlined = i;
+				else (aUnderlined ??= new() { iUnderlined }).Add(i);
 			}
+		}
+		if (aUnderlined != null) {
+			int fi = 0;
+			if (_iHot >= 0) {
+				for (int i = 0; i < aUnderlined.Count; i++) if (aUnderlined[i] > _iHot) { fi = i; break; }
+			}
+			FocusedItem = _a[aUnderlined[fi]];
+		} else if (iUnderlined >= 0) {
+			_Click(iUnderlined, keyboard: true);
 		}
 	}
 

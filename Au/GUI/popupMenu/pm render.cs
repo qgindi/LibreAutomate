@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace Au;
@@ -33,12 +33,12 @@ public unsafe partial class popupMenu {
 	NativeFont_ _GetFont(bool bold = false) {
 		var font = Font ?? DefaultFont;
 		if (font == null) return bold ? NativeFont_.BoldCached(_dpi) : NativeFont_.RegularCached(_dpi);
-		if(!bold) return _font ??= font.CreateFont(_dpi);
+		if (!bold) return _font ??= font.CreateFont(_dpi);
 		return _fontBold ??= (font with { Bold = true }).CreateFont(_dpi);
 	}
 	NativeFont_ _font, _fontBold; //disposing in _WmNcdestroy or ~NativeFont_
 
-	_Metrics _z;
+	_Metrics _met;
 
 	class _Metrics : IDisposable {
 		public bool hasImages, hasCheck, hasSubmenus, hasSeparators, hasHotkeys;
@@ -108,10 +108,10 @@ public unsafe partial class popupMenu {
 	SIZE _Measure(int maxWidth) {
 		SIZE R = default;
 
-		_z?.Dispose();
-		_z = new _Metrics(this);
+		_met?.Dispose();
+		_met = new _Metrics(this);
 
-		int buttonPlusX = (_z.border + _z.textPaddingX) * 2 + _z.check + _z.image + _z.submenu + _z.submenuMargin + _z.paddingLeft + _z.paddingRight;
+		int buttonPlusX = (_met.border + _met.textPaddingX) * 2 + _met.check + _met.image + _met.submenu + _met.submenuMargin + _met.paddingLeft + _met.paddingRight;
 		int maxTextWidth = maxWidth - buttonPlusX;
 
 		var font = _GetFont();
@@ -119,7 +119,7 @@ public unsafe partial class popupMenu {
 		int textHeight = dc.MeasureEP(" ").height;
 
 		int maxHotkey = 0;
-		if (_z.hasHotkeys) {
+		if (_met.hasHotkeys) {
 			foreach (var b in _a) {
 				if (b.Hotkey == null) continue;
 				int wid = dc.MeasureDT(b.Hotkey, c_tffHotkey).width;
@@ -136,7 +136,7 @@ public unsafe partial class popupMenu {
 			var b = _a[i];
 			SIZE z;
 			if (b.IsSeparator) {
-				z = new(0, _z.separator);
+				z = new(0, _met.separator);
 			} else {
 				var s = b.Text;
 				if (!s.NE()) {
@@ -144,10 +144,10 @@ public unsafe partial class popupMenu {
 					z = dc.MeasureDT(s, _TfFlags(b), maxTextWidth);
 					z.width = Math.Min(z.width, maxTextWidth);
 					if (b.FontBold) Api.SelectObject(dc, font);
-					_z.xTextEnd = Math.Max(_z.xTextEnd, z.width);
+					_met.xTextEnd = Math.Max(_met.xTextEnd, z.width);
 					z.width += buttonPlusX;
 				} else z = new(0, textHeight);
-				z.height = Math.Max(z.height + _z.textPaddingY * 2 + 1, _z.image) + (_z.border + _z.paddingY) * 2;
+				z.height = Math.Max(z.height + _met.textPaddingY * 2 + 1, _met.image) + (_met.border + _met.paddingY) * 2;
 			}
 			b.rect = new(0, y, z.width, z.height);
 			y += z.height;
@@ -157,7 +157,7 @@ public unsafe partial class popupMenu {
 
 		if (maxHotkey > 0) {
 			R.width += maxHotkey;
-			_z.xHotkeyStart = _z.xTextEnd + hotkeyPlus;
+			_met.xHotkeyStart = _met.xTextEnd + hotkeyPlus;
 		}
 		foreach (var b in _a) b.rect.right = R.width;
 
@@ -172,14 +172,17 @@ public unsafe partial class popupMenu {
 	const TFFlags c_tffHotkey = TFFlags.NOPREFIX | TFFlags.SINGLELINE;
 
 	void _Render(IntPtr dc, RECT rUpdate) {
-		Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_BTNFACE + 1));
+		using (var menuBrush = GdiObject_.SysColorBrush(_met.theme, Api.COLOR_BTNFACE)) menuBrush.BrushFill(dc, rUpdate);
 
-		using var g = Graphics.FromHdc(dc);
-		g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+		using var g = _met.hasImages ? Graphics.FromHdc(dc) : null;
+		if (g != null) {
+			g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+		}
 		var font = _GetFont();
 		using var soFont = new GdiSelectObject_(dc, font);
 		Api.SetBkMode(dc, 1);
-		int textColor = Api.GetSysColor(Api.COLOR_BTNTEXT), textColorDisabled = Api.GetSysColor(Api.COLOR_GRAYTEXT);
+		int textColor = Api.GetThemeSysColor(_met.theme, Api.COLOR_BTNTEXT),
+			textColorDisabled = Api.GetThemeSysColor(_met.theme, Api.COLOR_GRAYTEXT);
 
 		rUpdate.Offset(0, _scroll.Offset);
 		for (int i = _scroll.Pos; i < _a.Count; i++) {
@@ -190,61 +193,60 @@ public unsafe partial class popupMenu {
 
 			var r = _ItemRect(b);
 
-			//g.DrawRectangleInset(Pens.BlueViolet, r);
-
 			if (b.IsSeparator) {
-				r.Inflate(-_z.textPaddingX / 4, 0);
-				//r.left+=_z.check+_z.image;
-				r.top += (r.Height - _z.sepLine) / 2;
-				r.Height = _z.sepLine;
-				if (_z.theme != default) Api.DrawThemeBackground(_z.theme, dc, 15, 0, r);
+				r.Inflate(-_met.textPaddingX / 4, 0);
+				//r.left+=_met.check+_met.image;
+				r.top += (r.Height - _met.sepLine) / 2;
+				r.Height = _met.sepLine;
+				if (_met.theme != default) Api.DrawThemeBackground(_met.theme, dc, 15, 0, r);
 				else Api.DrawEdge(dc, ref r, Api.EDGE_ETCHED, Api.BF_TOP);
 			} else {
-				if (b.BackgroundColor != default) using (var brush = new SolidBrush((Color)b.BackgroundColor)) g.FillRectangle(brush, r);
+				if (b.BackgroundColor != default)
+					using (var brush = GdiObject_.ColorBrush(b.BackgroundColor)) brush.BrushFill(dc, r);
 				if (i == _iHot) {
 					if ((textColor == 0 || b.TextColor != default) && b.BackgroundColor == default)
-						using (var brush = new SolidBrush(0xC0DCF3.ToColor_())) g.FillRectangle(brush, r);
-					using (var pen = new Pen(0x90C8F6.ToColor_(), _z.border)) g.DrawRectangleInset(pen, r);
+						using (var brush = GdiObject_.ColorBrush(0xC0DCF3)) brush.BrushFill(dc, r);
+					using (var brush = GdiObject_.ColorBrush(0x90C8F6)) brush.BrushRect(dc, r);
 				}
 
-				r.Inflate(-_z.border, -_z.border - _z.paddingY);
-				r.left += _z.paddingLeft; r.right -= _z.paddingRight;
+				r.Inflate(-_met.border, -_met.border - _met.paddingY);
+				r.left += _met.paddingLeft; r.right -= _met.paddingRight;
 				var r2 = r;
 
-				r.left += _z.check;
+				r.left += _met.check;
 
-				if (b.image2 != null) {
-					g.DrawImage(b.image2, r.left + _z.textPaddingY, r.top + (r.Height - _z.image) / 2, _z.image, _z.image);
+				if (b.HasImage_) {
+					g.DrawImage(b.image2, r.left + _met.textPaddingY, r.top + (r.Height - _met.image) / 2, _met.image, _met.image);
 				}
 
-				r.left += _z.image + _z.textPaddingX; r.right -= _z.textPaddingX + _z.submenu + _z.submenuMargin;
-				r.top += _z.textPaddingY; r.bottom -= _z.textPaddingY;
+				r.left += _met.image + _met.textPaddingX; r.right -= _met.textPaddingX + _met.submenu + _met.submenuMargin;
+				r.top += _met.textPaddingY; r.bottom -= _met.textPaddingY;
 
 				if (b.Hotkey != null) {
 					Api.SetTextColor(dc, textColorDisabled);
-					var rh = r; rh.left += _z.xHotkeyStart;
+					var rh = r; rh.left += _met.xHotkeyStart;
 					Api.DrawText(dc, b.Hotkey, ref rh, c_tffHotkey);
 				}
 
 				Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));
 				if (!b.Text.NE()) {
 					if (b.FontBold) Api.SelectObject(dc, _GetFont(true));
-					r.Width = _z.xTextEnd;
+					r.Width = _met.xTextEnd;
 					Api.DrawText(dc, b.Text, ref r, _TfFlags(b));
 					if (b.FontBold) Api.SelectObject(dc, font);
 				}
 
 				if (b.IsSubmenu) {
-					_DrawControl(_z.zSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _z.submenu, r.top, _z.submenu, r.Height);
+					_DrawControl(_met.zSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _met.submenu, r.top, _met.submenu, r.Height);
 				}
 				if (b.IsChecked) {
-					_DrawControl(_z.zCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _z.check, r.Height);
+					_DrawControl(_met.zCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _met.check, r.Height);
 				}
 
 				void _DrawControl(SIZE z, int part, int state, string c, int x, int y, int width, int height) {
-					if (_z.theme != default && z != default) {
+					if (_met.theme != default && z != default) {
 						RECT r = new(x, r2.top + (r2.Height - z.height) / 2, z.width, z.height);
-						Api.DrawThemeBackground(_z.theme, dc, part, state, r);
+						Api.DrawThemeBackground(_met.theme, dc, part, state, r);
 					} else {
 						RECT r = new(x, y, width, height);
 						Api.DrawText(dc, c, ref r, TFFlags.CENTER);
@@ -258,8 +260,10 @@ public unsafe partial class popupMenu {
 	void _WmNcpaint() {
 		using var dc = new WindowDC_(Api.GetWindowDC(_w), _w);
 		RECT r = new(0, 0, _size.window.width, _size.window.height);
+		using var brushBorder = GdiObject_.SysColorBrush(_met.theme, Api.COLOR_BTNSHADOW);
+		using var brushPadding = GdiObject_.SysColorBrush(_met.theme, Api.COLOR_BTNFACE);
 		for (int i = 0; i < _size.border; i++) {
-			Api.FrameRect(dc, r, Api.GetSysColorBrush(i == 0 ? Api.COLOR_BTNSHADOW : Api.COLOR_BTNFACE));
+			Api.FrameRect(dc, r, i == 0 ? brushBorder : brushPadding);
 			r.Inflate(-1, -1);
 		}
 	}

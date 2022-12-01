@@ -8,7 +8,7 @@ namespace Au {
 	/// File path string functions. Parse, combine, make full, make unique, make valid, expand variables, etc.
 	/// </summary>
 	/// <remarks>
-	/// Functions of this class work with strings, not with the file system. Some functions may just get file info, for example <see cref="makeUnique"/>.
+	/// Most functions of this class work with strings and don't access the file system. Several functions query file system info.
 	/// 
 	/// Functions of this class don't throw exceptions when path is invalid (path format, invalid characters). Only <see cref="normalize"/> throws exception if not full path.
 	/// 
@@ -134,48 +134,26 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets the length of the drive or network folder part in <i>path</i>, including its separator if any.
-		/// If the string does not start with a drive or network folder path, returns 0 or prefix length (<c>@"\\?\"</c> or <c>@"\\?\UNC\"</c>).
+		/// Gets the length of the drive or network folder part in <i>path</i>, like <c>@"C:\"</c>, <c>@"\\server\share\"</c>, <c>@"\\?\C:\"</c>, <c>@"\\?\UNC\server\share\"</c>, etc.
 		/// </summary>
 		/// <param name="path">Full path or any string. Can be null. Should not be <c>@"%environmentVariable%\..."</c>.</param>
 		/// <remarks>
-		/// Supports prefixes <c>@"\\?\"</c> and <c>@"\\?\UNC\"</c>.
-		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
+		/// See <see cref="Path.GetPathRoot"/>.
 		/// </remarks>
 		public static int getRootLength(RStr path) {
-			var s = path;
-			int i = 0, len = s.Length;
-			if (len >= 2) {
-				switch (s[1]) {
-				case ':':
-					if (s[i].IsAsciiAlpha()) {
-						int j = i + 2;
-						if (len == j) return j;
-						if (IsSepChar_(s[j])) return j + 1;
-						//else invalid
-					}
-					break;
-				case '\\':
-				case '/':
-					if (IsSepChar_(s[0])) {
-						i = _GetPrefixLength(s);
-						if (i == 0) i = 2; //no prefix
-						else if (i == 4) {
-							if (len >= 6 && s[5] == ':') goto case ':'; //like @"\\?\C:\..."
-							break; //invalid, no UNC
-						} //else like @"\\?\UNC\server\share\..."
-						int i0 = i, nSep = 0;
-						for (; i < len && nSep < 2; i++) {
-							char c = s[i];
-							if (IsSepChar_(c)) nSep++;
-							else if (c == ':') return i0;
-							else if (c == '0') break;
-						}
-					}
-					break;
-				}
-			}
+			int i = Path.GetPathRoot(path).Length; //Span, no alloc
+			if (i > 0 && i < path.Length && !IsSepChar_(path[i - 1]) && IsSepChar_(path[i])) i++; //@"\\server\share" -> @"\\server\share\"
 			return i;
+		}
+
+		/// <summary>
+		/// Calls <b>Path.GetPathRoot</b>. If no '\\' or '/' at the end, appends "\\".
+		/// Tested: <b>Path.GetPathRoot</b> returns network path like @"\\server\share". API <b>PathSkipRoot</b> returns with '\\'.
+		/// </summary>
+		internal static string GetRootBS_(string s) {
+			s = Path.GetPathRoot(s);
+			if (!Path.EndsInDirectorySeparator(s)) s += "\\";
+			return s;
 		}
 
 		/// <summary>
@@ -269,15 +247,27 @@ namespace Au {
 				};
 				return prefixLongPathIfNeed(r);
 			}
-		ge:
+			ge:
 			if (noException) return null;
 			throw new ArgumentException("Empty filename or path.");
 		}
 
 		/// <summary>
-		/// Returns true if character <c>c == '\\' || c == '/'</c>.
+		/// Returns true if character <c>c is '\\' or '/'</c>.
 		/// </summary>
-		internal static bool IsSepChar_(char c) { return c == '\\' || c == '/'; }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool IsSepChar_(char c) { return c is '\\' or '/'; }
+
+		/// <summary>
+		/// Returns true if s starts with "\\". Supports '/'.
+		/// </summary>
+		/// <param name="s">Can be null.</param>
+		internal static bool StartsWithTwoSlash_(string s) => s.Lenn() >= 2 && IsSepChar_(s[0]) && IsSepChar_(s[1]);
+
+		///// <summary>
+		///// Returns true if ends with '\\' or '/'.
+		///// </summary>
+		//internal static bool EndsWithSep_(RStr s) { return s.Length > 0 && s[^1] is '\\' or '/'; }
 
 		/// <summary>
 		/// Returns true if ends with <c>':'</c> preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
@@ -292,22 +282,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Ensures that s either ends with a valid drive path (eg <c>@"C:\"</c> but not "C:") or does not end with <c>'\\'</c> or <c>'/'</c> (unless would become empty if removed).
+		/// If s is like "C:", returns "C:\", else returns s.
 		/// </summary>
-		/// <param name="s">Can be null.</param>
-		static string _AddRemoveSep(string s) {
-			if (s != null) {
-				int i = s.Length - 1;
-				if (i > 0) {
-					if (IsSepChar_(s[i]) && s[i - 1] != ':') {
-						var s2 = s.Trim(@"\/");
-						if (s2.Length != 0) s = s2;
-					}
-					if (_EndsWithDriveWithoutSep(s)) s += "\\";
-				}
-			}
-			return s;
-		}
+		static string _AddSepToDrive(string s) => _EndsWithDriveWithoutSep(s) ? s + "\\" : s;
 
 		/// <summary>
 		/// Makes normal full path from path that can contain special substrings etc.
@@ -322,14 +299,15 @@ namespace Au {
 		/// 2. If <i>path</i> is not full path but looks like URL, and used flag <b>CanBeUrl</b>, returns <i>path</i>.
 		/// 3. If <i>path</i> is not full path, and <i>defaultParentDirectory</i> is not null/<c>""</c>, combines <i>path</i> with <c>expand(defaultParentDirectory)</c>.
 		/// 4. If <i>path</i> is not full path, throws exception.
-		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
-		/// 6. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
-		/// 7. If no flag <b>DontRemoveEndSeparator</b>, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
-		/// 8. Appends <c>'\\'</c> character if ends with a drive name (eg <c>"C:"</c> -> <c>@"C:\"</c>).
+		/// 5. If <i>path</i> is like <c>"C:"</c> makes like <c>"C:\"</c>.
+		/// 6. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
+		/// 7. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
+		/// 8. If no flag <b>DontRemoveEndSeparator</b>, and string ends with <c>'\\'</c> character, and length &gt; 4, removes the <c>'\\'</c>, unless then it would be a path to an existing file (not directory).
 		/// 9. If no flag <b>DontPrefixLongPath</b>, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
-		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, trims <c>'\\'</c> at the end if need.
+		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths (unless used <i>defaultParentDirectory</i>), trims <c>'\\'</c> at the end if need.
 		/// </remarks>
+		/// <seealso cref="filesystem.getFinalPath"/>
 		public static string normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0) {
 			if (!isFullPathExpand(ref path)) {
 				if (0 != (flags & PNFlags.CanBeUrlOrShell)) if (IsShellPathOrUrl_(path)) return path;
@@ -339,7 +317,7 @@ namespace Au {
 			}
 
 			return Normalize_(path, flags, noExpandEV: true);
-		ge:
+			ge:
 			throw new ArgumentException($"Not full path: '{path}'.");
 		}
 
@@ -352,7 +330,7 @@ namespace Au {
 				if (!noExpandEV) s = expand(s);
 				Debug_.PrintIf(IsShellPathOrUrl_(s), s);
 
-				if (_EndsWithDriveWithoutSep(s)) s += "\\"; //API would append current directory
+				s = _AddSepToDrive(s); //API would append current directory
 
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
@@ -361,8 +339,10 @@ namespace Au {
 
 				if (0 == (flags & PNFlags.DontExpandDosPath) && IsPossiblyDos_(s)) s = ExpandDosPath_(s);
 
-				if (0 == (flags & PNFlags.DontRemoveEndSeparator)) s = _AddRemoveSep(s);
-				else if (_EndsWithDriveWithoutSep(s)) s += "\\";
+				if (0 == (flags & PNFlags.DontRemoveEndSeparator) && IsSepChar_(s[^1]) && s.Length > 4) {
+					var s2 = s[..^1];
+					if (Api.GetFileAttributes(s2).Has(FileAttributes.Directory)) s = s2; //if does not exist as file
+				}
 
 				if (0 == (flags & PNFlags.DontPrefixLongPath)) s = prefixLongPathIfNeed(s);
 			}
@@ -371,14 +351,14 @@ namespace Au {
 
 		/// <summary>
 		/// Prepares path for passing to API and .NET functions that support "..", DOS path etc.
-		/// Calls expand, _AddRemoveSep, prefixLongPathIfNeed. By default throws exception if !isFullPath(path).
+		/// Calls expand, _AddSepToDrive, prefixLongPathIfNeed. By default throws exception if !isFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
 		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath = true) {
 			var s = expand(path);
 			Debug_.PrintIf(IsShellPathOrUrl_(s), s);
 			if (throwIfNotFullPath && !isFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
-			s = _AddRemoveSep(s);
+			s = _AddSepToDrive(s);
 			s = prefixLongPathIfNeed(s);
 			return s;
 		}
@@ -494,7 +474,7 @@ namespace Au {
 		static int _GetPrefixLength(RStr s) {
 			int len = s.Length;
 			if (len >= 4 && s[2] == '?' && IsSepChar_(s[0]) && IsSepChar_(s[1]) && IsSepChar_(s[3])) {
-				if (len >= 8 && IsSepChar_(s[7]) && s[4..].Eqi("UNC")) return 8;
+				if (len >= 8 && IsSepChar_(s[7]) && s[4..7].Eqi("UNC")) return 8;
 				return 4;
 			}
 			return 0;
@@ -523,13 +503,13 @@ namespace Au {
 		/// </remarks>
 		public static string correctName(string name, string invalidCharReplacement = "-") {
 			if (name == null || (name = name.Trim()).Length == 0) return "-";
-			name = name.RxReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if (name.RxIsMatch(_rxInvalidFN2)) name = "@" + name;
+			name = _rxInvalidFN1.Replace(name, invalidCharReplacement).Trim();
+			if (_rxInvalidFN2.IsMatch(name)) name = "@" + name;
 			return name;
 		}
 
-		const string _rxInvalidFN1 = @"\.$|[\\/|<>?*:""\x00-\x1f]";
-		const string _rxInvalidFN2 = @"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)";
+		static regexp _rxInvalidFN1 = new(@"\.$|[\\/|<>?*:""\x00-\x1f]");
+		static regexp _rxInvalidFN2 = new(@"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)");
 
 		/// <summary>
 		/// Returns true if name cannot be used for a file name, eg contains <c>'\\'</c> etc characters or is empty.
@@ -538,14 +518,14 @@ namespace Au {
 		/// <param name="name">Any string. Example: <c>"name.txt"</c>. Can be null.</param>
 		public static bool isInvalidName(string name) {
 			if (name == null || (name = name.Trim()).Length == 0) return true;
-			return name.RxIsMatch(_rxInvalidFN1) || name.RxIsMatch(_rxInvalidFN2);
+			return _rxInvalidFN1.IsMatch(name) || _rxInvalidFN2.IsMatch(name);
 		}
 
 		/// <summary>
 		/// Returns true if character <i>c</i> is invalid in file names (the filename part).
 		/// </summary>
 		public static bool isInvalidNameChar(char c)
-			=> c is < ' ' or '\"' or '<' or '>' or '|'or '*' or '?' or ':'  or '\\' or '/';
+			=> c is < ' ' or '\"' or '<' or '>' or '|' or '*' or '?' or ':' or '\\' or '/';
 
 		/// <summary>
 		/// Returns true if character <i>c</i> is invalid in file paths.
@@ -802,7 +782,7 @@ namespace Au {
 
 namespace Au.Types {
 	/// <summary>
-	/// flags for <see cref="pathname.normalize"/>.
+	/// Flags for <see cref="pathname.normalize"/>.
 	/// </summary>
 	[Flags]
 	public enum PNFlags {

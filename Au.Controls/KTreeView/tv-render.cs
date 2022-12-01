@@ -159,190 +159,198 @@ public unsafe partial class KTreeView {
 	/// </summary>
 	public Brush ImageBrush { get; set; }
 
-	//CONSIDER: custom background and text colors.
-	//public ColorInt? BackgroundColor { get; set; }
+	/// <summary>
+	/// Background color.
+	/// Ignored if high contrast.
+	/// </summary>
+	public ColorInt? BackgroundColor { get; set; }
+
 	//public ColorInt? TextColor { get; set; }
 
 	void _Render(IntPtr dc, RECT rUpdate) {
-		//if (BackgroundColor != null) {
-
-		//} else {
-		Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_WINDOW + 1));
-		//}
-		if (_avi.NE_()) return;
-
-		var range = _GetViewRange();
-		int nDraw = range.to - range.from;
-		if (nDraw > 0) {
-			int backColor = Api.GetSysColor(Api.COLOR_WINDOW), textColor = Api.GetSysColor(Api.COLOR_WINDOWTEXT);
-			bool isFocusedControl = this.IsKeyboardFocused;
-			int xLefts = -_hscroll.Offset; if (HasCheckboxes) xLefts += _itemHeight;
-			int xImages = xLefts + _imageMarginX + _marginLeft;
-			int yyImages = (_itemHeight + 1 - _imageSize) / 2, yyText = _dpi == 96 ? 1 : (_dpi >= 144 ? -1 : 0);
-
-			var graphics = System.Drawing.Graphics.FromHdc(dc);
-			var tr = new GdiTextRenderer(dc, _dpi);
-			IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button", _dpi) : default;
-			try {
-				graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-				SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != Api.GetThemePartSize(checkTheme, dc, 3, 1, null, Api.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = More.Dpi.Scale(13, _dpi);
-
-				var cd = CustomDraw;
-				var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi) {
-					isFocusedControl = isFocusedControl,
-					marginLeft = _marginLeft,
-					marginRight = _marginRight,
-					checkSize = cSize
-				};
-				cd?.Begin(cdi, tr);
-
-				for (int i = 0; i < nDraw; i++) {
-					int index = i + range.from;
-					var v = _avi[index];
-					var item = v.item;
-					int y = i * _itemHeight;
-					var r = new RECT(0, y, _width, _itemHeight);
-					if (!r.IntersectsWith(rUpdate)) continue;
-					//print.it(i);
-					int indent = _imageSize * v.level, xLeft = indent + xLefts;
-					int xImage = indent + xImages, yImage = y + yyImages;
-					int xText = xImage + _imageSize + _imageMarginX, yText = y + yyText;
-
-					if (cdi != null) {
-						cdi.index = index;
-						cdi.item = item;
-						cdi.rect = r;
-						cdi.imageRect = new RECT(xImage, yImage, _imageSize, _imageSize);
-						cdi.xText = xText;
-						cdi.yText = yText;
-						cdi.xLeft = xLeft;
-						cdi.xRight = xText + v.measured;
-						cdi.isFocusedItem = index == _focusedIndex;
-						cdi.isHot = index == _hotIndex;
-						cdi.isSelected = v.isSelected;
-					}
-
-					//background
-					if (cd == null || !cd.DrawBackground()) {
-						int color = item.Color;
-						if (color != -1 || backColor == 0xffffff) { //custom color, or default color is white
-							if (color != -1) { //draw custom color
-								var brush = Api.CreateSolidBrush(color & 0xffffff);
-								Api.FillRect(dc, r, brush);
-								Api.DeleteObject(brush);
-							}
-							int alpha = color >> 24;
-							if (color == -1 || alpha is >= 1 and <= 3) { //if no custom color or if custom color's alpha is 1 - 3, draw selection or hot background
-								color = -1;
-								if (v.isSelected) {
-									if (0 != (alpha & 1)) color = isFocusedControl ? 0xffd5c4 : 0xe0e0e0;
-								} else if (HotTrack && index == _hotIndex) {
-									if (0 != (alpha & 2)) color = 0xfff0e8;
-								}
-								if (color != -1) {
-									var brush = Api.CreateSolidBrush(color);
-									var r2 = r; r2.left = xText - _imageMarginX / 2; //don't draw selection background under icon and checkbox
-									Api.FillRect(dc, r2, brush);
-									Api.DeleteObject(brush);
-								}
-							}
-						} else { //probably high contrast
-							if (v.isSelected) Api.FillRect(dc, r, (IntPtr)(Api.COLOR_HIGHLIGHT + 1));
-						}
-
-						color = item.BorderColor;
-						if (color != -1) {
-							int alpha = color >> 24; color &= 0xffffff;
-							var r2 = r; if (alpha == 1) r2.left = xText - _imageMarginX / 2 - 1;
-							graphics.DrawRectangleInset(color.ToColor_(bgr: true), 1, r2);
-						}
-					}
-
-					//checkboxes
-					if (HasCheckboxes && item.CheckState != TVCheck.None) {
-						if (cd == null || !cd.DrawCheckbox()) {
-							//if(1==(i&3)) item.CheckState=TVCheck.Checked; if(2==(i&3)) item.CheckState=TVCheck.Mixed; if(3==(i&3)) item.CheckState=TVCheck.Excluded; if(0!=(i&4)) v.IsDisabled=true; //test
-							var rr = new RECT(xLeft - cSize.height, y + (_itemHeight - cSize.height) / 2, cSize.width, cSize.height);
-							var ch = item.CheckState;
-							if (checkTheme != default) {
-								int state = ch switch { TVCheck.Checked => 5, TVCheck.RadioChecked => 5, TVCheck.Mixed => 9, TVCheck.Excluded => 17, _ => 1 }; //CBS_x,RBS_x
-								if (item.IsDisabled) state += 3; else if (index == _hotIndex) state += 1;
-								Api.DrawThemeBackground(checkTheme, dc, (ch == TVCheck.RadioChecked || ch == TVCheck.RadioUnchecked) ? 2 : 3, state, rr); //BP_RADIOBUTTON,BP_CHECKBOX
-							} else if (ch != TVCheck.Excluded) {
-								int state = ch switch { TVCheck.Checked => 0x400, TVCheck.Mixed => 0x408, TVCheck.RadioUnchecked => 0x4, TVCheck.RadioChecked => 0x404, _ => 0 }; //DFCS_x
-								if (item.IsDisabled) state |= 0x100; else if (index == _hotIndex) state |= 0x1000;
-								KApi.DrawFrameControl(dc, rr, 4, state); //DFC_BUTTON
-							}
-							//cannot use .NET CheckBoxRenderer etc because no per-monitor DPI.
-						}
-					}
-
-					//image background
-					if (ImageBrush != null) {
-						int imm = (_imageMarginX + 1) / 2;
-						graphics.FillRectangle(ImageBrush, xImage - imm, y, _imageSize + imm * 2, _itemHeight);
-					}
-
-					//image
-					_DrawImage(item.Image);
-
-					void _DrawImage(object imo) {
-						Bitmap b = null;
-						switch (imo) {
-						case Bitmap v:
-							b = v;
-							break;
-						case string v:
-							if (v == "link:") { v = s_stockLinkIcon.Value; if (v == null) break; }
-							b = ImageCache.Get(v, _dpi, ImageUtil.HasImageOrResourcePrefix(v));
-							break;
-						case IEnumerable<object> v:
-							foreach (var o in v) _DrawImage(o);
-							break;
-						}
-
-						if (b != null) {
-							if (cd == null || !cd.DrawImage(b)) {
-								graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
-							}
-						}
-					}
-
-					//text
-					if (cd == null || !cd.DrawText()) {
-						bool bold = item.IsBold; if (bold) tr.FontBold();
-						int color = item.TextColor; if (color == -1) color = item.IsDisabled ? Api.GetSysColor(Api.COLOR_GRAYTEXT) : textColor;
-						tr.DrawText(item.DisplayText, (xText, yText), color);
-						if (bold) tr.FontNormal();
-					}
-
-					if (cd != null) {
-						cd.DrawMarginLeft();
-						cd.DrawMarginRight();
-					}
-
-					//drag & drop insertion mark
-					if (_dd != null && _dd.insertIndex == index) {
-						int thick = More.Dpi.Scale(3, _dpi);
-						using var pen = new System.Drawing.Pen(System.Drawing.SystemColors.WindowText, thick);
-						y += thick / 2; int h1 = _itemHeight - thick;
-						if (_dd.insertFolder) {
-							graphics.DrawRectangle(pen, xImage, y, _imageSize, h1);
-						} else {
-							if (_dd.insertAfter) y += h1;
-							graphics.DrawLine(pen, indent, y, _width, y);
-						}
-					}
-				}
-
-				cd?.End();
+		System.Drawing.Graphics graphics = null;
+		try {
+			bool haveBackColor = BackgroundColor != null && !System.Windows.SystemParameters.HighContrast;
+			if (haveBackColor) {
+				graphics = System.Drawing.Graphics.FromHdc(dc);
+				graphics.Clear((Color)BackgroundColor.Value);
+			} else {
+				Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_WINDOW + 1));
 			}
-			finally {
-				graphics.Dispose();
-				tr.Dispose();
-				if (checkTheme != default) Api.CloseThemeData(checkTheme);
+			if (_avi.NE_()) return;
+
+			var range = _GetViewRange();
+			int nDraw = range.to - range.from;
+			if (nDraw > 0) {
+				int backColor = haveBackColor ? BackgroundColor.Value.ToBGR() : Api.GetSysColor(Api.COLOR_WINDOW);
+				int textColor = Api.GetSysColor(Api.COLOR_WINDOWTEXT);
+				bool isFocusedControl = this.IsKeyboardFocused;
+				int xLefts = -_hscroll.Offset; if (HasCheckboxes) xLefts += _itemHeight;
+				int xImages = xLefts + _imageMarginX + _marginLeft;
+				int yyImages = (_itemHeight + 1 - _imageSize) / 2, yyText = _dpi == 96 ? 1 : (_dpi >= 144 ? -1 : 0);
+
+				graphics ??= System.Drawing.Graphics.FromHdc(dc);
+				var tr = new GdiTextRenderer(dc, _dpi);
+				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button", _dpi) : default;
+				try {
+					graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != Api.GetThemePartSize(checkTheme, dc, 3, 1, null, Api.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = More.Dpi.Scale(13, _dpi);
+
+					var cd = CustomDraw;
+					var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi) {
+						isFocusedControl = isFocusedControl,
+						marginLeft = _marginLeft,
+						marginRight = _marginRight,
+						checkSize = cSize
+					};
+					cd?.Begin(cdi, tr);
+
+					for (int i = 0; i < nDraw; i++) {
+						int index = i + range.from;
+						var v = _avi[index];
+						var item = v.item;
+						int y = i * _itemHeight;
+						var r = new RECT(0, y, _width, _itemHeight);
+						if (!r.IntersectsWith(rUpdate)) continue;
+						//print.it(i);
+						int indent = _imageSize * v.level, xLeft = indent + xLefts;
+						int xImage = indent + xImages, yImage = y + yyImages;
+						int xText = xImage + _imageSize + _imageMarginX, yText = y + yyText;
+
+						if (cdi != null) {
+							cdi.index = index;
+							cdi.item = item;
+							cdi.rect = r;
+							cdi.imageRect = new RECT(xImage, yImage, _imageSize, _imageSize);
+							cdi.xText = xText;
+							cdi.yText = yText;
+							cdi.xLeft = xLeft;
+							cdi.xRight = xText + v.measured;
+							cdi.isFocusedItem = index == _focusedIndex;
+							cdi.isHot = index == _hotIndex;
+							cdi.isSelected = v.isSelected;
+						}
+
+						//background
+						bool hiliteSysColor = false;
+						if (cd == null || !cd.DrawBackground()) {
+							int color = item.Color;
+							if (color != -1 || (backColor & 0xe0e0e0) == 0xe0e0e0) { //custom color, or default color is [almost] white
+								if (color != -1) //draw custom color
+									using (var b1 = GdiObject_.ColorBrush(color)) b1.BrushFill(dc, r);
+								int alpha = color >> 24;
+								if (color == -1 || alpha is >= 1 and <= 3) { //if no custom color or if custom color's alpha is 1 - 3, draw selection or hot background
+									color = -1;
+									if (v.isSelected) {
+										if (0 != (alpha & 1)) color = isFocusedControl ? 0xc4d5ff : 0xe0e0e0;
+									} else if (HotTrack && index == _hotIndex) {
+										if (0 != (alpha & 2)) color = 0xe8f0ff;
+									}
+									if (color != -1) {
+										var r2 = r; r2.left = xText - _imageMarginX / 2; //don't draw selection background under icon and checkbox
+										using (var b2 = GdiObject_.ColorBrush(color)) b2.BrushFill(dc, r2);
+									}
+								}
+							} else { //probably high contrast
+								if (hiliteSysColor = v.isSelected) Api.FillRect(dc, r, (IntPtr)(Api.COLOR_HIGHLIGHT + 1));
+							}
+
+							color = item.BorderColor;
+							if (color != -1) {
+								int alpha = color >> 24;
+								var r2 = r; if (alpha == 1) r2.left = xText - _imageMarginX / 2 - 1;
+								using (var b3 = GdiObject_.ColorBrush(color)) b3.BrushRect(dc, r2);
+							}
+						}
+
+						//checkboxes
+						if (HasCheckboxes && item.CheckState != TVCheck.None) {
+							if (cd == null || !cd.DrawCheckbox()) {
+								//if(1==(i&3)) item.CheckState=TVCheck.Checked; if(2==(i&3)) item.CheckState=TVCheck.Mixed; if(3==(i&3)) item.CheckState=TVCheck.Excluded; if(0!=(i&4)) v.IsDisabled=true; //test
+								var rr = new RECT(xLeft - cSize.height, y + (_itemHeight - cSize.height) / 2, cSize.width, cSize.height);
+								var ch = item.CheckState;
+								if (checkTheme != default) {
+									int state = ch switch { TVCheck.Checked => 5, TVCheck.RadioChecked => 5, TVCheck.Mixed => 9, TVCheck.Excluded => 17, _ => 1 }; //CBS_x,RBS_x
+									if (item.IsDisabled) state += 3; else if (index == _hotIndex) state += 1;
+									Api.DrawThemeBackground(checkTheme, dc, (ch == TVCheck.RadioChecked || ch == TVCheck.RadioUnchecked) ? 2 : 3, state, rr); //BP_RADIOBUTTON,BP_CHECKBOX
+								} else if (ch != TVCheck.Excluded) {
+									int state = ch switch { TVCheck.Checked => 0x400, TVCheck.Mixed => 0x408, TVCheck.RadioUnchecked => 0x4, TVCheck.RadioChecked => 0x404, _ => 0 }; //DFCS_x
+									if (item.IsDisabled) state |= 0x100; else if (index == _hotIndex) state |= 0x1000;
+									KApi.DrawFrameControl(dc, rr, 4, state); //DFC_BUTTON
+								}
+								//cannot use .NET CheckBoxRenderer etc because no per-monitor DPI.
+							}
+						}
+
+						//image background
+						if (ImageBrush != null) {
+							int imm = (_imageMarginX + 1) / 2;
+							graphics.FillRectangle(ImageBrush, xImage - imm, y, _imageSize + imm * 2, _itemHeight);
+						}
+
+						//image
+						_DrawImage(item.Image);
+
+						void _DrawImage(object imo) {
+							Bitmap b = null;
+							switch (imo) {
+							case Bitmap v:
+								b = v;
+								break;
+							case string v:
+								if (v == "link:") { v = s_stockLinkIcon.Value; if (v == null) break; }
+								b = ImageCache.Get(v, _dpi, ImageUtil.HasImageOrResourcePrefix(v));
+								break;
+							case IEnumerable<object> v:
+								foreach (var o in v) _DrawImage(o);
+								break;
+							}
+
+							if (b != null) {
+								if (cd == null || !cd.DrawImage(b)) {
+									graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
+								}
+							}
+						}
+
+						//text
+						if (cd == null || !cd.DrawText()) {
+							bool bold = item.IsBold; if (bold) tr.FontBold();
+							int color = item.TextColor;
+							if (color == -1) color = item.IsDisabled ? Api.GetSysColor(Api.COLOR_GRAYTEXT) : hiliteSysColor ? Api.GetSysColor(Api.COLOR_HIGHLIGHTTEXT) : textColor;
+							else color = ColorInt.SwapRB(color);
+							tr.DrawText(item.DisplayText, (xText, yText), color);
+							if (bold) tr.FontNormal();
+						}
+
+						if (cd != null) {
+							cd.DrawMarginLeft();
+							cd.DrawMarginRight();
+						}
+
+						//drag & drop insertion mark
+						if (_dd != null && _dd.insertIndex == index) {
+							int thick = More.Dpi.Scale(3, _dpi);
+							using var pen = new System.Drawing.Pen(System.Drawing.SystemColors.WindowText, thick);
+							y += thick / 2; int h1 = _itemHeight - thick;
+							if (_dd.insertFolder) {
+								graphics.DrawRectangle(pen, xImage, y, _imageSize, h1);
+							} else {
+								if (_dd.insertAfter) y += h1;
+								graphics.DrawLine(pen, indent, y, _width, y);
+							}
+						}
+					}
+
+					cd?.End();
+				}
+				finally {
+					tr.Dispose();
+					if (checkTheme != default) Api.CloseThemeData(checkTheme);
+				}
 			}
 		}
+		finally { graphics?.Dispose(); }
 	}
 
 	static string _StockLinkLocation() {

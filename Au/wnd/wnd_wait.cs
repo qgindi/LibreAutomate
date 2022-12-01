@@ -194,7 +194,7 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="not">Wait until this window does not have the specified name.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>

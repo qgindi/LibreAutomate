@@ -668,9 +668,9 @@ public partial class keys {
 	/// 
 	/// Mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
 	/// 
-	/// You can use a <see cref="keys"/> variable instead of this function. Example: <c>new keys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="keys(OKey)"/> topic.
+	/// You can use a <see cref="keys"/> variable instead of this function. Example: <c>new keys(null).Add("keys", "!text").SendNow();</c>. More examples in <see cref="keys(OKey)"/> topic.
 	/// 
-	/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddChar"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="Send"/>.
+	/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddChar"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="SendNow"/>.
 	/// 
 	/// Uses API <msdn>SendInput</msdn>.
 	/// </remarks>
@@ -742,7 +742,7 @@ public partial class keys {
 	/// ]]></code>
 	/// </example>
 	public static void send([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
-		new keys(opt.key).Add(keysEtc).Send();
+		new keys(opt.key).Add(keysEtc).SendNow();
 	}
 	//CONSIDER: move most of Remarks to Articles. Also make the param doc smaller, and move the big list to Remarks.
 
@@ -761,7 +761,7 @@ public partial class keys {
 		/// <inheritdoc cref="keys.send" path="/param"/>
 	public static void sendL([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		var o = new OKey() { KeySpeed = 0, NoBlockInput = true, NoCapsOff = true, NoModOff = true, SleepFinally = 0 };
-		new keys(o).Add(keysEtc).Send();
+		new keys(o).Add(keysEtc).SendNow();
 	}
 
 	/// <summary>
@@ -774,7 +774,7 @@ public partial class keys {
 	/// </param>
 	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). Also fails if there is no focused window.</exception>
 	/// <remarks>
-	/// Calls <see cref="AddText(string, string)"/> and <see cref="Send"/>.
+	/// Calls <see cref="AddText(string, string)"/> and <see cref="SendNow"/>.
 	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.
 	/// </remarks>
 	/// <seealso cref="clipboard.paste"/>
@@ -789,7 +789,7 @@ public partial class keys {
 	/// ]]></code>
 	/// </example>
 	public static void sendt(string text, string html = null) {
-		new keys(opt.key).AddText(text, html).Send();
+		new keys(opt.key).AddText(text, html).SendNow();
 	}
 }
 

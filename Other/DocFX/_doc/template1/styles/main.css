@@ -190,6 +190,14 @@ code {
     border-radius: 2px;
     padding: 1px 4px;
 }
+pre code {
+    color: inherit;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    white-space: inherit;
+}
 
 span.parametername {
     font-style: italic;
@@ -279,4 +287,9 @@ span.parametername {
 /* after upgrading DocFX, don't know who modifies default docfx.css and makes Parameters etc gray. Change it. */
 .decalaration, .fieldValue, .parameters, .returns, .exceptions {
     color: #333;
+}
+
+/* Summary of classes. Was 2em. */
+.level0.summary {
+    margin: 1em 0 1em 0;
 }

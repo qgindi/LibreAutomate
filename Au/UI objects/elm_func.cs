@@ -1337,7 +1337,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="path">
 		/// String or array consisting of names (<see cref="Name"/>) of treeitem elements, like <c>"One|Two|Three"</c> or <c>new string[] { "One", "Two", "Three" }</c>.
-		/// Name string format: [](xref:wildcard_expression).
+		/// Name string format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="keys">null or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double, bool)"/>.</param>
 		/// <param name="waitS">If not 0, after expanding each element waits for expanded state max this number of seconds; on timeout throws exception, unless negative. Also waits for each element this number of seconds; always exception if not found.</param>
@@ -1439,7 +1439,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="item">
 		/// Item name (<see cref="Name"/>).
-		/// String format: [](xref:wildcard_expression).
+		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="how">
 		/// Try this parameter if the function fails to select the item etc.

@@ -61,14 +61,14 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 			string link = f.IdStringWithWorkspace;
 			int i1 = path.Length - text.Length;
 			string s1 = path[..i1], s2 = path[i1..];
-			b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>", link, s1);
+			b.AppendFormat("<+open \"{0}\"><c #808080>{1}<>", link, s1);
 			if (i < 0) {
 				b.Append(s2);
 			} else { //hilite
 				int to = i + s.Length;
-				b.Append(s2, 0, i).Append("<bc 0xffff5f>").Append(s2, i, s.Length).Append("<>").Append(s2, to, s2.Length - to);
+				b.Append(s2, 0, i).Append("<bc #ffff5f>").Append(s2, i, s.Length).Append("<>").Append(s2, to, s2.Length - to);
 			}
-			if (f.IsFolder) b.Append("    <c 0x008000>//folder<>");
+			if (f.IsFolder) b.Append("    <c #008000>//folder<>");
 			b.AppendLine("<>");
 
 			_aClose.Add(f);
@@ -76,7 +76,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 
 		if (b.Length == 0) return;
 
-		if (_aClose.Count > 0) b.AppendLine("<bc #FFC000><+caff><c 0x80ff>Close all<><><>");
+		if (_aClose.Count > 0) b.AppendLine("<bc #FFC000><+caff><c #80ff>Close all<><><>");
 
 		cFound.zSetText(b.ToString());
 	}

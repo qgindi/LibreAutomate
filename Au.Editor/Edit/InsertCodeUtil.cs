@@ -149,12 +149,12 @@ static class InsertCodeUtil {
 				var n2 = v.DeclaringSyntaxReferences.First().GetSyntax();
 				var s2 = _GetLocalScope(n2);
 				if (!scopes.Contains(s2)) {
-					//print.it($"<>    <c 0xff8080>{v.Name}, {v.GetSymbolType()}<>");
+					//print.it($"<>    <c #ff8080>{v.Name}, {v.GetSymbolType()}<>");
 					continue;
 				}
 				var span = n2 is ForEachStatementSyntax fe ? fe.Identifier.Span : n2.Span;
 				if (pos <= span.End) {
-					//print.it($"<>    <c 0xc0c0c0>{v.Name}, {v.GetSymbolType()}<>");
+					//print.it($"<>    <c #c0c0c0>{v.Name}, {v.GetSymbolType()}<>");
 					continue;
 				}
 				//print.it(v.Name, v.GetSymbolType());

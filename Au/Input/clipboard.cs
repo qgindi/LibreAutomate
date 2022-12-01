@@ -77,6 +77,7 @@ public static class clipboard {
 	/// </param>
 	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 	/// <param name="hotkey">Keys to use instead of Ctrl+C or Ctrl+X. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
+	/// <param name="timeoutMS">Max time to wait until the focused app sets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
 	/// <remarks>
 	/// Also can get file paths, as multiline text.
 	/// 
@@ -84,9 +85,9 @@ public static class clipboard {
 	/// Fails if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
 	/// Works with console windows too, even if they don't support Ctrl+C.
 	/// </remarks>
-	public static string copy(bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+	public static string copy(bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, cut ? KKey.X : KKey.C);
-		return _Copy(cut, hotkey, options);
+		return _Copy(cut, hotkey, options, timeoutMS);
 		//rejected: 'format' parameter. Not useful.
 	}
 
@@ -98,9 +99,9 @@ public static class clipboard {
 	/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
 	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to copy text". Default true.</param>
 	/// <inheritdoc cref="copy" path="//param|//remarks"/>
-	public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+	public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		try {
-			text = _Copy(cut, hotkey, options);
+			text = _Copy(cut, hotkey, options, timeoutMS);
 			return true;
 		}
 		catch (Exception e1) {
@@ -114,6 +115,7 @@ public static class clipboard {
 	/// <summary>
 	/// Gets data of any formats from the focused app using the clipboard and a callback function.
 	/// </summary>
+	/// <returns>The return value of <i>callback</i>.</returns>
 	/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example <see cref="clipboardData"/> or <see cref="System.Windows.Forms.Clipboard"/>. Don't call copy/paste functions.</param>
 	/// <remarks>
 	/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
@@ -122,20 +124,27 @@ public static class clipboard {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// string text = null; Bitmap image = null; string[] files = null;
-	/// clipboard.copyData(() => { text = clipboardData.getText(); image = clipboardData.getImage(); files = clipboardData.getFiles(); });
-	/// if(text == null) print.it("no text in clipboard"); else print.it(text);
-	/// if(image == null) print.it("no image in clipboard"); else print.it(image.Size);
-	/// if(files == null) print.it("no files in clipboard"); else print.it(files);
+	/// var image = clipboard.copyData(() => clipboardData.getImage());
+	/// 
+	/// var (text, files) = clipboard.copyData(() => (clipboardData.getText(), clipboardData.getFiles()));
 	/// ]]></code>
 	/// </example>
 	/// <inheritdoc cref="copy"/>
-	public static void copyData(Action callback, bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+	public static T copyData<T>(Func<T> callback, bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		Not_.Null(callback);
-		_Copy(cut, hotkey, options, callback);
+		T r = default;
+		_Copy(cut, hotkey, options, timeoutMS, () => { r = callback(); });
+		return r;
 	}
 
-	static string _Copy(bool cut, KHotkey hotkey, OKey options, Action callback = null) {
+	///
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
+	public static void copyData(Action callback, bool cut = false, OKey options = null, KHotkey hotkey = default) {
+		Not_.Null(callback);
+		_Copy(cut, hotkey, options, 0, callback);
+	}
+
+	static string _Copy(bool cut, KHotkey hotkey, OKey options, int timeoutMS, Action callback = null) {
 		string R = null;
 		var optk = options ?? opt.key;
 		bool restore = optk.RestoreClipboard;
@@ -170,7 +179,7 @@ public static class clipboard {
 				}
 
 				//wait until the app sets clipboard text
-				listener.Wait(ref ctrlC);
+				listener.Wait(ref ctrlC, timeoutMS);
 			}
 			finally {
 				ctrlC.Release();
@@ -212,6 +221,7 @@ public static class clipboard {
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.SleepFinally"/>, <see cref="OKey.Hook"/>, <see cref="OKey.KeySpeedClipboard"/>.
 	/// </param>
 	/// <param name="hotkey">Keys to use instead of Ctrl+V. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
+	/// <param name="timeoutMS">Max time to wait until the focused app gets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
 	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 	/// <remarks>
 	/// Sets clipboard data, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
@@ -227,11 +237,11 @@ public static class clipboard {
 	/// clipboard.paste("Example\r\n");
 	/// ]]></code>
 	/// </example>
-	public static void paste(string text, string html = null, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+	public static void paste(string text, string html = null, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		if (text.NE() && html.NE()) return;
 		object data = text;
 		if (html != null) data = new clipboardData().AddHtml(html).AddText(text ?? html);
-		_Paste(data, options, hotkey);
+		_Paste(data, options, hotkey, timeoutMS);
 	}
 	//problem: fails to paste in VMware player. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
@@ -242,9 +252,9 @@ public static class clipboard {
 	/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
 	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to paste text". Default true.</param>
 	/// <inheritdoc cref="paste" path="//param|//remarks"/>
-	public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+	public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		try {
-			paste(text, html, options, hotkey);
+			paste(text, html, options, hotkey, timeoutMS);
 			return true;
 		}
 		catch (Exception e1) {
@@ -264,9 +274,9 @@ public static class clipboard {
 	/// ]]></code>
 	/// </example>
 	/// <inheritdoc cref="paste"/>
-	public static void pasteData(clipboardData data, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+	public static void pasteData(clipboardData data, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		Not_.Null(data);
-		_Paste(data, options, hotkey);
+		_Paste(data, options, hotkey, timeoutMS);
 	}
 
 	//rejected. Should use some UI-created/saved data containing all three formats.
@@ -280,14 +290,14 @@ public static class clipboard {
 	//	_Paste(a, options);
 	//}
 
-	static void _Paste(object data, OKey options, KHotkey hotkey = default) {
+	static void _Paste(object data, OKey options, KHotkey hotkey, int timeoutMS) {
 		var wFocus = keys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 		var optk = options ?? opt.key;
 		using (var bi = new inputBlocker { ResendBlockedKeys = true }) {
 			if (!optk.NoBlockInput) bi.Start(BIEvents.Keys);
 			keys.Internal_.ReleaseModAndDisableModMenu();
 			optk = optk.GetHookOptionsOrThis_(wFocus);
-			Paste_(data, optk, wFocus, hotkey);
+			Paste_(data, optk, wFocus, hotkey, timeoutMS);
 		}
 
 		int sleepFinally = optk.SleepFinally;
@@ -299,7 +309,7 @@ public static class clipboard {
 	/// The caller should block user input (if need), release modifier keys, get optk/wFocus, sleep finally (if need).
 	/// </summary>
 	/// <param name="data">string or <b>clipboardData</b>.</param>
-	internal static void Paste_(object data, OKey optk, wnd wFocus, KHotkey hotkey = default) {
+	internal static void Paste_(object data, OKey optk, wnd wFocus, KHotkey hotkey = default, int timeoutMS = 0) {
 		bool isConsole = wFocus.IsConsole;
 		List<KKey> andKeys = null;
 
@@ -354,9 +364,9 @@ public static class clipboard {
 					ctrlV.Press(hotkey, optk, wFocus, andKeys: andKeys);
 				}
 
-				//wait until the app gets clipboard text
+				//wait until the app gets clipboard data
 				if (sync) {
-					listener.Wait(ref ctrlV);
+					listener.Wait(ref ctrlV, timeoutMS);
 					if (listener.FailedToSetData != null) throw new AuException(listener.FailedToSetData.Message);
 					if (listener.IsBadWindow) sync = false;
 				}
@@ -441,19 +451,20 @@ public static class clipboard {
 
 		/// <summary>
 		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
-		/// Throws AuException on timeout (3 s normally, 28 s if the target window is hung).
+		/// Throws AuException on timeout (default 3 s normally, 28 s if the target window is hung).
 		/// </summary>
 		/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
-		public void Wait(ref keys.Internal_.SendCopyPaste ctrlKey) {
+		public void Wait(ref keys.Internal_.SendCopyPaste ctrlKey, int timeoutMS = 0) {
 			//print.it(Success); //on Paste often already true, because SendInput dispatches sent messages
-			for (int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.
-				wait.Wait_(500, WHFlags.DoEvents, null, this);
-
+			int n = 6, t = 500; //max 3 s (6*500 ms). If hung, max 28 s.
+			if (timeoutMS > 0) { n = (timeoutMS + 500 - 1) / 500; t = timeoutMS / n; }
+			while (!Success) {
+				wait.Wait_(t, WHFlags.DoEvents, null, this);
 				if (Success) break;
-				//is hung?
 				if (--n == 0) throw new AuException(_paste ? "*paste" : "*copy");
 				ctrlKey.Release();
-				_wFocus.SendTimeout(5000, out _, 0, flags: 0);
+				//is hung?
+				_wFocus.SendTimeout(t * 10, out _, 0, flags: 0);
 			}
 		}
 

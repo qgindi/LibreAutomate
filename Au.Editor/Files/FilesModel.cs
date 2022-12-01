@@ -1,3 +1,7 @@
+//CONSIDER: tool to merge workspaces.
+//	Eg show window with differences (added, deleted and modified items). Then user can copy each file in whatever direction.
+//	Could be useful to sync portable.
+
 using System.Xml.Linq;
 using System.IO.Compression;
 using System.Windows.Input;
@@ -122,7 +126,8 @@ partial class FilesModel {
 
 	public static void LoadWorkspace(string wsDir = null) {
 		wsDir ??= App.Settings.workspace;
-		if (wsDir.NE()) wsDir = folders.ThisAppDocuments + "Main";
+		if (wsDir.NE()) wsDir = folders.ThisAppDocuments + "Main"; else wsDir = pathname.normalize(wsDir);
+
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = App.Model;
 		FilesModel m = null;
@@ -156,14 +161,20 @@ partial class FilesModel {
 		oldModel?.Dispose();
 		App.Model = m;
 
-		//CONSIDER: unexpand path
-		if (wsDir != App.Settings.workspace) {
+		//this code is important for portable
+		filesystem.getFinalPath(wsDir, out wsDir);
+		filesystem.getFinalPath(folders.ThisAppDocuments, out var tad);
+		var unexpanded = folders.unexpandPath(wsDir, (tad, "%folders.ThisAppDocuments%"));
+
+		if (unexpanded != App.Settings.workspace) {
 			if (App.Settings.workspace != null) {
 				var ar = App.Settings.recentWS ?? Array.Empty<string>();
-				int i = Array.IndexOf(ar, wsDir); if (i >= 0) ar = ar.RemoveAt(i);
+				int i = Array.IndexOf(ar, unexpanded);
+				if (i < 0) i = Array.IndexOf(ar, wsDir);
+				if (i >= 0) ar = ar.RemoveAt(i);
 				App.Settings.recentWS = ar.InsertAt(0, App.Settings.workspace);
 			}
-			App.Settings.workspace = wsDir;
+			App.Settings.workspace = unexpanded;
 		}
 
 		if (App.Loaded == EProgramState.LoadedUI) m.WorkspaceLoadedWithUI(onUiLoaded: false);
@@ -666,7 +677,7 @@ partial class FilesModel {
 			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		} else {
 			string symlinkTarget = null;
-			if (f.IsSymlink) filesystem.more.getFinalPath(filePath, out symlinkTarget);
+			if (f.IsSymlink) filesystem.getFinalPath(filePath, out symlinkTarget, format: FPFormat.PrefixNever);
 
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 
@@ -756,7 +767,7 @@ partial class FilesModel {
 			if (how is 3 or 4) {
 				var e = filesystem.exists(path, useRawPath: true);
 				if (!e) { print.it(f.IsFolder ? "The folder does not exist" : "The file does not exist"); continue; }
-				if (how == 4 && e.IsNtfsLink && e.Directory && filesystem.more.getFinalPath(path, out var s1)) path = s1;
+				if (how == 4 && e.IsNtfsLink && e.Directory && filesystem.getFinalPath(path, out var s1, format: FPFormat.PrefixNever)) path = s1;
 			}
 
 			switch (how) {
@@ -1172,6 +1183,8 @@ partial class FilesModel {
 			if (isZip) filesystem.delete(wsDir);
 		}
 		catch (Exception ex) { print.it(ex); }
+
+		//CONSIDER: rename "global.cs" and maybe "@Triggers and toolbars"
 	}
 
 	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNInsert pos, bool importingWorkspace = false) {
@@ -1207,13 +1220,13 @@ partial class FilesModel {
 
 	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
 		try {
-			a = a.Select(s => filesystem.more.getFinalPath(s, out s) ? s : null).OfType<string>().ToArray();
+			a = a.Select(s => filesystem.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
 			if (a.Length == 0) return;
 			var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 
 			//need to detect files coming from the workspace dir. When copying to a symlink folder - from that folder.
 			var rootDir = newParent.Ancestors(andSelf: true, noRoot: true).FirstOrDefault(o => filesystem.exists(o.FilePath).IsNtfsLink)?.FilePath ?? FilesDirectory;
-			if (!filesystem.more.getFinalPath(rootDir, out rootDir)) return;
+			if (!filesystem.getFinalPath(rootDir, out rootDir, format: FPFormat.PrefixNever)) return;
 			//CONSIDER: folder symlink: later auto-update files in workspace when files added/removed not through this app.
 
 			bool fromWorkspaceDir = false;
@@ -1418,6 +1431,7 @@ partial class FilesModel {
 	/// </summary>
 	public static void FillMenuRecentWorkspaces(MenuItem sub) {
 		void _Add(string path, int i) {
+			path = pathname.expand(path);
 			var mi = new MenuItem { Header = path.Replace("_", "__") };
 			if (i == 0) mi.FontWeight = FontWeights.Bold;
 			mi.Click += (_, _) => LoadWorkspace(path);

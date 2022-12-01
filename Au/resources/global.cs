@@ -35,13 +35,12 @@ using System.Runtime.InteropServices;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LibreAutomate")]
-[assembly: AssemblyCopyright("Copyright 2022 Gintaras Didžgalvis")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCompany("Gintaras Didžgalvis")]
+[assembly: AssemblyProduct("LibreAutomate C#")]
+[assembly: AssemblyCopyright("Copyright 2020-2022 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.11.0")]
+[assembly: AssemblyVersion("0.11.2")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

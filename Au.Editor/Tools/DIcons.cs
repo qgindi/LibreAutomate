@@ -6,9 +6,9 @@ using Au.Tools;
 
 class DIcons : KDialogWindow {
 	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>
-	public static void ZShow(bool fileIcon = false, string find = null) {
+	public static void ZShow(bool fileIcon = false, string find = null, bool expandMenuIcon = false) {
 		if (s_dialog == null) {
-			s_dialog = new(expandFileIcon: fileIcon, randomizeColors: find == null);
+			s_dialog = new(expandFileIcon: fileIcon, randomizeColors: find == null, expandMenuIcon: expandMenuIcon);
 			s_dialog.Show();
 		} else {
 			s_dialog.Hwnd().ActivateL(true);
@@ -25,8 +25,8 @@ class DIcons : KDialogWindow {
 	enum _Action {
 		FileIcon = 1,
 		MenuIcon,
-		InsertXamlVar,
-		InsertXamlField,
+		//InsertXamlVar,
+		//InsertXamlField,
 		CopyName,
 		CopyXaml,
 		ExportXaml,
@@ -40,7 +40,7 @@ class DIcons : KDialogWindow {
 	//bool _withCollection;
 	TextBox _tName;
 
-	DIcons(bool expandFileIcon, bool randomizeColors) {
+	DIcons(bool expandFileIcon, bool randomizeColors, bool expandMenuIcon) {
 		Title = "Icons";
 		Owner = App.Wmain;
 		ShowInTaskbar = false;
@@ -58,6 +58,7 @@ Can be Pack.Icon, like Modern.List.")
 		_tName.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tName.Clear(); };
 		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
 		b.xAddInBorder(out KTreeView tv); //tv.SingleClickActivate = true;
+		tv.ImageBrush = System.Drawing.Brushes.White;
 		b.End();
 
 		//right - color picker, buttons, etc
@@ -66,7 +67,6 @@ Can be Pack.Icon, like Modern.List.")
 		colors.ColorChanged += color => {
 			_random = null;
 			_color = _ColorToString(color);
-			tv.ImageBrush = ColorInt.GetPerceivedBrightness(color, false) > .8 ? System.Drawing.Brushes.DimGray : null;
 			tv.Redraw();
 		};
 		b.StartStack();
@@ -90,7 +90,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.End();
 		if (expandFileIcon) exp1.IsExpanded = true;
 
-		b.StartGrid<Expander>("Code for menu/toolbar/etc icon");
+		b.StartGrid<Expander>(out var exp2, "Menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
 		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled()
@@ -109,6 +109,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
 		b.End();
+		if (expandMenuIcon) exp2.IsExpanded = true;
 
 		b.StartStack<Expander>("Export to current workspace folder");
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, _Action.ExportXaml)).Width(70).Disabled();
@@ -120,15 +121,34 @@ Can be Pack.Icon, like Modern.List.")
 		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
 		b.End();
 
-		//b.StartGrid<Expander>("List display options");
-		////b.Add("Background", out ComboBox cBackground).Items("Default|Control|White|Black)");
-		////cBackground.SelectionChanged += (o, e) => _ChangeBackground();
+		b.StartGrid<Expander>("Options");
+		b.Add("List background", out ComboBox cBackground)
+			.Items("White|Black|Dark|Control")
+			.Select(Math.Clamp(App.Settings.dicons_listColor, 0, 3));
+		cBackground.SelectionChanged += (o, e) => {
+			App.Settings.dicons_listColor = cBackground.SelectedIndex;
+			_SetListIconBrush();
+			tv.Redraw();
+		};
+		_SetListIconBrush();
+		void _SetListIconBrush() {
+			tv.ImageBrush = App.Settings.dicons_listColor switch { 0 => System.Drawing.Brushes.White, 1 => System.Drawing.Brushes.Black, 2 => System.Drawing.Brushes.DimGray, _ => System.Drawing.SystemBrushes.Control }; ;
+		}
+		var darkContrast = b.xAddCheckText("High contrast color", App.Settings.dicons_contrastColor, check: App.Settings.dicons_contrastUse);
+		b.Tooltip("Append this color, like \"*Pack.Name selectedColor|thisColor\". This color is for high contrast dark theme. Can be #RRGGBB or color name.");
+		darkContrast.c.CheckChanged += (_, _) => App.Settings.dicons_contrastUse = darkContrast.c.IsChecked;
+		darkContrast.t.TextChanged += (_, _) => {
+			var s = darkContrast.t.Text.NullIfEmpty_();
+			if (s != null) for (int i = 0; i < 2; i++) { try { System.Windows.Media.ColorConverter.ConvertFromString(s); } catch { s = i == 0 ? "#" + s : null; } }
+			App.Settings.dicons_contrastColor = s;
+		};
+
 		//b.Add(out KCheckBox cCollection, "Collection");
 		//cCollection.CheckChanged += (_, _) => {
 		//	_withCollection = cCollection.IsChecked == true;
 		//	tv.Redraw();
 		//};
-		//b.End();
+		b.End();
 
 		b.Row(-1);
 		b.R.Add<TextBlock>().Align("R").Text("Thanks to ", "<a>MahApps.Metro.IconPacks", new Action(() => run.it("https://github.com/MahApps/MahApps.Metro.IconPacks")));
@@ -233,19 +253,19 @@ Can be Pack.Icon, like Modern.List.")
 		void _InsertCodeOrExport(KTreeView tv, _Action what) {
 			//lastAction = what;
 			if (tv.SelectedItem is not _Item k) return;
-			string code = null;
+			//string code = null;
 			if (what == _Action.MenuIcon) {
 				var s = _ColorName(k);
 				if (DCustomize.ZSetImage(s)) return;
 				InsertCode.SetMenuToolbarItemIcon(s);
 			} else if (what == _Action.CopyName) {
-				code = _ColorName(k);
+				clipboard.text = _ColorName(k);
 			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {
 				xaml = xaml.Replace('\"', '\'').RxReplace(@"\R\s*", "");
 				switch (what) {
-				case _Action.InsertXamlVar: code = $"string icon{k._name} = \"{xaml}\";"; break;
-				case _Action.InsertXamlField: code = $"public const string {k._name} = \"{xaml}\";"; break;
-				case _Action.CopyXaml: code = xaml; break;
+				//case _Action.InsertXamlVar: code = $"string icon{k._name} = \"{xaml}\";"; break;
+				//case _Action.InsertXamlField: code = $"public const string {k._name} = \"{xaml}\";"; break;
+				case _Action.CopyXaml: clipboard.text = xaml; break;
 				case _Action.ExportXaml: _Export(false); break;
 				case _Action.ExportIcon: _Export(true); break;
 				}
@@ -267,11 +287,11 @@ Can be Pack.Icon, like Modern.List.")
 				}
 			}
 
-			if (code != null) {
-				if (what is _Action.CopyName or _Action.CopyXaml) clipboard.text = code;
-				else if (what is _Action.InsertXamlVar or _Action.InsertXamlField) InsertCode.Statements(code);
-				else InsertCode.TextSimply(code);
-			}
+			//if (code != null) {
+			//	if (what is _Action.CopyName or _Action.CopyXaml) clipboard.text = code;
+			//	else if (what is _Action.InsertXamlVar or _Action.InsertXamlField) InsertCode.Statements(code);
+			//	else InsertCode.TextSimply(code);
+			//}
 		}
 
 		void _RandomizeColors() {
@@ -298,21 +318,20 @@ Can be Pack.Icon, like Modern.List.")
 			}
 			//}
 			//perf.nw(); //4 ms
-			tv.ImageBrush = middleL > 200 ? System.Drawing.Brushes.DimGray : null;
 			tv.Redraw();
 		}
-
-		//void _ChangeBackground() {
-		//	int i = cBackground.SelectedIndex;
-		//	tv.currently does not support custom background color. We could custom-draw, but never mind.
-		//}
 	}
 
 	static string _ColorToString(int c) => "#" + c.ToS("X6");
 
 	string _ItemColor(_Item k) => _random == null ? _color : _ColorToString(k._color);
 
-	string _ColorName(_Item k) => "*" + k._table + "." + k._name + " " + _ItemColor(k);
+	//string _ColorName(_Item k) => "*" + k._table + "." + k._name + " " + _ItemColor(k);
+	string _ColorName(_Item k) {
+		var s = "*" + k._table + "." + k._name + " " + _ItemColor(k);
+		if (App.Settings.dicons_contrastUse && !App.Settings.dicons_contrastColor.NE()) s = s + "|" + App.Settings.dicons_contrastColor;
+		return s;
+	}
 
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		_dpi = newDpi.PixelsPerInchX.ToInt();
@@ -337,13 +356,6 @@ Can be Pack.Icon, like Modern.List.")
 					//using var p1 = perf.local();
 					if (GetIconFromBigDB(_table, _name, s_dialog._ItemColor(this), out string xaml)) {
 						//p1.Next('d');
-
-						//rejected: if very bright, use dark background for icon.
-						//	This works, but looks not good. Instead we set tv.ImageBrush when all icons are bright.
-						//var e = ImageUtil.LoadWpfImageElement(xaml);
-						//e = new Border { Child = e, Background = System.Windows.Media.Brushes.DimGray };
-						//return ImageUtil.ConvertWpfImageElementToGdipBitmap(e, s_dialog._dpi, (16, 16));
-
 						return ImageUtil.LoadGdipBitmapFromXaml(xaml, s_dialog._dpi, (16, 16));
 					}
 				}
@@ -374,11 +386,12 @@ Can be Pack.Icon, like Modern.List.")
 		string templ = null; foreach (var v in s_tables) if (v.table == table) { templ = v.templ; break; }
 		if (templ == null) return false;
 		if (!s_db.Get(out string data, $"SELECT data FROM {table} WHERE name='{name}'")) return false;
+		//the SELECT is the slowest part. With prepared statement just slightly faster.
 
 		int i = templ.Find(" Data=\"{x:Null}\""); if (i < 0) return false;
 		templ = templ.ReplaceAt(i + 7, 8, data);
 
-		if (0 == templ.RxReplace(@"(?:Fill|Stroke)=""\K[^""]+", color, out templ)) return false;
+		if (!WpfUtil_.SetColorInXaml(ref templ, color)) return false;
 
 		if (templ.Contains("\"{")) return false;
 		//print.it(templ);
@@ -387,19 +400,21 @@ Can be Pack.Icon, like Modern.List.")
 		return true;
 	}
 
-	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. Can be null.</param>
+	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. If just "*Pack.Icon", sets "black". Can be null.</param>
 	/// <exception cref="Exception"></exception>
 	public static bool GetIconFromBigDB(string icon, out string xaml) {
 		xaml = null;
 		if (icon == null || !icon.Starts('*')) return false;
 		int i = icon.IndexOf('.'); if (i < 0) return false;
-		int j = icon.IndexOf(' ', i + 1); if (j < 0) return false;
+		int j = icon.IndexOf(' ', i + 1);
+		string color = null;
+		if (j > 0) color = icon[(j + 1)..]; else j = icon.Length;
 		_OpenDB();
-		return GetIconFromBigDB(icon[1..i], icon[++i..j], icon[++j..], out xaml);
+		return GetIconFromBigDB(icon[1..i], icon[++i..j], color, out xaml);
 	}
 
 #if true
-	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. Can be null.</param>
+	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. If just "*Pack.Icon", sets "black". Can be null.</param>
 	public static bool TryGetIconFromBigDB(string icon, out string xaml) {
 		//using var p1 = perf.local();
 		try { return GetIconFromBigDB(icon, out xaml); }
@@ -420,7 +435,7 @@ Can be Pack.Icon, like Modern.List.")
 		//using var p1 = perf.local();
 		try {
 			if(s_iconsDB == null) {
-				var dbFile = folders.ThisAppDataLocal + "icons.db"; //shoulddo: if portable, create in workspace folder
+				var dbFile = folders.ThisAppDataLocal + "icons.db";
 				var db = s_iconsDB = new(dbFile, sql: "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS icons (icon TEXT PRIMARY KEY, xaml TEXT)");
 				process.thisProcessExit += _ => db.Dispose();
 			}

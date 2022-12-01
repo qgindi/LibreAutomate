@@ -40,7 +40,7 @@ namespace Au {
 		/// <code><![CDATA[
 		/// var k = new keys(opt.key); //create new keys instance and copy options from opt.key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of opt.key
-		/// k.Add("Right*10 Ctrl+A").Send(); //uses options of k
+		/// k.Add("Right*10 Ctrl+A").SendNow(); //uses options of k
 		/// ]]></code>
 		/// </example>
 		public static OKey key => t_key ??= new OKey(init.key);
@@ -122,7 +122,7 @@ namespace Au {
 			/// <code><![CDATA[
 			/// var k = new keys(opt.init.key); //create new keys instance and copy options from opt.init.key to it
 			/// k.Options.KeySpeed = 100; //changes option of k
-			/// k.Add("Tab Ctrl+V").Send(); //uses options of k
+			/// k.Add("Tab Ctrl+V").SendNow(); //uses options of k
 			/// ]]></code>
 			/// </example>
 			public static OKey key { get; } = new OKey();
@@ -889,7 +889,7 @@ namespace Au.Types {
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="keys.send"/>, <see cref="keys.sendt"/>, <see cref="keys.Send"/>, <see cref="clipboard.paste"/> and similar functions. Not called by <see cref="clipboard.copy"/>.
+		/// The callback function is called by <see cref="keys.send"/>, <see cref="keys.sendt"/>, <see cref="keys.SendNow"/>, <see cref="clipboard.paste"/> and similar functions. Not called by <see cref="clipboard.copy"/>.
 		/// </remarks>
 		/// <seealso cref="OKeyHookData"/>
 		/// <example>

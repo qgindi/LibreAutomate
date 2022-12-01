@@ -4,17 +4,19 @@ uid: command_line
 
 # Command line of Au.Editor.exe
 
+**/n** (the first argument) - don't restart as administrator when started not as administrator. See [UAC](xref:uac).
+
+To restart as administrator the program uses Windows Task Scheduler task `\Au\Au.Editor`. It is created by the setup program. Does not restart if the task is missing or disabled.
+
 **/v** - show the main window when started, regarless of program settings.
 
-**/n** - don't restart as administrator when started not as administrator. See [UAC](xref:uac). Note: can restart as administrator only if installed with the setup program.
+**"script name or relative path in current workspace"** - run the script. Can be followed by script's command line arguments (the *args* variable).
 
 **"full path of a file or folder"** - import it into the current workspace (shows a dialog). Can be multiple files, like `"file1" "file2" "file3"`.
 
 **"workspace folder path"** - open or import the workspace (shows a dialog).
 
-**"script name or relative path in current workspace"** - run the script. Can be followed by script's command line arguments (the *args* variable).
-
-Multiple options not supported, except: **/n** followed by some other option except "run script".
+Cannot be more than 1 of the above 4 (/v, run script, import, workspace).
 
 #### About "run script"
 The started Au.Editor.exe process is an intermediate temporary process, not the regular editor process with UI. It just relays the command line to the regular process, waits if need, and exits. Also it starts the regular process if not running. The regular process compiles and starts the script.
@@ -23,7 +25,7 @@ Use prefix * to wait until the script ends. While waiting, the parent process ca
 
 The exit code of this process when it waits is the script's exit code. The script can simply return it, like `return 1;` or call **Environment.Exit**. When does not wait, the exit code is the process id of the script. When fails to run (script not found, contains errors, etc) or wait, the exit code is < 0 (can be -1 to -7).
 
-##### Examples
+#### Examples
 
 - `Au.Editor.exe Script5.cs`
 - `Au.Editor.exe "Script name with spaces"`

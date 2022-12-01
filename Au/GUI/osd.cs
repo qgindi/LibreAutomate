@@ -232,7 +232,7 @@ namespace Au.Types
 		/// <summary>
 		/// Closes all OSD windows of this process.
 		/// </summary>
-		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
+		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [wildcard expression](xref:wildcard_expression).</param>
 		public static void closeAll([ParamString(PSFormat.Wildex)] string name = null) {
 			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Post(Api.WM_CLOSE);
 		}

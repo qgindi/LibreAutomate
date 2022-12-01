@@ -1,6 +1,6 @@
 # LibreAutomate C#
 
-LibreAutomate is a C# script editor/manager with an automation library and UI automation tools. For Windows. Uses .NET 6.
+C# script editor and automation library for Windows.
 
 Some features of the automation library:
 - Automate desktop and web UI using keys, mouse and API. Find and click buttons, links, images.
@@ -10,6 +10,7 @@ Some features of the automation library:
 - Custom dialog windows of any complexity can be created easily in code.
 - All classes/functions are documented.
 - The library can be used in other programs too. Can be installed from [NuGet](https://www.nuget.org/packages/LibreAutomate).
+- Uses .NET 6.
 
 Some features of the script editor program:
 - The scripting language is C#. The program is a good way to learn it.

@@ -26,9 +26,9 @@ public partial class keys
 	/// var k = new keys(opt.init.key);
 	/// k.Options.KeySpeed = 50;
 	/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
-	/// k.Send(); //sends and clears the variable
+	/// k.SendNow(); //sends and clears the variable
 	/// k.Add("Tab // Space*3", "!text", KKey.Enter, 500); //the same as the above k.AddKeys... line
-	/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
+	/// for(int i = 0; i < 5; i++) k.SendNow(true); //does not clear the variable
 	/// ]]></code>
 	/// </example>
 	public keys(OKey cloneOptions) { Options = new OKey(cloneOptions); }
@@ -138,7 +138,7 @@ public partial class keys
 	bool? _antiCapsLock;
 
 	/// <summary>
-	/// Adds keystrokes to the internal collection. They will be sent by <see cref="Send"/>.
+	/// Adds keystrokes to the internal collection. They will be sent by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="keys_">
@@ -155,7 +155,7 @@ public partial class keys
 		if (k[0] == '%') return AddText(null, k[1..]);
 		int i = 0, len = 0;
 		foreach (var g in _SplitKeysString(k)) {
-			//print.it($"<><c 0xC000>{g.Value}</c>"); //continue;
+			//print.it($"<><c #C000>{g.Value}</c>"); //continue;
 			i = g.Start; len = g.Length;
 			char c = k[i]; _KEvent e;
 			switch (c) {
@@ -251,7 +251,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="Send"/>.
+	/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
@@ -269,7 +269,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="Send"/>.
+	/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
@@ -341,7 +341,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds text or HTML. It will be sent by <see cref="Send"/>.
+	/// Adds text or HTML. It will be sent by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <remarks>
@@ -382,7 +382,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds clipboard data, for example several formats. It will be pasted by <see cref="Send"/>.
+	/// Adds clipboard data, for example several formats. It will be pasted by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="cd">Clipboard data.</param>
@@ -421,7 +421,7 @@ public partial class keys
 	/// <returns>This.</returns>
 	/// <param name="a"></param>
 	/// <remarks>
-	/// The callback function will be called by <see cref="Send"/> and can do anything except sending keys and copy/paste.
+	/// The callback function will be called by <see cref="SendNow"/> and can do anything except sending keys and copy/paste.
 	/// </remarks>
 	public keys AddAction(Action a) {
 		Not_.Null(a);
@@ -430,7 +430,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds the repeat operator. Then <see cref="Send"/> will send the last added key or character <i>count</i> times.
+	/// Adds the repeat operator. Then <see cref="SendNow"/> will send the last added key or character <i>count</i> times.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="count">The repeat count.</param>
@@ -445,7 +445,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds a short pause. Then <see cref="Send"/> will sleep (wait).
+	/// Adds a short pause. Then <see cref="SendNow"/> will sleep (wait).
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="timeMS">Time to sleep, milliseconds.</param>
@@ -458,7 +458,7 @@ public partial class keys
 	}
 
 	/// <summary>
-	/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
+	/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <inheritdoc cref="keys.send" path="/param"/>
@@ -501,7 +501,9 @@ public partial class keys
 	/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
 	/// <exception cref="ArgumentException"><i>canSendAgain</i> is true and <i>keys_</i> end with + or (.</exception>
 	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
-	public void Send(bool canSendAgain = false) {
+	public void SendNow(bool canSendAgain = false) {
+		//note: the "Now" in the name is just to make it different from the static function send(). If named Send, problems with DocFX etc.
+
 		_ThrowIfSending();
 		if (_a.Count == 0) return;
 		if (canSendAgain) {
@@ -581,6 +583,12 @@ public partial class keys
 		//	The best would be non-LL keyboard hook that sets event when receives our sent special key-up. Especially when combined with 'get thread CPU usage' while waiting for the event. However these hooks don't work eg in Store apps.
 		//Better add a Sync function (keys.sync) or/and special key name, let users do it explicitly where need.
 	}
+
+	/// <summary>
+	/// Deprecated. Use <see cref="SendNow"/>.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public void Send(bool canSendAgain = false) => SendNow(canSendAgain);
 
 	unsafe void _SendKey(_KEvent k, int i) {
 		bool needScanCode = k.scan == 0 && !k.SIFlags.HasAny(_KFlags.Scancode | _KFlags.Unicode);

@@ -200,8 +200,8 @@ public partial class KMenuCommands {
 		//print.it($"---- {name} = {target}");
 		foreach (var c in _d.Values) {
 			var ca = c.Attribute;
-			var keys = ca.keys;
-			if (keys != null && ca.target == name) {
+			var keys = c.Keys;
+			if (!keys.NE() && ca.target == name) {
 				//print.it(c, keys);
 				int i = keys.IndexOf(", ");
 				if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);

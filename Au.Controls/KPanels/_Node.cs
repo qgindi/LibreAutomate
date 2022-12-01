@@ -387,6 +387,7 @@ namespace Au.Controls
 								TextAlignment = TextAlignment.Center,
 								Padding = new Thickness(2, 1, 2, 3),
 								Background = _pm.CaptionBrush,
+								Foreground = Brushes.Black,
 								TextTrimming = TextTrimming.CharacterEllipsis
 							};
 						} else if (_IsToolbar) {

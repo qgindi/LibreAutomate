@@ -254,25 +254,26 @@ namespace Au {
 		static string __thisAppBS;
 		//Can change: AppDomain.CurrentDomain.SetData("APP_CONTEXT_BASE_DIRECTORY", "C:\\");
 
-		//FUTURE: support portable apps.
-		//	Eg if ThisAppBS is like "*\PortableApps\*\App\*", let ThisAppX properties by default return "*\PortableApps\*\Data\...".
-		//	But maybe it does not make much sense, because many (most?) users also would have to install .NET5+.
-		//	The app can use dotnet dlls in app's folder without dotnet installed. Our AppHost supports it.
-		//	Or could install dotnet in the removable drive to be shared by portable .NET apps. And let our AppHost support it. Maybe it already supports the environment variable, don't remember.
-
-		const string c_defaultAppSubDir = "Au";
-		//static string c_defaultAppSubDir = @"Au\" + script.name; //no. In a script app could create many folders. All these properties can be set.
-		//note: don't use Application.ProductName etc. It loads Forms, exception if dynamic assembly, etc.
-
 		#region set auto/once
 
-		[ThreadStatic] static bool _noGetAutoCreate;
+		/// <summary>
+		/// Don't auto-create folders when accessing <see cref="ThisAppDocuments"/>, <see cref="ThisAppTemp"/>, <see cref="ThisAppDataLocal"/> or <see cref="ThisAppDataRoaming"/> in this thread.
+		/// </summary>
+		/// <remarks>
+		/// Normally this is used temporarily, then restored (set = false).
+		/// </remarks>
+		public static bool noAutoCreate {
+			get => _noAutoCreate;
+			set { _noAutoCreate = value; }
+		}
+		[ThreadStatic] static bool _noAutoCreate;
+
 		static readonly object _lock = new();
 
 		static string _SetAuto(ref string propVar, string value, bool create) {
 			lock (_lock) {
 				if (propVar == null) {
-					if (create && !_noGetAutoCreate) filesystem.createDirectory(value);
+					if (create && !_noAutoCreate) filesystem.createDirectory(value);
 					propVar = value;
 				}
 			}
@@ -285,87 +286,138 @@ namespace Au {
 #if DEBUG
 					if (!Debugger.IsAttached) //debugger may get the property. Then _SetAuto sets default value.
 #endif
-						throw new InvalidOperationException("folders." + m_ + " is already set.");
+					throw new InvalidOperationException("folders." + m_ + " is already set.");
 				}
-				if (create) filesystem.createDirectory(value);
+				if (create && !_noAutoCreate) filesystem.createDirectory(value);
 				propVar = value;
 			}
+		}
+
+		static string _DefThisApp(string baseDir, string portableSubdir, bool warning = false) {
+			bool ee = script.role == SRole.EditorExtension;
+			if (ScriptEditor.IsPortable) return Editor.Path + @"\data\" + portableSubdir + (ee ? null : @"\_script");
+			//return baseDir + (ee ? @"\LibreAutomate" : @"\Au"); //old
+			return baseDir + (ee ? @"\LibreAutomate" : @"\LibreAutomate\_script");
 		}
 
 		#endregion
 
 		/// <summary>
 		/// Gets or sets path of folder "temporary files of this application".
-		/// Default is <c>folders.Temp + "Au"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
+		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
+		/// - miniProgram and exeProgram - <c>folders.Temp + @"LibreAutomate\_script"</c>. Or <c>folders.Temp + "Au"</c>, if exists (for backward compatibility).
+		/// - editorExtension - <c>folders.Temp + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\temp\_script"</c>. Note: exeProgram launched not from editor isn't portable.
+		/// - Portable editorExtension - <c>folders.ThisApp + @"data\temp"</c>. Cannot be changed.
+		/// 
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
 		/// </remarks>
 		public static FolderPath ThisAppTemp {
-			get => new(__thisAppTemp ?? _SetAuto(ref __thisAppTemp, Temp + c_defaultAppSubDir, create: true));
+			get => new(__thisAppTemp ?? _SetAuto(ref __thisAppTemp, _DefThisApp(Temp, "temp"), create: true));
 			set => _SetOnce(ref __thisAppTemp, value, create: true);
 		}
 		static string __thisAppTemp;
 
 		/// <summary>
 		/// Gets or sets path of folder "user document files of this application".
-		/// Default is <c>folders.Documents + "Au"</c>.
 		/// </summary>
-		/// <inheritdoc cref="ThisAppTemp"/>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <remarks>
+		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
+		/// - miniProgram and exeProgram - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
+		/// - editorExtension - <c>folders.Documents + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: exeProgram launched not from editor isn't portable.
+		/// - Portable editorExtension - <c>folders.ThisApp + @"data\doc"</c>. Cannot be changed.
+		/// 
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// </remarks>
 		public static FolderPath ThisAppDocuments {
-			get => new(__thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true));
+			get => new(__thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, _DefThisApp(Documents, "doc", warning: true), create: true));
 			set => _SetOnce(ref __thisAppDocuments, value, create: true);
 		}
 		static string __thisAppDocuments;
 
 		/// <summary>
-		/// Gets or sets path of folder "private files of this application of this user account".
-		/// Default is <c>folders.RoamingAppData + "Au"</c>.
-		/// </summary>
-		/// <inheritdoc cref="ThisAppTemp"/>
-		public static FolderPath ThisAppData {
-			get => new(__thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true));
-			set => _SetOnce(ref __thisAppData, value, create: true);
-		}
-		static string __thisAppData;
-
-		/// <summary>
 		/// Gets or sets path of folder "local (non-roaming) private files of this application of this user account".
-		/// Default is <c>folders.LocalAppData + "Au"</c>.
 		/// </summary>
-		/// <inheritdoc cref="ThisAppTemp"/>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <remarks>
+		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
+		/// - miniProgram and exeProgram - <c>folders.LocalAppData + @"LibreAutomate\_script"</c>. Or <c>folders.LocalAppData + "Au"</c>, if exists (for backward compatibility).
+		/// - editorExtension - <c>folders.LocalAppData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appLocal\_script"</c>. Note: exeProgram launched not from editor isn't portable.
+		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appLocal"</c>. Cannot be changed.
+		/// 
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// </remarks>
 		public static FolderPath ThisAppDataLocal {
-			get => new(__thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true));
+			get => new(__thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, _DefThisApp(LocalAppData, "appLocal", warning: true), create: true));
 			set => _SetOnce(ref __thisAppDataLocal, value, create: true);
 		}
 		static string __thisAppDataLocal;
 
 		/// <summary>
-		/// Gets or sets path of folder "common (all users) private files of this application".
-		/// Default is <c>folders.ProgramData + "Au"</c>.
+		/// Gets or sets path of folder "roaming private files of this application of this user account".
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
+		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
+		/// - miniProgram and exeProgram - <c>folders.RoamingAppData + @"LibreAutomate\_script"</c>. Or <c>folders.RoamingAppData + "Au"</c>, if exists (for backward compatibility).
+		/// - editorExtension - <c>folders.RoamingAppData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appRoaming\_script"</c>. Note: exeProgram launched not from editor isn't portable.
+		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appRoaming"</c>. Cannot be changed.
+		/// 
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// This function does not auto-create the folder; usually it is created when installing the application.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// </remarks>
+		public static FolderPath ThisAppDataRoaming {
+			get => new(__thisAppDataRoaming ?? _SetAuto(ref __thisAppDataRoaming, _DefThisApp(RoamingAppData, "appRoaming"), create: true));
+			set => _SetOnce(ref __thisAppDataRoaming, value, create: true);
+		}
+		static string __thisAppDataRoaming;
+
+		[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+		public static FolderPath ThisAppData {
+			get => ThisAppDataRoaming;
+			set => ThisAppDataRoaming = value;
+		} //info: unexpandPath ignores ThisAppX.
+
+		/// <summary>
+		/// Gets or sets path of folder "common (all users) private files of this application".
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <remarks>
+		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
+		/// - miniProgram and exeProgram - <c>folders.ProgramData + @"LibreAutomate\_script"</c>. Or <c>folders.ProgramData + "Au"</c>, if exists (for backward compatibility).
+		/// - editorExtension - <c>folders.ProgramData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appCommon\_script"</c>. Note: exeProgram launched not from editor isn't portable.
+		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appCommon"</c>. Cannot be changed.
+		/// 
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// This function does not auto-create the folder; usually it is created when installing the application; the script editor does not use and does not install it.
 		/// Note: the ProgramData folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
 		/// </remarks>
 		public static FolderPath ThisAppDataCommon {
-			get => new(__thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, ProgramData + c_defaultAppSubDir, create: false));
+			get => new(__thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, _DefThisApp(ProgramData, "appCommon"), create: false));
 			set => _SetOnce(ref __thisAppDataCommon, value, create: false);
 		}
 		static string __thisAppDataCommon;
 
 		/// <summary>
-		/// Gets or sets path of folder "images (icons etc) of this application".
-		/// Default is <c>ThisAppBS + "Images"</c>.
+		/// Gets or sets path of folder "images of this application".
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
+		/// Default is <c>ThisAppBS + "Images"</c>.
+		/// 
 		/// Used by functions of these classes: <b>icon</b>, <b>popupMenu</b>, <b>toolbar</b>, <b>uiimage</b>, possibly some other.
-		/// This function does not auto-create the folder; usually it is created when installing the application.
+		/// This function does not auto-create the folder; usually it is created when installing the application; the script editor does not use and does not install it.
 		/// </remarks>
 		public static FolderPath ThisAppImages {
 			get => new(__thisAppImages ?? _SetAuto(ref __thisAppImages, ThisAppBS + "Images", create: false));
@@ -374,25 +426,37 @@ namespace Au {
 		static string __thisAppImages;
 
 		/// <summary>
-		/// Gets the root directory of this application, like <c>@"C:\"</c> or <c>@"\\network\folder\"</c>.
+		/// Gets the root directory of this application, like <c>@"C:\"</c> or <c>@"\\server\share\"</c>.
 		/// </summary>
-		public static string ThisAppDriveBS => __thisAppDrive ??= Path.GetPathRoot(ThisAppBS);
+		/// <remarks>
+		/// See <see cref="Path.GetPathRoot"/>.
+		/// </remarks>
+		public static string ThisAppDriveBS => __thisAppDrive ??= pathname.GetRootBS_(ThisAppBS);
 		static string __thisAppDrive;
 		//public static FolderPath ThisAppDrive => new(__thisAppDrive ??= Path.GetPathRoot(ThisAppBS));
 
 		/// <summary>
+		/// Gets folder of the script editor.
+		/// Available in the script editor process and in scripts launched from it. Elsewhere null.
+		/// </summary>
+		public static FolderPath Editor { get; internal set; }
+
+		/// <summary>
 		/// Gets folder of current workspace.
-		/// Available in editor process. In script process available if role is miniProgram or editorExtension. Elsewhere null.
+		/// Available in the script editor process and in scripts launched from it. Elsewhere null.
 		/// </summary>
 		public static FolderPath Workspace {
 			get => __workspace;
-			internal set { __workspace = value; WorkspaceDriveBS = Path.GetPathRoot(value); }
+			internal set { __workspace = value; WorkspaceDriveBS = pathname.GetRootBS_(value); }
 		}
 		static FolderPath __workspace;
 
 		/// <summary>
-		/// Gets the root directory of <see cref="Workspace"/>, like <c>@"C:\"</c> or <c>@"\\network\folder\"</c>.
+		/// Gets the root directory of <see cref="Workspace"/>, like <c>@"C:\"</c> or <c>@"\\server\share\"</c>.
 		/// </summary>
+		/// <remarks>
+		/// See <see cref="Path.GetPathRoot"/>.
+		/// </remarks>
 		public static string WorkspaceDriveBS { get; private set; }
 
 		/// <summary>
@@ -407,12 +471,11 @@ namespace Au {
 		public static DriveType thisAppDriveType => s_driveTypeApp ??= _GetDriveType(ThisAppDriveBS);
 		static DriveType? s_driveTypeApp;
 
+		//note: don't use this func with any paths. It is for the above 2 funcs only.
 		static DriveType _GetDriveType(string path) {
-			if (path.Starts(@"\\")) { //DriveInfo does not support it, exception
-				if (!path.Starts(@"\\?\")) return DriveType.Network;
-				path = path[4..];
-			}
-			return new DriveInfo(path).DriveType;
+			path = pathname.unprefixLongPath(path);
+			if (path.Starts(@"\\")) return DriveType.Network; //GetDriveType does not support it. DriveInfo throws exception.
+			return (DriveType)Api.GetDriveType(path);
 		}
 
 		/// <summary>
@@ -718,7 +781,7 @@ namespace Au {
 		/// <returns>null if unavailable.</returns>
 		/// <param name="folderName">
 		/// Can be:
-		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b>.
+		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b> or string.
 		/// <br/>• name of a property of the nested class <see cref="shell"/>, like <c>"shell.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
 		/// <br/>• known folder canonical name. See <see cref="getKnownFolders"/>. If has prefix <c>"shell."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
@@ -730,7 +793,10 @@ namespace Au {
 
 			//properties of this class
 			Type ty = isVirtual ? typeof(shell) : typeof(folders);
-			if (ty.GetProperty(folderName)?.GetValue(null) is FolderPath fp) return fp;
+			switch (ty.GetProperty(folderName)?.GetValue(null)) {
+			case FolderPath fp: return fp;
+			case string fp: return new(fp);
+			}
 			//Using reflection is not the fastest way, but simplest, cannot make bugs, and don't need maintenance. Fast enough.
 
 			//default and custom registered known folders by canonical name
@@ -806,6 +872,12 @@ namespace Au {
 							return true;
 						}
 					}
+
+					if (ScriptEditor.IsPortable && path.Starts(ThisAppDriveBS, true)) {
+						folder = "folders.ThisAppDriveBS";
+						name = path[ThisAppDriveBS.Length..];
+						return true;
+					}
 				}
 			}
 			return false;
@@ -824,7 +896,8 @@ namespace Au {
 		static readonly Lazy<List<(string path, string name)>> _up = new(() => {
 			var a = new List<(string path, string name)>(120); //105
 			lock (_lock) {
-				_noGetAutoCreate = true;
+				var nac = noAutoCreate;
+				noAutoCreate = true;
 				foreach (var pi in typeof(folders).GetProperties()) {
 					if (pi.PropertyType == typeof(FolderPath)
 						&& !pi.Name.Starts("ThisApp") //different in processes
@@ -833,7 +906,7 @@ namespace Au {
 						if (!s.NE()) a.Add((s.Lower(), pi.Name));
 					}
 				}
-				_noGetAutoCreate = false;
+				noAutoCreate = nac;
 			}
 			a.Sort((s1, s2) => {
 				var r = s2.path.Length - s1.path.Length; //prefer longer path, eg C:\A\B to C:\A
@@ -857,6 +930,33 @@ namespace Au {
 			}
 			return a.OrderByDescending(o => o.path.Length).ToList();
 		});
+
+		/// <summary>
+		/// If <i>path</i> starts with one of specified folder paths, replaces that part with the replacements string. Else returns unchanged string.
+		/// </summary>
+		/// <param name="path">Any string. Can be null. Case-insensitive.</param>
+		/// <param name="list">Folder paths and replacement strings.</param>
+		/// <example>
+		/// <code><![CDATA[
+		/// var s = folders.Documents + "file.txt";
+		/// //var s = folders.Temp + "file.txt";
+		/// print.it(s);
+		/// print.it(folders.unexpandPath(s, (folders.Temp, "%temp%"), (folders.Documents, "%folders.Documents%")));
+		/// ]]></code>
+		/// </example>
+		public static string unexpandPath(string path, params (string folder, string replacement)[] list) {
+			path = path.Replace('/', '\\');
+			foreach (var (f_, repl) in list) {
+				var f = f_.Replace('/', '\\');
+				if (path.Starts(f, true)) {
+					int len = f.Length;
+					if (path.Length == len) return repl;
+					if (path[len] is not ('\\' or '/') && f[^1] is not ('\\' or '/')) continue;
+					return string.Concat(repl, path.AsSpan(len));
+				}
+			}
+			return path;
+		}
 	}
 }
 

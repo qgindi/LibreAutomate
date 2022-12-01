@@ -14,8 +14,7 @@ namespace Au;
 /// <seealso cref="Environment"/>
 /// <seealso cref="System.Windows.Forms.SystemInformation"/>
 /// <seealso cref="System.Windows.SystemParameters"/>
-public static class miscInfo
-{
+public static class miscInfo {
 	/// <summary>
 	/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
 	/// </summary>
@@ -34,21 +33,53 @@ public static class miscInfo
 	/// <param name="w">Receives the control that contains the text cursor.</param>
 	/// <param name="orMouse">If fails, get mouse pointer coordinates.</param>
 	/// <remarks>
-	/// Can get only standard text cursor. Many apps use non-standard cursor; then fails.
+	/// Some apps use non-standard text cursor; then may fail.
 	/// Also fails if the text cursor currently is not displayed.
 	/// </remarks>
 	public static bool getTextCursorRect(out RECT r, out wnd w, bool orMouse = false) {
-		if (getGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
-			if (g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
-			r = g.rcCaret;
-			g.hwndCaret.MapClientToScreen(ref r);
-			w = g.hwndCaret;
-			return true;
+		if (getGUIThreadInfo(out var g)) {
+			if (!g.hwndCaret.Is0) {
+				if (g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
+				r = g.rcCaret;
+				g.hwndCaret.MapClientToScreen(ref r);
+				w = g.hwndCaret;
+				return true;
+			}
+
+			//eg in Chrome the above fails, but the MSAA way works
+			if (!g.hwndFocus.Is0) {
+				try {
+					var e = elm.fromWindow(g.hwndFocus, EObjid.CARET, EWFlags.NoThrow | EWFlags.NotInProc);
+					if (e != null && e.GetRect(out r)) { w = g.hwndFocus; return true; }
+
+					//Both above don't work in PowerShell.
+					//	Does not support IUIAutomationTextPattern2. Could try IUIAutomationTextPattern2.GetCaretRange.
+					//	IUIAutomationTextPattern.GetSelection -> IUIAutomationTextRange.GetBoundingRectangles returns 0 rectangles if there is no selected text.
+					//		ExpandToEnclosingUnit(Char) expands to line. And does not work if caret is at the end of text. MoveEndpointByUnit too.
+					//	Win+; doesn't work too. But PhraseExpress works. And IME (interesting: temporarily replaces the caret).
+					//	I would't care, but this was an user request.
+					//Now instead using an undocumented PS feature.
+					if (g.hwndFocus.ClassNameIs("HwndWrapper[powershell_ise.exe;*")) {
+						if (UiaUtil.GetCaretRectInPowerShell(out r)) { w = g.hwndFocus; return true; }
+					}
+
+					//Both above don't work in winstore apps and Windows Terminal.
+					//Most winstore and winui3 apps support IUIAutomationTextPattern2, and it gives correct caret rect.
+					//Terminal supports only IUIAutomationTextPattern, and it gives correct caret rect when there is no selection.
+					//However cannot use these interfaces with unknown apps, because some give client coordinates (eg PowerShell; it's a bug). We can convert to screen easily, but can't know the coordinate type in unknown apps.
+					//Win+; works well in all tested winstore apps and terminal, although some apps don't support even IUIAutomationTextPattern (eg StickyNotes). What API it uses? It does not use MSAA, because does not work in many normal apps eg Chrome.
+					//IME works everywhere. What API it uses?
+					//PhraseExpress doesn't work.
+				}
+				catch (Exception e1) { Debug_.Print(e1); }
+			}
 		}
+
 		if (orMouse) {
 			Api.GetCursorPos(out var p);
 			r = new RECT(p.x, p.y, 0, 16);
 		} else r = default;
+
 		w = default;
 		return false;
 

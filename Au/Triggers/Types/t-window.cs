@@ -956,7 +956,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// Use in window trigger action, like in examples.
 	/// </summary>
 	/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
-	/// <param name="windowName">Window name when the toolbar should be visible. String format: [](xref:wildcard_expression).</param>
+	/// <param name="windowName">Window name when the toolbar should be visible. String format: [wildcard expression](xref:wildcard_expression).</param>
 	/// <exception cref="ArgumentException">Invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
 	/// <remarks>
 	/// The trigger must have argument <c>, later: TWLater.Name</c> (see <see cref="TWLater"/>) and match the window with any name.
