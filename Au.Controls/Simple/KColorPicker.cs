@@ -168,14 +168,14 @@ namespace Au.Controls
 				int y = 0;
 				for (int i = 0, lum = 240; (lum -= 240 / (c_nLum + 1)) > 0; i++) {
 					for (int j = 0, hue = 0; hue < 240; j++, hue += 240 / c_nHue) {
-						//					var col=_ColorHLSToRGB(hue, lum, 240);
+						//var col=_ColorHLSToRGB(hue, lum, 240);
 
 						int lum2 = lum;
 						if (lum >= 120) {
 							int d = Math.Abs(80 - hue); //diff from green
 							if (d <= 64) {
 								d /= 4;
-								//							if(lum==120) print.it(Math.Max(d, 10), (240-lum)/Math.Max(d, 10));
+								//if(lum==120) print.it(Math.Max(d, 10), (240-lum)/Math.Max(d, 10));
 								lum2 -= (240 - lum) / Math.Max(d, 8);
 							}
 						}
@@ -183,11 +183,11 @@ namespace Au.Controls
 
 						_ac[j, i] = col;
 
-						//					if(lum==120 /*&& hue<=180*/) {
-						//						ColorInt k=ColorInt.FromBGR(col, true);
-						//						var b=k.GetPerceivedBrightness();
-						//						print.it(col.ToString("X6"), hue, lum, b);
-						//					}
+						//if(lum==120 /*&& hue<=180*/) {
+						//	ColorInt k=ColorInt.FromBGR(col, true);
+						//	var b=k.GetPerceivedBrightness();
+						//	print.it(col.ToString("X6"), hue, lum, b);
+						//}
 
 						_Draw(col, j * z);
 					}
@@ -197,7 +197,7 @@ namespace Au.Controls
 				//black...white
 				y += _cellSize / 4;
 				for (int j = 0, gray = 0; j < c_nHue; j++, gray += gray < 120 ? 10 : 8) {
-					//				print.it(gray);
+					//print.it(gray);
 					if (gray > 255) gray = 255;
 					var col = (gray << 16) | (gray << 8) | gray;
 					_ac[j, c_nLum] = col;
@@ -210,7 +210,7 @@ namespace Au.Controls
 
 				void _Draw(int col, int x) {
 					RECT r = (x + 1, y + 1, z - 1, z - 1);
-					var brush = Api.CreateSolidBrush(col);
+					var brush = Api.CreateSolidBrush(col); 
 					Api.FillRect(dc, r, brush);
 					Api.DeleteObject(brush);
 				}
@@ -220,9 +220,9 @@ namespace Au.Controls
 
 			(int hue, int lum) _select = (0, c_nLum);
 
-			//		public int SelectedColor => _ac[_select.hue, _select.lum];
+			//public int SelectedColor => _ac[_select.hue, _select.lum];
 
-			//		public bool SelectedGray => _select.lum==c_nLum;
+			//public bool SelectedGray => _select.lum==c_nLum;
 
 			public void SelectColor(int col) {
 				//print.it((uint)col);

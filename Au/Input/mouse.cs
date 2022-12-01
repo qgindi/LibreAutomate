@@ -973,7 +973,7 @@ namespace Au {
 				if (mod.Has(KMod.Shift)) k.AddKey(KKey.Shift, down);
 				if (mod.Has(KMod.Alt)) k.AddKey(KKey.Alt, down);
 				if (mod.Has(KMod.Win)) k.AddKey(KKey.Win, down);
-				k.Send(); //and sleeps opt.key.SleepFinally (default 10)
+				k.SendNow(); //and sleeps opt.key.SleepFinally (default 10)
 			}
 		}
 

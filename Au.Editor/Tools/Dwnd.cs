@@ -48,7 +48,7 @@ class Dwnd : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize((500, 450..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture #FF4040", $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
+		_cCapture = b.xAddCheckIcon("*Unicons.Capture" + Menus.red, $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
@@ -539,7 +539,7 @@ class Dwnd : KDialogWindow {
 
 		object ITreeViewItem.Image => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
 
-		int ITreeViewItem.TextColor => _isFailed ? 0xff : (c.IsVisible ? Api.GetSysColor(Api.COLOR_WINDOWTEXT) : Api.GetSysColor(Api.COLOR_GRAYTEXT));
+		int ITreeViewItem.TextColor => _isFailed ? 0xff : ColorInt.SwapRB(c.IsVisible ? Api.GetSysColor(Api.COLOR_WINDOWTEXT) : Api.GetSysColor(Api.COLOR_GRAYTEXT));
 
 		#endregion
 	}
@@ -558,14 +558,14 @@ class Dwnd : KDialogWindow {
 			if (wcp == 2 && c.Is0) wcp = 1;
 			if (!w.IsAlive) return "";
 			if (wcp == 1) { //window
-				b.AppendLine("<BC #B0E0B0><b>Window<>    <+switch 2>Control<>    <+switch 3>Process<><>");
+				b.AppendLine("<lc #B0E0B0><b>Window<>    <+switch 2>Control<>    <+switch 3>Process<><>");
 				if (wClass == null) {
 					wClass = w.ClassName;
 					wName = w.Name;
 				}
 				_Common(false, b, w, wName, wClass);
 			} else if (wcp == 2) { //control
-				b.AppendLine("<BC #B0E0B0><+switch 1>Window<>    <b>Control<>    <+switch 3>Process<><>");
+				b.AppendLine("<lc #B0E0B0><+switch 1>Window<>    <b>Control<>    <+switch 3>Process<><>");
 				if (c.IsAlive) {
 					if (cClass == null) {
 						cClass = c.ClassName;
@@ -579,7 +579,7 @@ class Dwnd : KDialogWindow {
 					_Common(true, b, c, cName, cClass);
 				}
 			} else { //program
-				b.AppendLine("<BC #B0E0B0><+switch 1>Window<>    <+switch 2>Control<>    <b>Process<><>");
+				b.AppendLine("<lc #B0E0B0><+switch 1>Window<>    <+switch 2>Control<>    <b>Process<><>");
 			g1:
 				if (wProg == null) {
 					wProg = w.ProgramName;

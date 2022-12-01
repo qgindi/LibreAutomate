@@ -2,17 +2,18 @@
 
 /// Delete file or folder.
 
-filesystem.delete(@"C:\Test2\file.txt"); //delete permanantly
-filesystem.delete(@"C:\Test2\file.txt", recycleBin: true); //move to the Recycle Bin if possible, else delete permanently
+filesystem.delete(@"C:\Temp\file.txt"); //delete permanantly
+filesystem.delete(@"C:\Temp\file.txt", FDFlags.RecycleBin); //move to the Recycle Bin if possible, else delete permanently
 
-/// Delete everything from folder (make it empty).
+/// Delete everything from Temp folder, except locked files/folders.
 
-foreach (var f in filesystem.enumerate(@"C:\Test2"))
-	filesystem.delete(f.FullPath);
+foreach (var f in filesystem.enumerate(folders.Temp)) {
+	filesystem.delete(f.FullPath, FDFlags.CanFail);
+}
 
 /// Delete all .txt files from folder. Not from subfolders.
 
-foreach (var f in filesystem.enumFiles(@"C:\Test", "*.txt"))
+foreach (var f in filesystem.enumFiles(@"C:\Temp", "*.txt"))
 	filesystem.delete(f.FullPath);
 
 /// Empty the Recycle Bin.

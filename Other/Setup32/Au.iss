@@ -34,7 +34,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "C:\code\au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -68,6 +68,10 @@ Source: "winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dotnet_ref.txt"; DestDir: "{app}"; Flags: ignoreversion
+
+[Dirs]
+Name: "{app}\Roslyn\.exeProgram"; Attribs: hidden
+;why Inno stops here when debugging?
 
 [InstallDelete]
 ;Type: files; Name: "{app}\file.ext"

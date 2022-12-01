@@ -1,4 +1,4 @@
-/// The <+lang jump statements, return><.k>return<><> statement is used to exit current function.
+/// The <b><+lang jump statements, return>return<><> statement is used to exit current function.
 
 Func1();
 print.it(3);

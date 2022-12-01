@@ -32,7 +32,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<u>text<>` | Underline.
 | `<c 0xE0A000>text<>`<br/>`<c #E0A000>text<>`<br/>`<c green>text<>` | Text color.<br/>Can be 0xRRGGBB, #RRGGBB or .NET color name.
 | `<bc yellow>text<>` | Text background color.
-| `<BC wheat>line text<>` | Line background color.
+| `<lc wheat>line text<>` | Line background color.
 | `<size 10>text<>` |  Font height.<br/>Note: it can increase height of all lines.
 | `<mono>text<>` | Monospace font.
 

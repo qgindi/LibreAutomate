@@ -150,4 +150,4 @@ public static class ExtensionMethods {
 	}
 }
 
-/// Generic methods have names like <b>Name<T></b>. When using the method, replace <b>T</b> with a type name, like <mono><_>Name<string></_><>.
+/// Generic methods have names like <b><_>Name<T></_></b>. When using the method, replace <b>T</b> with a type name, like <mono>Name<string></mono>.

@@ -27,11 +27,9 @@ for (int i = 0; i < 3; i++) {
 
 /// Another way to execute code more than once - user-defined functions.
 
-//call function Example 3 times
+//call function Example 2 times
 Example("one", 1);
-Example("two",2);Example("three",
-							3);
-
+Example("two",2);
 
 //this is the function
 void Example(string s, int i) {
@@ -45,4 +43,8 @@ void Example(string s, int i) {
 /// - Every statement ends with a semicolon (;). Unless it starts a block of code enclosed in { }.
 /// - Function arguments are enclosed in ( ) and separated with comma (,).
 /// - Blocks of related code are enclosed in {  }.
-/// - C# does not care about the type and amount of whitespace (spaces, tabs, newlines) between statements, arguments, etc.
+/// 
+/// C# does not care about the type and amount of whitespace (spaces, tabs, newlines) between statements, arguments, etc. Example:
+
+Example("one",1);Example("two",
+							2);

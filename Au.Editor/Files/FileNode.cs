@@ -249,6 +249,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 
 	/// <summary>
+	/// Gets custom or default icon name or file path.
+	/// </summary>
+	public string IconString => CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType));
+
+	/// <summary>
 	/// Gets or sets other item to run instead of this. None if null.
 	/// The setter will save workspace.
 	/// </summary>
@@ -429,8 +434,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		c_iconClass = "*Codicons.SymbolClass #008EEE",
 		c_iconFolder = "*Material.Folder #EABB00",
 		c_iconFolderOpen = "*Material.FolderOpen #EABB00";
-	//c_iconFolder = "*Material.FolderOutline #EABB00",
-	//c_iconFolderOpen = "*Material.FolderOpenOutline #EABB00";
 
 	public static string GetFileTypeImageSource(FNType ft, bool openFolder = false)
 		=> ft switch {
@@ -459,11 +462,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	//bool ITreeViewItem.IsSelectable { get; }
 
-	int ITreeViewItem.Color => !IsFolder && _model.OpenFiles.Contains(this) && _IsTextBlack ? 0x1d2fafa : -1;
+	int ITreeViewItem.Color => !IsFolder && _model.OpenFiles.Contains(this) && _IsTextBlack ? 0x1fafad2 : -1;
 
-	int ITreeViewItem.TextColor => _model.IsCut(this) ? 0xff : -1;
+	int ITreeViewItem.TextColor => _model.IsCut(this) ? 0xff0000 : -1;
 
-	int ITreeViewItem.BorderColor => this == _model.CurrentFile ? 0x1FFA0A0 : -1;
+	int ITreeViewItem.BorderColor => this == _model.CurrentFile ? 0x1A0A0FF : -1;
 
 	static bool _IsTextBlack => (uint)Api.GetSysColor(Api.COLOR_WINDOWTEXT) == 0; //if not high-contrast theme
 

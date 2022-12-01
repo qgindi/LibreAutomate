@@ -4,7 +4,7 @@ string s = "text"; //variable s of type string
 int k = 5; //variable k of type int
 dialog.showInfo(s, k.ToString()); //call function showInfo which is defined in type dialog. Also call function ToString which is defined in type int.
 
-/// <.k>int<>, <.k>string<> and some other types are built into the C# language; more info in recipe <+recipe>Variables<>. Many other types are defined in .NET and other libraries, and <c 0x0080c0>dialog<> is an example. More examples:
+/// <.k>int<>, <.k>string<> and some other types are built into the C# language; more info in recipe <+recipe>Variables<>. Many other types are defined in .NET and other libraries, and <b>dialog<> is an example. More examples:
 
 DateTime dt = DateTime.Now; //variable dt of type DateTime. Also call function Now which is defined in type DateTime.
 RECT r = new RECT(1, 2, 3, 4); //variable r of type RECT. Also call a constructor function defined in type RECT.
@@ -21,10 +21,10 @@ print.it(dt, r.left); //call function it which is defined in type print. Pass dt
 
 /// Also C# supports arrays, <google C# generic types>generic types<>, <google C# nullable value types>nullable value types<>, <google C# value tuple types>tuples<>, <google C# anonymous types>anonymous types<> and <google C# unsafe pointers>pointers<>.
 ///
-/// Generic types have names like <b>List<T></b>. They can be used in several ways:
-/// - Replace <b>T</b> with a type name, like <mono><_>List<string></_><>. Examples in recipe <+recipe>Array<>.
+/// Generic types have names like <b><_>List<T></_></b>. They can be used in several ways:
+/// - Replace <b>T</b> with a type name, like <mono>List<string></mono>. Examples in recipe <+recipe Collections - array>collections<>.
 /// - If a parameter is of type <b>T</b>, can be used argument of any supported type.
-/// - If an <.k>out<> parameter is of type <b>T</b>, also can be used code like <mono>out string s<>.
+/// - If an <.k>out<> parameter is of type <b>T</b>, argument code can be like <mono>out string s<>.
 ///
 /// If a value-type variable is declared like <mono>int? i<>, you can assign it <.k>null<>, which could mean "no value". Often used for optional parameters.
 

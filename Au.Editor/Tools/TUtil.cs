@@ -197,7 +197,7 @@ static class TUtil {
 				andRun = andRunW != null;
 				activate = Activate;
 			}
-			if(Finder && !Test) {
+			if (Finder && !Test) {
 				needChildFinder = NeedControl;
 				needWndFinder = !needChildFinder;
 			}
@@ -606,6 +606,7 @@ static class TUtil {
 				i = dialog.show("Shortcut", buttons: sb, flags: DFlags.CommandLinks | DFlags.CenterMouse | DFlags.Wider);
 			}
 			var path = i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null };
+			//rejected: if path unexpanded, first time in process print info about the setting. Not so hard to find it in Options.
 			var name = i <= 2 ? _name2 ?? _name : _name;
 			var args = i <= 2 ? _args : null;
 			if (args != null) args = _argsComment ? "/*, " + args + "*/" : ", " + args;
@@ -939,7 +940,7 @@ static class TUtil {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
 				Debug_.Print("---- CODE ----\r\n" + code + "--------------");
 				//shows code too, because it may be different than in the code box
-				return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<BC #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
+				return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<lc #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
 			}
 			//object ro = invoke?.Invoke(c.method) ?? c.method.Invoke(null, null);
 			object ro = c.method.Invoke(null, null);
@@ -1028,7 +1029,7 @@ obj.{code};
 
 		try {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true))
-				return new(true, "Errors:", $"{c.errors}\r\n\r\n<BC #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
+				return new(true, "Errors:", $"{c.errors}\r\n\r\n<lc #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
 			c.method.Invoke(null, new[] { obj });
 			return null;
 		}
@@ -1043,12 +1044,12 @@ obj.{code};
 	#region info
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
-		t.zText = $"<BC #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
+		t.zText = $"<lc #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
 	}
 
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
-		t.zText = $"<BC #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
+		t.zText = $"<lc #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
 	}
 

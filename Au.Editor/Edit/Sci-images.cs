@@ -1,4 +1,4 @@
-﻿//#define SMALLER_SCREENSHOTS //smaller if /*image:...*/
+//#define SMALLER_SCREENSHOTS //smaller if /*image:...*/
 
 using static Au.Controls.Sci;
 using System.Drawing;
@@ -150,7 +150,7 @@ partial class SciCode {
 
 			string _Plus(FolderPath fp, ref int i) {
 				//print.it("FOLDERS", fp.Path);
-				if (i < a.Length - 2 && _Eq(i + 1, CT.OperatorOverloaded, "+") && _IsString(a[i + 2], out var r)) {
+				if (i < a.Length - 2 && (_Eq(i + 1, CT.OperatorOverloaded, "+") || _Eq(i + 1, CT.Operator, "+")) && _IsString(a[i + 2], out var r)) {
 					i += 2;
 					return fp + r.ToString();
 				}

@@ -1,9 +1,3 @@
-//FUTURE: /portable
-//	1. Set folders.ThisAppDocuments etc in folders.ThisApp\Portable.
-//	2. Don't restart as admin.
-//	3. Don't allow to set option to run at startup.
-//	4. Etc.
-
 static class CommandLine {
 	/// <summary>
 	/// Processes command line of this program. Called before any initialization.
@@ -12,8 +6,9 @@ static class CommandLine {
 	public static bool ProgramStarted1(string[] args, out int exitCode) {
 		//print.it(args);
 		exitCode = 0; //note: Environment.ExitCode bug: the setter's set value is ignored and the process returns 0.
-		if (args.Length > 0) {
-			var s = args[0];
+		int i = args.Length > 0 && args[0] == "/n" ? 1 : 0;
+		if (args.Length > i) {
+			var s = args[i];
 			if (s.Starts('/')) {
 				switch (s) {
 				case "/s":
@@ -24,7 +19,7 @@ static class CommandLine {
 					return true;
 				}
 			} else if (!pathname.isFullPath(s)) {
-				exitCode = _LetEditorRunScript(args);
+				exitCode = _LetEditorRunScript(args, i);
 				return true;
 			}
 		}
@@ -122,6 +117,7 @@ static class CommandLine {
 
 		WndUtil.RegisterWindowClass(ScriptEditor.c_msgWndClassName, _WndProc);
 		_msgWnd = WndUtil.CreateMessageOnlyWindow(ScriptEditor.c_msgWndClassName);
+		script.s_wndMsg = _msgWnd;
 	}
 
 	/// <summary>
@@ -151,7 +147,7 @@ static class CommandLine {
 
 	/// <summary>
 	/// The message-only window.
-	/// Don't call before the program is fully inited and OnMainFormLoaded called.
+	/// Available after loading the first workspace.
 	/// </summary>
 	public static wnd MsgWnd => _msgWnd;
 
@@ -178,6 +174,11 @@ static class CommandLine {
 					App.Wmain.tempHideWhenClosing = false;
 				}
 				return 0;
+			case 3: //get wpf preview window saved xy
+				return App.Settings.wpfpreview_xy;
+			case 4: //save wpf preview window xy
+				App.Settings.wpfpreview_xy = (int)lparam;
+				break;
 			case 10:
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
 				break;
@@ -223,10 +224,8 @@ static class CommandLine {
 			Api.ReplyMessage(1);
 			_OpenFile();
 			break;
-		case 5: //script.end(name)
-			if (App.Model.Find(s) is FileNode f2) return App.Tasks.EndTasksOf(f2) ? 1 : 2;
-			print.warning($"File not found: '{s}'.", -1);
-			return 0;
+		case 5 or 6: //script.end(name) or script.isRunning(name)
+			return _ScriptAction(action);
 		case 10: //ScriptEditor.GetIcon
 			s = DIcons.GetIconString(s, (EGetIcon)action2);
 			return s == null ? 0 : WndCopyData.Return<char>(s, wparam);
@@ -234,6 +233,9 @@ static class CommandLine {
 			return Menus.Invoke(s, false, (int)wparam);
 		case 12: //ScriptEditor.GetMenuCommandState
 			return Menus.Invoke(s, true, (int)wparam);
+		//case 13: //ScriptEditor.Folders (rejected)
+		//	s = string.Join('|', (string)folders.ThisAppDocuments, (string)folders.ThisAppDataLocal, (string)folders.ThisAppTemp);
+		//	return WndCopyData.Return<char>(s, wparam);
 		case 100: //script.run/runWait
 		case 101: //run script from command line
 			return _RunScript();
@@ -255,6 +257,18 @@ static class CommandLine {
 				return (int)script.RunResult_.notFound;
 			}
 			return CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
+		}
+
+		nint _ScriptAction(int action) {
+			if (App.Model.Find(s) is FileNode f) {
+				return action switch {
+					5 => App.Tasks.EndTasksOf(f) ? 1 : 2,
+					6 => App.Tasks.IsRunning(f) ? 1 : 0,
+					_ => 0
+				};
+			}
+			print.warning($"File not found: '{s}'.", -1);
+			return 0;
 		}
 
 		void _OpenFile() {
@@ -352,13 +366,13 @@ static class CommandLine {
 	/// Finds the message-only window. Starts editor if not running. In any case waits for the window max 15 s.
 	/// </summary>
 	/// <param name="wMsg"></param>
-	static bool _EnsureEditorRunningAndGetMsgWindow(out wnd wMsg) {
+	static bool _EnsureEditorRunningAndGetMsgWindow(out wnd wMsg, string args) {
 		wMsg = default;
 		for (int i = 0; i < 1000; i++) { //if we started editor process, wait until it fully loaded, then it creates the message-only window
 			wMsg = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true);
 			if (!wMsg.Is0) return true;
 			if (i == 0) {
-				var ps = new ProcessStarter_(process.thisExePath, rawExe: true);
+				var ps = new ProcessStarter_(process.thisExePath, args, rawExe: true);
 				if (!ps.StartL(out var pi)) break;
 				Api.AllowSetForegroundWindow(pi.dwProcessId);
 				pi.Dispose();
@@ -371,13 +385,13 @@ static class CommandLine {
 
 	//Initially for this was used native exe. Rejected because of AV false positives, including WD.
 	//	Speed with native exe 50 ms, now 85 ms. Never mind.
-	static unsafe int _LetEditorRunScript(string[] args) {
-		if (!_EnsureEditorRunningAndGetMsgWindow(out wnd w)) return (int)script.RunResult_.noEditor;
+	static unsafe int _LetEditorRunScript(string[] args, int iArg) {
+		if (!_EnsureEditorRunningAndGetMsgWindow(out wnd w, iArg > 0 ? args[0] : null)) return (int)script.RunResult_.noEditor;
 
 		//If script name has prefix *, need to wait until script process ends.
 		//	Also auto-detect whether need to write script.writeResult to stdout.
-		var file = args[0];
-		args = args.RemoveAt(0);
+		var file = args[iArg];
+		args = args.RemoveAt(0, iArg + 1);
 		int mode = 0; //1 - wait, 3 - wait and get script.writeResult output
 		if (file.Starts('*')) {
 			file = file[1..];

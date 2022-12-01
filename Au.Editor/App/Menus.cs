@@ -3,9 +3,25 @@ using Au.Tools;
 using System.Windows.Controls;
 
 static class Menus {
+	public const string
+		black = " #585858|#D0D0D0",
+		blue = " #008EEE|#77C9FF",
+		green = " #99BF00|#A9CE13",
+		brown = " #9F5300|#D0D0D0",
+		purple = " #B340FF|#D595FF",
+		orange = " #EABB00",
+		red = " #FF4040|#FF9595"
+		;
+	public const string
+		iconBack = "*EvaIcons.ArrowBack" + black,
+		iconTrigger = "*Codicons.SymbolEvent" + blue,
+		iconIcons = "*FontAwesome.IconsSolid" + green,
+		iconUndo = "*Ionicons.UndoiOS" + brown,
+		iconPaste = "*Material.ContentPaste" + brown;
+
 	[Command(target = "Files")]
 	public static class File {
-		[Command(target = "", image = "*EvaIcons.FileAddOutline #008EEE")]
+		[Command(target = "", image = "*EvaIcons.FileAddOutline" + blue)]
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
@@ -19,18 +35,18 @@ static class Menus {
 			public static void New_folder() { _New(null); }
 		}
 
-		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete #585858")]
+		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete" + black)]
 		public static void Delete() { App.Model.DeleteSelected(); }
 
-		[Command(keys = "F2", image = "*BoxIcons.RegularRename #008EEE")]
+		[Command(keys = "F2", image = "*BoxIcons.RegularRename" + blue)]
 		public static void Rename() { App.Model.RenameSelected(); }
 
-		[Command(image = "*RemixIcon.ChatSettingsLine #99BF00")]
+		[Command(image = "*RemixIcon.ChatSettingsLine" + green)]
 		public static void Properties() { App.Model.Properties(); }
 
 		[Command("Copy, paste")]
 		public static class CopyPaste {
-			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo #99BF00", tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
+			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo" + green, tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
 			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
 
 			[Command("Cu_t", separator = true, keysText = "Ctrl+X")]
@@ -69,19 +85,19 @@ static class Menus {
 			[Command(target = "")]
 			public static void Close_all() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll); }
 
-			[Command(target = "", image = "*Codicons.CollapseAll #585858")]
+			[Command(target = "", image = "*Codicons.CollapseAll" + black)]
 			public static void Collapse_all_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseAllFolders); }
 
-			[Command(target = "", image = "*Codicons.CollapseAll #585858")]
+			[Command(target = "", image = "*Codicons.CollapseAll" + black)]
 			public static void Collapse_inactive_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseInactiveFolders); }
 
 			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
 			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
 
-			[Command(keys = "Alt+Left", target = "", image = "*EvaIcons.ArrowBack #585858")]
+			[Command(keys = "Alt+Left", target = "", image = iconBack)]
 			public static void Go_back() { App.Model.EditGoBack.GoBack(); }
 
-			[Command(keys = "Alt+Right", target = "", image = "*EvaIcons.ArrowForward #585858")]
+			[Command(keys = "Alt+Right", target = "", image = "*EvaIcons.ArrowForward" + black)]
 			public static void Go_forward() { App.Model.EditGoBack.GoForward(); }
 		}
 
@@ -129,7 +145,7 @@ static class Menus {
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 
-			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave #585858")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black)]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 
 			[Command]
@@ -154,24 +170,24 @@ static class Menus {
 
 	[Command(target = "Edit")]
 	public static class Edit {
-		[Command(keysText = "Ctrl+Z", image = "*Ionicons.UndoiOS #9F5300")]
+		[Command(keysText = "Ctrl+Z", image = iconUndo)]
 		public static void Undo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_UNDO); }
 
-		[Command(keysText = "Ctrl+Y", image = "*Ionicons.RedoiOS #9F5300")]
+		[Command(keysText = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
 		public static void Redo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_REDO); }
 
-		[Command('t', separator = true, keysText = "Ctrl+X", image = "*Zondicons.EditCut #9F5300")]
+		[Command('t', separator = true, keysText = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
 		public static void Cut() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_CUT); }
 
-		[Command(keysText = "Ctrl+C", image = "*Material.ContentCopy #9F5300")]
+		[Command(keysText = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
 		public static void Copy() { Panels.Editor.ZActiveDoc.ECopy(); }
 
-		[Command(keysText = "Ctrl+V", image = "*Material.ContentPaste #9F5300")]
+		[Command(keysText = "Ctrl+V", image = iconPaste)]
 		public static void Paste() { Panels.Editor.ZActiveDoc.EPaste(); }
 
 		[Command]
 		public static class Other_formats {
-			[Command(image = "*Material.ForumOutline #9F5300", text = "Copy _forum code")]
+			[Command(image = "*Material.ForumOutline" + brown, text = "Copy _forum code")]
 			public static void Forum_copy() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.Forum); }
 
 			[Command("Copy HTML <span style>")]
@@ -190,30 +206,30 @@ static class Menus {
 			public static void Copy_without_screenshots() { Panels.Editor.ZActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 
-		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace #008EEE")]
+		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
 		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
 
 		//[Command(keys = "Ctrl+Shift+F")]
 		//public static void Find_in_files() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc, findInFiles: true); }
 
-		[Command(separator = true, keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid #B340FF")]
+		[Command(separator = true, keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + purple)]
 		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc); }
 
-		[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine #B340FF")]
+		[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + purple)]
 		public static void Parameter_info() { CodeInfo.ShowSignature(); }
 
-		[Command(keysText = "F12", image = "*RemixIcon.WalkFill #B340FF")]
+		[Command(keysText = "F12", image = "*RemixIcon.WalkFill" + purple)]
 		public static void Go_to_definition() { CiGoTo.GoToDefinition(); }
 
 		[Command(separator = true)]
 		public static class Document {
-			[Command(image = "*Material.CommentEditOutline #9F5300")]
+			[Command(image = "*Material.CommentEditOutline" + brown)]
 			public static void Add_file_description() { InsertCode.AddFileDescription(); }
 
-			[Command(image = "*Codicons.SymbolClass #9F5300")]
+			[Command(image = "*Codicons.SymbolClass" + brown)]
 			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 
-			[Command(image = "*PixelartIcons.AlignLeft #9F5300", separator = true)]
+			[Command(image = "*PixelartIcons.AlignLeft" + brown, separator = true)]
 			public static void Format_document() { ModifyCode.Format(false); }
 
 			//CONSIDER: script.setup.
@@ -221,17 +237,17 @@ static class Menus {
 
 		[Command]
 		public static class Selection {
-			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd #9F5300")]
+			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
 			public static void Comment() { ModifyCode.CommentLines(true); }
 
-			[Command(keysText = "R-click margin", keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus #9F5300")]
+			[Command(keysText = "R-click margin", keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus" + brown)]
 			public static void Uncomment() { ModifyCode.CommentLines(false); }
 
-			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease #9F5300")]
+			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown)]
 			public static void Indent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB); }
 			//SHOULDDO: now does not indent empty lines if was no indentation.
 
-			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease #9F5300")]
+			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
 			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
 
 			//[Command(keysText = "Ctrl+D")]
@@ -249,16 +265,16 @@ static class Menus {
 
 		[Command]
 		public static class Surround {
-			[Command("for (repeat)", image = "*Typicons.ArrowLoop #9F5300")]
+			[Command("for (repeat)", image = "*Typicons.ArrowLoop" + brown)]
 			public static void Surround_for() { InsertCode.SurroundFor(); }
 
-			[Command("try (catch exceptions)", image = "*MaterialDesign.ErrorOutline #9F5300")]
+			[Command("try (catch exceptions)", image = "*MaterialDesign.ErrorOutline" + brown)]
 			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
 		}
 
 		[Command]
 		public static class Generate {
-			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda #9F5300")]
+			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda" + brown)]
 			public static void Create_delegate() { InsertCode.CreateDelegate(); }
 
 			[Command(tooltip = "Implement interface or abstract class")]
@@ -270,36 +286,36 @@ static class Menus {
 
 		[Command]
 		public static class View {
-			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap #99BF00")]
+			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap" + green)]
 			public static void Wrap_lines() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
-			[Command(checkable = true, image = "*Material.TooltipImageOutline #99BF00")]
+			[Command(checkable = true, image = "*Material.TooltipImageOutline" + green)]
 			public static void Images_in_code() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Images); }
 
-			[Command(checkable = true, image = "*Codicons.Preview #99BF00")]
+			[Command(checkable = true, image = "*Codicons.Preview" + green)]
 			public static void WPF_preview(MenuItem mi) { SciCode.WpfPreviewStartStop(mi); }
 		}
 	}
 
 	[Command(target = "Edit")]
 	public static class Code {
-		[Command(underlined: 'r', image = "*Material.RecordRec #008EEE")]
-		//[Command(underlined: 'r', image = "*BoxIcons.RegularVideoRecording #008EEE")]
+		[Command(underlined: 'r', image = "*Material.RecordRec" + blue)]
+		//[Command(underlined: 'r', image = "*BoxIcons.RegularVideoRecording" + blue)]
 		public static void Input_recorder() { DInputRecorder.ShowRecorder(); }
 
-		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt #008EEE")]
+		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt" + blue)]
 		public static void wnd() { Dwnd.Dialog(); }
 
-		[Command("Find UI _element", image = "*Material.CheckBoxOutline #008EEE")]
+		[Command("Find UI _element", image = "*Material.CheckBoxOutline" + blue)]
 		public static void elm() { Delm.Dialog(); }
 
-		[Command("Find _image", image = "*Material.ImageSearchOutline #008EEE")]
+		[Command("Find _image", image = "*Material.ImageSearchOutline" + blue)]
 		public static void uiimage() { Duiimage.Dialog(); }
 
 		[Command]
 		public static void Quick_capturing() { QuickCapture.Info(); }
 
-		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline #008EEE")]
+		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline" + blue)]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 
 		[Command(underlined: 'x', keysText = "Ctrl+Space in string")]
@@ -323,7 +339,7 @@ static class Menus {
 		[Command]
 		public static void Window_triggers() { TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs"); }
 
-		[Command("...", image = "*Codicons.SymbolEvent #008EEE")]
+		[Command("...", image = iconTrigger)]
 		public static void New_trigger() { TriggersAndToolbars.NewTrigger(); }
 
 		//rejected. It's in the quick capturing menu.
@@ -339,7 +355,7 @@ static class Menus {
 		[Command(separator = true)]
 		public static void Toolbars() { TriggersAndToolbars.GoToToolbars(); }
 
-		[Command("...", image = "*Material.ShapeRectanglePlus #008EEE")]
+		[Command("...", image = "*Material.ShapeRectanglePlus" + blue)]
 		public static void New_toolbar() { TriggersAndToolbars.NewToolbar(); }
 
 		[Command("...")]
@@ -360,10 +376,10 @@ static class Menus {
 
 	[Command(target = "Edit")]
 	public static class Run {
-		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000")]
+		[Command(keys = "F5", image = "*Codicons.DebugStart #40B000|#4FD200")]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 
-		[Command(image = "*FontAwesome.StopCircleRegular #585858")]
+		[Command(image = "*FontAwesome.StopCircleRegular" + black)]
 		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {
@@ -383,10 +399,10 @@ static class Menus {
 		//[Command(image = "")]
 		//public static void Pause() { }
 
-		[Command(image = "*VaadinIcons.Compile #008EEE")]
+		[Command(image = "*VaadinIcons.Compile" + blue)]
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
-		[Command("...", image = "*BoxIcons.RegularHistory #008EEE")]
+		[Command("...", image = "*BoxIcons.RegularHistory" + blue)]
 		public static void Recent() { RecentTT.Show(); }
 
 		[Command(separator = true)]
@@ -404,20 +420,23 @@ static class Menus {
 
 	[Command(target = "")]
 	public static class Tools {
-		[Command(image = "*PicolIcons.Settings #99BF00")]
+		[Command(image = "*PicolIcons.Settings" + green)]
 		public static void Options() { DOptions.ZShow(); }
 
-		[Command(image = "*FontAwesome.IconsSolid #99BF00")]
+		[Command(image = iconIcons)]
 		public static void Icons() { DIcons.ZShow(); }
 
-		[Command(image = "*SimpleIcons.NuGet #99BF00")]
+		[Command(image = "*SimpleIcons.NuGet" + green)]
 		public static void NuGet() { DNuget.ZShow(); }
 
-		[Command(image = "*Codicons.SymbolSnippet #99BF00")]
+		[Command(image = "*Codicons.SymbolSnippet" + green)]
 		public static void Snippets() { DSnippets.ZShow(); }
 
 		[Command]
 		public static void Customize() { DCustomize.ZShow(); }
+
+		[Command]
+		public static void Portable() { DPortable.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
 		public static class Output {
@@ -446,13 +465,16 @@ static class Menus {
 
 	[Command(target = "")]
 	public static class Help {
-		[Command(image = "*FontAwesome.QuestionCircleRegular #BB54FF")]
+		[Command(image = "*FontAwesome.QuestionCircleRegular" + orange)]
 		public static void Program_help() { HelpUtil.AuHelp(""); }
 
-		[Command(image = "*FontAwesome.QuestionCircleRegular #EABB00")]
+		[Command(image = "*BoxIcons.RegularLibrary" + orange)]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
 
-		[Command(keys = "F1", image = "*FontAwesome.QuestionCircleRegular #008EEE")]
+		[Command(text = "C# help", image = "*Modern.LanguageCsharp" + orange)]
+		public static void CSharp_help() { run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/"); }
+
+		[Command(keys = "F1", image = "*Unicons.MapMarkerQuestion" + purple)]
 		public static void Context_help() {
 			var w = Api.GetFocus();
 			if (w.ClassNameIs("HwndWrapper*")) {
@@ -463,27 +485,29 @@ static class Menus {
 			}
 		}
 
-		[Command(separator = true)]
+		[Command(image = "*Material.Forum" + blue)]
 		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 
 		[Command]
-		public static void Email() { run.itSafe("mailto:support@quickmacros.com?subject=" + App.AppNameShort); }
+		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {_ProgramVersion}"); }
 
 		[Command]
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
-Version: {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}
+Version: {_ProgramVersion}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
-Libraries and algorithms: <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, Wu's Color Quantizer, Cantatore wildcard.
+Uses C# 11, <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.33<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 -----------------------");
 		}
+
+		static string _ProgramVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 	}
 
 #if TRACE
-	[Command(keys = "F11", target = "")]
+	[Command(target = "")]
 	public static void TEST() { Test.FromMenubar(); }
 
 	[Command]

@@ -106,7 +106,7 @@ bool _IsWow64() {
 struct PATHS {
 	std::wstring appDir, netCore, netDesktop, coreclrDll, exeName;
 	std::string asmDll, exePath;
-	bool isPrivate;
+	bool isPrivateNetRuntime, isEditorOrTaskExe;
 };
 
 struct VERSTRUCT {
@@ -208,13 +208,14 @@ bool GetPaths(PATHS& p) {
 	size_t lenApp, lenAppDir;
 
 	//get exe full path
-	lenApp = ::GetModuleFileNameW(0, w, lenof(w) - 50);
+	lenApp = ::GetModuleFileNameW(0, w, lenof(w) - 100);
 	_ToUtf8(w, lenApp, p.exePath);
 
 	//get appDir and exeName
 	for (lenAppDir = lenApp; w[--lenAppDir] != '\\'; ) {}
 	p.appDir.assign(w, lenAppDir);
 	p.exeName = w + lenAppDir + 1;
+	p.isEditorOrTaskExe = _StrEqualI(p.exeName, L"Au.Editor.exe") || _StrEqualI(p.exeName, L"Au.Task.exe");
 
 	//get asmDll
 	if (s_asmName[0] != 0) { //exe created from script. See code in Compiler.cs, function _AppHost.
@@ -226,18 +227,37 @@ bool GetPaths(PATHS& p) {
 		p.asmDll += ".dll";
 	}
 
+	auto coreclr2 =
+#if _WIN64
+		L"\\dotnet\\coreclr.dll";
+#else
+		L"\\dotnet32\\coreclr.dll";
+#endif
+
+	p.isPrivateNetRuntime = false;
 	//is coreclr.dll in app dir?
 	wcscpy(w + lenAppDir, L"\\coreclr.dll");
-	if (p.isPrivate = _FileExists(w)) {
-		p.coreclrDll = w;
-		p.netCore = p.appDir;
-		p.netDesktop = p.appDir;
-		return true;
+	if (_FileExists(w)) goto gPrivate;
+	//is in "dotnet" subdir?
+	wcscpy(w + lenAppDir, coreclr2);
+	if (_FileExists(w)) goto gPrivate;
+
+	//is this a script exe launched from editor and editor's dir contains coreclr.dll?
+	if (!p.isEditorOrTaskExe) {
+		auto n = GetCurrentDirectory(lenof(w), w);
+		auto s1 = L"\\Roslyn\\.exeProgram"; const int len1 = 19;
+		if (n >= 4 + len1 && n < lenof(w) - 50 && _wcsicmp(w + n - len1, s1) == 0) {
+			n -= len1;
+			wcscpy(w + n, L"\\coreclr.dll");
+			if (_FileExists(w)) goto gPrivate;
+			wcscpy(w + n, coreclr2);
+			if (_FileExists(w)) goto gPrivate;
+		}
 	}
 
 	//get .NET root path, like "C:\Program Files\dotnet". See C:\Downloads\runtime-master\src\installer\corehost\cli\fxr_resolver.cpp.
-	DWORD lenDotnet;
-	for (int i = 0; ; i++) {
+	for (int i = 0; i <= 2; i++) {
+		DWORD lenDotnet;
 		if (i == 0) { //env var DOTNET_ROOT
 			lenDotnet = GetEnvironmentVariableW(_IsWow64() ? L"DOTNET_ROOT(x86)" : L"DOTNET_ROOT", w, lenof(w));
 		} else if (i == 1) { //registry InstallLocation
@@ -255,18 +275,24 @@ bool GetPaths(PATHS& p) {
 		}
 		if (i > 0 && lenDotnet != 0) lenDotnet--;
 		if (lenDotnet > 1 && w[lenDotnet - 1] == '\\') lenDotnet--;
-		if (lenDotnet > 1 && lenDotnet < lenof(w) - 100 && _DirExists(w)) break;
-		if (i == 2) return false;
+		if (lenDotnet > 1 && lenDotnet < lenof(w) - 100 && _DirExists(w)) {
+			VERSTRUCT ver;
+			if (!GetRuntimeDir(w, lenDotnet, p.netCore, ver, false)) continue;
+			if (!GetRuntimeDir(w, lenDotnet, p.netDesktop, ver, true)) continue;
+
+			//get coreclrDll
+			_WstringFrom(p.coreclrDll, p.netCore, L"\\coreclr.dll", -1);
+			if (_FileExists(p.coreclrDll.c_str())) return true;
+		}
 	}
-	//Print("%S", w);
+	return false;
 
-	VERSTRUCT ver;
-	if (!GetRuntimeDir(w, lenDotnet, p.netCore, ver, false)) return false;
-	if (!GetRuntimeDir(w, lenDotnet, p.netDesktop, ver, true)) return false;
-
-	//get coreclrDll
-	_WstringFrom(p.coreclrDll, p.netCore, L"\\coreclr.dll", -1);
-	return _FileExists(p.coreclrDll.c_str());
+gPrivate:
+	p.isPrivateNetRuntime = true;
+	p.coreclrDll = w;
+	p.netCore.assign(w, p.coreclrDll.length() - 12);
+	p.netDesktop = p.netCore;
+	return true;
 }
 
 void BuildTpaList(const std::wstring& dir, std::string& tpaList, bool onlyAu = false) {
@@ -331,8 +357,7 @@ const char** ArgsUtf8(int& nArgs) {
 	return r;
 }
 
-struct _TaskInit
-{
+struct _TaskInit {
 	const char* asmFile;
 	const char** args;
 	int nArgs;
@@ -390,8 +415,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	{
 		bool noAppPaths = false;
 		std::string tpaList; tpaList.reserve(30000);
-		if (p.isPrivate) {
-			BuildTpaList(p.appDir, tpaList);
+		if (p.isPrivateNetRuntime && !p.isEditorOrTaskExe) {
+			BuildTpaList(p.netCore, tpaList);
 		} else {
 			//rejected: to get dotnet assemblies enumerate their folders. Bad: it picks some native assembles too; works, but dirty.
 			//BuildTpaList(p.netDesktop, tpaList); //note: must be first, else eg WPF does not work because netCore dir contains WindowsBase too, and it is invalid
@@ -404,7 +429,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			//	Workaround: don't use APP_PATHS for Au.Task.exe and Au.Editor.exe (for script roles miniProgram and editorExtension).
 			//		Add Au.* assemblies to the TPA list. For others use the assembly resolve event; including Roslyn.
 			//		For this reason we also don't add Roslyn to APP_PATHS.
-			noAppPaths = _StrEqualI(p.exeName, L"Au.Editor.exe") || _StrEqualI(p.exeName, L"Au.Task.exe");
+			noAppPaths = p.isEditorOrTaskExe;
 			//if(noAppPaths) //no, exeProgram may want to get Au.dll with AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") like it is in miniProgram
 			BuildTpaList(p.appDir, tpaList, true);
 		}
@@ -424,7 +449,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			nd16 += L"\\32\\;";
 #endif
 		}
-		nd16 += p.netDesktop; nd16 += L"\\;";
+		if (!p.isPrivateNetRuntime) { nd16 += p.netDesktop; nd16 += L"\\;"; }
 		nd16 += p.netCore; nd16 += L"\\;";
 		_ToUtf8(nd16, nd8);
 

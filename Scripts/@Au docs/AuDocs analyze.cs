@@ -57,7 +57,7 @@ class _Analyze {
 		
 		if (_currentFileIndex > _currentFileIndexPrev) {
 			_currentFileIndexPrev = _currentFileIndex;
-			print.it($"<><z yellowgreen>{_currentFileIndex}<>");
+			print.it($"<><bc yellowgreen>{_currentFileIndex}<>");
 		}
 		
 		_currentSym = sym;
@@ -154,7 +154,7 @@ class _Analyze {
 				foreach (var p in ap) {
 					var rx = new regexp($@"(?<![\.'])\b{p.Name}\b");
 					foreach (var s in at) {
-						if (rx.Replace(s, "</_><z yellow>$0<><_>", out var s2) > 0) {
+						if (rx.Replace(s, "</_><bc yellow>$0<><_>", out var s2) > 0) {
 							if(!sep) { sep=true; print.it("-------------------"); }
 							_Print(s2);
 						}
@@ -172,7 +172,7 @@ class _Analyze {
 				var v = m.Value;
 				
 				//found = v is not ("ANSI" or "PCRE" or "NOTE" or "IMPORTANT" or "MSDN" or "XAML" or "HTML" or "ASCII" or "JSON" or "HTTP");
-				//if (found) return "</_><z yellow>" + v + "<><_>";
+				//if (found) return "</_><bc yellow>" + v + "<><_>";
 				
 				bool skip = true; for (int j = 1; j < v.Length; j++) if (char.IsUpper(v[j])) { skip = false; break; }
 				if (skip) {
@@ -191,7 +191,7 @@ class _Analyze {
 				
 				if (hs.Contains(v)) {
 					found = true;
-					return "</_><z yellow>" + v + "<><_>";
+					return "</_><bc yellow>" + v + "<><_>";
 				} else {
 					
 				}
@@ -212,7 +212,7 @@ class _Analyze {
 				if (!_spellCheck.Check(v)) {
 					if (v is "eg" or "ie" || v.Starts(true, "substring", "unmanaged") > 0) return v;
 					found = true;
-					return "</_><z yellow>" + v + "<><_>";
+					return "</_><bc yellow>" + v + "<><_>";
 				}
 				return v;
 			}, out var s2);
@@ -276,8 +276,8 @@ class _Analyze {
 		foreach (var (s, o) in _dDupText) {
 			if (o is not List<ISymbol> a) continue;
 			print.it($"""
-<><Z green>Duplicate text:<>
-<Z wheat><_>{s}</_><>
+<><lc green>Duplicate text:<>
+<lc wheat><_>{s}</_><>
 {string.Join('\n', a.Select(o => AuDocs.VsGoto(o)))}
 """);
 		}

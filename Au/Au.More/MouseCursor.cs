@@ -62,10 +62,9 @@ namespace Au.More
 		/// This function creates/deletes a temporary file, because there is no good API to load cursor from memory.
 		/// </remarks>
 		public static MouseCursor Load(byte[] cursorData, int size = 0) {
-			var s = folders.Temp + Guid.NewGuid().ToString();
-			File.WriteAllBytes(s, cursorData);
-			try { return Load(s, size); }
-			finally { filesystem.delete(s, FDFlags.CanFail); }
+			using var tf = new TempFile();
+			File.WriteAllBytes(tf, cursorData);
+			return Load(tf, size);
 
 			//If want to avoid temp file, can use:
 			//	1. CreateIconFromResourceEx.

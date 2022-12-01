@@ -6,6 +6,6 @@
 ///
 /// 3. Put the classes in file <open>global.cs<>. Or in class files added to global.cs. Use this only for classes that should be available in ALL code files (script, class) of current workspace. Also in global.cs you can add library references: Properties -> Library.
 
-/// Read more about <help editor/Class files%2C projects>class files and libraries<>.
+/// Read more about <help editor/Class files, projects>class files and libraries<>.
 
 /// To add a class file, project or other library to each new script, in Options -> Templates select Custom and edit the template.

@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Au {
 	/// <summary>
-	/// Parses and compares [](xref:wildcard_expression).
+	/// Parses and compares [wildcard expression](xref:wildcard_expression).
 	/// </summary>
 	/// <remarks>
 	/// Used in 'find' functions. For example in <see cref="wnd.find"/> to compare window name, class name and program.
@@ -113,7 +113,7 @@ namespace Au {
 		//rejected: ReadOnlySpan<char>. Then cannot use eg .NET Regex.
 
 		/// <summary>
-		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns true if they match.
+		/// Compares a string with the [wildcard expression](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns false. If <c>""</c>, returns true if it was <c>""</c> or <c>"*"</c> or a regular expression that matches <c>""</c>.</param>
 		public bool Match(string s) {
@@ -237,7 +237,7 @@ namespace Au.Types {
 		/// 
 		/// Uses ordinal comparison, ie does not depend on current culture.
 		/// 
-		/// See also: [](xref:wildcard_expression).
+		/// See also: [wildcard expression](xref:wildcard_expression).
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

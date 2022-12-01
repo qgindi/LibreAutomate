@@ -153,7 +153,7 @@ static class CiUtil {
 		if (url != null) run.itSafe(url);
 	}
 
-	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + Uri.EscapeDataString(query);
+	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(query);
 
 	public static string GetSymbolHelpUrl(ISymbol sym) {
 		//print.it(sym);

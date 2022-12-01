@@ -40,16 +40,16 @@ class DInputRecorder : KDialogWindow {
 	ScrollViewer _scroller;
 	TextBox _tSpeed;
 
-	const string c_iconPause = "*Material.PauseCircleOutline #008EEE",
-		c_iconRetry = "*BoxIcons.RegularReset #FF6640",
-		c_iconUndo = "*Ionicons.UndoiOS #9F5300";
+	const string c_iconPause = "*Material.PauseCircleOutline" + Menus.blue,
+		c_iconRetry = "*BoxIcons.RegularReset" + Menus.red,
+		c_iconUndo = Menus.iconUndo;
 
 	const int c_xyWindow = 0, c_xyControl = 1, c_xyScreen = 2;
 
 	DInputRecorder() {
 		Title = "Input recorder";
-		var b = new wpfBuilder(this).WinSize((300, 200..400), (270, 260..)).Columns(80, -1);
-		b.WinProperties(WindowStartupLocation.Manual, /*resizeMode: ResizeMode.NoResize,*/ showActivated: false, showInTaskbar: false, topmost: true, style: WindowStyle.ToolWindow);
+		var b = new wpfBuilder(this).WinSize((300, 200..400), (284, 270..)).Columns(80, -1);
+		b.WinProperties(WindowStartupLocation.Manual, showActivated: false, showInTaskbar: false, topmost: true, style: WindowStyle.ToolWindow);
 		b.Window.SizeToContent = 0;
 
 		b.Row(-1).StartGrid().Columns(-1);

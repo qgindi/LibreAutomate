@@ -6,9 +6,9 @@
 /// - <help api/index>Automation library reference<> (menu Help -> Library help).
 ///
 /// If need something more, try:
-/// - <link https://www.quickmacros.com/forum/forumdisplay.php?fid=19>Forum<> (menu Help -> Forum).
+/// - <link https://www.libreautomate.com/forum/>Forum<> (menu Help -> Forum).
 /// - Internet: <google>stackoverflow</google>, <google>Microsoft technical documentation<>, etc.
-/// - Programming libraries: <+recipe>NuGet</b>, <google>GitHub</google>, etc.
+/// - Programming libraries: <+recipe>NuGet<>, <google>GitHub<>, etc.
 /// - <+recipe>Windows API<>.
 
 /// Simple automations can be recorded. The input recorder records keys and mouse clicks in any window. You can edit the recorded code: insert <+recipe Simple wait>wait<>, edit <+recipe Find window>window names<>, etc.

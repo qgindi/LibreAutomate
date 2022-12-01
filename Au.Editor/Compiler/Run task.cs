@@ -255,7 +255,6 @@ class RunningTasks {
 
 	public RunningTasks() {
 		App.Timer1sOr025s += _TimerUpdateUI;
-		script.s_role = SRole.EditorExtension;
 	}
 
 	public void OnWorkspaceClosed() {
@@ -489,8 +488,10 @@ class RunningTasks {
 			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
 
-			var f1 = r.flags; if (runFromEditor) f1 |= MiniProgram_.EFlags.FromEditor;
-			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, f.IdString, process.thisProcessId);
+			var f1 = r.flags;
+			if (runFromEditor) f1 |= MiniProgram_.EFlags.FromEditor;
+			if (App.IsPortable) f1 |= MiniProgram_.EFlags.IsPortable;
+			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, f.IdString, process.thisProcessId, (int)CommandLine.MsgWnd);
 			wrPipeName = null;
 
 			//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
@@ -586,42 +587,60 @@ class RunningTasks {
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
 	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor) {
-		if (uac == _SpUac.admin) {
-			RResult k;
-			if (exeProgram) {
-				var p = &SharedMemory_.Ptr->script;
-				p->pidEditor = process.thisProcessId;
-				int flags = 1;
-				if (runFromEditor) flags |= 2;
-				if (wrPipeName != null) { flags |= 4; p->pipe = wrPipeName; }
-				p->flags = flags;
+		(int pid, WaitHandle hProcess) r;
+		string cwd;
 
-				k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, (string)folders.NetRuntime);
-
-				if (0 != (p->flags & 1)) { //usually already 0
-					if (!wait.forCondition(-3, () => 0 != (p->flags & 1))) p->flags &= ~1;
+		if (exeProgram) {
+			if (s_cwdExe == null) {
+				//Pass this working directory to let the exe know it was launched from editor.
+				//	Then its AppModuleInit_ will read from shared memory and set the event.
+				//	Also AppHost uses this to find portable .NET runtime.
+				//There are no other ways to pass data when using shellexecute(runas) when cannot use command line args.
+				//This empty hidden directory is created by the setup program. This code creates it if missing.
+				cwd = folders.ThisApp.Path + "\\Roslyn\\.exeProgram";
+				if (!filesystem.exists(cwd).Directory) {
+					filesystem.createDirectory(cwd);
+					File.SetAttributes(cwd, FileAttributes.Directory | FileAttributes.Hidden);
 				}
-			} else {
-				k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
-			}
+				s_cwdExe = cwd;
+				s_event1 = Api.CreateEvent2(default, true, false, "Au.event.exeProgram.1");
+			} else cwd = s_cwdExe;
 
-			return (k.ProcessId, k.ProcessHandle);
+			var p = &SharedMemory_.Ptr->script;
+			p->pidEditor = process.thisProcessId;
+			p->hwndMsg = (int)CommandLine.MsgWnd;
+			int flags = 0;
+			if (runFromEditor) flags |= 2;
+			if (App.IsPortable) flags |= 4;
+			if (wrPipeName != null) { flags |= 8; p->pipe = wrPipeName; }
+			p->flags = flags;
+			p->workspace = folders.Workspace;
+		} else cwd = folders.ThisApp;
+
+		if (uac == _SpUac.admin) {
+			var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
+			r = (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
-			//	Normally Au.Editor runs as admin in admin user account, and don't need to go through this.
+			//	Normally editor runs as admin in admin user account, and don't need to go through this.
 		} else {
-			if (wrPipeName != null) wrPipeName = "script.writeResult.pipe=" + wrPipeName;
-
-			var ps = new ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
-
-			//for script.ExitWhenEditorDies_ when role exeProgram
-			ps.si.dwX = runFromEditor ? -1446812571 : -1446812572;
-			ps.si.dwY = process.thisProcessId;
-
+			var ps = new ProcessStarter_(exeFile, args, cwd, rawExe: true);
 			var need = ProcessStarter_.Result.Need.WaitHandle;
-			var psr = uac == _SpUac.userFromAdmin ? ps.StartUserIL(need) : ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
-			return (psr.pid, psr.waitHandle);
+			var psr = uac == _SpUac.userFromAdmin
+				? ps.StartUserIL(need)
+				: ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
+			r = (psr.pid, psr.waitHandle);
 		}
+
+		if (exeProgram) {
+			IntPtr* ha = stackalloc IntPtr[2] { s_event1, r.hProcess.SafeWaitHandle.DangerousGetHandle() };
+			Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
+			Api.ResetEvent(s_event1);
+		}
+
+		return r;
 	}
+	static IntPtr s_event1;
+	static string s_cwdExe;
 
 	int _Find(int taskId) {
 		for (int i = 0; i < _a.Count; i++) {

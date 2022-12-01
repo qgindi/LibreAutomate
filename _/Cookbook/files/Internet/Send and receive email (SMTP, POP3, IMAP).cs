@@ -41,7 +41,7 @@ using (var client = new ImapClient()) {
 
 	foreach (var m in inbox.Fetch(0, -1, MessageSummaryItems.Envelope | MessageSummaryItems.Flags | MessageSummaryItems.UniqueId | MessageSummaryItems.PreviewText)) {
 		//if(m.Flags.Value.Has(MessageFlags.Seen)) continue;
-		print.it($"<><Z #C0C0ff>{m.Index}. {m.Envelope.Subject}   {m.Envelope.From}<>");
+		print.it($"<><lc #C0C0ff>{m.Index}. {m.Envelope.Subject}   {m.Envelope.From}<>");
 		print.it(m.PreviewText);
 		//if (!m.Flags.Value.Has(MessageFlags.Seen)) {
 		//	var M = inbox.GetMessage(m.UniqueId);

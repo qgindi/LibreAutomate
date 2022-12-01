@@ -1,7 +1,5 @@
 /*
 
-Make an online copy of the cookbook. At least contents. As a preview of what this app is.
-
 Recipe "Automation code examples". Just examples of commonly used automation code, without much explanation. To show how an automation script looks.
 
 CONSIDER:

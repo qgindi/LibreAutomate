@@ -1,7 +1,7 @@
 /// Namespaces are containers for types (classes etc) and other namespaces. Like folders. Types in libraries (.NET etc) always are in namespaces. It allows to avoid conflicts with types in other libraries.
 /// 
 /// In a script these types can be used in two ways:
-/// - At the start of the script (but after /*/ comments /*/) add <+lang using directive>using<> directives with names of namespaces you want to use.
+/// - At the start of the script (but after <c green><mono>/*/ comments /*/<><>) add <b><+lang using directive>using<><> directives with names of namespaces you want to use.
 /// - Prepend namespace name and dot to the type name.
 
 using System;

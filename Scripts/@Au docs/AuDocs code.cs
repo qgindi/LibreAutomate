@@ -17,7 +17,7 @@ partial class AuDocs {
 		_Style("ex", s.Excluded);
 		_Style("f", s.Function);
 		_Style("k", s.Keyword);
-		_Style("label", s.Label);
+		_Style("goto", s.Label);
 		_Style("ns", s.Namespace);
 		_Style("n", s.Number);
 		_Style("o", s.Operator);
@@ -77,7 +77,7 @@ partial class AuDocs {
 			a.AsSpan(start..end).Fill((byte)style);
 		}
 		
-		var b = new StringBuilder();
+		var b = new StringBuilder("<code>"); //<code> isn't necessary; it disables Google translate (or would need attribute class="notranslate" or translate="no") and maybe better in some other cases I don't know
 		for (int i = 0; i < a.Length;) {
 			int start = i; byte u = a[i]; while (i < a.Length && a[i] == u) i++;
 			string text = System.Net.WebUtility.HtmlEncode(s[start..i]);
@@ -90,7 +90,7 @@ partial class AuDocs {
 					EStyle.Excluded => "ex",
 					EStyle.Function => "f",
 					EStyle.Keyword => "k",
-					EStyle.Label => "label",
+					EStyle.Label => "goto", //not "label", it is used in DocFX CSS
 					EStyle.Namespace => "ns",
 					EStyle.Number => "n",
 					EStyle.Operator => "o",
@@ -109,7 +109,7 @@ partial class AuDocs {
 				b.Append("</span>");
 			}
 		}
-		s = b.ToString();
+		s = b.Append("</code>").ToString();
 		
 		//print.it("--------------");
 		//print.it(s);

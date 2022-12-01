@@ -30,6 +30,7 @@
           "articles/**/toc.yml",
           "editor/**.md",
           "editor/**/toc.yml",
+          "cookbook/**.md",
           "toc.yml",
           "*.md"
         ]
@@ -38,7 +39,7 @@
     "resource": [
       {
         "files": [
-          "images/**"
+          "images/**",
         ]
       }
     ],

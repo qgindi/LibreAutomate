@@ -118,18 +118,22 @@ partial class CiCompletion {
 		//var p1 = perf.local();
 
 		//print.it(_cancelTS);
-		bool isCommand = ch == default, wasBusy = _cancelTS != null;
-		Cancel();
+		//bool busy = _cancelTS != null;
+		bool isCommand = ch == default;
 
-		if (!CodeInfo.GetContextWithoutDocument(out var cd)) return; //returns false if position is in meta comments
+		if (!CodeInfo.GetContextWithoutDocument(out var cd)) { //returns false if position is in meta comments
+			Cancel();
+			return;
+		}
 		SciCode doc = cd.sci;
 		int position = cd.pos;
 		string code = cd.code;
 
 		if (ch != default && position > 1 && SyntaxFacts.IsIdentifierPartCharacter(ch) && SyntaxFacts.IsIdentifierPartCharacter(code[position - 2])) { //in word
-			if (!wasBusy) return;
-			ch = default;
+			return;
+			//never mind: does not hide Regex completions. Same in VS.
 		}
+		Cancel();
 
 		//CodeInfo.HideTextPopupAndTempWindows(); //no
 		CodeInfo.HideTextPopup();
@@ -293,21 +297,31 @@ partial class CiCompletion {
 			}
 
 			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-			if (position != doc.zCurrentPos16 || (object)code != doc.zText) return; //changed while awaiting
+			var codeNow = doc.zText;
+			int posNow = doc.zCurrentPos16, posAdd = 0, codeLength = code.Length;
+			if (codeNow != code) { //changed while awaiting
+				int lenDiff = codeNow.Length - code.Length; if (lenDiff<=0) return;
+				posAdd = posNow - position; if (posAdd != lenDiff) return;
+				if (!CodeInfo.GetContextAndDocument(out cd, posNow)) return;
+				position = cd.pos;
+				code = cd.code;
+				document = cd.document;
+			} else if (posNow != position) return;
 			//p1.Next('T');
 
-			var provider = _GetProvider(r.ItemsList[0]);
+			var provider = _GetProvider(r.ItemsList[0]); //currently used only in cases when all completion items are from same provider
 			if (!isDot) isDot = provider == CiComplProvider.Override;
 			//print.it(provider, isDot, canGroup, r.Items[0].DisplayText);
 
 			var span = r.Span;
-			if (span.Length > 0 && provider == CiComplProvider.EmbeddedLanguage) span = new TextSpan(position, 0);
+			if (posAdd > 0) span = new(span.Start, span.Length + posAdd);
+			if (span.Length > 0 && provider == CiComplProvider.EmbeddedLanguage) span = new(position, 0);
 
 			var d = new _Data {
 				completionService = completionService,
 				document = document,
 				model = model,
-				codeLength = code.Length,
+				codeLength = codeLength,
 				filterText = code.Substring(span.Start, span.Length),
 				items = new List<CiComplItem>(r.ItemsList.Count),
 				forced = isCommand,
@@ -327,7 +341,7 @@ partial class CiCompletion {
 			//var testInternal = CodeInfo.Meta.TestInternal;
 			Dictionary<INamespaceOrTypeSymbol, List<int>> groups = canGroup ? new(new CiNamespaceOrTypeSymbolEqualityComparer()) : null;
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
-			bool hasNamespaces = false;
+			uint kinds = 0; bool hasNamespaces = false;
 			foreach (var ci_ in r.ItemsList) {
 				var ci = ci_;
 				Debug.Assert(ci.Symbols == null || ci.Symbols.Count > 0); //we may use code ci?.Symbols[0]. Roslyn uses this code in CompletionItem ctor: var firstSymbol = symbols[0];
@@ -356,6 +370,7 @@ partial class CiCompletion {
 				}
 
 				var v = new CiComplItem(provider, ci);
+				kinds |= 1u << ((int)v.kind);
 				//print.it(ci.DisplayText, sym);
 				//if(ci.SortText != ci.DisplayText) print.it($"<>{ci.DisplayText}, sort={ci.SortText}");
 				//if(ci.FilterText != ci.DisplayText) print.it($"<>{ci.DisplayText}, filter={ci.FilterText}");
@@ -427,11 +442,7 @@ partial class CiCompletion {
 					canGroup = false;
 					break;
 				case CiItemKind.LocalVariable:
-					if (isDot) continue; //see the bug comments below
-					break;
-				case CiItemKind.Keyword when syncon.IsGlobalStatementContext:
-					if (ci.DisplayText == "from") v.ci = ci.WithDisplayText("return").WithFilterText("return").WithSortText("return"); //Roslyn bug: no 'return', but is 'from' (why?)
-																																	   //print.it(ci.DisplayText);
+					if (isDot) continue; //see the bug comment below
 					break;
 				}
 
@@ -481,19 +492,22 @@ partial class CiCompletion {
 							for (; i < d.items.Count; i++) snippetsGroup.Add(i);
 						}
 					}
-				} else if (hasNamespaces && !d.noAutoSelect) {
+				} else if (!d.noAutoSelect && (hasNamespaces || _ProbablyInNamespace())) {
 					//add types from favorite namespaces
-					//if (syncon.IsTypeContext) {
+					//if (hasNamespaces && syncon.IsTypeContext) {
 					//	CodeInfo._favorite.AddCompletions(d.items, groups, span, syncon, null);
 					//}
 
 					//add snippets
-					if (provider != CiComplProvider.Cref) {
+					if (provider is not (CiComplProvider.Cref or CiComplProvider.XmlDoc)) {
 						int i = d.items.Count;
 						CiSnippets.AddSnippets(d.items, span, root, code, syncon);
 						for (; i < d.items.Count; i++) (snippetsGroup ??= new List<int>()).Add(i);
 					}
 				}
+
+				bool _ProbablyInNamespace()
+					=> kinds == 1u << (int)CiItemKind.Keyword && provider == CiComplProvider.Keyword && r.ItemsList.Count > 15; //only keywords
 			}
 			//p1.Next('+');
 

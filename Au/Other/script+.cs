@@ -73,3 +73,40 @@ public sealed class NativePathsAttribute : Attribute {
 	/// <param name="paths">Dll paths separated with |.</param>
 	public NativePathsAttribute(string paths) { Paths = paths; }
 }
+
+/// <summary>
+/// <see cref="ScriptEditor.GetCommandState"/>.
+/// </summary>
+[Flags]
+public enum ECommandState {
+	///
+	Checked = 1,
+	///
+	Disabled = 2,
+}
+
+/// <summary>
+/// For <see cref="ScriptEditor.GetIcon"/>.
+/// </summary>
+public enum EGetIcon {
+	/// <summary>
+	/// Input is a file or folder in current workspace. Can be relative path in workspace (like <c>@"\Folder\File.cs"</c>) or full path or filename.
+	/// Output must be icon name, like <c>"*Pack.Icon color"</c>, where color is like <c>#RRGGBB</c> or color name. See menu Tools -> Icons.
+	/// </summary>
+	PathToIconName,
+
+	/// <summary>
+	/// Input is a file or folder in current workspace (see <b>PathToIconName</b>).
+	/// Output must be icon XAML.
+	/// </summary>
+	PathToIconXaml,
+
+	/// <summary>
+	/// Input is icon name (see <b>PathToIconName</b>).
+	/// Output must be icon XAML.
+	/// </summary>
+	IconNameToXaml,
+
+	//PathToGdipBitmap,
+	//IconNameToGdipBitmap,
+}

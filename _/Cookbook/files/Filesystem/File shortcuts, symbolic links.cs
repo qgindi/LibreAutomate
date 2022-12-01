@@ -29,3 +29,6 @@ shortcutFile.delete(@"C:\Test\Notepad.lnk");
 var symlink = folders.Desktop + "Test";
 if (filesystem.exists(symlink).IsNtfsLink) filesystem.delete(symlink); //deletes the symbolic link but not its target
 Directory.CreateSymbolicLink(symlink, @"C:\Test");
+//File.CreateSymbolicLink(symlink2, @"C:\Test\file.txt");
+
+/// Symbolic links can be absolute (target is full path) or relative (target is relative to the link's parent directory, like <mono>@"Abc\Def"<> or <mono>@"..\Abc\Def"<>).

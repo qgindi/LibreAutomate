@@ -16,7 +16,7 @@ using OpenQA.Selenium.Support.UI;
 var service = ChromeDriverService.CreateDefaultService();
 service.HideCommandPromptWindow = true;
 using var driver = new ChromeDriver(service);
-driver.Navigate().GoToUrl("https://www.quickmacros.com/forum/");
+driver.Navigate().GoToUrl("https://www.libreautomate.com/forum/");
 
 //Maximize window.
 

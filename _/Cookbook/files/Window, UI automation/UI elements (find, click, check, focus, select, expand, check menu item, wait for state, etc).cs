@@ -1,41 +1,40 @@
 /// To create code to find a UI element, use tool "Find UI element"; it's in the Code menu, hotkey Ctrl+Shift+E. It also can create action code, for example to click the element.
 
-{ //click button "Properties" in a folder window; then wait 1 s
-var w = wnd.find(1, cn: "CabinetWClass").Activate();
-var e = w.Elm["SPLITBUTTON", "Properties", "class=NetUIHWND"].Find(1);
-e.Invoke();
-//e.MouseClick(); //use this when Invoke does not work
-//e.MouseClickD(); //or this (double click)
-//e.MouseClickR(); //or this (right click)
-//e.PostClick(); //or this
-//e.WebInvoke(); //use this with web page links when need to wait for new page
-//e.JavaInvoke(); //use this with Java windows when Invoke does not work well
-} 1.s();
-{ //check checkbox "Read-only"; then wait 1 s
-var w = wnd.find(1, "* Properties", "#32770");
-var e = w.Elm["CHECKBOX", "Read-only"].Find(1);
-e.Check(true);
-} 1.s();
-{ //select tab "Details"
-var w = wnd.find(1, "* Properties", "#32770").Activate();
-var e = w.Elm["PAGETAB", "Details"].Find(1);
-e.Focus(true);
-}
+//click button "Properties" in a folder window; then wait 1 s
+var w1 = wnd.find(1, cn: "CabinetWClass").Activate();
+var e1 = w1.Elm["SPLITBUTTON", "Properties", "class=NetUIHWND"].Find(1);
+e1.Invoke();
+//e1.MouseClick(); //use this when Invoke does not work
+//e1.MouseClickD(); //or this (double click)
+//e1.MouseClickR(); //or this (right click)
+//e1.PostClick(); //or this
+//e1.WebInvoke(); //use this with web page links when need to wait for new page
+//e1.JavaInvoke(); //use this with Java windows when Invoke does not work well
+1.s();
 
-{ //expand folder "System32" in a folder window. At first expands its ancestors.
-var w = wnd.find(1, cn: "CabinetWClass").Activate();
-var e = w.Elm["TREEITEM", "This PC", "id=100"].Find(1);
-e.Expand("*C:*|Windows|System32");
+//check checkbox "Read-only"; then wait 1 s
+var w2 = wnd.find(1, "* Properties", "#32770");
+var e2 = w2.Elm["CHECKBOX", "Read-only"].Find(1);
+e2.Check(true);
+1.s();
+
+//select tab "Details"
+var w3 = wnd.find(1, "* Properties", "#32770").Activate();
+var e3 = w3.Elm["PAGETAB", "Details"].Find(1);
+e3.Focus(true);
+
+//expand folder "System32" in a folder window. At first expands its ancestors.
+var w4 = wnd.find(1, cn: "CabinetWClass").Activate();
+var e4 = w4.Elm["TREEITEM", "This PC", "id=100"].Find(1);
+e4.Expand("*C:*|Windows|System32");
 //wait 2 s and collapse 3 levels
 2.s();
 keys.send("Left*6");
-}
 
-{ //select combo box item "Baltic"
-var w = wnd.find(1, "Font", "#32770").Activate();
-var e = w.Elm["COMBOBOX", "Script:"].Find(1);
-e.ComboSelect("Baltic");
-}
+//select combo box item "Baltic"
+var w5 = wnd.find(1, "Font", "#32770").Activate();
+var e5 = w5.Elm["COMBOBOX", "Script:"].Find(1);
+e5.ComboSelect("Baltic");
 
 /// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hotkeys and Alt+keys.
 
@@ -61,29 +60,26 @@ var eWW = wMenu2.Elm["MENUITEM", "Word Wrap"].Find(1);
 keys.send(eWW.IsChecked ? "Esc*2" : "W");
 
 /// Wait until button "Apply" isn't disabled.
-{
-var w = wnd.find(1, "* Properties", "#32770");
-var e = w.Elm["BUTTON", "Apply"].Find(1);
-e.WaitFor(0, e => !e.IsDisabled);
+
+var wProp = wnd.find(1, "* Properties", "#32770");
+var eApply = wProp.Elm["BUTTON", "Apply"].Find(1);
+eApply.WaitFor(0, e => !e.IsDisabled);
 print.it("enabled");
-}
 
 /// To find child/descendant elements, use <see cref="elm.Elm"/>.
 
-{
-var w = wnd.find(1, cn: "CabinetWClass").Activate();
-var e = w.Elm["LIST", "Items View", "class=DirectUIHWND"].Find(1);
-var e2 = e.Elm["LISTITEM", "c"].Find();
-print.it(e2);
+var wFolder = wnd.find(1, cn: "CabinetWClass").Activate();
+var eList = wFolder.Elm["LIST", "Items View", "class=DirectUIHWND"].Find(1);
+var eLi = eList.Elm["LISTITEM", "c"].Find();
+print.it(eLi);
 print.it("---");
-var a1 = e.Elm["LISTITEM"].FindAll();
-print.it(a1);
+var aLi = eList.Elm["LISTITEM"].FindAll();
+print.it(aLi);
 print.it("---");
-var a2 = e.Elm.FindAll();
-print.it(a2);
-}
+var aAll = eList.Elm.FindAll();
+print.it(aAll);
 
-/// You can find more <b>elm</b> functions in the popup list that appears when you type . (dot) after a variable name or elm.
+/// You can find more <b>elm</b> functions in the popup list that appears when you type . (dot) after a variable name or <mono>elm<>.
 
 var em = elm.fromMouse(); //popup list when typed "elm."
 string role = em.Role; //popup list when typed "em."
@@ -93,6 +89,6 @@ string role = em.Role; //popup list when typed "em."
 /// Find window that contains button "Apply" (UI element), and get the UI element too.
 
 var f1 = new elmFinder("BUTTON", "Apply"); //or var f1 = elm.path["BUTTON", "Apply"];
-var w1 = wnd.find(cn: "#32770", also: t => f1.In(t).Exists()); //or t => t.HasElm(f1)
-print.it(w1);
+var w10 = wnd.find(cn: "#32770", also: t => f1.In(t).Exists()); //or t => t.HasElm(f1)
+print.it(w10);
 print.it(f1.Result);

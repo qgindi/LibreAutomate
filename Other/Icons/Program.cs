@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Au;
 using Au.Types;
 using System.Reflection;
@@ -18,7 +18,7 @@ class Program
 {
 	[STAThread]
 	static void Main(string[] args) {
-		print.qm2.use = true;
+		//print.qm2.use = true;
 		print.clear();
 		new Application();
 		CreateDB();

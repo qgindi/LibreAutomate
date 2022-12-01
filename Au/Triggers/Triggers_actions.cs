@@ -467,6 +467,8 @@ class TriggerActionThreads {
 		switch (Interlocked.Exchange(ref muteMod, 0)) {
 		case c_modRelease:
 			keys.Internal_.ReleaseModAndDisableModMenu();
+			//TODO: now when the script is remapping keys using action like keys.sendL('Ž'), and user holds down Shift, this releases Shift.
+			//	User expects to type eg "AŽU" but types "AŽu".
 			break;
 		case c_modCtrl:
 			keys.Internal_.SendKey(KKey.Ctrl); //disable Alt/Win menu

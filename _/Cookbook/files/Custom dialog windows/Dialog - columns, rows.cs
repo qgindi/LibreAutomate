@@ -15,18 +15,18 @@ if (!b.ShowDialog()) return;
 /// The default window layout is a 2-column grid (table). To set columns use <see cref="wpfBuilder.Columns"/>.
 /// 
 /// Column width can be of 3 types:
-/// - > 0 - width in WPF units (1/96 inch).
-/// - 0 - auto (of the widest control). Often used for labels.
-/// - < 0 - fraction of the remaining space. Aka <i>star-sized</i>.
+/// - If > 0 - width in WPF units (1/96 inch).
+/// - If 0 - auto (of the widest control). Often used for labels.
+/// - If < 0 - fraction of the remaining space. Aka <i>star-sized</i>.
 
 /// Default columns are 0, -1. The first column (auto-sized) is intended for labels; the second fills the remaining space.
 ///
 /// Function <see cref="wpfBuilder.Row"/> starts a new row with specified height. Function <b>R</b> starts an auto-sized row, same as <mono>Row(0)<>.
 
 /// Row height can be of 3 types:
-/// - > 0 - height in WPF units (1/96 inch).
-/// - 0 - auto (of the tallest control). It is default.
-/// - < 0 - fraction of the remaining space.
+/// - If > 0 - height in WPF units (1/96 inch).
+/// - If 0 - auto (of the tallest control). It is default.
+/// - If < 0 - fraction of the remaining space.
 
 /// If there are star-sized columns or rows, need to set container width or height (<b>WinSize</b>, <b>Size</b>, etc).
 

@@ -49,9 +49,9 @@ print.it(3);
 
 /// Note: The <.k>finally<> code does not run if <google C# Environment.Exit>Environment.Exit<> or some other function terminates the process.
 
-/// With disposable objects instead of try-finally-Dispose can be used the <+lang using statement><.k>using<><> statement.
+/// With disposable objects instead of try-finally-Dispose can be used the <b><+lang using statement>using<><> statement.
 
-/// To throw exceptions use the <+lang throw statement><.k>throw<><> statement.
+/// To throw exceptions use the <b><+lang throw statement>throw<><> statement.
 
 Func1(1);
 Func1(-1);

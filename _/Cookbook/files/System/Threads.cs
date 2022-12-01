@@ -20,7 +20,7 @@ Task.Run(() => {
 });
 for (int i = 0; i < 10; i++) { 100.ms(); print.it(Environment.CurrentManagedThreadId); }
 
-/// Not all codes are safe to run in multiple threads simultaneously. Objects that aren't thread-safe may be corrupted. Use <+lang lock statement><.k>lock<><> to prevent it.
+/// Not all codes are safe to run in multiple threads simultaneously. Objects that aren't thread-safe may be corrupted. Use <b><+lang lock statement>lock<><> to prevent it.
 
 var a = new List<int>();
 

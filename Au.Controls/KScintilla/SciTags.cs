@@ -13,12 +13,12 @@ NEW TAGS:
 NEW PARAMETERS:
    <c ColorName> - .NET color name for text color. Also color can be #RRGGBB.
    <bc ColorName> - .NET color name for background color. Also color can be #RRGGBB.
-   <BC ColorName> - .NET color name for background color, whole line. Also color can be #RRGGBB.
+   <lc ColorName> - .NET color name for background color, whole line. Also color can be #RRGGBB.
 
 RENAMED TAGS:
 	<script>, was <macro>.
 	<bc>, was <z>.
-	<BC>, was <Z>.
+	<lc>, was <Z>.
 
 REMOVED TAGS:
 	<tip>.
@@ -231,7 +231,7 @@ public unsafe class SciTags {
 						b.Append("\r\n");
 					} else if (hasTagsThis) {
 						b.Append("\r\n<\x15\x0\x4");
-						//info: add "\r\n" here, not later, because later it would make more difficult <BC> tag
+						//info: add "\r\n" here, not later, because later it would make more difficult <lc> tag
 					} else {
 						b.Append(hasTagsPrev ? "\r\n<\x15\x0\x4" : "\r\n");
 					}
@@ -401,7 +401,8 @@ public unsafe class SciTags {
 				break;
 			case 1 << 16 | 'c':
 			case 2 << 16 | 'b' when tag[1] == 'c':
-			case 2 << 16 | 'B' when tag[1] == 'C':
+			case 2 << 16 | 'l' when tag[1] == 'c':
+			case 2 << 16 | 'B' when tag[1] == 'C': //fbc
 			case 1 << 16 | 'z' or 1 << 16 | 'Z': //fbc
 				if (attr == null) goto ge;
 				int color;
@@ -413,7 +414,7 @@ public unsafe class SciTags {
 					color = c.ToArgb() & 0xffffff;
 				}
 				if (ch == 'c') style.Color = color; else style.BackColor = color;
-				if (ch == 'B' || ch == 'Z') style.Eol = true;
+				if (ch == 'l' || ch == 'B' || ch == 'Z') style.Eol = true;
 				break;
 			case 4 << 16 | 's' when span.SequenceEqual("size"u8) && attr != null:
 				style.Size = Api.strtoi(attr);
@@ -657,7 +658,7 @@ public unsafe class SciTags {
 			run.itSafe(s1, s2);
 			break;
 		case "google":
-			run.itSafe("https://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+			run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s1) + s2);
 			break;
 		case "help":
 			HelpUtil.AuHelp(attr);

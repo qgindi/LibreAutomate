@@ -78,16 +78,16 @@ class DCustomize : KDialogWindow {
 		b.Row(-1).StartStack(vertical: true).Hidden();
 		_panelProp = b.Panel;
 
-		b.Add(out _lCommandPath).Padding("4").Brush(Brushes.LightBlue);
+		b.Add(out _lCommandPath).Padding("4").Brush(Brushes.LightBlue, Brushes.Black);
 		b.StartGrid<GroupBox>("Properties common to menu item and toolbar button").Columns(0, -1, 30, 30);
 		b.R.Add("Text", out _tText).Tooltip("Text.\nInsert _ before Alt-underlined character.");
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
-			.xAddButtonIcon("*MaterialDesign.ColorLens #99BF00", _ => _ColorTool(), "Colors"); b.Span(1);
+			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => _ColorTool(), "Colors"); b.Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
-			.xAddButtonIcon("*FontAwesome.IconsSolid #99BF00", _ => { _tImage.SelectAll(); DIcons.ZShow(); }, "Icons tool.\nSelect an icon, expand 'Code...' and click 'Menu...'."); b.Span(1);
+			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ZShow(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
-			.xAddButtonIcon("*Material.KeyboardOutline #99BF00", _ => _KeysTool(), "Keys tool");
-		b.xAddButtonIcon("*FeatherIcons.Eye #008EEE", _ => _KeysList(), "Existing hotkeys");
+			.xAddButtonIcon("*Material.KeyboardOutline" + Menus.green, _ => _KeysTool(), "Keys tool");
+		b.xAddButtonIcon("*FeatherIcons.Eye" + Menus.blue, _ => _KeysList(), "Existing hotkeys");
 		b.StartGrid<Expander>("Default");
 		b.R.Add("Text", out _tDefText); _Readonly(_tDefText);
 		b.R.Add("Image", out _tDefImage); _Readonly(_tDefImage);
@@ -142,7 +142,7 @@ class DCustomize : KDialogWindow {
 			_info.zText = $"""
 Here you can edit menus, toolbars and hotkeys of the main window.
 
-<b>menu</b> - customized menu items. To edit a menu item, add or select it here (right-click...) or in a toolbar.
+<b>menu</b> - customized menu items. Right-click...
 <b>File, etc</b> - toolbars. Right-click to add a button.
 
 Menu items cannot be removed or reordered. Default toolbar buttons cannot be removed, but you can edit, reorder and hide.
@@ -151,7 +151,6 @@ Text color in the list: blue - customized; gray - hidden button; red - cut.
 
 You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. To reset everything, delete the file. To reset an item or toolbar, remove it from XML.
 """;
-
 		};
 
 		void _KeysTool() {
@@ -278,13 +277,14 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 			var m = new popupMenu();
 
 			var c0 = t.Level == 0 ? t : t.Parent;
-			m[c0.isMenu ? "Add to customized..." : "Add button..."] = o => { _menu.PlacementTarget = this; _menu.IsOpen = true; };
+			m[c0.isMenu ? "Customize menu item..." : "Add button..."] = o => { _menu.PlacementTarget = this; _menu.IsOpen = true; };
 			if (t.Level == 1) {
 				m.Separator();
 				m["Cut"] = o => _Cut(t);
 				_MiPaste(false);
-				m.Submenu("Delete", m => {
-					m["Delete " + t.displayText] = o => _Delete(t);
+				var s1 = _IsDefaultButton(t) ? "Hide" : "Delete";
+				m.Submenu(s1, m => {
+					m[s1 + " " + t.displayText] = o => _Delete(t, ask: false);
 				});
 			} else {
 				_MiPaste(true);
@@ -308,7 +308,9 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 	}
 
 	bool _CanPaste(_Custom where) {
-		return _clip != null && _clip != where;
+		if (_clip == null || _clip == where) return false;
+		if (_IsDefaultButton(_clip) && where != _clip.Parent && where.Parent != _clip.Parent) return false; //don't move to another toolbar
+		return true;
 	}
 
 	void _Paste(_Custom where) {
@@ -334,6 +336,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 	void _Move(_Custom t, bool up) {
 		var where = up ? t.Previous : t.Next;
 		if (where == null) {
+			if (_IsDefaultButton(t)) return; //don't move to another toolbar
 			int i = _tree.IndexOf(t.Parent) + (up ? -1 : 1);
 			if ((uint)i >= _tree.Count) return;
 			where = _tree[i];
@@ -344,12 +347,29 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		_tv.EnsureVisible(t);
 	}
 
-	void _Delete(_Custom t) {
-		if (t == _ti) _panelProp.Visibility = Visibility.Hidden;
-		_clip = null;
-		t.Remove();
-		_tv.SetItems(_tree, true);
+	void _Delete(_Custom t, bool ask) {
+		if (!_IsDefaultButton(t)) {
+			if (ask && !dialog.showOkCancel("Delete?", t.displayText, owner: this)) return;
+			if (t == _ti) _panelProp.Visibility = Visibility.Hidden;
+			_clip = null;
+			t.Remove();
+			_tv.SetItems(_tree, true);
+		} else if (t == _ti) {
+			_cbHide.SelectedIndex = 1;
+		} else {
+			t.hide = "always";
+			_tv.Redraw(t);
+		}
 	}
+
+	bool _IsDefaultButton(_Custom t) {
+		if (t.Level > 0 && !t.isMenu) {
+			_xdefault ??= XmlUtil.LoadElem(App.Commands.DefaultFile);
+			return _xdefault.Element(t.Parent.displayText)?.Element(t.def.name) != null;
+		}
+		return false;
+	}
+	XElement _xdefault;
 
 	void _FillMenu() {
 		_Menu(Panels.Menu, _menu = new(), null, 0);
@@ -469,9 +489,9 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 
 		object ITreeViewItem.Image => Level == 0 ? (_isExpanded ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml") : (image ?? def.attr.image);
 
-		int ITreeViewItem.Color => Level > 0 ? -1 : isMenu ? 0x80C0F0 : 0xA0E0C0;
+		int ITreeViewItem.Color => Level > 0 ? -1 : isMenu ? 0xF0C080 : 0xC0E0A0;
 
-		int ITreeViewItem.TextColor => this == _d._clip ? 0xFF : (hide == "always" ? 0x808080 : IsCustomized() ? 0xFF0000 : -1);
+		int ITreeViewItem.TextColor => this == _d._clip ? 0xFF0000 : (hide == "always" ? 0x808080 : IsCustomized() ? (WpfUtil_.IsHighContrastDark ? 0xFFFF00 : 0x0000FF) : Level > 0 ? -1 : 0);
 
 		#endregion
 
@@ -508,7 +528,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		if (_tv.FocusedItem is _Custom t) {
 			switch (k) {
 			case (0, Key.Delete):
-				if (t.Level > 0 && dialog.showOkCancel("Delete?", t.displayText, owner: this)) _Delete(t);
+				if (t.Level > 0) _Delete(t, ask: true);
 				break;
 			case (ModifierKeys.Control, Key.X):
 				if (t.Level > 0) _Cut(t);

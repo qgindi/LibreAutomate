@@ -1,4 +1,4 @@
-/// A <help editor/Class files%2C projects>script project<> folder can contain one script and multiple class files that contain classes, structs, etc used in the script. Also you can place resource files there.
+/// A <help editor/Class files, projects>script project<> folder can contain one script and multiple class files that contain classes, structs, etc used in the script. Also you can place resource files there.
 /// 
 /// Script example:
 

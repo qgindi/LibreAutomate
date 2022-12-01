@@ -33,12 +33,12 @@ class PanelFind : UserControl {
 
 		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
 		b.StartStack();
-		_cFolder = b.xAddCheckIcon("*Material.FolderSearchOutline #99BF00", "Let 'In files' search only in current project or root folder");
+		_cFolder = b.xAddCheckIcon("*Material.FolderSearchOutline" + Menus.green, "Let 'In files' search only in current project or root folder");
 		b.Padding(1, 0, 1, 1);
-		b.xAddButtonIcon("*EvaIcons.Options2 #99BF00", _bOptions_Click, "More options");
+		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _bOptions_Click, "More options");
 
 		var cmd1 = App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)];
-		var bBack = b.xAddButtonIcon("*EvaIcons.ArrowBack #585858", _ => Menus.File.OpenCloseGo.Go_back(), "Go back");
+		var bBack = b.xAddButtonIcon(Menus.iconBack, _ => Menus.File.OpenCloseGo.Go_back(), "Go back");
 		b.Disabled(!cmd1.Enabled);
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
 
@@ -548,7 +548,7 @@ class PanelFind : UserControl {
 
 		if (!_GetTextToFind(out var f)) return;
 
-		cFound.zText = "<c 0xA0A0A0>... searching ...<>";
+		cFound.zText = "<c #A0A0A0>... searching ...<>";
 		//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
 		wait.doEvents();
 
@@ -592,21 +592,21 @@ class PanelFind : UserControl {
 			_FindAllInString(text, f, a);
 
 			if (a.Count != 0) {
-				b.Append("<BC 0xC0E0C0>");
+				b.Append("<lc #C0E0C0>");
 				path ??= v.ItemPath;
 				string link = v.IdStringWithWorkspace;
 				if (v.IsFolder) {
-					b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
+					b.AppendFormat("<+open \"{0}\"><c #808080>{1}<><>    <c #008000>//folder<>", link, path);
 				} else {
 					int i1 = path.Length - v.Name.Length;
 					string s1 = path[..i1], s2 = path[i1..];
 					aFiles.Add(v); nFound += a.Count;
 					int ns = 120 - path.Length * 7 / 4;
 #if true //open and select the first found text
-					b.AppendFormat("<+f \"{0} {1} {2}\"><c 0x808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
+					b.AppendFormat("<+f \"{0} {1} {2}\"><c #808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>",
 						link, a[0].Start.Value, a[0].End.Value, s1, s2, ns > 0 ? new string(' ', ns) : null);
 #else //just open
-						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
+						b.AppendFormat("<+open \"{0}\"><c #808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>",
 							link, s1, s2, ns > 0 ? new string(' ', ns) : null);
 #endif
 				}
@@ -622,7 +622,7 @@ class PanelFind : UserControl {
 						bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
 						b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
 							.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
-							.Append("<bc 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
+							.Append("<bc #ffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
 							.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
 							.AppendLine("<>");
 					}
@@ -632,7 +632,7 @@ class PanelFind : UserControl {
 			if (bSlow != null) {
 				time = perf.ms - time;
 				if (time >= timeSlow + (jited ? 0 : 100)) {
-					if (bSlow.Length == 0) bSlow.AppendLine("<BC #FFC000>Slow files:<>");
+					if (bSlow.Length == 0) bSlow.AppendLine("<lc #FFC000>Slow files:<>");
 					bSlow.Append(time).Append(" ms <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
 				}
 				jited = true;
@@ -641,7 +641,7 @@ class PanelFind : UserControl {
 
 		if (nFound > 0) {
 			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
-			b.AppendFormat("<bc #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
+			b.AppendFormat("<bc #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c #80ff>Replace all...<><>    <+caf><c #80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
 			_lastFindAll = (f, aFiles, guid, null);
 		}
 
@@ -665,11 +665,15 @@ class PanelFind : UserControl {
 		if (!_CanReplaceInFiles()) return;
 
 		if (1 != dialog.show("Replace text in files",
-			"Before replacing you may want to backup the workspace <a href=\"backup\">folder</a>.",
+			"""
+Replaces text in all files displayed in the Found panel.
+Opens files to enable Undo.
+
+Before replacing you may want to backup the workspace <a href="backup">folder</a>.
+""",
 			"Replace|Cancel",
+			flags: DFlags.CenterMouse,
 			owner: App.Hmain,
-			expandedText: @"Replaces text in all files displayed in the Found panel.
-Opens files to enable Undo.",
 			onLinkClick: e => run.selectInExplorer(folders.Workspace))) return;
 
 		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.Hmain);

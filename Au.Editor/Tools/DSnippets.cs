@@ -570,23 +570,23 @@ class DSnippets : KDialogWindow {
 		string ITreeViewItem.DisplayText => text;
 		
 		object ITreeViewItem.Image => Level switch {
-			0 => "*Modern.PageXml #000000",
-			1 => _isExpanded ? @"*Material.FolderOpen #EABB00" : @"*Material.Folder #EABB00",
-			2 => IsFolder ? "*Codicons.SymbolSnippet #00A000" : "*Codicons.SymbolSnippet #0060F0",
-			_ => "*Material.Asterisk #0060F0",
+			0 => "*Modern.PageXml" + Menus.black,
+			1 => _isExpanded ? FileNode.c_iconFolderOpen : FileNode.c_iconFolder,
+			2 => IsFolder ? "*Codicons.SymbolSnippet #00A000|#00E000" : "*Codicons.SymbolSnippet #0060F0|#80C0FF",
+			_ => "*Material.Asterisk #0060F0|#80C0FF",
 		};
 		
 		TVCheck ITreeViewItem.CheckState => Level is not (0 or 2) ? TVCheck.None : isChecked ? TVCheck.Checked : TVCheck.Unchecked;
-		
+
 		//bool ITreeViewItem.IsDisabled { get; }
-		
+
 		//bool ITreeViewItem.IsBold { get; }
-		
+
 		//bool ITreeViewItem.IsSelectable { get; }
+
+		int ITreeViewItem.Color => (Level == 1 && this != _d._tv.SelectedItem) ? 0xC0E0A0 : -1;
 		
-		int ITreeViewItem.Color => Level == 1 && this != _d._tv.SelectedItem ? 0xA0E0C0 : -1;
-		
-		int ITreeViewItem.TextColor => this != _d._clip ? -1 : _d._cut ? 0xFF : 0x00A000;
+		int ITreeViewItem.TextColor => this == _d._clip ? (_d._cut ? 0xFF0000 : 0x00A000) : (Level == 1 ? 0 : -1);
 		
 		//int ITreeViewItem.BorderColor { get; }
 		

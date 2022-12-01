@@ -4,6 +4,8 @@ using Au.Controls;
 using Microsoft.Win32;
 using System.Windows.Controls.Primitives;
 using Au.Tools;
+using System.Windows.Media;
+using System.Windows.Documents;
 
 class DOptions : KDialogWindow {
 	public static void ZShow() {
@@ -61,7 +63,7 @@ class DOptions : KDialogWindow {
 		var b = _Page("General").Columns(-1, -1);
 		//left column
 		b.StartStack(vertical: true);
-		b.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, because used for the QM2 forum registration security question
+		b.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, and don't change text, because used for the forum registration security question
 		b.Add(out KCheckBox startHidden, "Start hidden; hide when closing");
 		b.End();
 		//right column
@@ -79,8 +81,9 @@ class DOptions : KDialogWindow {
 
 		//};
 		const string c_rkRun = @"Software\Microsoft\Windows\CurrentVersion\Run";
-		bool init_startWithWin = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string;
+		bool init_startWithWin = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string s1 && filesystem.more.isSameFile(s1.Trim('\"'), process.thisExePath);
 		startWithWin.IsChecked = init_startWithWin;
+		if (App.IsPortable) startWithWin.Checked += (_, _) => dialog.showWarning("Portable mode warning", "This setting will be saved in the Registry. Portable apps should not do it.", owner: this);
 		startHidden.IsChecked = App.Settings.runHidden;
 		string init_startupScripts = App.Model.StartupScriptsCsv;
 		startupScripts.Text = init_startupScripts;
@@ -313,7 +316,6 @@ Line number";
 				styles.FontName = fname;
 				styles.FontSize = fsize;
 
-				print.it(styles != CiStyling.TStyles.Settings);
 				if (styles != CiStyling.TStyles.Settings || inverted) {
 					CiStyling.TStyles.Settings = styles;
 					foreach (var v in Panels.Editor.ZOpenDocs) {
@@ -458,6 +460,10 @@ To apply changes after deleting etc, restart this application.
 
 	unsafe void _OS() {
 		var b = _Page("OS");
+		b.R.Add<TextBlock>("Windows settings. Used by all programs on this computer.");
+		if (App.IsPortable) b.R.Add<TextBlock>().Text(new Run("Portable mode warning: portable apps should not change Windows settings.") { Foreground = Brushes.Red });
+		b.R.AddSeparator().Margin("T8B8");
+
 		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Validation(o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
 		bool disableLAW = 0 == Api.SystemParametersInfo(Api.SPI_GETFOREGROUNDLOCKTIMEOUT, 0);
 		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"").Checked(disableLAW);

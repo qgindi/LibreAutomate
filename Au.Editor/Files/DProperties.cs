@@ -16,7 +16,7 @@ class DProperties : KDialogWindow {
 	readonly ComboBox role, ifRunning, uac, warningLevel;
 	readonly TextBox testScript, outputPath, icon, manifest, sign, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
 	readonly KCheckBox bit32, xmlDoc, console, optimize, cMultiline;
-	readonly Expander gRun, gAssembly, gCompile;
+	readonly GroupBox gRun, gAssembly, gCompile;
 	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bOutputPath, bVersion;
 
 	public DProperties(FileNode f) {
@@ -41,7 +41,7 @@ class DProperties : KDialogWindow {
 			.Add("ifRunning", out ifRunning).Skip()
 			.Add("uac", out uac);
 		b.End();
-		b.End().Brush(Brushes.OldLace);
+		b.End();
 
 		b.StartGrid(out gCompile, "Compile").Columns(0, 50, 20, 0, -1);
 		b.R.Add(out optimize, "optimize").Skip(2)
@@ -53,7 +53,7 @@ class DProperties : KDialogWindow {
 			.Add("preBuild", out preBuild).Skip()
 			.Add("postBuild", out postBuild);
 		b.End();
-		b.End().Brush(Brushes.OldLace);
+		b.End();
 
 		b.StartStack(out gAssembly, "Assembly", vertical: true);
 		b.StartGrid().Columns(0, -1, 30)
@@ -71,7 +71,7 @@ class DProperties : KDialogWindow {
 			.AddButton(out bVersion, "Version", _ => _VersionInfo()).Align("R")
 			.End();
 		b.End();
-		b.End().Brush(Brushes.OldLace);
+		b.End();
 
 		b.End();
 		b.StartStack(vertical: true).Margin("L20"); //right column
@@ -118,6 +118,7 @@ class DProperties : KDialogWindow {
 			if (isLibrary) m[@"%folders.ThisApp%\Libraries"] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
 				var initf = _GetOutputPath(getDefault: false, expandEnvVar: true);
+				if (!isLibrary && !filesystem.exists(initf)) initf = pathname.getDirectory(initf);
 				filesystem.createDirectory(initf);
 				var d = new FileOpenSaveDialog(isLibrary ? "{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDD}" : "{4D1F3AFB-DA1A-45AC-8C12-51DDA5C51CDD}") {
 					InitFolderFirstTime = initf,
@@ -147,14 +148,6 @@ class DProperties : KDialogWindow {
 			foreach (var v in a) c.Items.Add(v);
 			c.SelectedIndex = Math.Max(0, index);
 		}
-
-		gRun.IsExpanded = true;
-#if true //rejected: initially collapsed expanders. Annoying.
-		gAssembly.IsExpanded = true;
-		gCompile.IsExpanded = true;
-#else
-		gAssembly.IsExpanded = _role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary;
-#endif
 
 		_ChangedRole();
 		role.SelectionChanged += (_, _) => {
@@ -229,14 +222,20 @@ class DProperties : KDialogWindow {
 	}
 
 	void _ButtonClick_addLibrary(WBButtonClickArgs e) {
-		int indi = popupMenu.showSimple(@"%folders.Workspace%\dll|%folders.ThisApp%\Libraries|Last used folder", owner: this);
-		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-47AC-8C12-41DDA5C51CDB}") {
-			FileTypes = "Dll|*.dll|All files|*.*"
-		};
-		if (indi is > 0 and < 3) {
-			var s = indi == 1 ? App.Model.DllDirectory : folders.ThisAppBS + "Libraries";
-			if (_CreateDirectory(s)) d.InitFolderNow = s;
+		string dir1 = App.Model.DllDirectory, dir2 = folders.ThisAppBS + "Libraries", initDir = null;
+		bool exists1 = filesystem.exists(dir1).Directory, exists2 = filesystem.exists(dir2).Directory;
+		if (exists1 || exists2) {
+			var m = new popupMenu();
+			if (exists1) m.Add(1, @"%folders.Workspace%\dll");
+			if (exists2) m.Add(2, @"%folders.ThisApp%\Libraries");
+			m.Add(3, "Last used folder");
+			int r = m.Show(owner: this); if (r == 0) return;
+			if (r == 1) initDir = dir1; else if (r == 2) initDir = dir2;
 		}
+		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-47AC-8C12-41DDA5C51CDB}") {
+			FileTypes = "Dll|*.dll|All files|*.*",
+			InitFolderNow = initDir
+		};
 		if (!d.ShowOpen(out string[] a, this)) return;
 
 		foreach (var v in a) {
@@ -373,15 +372,18 @@ class DProperties : KDialogWindow {
 			if (d.ShowOpen(out string s, this))
 				_ConvertTypeLibrary(s, e.Button);
 		};
-		m.Submenu("Use converted", m => {
-			foreach (var f in filesystem.enumFiles(folders.Workspace + @".interop", "*.dll")) {
-				m[f.Name] = o => {
-					var s = o.Text;
-					if (!_meta.com.Contains(s)) _meta.com.Add(s);
-					_ShowInfo_Added(e.Button, _meta.com);
-				};
-			}
-		});
+		var dir = folders.Workspace + @".interop";
+		if (filesystem.exists(dir)) {
+			m.Submenu("Use converted", m => {
+				foreach (var f in filesystem.enumFiles(dir, "*.dll")) {
+					m[f.Name] = o => {
+						var s = o.Text;
+						if (!_meta.com.Contains(s)) _meta.com.Add(s);
+						_ShowInfo_Added(e.Button, _meta.com);
+					};
+				}
+			});
+		}
 		m.Show(owner: this);
 	}
 
@@ -562,11 +564,6 @@ class DProperties : KDialogWindow {
 	static bool _IsChecked(KCheckBox t, bool falseIfHidden = true) {
 		if (falseIfHidden && _IsHidden(t)) return false;
 		return t.IsChecked;
-	}
-
-	static bool _CreateDirectory(string path) {
-		try { filesystem.createDirectory(path); return true; }
-		catch { return false; }
 	}
 
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {

@@ -14,7 +14,7 @@
 ///
 /// Program files can be easily decompiled into readable source code. For protection can be used a .NET obfuscator.
 ///
-/// <see cref="print.it"/> text is displayed in the editor if it is running, unless it's a console program. See also <see cref="print.Server"/>.
+/// <see cref="print.it"/> text is displayed in the editor if it is running, unless it's a console program. See also <see cref="PrintServer"/>.
 ///
 /// If you want to use action triggers (hotkeys etc) in .exe program, add them to the script like in the <see cref="Au.Triggers.ActionTriggers"/> example.
 ///

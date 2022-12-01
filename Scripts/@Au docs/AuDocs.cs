@@ -111,7 +111,7 @@ partial class AuDocs {
 			var s = _bFile.ToString();
 			filesystem.saveText(destDir + f.path, s);
 			
-			//print.it($"<><Z green>{f.path}<>");
+			//print.it($"<><lc green>{f.path}<>");
 			//print.it(s);
 			//if(f.path.Ends("param types.cs")) print.it(s);
 		}
@@ -385,7 +385,7 @@ partial class AuDocs {
 					default: print.it(x.FirstNode.NodeType); continue;
 					}
 					x.Name = "pre";
-					x.Value = "%%" + Convert.ToBase64String(Encoding.UTF8.GetBytes(code)) + "%%";
+					x.Value = "%%" + Convert.ToBase64String(Encoding.UTF8.GetBytes(code.TrimStart("\r\n"))) + "%%";
 					break;
 				case "seealso":
 					_Warning("<seealso> in text.", x);

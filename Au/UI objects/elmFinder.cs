@@ -100,7 +100,7 @@ public unsafe class elmFinder {
 	/// </param>
 	/// <param name="name">
 	/// UI element name (<see cref="elm.Name"/>).
-	/// String format: [](xref:wildcard_expression).
+	/// String format: [wildcard expression](xref:wildcard_expression).
 	/// null means 'any'. <c>""</c> means 'empty or unavailable'.
 	/// </param>
 	/// <param name="prop">

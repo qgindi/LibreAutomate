@@ -61,7 +61,7 @@ static unsafe class MiniProgram_ {
 		r = default;
 		string pipeName = new((char*)pn);
 
-		script.s_role = SRole.MiniProgram;
+		script.role = SRole.MiniProgram;
 
 		process.ThisThreadSetComApartment_(ApartmentState.STA); //1.7 ms
 
@@ -104,38 +104,38 @@ static unsafe class MiniProgram_ {
 
 		//Debug_.PrintLoadedAssemblies(true, true);
 
-		EFlags flags;
-
 		//using var p1 = perf.local();
-		using (var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, Api.OPEN_EXISTING, 0)) {
-			if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
-			//p1.Next();
-			int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
-			//p1.Next();
-			if (!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
-			//p1.Next();
-			var a = Serializer_.Deserialize(b);
-			//p1.Next('d');
-			flags = (EFlags)(int)a[2];
+		using var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, Api.OPEN_EXISTING, 0);
+		if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
+		//p1.Next();
+		int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
+		//p1.Next();
+		if (!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
+		//p1.Next();
+		var a = Serializer_.Deserialize(b);
+		//p1.Next('d');
+		var flags = (EFlags)(int)a[2];
 
-			r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
-			//p1.Next();
-			string[] args = a[3];
-			if (!args.NE_()) {
-				r.nArgs = args.Length;
-				r.args = (IntPtr*)Marshal.AllocHGlobal(args.Length * sizeof(IntPtr));
-				for (int i = 0; i < args.Length; i++) r.args[i] = Marshal.StringToCoTaskMemUTF8(args[i]);
-			}
-			//p1.Next();
-
-			script.s_wrPipeName = a[4];
-			folders.Workspace = new FolderPath(a[5]);
-			s_scriptId = a[6];
-			//p1.Next();
-
-			script.Starting_(a[0], a[7]);
+		r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
+		//p1.Next();
+		string[] args = a[3];
+		if (!args.NE_()) {
+			r.nArgs = args.Length;
+			r.args = (IntPtr*)Marshal.AllocHGlobal(args.Length * sizeof(IntPtr));
+			for (int i = 0; i < args.Length; i++) r.args[i] = Marshal.StringToCoTaskMemUTF8(args[i]);
 		}
 		//p1.Next();
+
+		s_scriptId = a[6];
+		script.s_wndMsg = (wnd)(int)a[8];
+		script.s_wrPipeName = a[4];
+		//p1.Next();
+
+		if (0 != (flags & EFlags.FromEditor)) script.testing = true;
+		if (0 != (flags & EFlags.IsPortable)) ScriptEditor.IsPortable = true;
+
+		folders.Editor = new(folders.ThisApp);
+		folders.Workspace = new(a[5]);
 
 		if (0 != (flags & EFlags.RefPaths))
 			AssemblyLoadContext.Default.Resolving += (alc, an)
@@ -156,7 +156,8 @@ static unsafe class MiniProgram_ {
 			//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
 		}
 
-		if (0 != (flags & EFlags.FromEditor)) script.testing = true;
+		script.Starting_(a[0], a[7]);
+		//p1.Next();
 
 		//Api.QueryPerformanceCounter(out s_started);
 		//print.TaskEvent_("TS", s_started);
@@ -289,6 +290,9 @@ static unsafe class MiniProgram_ {
 
 		/// <summary>Started from editor with the Run button or menu command. Used for <see cref="script.testing"/>.</summary>
 		FromEditor = 32,
+
+		/// <summary>Started from portable editor.</summary>
+		IsPortable = 64,
 
 		//Config = 256, //meta hasConfig
 	}

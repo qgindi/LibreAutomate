@@ -14,7 +14,7 @@ print.it($"text with variables: i={i}, s={s}");
 ///
 /// Can be used <help articles/Output tags>colors, bold etc, links, images, code<>.
 
-print.it("<><Z DarkSeaGreen>Text, <google big bang>link<>.<>");
+print.it("<><lc DarkSeaGreen>Text, <google big bang>link<>.<>");
 
 /// Display text in a message box. To insert <see cref="dialog.show"/> code can be used dsDialogShowSnippet.
 

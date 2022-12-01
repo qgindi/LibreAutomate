@@ -14,6 +14,7 @@ x /= 2; //20
 x = x / 2; //10
 x = x % 3; //1 (division remainder)
 
+x = 1;
 int y = x++; //x 2, y 1 (same as y = x; x = x + 1;)
 y = ++x; //x 3, y 3 (same as x = x + 1; y = x;)
 

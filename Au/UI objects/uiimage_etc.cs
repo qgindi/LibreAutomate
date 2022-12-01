@@ -362,7 +362,7 @@ namespace Au
 				_flags = flags;
 				_cursor = MouseCursor.Load(ResourceUtil.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
 				_dpi = screen.primary.Dpi;
-				_w = WndUtil.CreateWindow(_WndProc, true, "#32770", "Au.uiimage.CaptureUI", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
+				_w = WndUtil.CreateWindow(_WndProc, true, WndUtil.WindowClassDWP_, "Au.uiimage.captureUI", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
 				_w.ActivateL();
 
 				try {
@@ -473,7 +473,7 @@ namespace Au
 
 				//draw red crosshair
 				k = magnWH / 2;
-				using (var pen = new Pen_(0xff)) {
+				using (var pen = new GdiPen_(0xff)) {
 					pen.DrawLine(dc, (k, 1), (k, magnWH + 1));
 					pen.DrawLine(dc, (1, k), (magnWH + 1, k));
 				}

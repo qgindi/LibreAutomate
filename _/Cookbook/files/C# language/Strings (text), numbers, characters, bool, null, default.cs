@@ -6,12 +6,12 @@ string s3 = null; //no string. Not the same as "".
 print.it("this is a \"string\"\r\n\twith \\ escape sequences");
 
 /// Frequently used escape sequences:
-/// \"		"
-/// \\		\
-/// \t		tab
-/// \n		newline
-/// \r\n	Windows newline (2 characters)
-/// \0		character code 0
+/// <mono>\"<> - <mono>"<>
+/// <mono>\\<> - <mono>\<>
+/// <mono>\t<> - tab
+/// <mono>\n<> - newline
+/// <mono>\r\n<> - Windows newline (2 characters)
+/// <mono>\0<> - character code 0
 
 /// To avoid many escape sequences, use verbatim strings or raw strings.
 
