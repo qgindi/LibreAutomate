@@ -107,7 +107,7 @@ class RepairWorkspace {
 	static HashSet<string> _clickedLinks = new();
 
 	public static void OrphanedFiles() {
-		Panels.Output.ZOutput.ZTags.AddLinkTag("+missingAdd", s => {
+		Panels.Output.aaOutput.aaTags.AddLinkTag("+missingAdd", s => {
 			if (!_clickedLinks.Add(s)) return;
 			var a = s.Split('|');
 			var f = App.Model.Find(a[0], FNFind.Folder);

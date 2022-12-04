@@ -80,7 +80,7 @@ public struct FAttr {
 	public bool Directory => 0 != (_a & FileAttributes.Directory);
 
 	/// <summary>
-	/// It is a NTFS link, such as symbolic link or mounted folder. Don't confuse with shell links (shortcuts).
+	/// It is a NTFS link, such as symbolic link, junction or mounted folder. Don't confuse with shell links (shortcuts).
 	/// If <see cref="File"/> true, the target is a file. If <see cref="Directory"/> true, the target is a directory.
 	/// </summary>
 	public bool IsNtfsLink => _ntfsLink;
@@ -362,7 +362,7 @@ public enum FIfExists {
 }
 
 /// <summary>
-/// Used with <see cref="filesystem.getFinalPath"/>
+/// Used with <see cref="filesystem.more.getFinalPath"/>
 /// </summary>
 public enum FPFormat {
 	/// <summary>
@@ -388,7 +388,7 @@ public enum FPFormat {
 }
 
 /// <summary>
-/// See <see cref="filesystem.comparePaths"/>.
+/// See <see cref="filesystem.more.comparePaths"/>.
 /// </summary>
 public enum CPResult {
 	/// <summary>
@@ -430,3 +430,30 @@ public enum CPResult {
 /// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
 /// </remarks>
 public record struct FileId(int VolumeSerialNumber, long FileIndex);
+
+/// <summary>
+/// See <see cref="filesystem.more.createSymbolicLink"/>
+/// </summary>
+public enum CSLink {
+	/// <summary>Symbolic link to file.</summary>
+	File,
+
+	/// <summary>Symbolic link to directory.</summary>
+	Directory,
+
+	/// <summary>
+	/// Junction to directory.
+	/// 
+	/// Junctions work like symbolic links, but there are differences when creating them:
+	/// <br/>• Don't need admin privileges to create.
+	/// <br/>• Target must be full path. Fails if relative path.
+	/// <br/>• Target must be on this computer. Fails if on a network computer.
+	/// <br/>• Target must be directory. Fails if file.
+	/// </summary>
+	Junction,
+
+	/// <summary>
+	/// Junction to local directory or symbolic link to network directory.
+	/// </summary>
+	JunctionOrSymlink,
+}

@@ -68,22 +68,22 @@ partial class SciCode : KScintilla {
 		_fn = file;
 		_fls = fls;
 
-		if (fls.IsBinary) ZInitReadOnlyAlways = true;
-		if (fls.IsImage) ZInitImages = true;
+		if (fls.IsBinary) aaInitReadOnlyAlways = true;
+		if (fls.IsImage) aaInitImages = true;
 
 		Name = "document";
 	}
 
-	protected override void ZOnHandleCreated() {
+	protected override void aaOnHandleCreated() {
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
 
-		zSetMarginType(c_marginFold, SC_MARGIN_SYMBOL);
-		zSetMarginType(c_marginImages, SC_MARGIN_SYMBOL);
+		aaaSetMarginType(c_marginFold, SC_MARGIN_SYMBOL);
+		aaaSetMarginType(c_marginImages, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
-		zSetMarginType(c_marginMarkers, SC_MARGIN_SYMBOL);
-		zSetMarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
+		aaaSetMarginType(c_marginMarkers, SC_MARGIN_SYMBOL);
+		aaaSetMarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
 		//zSetMarginType(c_marginChanges, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINWIDTHN, c_marginChanges, 4);
 		Call(SCI_SETMARGINLEFT, 0, 2);
@@ -121,11 +121,11 @@ partial class SciCode : KScintilla {
 			//zStyleForeColor(STYLE_CALLTIP, 0);
 			//Call(SCI_CALLTIPUSESTYLE);
 		} else {
-			zStyleFont(STYLE_DEFAULT, "Consolas", 9);
-			zStyleClearAll();
+			aaaStyleFont(STYLE_DEFAULT, "Consolas", 9);
+			aaaStyleClearAll();
 		}
 
-		zStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
+		aaaStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
 		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
@@ -140,7 +140,7 @@ partial class SciCode : KScintilla {
 	//Called by PanelEdit.ZOpen.
 	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
-		Debug.Assert(!Hwnd.Is0);
+		Debug.Assert(!aaWnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
 		if (!EIsBinary) _fn.UpdateFileModTime();
@@ -163,7 +163,7 @@ partial class SciCode : KScintilla {
 				print.it($@"<>Note: text of {_fn.Name} contains single \r (CR) as line end characters. It can create problems. <+badCR s>Show<>, <+badCR h>hide<>, <+badCR f>fix<>.");
 				if (!s_badCR) {
 					s_badCR = true;
-					Panels.Output.ZOutput.ZTags.AddLinkTag("+badCR", s1 => {
+					Panels.Output.aaOutput.aaTags.AddLinkTag("+badCR", s1 => {
 						bool fix = s1.Starts('f');
 						Panels.Editor.ZActiveDoc?.Call(fix ? SCI_CONVERTEOLS : SCI_SETVIEWEOL, fix || s1.Starts('h') ? 0 : 1); //tested: SCI_CONVERTEOLS ignored if readonly
 					});
@@ -183,7 +183,7 @@ partial class SciCode : KScintilla {
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
 
-	protected override void ZOnSciNotify(ref SCNotification n) {
+	protected override void aaOnSciNotify(ref SCNotification n) {
 		//if (test_) {
 		//	switch (n.nmhdr.code) {
 		//	case NOTIF.SCN_UPDATEUI:
@@ -240,7 +240,7 @@ partial class SciCode : KScintilla {
 		case NOTIF.SCN_CHARADDED:
 			//print.it($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
 			if (n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
-				zAddUndoPoint();
+				aaaAddUndoPoint();
 			}
 			if (n.ch != '\r' && n.ch <= 0xffff) { //on Enter we receive notifications for '\r' and '\n'
 				CodeInfo.SciCharAdded(this, (char)n.ch);
@@ -279,7 +279,7 @@ partial class SciCode : KScintilla {
 				EHideImages_(Call(SCI_GETENDSTYLED), n.position);
 				Call(SCI_STARTSTYLING, n.position); //need this even if would not hide images
 			} else {
-				zSetStyled();
+				aaaSetStyled();
 			}
 			break;
 			//case NOTIF.SCN_PAINTED:
@@ -287,7 +287,7 @@ partial class SciCode : KScintilla {
 			//	break;
 		}
 
-		base.ZOnSciNotify(ref n);
+		base.aaOnSciNotify(ref n);
 	}
 	bool _modified;
 
@@ -315,21 +315,21 @@ partial class SciCode : KScintilla {
 		case Api.WM_RBUTTONDOWN: {
 				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
 				POINT p = Math2.NintToPOINT(lparam);
-				int margin = zMarginFromPoint(p, false);
+				int margin = aaaMarginFromPoint(p, false);
 				if (margin >= 0) {
-					var selStart = zSelectionStart8;
-					var (_, start, end) = zLineStartEndFromPos(false, zPosFromXY(false, p, false));
+					var selStart = aaaSelectionStart8;
+					var (_, start, end) = aaaLineStartEndFromPos(false, aaaPosFromXY(false, p, false));
 					if (selStart >= start && selStart <= end) return true;
 					//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
 					if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
-						if (zSelectionEnd8 == start) zGoToPos(false, start); //clear selection above start
+						if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
 					}
 				}
 			}
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lparam == -1;
-				int margin = kbd ? -1 : zMarginFromPoint(Math2.NintToPOINT(lparam), true);
+				int margin = kbd ? -1 : aaaMarginFromPoint(Math2.NintToPOINT(lparam), true);
 				switch (margin) {
 				case -1:
 					var m = new KWpfMenu();
@@ -340,7 +340,7 @@ partial class SciCode : KScintilla {
 					ModifyCode.CommentLines(null, notSlashStar: true);
 					break;
 				case c_marginFold:
-					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: Hwnd) - 1; //note: no "toggle", it's not useful
+					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: aaWnd) - 1; //note: no "toggle", it's not useful
 					if (fold >= 0) Call(SCI_FOLDALL, fold);
 					break;
 				}
@@ -398,7 +398,7 @@ partial class SciCode : KScintilla {
 				switch ((key, mod)) {
 				case (KKey.Enter, 0):
 				case (KKey.Enter, ModifierKeys.Control | ModifierKeys.Shift):
-					zAddUndoPoint();
+					aaaAddUndoPoint();
 					break;
 				}
 				break;
@@ -440,7 +440,7 @@ partial class SciCode : KScintilla {
 	//Called by FileNode.OnAppActivatedAndThisIsOpen.
 	internal void EFileModifiedExternally_() {
 		Debug.Assert(!EIsBinary); //caller must check it
-		if (!_fn.GetFileText(out var text) || text == this.zText) return;
+		if (!_fn.GetFileText(out var text) || text == this.aaaText) return;
 		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
 
@@ -450,9 +450,9 @@ partial class SciCode : KScintilla {
 
 	//never mind: not called when zoom changes.
 	internal void ESetLineNumberMarginWidth_(bool onModified = false) {
-		int c = 4, lines = zLineCount;
+		int c = 4, lines = aaaLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) zSetMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
+		if (!onModified || c != _prevLineNumberMarginWidth) aaaSetMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
 	}
 	int _prevLineNumberMarginWidth;
 
@@ -463,13 +463,13 @@ partial class SciCode : KScintilla {
 	/// Caller must not copy text to clipboard, and must not pass the event to Scintilla.
 	/// </summary>
 	public void ECopy(ECopyAs copyAs = ECopyAs.Text) {
-		int i1 = zSelectionStart8, i2 = zSelectionEnd8, textLen = zLen8;
+		int i1 = aaaSelectionStart8, i2 = aaaSelectionEnd8, textLen = aaaLen8;
 		if (textLen == 0) return;
 		if (copyAs == ECopyAs.Text) {
 			if (i2 != i1) Call(SCI_COPY);
 		} else {
 			bool isCS = _fn.IsCodeFile, isFragment = i2 != i1 && !(i1 == 0 && i2 == textLen);
-			string s = isFragment ? zRangeText(false, i1, i2) : zText;
+			string s = isFragment ? aaaRangeText(false, i1, i2) : aaaText;
 			if (isCS) s = _ImageRemoveScreenshots(s);
 			switch (copyAs) {
 			case ECopyAs.Forum:
@@ -515,11 +515,11 @@ partial class SciCode : KScintilla {
 				_NewFileFromForumCode(text, name, isClass);
 				break;
 			case 2: //Replace all text
-				zSetText(text);
+				aaaSetText(text);
 				break;
 			case 3: //Paste
 				CodeInfo.Pasting(this);
-				zReplaceSel(text);
+				aaaReplaceSel(text);
 				break;
 			} //rejected: option to rename this file
 		} else {
@@ -570,21 +570,21 @@ partial class SciCode : KScintilla {
 	internal void EInicatorsFind_(List<Range> a) {
 		if (_indicHaveFind) {
 			_indicHaveFind = false;
-			zIndicatorClear(c_indicFind);
+			aaaIndicatorClear(c_indicFind);
 		}
 		if (a == null || a.Count == 0) return;
 		_indicHaveFind = true;
 
-		foreach (var v in a) zIndicatorAdd(true, c_indicFind, v);
+		foreach (var v in a) aaaIndicatorAdd(true, c_indicFind, v);
 	}
 
 	internal void EInicatorsDiag_(bool has) {
 		if (_indicHaveDiag) {
 			_indicHaveDiag = false;
-			zIndicatorClear(c_indicDiagHidden);
-			zIndicatorClear(c_indicInfo);
-			zIndicatorClear(c_indicWarning);
-			zIndicatorClear(c_indicError);
+			aaaIndicatorClear(c_indicDiagHidden);
+			aaaIndicatorClear(c_indicInfo);
+			aaaIndicatorClear(c_indicWarning);
+			aaaIndicatorClear(c_indicError);
 		}
 		if (!has) return;
 		_indicHaveDiag = true;
@@ -787,7 +787,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 		public int CurrentFrom => _doc != null ? _fromUtf16 : -1;
 
-		public int CurrentTo => _doc?.zPos16(to) ?? -1;
+		public int CurrentTo => _doc?.aaaPos16(to) ?? -1;
 
 		public object Owner => _owner;
 
@@ -834,10 +834,10 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	/// <param name="flags"></param>
 	public ITempRange ETempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
 		int fromUtf16 = from;
-		zNormalizeRange(true, ref from, ref to);
+		aaaNormalizeRange(true, ref from, ref to);
 		//print.it(fromUtf16, from, to, zCurrentPos8);
 #if DEBUG
-		if (!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to))) {
+		if (!(aaaCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? aaaCurrentPos8 == to : aaaCurrentPos8 <= to))) {
 			Debug_.Print("bad");
 			//CiUtil.HiliteRange(from, to);
 		}
@@ -865,7 +865,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	/// <param name="endPosition">position must be at the end of the range.</param>
 	/// <param name="utf8"></param>
 	public IEnumerable<ITempRange> ETempRanges_Enum(int position, object owner = null, bool endPosition = false, bool utf8 = false) {
-		if (!utf8) position = zPos8(position);
+		if (!utf8) position = aaaPos8(position);
 		for (int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
 			if (r.Contains(position, owner, endPosition)) yield return r;
@@ -886,7 +886,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 	void _TempRangeOnModifiedOrPosChanged(MOD mod, int pos, int len) {
 		if (_tempRanges.Count == 0) return;
-		if (mod == 0) pos = zCurrentPos8;
+		if (mod == 0) pos = aaaCurrentPos8;
 		int pos2 = pos;
 		if (mod.Has(MOD.SC_MOD_DELETETEXT)) { pos2 += len; len = -len; }
 		for (int i = _tempRanges.Count - 1; i >= 0; i--) {
@@ -910,11 +910,11 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 	#region acc
 
-	protected override ERole ZAccessibleRole => ERole.DOCUMENT;
+	protected override ERole aaAccessibleRole => ERole.DOCUMENT;
 
-	protected override string ZAccessibleName => "document - " + _fn.DisplayName;
+	protected override string aaAccessibleName => "document - " + _fn.DisplayName;
 
-	protected override string ZAccessibleDescription => _fn.FilePath;
+	protected override string aaAccessibleDescription => _fn.FilePath;
 
 	#endregion
 }

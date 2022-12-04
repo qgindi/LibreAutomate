@@ -90,7 +90,7 @@ partial class CiCompletion {
 		if (_data != null) {
 			bool trValid = _data.tempRange.GetCurrentFromTo(out int from, out int to, utf8: true);
 			Debug.Assert(trValid); if (!trValid) { Cancel(); return; }
-			string s = doc.zRangeText(false, from, to);
+			string s = doc.aaaRangeText(false, from, to);
 
 			//cancel if typed nonalpha if auto-showed by typing nonalpha (eg space in parameters or '(' after method name)
 			if (!_data.forced && _data.filterText.NE() && s.Length == 1 && !SyntaxFacts.IsIdentifierStartCharacter(s[0])) {
@@ -297,8 +297,8 @@ partial class CiCompletion {
 			}
 
 			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-			var codeNow = doc.zText;
-			int posNow = doc.zCurrentPos16, posAdd = 0, codeLength = code.Length;
+			var codeNow = doc.aaaText;
+			int posNow = doc.aaaCurrentPos16, posAdd = 0, codeLength = code.Length;
 			if (codeNow != code) { //changed while awaiting
 				int lenDiff = codeNow.Length - code.Length; if (lenDiff<=0) return;
 				posAdd = posNow - position; if (posAdd != lenDiff) return;
@@ -882,7 +882,7 @@ partial class CiCompletion {
 		}
 
 		bool isSpace; if (isSpace = ch == ' ') ch = default;
-		int codeLenDiff = doc.zLen16 - _data.codeLength;
+		int codeLenDiff = doc.aaaLen16 - _data.codeLength;
 
 		if (item.Provider == CiComplProvider.Snippet) {
 			if (ch != default && ch != '(') return CiComplResult.None;
@@ -924,12 +924,12 @@ partial class CiCompletion {
 					//Replace 4 spaces with tab. Make { in same line.
 					s = s.Replace("    ", "\t").RxReplace(@"\R\t*\{", " {", 1);
 					//Correct indentation. 
-					int indent = s.FindNot("\t"), indent2 = doc.zLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
+					int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
 					if (indent > indent2) s = s.RxReplace("(?m)^" + new string('\t', indent - indent2), "");
 					break;
 				case CiComplProvider.XmlDoc:
 					if (!s.Ends('>') && s.RxMatch(@"^<?(\w+)($| )", 1, out string tag)) {
-						string lt = s.Starts('<') || doc.zText.Eq(span.Start - 1, '<') ? "" : "<";
+						string lt = s.Starts('<') || doc.aaaText.Eq(span.Start - 1, '<') ? "" : "<";
 						if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos += 1 + lt.Length;
 						s = $"{lt}{s}></{tag}>";
 					}
@@ -939,11 +939,11 @@ partial class CiCompletion {
 				bool last = true;
 				for (int j = changes.Length; --j >= 0; last = false) {
 					var v = changes[j];
-					doc.zReplaceRange(true, v.Span.Start, v.Span.End + (last ? codeLenDiff : 0), last ? s : v.NewText);
+					doc.aaaReplaceRange(true, v.Span.Start, v.Span.End + (last ? codeLenDiff : 0), last ? s : v.NewText);
 					//if(last && newPos<0) newPos = span.Start - doc.zLen16; //from end //currently don't need because Scintilla automatically does it (read zReplaceRange doc)
 				}
 				//if (newPos < 0) newPos += doc.zLen16;
-				if (newPos >= 0) doc.zSelect(true, newPos, newPos, makeVisible: true);
+				if (newPos >= 0) doc.aaaSelect(true, newPos, newPos, makeVisible: true);
 				return CiComplResult.Complex;
 			}
 		}
@@ -1021,7 +1021,7 @@ partial class CiCompletion {
 
 				bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
 
-				bool _IsDirective() => doc.zText.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
+				bool _IsDirective() => doc.aaaText.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
 
 				//If 'new Type', adds '()'.
 				//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
@@ -1037,7 +1037,7 @@ partial class CiCompletion {
 				if (isComplex = ch != default) {
 					if (ch == '{') {
 						if (isEnter) {
-							int indent = doc.zLineIndentationFromPos(true, i);
+							int indent = doc.aaaLineIndentationFromPos(true, i);
 							var b = new StringBuilder(" {\r\n");
 							b.Append('\t', indent + 1);
 							b.Append("\r\n").Append('\t', indent).Append('}');
@@ -1049,7 +1049,7 @@ partial class CiCompletion {
 						}
 						bracketsFrom = i + s.Length + 2;
 						bracketsLen = s2.Length - 3;
-					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !_data.noAutoSelect && !doc.zText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
+					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !_data.noAutoSelect && !doc.aaaText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
 						s2 ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
 						bracketsFrom = i + s.Length + s2.Length - 1;
@@ -1072,9 +1072,9 @@ partial class CiCompletion {
 		try {
 			if (!isComplex && s == _data.filterText) return CiComplResult.None;
 
-			doc.zSetAndReplaceSel(true, i, i + len, s);
+			doc.aaaSetAndReplaceSel(true, i, i + len, s);
 			if (isComplex) {
-				if (positionBack > 0) doc.zCurrentPos16 = i + s.Length - positionBack;
+				if (positionBack > 0) doc.aaaCurrentPos16 = i + s.Length - positionBack;
 				if (bracketsFrom > 0) {
 					CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
 				}

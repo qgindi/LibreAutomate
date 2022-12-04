@@ -139,9 +139,11 @@ internal static unsafe partial class Cpp
 		//run GC to release Firefox object wrappers. Else may not unload from Firefox.
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
-		//Cpp_Unload(0); //in Setup32.dll, it's 32-bit
-		run.it(@"C:\code\au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
+		Cpp_Unload(0);
 	}
+
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static extern void Cpp_Unload(uint flags);
 #endif
 
 	// STRING

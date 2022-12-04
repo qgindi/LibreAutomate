@@ -42,7 +42,7 @@ class KSciCodeBoxWnd : KSciCodeBox {
 		if (w != _wnd) _userModified = false; else if (!_userModified) _userModified = 0 != Call(Sci.SCI_GETMODIFY);
 		if (!w.Is0) {
 			if (_userModified) {
-				sCode = zRangeText(false, 0, _ReadonlyStartUtf8);
+				sCode = aaaRangeText(false, 0, _ReadonlyStartUtf8);
 				var p = _ParseWndFind(sCode, test: false);
 				if (p?.wVar != null) {
 					bool isConCode = p.cVar != null;
@@ -230,9 +230,9 @@ class KSciCodeBoxWnd : KSciCodeBox {
 		_wnd = d.ZResultWindow;
 		_con = d.ZResultUseControl ? d.ZResultControl : default;
 		int i = _ReadonlyStartUtf8;
-		var code2 = zRangeText(false, i, i + _readonlyLenUtf8);
-		zIsReadonly = false;
-		zSetText(code + code2);
+		var code2 = aaaRangeText(false, i, i + _readonlyLenUtf8);
+		aaaIsReadonly = false;
+		aaaSetText(code + code2);
 		return (true, d.ZResultWindow, d.ZResultControl, d.ZResultUseControl);
 	}
 }

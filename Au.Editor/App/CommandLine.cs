@@ -49,11 +49,14 @@ static class CommandLine {
 				for (int i = 0; i < args.Length; i++) {
 					s = args[i];
 					switch (s) {
+					case "/v":
+						StartVisible = true;
+						break;
 					case "/restart":
 						restarting = true;
 						break;
-					case "/v":
-						StartVisible = true;
+					case "/raa":
+						Raa = true;
 						break;
 					case "/test":
 						if (++i < args.Length) TestArg = args[i];
@@ -107,6 +110,11 @@ static class CommandLine {
 	/// true if /v
 	/// </summary>
 	public static bool StartVisible;
+
+	/// <summary>
+	/// true if /raa
+	/// </summary>
+	public static bool Raa;
 
 	/// <summary>
 	/// Called after loading workspace. Before executing startup scripts, adding tray icon and creating UI.

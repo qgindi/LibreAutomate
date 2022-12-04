@@ -36,7 +36,7 @@ class CiTools {
 		_ShowWindow(_regexWindow, doc, pos16, dontCover);
 
 		if (!replace && si.isClassic) {
-			doc.zInsertText(true, si.stringNode.SpanStart, "@");
+			doc.aaaInsertText(true, si.stringNode.SpanStart, "@");
 			spanStart++; spanEnd++;
 		}
 

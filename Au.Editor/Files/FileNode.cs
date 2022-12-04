@@ -347,7 +347,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <param name="text">"" if failed (eg file not found) or folder.</param>
 	public BoolError GetCurrentText(out string text, bool silent = false) {
-		if (this == _model.CurrentFile) { text = Panels.Editor.ZActiveDoc.zText; return true; }
+		if (this == _model.CurrentFile) { text = Panels.Editor.ZActiveDoc.aaaText; return true; }
 		return GetFileText(out text, silent);
 	}
 

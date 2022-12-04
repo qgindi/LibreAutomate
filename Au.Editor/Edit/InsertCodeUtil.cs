@@ -24,7 +24,7 @@ static class InsertCodeUtil {
 	/// </summary>
 	public static string IndentStringForInsertSimple(string s, SciCode doc, int pos) {
 		if (s.Contains('\n')) {
-			int indent = doc.zLineIndentationFromPos(true, pos);
+			int indent = doc.aaaLineIndentationFromPos(true, pos);
 			if (indent > 0) s = s.RxReplace(@"(?<=\n)", new string('\t', indent));
 		}
 		return s;

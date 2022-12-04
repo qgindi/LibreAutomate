@@ -33,6 +33,7 @@ static class App {
 		//restart as admin if started as non-admin on admin user account
 		if (args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
+			_raaResult = WinTaskScheduler.RResult.ArgN;
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 			if (_RestartAsAdmin(args)) return 0;
 		}
@@ -95,11 +96,11 @@ static class App {
 			ShutdownMode = ShutdownMode.OnExplicitShutdown //will set OnMainWindowClose when creating main window. If now, would exit if a startup script shows/closes a WPF window.
 		};
 		_app.Dispatcher.InvokeAsync(Model.RunStartupScripts);
-		if (!Settings.runHidden || CommandLine.StartVisible) _app.Dispatcher.Invoke(ShowWindow);
+		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
 		try {
 			_app.Run();
 			//Hidden app should start as fast as possible, because usually starts with Windows.
-			//Tested with native message loop. Faster by 70 ms (240 vs 310 without the .NET startup time).
+			//Tested with native message loop (before show window). Faster by 70 ms (240 vs 310 without the .NET startup time).
 			//	But then problems. Eg cannot auto-create main window synchronously, because need to exit native loop and start WPF loop.
 		}
 		finally { MainFinally_(); }
@@ -141,7 +142,6 @@ static class App {
 				_app.MainWindow = _wmain = new MainWindow();
 				_app.ShutdownMode = ShutdownMode.OnMainWindowClose;
 				_wmain.Init();
-				_OnShowWindow();
 			}
 			return _wmain;
 		}
@@ -217,8 +217,7 @@ static class App {
 							filesystem.move(s, doc);
 
 							//rejected.
-							//var f = Directory.CreateSymbolicLink(s, thisAppDoc);
-							//f.Attributes |= FileAttributes.Hidden /*| FileAttributes.System*/;
+							//filesystem.more.createSymbolicLink(s, thisAppDoc, CSLink.Junction);
 
 							var f = doc + @"\.settings\Settings.json";
 							var text = File.ReadAllText(f);
@@ -255,7 +254,7 @@ static class App {
 		}
 	}
 
-	static void _OnShowWindow() {
+	internal static void OnMainWindowLoaded_() {
 		if (IsPortable) {
 			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.ThisAppBS + "data"}>data<> folder.");
 		} else {
@@ -263,7 +262,7 @@ static class App {
 			//	FUTURE: delete this code.
 			_Folder(folders.Documents, "folders.ThisAppDocuments");
 			_Folder(folders.LocalAppData, "folders.ThisAppDataLocal");
-			void _Folder(string dir, string name) {
+			static void _Folder(string dir, string name) {
 				var dir1 = dir + @"\Au";
 				if (filesystem.exists(dir1, useRawPath: true)) {
 					var dir2 = dir + @"\LibreAutomate\_script";
@@ -280,7 +279,57 @@ static class App {
 					}
 				}
 			}
+
+			if (_raaResult is not (WinTaskScheduler.RResult.None or WinTaskScheduler.RResult.ArgN)) {
+				var s1 = _raaResult == WinTaskScheduler.RResult.TaskNotFound ? null : $"\r\n\tFailed to run as administrator. Error: {_raaResult}.";
+				var s = $"""
+<>Info: running not as administrator. <fold>
+	Without admin rights this program cannot automate admin windows etc. See <help articles/UAC>UAC<>.{s1}
+	Restart as administrator: <+restartAdmin >now<>, <+restartAdmin /raa>now and always<> (later without UAC consent).
+	</fold>
+""";
+				print.it(s);
+				Panels.Output.aaOutput.aaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
+			} else if (CommandLine.Raa) { //restarted because clicked link "Restart as administrator: now and always"
+				var name = IsAuHomePC ? "_Au.Editor" : "Au.Editor";
+				bool ok = WinTaskScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
+				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
+
+				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
+			}
 		}
+	}
+
+	static WinTaskScheduler.RResult _raaResult;
+
+	static bool _RestartAsAdmin(string[] args) {
+		if (Debugger.IsAttached) return false; //very fast
+		bool home = IsAuHomePC;
+		string sesId = process.thisProcessSessionId.ToS();
+		args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
+		(int pid, _raaResult) = WinTaskScheduler.RunTask("Au",
+			home ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
+			process.thisExePath, true, args);
+		if (pid == 0) { //probably this program is not installed (no scheduled task)
+			if (home) print.qm2.write("failed to run as admin", _raaResult);
+			return false;
+		}
+		//Api.AllowSetForegroundWindow(pid); //fails and has no sense
+		return true;
+	}
+
+	/// <summary>
+	/// Restarts this program.
+	/// </summary>
+	/// <param name="commandLine">Command line arguments to append. Don't use /n and /v because this func manages it.</param>
+	/// <param name="admin">UAC-elevate (verb runas).</param>
+	public static void Restart(string commandLine = null, bool admin = false) {
+		Debug.Assert(Loaded == EProgramState.LoadedUI);
+		var cl = Hmain.IsVisible ? "/n /v /restart " : "/n /restart";
+		if (!commandLine.NE()) cl = cl + " " + commandLine;
+		Menus.File.Exit();
+		if (Loaded < EProgramState.Unloading) return;
+		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, admin ? RFlags.Admin : RFlags.InheritAdmin); };
 	}
 
 	/// <summary>
@@ -340,30 +389,6 @@ static class App {
 	public static bool IsAuHomePC { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
 
 	public static bool IsPortable { get; private set; }
-
-	static bool _RestartAsAdmin(string[] args) {
-		if (Debugger.IsAttached) return false; //very fast
-		bool home = IsAuHomePC;
-		string sesId = process.thisProcessSessionId.ToS();
-		args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
-		int pid = WinTaskScheduler.RunTask("Au",
-			home ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
-			process.thisExePath, true, args);
-		if (pid == 0) { //probably this program is not installed (no scheduled task)
-			if (home) print.qm2.write("failed to run as admin");
-			return false;
-		}
-		//Api.AllowSetForegroundWindow(pid); //fails and has no sense
-		return true;
-	}
-
-	public static void Restart() {
-		Debug.Assert(Loaded == EProgramState.LoadedUI);
-		var cl = Hmain.IsVisible ? "/n /v /restart " : "/n /restart";
-		Menus.File.Exit();
-		if (Loaded < EProgramState.Unloading) return;
-		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, RFlags.InheritAdmin); };
-	}
 
 	internal static class TrayIcon {
 		static IntPtr[] _icons;

@@ -15,8 +15,8 @@ class KeysWindow : InfoWindow //KPopup
 
 	protected override void OnHandleCreated() {
 		var c = Control1;
-		c.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
-		c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+		c.aaTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
+		c.aaTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
 		_SetText();
 
@@ -69,7 +69,7 @@ class KeysWindow : InfoWindow //KPopup
 			char k1 = code[pos - 1], k2 = code[pos];
 			if (!addArg) {
 				if (s[0] is '*' or '+') {
-					if (k1 is '*' or '+') cd.sci?.zSelect(true, pos - 1, pos); //eg remove + from Alt+ if now selected *down
+					if (k1 is '*' or '+') cd.sci?.aaaSelect(true, pos - 1, pos); //eg remove + from Alt+ if now selected *down
 				} else {
 					if (pos > from && k1 > ' ' && k1 != '(' && !(k1 == '+' && !code.Eq(pos - 2, '#'))) prefix = " "; //insert space between keys
 				}
@@ -88,7 +88,7 @@ class KeysWindow : InfoWindow //KPopup
 			void _AddArg(string s) {
 				int stringEnd = si.stringNode.Span.End;
 				if (to == stringEnd) s = "\"" + s;
-				cd.sci.zGoToPos(true, stringEnd);
+				cd.sci.aaaGoToPos(true, stringEnd);
 				InsertCode.TextSimplyInControl(cd.sci, s);
 			}
 		}

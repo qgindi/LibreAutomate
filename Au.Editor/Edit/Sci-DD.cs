@@ -4,8 +4,8 @@ using Au.Tools;
 
 partial class SciCode {
 	void _InitDragDrop() {
-		Api.RevokeDragDrop(Hwnd); //of Scintilla
-		Api.RegisterDragDrop(Hwnd, _ddTarget = new _DragDrop(this));
+		Api.RevokeDragDrop(aaWnd); //of Scintilla
+		Api.RegisterDragDrop(aaWnd, _ddTarget = new _DragDrop(this));
 		//Scintilla will call RevokeDragDrop when destroying window
 	}
 
@@ -50,7 +50,7 @@ partial class SciCode {
 
 		int _GetEffect(int effect, int grfKeyState) {
 			if (!_canDrop) return 0;
-			if (_sci.zIsReadonly) return 0;
+			if (_sci.aaaIsReadonly) return 0;
 			DragDropEffects r, ae = (DragDropEffects)effect;
 			var ks = (DragDropKeyStates)grfKeyState;
 			switch (ks & (DragDropKeyStates.ShiftKey | DragDropKeyStates.ControlKey | DragDropKeyStates.AltKey)) {
@@ -66,10 +66,10 @@ partial class SciCode {
 		}
 
 		void _GetDropPos(ref POINT p, out int pos) {
-			_sci.Hwnd.MapScreenToClient(ref p);
+			_sci.aaWnd.MapScreenToClient(ref p);
 			if (!_justText) { //if files etc, drop as lines, not anywhere
 				pos = _sci.Call(SCI_POSITIONFROMPOINT, p.x, p.y);
-				pos = _sci.zLineStartFromPos(false, pos);
+				pos = _sci.aaaLineStartFromPos(false, pos);
 				p.x = _sci.Call(SCI_POINTXFROMPOSITION, 0, pos);
 				p.y = _sci.Call(SCI_POINTYFROMPOSITION, 0, pos);
 			} else pos = 0;
@@ -128,7 +128,7 @@ partial class SciCode {
 				} else { //file, script or URL
 					InsertCode.Statements(s, ICSFlags.NoFocus);
 				}
-				if (!_sci.IsFocused && _sci.Hwnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
+				if (!_sci.IsFocused && _sci.aaWnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
 					_sci._noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
 					_sci.Focus();
 					_sci._noModelEnsureCurrentSelected = false;

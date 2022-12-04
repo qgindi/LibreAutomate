@@ -58,7 +58,7 @@ class CiErrors {
 
 				if (!has) doc.EInicatorsDiag_(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
-				doc.zIndicatorAdd(true, indic, start..end);
+				doc.aaaIndicatorAdd(true, indic, start..end);
 				_codeDiag.Add((d, start, end));
 
 				if (d.Severity == DiagnosticSeverity.Error) {
@@ -84,14 +84,14 @@ class CiErrors {
 				int from = v.from + offs, to = v.to + offs;
 				if (to <= start16 || from >= end16) continue;
 				if (!has) doc.EInicatorsDiag_(has = true);
-				doc.zIndicatorAdd(true, SciCode.c_indicError, from..to);
+				doc.aaaIndicatorAdd(true, SciCode.c_indicError, from..to);
 			}
 		}
 		_Strings(semo, cd, start16, end16);
 		if (_stringErrors.Count > 0) {
 			if (!has) doc.EInicatorsDiag_(has = true);
 			foreach (var v in _stringErrors) {
-				doc.zIndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
+				doc.aaaIndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
 			}
 		}
 		if (!has) {
@@ -219,11 +219,11 @@ class CiErrors {
 	}
 
 	public void EraseIndicatorsInLine(SciCode doc, int pos8) {
-		var (_, start, end) = doc.zLineStartEndFromPos(false, pos8, withRN: true);
-		doc.zIndicatorClear(false, SciCode.c_indicDiagHidden, start..end);
-		doc.zIndicatorClear(false, SciCode.c_indicInfo, start..end);
-		doc.zIndicatorClear(false, SciCode.c_indicWarning, start..end);
-		doc.zIndicatorClear(false, SciCode.c_indicError, start..end);
+		var (_, start, end) = doc.aaaLineStartEndFromPos(false, pos8, withRN: true);
+		doc.aaaIndicatorClear(false, SciCode.c_indicDiagHidden, start..end);
+		doc.aaaIndicatorClear(false, SciCode.c_indicInfo, start..end);
+		doc.aaaIndicatorClear(false, SciCode.c_indicWarning, start..end);
+		doc.aaaIndicatorClear(false, SciCode.c_indicError, start..end);
 	}
 
 	public void SciModified(SciCode doc, in Sci.SCNotification n) {
@@ -234,7 +234,7 @@ class CiErrors {
 		if (_pasting.doc != null && n.modificationType.Has(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_PERFORMED_USER)) {
 			var p = _pasting; _pasting = default;
 			if (doc == p.doc && n.length > 3) {
-				int start = doc.zPos16(n.position), end = doc.zPos16(n.position + n.length);
+				int start = doc.aaaPos16(n.position), end = doc.aaaPos16(n.position + n.length);
 				Indicators(start, end, pasting: true, pastingSilent: p.silent);
 			}
 		}
@@ -415,12 +415,12 @@ class CiErrors {
 	}
 
 	void _UsingsEtc(CiText x, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
-		var mu = new _MissingUsingError(doc.zText, v.start, v.end, extMethod, _semo);
+		var mu = new _MissingUsingError(doc.aaaText, v.start, v.end, extMethod, _semo);
 		List<_MissingUsingError> amu = null;
 		_MissingUsingError.AddToList(ref amu, mu);
 		List<string> usings = _GetMissingUsings(amu);
 		if (usings != null) {
-			var sstart = doc.zPos8(v.start).ToString();
+			var sstart = doc.aaaPos8(v.start).ToString();
 			x.Append("\nAdd using ");
 			for (int i = 0; i < usings.Count; i++) {
 				var u = usings[i];
@@ -450,7 +450,7 @@ class CiErrors {
 			var doc = Panels.Editor.ZActiveDoc;
 			EraseIndicatorsInLine(doc, pos8);
 			if (action == 'p') {
-				doc.zInsertText(false, pos8, s + ".", addUndoPointAfter: true);
+				doc.aaaInsertText(false, pos8, s + ".", addUndoPointAfter: true);
 			} else {
 				InsertCode.UsingDirective(s, true);
 			}

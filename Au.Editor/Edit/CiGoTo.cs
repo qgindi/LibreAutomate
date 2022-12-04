@@ -244,8 +244,8 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 				var g = new CiGoTo(sym);
 				if (g.CanGoTo) g.GoTo();
 			}
-		} else if (cd.sci.zHasSelection) {
-			_Open(cd.sci.zSelectedText());
+		} else if (cd.sci.aaaHasSelection) {
+			_Open(cd.sci.aaaSelectedText());
 		} else if (helpKind == CiUtil.HelpKind.String && token.Parent.IsKind(SyntaxKind.StringLiteralExpression)) {
 			_Open(token.ValueText, token);
 		} else if (helpKind == CiUtil.HelpKind.None && cd != null) { //maybe path in comments or disabled code

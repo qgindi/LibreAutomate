@@ -164,6 +164,6 @@ partial class TriggersAndToolbars {
 		if (last != null) pos = last.FullSpan.End;
 		else if (md.Body.Statements.OfType<IfStatementSyntax>().FirstOrDefault() is IfStatementSyntax firstIf) pos = firstIf.FullSpan.Start;
 		else pos = md.Body.CloseBraceToken.SpanStart;
-		cd.sci.zGoToPos(true, pos);
+		cd.sci.aaaGoToPos(true, pos);
 	}
 }

@@ -26,7 +26,7 @@ partial class CiStyling
 			doc.Dispatcher.InvokeAsync(() => _DocChanged(doc, true), System.Windows.Threading.DispatcherPriority.Loaded);
 			//info: if Normal priority, scintilla says there is 0 visible lines, and will need to do styling again. Timer would be OK too.
 		} else { //at program startup
-			CodeInfo.ReadyForStyling += () => { if (!doc.Hwnd.Is0) _DocChanged(doc, true); };
+			CodeInfo.ReadyForStyling += () => { if (!doc.aaWnd.Is0) _DocChanged(doc, true); };
 		}
 	}
 
@@ -74,11 +74,11 @@ partial class CiStyling
 			else _Work(doc, cancel: true);
 		} else {
 			//using var p1 = perf.local();
-			Sci_GetVisibleRange(doc.ZSciPtr, out var vr); //fast
+			Sci_GetVisibleRange(doc.aaSciPtr, out var vr); //fast
 			if (vr != _visibleLines) {
 				_Work(doc);
 			} else if (_diagCounter > 0 && --_diagCounter == 0) {
-				CodeInfo._diag.Indicators(doc.zPos16(vr.posFrom), doc.zPos16(vr.posTo));
+				CodeInfo._diag.Indicators(doc.aaaPos16(vr.posFrom), doc.aaaPos16(vr.posTo));
 			}
 		}
 	}
@@ -90,7 +90,7 @@ partial class CiStyling
 		//Delay to avoid multiple styling/folding/cancelling on multistep actions (replace text range, find/replace all, autocorrection) and fast automated text input.
 		_cancelTS?.Cancel(); _cancelTS = null;
 		_modStart = Math.Min(_modStart, n.position);
-		_modFromEnd = Math.Min(_modFromEnd, doc.zLen8 - n.FinalPosition);
+		_modFromEnd = Math.Min(_modFromEnd, doc.aaaLen8 - n.FinalPosition);
 		_folded = false;
 		//using var p1 = perf.local();
 #if true
@@ -104,8 +104,8 @@ partial class CiStyling
 		//	If the hidden text is long, it adds horz scrollbar and scrolls.
 		//	Not if the undo text ends with newline.
 		if (n.modificationType.Has(MOD.SC_LASTSTEPINUNDOREDO | MOD.SC_MOD_INSERTTEXT)) {
-			doc.EHideImages_(n.position, doc.zLineEndFromPos(false, n.position + n.length));
-			doc.zSetStyled();
+			doc.EHideImages_(n.position, doc.aaaLineEndFromPos(false, n.position + n.length));
+			doc.aaaSetStyled();
 		}
 	}
 
@@ -114,7 +114,7 @@ partial class CiStyling
 		var doc = t.Tag as SciCode;
 		if (doc != Panels.Editor.ZActiveDoc) return;
 		if (_cancelTS != null) return;
-		_Work(doc, doc.zLineStartFromPos(false, _modStart), doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
+		_Work(doc, doc.aaaLineStartFromPos(false, _modStart), doc.aaaLineEndFromPos(false, doc.aaaLen8 - _modFromEnd, withRN: true));
 		//p1.NW('a'); //we return without waiting for the async task to complete
 	}
 
@@ -140,7 +140,7 @@ partial class CiStyling
 		var code = cd.code;
 		_PN('d');
 		try {
-			Sci_GetVisibleRange(doc.ZSciPtr, out var vr);
+			Sci_GetVisibleRange(doc.aaSciPtr, out var vr);
 			//print.it(vr);
 
 			bool minimal = end8 >= 0;
@@ -164,7 +164,7 @@ partial class CiStyling
 					CiFolding.Fold(doc, af);
 					_folded = true;
 				}
-				Sci_GetVisibleRange(doc.ZSciPtr, out vr);
+				Sci_GetVisibleRange(doc.aaSciPtr, out vr);
 				_PN('F');
 				start8 = vr.posFrom;
 				end8 = vr.posTo;
@@ -181,8 +181,8 @@ partial class CiStyling
 				//print.it(vr);
 				List<StartEnd> a = new();
 				StartEnd r = new(start8, end8);
-				for (int dline = doc.zLineFromPos(false, start8), dlinePrev = dline - 1, vline = doc.Call(SCI_VISIBLEFROMDOCLINE, dline); ; dline = doc.Call(SCI_DOCLINEFROMVISIBLE, ++vline)) {
-					int i = doc.zLineStart(false, dline); if (i >= end8) break;
+				for (int dline = doc.aaaLineFromPos(false, start8), dlinePrev = dline - 1, vline = doc.Call(SCI_VISIBLEFROMDOCLINE, dline); ; dline = doc.Call(SCI_DOCLINEFROMVISIBLE, ++vline)) {
+					int i = doc.aaaLineStart(false, dline); if (i >= end8) break;
 					//print.it(dline + 1);
 					if (dline > dlinePrev + 1) {
 						a.Add(r);
@@ -197,7 +197,7 @@ partial class CiStyling
 			}
 
 			var ar = new (IEnumerable<ClassifiedSpan> a, StartEnd r)[ar8.Count];
-			for (int i = 0; i < ar8.Count; i++) ar[i].r = new StartEnd(doc.zPos16(ar8[i].start), doc.zPos16(ar8[i].end));
+			for (int i = 0; i < ar8.Count; i++) ar[i].r = new StartEnd(doc.aaaPos16(ar8[i].start), doc.aaaPos16(ar8[i].end));
 			SemanticModel semo = null;
 
 			await Task.Run(async () => {
@@ -236,7 +236,7 @@ partial class CiStyling
 
 					//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
 					int spanStart16 = Math.Max(v.TextSpan.Start, r.start), spanEnd16 = Math.Min(v.TextSpan.End, r.end);
-					int spanStart8 = doc.zPos8(spanStart16), spanEnd8 = doc.zPos8(spanEnd16);
+					int spanStart8 = doc.aaaPos8(spanStart16), spanEnd8 = doc.aaaPos8(spanEnd16);
 					_SetStyleRange((byte)style);
 
 					void _SetStyleRange(byte style) {
@@ -248,7 +248,7 @@ partial class CiStyling
 			_PN();
 			doc.Call(SCI_STARTSTYLING, start8);
 			unsafe { fixed (byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
-			doc.zSetStyled(minimal ? int.MaxValue : end8);
+			doc.aaaSetStyled(minimal ? int.MaxValue : end8);
 
 			_modStart = _modFromEnd = int.MaxValue;
 			_visibleLines = minimal ? default : vr;
@@ -257,7 +257,7 @@ partial class CiStyling
 				doc.EImagesGet_(cd, ar.SelectMany(o => o.a), vr);
 				_diagCounter = 4; //update diagnostics after 1 s
 			} else {
-				CodeInfo._diag.EraseIndicatorsInLine(doc, doc.zCurrentPos8);
+				CodeInfo._diag.EraseIndicatorsInLine(doc, doc.aaaCurrentPos8);
 			}
 		}
 		catch (OperationCanceledException) { }
@@ -550,15 +550,15 @@ partial class CiStyling
 
 		/// <param name="multiFont">Set font only for code styles.</param>
 		public void ToScintilla(KScintilla sci, bool multiFont = false) {
-			if (!multiFont) sci.zStyleFont(STYLE_DEFAULT, FontName, FontSize);
-			sci.zStyleBackColor(STYLE_DEFAULT, BackgroundColor);
+			if (!multiFont) sci.aaaStyleFont(STYLE_DEFAULT, FontName, FontSize);
+			sci.aaaStyleBackColor(STYLE_DEFAULT, BackgroundColor);
 			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
-			sci.zStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
+			sci.aaaStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
 
 			void _Set(EStyle k, TStyle sty) {
-				sci.zStyleForeColor((int)k, sty.color);
-				if (sty.bold) sci.zStyleBold((int)k, true);
-				if (multiFont) sci.zStyleFont((int)k, FontName, FontSize);
+				sci.aaaStyleForeColor((int)k, sty.color);
+				if (sty.bold) sci.aaaStyleBold((int)k, true);
+				if (multiFont) sci.aaaStyleFont((int)k, FontName, FontSize);
 			}
 
 			_Set(EStyle.None, None);

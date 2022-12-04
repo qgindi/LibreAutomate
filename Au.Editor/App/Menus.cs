@@ -441,25 +441,25 @@ static class Menus {
 		[Command(separator = true, target = "Output")]
 		public static class Output {
 			[Command(keysText = "M-click")]
-			public static void Clear() { Panels.Output.ZClear(); }
+			public static void Clear() { Panels.Output.aaClear(); }
 
 			[Command("Copy", keysText = "Ctrl+C")]
-			public static void Copy_output() { Panels.Output.ZCopy(); }
+			public static void Copy_output() { Panels.Output.aaCopy(); }
 
 			[Command(keys = "Ctrl+F")]
-			public static void Find_selected_text() { Panels.Output.ZFind(); }
+			public static void Find_selected_text() { Panels.Output.aaFind(); }
 
 			[Command]
-			public static void History() { Panels.Output.ZHistory(); }
+			public static void History() { Panels.Output.aaHistory(); }
 
 			[Command("Wrap lines", separator = true, checkable = true)]
-			public static void Wrap_lines_in_output() { Panels.Output.ZWrapLines ^= true; }
+			public static void Wrap_lines_in_output() { Panels.Output.aaWrapLines ^= true; }
 
 			[Command("White space", checkable = true)]
-			public static void White_space_in_output() { Panels.Output.ZWhiteSpace ^= true; }
+			public static void White_space_in_output() { Panels.Output.aaWhiteSpace ^= true; }
 
 			[Command(checkable = true)]
-			public static void Topmost_when_floating() { Panels.Output.ZTopmost ^= true; }
+			public static void Topmost_when_floating() { Panels.Output.aaTopmost ^= true; }
 		}
 	}
 
@@ -480,7 +480,7 @@ static class Menus {
 			if (w.ClassNameIs("HwndWrapper*")) {
 				//var e = Keyboard.FocusedElement as FrameworkElement;
 
-			} else if (w == Panels.Editor.ZActiveDoc.Hwnd) {
+			} else if (w == Panels.Editor.ZActiveDoc.aaWnd) {
 				CiUtil.OpenSymbolOrKeywordFromPosHelp();
 			}
 		}

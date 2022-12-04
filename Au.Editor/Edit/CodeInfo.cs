@@ -238,10 +238,10 @@ static class CodeInfo {
 			if (_compl.IsVisibleUI) {
 				int diff = b.newPosUtf8 - b.oldPosUtf8;
 				_compl.SciCharAdding_Commit(doc, ch);
-				b.newPosUtf8 = doc.zCurrentPos8 + diff;
+				b.newPosUtf8 = doc.aaaCurrentPos8 + diff;
 			}
 
-			doc.zCurrentPos8 = b.newPosUtf8;
+			doc.aaaCurrentPos8 = b.newPosUtf8;
 			if (!b.dontSuppress) return true;
 		} else if (_compl.IsVisibleUI) {
 			if (CiComplResult.Complex == _compl.SciCharAdding_Commit(doc, ch)) return true;
@@ -323,11 +323,11 @@ static class CodeInfo {
 	public static async void SciMouseDwellStarted(SciCode doc, int pos8) {
 		if (!_CanWork(doc) || pos8 < 0) return;
 
-		var text0 = doc.zText;
-		int pos16 = doc.zPos16(pos8);
+		var text0 = doc.aaaText;
+		int pos16 = doc.aaaPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
-		if (doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.zText) return; //changed while awaiting
+		if (doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.aaaText) return; //changed while awaiting
 
 		if (diag == null && quick == null) {
 			HideTextPopup();
@@ -383,8 +383,8 @@ static class CodeInfo {
 			Debug.Assert(Environment.CurrentManagedThreadId == 1);
 
 			sci = Panels.Editor.ZActiveDoc;
-			code = sci.zText;
-			this.pos = pos switch { -1 => sci.zCurrentPos16, -2 => sci.zSelectionStart16, _ => pos };
+			code = sci.aaaText;
+			this.pos = pos switch { -1 => sci.aaaCurrentPos16, -2 => sci.aaaSelectionStart16, _ => pos };
 			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 

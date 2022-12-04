@@ -285,16 +285,16 @@ class CiFolding {
 			a = new int[af.Count];
 			for (int i = 0; i < a.Length; i++) {
 				var v = af[i];
-				int pos8 = doc.zPos8(v.pos);
+				int pos8 = doc.aaaPos8(v.pos);
 				a[i] = pos8 | (v.start ? 0 : unchecked((int)0x80000000));
 
 				if (v.separator != 0) {
 					//add separator below, or above if start
 					if (v.start) { //above
 						int k = v.pos - v.separator; if (k <= 0) continue;
-						pos8 = doc.zPos8(k);
+						pos8 = doc.aaaPos8(k);
 					}
-					int li = doc.zLineFromPos(false, pos8);
+					int li = doc.aaaLineFromPos(false, pos8);
 					_DeleteUnderlinedLineMarkers(li);
 					//if(underlinedLine != li) print.it("add", li + 1);
 					if (underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
@@ -318,7 +318,7 @@ class CiFolding {
 		}
 
 		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
-			fixed (int* ip = a) Sci_SetFoldLevels(doc.ZSciPtr, 0, -1, a.Lenn_(), ip);
+			fixed (int* ip = a) Sci_SetFoldLevels(doc.aaSciPtr, 0, -1, a.Lenn_(), ip);
 		}
 		//p1.Next('f');
 		doc.ERestoreEditorData_();
@@ -349,11 +349,11 @@ class CiFolding {
 									| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
 		doc.Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
 		doc.Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
-		doc.zStyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
+		doc.aaaStyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
 
 		doc.Call(SCI_SETMARGINCURSORN, foldMargin, SC_CURSORARROW);
 
-		doc.zSetMarginWidth(foldMargin, 12);
+		doc.aaaSetMarginWidth(foldMargin, 12);
 
 		//separator lines below functions, types and namespaces
 		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);
@@ -370,10 +370,10 @@ partial class SciCode {
 		if (isExpanded) {
 			_FoldLine(line);
 			//move caret out of contracted region
-			int pos = zCurrentPos8;
+			int pos = aaaCurrentPos8;
 			if (pos > startPos) {
-				int i = zLineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
-				if (pos <= i) zCurrentPos8 = startPos;
+				int i = aaaLineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
+				if (pos <= i) aaaCurrentPos8 = startPos;
 			}
 		} else {
 			Call(SCI_FOLDLINE, line, 1);
@@ -385,7 +385,7 @@ partial class SciCode {
 #if false
 		Call(SCI_FOLDLINE, line);
 #else
-		string s = zLineText(line), s2 = "";
+		string s = aaaLineText(line), s2 = "";
 		for (int i = 0; i < s.Length; i++) {
 			char c = s[i];
 			if (c == '{') { s2 = "... }"; break; }
@@ -397,7 +397,7 @@ partial class SciCode {
 		}
 		//quite slow. At startup ~250 mcs. The above code is fast.
 		if (s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
-		else zSetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+		else aaaSetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
 #endif
 	}
 
@@ -408,19 +408,19 @@ partial class SciCode {
 
 		if (os is _EOpenState.NewFileFromTemplate) {
 			if (_fn.IsScript) {
-				var code = zText;
+				var code = aaaText;
 				if (!code.NE()) {
 					//fold all //.
-					for (int i = base.zLineCount - 1; --i >= 0;) {
+					for (int i = base.aaaLineCount - 1; --i >= 0;) {
 						int k = Call(SCI_GETFOLDLEVEL, i);
 						if (0 != (k & SC_FOLDLEVELHEADERFLAG)) {
-							int j = zLineEnd(false, i);
-							if (zCharAt(j - 1) == '.' && zCharAt(j - 2) == '/') Call(SCI_FOLDLINE, i);
+							int j = aaaLineEnd(false, i);
+							if (aaaCharAt(j - 1) == '.' && aaaCharAt(j - 2) == '/') Call(SCI_FOLDLINE, i);
 						}
 					}
 
 					if (code.RxMatch(@"//\.\.+\R\R?(?=\z|\R)", 0, out RXGroup g)) {
-						zGoToPos(true, g.End);
+						aaaGoToPos(true, g.End);
 					}
 					//if (CodeInfo.GetContextAndDocument(out var cd, 0, true) && !cd.code.NE() && cd.document.GetSyntaxRootAsync().Result is CompilationUnitSyntax cu) {
 					//	print.it(cu);
@@ -434,9 +434,9 @@ partial class SciCode {
 			try {
 				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?").Bind(1, _fn.Id);
 				if (p.Step()) {
-					int cp = zCurrentPos8;
+					int cp = aaaCurrentPos8;
 					int top = Math.Max(0, p.GetInt(0));
-					int pos = Math.Clamp(p.GetInt(1), 0, zLen8);
+					int pos = Math.Clamp(p.GetInt(1), 0, aaaLen8);
 					var a = p.GetList<int>(2);
 					if (a != null) {
 						_savedLinesMD5 = _Hash(a);
@@ -446,7 +446,7 @@ partial class SciCode {
 							if (marker == 31) _FoldLine(line);
 							else Call(SCI_MARKERADDSET, line, 1 << marker);
 						}
-						if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, zLineFromPos(false, cp));
+						if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, aaaLineFromPos(false, cp));
 					}
 					if (top + pos > 0) {
 						if (os != _EOpenState.Reopen) {
@@ -463,9 +463,9 @@ partial class SciCode {
 							Call(SCI_SETVSCROLLBAR, true);
 
 							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, Call(SCI_VISIBLEFROMDOCLINE, top));
-							if (pos <= zLen8) {
+							if (pos <= aaaLen8) {
 								App.Model.EditGoBack.OnRestoringSavedPos();
-								zGoToPos(false, pos);
+								aaaGoToPos(false, pos);
 							}
 
 							//workaround for: in wrap mode SCI_SETFIRSTVISIBLELINE sets wrong line because still not wrapped.
@@ -508,7 +508,7 @@ partial class SciCode {
 		//p1.Next();
 		var hash = _Hash(a);
 		//p1.Next();
-		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = zCurrentPos8;
+		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = aaaCurrentPos8;
 		if (top > 0) top = Call(SCI_DOCLINEFROMVISIBLE, top); //save document line, because visible line changes after changing wrap mode or resizing in wrap mode etc. Never mind: the top visible line may be not at the start of the document line.
 		if (top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
 			try {

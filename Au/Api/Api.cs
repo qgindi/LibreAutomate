@@ -468,6 +468,9 @@ static unsafe partial class Api {
 	//[DllImport("advapi32.dll", EntryPoint = "ConvertSecurityDescriptorToStringSecurityDescriptorW")]
 	//internal static extern bool ConvertSecurityDescriptorToStringSecurityDescriptor(void* SecurityDescriptor, uint RequestedStringSDRevision, uint SecurityInformation, out char* StringSecurityDescriptor, out uint StringSecurityDescriptorLen);
 
+	[DllImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownW", SetLastError = true)]
+	internal static extern bool InitiateSystemShutdown(string lpMachineName, string lpMessage, int dwTimeout, bool bForceAppsClosed, bool bRebootAfterShutdown);
+
 
 
 

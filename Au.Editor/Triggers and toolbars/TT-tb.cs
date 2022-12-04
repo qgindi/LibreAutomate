@@ -169,7 +169,7 @@ partial class Program {
 			f = App.Model.NewItem("Class.cs", (folder, FNInsert.Inside), sName + ".cs", text: new(true, text));
 		} else {
 			var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if (programNode == null) return;
-			_OpenSourceFile(f).zInsertText(true, programNode.CloseBraceToken.SpanStart, text);
+			_OpenSourceFile(f).aaaInsertText(true, programNode.CloseBraceToken.SpanStart, text);
 		}
 
 		_Update();
@@ -192,7 +192,7 @@ partial class Program {
 		//go to the toolbar function
 		int i = t.location.SourceSpan.Start;
 		timer.after(iTrigger != 4 ? 500 : 10, _ => { //workaround for bad scrolling. Also briefly shows the trigger.
-			_OpenSourceFile(f)?.zGoToPos(true, i);
+			_OpenSourceFile(f)?.aaaGoToPos(true, i);
 		});
 
 		//maybe a settings file exists with this name, probably orphaned
@@ -247,7 +247,7 @@ partial class Program {
 		if (cbReplace?.SelectedItem is _Trigger u && _GetTriggerStatementFullRange2(u, out var span, replacing: true)) {
 			var doc = _OpenSourceFile(t.fn, span.Start);
 			using var undo = new KScintilla.UndoAction(doc);
-			doc.zDeleteRange(true, span.Start, span.End);
+			doc.aaaDeleteRange(true, span.Start, span.End);
 			pos = span.Start;
 			_Add();
 		} else {
@@ -274,7 +274,7 @@ partial class Program {
 
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return default;
-		int pos = doc.zCurrentPos16;
+		int pos = doc.aaaCurrentPos16;
 		var f = doc.EFile;
 		//is pos in a toolbar function?
 		var t = _toolbars.FirstOrDefault(o => o.fn == f && o.method.DeclaringSyntaxReferences[0].Span.ContainsOrTouches(pos));
@@ -432,7 +432,7 @@ Please edit window name strings in the toolbar trigger code.
 	static SciCode _OpenSourceFile(FileNode f, TextSpan span) {
 		if (!App.Model.OpenAndGoTo(f)) return null;
 		var doc = Panels.Editor.ZActiveDoc;
-		doc.zSelect(true, span.End, span.Start, true);
+		doc.aaaSelect(true, span.End, span.Start, true);
 		return doc;
 	}
 
