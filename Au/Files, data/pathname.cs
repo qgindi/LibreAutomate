@@ -57,7 +57,7 @@ namespace Au {
 				var k = folders.getFolder(prop);
 				if (k != null) {
 					s = s[++i..];
-					string ks = k.ToString(); if (ks.Starts(":: ")) return ks + s; //don't need \
+					string ks = k.Path; if (ks.Starts(":: ")) return ks + s; //don't need \
 					return k + s; //add \ if need
 				}
 				//throw new AuException("folders does not have property " + prop);
@@ -307,7 +307,7 @@ namespace Au {
 		/// 
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths (unless used <i>defaultParentDirectory</i>), trims <c>'\\'</c> at the end if need.
 		/// </remarks>
-		/// <seealso cref="filesystem.getFinalPath"/>
+		/// <seealso cref="filesystem.more.getFinalPath"/>
 		public static string normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0) {
 			if (!isFullPathExpand(ref path)) {
 				if (0 != (flags & PNFlags.CanBeUrlOrShell)) if (IsShellPathOrUrl_(path)) return path;

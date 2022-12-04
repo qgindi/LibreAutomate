@@ -130,7 +130,7 @@ class PanelOutline : DockPanel
 			_tv.ItemActivated += e => {
 				_activeDoc.Focus();
 				var v = e.Item as _Item;
-				_activeDoc.zGoToPos(true, v._pos);
+				_activeDoc.aaaGoToPos(true, v._pos);
 			};
 			Panels.Editor.ZActiveDocChanged += () => Clear();
 		}

@@ -22,7 +22,7 @@ static class ModifyCode {
 		//how to comment/uncomment: // or /**/
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return;
 		var doc = cd.sci;
-		int selStart = cd.pos, selEnd = doc.zSelectionEnd16, replStart = selStart, replEnd = selEnd;
+		int selStart = cd.pos, selEnd = doc.aaaSelectionEnd16, replStart = selStart, replEnd = selEnd;
 		bool com, slashStar = false, isSelection = selEnd > selStart;
 		string code = cd.code, s = null;
 		var root = cd.syntaxRoot;
@@ -90,11 +90,11 @@ static class ModifyCode {
 			}
 		}
 
-		bool caretAtEnd = isSelection && doc.zCurrentPos16 == selEnd;
-		doc.zReplaceRange(true, replStart, replEnd, s);
+		bool caretAtEnd = isSelection && doc.aaaCurrentPos16 == selEnd;
+		doc.aaaReplaceRange(true, replStart, replEnd, s);
 		if (isSelection) {
 			int i = replStart, j = replStart + s.Length;
-			doc.zSelect(true, caretAtEnd ? i : j, caretAtEnd ? j : i);
+			doc.aaaSelect(true, caretAtEnd ? i : j, caretAtEnd ? j : i);
 		}
 	}
 
@@ -104,8 +104,8 @@ static class ModifyCode {
 		var doc = cd.sci;
 		int from, to;
 		if (selection) {
-			from = doc.zSelectionStart16;
-			to = doc.zSelectionEnd16;
+			from = doc.aaaSelectionStart16;
+			to = doc.aaaSelectionEnd16;
 			if (from == to) {
 				var node = CiUtil.GetStatementEtcFromPos(cd, from);
 				if (node == null) return;
@@ -124,7 +124,7 @@ static class ModifyCode {
 		if (s == null) return;
 		if (selection) {
 			doc.EReplaceTextGently(s, from..to);
-			doc.zSelect(true, from0, doc.zLen16 - tail);
+			doc.aaaSelect(true, from0, doc.aaaLen16 - tail);
 		} else {
 			doc.EReplaceTextGently(s);
 		}
@@ -244,9 +244,9 @@ partial class SciCode {
 	/// Replaces text without losing markers, expanding folded code, etc.
 	/// </summary>
 	public void EReplaceTextGently(string s, Range? range = null) {
-		var (rFrom, rTo) = range.GetStartEnd(zLen16);
+		var (rFrom, rTo) = range.GetStartEnd(aaaLen16);
 		int len = s.Lenn(); if (len == 0) goto gRaw;
-		string old = range.HasValue ? zRangeText(true, rFrom, rTo) : zText;
+		string old = range.HasValue ? aaaRangeText(true, rFrom, rTo) : aaaText;
 		if (len > 1_000_000 || old.Length > 1_000_000 || old.Length == 0) goto gRaw;
 		var dmp = new DiffMatchPatch.diff_match_patch();
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
@@ -256,18 +256,18 @@ partial class SciCode {
 			for (int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 				var d = a[i];
 				if (d.operation == DiffMatchPatch.Operation.INSERT) {
-					zInsertText(true, j + rFrom, d.text);
+					aaaInsertText(true, j + rFrom, d.text);
 				} else {
 					j -= d.text.Length;
 					if (d.operation == DiffMatchPatch.Operation.DELETE)
-						zDeleteRange(true, j + rFrom, j + d.text.Length + rFrom);
+						aaaDeleteRange(true, j + rFrom, j + d.text.Length + rFrom);
 				}
 			}
 		}
 		return;
 		gRaw:
-		if (range.HasValue) zReplaceRange(true, rFrom, rTo, s);
-		else zText = s;
+		if (range.HasValue) aaaReplaceRange(true, rFrom, rTo, s);
+		else aaaText = s;
 
 		//never mind: then Undo sets position at the first replaced part (in the document it's the last, because replaces in reverse order).
 		//	And then Redo sets position at the last replaced part.

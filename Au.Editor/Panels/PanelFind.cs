@@ -233,7 +233,7 @@ class PanelFind : UserControl {
 		string s = null;
 		switch (e) {
 		case KScintilla c:
-			s = c.zSelectedText();
+			s = c.aaaSelectedText();
 			break;
 		case TextBox c:
 			s = c.SelectedText;
@@ -299,7 +299,7 @@ class PanelFind : UserControl {
 
 		if (!noRecent) _AddToRecent(f);
 
-		if (forReplace && (Panels.Editor.ZActiveDoc?.zIsReadonly ?? true)) return false;
+		if (forReplace && (Panels.Editor.ZActiveDoc?.aaaIsReadonly ?? true)) return false;
 		return true;
 	}
 
@@ -323,8 +323,8 @@ class PanelFind : UserControl {
 	void _FindNextInEditor(_TextToFind f, bool replace) {
 		_ttNext?.Close();
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
-		var text = doc.zText; if (text.Length == 0) return;
-		int i, to, len = 0, from8 = replace ? doc.zSelectionStart8 : doc.zSelectionEnd8, from = doc.zPos16(from8), to8 = doc.zSelectionEnd8;
+		var text = doc.aaaText; if (text.Length == 0) return;
+		int i, to, len = 0, from8 = replace ? doc.aaaSelectionStart8 : doc.aaaSelectionEnd8, from = doc.aaaPos16(from8), to8 = doc.aaaSelectionEnd8;
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
 		g1:
@@ -361,26 +361,26 @@ class PanelFind : UserControl {
 			goto g1;
 		}
 		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: searching from start.");
-		to = doc.zPos8(i + len);
-		i = doc.zPos8(i);
+		to = doc.aaaPos8(i + len);
+		i = doc.aaaPos8(i);
 		g2:
 		if (replace && i == from8 && to == to8) {
 			var repl = f.replaceText;
 			if (rm != null) if (!_TryExpandRegexReplacement(rm, repl, out repl)) return;
 			//doc.zReplaceRange(i, to, repl); //also would need to set caret pos = to
-			doc.zReplaceSel(repl);
+			doc.aaaReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
 			if (CiStyling.IsProtected(doc, i, to)) {
 				//print.it("hidden");
 				//if (1 != dialog.show("Select hidden text?", "The found text is in a hidden text range. Do you want to select it?", "Yes|No", owner: this, defaultButton: 2)) {
-				doc.zGoToPos(false, CiStyling.SkipProtected(doc, to));
+				doc.aaaGoToPos(false, CiStyling.SkipProtected(doc, to));
 				return;
 				//}
 			}
 
 			App.Model.EditGoBack.RecordNext();
-			doc.zSelect(false, i, to, true);
+			doc.aaaSelect(false, i, to, true);
 
 			_lastFind.f = f;
 			_lastFind.doc = doc;
@@ -400,8 +400,8 @@ class PanelFind : UserControl {
 
 	void _ReplaceAllInEditor(_TextToFind f) {
 		var doc = Panels.Editor.ZActiveDoc;
-		if (doc.zIsReadonly) return;
-		var text = doc.zText;
+		if (doc.aaaIsReadonly) return;
+		var text = doc.aaaText;
 		var repl = f.replaceText;
 		if (f.rx != null) {
 			if (f.rx.FindAll(text, out var ma)) {
@@ -425,9 +425,9 @@ class PanelFind : UserControl {
 		}
 
 		void _ReplaceRange(int from, int to, string s) {
-			doc.zNormalizeRange(true, ref from, ref to);
+			doc.aaaNormalizeRange(true, ref from, ref to);
 			if (CiStyling.IsProtected(doc, from, to)) return;
-			doc.zReplaceRange(false, from, to, s);
+			doc.aaaReplaceRange(false, from, to, s);
 		}
 
 		//Easier/faster would be to create new text and call zSetText. But then all non-text data is lost: markers, folds, caret position...
@@ -460,7 +460,7 @@ class PanelFind : UserControl {
 	void _FindAllInEditor() {
 		_aEditor.Clear();
 		if (!_GetTextToFind(out var f, noRecent: true, noErrorTooltip: true)) return;
-		var text = Panels.Editor.ZActiveDoc?.zText; if (text.NE()) return;
+		var text = Panels.Editor.ZActiveDoc?.aaaText; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -481,33 +481,33 @@ class PanelFind : UserControl {
 		Panels.PanelManager["Found"].Visible = true;
 
 		var cFound = Panels.Found.ZControl;
-		cFound.zClearText();
+		cFound.aaaClearText();
 
 		if (!_init1) {
 			_init1 = true;
 
-			App.Model.WorkspaceLoadedAndDocumentsOpened += () => cFound.zClearText();
+			App.Model.WorkspaceLoadedAndDocumentsOpened += () => cFound.aaaClearText();
 
-			cFound.ZTags.AddLinkTag("+open", s => {
+			cFound.aaTags.AddLinkTag("+open", s => {
 				_OpenLinkClicked(s);
 			});
 
-			cFound.ZTags.AddLinkTag("+ra", s => {
+			cFound.aaTags.AddLinkTag("+ra", s => {
 				if (!_OpenLinkClicked(s, replaceAll: true)) return;
 				timer.after(10, _ => _ReplaceAllInFile());
 				//info: without timer sometimes does not set cursor pos correctly
 			});
 
-			cFound.ZTags.AddLinkTag("+f", s => {
+			cFound.aaTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
 				if (!_OpenLinkClicked(a[0])) return;
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
 				timer.after(10, _ => {
-					if (to >= doc.zLen16) return;
+					if (to >= doc.aaaLen16) return;
 					App.Model.EditGoBack.RecordNext();
-					doc.zSelect(true, from, to, true);
+					doc.aaaSelect(true, from, to, true);
 				});
 				//info: scrolling works better with async when now opened the file
 			});
@@ -521,20 +521,20 @@ class PanelFind : UserControl {
 					if (!App.Model.SetCurrentFile(f)) return false;
 				}
 				//add indicator to make it easier to find later
-				cFound.zIndicatorClear(c_indic);
-				var v = cFound.zLineStartEndFromPos(false, cFound.zCurrentPos8);
-				cFound.zIndicatorAdd(false, c_indic, v.start..v.end);
+				cFound.aaaIndicatorClear(c_indic);
+				var v = cFound.aaaLineStartEndFromPos(false, cFound.aaaCurrentPos8);
+				cFound.aaaIndicatorAdd(false, c_indic, v.start..v.end);
 				return true;
 			}
 
-			cFound.ZTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
+			cFound.aaTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
 
-			cFound.ZTags.AddLinkTag("+caf", s => {
+			cFound.aaTags.AddLinkTag("+caf", s => {
 				App.Model.CloseFiles(_lastFindAll.files, _lastFindAll.wasOpen);
 				App.Model.CollapseAll(exceptWithOpenFiles: true);
 			});
 
-			cFound.ZTags.AddLinkTag("+caff", s => Panels.Files.CloseAll());
+			cFound.aaTags.AddLinkTag("+caff", s => Panels.Files.CloseAll());
 
 			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
 			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
@@ -548,7 +548,7 @@ class PanelFind : UserControl {
 
 		if (!_GetTextToFind(out var f)) return;
 
-		cFound.zText = "<c #A0A0A0>... searching ...<>";
+		cFound.aaaText = "<c #A0A0A0>... searching ...<>";
 		//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
 		wait.doEvents();
 
@@ -653,7 +653,7 @@ class PanelFind : UserControl {
 			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);
 
-		cFound.zSetText(b.ToString());
+		cFound.aaaSetText(b.ToString());
 	}
 
 	(_TextToFind f, List<FileNode> files, string guid, System.Collections.BitArray wasOpen) _lastFindAll;

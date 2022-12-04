@@ -1,6 +1,6 @@
 - name: Output tags
   href: Output tags.md
-- name: UAC
+- name: UAC, run as administrator
   href: UAC.md
 - name: Wildcard expression
   href: Wildcard expression.md

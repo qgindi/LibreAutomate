@@ -92,7 +92,7 @@ class CiWinapi
 			if (kind == CiItemKind.Constant) {
 				int u = name.IndexOf('_') + 1;
 				if (u > 1) {
-					string prefix = " " + name[..u], code = doc.zText;
+					string prefix = " " + name[..u], code = doc.aaaText;
 					foreach (var v in nodeCD.ChildNodes().OfType<FieldDeclarationSyntax>()) {
 						var span = v.Span;
 						int j = code.Find(prefix, span.Start..span.End);
@@ -113,7 +113,7 @@ class CiWinapi
 			//}
 
 			text = emptyLine + text + "\r\n";
-			doc.zInsertText(true, posInsert, text, addUndoPointAfter: true, restoreFolding: true);
+			doc.aaaInsertText(true, posInsert, text, addUndoPointAfter: true, restoreFolding: true);
 
 			//recursively add declarations for unknown names found in now added declaration
 			if (kind is CiItemKind.Constant or CiItemKind.Field or CiItemKind.Enum or CiItemKind.Class) return;

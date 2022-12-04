@@ -10,7 +10,7 @@ class EditGoBack {
 		//print.it("pos", zCurrentPos8);
 
 		bool add;
-		int pos = doc.zCurrentPos8;
+		int pos = doc.aaaCurrentPos8;
 		var prev = _a.Count > 0 ? _a[_i] : default;
 		if (prev.fn != doc.EFile) {
 			add = true;
@@ -21,7 +21,7 @@ class EditGoBack {
 				add = true;
 			} else {
 				add = Environment.TickCount64 - _time > 500
-					&& Math.Abs(doc.zLineFromPos(false, pos) - doc.zLineFromPos(false, prev.pos)) >= 10;
+					&& Math.Abs(doc.aaaLineFromPos(false, pos) - doc.aaaLineFromPos(false, prev.pos)) >= 10;
 			}
 		}
 
@@ -122,7 +122,7 @@ class EditGoBack {
 		_UpdateUI();
 		if (!App.Model.SetCurrentFile(v.fn)) return;
 		var doc = Panels.Editor.ZActiveDoc;
-		doc.zGoToPos(false, v.pos);
+		doc.aaaGoToPos(false, v.pos);
 		doc.Focus();
 	}
 

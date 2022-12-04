@@ -145,7 +145,7 @@ class DOptions : KDialogWindow {
 		var b = _Page("Font", WBPanelType.Dock);
 
 		b.Add(out KScintilla sciStyles).Width(150);
-		sciStyles.ZInitBorder = true;
+		sciStyles.aaInitBorder = true;
 		sciStyles.Name = "styles";
 		//note: not readonly. Eg users may want to paste and see any character in multiple fonts.
 
@@ -202,7 +202,7 @@ class DOptions : KDialogWindow {
 
 			//styles
 
-			sciStyles.zSetMarginWidth(1, 0);
+			sciStyles.aaaSetMarginWidth(1, 0);
 			styles.ToScintilla(sciStyles);
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
@@ -227,7 +227,7 @@ GotoLabel
 XML doc text
 /// <doc tag>
 Line number";
-			sciStyles.zText = s;
+			sciStyles.aaaText = s;
 			int i = -3;
 			foreach (var v in s.Lines(..)) {
 				i++;
@@ -242,10 +242,10 @@ Line number";
 			}
 			//when selected line changed
 			int currentLine = -1;
-			sciStyles.ZNotify += (KScintilla c, ref Sci.SCNotification n) => {
+			sciStyles.aaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.nmhdr.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
-					int line = c.zLineFromPos(false, c.zCurrentPos8);
+					int line = c.aaaLineFromPos(false, c.aaaCurrentPos8);
 					if (line != currentLine) {
 						currentLine = line;
 						int k = _SciStylesLineToStyleIndex(line);
@@ -279,8 +279,8 @@ Line number";
 			void _ChangeFont(object control = null) {
 				var (fname, fsize) = _GetFont();
 				for (int i = 0; i <= Sci.STYLE_LINENUMBER; i++) {
-					if (control == fontName) sciStyles.zStyleFont(i, fname);
-					else sciStyles.zStyleFontSize(i, fsize);
+					if (control == fontName) sciStyles.aaaStyleFont(i, fname);
+					else sciStyles.aaaStyleFontSize(i, fsize);
 				}
 			}
 			(string name, int size) _GetFont() {
@@ -290,14 +290,14 @@ Line number";
 			bold.CheckChanged += (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
 			color.ColorChanged += col => { if (!ignoreColorEvents) _UpdateSci(); };
 			void _UpdateSci(object control = null) {
-				int k = _SciStylesLineToStyleIndex(sciStyles.zLineFromPos(false, sciStyles.zCurrentPos8));
+				int k = _SciStylesLineToStyleIndex(sciStyles.aaaLineFromPos(false, sciStyles.aaaCurrentPos8));
 				int col = color.Color;
 				if (k >= 0) {
-					if (control == bold) sciStyles.zStyleBold(k, bold.IsChecked);
-					else sciStyles.zStyleForeColor(k, col);
+					if (control == bold) sciStyles.aaaStyleBold(k, bold.IsChecked);
+					else sciStyles.aaaStyleForeColor(k, col);
 				} else if (k == -1) {
 					backColor = col;
-					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.zStyleBackColor(i, col);
+					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.aaaStyleBackColor(i, col);
 				}
 			}
 
@@ -353,7 +353,7 @@ To apply changes after deleting etc, restart this application.
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
 		b.R.Add("Template", out ComboBox template).Items("Script|Class")
 			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
-		b.Row(-1).Add(out KSciCodeBoxWnd sci); sci.ZInitBorder = true;
+		b.Row(-1).Add(out KSciCodeBoxWnd sci); sci.aaInitBorder = true;
 		//b.R.Add(out KCheckBox fold, "Fold script").Checked(0 == (1 & App.Settings.templ_flags));
 		b.End();
 
@@ -362,7 +362,7 @@ To apply changes after deleting etc, restart this application.
 
 		template.SelectionChanged += _Combo_Changed;
 		use.SelectionChanged += _Combo_Changed;
-		sci.ZTextChanged += (_, _) => customText[template.SelectedIndex] = sci.zText;
+		sci.aaTextChanged += (_, _) => customText[template.SelectedIndex] = sci.aaaText;
 		b.Loaded += () => {
 			_Combo_Changed(template, null);
 		};

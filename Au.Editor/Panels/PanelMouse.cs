@@ -16,18 +16,18 @@ class PanelMouse : Grid
 
 		_sci = new KScintilla {
 			Name = "Mouse_info",
-			ZInitReadOnlyAlways = true,
-			ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways
+			aaInitReadOnlyAlways = true,
+			aaInitTagsStyle = KScintilla.aaTagsStyle.AutoAlways
 		};
-		_sci.ZHandleCreated += _sci_ZHandleCreated;
+		_sci.aaHandleCreated += _sci_ZHandleCreated;
 		this.Children.Add(_sci);
 	}
 
 	private void _sci_ZHandleCreated() {
-		_sci.zStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
-		_sci.zStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		_sci.zSetMarginWidth(1, 4);
-		_sci.zStyleClearAll();
+		_sci.aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
+		_sci.aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
+		_sci.aaaSetMarginWidth(1, 4);
+		_sci.aaaStyleClearAll();
 		_sci.Call(Sci.SCI_SETHSCROLLBAR);
 		_sci.Call(Sci.SCI_SETVSCROLLBAR);
 		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
@@ -80,7 +80,7 @@ class PanelMouse : Grid
 			}
 			var s = b.ToString();
 			//p1.Next();
-			_sci.zSetText(s);
+			_sci.aaaSetText(s);
 		}
 	}
 

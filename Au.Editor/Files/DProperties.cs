@@ -595,7 +595,7 @@ class DProperties : KDialogWindow {
 	#region info
 
 	void _InitInfo() {
-		info.zText = $"""
+		info.aaaText = $"""
 Type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>
 Path: <explore>{_f.FilePath}<>
 

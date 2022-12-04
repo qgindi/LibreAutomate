@@ -33,7 +33,7 @@ partial class SciCode {
 		//remove StaticSymbol. It is added for each static symbol, randomly before or after. Makes code difficult.
 		var a = list.Where(o => o.ClassificationType != CT.StaticSymbol).ToArray();
 
-		if (a.Length > 0) zIndicatorClear(true, c_indicImages, a[0].TextSpan.Start..a[^1].TextSpan.End);
+		if (a.Length > 0) aaaIndicatorClear(true, c_indicImages, a[0].TextSpan.Start..a[^1].TextSpan.End);
 
 		string code = cd.code;
 		int maxWidth = 0;
@@ -81,7 +81,7 @@ partial class SciCode {
 			if (nextLineStart == 0) nextLineStart = code.Length;
 
 			int start = a[i].TextSpan.Start;
-			int line = zLineFromPos(true, start), vi = Call(SCI_VISIBLEFROMDOCLINE, line);
+			int line = aaaLineFromPos(true, start), vi = Call(SCI_VISIBLEFROMDOCLINE, line);
 			if (vi >= vr.vlineFrom && vi < vr.vlineTo && 0 != Call(SCI_GETLINEVISIBLE, line))
 				maxWidth = Math.Max(maxWidth, _ImageDisplaySize(!isImage, b, isComment).Width);
 
@@ -90,7 +90,7 @@ partial class SciCode {
 				Call(SCI_INDICSETSTYLE, c_indicImages, INDIC_HIDDEN);
 				int descent = 16 - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT);
 				if (descent > 0) {
-					bool caretVisible = Hwnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, zCurrentPos8));
+					bool caretVisible = aaWnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, aaaCurrentPos8));
 					Call(SCI_SETEXTRADESCENT, descent); //note: later don't set = 0 when no visible images. Then bad scrolling and can start to repeat.
 					if (caretVisible) Call(SCI_SCROLLCARET);
 				}
@@ -103,14 +103,14 @@ partial class SciCode {
 			if (ii == ab.Count) ab.Add(new() { image = b, isImage = isImage, isComment = isComment });
 			//print.it(ii, s);
 
-			zIndicatorAdd(true, c_indicImages, start..(start + 1), ii + 1);
+			aaaIndicatorAdd(true, c_indicImages, start..(start + 1), ii + 1);
 		}
 
 		//maxWidth is 0 if no images or if all images are in folded regions.
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
-		var (left, right) = zGetMarginX(c_marginImages);
+		var (left, right) = aaaGetMarginX(c_marginImages);
 		_ImagesMarginAutoWidth(right - left, maxWidth);
-		if (maxWidth > 0) Api.InvalidateRect(Hwnd, new RECT(left, 0, maxWidth, short.MaxValue));
+		if (maxWidth > 0) Api.InvalidateRect(aaWnd, new RECT(left, 0, maxWidth, short.MaxValue));
 		//SHOULDDO: draw only when need, ie when new indicators are different than old.
 		//	Now draws on each text change, eg added character, unless changes are frequent. But not too slow.
 		//	And probably then also draws all other margins.
@@ -226,7 +226,7 @@ partial class SciCode {
 		//print.it(c.rect, c.firstLine, c.lastLine);
 		//using var p1 = perf.local();
 
-		int pos = zLineStart(false, c.firstLine) - 1, posEnd = zLineEnd(false, c.lastLine);
+		int pos = aaaLineStart(false, c.firstLine) - 1, posEnd = aaaLineEnd(false, c.lastLine);
 		int topVisibleLine = Call(SCI_GETFIRSTVISIBLELINE), lineH = Call(SCI_TEXTHEIGHT);
 		int maxWidth = 0;
 		Graphics g = null;
@@ -236,7 +236,7 @@ partial class SciCode {
 				if (pos <= 0 || pos >= posEnd) break; //after the visible range or at the end of text
 				int i = Call(SCI_INDICATORVALUEAT, c_indicImages, pos) - 1;
 				if ((uint)i >= _im.a.Count) break; //should never
-				int line = zLineFromPos(false, pos);
+				int line = aaaLineFromPos(false, pos);
 				if (0 == Call(SCI_GETLINEVISIBLE, line)) continue; //folded?
 
 				//print.it(pos, i, line);
@@ -273,7 +273,7 @@ partial class SciCode {
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
 		int oldWidth = c.rect.Width;
 		if (maxWidth != oldWidth)
-			if (maxWidth > oldWidth || (c.rect.top == 0 && c.rect.bottom == Hwnd.ClientRect.bottom))
+			if (maxWidth > oldWidth || (c.rect.top == 0 && c.rect.bottom == aaWnd.ClientRect.bottom))
 				_ImagesMarginAutoWidth(oldWidth, maxWidth);
 	}
 
@@ -282,7 +282,7 @@ partial class SciCode {
 		//when shrinking, in wrap mode could start autorepeating, when makes less lines wrapped and it uncovers wider images at the bottom and need to expand again.
 		//	Tried to delay or to not change if changed recently, but not good. Never mind.
 		if (width < oldWidth && App.Settings.edit_wrap) return;
-		Hwnd.Post(SCI_SETMARGINWIDTHN, c_marginImages, width);
+		aaWnd.Post(SCI_SETMARGINWIDTHN, c_marginImages, width);
 	}
 
 	void _ImagesOnOff() {
@@ -291,7 +291,7 @@ partial class SciCode {
 			Call(SCI_SETMARGINDRAWCALLBACK);
 			Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
 			Call(SCI_SETEXTRADESCENT, 1);
-			zIndicatorClear(c_indicImages);
+			aaaIndicatorClear(c_indicImages);
 			_im.a = null;
 		} else {
 			if (this == Panels.Editor.ZActiveDoc) CodeInfo._styling.Update();
@@ -321,7 +321,7 @@ partial class SciCode {
 	/// Called on SCN_STYLENEEDED (to avoid bad things like briefly visible and added horizontal scrollbar) and then by CiStyling._Work (async).
 	/// </remarks>
 	internal unsafe void EHideImages_(int from8, int to8, byte[] styles = null, [CallerMemberName] string caller = null) {
-		if (styles == null) from8 = zLineStartFromPos(false, from8);
+		if (styles == null) from8 = aaaLineStartFromPos(false, from8);
 		if (to8 - from8 < 40) return;
 		//print.it("HI", from8, to8, styles != null);
 		var r = new Au.Controls.SciDirectRange(this, from8, to8);
@@ -357,24 +357,24 @@ partial class SciCode {
 	//		Workaround: modify scintilla source in Editor::RangeContainsProtected.
 
 	bool _ImageDeleteKey(KKey key) {
-		if (key is KKey.Delete or KKey.Back && !base.zHasSelection) {
-			int pos = base.zCurrentPos8, to = pos;
+		if (key is KKey.Delete or KKey.Back && !base.aaaHasSelection) {
+			int pos = base.aaaCurrentPos8, to = pos;
 			if (key == KKey.Back) {
-				while (zGetStyleAt(pos - 1) == STYLE_HIDDEN) pos--;
+				while (aaaGetStyleAt(pos - 1) == STYLE_HIDDEN) pos--;
 			} else {
-				while (zGetStyleAt(to) == STYLE_HIDDEN) to++;
+				while (aaaGetStyleAt(to) == STYLE_HIDDEN) to++;
 			}
 			if (to > pos) {
 				bool ok = s_imageDeleteAlways;
 				if (!ok) {
-					var s = base.zRangeText(false, pos, to).Limit(50);
+					var s = base.aaaRangeText(false, pos, to).Limit(50);
 					var c = new DControls { Checkbox = "Remember" };
 					ok = 1 == dialog.show("Delete hidden text?", s, "OK|Cancel", controls: c, owner: this);
 					s_imageDeleteAlways = ok && c.IsChecked;
 				}
 				if (ok) {
-					zDeleteRange(false, pos, to);
-					zAddUndoPoint();
+					aaaDeleteRange(false, pos, to);
+					aaaAddUndoPoint();
 					return true;
 				}
 			}
@@ -388,12 +388,12 @@ partial class SciCode {
 	}
 
 	public void EImageRemoveScreenshots() {
-		if (zIsReadonly || !_fn.IsCodeFile) return;
-		bool isSel = zHasSelection;
-		string s = isSel ? zSelectedText() : zText;
+		if (aaaIsReadonly || !_fn.IsCodeFile) return;
+		bool isSel = aaaHasSelection;
+		string s = isSel ? aaaSelectedText() : aaaText;
 		var s2 = _ImageRemoveScreenshots(s);
 		if (s2 == s) return;
-		if (isSel) EReplaceTextGently(s2, zSelectionStart8..zSelectionEnd8);
+		if (isSel) EReplaceTextGently(s2, aaaSelectionStart8..aaaSelectionEnd8);
 		else EReplaceTextGently(s2);
 	}
 }

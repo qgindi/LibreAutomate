@@ -113,6 +113,7 @@ void _KillDocfxProcesses() {
 class SdkWorkaround : IDisposable {
 	FEFile[] _a;
 	public SdkWorkaround() {
+		process.terminate("dotnet.exe"); //sometimes is running with commandline like exec "C:\Program Files\dotnet\sdk\7.0.100-preview.6.22352.1\Roslyn\bincore\VBCSCompiler.dll" "-pipename:gi5pdacphS_jwvn9NqoQTNKojar9AsTr5onJxJgc+P8"
 		_a = filesystem.enumDirectories(folders.NetRuntimeBS + @"..\..\..\sdk").Where(o => o.Name.ToInt() > 6).ToArray();
 		foreach (var v in _a) {
 			filesystem.rename(v.FullPath, "@" + v.Name);

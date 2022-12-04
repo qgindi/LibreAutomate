@@ -494,7 +494,7 @@ A script can use packages from multiple folders if they are compatible.");
 	void _AddMeta() {
 #if !SCRIPT
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
-		var meta = new MetaCommentsParser(doc.zText);
+		var meta = new MetaCommentsParser(doc.aaaText);
 		meta.nuget.Add($@"{_Selected.Parent.Name}\{_Selected.Name}");
 		meta.Apply();
 #endif

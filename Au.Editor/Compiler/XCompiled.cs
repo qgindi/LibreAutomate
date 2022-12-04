@@ -28,7 +28,7 @@ static partial class Compiler {
 			//	Volume GUID for a removable drive is:
 			//		The same on the same computer/OS, regardless of drive letter and USB port.
 			//		Different on each computer/OS. It's good.
-			filesystem.getFinalPath(folders.Workspace, out var ws, format: FPFormat.VolumeGuid);
+			filesystem.more.getFinalPath(folders.Workspace, out var ws, format: FPFormat.VolumeGuid);
 			_environmentString = osVersion.onaString + "|" + ws;
 		}
 

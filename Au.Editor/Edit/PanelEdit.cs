@@ -56,7 +56,7 @@ class PanelEdit : Grid
 		if (f == _activeDoc?.EFile) return true;
 
 		//print.it(focusEditor, new StackTrace(true));
-		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.Hwnd.IsFocused ?? false));
+		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.aaWnd.IsFocused ?? false));
 
 		void _ShowHideActiveDoc(bool show) {
 			if (show) {
@@ -107,7 +107,7 @@ class PanelEdit : Grid
 			void _Timer() {
 				//print.it("timer");
 				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.TreeControl.IsFocused) {
-					if (wnd.fromMouse() != doc.Hwnd
+					if (wnd.fromMouse() != doc.aaWnd
 						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
 						) return;
 					doc.Focus();
@@ -209,7 +209,7 @@ class PanelEdit : Grid
 		if (0 == d.Call(SCI_CANUNDO)) disable |= _EUpdateUI.Undo;
 		if (0 == d.Call(SCI_CANREDO)) disable |= _EUpdateUI.Redo;
 		if (0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= _EUpdateUI.Copy;
-		if (disable.Has(_EUpdateUI.Copy) || d.zIsReadonly) disable |= _EUpdateUI.Cut;
+		if (disable.Has(_EUpdateUI.Copy) || d.aaaIsReadonly) disable |= _EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
 		var dif = disable ^ _editDisabled;

@@ -110,7 +110,7 @@ class Dwnd : KDialogWindow {
 		b.Row(-1).StartGrid().Columns(-1, 0, -1);
 		b.Row(-1).xAddInBorder(out _tree, "TR");
 		b.xAddSplitterV();
-		b.xAddInBorder(out _winInfo, "TL"); _winInfo.ZWrapLines = false; _winInfo.Name = "window_info";
+		b.xAddInBorder(out _winInfo, "TL"); _winInfo.aaWrapLines = false; _winInfo.Name = "window_info";
 		b.End();
 
 		b.End();
@@ -169,7 +169,7 @@ class Dwnd : KDialogWindow {
 
 		bool _GetClassName(wnd w, out string cn) {
 			cn = w.ClassName; if (cn != null) return true;
-			_winInfo.zText = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + lastError.message;
+			_winInfo.aaaText = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + lastError.message;
 			_scroller.Visibility = Visibility.Hidden;
 			return false;
 		}
@@ -417,7 +417,7 @@ class Dwnd : KDialogWindow {
 	//public event Action OK;
 
 	private void _Insert(WBButtonClickArgs e) {
-		var s = _code.zText.NullIfEmpty_();
+		var s = _code.aaaText.NullIfEmpty_();
 
 		if (_forTrigger && s != null) s = TUtil.ArgsFromWndFindCode(s);
 
@@ -674,11 +674,11 @@ class Dwnd : KDialogWindow {
 	void _FillWindowInfo(in _WinInfo f) {
 		if (_wiWCP == 0) {
 			_wiWCP = 1;
-			_winInfo.ZTags.AddLinkTag("+switch", s => {
+			_winInfo.aaTags.AddLinkTag("+switch", s => {
 				_wiWCP = s.ToInt();
 				_SetText(default);
 			});
-			_winInfo.ZTags.AddLinkTag("+rect", s => {
+			_winInfo.aaTags.AddLinkTag("+rect", s => {
 				var w = (wnd)s.ToInt(0, out int e);
 				int client = s.ToInt(e);
 				var r = client == 1 ? w.ClientRectInScreen : w.Rect;
@@ -689,7 +689,7 @@ class Dwnd : KDialogWindow {
 
 		void _SetText(in _WinInfo wi) {
 			var s1 = wi.Format(_wnd, _con, _wiWCP);
-			_winInfo.zText = s1.TrimEnd("\r\n");
+			_winInfo.aaaText = s1.TrimEnd("\r\n");
 		}
 	}
 	int _wiWCP; //0 not inited, 1 window, 2 control, 3 program
@@ -698,7 +698,7 @@ class Dwnd : KDialogWindow {
 	void _InitInfo() {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
-		_info.zText = _dialogInfo;
+		_info.aaaText = _dialogInfo;
 		_info.ZAddElem(this, _dialogInfo);
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: !true);
 

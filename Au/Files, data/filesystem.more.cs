@@ -10,7 +10,7 @@ partial class filesystem {
 		/// </summary>
 		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
-		/// <seealso cref="filesystem.comparePaths(string, string, bool, bool)"/>
+		/// <seealso cref="comparePaths(string, string, bool, bool)"/>
 		public static bool isSameFile(string path1, string path2) {
 			if (getFileId(path1, out var fid1) && getFileId(path2, out var fid2)) return fid1 == fid2;
 			Debug_.Print($"getFileId failed:\r\n\t{path1}\r\n\t{path2}");
@@ -37,10 +37,66 @@ partial class filesystem {
 			return true;
 		}
 
-		///
-		[EditorBrowsable(EditorBrowsableState.Never)] //fbc. Moved to filesystem. The old func has 3 parameters.
-		public static bool getFinalPath(string path, out string result, bool ofSymlink = false)
-			=> filesystem.getFinalPath(path, out result, ofSymlink);
+		/// <summary>
+		/// Gets full normalized path of an existing file or directory or symbolic link target.
+		/// </summary>
+		/// <returns>false if failed. For example if the path does not point to an existing file or directory. Supports <see cref="lastError"/>.</returns>
+		/// <param name="path">Full or relative path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="result">Receives full path, or null if failed.</param>
+		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
+		/// <param name="format">Result format.</param>
+		/// <remarks>
+		/// Calls API <msdn>GetFinalPathNameByHandle</msdn>.
+		/// 
+		/// Unlike <see cref="pathname.normalize"/>, this function works with existing files and directories, not any strings.
+		/// </remarks>
+		/// <seealso cref="shortcutFile.getTarget(string)"/>
+		public static bool getFinalPath(string path, out string result, bool ofSymlink = false, FPFormat format = FPFormat.PrefixIfLong) {
+			result = null;
+			path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
+			using Handle_ h = Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
+			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
+			if (h.Is0 || !Api.GetFinalPathNameByHandle(h, out var s, format == FPFormat.VolumeGuid ? 1u : 0u)) return false;
+			if (format == FPFormat.PrefixNever || (format == FPFormat.PrefixIfLong && s.Length <= pathname.maxDirectoryPathLength))
+				s = pathname.unprefixLongPath(s);
+			result = s;
+			return true;
+
+			//never mind: does not change the root if it is like @"\\ThisComputer\share" or @"\\ThisComputer\C$" or @"\\127.0.0.1\c$" or @"\\LOCALHOST\c$" and it is the same as "C:\".
+			//	Tested: getFileId returns the same value for all these.
+		}
+
+		/// <summary>
+		/// Compares final paths of two existing files or directories to determine equality or relationship.
+		/// </summary>
+		/// <param name="pathA">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="pathB">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="ofSymlinkA">If <i>pathA</i> is of a symbolic link, get final path of the link, not of its target.</param>
+		/// <param name="ofSymlinkB">If <i>pathB</i> is of a symbolic link, get final path of the link, not of its target.</param>
+		/// <remarks>
+		/// Before comparing, calls <see cref="getFinalPath"/>, therefore paths can have any format.
+		/// Example: <c>@"C:\Test\"</c> and <c>@"C:\A\..\Test"</c> are equal.
+		/// Example: <c>@"C:\Test\file.txt"</c> and <c>"file.txt"</c> are equal if the file is in <c>@"C:\Test</c> and <c>@"C:\Test</c> is current directory.
+		/// Example: <c>@"C:\Temp\file.txt"</c> and <c>"%TEMP%\file.txt"</c> are equal if TEMP is an environment variable = <c>@"C:\Temp</c>.
+		/// </remarks>
+		/// <seealso cref="isSameFile(string, string)"/>
+		public static CPResult comparePaths(string pathA, string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false)
+			=> comparePaths(ref pathA, ref pathB, ofSymlinkA, ofSymlinkB);
+
+		/// <summary>
+		/// Compares final paths of two existing files or directories to determine equality or relationship.
+		/// Also gets final paths (see <see cref="getFinalPath"/>).
+		/// </summary>
+		/// <inheritdoc cref="comparePaths(string, string, bool, bool)"/>
+		public static CPResult comparePaths(ref string pathA, ref string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false) {
+			if (!getFinalPath(pathA, out pathA, ofSymlinkA, FPFormat.PrefixAlways)) return CPResult.Failed;
+			if (!getFinalPath(pathB, out pathB, ofSymlinkB, FPFormat.PrefixAlways)) return CPResult.Failed;
+			//print.it(pathA, pathB);
+			if (pathA.Eqi(pathB)) return CPResult.Same;
+			if (pathA.Length < pathB.Length && pathB.Starts(pathA, true) && (pathB[pathA.Length] == '\\' || pathA.Ends('\\'))) return CPResult.AContainsB;
+			if (pathB.Length < pathA.Length && pathA.Starts(pathB, true) && (pathA[pathB.Length] == '\\' || pathB.Ends('\\'))) return CPResult.BContainsA;
+			return CPResult.None;
+		}
 
 		/// <summary>
 		/// Calls <see cref="enumerate"/> and returns sum of all file sizes.
@@ -64,6 +120,57 @@ partial class filesystem {
 		/// <param name="progressUI">Show progress dialog if slow. Default true.</param>
 		public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
 			Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
+		}
+
+		/// <summary>
+		/// Creates a NTFS symbolic link or junction.
+		/// </summary>
+		/// <param name="linkPath">Full path of the link. Supports environment variables etc.</param>
+		/// <param name="targetPath">If <i>type</i> is <b>Junction</b>, must be full path. Else can be either full path or path relative to the parent directory of the link. If starts with an environment variable, the function expands it before creating the link.</param>
+		/// <param name="type"></param>
+		/// <param name="elevate">If fails to create symbolic link because this process does not have admin rights, run <c>cmd.exe mklink</c> as administrator. Will show a dialog and UAC consent. Not used if type is <b>Junction</b>, because don't need admin rights to create junctions.</param>
+		/// <param name="deleteOld">If <i>linkPath</i> already exists as a symbolic link or junction, delete it before creating new.</param>
+		/// <remarks>
+		/// Some reasons why this function can fail:
+		/// - The link already exists. Solution: use <c>deleteOld: true</c>.
+		/// - This process is running not as administrator. Solution: use <i>type</i> <b>Junction</b> or <c>elevate: true</c>.
+		/// - The file system format is not NTFS. For example FAT32 in USB drive.
+		/// 
+		/// More info: <google>CreateSymbolicLink, mklink, NTFS symbolic links, junctions</google>.
+		/// </remarks>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="AuException">Failed.</exception>
+		public static void createSymbolicLink(string linkPath, string targetPath, CSLink type, bool elevate = false, bool deleteOld = false) {
+			linkPath = pathname.normalize(linkPath);
+			if (type is CSLink.Junction) {
+				targetPath = pathname.normalize(targetPath); //junctions don't support relative path
+			} else { //symlinks support relative path
+				targetPath = targetPath.Replace('/', '\\'); //rumors: the link may not work if with /
+			}
+
+			if (deleteOld && exists(linkPath, useRawPath: true).IsNtfsLink) delete(linkPath);
+			else createDirectoryFor(linkPath);
+
+			if (type is CSLink.Junction or CSLink.JunctionOrSymlink) {
+				var r = run.console(out string s, "cmd.exe", $"""/u /c "mklink /d /j "{linkPath}" "{targetPath}" """, encoding: Encoding.Unicode); //tested: UTF-16 on Win11 and Win7
+				if (r == 0) return;
+				if (!(type == CSLink.JunctionOrSymlink && s.Starts("Local volumes are required"))) throw new AuException("*to create junction. " + s.Trim());
+			}
+
+			if (Api.CreateSymbolicLink(linkPath, targetPath, type == CSLink.File ? 0u : 1u)) return;
+			int ec = lastError.code;
+			if (ec == Api.ERROR_PRIVILEGE_NOT_HELD && elevate && !uacInfo.isAdmin) {
+				if (dialog.showOkCancel("Create symbolic link", "Administrator rights required.", icon: DIcon.Shield)) {
+					using var tf = new TempFile();
+					var d = type == CSLink.File ? null : "/d ";
+					var cl = $"""/u /c "mklink {d}"{linkPath}" "{targetPath}" 2>"{tf}" """; //redirects stderr to temp file
+					var r = run.it(folders.System + "cmd.exe", cl, RFlags.Admin | RFlags.WaitForExit, new() { WindowState = ProcessWindowStyle.Hidden });
+					if (r.ProcessExitCode == 0) return;
+					string s = null; try { s = loadText(tf, encoding: Encoding.Unicode).Trim(); } catch { }
+					throw new AuException("*to create symbolic link. " + s);
+				}
+			}
+			throw new AuException(ec, "*to create symbolic link.");
 		}
 
 		/// <summary>

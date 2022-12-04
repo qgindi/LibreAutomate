@@ -38,16 +38,16 @@ class InfoWindow : KPopup {
 	/// Text with output tags.
 	/// </summary>
 	public string Text {
-		get => _c?.zText;
-		set => Control1.zText = value;
+		get => _c?.aaaText;
+		set => Control1.aaaText = value;
 	}
 
 	/// <summary>
 	/// Text of second control with output tags.
 	/// </summary>
 	public string Text2 {
-		get => _c2?.zText;
-		set => Control2.zText = value;
+		get => _c2?.aaaText;
+		set => Control2.aaaText = value;
 	}
 
 	/// <summary>

@@ -6,7 +6,7 @@ uid: class_project
 A [script](xref:script) can contain functions and classes. Also can use those from class files and libraries.
 
 #### Class files
-A class file contains C# code of one or more classes with functions that can be used in other C# files (script, class). It cannot run when you click the Run button.
+A class file contains C# code of one or more classes with functions that can be used in other C# files (script, class). By default it cannot run when you click the Run button.
 
 There are several ways to include class files in a C# file X:
 - in X Properties click Add file -> Class file. Used when the class file contais classes that can be used in any C# files.
@@ -35,4 +35,25 @@ A library can be created from a class file, usually the main file of a library p
 Any C# file can use libraries. You can add library references in the Properties dialog. If it's a library whose source files are in current workspace, click Add reference -> Project. It is known as *project reference*. It adds a reference to the assembly created by the library, auto-compiles the library when need, and enables [code editor features](xref:code_editor) such as "go to definition".
 
 #### Test scripts
-A class file cannot be executed directly when you click the Run button. But you'll want to test its functions etc while creating it. For it create a *test script* that is executed instead when you click the Run button. Let the script call functions of the class file. To create a test script for a class file: try to run the class file and then click the link in the error text in the output panel.
+By default a class file cannot be executed directly when you click the Run button. But you'll want to test its functions etc while creating it. For it create a *test script* that is executed instead when you click the Run button. Let the script call functions of the class file. To create a test script for a class file: try to run the class file and then click the link in the error text in the output panel. And below is another way.
+
+#### Run a class file without a test script or project
+Specify role miniProgram, exeProgram or editorExtension.
+
+Then at the start add code that uses the class. By default class files containing such code cannot be used in other scripts (error "Only one compilation unit can have top-level statements"). Workaround: define a preprocessor symbol, and use `#if` to disable that code when the class file is compiled as part of another script etc. Example:
+
+```csharp
+/*/ role miniProgram; define TEST; /*/
+
+#if TEST
+Class1.Function1();
+#endif
+
+class Class1 {
+	public static void Function1() {
+		print.it(1);
+	}
+}
+```
+
+When the first option in `/*/ ... /*/` is role other than `classFile` (like in the example), `define TEST` and other incompatible options are ignored when the class file is compiled as part of another script etc (for example the TEST symbol isn't added to the compilation). Else such options then cannot be used (error).

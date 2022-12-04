@@ -767,7 +767,7 @@ namespace Au {
 							if (i == patternStart + 2 && f.Name == "op_Addition") {
 								//print.it(2);
 								var fp = (FolderPath)f1.Invoke(null, null);
-								if (fp.ToString() == null) return null;
+								if (fp.Path == null) return null;
 								return fp + filename;
 							} else if (i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
 								//print.it(3);

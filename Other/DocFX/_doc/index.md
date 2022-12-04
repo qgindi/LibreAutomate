@@ -42,7 +42,7 @@ Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 The program and the library are very young. They don't have any known problems, but need more testing everywhere.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.11.0, 2022-11-08, 24 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.12.0, 2022-12-04, 24 MB
 
 Note: the program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed. Antivirus false positives are common to this type of software.
 
@@ -63,6 +63,6 @@ This software replaces [Quick Macros](xref:qm2). The same developer.
 The goal is to provide automation software for Windows with these features:
 - Powerful library that includes UI automation, triggers, toolbars, etc.
 - Script editor/manager program with tools for automation.
-- In scripts use the C# language, .NET and other libraries.
+- In scripts use the C# language and .NET libraries.
 - Free and open-source.
 

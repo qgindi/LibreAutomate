@@ -1,4 +1,4 @@
-﻿---
+---
 uid: uac
 title: UAC
 ---
@@ -7,7 +7,9 @@ title: UAC
 
 UAC is a Windows security feature. It does not allow most programs to change important files and Windows settings. Only processes that run as administrator can do it. Also non-admin processes cannot interact with windows of admin processes.
 
-The script editor process normally runs as administrator, unless incorrectly installed. Scripts run in separate processes. They inherit the editor's integrity level (admin/nonadmin), unless a different level is specified in script Properties or the .exe script is launched not by the editor.
+The script editor should run as administrator (recommended but not necessary). It can always start as administrator without UAC consent. If started not as administrator, it prints some information that includes a link to enable this feature. If later you want to disable this feature, delete or disable Windows Task Scheduler task \Au\Au.Editor. To disable temporarily, start the program with command line `/n`.
+
+Scripts run in separate processes. They inherit the editor's UAC integrity level (admin/nonadmin), unless a different level is specified in script Properties (uac) or the .exe script is launched not by the editor.
 
 Classes and functions that can be used to get UAC-related info: [uacInfo](), [wnd.Uac](), [wnd.UacAccessDenied]().
 

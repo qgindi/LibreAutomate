@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Input;
 
@@ -14,7 +14,7 @@ using static Sci;
 /// Most functions throw ArgumentOutOfRangeException when: 1. A position or line index argument is negative. 2. Scintilla returned a negative position or line index.
 /// If a position or line index argument is greater than text length or the number of lines, some functions return the text length or the last line, and it is documented; for other functions the behaviour is undefined, eg ArgumentOutOfRangeException or Scintilla's return value or like of the documented methods.
 /// 
-/// Almost all function/event names start with z or Z, because VS intellisense cannot group by inheritance and would mix with 300 WPF functions/events. Most public and internal Scintilla API wrapper functions have prefix z, others Z. Derived classes can use prefix for example zz and ZZ.
+/// Function/event names start with aa, because VS intellisense cannot group by inheritance and would mix with 300 WPF functions/events.
 /// </remarks>
 public unsafe partial class KScintilla : HwndHost {
 	wnd _w;
@@ -33,27 +33,27 @@ public unsafe partial class KScintilla : HwndHost {
 		//filesystem.more.loadDll64or32Bit_("Lexilla.dll");
 	}
 
-	public nint ZSciPtr => _sciPtr;
+	public nint aaSciPtr => _sciPtr;
 
-	public SciImages ZImages { get; private set; }
+	public SciImages aaImages { get; private set; }
 
-	public SciTags ZTags { get; private set; }
+	public SciTags aaTags { get; private set; }
 
 	#region HwndHost
 
-	public wnd Hwnd => _w; //not ZHwnd, to avoid accidental use of extension method Hwnd()
+	public wnd aaWnd => _w;
 
-	public event Action ZHandleCreated;
+	public event Action aaHandleCreated;
 
 	/// <summary>
-	/// Invokes event <see cref="ZHandleCreated"/>.
+	/// Invokes event <see cref="aaHandleCreated"/>.
 	/// </summary>
-	protected virtual void ZOnHandleCreated() => ZHandleCreated?.Invoke();
+	protected virtual void aaOnHandleCreated() => aaHandleCreated?.Invoke();
 
 	protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 		var wParent = (wnd)hwndParent.Handle;
 		_dpi = Dpi.OfWindow(wParent);
-		WS style = WS.CHILD; if (ZInitBorder) style |= WS.BORDER;
+		WS style = WS.CHILD; if (aaInitBorder) style |= WS.BORDER;
 		//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
 		_w = Api.CreateWindowEx(0, "Scintilla", Name, style, 0, 0, 0, 0, wParent);
 		//size 0 0 is not the best, but it is a workaround for WPF bugs
@@ -61,16 +61,16 @@ public unsafe partial class KScintilla : HwndHost {
 		_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 		Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
-		bool hasTags = ZInitTagsStyle != ZTagsStyle.NoTags;
-		if (ZInitReadOnlyAlways) {
+		bool hasTags = aaInitTagsStyle != aaTagsStyle.NoTags;
+		if (aaInitReadOnlyAlways) {
 			MOD mask = 0;
-			if (ZInitImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
+			if (aaInitImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
 			Call(SCI_SETMODEVENTMASK, (int)mask);
 		}
 		_InitDocument();
 		Call(SCI_SETSCROLLWIDTHTRACKING, 1);
 		Call(SCI_SETSCROLLWIDTH, 1); //SHOULDDO: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
-		if (!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
+		if (!aaInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
 		Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 
 		//Need to set selection colors or layer, because the default inactive selection color is darker than active.
@@ -79,26 +79,26 @@ public unsafe partial class KScintilla : HwndHost {
 		Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, unchecked((int)0xA0A0A0A0)); //use alpha to mix with indicators
 		Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_INACTIVE_BACK, 0x60A0A0A0);
 
-		if (ZInitWrapVisuals) {
+		if (aaInitWrapVisuals) {
 			Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
 			Call(SCI_SETWRAPVISUALFLAGSLOCATION, SC_WRAPVISUALFLAGLOC_END_BY_TEXT);
 			Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT);
 		}
-		if (ZWrapLines) {
+		if (aaWrapLines) {
 			Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 		}
 
-		//note: cannot set styles here, because later derived class will call zStyleClearAll, which sets some special styles.
+		//note: cannot set styles here, because later derived class will call aaaStyleClearAll, which sets some special styles.
 
-		if (ZInitImages) ZImages = new SciImages(this);
-		if (hasTags) ZTags = new SciTags(this);
+		if (aaInitImages) aaImages = new SciImages(this);
+		if (hasTags) aaTags = new SciTags(this);
 
 		if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
 			Api.SetFocus(_w);
 
-		ZOnHandleCreated();
+		aaOnHandleCreated();
 
-		if (!_text.NE()) zSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
+		if (!_text.NE()) aaaSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
 
 		Api.SetWindowLongPtr(_w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndproc = _WndProc));
 		//WPF will subclass this window.
@@ -116,7 +116,7 @@ public unsafe partial class KScintilla : HwndHost {
 
 		Call(SCI_SETCODEPAGE, Api.CP_UTF8);
 		Call(SCI_SETTABWIDTH, 4);
-		if (ZInitReadOnlyAlways) {
+		if (aaInitReadOnlyAlways) {
 			Call(SCI_SETREADONLY, 1);
 			Call(SCI_SETUNDOCOLLECTION);
 		} //else if (_isReadOnly) Call(SCI_SETREADONLY, 1);
@@ -139,8 +139,8 @@ public unsafe partial class KScintilla : HwndHost {
 		MButtons button = msg switch { Api.WM_LBUTTONDOWN => MButtons.Left, Api.WM_RBUTTONDOWN => MButtons.Right, Api.WM_MBUTTONDOWN => MButtons.Middle, _ => 0 };
 		if (button != 0 && Api.GetFocus() != _w) {
 			bool setFocus = true;
-			if (msg == Api.WM_LBUTTONDOWN) ZTags?.OnLButtonDownWhenNotFocused_(wp, lp, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-			if (setFocus && !ZNoMouseSetFocus.Has(button)) this.Focus();
+			if (msg == Api.WM_LBUTTONDOWN) aaTags?.OnLButtonDownWhenNotFocused_(wp, lp, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
+			if (setFocus && !aaNoMouseSetFocus.Has(button)) this.Focus();
 		}
 
 		switch (msg) {
@@ -173,7 +173,7 @@ public unsafe partial class KScintilla : HwndHost {
 		if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {
 			_dpi = newDpi.PixelsPerInchY.ToInt();
 			Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
-			zMarginWidthsDpiChanged_();
+			aaaMarginWidthsDpiChanged_();
 		}
 		base.OnDpiChanged(oldDpi, newDpi);
 	}
@@ -237,8 +237,8 @@ public unsafe partial class KScintilla : HwndHost {
 			if (!modifiers.Has(ModifierKeys.Alt)) {
 				switch (k) {
 				case KKey.Left or KKey.Right or KKey.Up or KKey.Down:
-				case KKey.Enter when modifiers == 0 && !zIsReadonly:
-				case KKey.Tab when !modifiers.Has(ModifierKeys.Control) && !zIsReadonly:
+				case KKey.Enter when modifiers == 0 && !aaaIsReadonly:
+				case KKey.Tab when !modifiers.Has(ModifierKeys.Control) && !aaaIsReadonly:
 					Call(msg.message, msg.wParam, msg.lParam); //not DispatchMessage or Send
 					return true;
 				case KKey.Insert when modifiers == 0: return true;
@@ -273,43 +273,43 @@ public unsafe partial class KScintilla : HwndHost {
 				_posState = default;
 				_aPos.Clear();
 
-				ZImages?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
-				ZTags?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+				aaImages?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+				aaTags?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
 			}
 			//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
-			if (ZDisableModifiedNotifications) return;
+			if (aaDisableModifiedNotifications) return;
 			break;
 		case NOTIF.SCN_HOTSPOTRELEASECLICK:
-			ZTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+			aaTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
 			break;
 		}
-		ZOnSciNotify(ref n);
+		aaOnSciNotify(ref n);
 	}
 
 	/// <summary>
-	/// Raises the <see cref="ZNotify"/> event.
+	/// Raises the <see cref="aaNotify"/> event.
 	/// </summary>
-	protected virtual void ZOnSciNotify(ref SCNotification n) {
-		ZNotify?.Invoke(this, ref n);
+	protected virtual void aaOnSciNotify(ref SCNotification n) {
+		aaNotify?.Invoke(this, ref n);
 		switch (n.nmhdr.code) {
 		case NOTIF.SCN_MODIFIED:
-			var e = ZTextChanged;
+			var e = aaTextChanged;
 			if (e != null && n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) e(this, EventArgs.Empty);
 			break;
 		}
 	}
 
-	public delegate void ZEventHandler(KScintilla c, ref SCNotification n);
+	public delegate void aaEventHandler(KScintilla c, ref SCNotification n);
 
 	/// <summary>
 	/// Occurs when any Scintilla notification is received.
 	/// </summary>
-	public event ZEventHandler ZNotify;
+	public event aaEventHandler aaNotify;
 
 	/// <summary>
 	/// Occurs when text changed.
 	/// </summary>
-	public event EventHandler ZTextChanged;
+	public event EventHandler aaTextChanged;
 
 	/// <summary>
 	/// Sends a Scintilla message to the control and returns int.
@@ -346,7 +346,7 @@ public unsafe partial class KScintilla : HwndHost {
 	[DebuggerStepThrough]
 	public nint CallRetPtr(int sciMessage, nint wParam = 0, nint lParam = 0) {
 #if DEBUG
-		if (ZDebugPrintMessages_) _DebugPrintMessage(sciMessage);
+		if (aaDebugPrintMessages_) _DebugPrintMessage(sciMessage);
 #endif
 
 		Debug.Assert(!_w.Is0);
@@ -389,7 +389,7 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 	static Dictionary<int, string> s_debugPM;
 
-	internal bool ZDebugPrintMessages_ { get; set; }
+	internal bool aaDebugPrintMessages_ { get; set; }
 #endif
 
 	#region properties
@@ -398,38 +398,38 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Border style.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool ZInitBorder { get; set; }
+	public virtual bool aaInitBorder { get; set; }
 
 	/// <summary>
 	/// Use the default Scintilla's context menu.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool ZInitUseDefaultContextMenu { get; set; }
+	public virtual bool aaInitUseDefaultContextMenu { get; set; }
 
 	/// <summary>
 	/// This control is used just to display text, not to edit.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool ZInitReadOnlyAlways { get; set; }
+	public virtual bool aaInitReadOnlyAlways { get; set; }
 
 	/// <summary>
 	/// Whether to show images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.
 	/// Must be set before creating control handle.
-	/// If false, <see cref="ZImages"/> property is null.
+	/// If false, <see cref="aaImages"/> property is null.
 	/// </summary>
-	public virtual bool ZInitImages { get; set; }
+	public virtual bool aaInitImages { get; set; }
 
 	/// <summary>
-	/// See <see cref="ZInitTagsStyle"/>.
+	/// See <see cref="aaInitTagsStyle"/>.
 	/// </summary>
-	public enum ZTagsStyle {
-		/// <summary>Don't support tags. The <see cref="ZTags"/> property is null.</summary>
+	public enum aaTagsStyle {
+		/// <summary>Don't support tags. The <see cref="aaTags"/> property is null.</summary>
 		NoTags,
 
-		/// <summary>Let <see cref="zText"/>, zSetText and zAppendText parse tags when the text has prefix "&lt;&gt;".</summary>
+		/// <summary>Let <see cref="aaaText"/>, aaaSetText and aaaAppendText parse tags when the text has prefix "&lt;&gt;".</summary>
 		AutoWithPrefix,
 
-		/// <summary>Let <see cref="zText"/>, zSetText and zAppendText parse tags always.</summary>
+		/// <summary>Let <see cref="aaaText"/>, aaaSetText and aaaAppendText parse tags always.</summary>
 		AutoAlways,
 
 		/// <summary>Tags are parsed only when calling Tags.AddText.</summary>
@@ -440,18 +440,18 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Whether and when supports tags.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual ZTagsStyle ZInitTagsStyle { get; set; }
+	public virtual aaTagsStyle aaInitTagsStyle { get; set; }
 
 	/// <summary>
 	/// Whether to show arrows etc to make wrapped lines more visible.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool ZInitWrapVisuals { get; set; } = true;
+	public virtual bool aaInitWrapVisuals { get; set; } = true;
 
 	/// <summary>
 	/// Word-wrap.
 	/// </summary>
-	public virtual bool ZWrapLines {
+	public virtual bool aaWrapLines {
 		get => _wrapLines;
 		set {
 			if (value != _wrapLines) {
@@ -464,20 +464,20 @@ public unsafe partial class KScintilla : HwndHost {
 
 	/// <summary>
 	/// Whether uses Enter key.
-	/// If null (default), false if <see cref="ZInitReadOnlyAlways"/> is true.
+	/// If null (default), false if <see cref="aaInitReadOnlyAlways"/> is true.
 	/// </summary>
-	public bool? ZAcceptsEnter { get; set; }
+	public bool? aaUsesEnter { get; set; }
 
 	/// <summary>
-	/// On SCN_MODIFIED notifications suppress <see cref="ZOnSciNotify"/>, <see cref="ZNotify"/> and <see cref="ZTextChanged"/>.
+	/// On SCN_MODIFIED notifications suppress <see cref="aaOnSciNotify"/>, <see cref="aaNotify"/> and <see cref="aaTextChanged"/>.
 	/// Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
 	/// </summary>
-	public bool ZDisableModifiedNotifications { get; set; }
+	public bool aaDisableModifiedNotifications { get; set; }
 
 	/// <summary>
 	/// Don't set focus on mouse left/right/middle button down.
 	/// </summary>
-	public MButtons ZNoMouseSetFocus { get; set; }
+	public MButtons aaNoMouseSetFocus { get; set; }
 
 	#endregion
 
@@ -488,32 +488,32 @@ public unsafe partial class KScintilla : HwndHost {
 	class _Accessible : HwndHostAccessibleBase_ {
 		readonly KScintilla _sci;
 
-		internal _Accessible(KScintilla sci) : base(sci, sci.Hwnd) {
+		internal _Accessible(KScintilla sci) : base(sci, sci.aaWnd) {
 			_sci = sci;
 		}
 
-		public override ERole Role(int child) => _sci.ZAccessibleRole;
+		public override ERole Role(int child) => _sci.aaAccessibleRole;
 
-		public override string Name(int child) => _sci.ZAccessibleName;
+		public override string Name(int child) => _sci.aaAccessibleName;
 
-		public override string Description(int child) => _sci.ZAccessibleDescription;
+		public override string Description(int child) => _sci.aaAccessibleDescription;
 
-		public override string Value(int child) => _sci.ZAccessibleValue;
+		public override string Value(int child) => _sci.aaAccessibleValue;
 
 		public override EState State(int child) {
 			var r = base.State(child);
-			if (_sci.zIsReadonly) r |= EState.READONLY;
+			if (_sci.aaaIsReadonly) r |= EState.READONLY;
 			return r;
 		}
 	}
 
-	protected virtual ERole ZAccessibleRole => ERole.TEXT; //_sci.ZInitReadOnlyAlways ? ERole.STATICTEXT : ERole.TEXT;
+	protected virtual ERole aaAccessibleRole => ERole.TEXT; //_sci.aaInitReadOnlyAlways ? ERole.STATICTEXT : ERole.TEXT;
 
-	protected virtual string ZAccessibleName => Name;
+	protected virtual string aaAccessibleName => Name;
 
-	protected virtual string ZAccessibleDescription => null;
+	protected virtual string aaAccessibleDescription => null;
 
-	protected virtual string ZAccessibleValue => ZInitReadOnlyAlways ? zText?.Limit(0xffff) : null;
+	protected virtual string aaAccessibleValue => aaInitReadOnlyAlways ? aaaText?.Limit(0xffff) : null;
 
 	#endregion
 }

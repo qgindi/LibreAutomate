@@ -87,9 +87,9 @@ class CiAutocorrect {
 		c = null;
 		bool isBackspace = false, isOpenBrac = false;
 
-		int pos8 = doc.zCurrentPos8;
-		if (pos8 == doc.zLen8 && ch != (char)KKey.Back && !doc.zHasSelection) { //if pos8 is at the end of text, add newline
-			doc.zInsertText(false, pos8, "\r\n");
+		int pos8 = doc.aaaCurrentPos8;
+		if (pos8 == doc.aaaLen8 && ch != (char)KKey.Back && !doc.aaaHasSelection) { //if pos8 is at the end of text, add newline
+			doc.aaaInsertText(false, pos8, "\r\n");
 		}
 
 		switch (ch) {
@@ -111,13 +111,13 @@ class CiAutocorrect {
 		if (isBackspace || isOpenBrac) {
 			if (pos8 != from) return false;
 		} else {
-			if (ch != (char)KKey.Tab && ch != doc.zCharAt(to)) { //info: '\0' if posUtf8 invalid
+			if (ch != (char)KKey.Tab && ch != doc.aaaCharAt(to)) { //info: '\0' if posUtf8 invalid
 				if (ch == '\"') return _RawString();
 				return false;
 			}
-			if (ch == (char)KKey.Tab && doc.zCharAt(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
+			if (ch == (char)KKey.Tab && doc.aaaCharAt(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
 		}
-		for (int i = pos8; i < to; i++) switch (doc.zCharAt(i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
+		for (int i = pos8; i < to; i++) switch (doc.aaaCharAt(i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
 
 		//rejected: ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion. Probably more annoying than useful, because than may want to type (cast) or ()=>lambda or (tup, le).
 		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == doc.zCharAt(pos8 - 1)) {
@@ -134,12 +134,12 @@ class CiAutocorrect {
 		}
 
 		to++;
-		if (ch == (char)KKey.Tab) doc.zCurrentPos8 = to;
+		if (ch == (char)KKey.Tab) doc.aaaCurrentPos8 = to;
 		else c = new BeforeCharContext { oldPosUtf8 = pos8, newPosUtf8 = to };
 		return true;
 
 		bool _RawString() { //close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
-			if (pos8 > 3 && doc.zCharAt(pos8 - 1) == '\"' && doc.zCharAt(pos8 - 2) == '\"' && doc.zCharAt(pos8 - 3) != '@') {
+			if (pos8 > 3 && doc.aaaCharAt(pos8 - 1) == '\"' && doc.aaaCharAt(pos8 - 2) == '\"' && doc.aaaCharAt(pos8 - 3) != '@') {
 				if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 				var pos16 = cd.pos;
 				var token = cd.syntaxRoot.FindToken(pos16 - 1);
@@ -149,25 +149,25 @@ class CiAutocorrect {
 					var span = token.Span;
 					if (pos16 == span.End && (tkind == SyntaxKind.StringLiteralToken ? span.Length == 2 : token.Parent.Span.Length == 3)) {
 						//never mind: does not work if $$"". Then code is already invalid, and can't detect correctly. VS ignores it too.
-						doc.zInsertText(false, pos8, "\"");
-						doc.zAddUndoPoint();
+						doc.aaaInsertText(false, pos8, "\"");
+						doc.aaaAddUndoPoint();
 						var nt = token.GetNextToken(includeZeroWidth: true);
 						bool semicolon = nt.IsKind(SyntaxKind.SemicolonToken) && nt.IsMissing;
-						doc.zInsertText(false, pos8 + 1, semicolon ? "\"\"\";" : "\"\"\"");
-						doc.zCurrentPos8 = pos8 + 1;
+						doc.aaaInsertText(false, pos8 + 1, semicolon ? "\"\"\";" : "\"\"\"");
+						doc.aaaCurrentPos8 = pos8 + 1;
 						return true;
 					}
 				} else if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
 					//if pos it at """|""", make """"|""""
 					int q1 = 0, q2 = 0;
-					for (int i = pos8; doc.zCharAt(--i) == '\"';) q1++;
-					for (int i = pos8; doc.zCharAt(i++) == '\"';) q2++;
+					for (int i = pos8; doc.aaaCharAt(--i) == '\"';) q1++;
+					for (int i = pos8; doc.aaaCharAt(i++) == '\"';) q2++;
 					if (q1 == q2 && q1 >= 3) {
 						if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken && token.SpanStart != pos8 - q1) return false;
-						doc.zInsertText(false, pos8, "\"");
-						doc.zAddUndoPoint();
-						doc.zInsertText(false, pos8 + 1, "\"");
-						doc.zCurrentPos8 = pos8 + 1;
+						doc.aaaInsertText(false, pos8, "\"");
+						doc.aaaAddUndoPoint();
+						doc.aaaInsertText(false, pos8 + 1, "\"");
+						doc.aaaCurrentPos8 = pos8 + 1;
 						return true;
 					}
 				}
@@ -204,7 +204,7 @@ class CiAutocorrect {
 			if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
 			if (_IsNumericLiteralStatement(out _)) {
 				//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
-				c.doc.zReplaceRange(true, pos, cd.pos, replaceText, moveCurrentPos: true);
+				c.doc.aaaReplaceRange(true, pos, cd.pos, replaceText, moveCurrentPos: true);
 				c.ignoreChar = true;
 			}
 			return;
@@ -213,8 +213,8 @@ class CiAutocorrect {
 			if (_IsNumericLiteralStatement(out int spanStart)) {
 				var br = code.Eq(cd.pos, '{') ? null : "{  }";
 				replaceText = $"for (int i = 0; i < {code[spanStart..pos]}; i++) {br}";
-				c.doc.zReplaceRange(true, spanStart, cd.pos, replaceText);
-				c.doc.zCurrentPos16 = spanStart + replaceText.Length - (br == null ? 0 : 2);
+				c.doc.aaaReplaceRange(true, spanStart, cd.pos, replaceText);
+				c.doc.aaaCurrentPos16 = spanStart + replaceText.Length - (br == null ? 0 : 2);
 				c.ignoreChar = true;
 			}
 			return;
@@ -238,7 +238,7 @@ class CiAutocorrect {
 			int i = pos; while (i > 0 && code[i - 1] is '\t' or ' ') i--;
 			if (i < pos && (i == 0 || code[i - 1] == '\n')) {
 				if (root.FindTrivia(pos).IsDirective) {
-					c.doc.zDeleteRange(true, i, pos);
+					c.doc.aaaDeleteRange(true, i, pos);
 				}
 			}
 			return;
@@ -270,7 +270,7 @@ class CiAutocorrect {
 				} else correct = i < pos;
 
 				if (correct) {
-					c.doc.zReplaceRange(true, i, pos, new string('\t', ind));
+					c.doc.aaaReplaceRange(true, i, pos, new string('\t', ind));
 					c.ignoreChar = true;
 				}
 				return;
@@ -368,8 +368,8 @@ class CiAutocorrect {
 			}
 		}
 
-		c.doc.zReplaceRange(true, cd.pos, cd.pos + replaceLength, replaceText, moveCurrentPos: ch == ';');
-		if (newPos > 0) c.doc.zCurrentPos16 = newPos;
+		c.doc.aaaReplaceRange(true, cd.pos, cd.pos + replaceLength, replaceText, moveCurrentPos: ch == ';');
+		if (newPos > 0) c.doc.aaaCurrentPos16 = newPos;
 
 		if (tempRangeFrom > 0) c.doc.ETempRanges_Add(this, tempRangeFrom, tempRangeTo);
 		else c.ignoreChar = true;
@@ -387,7 +387,7 @@ class CiAutocorrect {
 		if (pos < 1) return false;
 		if (pos == code.Length) return false;
 
-		bool canCorrect = true, canAutoindent = onEnterWithoutMod, isSelection = doc.zHasSelection; //note: complResult is never Complex here
+		bool canCorrect = true, canAutoindent = onEnterWithoutMod, isSelection = doc.aaaHasSelection; //note: complResult is never Complex here
 		if (!anywhere) {
 			if (!isSelection) {
 				char ch = code[pos];
@@ -643,13 +643,13 @@ class CiAutocorrect {
 
 			if (onSemicolon) {
 				if (anywhere) {
-					doc.zGoToPos(true, (needSemicolon || endOfSpan > pos) ? endOfSpan : endOfFullSpan);
-					if (needSemicolon) doc.zReplaceSel(isCase ? ":" : ";");
+					doc.aaaGoToPos(true, (needSemicolon || endOfSpan > pos) ? endOfSpan : endOfFullSpan);
+					if (needSemicolon) doc.aaaReplaceSel(isCase ? ":" : ";");
 				} else {
-					bcc = new BeforeCharContext { oldPosUtf8 = doc.zPos8(pos), newPosUtf8 = doc.zPos8(endOfSpan), dontSuppress = needSemicolon };
+					bcc = new BeforeCharContext { oldPosUtf8 = doc.aaaPos8(pos), newPosUtf8 = doc.aaaPos8(endOfSpan), dontSuppress = needSemicolon };
 				}
 			} else {
-				int indent = doc.zLineIndentationFromPos(true, (indentNode ?? node).SpanStart);
+				int indent = doc.aaaLineIndentationFromPos(true, (indentNode ?? node).SpanStart);
 				if (needBlock || block != null || isCase) indent++;
 				bool indentNext = indent > 0 && code[endOfFullSpan - 1] != '\n' && endOfFullSpan < code.Length; //indent next statement (or whatever) that was in the same line
 
@@ -691,8 +691,8 @@ class CiAutocorrect {
 
 				var s = b.ToString();
 				//print.it($"'{s}'");
-				doc.zReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
-				doc.zGoToPos(true, finalPos);
+				doc.aaaReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
+				doc.aaaGoToPos(true, finalPos);
 			}
 		} else { //autoindent
 			int indent = 0;
@@ -809,7 +809,7 @@ class CiAutocorrect {
 			//correct 'case' if indented too much. It happens when it is not the first 'case' in section.
 			if (!expandBraces && indent > 0 && node is SwitchSectionSyntax && nodeFromPos is SwitchLabelSyntax && from >= nodeFromPos.Span.End) {
 				int i = nodeFromPos.SpanStart, j = i;
-				if (cd.sci.zLineIndentationFromPos(true, i) != indent - 1) {
+				if (cd.sci.aaaLineIndentationFromPos(true, i) != indent - 1) {
 					while (_IsSpace(code[i - 1])) i--;
 					if (code[i - 1] == '\n') {
 						replaceFrom = i;
@@ -840,10 +840,10 @@ class CiAutocorrect {
 			//replace text and set caret position
 			var s = b.ToString();
 			//print.it($"'{s}'");
-			doc.zReplaceRange(true, replaceFrom, replaceTo, s);
+			doc.aaaReplaceRange(true, replaceFrom, replaceTo, s);
 			pos = replaceFrom + s.Length;
 			if (expandBraces) pos -= indent + 2;
-			doc.zGoToPos(true, pos);
+			doc.aaaGoToPos(true, pos);
 		}
 		return true;
 	}
@@ -856,8 +856,8 @@ class CiAutocorrect {
 		var span = token.Span;
 		if (pos < span.Start || pos > span.End) {
 			if (isSelection) {
-				posStart = cd.sci.zSelectionStart16;
-				posEnd = cd.sci.zSelectionEnd16;
+				posStart = cd.sci.aaaSelectionStart16;
+				posEnd = cd.sci.aaaSelectionEnd16;
 			}
 			var trivia = token.Parent.FindTrivia(pos);
 			//CiUtil.PrintNode(trivia, pos);
@@ -888,8 +888,8 @@ class CiAutocorrect {
 			bool? isString = token.IsInString(pos, cd.code, out var si, orU8: true);
 			if (isString == false) return 0;
 			if (si.isRawPrefixCenter) {
-				cd.sci.zInsertText(true, pos, "\r\n\r\n"); //let Enter in raw string prefix like """|""" add extra newline
-				cd.sci.zCurrentPos16 = pos + 2;
+				cd.sci.aaaInsertText(true, pos, "\r\n\r\n"); //let Enter in raw string prefix like """|""" add extra newline
+				cd.sci.aaaCurrentPos16 = pos + 2;
 				return 1;
 			}
 			if (isString == null || !si.isClassic) return 2;
@@ -898,7 +898,7 @@ class CiAutocorrect {
 		}
 
 		var doc = cd.sci;
-		indent += doc.zLineIndentationFromPos(true, posStart);
+		indent += doc.aaaLineIndentationFromPos(true, posStart);
 		if (indent < 1 /*&& prefix == null*/ && suffix == null) return 2;
 
 		var b = new StringBuilder();
@@ -908,16 +908,16 @@ class CiAutocorrect {
 		if (newlineLast) b.AppendLine();
 
 		var s = b.ToString();
-		doc.zReplaceRange(true, posStart, posEnd, s, moveCurrentPos: true);
+		doc.aaaReplaceRange(true, posStart, posEnd, s, moveCurrentPos: true);
 
 		return 1;
 	}
 
 	static bool _OnBackspaceOrDelete(SciCode doc, bool back) {
 		//when joining 2 non-empty lines with Delete or Backspace, remove indentation from the second line
-		if (doc.zHasSelection) return false;
-		int i = doc.zCurrentPos16;
-		var code = doc.zText;
+		if (doc.aaaHasSelection) return false;
+		int i = doc.aaaCurrentPos16;
+		var code = doc.aaaText;
 		RXGroup g;
 		if (back) {
 			int i0 = i;
@@ -929,7 +929,7 @@ class CiAutocorrect {
 			if (code.RxMatch(@"(?m)^\h+\R", 0, out g, RXFlags.ANCHORED, i..)) goto g1;
 		}
 		if (!code.RxMatch(@"(?m)(?<!^)\R\h+", 0, out g, RXFlags.ANCHORED, i..)) return false;
-		g1: doc.zDeleteRange(true, g.Start, g.End);
+		g1: doc.aaaDeleteRange(true, g.Start, g.End);
 		return true;
 	}
 

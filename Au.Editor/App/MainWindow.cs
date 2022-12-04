@@ -118,6 +118,8 @@ partial class MainWindow : Window {
 
 		Au.Tools.QuickCapture.RegisterHotkeys();
 
+		App.OnMainWindowLoaded_();
+
 		CommandLine.UILoaded();
 	}
 

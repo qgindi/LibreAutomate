@@ -269,9 +269,9 @@ class Delm : KDialogWindow {
 		if (p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_elm.MiscFlags.Has(EMiscFlags.Java) /*&& !osVersion.is32BitOS*/) {
 			timer.after(50, _ => {
 				if (_info.ZElemsSuspended) { //eg showing test result
-					string s1 = c_infoJava, s2 = _info.zText; if (!s2.NE() && !s2.Ends('\n')) s1 = "\r\n" + s1;
-					_info.zAppendText(s1, false, false);
-				} else _info.zText = c_infoJava;
+					string s1 = c_infoJava, s2 = _info.aaaText; if (!s2.NE() && !s2.Ends('\n')) s1 = "\r\n" + s1;
+					_info.aaaAppendText(s1, false, false);
+				} else _info.aaaText = c_infoJava;
 			});
 		}
 		//_info.zText = c_infoJava;
@@ -612,7 +612,7 @@ class Delm : KDialogWindow {
 
 	void _Capture() {
 		_ttRecapture?.Close();
-		_info.zText = _IsAutoTest ? "" : _dialogInfo; //clear error/info from previous test etc. If with auto-test options, make empty to reduce flickering.
+		_info.aaaText = _IsAutoTest ? "" : _dialogInfo; //clear error/info from previous test etc. If with auto-test options, make empty to reduce flickering.
 
 		if (_ElmFromPoint(mouse.xy) is not elm e) return;
 
@@ -790,7 +790,7 @@ class Delm : KDialogWindow {
 	void _Insert(bool hotkey) {
 		if (_close && !hotkey) {
 			base.Close();
-		} else if (_code.zText.NullIfEmpty_() is string s) {
+		} else if (_code.aaaText.NullIfEmpty_() is string s) {
 			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_ActionIsFinder) {
 				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
 			}
@@ -1831,10 +1831,10 @@ class Delm : KDialogWindow {
 	void _InitInfo() {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
-		_info.zText = _dialogInfo;
+		_info.aaaText = _dialogInfo;
 		_info.ZAddElem(this, _dialogInfo);
-		_info.ZTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
-		_info.ZTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
+		_info.aaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
+		_info.aaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: true);
 
 		//note: for Test button etc it's better to use tooltip, not _info.
