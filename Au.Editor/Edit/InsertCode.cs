@@ -152,7 +152,7 @@ static class InsertCode {
 		bool afterOpenBrace = t2.IsKind(SyntaxKind.OpenBraceToken);
 		bool beforeCloseBrace = replTo < code.Length && code[replTo] == '}';
 
-		int indent = d.zLineIndentationFromPos(true, pos);
+		int indent = d.aaaLineIndentationFromPos(true, pos);
 		if (afterOpenBrace && breakLine != null && !(t2.Parent is BlockSyntax bs1 && bs1.Parent is GlobalStatementSyntax)) indent++;
 		else if (beforeCloseBrace) indent++;
 
@@ -179,25 +179,25 @@ static class InsertCode {
 		}
 
 		CodeInfo.Pasting(d, silent: true);
-		d.zSetAndReplaceSel(true, pos, replTo, s);
+		d.aaaSetAndReplaceSel(true, pos, replTo, s);
 
-		if (go >= 0) d.zGoToPos(true, pos + go);
-		else if (flags.Has(ICSFlags.SelectNewCode)) d.zSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
-		else if (flags.Has(ICSFlags.GoToStart)) d.zGoToPos(true, pos);
+		if (go >= 0) d.aaaGoToPos(true, pos + go);
+		else if (flags.Has(ICSFlags.SelectNewCode)) d.aaaSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
+		else if (flags.Has(ICSFlags.GoToStart)) d.aaaGoToPos(true, pos);
 
 		if (flags.Has(ICSFlags.Fold)) _FoldInsertedCode(d, pos, s.LineCount());
 
 		static void _FoldInsertedCode(SciCode doc, int start, int nLines) {
-			string text = doc.zText;
+			string text = doc.aaaText;
 			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
-				var d = Panels.Editor.ZActiveDoc; if (d != doc || d.zText != text) return;
-				for (int line = d.zLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
+				var d = Panels.Editor.ZActiveDoc; if (d != doc || d.aaaText != text) return;
+				for (int line = d.aaaLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
 					if (0 != (d.Call(Sci.SCI_GETFOLDLEVEL, i) & Sci.SC_FOLDLEVELHEADERFLAG)) d.Call(Sci.SCI_FOLDLINE, i);
 				}
 			});
 		}
 
-		var w = d.Hwnd.Window;
+		var w = d.aaWnd.Window;
 		if (flags.Has(ICSFlags.ActivateEditor)) w.ActivateL();
 		if (!flags.Has(ICSFlags.NoFocus) && w.IsActive) d.Focus();
 	}
@@ -283,7 +283,7 @@ static class InsertCode {
 	public static void TextSimply(string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		var d = Panels.Editor.ZActiveDoc;
-		if (d == null || d.zIsReadonly) return;
+		if (d == null || d.aaaIsReadonly) return;
 		TextSimplyInControl(d, s);
 	}
 
@@ -316,8 +316,8 @@ static class InsertCode {
 		}
 
 		if (c is KScintilla sci) {
-			if (sci.zIsReadonly) return;
-			sci.zReplaceSel(s);
+			if (sci.aaaIsReadonly) return;
+			sci.aaaReplaceSel(s);
 			while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
 		} else if (c is TextBox tb) {
 			if (tb.IsReadOnly) return;
@@ -342,14 +342,14 @@ static class InsertCode {
 	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ZActiveDoc;
 
-		int indent = doc.zLineIndentationFromPos(true, from);
+		int indent = doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
 			var si = new string('\t', indent);
 			before = before.RxReplace("(?m)^", si);
 			after = after.RxReplace("(?m)^", si);
 		}
 
-		var s = doc.zRangeText(true, from, to);
+		var s = doc.aaaRangeText(true, from, to);
 		var b = new StringBuilder();
 
 		if (concise && s.LineCount() <= 1) {
@@ -372,7 +372,7 @@ static class InsertCode {
 	/// <param name="concise">If text is single line, surround as single line.</param>
 	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ZActiveDoc;
-		int from = doc.zSelectionStart16, to = doc.zSelectionEnd16;
+		int from = doc.aaaSelectionStart16, to = doc.aaaSelectionEnd16;
 		if (from == to) {
 			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
 			var stat = CiUtil.GetStatementEtcFromPos(cd, from);
@@ -403,7 +403,7 @@ static class InsertCode {
 		}
 		if (i == k.code.Length || k.code[i] is not ('\r' or '\n')) b.AppendLine();
 
-		k.sci.zInsertText(true, i, b.ToString(), addUndoPointAfter: true, restoreFolding: true);
+		k.sci.aaaInsertText(true, i, b.ToString(), addUndoPointAfter: true, restoreFolding: true);
 
 		return true;
 
@@ -436,7 +436,7 @@ static class InsertCode {
 		var cu = k.syntaxRoot;
 
 		//then look in current namespace, ancestor namespaces, compilation unit
-		int pos = k.sci.zCurrentPos16;
+		int pos = k.sci.aaaCurrentPos16;
 		for (var node = cu.FindToken(pos).Parent; node != null; node = node.Parent) {
 			SyntaxList<UsingDirectiveSyntax> usings; SyntaxList<ExternAliasDirectiveSyntax> externs;
 			if (node is NamespaceDeclarationSyntax ns) {
@@ -533,14 +533,14 @@ static class InsertCode {
 
 		s = InsertCodeUtil.IndentStringForInsertSimple(s, doc, pos);
 
-		doc.zInsertText(true, pos, s, true, true);
-		doc.zGoToPos(true, pos + s.Find("/ ") + 2);
+		doc.aaaInsertText(true, pos, s, true, true);
+		doc.aaaGoToPos(true, pos + s.Find("/ ") + 2);
 	}
 
 	public static void AddFileDescription() {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
-		doc.zInsertText(false, 0, "/// Description\r\n\r\n");
-		doc.zSelect(false, 4, 15, makeVisible: true);
+		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
+		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}
 
 	public static void AddClassProgram() {
@@ -796,8 +796,8 @@ class Program {
 		//print.it(text);
 		//clipboard.text = text;
 
-		cd.sci.zInsertText(true, position, text, addUndoPointAfter: true);
-		cd.sci.zGoToPos(true, position);
+		cd.sci.aaaInsertText(true, position, text, addUndoPointAfter: true);
+		cd.sci.aaaGoToPos(true, position);
 
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
 	}
@@ -860,7 +860,7 @@ class Program {
 		icon = $"{prefix}{paramName}: \"{icon}\"{suffix}";
 		//print.it(cd.pos, replFrom, replTo, icon);
 
-		cd.sci.zReplaceRange(true, replFrom, replTo, icon);
+		cd.sci.aaaReplaceRange(true, replFrom, replTo, icon);
 	}
 
 	//FUTURE: dialogs in SurroundFor and SurroundTryCatch. Eg to set variable name, count, whether to add finally.

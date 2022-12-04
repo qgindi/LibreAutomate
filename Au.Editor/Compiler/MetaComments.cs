@@ -405,7 +405,7 @@ class MetaComments {
 	/// </summary>
 	bool _ParseFile(FileNode f, bool isMain, bool isC, bool isGlobalSc = false) {
 		if (!isMain && _CodeFilesContains(f)) return false;
-		if(f.GetCurrentText(out var code, silent: true).error is string es1) { Errors.AddError(f, es1); return false; }
+		if (f.GetCurrentText(out var code, silent: true).error is string es1) { Errors.AddError(f, es1); return false; }
 		bool isScript = f.IsScript;
 		var cf = new MetaCodeFile(f, code, isMain, isC);
 
@@ -438,7 +438,7 @@ class MetaComments {
 				else _ParseFile(glob, false, true, isGlobalSc: true);
 			} else if (!model.NoGlobalCs_) {
 				model.NoGlobalCs_ = true;
-				Panels.Output.ZOutput.ZTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
+				Panels.Output.aaOutput.aaTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
 				if (model.FoundMultiple == null) print.warning("Missing class file \"global.cs\". <+restoreGlobal>Restore<>.", -1, "<>");
 				else print.warning("Cannot use class file 'global.cs', because multiple exist.", -1);
 			}
@@ -575,7 +575,17 @@ class MetaComments {
 		}
 
 		if (!_f.isMain) {
-			_ErrorN($"in this file only these options can be used: r, com, nuget, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}.");
+			//In class files compiled as not main silently ignore all options if the first option is role other than class.
+			//	It allows to test a class file without a test script etc.
+			//	How: In meta define symbol X. Then #if X, enable executable code that uses the class.
+			if (name == "role") {
+				if (_f.allowAnyMeta_ = _Enum(out ERole ro1, value) && ro1 != ERole.classFile) return;
+			} else if (_f.allowAnyMeta_) {
+				if (name is "optimize" or "define" or "warningLevel" or "noWarnings" or "testInternal" or "preBuild" or "postBuild" or "outputPath" or "ifRunning" or "uac" or "bit32" or "console" or "manifest" or "icon" or "sign" or "xmlDoc") return;
+				_ErrorN("unknown meta comment option");
+			}
+
+			_ErrorN($"in this file only these options can be used: r, com, nuget, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
 			return;
 		}
 
@@ -637,10 +647,6 @@ class MetaComments {
 			_Specified(EMSpecified.console);
 			if (_TrueFalse(out bool con, value)) Console = con;
 			break;
-		//case "config":
-		//	_Specified(EMSpecified.config);
-		//	ConfigFile = _GetFile(value);
-		//	break;
 		case "manifest":
 			_Specified(EMSpecified.manifest);
 			ManifestFile = _GetFile(value, FNFind.File);
@@ -661,8 +667,6 @@ class MetaComments {
 			_Specified(EMSpecified.xmlDoc);
 			if (_TrueFalse(out bool xmlDOc, value)) XmlDoc = xmlDOc;
 			break;
-		//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
-		//	break;
 		default:
 			_ErrorN("unknown meta comment option");
 			break;
@@ -938,16 +942,12 @@ class MetaComments {
 	}
 }
 
-struct MetaCodeFile {
-	public FileNode f;
-	public string code;
-	public bool isMain;
-
-	/// <summary>Added through meta option 'c' or "global.cs".</summary>
-	public bool isC;
-
-	public MetaCodeFile(FileNode f, string code, bool isMain, bool isC) { this.f = f; this.code = code; this.isMain = isMain; this.isC = isC; }
-
+/// <param name="f"></param>
+/// <param name="code"></param>
+/// <param name="isMain"></param>
+/// <param name="isC">Added through meta 'c' or "global.cs".</param>
+record struct MetaCodeFile(FileNode f, string code, bool isMain, bool isC) {
+	internal bool allowAnyMeta_;
 	public override string ToString() => f.ToString();
 }
 

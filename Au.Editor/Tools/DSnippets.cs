@@ -87,7 +87,7 @@ class DSnippets : KDialogWindow {
 		b.AddButton("...", _ => _InsertVar(null));
 		b.End();
 		b.Row(-1).xAddInBorder(out _code);
-		_code.ZTextChanged += (_, _) => { if (!_ignoreEvents) _ti.code = _code.zText; };
+		_code.aaTextChanged += (_, _) => { if (!_ignoreEvents) _ti.code = _code.aaaText; };
 		b.End();
 		
 		//context
@@ -400,8 +400,8 @@ class DSnippets : KDialogWindow {
 	
 	void _InsertVar(string s) {
 		if (s != null) {
-			if (s == "sel") s = $"$end${_code.zSelectedText()}$end$";
-			_code.zReplaceSel(s);
+			if (s == "sel") s = $"$end${_code.aaaSelectedText()}$end$";
+			_code.aaaReplaceSel(s);
 			_code.Focus();
 		} else {
 			var m = new popupMenu();
@@ -417,7 +417,7 @@ class DSnippets : KDialogWindow {
 		var a = s.Lines();
 		int indent = (int)a.Min(o => (uint)o.FindNot("\t"));
 		s = string.Join("\r\n", a.Select(o => o[indent..]));
-		_code.zReplaceRange(false, 0, -1, s);
+		_code.aaaReplaceRange(false, 0, -1, s);
 	}
 	
 	void _TvSetText(string s) {

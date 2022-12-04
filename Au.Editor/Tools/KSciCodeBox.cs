@@ -7,22 +7,22 @@ namespace Au.Controls;
 /// </summary>
 public class KSciCodeBox : KScintilla {
 	public KSciCodeBox() {
-		ZInitUseDefaultContextMenu = true;
+		aaInitUseDefaultContextMenu = true;
 		//ZInitBorder = true; //no, the native border is of different color and thickness (high DPI) than other WPF controls
 		Name = "code";
 	}
 
-	protected override void ZOnHandleCreated() {
-		base.ZOnHandleCreated();
+	protected override void aaOnHandleCreated() {
+		base.aaOnHandleCreated();
 
-		zSetMarginWidth(1, 0);
-		zIsReadonly = true;
+		aaaSetMarginWidth(1, 0);
+		aaaIsReadonly = true;
 
 		var styles = new CiStyling.TStyles { FontSize = 9 };
 		styles.ToScintilla(this);
 	}
 
-	protected override void ZOnSciNotify(ref Sci.SCNotification n) {
+	protected override void aaOnSciNotify(ref Sci.SCNotification n) {
 		//switch(n.nmhdr.code) {
 		//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
 		//default: print.it(n.nmhdr.code, n.modificationType); break;
@@ -34,7 +34,7 @@ public class KSciCodeBox : KScintilla {
 			if (0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
 				if (_readonlyLenUtf8 > 0) {
 					int i = Call(Sci.SCI_GETSELECTIONEND);
-					zIsReadonly = i > _ReadonlyStartUtf8 || _LenUtf8 == 0; //small bug: if caret is at the boundary, allows to delete readonly text, etc.
+					aaaIsReadonly = i > _ReadonlyStartUtf8 || _LenUtf8 == 0; //small bug: if caret is at the boundary, allows to delete readonly text, etc.
 				}
 			}
 			break;
@@ -43,7 +43,7 @@ public class KSciCodeBox : KScintilla {
 			break;
 		}
 
-		base.ZOnSciNotify(ref n);
+		base.aaOnSciNotify(ref n);
 	}
 
 	/// <summary>
@@ -52,19 +52,19 @@ public class KSciCodeBox : KScintilla {
 	/// <param name="s"></param>
 	/// <param name="readonlyFrom">If 0, makes all text readonly. If s.Length or -1, makes all text editable. If between 0 and s.Length, makes readonly from this position.</param>
 	public void ZSetText(string s, int readonlyFrom = 0) {
-		zIsReadonly = false;
-		zSetText(s, SciSetTextFlags.NoUndoNoNotify);
+		aaaIsReadonly = false;
+		aaaSetText(s, SciSetTextFlags.NoUndoNoNotify);
 		if (readonlyFrom > 0) {
-			_readonlyLenUtf8 = _LenUtf8 - zPos8(readonlyFrom);
+			_readonlyLenUtf8 = _LenUtf8 - aaaPos8(readonlyFrom);
 		} else if (readonlyFrom < 0) {
 			_readonlyLenUtf8 = 0;
 		} else {
-			zIsReadonly = true;
+			aaaIsReadonly = true;
 			_readonlyLenUtf8 = -1;
 		}
 	}
 
-	public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : zPos16(_ReadonlyStartUtf8);
+	public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : aaaPos16(_ReadonlyStartUtf8);
 
 	protected int _readonlyLenUtf8;
 
@@ -73,7 +73,7 @@ public class KSciCodeBox : KScintilla {
 	protected int _LenUtf8 => Call(Sci.SCI_GETTEXTLENGTH);
 
 	unsafe void _Styling() {
-		var styles8 = CiUtil.GetScintillaStylingBytes(zText);
+		var styles8 = CiUtil.GetScintillaStylingBytes(aaaText);
 		Call(Sci.SCI_STARTSTYLING);
 		fixed (byte* p = styles8) Call(Sci.SCI_SETSTYLINGEX, styles8.Length, p);
 	}

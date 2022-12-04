@@ -229,7 +229,7 @@ static class CiSnippets {
 		string s = x.Value;
 
 		//##directive -> #directive
-		if (s.Starts('#') && doc.zText.Eq(pos - 1, '#')) s = s[1..];
+		if (s.Starts('#') && doc.aaaText.Eq(pos - 1, '#')) s = s[1..];
 
 		//get variable name from code
 		if (_GetAttr("var", out string attrVar)) {
@@ -288,20 +288,20 @@ static class CiSnippets {
 
 		//maybe need using directives
 		if (_GetAttr("using", out var attrUsing)) {
-			int len1 = doc.zLen16;
+			int len1 = doc.aaaLen16;
 			if (InsertCode.UsingDirective(attrUsing)) {
-				int lenDiff = doc.zLen16 - len1;
+				int lenDiff = doc.aaaLen16 - len1;
 				pos += lenDiff;
 				endPos += lenDiff;
 			}
 		}
 
 		CodeInfo.Pasting(doc, silent: true);
-		doc.zReplaceRange(true, pos, endPos, s, moveCurrentPos: i < 0);
+		doc.aaaReplaceRange(true, pos, endPos, s, moveCurrentPos: i < 0);
 
 		if (i >= 0) {
 			int newPos = pos + i;
-			doc.zSelect(true, newPos, newPos + selectLength, makeVisible: true);
+			doc.aaaSelect(true, newPos, newPos + selectLength, makeVisible: true);
 			if (tempRange != default) CodeInfo._correct.BracketsAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
 			if (showSignature) CodeInfo.ShowSignature();
 		}

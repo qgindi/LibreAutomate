@@ -945,9 +945,6 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern uint GetConsoleOutputCP();
 
-	[DllImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownW", SetLastError = true)]
-	internal static extern bool InitiateSystemShutdown(string lpMachineName, string lpMessage, int dwTimeout, bool bForceAppsClosed, bool bRebootAfterShutdown);
-
 	[DllImport("kernel32.dll")]
 	internal static extern nint SetUnhandledExceptionFilter(nint _);
 
@@ -959,6 +956,17 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", EntryPoint = "GetDriveTypeW")]
 	internal static extern int GetDriveType(string lpRootPathName);
 
+	/// <summary>
+	/// Use this API instead of <b>Directory.CreateSymbolicLink</b> which has a bug: does not throw exception when fails (eg non-admin).
+	/// Note: the API fails if non-admin.
+	///		With flag 2 does not fail if enabled developer mode.
+	///		It seems can be enabled for non-admin in gpedit.msc; not tested; google for more info.
+	///		Somewhere found this info, but it's incorrect: "Windows 11 doesn’t require administrative privileges to create symbolic links".
+	/// </summary>
+	/// <param name="dwFlags">1 - directory.</param>
+	[DllImport("kernel32.dll", EntryPoint = "CreateSymbolicLinkW", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.U1)] //BOOLEAN
+	internal static extern bool CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, uint dwFlags);
 
 
 

@@ -139,7 +139,7 @@ class DCustomize : KDialogWindow {
 		}
 
 		b.Loaded += () => {
-			_info.zText = $"""
+			_info.aaaText = $"""
 Here you can edit menus, toolbars and hotkeys of the main window.
 
 <b>menu</b> - customized menu items. Right-click...

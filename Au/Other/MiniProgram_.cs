@@ -57,6 +57,7 @@ static unsafe class MiniProgram_ {
 	/// <summary>
 	/// Called by apphost.
 	/// </summary>
+	[MethodImpl(MethodImplOptions.NoOptimization)]
 	static void Init(nint pn, out _TaskInit r) {
 		r = default;
 		string pipeName = new((char*)pn);
@@ -72,6 +73,12 @@ static unsafe class MiniProgram_ {
 		//	if (s_started != 0) print.TaskEvent_(e == null ? "TE" : "TF " + e.ToStringWithoutStack(), s_started);
 		//};
 
+#if true
+		if (!Api.WaitNamedPipe(pipeName, -1)) return;
+#else
+//rejected: JIT some functions in other thread. Now everything much faster than with old .NET.
+Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
+
 		for (int i = 0; ; i++) {
 			if (Api.WaitNamedPipe(pipeName, i == 1 ? -1 : 25)) break;
 			if (Marshal.GetLastWin32Error() != Api.ERROR_SEM_TIMEOUT) return;
@@ -84,23 +91,20 @@ static unsafe class MiniProgram_ {
 
 				//JIT
 				Jit_.Compile(typeof(Serializer_), "Deserialize");
-				Jit_.Compile(typeof(Api), nameof(Api.ReadFile), nameof(Api.CloseHandle), nameof(Api.SetEnvironmentVariable));
+				//tested: now Api functions fast, don't JIT.
 				//p2.Next();
-				var h1 = Api.CreateFile(null, Api.GENERIC_READ, 0, Api.OPEN_EXISTING, 0);
-				//p2.Next();
-				Marshal.StringToCoTaskMemUTF8("-");
-				folders.Workspace = new FolderPath("");
 				Jit_.Compile(typeof(script), nameof(script.setup), "_AuxThread");
 				//p2.Next();
 
-				//print.TaskEvent_(null, 0); //8-20 ms
-				Thread.Sleep(20);
-				"Au".ToLowerInvariant(); //15-40 ms
+				//Thread.Sleep(20);
+				//p2.Next();
+				//"Au".ToLowerInvariant(); //15-40 ms //now <1 ms
 
 				//if need to preload some assemblies, use code like this. But now .NET loads assemblies fast, not like in old framework.
 				//_ = typeof(TypeFromAssembly).Assembly;
 			}, sta: false);
 		}
+#endif
 
 		//Debug_.PrintLoadedAssemblies(true, true);
 
@@ -109,7 +113,6 @@ static unsafe class MiniProgram_ {
 		if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
 		//p1.Next();
 		int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
-		//p1.Next();
 		if (!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
 		//p1.Next();
 		var a = Serializer_.Deserialize(b);
@@ -129,7 +132,6 @@ static unsafe class MiniProgram_ {
 		s_scriptId = a[6];
 		script.s_wndMsg = (wnd)(int)a[8];
 		script.s_wrPipeName = a[4];
-		//p1.Next();
 
 		if (0 != (flags & EFlags.FromEditor)) script.testing = true;
 		if (0 != (flags & EFlags.IsPortable)) ScriptEditor.IsPortable = true;

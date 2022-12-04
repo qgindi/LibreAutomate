@@ -859,7 +859,7 @@ static class TUtil {
 	/// Adds link +hotkey that shows dialog "Hotkeys" and updates App.Settings.delm.hk_capture and optionally App.Settings.delm.hk_insert.
 	/// </summary>
 	public static void RegisterLink_DialogHotkey(KSciInfoBox sci, bool insertToo) {
-		sci.ZTags.AddLinkTag("+hotkey", _ => {
+		sci.aaTags.AddLinkTag("+hotkey", _ => {
 			TextBox capture, insert = null;
 			var b = new wpfBuilder("Hotkey");
 			b.R.Add("Capture", out capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus().Tooltip("Used in wnd and elm tools");
@@ -1044,12 +1044,12 @@ obj.{code};
 	#region info
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
-		t.zText = $"<lc #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
+		t.aaaText = $"<lc #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
 	}
 
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
-		t.zText = $"<lc #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
+		t.aaaText = $"<lc #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.ZSuspendElems();
 	}
 
@@ -1092,7 +1092,7 @@ obj.{code};
 
 		public CommonInfos(KSciInfoBox control) {
 			_control = control;
-			_control.ZTags.AddLinkTag("+regex", o => _Regex(o));
+			_control.aaTags.AddLinkTag("+regex", o => _Regex(o));
 		}
 
 		void _Regex(string _) {

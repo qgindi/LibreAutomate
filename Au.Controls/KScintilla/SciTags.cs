@@ -64,7 +64,7 @@ using static Sci;
 /// Also you can register custom link tags that call your callback functions.
 /// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 /// 
-/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.ZInitTagsStyle"/> and optionally <see cref="KScintilla.ZInitImages"/>.
+/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.aaInitTagsStyle"/> and optionally <see cref="KScintilla.aaInitImages"/>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -143,17 +143,17 @@ public unsafe class SciTags {
 		for (i = from; i < _styles.Count; i++) {
 			_TagStyle st = _styles[i];
 			j = i + STYLE_FIRST_EX;
-			if (st.HasColor) _c.zStyleForeColor(j, st.Color);
-			if (st.HasBackColor) { _c.zStyleBackColor(j, st.BackColor); if (st.Eol) _c.zStyleEolFilled(j, true); }
-			if (st.Bold) _c.zStyleBold(j, true);
-			if (st.Italic) _c.zStyleItalic(j, true);
-			if (st.Underline) _c.zStyleUnderline(j, true);
-			if (st.Mono) _c.zStyleFont(j, "Consolas");
-			if (st.Hotspot) _c.zStyleHotspot(j, true);
+			if (st.HasColor) _c.aaaStyleForeColor(j, st.Color);
+			if (st.HasBackColor) { _c.aaaStyleBackColor(j, st.BackColor); if (st.Eol) _c.aaaStyleEolFilled(j, true); }
+			if (st.Bold) _c.aaaStyleBold(j, true);
+			if (st.Italic) _c.aaaStyleItalic(j, true);
+			if (st.Underline) _c.aaaStyleUnderline(j, true);
+			if (st.Mono) _c.aaaStyleFont(j, "Consolas");
+			if (st.Hotspot) _c.aaaStyleHotspot(j, true);
 			int size = st.Size;
 			if (size > 0) {
 				if (size < 6 && st.Hotspot) size = 6;
-				_c.zStyleFontSize(j, size);
+				_c.aaaStyleFontSize(j, size);
 			}
 		}
 	}
@@ -165,7 +165,7 @@ public unsafe class SciTags {
 	/// </summary>
 	void _ClearUserStyles() {
 		if (_styles.Count > 0) {
-			_c.zStyleClearRange(STYLE_FIRST_EX);
+			_c.aaaStyleClearRange(STYLE_FIRST_EX);
 			_styles.Clear();
 		}
 		//QM2 also cleared the image cache, but now it is shared by all controls of this thread.
@@ -173,7 +173,7 @@ public unsafe class SciTags {
 
 	internal void OnTextChanged_(bool inserted, in SCNotification n) {
 		//if deleted or replaced all text, clear user styles
-		if (!inserted && n.position == 0 && _c.zLen8 == 0) {
+		if (!inserted && n.position == 0 && _c.aaaLen8 == 0) {
 			_ClearUserStyles();
 			//_linkDelegates.Clear(); //no
 		}
@@ -207,7 +207,7 @@ public unsafe class SciTags {
 			onMessage?.Invoke(m);
 			switch (m.Type) {
 			case PrintServerMessageType.Clear:
-				_c.zClearText();
+				_c.aaaClearText();
 				s = null;
 				b?.Clear();
 				break;
@@ -246,14 +246,14 @@ public unsafe class SciTags {
 			if (b != null) s = b.ToString();
 
 			//limit
-			int len = _c.zLen8;
+			int len = _c.aaaLen8;
 			if (len > 4 * 1024 * 1024) {
-				len = _c.zLineStartFromPos(false, len / 2);
-				if (len > 0) _c.zReplaceRange(false, 0, len, "...\r\n");
+				len = _c.aaaLineStartFromPos(false, len / 2);
+				if (len > 0) _c.aaaReplaceRange(false, 0, len, "...\r\n");
 			}
 
 			if (hasTags) AddText(s, true, true);
-			else _c.zAppendText(s, true, true, true);
+			else _c.aaaAppendText(s, true, true, true);
 
 			//test slow client
 			//Thread.Sleep(500);
@@ -274,7 +274,7 @@ public unsafe class SciTags {
 	public void AddText(string text, bool append, bool skipLTGT, bool? scroll = null) {
 		//perf.first();
 		if (text.NE() || (skipLTGT && text == "<>")) {
-			if (append) _c.zAppendText("", true, true, true); else _c.zClearText();
+			if (append) _c.aaaAppendText("", true, true, true); else _c.aaaClearText();
 			return;
 		}
 
@@ -520,8 +520,8 @@ public unsafe class SciTags {
 		if (_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
 		//perf.next();
-		int prevLen = append ? _c.zLen8 : 0;
-		_c.zAddText8_(append, scroll ?? append, s0, len);
+		int prevLen = append ? _c.aaaLen8 : 0;
+		_c.aaaAddText8_(append, scroll ?? append, s0, len);
 		if (!hasTags) {
 			_c.Call(SCI_STARTSTYLING, prevLen);
 			_c.Call(SCI_SETSTYLING, len, STYLE_DEFAULT);
@@ -613,17 +613,17 @@ public unsafe class SciTags {
 
 		int iTag, iText, k;
 		//to find the start of link text (after <tag>), search for STYLE_HIDDEN before
-		for (iText = pos; iText > 0; iText--) if (_c.zGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
+		for (iText = pos; iText > 0; iText--) if (_c.aaaGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
 		if (iText == 0) return false;
 		//to find the start of <tag>, search for some other style before
-		for (iTag = iText - 1; iTag > 0; iTag--) if (_c.zGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
+		for (iTag = iText - 1; iTag > 0; iTag--) if (_c.aaaGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
 		//to find the end of link text, search for a non-hotspot style after
 		for (pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
-			k = _c.zGetStyleAt(pos);
-			if (k < STYLE_FIRST_EX || !_c.zStyleHotspot(k)) break;
+			k = _c.aaaGetStyleAt(pos);
+			if (k < STYLE_FIRST_EX || !_c.aaaStyleHotspot(k)) break;
 		}
 		//get text <tag>LinkText
-		var s = _c.zRangeText(false, iTag, pos);
+		var s = _c.aaaRangeText(false, iTag, pos);
 		//print.it(iTag, iText, pos, s);
 
 		//is it <fold>?
@@ -702,7 +702,7 @@ public unsafe class SciTags {
 	/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 	/// </param>
 	/// <remarks>
-	/// Call this function when control handle is already created. Until that <see cref="KScintilla.ZTags"/> returns null.
+	/// Call this function when control handle is already created. Until that <see cref="KScintilla.aaTags"/> returns null.
 	/// </remarks>
 	/// <seealso cref="AddCommonLinkTag"/>
 	public void AddLinkTag(string name, Action<string> a) {
@@ -739,7 +739,7 @@ public unsafe class SciTags {
 	/// <exception cref="ArgumentException">name does not start with '.'.</exception>
 	/// <exception cref="InvalidOperationException">Trying to add more than 100 styles.</exception>
 	/// <remarks>
-	/// Call this function when control handle is already created. Until that <see cref="KScintilla.ZTags"/> returns null.
+	/// Call this function when control handle is already created. Until that <see cref="KScintilla.aaTags"/> returns null.
 	/// </remarks>
 	public void AddStyleTag(string name, UserDefinedStyle style) {
 		if (_userStyles == null) _userStyles = new Dictionary<string, _TagStyle>();
@@ -752,10 +752,10 @@ public unsafe class SciTags {
 	public Func<string, byte[]> CodeStylesProvider;
 
 	internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus) {
-		if (setFocus && _c.ZInitReadOnlyAlways && !keys.gui.isAlt) {
+		if (setFocus && _c.aaInitReadOnlyAlways && !keys.gui.isAlt) {
 			int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
 			//print.it(pos);
-			if (pos >= 0 && _c.zStyleHotspot(_c.zGetStyleAt(pos))) setFocus = false;
+			if (pos >= 0 && _c.aaaStyleHotspot(_c.aaaGetStyleAt(pos))) setFocus = false;
 		}
 	}
 

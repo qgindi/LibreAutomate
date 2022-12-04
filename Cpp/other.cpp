@@ -220,4 +220,27 @@ namespace other {
 		return true;
 	}
 
+	//Unloads this dll (AuCpp.dll) from other processes.
+	//flags: 1 wait less.
+	EXPORT void Cpp_Unload(DWORD flags = 0) {
+		int less = flags & 1 ? 5 : 1;
+		DWORD_PTR res;
+		std::vector<HWND> a;
+
+		//close acc agent windows
+		for (HWND w = 0; w = FindWindowExW(HWND_MESSAGE, w, L"AuCpp_IPA_1", nullptr); ) a.push_back(w);
+		int n = (int)a.size();
+		if (n > 0) {
+			for (int i = 0; i < n; i++) SendMessageTimeout(a[i], WM_CLOSE, 0, 0, SMTO_ABORTIFHUNG, 5000 / less, &res);
+			a.clear();
+			Sleep(n * 50);
+		}
+
+		//unload from processes where loaded by the clipboard hook
+		SendMessageTimeout(HWND_BROADCAST, 0, 0, 0, SMTO_ABORTIFHUNG, 1000 / less, &res);
+		for (HWND w = 0; w = FindWindowExW(HWND_MESSAGE, w, nullptr, nullptr); ) a.push_back(w);
+		for (int i = 0; i < (int)a.size(); i++) SendMessageTimeout(a[i], 0, 0, 0, SMTO_ABORTIFHUNG, 1000 / less, &res);
+		Sleep(500 / less);
+	}
+
 } //namespace other

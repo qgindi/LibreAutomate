@@ -437,7 +437,7 @@ class Duiimage : KDialogWindow {
 	void _Insert(WBButtonClickArgs _1) {
 		if (_close) {
 			base.Close();
-		} else if (_code.zText.NullIfEmpty_() is string s) {
+		} else if (_code.aaaText.NullIfEmpty_() is string s) {
 			string newline = _cbAction.SelectedIndex is 0 or >= c_finder ? "\r\n" : null; //if no action, add empty line
 			InsertCode.Statements(s);
 			//if (_Opt.Has(_EOptions.InsertClose)) {
@@ -468,7 +468,7 @@ class Duiimage : KDialogWindow {
 	void _InitInfo() {
 		//_commonInfos = new TUtil.CommonInfos(_info);
 
-		_info.zText = c_dialogInfo;
+		_info.aaaText = c_dialogInfo;
 		_info.ZAddElem(this, c_dialogInfo);
 
 		_info.InfoC(controlC,

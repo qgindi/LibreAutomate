@@ -12,20 +12,20 @@ class PanelFound : DockPanel
 
 		_c = new _KScintilla {
 			Name = "Found_list",
-			ZInitReadOnlyAlways = true,
-			ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways,
-			ZAcceptsEnter = true
+			aaInitReadOnlyAlways = true,
+			aaInitTagsStyle = KScintilla.aaTagsStyle.AutoAlways,
+			aaUsesEnter = true
 		};
-		_c.ZHandleCreated += _c_ZHandleCreated;
+		_c.aaHandleCreated += _c_ZHandleCreated;
 
 		this.Children.Add(_c);
 	}
 
 	private void _c_ZHandleCreated() {
-		_c.zSetMarginWidth(1, 0);
-		_c.zStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		_c.zStyleClearAll();
-		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);
+		_c.aaaSetMarginWidth(1, 0);
+		_c.aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
+		_c.aaaStyleClearAll();
+		_c.aaTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);
 	}
 
 	class _KScintilla : KScintilla
@@ -34,7 +34,7 @@ class PanelFound : DockPanel
 			switch (msg) {
 			case Api.WM_MBUTTONDOWN: //close file
 				int pos = Call(Sci.SCI_POSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
-				if (ZTags.GetLinkFromPos(pos, out var tag, out var attr) && tag is "+f" or "+ra") {
+				if (aaTags.GetLinkFromPos(pos, out var tag, out var attr) && tag is "+f" or "+ra") {
 					//print.it(tag, attr);
 					var f = App.Model.Find(attr.Split(' ')[0]);
 					if (f != null) App.Model.CloseFile(f, selectOther: true, focusEditor: true);

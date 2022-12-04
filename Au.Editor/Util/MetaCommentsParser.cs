@@ -74,7 +74,7 @@ class MetaCommentsParser
 
 		var b = new StringBuilder();
 		b.Append(prepend).Append(Multiline ? "/*/\r\n" : "/*/ ");
-		_Append("role", role);
+		_Append("role", role); //must be the first
 
 		_Append("ifRunning", ifRunning);
 		_Append("uac", uac);
@@ -125,7 +125,7 @@ class MetaCommentsParser
 	public void Apply() {
 		var doc = Panels.Editor.ZActiveDoc;
 		var f = doc.EFile;
-		var code = doc.zText;
+		var code = doc.aaaText;
 		var meta = MetaComments.FindMetaComments(code);
 		string prepend = null, append = null;
 		if (meta.end == 0) {
@@ -141,9 +141,9 @@ class MetaCommentsParser
 			if (meta.end == 0) return;
 			while (meta.end < code.Length && code[meta.end] <= ' ') meta.end++;
 		} else if (s.Length == meta.end - meta.start) {
-			if (s == doc.zRangeText(true, meta.start, meta.end)) return; //did not change
+			if (s == doc.aaaRangeText(true, meta.start, meta.end)) return; //did not change
 		}
 
-		doc.zReplaceRange(true, meta.start, meta.end, s);
+		doc.aaaReplaceRange(true, meta.start, meta.end, s);
 	}
 }

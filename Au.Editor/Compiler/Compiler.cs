@@ -326,7 +326,7 @@ static partial class Compiler {
 		//#if TRACE
 		//p1.NW('C');
 		//#endif
-		//print.it("<><c red>compiling<>");
+		//print.it($"<><c red>compiled<> {f}");
 		return true;
 
 		//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.

@@ -17,7 +17,7 @@ namespace Au;
 /// Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
 /// </remarks>
 public static partial class filesystem {
-	#region exists, attributes, properties, final path
+	#region exists, attributes, properties
 
 	/// <summary>
 	/// Adds SEM_FAILCRITICALERRORS to the error mode of this process, as MSDN recommends. Once in process.
@@ -199,67 +199,6 @@ public static partial class filesystem {
 		var R = a.Has(FileAttributes.Directory) ? FileIs_.Directory : FileIs_.File;
 		if (ntfsLink) R |= (FileIs_)4;
 		return R;
-	}
-
-	/// <summary>
-	/// Gets full normalized path of an existing file or directory or symbolic link target.
-	/// </summary>
-	/// <returns>false if failed. For example if the path does not point to an existing file or directory. Supports <see cref="lastError"/>.</returns>
-	/// <param name="path">Full or relative path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
-	/// <param name="result">Receives full path, or null if failed.</param>
-	/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
-	/// <param name="format">Result format.</param>
-	/// <remarks>
-	/// Calls API <msdn>GetFinalPathNameByHandle</msdn>.
-	/// 
-	/// Unlike <see cref="pathname.normalize"/>, this function works with existing files and directories, not any strings.
-	/// </remarks>
-	/// <seealso cref="shortcutFile.getTarget(string)"/>
-	public static bool getFinalPath(string path, out string result, bool ofSymlink = false, FPFormat format = FPFormat.PrefixIfLong) {
-		result = null;
-		path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
-		using Handle_ h = Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
-		//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
-		if (h.Is0 || !Api.GetFinalPathNameByHandle(h, out var s, format == FPFormat.VolumeGuid ? 1u : 0u)) return false;
-		if (format == FPFormat.PrefixNever || (format == FPFormat.PrefixIfLong && s.Length <= pathname.maxDirectoryPathLength))
-			s = pathname.unprefixLongPath(s);
-		result = s;
-		return true;
-
-		//never mind: does not change the root if it is like @"\\ThisComputer\share" or @"\\ThisComputer\C$" or @"\\127.0.0.1\c$" or @"\\LOCALHOST\c$" and it is the same as "C:\".
-		//	Tested: getFileId returns the same value for all these.
-	}
-
-	/// <summary>
-	/// Compares final paths of two existing files or directories to determine equality or relationship.
-	/// </summary>
-	/// <param name="pathA">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
-	/// <param name="pathB">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
-	/// <param name="ofSymlinkA">If <i>pathA</i> is of a symbolic link, get final path of the link, not of its target.</param>
-	/// <param name="ofSymlinkB">If <i>pathB</i> is of a symbolic link, get final path of the link, not of its target.</param>
-	/// <remarks>
-	/// Before comparing, calls <see cref="getFinalPath"/>, therefore paths can have any format.
-	/// Example: <c>@"C:\Test\"</c> and <c>@"C:\A\..\Test"</c> are equal.
-	/// Example: <c>@"C:\Test\file.txt"</c> and <c>"file.txt"</c> are equal if the file is in <c>@"C:\Test</c> and <c>@"C:\Test</c> is current directory.
-	/// Example: <c>@"C:\Temp\file.txt"</c> and <c>"%TEMP%\file.txt"</c> are equal if TEMP is an environment variable = <c>@"C:\Temp</c>.
-	/// </remarks>
-	/// <seealso cref="filesystem.more.isSameFile(string, string)"/>
-	public static CPResult comparePaths(string pathA, string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false)
-		=> comparePaths(ref pathA, ref pathB, ofSymlinkA, ofSymlinkB);
-
-	/// <summary>
-	/// Compares final paths of two existing files or directories to determine equality or relationship.
-	/// Also gets final paths (see <see cref="getFinalPath"/>).
-	/// </summary>
-	/// <inheritdoc cref="comparePaths(string, string, bool, bool)"/>
-	public static CPResult comparePaths(ref string pathA, ref string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false) {
-		if (!getFinalPath(pathA, out pathA, ofSymlinkA, FPFormat.PrefixAlways)) return CPResult.Failed;
-		if (!getFinalPath(pathB, out pathB, ofSymlinkB, FPFormat.PrefixAlways)) return CPResult.Failed;
-		//print.it(pathA, pathB);
-		if (pathA.Eqi(pathB)) return CPResult.Same;
-		if (pathA.Length < pathB.Length && pathB.Starts(pathA, true) && (pathB[pathA.Length] == '\\' || pathA.Ends('\\'))) return CPResult.AContainsB;
-		if (pathB.Length < pathA.Length && pathA.Starts(pathB, true) && (pathA[pathB.Length] == '\\' || pathB.Ends('\\'))) return CPResult.BContainsA;
-		return CPResult.None;
 	}
 
 	#endregion

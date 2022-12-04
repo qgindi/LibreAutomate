@@ -10,7 +10,7 @@ namespace Au.Controls
 	/// <remarks>
 	/// Draws images in annotation areas.
 	/// Supports text annotations too, below images and in no-image lines. But it is limited:
-	/// 1. To set/get it use <see cref="KScintilla.zAnnotationText(int, string)"/>, not direct Scintilla API.
+	/// 1. To set/get it use <see cref="KScintilla.aaaAnnotationText(int, string)"/>, not direct Scintilla API.
 	/// 2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
 	/// 3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
 	/// 4. Setting annotation styles is currently not supported.
@@ -149,7 +149,7 @@ namespace Au.Controls
 				int annotLen = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //we'll need old annotation text later, and we'll get it into the same buffer after the new image info
 
 				//calculate n annotation lines from image height
-				int lineHeight = _c.zLineHeight(); if (lineHeight <= 0) continue;
+				int lineHeight = _c.aaaLineHeight(); if (lineHeight <= 0) continue;
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
 				//print.it(lineHeight, maxHeight, nAnnotLines);
 
@@ -260,7 +260,7 @@ namespace Au.Controls
 					return;
 				}
 			}
-			_c.zAnnotationText_(line, s);
+			_c.aaaAnnotationText_(line, s);
 		}
 
 		/// <summary>
@@ -386,8 +386,8 @@ namespace Au.Controls
 			//Cannot store array indices in annotation, because they may change.
 			//Also cannot store image strings in annotation, because then boxed annotation would be too wide (depends on text length).
 			//Getting/parsing text takes less than 20% time. Other time - drawing image.
-			int from = _c.zLineStart(false, c.line), to = _c.zLineEnd(false, c.line), len = to - from;
-			var text = _c.zRangePointer(from, to);
+			int from = _c.aaaLineStart(false, c.line), to = _c.aaaLineEnd(false, c.line), len = to - from;
+			var text = _c.aaaRangePointer(from, to);
 
 			//find image strings and draw the images
 			bool hasImages = false;
@@ -464,7 +464,7 @@ namespace Au.Controls
 			if (!hasImages && c.annotLine == 0) {
 				int line = c.line; var annot = AnnotationText_(line);
 				//_c.zAnnotationText_(line, annot); //dangerous
-				_c.Dispatcher.InvokeAsync(() => { _c.zAnnotationText_(line, annot); });
+				_c.Dispatcher.InvokeAsync(() => { _c.aaaAnnotationText_(line, annot); });
 				return 1;
 			}
 
@@ -489,7 +489,7 @@ namespace Au.Controls
 			int from = n.position, to = from + (inserted ? n.length : 0), len = 0, firstLine = 0, textPos = 0;
 			bool allText = false;
 			if (from == 0) {
-				len = _c.zLen8;
+				len = _c.aaaLen8;
 				if (len < 10) return; //eg 0 when deleted all text
 				if (inserted && len == n.length) { //added all text
 					allText = true;
@@ -497,10 +497,10 @@ namespace Au.Controls
 				}
 			}
 			if (s == null) {
-				firstLine = _c.zLineFromPos(false, from);
-				int from2 = _c.zLineStart(false, firstLine);
+				firstLine = _c.aaaLineFromPos(false, from);
+				int from2 = _c.aaaLineStart(false, firstLine);
 				if (!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
-				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _c.zLineEndFromPos(false, to);
+				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _c.aaaLineEndFromPos(false, to);
 				len = to2 - from2;
 				//print.it(inserted, from, to, from2, to2, len);
 				if (len < 10) return;
@@ -508,7 +508,7 @@ namespace Au.Controls
 					s = n.textUTF8;
 				} else {
 					//Debug_.Print("need to get text");
-					s = _c.zRangePointer(from2, to2);
+					s = _c.aaaRangePointer(from2, to2);
 				}
 				textPos = from2;
 			}
@@ -562,7 +562,7 @@ namespace Au.Controls
 					_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);
 					int len = _c.Call(SCI_GETTEXTLENGTH);
 					if (len >= 10) {
-						var s = _c.zRangePointer(0, len);
+						var s = _c.aaaRangePointer(0, len);
 						_SetImagesForTextRange(0, s, len, true, 0);
 					}
 				}

@@ -5,32 +5,32 @@ namespace Au.Controls
 {
 	/// <summary>
 	/// Scintilla-based control to show formatted information text.
-	/// To set text use the <see cref="KScintilla.zText"/> property. For formatting and links use tags: <see cref="SciTags"/>.
+	/// To set text use the <see cref="KScintilla.aaaText"/> property. For formatting and links use tags: <see cref="SciTags"/>.
 	/// </summary>
 	public class KSciInfoBox : KScintilla
 	{
 		public KSciInfoBox() {
-			ZInitReadOnlyAlways = true;
-			ZInitTagsStyle = ZTagsStyle.AutoAlways;
-			ZInitImages = true;
-			ZInitUseDefaultContextMenu = true;
-			ZInitWrapVisuals = false;
-			ZWrapLines = true;
+			aaInitReadOnlyAlways = true;
+			aaInitTagsStyle = aaTagsStyle.AutoAlways;
+			aaInitImages = true;
+			aaInitUseDefaultContextMenu = true;
+			aaInitWrapVisuals = false;
+			aaWrapLines = true;
 			//TabStop = false;
 			Name = "info";
 		}
 
-		protected override void ZOnHandleCreated() {
-			base.ZOnHandleCreated();
+		protected override void aaOnHandleCreated() {
+			base.aaOnHandleCreated();
 
-			zStyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
-			if (ZInitUseSystemFont) zStyleFont(Sci.STYLE_DEFAULT); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9, but Verdana looks better.
-			zStyleClearAll();
+			aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
+			if (ZInitUseSystemFont) aaaStyleFont(Sci.STYLE_DEFAULT); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9, but Verdana looks better.
+			aaaStyleClearAll();
 
-			zSetMarginWidth(1, 0);
+			aaaSetMarginWidth(1, 0);
 
 			SIZE z = ZInitBlankMargins;
-			z = Dpi.Scale(z, this.Hwnd);
+			z = Dpi.Scale(z, this.aaWnd);
 			Call(Sci.SCI_SETMARGINLEFT, 0, z.width);
 			Call(Sci.SCI_SETMARGINRIGHT, 0, z.height);
 		}
@@ -62,7 +62,7 @@ namespace Au.Controls
 					if (Environment.TickCount64 < _suspendElems) return;
 					_suspendElems = 0;
 				}
-				this.zText = (o as FrameworkElement).ToolTip as string;
+				this.aaaText = (o as FrameworkElement).ToolTip as string;
 			};
 		}
 

@@ -162,8 +162,8 @@ partial class FilesModel {
 		App.Model = m;
 
 		//this code is important for portable
-		filesystem.getFinalPath(wsDir, out wsDir);
-		filesystem.getFinalPath(folders.ThisAppDocuments, out var tad);
+		filesystem.more.getFinalPath(wsDir, out wsDir);
+		filesystem.more.getFinalPath(folders.ThisAppDocuments, out var tad);
 		var unexpanded = folders.unexpandPath(wsDir, (tad, "%folders.ThisAppDocuments%"));
 
 		if (unexpanded != App.Settings.workspace) {
@@ -578,16 +578,16 @@ partial class FilesModel {
 		var doc = Panels.Editor.ZActiveDoc;
 		if (findText != null) {
 			line = -1;
-			columnOrPos = doc.zText.FindWord(findText);
+			columnOrPos = doc.aaaText.FindWord(findText);
 		}
 		if (line >= 0 || columnOrPos >= 0) {
 			if (line >= 0) {
-				int i = doc.zLineStart(false, line);
-				if (columnOrPos > 0) i = doc.zPos8(Math.Min(doc.zPos16(i) + columnOrPos, doc.zLen16)); //not SCI_FINDCOLUMN, it calculates tabs
+				int i = doc.aaaLineStart(false, line);
+				if (columnOrPos > 0) i = doc.aaaPos8(Math.Min(doc.aaaPos16(i) + columnOrPos, doc.aaaLen16)); //not SCI_FINDCOLUMN, it calculates tabs
 				columnOrPos = i;
 			}
 			if (!wasOpen) wait.doEvents(); //else scrolling does not work well if now opened the file. Can't async, because caller may use the new pos immediately.
-			doc.zGoToPos(false, columnOrPos);
+			doc.aaaGoToPos(false, columnOrPos);
 		} else {
 			if (!wasOpen) wait.doEvents(); //caller then may call zGoToPos or zSelect etc
 		}
@@ -677,7 +677,7 @@ partial class FilesModel {
 			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		} else {
 			string symlinkTarget = null;
-			if (f.IsSymlink) filesystem.getFinalPath(filePath, out symlinkTarget, format: FPFormat.PrefixNever);
+			if (f.IsSymlink) filesystem.more.getFinalPath(filePath, out symlinkTarget, format: FPFormat.PrefixNever);
 
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 
@@ -767,7 +767,7 @@ partial class FilesModel {
 			if (how is 3 or 4) {
 				var e = filesystem.exists(path, useRawPath: true);
 				if (!e) { print.it(f.IsFolder ? "The folder does not exist" : "The file does not exist"); continue; }
-				if (how == 4 && e.IsNtfsLink && e.Directory && filesystem.getFinalPath(path, out var s1, format: FPFormat.PrefixNever)) path = s1;
+				if (how == 4 && e.IsNtfsLink && e.Directory && filesystem.more.getFinalPath(path, out var s1, format: FPFormat.PrefixNever)) path = s1;
 			}
 
 			switch (how) {
@@ -961,7 +961,7 @@ partial class FilesModel {
 				else if (s.RxMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
 				else if (s.RxMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
 			}
-			Panels.Editor.ZActiveDoc.zSetText(s);
+			Panels.Editor.ZActiveDoc.aaaSetText(s);
 		}
 
 		if (beginRenaming && f.IsSelected) RenameSelected(newFile: !f.IsFolder);
@@ -1220,13 +1220,13 @@ partial class FilesModel {
 
 	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
 		try {
-			a = a.Select(s => filesystem.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
+			a = a.Select(s => filesystem.more.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
 			if (a.Length == 0) return;
 			var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 
 			//need to detect files coming from the workspace dir. When copying to a symlink folder - from that folder.
 			var rootDir = newParent.Ancestors(andSelf: true, noRoot: true).FirstOrDefault(o => filesystem.exists(o.FilePath).IsNtfsLink)?.FilePath ?? FilesDirectory;
-			if (!filesystem.getFinalPath(rootDir, out rootDir, format: FPFormat.PrefixNever)) return;
+			if (!filesystem.more.getFinalPath(rootDir, out rootDir, format: FPFormat.PrefixNever)) return;
 			//CONSIDER: folder symlink: later auto-update files in workspace when files added/removed not through this app.
 
 			bool fromWorkspaceDir = false;
@@ -1291,9 +1291,13 @@ partial class FilesModel {
 					} else {
 						var newPath = newParentPath + name;
 						if (!TryFileOperation(() => {
-							if (action == 1) Directory.CreateSymbolicLink(newPath, path);
-							else if (action == 2) filesystem.copy(path, newPath, FIfExists.Fail);
-							else if (newPath != path) filesystem.move(path, newPath, FIfExists.Fail);
+							if (action == 1) {
+								filesystem.more.createSymbolicLink(newPath, path, CSLink.JunctionOrSymlink, elevate: true);
+							} else if (action == 2) {
+								filesystem.copy(path, newPath, FIfExists.Fail);
+							} else if (newPath != path) {
+								filesystem.move(path, newPath, FIfExists.Fail);
+							}
 						})) continue;
 						k = new FileNode(this, name, newPath, isDir, isLink: action == 1);
 						if (isDir) _AddDir(newPath, k);

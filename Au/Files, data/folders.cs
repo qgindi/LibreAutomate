@@ -902,7 +902,7 @@ namespace Au {
 					if (pi.PropertyType == typeof(FolderPath)
 						&& !pi.Name.Starts("ThisApp") //different in processes
 						&& pi.GetValue(null) is FolderPath fp) {
-						var s = fp.ToString();
+						var s = fp.Path;
 						if (!s.NE()) a.Add((s.Lower(), pi.Name));
 					}
 				}
@@ -923,7 +923,7 @@ namespace Au {
 			var a = new List<(string path, string name)>(30); //22
 			foreach (var pi in typeof(folders.shell).GetProperties()) {
 				if (pi.PropertyType == typeof(FolderPath) && pi.GetValue(null) is FolderPath fp) {
-					var s = fp.ToString();
+					var s = fp.Path;
 					//print.it(pi.Name, s);
 					if (!s.NE()) a.Add((s, pi.Name));
 				}
@@ -972,6 +972,9 @@ namespace Au.Types {
 		public static explicit operator FolderPath(string path) => new(path); //not implicit. Example: var s = "STRING " + folders.ThisApp; // converts "STRING " to FolderPath and result is @"STRING \C:\path"
 		public static implicit operator string(FolderPath f) => f._path;
 
+		/// <summary>
+		/// Returns <see cref="Path"/>.
+		/// </summary>
 		public override string ToString() => _path;
 
 		/// <summary>

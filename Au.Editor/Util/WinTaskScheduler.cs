@@ -83,24 +83,26 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 	/// <param name="pathMustBe">If not null, don't run if the task action's path does not match this.</param>
 	/// <param name="joinArgs">Join args into single arg for $(Arg0).</param>
 	/// <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
-	public static int RunTask(string taskFolder, string taskName, string pathMustBe, bool joinArgs, params string[] args) {
-		if (!_Connect(out var ts)) return 0;
-		if (0 != ts.GetFolder(taskFolder, out var tf) || 0 != tf.GetTask(taskName, out var t)) return 0;
+	public static (int processId, RResult result) RunTask(string taskFolder, string taskName, string pathMustBe, bool joinArgs, params string[] args) {
+		if (!_Connect(out var ts)) return (0, RResult.CantConnect);
+		if (0 != ts.GetFolder(taskFolder, out var tf) || 0 != tf.GetTask(taskName, out var t)) return (0, RResult.TaskNotFound);
 
-		if (0 == t.get_Enabled(out var enabled) && enabled == 0) return 0;
+		if (0 == t.get_Enabled(out var enabled) && enabled == 0) return (0, RResult.TaskDisabled);
 		
 		if (pathMustBe != null) {
-			if (0 != t.get_Definition(out var td) || 0 != td.get_Actions(out var ac)) return 0;
-			if (0 != ac.get_Item(1, out var a1) || a1 is not api.IExecAction a2) return 0; //1-based, it's documented
+			if (0 != t.get_Definition(out var td) || 0 != td.get_Actions(out var ac)) return (0, RResult.BadTask);
+			if (0 != ac.get_Item(1, out var a1) || a1 is not api.IExecAction a2) return (0, RResult.BadTask); //1-based, it's documented
 			a2.get_Path(out var s1);
-			if (!filesystem.more.isSameFile(pathMustBe, s1)) return 0;
+			if (!filesystem.more.isSameFile(pathMustBe, s1)) return (0, RResult.BadPath);
 		}
 		
 		object a; if (args.NE_()) a = null; else if (joinArgs) a = StringUtil.CommandLineFromArray(args); else a = args;
-		if (0 != t.Run(a, out var rt)) return 0;
+		if (0 != t.Run(a, out var rt)) return (0, RResult.RunFailed);
 		rt.get_EnginePID(out int pid);
-		return pid;
+		return (pid, RResult.Success);
 	}
+
+	public enum RResult { None, Success, CantConnect, TaskNotFound, TaskDisabled, BadTask, BadPath, RunFailed, ArgN }
 	
 	/// <summary>
 	/// Returns true if the task exists.

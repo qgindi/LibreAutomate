@@ -770,7 +770,7 @@ public static class script {
 	/// 
 	/// This function can launch a script to automate attaching a debugger. See Options -> General -> Debugger script. More info in Cookbook.
 	/// 
-	/// <note>Script processes usually run as administrator, therefore the debugger process must run as administrator too.</note>
+	/// <note>If the script process is running as administrator, the debugger process must run as administrator too.</note>
 	/// 
 	/// Visual Studio Code debugger setup:
 	/// - Install extension "C#".

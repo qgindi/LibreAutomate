@@ -128,7 +128,7 @@ class CiSignature {
 			return;
 		}
 		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-		if (cd.pos != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //changed while awaiting
+		if (cd.pos != doc.aaaCurrentPos16 || (object)cd.code != doc.aaaText) return; //changed while awaiting
 																				   //p1.Next('s');
 
 		//print.it($"<><c orange>pos={cd.pos}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
@@ -184,13 +184,13 @@ class CiSignature {
 		}
 
 		doc.ETempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
-			if (doc.ETempRanges_Enum(doc.zCurrentPos8, this, utf8: true).Any()) return;
+			if (doc.ETempRanges_Enum(doc.aaaCurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos));
-		doc.Hwnd.MapClientToScreen(ref rect);
-		rect.Width += Dpi.Scale(200, doc.Hwnd);
+		doc.aaWnd.MapClientToScreen(ref rect);
+		rect.Width += Dpi.Scale(200, doc.aaWnd);
 		rect.left -= 6;
 
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {

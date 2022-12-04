@@ -78,7 +78,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 
 		if (_aClose.Count > 0) b.AppendLine("<bc #FFC000><+caff><c #80ff>Close all<><><>");
 
-		cFound.zSetText(b.ToString());
+		cFound.aaaSetText(b.ToString());
 	}
 
 	public void CloseAll() {

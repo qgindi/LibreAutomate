@@ -15,7 +15,7 @@ class DWinapi : KDialogWindow {
 		Owner = GetWindow(doc);
 
 		if (name == null) {
-			name = doc.zSelectedText();
+			name = doc.aaaSelectedText();
 			if (!name.NE()) {
 				name = name.RxReplace(@"\W+", " ");
 			}
@@ -24,13 +24,13 @@ class DWinapi : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(800, 500);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add("Name", out tName, name);
-		b.Row(-1).Add(out code); code.ZInitBorder = true;
+		b.Row(-1).Add(out code); code.aaInitBorder = true;
 		b.R.AddButton("?", _ => _Help());
 		b.AddOkCancel("OK, copy to clipboard");
 		b.End();
 
 		b.OkApply += o => {
-			string s = code.zText;
+			string s = code.aaaText;
 			if (s.NE()) return;
 			Clipboard.SetText(s);
 		};

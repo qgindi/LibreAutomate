@@ -165,7 +165,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 				_old = b;
 			}
 			catch (Exception ex) {
-				print.it($"Failed to save settings to '{_file}'. {ex.ToStringWithoutStack()}");
+				print.it($"Failed to save settings to '{_file}'. {ex}");
 			}
 		}
 

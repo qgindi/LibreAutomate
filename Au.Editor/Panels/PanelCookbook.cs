@@ -7,7 +7,6 @@ using Au.Tools;
 
 //CONSIDER: Add a menu-button. Menu:
 //	Item "Request a recipe for this search query (uses internet)".
-//	Checkbox "Auto-update the cookbook (uses internet)".
 
 //CONSIDER: option to show Recipe panel when Cookbook panel is really visible and hide when isn't.
 
@@ -22,7 +21,12 @@ class PanelCookbook : UserControl {
 	bool _loaded;
 	List<string> _history = new();
 
+#if DEBUG
 	static string s_cookbookPath;
+#else
+	static sqlite s_sqlite;
+	static sqliteStatement s_sqliteGetText;
+#endif
 
 	public PanelCookbook() {
 		this.UiaSetName("Cookbook panel");
@@ -44,10 +48,7 @@ class PanelCookbook : UserControl {
 			if (e.Button == MouseButton.Right) {
 				var m = new popupMenu();
 				m.Add("DEBUG", disable: true);
-				m["Reload"] = o => {
-					Menus.File.Workspace.Save_now();
-					_Load();
-				};
+				m["Reload"] = o => { Menus.File.Workspace.Save_now(); UnloadLoad(false); UnloadLoad(true); };
 				//m["Check links"] = o => _DebugCheckLinks();
 				m["Print name words"] = o => _DebugGetWords(false);
 				m["Print body words"] = o => _DebugGetWords(true);
@@ -68,8 +69,15 @@ class PanelCookbook : UserControl {
 
 	void _Load() {
 		try {
+#if DEBUG
 			s_cookbookPath = folders.ThisAppBS + "Cookbook\\files";
 			var xr = XmlUtil.LoadElem(s_cookbookPath + ".xml");
+#else
+			s_sqlite = new(folders.ThisAppBS + "cookbook.db", SLFlags.SQLITE_OPEN_READONLY);
+			s_sqliteGetText = s_sqlite.Statement("SELECT data FROM files WHERE name=?");
+			var xml = _GetText("files.xml"); if (xml == null) return;
+			var xr = XElement.Parse(xml);
+#endif
 
 			_root = new _Item(null, true);
 			_AddItems(xr, _root, 0);
@@ -92,8 +100,44 @@ class PanelCookbook : UserControl {
 
 			_tv.SetItems(_root.Children());
 		}
-		catch { }
+		catch (Exception e1) { print.it(e1); }
 	}
+
+	//Used by script "Create cookbook.db" to unlock database file and auto-reload.
+	public bool UnloadLoad(bool load) {
+		if (load == _loaded) return false;
+		if (load) {
+			_Load();
+		} else {
+#if !DEBUG
+			s_sqliteGetText.Dispose(); s_sqliteGetText = null;
+			s_sqlite.Dispose(); s_sqlite = null;
+#endif
+			_root = null;
+			_loaded = false;
+			_tv.SetItems(null);
+		}
+		return true;
+	}
+
+#if !DEBUG
+	//In Release config loads files from database "cookbook.db" created by script "Create cookbook.db".
+	//In Debug config loads files directly. It allows to edit them and see results without creating database.
+	//Previously always loaded from files. But it triggered 7 false positives in virustotal.com. The "bad" recipe was PowerShell.
+	//The same recipes don't trigger FP when in database. Additionally the script mangles text to avoid FP in the future.
+
+	static string _Unmangle(string s) => s_unmangle.Replace(s, "$1");
+	static readonly regexp s_unmangle = new(@"A([A-Z][a-z]+)");
+
+	static string _GetText(string name) {
+		if (!s_sqliteGetText.Reset().Bind(1, name).Step()) {
+			print.warning($"{name} not found in cookbook.db. Reinstall this program.");
+			return null;
+		}
+		var s = s_sqliteGetText.GetText(0);
+		return _Unmangle(s);
+	}
+#endif
 
 	void _OpenRecipe(_Item recipe, bool select) {
 		if (recipe == null || recipe.dir) return;
@@ -129,7 +173,7 @@ class PanelCookbook : UserControl {
 					if (r == null) continue;
 				} else {
 					var t = inBody ? n.GetBodyTextWithoutLinksEtc() : n.name;
-					if (!t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
+					if (t == null || !t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
 					r = new _Item(n.name, false);
 				}
 				R ??= new _Item(parent.name, true) { isExpanded = true };
@@ -292,6 +336,7 @@ class PanelCookbook : UserControl {
 
 		#endregion
 
+#if DEBUG
 		public string FullPath {
 			get {
 				if (_path == null && name != null) {
@@ -312,6 +357,11 @@ class PanelCookbook : UserControl {
 		public string GetBodyText() {
 			try { return filesystem.loadText(FullPath); } catch { return null; }
 		}
+#else
+		public string GetBodyText() {
+			return _GetText(name);
+		}
+#endif
 
 		public string GetBodyTextWithoutLinksEtc() {
 			var t = GetBodyText(); if (t == null) return null;
