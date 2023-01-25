@@ -42,13 +42,13 @@ namespace Au;
 /// Dialog window with several controls for data input.
 /// <code><![CDATA[
 /// var b = new wpfBuilder("Example").WinSize(400); //create Window object with Grid control; set window width 400
-/// b.R.Add("Text", out TextBox text1).Focus(); //add label and text box control in first row
-/// b.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three"); //in second row add label and combo box control with items
-/// b.R.Add(out CheckBox c1, "Check"); //in third row add check box control
-/// b.R.AddOkCancel(); //finally add standard OK and Cancel buttons
+/// b._r.Add("TextForFind", out TextBox text1).Focus(); //add label and text box control in first row
+/// b._r.Add("Combo", out ComboBox combo1).Items("One|Two|Three"); //in second row add label and combo box control with items
+/// b._r.Add(out CheckBox c1, "Check"); //in third row add check box control
+/// b._r.AddOkCancel(); //finally add standard OK and Cancel buttons
 /// b.End();
 /// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-/// print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
+/// print.it(text1.TextForFind, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
 /// ]]></code>
 /// </example>
 public class wpfBuilder {
@@ -493,8 +493,8 @@ public class wpfBuilder {
 	/// <code><![CDATA[
 	/// string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
 	/// var b = new wpfBuilder("Window").WinSize(300);
-	/// b.Row(0).Add("Text", out TextBox _);
-	/// b.R.AddOkCancel();
+	/// b.Row(0).Add("TextForFind", out TextBox _);
+	/// b._r.AddOkCancel();
 	/// b.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o));
 	/// b.End();
 	/// ]]></code>
@@ -672,13 +672,13 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="variable">
 	/// Receives element's variable. The function creates element of variable's type. You can use the variable to set element's properties before showing window or/and to get value after.
-	/// Examples: <c>.Add(out CheckBox c1, "Text")</c>, <c>.Add(out _textBox1)</c>. If don't need a variable: <c>.Add(out Label _, "Text")</c> or <c>.Add&lt;Label>("Text")</c>.
+	/// Examples: <c>.Add(out CheckBox c1, "TextForFind")</c>, <c>.Add(out _textBox1)</c>. If don't need a variable: <c>.Add(out Label _, "TextForFind")</c> or <c>.Add&lt;Label>("TextForFind")</c>.
 	/// </param>
 	/// <param name="text">
-	/// Text, header or other content. Supported element types (or base types):
-	/// <see cref="TextBox"/> - sets <b>Text</b> property.
-	/// <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
-	/// <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="Text"/>).
+	/// TextForFind, header or other content. Supported element types (or base types):
+	/// <see cref="TextBox"/> - sets <b>TextForFind</b> property.
+	/// <see cref="ComboBox"/> - sets <b>TextForFind</b> property (see also <see cref="Items"/>).
+	/// <see cref="TextBlock"/> - sets <b>TextForFind</b> property (see also <see cref="Text"/>).
 	/// <see cref="PasswordBox"/> - sets <b>Password</b> property.
 	/// <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property.
 	/// <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc).
@@ -795,7 +795,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
-	/// <param name="text">Text, header or other content. More info - see other overload.</param>
+	/// <param name="text">TextForFind, header or other content. More info - see other overload.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
@@ -804,9 +804,9 @@ public class wpfBuilder {
 	/// Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
 	/// </summary>
 	/// <param name="var1">Variable of first element. More info - see other overload.</param>
-	/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
+	/// <param name="text1">TextForFind, header or other content of first element. More info - see other overload.</param>
 	/// <param name="var2">Variable of second element. More info - see other overload.</param>
-	/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
+	/// <param name="text2">TextForFind, header or other content of second element. More info - see other overload.</param>
 	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
 	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for element type <i>T1</i> or <i>T2</i>.</exception>
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
@@ -825,7 +825,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="label">Label text.</param>
 	/// <param name="variable">Variable of second element. More info - see other overload.</param>
-	/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
+	/// <param name="text">TextForFind, header or other content of second element. More info - see other overload.</param>
 	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
 	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for this element type.</exception>
 	public wpfBuilder Add<T>(string label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
@@ -847,7 +847,7 @@ public class wpfBuilder {
 	/// Adds button with <see cref="ButtonBase.Click"/> event handler.
 	/// </summary>
 	/// <param name="variable">Receives button's variable.</param>
-	/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
+	/// <param name="text">TextForFind/content (<see cref="ContentControl.Content"/>).</param>
 	/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button. Not called if validation fails.</param>
 	/// <param name="flags"></param>
 	/// <remarks>
@@ -902,7 +902,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds button that closes the window and sets <see cref="ResultButton"/>.
 	/// </summary>
-	/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
+	/// <param name="text">TextForFind/content (<see cref="ContentControl.Content"/>).</param>
 	/// <param name="result"><see cref="ResultButton"/> value when clicked this button.</param>
 	/// <remarks>
 	/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns true.
@@ -928,9 +928,9 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds OK and/or Cancel and/or Apply buttons.
 	/// </summary>
-	/// <param name="ok">Text of OK button. If null, does not add the button.</param>
-	/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
-	/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
+	/// <param name="ok">TextForFind of OK button. If null, does not add the button.</param>
+	/// <param name="cancel">TextForFind of Cancel button. If null, does not add the button.</param>
+	/// <param name="apply">TextForFind of Apply button. If null, does not add the button.</param>
 	/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If null (default), adds if not already in a stack panel, except when there is 1 button.</param>
 	/// <remarks>
 	/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
@@ -977,15 +977,15 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="e">Variable for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. TextForFind can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <param name="label">If not null, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a [Flags] enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
 	/// <param name="vertical">Vertical stack. Default true.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(250);
-	/// b.R.AddEnum<KMod>(out var e1, KMod.Ctrl | KMod.Alt, label: "Modifiers", vertical: false);
-	/// b.R.AddEnum<DayOfWeek>(out var e2, DateTime.Today.DayOfWeek, label: "Day");
-	/// b.R.AddOkCancel();
+	/// b._r.AddEnum<KMod>(out var e1, KMod.Ctrl | KMod.Alt, label: "Modifiers", vertical: false);
+	/// b._r.AddEnum<DayOfWeek>(out var e2, DateTime.Today.DayOfWeek, label: "Day");
+	/// b._r.AddOkCancel();
 	/// if (!b.ShowDialog()) return;
 	/// print.it(e1.Result);
 	/// print.it(e2.Result);
@@ -1186,7 +1186,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets horizontal and/or vertical alignment of the last added element.
 	/// </summary>
-	/// <param name="x">Horizontal alignment. String that starts with one of these letters, uppercase or lowercase: L (left), R (right), C (center), S (stretch).</param>
+	/// <param name="x">Horizontal alignment. String that starts with one of these letters, uppercase or lowercase: L (left), _r (right), C (center), S (stretch).</param>
 	/// <param name="y">Vertical alignment. String that starts with one of these letters, uppercase or lowercase: T (top), B (bottom), C (center), S (stretch).</param>
 	/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
@@ -1246,7 +1246,7 @@ public class wpfBuilder {
 	/// Sets margin of the last added element.
 	/// </summary>
 	/// <param name="margin">
-	/// String containing uppercase or lowercase letters for margin sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
+	/// String containing uppercase or lowercase letters for margin sides (L, T, _r, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
@@ -1306,7 +1306,7 @@ public class wpfBuilder {
 	/// Sets padding of the last added control.
 	/// </summary>
 	/// <param name="padding">
-	/// String containing uppercase or lowercase letters for padding sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
+	/// String containing uppercase or lowercase letters for padding sides (L, T, _r, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
@@ -1341,21 +1341,21 @@ public class wpfBuilder {
 	/// Sets tooltip text/content/object of the last added element. See <see cref="FrameworkElement.ToolTip"/>.
 	/// </summary>
 	/// <example>
-	/// Text box with simple tooltip.
+	/// TextForFind box with simple tooltip.
 	/// <code><![CDATA[
-	/// b.R.Add("Example", out TextBox _).Tooltip("Tooltip text");
+	/// b._r.Add("Example", out TextBox _).Tooltip("Tooltip text");
 	/// ]]></code>
 	/// Tooltip with content created by another <b>wpfBuilder</b>.
 	/// <code><![CDATA[
 	/// //tooltip content
 	/// var btt = new wpfBuilder()
-	/// 	.R.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
-	/// 	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
+	/// 	._r.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
+	/// 	._r.Add<TextBlock>().TextForFind("Some ", "<b>text", ".")
 	/// 	.End();
 	/// //dialog
 	/// var b = new wpfBuilder("Window").WinSize(300);
-	/// b.R.AddButton("Example", null).Tooltip(btt.Panel);
-	/// b.R.AddOkCancel();
+	/// b._r.AddButton("Example", null).Tooltip(btt.Panel);
+	/// b._r.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
@@ -1383,8 +1383,8 @@ public class wpfBuilder {
 	/// <exception cref="NotSupportedException">Last added element must be <b>Control</b>, <b>Panel</b>, <b>Border</b> or <b>TextBlock</b>. With <i>foreground</i> only <b>Control</b> or <b>TextBlock</b>.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add<Label>("Example1").Brush(Brushes.Cornsilk, Brushes.Green).Border(Brushes.BlueViolet, 1);
-	/// b.R.Add<Label>("Example2").Brush(new LinearGradientBrush(Colors.Chocolate, Colors.White, 0));
+	/// b._r.Add<Label>("Example1").Brush(Brushes.Cornsilk, Brushes.Green).Border(Brushes.BlueViolet, 1);
+	/// b._r.Add<Label>("Example2").Brush(new LinearGradientBrush(Colors.Chocolate, Colors.White, 0));
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Brush(Brush background = null, Brush foreground = null) { //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
@@ -1420,8 +1420,8 @@ public class wpfBuilder {
 	/// <exception cref="NotSupportedException">Last added element must be <b>Control</b> or <b>Border</b>. With <i>cornerRadius</i> only <b>Border</b>.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add<Label>("Example1").Border(Brushes.BlueViolet, 1, new(5)).Brush(Brushes.Cornsilk, Brushes.Green);
-	/// b.R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast);
+	/// b._r.Add<Label>("Example1").Border(Brushes.BlueViolet, 1, new(5)).Brush(Brushes.Cornsilk, Brushes.Green);
+	/// b._r.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast);
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Border(Brush color = null, double thickness = 1d, Thickness? padding = null, double? cornerRadius = null, Thickness? thickness2 = null) {
@@ -1543,14 +1543,14 @@ public class wpfBuilder {
 	/// <example>
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(300);
-	/// b.R.Add("Name", out TextBox tName)
-	/// 	.Validation(o => string.IsNullOrWhiteSpace(tName.Text) ? "Name cannot be empty" : null);
-	/// b.R.Add("Count", out TextBox tCount)
-	/// 	.Validation(o => int.TryParse(tCount.Text, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100");
-	/// b.R.AddOkCancel();
+	/// b._r.Add("Name", out TextBox tName)
+	/// 	.Validation(o => string.IsNullOrWhiteSpace(tName.TextForFind) ? "Name cannot be empty" : null);
+	/// b._r.Add("Count", out TextBox tCount)
+	/// 	.Validation(o => int.TryParse(tCount.TextForFind, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100");
+	/// b._r.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
-	/// print.it(tName.Text, tCount.Text.ToInt());
+	/// print.it(tName.TextForFind, tCount.TextForFind.ToInt());
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/) {
@@ -1592,7 +1592,7 @@ public class wpfBuilder {
 							e.Focus();
 						}
 						catch { }
-						//						catch(Exception e1) { print.it(e1); }
+						//catch(Exception e1) { print.it(e1); }
 					});
 				};
 				tb.Inlines.Add(h);
@@ -1600,7 +1600,7 @@ public class wpfBuilder {
 		}
 		if (tb == null) return true;
 		var tt = new ToolTip { Content = tb, StaysOpen = false, PlacementTarget = b, Placement = PlacementMode.Bottom };
-		//		var tt=new Popup { Child=tb, StaysOpen=false, PlacementTarget=b, Placement= PlacementMode.Bottom }; //works, but black etc
+		//var tt=new Popup { Child=tb, StaysOpen=false, PlacementTarget=b, Placement= PlacementMode.Bottom }; //works, but black etc
 		tt.IsOpen = true;
 		//never mind: could add eg red rectangle, like WPF does on binding validation error. Not easy.
 		return false;
@@ -1611,7 +1611,7 @@ public class wpfBuilder {
 		_Enum(root, 0);
 		void _Enum(DependencyObject parent, int level) {
 			foreach (var o in LogicalTreeHelper.GetChildren(parent).OfType<DependencyObject>()) {
-				//				print.it(new string(' ', level) + o);
+				//print.it(new string(' ', level) + o);
 				if (o is Panel p && s_cwt.TryGetValue(p, out var gb)) a.Add(gb);
 				_Enum(o, level + 1);
 			}
@@ -1850,8 +1850,8 @@ public class wpfBuilder {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add<TextBlock>().Text(
-	/// 	"Text ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
+	/// b._r.Add<TextBlock>().TextForFind(
+	/// 	"TextForFind ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
 	/// 	new Run("color") { Foreground = Brushes.Blue, Background = Brushes.Cornsilk, FontSize = 20 }, "\n",
 	/// 	"controls", new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }, new CheckBox() { Content = "Check" }, "\n",
 	/// 	"image", ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")
@@ -1928,7 +1928,7 @@ public class wpfBuilder {
 			case Frame u: u.Source = new Uri(source); break;
 			case RichTextBox u when source.Ends(".rtf", true):
 				using (var fs = filesystem.loadStream(source)) { u.Selection.Load(fs, DataFormats.Rtf); }
-				//also supports DataFormats.Text,Xaml,XamlPackage. If need HTML, download and try HtmlToXamlConverter. See https://www.codeproject.com/Articles/1097390/Displaying-HTML-in-a-WPF-RichTextBox
+				//also supports DataFormats.TextForFind,Xaml,XamlPackage. If need HTML, download and try HtmlToXamlConverter. See https://www.codeproject.com/Articles/1097390/Displaying-HTML-in-a-WPF-RichTextBox
 				break;
 			default: bad = true; break;
 			}
@@ -1991,11 +1991,11 @@ public class wpfBuilder {
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(400)
 	/// 	.Columns(30.., 0, -1) //the middle column is for splitter; the 30 is minimal width
-	/// 	.R.Add(out TextBox _)
+	/// 	._r.Add(out TextBox _)
 	/// 	.Add<GridSplitter>().Splitter(true, 2).Brush(Brushes.Orange) //add splitter in the middle column
 	/// 	.Add(out TextBox _)
-	/// 	.R.Add(out TextBox _).Skip().Add(out TextBox _) //skip the splitter's column
-	/// 	.R.AddOkCancel()
+	/// 	._r.Add(out TextBox _).Skip().Add(out TextBox _) //skip the splitter's column
+	/// 	._r.AddOkCancel()
 	/// 	.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
@@ -2005,7 +2005,7 @@ public class wpfBuilder {
 	/// 	.Row(27..).Add("Row", out TextBox _)
 	/// 	.Add<GridSplitter>().Splitter(false, 2).Brush(Brushes.Orange)
 	/// 	.Row(-1).Add("Row", out TextBox _)
-	/// 	.R.AddOkCancel()
+	/// 	._r.AddOkCancel()
 	/// 	.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
@@ -2039,7 +2039,7 @@ public class wpfBuilder {
 	//		if(decimalPlaces!=null) c.DecimalPlaces=decimalPlaces.Value;
 	//		if(thousandsSeparator!=null) c.ThousandsSeparator=thousandsSeparator.Value;
 	//		if(hex!=null) c.Hexadecimal=hex.Value;
-	//		if(value!=null) c.Value=value.Value; else c.Text=null;
+	//		if(value!=null) c.Value=value.Value; else c.TextForFind=null;
 	//		return this;
 	//	}
 

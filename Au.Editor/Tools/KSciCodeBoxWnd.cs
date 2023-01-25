@@ -13,13 +13,13 @@ namespace Au.Controls;
 class KSciCodeBoxWnd : KSciCodeBox {
 	/// <summary>
 	/// Returns code to find window w and optionally control con in it. Without newline at the end.
-	/// If w/con is same as previous and code of this control is modified and valid, gets code from this code control, from the start to ZReadonlyStart.
+	/// If w/con is same as previous and code of this control is modified and valid, gets code from this code control, from the start to aaReadonlyStart.
 	/// Else creates code "var w = wnd.find(...);". If w is invalid, creates code "wnd w = default;".
 	/// The returned wndVar is final wnd variable name (of window or control).
 	/// </summary>
-	public (string code, string wndVar) ZGetWndFindCode(bool test, wnd w, wnd con = default, bool private1 = false) {
+	public (string code, string wndVar) a4GetWndFindCode(bool test, wnd w, wnd con = default, bool private1 = false) {
 		if (test) { //remove 'wait' and 'activate' from wnd.find and wnd.Child. If no 'wait', insert 0 to throw notfoundexception.
-			var k = ZGetWndFindCode(false, w, con, private1: true);
+			var k = a4GetWndFindCode(false, w, con, private1: true);
 			var s = k.code;
 			var p = _ParseWndFind(s, test: true);
 			if (p?.wVar != null) {
@@ -222,17 +222,17 @@ class KSciCodeBoxWnd : KSciCodeBox {
 	/// <summary>
 	/// Shows <see cref="Dwnd"/> and updates text.
 	/// </summary>
-	public (bool ok, wnd w, wnd con, bool useCon) ZShowWndTool(Window owner, wnd w, wnd con, bool checkControl) {
+	public (bool ok, wnd w, wnd con, bool useCon) a4ShowWndTool(Window owner, wnd w, wnd con, bool checkControl) {
 		var flags = DwndFlags.DontInsert; if (checkControl) flags |= DwndFlags.CheckControl;
 		var d = new Dwnd(con.Is0 ? w : con, flags);
-		d.ShowAndWait(owner, hideOwner: true);
-		var code = d.ZResultCode; if (code == null) return default;
-		_wnd = d.ZResultWindow;
-		_con = d.ZResultUseControl ? d.ZResultControl : default;
+		d.aaShowAndWait(owner, hideOwner: true);
+		var code = d.aaResultCode; if (code == null) return default;
+		_wnd = d.aaResultWindow;
+		_con = d.aaResultUseControl ? d.aaResultControl : default;
 		int i = _ReadonlyStartUtf8;
 		var code2 = aaaRangeText(false, i, i + _readonlyLenUtf8);
 		aaaIsReadonly = false;
 		aaaSetText(code + code2);
-		return (true, d.ZResultWindow, d.ZResultControl, d.ZResultUseControl);
+		return (true, d.aaResultWindow, d.aaResultControl, d.aaResultUseControl);
 	}
 }

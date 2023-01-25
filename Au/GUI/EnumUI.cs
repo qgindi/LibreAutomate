@@ -16,7 +16,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </summary>
 	/// <param name="m"></param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. TextForFind can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new popupMenu();
@@ -70,11 +70,11 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. TextForFind can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// With <b>wpfBuilder</b>.
 	/// <code><![CDATA[
-	/// b.R.StartStack(vertical: true);
+	/// b._r.StartStack(vertical: true);
 	/// var e = new EnumUI<KMod>(b.Panel as StackPanel, KMod.Ctrl|KMod.Alt);
 	/// b.End();
 	/// ...
@@ -105,10 +105,10 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. TextForFind can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add("Dock", out ComboBox cb1);
+	/// b._r.Add("Dock", out ComboBox cb1);
 	/// var e = new EnumUI<Dock>(cb1);
 	/// ...
 	/// print.it(e.Result);

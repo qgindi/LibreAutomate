@@ -12,7 +12,7 @@ class PanelRecipe : DockPanel {
 	_KScintilla _c;
 	string _usings;
 
-	//public KScintilla ZControl => _c;
+	//public KScintilla aaControl => _c;
 
 	public PanelRecipe() {
 		//this.UiaSetName("Recipe panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
@@ -22,22 +22,22 @@ class PanelRecipe : DockPanel {
 			aaInitReadOnlyAlways = true,
 			aaInitTagsStyle = KScintilla.aaTagsStyle.User
 		};
-		_c.aaHandleCreated += _c_ZHandleCreated;
+		_c.aaHandleCreated += _c_aaHandleCreated;
 
 		this.Children.Add(_c);
 	}
 
-	private void _c_ZHandleCreated() {
+	private void _c_aaHandleCreated() {
 		_c.Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 
 		_c.aaaSetMarginWidth(1, 14);
 		_c.Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
 		_c.Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
 
-		//_c.zStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
-		//_c.zStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
-		//_c.zStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
-		//_c.zStyleFont(STYLE_DEFAULT, "Calibri", 9); //too small
+		//_c.aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
+		//_c.aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
+		//_c.aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
+		//_c.aaaStyleFont(STYLE_DEFAULT, "Calibri", 9); //too small
 		_c.aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9);
 		var styles = new CiStyling.TStyles { FontSize = 9 };
 		styles.ToScintilla(_c, multiFont: true);
@@ -45,11 +45,11 @@ class PanelRecipe : DockPanel {
 
 		_c.aaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 		_c.aaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _usings); if (s != null) run.itSafe(s); });
-		//_c.ZTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
+		//_c.aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
 		_c.aaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
-		//_c.ZTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
+		//_c.aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 		_c.aaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-		_c.aaTags.AddLinkTag("+nuget", s => DNuget.ZShow(s));
+		_c.aaTags.AddLinkTag("+nuget", s => DNuget.aaShow(s));
 		_c.aaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
 
 #if DEBUG
@@ -203,7 +203,7 @@ class PanelRecipe : DockPanel {
 		App.Timer1sWhenVisible += () => {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!this.IsVisible) return;
-			var doc = Panels.Editor.ZActiveDoc;
+			var doc = Panels.Editor.aaActiveDoc;
 			if (doc == null || !doc.EFile.IsScript || doc.EFile.Parent.Name == "-") return;
 			string text = doc.aaaText;
 			if (text == prevText) return;

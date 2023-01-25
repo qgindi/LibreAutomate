@@ -132,7 +132,7 @@ class PanelOutline : DockPanel
 				var v = e.Item as _Item;
 				_activeDoc.aaaGoToPos(true, v._pos);
 			};
-			Panels.Editor.ZActiveDocChanged += () => Clear();
+			Panels.Editor.aaActiveDocChanged += Clear;
 		}
 
 		_tv.SetItems(root.Children(), modified: changed != 4);
@@ -146,7 +146,7 @@ class PanelOutline : DockPanel
 					if ((o == null) != (n == null)) return 1; //added or removed at the end
 					if (o == null) break;
 					if (!n.Eq(o)) {
-						//is just changed text of this, or something added or removed in the moddle? If added/removed, need to update _isExpanded.
+						//is just changed text of this, or something added or removed in the middle? If added/removed, need to update _isExpanded.
 						R |= 1;
 						_Item o1 = o.Next, n1 = n.Next;
 						if (o1 != null && n1 != null) { //else added or removed at the end
@@ -189,7 +189,7 @@ class PanelOutline : DockPanel
 	//	Debug.Assert(this.IsVisible && _oldTree != null);
 	//	//print.it("sync");
 
-	//	int pos = Panels.Editor.ZActiveDoc.zCurrentPos16; //todo: return if didn't change (use the position changed notification).
+	//	int pos = Panels.Editor.aaActiveDoc.aaaCurrentPos16; //todo: return if didn't change (use the position changed notification).
 	//	_Item found = null;
 	//	if (0 == (3 & App.Settings.outline_flags)) { //not sorted
 	//		found = _Find(_oldTree);

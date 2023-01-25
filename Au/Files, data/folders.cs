@@ -482,6 +482,20 @@ namespace Au {
 		/// Gets folder path of caller's source code file.
 		/// </summary>
 		/// <param name="f_">[](xref:caller_info)</param>
+		/// <remarks>
+		/// This is complete code of this function:
+		/// <code><![CDATA[
+		/// public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
+		/// ]]></code>
+		/// 
+		/// In the same way you can get file path and text:
+		/// <code><![CDATA[
+		/// static string _SourceFile([CallerFilePath] string f_ = null) => f_;
+		/// 
+		/// static string _SourceCode([CallerFilePath] string f_ = null) => filesystem.loadText(f_);
+		/// ]]></code>
+		/// </remarks>
+		/// <seealso cref="CallerFilePathAttribute"/>
 		public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
 
 		/// <summary>

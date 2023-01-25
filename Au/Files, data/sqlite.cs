@@ -220,9 +220,9 @@ namespace Au {
 		//public bool Get(out DateTime value, bool convertToLocal, string sql, params object[] bind)
 		//{
 		//	using var p = Prepare(sql, bind);
-		//	bool R = p.Step();
-		//	value = R ? p.GetDateTime(0, convertToLocal) : default;
-		//	return R;
+		//	bool _r = p.Step();
+		//	value = _r ? p.GetDateTime(0, convertToLocal) : default;
+		//	return _r;
 		//}
 
 		/// <remarks></remarks>

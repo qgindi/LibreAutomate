@@ -5,7 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Input;
 
 partial class MainWindow : Window {
-	public void Init() {
+	public void aaInit() {
 		//_StartProfileOptimization();
 
 		Title = App.AppNameShort; //don't append document name etc
@@ -43,10 +43,10 @@ partial class MainWindow : Window {
 
 		_NormalizeMouseWheel();
 
-		//timer.after(100, _ => DOptions.ZShow());
+		//timer.after(100, _ => DOptions.aaShow());
 		//timer.after(100, _ => App.Model.Properties());
 		//timer.after(100, _ => Menus.File.Workspace.New_workspace());
-		//timer.after(100, _ => DIcons.ZShow());
+		//timer.after(100, _ => DIcons.aaShow());
 		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.find(null, "Shell_TrayWnd")));
 		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.findOrRun(null, "Notepad", run: () => run.it(folders.System + "notepad.exe"))));
 		//timer.after(500, _ => Au.Tools.Delm.Dialog(new POINT(806, 1580)));
@@ -77,6 +77,7 @@ partial class MainWindow : Window {
 				process.ThisProcessMinimizePhysicalMemory_(1000);
 			} else {
 				Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc
+				EditorExtension.ClosingWorkspace_(onExit: true);
 			}
 		}
 		base.OnClosing(e); //note: must be at the end, after we set Cancel
@@ -109,9 +110,9 @@ partial class MainWindow : Window {
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
 
 		App.Loaded = EProgramState.LoadedUI;
-		//Load?.Invoke(this, EventArgs.Empty);
 
 		CodeInfo.UiLoaded();
+
 		UacDragDrop.AdminProcess.Enable(true); //rejected: disable when hiding main window. Some other window may be visible.
 
 		hs.AddHook(_WndProc);
@@ -120,6 +121,8 @@ partial class MainWindow : Window {
 
 		App.OnMainWindowLoaded_();
 
+		//Created?.Invoke();
+
 		CommandLine.UILoaded();
 	}
 
@@ -127,7 +130,7 @@ partial class MainWindow : Window {
 	///// When window handle created.
 	///// Documents are open, etc.
 	///// </summary>
-	//public event EventHandler Load;
+	//public event Action Created;
 
 	unsafe nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
 		var w = (wnd)hwnd;
@@ -147,7 +150,7 @@ partial class MainWindow : Window {
 		case Api.WM_ACTIVATEAPP:
 			if (wParam != 0) {
 				_appActivatedTimer ??= new(_ => {
-					Panels.Editor.OnAppActivated();
+					Panels.Editor.aaOnAppActivated_();
 				});
 				_appActivatedTimer.After(250);
 			} else {
@@ -221,7 +224,7 @@ partial class MainWindow : Window {
 #endif
 	}
 
-	public void ZShowAndActivate() {
+	public void aaShowAndActivate() {
 		Show();
 		var w = this.Hwnd();
 		w.ShowNotMinimized();

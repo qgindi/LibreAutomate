@@ -35,7 +35,7 @@ class KeysWindow : InfoWindow //KPopup
 	}
 
 	/// <summary>
-	/// Inserts s in InsertInControl, which can be either Panels.Editor.ZActiveDoc or a TextBox (only for a hotkey).
+	/// Inserts s in InsertInControl, which can be either Panels.Editor.aaActiveDoc or a TextBox (only for a hotkey).
 	/// </summary>
 	void _Insert(string s) {
 		FrameworkElement con = InsertInControl;
@@ -49,7 +49,7 @@ class KeysWindow : InfoWindow //KPopup
 			}
 			if (s.Ends(false, "Alt", "Ctrl", "Shift", "Win") > 0) s += "+";
 		} else {
-			Debug.Assert(con == Panels.Editor.ZActiveDoc);
+			Debug.Assert(con == Panels.Editor.aaActiveDoc);
 			if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return;
 			if (true != token.IsInString(cd.pos, cd.code, out var si)) return;
 			int pos = cd.pos, from = si.textSpan.Start, to = si.textSpan.End;

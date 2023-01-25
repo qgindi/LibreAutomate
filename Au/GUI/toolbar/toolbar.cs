@@ -140,7 +140,7 @@ public partial class toolbar : MTBase {
 	/// Adds button.
 	/// Same as <see cref="this[string, MTImage, int]"/>.
 	/// </summary>
-	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
+	/// <param name="text">TextForFind. Or <c>"TextForFind|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"TextForFind|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"TextForFind\a"</c> or <c>"TextForFind\a|Tooltip"</c>.</param>
 	/// <param name="click">Action called when the button clicked.</param>
 	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -239,7 +239,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Adds new horizontal separator, optionally with text.
 	/// </summary>
-	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator).</param>
+	/// <param name="text">TextForFind. Or <c>"TextForFind|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"TextForFind|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator).</param>
 	public TBItem Group(string text = null) {
 		var item = new TBItem(TBItemType.Group);
 		_Add(item, text, null, default, 0);

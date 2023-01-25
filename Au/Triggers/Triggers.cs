@@ -711,7 +711,7 @@ class TriggerHookContext : WFCache
 			b.AppendLine();
 		}
 		b.Append("* W - Triggers.Of (window); F - Triggers.FuncOf.</fold>");
-		ThreadPool.QueueUserWorkItem(s1 => print.it(s1), b.ToString()); //4 ms first time. Async because Write() JIT slow.
+		ThreadPool.QueueUserWorkItem(print.it, b.ToString()); //4 ms first time. Async because JIT slow.
 	}
 
 	/// <summary>

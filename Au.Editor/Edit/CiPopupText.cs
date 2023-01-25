@@ -29,7 +29,7 @@ class CiPopupText
 	public Action<CiPopupText, string> OnLinkClick { get; set; }
 
 	/// <summary>
-	/// Text to show. Set before calling Show.
+	/// TextForFind to show. Set before calling Show.
 	/// </summary>
 	public System.Windows.Documents.Section Text {
 		get => _section;
@@ -77,7 +77,6 @@ class CiPopupText
 	/// </summary>
 	/// <param name="ownerControl"></param>
 	/// <param name="anchorRect">Rectangle in screen coord. The popup window will be by it but not in it (in it if side = null).</param>
-	/// <param name="align"></param>
 	/// <param name="hideIfOutside">Hide when mouse moved outside anchorRect unless is in the popup window.</param>
 	public void Show(SciCode ownerControl, RECT anchorRect, Dock? side, bool hideIfOutside = false) {
 		_CreateOrGet();

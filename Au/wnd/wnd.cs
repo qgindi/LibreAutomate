@@ -2643,7 +2643,7 @@ namespace Au {
 
 			if (removeUnderlineAmpersand
 				&& !R.NE()
-				//&& R.Contains('&') //slower than HasStyle if the string is longer than 20
+				//&& _r.Contains('&') //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
 				) R = StringUtil.RemoveUnderlineChar(R);
 
@@ -2699,7 +2699,7 @@ namespace Au {
 		/// <summary>
 		/// Sets window/control name or control text.
 		/// </summary>
-		/// <param name="text">Text. Can be null, it is the same as <c>""</c>.</param>
+		/// <param name="text">TextForFind. Can be null, it is the same as <c>""</c>.</param>
 		/// <remarks>
 		/// Uses API <msdn>WM_SETTEXT</msdn>.
 		/// Top-level window name usually its title bar text.

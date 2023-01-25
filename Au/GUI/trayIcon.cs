@@ -181,7 +181,7 @@ namespace Au
 		/// Shows temporary notification window by the tray icon.
 		/// </summary>
 		/// <param name="title">Title, max 63 characters.</param>
-		/// <param name="text">Text, max 255 characters.</param>
+		/// <param name="text">TextForFind, max 255 characters.</param>
 		/// <param name="flags">Standard icon and other flags.</param>
 		/// <param name="icon">Custom icon. Important: use icon of size returned by <see cref="notificationIconSize"/>.</param>
 		/// <remarks>

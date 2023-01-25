@@ -253,6 +253,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 		set {
 			_triggers.ThrowIfRunning_();
 			if (f.Props.contains.Value is uiimageFinder) print.warning("Window triggers with 'contains image' are unreliable.");
+			else if (f.Props.contains.Value is ocrFinder) print.warning("Window triggers with 'contains OCR text' are slow.");
 
 			var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later, (f_, l_));
 			ref var last = ref _tActive; if (t.IsVisible) last = ref _tVisible;

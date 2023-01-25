@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
  * https://github.com/google/diff-match-patch
@@ -21,6 +21,8 @@
 //	Removed System.Linq dependency.
 //	Replaced DateTime.Now with GetTickCount.
 //	Some other small changes.
+
+#pragma warning disable 1591 //no XML comment
 
 using System.Text.RegularExpressions;
 
@@ -1808,7 +1810,7 @@ namespace DiffMatchPatch
 		 * @param text2 Ignored.
 		 * @param diffs Array of Diff objects for text1 to text2.
 		 * @return List of Patch objects.
-		 * @deprecated Prefer patch_make(string text1, List<Diff> diffs).
+		 * @deprecated Prefer patch_make(string text1, List&lt;Diff&gt; diffs).
 		 */
 		public List<Patch> patch_make(string text1, string text2,
 			List<Diff> diffs)
@@ -2200,7 +2202,7 @@ namespace DiffMatchPatch
 		/**
 		 * Take a list of patches and return a textual representation.
 		 * @param patches List of Patch objects.
-		 * @return Text representation of patches.
+		 * @return TextForFind representation of patches.
 		 */
 		public string patch_toText(List<Patch> patches)
 		{
@@ -2214,7 +2216,7 @@ namespace DiffMatchPatch
 		/**
 		 * Parse a textual representation of patches and return a List of Patch
 		 * objects.
-		 * @param textline Text representation of patches.
+		 * @param textline TextForFind representation of patches.
 		 * @return List of Patch objects.
 		 * @throws ArgumentException If invalid input.
 		 */

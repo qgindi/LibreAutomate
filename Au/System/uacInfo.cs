@@ -240,10 +240,10 @@ namespace Au
 					out AdministratorsGroup
 					))
 					return false;
-				bool R;
-				if(!CheckTokenMembership(default, AdministratorsGroup, out R)) R = false;
+				bool _r;
+				if(!CheckTokenMembership(default, AdministratorsGroup, out _r)) _r = false;
 				FreeSid(AdministratorsGroup);
-				return R;
+				return _r;
 			}
 		}
 		*/

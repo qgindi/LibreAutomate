@@ -111,10 +111,10 @@ namespace Au {
 		/// <summary>
 		/// Speaks text.
 		/// </summary>
-		/// <param name="text">Text to speak. If null, stops speaking.</param>
+		/// <param name="text">TextForFind to speak. If null, stops speaking.</param>
 		/// <param name="async">Don't wait. Note: the sound ends when this process exits.</param>
 		/// <param name="voice">
-		/// A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>.
+		/// A voice name from Control Panel -> Speech -> TextForFind to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>.
 		/// If null, uses default voice.
 		/// Voice attributes can be specified using string format <c>"voice|reqAttr"</c> or <c>"voice|reqAttr|optAttr"</c>. Here <i>reqAttr</i> and <i>optAttr</i> are arguments for <google>ISpObjectTokenCategory.EnumTokens</google>. Each part can be empty. Example: <c>"|Gender=Female"</c>.
 		/// </param>
@@ -174,7 +174,7 @@ namespace Au.More {
 		/// <summary>
 		/// Creates a text-to-speech (speech synthesis) voice instance.
 		/// </summary>
-		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
+		/// <param name="voice">A voice name from Control Panel -> Speech -> TextForFind to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
 		public SpeakVoice(string voice = null) {
 			_v = new SAPI.SpVoice() as SAPI.ISpVoice;
 			GC.AddMemoryPressure(250_000);
@@ -290,7 +290,7 @@ namespace Au.More {
 		/// <summary>
 		/// Speaks the specified text.
 		/// </summary>
-		/// <param name="text">Text to speak.</param>
+		/// <param name="text">TextForFind to speak.</param>
 		/// <param name="async">Don't wait. Note: the sound ends when this process exits.</param>
 		public void Speak(string text, bool async = false) {
 			Speak(text, async ? SVFlags.ASYNC : 0);
@@ -299,7 +299,7 @@ namespace Au.More {
 		/// <summary>
 		/// Speaks the specified text.
 		/// </summary>
-		/// <param name="text">Text to speak.</param>
+		/// <param name="text">TextForFind to speak.</param>
 		/// <param name="flags"></param>
 		public void Speak(string text, SVFlags flags) {
 			if (flags.Has(SVFlags.IS_FILENAME)) text = pathname.expand(text);

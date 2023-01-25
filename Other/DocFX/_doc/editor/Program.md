@@ -10,7 +10,7 @@ The program is an integrated scripting environment for creating and executing au
 
 In the main window: code editor, several panels, toolbars and menu bar. Also there is a tray icon. The main window can be hidden, it depends on program settings.
 
-### Code editor
+## Code editor
 Here you edit automation scripts and other text files.
 [Features](xref:code_editor).
 
@@ -18,7 +18,7 @@ Multiple files can be open, but only one is visible. The list of open files is i
 
 All changes are saved automatically after some time and also when closing etc. The Save button saves all changes immediately.
 
-### Panels
+## Panels
 Panels and toolbars can be docked, floating or hidden.
 
 #### Files
@@ -83,7 +83,7 @@ Helps to find types, functions, fields, namespaces and regions in current C# cod
 #### Cookbook, Recipe
 Automation code examples and info.
 
-### Menus
+## Menus
 
 #### File
 File and workspace management.
@@ -106,7 +106,7 @@ Tool windows.
 #### Help
 Program help and library reference.
 
-### Tray icon
+## Tray icon
 Click - show and activate editor window. Right-click - show context menu. Middle-click - disable/enable triggers.
 
 No color when triggers are disabled.

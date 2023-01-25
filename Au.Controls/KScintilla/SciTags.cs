@@ -68,7 +68,7 @@ using static Sci;
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
-/// print.it("<>Text with <i>tags<>.");
+/// print.it("<>TextForFind with <i>tags<>.");
 /// ]]></code>
 /// </example>
 public unsafe class SciTags {
@@ -267,7 +267,7 @@ public unsafe class SciTags {
 	/// <summary>
 	/// Sets or appends styled text.
 	/// </summary>
-	/// <param name="text">Text with tags (optionally).</param>
+	/// <param name="text">TextForFind with tags (optionally).</param>
 	/// <param name="append">Append. Also appends "\r\n". If false, replaces control text.</param>
 	/// <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
 	/// <param name="scroll">Set caret and scroll to the end. If null, does it if <i>append</i> true.</param>

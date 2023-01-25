@@ -15,26 +15,26 @@ class PanelEdit : Grid
 		this.Background = SystemColors.AppWorkspaceBrush;
 		App.Commands.BindKeysTarget(this, "Edit");
 		_UpdateUI_IsOpen();
-		_UpdateUI_EditView();
+		aaUpdateUI_EditView_();
 	}
 
-	public SciCode ZActiveDoc => _activeDoc;
+	public SciCode aaActiveDoc => _activeDoc;
 
-	public event Action ZActiveDocChanged;
+	public event Action aaActiveDocChanged;
 
-	public bool ZIsOpen => _activeDoc != null;
+	public bool aaIsOpen => _activeDoc != null;
 
 	/// <summary>
 	/// Documents that are actually open currently.
 	/// Note: <see cref="FilesModel.OpenFiles"/> contains not only these.
 	/// </summary>
-	public IReadOnlyList<SciCode> ZOpenDocs => _docs;
+	public IReadOnlyList<SciCode> aaOpenDocs => _docs;
 
 	/// <summary>
 	/// If f is open (active or not), returns its SciCode, else null.
-	/// See <see cref="ZOpenDocs"/>.
+	/// See <see cref="aaOpenDocs"/>.
 	/// </summary>
-	public SciCode ZGetOpenDocOf(FileNode f) {
+	public SciCode aaGetOpenDocOf(FileNode f) {
 		foreach (var v in _docs) if (v.EFile == f) return v;
 		return null;
 	}
@@ -50,7 +50,7 @@ class PanelEdit : Grid
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
 	/// <param name="focusEditor">If null, focus later, when mouse enters editor. Ignored if editor was focused (sets focus). Also depends on <i>newFile</i>.</param>
 	/// <param name="noTemplate">New file was created with custom text (option 'replaceTemplate').</param>
-	public bool ZOpen(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
+	public bool aaOpen(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
 		if (f == _activeDoc?.EFile) return true;
@@ -68,19 +68,19 @@ class PanelEdit : Grid
 			}
 		}
 
-		var doc = ZGetOpenDocOf(f);
+		var doc = aaGetOpenDocOf(f);
 		if (doc != null) {
 			_ShowHideActiveDoc(false);
 			_activeDoc = doc;
 			_ShowHideActiveDoc(true);
 			doc.EOpenDocActivated();
 			_UpdateUI_IsOpen();
-			_UpdateUI_EditEnabled();
-			ZActiveDocChanged?.Invoke();
+			aaUpdateUI_EditEnabled_();
+			aaActiveDocChanged?.Invoke();
 		} else {
 			var path = f.FilePath;
 			byte[] text = null;
-			KScintilla.FileLoaderSaver fls = default;
+			KScintilla.aaaFileLoaderSaver fls = default;
 			try { text = fls.Load(path); }
 			catch (Exception ex) { print.it("Failed to open file. " + ex.Message); }
 			if (text == null) return false;
@@ -92,8 +92,8 @@ class PanelEdit : Grid
 			Children.Add(doc);
 			doc.EInit_(text, newFile, noTemplate);
 			_UpdateUI_IsOpen();
-			_UpdateUI_EditEnabled();
-			ZActiveDocChanged?.Invoke();
+			aaUpdateUI_EditEnabled_();
+			aaActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
 
@@ -106,9 +106,9 @@ class PanelEdit : Grid
 			App.Timer025sWhenVisible += _Timer;
 			void _Timer() {
 				//print.it("timer");
-				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.TreeControl.IsFocused) {
+				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.aaTreeControl.IsFocused) {
 					if (wnd.fromMouse() != doc.aaWnd
-						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
+						|| !Panels.Files.aaTreeControl.IsKeyboardFocused //editing item label
 						) return;
 					doc.Focus();
 				}
@@ -116,7 +116,7 @@ class PanelEdit : Grid
 			}
 		}
 
-		Panels.Find.ZUpdateQuickResults();
+		Panels.Find.aaUpdateQuickResults();
 		return true;
 	}
 
@@ -127,16 +127,16 @@ class PanelEdit : Grid
 	/// Does not show another document when closed the active document.
 	/// </summary>
 	/// <param name="f"></param>
-	public void ZClose(FileNode f) {
+	public void aaClose(FileNode f) {
 		Debug.Assert(f != null);
 		SciCode doc;
 		if (f == _activeDoc?.EFile) {
 			App.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
-			ZActiveDocChanged?.Invoke();
+			aaActiveDocChanged?.Invoke();
 		} else {
-			doc = ZGetOpenDocOf(f);
+			doc = aaGetOpenDocOf(f);
 			if (doc == null) return;
 		}
 		Children.Remove(doc);
@@ -150,10 +150,10 @@ class PanelEdit : Grid
 	/// <summary>
 	/// Closes all documents and destroys controls.
 	/// </summary>
-	public void ZCloseAll(bool saveTextIfNeed) {
+	public void aaCloseAll(bool saveTextIfNeed) {
 		if (saveTextIfNeed) App.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
-		ZActiveDocChanged?.Invoke();
+		aaActiveDocChanged?.Invoke();
 		foreach (var doc in _docs) {
 			Children.Remove(doc);
 			if (doc.IsFocused) App.Wmain.Focus();
@@ -163,17 +163,17 @@ class PanelEdit : Grid
 		_UpdateUI_IsOpen();
 	}
 
-	public bool ZSaveText() {
+	public bool aaSaveText() {
 		return _activeDoc?.ESaveText_() ?? true;
 	}
 
-	public void ZSaveEditorData() {
+	public void aaSaveEditorData() {
 		_activeDoc?.ESaveEditorData_();
 	}
 
-	//public bool ZIsModified => _activeDoc?.IsModified ?? false;
+	//public bool aaIsModified => _activeDoc?.IsModified ?? false;
 
-	internal void OnAppActivated() {
+	internal void aaOnAppActivated_() {
 		foreach (var doc in _docs) {
 			doc.EFile.OnAppActivatedAndThisIsOpen(doc);
 		}
@@ -202,7 +202,7 @@ class PanelEdit : Grid
 	/// Enables/disables commands (toolbar buttons, menu items) depending on document state such as "can undo".
 	/// Called on SCN_UPDATEUI.
 	/// </summary>
-	internal void _UpdateUI_EditEnabled() {
+	internal void aaUpdateUI_EditEnabled_() {
 		_EUpdateUI disable = 0;
 		var d = _activeDoc;
 		if (d == null) return; //we disable the toolbar and menu
@@ -226,7 +226,7 @@ class PanelEdit : Grid
 	}
 	_EUpdateUI _editDisabled;
 
-	internal void _UpdateUI_EditView() {
+	internal void aaUpdateUI_EditView_() {
 		App.Commands[nameof(Menus.Edit.View.Wrap_lines)].Checked = App.Settings.edit_wrap;
 		App.Commands[nameof(Menus.Edit.View.Images_in_code)].Checked = !App.Settings.edit_noImages;
 	}

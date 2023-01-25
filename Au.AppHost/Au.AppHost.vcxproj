@@ -15,8 +15,8 @@
     <ProjectGuid>{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Au.AppHost</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Au.AppHost</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

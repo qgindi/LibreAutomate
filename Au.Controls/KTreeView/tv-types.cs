@@ -31,7 +31,7 @@ public interface ITreeViewItem {
 	void SetIsExpanded(bool yes) { }
 
 	/// <summary>
-	/// Text to display.
+	/// TextForFind to display.
 	/// </summary>
 	string DisplayText { get; }
 
@@ -88,7 +88,7 @@ public interface ITreeViewItem {
 	int Color => -1;
 
 	/// <summary>
-	/// Text color 0xRRGGBB. If -1 (default), uses default colors, depending on state (normal, disabled).
+	/// TextForFind color 0xRRGGBB. If -1 (default), uses default colors, depending on state (normal, disabled).
 	/// </summary>
 	int TextColor => -1;
 
@@ -197,10 +197,10 @@ public class TVDrawInfo {
 	/// <summary>Image drawing rectangle of current item.</summary>
 	public RECT imageRect;
 
-	/// <summary>Text drawing X offset of current item.</summary>
+	/// <summary>TextForFind drawing X offset of current item.</summary>
 	public int xText;
 
-	/// <summary>Text drawing Y offset of current item.</summary>
+	/// <summary>TextForFind drawing Y offset of current item.</summary>
 	public int yText;
 
 	/// <summary>Left margin drawing X offset of current item.</summary>

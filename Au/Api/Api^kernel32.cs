@@ -137,8 +137,10 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", SetLastError = true)]
 	internal static extern IntPtr GetModuleHandle(string name);
 
-	[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true)]
-	internal static extern IntPtr LoadLibrary(string lpLibFileName);
+	//Better use NativeLibrary.TryLoad.
+	//Dlls loaded by LoadLibrary don't find other used dlls from the same directory if it's not the app directory. Need LoadLibraryEx with LOAD_WITH_ALTERED_SEARCH_PATH, and probably NativeLibrary.TryLoad uses it.
+	//[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true)]
+	//internal static extern IntPtr LoadLibrary(string lpLibFileName);
 
 	internal const uint LOAD_LIBRARY_AS_DATAFILE = 0x2;
 
@@ -263,14 +265,14 @@ static unsafe partial class Api {
 	internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize = 0, uint dwFreeType = MEM_RELEASE);
 
 	[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
-	internal static extern System.IO.FileAttributes GetFileAttributes(string lpFileName);
+	internal static extern FileAttributes GetFileAttributes(string lpFileName);
 
 	[DllImport("kernel32.dll", EntryPoint = "SetFileAttributesW", SetLastError = true)]
-	internal static extern bool SetFileAttributes(string lpFileName, System.IO.FileAttributes dwFileAttributes);
+	internal static extern bool SetFileAttributes(string lpFileName, FileAttributes dwFileAttributes);
 
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct WIN32_FILE_ATTRIBUTE_DATA {
-		public System.IO.FileAttributes dwFileAttributes;
+		public FileAttributes dwFileAttributes;
 		public long ftCreationTime;
 		public long ftLastAccessTime;
 		public long ftLastWriteTime;
@@ -309,20 +311,14 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll")]
 	internal static extern uint SetErrorMode(uint uMode);
 
-	[DllImport("kernel32.dll")]
-	internal static extern uint GetErrorMode();
+	//[DllImport("kernel32.dll")]
+	//internal static extern uint GetErrorMode();
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
-
-	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern IntPtr LocalAlloc(uint uFlags, nint uBytes);
+	//[DllImport("kernel32.dll", SetLastError = true)]
+	//internal static extern IntPtr LocalAlloc(uint uFlags, nint uBytes);
 
 	[DllImport("kernel32.dll")]
 	internal static extern IntPtr LocalFree(void* hMem);
-
-	[DllImport("kernel32.dll", EntryPoint = "lstrcpynW")]
-	internal static extern char* lstrcpyn(char* sTo, char* sFrom, int sToBufferLength);
 
 	[DllImport("kernel32.dll", EntryPoint = "lstrcpynW")]
 	internal static extern char* lstrcpyn(char* sTo, string sFrom, int sToBufferLength);

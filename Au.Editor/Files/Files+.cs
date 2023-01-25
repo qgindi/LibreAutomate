@@ -42,7 +42,7 @@ class DNewWorkspace : KDialogWindow {
 		_name = name;
 		_location = location;
 
-		Title = "New Workspace";
+		Title = "New workspace";
 
 		var b = new wpfBuilder(this).WinSize(600);
 		TextBox tName, tLocation = null;

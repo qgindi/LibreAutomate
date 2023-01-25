@@ -265,7 +265,7 @@ public unsafe partial class KScintilla {
 	/// Replaces all text.
 	/// Parses tags if need.
 	/// </summary>
-	/// <param name="s">Text.</param>
+	/// <param name="s">TextForFind.</param>
 	/// <param name="flags"></param>
 	/// <param name="ignoreTags">Don't parse tags, regardless of aaInitTagsStyle.</param>
 	public void aaaSetText(string s, SciSetTextFlags flags = 0, bool ignoreTags = false) {
@@ -293,7 +293,7 @@ public unsafe partial class KScintilla {
 	///// Replaces all text.
 	///// Does not parse tags.
 	///// </summary>
-	///// <param name="s">Text.</param>
+	///// <param name="s">TextForFind.</param>
 	///// <param name="startIndex"></param>
 	///// <param name="flags"></param>
 	//public void aaaSetTextUtf8(byte[] s, int startIndex = 0, SciSetTextFlags flags = 0)
@@ -407,7 +407,7 @@ public unsafe partial class KScintilla {
 	/// </remarks>
 	public string aaaText {
 		get {
-			//print.qm2.write($"Text: cached={_text != null}");
+			//print.qm2.write($"TextForFind: cached={_text != null}");
 			if (_text == null && !_w.Is0) _text = aaaGetText_(); //_NotifyModified sets _text=null
 			return _text;
 		}
@@ -916,10 +916,10 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	/// <param name="utf16"></param>
 	/// <param name="pos">Start index. Cannot be negative.</param>
-	/// <param name="s">Text to insert. Can be null.</param>
+	/// <param name="s">TextForFind to insert. Can be null.</param>
 	/// <param name="addUndoPointBefore">Call <see cref="aaaAddUndoPoint"/> before.</param>
 	/// <param name="addUndoPointAfter">Call <see cref="aaaAddUndoPoint"/> after.</param>
-	/// <param name="restoreFolding">If <i>pos</i> is hidden because of folding, finally collapse its folding again. See <see cref="FoldingRestorer"/>.</param>
+	/// <param name="restoreFolding">If <i>pos</i> is hidden because of folding, finally collapse its folding again. See <see cref="aaaFoldingRestorer"/>.</param>
 	/// <remarks>
 	/// Does not parse tags.
 	/// Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="aaaReplaceSel"/> or <see cref="aaaReplaceRange"/>.
@@ -927,7 +927,7 @@ public unsafe partial class KScintilla {
 	public void aaaInsertText(bool utf16, int pos, string s, bool addUndoPointBefore = false, bool addUndoPointAfter = false, bool restoreFolding = false) {
 		if (addUndoPointBefore) aaaAddUndoPoint();
 		using (new _NoReadonly(this))
-		using (new FoldingRestorer(restoreFolding ? this : null, pos))
+		using (new aaaFoldingRestorer(restoreFolding ? this : null, pos))
 			aaaSetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
 		if (addUndoPointAfter) aaaAddUndoPoint();
 	}
@@ -936,14 +936,14 @@ public unsafe partial class KScintilla {
 	/// If ctor detects that the line from <i>pos</i> is hidden because of folding, <b>Dispose</b> collapses its folding again.
 	/// Use when modifying text to prevent unfolding.
 	/// </summary>
-	public struct FoldingRestorer : IDisposable {
+	public struct aaaFoldingRestorer : IDisposable {
 		KScintilla _sci;
 		int _foldLine;
 		//tested: temp setting SCI_SETAUTOMATICFOLD does not work. If restoring async, does not expand, but draws incorrectly.
 
 		/// <param name="sci">Can be null, then does nothing.</param>
 		/// <param name="pos"></param>
-		public FoldingRestorer(KScintilla sci, int pos) {
+		public aaaFoldingRestorer(KScintilla sci, int pos) {
 			_sci = sci;
 			_foldLine = -1;
 			if (sci != null) {
@@ -968,7 +968,7 @@ public unsafe partial class KScintilla {
 	///// Does not parse tags.
 	///// Does not change current selection; for it use <see cref="aaaReplaceSel"/>.
 	///// </summary>
-	///// <param name="s">Text to insert. Can be null.</param>
+	///// <param name="s">TextForFind to insert. Can be null.</param>
 	//public void aaaInsertText(string s)
 	//{
 	//	using(new _NoReadonly(this))
@@ -1119,7 +1119,7 @@ public unsafe partial class KScintilla {
 	//}
 	//bool _isReadOnly;
 
-	public struct FileLoaderSaver {
+	public struct aaaFileLoaderSaver {
 		_Encoding _enc;
 
 		public bool IsBinary => _enc == _Encoding.Binary;
@@ -1456,14 +1456,14 @@ public unsafe partial class KScintilla {
 	/// <summary>
 	/// Ctor calls SCI_BEGINUNDOACTION. Dispose() calls SCI_ENDUNDOACTION.
 	/// </summary>
-	public struct UndoAction : IDisposable {
+	public struct aaaUndoAction : IDisposable {
 		KScintilla _sci;
 
 		/// <summary>
 		/// Calls SCI_BEGINUNDOACTION.
 		/// </summary>
 		/// <param name="sci">Can be null, then does nothing.</param>
-		public UndoAction(KScintilla sci) {
+		public aaaUndoAction(KScintilla sci) {
 			_sci = sci;
 			if (_sci != null) _sci.Call(SCI_BEGINUNDOACTION);
 		}

@@ -35,11 +35,7 @@ partial class FilesModel {
 	readonly bool _initedFully;
 	public object CompilerContext;
 
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="c">Tree control. Can be null, for example when importing workspace.</param>
-	/// <param name="file">Workspace file (XML).</param>
+	/// <param name="file">Path of workspace tree file (files.xml).</param>
 	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
 	/// <exception cref="Exception">XElement.Load exceptions. And possibly more.</exception>
 	public FilesModel(string file, bool importing) {
@@ -101,7 +97,7 @@ partial class FilesModel {
 
 	#region tree control
 
-	public static FilesView TreeControl => Panels.Files?.TreeControl;
+	public static FilesView TreeControl => Panels.Files?.aaTreeControl;
 
 	/// <summary>
 	/// Updates control when changed number or order of visible items (added, removed, moved, etc).
@@ -193,7 +189,7 @@ partial class FilesModel {
 			LoadState(openFiles: true);
 		}
 		WorkspaceLoadedAndDocumentsOpened?.Invoke();
-		if (!onUiLoaded) RunStartupScripts();
+		if (!onUiLoaded) RunStartupScripts(true);
 	}
 
 	static bool s_isNewWorkspace;
@@ -406,7 +402,7 @@ partial class FilesModel {
 		var of = OpenFiles;
 		if (!of.Remove(f)) return false;
 
-		Panels.Editor.ZClose(f);
+		Panels.Editor.aaClose(f);
 		f.IsSelected = false;
 
 		if (f == _currentFile) {
@@ -447,19 +443,20 @@ partial class FilesModel {
 	/// Updates PanelOpen, enables/disables Previous command.
 	/// </summary>
 	void _UpdateOpenFiles(FileNode current) {
-		Panels.Open.ZUpdateList();
+		Panels.Open.aaUpdateList();
 		App.Commands[nameof(Menus.File.OpenCloseGo.Previous_document)].Enabled = OpenFiles.Count > 1;
 	}
 
 	/// <summary>
-	/// Called by <see cref="PanelFiles.ZLoadWorkspace"/> before opening another workspace and disposing this.
-	/// Saves all, closes documents, sets _currentFile = null.
+	/// Called by <see cref="LoadWorkspace"/> before opening another workspace and disposing this.
+	/// Saves all, raises <see cref="UnloadingWorkspace"/> event, closes documents, sets _currentFile = null.
 	/// </summary>
 	internal void UnloadingWorkspace_() {
 		Save.AllNowIfNeed();
-		UnloadingWorkspaceEvent?.Invoke();
+		EditorExtension.ClosingWorkspace_(onExit: false);
+		UnloadingWorkspace?.Invoke(); //closes dialogs that contain workspace-specific data, eg Properties
 		_currentFile = null;
-		Panels.Editor.ZCloseAll(saveTextIfNeed: false);
+		Panels.Editor.aaCloseAll(saveTextIfNeed: false);
 		OpenFiles.Clear();
 		_UpdateOpenFiles(null);
 	}
@@ -467,7 +464,7 @@ partial class FilesModel {
 	/// <summary>
 	/// Note: unsubscribe to avoid memory leaks.
 	/// </summary>
-	public event Action UnloadingWorkspaceEvent;
+	public event Action UnloadingWorkspace;
 
 	//rejected. Let unsubscribe in OnClosed: App.Model.UnloadingWorkspaceEvent -= Close;
 	///// <summary>
@@ -518,7 +515,7 @@ partial class FilesModel {
 		var fPrev = _currentFile;
 		_currentFile = f;
 
-		if (!Panels.Editor.ZOpen(f, newFile, focusEditor, noTemplate)) {
+		if (!Panels.Editor.aaOpen(f, newFile, focusEditor, noTemplate)) {
 			_currentFile = fPrev;
 			if (OpenFiles.Contains(f)) _UpdateOpenFiles(_currentFile); //?
 			return false;
@@ -572,10 +569,10 @@ partial class FilesModel {
 	/// <param name="columnOrPos">If not negative, goes to this 0-based position in text (if line negative) or to this 0-based column in line.</param>
 	/// <param name="findText">If not null, finds this text (<b>FindWord</b>), and goes there if found. Then <i>line</i> and <i>columnPos</i> not used.</param>
 	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1, string findText = null) {
-		App.Wmain.ZShowAndActivate();
+		App.Wmain.aaShowAndActivate();
 		bool wasOpen = _currentFile == f;
 		if (!SetCurrentFile(f)) return false;
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		if (findText != null) {
 			line = -1;
 			columnOrPos = doc.aaaText.FindWord(findText);
@@ -589,7 +586,7 @@ partial class FilesModel {
 			if (!wasOpen) wait.doEvents(); //else scrolling does not work well if now opened the file. Can't async, because caller may use the new pos immediately.
 			doc.aaaGoToPos(false, columnOrPos);
 		} else {
-			if (!wasOpen) wait.doEvents(); //caller then may call zGoToPos or zSelect etc
+			if (!wasOpen) wait.doEvents(); //caller then may call aaaGoToPos or aaaSelect etc
 		}
 		doc.Focus();
 		return true;
@@ -645,7 +642,7 @@ partial class FilesModel {
 
 	public void RenameSelected(bool newFile = false) {
 		Panels.PanelManager[Panels.Files].Visible = true; //exception if not visible
-		TreeControl.EditLabel(ended: newFile ? ok => { if (ok && Keyboard.IsKeyDown(Key.Enter)) Panels.Editor.ZActiveDoc?.Focus(); } : null);
+		TreeControl.EditLabel(ended: newFile ? ok => { if (ok && Keyboard.IsKeyDown(Key.Enter)) Panels.Editor.aaActiveDoc?.Focus(); } : null);
 	}
 
 	public void DeleteSelected() {
@@ -961,7 +958,7 @@ partial class FilesModel {
 				else if (s.RxMatch(@"\R\R", 0, out RXGroup g, range: me..)) s = s.Insert(g.End, text.text);
 				else if (s.RxMatch(@"\R\z", 0, out g, range: me..)) s = s + "\r\n" + text.text;
 			}
-			Panels.Editor.ZActiveDoc.aaaSetText(s);
+			Panels.Editor.aaActiveDoc.aaaSetText(s);
 		}
 
 		if (beginRenaming && f.IsSelected) RenameSelected(newFile: !f.IsFolder);
@@ -1540,7 +1537,7 @@ partial class FilesModel {
 		set { CurrentUser(true).debuggerScript = value; }
 	}
 
-	public void RunStartupScripts() {
+	public void RunStartupScripts(bool startAsync) {
 		var csv = StartupScriptsCsv; if (csv == null) return;
 		try {
 			var x = csvTable.parse(csv);
@@ -1549,16 +1546,20 @@ partial class FilesModel {
 				if (file.Starts("//")) continue;
 				var f = FindCodeFile(file);
 				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options -> Run scripts..."); continue; }
-				int delay = 10;
+				int delay = 0;
 				if (x.ColumnCount > 1) {
 					var sd = row[1];
 					delay = sd.ToInt(0, out int end);
 					if (end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
-					if (delay < 10) delay = 10;
 				}
-				timer.after(delay, t => {
+				if (startAsync && delay < 10) delay = 10;
+				if (delay > 0) {
+					timer.after(delay, t => {
+						CompileRun.CompileAndRun(true, f);
+					});
+				} else {
 					CompileRun.CompileAndRun(true, f);
-				});
+				}
 			}
 		}
 		catch (FormatException) { }

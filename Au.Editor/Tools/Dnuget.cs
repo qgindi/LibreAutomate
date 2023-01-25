@@ -17,7 +17,7 @@ using Au.Tools;
 //Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
 
 class DNuget : KDialogWindow {
-	public static void ZShow(string package = null) {
+	public static void aaShow(string package = null) {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -30,7 +30,7 @@ class DNuget : KDialogWindow {
 
 	protected override void OnClosed(EventArgs e) {
 		s_dialog = null;
-		App.Model.UnloadingWorkspaceEvent -= Close;
+		App.Model.UnloadingWorkspace -= Close;
 		base.OnClosed(e);
 	}
 
@@ -115,12 +115,13 @@ A script can use packages from multiple folders if they are compatible.");
 
 		b.End();
 
+		//Action gotoSDK = () => run.it("https://aka.ms/dotnet/6.0/dotnet-sdk-win-x64.exe");
 		Action gotoSDK = () => run.it("https://dotnet.microsoft.com/en-us/download");
 		b.R.Add(out TextBlock infoSDK).Text("<b>Need to install .NET SDK x64, version 6.0 or later. ", "<a>Download", gotoSDK).Hidden();
 		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 
 		Loaded += async (_, _) => {
-			App.Model.UnloadingWorkspaceEvent += Close;
+			App.Model.UnloadingWorkspace += Close;
 			_FillTree();
 
 			bool sdkOK = false;
@@ -156,8 +157,8 @@ A script can use packages from multiple folders if they are compatible.");
 		var proj = _ProjPath(folder);
 
 		if (!File.Exists(proj)) {
-			var s = @"
-<Project Sdk=""Microsoft.NET.Sdk"">
+			var s = """
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net6.0-windows</TargetFramework>
 		<UseWPF>true</UseWPF>
@@ -168,14 +169,14 @@ A script can use packages from multiple folders if they are compatible.");
 	</PropertyGroup>
 
 	<!-- Copy XML files -->
-	<Target Name=""_ResolveCopyLocalNuGetPkgXmls"" AfterTargets=""ResolveReferences"">
+	<Target Name="_ResolveCopyLocalNuGetPkgXmls" AfterTargets="ResolveReferences">
 		<ItemGroup>
-			<ReferenceCopyLocalPaths Include=""@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')"" Condition=""'%(ReferenceCopyLocalPaths.NuGetPackageId)'!='' and Exists('%(RootDir)%(Directory)%(Filename).xml')"" />
+			<ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)'!='' and Exists('%(RootDir)%(Directory)%(Filename).xml')" />
 		</ItemGroup>
 	</Target>
 
 </Project>
-";
+""";
 			try { File.WriteAllText(proj, s); }
 			catch (Exception e1) { dialog.showError("Failed", e1.ToStringWithoutStack(), owner: this); }
 		}
@@ -185,6 +186,8 @@ A script can use packages from multiple folders if they are compatible.");
 
 		//now need only package name
 		package = package.RxReplace(@"^\s*(\S+).*", "$1");
+
+		if (folder.Eqi(package)) print.it("<><c orange>Warning: folder name should not be the same as package name."); //will fail if same
 
 		await _Build(folder, package, sAdd);
 	}
@@ -265,7 +268,7 @@ A script can use packages from multiple folders if they are compatible.");
 
 				var dCompile = _GetCompileAssembliesFromAssetsJson(dirProj2 + @"\obj\project.assets.json", folderPath);
 
-				#region copied from script "Create NuGet xml.cs"
+#region copied from script "Create NuGet xml.cs"
 
 				//get lists of .NET dlls, native dlls and other files
 				List<(FEFile f, bool ro)> aDllNet = new();
@@ -357,7 +360,7 @@ A script can use packages from multiple folders if they are compatible.");
 					xx.Add(new XElement("other", s));
 				}
 
-				#endregion
+#endregion
 
 				xn.SaveElem(npath, backup: true);
 
@@ -493,7 +496,7 @@ A script can use packages from multiple folders if they are compatible.");
 
 	void _AddMeta() {
 #if !SCRIPT
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
 		var meta = new MetaCommentsParser(doc.aaaText);
 		meta.nuget.Add($@"{_Selected.Parent.Name}\{_Selected.Name}");
 		meta.Apply();
@@ -610,7 +613,7 @@ A script can use packages from multiple folders if they are compatible.");
 		public string Name { get; }
 		public string Version { get; }
 
-		#region ITreeViewItem
+#region ITreeViewItem
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
 		bool ITreeViewItem.IsExpanded => _isExpanded;
@@ -620,6 +623,6 @@ A script can use packages from multiple folders if they are compatible.");
 		object ITreeViewItem.Image => _isExpanded ? FileNode.c_iconFolderOpen : (IsFolder ? FileNode.c_iconFolder : null);
 		//public TVCheck CheckState { get; }
 
-		#endregion
+#endregion
 	}
 }

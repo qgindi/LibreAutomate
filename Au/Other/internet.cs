@@ -57,19 +57,19 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0"); //optional, this is just an example
-		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
+		/// string s = internet.http.Get("https://httpbin.org/anything").TextForFind();
 		/// ]]></code>
 		/// The same without <b>internet.http</b>.
 		/// <code><![CDATA[
 		/// var http = new HttpClient();
 		/// http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");
-		/// string s = http.Get("https://httpbin.org/anything").Text();
+		/// string s = http.Get("https://httpbin.org/anything").TextForFind();
 		/// ]]></code>
 		/// The same again.
 		/// <code><![CDATA[
 		/// var http = new HttpClient() { BaseAddress = new("https://httpbin.org") };
 		/// http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");
-		/// string s = http.Get("anything").Text();
+		/// string s = http.Get("anything").TextForFind();
 		/// ]]></code>
 		/// </example>
 		public static HttpClient http => _lazyHC.Value; //rejected: public setter
@@ -83,7 +83,7 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
-		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
+		/// string s = internet.http.Post("https://httpbin.org/anything", content).TextForFind();
 		/// ]]></code>
 		/// </example>
 		public static MultipartFormDataContent formContent(params (string name, object value)[] fields) {
@@ -107,11 +107,24 @@ namespace Au {
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// string s = internet.http.Post("https://httpbin.org/anything", internet.jsonContent(new POINT(10, 20))).Text();
+		/// var v = new POINT(10, 20);
+		/// string s = internet.http.Post("https://httpbin.org/anything", internet.jsonContent(v)).TextForFind();
 		/// ]]></code>
 		/// </example>
 		public static JsonContent jsonContent<T>(T x)
 			=> JsonContent.Create(x);
+
+		/// <summary>
+		/// Creates an <b>HttpContent</b> for posting a JSON string. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
+		/// </summary>
+		/// <param name="json">JSON string.</param>
+		/// <example>
+		/// <code><![CDATA[
+		/// string json = "{ ... }";
+		/// string s = internet.http.Post("https://httpbin.org/anything", jsonContent(json)).TextForFind();
+		/// ]]></code>
+		/// </example>
+		public static StringContent jsonContent(string json) => new(json, null, "application/json");
 
 		/// <summary>
 		/// Joins a URL address and parameters. Urlencodes parameters.
@@ -172,7 +185,7 @@ namespace Au.Types {
 		/// <example>
 		/// <code><![CDATA[
 		/// using var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
-		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
+		/// string s = internet.http.Post("https://httpbin.org/anything", content).TextForFind();
 		/// ]]></code>
 		/// </example>
 		public static MultipartFormDataContent AddFile(this MultipartFormDataContent t, string name, string file, string contentType = null, string fileName = null) {
@@ -285,7 +298,7 @@ namespace Au.Types {
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
+		/// string s = internet.http.Get("https://httpbin.org/anything").TextForFind();
 		/// ]]></code>
 		/// </example>
 		public static HttpResponseMessage Get(this HttpClient t, string url, bool dontWait = false, string[] headers = null) {
@@ -310,7 +323,7 @@ namespace Au.Types {
 		/// <example>
 		/// <code><![CDATA[
 		/// if (!internet.http.TryGet(out var r, "https://httpbin.org/anything", printError: true)) return;
-		/// print.it(r.Text());
+		/// print.it(r.TextForFind());
 		/// ]]></code>
 		/// </example>
 		public static bool TryGet(this HttpClient t, out HttpResponseMessage r, string url, bool dontWait = false, string[] headers = null, bool printError = false) {
@@ -355,6 +368,7 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="url">URL.</param>
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
+		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, string[])" path="/param[@name='headers']"/>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
@@ -364,15 +378,15 @@ namespace Au.Types {
 		/// <example>
 		/// <code><![CDATA[
 		/// using var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
-		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
+		/// string s = internet.http.Post("https://httpbin.org/anything", content).TextForFind();
 		/// ]]></code>
 		/// Note: the 'using' in the above example will close the file stream. Don't need it when content does not contain files.
 		/// </example>
-		public static HttpResponseMessage Post(this HttpClient t, string url, HttpContent content, string[] headers = null) {
+		public static HttpResponseMessage Post(this HttpClient t, string url, HttpContent content, string[] headers = null, bool dontWait = false) {
 			Not_.Null(url);
 			var rm = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
 			if (headers != null) rm.Headers.AddMany(headers);
-			return t.Send(rm);
+			return t.Send(rm, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 		}
 		//rejected: bool disposeContent = true (auto-close MultipartFormDataContent streams etc).
 		//	Users may want to retry etc. Usually this is used in scripts that will exit soon. Usually not so important to close files immediately.
@@ -387,6 +401,7 @@ namespace Au.Types {
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, string[])" path="/param[@name='headers']"/>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
+		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <returns>false if failed.</returns>
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
 		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
@@ -394,15 +409,15 @@ namespace Au.Types {
 		/// <code><![CDATA[
 		/// var content = internet.formContent(("name1", "value1"), ("name2", "value2"));
 		/// if (!internet.http.TryPost(out var r, "https://httpbin.org/anything", content, printError: true)) return;
-		/// print.it(r.Text());
+		/// print.it(r.TextForFind());
 		/// ]]></code>
 		/// </example>
-		public static bool TryPost(this HttpClient t, out HttpResponseMessage r, string url, HttpContent content, string[] headers = null, bool printError = false) {
+		public static bool TryPost(this HttpClient t, out HttpResponseMessage r, string url, HttpContent content, string[] headers = null, bool printError = false, bool dontWait = false) {
 			Not_.Null(url);
 			var rm = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
 			if (headers != null) rm.Headers.AddMany(headers);
 			try {
-				r = t.Send(rm);
+				r = t.Send(rm, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 				if (r.IsSuccessStatusCode) return true;
 				if (printError) print.warning($"HTTP POST failed. {(int)r.StatusCode} ({r.StatusCode}), {r.ReasonPhrase}");
 			}

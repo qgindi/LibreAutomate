@@ -1,14 +1,26 @@
 - name: Program
   href: Program.md
+
 - name: Code editor
   href: Code editor.md
-- name: Command line
-  href: Command line.md
+
 - name: Scripts
   href: Scripts.md
+
 - name: "Class files, projects"
   href: "Class files, projects.md"
+
+- name: Command line
+  href: Command line.md
+
+- name: Program settings
+  href: Program settings.md
+
+- name: Portable app
+  href: Portable app.md
+
 - name: Snippets
   href: Snippets.md
+
 - name: Compared with QM
   href: Compared with QM.md

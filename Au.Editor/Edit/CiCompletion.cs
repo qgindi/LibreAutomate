@@ -296,7 +296,7 @@ partial class CiCompletion {
 				return;
 			}
 
-			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
+			Debug.Assert(doc == Panels.Editor.aaActiveDoc); //when active doc changed, cancellation must be requested
 			var codeNow = doc.aaaText;
 			int posNow = doc.aaaCurrentPos16, posAdd = 0, codeLength = code.Length;
 			if (codeNow != code) { //changed while awaiting
@@ -434,7 +434,7 @@ partial class CiCompletion {
 				case CiItemKind.EnumMember when !isDot:
 					//workaround for Roslyn bug: if Enum.Member, members are sorted by value, not by name. Same in VS.
 					bool good = ci.SortText == ci.DisplayText;
-					Debug_.PrintIf(good, "Roslyn bug fixed");
+					//Debug_.PrintIf(good, "Roslyn bug fixed"); //occasionally prints
 					if (!good) v.ci = ci = ci.WithSortText(ci.DisplayText);
 					break;
 				case CiItemKind.EnumMember when isDot:
@@ -648,7 +648,7 @@ partial class CiCompletion {
 			d.tempRange = doc.ETempRanges_Add(this, span.Start, span.End, () => {
 				//print.it("leave", _data==d);
 				if (_data == d) _CancelUI(tempRangeRemoved: true);
-			}, position == span.End ? SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange : 0);
+			}, position == span.End ? SciCode.TempRangeFlags.LeaveIfPosNotAtEndOfRange : 0);
 
 			_data = d;
 			if (_popupList == null) {
@@ -712,8 +712,8 @@ partial class CiCompletion {
 			foreach (var v in d.items) {
 				if (v.kind == CiItemKind.None) continue; //eg regex completion
 				var s = v.ci.FilterText;
-				//Debug_.PrintIf(v.ci.FilterText != v.Text, $"{v.ci.FilterText}, {v.Text}");
-				//print.it(v.Text, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
+				//Debug_.PrintIf(v.ci.FilterText != v.TextForFind, $"{v.ci.FilterText}, {v.TextForFind}");
+				//print.it(v.TextForFind, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
 				bool found = false;
 				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
 				if (iFirst >= 0) {
@@ -935,14 +935,14 @@ partial class CiCompletion {
 					}
 					break;
 				}
-				using var undo = new KScintilla.UndoAction(doc);
+				using var undo = new KScintilla.aaaUndoAction(doc);
 				bool last = true;
 				for (int j = changes.Length; --j >= 0; last = false) {
 					var v = changes[j];
 					doc.aaaReplaceRange(true, v.Span.Start, v.Span.End + (last ? codeLenDiff : 0), last ? s : v.NewText);
-					//if(last && newPos<0) newPos = span.Start - doc.zLen16; //from end //currently don't need because Scintilla automatically does it (read zReplaceRange doc)
+					//if(last && newPos<0) newPos = span.Start - doc.aaaLen16; //from end //currently don't need because Scintilla automatically does it (read aaaReplaceRange doc)
 				}
-				//if (newPos < 0) newPos += doc.zLen16;
+				//if (newPos < 0) newPos += doc.aaaLen16;
 				if (newPos >= 0) doc.aaaSelect(true, newPos, newPos, makeVisible: true);
 				return CiComplResult.Complex;
 			}

@@ -96,7 +96,7 @@ partial class SciCode {
 				}
 
 				if (_data.scripts) {
-					var a = Panels.Files.TreeControl.DragDropFiles;
+					var a = Panels.Files.aaTreeControl.DragDropFiles;
 					if (a != null) {
 						foreach (var f in a) {
 							_AppendScriptOrLink(f.ItemPath, f.Name, f);

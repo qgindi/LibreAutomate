@@ -47,7 +47,7 @@ static class CodeInfo {
 			for (int i = 0; i < aEnable.Length; i++)
 				if (aEnable[i].IsEnabled()) aEnable[i].Enable(false); else aEnable[i] = default;
 		});
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		if (doc != null) doc.Visibility = Visibility.Hidden; //hide document window. The black unfolded text is distracting. Does not have sense to show it.
 
 		Task.Run(() => {
@@ -76,7 +76,8 @@ static class CodeInfo {
 				App.Dispatcher.InvokeAsync(() => {
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
-					Panels.Editor.ZActiveDocChanged += Stop;
+					ReadyForStyling = null; //GC
+					Panels.Editor.aaActiveDocChanged += Stop;
 					App.Timer025sWhenVisible += _Timer025sWhenVisible;
 					_Finally();
 				});
@@ -106,6 +107,12 @@ static class CodeInfo {
 					if (!aEnable[i].Is0) aEnable[i].Enable(true);
 			}
 			//perf.nw('R');
+
+			IsReadyForEditing = true;
+			if (ReadyForEditing != null) {
+				try { ReadyForEditing(); } catch (Exception e1) { print.it(e1); } //used in editorExtension scripts
+				ReadyForEditing = null; //GC
+			}
 		}
 	}
 
@@ -120,11 +127,22 @@ static class CodeInfo {
 	/// </summary>
 	public static event Action ReadyForStyling;
 
+	/// <summary>
+	/// Main window already enabled after program starts.
+	/// </summary>
+	public static bool IsReadyForEditing { get; private set; }
+
+	/// <summary>
+	/// When main window enabled after program starts.
+	/// Runs in main thread, after <b>ReadyForStyling</b>.
+	/// </summary>
+	public static event Action ReadyForEditing;
+
 	static bool _CanWork(SciCode doc) {
 		if (!_isWarm) return false;
 		if (doc == null) return false;
 		if (!doc.EFile.IsCodeFile) return false;
-		if (doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
+		if (doc != Panels.Editor.aaActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
 
@@ -312,7 +330,7 @@ static class CodeInfo {
 	}
 
 	public static void ShowSignature(SciCode doc = null) {
-		doc ??= Panels.Editor.ZActiveDoc;
+		doc ??= Panels.Editor.aaActiveDoc;
 		if (!_CanWork(doc)) return;
 		_signature.ShowSignature(doc);
 	}
@@ -327,7 +345,7 @@ static class CodeInfo {
 		int pos16 = doc.aaaPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
-		if (doc != Panels.Editor.ZActiveDoc || (object)text0 != doc.aaaText) return; //changed while awaiting
+		if (doc != Panels.Editor.aaActiveDoc || (object)text0 != doc.aaaText) return; //changed while awaiting
 
 		if (diag == null && quick == null) {
 			HideTextPopup();
@@ -376,13 +394,13 @@ static class CodeInfo {
 
 		/// <summary>
 		/// Initializes all fields except document.
-		/// For <b>sci</b> uses <b>Panels.Editor.ZActiveDoc</b>.
+		/// For <b>sci</b> uses <b>Panels.Editor.aaActiveDoc</b>.
 		/// </summary>
 		/// <param name="pos">If -1, gets current position. If -2, gets selection start.</param>
 		public Context(int pos) {
 			Debug.Assert(Environment.CurrentManagedThreadId == 1);
 
-			sci = Panels.Editor.ZActiveDoc;
+			sci = Panels.Editor.aaActiveDoc;
 			code = sci.aaaText;
 			this.pos = pos switch { -1 => sci.aaaCurrentPos16, -2 => sci.aaaSelectionStart16, _ => pos };
 			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
@@ -649,7 +667,7 @@ for (int i = 0; i < count; i++) { }
 	}
 
 	private static void _Timer025sWhenVisible() {
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		if (!_CanWork(doc)) {
 			Panels.Outline.Clear();
 			return;
@@ -657,7 +675,7 @@ for (int i = 0; i < count; i++) { }
 
 		//cancel if changed the screen rectangle of the document window
 		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _tpVisible) {
-			var r = Panels.Editor.ZActiveDoc.Hwnd().Rect;
+			var r = Panels.Editor.aaActiveDoc.Hwnd().Rect;
 			if (!_isUI) {
 				_isUI = true;
 				_sciRect = r;
@@ -688,7 +706,7 @@ for (int i = 0; i < count; i++) { }
 	//	This test version shows above Output.
 	//static void _ShowTextPopup(SciCode doc, int pos16, System.Windows.Documents.Section text, Action<CiPopupText, string> onLinkClick = null) {
 	//	_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _tpVisible = false);
-	//	_textPopup.Text = text;
+	//	_textPopup.TextForFind = text;
 	//	_textPopup.OnLinkClick = onLinkClick;
 	//	if (keys.isScrollLock && Panels.Output.IsVisible) {
 	//		var r = Panels.Output.RectInScreen();

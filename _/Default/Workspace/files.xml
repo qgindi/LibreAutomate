@@ -1,1 +1,7 @@
-﻿<files max-i="3" />
+﻿<files max-i="7">
+  <s n="Script1.cs" i="4" />
+  <s n="Examples.cs" i="5" />
+  <d n="Classes" i="6">
+    <c n="global.cs" i="7" />
+  </d>
+</files>

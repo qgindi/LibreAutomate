@@ -142,7 +142,7 @@ class CiPopupList
 		if (text == null) return;
 		_textPopup.Text = text;
 		_textPopup.OnLinkClick = (ph, e) => ph.Text = _compl.GetDescriptionDoc(ci, e.ToInt(1));
-		_textPopup.Show(Panels.Editor.ZActiveDoc, _popup.Hwnd.Rect, Dock.Right);
+		_textPopup.Show(Panels.Editor.aaActiveDoc, _popup.Hwnd.Rect, Dock.Right);
 	}
 
 	void _SortAndSetControlItems() {
@@ -166,7 +166,7 @@ class CiPopupList
 			int r = string.Compare(c1.ci.SortText, c2.ci.SortText, StringComparison.OrdinalIgnoreCase);
 			if (r == 0) {
 				r = CiSnippets.Compare(c1, c2);
-				//if (r == 0) r = string.Compare(c1.Text, c2.Text, StringComparison.OrdinalIgnoreCase);
+				//if (r == 0) r = string.Compare(c1.TextForFind, c2.TextForFind, StringComparison.OrdinalIgnoreCase);
 			}
 			return r;
 		});

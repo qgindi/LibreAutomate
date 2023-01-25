@@ -26,7 +26,7 @@
     <DefineConstants></DefineConstants>
 	<PackageId>LibreAutomate</PackageId>
 	<Title>LibreAutomate</Title>
-	<Version>0.10.1</Version>
+	<Version>0.12.0</Version>
 	<Authors>didgeridoo</Authors>
 	<Product>LibreAutomate</Product>
 	<Description>LibreAutomate is an automation library for Windows. Mostly desktop and web UI automation. To get the most of it, install the LibreAutomate C# app.</Description>
