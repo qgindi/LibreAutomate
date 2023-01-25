@@ -72,7 +72,7 @@ void _Build() {
 	
 	if (build) {
 		filesystem.delete(siteDirTemp);
-		using var sdkwa = new SdkWorkaround();
+		//using var sdkwa = new SdkWorkaround();
 		r = run.console(o => { print.it(o); }, docfx, "metadata");
 		if (r != 0) { print.it("docfx metadata", r); return; }
 		if (onlyMetadata) { print.it("metadata ok"); return; }
@@ -109,6 +109,7 @@ void _KillDocfxProcesses() {
 
 /// <summary>
 /// Workaround for: if Au uses .NET 6 and is installed a .NET 7 SDK, cannot resolve cref of .NET types etc. Prints many warnings.
+/// 2023-01-24: don't need the workaround.
 /// </summary>
 class SdkWorkaround : IDisposable {
 	FEFile[] _a;

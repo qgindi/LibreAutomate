@@ -7,12 +7,7 @@
 /// Click the Run button to apply changes after editing.
 ///
 /// You'll find hotkey code examples in file "Hotkey triggers".
-/// 
-/// To disable or remap keys, use code like this. Note: use <b>keys.more.sendKey</b> or <b>keys.sendL</b>, not <b>keys.send</b>.
-
-hk["CapsLock"] = o => {  }; //just disable. Does not disable Ctrl+CapsLock etc.
-hk["?+Ins"] = o => keys.more.sendKey(KKey.Apps); //remap key. Also Ctrl+Ins etc.
-
+///
 /// Tips:
 /// - To get code for "run script" or "run/open file or URL" you can drag and drop scripts, files and links to the code editor.
 /// - To show hotkey info tools: let the text cursor be in the hotkey string. Then press Ctrl+Shift+Space, or invoke the Keys window from the Code menu or toolbar.

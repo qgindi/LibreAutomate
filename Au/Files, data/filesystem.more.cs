@@ -188,31 +188,34 @@ partial class filesystem {
 		/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
 		/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
 		/// </remarks>
-		internal static void LoadDll64or32Bit_(string fileName) {
+		internal unsafe static void LoadDll64or32Bit_(string fileName) {
 			//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
-			string rel = (osVersion.is32BitProcess ? @"32\" : @"64\") + fileName;
+			string rel = (sizeof(nint) == 4 ? @"32\" : @"64\") + fileName;
+			//note: don't use osVersion.is32BitProcess here. Its static ctor makes this func slower at startup.
+			//	And folders.ThisAppBS is slow first time, therefore call AppContext.BaseDirectory directly.
+
+			//var s1 = folders.ThisAppBS + rel;
+			var s1 = AppContext.BaseDirectory + rel;
 
 			//app path
-			if (default != Api.LoadLibrary(folders.ThisAppBS + rel)) return;
+			if (NativeLibrary.TryLoad(s1, out _)) return;
 
 			//like DllImport. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
 			if (NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out _)) return;
 
 			//dll path. Eg in PowerShell. Other scripting environments etc may copy the dll elsewhere; then need the environment variable.
 			var p = pathname.getDirectory(Assembly.GetCallingAssembly().Location, withSeparator: true) + rel;
-			if (default != Api.LoadLibrary(p)) return;
+			if (NativeLibrary.TryLoad(p, out _)) return;
 
 			//environment variable
 			p = Environment.GetEnvironmentVariable("Au.Path");
-			if (p != null && default != Api.LoadLibrary(pathname.combine(p, rel))) return;
+			if (p != null && NativeLibrary.TryLoad(pathname.combine(p, rel), out _)) return;
 
 			//extracted from resources?
-			if (default != Api.LoadLibrary(folders.ThisAppTemp + rel)) return;
+			if (NativeLibrary.TryLoad(folders.ThisAppTemp + rel, out _)) return;
 
-			//if(default != Api.LoadLibrary(fileName)) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
-
-			var bits = osVersion.is32BitProcess ? "32" : "64";
+			var bits = sizeof(nint) == 4 ? "32" : "64";
 			throw new DllNotFoundException($@"{fileName} must be in <this program>\{bits} or <this dll>\{bits} or <environment variable Au.Path>\{bits} or <folders.ThisAppTemp>\{bits}.
   This program: {folders.ThisApp}");
 		}

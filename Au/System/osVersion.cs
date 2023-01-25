@@ -9,7 +9,7 @@ namespace Au;
 /// <seealso cref="OperatingSystem"/>
 public static unsafe class osVersion {
 	static osVersion() {
-		Api.RTL_OSVERSIONINFOW x = default; x.dwOSVersionInfoSize = Api.SizeOf(x);
+		Api.RTL_OSVERSIONINFOW x = default; x.dwOSVersionInfoSize = sizeof(Api.RTL_OSVERSIONINFOW);
 		Api.RtlGetVersion(ref x); //use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
 		_winver = Math2.MakeWord(_winminor = (int)x.dwMinorVersion, _winmajor = (int)x.dwMajorVersion);
 		_winbuild = (int)x.dwBuildNumber;

@@ -127,7 +127,7 @@ class CiSignature {
 			_CancelUI();
 			return;
 		}
-		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
+		Debug.Assert(doc == Panels.Editor.aaActiveDoc); //when active doc changed, cancellation must be requested
 		if (cd.pos != doc.aaaCurrentPos16 || (object)cd.code != doc.aaaText) return; //changed while awaiting
 																				   //p1.Next('s');
 
@@ -186,7 +186,7 @@ class CiSignature {
 		doc.ETempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
 			if (doc.ETempRanges_Enum(doc.aaaCurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
-		}, SciCode.ZTempRangeFlags.NoDuplicate);
+		}, SciCode.TempRangeFlags.NoDuplicate);
 
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos));
 		doc.aaWnd.MapClientToScreen(ref rect);
@@ -205,7 +205,7 @@ class CiSignature {
 			if (methodCompletion) CodeInfo._compl.ShowList(ch); //when autocompletion added (); may need to show enum list 
 		}
 
-		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
+		_textPopup.Show(Panels.Editor.aaActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
 
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);

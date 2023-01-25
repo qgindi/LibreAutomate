@@ -44,7 +44,7 @@ class DInputRecorder : KDialogWindow {
 		c_iconRetry = "*BoxIcons.RegularReset" + Menus.red,
 		c_iconUndo = Menus.iconUndo;
 
-	const int c_xyWindow = 0, c_xyControl = 1, c_xyScreen = 2;
+	const int c_xyControl = 1, c_xyScreen = 2;
 
 	DInputRecorder() {
 		Title = "Input recorder";
@@ -670,7 +670,7 @@ class DInputRecorder : KDialogWindow {
 
 			_Add(new _RecoChar { c = t.c, s = t.s, alt = alt, count = 1 }, k.time, w);
 
-			//why Text+ checkbox exists when we can detect AltGr:
+			//why TextForFind+ checkbox exists when we can detect AltGr:
 			//	1. OS bugs. Eg AltGr stops working after an Open/Save dialog etc.
 			//	2. Possibly not all keyboards have RAlt.
 			//	3. Somebody may want to use Ctrl+Alt even if AltGr exists and works.
@@ -848,7 +848,7 @@ class DInputRecorder : KDialogWindow {
 		//}
 		static bool _PointIsDrag(POINT a, POINT b) => Math.Abs(a.x - b.x) >= 4 || Math.Abs(a.y - b.y) >= 4;
 
-		static bool _PointIsDouble(POINT a, POINT b) => b.x >= a.x - 2 && b.x < a.x + 2 && b.y >= a.y - 2 && b.y < a.y + 2;
+		static bool _PointIsDouble(POINT a, POINT b) => Math.Abs(a.x - b.x) <= 2 && Math.Abs(a.y - b.y) <= 2;
 	}
 
 	//void _WeHook(HookData.WinEvent k) {

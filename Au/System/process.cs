@@ -400,7 +400,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets the command line string used to start the process.
+		/// Gets the command line string used to start the specified process.
 		/// </summary>
 		/// <returns>null if failed.</returns>
 		/// <param name="processId">Process id.</param>

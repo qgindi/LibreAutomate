@@ -114,8 +114,8 @@ namespace Au.Controls
 		/// Sets image annotations for one or more lines of text.
 		/// </summary>
 		/// <param name="firstLine">First line index.</param>
-		/// <param name="text">Text that starts at line firstLine.</param>
-		/// <param name="length">Text length.</param>
+		/// <param name="text">TextForFind that starts at line firstLine.</param>
+		/// <param name="length">TextForFind length.</param>
 		/// <param name="allText">Added all text (not edited or appended).</param>
 		/// <param name="textPos">Position where the text starts.</param>
 		[SkipLocalsInit]
@@ -422,14 +422,14 @@ namespace Au.Controls
 								int yOffs = -c.annotLine * hLine; if (isFirstLine == 0) yOffs += IMAGE_MARGIN_TOP;
 								var ok = Api.SetDIBitsToDevice(hdc, x, r.top + isFirstLine * IMAGE_MARGIN_TOP,
 									q.width, q.height, 0, yOffs, 0, q.height,
-									pBits, q.biHeader, 0); //DIB_RGB_COLORS
+									pBits, q.biHeader);
 								Debug.Assert(ok > 0);
 							} else if (siz <= sizF) {
 								//this is fast, but cannot use with compressed bitmaps
 								int hei = yy - y, bmY = q.height - (currentTop - ((isFirstLine ^ 1) * IMAGE_MARGIN_TOP) + hei);
 								var ok = Api.SetDIBitsToDevice(hdc, x, r.top + isFirstLine * IMAGE_MARGIN_TOP,
 									q.width, hei, 0, 0, 0, hei,
-									pBits + bmY * bytesInLine, q.biHeader, 0); //DIB_RGB_COLORS
+									pBits + bmY * bytesInLine, q.biHeader);
 								Debug.Assert(ok > 0);
 							} else Debug.Assert(false);
 
@@ -463,7 +463,7 @@ namespace Au.Controls
 			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
 			if (!hasImages && c.annotLine == 0) {
 				int line = c.line; var annot = AnnotationText_(line);
-				//_c.zAnnotationText_(line, annot); //dangerous
+				//_c.aaaAnnotationText_(line, annot); //dangerous
 				_c.Dispatcher.InvokeAsync(() => { _c.aaaAnnotationText_(line, annot); });
 				return 1;
 			}

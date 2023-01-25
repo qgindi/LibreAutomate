@@ -1,11 +1,17 @@
 using System.Windows.Controls;
 using Au.Controls;
-using Microsoft.Win32;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Drawing;
 
 //FUTURE: add image tools: eraser (to draw mask, ie transparent areas), crop.
+
+//FUTURE: if there are screens with different DPI, suggest to capture on each screen. Then code:
+//string image = screen.of(w).Dpi switch {
+//	120 => @"image:",
+//	_ => @"image:"
+//};
+
 
 namespace Au.Tools;
 
@@ -23,7 +29,7 @@ class Duiimage : KDialogWindow {
 
 	KSciInfoBox _info;
 	KPopup _ttInfo;
-	Button _bTest, _bInsert;
+	Button _bTest, _bInsert, _bMore;
 	ComboBox _cbAction;
 	const int c_waitnot = 8, c_finder = 9;
 	_PictureBox _pict;
@@ -39,7 +45,7 @@ class Duiimage : KDialogWindow {
 		Title = "Find image or color in window";
 
 		_noeventValueChanged = true;
-		var b = new wpfBuilder(this).WinSize((410, 400..), (380, 330..)).Columns(160, -1);
+		var b = new wpfBuilder(this).WinSize((450, 400..), (380, 330..)).Columns(160, -1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(76, 76, 76, -1);
 		//row 1
@@ -48,7 +54,7 @@ class Duiimage : KDialogWindow {
 		b.AddButton(out _bInsert, "Insert", _Insert).Disabled();
 		b.Add(out _cbAction).Align("L").Width(140).Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|PostClickD|PostClickR|waitNot|new uiimageFinder").Select(2);
 		//row 3
-		b.R.AddButton("More ▾", _bEtc_Click).Align("L");
+		b.R.AddButton(out _bMore, "More ▾", _bEtc_Click).Align("L");
 		b.StartStack();
 		waitC = b.xAddCheckText("Wait", "1", check: true); b.Width(53);
 		(waitnoC = b.xAddCheckText("Timeout", "5")).Visible = false; b.Width(53);
@@ -59,9 +65,11 @@ class Duiimage : KDialogWindow {
 		//row 4
 		b.R.AddButton("Window...", _bWnd_Click).And(-70).Add(out controlC, "Control").Disabled();
 		b.xStartPropertyGrid();
-		rectC = b.xAddCheckText("Rectangle", "0, 0, ^0, ^0"); b.And(21).AddButton("...", _bRect_Click);
-		wiflagsC = b.xAddCheckCombo("Window pixels", "WindowDC|PrintWindow");
+		rectC = b.xAddCheckText("Rectangle", "0, 0, ^0, ^0");
+		b.And(21).AddButton("...", _bRect_Click);
+		wiflagsC = b.xAddCheckCombo("Flags", "WindowDC|PrintWindow");
 		diffC = b.xAddCheckText("Color diff", "10");
+		b.And(60).AddButton("Detect", _bDiff_Click).Tooltip("Detects the smallest diff value that allows to find the image");
 		skipC = b.xAddCheckText("Skip");
 		b.xAddCheck(out allC, "Get all", noR: true);
 		b.xEndPropertyGrid(); b.SpanRows(2);
@@ -92,27 +100,86 @@ class Duiimage : KDialogWindow {
 		App.Hmain.ActivateL();
 	}
 
-	private void _bCapture_Click(WBButtonClickArgs e) {
+	void _bCapture_Click(WBButtonClickArgs e) {
 		if (!_CaptureImageOrRect(false, out var r)) return;
 		_imageFile = null;
 		_SetImage(r);
+
+		if (r.possiblyWrongWindow) {
+			dialog.showWarning("Possibly wrong window", "The window that contained the captured image possibly disappeared while capturing. Please review the code. If the window is wrong, click the [Window...] button and capture the correct window; or capture later with the 'Find window' tool or 'Quick capturing' hotkey.", owner: this);
+		}
+
+		if (_Flags is 0 or ICFlags.PrintWindow && Dpi.IsWindowVirtualized(r.w)) {
+			TUtil.InfoTooltip(ref _ttInfo, e.Button, """
+Note: The window is DPI-scaled. Its pixel colors will change after resizing, and the code may stop working.
+To avoid it, capture with flag WindowDC. Or try to move the window to another screen.
+""");
+		}
 	}
 
-	private void _bWnd_Click(WBButtonClickArgs e) {
-		var r = _code.ZShowWndTool(this, _wnd, _con, checkControl: _useCon);
-		if (r.ok) _SetWndCon(r.w, r.con, r.useCon, true);
-	}
-
-	private void _bRect_Click(WBButtonClickArgs e) {
+	void _bRect_Click(WBButtonClickArgs e) {
 		if (_wnd.Is0) return;
 		var m = new popupMenu();
-		m["Rectangle of the captured image"] = o => _SetRect(_rect);
 		m["Select rectangle..."] = o => { if (_CaptureImageOrRect(true, out var r)) _SetRect(r.rect); };
-		m.Show();
+		if (_image != null) m["Rectangle of the captured image"] = o => _SetRect(_rect);
+		m.Show(owner: this);
 		void _SetRect(RECT k) => rectC.Set(true, k.ToStringFormat("({0}, {1}, {4}, {5})"));
 	}
 
-	//Use r on Capture. Use image on Open.
+	void _bDiff_Click(WBButtonClickArgs e) {
+		if (_image == null || _wnd.Is0) return;
+		_wnd.ActivateL();
+		300.ms();
+		string es = null;
+		try {
+			using var b = CaptureScreen.Image(_AreaWnd, how: _Flags.ToICHow_());
+			var im = _isColor ? (IFImage)_color : _image;
+			int maxFound = 0, minNotfound = 0;
+			if (!new uiimageFinder(im).Exists(b)) {
+				for (maxFound = 101; maxFound - minNotfound > 1;) {
+					int i = (minNotfound + maxFound) / 2;
+					if (new uiimageFinder(im, diff: i).Exists(b)) maxFound = i; else minNotfound = i;
+				}
+			}
+			if (maxFound <= 100) {
+				_noeventValueChanged = true;
+				diffC.t.Text = maxFound.ToS();
+				diffC.c.IsChecked = maxFound > 0;
+				_noeventValueChanged = false;
+			} else es = "Can't find with any diff.";
+		}
+		catch (Exception e1) { es = e1.ToStringWithoutStack(); }
+		finally { this.Hwnd().ActivateL(); }
+		if (es != null) TUtil.InfoTooltip(ref _ttInfo, e.Button, es);
+	}
+
+	ICFlags _Flags => !wiflagsC.c.IsChecked ? 0 : wiflagsC.t.SelectedIndex switch { 1 => ICFlags.PrintWindow, _ => ICFlags.WindowDC };
+
+	bool _CaptureImageOrRect(bool rect, out ICResult r) {
+		_ttInfo?.Close();
+
+		var fl = rect ? ICFlags.Rectangle : _Flags;
+		if (!CaptureScreen.ImageUI(out r, fl, this)) return false;
+
+		var w2 = (!rect || _useCon) ? r.w : r.w.Window;
+		string es = null;
+		if (rect) {
+			bool otherWindow = w2 != _AreaWnd;
+			if (otherWindow) es = "Whole rectangle must be in the client area of the captured image's window or control.";
+		} else if (r.w.Is0) {
+			r.image?.Dispose(); r.image = null;
+			es = "Whole image must be in the client area of a single window.";
+		}
+		if (es != null) {
+			dialog.showError(null, es, owner: this);
+			return false;
+		}
+
+		w2.MapScreenToClient(ref r.rect);
+		return true;
+	}
+
+	//Use r on Capture. Use image on Open or Paste.
 	void _SetImage(ICResult r = null, Bitmap image = null) {
 		if (r != null) { //on Capture
 			var w = r.w.Window; if (w.Is0) return;
@@ -124,7 +191,9 @@ class Duiimage : KDialogWindow {
 			_color = r.color & 0xffffff;
 			_image = r.image;
 			_rect = r.rect;
-		} else { //on Open
+			if (r.dpiScale != 1 && !_isColor) _rect.Inflate(2, 2);
+		} else { //on Open or Paste
+			_isColor = false;
 			_color = 0;
 			_image = image;
 			_rect = new RECT(0, 0, image.Width, image.Height);
@@ -142,15 +211,20 @@ class Duiimage : KDialogWindow {
 	}
 
 	void _SetWndCon(wnd w, wnd con, bool useCon, bool updateCodeIfNeed) {
-		var wPrev = _WndSearchIn;
+		var wPrev = _AreaWnd;
 		_wnd = w;
 		_con = con == w ? default : con;
 
 		_noeventValueChanged = !updateCodeIfNeed;
 		_useCon = useCon && !_con.Is0;
 		controlC.IsChecked = _useCon; controlC.IsEnabled = !_con.Is0;
-		if (_WndSearchIn != wPrev) rectC.c.IsChecked = false;
+		if (_AreaWnd != wPrev) rectC.c.IsChecked = false;
 		_noeventValueChanged = false;
+	}
+
+	private void _bWnd_Click(WBButtonClickArgs e) {
+		var r = _code.a4ShowWndTool(this, _wnd, _con, checkControl: _useCon);
+		if (r.ok) _SetWndCon(r.w, r.con, r.useCon, true);
 	}
 
 	//when checked/unchecked any checkbox, and when text changed of any textbox
@@ -164,7 +238,7 @@ class Duiimage : KDialogWindow {
 					if (_useCon = on) _wnd.MapClientToClientOf(_con, ref _rect); else _con.MapClientToClientOf(_wnd, ref _rect);
 					rectC.c.IsChecked = false;
 				} else if (c == wiflagsC.c) {
-					if (_image != null) TUtil.InfoTooltip(ref _ttInfo, c, "After changing 'Window pixels' may need to capture again.\nClick Test. If not found, click Capture.");
+					if (_image != null) TUtil.InfoTooltip(ref _ttInfo, c, "After changing flags may need to capture again.\nClick Test. If not found, click Capture.");
 				} else if (c == skipC.c) {
 					if (on) allC.IsChecked = false;
 				} else if (c == allC) {
@@ -224,9 +298,9 @@ class Duiimage : KDialogWindow {
 			b.Append("var f = new uiimageFinder(");
 		} else {
 			b.Append(waitNot ? "uiimage.waitNot(" : "uiimage.find(");
-			if (wait || waitNot || orThrow) if (b.AppendWaitTime(waitTime ?? "0", orThrow)) b.Append(", ");
+			if (wait || waitNot || orThrow) if (b.AppendWaitTime(waitTime ?? "0", orThrow, appendAlways: waitNot)) b.Append(", ");
 
-			(wndCode, wndVar) = _code.ZGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
+			(wndCode, wndVar) = _code.a4GetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			bb.AppendLine(wndCode);
 
 			if (rectC.GetText(out var sRect)) b.AppendFormat("new({0}, {1})", wndVar, sRect);
@@ -294,38 +368,14 @@ class Duiimage : KDialogWindow {
 
 		var R = bb.Append(b).ToString();
 
-		if (!forTest) _code.ZSetText(R, wndCode.Lenn());
+		if (!forTest) _code.a4SetText(R, wndCode.Lenn());
 
 		return (R, wndVar);
 	}
 
 	#region util, misc
 
-	wnd _WndSearchIn => _useCon ? _con : _wnd;
-
-	bool _CaptureImageOrRect(bool rect, out ICResult r) {
-		ICFlags fl = 0;
-		if (rect) fl = ICFlags.Rectangle;
-		else if (wiflagsC.c.IsChecked) fl = wiflagsC.t.SelectedIndex == 0 ? ICFlags.WindowDC : ICFlags.PrintWindow; //FUTURE: how rect is if DPI-scaled window?
-
-		if (!uiimage.captureUI(out r, fl, this)) return false;
-
-		string es = null;
-		if (rect) {
-			bool otherWindow = (_useCon ? r.w : r.w.Window) != (_useCon ? _con : _wnd);
-			if (otherWindow) es = "Whole rectangle must be in the client area of the captured image's window or control.";
-		} else if (r.w.Is0) {
-			r.image?.Dispose(); r.image = null;
-			es = "Whole image must be in the client area of a single window.";
-		}
-		if (es != null) {
-			dialog.showError(null, es, owner: this);
-			return false;
-		}
-
-		r.w.MapScreenToClient(ref r.rect);
-		return true;
-	}
+	wnd _AreaWnd => _useCon ? _con : _wnd;
 
 	string _CurrentImageString() {
 		if (_isColor) return "0x" + _color.ToString("X6");
@@ -343,28 +393,25 @@ class Duiimage : KDialogWindow {
 		bool isImage = _image != null && !_isColor;
 
 		var m = new popupMenu();
+		m["Copy image", disable: !isImage] = o => { new clipboardData().AddImage(_image).SetClipboard(); };
+		m["Paste image", disable: !clipboardData.contains(ClipFormats.Image)] = o => _PasteImage(e.Button);
 		m["Use file..."] = o => _OpenFile(false, e.Button);
 		m["Embed file..."] = o => _OpenFile(true, e.Button);
 		m["Save as file...", disable: !isImage] = o => _SaveFile();
 		m.Separator();
 		m["Add to array", disable: _image == null] = o => _MultiMenuAdd();
 		m["Remove from array", disable: !_MultiIsActive] = o => _MultiRemove();
-		//m.Separator();
-		//var cIC = m.AddCheck("Let Insert close", _Opt.Has(_EOptions.InsertClose));
-		m.Show();
-		//_EOptions f = _Opt;
-		//f.SetFlag(_EOptions.InsertClose, cIC.IsChecked);
-		////var changed = _Opt ^ f;
-		//_Opt = f;
-		////if (changed.Has(_EOptions.)) _FormatCode();
+		m.Show(owner: this);
+	}
+
+	bool _RequireWindow(Button button) {
+		if (!_wnd.Is0) return true;
+		TUtil.InfoTooltip(ref _ttInfo, button, "At first please select a window with button 'Capture' or 'Window'.");
+		return false;
 	}
 
 	void _OpenFile(bool embed, Button button) {
-		if (_wnd.Is0) {
-			TUtil.InfoTooltip(ref _ttInfo, button, "At first please select a window with button 'Capture' or 'Window'.");
-			return;
-		}
-
+		if (!_RequireWindow(button)) return;
 		if (!_FileDialog().ShowOpen(out string f, this)) return;
 		var im = new Bitmap(f);
 		_imageFile = embed ? null : f;
@@ -383,8 +430,14 @@ class Duiimage : KDialogWindow {
 		return true;
 	}
 
+	void _PasteImage(Button button) {
+		if (!_RequireWindow(button)) return;
+		var im = clipboardData.getImage();
+		if (im != null) _SetImage(null, im);
+	}
+
 	void _MultiMenuAdd() {
-		if (_multi == null) _multi = new HashSet<string>();
+		_multi ??= new HashSet<string>();
 		_MultiAdd();
 	}
 
@@ -414,17 +467,6 @@ class Duiimage : KDialogWindow {
 	//	_pict.Invalidate();
 	//}
 
-	//[Flags]
-	//enum _EOptions
-	//{
-	//	InsertClose = 1 << 5,
-	//}
-
-	//static _EOptions _Opt {
-	//	get => (_EOptions)App.Settings.tools_Duiimage_flags;
-	//	set => App.Settings.tools_Duiimage_flags = (int)value;
-	//}
-
 	#endregion
 
 	#region Insert, Test
@@ -432,7 +474,7 @@ class Duiimage : KDialogWindow {
 	///// <summary>
 	///// When OK clicked, contains C# code. Else null.
 	///// </summary>
-	//public string ZResultCode { get; private set; }
+	//public string aaResultCode { get; private set; }
 
 	void _Insert(WBButtonClickArgs _1) {
 		if (_close) {
@@ -440,24 +482,24 @@ class Duiimage : KDialogWindow {
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
 			string newline = _cbAction.SelectedIndex is 0 or >= c_finder ? "\r\n" : null; //if no action, add empty line
 			InsertCode.Statements(s);
-			//if (_Opt.Has(_EOptions.InsertClose)) {
-			//	base.Close();
-			//} else {
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {
 				_close = !true;
 				_bInsert.Content = "Insert";
 			};
-			//}
+
+			if (rectC.GetText(out var sRect)) TUtil.InfoRectCoord(_AreaWnd, sRect);
 		}
 	}
 	bool _close;
 
 	void _Test(WBButtonClickArgs _1) {
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;
-		var rr = TUtil.RunTestFindObject(this, code, wndVar, _WndSearchIn, getRect: o => (o as uiimage).RectInScreen, activateWindow: true);
+		var rr = TUtil.RunTestFindObject(this, code, wndVar, _AreaWnd, getRect: o => (o as uiimage).RectInScreen, activateWindow: true);
 		_info.InfoErrorOrInfo(rr.info);
+
+		//CONSIDER: don't activate the window if it wasn't active when captured
 	}
 
 	#endregion
@@ -469,7 +511,7 @@ class Duiimage : KDialogWindow {
 		//_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = c_dialogInfo;
-		_info.ZAddElem(this, c_dialogInfo);
+		_info.a4AddElem(this, c_dialogInfo);
 
 		_info.InfoC(controlC,
 @"Search only in control (if captured), not in whole window.
@@ -478,11 +520,11 @@ With uiimageFinder this is used only for testing.");
 		_info.InfoCT(rectC,
 @"Limit the search area to this rectangle in the client area of the window or control. Smaller = faster.
 Can be <b>RECT<>: <code>(left, top, width, height)</code>. Or 4 <help Au.Types.Coord>Coord<>: <code>left, top, right, bottom</code>; for example <code>^0</code> is right/bottom edge, <code>0.5f</code> is center.
-With uiimageFinder this is used only for testing.");
+If action is uiimageFinder, this is used only for testing.");
 		_info.InfoCO(wiflagsC,
 @"Get pixels from window, not from screen.
-Usually it makes faster. Also, window can be in background.
-Works not with all windows. WindowDC is fastest. PrintWindow works with more windows.");
+The window can be in the background. Also with WindowDC faster.
+Works not with all windows. Try WindowDC, then PrintWindow if fails.");
 		_info.InfoCT(diffC,
 @"Maximal allowed color difference.
 Valid values: 0 - 100.");
@@ -490,6 +532,14 @@ Valid values: 0 - 100.");
 @"0-based index of matching image.
 For example, if 1, gets the second matching image.");
 		_info.Info(_cbAction, "Action", "Call this function when found. Or instead of <b>find<> call <b>waitNot<> or create new <b>uiimageFinder<>.");
+		_info.Info(_bMore, "More",
+@"Manage images now.
+ • <i>Copy image</i> - copy the image to the clipboard. For example then you can paste it in image editing software.
+ • <i>Paste image</i> - paste image from the clipboard. For example from image editing software or Snipping Tool.
+ • <b>Use file</b> - use an image file instead of captured image string.
+ • <b>Embed file</b> - add image file data to the code as string.
+ • <b>Save as file</b> - save the image.
+ • <b>Add to array</b> - add this image to a list of images to find.");
 		_info.InfoC(allC, "Find all matching images.");
 		_info.InfoCT(waitC, @"The wait timeout, seconds.
 The function waits max this time interval. On timeout throws exception if <b>Fail...<> checked, else returns null. If empty, uses 8e88 (infinite).");

@@ -22,12 +22,12 @@ static unsafe partial class Api {
 	internal static int SizeOf<T>() => Marshal.SizeOf<T>();
 
 	/// <summary>
-	/// Gets dll module handle (Api.GetModuleHandle) or loads dll (Api.LoadLibrary), and returns unmanaged exported function address (Api.GetProcAddress).
+	/// Gets dll module handle (Api.GetModuleHandle) or loads dll (NativeLibrary.TryLoad), and returns unmanaged exported function address (Api.GetProcAddress).
 	/// See also: GetDelegate.
 	/// </summary>
 	internal static IntPtr GetProcAddress(string dllName, string funcName) {
 		IntPtr hmod = GetModuleHandle(dllName);
-		if (hmod == default) { hmod = LoadLibrary(dllName); if (hmod == default) return hmod; }
+		if (hmod == default && !NativeLibrary.TryLoad(dllName, out hmod)) return default;
 
 		return GetProcAddress(hmod, funcName);
 	}
@@ -155,6 +155,9 @@ static unsafe partial class Api {
 
 	[DllImport("gdi32.dll")]
 	internal static extern bool StretchBlt(IntPtr hdcDest, int xDest, int yDest, int wDest, int hDest, IntPtr hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, uint rop);
+	
+	[DllImport("gdi32.dll")]
+	internal static extern IntPtr CreateDIBSection(IntPtr hdc, in Api.BITMAPINFO pbmi, uint usage, out uint* ppvBits, IntPtr hSection = default, uint offset = 0);
 
 	internal struct BITMAPINFOHEADER {
 		public int biSize;
@@ -190,12 +193,12 @@ static unsafe partial class Api {
 		/// <summary>
 		/// Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
 		/// </summary>
-		public BITMAPINFO(int _) : this() { biSize = sizeof(BITMAPINFOHEADER); }
+		public BITMAPINFO() { biSize = sizeof(BITMAPINFOHEADER); }
 
 		/// <summary>
 		/// Sets width/height/bitcount/planes fields. Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
 		/// </summary>
-		public BITMAPINFO(int width, int height, int bitCount) : this(0) { biWidth = width; biHeight = height; biBitCount = (ushort)bitCount; biPlanes = 1; }
+		public BITMAPINFO(int width, int height, int bitCount = 32) : this() { biWidth = width; biHeight = height; biBitCount = (ushort)bitCount; biPlanes = 1; }
 
 		//little tested
 		///// <summary>
@@ -226,7 +229,7 @@ static unsafe partial class Api {
 	/// lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
 	/// </summary>
 	[DllImport("gdi32.dll")]
-	internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse);
+	internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse = 0); //DIB_RGB_COLORS
 
 	//internal const int WHITE_BRUSH = 0;
 	//internal const int LTGRAY_BRUSH = 1;
@@ -1242,10 +1245,41 @@ static unsafe partial class Api {
 		CLOAK,
 		CLOAKED,
 		FREEZE_REPRESENTATION,
+		PASSIVE_UPDATE_MODE,
 	}
 
 	[DllImport("dwmapi.dll")]
 	internal static extern int DwmGetWindowAttribute(wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
+	
+	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//internal static extern int DwmSetWindowAttribute(wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
+	
+	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//internal static extern int DwmRegisterThumbnail(wnd hwndDestination, wnd hwndSource, out IntPtr phThumbnailId);
+	
+	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//internal static extern int DwmUnregisterThumbnail(IntPtr hThumbnailId);
+	
+	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//internal static extern int DwmQueryThumbnailSourceSize(IntPtr hThumbnail, out SIZE pSize);
+	
+	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//internal static extern int DwmUpdateThumbnailProperties(IntPtr hThumbnailId, in DWM_THUMBNAIL_PROPERTIES ptnProperties);
+	
+	//[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	//internal struct DWM_THUMBNAIL_PROPERTIES {
+	//	public uint dwFlags;
+	//	public RECT rcDestination;
+	//	public RECT rcSource;
+	//	public byte opacity;
+	//	public bool fVisible;
+	//	public bool fSourceClientAreaOnly;
+	//}
+	
+	//internal const uint DWM_TNP_SOURCECLIENTAREAONLY = 0x10;
+	//internal const uint DWM_TNP_RECTDESTINATION = 0x1;
+	//internal const uint DWM_TNP_VISIBLE = 0x8;
+	//internal const uint DWM_TNP_RECTSOURCE = 0x2;
 
 
 

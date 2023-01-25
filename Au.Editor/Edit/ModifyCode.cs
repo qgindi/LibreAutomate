@@ -17,7 +17,6 @@ static class ModifyCode {
 	/// </summary>
 	/// <param name="comment">Comment out (true), uncomment (false) or toggle (null).</param>
 	/// <param name="notSlashStar">Comment out lines, even if there is nut-full-line selection.</param>
-	/// <param name="doc">If null, uses Panels.Editor.ZActiveDoc.</param>
 	public static void CommentLines(bool? comment, bool notSlashStar = false) {
 		//how to comment/uncomment: // or /**/
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return;
@@ -252,7 +251,7 @@ partial class SciCode {
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
 		if (a.Count > 1000) goto gRaw;
 		dmp.diff_cleanupEfficiency(a);
-		using (new SciCode.UndoAction(this)) {
+		using (new SciCode.aaaUndoAction(this)) {
 			for (int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 				var d = a[i];
 				if (d.operation == DiffMatchPatch.Operation.INSERT) {

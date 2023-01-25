@@ -1,7 +1,6 @@
 //FUTURE: option to allow % of image completely different. Eg button with/without focus rectangle.
+//	Or/and in the tool allow to erase some areas (make alpha 0).
 
-//#define WI_DEBUG_PERF
-//#define WI_SIMPLE
 //#define WI_TEST_NO_OPTIMIZATION
 
 using System.Drawing;
@@ -15,10 +14,8 @@ namespace Au;
 /// <remarks>
 /// Can be used instead of <see cref="uiimage.find"/>.
 /// </remarks>
-public unsafe class uiimageFinder
-{
-	class _Image
-	{
+public unsafe class uiimageFinder {
+	class _Image {
 		public uint[] pixels;
 		public int width, height;
 		public _OptimizationData optim;
@@ -53,21 +50,6 @@ public unsafe class uiimageFinder
 		public _Image() { }
 	}
 
-	//large unmanaged memory etc reused while waiting, to make slightly faster
-	internal unsafe struct _AreaData
-	{
-		public MemoryBitmap mb;
-		public int width, height, memSize;
-		public uint* pixels;
-
-		public void Free() {
-			if (mb != null) { //null if IFArea.AreaType.Bitmap
-				mb.Dispose();
-				MemoryUtil.VirtualFree(pixels);
-			}
-		}
-	}
-
 	//ctor parameters
 	readonly List<_Image> _images; //support multiple images
 	readonly IFFlags _flags;
@@ -76,7 +58,7 @@ public unsafe class uiimageFinder
 
 	Action_ _action;
 	IFArea _area;
-	_AreaData _ad;
+	CaptureScreenImage _ad; //area data
 	POINT _resultOffset; //to map the found rectangle from the captured area coordinates to the specified area coordinates
 
 	/// <summary>
@@ -150,7 +132,7 @@ public unsafe class uiimageFinder
 	/// <inheritdoc cref="Find(IFArea)"/>
 	public bool Exists(IFArea area) {
 		_Before(area, Action_.Find);
-		return Find_();
+		return _Find();
 	}
 
 	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
@@ -184,132 +166,51 @@ public unsafe class uiimageFinder
 	public bool WaitNot(double secondsTimeout, IFArea area)
 		=> Wait_(Action_.WaitNot, secondsTimeout, area);
 
-	internal enum Action_ { Find, Wait, WaitNot, WaitChanged }
-
 	internal bool Wait_(Action_ action, double secondsTimeout, IFArea area) {
+		if (area.Type == IFArea.AreaType.Bitmap) throw new ArgumentException("Bitmap and wait");
 		_Before(area, action);
-		try { return wait.forCondition(secondsTimeout, () => Find_() ^ (action > Action_.Wait)); }
+		try { return wait.forCondition(secondsTimeout, () => _Find() ^ (action > Action_.Wait)); }
 		finally { _After(); }
 
 		//tested: does not create garbage while waiting.
 	}
 
-	//called at the start of Find_ and Wait_
+	internal enum Action_ { Find, Wait, WaitNot, WaitChanged }
+
+	//called at the start of _Find and Wait_
 	void _Before(IFArea area, Action_ action) {
 		Not_.Null(area);
-		_area = area;
 		_action = action;
+		_area = area;
+		_ad ??= new();
 
 		if (_action == Action_.WaitChanged) {
-			Debug.Assert(_images.Count == 0 && _also == null); //the first Find_ will capture the area and add to _images
+			Debug.Assert(_images.Count == 0 && _also == null); //the first _Find will capture the area and add to _images
 		} else {
 			if (_images.Count == 0) throw new ArgumentException("no image");
 		}
 
-		IFFlags badFlags = 0;
-		switch (_area.Type) {
-		case IFArea.AreaType.Screen:
-			badFlags = IFFlags.WindowDC | IFFlags.PrintWindow;
-			break;
-		case IFArea.AreaType.Wnd:
-			_area.W.ThrowIfInvalid();
-			break;
-		case IFArea.AreaType.Elm:
-			if (_area.E == null) throw new ArgumentNullException(nameof(area));
-			_area.W = _area.E.WndContainer;
-			goto case IFArea.AreaType.Wnd;
-		case IFArea.AreaType.Bitmap:
-			if (_action != Action_.Find) throw new ArgumentException("wait", "image");
-			if (_area.B == null) throw new ArgumentNullException(nameof(area));
-			badFlags = IFFlags.WindowDC | IFFlags.PrintWindow;
-			break;
-		}
-		if (_flags.HasAny(badFlags)) throw new ArgumentException("Invalid flags for this area type: " + badFlags);
+		_area.Before_(_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow));
 
 		Result = new uiimage(_area);
 	}
 
-	//called at the end of Find_ (if not waiting) and Wait_
+	//called at the end of _Find (if not waiting) and Wait_
 	void _After() {
-		_ad.Free(); _ad = default;
+		_ad.Dispose();
 		_area = null;
 		if (_action == Action_.WaitChanged) _images.Clear();
 	}
 
-	internal bool Find_() {
+	bool _Find() {
 		//using var p1 = perf.local();
 		Result.Clear_();
 
-		bool inScreen = !_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow);
-		bool failedGetRect = false;
-
-		var w = _area.W;
-		if (!w.Is0) {
-			if (!w.IsVisible || w.IsMinimized) return false;
-			if (inScreen && w.IsCloaked) return false;
-		}
-
-		//Get area rectangle.
-		RECT r;
-		_resultOffset = default;
-		switch (_area.Type) {
-		case IFArea.AreaType.Wnd:
-			failedGetRect = !w.GetClientRect(out r, inScreen);
-			break;
-		case IFArea.AreaType.Elm:
-			failedGetRect = !(inScreen ? _area.E.GetRect(out r) : _area.E.GetRect(out r, w));
-			break;
-		case IFArea.AreaType.Bitmap:
-			r = new RECT(0, 0, _area.B.Width, _area.B.Height);
-			break;
-		default: //Screen
-			r = _area.R;
-			if (!screen.isInAnyScreen(r)) r = default;
-			_area.HasRect = false;
-			_resultOffset.x = r.left; _resultOffset.y = r.top;
-			break;
-		}
-		if (failedGetRect) {
-			w.ThrowIfInvalid();
-			throw new AuException("*get rectangle");
-		}
-
-		//r is the area from where to get pixels. If !inScreen, it is relative to the client area.
-		//Intermediate results will be relative to r. Then will be added _resultOffset if a limiting rectangle is used.
-
-		if (_area.HasRect) {
-			RECT rr;
-			if (_area.HasCoord) {
-				RECT rc = new(0, 0, r.Width, r.Height);
-				POINT p1 = Coord.NormalizeInRect(_area.cLeft, _area.cTop, rc), p2 = Coord.NormalizeInRect(_area.cRight, _area.cBottom, rc);
-				rr = RECT.FromLTRB(p1.x, p1.y, p2.x, p2.y);
-			} else {
-				rr = _area.R;
-			}
-			_resultOffset.x = rr.left; _resultOffset.y = rr.top;
-			rr.Offset(r.left, r.top);
-			r.Intersect(rr);
-		}
-
-		if (_area.Type == IFArea.AreaType.Elm) {
-			//adjust r and _resultOffset,
-			//	because object rectangle may be bigger than client area (eg WINDOW object)
-			//	or its part is not in client area (eg scrolled web page).
-			//	If not adjusted, then may capture part of parent or sibling controls or even other windows...
-			//	Never mind: should also adjust control rectangle in ancestors in the same way.
-			//		This is not so important because usually whole control is visible (resized, not clipped).
-			int x = r.left, y = r.top;
-			w.GetClientRect(out var rw, inScreen);
-			r.Intersect(rw);
-			x -= r.left; y -= r.top;
-			_resultOffset.x -= x; _resultOffset.y -= y;
-		}
-		if (r.NoArea) return false; //never mind: if WaitChanged and this is the first time, immediately returns 'changed'
+		if (!_area.GetRect_(out var r, out _resultOffset, _flags)) return false;
 
 		//If WaitChanged, first time just get area pixels into _images[0].
 		if (_action == Action_.WaitChanged && _images.Count == 0) {
-			_GetAreaPixels(r, true);
-			return true;
+			return _GetAreaPixels(r, true);
 		}
 
 		//Return false if all images are bigger than the search area.
@@ -322,30 +223,34 @@ public unsafe class uiimageFinder
 		BitmapData bitmapBD = null;
 		try {
 			//Get area pixels.
-			if (_area.Type == IFArea.AreaType.Bitmap) {
+			bool havePixels = _area.Type == IFArea.AreaType.Bitmap;
+			if (havePixels) {
 				var pf = (_area.B.PixelFormat == PixelFormat.Format32bppArgb) ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb; //if possible, use PixelFormat of _area, to avoid conversion/copying. Both these formats are ok, we don't use alpha.
 				bitmapBD = _area.B.LockBits(r, ImageLockMode.ReadOnly, pf);
 				if (bitmapBD.Stride < 0) throw new ArgumentException("bottom-up Bitmap");
-				_ad.pixels = (uint*)bitmapBD.Scan0;
-				_ad.width = bitmapBD.Width; _ad.height = bitmapBD.Height;
+				_ad.SetExternalData_((uint*)bitmapBD.Scan0, bitmapBD.Width, bitmapBD.Height);
+				//note: don't support rect in Bitmap. LockBits does not copy bits if same pixelformat. Would need to create new Bitmap from that rect, or use stride when searching.
 			} else {
-				_GetAreaPixels(r);
+				havePixels = _GetAreaPixels(r);
 			}
 			//p1.Next();
 
-			//Find image(s) in area.
-			uiimage alsoResult = null;
-			for (int i = 0, n = _images.Count; i < n; i++) {
-				Result.ListIndex = i;
-				Result.MatchIndex = 0;
-				if (_FindImage(_images[i], out var alsoAction, ref alsoResult)) return true;
-				if (alsoAction == IFAlso.NotFound || alsoAction == IFAlso.FindOtherOfThis || alsoAction == IFAlso.OkFindMoreOfThis) break;
+			if (havePixels) {
+				//Find image(s) in area.
+				uiimage alsoResult = null;
+				for (int i = 0, n = _images.Count; i < n; i++) {
+					Result.ListIndex = i;
+					Result.MatchIndex = 0;
+					if (_FindImage(_images[i], out var alsoAction, ref alsoResult)) return true;
+					if (alsoAction is IFAlso.NotFound or IFAlso.FindOtherOfThis or IFAlso.OkFindMoreOfThis) break;
+				}
+
+				if (alsoResult != null) {
+					Result = alsoResult;
+					return true;
+				}
 			}
 
-			if (alsoResult != null) {
-				Result = alsoResult;
-				return true;
-			}
 			Result.Clear_();
 			return false;
 		}
@@ -360,10 +265,10 @@ public unsafe class uiimageFinder
 		alsoAction = IFAlso.FindOtherOfList;
 
 		int imageWidth = image.width, imageHeight = image.height;
-		if (_ad.width < imageWidth || _ad.height < imageHeight) return false;
+		if (_ad.Width < imageWidth || _ad.Height < imageHeight) return false;
 		fixed (uint* imagePixels = image.pixels) {
 			uint* imagePixelsTo = imagePixels + imageWidth * imageHeight;
-			uint* areaPixels = _ad.pixels;
+			uint* areaPixels = _ad.Pixels;
 
 			//rejected. Does not make faster, just adds more code.
 			//if image is of same size as area, simply compare. For example, when action is WaitChanged.
@@ -377,7 +282,7 @@ public unsafe class uiimageFinder
 			//}
 			//else if(imagePixelCount == 1) { ... } //eg when image is color
 
-			if (!image.optim.Init(image, _ad.width)) return false;
+			if (!image.optim.Init(image, _ad.Width)) return false;
 			var optim = image.optim; //copy struct, size = 9*int
 			int o_pos0 = optim.v0.pos;
 			var o_a1 = &optim.v1; var o_an = o_a1 + (optim.N - 1);
@@ -385,9 +290,9 @@ public unsafe class uiimageFinder
 			//find first pixel. This part is very important for speed.
 			//int nTimesFound = 0; //debug
 
-			var areaWidthMinusImage = _ad.width - imageWidth;
+			var areaWidthMinusImage = _ad.Width - imageWidth;
 			var pFirst = areaPixels + o_pos0;
-			var pLast = pFirst + _ad.width * (_ad.height - imageHeight) + areaWidthMinusImage;
+			var pLast = pFirst + _ad.Width * (_ad.Height - imageHeight) + areaWidthMinusImage;
 
 			//this is a workaround for compiler not using registers for variables in fast loops (part 1)
 			var f = new _FindData {
@@ -480,7 +385,7 @@ public unsafe class uiimageFinder
 
 			if (_action != Action_.WaitChanged) {
 				int iFound = (int)(f.p - o_pos0 - areaPixels);
-				var r = new RECT(iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight);
+				var r = new RECT(iFound % _ad.Width, iFound / _ad.Width, imageWidth, imageHeight);
 				_DpiScaleRect(ref r);
 				r.Offset(_resultOffset.x, _resultOffset.y);
 				Result.Rect = r;
@@ -516,8 +421,7 @@ public unsafe class uiimageFinder
 		return false;
 	}
 
-	struct _FindData
-	{
+	struct _FindData {
 		public uint color;
 		public uint* p, pLineLast;
 	}
@@ -563,10 +467,8 @@ public unsafe class uiimageFinder
 
 	static bool _IsTransparent(uint color) => color < 0xff000000;
 
-	struct _OptimizationData
-	{
-		internal struct POSCOLOR
-		{
+	struct _OptimizationData {
+		internal struct POSCOLOR {
 			public int pos; //the position in area (not in image) from which to start searching. Depends on where in the image is the color.
 			public uint color;
 		};
@@ -665,7 +567,7 @@ public unsafe class uiimageFinder
 		}
 	}
 
-	void _GetAreaPixels(RECT r, bool toImage0 = false) {
+	bool _GetAreaPixels(RECT r, bool toImage0 = false) {
 		//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
 		//This is the slowest part of Find, especially BitBlt.
 		//Speed depends on computer, driver, OS version, theme, size.
@@ -673,99 +575,29 @@ public unsafe class uiimageFinder
 		//With incorrect/generic video driver can be 10 times slower. Eg on vmware virtual PC.
 		//Much faster when using window DC. Then same speed as without Aero.
 
-		int areaWidth = r.Width, areaHeight = r.Height;
-		//_Debug("start", 1);
-		//create memory bitmap. When waiting, we reuse _ad.mb, it makes slightly faster.
-		if (_ad.mb == null || areaWidth != _ad.width || areaHeight != _ad.height) {
-			if (_ad.mb != null) { _ad.mb.Dispose(); _ad.mb = null; }
-			_ad.mb = new MemoryBitmap(_ad.width = areaWidth, _ad.height = areaHeight);
-			//_Debug("created MemBmp");
-		}
+		_ad.DontSetAlpha_ = !toImage0;
+		bool ok = _area.Type == IFArea.AreaType.Screen
+			? _ad.Capture(r, relaxed: true)
+			: _ad.Capture(_area.W, r, _flags.ToICHow_() | ICHow.Relaxed);
+		if (!ok) return false; //r not in client area. Probably the window resized since r.Intersect(clientArea).
 
-		//copy from screen/window to memory bitmap
-		if (0 != (_flags & IFFlags.PrintWindow)) {
-			//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then works with windows like Chrome, winstore.
-			if (!Api.PrintWindow(_area.W, _ad.mb.Hdc, Api.PW_CLIENTONLY | (osVersion.minWin8_1 ? Api.PW_RENDERFULLCONTENT : 0)))
-				_area.W.ThrowNoNative("Failed to get pixels");
-		} else {
-			//get DC of screen or window
-			bool windowDC = 0 != (_flags & IFFlags.WindowDC);
-			wnd w = windowDC ? _area.W : default;
-			using var dc = new WindowDC_(w);
-			if (dc.Is0) w.ThrowNoNative("Failed to get pixels");
-			//_Debug("get DC");
-			//copy from screen/window DC to memory bitmap
-			uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
-			bool bbOK = Api.BitBlt(_ad.mb.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, rop);
-			if (!bbOK) throw new AuException("BitBlt"); //the API fails only if a HDC is invalid
-		}
-
-		//_Debug("captured to MemBmp");
-		//get pixels
-		var h = new Api.BITMAPINFOHEADER {
-			biSize = sizeof(Api.BITMAPINFOHEADER),
-			biWidth = areaWidth,
-			biHeight = -areaHeight,
-			biPlanes = 1,
-			biBitCount = 32,
-			//biCompression = 0, //BI_RGB
-		};
-		int memSize = areaWidth * areaHeight * 4; //7.5 MB for a max window in 1920*1080 screen
 		if (toImage0) {
-			var im = new _Image { width = areaWidth, height = areaHeight, pixels = new uint[areaWidth * areaHeight] };
-			fixed (uint* p = im.pixels) _GetBits(p);
+			var im = new _Image { width = r.Width, height = r.Height, pixels = _ad.ToArray1D() };
 			_images.Add(im);
-		} else {
-			if (memSize > _ad.memSize) { //while waiting, we reuse the memory, it makes slightly faster.
-				MemoryUtil.VirtualFree(_ad.pixels);
-				_ad.pixels = (uint*)MemoryUtil.VirtualAlloc(memSize);
-				_ad.memSize = memSize;
-			}
-			_GetBits(_ad.pixels);
 		}
-		//_Debug("_GetBitmapBits", 3);
 
-		void _GetBits(uint* pixels) {
-			var bi = new Api.BITMAPINFO(areaWidth, -areaHeight, 32);
-			if (areaHeight != Api.GetDIBits(_ad.mb.Hdc, _ad.mb.Hbitmap, 0, areaHeight, pixels, ref bi, 0)) //DIB_RGB_COLORS
-				throw new AuException("GetDIBits");
-
-			//remove alpha. Don't need for area.
-			if (toImage0) {
-				byte* b = (byte*)pixels, be = b + memSize;
-				for (b += 3; b < be; b += 4) *b = 0xff;
-			}
-
-			//var testFile = folders.Temp + @"uiimage\" + s_test++ + ".png";
-			//filesystem.createDirectoryFor(testFile);
-			//using(var areaBmp = new Bitmap(areaWidth, areaHeight, areaWidth * 4, PixelFormat.Format32bppRgb, (IntPtr)p)) {
-			//	areaBmp.Save(testFile);
-			//}
-			////run.it(testFile);
-		}
+		return true;
 	}
 
 	//r is relative to the search area
 	void _DpiScaleRect(ref RECT r) {
 		if (!_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow)) return;
-		var w = _area.W;
-		if (!Dpi.GetScalingInfo_(w, out bool scaled, out _, out _) || !scaled) return; //makes faster on Win10+; don't scale on older OS
-		int d1 = screen.of(w.Window).Dpi, d2 = Dpi.OfWindow(w);
+		var w = _area.W.Window;
+		if (!Dpi.IsWindowVirtualizedWin10_(w)) return; //makes faster on Win10+; don't scale on older OS
+		int d1 = screen.of(w).Dpi, d2 = Dpi.OfWindow(w);
 		r.left = Math2.MulDiv(r.left, d1, d2);
 		r.top = Math2.MulDiv(r.top, d1, d2);
 		r.right = Math2.MulDiv(r.right, d1, d2);
 		r.bottom = Math2.MulDiv(r.bottom, d1, d2);
 	}
-
-	//[Conditional("WI_DEBUG_PERF")]
-	//static void _Debug(string s, int perfAction = 2)
-	//{
-	//	//MessageBox.Show(s);
-	//	switch(perfAction) {
-	//	case 1: perf.first(); break;
-	//	case 2: perf.next(); break;
-	//	case 3: perf.nw(); break;
-	//	}
-	//}
 }
-//static int s_test;

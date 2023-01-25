@@ -30,7 +30,7 @@ record AppSettings : JSettings {
 	public hotkeys_t hotkeys = new();
 
 	public record wndpos_t {
-		public string main, wnd, elm, uiimage, recorder, icons;
+		public string main, wnd, elm, uiimage, ocr, recorder, icons;
 	}
 	public wndpos_t wndpos = new();
 
@@ -84,6 +84,8 @@ record AppSettings : JSettings {
 	public int wpfpreview_xy;
 
 	public string portable_dir;
+
+	public Au.Tools.OcrEngineSettings ocr;
 
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
 

@@ -14,7 +14,7 @@ class PanelTasks : DockPanel
 		this.Children.Add(_tv);
 	}
 
-	public void ZUpdateList() {
+	public void aaUpdateList() {
 		_tv.SetItems(App.Tasks.Items, _updatedOnce);
 		if (!_updatedOnce) {
 			_updatedOnce = true;
@@ -38,7 +38,7 @@ class PanelTasks : DockPanel
 			m["End task  '" + name + "'"] = _ => App.Tasks.EndTask(t);
 			m["End all  '" + name + "'"] = _ => App.Tasks.EndTasksOf(f);
 			m.Separator();
-			m["Close\tM-click", disable: null == Panels.Editor.ZGetOpenDocOf(f)] = _ => App.Model.CloseFile(f, selectOther: true);
+			m["Close\tM-click", disable: null == Panels.Editor.aaGetOpenDocOf(f)] = _ => App.Model.CloseFile(f, selectOther: true);
 			//m.Separator();
 			//m["Recent tasks and triggers..."] = _ => RecentTT.Show(); //rejected. It is in menu Run. Or would also need to show context menu when rclicked in empty space.
 			m.Show();

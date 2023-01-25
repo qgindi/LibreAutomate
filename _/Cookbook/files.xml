@@ -1,4 +1,4 @@
-﻿<files max-i="364">
+﻿<files max-i="366">
   <d n="-" i="357">
     <s n="How to write the cookbook.cs" i="360" />
     <s n="Test.cs" i="362" />
@@ -52,7 +52,7 @@
     <s n="Web browser automation with Selenium.cs" i="141" />
     <s n="Find UI image or color.cs" i="90" />
     <s n="Take screenshot.cs" i="101" />
-    <s n="-OCR, extract text.cs" i="168" />
+    <s n="OCR, find UI text, extract text.cs" i="168" />
     <s n="-Computer vision.cs" i="257" />
   </d>
   <d n="Wait, time" i="78">
@@ -113,7 +113,7 @@
     <s n="Create .exe program.cs" i="188" />
   </d>
   <d n="Triggers, toolbars" i="17">
-    <s n="Keyboard triggers (hotkeys), remap keys.cs" i="160" />
+    <s n="Keyboard triggers (hotkeys).cs" i="160" />
     <s n="Autotext triggers, expand text.cs" i="162" />
     <s n="Mouse triggers.cs" i="161" />
     <s n="Window triggers, auto-close popup windows.cs" i="163" />
@@ -124,6 +124,8 @@
     <s n="Other triggers.cs" i="171" />
     <s n="-Hooks.cs" i="172" />
     <s n="Run code when script ends.cs" i="170" />
+    <s n="Remap keys.cs" i="365" />
+    <s n="Show triggers.cs" i="366" />
   </d>
   <d n="Custom dialog windows" i="264">
     <s n="Dialog - add elements, show, get values.cs" i="265" />

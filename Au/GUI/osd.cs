@@ -76,6 +76,9 @@ namespace Au.Types
 		void _SetOpacity() {
 			if (_opacity > 0) Api.SetLayeredWindowAttributes(_w, 0, (byte)(uint)(_opacity * 255), 2);
 			else Api.SetLayeredWindowAttributes(_w, (uint)TransparentColor.ToBGR(), 0, 1);
+
+			//never mind: when resizing an alpha-transparent window by moving the top-left corner, the opposite corner shakes.
+			//	It's a Windows problem, and I could not find a workaround.
 		}
 
 		/// <summary>
@@ -173,7 +176,7 @@ namespace Au.Types
 				_w = default;
 				break;
 			case Api.WM_ERASEBKGND:
-				return 0;
+				return 1;
 			case Api.WM_PAINT:
 				using (var bp = new BufferedPaint(w, true)) {
 					var dc = bp.DC;
@@ -413,7 +416,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var m = new osdText { Text = "Text" };
+		/// var m = new osdText { TextForFind = "TextForFind" };
 		/// m.XY = new(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
 		/// m.Show();
 		/// ]]></code>
@@ -454,7 +457,7 @@ namespace Au
 		public bool ResizeWhenContentChanged { get; set; }
 
 		/// <summary>
-		/// Text in OSD window.
+		/// TextForFind in OSD window.
 		/// </summary>
 		/// <remarks>
 		/// This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="ResizeWhenContentChanged"/> is true.
@@ -475,7 +478,7 @@ namespace Au
 		public FontNSS Font { get; set; }
 
 		/// <summary>
-		/// Text color.
+		/// TextForFind color.
 		/// Default: <see cref="defaultTextColor"/>.
 		/// </summary>
 		/// <remarks>
@@ -770,7 +773,7 @@ namespace Au
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
 		/// </summary>
-		/// <param name="text">Text in OSD window.<br/>Sets <see cref="Text"/>.</param>
+		/// <param name="text">TextForFind in OSD window.<br/>Sets <see cref="Text"/>.</param>
 		/// <param name="secondsTimeout"><inheritdoc cref="SecondsTimeout" path="/summary/node()"/>Sets <see cref="SecondsTimeout"/>.</param>
 		/// <param name="xy"><inheritdoc cref="XY" path="/summary/node()"/>Sets <see cref="XY"/>.</param>
 		/// <param name="icon"><inheritdoc cref="Icon" path="/summary/node()"/>Sets <see cref="Icon"/>.</param>

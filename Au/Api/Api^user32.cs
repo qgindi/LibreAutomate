@@ -350,7 +350,7 @@ static unsafe partial class Api {
 
 	internal struct WINDOWPLACEMENT {
 		public int length;
-		/// <summary>WPF_</summary>
+		/// <summary>WPF_x</summary>
 		public uint flags;
 		public int showCmd;
 		public POINT ptMinPosition;
@@ -368,8 +368,8 @@ static unsafe partial class Api {
 		public int cbSize;
 		public RECT rcWindow;
 		public RECT rcClient;
-		public uint dwStyle;
-		public uint dwExStyle;
+		public WS dwStyle;
+		public WSE dwExStyle;
 		public uint dwWindowStatus;
 		public int cxWindowBorders;
 		public int cyWindowBorders;
@@ -379,6 +379,15 @@ static unsafe partial class Api {
 
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool GetWindowInfo(wnd hwnd, ref WINDOWINFO pwi);
+
+	//[DllImport("user32.dll", SetLastError = true)]
+	//internal static extern bool GetTitleBarInfo(wnd hwnd, ref TITLEBARINFO pti);
+
+	//internal struct TITLEBARINFO {
+	//	public int cbSize;
+	//	public RECT r;
+	//	public fixed uint rgstate[6];
+	//}
 
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool IsZoomed(wnd hWnd);
@@ -1316,7 +1325,7 @@ static unsafe partial class Api {
 	internal static extern int ReleaseDC(wnd hWnd, IntPtr hDC);
 
 	[DllImport("user32.dll")]
-	internal static extern int FillRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
+	internal static extern int FillRect(IntPtr hDC, in RECT lprc, nint hbr);
 
 	[DllImport("user32.dll")]
 	internal static extern int FrameRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
@@ -1579,7 +1588,7 @@ static unsafe partial class Api {
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool LockWorkStation();
 
-	[DllImport("user32.dll")]
+	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern nint RegisterSuspendResumeNotification(IntPtr hRecipient, uint Flags);
 
 	//internal const uint DEVICE_NOTIFY_WINDOW_HANDLE = 0x0;
@@ -1595,5 +1604,7 @@ static unsafe partial class Api {
 
 	//internal delegate uint DEVICE_NOTIFY_CALLBACK_ROUTINE(nint context, uint type, nint setting);
 
+	[DllImport("user32.dll", SetLastError = true)]
+	internal static extern bool ClipCursor(RECT* lpRect);
 }
 

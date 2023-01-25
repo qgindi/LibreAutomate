@@ -1,5 +1,4 @@
 using System.Web;
-using System.Net;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -99,7 +98,7 @@ class CiGoTo {
 	}
 
 	/// <summary>
-	/// Gets link data string for <see cref="LinkGoTo(string, Control)"/>. Returns null if unavailable.
+	/// Gets link data string for <see cref="LinkGoTo"/>. Returns null if unavailable.
 	/// This function is fast. The slower code is in the <b>GoTo</b> function.
 	/// </summary>
 	public static string GetLinkData(ISymbol sym) => new CiGoTo(sym)._GetLinkData();
@@ -279,7 +278,6 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 		static bool _Open(string s, SyntaxToken token = default) {
 			if (s.NE()) return false;
 			if (pathname.isUrl(s)) {
-				print.it(s);
 				if (0 == s.Starts(false, "http:", "https:")) return false;
 				run.itSafe(s);
 			} else {

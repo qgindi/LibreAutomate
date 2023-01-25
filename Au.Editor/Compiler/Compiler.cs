@@ -775,7 +775,7 @@ static partial class Compiler {
 #endif
 	}
 
-	static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
+	static string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
 		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe"
 		//	and modifies it, eg copies native resources from the dll.
@@ -795,11 +795,9 @@ static partial class Compiler {
 			var b = File.ReadAllBytes(appHost);
 			//p1.Next();
 			//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
-			fixed (byte* p = b) {
-				int i = BytePtr_.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
-				i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
-				b[i] = 0;
-			}
+			int i = BytePtr_.AsciiFindString(b, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
+			i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
+			b[i] = 0;
 
 			var res = new _Resources();
 			if (m.IconFile != null) {
@@ -978,7 +976,7 @@ static partial class Compiler {
 		if (r.role != ERole.editorExtension) throw new ArgumentException($"'{x.f.Name}' role must be editorExtension");
 		if (!ok) return false;
 
-		RunAssembly.Run(r.file, args, handleExceptions: false);
+		EditorExtension.Run_(r.file, args, handleExceptions: false);
 		return true;
 	}
 	static regexp s_rx1;

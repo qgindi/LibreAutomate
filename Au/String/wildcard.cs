@@ -160,7 +160,7 @@ namespace Au {
 
 		/// <summary>
 		/// Returns the text or wildcard string.
-		/// null if <b>TextType</b> is not <b>Text</b> or <b>Wildcard</b>.
+		/// null if <b>TextType</b> is not <b>TextForFind</b> or <b>Wildcard</b>.
 		/// </summary>
 		public string Text => _o as string;
 
@@ -172,7 +172,7 @@ namespace Au {
 
 		/// <summary>
 		/// Gets the <b>Regex</b> object created from regular expression string.
-		/// null if <b>TextType</b> is not <b>RegexNet</b> (no option R).
+		/// null if <b>TextType</b> is not <b>RegexNet</b> (no option _r).
 		/// </summary>
 		public Regex RegexNet => _o as Regex;
 
@@ -378,12 +378,12 @@ namespace Au.Types {
 	/// </summary>
 	public enum WXType : byte {
 		/// <summary>
-		/// Simple text (option t, or no *? characters and no t r R options).
+		/// Simple text (option t, or no *? characters and no t r _r options).
 		/// </summary>
 		Text,
 
 		/// <summary>
-		/// Wildcard (has *? characters and no t r R options).
+		/// Wildcard (has *? characters and no t r _r options).
 		/// <b>Match</b> calls <see cref="ExtString.Like(string, string, bool)"/>.
 		/// </summary>
 		Wildcard,
@@ -395,7 +395,7 @@ namespace Au.Types {
 		RegexPcre,
 
 		/// <summary>
-		/// .NET regular expression (option R).
+		/// .NET regular expression (option _r).
 		/// <b>Match</b> calls <see cref="Regex.IsMatch(string)"/>.
 		/// </summary>
 		RegexNet,

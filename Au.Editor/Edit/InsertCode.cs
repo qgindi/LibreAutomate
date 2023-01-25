@@ -11,8 +11,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Rename;
 
-[Flags]
 /// <summary>Flags for <see cref="InsertCode.Statements"/>.</summary>
+[Flags]
 enum ICSFlags {
 	/// <summary>If text contains '%', remove it and finally move caret there.</summary>
 	GoToPercent = 1,
@@ -41,7 +41,7 @@ static class InsertCode {
 	/// If editor is null or readonly, prints in output.
 	/// Async if called from non-main thread.
 	/// </summary>
-	/// <param name="s">Text. The function ignores "\r\n" at the end. Does nothing if null.</param>
+	/// <param name="s">TextForFind. The function ignores "\r\n" at the end. Does nothing if null.</param>
 	/// <param name="separate">Prepend/append empty line to separate from surrounding code if need. If null, does it if <i>s</i> contains '\n'.</param>
 	public static void Statements(string s, ICSFlags flags = 0, bool? separate = null) {
 		if (s == null) return;
@@ -190,7 +190,7 @@ static class InsertCode {
 		static void _FoldInsertedCode(SciCode doc, int start, int nLines) {
 			string text = doc.aaaText;
 			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
-				var d = Panels.Editor.ZActiveDoc; if (d != doc || d.aaaText != text) return;
+				var d = Panels.Editor.aaActiveDoc; if (d != doc || d.aaaText != text) return;
 				for (int line = d.aaaLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
 					if (0 != (d.Call(Sci.SCI_GETFOLDLEVEL, i) & Sci.SC_FOLDLEVELHEADERFLAG)) d.Call(Sci.SCI_FOLDLINE, i);
 				}
@@ -282,7 +282,7 @@ static class InsertCode {
 	/// <param name="s">If contains '%', removes it and moves caret there.</param>
 	public static void TextSimply(string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
-		var d = Panels.Editor.ZActiveDoc;
+		var d = Panels.Editor.aaActiveDoc;
 		if (d == null || d.aaaIsReadonly) return;
 		TextSimplyInControl(d, s);
 	}
@@ -340,13 +340,14 @@ static class InsertCode {
 	/// Ignores newline at the end of the range text.
 	/// </summary>
 	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 
 		int indent = doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
 			var si = new string('\t', indent);
 			before = before.RxReplace("(?m)^", si);
-			after = after.RxReplace("(?m)^", si);
+			int i1 = after.IndexOf('\n') + 1;
+			if (i1 > 0) after = after.RxReplace("(?m)^", si, range: i1..);
 		}
 
 		var s = doc.aaaRangeText(true, from, to);
@@ -371,7 +372,7 @@ static class InsertCode {
 	/// </summary>
 	/// <param name="concise">If text is single line, surround as single line.</param>
 	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		int from = doc.aaaSelectionStart16, to = doc.aaaSelectionEnd16;
 		if (from == to) {
 			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
@@ -476,8 +477,8 @@ static class InsertCode {
 	///// <returns>false if all specified meta options already exist.</returns>
 	//public static bool MetaOption(string s) {
 	//	Debug.Assert(Environment.CurrentManagedThreadId == 1);
-	//	var doc = Panels.Editor.ZActiveDoc; if (doc == null || !doc.EFile.IsCodeFile) return false;
-	//	var meta = new MetaCommentsParser(doc.zText);
+	//	var doc = Panels.Editor.aaActiveDoc; if (doc == null || !doc.EFile.IsCodeFile) return false;
+	//	var meta = new MetaCommentsParser(doc.aaaText);
 	//	//meta.nuget.Add(...);
 	//	meta.Apply();
 	//	return false;
@@ -498,11 +499,11 @@ static class InsertCode {
 		var start = node.SpanStart;
 		if (start < pos) return;
 
-		if (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
+		while (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
 			node = node.Parent;
-			if (node is not MemberDeclarationSyntax || node.SpanStart != start) return;
+			if (node == null) return;
 		}
-		if (node is GlobalStatementSyntax) return;
+		if (node is GlobalStatementSyntax || node.SpanStart != start) return;
 
 		//already has doc comment?
 		foreach (var v in node.GetLeadingTrivia()) {
@@ -517,16 +518,20 @@ static class InsertCode {
 		string s = @" <summary>
 /// 
 /// </summary>";
-		var pl = node switch { BaseMethodDeclarationSyntax met => met.ParameterList, RecordDeclarationSyntax rec => rec.ParameterList, _ => null };
+		BaseParameterListSyntax pl = node switch {
+			BaseMethodDeclarationSyntax met => met.ParameterList,
+			RecordDeclarationSyntax rec => rec.ParameterList,
+			IndexerDeclarationSyntax ids => ids.ParameterList,
+			_ => null
+		};
 		if (pl != null) {
 			var b = new StringBuilder(s);
 			foreach (var p in pl.Parameters) {
 				b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
 			}
-			if (node is MethodDeclarationSyntax mm) {
-				var rt = mm.ReturnType;
-				if (!code.Eq(rt.Span, "void")) b.Append("\r\n/// <returns></returns>");
-			}
+			if ((node is MethodDeclarationSyntax mm && !code.Eq(mm.ReturnType.Span, "void")) || node is IndexerDeclarationSyntax)
+				b.Append("\r\n/// <returns></returns>");
+
 			s = b.ToString();
 			//rejected: <typeparam name="TT"></typeparam>. Rarely used.
 		}
@@ -538,7 +543,7 @@ static class InsertCode {
 	}
 
 	public static void AddFileDescription() {
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}
@@ -704,7 +709,7 @@ class Program {
 			}
 		}
 		return;
-	g1:
+		g1:
 
 		var baseType = semo.GetTypeInfo(node).Type as INamedTypeSymbol;
 		if (baseType == null) return;

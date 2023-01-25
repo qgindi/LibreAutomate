@@ -4,11 +4,11 @@ int i = 0; //declare (create) variable i of type int, and assign value 0
 string s = "text"; //variable s of type string
 i = 10; //can change value
 print.it(i, s); //display variable values
-int j; if (i == 1) j = 1; else j = 2; //can assign value later
-int one = 10, two, three = one, four = i; //sevaral variables in single statement
+int j; if (i == 1) j = 1; else j = 2; //can assign value later. Can't use unassigned.
+int one = 10, two, three = one, four = i; //several variables in single statement
 var k = 0; //var means the type of the assigned value. The same as int k = 0;
 bool b1 = keys.isCtrl; //call a function and assign its return value
-if (!dialog.showInput(out string s3, s)) return; //declare with the out keyword; the function assigns a value
+if (!dialog.showInput(out string s3, s)) return; //declare with the out keyword. The function assigns a value.
 
 /// Names are case-sensitive and can contain letters, digits (except at the start) and _.
 

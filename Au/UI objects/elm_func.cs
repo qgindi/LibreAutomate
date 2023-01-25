@@ -716,7 +716,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="props">
 		/// String that specifies properties to get, for example <c>"nv"</c> for name and value.
-		/// <br/>• R - <see cref="Role"/>.
+		/// <br/>• _r - <see cref="Role"/>.
 		/// <br/>• n - <see cref="Name"/>.
 		/// <br/>• v - <see cref="Value"/>.
 		/// <br/>• d - <see cref="Description"/>.

@@ -365,7 +365,7 @@ public partial class keys
 	/// Adds text with explicitly specified sending method (keys, characters or paste).
 	/// </summary>
 	/// <returns>This.</returns>
-	/// <param name="text">Text. Can be null.</param>
+	/// <param name="text">TextForFind. Can be null.</param>
 	/// <param name="how">Overrides <see cref="OKey.TextHow"/>.</param>
 	public keys AddText(string text, OKeyText how) {
 		_ThrowIfSending();

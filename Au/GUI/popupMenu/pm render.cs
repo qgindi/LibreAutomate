@@ -43,7 +43,7 @@ public unsafe partial class popupMenu {
 	class _Metrics : IDisposable {
 		public bool hasImages, hasCheck, hasSubmenus, hasSeparators, hasHotkeys;
 		public int border, paddingY, paddingLeft, paddingRight, textPaddingX, textPaddingY, image, check, submenu, submenuMargin, separator, sepLine;
-		public SIZE zCheck, zSubmenu;
+		public SIZE sizeCheck, sizeSubmenu;
 		public IntPtr theme;
 		public int xTextEnd, xHotkeyStart;
 
@@ -91,12 +91,12 @@ public unsafe partial class popupMenu {
 			if (theme != default) {
 				using var dc = new ScreenDC_();
 				if (hasSubmenus) {
-					Api.GetThemePartSize(theme, dc, 16, 1, null, Api.THEMESIZE.TS_TRUE, out zSubmenu);
-					submenu = Math.Max(submenu, zSubmenu.width + submenu / 4);
+					Api.GetThemePartSize(theme, dc, 16, 1, null, Api.THEMESIZE.TS_TRUE, out sizeSubmenu);
+					submenu = Math.Max(submenu, sizeSubmenu.width + submenu / 4);
 				}
 				if (hasCheck) {
-					Api.GetThemePartSize(theme, dc, 11, 1, null, Api.THEMESIZE.TS_TRUE, out zCheck);
-					check = Math.Max(check, zCheck.width + 2);
+					Api.GetThemePartSize(theme, dc, 11, 1, null, Api.THEMESIZE.TS_TRUE, out sizeCheck);
+					check = Math.Max(check, sizeCheck.width + 2);
 				}
 				if (hasSeparators && 0 == Api.GetThemePartSize(theme, dc, 15, 0, null, Api.THEMESIZE.TS_TRUE, out var z)) sepLine = z.height;
 			}
@@ -237,10 +237,10 @@ public unsafe partial class popupMenu {
 				}
 
 				if (b.IsSubmenu) {
-					_DrawControl(_met.zSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _met.submenu, r.top, _met.submenu, r.Height);
+					_DrawControl(_met.sizeSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _met.submenu, r.top, _met.submenu, r.Height);
 				}
 				if (b.IsChecked) {
-					_DrawControl(_met.zCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _met.check, r.Height);
+					_DrawControl(_met.sizeCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _met.check, r.Height);
 				}
 
 				void _DrawControl(SIZE z, int part, int state, string c, int x, int y, int width, int height) {

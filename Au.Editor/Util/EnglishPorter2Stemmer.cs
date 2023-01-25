@@ -1,4 +1,6 @@
-﻿//https://github.com/nemec/porter2-stemmer
+//https://github.com/nemec/porter2-stemmer
+
+#pragma warning disable 1591 //no XML comment
 
 namespace Porter2Stemmer;
 

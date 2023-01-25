@@ -15,7 +15,7 @@ class PanelOpen : DockPanel
 		this.Children.Add(_tv);
 	}
 
-	public void ZUpdateList() {
+	public void aaUpdateList() {
 		//_tv.SetItems(App.Model.OpenFiles, _updatedOnce); //this would be ok, but displays yellow etc
 		var a = App.Model.OpenFiles;
 		_tv.SetItems(a.Select(o => new _Item { f = o }), _updatedOnce);

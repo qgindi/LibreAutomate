@@ -91,7 +91,7 @@ partial class TriggersAndToolbars {
 			bOK.IsEnabled = enable;
 		}
 
-		if (!w.ShowAndWait(App.Wmain)) return;
+		if (!w.aaShowAndWait(App.Wmain)) return;
 
 		int ia = lbAction.SelectedIndex; if (iType != 2) ia += 5;
 		var sAction = aa[ia];
@@ -105,8 +105,8 @@ partial class TriggersAndToolbars {
 			s = """Triggers.Mouse[TM%]""";
 		} else if (iType == 4) {
 			var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-			if (!d.ShowAndWait(null)) return;
-			s = $"Triggers.Window[TWEvent.%ActiveNew, {d.ZResultCode}]";
+			if (!d.aaShowAndWait(null)) return;
+			s = $"Triggers.Window[TWEvent.%ActiveNew, {d.aaResultCode}]";
 		}
 		s = $"{s} = {sAction};";
 		_CorrectTriggerPlace();

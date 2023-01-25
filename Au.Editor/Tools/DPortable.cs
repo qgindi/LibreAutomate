@@ -6,12 +6,12 @@ using System.Windows.Controls;
 using Au.Controls;
 
 #if SCRIPT
-DPortable.ZShow();
+DPortable.aaShow();
 file
 #endif
 
 class DPortable : KDialogWindow {
-	public static void ZShow() {
+	public static void aaShow() {
 		if (App.IsPortable) {
 			dialog.showError("Portable mode", "Please restart this program in non-portable mode.", owner: App.Wmain);
 			return;

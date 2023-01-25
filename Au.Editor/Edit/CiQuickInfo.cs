@@ -8,8 +8,7 @@ class CiQuickInfo {
 		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
 
-		//don't include <remarks>. Sometimes it takes too much space. Badly formatted if eg contains markdown.
-		var opt1 = QuickInfoOptions.Default with { ShowRemarksInQuickInfo = false, IncludeNavigationHintsInQuickInfo = false };
+		var opt1 = QuickInfoOptions.Default with { IncludeNavigationHintsInQuickInfo = false };
 		var opt2 = new Microsoft.CodeAnalysis.LanguageServices.SymbolDescriptionOptions { QuickInfoOptions = opt1 };
 
 		var service = QuickInfoService.GetService(cd.document);
@@ -17,7 +16,7 @@ class CiQuickInfo {
 		//p1.Next();
 		if (r == null) return null;
 		//this oveload is internal, but:
-		//	- The public overload does not have an options parameter. Used to set options for workspace, but it stopped working.
+		//	- The public overload does not have an options parameter. In old Roslyn could set options for workspace, but it stopped working.
 		//	- Roslyn in Debug config asserts "don't use this function".
 
 		//print.it(r.Span, r.RelatedSpans);
@@ -28,7 +27,7 @@ class CiQuickInfo {
 
 		//don't show some useless quickinfos, eg for literals
 		if (r.Tags.Length == 2 && a.Length == 2 && a[1].Kind == QuickInfoSectionKinds.DocumentationComments) {
-			//print.it(r.Tags[0], a[1].Kind, a[1].Text);
+			//print.it(r.Tags[0], a[1].Kind, a[1].TextForFind);
 			var s = a[1].Text;
 			if (s.Starts("Represents ")) {
 				switch (r.Tags[0]) {
@@ -50,13 +49,8 @@ class CiQuickInfo {
 			var se = a[i];
 			//print.it(se.Kind, se.Text);
 
-			//if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) continue;
-
 			x.StartParagraph();
 
-			//if (se.Kind == QuickInfoSectionKinds.RemarksDocumentationComments) {
-			//	x.Append("More info in Remarks (click and press F1)."); //no, because the DB does not contain Au and .NET remarks; would show this info only for others (local, XML files).
-			//} else {
 			if (i == 0) { //image
 				CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
 				if (kind != CiItemKind.None) {
@@ -87,7 +81,6 @@ class CiQuickInfo {
 			} else {
 				x.AppendTaggedParts(tp);
 			}
-			//}
 
 			x.EndParagraph();
 		}

@@ -163,10 +163,7 @@ static partial class Compiler {
 		/// <summary>
 		/// Called when successfully compiled script f. Saves data that next time will be used by <see cref="IsCompiled"/>.
 		/// </summary>
-		/// <param name="f"></param>
 		/// <param name="outFile">The output assembly.</param>
-		/// <param name="m"></param>
-		/// <param name="mtaThread">No [STAThread].</param>
 		public void AddCompiled(FileNode f, string outFile, MetaComments m, MiniProgram_.EFlags miniFlags) {
 			if (_data == null && !_Open()) _data = new();
 

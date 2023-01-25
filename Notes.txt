@@ -1,7 +1,6 @@
 VERSION INFO
 
 The program version format is major.minor.build, like 1.20.5.
-	Major: 0 for preview versions before the first normal version. Else 1.
 	Minor: changed when added some significant features.
 	Build: changed when fixed bugs between minor versions. Also may have some new features.
 
@@ -27,7 +26,7 @@ May need to test something. Eg some changes could break some main features.
 May need to undefine TRACE in some projects. Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
 
 May need to delete test code. Or use #if TRACE, like in Tests.cs.
-	Review perf.
+	Review perf and print.
 
 Change version info (see above).
 
@@ -60,7 +59,7 @@ Review the web pages. Github too.
 Download and test the setup file.
 	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
 
-Occasionally test the setup file at virustotal.com. And separately other exe files.
+Test the setup file at virustotal.com. And separately other files (even data files).
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
 
 Announce in forum.
@@ -90,8 +89,8 @@ Run script "Create .NET ref and doc databases.cs".
 
 Build/run the editor.
 
-Update .NET version in Setup32 project function Cpp_NeedDotnet and in the .iss file.
+Update .NET version in the .iss file (Inno Setup).
 
 Consider: Update .NET version in DNuget.cs in several places. Maybe later.
 
-Maybe more, don't remember.
+Maybe more.

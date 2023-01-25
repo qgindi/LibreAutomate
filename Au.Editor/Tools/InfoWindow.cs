@@ -35,7 +35,7 @@ class InfoWindow : KPopup {
 	public KSciInfoBox Control2 => _c2;
 
 	/// <summary>
-	/// Text with output tags.
+	/// TextForFind with output tags.
 	/// </summary>
 	public string Text {
 		get => _c?.aaaText;
@@ -43,7 +43,7 @@ class InfoWindow : KPopup {
 	}
 
 	/// <summary>
-	/// Text of second control with output tags.
+	/// TextForFind of second control with output tags.
 	/// </summary>
 	public string Text2 {
 		get => _c2?.aaaText;
@@ -62,12 +62,12 @@ class InfoWindow : KPopup {
 		//public _Control(InfoWindow t) {
 		public _InfoBox() {
 			//_t = t;
-			this.ZInitUseSystemFont = true;
-			this.ZInitBlankMargins = (4, 4);
+			this.a4InitUseSystemFont = true;
+			this.a4InitBlankMargins = (4, 4);
 		}
 
-		//protected override void ZOnHandleCreated() {
-		//	base.ZOnHandleCreated();
+		//protected override void aaOnHandleCreated() {
+		//	base.aaOnHandleCreated();
 		//	//base.NoMouseLeftSetFocus = true; //no, then cannot scroll with wheel on Win7-8.1
 		//	//base.NoMouseRightSetFocus = true;
 		//}

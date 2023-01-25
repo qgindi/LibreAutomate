@@ -132,7 +132,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// Panels.Files.TreeControl.
 	/// </summary>
-	public static KTreeView TreeControl => Panels.Files.TreeControl;
+	public static KTreeView TreeControl => Panels.Files.aaTreeControl;
 
 	/// <summary>
 	/// Gets workspace that contains this file.
@@ -347,7 +347,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <param name="text">"" if failed (eg file not found) or folder.</param>
 	public BoolError GetCurrentText(out string text, bool silent = false) {
-		if (this == _model.CurrentFile) { text = Panels.Editor.ZActiveDoc.aaaText; return true; }
+		if (this == _model.CurrentFile) { text = Panels.Editor.aaActiveDoc.aaaText; return true; }
 		return GetFileText(out text, silent);
 	}
 
@@ -939,20 +939,21 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	};
 
 	/// <summary>
-	/// Detects file type from extension.
-	/// If .cs, returns Class, else Other.
+	/// Detects file type from extension and code.
+	/// If .cs, returns Class or Script, else Other.
 	/// Must be not folder.
 	/// </summary>
 	static FNType _DetectFileType(string path) {
 		var type = FNType.Other;
 		if (path.Ends(".cs", true)) {
 			type = FNType.Class;
-			try {
-				var code = filesystem.loadText(path);
-				if (CiUtil.IsScript(code)) type = FNType.Script;
+			if (!path.Ends(@"\AssemblyInfo.cs", true)) {
+				try {
+					var code = filesystem.loadText(path);
+					if (CiUtil.IsScript(code)) type = FNType.Script;
+				}
+				catch (Exception ex) { Debug_.Print(ex); }
 			}
-			catch (Exception ex) { Debug_.Print(ex); }
-
 			//FUTURE: later allow to change file type script from/to class. Eg in Properties.
 		}
 		return type;

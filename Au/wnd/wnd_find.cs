@@ -35,7 +35,8 @@ namespace Au {
 		/// Defines an object that must be in the client area of the window:
 		/// <br/>• UI element: <see cref="elmFinder"/> or string like <c>"name"</c> or <c>"e 'role' name"</c> or <c>"e 'role'"</c>.
 		/// <br/>• Child control: <see cref="wndChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
-		/// <br/>• Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses <see cref="uiimage.find"/> with flag <see cref="IFFlags.WindowDC"/>).
+		/// <br/>• Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses a <b>uiimageFinder</b> with flag <see cref="IFFlags.WindowDC"/>).
+		/// <br/>• OCR text: <see cref="ocrFinder"/> or string <c>"ocr:..."</c> (uses an <b>ocrFinder</b> with flag <see cref="OcrFlags.WindowDC"/>).
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is <c>""</c>. To match any, use null.
@@ -352,16 +353,6 @@ namespace Au {
 			public static wnd[] allWindows(bool onlyVisible = false, bool sortFirstVisible = false) {
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
-
-			//rejected
-			///// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
-			///// <remarks>
-			///// Use this overload to avoid much garbage when calling frequently with the same <b>List</b> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
-			///// </remarks>
-			///// <inheritdoc cref="allWindows(bool, bool)" path="/param"/>
-			//public static void allWindows(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false) {
-			//	Internal_.EnumWindows2(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<wnd>());
-			//}
 
 			/// <summary>
 			/// Gets top-level windows ordered as in the Z order.
@@ -695,11 +686,14 @@ namespace Au.Types {
 		///
 		public static implicit operator WContains(uiimageFinder f) => new(f);
 
+		///
+		public static implicit operator WContains(ocrFinder f) => new(f);
+
 		/// <summary>
-		/// Converts from string to <see cref="wndChildFinder"/>, <see cref="elmFinder"/> or <see cref="uiimageFinder"/>.
+		/// Converts from string to <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
 		/// See <see cref="wnd.find"/>.
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of constructor of <see cref="wndChildFinder"/>, <see cref="elmFinder"/> or <see cref="uiimageFinder"/>.</exception>
+		/// <exception cref="Exception">Exceptions of constructor of <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.</exception>
 		public static implicit operator WContains(string s) => new(_ParseString(s));
 
 		static object _ParseString(string s) {
@@ -715,12 +709,14 @@ namespace Au.Types {
 				break;
 			case 'i' when s.Starts("image:"):
 				return new uiimageFinder(s, IFFlags.WindowDC);
+			case 'o' when s.Starts("ocr:"):
+				return new ocrFinder(s[4..], OcrFlags.WindowDC);
 			}
 			return new elmFinder(role, name, flags: EFFlags.ClientArea) { ResultGetProperty = '-' };
 		}
 
 		/// <summary>
-		/// Gets object stored in this variable. Can be null, <see cref="wndChildFinder"/>, <see cref="elmFinder"/> or <see cref="uiimageFinder"/>.
+		/// Gets object stored in this variable. Can be null, <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
 		/// </summary>
 		public object Value => _o;
 	}

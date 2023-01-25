@@ -1,0 +1,4 @@
+//GetTitleBarInfo
+//D2D1CreateFactory
+
+//ID2D1Factory

@@ -1,4 +1,5 @@
-﻿
+//TODO: use .winmd.
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -6,8 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Au.Controls;
 
-class CiWinapi
-{
+class CiWinapi {
 	int _typenameStart;
 	bool _canInsert;
 
@@ -71,12 +71,12 @@ class CiWinapi
 		if (sr.SyntaxTree != semo.SyntaxTree) {
 			var f = App.Model.Find(sr.SyntaxTree.FilePath, FNFind.CodeFile);
 			if (!App.Model.SetCurrentFile(f, dontChangeTreeSelection: true)) return false;
-			doc = Panels.Editor.ZActiveDoc;
+			doc = Panels.Editor.aaActiveDoc;
 			fSelect = cd.sci.EFile;
 		}
 
 		var hs = new HashSet<string>();
-		using (new KScintilla.UndoAction(doc)) {
+		using (new KScintilla.aaaUndoAction(doc)) {
 			_Insert(0, sr.GetSyntax(), text, item.Text, item.kind);
 		}
 
@@ -106,9 +106,9 @@ class CiWinapi
 			}
 
 			//if (level == 0) { //insert missing usings first. Now in global.cs. Or CiErrors will add.
-			//	int len = doc.zLen16;
+			//	int len = doc.aaaLen16;
 			//	InsertCode.UsingDirective("Au;Au.Types;System;System.Runtime.InteropServices"); //Au: wnd; Au.Types: RECT etc; System: IntPtr, Guid etc
-			//	int add = doc.zLen16 - len;
+			//	int add = doc.aaaLen16 - len;
 			//	posInsert += add; posClass += add;
 			//}
 

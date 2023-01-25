@@ -433,7 +433,7 @@ class TriggerActionThreads {
 	//			}
 	//		}
 
-	//		bool R = true;
+	//		bool _r = true;
 	//		lock(_q) {
 	//			int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
 	//			if(_running) {
@@ -445,7 +445,7 @@ class TriggerActionThreads {
 	//							" Trigger: " + trigger);
 	//					return false;
 	//				}
-	//				R = false;
+	//				_r = false;
 	//			} else {
 	//				_running = true;
 	//				//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
@@ -453,7 +453,7 @@ class TriggerActionThreads {
 	//			_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : perf.ms + ifRunningWaitMS });
 	//		}
 	//		Api.SetEvent(_event);
-	//		return R;
+	//		return _r;
 	//	}
 
 	//	public void Dispose()
@@ -463,12 +463,10 @@ class TriggerActionThreads {
 	//	}
 	//}
 
-	void _MuteMod(ref int muteMod) {
+	static void _MuteMod(ref int muteMod) {
 		switch (Interlocked.Exchange(ref muteMod, 0)) {
 		case c_modRelease:
 			keys.Internal_.ReleaseModAndDisableModMenu();
-			//TODO: now when the script is remapping keys using action like keys.sendL('Ž'), and user holds down Shift, this releases Shift.
-			//	User expects to type eg "AŽU" but types "AŽu".
 			break;
 		case c_modCtrl:
 			keys.Internal_.SendKey(KKey.Ctrl); //disable Alt/Win menu

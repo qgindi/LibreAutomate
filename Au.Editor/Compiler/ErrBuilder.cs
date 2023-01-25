@@ -52,7 +52,7 @@ namespace Au.Compiler {
 		/// <param name="f">C# file.</param>
 		/// <param name="code">f code.</param>
 		/// <param name="pos">Position in code.</param>
-		/// <param name="message">Text to append. Example: "error: message".</param>
+		/// <param name="message">TextForFind to append. Example: "error: message".</param>
 		/// <param name="formatArgs">If not null/empty, calls StringBuilder.AppendFormat(message, formatArgs).</param>
 		public void AddError(FileNode f, string code, int pos, string message, params object[] formatArgs) {
 			_StartAdd();
@@ -64,7 +64,7 @@ namespace Au.Compiler {
 		/// Adds error message with a link that opens the C# file and goes to the specified position.
 		/// </summary>
 		/// <param name="pos">Position in code.</param>
-		/// <param name="message">Text to append. Example: "error: message".</param>
+		/// <param name="message">TextForFind to append. Example: "error: message".</param>
 		/// <param name="formatArgs">If not null/empty, calls StringBuilder.AppendFormat(message, formatArgs).</param>
 		public void AddError(FileNode f, Microsoft.CodeAnalysis.Text.LinePosition pos, string message, params object[] formatArgs) {
 			_StartAdd();

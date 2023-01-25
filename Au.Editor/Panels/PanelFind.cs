@@ -50,10 +50,10 @@ class PanelFind : UserControl {
 		b.End().End();
 
 		this.IsVisibleChanged += (_, _) => {
-			Panels.Editor.ZActiveDoc?.EInicatorsFind_(IsVisible ? _aEditor : null);
+			Panels.Editor.aaActiveDoc?.EInicatorsFind_(IsVisible ? _aEditor : null);
 		};
 
-		_tFind.TextChanged += (_, _) => ZUpdateQuickResults();
+		_tFind.TextChanged += (_, _) => aaUpdateQuickResults();
 
 		//prevent tooltip on set focus.
 		//	Broken in .NET 6:  AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
@@ -133,7 +133,7 @@ class PanelFind : UserControl {
 				_adorner1.Text = "Find";
 			}
 		}
-		ZUpdateQuickResults();
+		aaUpdateQuickResults();
 	}
 
 	RegexWindow _regexWindow;
@@ -213,7 +213,7 @@ class PanelFind : UserControl {
 	/// <summary>
 	/// Makes visible and sets find text = s (should be selected text of a control; can be null/"").
 	/// </summary>
-	public void ZCtrlF(string s/*, bool findInFiles = false*/) {
+	public void aaCtrlF(string s/*, bool findInFiles = false*/) {
 		Panels.PanelManager[this].Visible = true;
 		_tFind.Focus();
 		if (s.NE()) {
@@ -229,7 +229,7 @@ class PanelFind : UserControl {
 	/// Makes visible and sets find text = selected text of e.
 	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
 	/// </summary>
-	public void ZCtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
+	public void aaCtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
 		string s = null;
 		switch (e) {
 		case KScintilla c:
@@ -239,25 +239,25 @@ class PanelFind : UserControl {
 			s = c.SelectedText;
 			break;
 		}
-		ZCtrlF(s/*, findInFiles*/);
+		aaCtrlF(s/*, findInFiles*/);
 	}
 
 	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
 	///// <summary>
 	///// Makes visible and sets find text = selected text of focused control.
 	///// </summary>
-	//public void ZCtrlF() => ZCtrlF(FocusManager.GetFocusedElement(App.Wmain));
+	//public void aaCtrlF() => aaCtrlF(FocusManager.GetFocusedElement(App.Wmain));
 
 	/// <summary>
 	/// Called when changed find text or options. Also when activated another document.
 	/// Async-updates find-hiliting in editor.
 	/// </summary>
-	public void ZUpdateQuickResults() {
+	public void aaUpdateQuickResults() {
 		if (!IsVisible) return;
 
 		_timerUQR ??= new timer(_ => {
 			_FindAllInEditor();
-			Panels.Editor.ZActiveDoc?.EInicatorsFind_(_aEditor);
+			Panels.Editor.aaActiveDoc?.EInicatorsFind_(_aEditor);
 		});
 
 		_timerUQR.After(150);
@@ -299,7 +299,7 @@ class PanelFind : UserControl {
 
 		if (!noRecent) _AddToRecent(f);
 
-		if (forReplace && (Panels.Editor.ZActiveDoc?.aaaIsReadonly ?? true)) return false;
+		if (forReplace && (Panels.Editor.aaActiveDoc?.aaaIsReadonly ?? true)) return false;
 		return true;
 	}
 
@@ -322,7 +322,7 @@ class PanelFind : UserControl {
 
 	void _FindNextInEditor(_TextToFind f, bool replace) {
 		_ttNext?.Close();
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
 		var text = doc.aaaText; if (text.Length == 0) return;
 		int i, to, len = 0, from8 = replace ? doc.aaaSelectionStart8 : doc.aaaSelectionEnd8, from = doc.aaaPos16(from8), to8 = doc.aaaSelectionEnd8;
 		RXMatch rm = null;
@@ -367,7 +367,7 @@ class PanelFind : UserControl {
 		if (replace && i == from8 && to == to8) {
 			var repl = f.replaceText;
 			if (rm != null) if (!_TryExpandRegexReplacement(rm, repl, out repl)) return;
-			//doc.zReplaceRange(i, to, repl); //also would need to set caret pos = to
+			//doc.aaaReplaceRange(i, to, repl); //also would need to set caret pos = to
 			doc.aaaReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
@@ -399,13 +399,13 @@ class PanelFind : UserControl {
 	}
 
 	void _ReplaceAllInEditor(_TextToFind f) {
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		if (doc.aaaIsReadonly) return;
 		var text = doc.aaaText;
 		var repl = f.replaceText;
 		if (f.rx != null) {
 			if (f.rx.FindAll(text, out var ma)) {
-				using var undo = new KScintilla.UndoAction(doc);
+				using var undo = new KScintilla.aaaUndoAction(doc);
 				for (int i = ma.Length; --i >= 0;) {
 					var m = ma[i];
 					if (!_TryExpandRegexReplacement(m, repl, out var r)) return;
@@ -416,7 +416,7 @@ class PanelFind : UserControl {
 			var a = _aEditor;
 			_FindAllInString(text, f, a);
 			if (a.Count > 0) {
-				using var undo = new KScintilla.UndoAction(doc);
+				using var undo = new KScintilla.aaaUndoAction(doc);
 				for (int i = a.Count; --i >= 0;) {
 					var v = a[i];
 					_ReplaceRange(v.Start.Value, v.End.Value, repl);
@@ -430,7 +430,7 @@ class PanelFind : UserControl {
 			doc.aaaReplaceRange(false, from, to, s);
 		}
 
-		//Easier/faster would be to create new text and call zSetText. But then all non-text data is lost: markers, folds, caret position...
+		//Easier/faster would be to create new text and call aaaSetText. But then all non-text data is lost: markers, folds, caret position...
 	}
 
 	bool _TryExpandRegexReplacement(RXMatch m, string repl, out string result) {
@@ -460,7 +460,7 @@ class PanelFind : UserControl {
 	void _FindAllInEditor() {
 		_aEditor.Clear();
 		if (!_GetTextToFind(out var f, noRecent: true, noErrorTooltip: true)) return;
-		var text = Panels.Editor.ZActiveDoc?.aaaText; if (text.NE()) return;
+		var text = Panels.Editor.aaActiveDoc?.aaaText; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -480,7 +480,7 @@ class PanelFind : UserControl {
 	public KScintilla PrepareFindResultsPanel() {
 		Panels.PanelManager["Found"].Visible = true;
 
-		var cFound = Panels.Found.ZControl;
+		var cFound = Panels.Found.aaControl;
 		cFound.aaaClearText();
 
 		if (!_init1) {
@@ -501,7 +501,7 @@ class PanelFind : UserControl {
 			cFound.aaTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
 				if (!_OpenLinkClicked(a[0])) return;
-				var doc = Panels.Editor.ZActiveDoc;
+				var doc = Panels.Editor.aaActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
 				timer.after(10, _ => {
@@ -534,7 +534,7 @@ class PanelFind : UserControl {
 				App.Model.CollapseAll(exceptWithOpenFiles: true);
 			});
 
-			cFound.aaTags.AddLinkTag("+caff", s => Panels.Files.CloseAll());
+			cFound.aaTags.AddLinkTag("+caff", s => Panels.Files.aaCloseAll());
 
 			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
 			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
@@ -562,7 +562,7 @@ class PanelFind : UserControl {
 		List<FileNode> aFiles = new();
 
 		var folder = App.Model.Root;
-		if (_cFolder.IsChecked && Panels.Editor.ZActiveDoc?.EFile is FileNode fn) {
+		if (_cFolder.IsChecked && Panels.Editor.aaActiveDoc?.EFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}

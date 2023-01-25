@@ -905,6 +905,10 @@ partial class TestScript {
 	//}
 
 	void _Main() {
+		//Windows.Win32.UI.WindowsAndMessaging.TITLEBARINFO ti = new();
+		//Windows.Win32.PInvoke.GetTitleBarInfo(default, ref ti);
+
+		//Windows.Win32.Graphics.Direct2D.ID2D1Factory f;
 
 		//var a = new byte[] { 1, 2, 3, 4 };
 		//print.it(_Api.FreeImage_ZLibCRC32(0, a, a.Length));
@@ -994,6 +998,9 @@ partial class TestScript {
 		//b.ShowDialog();
 	}
 
+	[DllImport("kernel32.dll")]
+	internal static extern uint GetErrorMode();
+
 	[STAThread] static void Main(string[] args) { new TestScript(args); }
 	TestScript(string[] args) {
 		process.thisProcessCultureIsInvariant = true;
@@ -1002,6 +1009,14 @@ partial class TestScript {
 
 		//TestWER(); return;
 		//Console.WriteLine();
+		//Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
+		//for (int i = 0; i < 20; i++) {
+		//	var em = GetErrorMode();
+		//	if (em != 3) print.it(i, em);
+		//	1.ms();
+		//}
+		////throw new Exception();
+		//return;
 
 		//perf.first();
 		try {

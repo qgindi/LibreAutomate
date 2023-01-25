@@ -14,7 +14,7 @@ namespace Script;
 #endif
 
 class DSnippets : KDialogWindow {
-	public static void ZShow() {
+	public static void aaShow() {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -170,7 +170,7 @@ class DSnippets : KDialogWindow {
 			bool isMenu = level == 2 && t.IsFolder;
 			if (!isMenu) {
 				var s = t.code;
-				_code.ZSetText(s, _readonly ? 0 : -1);
+				_code.a4SetText(s, _readonly ? 0 : -1);
 			}
 			
 			_tName.Text = level == 2 ? t.text : t.Parent.text;

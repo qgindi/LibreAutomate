@@ -1,4 +1,4 @@
-﻿using Au.Controls;
+using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Automation;
@@ -19,11 +19,11 @@ class PanelMouse : Grid
 			aaInitReadOnlyAlways = true,
 			aaInitTagsStyle = KScintilla.aaTagsStyle.AutoAlways
 		};
-		_sci.aaHandleCreated += _sci_ZHandleCreated;
+		_sci.aaHandleCreated += _sci_aaHandleCreated;
 		this.Children.Add(_sci);
 	}
 
-	private void _sci_ZHandleCreated() {
+	private void _sci_aaHandleCreated() {
 		_sci.aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
 		_sci.aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
 		_sci.aaaSetMarginWidth(1, 4);
@@ -76,7 +76,7 @@ class PanelMouse : Grid
 				}
 
 				//rejected. Makes this func 5 times slower.
-				//var color = uiimage.getPixel(p);
+				//var color = CaptureScreen.Pixel(p);
 			}
 			var s = b.ToString();
 			//p1.Next();
@@ -84,11 +84,11 @@ class PanelMouse : Grid
 		}
 	}
 
-	//public void ZSetMouseInfoText(string text)
+	//public void aaSetMouseInfoText(string text)
 	//{
 	//	if(Dispatcher.Thread == Thread.CurrentThread) _SetMouseInfoText(text);
 	//	else Dispatcher.InvokeAsync(() => _SetMouseInfoText(text));
 	//
-	//	void _SetMouseInfoText(string text) { _sci.zSetText(text); }
+	//	void _SetMouseInfoText(string text) { _sci.aaaSetText(text); }
 	//}
 }

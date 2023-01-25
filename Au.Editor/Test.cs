@@ -25,6 +25,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using System.Text.RegularExpressions;
+using Au.Controls;
 //using Microsoft.VisualBasic.Devices;
 //using Microsoft.CodeAnalysis.Options;
 //using Microsoft.CodeAnalysis.Formatting;
@@ -40,6 +41,7 @@ using System.Text.RegularExpressions;
 #if TRACE
 
 #pragma warning disable 169
+
 
 static unsafe class Test {
 
@@ -61,6 +63,12 @@ static unsafe class Test {
 	/// </summary>
 	public static void FromMenubar() {
 		print.clear();
+
+		//EditorExtension.WindowLoaded
+
+		//EditorExtension.Test();
+
+		//KScintilla.
 
 		//var rx = new Regex(@"");
 		//App.Model.ImportFiles(new string[] { @"\\?\C:\code\ok\files\NtSetTimerResolution, timeBeginPeriod\Script103 - Copy.cs" });
@@ -111,7 +119,7 @@ static unsafe class Test {
 		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		//CiUtil.PrintNode(node);
 		//var span = node.GetRealFullSpan();
-		//cd.sci.zSelect(true, span.Start, span.End);
+		//cd.sci.aaaSelect(true, span.Start, span.End);
 
 		//var node = token.Parent;
 		//print.it("---------");
@@ -135,9 +143,9 @@ static unsafe class Test {
 
 		//throw new AuException("test");
 
-		//var doc = Panels.Editor.ZActiveDoc;
+		//var doc = Panels.Editor.aaActiveDoc;
 		//doc.test_ = true;
-		//print.it(doc.zCurrentPos16);
+		//print.it(doc.aaaCurrentPos16);
 
 		//var v = CiUtil.GetSymbolEtcFromPos(out var k);
 		//var semo = k.semanticModel;
@@ -149,14 +157,14 @@ static unsafe class Test {
 
 		//Au.Compiler.MetaReferences.DebugPrintCachedRefs();
 
-		//doc.zSetString(SCI_EOLANNOTATIONSETTEXT, 9, "Annotation");
+		//doc.aaaSetString(SCI_EOLANNOTATIONSETTEXT, 9, "Annotation");
 		//doc.Call(SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM);
 
-		//doc.zReplaceRange(true, 0, 0, "//");
-		//int i = doc.zCurrentPos8 - 4;
-		//doc.zSelect(false, i, i + 2);
+		//doc.aaaReplaceRange(true, 0, 0, "//");
+		//int i = doc.aaaCurrentPos8 - 4;
+		//doc.aaaSelect(false, i, i + 2);
 
-		//print.it(CiUtil.IsScript(doc.zText));
+		//print.it(CiUtil.IsScript(doc.aaaText));
 
 		//var s="aaa bbb"
 		//char c = 'a'

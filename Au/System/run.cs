@@ -328,11 +328,14 @@ namespace Au {
 			return _RunConsole(output, null, exe, args, curDir, encoding, !rawText);
 		}
 
+		//SHOULDDO: add overload that gets stderr separately:
+		//	public static int console(Action<string, string> output, ...
+
 		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding, bool needLines) {
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = pathname.expand(args); //rejected
 
-			encoding ??= Console.OutputEncoding; //fast. Default is an internal type System.Text.OSEncoding that wraps API GetConsoleOutputCP.
+			encoding ??= Console.OutputEncoding; //fast. Default is an internal type System.TextForFind.OSEncoding that wraps API GetConsoleOutputCP.
 			var decoder = encoding.GetDecoder(); //ensures we'll not get partial multibyte chars (UTF8 etc) at buffer end/start
 
 			var ps = new ProcessStarter_(exe, args, curDir, rawExe: true);

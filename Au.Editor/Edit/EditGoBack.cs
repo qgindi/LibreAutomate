@@ -7,7 +7,7 @@ class EditGoBack {
 	long _time;
 
 	internal void OnPosChanged(SciCode doc) {
-		//print.it("pos", zCurrentPos8);
+		//print.it("pos", aaaCurrentPos8);
 
 		bool add;
 		int pos = doc.aaaCurrentPos8;
@@ -121,7 +121,7 @@ class EditGoBack {
 		var v = _a[_i];
 		_UpdateUI();
 		if (!App.Model.SetCurrentFile(v.fn)) return;
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		doc.aaaGoToPos(false, v.pos);
 		doc.Focus();
 	}

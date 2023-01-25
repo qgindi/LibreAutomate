@@ -122,7 +122,7 @@ public unsafe class elmFinder {
 	/// <remarks>
 	/// To create code for this function, use dialog "Find UI element".
 	/// 
-	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
+	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**_r "</c>). They are similar.
 	/// 
 	/// When using path like <c>["ROLE1", "Name1"]["ROLE2", "Name2"]["ROLE3", "Name3"]</c>, multiple finders are linked like finder1 -> finder2 -> finder3, so that the chain of finders will find UI element specified by the last finder.
 	/// 
@@ -507,7 +507,7 @@ public unsafe class elmFinder {
 
 	[ThreadStatic] internal static (bool need, elm before, elm after) t_navigResult;
 
-	//rejected. Rarely used. Maybe in the future, but different API, maybe ...In(controls).Find(), and move the code into Find_.
+	//rejected. Rarely used. Maybe in the future, but different API, maybe ...In(controls).Find(), and move the code into _Find.
 	///// <summary>
 	///// Finds UI element in the specified control of window <i>w</i>.
 	///// </summary>
@@ -528,7 +528,7 @@ public unsafe class elmFinder {
 	//	w.ThrowIfInvalid();
 	//	foreach (var c in controls.FindAll(w)) {
 	//		try {
-	//			if (Find_(false, c, null)) {
+	//			if (_Find(false, c, null)) {
 	//				controls.Result = c;
 	//				return true;
 	//			}

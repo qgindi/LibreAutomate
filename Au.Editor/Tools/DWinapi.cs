@@ -11,7 +11,7 @@ class DWinapi : KDialogWindow {
 
 	public DWinapi(string name = null) {
 		Title = "Find Windows API";
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		Owner = GetWindow(doc);
 
 		if (name == null) {
@@ -52,7 +52,7 @@ and select from the list. It adds the declaration to the class, and more declara
 The database contains ~51000 declarations. They are not perfect. You can edit.
 If some really useful API are missing, tell about it: https://www.libreautomate.com/forum/ or support@quickmacros.com.
 */";
-			code.ZSetText(s);
+			code.a4SetText(s);
 		}
 	}
 
@@ -94,6 +94,6 @@ If some really useful API are missing, tell about it: https://www.libreautomate.
 			if (a.Count > 1) s = string.Join(s.Starts("internal const") ? "\r\n" : "\r\n\r\n", a.Select(o => o.code));
 			s += "\r\n";
 		}
-		code.ZSetText(s);
+		code.a4SetText(s);
 	}
 }

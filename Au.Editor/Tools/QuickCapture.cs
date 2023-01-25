@@ -1,4 +1,4 @@
-﻿//CONSIDER: disable hotkeys when editor hidden.
+//CONSIDER: disable hotkeys when editor hidden.
 
 namespace Au.Tools;
 
@@ -47,7 +47,7 @@ static class QuickCapture {
 
 		var p = mouse.xy;
 		wnd w0 = wnd.fromXY(p), w = w0.Window, c = w == w0 ? default : w0;
-		uint color = uiimage.getPixel(p) & 0xFFFFFF;
+		uint color = CaptureScreen.Pixel(p) & 0xFFFFFF;
 		var screenshot = TUtil.MakeScreenshot(p);
 
 		var m = new popupMenu();

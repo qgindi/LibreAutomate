@@ -68,7 +68,7 @@ partial class FilesModel
 		public void TextNowIfNeed(bool onlyText = false) {
 			if (_textAfterS > 0) _SaveTextNow();
 			if (onlyText) return;
-			Panels.Editor.ZSaveEditorData();
+			Panels.Editor.aaSaveEditorData();
 		}
 
 		void _SaveWorkspaceNow() {
@@ -86,8 +86,8 @@ partial class FilesModel
 		void _SaveTextNow() {
 			_textAfterS = 0;
 			Debug.Assert(_model != null); if (_model == null) return;
-			Debug.Assert(Panels.Editor.ZIsOpen);
-			if (!Panels.Editor.ZSaveText()) _textAfterS = 300; //if fails, retry later
+			Debug.Assert(Panels.Editor.aaIsOpen);
+			if (!Panels.Editor.aaSaveText()) _textAfterS = 300; //if fails, retry later
 		}
 
 		/// <summary>

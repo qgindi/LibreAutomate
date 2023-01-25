@@ -427,15 +427,15 @@ public static class script {
 		if (s_appModuleInit) return;
 		s_appModuleInit = true;
 
-		//#if !DEBUG
 		process.thisProcessCultureIsInvariant = true;
-		//#endif
 
-		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
-		//SEM_NOGPFAULTERRORBOX disables WER. //CONSIDER: add setup parameter enableWER.
+		Cpp.Cpp_UEF(true); //2 ms. Loads the C++ dll.
+
+		Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
+		//SEM_NOGPFAULTERRORBOX disables WER. See also the workaround below. //CONSIDER: add setup parameter enableWER.
 		//SEM_FAILCRITICALERRORS disables some error message boxes, eg when removable media not found; MSDN recommends too.
 
-		AppDomain.CurrentDomain.UnhandledException += (_, u) => {
+		AppDomain.CurrentDomain.UnhandledException += (o, u) => {
 			if (!u.IsTerminating) return; //never seen, but anyway
 			Exiting_ = true;
 			Cpp.Cpp_UEF(false);
@@ -443,6 +443,22 @@ public static class script {
 			s_unhandledException = e;
 			if (s_setupException.Has(UExcept.Print)) print.it(e);
 			if (s_setupException.Has(UExcept.Dialog)) dialog.showError("Task failed", e.ToStringWithoutStack(), flags: DFlags.Wider, expandedText: e.ToString());
+
+			//workaround for .NET bug: randomly changes error mode.
+			//	Usually 0x3 -> 0x8001 (removed SEM_NOGPFAULTERRORBOX), sometimes even 0x0. Usually never restores.
+			//	Then on unhandled exception starts werfault.exe (with "wait" cursor), and the process exits with 1 s delay, even if WER disabled.
+			//	Tested: same in a standard simplest .NET program. But less frequently.
+			//	Usually it happens while _AuxThread is starting, often in Cpp_UEF (now removed). Rarely if _AuxThread not used.
+			//	Several ms before or after the script code starts.
+			//	The bug is in several places in CLR code.
+			//		It sets error mode, then executes code without lock and exception handling, then restores (if no exception).
+			//		Why it does not use SetThreadErrorMode? Why it uses the obsolete flag SEM_NOOPENFILEERRORBOX? Why it does not check maybe SEM_FAILCRITICALERRORS is already set (as recommended in doc)? Why it does not | the new error mode flags with current flags?
+			//	Could move _AuxThread to the C++ dll (not very easy).
+			//		Or move most of the _AuxThread startup code to the main thread (making script startup slower).
+			//		But it just would make this less frequent.
+			//		Anyway, moved Cpp_UEF here. It's better to load the dll sync, not at a random time later.
+			//	Never mind. This workaround solves the biggest problem for this library. Maybe future .NET will fix it.
+			Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
 		};
 
 		AppDomain.CurrentDomain.ProcessExit += (_, _) => {
@@ -476,7 +492,7 @@ public static class script {
 				folders.Workspace = new(p->workspace);
 
 				var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.exeProgram.1");
-				if(!Api.SetEvent(hevent)) Environment.Exit(4);
+				if (!Api.SetEvent(hevent)) Environment.Exit(4);
 				Api.CloseHandle(hevent);
 			}
 			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
@@ -768,7 +784,7 @@ public static class script {
 	/// - Visual Studio: menu Debug -> Attach to process. Then select the process (this function displays its name and id).
 	/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
 	/// 
-	/// This function can launch a script to automate attaching a debugger. See Options -> General -> Debugger script. More info in Cookbook.
+	/// This function can launch a script to automate attaching a debugger. See Options -> General -> Debugger script. More info in <see href="/cookbook/Script testing and debugging.html">Cookbook</see>.
 	/// 
 	/// <note>If the script process is running as administrator, the debugger process must run as administrator too.</note>
 	/// 
@@ -823,12 +839,11 @@ public static class script {
 	//	Terminate script processes in a less brutal way.
 	//	Tray icon.
 	//	script.setup(sleepExit, lockExit)
-	//	Cpp.Cpp_UEF.
 	//	Cpp_InactiveWindowWorkaround for miniProgram.
 	//	Can be used for various triggers.
 	//	Etc.
 	static unsafe void _AuxThread(object param) {
-		//CONSIDER: for if miniProgram create thread earlier.
+		//CONSIDER: for miniProgram create thread earlier.
 
 		s_auxHthread = Api.OpenThread(Api.SYNCHRONIZE | Api.THREAD_SET_CONTEXT, false, Api.GetCurrentThreadId());
 
@@ -836,7 +851,7 @@ public static class script {
 		WndUtil.RegisterWindowClass(c_auxWndClassName, _AuxWndProc);
 		s_auxWnd = WndUtil.CreateMessageOnlyWindow(c_auxWndClassName, Api.GetCurrentProcessId().ToS());
 
-		Cpp.Cpp_UEF(true); //4 ms (loads the dll), therefore not in AppModuleInit_
+		//Cpp.Cpp_UEF(true); //moved to AppModuleInit_
 
 		if (role == SRole.MiniProgram) Cpp.Cpp_InactiveWindowWorkaround(true);
 

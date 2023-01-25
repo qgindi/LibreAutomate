@@ -6,7 +6,7 @@ using Au.Tools;
 
 class DIcons : KDialogWindow {
 	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>
-	public static void ZShow(bool fileIcon = false, string find = null, bool expandMenuIcon = false) {
+	public static void aaShow(bool fileIcon = false, string find = null, bool expandMenuIcon = false) {
 		if (s_dialog == null) {
 			s_dialog = new(expandFileIcon: fileIcon, randomizeColors: find == null, expandMenuIcon: expandMenuIcon);
 			s_dialog.Show();
@@ -256,7 +256,7 @@ Can be Pack.Icon, like Modern.List.")
 			//string code = null;
 			if (what == _Action.MenuIcon) {
 				var s = _ColorName(k);
-				if (DCustomize.ZSetImage(s)) return;
+				if (DCustomize.aaSetImage(s)) return;
 				InsertCode.SetMenuToolbarItemIcon(s);
 			} else if (what == _Action.CopyName) {
 				clipboard.text = _ColorName(k);
