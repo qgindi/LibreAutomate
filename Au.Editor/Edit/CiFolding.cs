@@ -472,7 +472,7 @@ partial class SciCode {
 							//	Don't need when saving document line, not visible line.
 							//if (top > 0 && 0 != Call(SCI_GETWRAPMODE)) {
 							//	timer.after(10, _ => {
-							//		if (this == Panels.Editor.ZActiveDoc && zCurrentPos8 == pos)
+							//		if (this == Panels.Editor.aaActiveDoc && aaaCurrentPos8 == pos)
 							//			Call(SCI_SETFIRSTVISIBLELINE, top);
 							//	});
 							//}
@@ -523,11 +523,11 @@ partial class SciCode {
 		}
 		//p1.NW('D');
 
-		/// <summary>
-		/// Gets indices of lines containing markers or contracted folding points.
-		/// </summary>
-		/// <param name="marker">If 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).</param>
-		/// <param name="saved">Receives line indices | marker in high-order 5 bits.</param>
+		// <summary>
+		// Gets indices of lines containing markers or contracted folding points.
+		// </summary>
+		// <param name="marker">If 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).</param>
+		// <param name="saved">Receives line indices | marker in high-order 5 bits.</param>
 		void _GetLines(int marker, List<int> a/*, int skipLineFrom = 0, int skipLineTo = 0*/) {
 			Debug.Assert((uint)marker < 32); //we have 5 bits for marker
 			for (int i = 0; ; i++) {
@@ -542,7 +542,7 @@ partial class SciCode {
 
 	//unsafe void _TestSaveFolding()
 	//{
-	//	//int n = zLineCount;
+	//	//int n = aaaLineCount;
 	//	//for(int i = 0; i < n; i++) print.it(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
 
 	//	var a = new List<POINT>();
@@ -555,7 +555,7 @@ partial class SciCode {
 	//	}
 
 	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
-	//	Sci_SetFoldLevels(SciPtr, 0, zLineCount - 1, 0, null);
+	//	Sci_SetFoldLevels(SciPtr, 0, aaaLineCount - 1, 0, null);
 	//	timer.after(1000, _ => _TestRestoreFolding(a));
 	//}
 
@@ -564,11 +564,11 @@ partial class SciCode {
 	//	var a = new int[lines.Count * 2];
 	//	for(int i = 0; i < lines.Count; i++) {
 	//		var p = lines[i];
-	//		a[i * 2] = zLineStart(false, p.x);
-	//		a[i * 2 + 1] = zLineStart(false, p.y) | unchecked((int)0x80000000);
+	//		a[i * 2] = aaaLineStart(false, p.x);
+	//		a[i * 2 + 1] = aaaLineStart(false, p.y) | unchecked((int)0x80000000);
 	//	}
 	//	Array.Sort(a, (e1, e2) => (e1 & 0x7fffffff) - (e2 & 0x7fffffff));
-	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, zLineCount - 1, a.Length, ip);
+	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, aaaLineCount - 1, a.Length, ip);
 	//}
 
 	int _savedTop, _savedPos;

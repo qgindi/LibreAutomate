@@ -1,4 +1,4 @@
-﻿using System.Windows.Interop;
+using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -288,7 +288,10 @@ namespace Au.Controls {
 
 		void _ClickCloseTimer(bool? start) {
 			if (start == null) {
-				int state = _MouseState();
+				int state = (keys.gui.getKeyState(KKey.MouseLeft) & 1)
+					| (keys.gui.getKeyState(KKey.MouseRight) & 1) << 1
+					| (keys.gui.getKeyState(KKey.MouseMiddle) & 1) << 2;
+				if (_ccState < 0) _ccState = state; //first time
 				if (state == _ccState) return;
 				_ccState = state;
 				if (ClickClose != CC.Anywhere) {
@@ -304,16 +307,11 @@ namespace Au.Controls {
 			} else if (start == true) {
 				if (!ClickClose.HasAny(CC.Anywhere)) return;
 				_ccTimer = 0 != Api.SetTimer(_w, c_ccTimer, 100, null);
-				_ccState = _MouseState();
+				_ccState = -1; //GetKeyState may not work if called from WM_WINDOWPOSCHANGED. Call from WM_TIMER.
 			} else if (_ccTimer) {
 				_ccTimer = false;
 				Api.KillTimer(_w, c_ccTimer);
 			}
-
-			static int _MouseState() =>
-				(keys.gui.getKeyState(KKey.MouseLeft) & 1)
-				| (keys.gui.getKeyState(KKey.MouseRight) & 1) << 1
-				| (keys.gui.getKeyState(KKey.MouseMiddle) & 1) << 2;
 		}
 		const int c_ccTimer = 10;
 		bool _ccTimer;

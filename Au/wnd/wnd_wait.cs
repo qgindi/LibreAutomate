@@ -24,7 +24,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// using System.Windows;
 		/// var b = new wpfBuilder("Window").WinSize(250);
-		/// b.R.AddButton("Wait", async _ => {
+		/// b._r.AddButton("Wait", async _ => {
 		/// 	  print.it("waiting for Notepad...");
 		/// 	  wnd w = await Task.Run(() => wnd.wait(-10, false, "* Notepad"));
 		/// 	  if(w.Is0) print.it("timeout"); else print.it(w);

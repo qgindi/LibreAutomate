@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Documents;
 
 class DOptions : KDialogWindow {
-	public static void ZShow() {
+	public static void aaShow() {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -69,7 +69,7 @@ class DOptions : KDialogWindow {
 		//right column
 		b.StartStack(vertical: true);
 		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(110, TextWrapping.NoWrap)
-			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs")
+			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms")
 			.Validation(_startupScripts_Validation);
 		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.DebuggerScript)
 			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.")
@@ -318,7 +318,7 @@ Line number";
 
 				if (styles != CiStyling.TStyles.Settings || inverted) {
 					CiStyling.TStyles.Settings = styles;
-					foreach (var v in Panels.Editor.ZOpenDocs) {
+					foreach (var v in Panels.Editor.aaOpenDocs) {
 						styles.ToScintilla(v);
 						v.ESetLineNumberMarginWidth_();
 					}
@@ -399,7 +399,7 @@ To apply changes after deleting etc, restart this application.
 				if (custom) text = customText[i];
 			}
 			text ??= FileNode.Templates.Load(tt, custom);
-			sci.ZSetText(text, readonlyFrom: custom ? -1 : 0);
+			sci.a4SetText(text, readonlyFrom: custom ? -1 : 0);
 		}
 	}
 
@@ -460,13 +460,15 @@ To apply changes after deleting etc, restart this application.
 
 	unsafe void _OS() {
 		var b = _Page("OS");
-		b.R.Add<TextBlock>("Windows settings. Used by all programs on this computer.");
+		b.R.Add<TextBlock>("Some Windows settings for all programs");
 		if (App.IsPortable) b.R.Add<TextBlock>().Text(new Run("Portable mode warning: portable apps should not change Windows settings.") { Foreground = Brushes.Red });
 		b.R.AddSeparator().Margin("T8B8");
 
 		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Validation(o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
 		bool disableLAW = 0 == Api.SystemParametersInfo(Api.SPI_GETFOREGROUNDLOCKTIMEOUT, 0);
 		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"").Checked(disableLAW);
+		bool underlineAK = Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES);
+		b.R.Add(out KCheckBox cUnderlineAK, "Underline menu/dialog item access keys").Checked(underlineAK);
 		b.End();
 
 		_b.OkApply += e => {
@@ -478,6 +480,8 @@ To apply changes after deleting etc, restart this application.
 
 			if (cDisableLAW.IsChecked != disableLAW)
 				Api.SystemParametersInfo(Api.SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (void*)(disableLAW ? 15000 : 0), save: true, notify: true);
+			if (cUnderlineAK.IsChecked != underlineAK)
+				Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
 		};
 	}
 

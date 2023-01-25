@@ -2,6 +2,7 @@
 //#define SUPPORT_RAW_HANDLE
 
 using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Au {
 	/// <summary>
@@ -60,10 +61,10 @@ namespace Au {
 		/// Adds text.
 		/// </summary>
 		/// <returns>this.</returns>
-		/// <param name="text">Text.</param>
+		/// <param name="text">TextForFind.</param>
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
-		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// TextForFind encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>.</exception>
@@ -106,13 +107,29 @@ namespace Au {
 #endif
 
 		/// <summary>
-		/// Adds image. Uses clipboard format <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
+		/// Adds image.
+		/// Uses clipboard format <see cref="ClipFormats.Png"/> and/or <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="image">Image. Must be <see cref="Bitmap"/>, else exception.</param>
+		/// <param name="png">
+		/// Use PNG format (it supports transparency):
+		/// <br/>• false - no, only CF_BITMAP.
+		/// <br/>• true - yes, only PNG.
+		/// <br/>• null (defaut) - add PNG and CF_BITMAP.
+		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public clipboardData AddImage(Image image) {
-			return _Add(image as Bitmap, Api.CF_BITMAP, minimalCheckFormat: true);
+		public clipboardData AddImage(Image image, bool? png = null) {
+			var b = (Bitmap)image;
+			if (png != false) {
+				var ms = new MemoryStream();
+				b.Save(ms, ImageFormat.Png);
+				_Add(ms.ToArray(), ClipFormats.Png, minimalCheckFormat: true);
+			}
+			if (png != true) {
+				_Add(b, Api.CF_BITMAP, minimalCheckFormat: true);
+			}
+			return this;
 		}
 
 		/// <summary>
@@ -226,7 +243,7 @@ namespace Au {
 			var v = (byte*)Api.GlobalLock(h); if (v == null) { Api.GlobalFree(h); goto ge; }
 			try { MemoryUtil.Copy(p, v, size); } finally { Api.GlobalUnlock(h); }
 			return h;
-		ge: throw new OutOfMemoryException();
+			ge: throw new OutOfMemoryException();
 		}
 
 		/// <summary>
@@ -386,7 +403,7 @@ EndFragment:0000000000
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
-		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// TextForFind encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string getText(int format = ClipFormats.Text) {
@@ -398,7 +415,7 @@ EndFragment:0000000000
 		/// <summary>
 		/// Gets clipboard data of any format as byte[].
 		/// </summary>
-		/// <returns>null if there is no data of the specified format.</returns>
+		/// <returns>null if there is no data of this format.</returns>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static byte[] getBinary(int format) {
@@ -414,6 +431,29 @@ EndFragment:0000000000
 			}
 		}
 
+		/// <summary>
+		/// Gets clipboard data of any format without copying to array. Uses a callback function.
+		/// </summary>
+		/// <param name="get">Callback function that receives data. The clipboard is open until it returns. The data is read-only.</param>
+		/// <returns>The return value of the callback function. Returns default(T) if there is no data of this format.</returns>
+		/// <inheritdoc cref="getBinary(int)"/>
+		public static T getBinary<T>(int format, Func<IntPtr, int, T> get) {
+			_CheckFormat(format);
+			using (new clipboard.OpenClipboard_(false)) {
+				return _GetBinary(format, get);
+			}
+		}
+
+		static T _GetBinary<T>(int format, Func<IntPtr, int, T> get) {
+			var h = Api.GetClipboardData(format);
+			if (h != default) {
+				using (new _GlobalLock(h, out var mem, out int len)) {
+					if (mem != default) return get(mem, len); //.NET does not allow Func<ReadOnlySpan<byte>, T>
+				}
+			}
+			return default;
+		}
+
 #if SUPPORT_RAW_HANDLE
 			public static IntPtr GetHandle(int format)
 			{
@@ -425,15 +465,33 @@ EndFragment:0000000000
 #endif
 
 		/// <summary>
-		/// Gets image from the clipboard. Uses clipboard format <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
+		/// Gets image from the clipboard.
+		/// Uses clipboard format <see cref="ClipFormats.Png"/> or <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
 		/// </summary>
 		/// <returns>null if there is no data of this format.</returns>
+		/// <param name="png">
+		/// Use PNG format (it supports transparency):
+		/// <br/>• false - no, only CF_BITMAP.
+		/// <br/>• true - yes, only PNG.
+		/// <br/>• null (defaut) - yes, but get CF_BITMAP if there is no PNG.
+		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/>.</exception>
-		public static Bitmap getImage() {
+		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/> or <see cref="Image.FromStream"/>.</exception>
+		public static unsafe Bitmap getImage(bool? png = null) {
 			using (new clipboard.OpenClipboard_(false)) {
-				var h = Api.GetClipboardData(Api.CF_BITMAP); if (h == default) return null;
-				return Image.FromHbitmap(h, Api.GetClipboardData(Api.CF_PALETTE));
+				if (png != false && _GetBinary(ClipFormats.Png, static (mem, len) => {
+					using var ms = new UnmanagedMemoryStream((byte*)mem, len);
+					return Image.FromStream(ms);
+				}) is Bitmap b1) return b1;
+
+				if (png != true) {
+					var h = Api.GetClipboardData(Api.CF_BITMAP);
+					if (h != default) {
+						using var b = Image.FromHbitmap(h, Api.GetClipboardData(Api.CF_PALETTE)); //bottom-up 32Rgb (GDI)
+						return b?.Clone(new(default, b.Size), PixelFormat.Format32bppArgb) as Bitmap; //top-down 32Argb (GDI+)
+					}
+				}
+				return null;
 			}
 		}
 
@@ -562,6 +620,9 @@ namespace Au.Types {
 		/// <summary>The HTML format. Registered, name "HTML Format". Used by <see cref="clipboardData"/> add/get HTML functions.</summary>
 		public static int Html { get; } = Api.RegisterClipboardFormat("HTML Format");
 
+		/// <summary>The PNG format. Registered, name "PNG". Used by <see cref="clipboardData"/> add/get image functions.</summary>
+		public static int Png { get; } = Api.RegisterClipboardFormat("PNG");
+
 		/// <summary>Registered "Shell IDList Array" format.</summary>
 		internal static int ShellIDListArray_ { get; } = Api.RegisterClipboardFormat("Shell IDList Array");
 
@@ -581,7 +642,7 @@ namespace Au.Types {
 		/// Registers a clipboard format and returns its id. If already registered, just returns id.
 		/// </summary>
 		/// <param name="name">Format name.</param>
-		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
+		/// <param name="textEncoding">TextForFind encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
 		/// <remarks>Calls API <msdn>RegisterClipboardFormat</msdn>.</remarks>
 		public static int Register(string name, Encoding textEncoding = null) {
 			var R = Api.RegisterClipboardFormat(name);

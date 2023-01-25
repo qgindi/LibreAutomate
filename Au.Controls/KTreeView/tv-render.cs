@@ -168,11 +168,11 @@ public unsafe partial class KTreeView {
 	//public ColorInt? TextColor { get; set; }
 
 	void _Render(IntPtr dc, RECT rUpdate) {
-		System.Drawing.Graphics graphics = null;
+		Graphics graphics = null;
 		try {
 			bool haveBackColor = BackgroundColor != null && !System.Windows.SystemParameters.HighContrast;
 			if (haveBackColor) {
-				graphics = System.Drawing.Graphics.FromHdc(dc);
+				graphics = Graphics.FromHdc(dc);
 				graphics.Clear((Color)BackgroundColor.Value);
 			} else {
 				Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_WINDOW + 1));
@@ -187,9 +187,10 @@ public unsafe partial class KTreeView {
 				bool isFocusedControl = this.IsKeyboardFocused;
 				int xLefts = -_hscroll.Offset; if (HasCheckboxes) xLefts += _itemHeight;
 				int xImages = xLefts + _imageMarginX + _marginLeft;
-				int yyImages = (_itemHeight + 1 - _imageSize) / 2, yyText = _dpi == 96 ? 1 : (_dpi >= 144 ? -1 : 0);
+				int yyImages = (_itemHeight + 1 - _imageSize) / 2;
+				int yyText = _itemHeight <= 22 ? 1 : _itemHeight <= 28 ? 0 : -1;
 
-				graphics ??= System.Drawing.Graphics.FromHdc(dc);
+				graphics ??= Graphics.FromHdc(dc);
 				var tr = new GdiTextRenderer(dc, _dpi);
 				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button", _dpi) : default;
 				try {
@@ -308,7 +309,7 @@ public unsafe partial class KTreeView {
 
 							if (b != null) {
 								if (cd == null || !cd.DrawImage(b)) {
-									graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
+									graphics.DrawImage(b, new Rectangle(xImage, yImage, _imageSize, _imageSize));
 								}
 							}
 						}
@@ -331,7 +332,7 @@ public unsafe partial class KTreeView {
 						//drag & drop insertion mark
 						if (_dd != null && _dd.insertIndex == index) {
 							int thick = More.Dpi.Scale(3, _dpi);
-							using var pen = new System.Drawing.Pen(System.Drawing.SystemColors.WindowText, thick);
+							using var pen = new Pen(SystemColors.WindowText, thick);
 							y += thick / 2; int h1 = _itemHeight - thick;
 							if (_dd.insertFolder) {
 								graphics.DrawRectangle(pen, xImage, y, _imageSize, h1);

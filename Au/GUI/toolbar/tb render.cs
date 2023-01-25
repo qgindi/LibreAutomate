@@ -59,7 +59,7 @@ public partial class toolbar {
 	/// <remarks>
 	/// A button can override this property:
 	/// - To never display text, let its text be empty, like <c>""</c> or <c>"|Tooltip"</c>.
-	/// - To always display text, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.
+	/// - To always display text, append <c>"\a"</c>, like <c>"TextForFind\a"</c> or <c>"TextForFind\a|Tooltip"</c>.
 	/// </remarks>
 	public bool DisplayText {
 		get => _sett.dispText;
@@ -86,7 +86,7 @@ public partial class toolbar {
 	FontNSS _font;
 
 	/// <summary>
-	/// Text color.
+	/// TextForFind color.
 	/// If <c>default</c>, uses system color.
 	/// </summary>
 	public ColorInt TextColor {
@@ -288,7 +288,7 @@ public partial class toolbar {
 		} else {
 			R = new(ww + tbp * 2, _Scale(_sett.size.Height, false));
 		}
-		//print.it(R);
+		//print.it(_r);
 
 		foreach (var b in _a) {
 			b.rect.Offset(tbp, tbp);
@@ -390,7 +390,7 @@ public partial class toolbar {
 							b.textSize.height);
 					}
 					r.right = Math.Min(r.right, b.rect.right - m.bBorder * 2);
-					//if(!b.Text.Contains('\n')) tff|=TFFlags.SINGLELINE|TFFlags.VCENTER;
+					//if(!b.TextForFind.Contains('\n')) tff|=TFFlags.SINGLELINE|TFFlags.VCENTER;
 					Api.SetTextColor(dc, textColor);
 					Api.DrawText(dc, b.Text.AsSpan(0, _TextDispLen(b)), ref r, tff);
 				}

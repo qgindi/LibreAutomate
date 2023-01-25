@@ -5,7 +5,7 @@ class PanelFound : DockPanel
 {
 	_KScintilla _c;
 
-	public KScintilla ZControl => _c;
+	public KScintilla aaControl => _c;
 
 	public PanelFound() {
 		//this.UiaSetName("Found panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
@@ -16,12 +16,12 @@ class PanelFound : DockPanel
 			aaInitTagsStyle = KScintilla.aaTagsStyle.AutoAlways,
 			aaUsesEnter = true
 		};
-		_c.aaHandleCreated += _c_ZHandleCreated;
+		_c.aaHandleCreated += _c_aaHandleCreated;
 
 		this.Children.Add(_c);
 	}
 
-	private void _c_ZHandleCreated() {
+	private void _c_aaHandleCreated() {
 		_c.aaaSetMarginWidth(1, 0);
 		_c.aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
 		_c.aaaStyleClearAll();

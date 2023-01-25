@@ -1,4 +1,3 @@
-
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
@@ -6,7 +5,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Windows.Data;
-using Microsoft.Win32;
 
 namespace Au.Types;
 
@@ -631,7 +629,7 @@ public static class ExtWpf {
 				//print.it("bad");
 				//if previous task failed before calling this func, this wasn't called and therefore an even older task may be running. Close its window.
 				foreach (var w in wnd.findAll("WPF preview", "HwndWrapper[*", "Au.Task.exe")) {
-					if (w.ProcessId != process.thisProcessId) w.Close(noWait: true);
+					if (!w.IsOfThisProcess) w.Close(noWait: true);
 				}
 			}
 		}

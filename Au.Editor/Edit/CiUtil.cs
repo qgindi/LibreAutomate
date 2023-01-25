@@ -35,12 +35,13 @@ static class CiUtil {
 	//}
 
 	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd, bool metaToo = false) {
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) { cd = default; return default; }
+		var doc = Panels.Editor.aaActiveDoc; if (doc == null) { cd = default; return default; }
 		if (!CodeInfo.GetContextAndDocument(out cd, metaToo: metaToo)) return default;
 		return GetSymbolOrKeywordFromPos(cd.document, cd.pos, cd.code);
 	}
 
-	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token) GetSymbolOrKeywordFromPos(Document document, int position, string code) {
+	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token)
+		GetSymbolOrKeywordFromPos(Document document, int position, string code) {
 		//using var p1 = perf.local();
 
 		//CONSIDER: try SymbolFinder. Same speed.
@@ -67,6 +68,10 @@ static class CiUtil {
 			}
 		} else if (tkind == SyntaxKind.OpenBracketToken) { //indexer?
 			if (token.Parent is BracketedArgumentListSyntax bal && bal.Parent is ElementAccessExpressionSyntax es) node = es;
+		} else if (node is ImplicitObjectCreationExpressionSyntax ioce) { //if 'new(', get the type
+			var m1 = document.GetSemanticModelAsync().Result;
+			if (m1.GetTypeInfo(ioce).Type is INamedTypeSymbol nt) return (nt, null, default, token);
+			return default;
 		} else {
 			var k = token.Kind();
 
@@ -475,7 +480,7 @@ global using System.Windows.Media;
 	}
 
 	public static void HiliteRange(int start, int end) {
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		doc.EInicatorsFind_(null);
 		doc.EInicatorsFind_(new List<Range> { start..end });
 	}

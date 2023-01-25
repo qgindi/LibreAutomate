@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Threading;
 
 [assembly: AssemblyTitle(App.AppNameLong)]
-//more in global.cs
+//more attributes in global.cs
 
 static class App {
 	public const string
@@ -53,8 +53,9 @@ static class App {
 		DebugTraceListener.Setup(usePrint: true);
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
-		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
+		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		_SetThisAppFoldersEtc();
+		dialog.options.defaultTitle = AppNameShort + " message";
 
 		if (CommandLine.ProgramStarted2(args)) return;
 
@@ -66,9 +67,10 @@ static class App {
 #endif
 
 		//perf.next('o');
-		Settings = AppSettings.Load(); //the slowest part, >50 ms. Loads many dlls.
-									   //Debug_.PrintLoadedAssemblies(true, !true);
-									   //perf.next('s');
+		Settings = AppSettings.Load(); /*the slowest part, >30 ms. Loads many dlls for JSON.*/
+		//perf.next('s');
+		//Debug_.PrintLoadedAssemblies(true, !true);
+
 		UserGuid = Settings.user ??= Guid.NewGuid().ToString();
 
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
@@ -95,7 +97,9 @@ static class App {
 		_app = new() {
 			ShutdownMode = ShutdownMode.OnExplicitShutdown //will set OnMainWindowClose when creating main window. If now, would exit if a startup script shows/closes a WPF window.
 		};
-		_app.Dispatcher.InvokeAsync(Model.RunStartupScripts);
+
+		_app.Dispatcher.InvokeAsync(() => Model.RunStartupScripts(false));
+
 		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
 		try {
 			_app.Run();
@@ -141,7 +145,7 @@ static class App {
 				_app.InitializeComponent();
 				_app.MainWindow = _wmain = new MainWindow();
 				_app.ShutdownMode = ShutdownMode.OnMainWindowClose;
-				_wmain.Init();
+				_wmain.aaInit();
 			}
 			return _wmain;
 		}
@@ -531,6 +535,7 @@ enum ERegisteredHotkeyId {
 
 namespace Au.Editor {
 	partial class WpfApp : Application {
+		///
 		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
 			base.OnSessionEnding(e);
 			if (!App.Hmain.Is0) Menus.File.Exit();

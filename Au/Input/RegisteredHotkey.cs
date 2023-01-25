@@ -21,7 +21,7 @@ namespace Au.More;
 /// 	public DialogClass() {
 /// 		Title = "Hotkeys";
 /// 		var b = new wpfBuilder(this).WinSize(250);
-/// 		b.R.AddOkCancel();
+/// 		b._r.AddOkCancel();
 /// 		b.End();
 /// 	}
 /// 

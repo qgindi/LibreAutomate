@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Drawing.Imaging;
 
 /// <summary>
@@ -18,7 +18,7 @@ unsafe class ColorQuantizer {
 			r.Inflate((Dpi.Scale(r.Width, dpi) - r.Width) / 2, (Dpi.Scale(r.Height, dpi) - r.Height) / 2);
 		}
 		try {
-			var b = uiimage.capture(r);
+			var b = CaptureScreen.Image(r);
 			var a = Quantize(b, 16, dpi);
 			var z = Convert2.BrotliCompress(a);
 			return "/*image:"
@@ -41,22 +41,11 @@ unsafe class ColorQuantizer {
 	public static byte[] Quantize(Bitmap b, int nColors, int dpi = 0) {
 		t_wr ??= new(null); if (!t_wr.TryGetTarget(out var q)) t_wr.SetTarget(q = new()); //avoid 0.7 MB of garbage each time
 
-		var d = b.LockBits(new(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, b.PixelFormat);
-		try {
-			var p = (byte*)d.Scan0;
-			bool topDown = d.Stride >= 0;
-			if (!topDown) p -= -d.Stride * (d.Height - 1);
-
-			var a = q.Quantize(b.Width, b.Height, Image.GetPixelFormatSize(d.PixelFormat), p, ref nColors, topDown, dpi);
-
-			//print.it(a.Length, a);
-			//var z=Convert2.Compress(a);
-			//print.it(a.Length, z.Length);
-			//print.it(Convert.ToBase64String(z));
-
-			return a;
-		}
-		finally { b.UnlockBits(d); }
+		using var d = b.Data(ImageLockMode.ReadOnly);
+		var p = (byte*)d.Scan0;
+		bool topDown = d.Stride >= 0;
+		if (!topDown) p -= -d.Stride * (d.Height - 1);
+		return q.Quantize(d.Width, d.Height, Image.GetPixelFormatSize(d.PixelFormat), p, ref nColors, topDown, dpi);
 	}
 
 	/// <summary>

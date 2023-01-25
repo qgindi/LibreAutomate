@@ -64,9 +64,9 @@ static unsafe class MiniProgram_ {
 
 		script.role = SRole.MiniProgram;
 
-		process.ThisThreadSetComApartment_(ApartmentState.STA); //1.7 ms
+		process.ThisThreadSetComApartment_(ApartmentState.STA); //1.5 ms
 
-		script.AppModuleInit_(); //2.7 ms (1.8 if with process.thisProcessExit below)
+		script.AppModuleInit_(); //3 ms
 
 		//rejected. Now this is implemented in editor. To detect when failed uses process exit code. Never mind exception text, it is not very useful.
 		//process.thisProcessExit += e => { //0.9 ms
@@ -194,8 +194,7 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 			foreach (var v in attr.Paths.Split('|')) {
 				//print.it(v);
 				if (!v.Ends(name, true) || !v.Eq(v.Length - name.Length - 1, '\\')) continue;
-				var h = Api.LoadLibrary(v);
-				if (h != default) return h;
+				if (NativeLibrary.TryLoad(v, out var h)) return h;
 			}
 		}
 		return default;
@@ -235,7 +234,7 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 		var dr = _Do(aNet);
 		var dn = _Do(aNative);
 
-		Dictionary<string, string> _Do(List<(FEFile f, int ver)> a) {
+		static Dictionary<string, string> _Do(List<(FEFile f, int ver)> a) {
 			if (a.Count == 0) return null;
 			Dictionary<string, string> d = null;
 			foreach (var group in a.ToLookup(o => pathname.getNameNoExt(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
@@ -269,7 +268,8 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 			//print.it("native", name);
 			if (name.Ends(".dll", true)) name = name[..^4];
 			if (!dn.TryGetValue(name, out var path)) return default;
-			return Api.LoadLibrary(path);
+			if (!NativeLibrary.TryLoad(path, out var r)) return default;
+			return r;
 		};
 	}
 

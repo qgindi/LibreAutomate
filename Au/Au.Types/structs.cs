@@ -356,8 +356,8 @@ namespace Au.Types
 			return $"{{L={left.ToS()} T={top.ToS()} W={Width.ToS()} H={Height.ToS()}}}";
 			//note: don't change the format. Some functions parse it, eg TryParse and acc in C++.
 
-			//don't need R B. Rarely useful, just makes more difficult to read W H.
-			//return $"{{L={left} T={top} R={right} B={bottom}  W={Width} H={Height}}}";
+			//don't need _r B. Rarely useful, just makes more difficult to read W H.
+			//return $"{{L={left} T={top} _r={right} B={bottom}  W={Width} H={Height}}}";
 		}
 
 		/// <summary>

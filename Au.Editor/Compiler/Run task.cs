@@ -58,7 +58,7 @@ static class CompileRun {
 		if (!run) return 1;
 
 		if (r.role == Au.Compiler.ERole.editorExtension) {
-			RunAssembly.Run(r.file, args, handleExceptions: true);
+			EditorExtension.Run_(r.file, args, handleExceptions: true);
 			return (int)script.RunResult_.editorThread;
 		}
 
@@ -213,7 +213,7 @@ class RunningTask : ITreeViewItem {
 
 	object ITreeViewItem.Image => f.Image;
 
-	///TVCheck ITreeViewItem.CheckState { get; }
+	//TVCheck ITreeViewItem.CheckState { get; }
 
 	//bool ITreeViewItem.IsDisabled { get; }
 
@@ -334,7 +334,7 @@ class RunningTasks {
 
 	void _UpdatePanels() {
 		_updateUI = false;
-		Panels.Tasks.ZUpdateList();
+		Panels.Tasks.aaUpdateList();
 	}
 
 	/// <summary>
@@ -423,6 +423,7 @@ class RunningTasks {
 			var ifRunning = r.ifRunning;
 			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
 				if (runFromEditor) ifRunning = EIfRunning.restart;
+				else if (ifRunning == EIfRunning.end_restart) ifRunning = EIfRunning.end;
 				else ifRunning |= EIfRunning._norestartFlag;
 			}
 			//print.it(same, ifRunning);
@@ -434,6 +435,9 @@ class RunningTasks {
 				return (int)script.RunResult_.deferred;
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
+			case EIfRunning.end:
+				_EndTask(running);
+				break;
 			default: //warn
 				print.it($"<>Cannot start {f.SciLink()} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
 				break;

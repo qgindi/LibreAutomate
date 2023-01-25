@@ -47,13 +47,13 @@ static class TUtil {
 
 	/// <summary>
 	/// Appends waitTime. If !orThrow, appends "-" if need.
-	/// If !orThrow and waitTime == "0", appends nothing and returns false.
+	/// If !orThrow and !appendAlways and waitTime == "0", appends nothing and returns false.
 	/// </summary>
-	public static bool AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow) {
+	public static bool AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow, bool appendAlways = false) {
 		if (waitTime.NE()) waitTime = "8e88";
 		if (!orThrow) {
-			if (waitTime == "0") return false;
-			if (!waitTime.Starts('-')) t.Append('-');
+			if (!appendAlways && waitTime == "0") return false;
+			if (!waitTime.Starts('-') && waitTime != "0") t.Append('-');
 		}
 		t.Append(waitTime);
 		return true;
@@ -921,7 +921,7 @@ static class TUtil {
 		var code0 = code;
 		var b = new StringBuilder();
 		b.AppendLine(@"static object[] __TestFunc__() {");
-		if (activateWindow) b.Append("((wnd)").Append(w.Window.Handle).Append(").ActivateL(); 200.ms(); ");
+		if (activateWindow) b.Append("((wnd)").Append(w.Window.Handle).Append(").ActivateL(); 300.ms(); ");
 		b.AppendLine("var _p_ = perf.local();");
 		b.AppendLine("#line 1");
 		var lines = code.Lines(true);
@@ -1011,7 +1011,9 @@ static class TUtil {
 		return new(r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
 	}
 
-	public record InfoStrings(bool isError, string header, string text, string headerSmall = null);
+	public record InfoStrings(bool isError, string header, string text, string headerSmall = null) {
+		//public string text2 { get; set; }
+	}
 
 	/// <summary>
 	/// Executes action code for a found UI element etc.
@@ -1045,22 +1047,23 @@ obj.{code};
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.aaaText = $"<lc #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
-		t.ZSuspendElems();
+		t.a4SuspendElems();
 	}
 
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.aaaText = $"<lc #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
-		t.ZSuspendElems();
+		t.a4SuspendElems();
 	}
 
 	public static void InfoErrorOrInfo(this KSciInfoBox t, InfoStrings info) {
-		if (info.isError) InfoError(t, info.header, info.text, info.headerSmall);
-		else InfoInfo(t, info.header, info.text, info.headerSmall);
+		var text = info.text /*?? info.text2*/;
+		if (info.isError) InfoError(t, info.header, text, info.headerSmall);
+		else InfoInfo(t, info.header, text, info.headerSmall);
 	}
 
 	public static void Info(this KSciInfoBox t, FrameworkElement e, string name, string text) {
 		text = CommonInfos.PrependName(name, text);
-		t.ZAddElem(e, text);
+		t.a4AddElem(e, text);
 	}
 
 	public static void InfoC(this KSciInfoBox t, ContentControl k, string text) => Info(t, k, _ControlName(k), text);
@@ -1068,14 +1071,14 @@ obj.{code};
 	public static void InfoCT(this KSciInfoBox t, KCheckTextBox k, string text, bool isWildex = false, string wildexPart = null) {
 		text = CommonInfos.PrependName(_ControlName(k.c), text);
 		if (isWildex) text = CommonInfos.AppendWildexInfo(text, wildexPart);
-		t.ZAddElem(k.c, text);
-		t.ZAddElem(k.t, text);
+		t.a4AddElem(k.c, text);
+		t.a4AddElem(k.t, text);
 	}
 
 	public static void InfoCO(this KSciInfoBox t, KCheckComboBox k, string text) {
 		text = CommonInfos.PrependName(_ControlName(k.c), text);
-		t.ZAddElem(k.c, text);
-		t.ZAddElem(k.t, text);
+		t.a4AddElem(k.c, text);
+		t.a4AddElem(k.t, text);
 	}
 
 	/// <summary>
@@ -1103,7 +1106,7 @@ obj.{code};
 		}
 
 		/// <summary>
-		/// Formats "name - text" string, where name is bold: <c>"<b>" + name + "<> - " + text</c>.
+		/// Formats "name - text" string, where name is bold: <![CDATA["<b>" + name + "<> - " + text]]>.
 		/// </summary>
 		public static string PrependName(string name, string text) => "<b>" + name + "<> - " + text;
 
@@ -1153,6 +1156,28 @@ Can use global usings and classes/functions from file ""global.cs"".";
 	//	tt.IsOpen = false;
 	//	tt.IsOpen = true;
 	//}
+
+	public static void InfoRectCoord(wnd w, string rect) {
+		if (!rect.RxMatch(@"^ *\( *(\d+) *, *(\d+) *, *(\d+) *, *(\d+) *\) *", out var m)) return;
+		InfoRectCoord(w.ClientRect, new RECT(m[1].Value.ToInt(), m[2].Value.ToInt(), m[3].Value.ToInt(), m[4].Value.ToInt()));
+	}
+	
+	public static void InfoRectCoord(RECT rOuter, RECT rInner) {
+		var b = new StringBuilder();
+		b.AppendFormat("<><help Au.Types.IFArea>IFArea<> <help Au.Types.Coord>Coord<> values equivalent to RECT ({0}, {1}, {2}, {3}) for window size ({4}, {5}): <fold>\r\n", rInner.left, rInner.top, rInner.Width, rInner.Height, rOuter.Width, rOuter.Height);
+		b.AppendFormat("           {0,-8} {1,-8} {2,-8} {3}\r\n", "left", "top", "right", "bottom");
+		for (int i = 0; i < 3; i++) {
+			b.AppendFormat("{0,-11}", i switch { 0 => "Simple", 1 => "Reverse", _ => "Fraction" });
+			for (int j = 0; j < 4; j++) {
+				var (e, s1) = j switch { 0 => (rInner.left, "left"), 1 => (rInner.top, "top"), 2 => (rInner.right, "right"), _ => (rInner.bottom, "bottom") };
+				int wh = ((j & 1) == 0 ? rOuter.Width : rOuter.Height);
+				b.AppendFormat("{0,-9}", i switch { 0 => e.ToS(), 1 => "^" + (wh - e).ToS(), _ => wh == 0 ? "0" : ((double)e / wh).ToS("0.###") + "f" });
+			}
+			b.AppendLine();
+		}
+		b.Append("</fold>");
+		print.it(b);
+	}
 
 	#endregion
 }
@@ -1215,14 +1240,14 @@ Can use global usings and classes/functions from file ""global.cs"".";
 
 ///// <summary>
 ///// All tool dialogs that insert code in editor should inherit from this class.
-///// Adds ZResultCode property; child class sets, app can get, this class inserts text in editor on OK.
+///// Adds aaaResultCode property; child class sets, app can get, this class inserts text in editor on OK.
 ///// </summary>
 //class CodeToolDialog : KDialogWindow
 //{
 //	protected wpfBuilder _builder;
-//	public virtual string ZResultCode { get; protected set; }
+//	public virtual string aaaResultCode { get; protected set; }
 
 //	public CodeToolDialog() {
-//		_builder.OkApply += o => { InsertCode.Statements(ZResultCode); };
+//		_builder.OkApply += o => { InsertCode.Statements(aaaResultCode); };
 //	}
 //}

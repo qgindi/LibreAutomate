@@ -277,13 +277,13 @@ static class CiSnippets {
 		//rejected: meta. Rare, difficult to implement, can use print.
 		////maybe need meta options
 		//if (_GetAttr("meta", out var attrMeta)) {
-		//	//int len1 = doc.zLen16;
+		//	//int len1 = doc.aaaLen16;
 		//	//if (InsertCode.MetaOption(attrMeta)) {
-		//	//	int lenDiff = doc.zLen16 - len1;
+		//	//	int lenDiff = doc.aaaLen16 - len1;
 		//	//	pos += lenDiff;
 		//	//	endPos += lenDiff;
 		//	//}
-		//	print.it($"<>Note: for {snippet.Text} code also need this at the start of the script: <c green>/*/ {attrPrint} /*/<>");
+		//	print.it($"<>Note: for {snippet.TextForFind} code also need this at the start of the script: <c green>/*/ {attrPrint} /*/<>");
 		//}
 
 		//maybe need using directives

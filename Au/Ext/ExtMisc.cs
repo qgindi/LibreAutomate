@@ -1,5 +1,8 @@
 //note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
+using System.Drawing;
+using System.Drawing.Imaging;
+
 namespace Au.Types;
 
 /// <summary>
@@ -37,21 +40,21 @@ public static unsafe partial class ExtMisc {
 	//public static int ToInt(this uint t) => unchecked((int)t);
 
 	///// <summary>
-	///// Converts to System.Drawing.Color.
+	///// Converts to Color.
 	///// Can be used like <c>0xff123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	///// </summary>
 	///// <param name="t"></param>
 	///// <param name="makeOpaque">Add 0xff000000.</param>
-	//internal static System.Drawing.Color ToColor_(this uint t, bool makeOpaque = true)
-	//	=> System.Drawing.Color.FromArgb(unchecked((int)(t | (makeOpaque ? 0xff000000 : 0))));
+	//internal static Color ToColor_(this uint t, bool makeOpaque = true)
+	//	=> Color.FromArgb(unchecked((int)(t | (makeOpaque ? 0xff000000 : 0))));
 
 	/// <summary>
-	/// Converts to System.Drawing.Color. Makes opaque (alpha 0xff).
+	/// Converts to Color. Makes opaque (alpha 0xff).
 	/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	/// </summary>
-	internal static System.Drawing.Color ToColor_(this int t, bool bgr = false) {
+	internal static Color ToColor_(this int t, bool bgr = false) {
 		if (bgr) t = ColorInt.SwapRB(t);
-		return System.Drawing.Color.FromArgb(unchecked(0xff << 24 | t));
+		return Color.FromArgb(unchecked(0xff << 24 | t));
 	}
 
 	/// <summary>
@@ -115,7 +118,7 @@ public static unsafe partial class ExtMisc {
 	///// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	//public static bool NoArea(this System.Drawing.Rectangle t) {
+	//public static bool NoArea(this Rectangle t) {
 	//	return t.Width <= 0 || t.Height <= 0;
 	//}
 
@@ -494,6 +497,42 @@ public static unsafe partial class ExtMisc {
 	}
 
 	/// <summary>
+	/// Gets a reference to a <b>TValue</b> in this dictionary, adding a new entry with a default value if the key does not exist.
+	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrAddDefault"/>.
+	/// </summary>
+	/// <inheritdoc cref="CollectionsMarshal.GetValueRefOrAddDefault"/>
+	/// <example>
+	/// <code><![CDATA[
+	/// var d = new Dictionary<string, int>();
+	/// for (int i = 0; i < 3; i++) {
+	/// 	ref var r = ref d.GetValueRefOrAddDefault("a", out bool exists);
+	/// 	print.it(exists);
+	/// 	if(!exists) r = 100; else r++;
+	/// }
+	/// print.it(d);
+	/// ]]></code>
+	/// </example>
+	internal static ref TValue GetValueRefOrAddDefault_<TKey, TValue>(this Dictionary<TKey, TValue> t, TKey key, out bool exists) {
+#pragma warning disable 9088 //weird and undocumented: "This returns a parameter by reference 'exists' but it is scoped to the current method"
+		return ref CollectionsMarshal.GetValueRefOrAddDefault(t, key, out exists);
+	}
+
+	/// <summary>
+	/// Gets a reference to a <b>TValue</b> in this dictionary. If the key does not exist, sets <i>exists</i> = false and returns a reference null.
+	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrNullRef"/> and <see cref="Unsafe.IsNullRef"/>.
+	/// </summary>
+	/// <param name="exists">Receives true if the key exists.</param>
+	/// <inheritdoc cref="CollectionsMarshal.GetValueRefOrNullRef"/>
+	internal static ref TValue GetValueRefOrNullRef_<TKey, TValue>(this Dictionary<TKey, TValue> t, TKey key, out bool exists) {
+		ref TValue r = ref CollectionsMarshal.GetValueRefOrNullRef(t, key);
+		exists = !Unsafe.IsNullRef(ref r);
+		return ref r;
+	}
+
+	/// <inheritdoc cref="CollectionsMarshal.AsSpan"/>
+	internal static Span<T> AsSpan_<T>(this List<T> t) => CollectionsMarshal.AsSpan(t);
+
+	/// <summary>
 	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.
 	/// </summary>
 	/// <exception cref="ArgumentException">key/value already exists.</exception>
@@ -562,11 +601,6 @@ public static unsafe partial class ExtMisc {
 	/// Returns true if null or <b>Count</b> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
-
-	/// <summary>
-	/// Gets range 0..Count of the internal array. Calls <see cref="CollectionsMarshal.AsSpan"/>.
-	/// </summary>
-	internal static Span<T> AsSpan_<T>(this List<T> t) => CollectionsMarshal.AsSpan(t);
 
 	/// <summary>
 	/// Efficiently recursively gets descendants of this tree.
@@ -700,9 +734,9 @@ public static unsafe partial class ExtMisc {
 	/// <param name="r"></param>
 	/// <param name="outset">Draw outset.</param>
 	/// <remarks>
-	/// Calls <see cref="System.Drawing.Graphics.DrawRectangle"/> with arguments corrected so that it draws inside or outside <i>r</i>. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment"/>, it is unreliable.
+	/// Calls <see cref="Graphics.DrawRectangle"/> with arguments corrected so that it draws inside or outside <i>r</i>. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment"/>, it is unreliable.
 	/// </remarks>
-	public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Pen pen, RECT r, bool outset = false) {
+	public static void DrawRectangleInset(this Graphics t, Pen pen, RECT r, bool outset = false) {
 		if (r.NoArea) return;
 		//pen.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width.
 		//	MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
@@ -724,18 +758,62 @@ public static unsafe partial class ExtMisc {
 	/// <remarks>
 	/// Creates pen and calls other overload.
 	/// </remarks>
-	public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Color penColor, int penWidth, RECT r, bool outset = false) {
-		using var pen = new System.Drawing.Pen(penColor, penWidth);
+	public static void DrawRectangleInset(this Graphics t, Color penColor, int penWidth, RECT r, bool outset = false) {
+		using var pen = new Pen(penColor, penWidth);
 		DrawRectangleInset(t, pen, r, outset);
 	}
 
 	/// <summary>
-	/// Creates solid brush and calls <see cref="System.Drawing.Graphics.FillRectangle"/>.
+	/// Creates solid brush and calls <see cref="Graphics.FillRectangle"/>.
 	/// </summary>
-	public static void FillRectangle(this System.Drawing.Graphics t, System.Drawing.Color color, RECT r) {
-		using var brush = new System.Drawing.SolidBrush(color);
+	public static void FillRectangle(this Graphics t, Color color, RECT r) {
+		using var brush = new SolidBrush(color);
 		t.FillRectangle(brush, r);
 	}
+
+	/// <summary>
+	/// Calls b.LockBits in ctor and b.UnlockBits in Dispose.
+	/// </summary>
+	internal struct BitmapData_ : IDisposable {
+		Bitmap _b;
+		BitmapData _d;
+
+		public BitmapData_(Bitmap b, ImageLockMode mode, PixelFormat? pf = null) {
+			_b = b;
+			_d = _b.LockBits(new(default, b.Size), mode, pf ?? _b.PixelFormat);
+		}
+
+		public BitmapData_(Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null) {
+			_b = b;
+			_d = _b.LockBits(r, mode, pf ?? _b.PixelFormat);
+		}
+
+		public void Dispose() {
+			_b?.UnlockBits(_d);
+			_b = null;
+			_d = null;
+		}
+
+		public int Width => _d.Width;
+		public int Height => _d.Height;
+		public int Stride => _d.Stride;
+		public PixelFormat PixelFormat => _d.PixelFormat;
+		public IntPtr Scan0 => _d.Scan0;
+	}
+
+	/// <summary>
+	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
+	/// </summary>
+	/// <param name="pf">If null, uses b.PixelFormat.</param>
+	internal static BitmapData_ Data(this Bitmap b, ImageLockMode mode, PixelFormat? pf = null)
+		=> new BitmapData_(b, mode, pf);
+
+	/// <summary>
+	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
+	/// </summary>
+	/// <param name="pf">If null, uses b.PixelFormat.</param>
+	internal static BitmapData_ Data(this Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null)
+		=> new BitmapData_(b, r, mode, pf);
 
 	#endregion
 }

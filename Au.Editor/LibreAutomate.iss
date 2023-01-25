@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "0.12.0"
+#define MyAppVersion "0.13.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -36,6 +36,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
@@ -56,8 +57,6 @@ Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
-;Source: "Cookbook\files\*"; DestDir: "{app}\Cookbook\files"; Excludes: "-*"; Flags: ignoreversion recursesubdirs
-;Source: "Cookbook\files.xml"; DestDir: "{app}\Cookbook"; Flags: ignoreversion
 
 Source: "default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "doc.db"; DestDir: "{app}"; Flags: ignoreversion
@@ -87,8 +86,6 @@ Type: filesandordirs; Name: "{app}\Cookbook"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-;Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-;Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Registry]
 ;register app path
@@ -98,14 +95,7 @@ Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\App Paths\Au.Edito
 ; Rarely used. Overwrites mine. Let users learn it, then they can use the dlls on any computer without this program installed.
 ;Root: HKLM; Subkey: SYSTEM\CurrentControlSet\Control\Session Manager\Environment; ValueType: string; ValueData: {app}; Flags: uninsdeletevalue
 
-;rejected. Difficult without the C++ dll. Not necessary.
-;[Tasks]
-;Name: "NetDownload"; Description: "Open the .NET download webpage"; Check: NeedDotnet
-;note: don't use the automatic .NET Runtime installation script: https://www.codeproject.com/Articles/20868/Inno-Setup-Dependency-Installer
-;  It is too fragile etc. The URL may vanish. Always uses a hardcoded version (need to edit everytime), even if a compatible version is installed. No SDK. Once the downloaded .NET setup program crashed. Entire setup fails if the script fails, eg because of .NET connection.
-
 [Run]
-;Filename: "https://dotnet.microsoft.com/en-us/download/dotnet/6.0"; Flags: nowait shellexec skipifsilent; Tasks: NetDownload
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#MyAppName}}"
 
 [UninstallRun]
@@ -116,22 +106,12 @@ Filename: "{sys}\schtasks.exe"; Parameters: "/delete /tn \Au\Au.Editor /f"; Flag
 ;Source: "Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Code]
-//var _needNet: Boolean;
 
 //procedure Cpp_Install(step: Integer; dir: String);
 //external 'Cpp_Install@files:Setup32.dll cdecl setuponly delayload';
 
 //procedure Cpp_Uninstall(step: Integer);
 //external 'Cpp_Uninstall@{app}\Setup32.dll cdecl uninstallonly delayload';
-
-//function Cpp_NeedDotnet(): Boolean;
-//external 'Cpp_NeedDotnet@files:Setup32.dll cdecl setuponly delayload';
-
-// function NeedDotnet(): Boolean;
-// begin
-// 	Result := Cpp_NeedDotnet(); //can't call directly from Tasks
-// 	_needNet := Result;
-// end;
 
 function FindWindowEx(w1, w2: Integer; cn, name: String): Integer;
 external 'FindWindowExW@user32.dll';
@@ -181,6 +161,63 @@ begin
   if silent then Sleep(500);
 end;
 
+function IsDotNetInstalled(): Boolean;
+var
+  args: string;
+  fileName: string;
+  output: AnsiString;
+  resultCode: Integer;
+begin
+  Result := false;
+  fileName := ExpandConstant('{tmp}\dotnet.txt');
+  args := '/C dotnet --list-runtimes > "' + fileName + '" 2>&1';
+  if Exec(ExpandConstant('{cmd}'), args, '', SW_HIDE, ewWaitUntilTerminated, resultCode) and (resultCode = 0) then
+  begin
+    if LoadStringFromFile(fileName, output) then Result := Pos('Microsoft.WindowsDesktop.App 6.', output) > 0;
+  end;
+  DeleteFile(fileName);
+end;
+
+function InstallDotNet(): Boolean;
+//function InstallDotNet(sdk: Boolean): Boolean;
+var
+  DownloadPage: TDownloadWizardPage;
+  url, setupFile, info1, info2: string;
+  ResultCode: Integer;
+begin
+  Result := true;
+//   if sdk then begin //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet, and the SDK would stay there unused.
+//     info1 := 'Installing .NET 6 SDK x64';
+//     info2 := 'Optional. Adds some advanced features (NuGet). If stopped or failed now, you can download and install it later. Size ~200 MB.';
+//     url := 'https://aka.ms/dotnet/6.0/dotnet-sdk-win-x64.exe';
+//   end else begin
+    info1 := 'Installing .NET 6 Desktop Runtime x64';
+    info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
+    url := 'https://aka.ms/dotnet/6.0/windowsdesktop-runtime-win-x64.exe';
+    //Unofficial URL of the latest .NET 6 version. Found in answers only. The official URL (in the runtime download page) is only for that version, eg 6.0.13.
+//  end;
+  setupFile := ExtractFileName(url);
+  
+  DownloadPage := CreateDownloadPage(info1, info2, nil);
+  DownloadPage.Clear;
+  DownloadPage.Add(url, setupFile, '');
+  DownloadPage.Show;
+  try
+    try
+      DownloadPage.Download;
+      setupFile := ExpandConstant('{tmp}\' + setupFile);
+      Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+      //Result := Exec(setupFile, '/install /passive /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0); //bad for /VERYSILENT
+      DeleteFile(setupFile);
+    except
+      if DownloadPage.AbortedByUser then Log('Aborted by user.') else Log(GetExceptionMessage);
+      Result := false;
+    end;
+  finally
+    DownloadPage.Hide;
+  end;
+end;
+
 function InitializeSetup(): Boolean;
 begin
   //Cpp_Install(0, '');
@@ -207,12 +244,7 @@ begin
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
-//var
-//  s1: String;
 begin
-//  s1:=Format('%d', [CurStep]);
-//  MsgBox(s1, mbInformation, MB_OK);
-  
   case CurStep of
     ssInstall:
     begin
@@ -224,10 +256,11 @@ begin
 			
       //Cpp_Install(1, ExpandConstant('{app}\'));
     end;
-//     ssPostInstall:
-//     begin
+     ssPostInstall:
+     begin
 //       Cpp_Install(2, ExpandConstant('{app}\'));
-//     end;
+       if not IsDotNetInstalled() then InstallDotNet();
+     end;
   end;
 end;
 
@@ -235,9 +268,6 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   s1: String;
 begin
-//  s1:=Format('%d', [CurUninstallStep]);
-//  MsgBox(s1, mbInformation, MB_OK);
-  
   case CurUninstallStep of
 //     usUninstall:
 //     begin
@@ -251,23 +281,3 @@ begin
     end;
   end;
 end;
-
-// procedure CurPageChanged(CurPageID: Integer);
-// var page: TWizardPage;
-// var txt: TNewStaticText;
-// begin
-//   //MsgBox(Format('%d', [CurPageID]), mbInformation, MB_OK);
-//   
-//   case CurPageID of
-//     wpSelectTasks:
-//     begin
-// 			if _needNet then begin
-// 				//replace the default Tasks page static text. It's better than using [Tasks] GroupDescription for it.
-// 				page := PageFromID(CurPageID);
-// 				txt := TNewStaticText(page.Surface.Controls[1]); //Controls[0] is the checkgroup
-// 				txt.AutoSize := True;
-// 				txt.Caption := 'You will need to download and install .NET 6 SDK x64 (~200 MB). Or .NET 6 Desktop Runtime x64 (~60 MB) now and SDK later (when/if will need).';
-// 			end;
-//     end;
-//   end;
-// end;

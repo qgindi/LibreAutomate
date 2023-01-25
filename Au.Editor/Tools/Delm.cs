@@ -163,9 +163,7 @@ class Delm : KDialogWindow {
 
 		//tree
 		b.xAddSplitterH(span: -1);
-		b.Row(-1).StartGrid().Columns(-1, 0, -1);
 		b.Row(-1).xAddInBorder(out _tree, "T");
-		b.End();
 
 		b.End();
 
@@ -268,13 +266,13 @@ class Delm : KDialogWindow {
 
 		if (p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_elm.MiscFlags.Has(EMiscFlags.Java) /*&& !osVersion.is32BitOS*/) {
 			timer.after(50, _ => {
-				if (_info.ZElemsSuspended) { //eg showing test result
+				if (_info.a4ElemsSuspended) { //eg showing test result
 					string s1 = c_infoJava, s2 = _info.aaaText; if (!s2.NE() && !s2.Ends('\n')) s1 = "\r\n" + s1;
 					_info.aaaAppendText(s1, false, false);
 				} else _info.aaaText = c_infoJava;
 			});
 		}
-		//_info.zText = c_infoJava;
+		//_info.aaaText = c_infoJava;
 
 		//_nodeCaptured = _tree.SelectedItem as _TreeItem; //print.it(_nodeCaptured?.e);
 		//perf.nw();
@@ -338,8 +336,8 @@ class Delm : KDialogWindow {
 				var k = b.xAddCheckText("@" + na, TUtil.EscapeWildex(va));
 				if (check) { k.c.IsChecked = true; noName = false; }
 				var info = TUtil.CommonInfos.AppendWildexInfo(TUtil.CommonInfos.PrependName(na, "HTML attribute."));
-				_info.ZAddElem(k.c, info);
-				_info.ZAddElem(k.t, info);
+				_info.a4AddElem(k.c, info);
+				_info.a4AddElem(k.t, info);
 			}
 			b.End();
 		} else _page.htmlAttr.Child = null;
@@ -381,7 +379,7 @@ class Delm : KDialogWindow {
 	private void _bWnd_Click(WBButtonClickArgs e) {
 		var wPrev = _WndSearchIn;
 		bool captCheck = _cCapture.IsChecked;
-		var r = _code.ZShowWndTool(this, _wnd, _con, checkControl: _useCon);
+		var r = _code.a4ShowWndTool(this, _wnd, _con, checkControl: _useCon);
 		if (captCheck) _cCapture.IsChecked = true;
 		if (!r.ok) return;
 		_SetWndCon(r.w, r.con, r.useCon);
@@ -437,7 +435,7 @@ class Delm : KDialogWindow {
 		if (isFinder) {
 			b.Append("var f = elm.path");
 		} else {
-			(wndCode, wndVar) = _code.ZGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
+			(wndCode, wndVar) = _code.a4GetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			b.AppendLine(wndCode);
 			if (isVar) b.Append("var e = ");
 			b.Append(wndVar).Append(".Elm");
@@ -553,7 +551,7 @@ class Delm : KDialogWindow {
 
 		var R = b.ToString();
 
-		if (!forTest) _code.ZSetText(R, wndCode.Lenn());
+		if (!forTest) _code.a4SetText(R, wndCode.Lenn());
 
 		return (R, wndVar);
 	}
@@ -785,7 +783,7 @@ class Delm : KDialogWindow {
 	///// <summary>
 	///// When OK clicked, contains C# code. Else null.
 	///// </summary>
-	//public string ZResultCode { get; private set; }
+	//public string aaResultCode { get; private set; }
 
 	void _Insert(bool hotkey) {
 		if (_close && !hotkey) {
@@ -1832,7 +1830,7 @@ class Delm : KDialogWindow {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = _dialogInfo;
-		_info.ZAddElem(this, _dialogInfo);
+		_info.a4AddElem(this, _dialogInfo);
 		_info.aaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		_info.aaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: true);

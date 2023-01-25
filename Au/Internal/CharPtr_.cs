@@ -137,7 +137,6 @@ namespace Au.More
 		/// Finds substring in string which can be binary.
 		/// Returns -1 if not found.
 		/// </summary>
-		/// <param name="p"></param>
 		/// <param name="len">Length of p to search in.</param>
 		/// <param name="s">Substring to find. Must contain only ASCII characters.</param>
 		public static int AsciiFindString(byte* p, int len, string s) {
@@ -153,6 +152,16 @@ namespace Au.More
 			return -1;
 
 			//speed: with long strings slightly slower than strstr.
+			//	With ReadOnlySpan<byte> slower.
+		}
+
+		/// <summary>
+		/// Finds substring in string which can be binary.
+		/// Returns -1 if not found.
+		/// </summary>
+		/// <param name="s">Substring to find. Must contain only ASCII characters.</param>
+		public static int AsciiFindString(ReadOnlySpan<byte> span, string s) {
+			fixed (byte* p = span) return AsciiFindString(p, span.Length, s);
 		}
 
 		///// <summary>

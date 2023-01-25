@@ -23,7 +23,7 @@ class PanelOutput : DockPanel {
 
 	public void aaCopy() { _c.Call(SCI_COPY); }
 
-	public void aaFind() { Panels.Find.ZCtrlF(_c); }
+	public void aaFind() { Panels.Find.aaCtrlF(_c); }
 
 	public void aaHistory() {
 		var p = new KPopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
@@ -48,8 +48,8 @@ class PanelOutput : DockPanel {
 		set {
 			Debug.Assert(!_inInitSettings || value);
 			if (!_inInitSettings) App.Settings.output_wrap = value;
-			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in KScintilla.ZOnHandleCreated
-			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in KScintilla.ZOnHandleCreated
+			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in KScintilla.aaOnHandleCreated
+			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in KScintilla.aaOnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
 			App.Commands[nameof(Menus.Tools.Output.Wrap_lines_in_output)].Checked = value;
 		}
@@ -140,7 +140,7 @@ class PanelOutput : DockPanel {
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
-			aaTags.AddLinkTag("+DCustomize", DCustomize.ZShow);
+			aaTags.AddLinkTag("+DCustomize", DCustomize.aaShow);
 
 			App.PrintServer.SetNotifications(aaWnd, Api.WM_APP);
 
@@ -234,7 +234,7 @@ class PanelOutput : DockPanel {
 							b.Append(s, stackEnd, more);
 						}
 						m.Text = b.ToString();
-						//print.qm2.write("'" + m.Text + "'");
+						//print.qm2.write("'" + m.TextForFind + "'");
 					}
 					if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}

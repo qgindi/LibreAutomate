@@ -42,9 +42,11 @@ Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 The program and the library are very young. They don't have any known problems, but need more testing everywhere.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.12.0, 2022-12-04, 24 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.13.0, 2023-01-24, 24 MB
 
-Note: the program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed. Antivirus false positives are common to this type of software.
+If Chrome cannot start the downloaded setup program: right-click it and select "Show in folder".
+
+The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 
 ### Links
 - [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)

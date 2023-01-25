@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Documents;
 
 using Au.Controls;
@@ -37,7 +36,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		EditGoBack.DisableUI();
 	}
 
-	public FilesModel.FilesView TreeControl => _tv;
+	public FilesModel.FilesView aaTreeControl => _tv;
 
 	private void _Find() {
 		var cFound = Panels.Find.PrepareFindResultsPanel();
@@ -81,7 +80,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		cFound.aaaSetText(b.ToString());
 	}
 
-	public void CloseAll() {
+	public void aaCloseAll() {
 		App.Model.CloseFiles(_aClose);
 		App.Model.CollapseAll(exceptWithOpenFiles: true);
 	}

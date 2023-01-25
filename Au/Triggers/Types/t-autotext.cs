@@ -148,7 +148,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <exception cref="ArgumentException">
-	/// - Text is empty or too long. Can be 1 - 100 characters.
+	/// - TextForFind is empty or too long. Can be 1 - 100 characters.
 	/// - Postfix characters contains letters or digits.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
@@ -811,7 +811,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
 	/// </summary>
 	/// <returns>Returns true if the user clicked the item or pressed Enter or Tab.</returns>
-	/// <param name="text">Text to display. This function limits it to 300 characters. Default: <c>"Replace"</c>.</param>
+	/// <param name="text">TextForFind to display. This function limits it to 300 characters. Default: <c>"Replace"</c>.</param>
 	/// <remarks>
 	/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
 	/// 
@@ -848,7 +848,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// </summary>
 	/// <param name="items">
 	/// Menu items. Any number of arguments of types:
-	/// <br/>• string - the replacement text and menu item label. Can contain tooltip like <c>"Text\0 Tooltip"</c>.
+	/// <br/>• string - the replacement text and menu item label. Can contain tooltip like <c>"TextForFind\0 Tooltip"</c>.
 	/// <br/>• <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
 	/// </param>
 	/// <remarks>
@@ -963,7 +963,7 @@ public class TAMenuItem {
 	/// <summary>
 	/// Sets menu item label and replacement text.
 	/// </summary>
-	/// <param name="label">Menu item label. If null, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
+	/// <param name="label">Menu item label. If null, uses <i>TextForFind</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
 	/// <param name="text">The replacement text. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="html">The replacement HTML. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -975,7 +975,7 @@ public class TAMenuItem {
 	}
 
 	/// <summary>
-	/// Creates <b>TAMenuItem</b> with only <b>Text</b>.
+	/// Creates <b>TAMenuItem</b> with only <b>TextForFind</b>.
 	/// </summary>
 	public static implicit operator TAMenuItem(string text) => new(null, text, null, 0);
 }

@@ -97,7 +97,7 @@ partial class CiStyling
 		_modTimer ??= new timer(_ModifiedTimer);
 		if (!_modTimer.IsRunning) { _modTimer.Tag = doc; _modTimer.After(25); }
 #else
-		_StylingAndFolding(doc, doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
+		_StylingAndFolding(doc, doc.aaaLineEndFromPos(false, doc.aaaLen8 - _modFromEnd, withRN: true));
 #endif
 		//workaround for:
 		//	On Undo, if the undo text contains hidden text, Scintilla it seems tries to show that unstyled text before styleneeded notification.
@@ -112,7 +112,7 @@ partial class CiStyling
 	void _ModifiedTimer(timer t) {
 		//var p1 = perf.local();
 		var doc = t.Tag as SciCode;
-		if (doc != Panels.Editor.ZActiveDoc) return;
+		if (doc != Panels.Editor.aaActiveDoc) return;
 		if (_cancelTS != null) return;
 		_Work(doc, doc.aaaLineStartFromPos(false, _modStart), doc.aaaLineEndFromPos(false, doc.aaaLen8 - _modFromEnd, withRN: true));
 		//p1.NW('a'); //we return without waiting for the async task to complete
@@ -169,11 +169,11 @@ partial class CiStyling
 				start8 = vr.posFrom;
 				end8 = vr.posTo;
 			}
-			//if (end8 == vr.posTo) _modFromEnd = doc.zLen8 - end8; //old code, now don't know its purpose. If need, then maybe do the same for _modStart.
+			//if (end8 == vr.posTo) _modFromEnd = doc.aaaLen8 - end8; //old code, now don't know its purpose. If need, then maybe do the same for _modStart.
 			if (end8 <= start8) return;
 
 #if PRINT
-			//print.it($"<><c green>lines {doc.zLineFromPos(false, start8) + 1}-{doc.zLineFromPos(false, end8)}, range {start8}-{end8}, {vr}<>");
+			//print.it($"<><c green>lines {doc.aaaLineFromPos(false, start8) + 1}-{doc.aaaLineFromPos(false, end8)}, range {start8}-{end8}, {vr}<>");
 #endif
 
 			var ar8 = _GetVisibleRanges();
@@ -276,7 +276,7 @@ partial class CiStyling
 #endif
 				return true;
 			}
-			if (doc != Panels.Editor.ZActiveDoc) {
+			if (doc != Panels.Editor.aaActiveDoc) {
 #if PRINT
 				print.it("<><c red>switched doc<>");
 #endif
@@ -324,7 +324,7 @@ partial class CiStyling
 			ClassificationTypeNames.StringEscapeCharacter => EStyle.StringEscape,
 			ClassificationTypeNames.StringLiteral => EStyle.String,
 			ClassificationTypeNames.StructName => EStyle.Type,
-			//ClassificationTypeNames.Text => EStyle.None,
+			//ClassificationTypeNames.TextForFind => EStyle.None,
 			ClassificationTypeNames.VerbatimStringLiteral => EStyle.String,
 			ClassificationTypeNames.TypeParameterName => EStyle.Type,
 			//ClassificationTypeNames.WhiteSpace => EStyle.None,
@@ -552,7 +552,7 @@ partial class CiStyling
 		public void ToScintilla(KScintilla sci, bool multiFont = false) {
 			if (!multiFont) sci.aaaStyleFont(STYLE_DEFAULT, FontName, FontSize);
 			sci.aaaStyleBackColor(STYLE_DEFAULT, BackgroundColor);
-			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
+			//if(None.color != 0) sci.aaaStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			sci.aaaStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
 
 			void _Set(EStyle k, TStyle sty) {

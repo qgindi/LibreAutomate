@@ -1,5 +1,4 @@
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Functions for high-DPI screen support.
 	/// </summary>
@@ -8,8 +7,7 @@ namespace Au.More
 	/// 
 	/// This program must be per-monitor-DPI-aware. Else results are undefined.
 	/// </remarks>
-	public static class Dpi
-	{
+	public static class Dpi {
 		/// <summary>
 		/// Gets DPI of the primary screen at the time this process started.
 		/// </summary>
@@ -199,8 +197,7 @@ namespace Au.More
 		/// <summary>
 		/// DPI awareness of a window or process.
 		/// </summary>
-		public enum Awareness //== DPI_AWARENESS == PROCESS_DPI_AWARENESS
-		{
+		public enum Awareness { //== DPI_AWARENESS == PROCESS_DPI_AWARENESS
 			///
 			Invalid = -1,
 			///
@@ -240,7 +237,7 @@ namespace Au.More
 		/// <returns>Returns false if not DPI-scaled/virtualized or if fails to detect or if invalid window handle.</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <remarks>
-		/// The user can recognize such windows easily: entire client area is a little blurry.
+		/// Such windows are a little blurry (entire client area).
 		/// 
 		/// OS scales a window when it is on a high-DPI screen, depending on the DPI awareness of the window:
 		/// - Unaware - always.
@@ -251,7 +248,7 @@ namespace Au.More
 		/// - On Windows 7 and 8.0 cannot easily get correct rectangles of such windows and their controls. This library ignores it, because would be too much work to apply workarounds in so many places and just for legacy OS versions (it has been fixed in Windows 8.1).
 		/// - If with <see cref="uiimage"/> want to use window pixels, need to capture image from window pixels, not from screen pixels.
 		/// 
-		/// This function is not completely reliable. And not very fast. This process should be per-monitor-DPI-aware.
+		/// This function is not completely reliable. And not very fast. This process must be per-monitor-DPI-aware.
 		/// </remarks>
 		public static bool IsWindowVirtualized(wnd w) {
 			if (GetScalingInfo_(w, out bool scaled, out _, out _)) return scaled;
@@ -261,6 +258,11 @@ namespace Au.More
 
 			//Also tested detecting with GDI. GDI functions return logical (not DPI-scaled) offsets/rectangles/etc. Works, but much slower.
 		}
+
+		/// <summary>
+		/// On Win10+ returns <see cref="IsWindowVirtualized"/>. Else false.
+		/// </summary>
+		internal static bool IsWindowVirtualizedWin10_(wnd w) => osVersion.minWin10_1607 && IsWindowVirtualized(w);
 
 		/// <summary>
 		/// If possible, gets whether the window is DPI-scaled/virtualized, and gets physical and logical rects if scaled.
@@ -367,18 +369,22 @@ namespace Au.More
 		/// using var dac = new Dpi.AwarenessContext(-1);
 		/// ]]></code>
 		/// </example>
-		public struct AwarenessContext : IDisposable
-		{
+		public struct AwarenessContext : IDisposable {
 			nint _dac;
 
 			/// <summary>
-			/// Calls API <msdn>SetThreadDpiAwarenessContext</msdn> if available.
+			/// If <see cref="Available"/>, calls API <msdn>SetThreadDpiAwarenessContext</msdn>.
 			/// </summary>
 			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 unaware, -2 system, -3 per-monitor, -4 per-monitor-v2, -5 unaware-gdiscaled. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
 			public AwarenessContext(nint dpiContext) {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
 			//rejected: enum dpiContext.
+
+			/// <summary>
+			/// If <see cref="Available"/>, calls API <msdn>GetWindowDpiAwarenessContext</msdn> and <msdn>SetThreadDpiAwarenessContext</msdn>. Sets the awareness context of this thread equal to that of the window.
+			/// </summary>
+			public AwarenessContext(wnd w) : this(Available ? Api.GetWindowDpiAwarenessContext(w) : 0) { }
 
 			/// <summary>
 			/// Restores previous DPI awareness context.
@@ -391,6 +397,11 @@ namespace Au.More
 
 			///
 			internal nint Previous_ => _dac;
+
+			/// <summary>
+			/// Returns true if thread DPI awareness contexts are available on this Windows version (Windows 10 1607 and later).
+			/// </summary>
+			public static bool Available => osVersion.minWin10_1607;
 
 			/////
 			//public const nint DPI_AWARENESS_CONTEXT_UNAWARE = -1;
@@ -406,14 +417,12 @@ namespace Au.More
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Used for <i>DPI</i> parameter of functions.
 	/// Has implicit conversions from <b>int</b> (DPI), <b>wnd</b> (DPI of window), <b>IntPtr</b> (DPI of screen handle), <b>POINT</b> (DPI of screen containing point), <b>RECT</b> (DPI of screen containing rectangle), forms <b>Control</b>, WPF <b>DependencyObject</b>. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
 	/// </summary>
-	public struct DpiOf
-	{
+	public struct DpiOf {
 		readonly int _dpi;
 
 		///

@@ -366,10 +366,11 @@ public class wndFinder {
 					case elmFinder f: found = w.HasElm(f); break;
 					case wndChildFinder f: found = f.Exists(w); break;
 					case uiimageFinder f: found = f.Exists(w); break;
+					case ocrFinder f: found = f.Exists(w); break;
 					}
 				}
 				catch (Exception ex) {
-					if (!(ex is AuWndException)) print.warning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
+					if (!(ex is AuWndException)) print.warning("Exception when tried to find the 'contains' object. " + ex, -1);
 				}
 				if (!found) { _stopProp = EProps.contains; continue; }
 			}

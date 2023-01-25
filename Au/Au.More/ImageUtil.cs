@@ -10,8 +10,7 @@ namespace Au.More;
 /// Loads WPF and GDI+ images from file, resource or string.
 /// </summary>
 /// <seealso cref="ResourceUtil"/>
-public static class ImageUtil
-{
+public static partial class ImageUtil {
 	/// <summary>
 	/// Returns true if string starts with <c>"image:"</c>.
 	/// </summary>
@@ -270,25 +269,11 @@ public static class ImageUtil
 		if (!arranged) e.InvalidateArrange(); //prevent huge memory leak
 		if (!measured) e.InvalidateMeasure();
 		int stride = wid * 4, msize = hei * stride;
-#if true
-		var R = new System.Drawing.Bitmap(wid, hei, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-		var d = R.LockBits(new(0, 0, wid, hei), System.Drawing.Imaging.ImageLockMode.ReadWrite, R.PixelFormat);
-		try { rtb.CopyPixels(new(0, 0, wid, hei), d.Scan0, msize, stride); }
-		finally { R.UnlockBits(d); }
-		R.SetResolution(dpi, dpi);
-		return R;
+		var b = new System.Drawing.Bitmap(wid, hei, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+		using var d = b.Data(System.Drawing.Imaging.ImageLockMode.ReadWrite);
+		rtb.CopyPixels(new(0, 0, wid, hei), d.Scan0, msize, stride);
+		b.SetResolution(dpi, dpi);
+		return b;
 		//tested: GC OK. Don't need GC_.AddObjectMemoryPressure. WPF makes enough garbage to trigger GC when need.
-#else //no. See uuimage._Capture.
-		var m = GC.AllocateUninitializedArray<uint>(wid * hei, pinned: true);
-		fixed (uint* pixels = m) {
-			rtb.CopyPixels(new Int32Rect(0, 0, wid, hei), (IntPtr)pixels, msize, stride);
-			var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, (IntPtr)pixels) { Tag = m };
-			//only this Bitmap creation method preserves alpha.
-			//	Update: But now with LockBits OK. Maybe pixel format was wrong (without P) when tested previously.
-			b.SetResolution(dpi, dpi);
-			return b;
-		}
-#endif
 	}
-	//[ThreadStatic] static RenderTargetBitmap t_rtb;
 }

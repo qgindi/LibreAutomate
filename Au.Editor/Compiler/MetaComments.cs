@@ -94,7 +94,7 @@ namespace Au.Compiler;
 /// 
 /// <h3>Settings used to run the compiled script</h3>
 /// <code><![CDATA[
-/// ifRunning warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart //what to do if this script is already running. Default: warn_restart. More info below.
+/// ifRunning warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart|end|end_restart //what to do if this script is already running. Default: warn_restart. More info below.
 /// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 /// bit32 false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 /// ]]></code>
@@ -108,6 +108,7 @@ namespace Au.Compiler;
 /// wait - run later, when that task ends.
 /// run - run simultaneously.
 /// restart - end it and run.
+/// end - end it and don't run.
 /// If ends with _restart, the Run button/menu will restart. Useful for quick edit-test.
 /// 
 /// About uac:
@@ -680,7 +681,7 @@ class MetaComments {
 	bool _Error(string s, int from, int to) {
 		if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 			Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
-		} else if (_flags.Has(EMPFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ZActiveDoc.EFile) {
+		} else if (_flags.Has(EMPFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.aaActiveDoc.EFile) {
 			CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 		}
 		return false;
@@ -957,7 +958,7 @@ enum ERole { miniProgram, exeProgram, editorExtension, classLibrary, classFile }
 
 enum EUac { inherit, user, admin }
 
-enum EIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wait, run_restart, run, restart, _norestartFlag = 1 }
+enum EIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wait, run_restart, run, restart, end, end_restart, _norestartFlag = 1 }
 
 /// <summary>
 /// Flags for <see cref="MetaComments.Parse"/>

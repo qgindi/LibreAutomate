@@ -88,14 +88,14 @@ namespace Au.More {
 					isXaml = true;
 					imageSource = WpfUtil_.NormalizeIconStringColor(imageSource, false); //color can be "normal|highContrast"
 				}
-				if (!isXaml && !isStore) dpi = 96; //will scale when drawing, it's fast and not so bad
+				if (!isXaml && !isStore) dpi = 96; //will scale when drawing, it's fast and not so bad. Tested scaling with Lanczos3 etc filters, but the result for icons isn't better.
 				string imageKey = imageSource;
 				if (!isIconName) {
 					if ((isXaml && imageKey.Starts('<')) || (isImage && ImageUtil.HasImageStringPrefix(imageKey))) imageKey = Hash.MD5(imageSource, base64: true);
 					//else imageKey = imageKey.Lower(); //not necessary
 				}
 
-				//get _DpiData for dpi
+				//get _DpiImages for dpi
 				_DpiImages dd;
 				foreach (var v in _aDpi) if (v.dpi == dpi) { dd = v; goto g1; }
 				_aDpi.Add(dd = new _DpiImages(dpi));

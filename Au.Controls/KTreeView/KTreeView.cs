@@ -41,7 +41,9 @@ public unsafe partial class KTreeView {
 		_imageMarginX = _DpiScale(4);
 		_marginLeft = _DpiScale(ItemMarginLeft);
 		_marginRight = _DpiScale(ItemMarginRight);
-		_itemHeight = _imageSize + _DpiScale(2);
+
+		using var tr = new GdiTextRenderer(dpi);
+		_itemHeight = Math.Max(_imageSize, tr.MeasureText("A").height) + _DpiScale(2);
 	}
 
 	///

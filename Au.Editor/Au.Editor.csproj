@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
@@ -15,18 +15,20 @@
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<NoWin32Manifest>true</NoWin32Manifest>
+		<IsPublishable>True</IsPublishable>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>TRACE</DefineConstants>
 		<Deterministic>False</Deterministic>
-		<NoWarn>1701;1702;8002</NoWarn>
+		<NoWarn>1701;1702;8002;419</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants></DefineConstants>
 		<Deterministic>False</Deterministic>
-		<NoWarn>1701;1702;8002</NoWarn>
+		<NoWarn>1701;1702;8002;419</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -120,7 +120,7 @@ class CiAutocorrect {
 		for (int i = pos8; i < to; i++) switch (doc.aaaCharAt(i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
 
 		//rejected: ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion. Probably more annoying than useful, because than may want to type (cast) or ()=>lambda or (tup, le).
-		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == doc.zCharAt(pos8 - 1)) {
+		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == doc.aaaCharAt(pos8 - 1)) {
 		//	r.OwnerData = null;
 		//	return true;
 		//}
@@ -759,8 +759,8 @@ class CiAutocorrect {
 					//print.it("--" + v.GetType().Name, v.Span, pos);
 					continue;
 				case GlobalStatementSyntax or CompilationUnitSyntax: //don't indent top-level statements
-																	 //case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //rejected: don't indent script class content. Now can use top-level statements.
-																	 //case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //rejected: don't indent script constructor content
+																	 //case ClassDeclarationSyntax k1 when k1.Identifier.TextForFind is "Program" or "Script": //rejected: don't indent script class content. Now can use top-level statements.
+																	 //case ConstructorDeclarationSyntax k2 when k2.Identifier.TextForFind is "Program" or "Script": //rejected: don't indent script constructor content
 					goto endLoop1;
 				}
 				//print.it(v.GetType().Name, v.Span, pos);

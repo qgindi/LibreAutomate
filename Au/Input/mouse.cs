@@ -373,7 +373,7 @@ namespace Au {
 		/// Applies SM_SWAPBUTTON.
 		/// Also moves to p in the same API SendInput call.
 		/// </summary>
-		static void _SendButton(MButton button, bool down, POINT p) {
+		internal static void SendButton_(MButton button, bool down, POINT p) {
 			//CONSIDER: release user-pressed modifier keys, like keys class does.
 			//CONSIDER: block user input, like keys class does.
 
@@ -466,21 +466,21 @@ namespace Au {
 				//info: default double-click time is 500. Control Panel can set 200-900. API can set 1.
 				//info: to detect double-click, some apps use time between down and down (that is why /4), others between up and down.
 
-				_SendButton(button, true, p);
+				SendButton_(button, true, p);
 				if (!windowOfThisThread) _Sleep(sleep);
-				_SendButton(button, false, p);
+				SendButton_(button, false, p);
 				if (!windowOfThisThread) _Sleep(sleep);
 				goto case 0;
 			case 0: //click
-				_SendButton(button, true, p);
+				SendButton_(button, true, p);
 				if (!windowOfThisThread) _Sleep(sleep);
-				_SendButton(button, false, p);
+				SendButton_(button, false, p);
 				break;
 			case MButton.Down:
-				_SendButton(button, true, p);
+				SendButton_(button, true, p);
 				break;
 			case MButton.Up:
-				_SendButton(button, false, p);
+				SendButton_(button, false, p);
 				break;
 			default: throw new ArgumentException("Incompatible flags: Down, Up, DoubleClick", nameof(button));
 			}
@@ -1020,13 +1020,13 @@ namespace Au {
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static MButtons buttons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		//{
-		//	MButtons R = 0;
-		//	if(0 != (buttons & MButtons.Left) && keys.isKey(KKey.MouseLeft)) R |= MButtons.Left;
-		//	if(0 != (buttons & MButtons.Right) && keys.isKey(KKey.MouseRight)) R |= MButtons.Right;
-		//	if(0 != (buttons & MButtons.Middle) && keys.isKey(KKey.MouseMiddle)) R |= MButtons.Middle;
-		//	if(0 != (buttons & MButtons.X1) && keys.isKey(KKey.MouseX1)) return R |= MButtons.X1;
-		//	if(0 != (buttons & MButtons.X2) && keys.isKey(KKey.MouseX2)) return R |= MButtons.X2;
-		//	return R;
+		//	MButtons _r = 0;
+		//	if(0 != (buttons & MButtons.Left) && keys.isKey(KKey.MouseLeft)) _r |= MButtons.Left;
+		//	if(0 != (buttons & MButtons.Right) && keys.isKey(KKey.MouseRight)) _r |= MButtons.Right;
+		//	if(0 != (buttons & MButtons.Middle) && keys.isKey(KKey.MouseMiddle)) _r |= MButtons.Middle;
+		//	if(0 != (buttons & MButtons.X1) && keys.isKey(KKey.MouseX1)) return _r |= MButtons.X1;
+		//	if(0 != (buttons & MButtons.X2) && keys.isKey(KKey.MouseX2)) return _r |= MButtons.X2;
+		//	return _r;
 		//}
 
 		//rejected: rarely used. Can use IsPressed.

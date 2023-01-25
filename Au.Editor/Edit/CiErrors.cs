@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
+using System.Collections.Immutable;
 
 class CiErrors {
 	SemanticModel _semo;
@@ -24,7 +25,17 @@ class CiErrors {
 		if (end16 <= start16) return;
 		bool has = false;
 		var semo = cd.semanticModel;
+
 		var a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16));
+
+		//ImmutableArray<Diagnostic> a = default;
+		//try { a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16)); }
+		//catch(ArgumentException e1) { print.it(e1); print.it(start16, end16, code.Length, semo.SyntaxTree.ToString()); }
+		//If script code is like 'usinf var c = class C1 {}'), throws ArgumentException("invalid span"), although the span is 0..code.Length.
+		//	Then semo.SyntaxTree.ToString() prints 'usinf var c = '.
+		//	Also then invalid coloring. And completion etc throws exceptions.
+		//	Never mind. Once in several years.
+
 		if (!a.IsDefaultOrEmpty) {
 			_codeDiag = new(a.Length);
 			foreach (var d_ in a) {
@@ -33,9 +44,9 @@ class CiErrors {
 				var loc = d.Location; if (!loc.IsInSource) continue;
 				var span = loc.SourceSpan;
 				//print.it(d.Severity, span, d.Id);
-				int start = span.Start, end = span.End;
+				int start = Math.Min(span.Start, code.Length), end = Math.Clamp(span.End, start, code.Length);
 				if (end == start) {
-					if (end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
+					if (end < code.Length && code[end] is not ('\r' or '\n')) end++;
 					else if (start > 0) start--;
 				}
 				var ec = (ErrorCode)d.Code;
@@ -447,7 +458,7 @@ class CiErrors {
 		if (action == 'u' || action == 'p') { //add 'using', prefix namespace
 			int pos8 = s.ToInt(2, out int i);
 			s = s[i..];
-			var doc = Panels.Editor.ZActiveDoc;
+			var doc = Panels.Editor.aaActiveDoc;
 			EraseIndicatorsInLine(doc, pos8);
 			if (action == 'p') {
 				doc.aaaInsertText(false, pos8, s + ".", addUndoPointAfter: true);

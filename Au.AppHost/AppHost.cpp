@@ -1,15 +1,15 @@
+#define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable: 6386 6385 6255 6305 6011 28251)
 
 #include <string>
 #include <vector>
-#include <Windows.h>
-//#include <Shlwapi.h>
+#include <windows.h>
+//#include <shlwapi.h>
 //#pragma comment(lib, "shlwapi.lib")
 #include "coreclrhost.h"
 
 //min supported .NET version. Installed major must be ==, minor >=, patch any (we'll use highest found), preview any (we'll use release or highest preview).
-//SHOULDDO: somehow auto-update, else can forget this when updating .NET version of C# projects (<TargetFramework>...</TargetFramework>).
 #define NETVERMAJOR 6
 #define NETVERMINOR 0
 #define NETVERPATCH 2 //see the workaround comment below
@@ -304,7 +304,7 @@ void BuildTpaList(const std::wstring& dir, std::string& tpaList, bool onlyAu = f
 		do {
 			wchar_t* s = fd.cFileName;
 			if (onlyAu) {
-				if (!(s[0] == 'A' && s[1] == 'u' && s[2] == '.')) continue; //Au.dll, Au.Editor.dll, etc
+				//if (!(s[0] == 'A' && s[1] == 'u' && s[2] == '.')) continue; //Au.dll, Au.Editor.dll, etc
 			} else {
 				if (s[0] == 'a' && s[1] == 'p' && s[2] == 'i' && s[3] == '-') continue; //api-ms-
 			}
@@ -385,25 +385,23 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	//Print("coreclrDll=%S", p.coreclrDll.c_str());
 
 	if (!pathsOK) {
+		int bits = is32bit ? 86 : 64;
 		wchar_t w[200];
-		wsprintfW(w, L"To run this application, need to install or upgrade .NET %i Desktop Runtime x%i.\r\n\r\n"
-			L"Would you like to download it now?", NETVERMAJOR, is32bit ? 86 : 64);
+		wsprintfW(w, L"To run this application, need to install:\r\n\r\n"
+			L".NET %i Desktop Runtime x%i\r\n\r\n"
+			L"Would you like to download it now?", NETVERMAJOR, bits);
 		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
 			AllowSetForegroundWindow(ASFW_ANY);
 			int(__stdcall * ShellExecuteW)(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);
-			(*(FARPROC*)(&ShellExecuteW)) = GetProcAddress(LoadLibraryW(L"shell32"), "ShellExecuteW");
-			wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
+			(*(FARPROC*)(&ShellExecuteW)) = GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
+			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
+			wsprintfW(w, L"https://aka.ms/dotnet/%i.%i/windowsdesktop-runtime-win-x%i.exe", NETVERMAJOR, NETVERMINOR, bits); //latest patch
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
-
-			//The dotnet apphost opens another url:
-			//	https://aka.ms/dotnet-core-applaunch?framework=Microsoft.WindowsDesktop.App&framework_version=6.0.0&arch=x64&rid=win10-x64&gui=true
-			//	And it redirects to https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime?cid=getdotnetcore
-			//	Both undocumented. Not sure which should be used.
 		}
 		return -1;
 	}
 
-	HMODULE hm = LoadLibraryW(p.coreclrDll.c_str()); //3 ms
+	HMODULE hm = LoadLibraryExW(p.coreclrDll.c_str(), 0, LOAD_WITH_ALTERED_SEARCH_PATH); //3 ms
 	if (hm == NULL) return -2;
 	auto coreclr_initialize = (coreclr_initialize_ptr)GetProcAddress(hm, "coreclr_initialize");
 	auto coreclr_execute_assembly = (coreclr_execute_assembly_ptr)GetProcAddress(hm, "coreclr_execute_assembly");

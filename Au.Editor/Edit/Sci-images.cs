@@ -294,7 +294,7 @@ partial class SciCode {
 			aaaIndicatorClear(c_indicImages);
 			_im.a = null;
 		} else {
-			if (this == Panels.Editor.ZActiveDoc) CodeInfo._styling.Update();
+			if (this == Panels.Editor.aaActiveDoc) CodeInfo._styling.Update();
 		}
 	}
 

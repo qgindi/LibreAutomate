@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 
 partial class SciCode : KScintilla {
-	readonly FileLoaderSaver _fls;
+	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
 
 	public FileNode EFile => _fn;
@@ -36,12 +36,12 @@ partial class SciCode : KScintilla {
 	//#if DEBUG
 	//	public const int c_indicTest = 21;
 	//	internal void TestHidden_() {
-	//		string code = zText;
+	//		string code = aaaText;
 	//		int start8 = code.Find("/*image:")+7;
 	//		int end8 = code.Find("*/");
 
 	//		byte style = 27;
-	//		zStyleHidden(style, true);
+	//		aaaStyleHidden(style, true);
 
 	//		var b = new byte[end8-start8];
 	//		Array.Fill(b, style);
@@ -53,15 +53,15 @@ partial class SciCode : KScintilla {
 	//	internal void TestIndicators_() {
 	//		Call(SCI_INDICSETFORE, c_indicTest, 0x008000);
 	//		Call(SCI_INDICSETSTYLE, c_indicTest, INDIC_BOX);
-	//		zIndicatorClear(c_indicTest);
-	//		int start = zSelectionStart8, end = zSelectionEnd8;
-	//		zIndicatorAdd(false, c_indicTest, start..end, 1);
+	//		aaaIndicatorClear(c_indicTest);
+	//		int start = aaaSelectionStart8, end = aaaSelectionEnd8;
+	//		aaaIndicatorAdd(false, c_indicTest, start..end, 1);
 	//	}
 	//#endif
 
 	//static int _test;
 
-	internal SciCode(FileNode file, FileLoaderSaver fls) {
+	internal SciCode(FileNode file, aaaFileLoaderSaver fls) {
 		//if(_test++==1) Tag = "test";
 
 		//_edit = edit;
@@ -84,7 +84,7 @@ partial class SciCode : KScintilla {
 		Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
 		aaaSetMarginType(c_marginMarkers, SC_MARGIN_SYMBOL);
 		aaaSetMarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
-		//zSetMarginType(c_marginChanges, SC_MARGIN_SYMBOL);
+		//aaaSetMarginType(c_marginChanges, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINWIDTHN, c_marginChanges, 4);
 		Call(SCI_SETMARGINLEFT, 0, 2);
 
@@ -116,9 +116,9 @@ partial class SciCode : KScintilla {
 
 			//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
 
-			//zStyleFont(STYLE_CALLTIP, "Calibri");
-			//zStyleBackColor(STYLE_CALLTIP, 0xf8fff0);
-			//zStyleForeColor(STYLE_CALLTIP, 0);
+			//aaaStyleFont(STYLE_CALLTIP, "Calibri");
+			//aaaStyleBackColor(STYLE_CALLTIP, 0xf8fff0);
+			//aaaStyleForeColor(STYLE_CALLTIP, 0);
 			//Call(SCI_CALLTIPUSESTYLE);
 		} else {
 			aaaStyleFont(STYLE_DEFAULT, "Consolas", 9);
@@ -134,10 +134,10 @@ partial class SciCode : KScintilla {
 
 		_InitDragDrop();
 
-		//base.ZOnHandleCreated();
+		//base.aaOnHandleCreated();
 	}
 
-	//Called by PanelEdit.ZOpen.
+	//Called by PanelEdit.aaOpen.
 	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!aaWnd.Is0);
@@ -165,7 +165,7 @@ partial class SciCode : KScintilla {
 					s_badCR = true;
 					Panels.Output.aaOutput.aaTags.AddLinkTag("+badCR", s1 => {
 						bool fix = s1.Starts('f');
-						Panels.Editor.ZActiveDoc?.Call(fix ? SCI_CONVERTEOLS : SCI_SETVIEWEOL, fix || s1.Starts('h') ? 0 : 1); //tested: SCI_CONVERTEOLS ignored if readonly
+						Panels.Editor.aaActiveDoc?.Call(fix ? SCI_CONVERTEOLS : SCI_SETVIEWEOL, fix || s1.Starts('h') ? 0 : 1); //tested: SCI_CONVERTEOLS ignored if readonly
 					});
 				}
 			}
@@ -212,10 +212,10 @@ partial class SciCode : KScintilla {
 			//never mind: we should cancel the 'save text later'
 			break;
 		case NOTIF.SCN_MODIFIED:
-			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, zCurrentPos8, n.Text);
+			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.TextForFind);
 			//print.it(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
-			//	print.it($"'{n.Text}'");
+			//	print.it($"'{n.TextForFind}'");
 			//	if(n.length == 2 && n.textUTF8!=null && n.textUTF8[0]=='\r' && n.textUTF8[1] == '\n') {
 			//		Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
 			//	}
@@ -227,9 +227,9 @@ partial class SciCode : KScintilla {
 				if (CodeInfo.SciModified(this, n)) {
 					_CodeModifiedAndCodeinfoOK();
 				}
-				Panels.Find.ZUpdateQuickResults();
+				Panels.Find.aaUpdateQuickResults();
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
-				//	//print.it(n.Text);
+				//	//print.it(n.TextForFind);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
@@ -255,7 +255,7 @@ partial class SciCode : KScintilla {
 			if (0 != (n.updated & 3)) { //text (1), selection/click (2)
 				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
 				if (0 != (n.updated & 2)) App.Model.EditGoBack.OnPosChanged(this);
-				Panels.Editor._UpdateUI_EditEnabled();
+				Panels.Editor.aaUpdateUI_EditEnabled_();
 			}
 			CodeInfo.SciUpdateUI(this, n.updated);
 			break;
@@ -370,7 +370,7 @@ partial class SciCode : KScintilla {
 			break;
 			//case Api.WM_LBUTTONUP:
 			//	//rejected. Sometimes I accidentally Ctrl+click and then wonder why it shows eg the github search dialog.
-			//	if (Keyboard.Modifiers == ModifierKeys.Control && !zIsSelection) {
+			//	if (Keyboard.Modifiers == ModifierKeys.Control && !aaaIsSelection) {
 			//		Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos());
 			//	}
 			//	break;
@@ -423,7 +423,7 @@ partial class SciCode : KScintilla {
 
 	public bool EIsBinary => _fls.IsBinary;
 
-	//Called by PanelEdit.ZSaveText.
+	//Called by PanelEdit.aaSaveText.
 	internal bool ESaveText_() {
 		Debug.Assert(!EIsBinary);
 		if (EIsUnsaved_) {
@@ -445,7 +445,7 @@ partial class SciCode : KScintilla {
 		Call(SCI_SETSAVEPOINT);
 
 		//rejected: print info. VS and VSCode reload silently.
-		//if (this == Panels.Editor.ZActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
+		//if (this == Panels.Editor.aaActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
 	}
 
 	//never mind: not called when zoom changes.
@@ -524,7 +524,7 @@ partial class SciCode : KScintilla {
 			} //rejected: option to rename this file
 		} else {
 			CodeInfo.Pasting(this);
-			Call(SCI_PASTE); //not zReplaceSel, because can be SCI_SETMULTIPASTE etc
+			Call(SCI_PASTE); //not aaaReplaceSel, because can be SCI_SETMULTIPASTE etc
 		}
 	}
 
@@ -600,22 +600,22 @@ partial class SciCode : KScintilla {
 	internal static void EToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			App.Settings.edit_wrap ^= true;
-			foreach (var v in Panels.Editor.ZOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
+			foreach (var v in Panels.Editor.aaOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
 		}
 		if (what.Has(EView.Images)) {
 			App.Settings.edit_noImages ^= true;
-			foreach (var v in Panels.Editor.ZOpenDocs) v._ImagesOnOff();
+			foreach (var v in Panels.Editor.aaOpenDocs) v._ImagesOnOff();
 		}
 
 		//should not need this, because this func called from menu commands only.
 		//	But somehow KMenuCommands does not auto change menu/toolbar checked state for Edit menu. Need to fix it.
-		Panels.Editor._UpdateUI_EditView();
+		Panels.Editor.aaUpdateUI_EditView_();
 	}
 
 	void _CodeModifiedAndCodeinfoOK() {
 		if (!_wpfPreview) return;
 		s_timer1 ??= new(static t => {
-			var doc = Panels.Editor.ZActiveDoc;
+			var doc = Panels.Editor.aaActiveDoc;
 			if (doc == t.Tag) doc._WpfPreviewRun(false);
 		});
 		s_timer1.Tag = this;
@@ -669,7 +669,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	}
 
 	public static void WpfPreviewStartStop(MenuItem mi) {
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
 		bool start = mi.IsChecked;
 		if (start == doc._wpfPreview) return;
 		doc._wpfPreview = start;
@@ -678,8 +678,8 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 		if (!s_wpfPreviewInited) {
 			s_wpfPreviewInited = true;
-			Panels.Editor.ZActiveDocChanged += () => {
-				mi.IsChecked = Panels.Editor.ZActiveDoc?._wpfPreview ?? false;
+			Panels.Editor.aaActiveDocChanged += () => {
+				mi.IsChecked = Panels.Editor.aaActiveDoc?._wpfPreview ?? false;
 			};
 		}
 
@@ -693,7 +693,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	#region temp ranges
 
 	[Flags]
-	public enum ZTempRangeFlags {
+	public enum TempRangeFlags {
 		/// <summary>
 		/// Call onLeave etc when current position != current end of range.
 		/// </summary>
@@ -751,9 +751,9 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 		internal readonly int from;
 		internal int to;
 		internal readonly Action onLeave;
-		readonly ZTempRangeFlags _flags;
+		readonly TempRangeFlags _flags;
 
-		internal _TempRange(SciCode doc, object owner, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, ZTempRangeFlags flags) {
+		internal _TempRange(SciCode doc, object owner, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, TempRangeFlags flags) {
 			_doc = doc;
 			_owner = owner;
 			_fromUtf16 = fromUtf16;
@@ -795,14 +795,14 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 		internal bool MustLeave(int pos, int pos2, int modLen) {
 			return pos < from || pos2 > to
-				|| (0 != (_flags & ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) && pos2 != to)
-				|| (0 != (_flags & ZTempRangeFlags.LeaveIfRangeTextModified) && modLen != 0);
+				|| (0 != (_flags & TempRangeFlags.LeaveIfPosNotAtEndOfRange) && pos2 != to)
+				|| (0 != (_flags & TempRangeFlags.LeaveIfRangeTextModified) && modLen != 0);
 		}
 
 		internal bool Contains(int pos, object owner, bool endPosition)
 			=> (endPosition ? (pos == to) : (pos >= from || pos <= to)) && (owner == null || ReferenceEquals(owner, _owner));
 
-		internal bool Equals(int from2, int to2, object owner2, ZTempRangeFlags flags2) {
+		internal bool Equals(int from2, int to2, object owner2, TempRangeFlags flags2) {
 			if (from2 != from || to2 != to || flags2 != _flags
 				//|| onLeave2 != onLeave //delegate always different if captured variables
 				//|| !ReferenceEquals(onLeave2?.Method, onLeave2?.Method) //can be used but slow. Also tested Target, always different.
@@ -832,18 +832,18 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	/// Can be null.
 	/// </param>
 	/// <param name="flags"></param>
-	public ITempRange ETempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
+	public ITempRange ETempRanges_Add(object owner, int from, int to, Action onLeave = null, TempRangeFlags flags = 0) {
 		int fromUtf16 = from;
 		aaaNormalizeRange(true, ref from, ref to);
-		//print.it(fromUtf16, from, to, zCurrentPos8);
+		//print.it(fromUtf16, from, to, aaaCurrentPos8);
 #if DEBUG
-		if (!(aaaCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? aaaCurrentPos8 == to : aaaCurrentPos8 <= to))) {
+		if (!(aaaCurrentPos8 >= from && (flags.Has(TempRangeFlags.LeaveIfPosNotAtEndOfRange) ? aaaCurrentPos8 == to : aaaCurrentPos8 <= to))) {
 			Debug_.Print("bad");
 			//CiUtil.HiliteRange(from, to);
 		}
 #endif
 
-		if (flags.Has(ZTempRangeFlags.NoDuplicate)) {
+		if (flags.Has(TempRangeFlags.NoDuplicate)) {
 			for (int i = _tempRanges.Count - 1; i >= 0; i--) {
 				var t = _tempRanges[i];
 				if (t.Equals(from, to, owner, flags)) return t;

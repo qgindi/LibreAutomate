@@ -1,16 +1,16 @@
-using System.Drawing;
-
 namespace Au.More;
 
 /// <summary>
 /// Helps to get and release screen DC with the 'using(...){...}' pattern.
 /// Uses API GetDC and ReleaseDC.
 /// </summary>
-sealed class ScreenDC_ : IDisposable {
+struct ScreenDC_ : IDisposable {
 	IntPtr _dc;
 
 	public ScreenDC_() => _dc = Api.GetDC(default);
+
 	public static implicit operator IntPtr(ScreenDC_ dc) => dc._dc;
+
 	public void Dispose() {
 		if (_dc != default) {
 			Api.ReleaseDC(default, _dc);
@@ -23,7 +23,7 @@ sealed class ScreenDC_ : IDisposable {
 /// Helps to get and release window DC with the 'using(...){...}' pattern.
 /// Uses API GetDC and ReleaseDC.
 /// </summary>
-sealed class WindowDC_ : IDisposable, IDeviceContext {
+struct WindowDC_ : IDisposable {
 	IntPtr _dc;
 	wnd _w;
 
@@ -41,17 +41,13 @@ sealed class WindowDC_ : IDisposable, IDeviceContext {
 			_dc = default;
 		}
 	}
-
-	IntPtr IDeviceContext.GetHdc() => _dc;
-
-	void IDeviceContext.ReleaseHdc() => Dispose();
 }
 
 /// <summary>
 /// Helps to create and delete compatible DC (memory DC) with the 'using(...){...}' pattern.
 /// Uses API CreateCompatibleDC and DeleteDC.
 /// </summary>
-class MemoryDC_ : IDisposable, IDeviceContext {
+class MemoryDC_ : IDisposable {
 	protected IntPtr _dc;
 
 	/// <summary>
@@ -73,10 +69,6 @@ class MemoryDC_ : IDisposable, IDeviceContext {
 			_dc = default;
 		}
 	}
-
-	IntPtr IDeviceContext.GetHdc() => _dc;
-
-	void IDeviceContext.ReleaseHdc() => Dispose();
 }
 
 /// <summary>

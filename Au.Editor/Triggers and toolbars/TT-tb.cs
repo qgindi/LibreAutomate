@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 using Microsoft.CodeAnalysis;
@@ -246,7 +246,7 @@ partial class Program {
 		int pos = -1;
 		if (cbReplace?.SelectedItem is _Trigger u && _GetTriggerStatementFullRange2(u, out var span, replacing: true)) {
 			var doc = _OpenSourceFile(t.fn, span.Start);
-			using var undo = new KScintilla.UndoAction(doc);
+			using var undo = new KScintilla.aaaUndoAction(doc);
 			doc.aaaDeleteRange(true, span.Start, span.End);
 			pos = span.Start;
 			_Add();
@@ -273,7 +273,7 @@ partial class Program {
 	}
 
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
-		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return default;
+		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return default;
 		int pos = doc.aaaCurrentPos16;
 		var f = doc.EFile;
 		//is pos in a toolbar function?
@@ -296,8 +296,8 @@ partial class Program {
 
 	void _AddTriggerWindow(_Toolbar t, int pos = -1) {
 		var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-		if (!d.ShowAndWait(null)) return;
-		string sTrigger = d.ZResultCode, sAction = t.Name, sSep = " ";
+		if (!d.aaShowAndWait(null)) return;
+		string sTrigger = d.aaResultCode, sAction = t.Name, sSep = " ";
 		if (!t.method.ReturnsVoid) {
 			sTrigger += ", later: TWLater.Name";
 			sAction = $"ta => ta.ShowToolbarWhenWindowName({sAction}, \"*window_name_when_the_toolbar_is_visible*\")";
@@ -334,12 +334,12 @@ Please edit window name strings in the toolbar trigger code.
 	//bool _DeleteTrigger(_Trigger t/*, bool commentOut = false*/) {
 	//	if (!_GetTriggerStatementFullRange2(t, out var span, replacing: false)) return false;
 	//	var doc = _OpenSourceFile(t.fn, span.Start);
-	//	//doc.zSelect(true, span.Start, span.End, true); return -1;
+	//	//doc.aaaSelect(true, span.Start, span.End, true); return -1;
 	//	//if (commentOut) {
-	//	//	doc.zSelect(true, span.Start, span.End, true);
-	//	//	doc.ZCommentLines(true);
+	//	//	doc.aaaSelect(true, span.Start, span.End, true);
+	//	//	ModifyCode.CommentLines(true);
 	//	//} else {
-	//	doc.zDeleteRange(true, span.Start, span.End);
+	//	doc.aaaDeleteRange(true, span.Start, span.End);
 	//	//}
 	//	_Update();
 	//	return true;
@@ -425,13 +425,13 @@ Please edit window name strings in the toolbar trigger code.
 	}
 
 	static SciCode _OpenSourceFile(FileNode f, int pos = -1) {
-		if (App.Model.OpenAndGoTo(f, columnOrPos: pos)) return Panels.Editor.ZActiveDoc;
+		if (App.Model.OpenAndGoTo(f, columnOrPos: pos)) return Panels.Editor.aaActiveDoc;
 		return null;
 	}
 
 	static SciCode _OpenSourceFile(FileNode f, TextSpan span) {
 		if (!App.Model.OpenAndGoTo(f)) return null;
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		doc.aaaSelect(true, span.End, span.Start, true);
 		return doc;
 	}

@@ -123,7 +123,7 @@ class MetaCommentsParser
 	public bool Multiline { get; set; }
 
 	public void Apply() {
-		var doc = Panels.Editor.ZActiveDoc;
+		var doc = Panels.Editor.aaActiveDoc;
 		var f = doc.EFile;
 		var code = doc.aaaText;
 		var meta = MetaComments.FindMetaComments(code);

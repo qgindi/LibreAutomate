@@ -355,7 +355,7 @@ class Dwnd : KDialogWindow {
 		var R = f.Format();
 
 		if (!forTest) {
-			_code.ZSetText(R);
+			_code.a4SetText(R);
 		}
 
 		return (R, "w");
@@ -390,27 +390,27 @@ class Dwnd : KDialogWindow {
 	#region Insert, Test
 
 	/// <summary>
-	/// When OK clicked, the top-level window (even when <see cref="ZResultUseControl"/> is true).
+	/// When OK clicked, the top-level window (even when <see cref="aaResultUseControl"/> is true).
 	/// </summary>
-	public wnd ZResultWindow => _wnd;
+	public wnd aaResultWindow => _wnd;
 
 	/// <summary>
-	/// When OK clicked, the control (even when <see cref="ZResultUseControl"/> is false) or default(wnd).
+	/// When OK clicked, the control (even when <see cref="aaResultUseControl"/> is false) or default(wnd).
 	/// </summary>
-	public wnd ZResultControl => _con;
+	public wnd aaResultControl => _con;
 
 	/// <summary>
 	/// When OK clicked, true if a control was selected and the 'Control' checkbox checked.
-	/// Use <see cref="ZResultWindow"/> or <see cref="ZResultControl"/>, depending on this property.
+	/// Use <see cref="aaResultWindow"/> or <see cref="aaResultControl"/>, depending on this property.
 	/// </summary>
-	public bool ZResultUseControl { get; private set; }
+	public bool aaResultUseControl { get; private set; }
 
 	/// <summary>
 	/// When OK clicked, contains C# code. Else null.
 	/// </summary>
-	public string ZResultCode { get; private set; }
+	public string aaResultCode { get; private set; }
 
-	//rejected. Can use Closed event; then ZResultCode not null if OK.
+	//rejected. Can use Closed event; then aaResultCode not null if OK.
 	///// <summary>
 	///// When closed with OK button.
 	///// </summary>
@@ -422,9 +422,9 @@ class Dwnd : KDialogWindow {
 		if (_forTrigger && s != null) s = TUtil.ArgsFromWndFindCode(s);
 
 		if (_dontInsert) {
-			ZResultCode = s;
+			aaResultCode = s;
 			if (s == null) e.Cancel = true;
-			else ZResultUseControl = !_con.Is0 && _cControl.IsChecked;
+			else aaResultUseControl = !_con.Is0 && _cControl.IsChecked;
 
 			if (this.IsModal_() == false) Close();
 			else DialogResult = s != null;
@@ -699,7 +699,7 @@ class Dwnd : KDialogWindow {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = _dialogInfo;
-		_info.ZAddElem(this, _dialogInfo);
+		_info.a4AddElem(this, _dialogInfo);
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: !true);
 
 		_info.InfoCT(nameW, "Window name.", true);
