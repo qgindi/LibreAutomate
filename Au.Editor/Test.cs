@@ -25,11 +25,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using Au.Controls;
 //using Microsoft.VisualBasic.Devices;
 //using Microsoft.CodeAnalysis.Options;
 //using Microsoft.CodeAnalysis.Formatting;
-
 
 /*
 
@@ -45,30 +45,19 @@ using Au.Controls;
 
 static unsafe class Test {
 
-	//	static void TestMarkdig() {
-	//		string markdown = @"List:
-	//- one.
-	//- two.
-
-	//	";
-
-	//		string html = Markdig.Markdown.ToHtml(markdown);
-	//		print.it(html);
-	//	}
-
-	//static void clipboarMikelandzeloLosAngelesWashingtonAfghanistanLithuania() { }
 
 	/// <summary>
-	/// one two three four five six seven eith none ten 
+	/// one two three four five six seven eight none ten 
 	/// </summary>
 	public static void FromMenubar() {
 		print.clear();
 
-		//EditorExtension.WindowLoaded
+		var doc = Panels.Editor.ActiveDoc;
+		//doc.
+		//print.it()
+		//Panels.Mouse.
 
-		//EditorExtension.Test();
-
-		//KScintilla.
+		
 
 		//var rx = new Regex(@"");
 		//App.Model.ImportFiles(new string[] { @"\\?\C:\code\ok\files\NtSetTimerResolution, timeBeginPeriod\Script103 - Copy.cs" });
@@ -143,7 +132,7 @@ static unsafe class Test {
 
 		//throw new AuException("test");
 
-		//var doc = Panels.Editor.aaActiveDoc;
+		//var doc = Panels.Editor.ActiveDoc;
 		//doc.test_ = true;
 		//print.it(doc.aaaCurrentPos16);
 

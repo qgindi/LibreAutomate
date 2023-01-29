@@ -316,31 +316,34 @@ public class uiimage {
 	#region obsolete
 
 	/// <inheritdoc cref="CaptureScreen.Image(RECT)"/>
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use CaptureScreen.Image")]
+	[Obsolete("Use CaptureScreen.Image"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static Bitmap capture(RECT r) => CaptureScreen.Image(r);
 
-	/// <inheritdoc cref="CaptureScreen.Image(wnd, RECT?, ICHow)"/>
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use CaptureScreen.Image")]
+	/// <inheritdoc cref="CaptureScreen.Image(wnd, RECT?, CIFlags)"/>
+	[Obsolete("Use CaptureScreen.Image"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static Bitmap capture(wnd w, RECT r, bool printWindow = false)
-		=> CaptureScreen.Image(w, r, printWindow ? ICHow.PrintWindow : ICHow.WindowDC);
+		=> CaptureScreen.Image(w, r, printWindow ? CIFlags.PrintWindow : CIFlags.WindowDC);
 
 	/// <inheritdoc cref="CaptureScreen.Pixels(RECT)"/>
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use CaptureScreen.Pixels")]
+	[Obsolete("Use CaptureScreen.Pixels"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static uint[,] getPixels(RECT r) => CaptureScreen.Pixels(r);
 
-	/// <inheritdoc cref="CaptureScreen.Pixels(wnd, RECT?, ICHow)"/>
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use CaptureScreen.Pixels")]
+	/// <inheritdoc cref="CaptureScreen.Pixels(wnd, RECT?, CIFlags)"/>
+	[Obsolete("Use CaptureScreen.Pixels"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static uint[,] getPixels(wnd w, RECT r, bool printWindow = false)
-		=> CaptureScreen.Pixels(w, r, printWindow ? ICHow.PrintWindow : ICHow.WindowDC);
+		=> CaptureScreen.Pixels(w, r, printWindow ? CIFlags.PrintWindow : CIFlags.WindowDC);
 
 	/// <inheritdoc cref="CaptureScreen.Pixel"/>
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use CaptureScreen.Pixel")]
+	[Obsolete("Use CaptureScreen.Pixel"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe uint getPixel(POINT p) => CaptureScreen.Pixel(p);
 
-	/// <inheritdoc cref="CaptureScreen.ImageUI"/>
-	[EditorBrowsable(EditorBrowsableState.Never), Obsolete("Use CaptureScreen.ImageUI")]
-	public static bool captureUI(out ICResult result, ICFlags flags = 0, AnyWnd owner = default)
-		=> CaptureScreen.ImageUI(out result, flags, owner);
+	/// <inheritdoc cref="CaptureScreen.ImageColorRectUI"/>
+	[Obsolete("Use CaptureScreen.ImageColorRectUI"), EditorBrowsable(EditorBrowsableState.Never)]
+	public static bool captureUI(out ICResult result, ICFlags flags = 0, AnyWnd owner = default) {
+		bool R = CaptureScreen.ImageColorRectUI(out var r1, (CIUFlags)flags, owner);
+		result = Unsafe.As<ICResult>(r1);
+		return R;
+	}
 
 	#endregion
 }

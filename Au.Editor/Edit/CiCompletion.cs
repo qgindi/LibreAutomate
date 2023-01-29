@@ -296,7 +296,7 @@ partial class CiCompletion {
 				return;
 			}
 
-			Debug.Assert(doc == Panels.Editor.aaActiveDoc); //when active doc changed, cancellation must be requested
+			Debug.Assert(doc == Panels.Editor.ActiveDoc); //when active doc changed, cancellation must be requested
 			var codeNow = doc.aaaText;
 			int posNow = doc.aaaCurrentPos16, posAdd = 0, codeLength = code.Length;
 			if (codeNow != code) { //changed while awaiting

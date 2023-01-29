@@ -1,4 +1,4 @@
-/*/ role editorExtension; define SCRIPT; testInternal Au,Au.Editor,Au.Controls; r Au.Editor.dll; r Au.Controls.dll; /*/
+/* role editorExtension; define SCRIPT; testInternal Au,Au.Editor,Au.Controls; r Au.Editor.dll; r Au.Controls.dll; /*/
 
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -11,7 +11,7 @@ file
 #endif
 
 class DPortable : KDialogWindow {
-	public static void aaShow() {
+	public static void AaShow() {
 		if (App.IsPortable) {
 			dialog.showError("Portable mode", "Please restart this program in non-portable mode.", owner: App.Wmain);
 			return;

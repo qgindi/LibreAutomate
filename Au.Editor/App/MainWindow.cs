@@ -5,7 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Input;
 
 partial class MainWindow : Window {
-	public void aaInit() {
+	public void AaInit() {
 		//_StartProfileOptimization();
 
 		Title = App.AppNameShort; //don't append document name etc
@@ -85,7 +85,7 @@ partial class MainWindow : Window {
 	internal bool tempHideWhenClosing;
 
 	protected override void OnClosed(EventArgs e) {
-		App.Loaded = EProgramState.Unloading;
+		App.Loaded = AppState.Unloading;
 		base.OnClosed(e);
 		UacDragDrop.AdminProcess.Enable(false);
 		CodeInfo.Stop();
@@ -109,7 +109,7 @@ partial class MainWindow : Window {
 
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
 
-		App.Loaded = EProgramState.LoadedUI;
+		App.Loaded = AppState.LoadedUI;
 
 		CodeInfo.UiLoaded();
 
@@ -141,16 +141,16 @@ partial class MainWindow : Window {
 			break;
 		case Api.WM_HOTKEY:
 			handled = true;
-			switch ((ERegisteredHotkeyId)(int)wParam) {
-			case ERegisteredHotkeyId.QuickCaptureMenu: Au.Tools.QuickCapture.Menu(); break;
-			case ERegisteredHotkeyId.QuickCaptureDwnd: Au.Tools.QuickCapture.ToolDwnd(); break;
-			case ERegisteredHotkeyId.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
+			switch ((AppHotkeyId)(int)wParam) {
+			case AppHotkeyId.QuickCaptureMenu: Au.Tools.QuickCapture.Menu(); break;
+			case AppHotkeyId.QuickCaptureDwnd: Au.Tools.QuickCapture.ToolDwnd(); break;
+			case AppHotkeyId.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
 			}
 			break;
 		case Api.WM_ACTIVATEAPP:
 			if (wParam != 0) {
 				_appActivatedTimer ??= new(_ => {
-					Panels.Editor.aaOnAppActivated_();
+					Panels.Editor.OnAppActivated_();
 				});
 				_appActivatedTimer.After(250);
 			} else {
@@ -224,7 +224,7 @@ partial class MainWindow : Window {
 #endif
 	}
 
-	public void aaShowAndActivate() {
+	public void AaShowAndActivate() {
 		Show();
 		var w = this.Hwnd();
 		w.ShowNotMinimized();

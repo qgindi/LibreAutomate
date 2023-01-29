@@ -265,8 +265,10 @@ class Delm : KDialogWindow {
 		_FormatCode();
 
 		if (p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_elm.MiscFlags.Has(EMiscFlags.Java) /*&& !osVersion.is32BitOS*/) {
-			timer.after(50, _ => {
-				if (_info.a4ElemsSuspended) { //eg showing test result
+			timer.every(50, t => {
+				if (_testing) return;
+				t.Stop();
+				if (_info.AaElemsSuspended) { //eg showing test result
 					string s1 = c_infoJava, s2 = _info.aaaText; if (!s2.NE() && !s2.Ends('\n')) s1 = "\r\n" + s1;
 					_info.aaaAppendText(s1, false, false);
 				} else _info.aaaText = c_infoJava;
@@ -336,8 +338,8 @@ class Delm : KDialogWindow {
 				var k = b.xAddCheckText("@" + na, TUtil.EscapeWildex(va));
 				if (check) { k.c.IsChecked = true; noName = false; }
 				var info = TUtil.CommonInfos.AppendWildexInfo(TUtil.CommonInfos.PrependName(na, "HTML attribute."));
-				_info.a4AddElem(k.c, info);
-				_info.a4AddElem(k.t, info);
+				_info.AaAddElem(k.c, info);
+				_info.AaAddElem(k.t, info);
 			}
 			b.End();
 		} else _page.htmlAttr.Child = null;
@@ -379,7 +381,7 @@ class Delm : KDialogWindow {
 	private void _bWnd_Click(WBButtonClickArgs e) {
 		var wPrev = _WndSearchIn;
 		bool captCheck = _cCapture.IsChecked;
-		var r = _code.a4ShowWndTool(this, _wnd, _con, checkControl: _useCon);
+		var r = _code.AaShowWndTool(this, _wnd, _con, checkControl: _useCon);
 		if (captCheck) _cCapture.IsChecked = true;
 		if (!r.ok) return;
 		_SetWndCon(r.w, r.con, r.useCon);
@@ -435,7 +437,7 @@ class Delm : KDialogWindow {
 		if (isFinder) {
 			b.Append("var f = elm.path");
 		} else {
-			(wndCode, wndVar) = _code.a4GetWndFindCode(forTest, _wnd, _useCon ? _con : default);
+			(wndCode, wndVar) = _code.AaGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			b.AppendLine(wndCode);
 			if (isVar) b.Append("var e = ");
 			b.Append(wndVar).Append(".Elm");
@@ -551,7 +553,7 @@ class Delm : KDialogWindow {
 
 		var R = b.ToString();
 
-		if (!forTest) _code.a4SetText(R, wndCode.Lenn());
+		if (!forTest) _code.AaSetText(R, wndCode.Lenn());
 
 		return (R, wndVar);
 	}
@@ -814,6 +816,7 @@ class Delm : KDialogWindow {
 		if (testAction) testAction = _ActionCanTest;
 		bool autoInsert = captured && _cAutoInsert.IsChecked;
 
+		_testing = true;
 		var restoreOwner = new int[1];
 		try {
 			var (rr, bad) = _RunElmTask(10000, (this.Hwnd(), _WndSearchIn), m => {
@@ -903,13 +906,17 @@ class Delm : KDialogWindow {
 				_Osd("Inserted", false);
 			}
 		}
-		finally { if (restoreOwner[0] == 0) restoreOwner[0] = 1; }
+		finally {
+			if (restoreOwner[0] == 0) restoreOwner[0] = 1;
+			_testing = false;
+		}
 
 		void _Osd(string s, bool error) {
 			if (!captured) return;
 			osdText.showTransparentText(s, 2, PopupXY.Mouse, error ? 0xFF6040 : 0xC000, showMode: OsdMode.ThisThread);
 		}
 	}
+	bool _testing;
 
 	bool _IsAutoTest => _Opt.HasAny(_EOptions.AutoTest) || _cAutoTestAction.IsChecked || _cAutoInsert.IsChecked;
 
@@ -1608,7 +1615,7 @@ class Delm : KDialogWindow {
 			//never mind
 			//}
 
-			sout += "\r\nRestart Java apps to apply the new settings.";
+			sout += "\r\nAlso may need to restart Java apps and this app.";
 
 			string dll64 = folders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = folders.SystemX86 + "WindowsAccessBridge-32.dll";
 			if (!filesystem.exists(dll64).File) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use UI elements of Java apps. Install 64-bit Java too.";
@@ -1830,9 +1837,9 @@ class Delm : KDialogWindow {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = _dialogInfo;
-		_info.a4AddElem(this, _dialogInfo);
-		_info.aaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
-		_info.aaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
+		_info.AaAddElem(this, _dialogInfo);
+		_info.AaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
+		_info.AaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: true);
 
 		//note: for Test button etc it's better to use tooltip, not _info.

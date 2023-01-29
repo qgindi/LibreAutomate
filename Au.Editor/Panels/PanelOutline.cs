@@ -5,8 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
-class PanelOutline : DockPanel
-{
+class PanelOutline {
 	KTreeView _tv;
 	SciCode _activeDoc;
 	bool _modified;
@@ -14,16 +13,18 @@ class PanelOutline : DockPanel
 	_Item _oldTree;
 
 	public PanelOutline() {
-		//this.UiaSetName("Outline panel");
+		//P.UiaSetName("Outline panel");
 
 		_tv = new KTreeView { Name = "Outline_list", SingleClickActivate = true, HotTrack = true };
 		_tv.ItemClick += e => { if (e.Button == System.Windows.Input.MouseButton.Right) _ContextMenu(); };
 		_tv.ContextMenuOpening += (_, _) => _ContextMenu(); //right-click in empty space
-		this.Children.Add(_tv);
+		P.Children.Add(_tv);
 	}
 
+	public DockPanel P { get; } = new();
+
 	public void Timer025sWhenVisible() {
-		if (_activeDoc == null || _modified) Update(); else if (!this.IsVisible) Clear();
+		if (_activeDoc == null || _modified) Update(); else if (!P.IsVisible) Clear();
 		//if (_oldTree != null) if (0 != (4 & App.Settings.outline_flags)) _Sync();
 	}
 
@@ -32,7 +33,7 @@ class PanelOutline : DockPanel
 	}
 
 	public void Update() {
-		if (this.IsVisible) {
+		if (P.IsVisible) {
 			try { if (_Update()) return; }
 			catch (Exception e1) { print.it(e1); }
 		}
@@ -132,7 +133,7 @@ class PanelOutline : DockPanel
 				var v = e.Item as _Item;
 				_activeDoc.aaaGoToPos(true, v._pos);
 			};
-			Panels.Editor.aaActiveDocChanged += Clear;
+			Panels.Editor.ActiveDocChanged += Clear;
 		}
 
 		_tv.SetItems(root.Children(), modified: changed != 4);
@@ -189,7 +190,7 @@ class PanelOutline : DockPanel
 	//	Debug.Assert(this.IsVisible && _oldTree != null);
 	//	//print.it("sync");
 
-	//	int pos = Panels.Editor.aaActiveDoc.aaaCurrentPos16; //todo: return if didn't change (use the position changed notification).
+	//	int pos = Panels.Editor.ActiveDoc.aaaCurrentPos16; //todo: return if didn't change (use the position changed notification).
 	//	_Item found = null;
 	//	if (0 == (3 & App.Settings.outline_flags)) { //not sorted
 	//		found = _Find(_oldTree);
@@ -220,7 +221,7 @@ class PanelOutline : DockPanel
 		//m.AddRadio("Sort by kind and name", sort == 3).Id = 4; //sorting by kind+position probably not useful. Always sort by kind+name.
 		//m.Separator();
 		//m.AddCheck("Sync", 0 != (flags & 4), _ => App.Settings.outline_flags ^= 4);
-		int i = m.Show(owner: this);
+		int i = m.Show(owner: P);
 		if (i is >= 1 and <= 3) {
 			App.Settings.outline_flags = (byte)((App.Settings.outline_flags & ~3) | (i - 1));
 			if (_oldTree != null) {
@@ -230,8 +231,7 @@ class PanelOutline : DockPanel
 		}
 	}
 
-	class _Item : TreeBase<_Item>, ITreeViewItem
-	{
+	class _Item : TreeBase<_Item>, ITreeViewItem {
 		internal string _text;
 		internal int _pos;
 		internal CiItemKind _kind;

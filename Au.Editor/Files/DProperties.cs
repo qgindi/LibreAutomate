@@ -8,7 +8,8 @@ class DProperties : KDialogWindow {
 	readonly FileNode _f;
 	readonly MetaCommentsParser _meta;
 	readonly bool _isClass;
-	Au.Compiler.ERole _role;
+	MCRole _role;
+	int _miscFlags;
 
 	//controls
 	readonly KSciInfoBox info;
@@ -86,25 +87,29 @@ class DProperties : KDialogWindow {
 		b.AddButton(out addResource, "Resource ▾", _ButtonClick_addFile);
 		b.AddButton(out addFile, "Other file ▾", _ButtonClick_addFile);
 		b.End();
-		b.StartStack(vertical: true).Add("Find in lists", out findInLists).Tooltip("In button drop-down lists show only items containing this text").End();
-		//b.AddButton("Change icon", _ => DIcons.aaShow(true, _f.CustomIconName)).Margin("T8B8"); //rejected
+		b.StartStack(vertical: true)
+			.Add("Find in lists", out findInLists).Tooltip("In button drop-down lists show only items containing this text")
+			.End();
 		b.End();
+		b.R.AddSeparator();
 		b.R.StartGrid().Columns(-1, 0);
 		b.Add(out cMultiline, "/*/ multiple lines /*/").Checked(_meta.Multiline);
+		b.Options(modifyPadding: false); //workaround for: OK/Cancel text incorrectly vcentered. Only on Win11, only in this dialog, only when this dialog is not in the secondary screen with DPI 125%.
 		b.AddOkCancel();
 		b.End();
 		b.End();
 
 		_role = _meta.role switch {
-			"miniProgram" => Au.Compiler.ERole.miniProgram,
-			"exeProgram" => Au.Compiler.ERole.exeProgram,
-			"editorExtension" => Au.Compiler.ERole.editorExtension,
-			"classLibrary" when _isClass => Au.Compiler.ERole.classLibrary,
-			"classFile" when _isClass => Au.Compiler.ERole.classFile,
-			_ => _isClass ? Au.Compiler.ERole.classFile : Au.Compiler.ERole.miniProgram,
+			"miniProgram" => MCRole.miniProgram,
+			"exeProgram" => MCRole.exeProgram,
+			"editorExtension" => MCRole.editorExtension,
+			"classLibrary" when _isClass => MCRole.classLibrary,
+			"classFile" when _isClass => MCRole.classFile,
+			_ => _isClass ? MCRole.classFile : MCRole.miniProgram,
 		};
 		_InitCombo(role, _isClass ? "miniProgram|exeProgram|editorExtension|classLibrary|classFile" : "miniProgram|exeProgram|editorExtension", null, (int)_role);
 		testScript.Text = _f.TestScript?.ItemPath;
+		_miscFlags = _meta.miscFlags.ToInt();
 		//Run
 		_InitCombo(ifRunning, "warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart|end|end_restart", _meta.ifRunning);
 		_InitCombo(uac, "inherit|user|admin", _meta.uac);
@@ -113,7 +118,7 @@ class DProperties : KDialogWindow {
 		void _ButtonClick_outputPath(WBButtonClickArgs e) {
 			var m = new popupMenu();
 			m[_GetOutputPath(getDefault: true)] = o => outputPath.Text = o.ToString();
-			bool isLibrary = _role == Au.Compiler.ERole.classLibrary;
+			bool isLibrary = _role == MCRole.classLibrary;
 			if (isLibrary) m[@"%folders.ThisApp%\Libraries"] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
 				var initf = _GetOutputPath(getDefault: false, expandEnvVar: true);
@@ -150,25 +155,29 @@ class DProperties : KDialogWindow {
 
 		_ChangedRole();
 		role.SelectionChanged += (_, _) => {
-			_role = (Au.Compiler.ERole)role.SelectedIndex;
+			_role = (MCRole)role.SelectedIndex;
 			_ChangedRole();
 		};
 		void _ChangedRole() {
-			_ShowHide(testScript, _role is Au.Compiler.ERole.classLibrary or Au.Compiler.ERole.classFile);
-			_ShowCollapse(_role is Au.Compiler.ERole.miniProgram or Au.Compiler.ERole.exeProgram, gRun, console, icon);
-			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram or Au.Compiler.ERole.classLibrary, outputPath, bOutputPath, bVersion);
-			_ShowCollapse(_role is Au.Compiler.ERole.exeProgram, manifest, bit32);
-			_ShowCollapse(_role == Au.Compiler.ERole.classLibrary, xmlDoc);
-			_ShowCollapse(_role != Au.Compiler.ERole.classFile, gAssembly, gCompile);
-			addProject.IsEnabled = _role != Au.Compiler.ERole.classFile;
+			_ShowHide(testScript, _role is MCRole.classLibrary or MCRole.classFile);
+			_ShowCollapse(_role is MCRole.miniProgram or MCRole.exeProgram, gRun, console, icon);
+			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath, bOutputPath, bVersion);
+			_ShowCollapse(_role is MCRole.exeProgram, manifest, bit32);
+			_ShowCollapse(_role == MCRole.classLibrary, xmlDoc);
+			_ShowCollapse(_role != MCRole.classFile, gAssembly, gCompile);
+			addProject.IsEnabled = _role != MCRole.classFile;
 		}
 
 		//rejected. Will display error in code editor. Rarely used. For some would need to remove /suffix.
 		//string _ValidateFile(FrameworkElement e, string name, FNFind kind) =>
 
-		Loaded += (_, _) => { App.Model.UnloadingWorkspace += Close; };
 		b.OkApply += _OkApply;
+	}
+
+	protected override void OnSourceInitialized(EventArgs e) {
 		_InitInfo();
+		App.Model.UnloadingWorkspace += Close;
+		base.OnSourceInitialized(e);
 	}
 
 	protected override void OnClosed(EventArgs e) {
@@ -202,15 +211,17 @@ class DProperties : KDialogWindow {
 
 		_meta.role = null;
 		_meta.outputPath = null;
-		if (_role != Au.Compiler.ERole.classFile) {
-			if (_isClass || _role != Au.Compiler.ERole.miniProgram) _meta.role = _role.ToString();
+		if (_role != MCRole.classFile) {
+			if (_isClass || _role != MCRole.miniProgram) _meta.role = _role.ToString();
 			switch (_role) {
-			case Au.Compiler.ERole.exeProgram:
-			case Au.Compiler.ERole.classLibrary:
+			case MCRole.exeProgram:
+			case MCRole.classLibrary:
 				_meta.outputPath = _GetOutputPath(getDefault: false);
 				break;
 			}
 		}
+
+		_meta.miscFlags = _miscFlags == 0 ? null : _miscFlags.ToS();
 	}
 
 	void _OkApply(WBButtonClickArgs e) {
@@ -299,6 +310,13 @@ class DProperties : KDialogWindow {
 		if (_f.FindProject(out var proj, out _, ofAnyScript: true)) m.Submenu("Project", m => _AddFW(m, proj));
 		m.Submenu("All", m => _AddFW(m));
 		m.Submenu("By type", m => _AddFW(m, sortByType: true));
+		if (isResource) {
+			m.Submenu("Options", m => {
+				m.AddCheck("Add XAML icons from code strings like \"*name color\"",
+					check: _role is not (MCRole.editorExtension or MCRole.classFile) && 0 == (_miscFlags & 1),
+					click: o => { if (o.IsChecked) _miscFlags &= ~1; else _miscFlags |= 1; });
+			});
+		}
 		m.Show(owner: this);
 
 		void _AddFW(popupMenu m, FileNode proj = null, bool sortByType = false) {
@@ -594,15 +612,20 @@ class DProperties : KDialogWindow {
 	#region info
 
 	void _InitInfo() {
+		info.AaTags.AddLinkTag("+changeFileType", _ => {
+			if (!dialog.showOkCancel($"Change file type to: {(_f.IsScript ? "class" : "script")}", "This also will close the Properties dialog as if clicked Cancel.", owner: this)) return;
+			_f.FileType = _f.IsScript ? FNType.Class : FNType.Script;
+			Close();
+		});
 		info.aaaText = $"""
-Type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>
+Type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>  (<+changeFileType>change...<>)
 Path: <explore>{_f.FilePath}<>
 
 C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
 """;
 
-		info.a4AddElem(role, """
+		info.AaAddElem(role, """
 <b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.
  • <i>miniProgram</i> - execute in a separate host process started from editor.
  • <i>exeProgram</i> - create/execute .exe file. It can run on any computer, without editor installed.
@@ -614,7 +637,7 @@ Default role for scripts is miniProgram; cannot be the last two. Default for cla
 
 Read more in Cookbook -> Script (classes, .exe) and online help -> Editor (scripts, class files).
 """);
-		info.a4AddElem(testScript, """
+		info.AaAddElem(testScript, """
 <b>testScript</b> - a script to run when you click the Run button.
 Usually it is used to test this class file or class library. It can contain meta comment <c green>c this file<> that adds this file to the compilation, or <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
 
@@ -622,7 +645,7 @@ Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\F
 
 This option is saved in current workspace, not in meta comments.
 """);
-		info.a4AddElem(ifRunning, """
+		info.AaAddElem(ifRunning, """
 <b>ifRunning</b> - when trying to start this script, what to do if it is already running.
  • <i>warn</i> - print warning and don't run.
  • <i>cancel</i> - don't run.
@@ -636,7 +659,7 @@ Default is warn_restart.
 
 This option is ignored when the task runs as .exe program started not from editor; instead use code: script.single("unique string");.
 """);
-		info.a4AddElem(uac, """
+		info.AaAddElem(uac, """
 <b>uac</b> - <help articles/UAC>UAC<> integrity level (IL) of the task process.
  • <i>inherit</i> (default) - the same as of the editor process. Normally High IL if installed on admin account, else Medium IL.
  • <i>user</i> - Medium IL, like most applications. The task cannot automate high IL process windows, write some files, change some settings, etc.
@@ -644,7 +667,7 @@ This option is ignored when the task runs as .exe program started not from edito
 
 This option is ignored when the task runs as .exe program started not from editor.
 """);
-		info.a4AddElem(outputPath, """
+		info.AaAddElem(outputPath, """
 <b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
 Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options.
 
@@ -653,7 +676,7 @@ Default if role exeProgram: <link>%folders.Workspace%\exe<>\filename. Default if
 If role exeProgram, the exe file is named like the script. The 32-bit version has suffix "-32". If optimize true (checked), creates both 64-bit and 32-bit versions. Else creates only 32-bit if bit32 true (checked) or 32-bit OS, else only 64-bit.
 If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
 """);
-		info.a4AddElem(icon, """
+		info.AaAddElem(icon, """
 <b>icon</b> - icon of the output exe file.
 
 The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add all .ico and .xaml icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
@@ -663,7 +686,7 @@ Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\
 
 If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
 """);
-		info.a4AddElem(manifest, """
+		info.AaAddElem(manifest, """
 <b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
@@ -671,27 +694,27 @@ Can be path relative to this file (examples: App.manifest, Folder\App.manifest, 
 
 The manifest will be added as a native resource.
 """);
-		info.a4AddElem(sign, """
+		info.AaAddElem(sign, """
 <b>sign</b> - strong-name signing key file, to sign the output assembly.
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
 Can be path relative to this file (examples: App.snk, Folder\App.snk, ..\Folder\App.snk) or path in the workspace (examples: \App.snk, \Folder\App.snk).
 """);
-		info.a4AddElem(console, """
+		info.AaAddElem(console, """
 <b>console</b> - let the program run with console.
 """);
-		info.a4AddElem(bit32, """
+		info.AaAddElem(bit32, """
 <b>bit32</b> - whether the exe process must be 32-bit everywhere.
  • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
  • <i>true</i> (checked) - the process is 32-bit on all computers.
 """);
-		info.a4AddElem(xmlDoc, """
+		info.AaAddElem(xmlDoc, """
 <b>xmlDoc</b> - create XML documentation file from /// XML comments of classes, functions, etc.
 Creates in the 'outputPath' folder.
 
 XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create HTML documentation.
 """);
-		info.a4AddElem(optimize, """
+		info.AaAddElem(optimize, """
 <b>optimize</b> - whether to make the compiled code as fast as possible.
  • <i>false</i> (default) - don't optimize. Define DEBUG and TRACE. Aka "Debug configuration".
  • <i>true</i> (checked) - optimize. Aka "Release configuration".
@@ -700,7 +723,7 @@ Default is false, because optimization makes difficult to debug. It makes notice
 
 This option is also applied to class files compiled together, eg as part of project. Use true (checked) if they contain code that must be as fast as possible.
 """);
-		info.a4AddElem(define, """
+		info.AaAddElem(define, """
 <b>define</b> - symbols that can be used with #if.
 Example: ONE,TWO,d:THREE,r:FOUR
 Can be used prefix r: or d: to define the symbol only if optimize true (checked) or false (unchecked).
@@ -708,7 +731,7 @@ If no optimize true, DEBUG and TRACE are added implicitly.
 These symbols also are visible in class files compiled together, eg as part of project.
 See also <google C# #define>#define<>.
 """);
-		info.a4AddElem(warningLevel, """
+		info.AaAddElem(warningLevel, """
 <b>warningLevel</b> - <google C# Compiler Options, WarningLevel>warning level<>. Default 6.
 0 - no warnings.
 1 - only severe warnings.
@@ -719,20 +742,20 @@ See also <google C# #define>#define<>.
 
 This option is also applied to class files compiled together, eg as part of project.
 """);
-		info.a4AddElem(noWarnings, """
+		info.AaAddElem(noWarnings, """
 <b>noWarnings</b> - don't show these warnings.
 Example: 151,3001,120
 
 This option is also applied to class files compiled together, eg as part of project.
 See also <google C# #pragma warning>#pragma warning<>.
 """);
-		info.a4AddElem(testInternal, """
+		info.AaAddElem(testInternal, """
 <b>testInternal</b> - access internal symbols of these assemblies, like with InternalsVisibleToAttribute.
 Example: Assembly1,Assembly2
 
 This option is also applied to class files compiled together, eg as part of project.
 """);
-		info.a4AddElem(preBuild, """
+		info.AaAddElem(preBuild, """
 <b>preBuild</b> - a script to run before compiling this code file.
 
 The script must have role editorExtension. It runs synchronously in the compiler's thread. To stop compilation, let it throw an exception.
@@ -746,11 +769,11 @@ By default it receives full path of the output exe or dll file in args[0]. If ne
 
 Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 """);
-		info.a4AddElem(postBuild, """
+		info.AaAddElem(postBuild, """
 <b>postBuild</b> - a script to run after compiling this code file successfully.
 Everything else is like with preBuild.
 """);
-		info.a4AddElem(addLibrary, """
+		info.AaAddElem(addLibrary, """
 <b>Library<> - add a .NET assembly reference.
 Adds meta comment <c green>r DllFile<>.
 
@@ -759,7 +782,7 @@ To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assem
 To remove this meta comment, edit the code.
 If script role is editorExtension, may need to restart editor.
 """);
-		info.a4AddElem(addNuget, """
+		info.AaAddElem(addNuget, """
 <b>NuGet<> - use a NuGet package installed by the NuGet tool (menu Tools -> NuGet).
 Adds meta comment <c green>nuget folder\package<>.
 
@@ -774,15 +797,15 @@ An interop assembly is a .NET assembly without real code. Not used at run time. 
 
 To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
 """;
-		info.a4AddElem(addComRegistry, "<b>COM<> - convert a registered" + c_com);
-		info.a4AddElem(addComBrowse, "<b>...<> - convert a" + c_com);
-		info.a4AddElem(addProject, """
+		info.AaAddElem(addComRegistry, "<b>COM<> - convert a registered" + c_com);
+		info.AaAddElem(addComBrowse, "<b>...<> - convert a" + c_com);
+		info.AaAddElem(addProject, """
 <b>Project<> - add a reference to a class library created in this workspace.
 Adds meta comment <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
 
 To remove this meta comment, edit the code. Optionally delete unused dll files.
 """);
-		info.a4AddElem(addClassFile, """
+		info.AaAddElem(addClassFile, """
 <b>Class file<> - add a C# code file that contains some classes/functions used by this file.
 Adds meta comment <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
@@ -793,13 +816,12 @@ If folder, adds all its descendant class files.
 If this file is in a project, don't add class files that are in the project folder.
 To remove this meta comment, edit the code.
 """);
-		info.a4AddElem(addResource, """
+		//FUTURE: add UI to append resource suffix
+		info.AaAddElem(addResource, """
 <b>Resource<> - add image etc file(s) as managed resources.
 Adds meta comment <c green>resource File<>.
 
-Default resource type is stream. In editor you can append space and <c green>/byte[]<>, <c green>/string<>, <c green>/strings<> or <c green>/embedded<>. Example: <c green>resource file.txt /string<>.
-/strings - CSV text file containing multiple strings as 2-column CSV (name, value).
-/embedded - separate stream. All others are in stream AssemblyName.g.resources.
+Default resource type is Stream. You can append <c green>/byte[]<> or <c green>/string<>, like <c green>resource file.txt /string<>. Or <c green>/strings<>, to add multiple strings from 2-column CSV file (name, value). Or <c green>/embedded<>, to add as a separate top-level stream that can be loaded with <google>Assembly.GetManifestResourceStream<> (others are in top-level stream "AssemblyName.g.resources").
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
 Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folder\File.png) or path in the workspace (examples: \File.png, \Folder\File.png).
@@ -807,12 +829,13 @@ If folder, will add all its descendant files.
 
 To remove this meta comment, edit the code.
 
-To load resources directly, use <help>Au.More.ResourceUtil<>, like <code>var s = Au.More.ResourceUtil.GetString("file.txt");</code>. Or <google>ResourceManager<>. To load WPF resources can be used "pack:..." URI; if role miniProgram, assembly name is like *ScriptName.
-To load embedded resources, use <google>Assembly.GetManifestResourceStream<>.
-Compiled names of non-embedded resource files are lowercase, like "file.png" or "subfolder/file.png".
+To load resources can be used <help>Au.More.ResourceUtil<>, like <code>var s = ResourceUtil.GetString("file.txt");</code>. Or <google>ResourceManager<>. To load WPF resources can be used "pack:..." URI; if role miniProgram, assembly name is like *ScriptName.
+
+Resource names in assembly by default are like "file.png". When adding a folder with subfolders, may be path relative to that folder, like "subfolder/file.png". If need path relative to this C# file, append space and <c green>/path<>. Resource names are lowercase, except <c green>/embedded<> and <c green>/strings<>. This program does not URL-encode resource names; WPF "pack:..." URI does not work if resource name contains spaces, non-ASCII or other URL-unsafe characters. Also this program does not convert XAML to BAML.
+
 To browse .NET assembly resources, types, etc can be used for example <google>ILSpy<>.
 """);
-		info.a4AddElem(addFile, """
+		info.AaAddElem(addFile, """
 <b>Other file<> - declare an unmanaged dll or other file used at run time.
 Adds meta comment <c green>file File<>.
 
@@ -830,7 +853,7 @@ If an exeProgram script uses unmanaged 64-bit and 32-bit dll files, consider pla
 
 To remove this meta comment, edit the code.
 """);
-		info.a4AddElem(bVersion, "<b>Version</b> - how to add version info.");
+		info.AaAddElem(bVersion, "<b>Version</b> - how to add version info.");
 	}
 
 	static void _VersionInfo() {

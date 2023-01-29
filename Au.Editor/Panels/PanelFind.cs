@@ -9,16 +9,16 @@ using System.Windows.Documents;
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
 
-class PanelFind : UserControl {
+class PanelFind {
 	TextBox _tFind, _tReplace;
 	KCheckBox _cFolder, _cCase, _cWord, _cRegex;
 	KPopup _ttRegex, _ttNext;
 	WatermarkAdorner _adorner1;
 
 	public PanelFind() {
-		this.UiaSetName("Find panel");
+		P.UiaSetName("Find panel");
 
-		var b = new wpfBuilder(this).Columns(-1).Brush(SystemColors.ControlBrush);
+		var b = new wpfBuilder(P).Columns(-1).Brush(SystemColors.ControlBrush);
 		b.Options(modifyPadding: false, margin: new Thickness(2));
 		b.AlsoAll((b, _) => { if (b.Last is Button k) k.Padding = new(1, 0, 1, 1); });
 		b.Row((-1, 22..)).Add<AdornerDecorator>()
@@ -49,17 +49,17 @@ class PanelFind : UserControl {
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression.\nF1 - Regex tool and help.");
 		b.End().End();
 
-		this.IsVisibleChanged += (_, _) => {
-			Panels.Editor.aaActiveDoc?.EInicatorsFind_(IsVisible ? _aEditor : null);
+		P.IsVisibleChanged += (_, _) => {
+			Panels.Editor.ActiveDoc?.EInicatorsFind_(P.IsVisible ? _aEditor : null);
 		};
 
-		_tFind.TextChanged += (_, _) => aaUpdateQuickResults();
+		_tFind.TextChanged += (_, _) => UpdateQuickResults();
 
 		//prevent tooltip on set focus.
 		//	Broken in .NET 6:  AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
 		_tFind.ToolTipOpening += (o, e) => { if (o is UIElement k && !k.IsMouseOver) e.Handled = true; };
 
-		foreach (var v in new TextBox[] { _tFind, _tReplace }) {
+		foreach (var v in new[] { _tFind, _tReplace }) {
 			v.AcceptsTab = true;
 			v.IsInactiveSelectionHighlightEnabled = true;
 			v.GotKeyboardFocus += _tFindReplace_KeyboardFocus;
@@ -74,8 +74,20 @@ class PanelFind : UserControl {
 			};
 		}
 
-		foreach (var v in new KCheckBox[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
+		foreach (var v in new[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
+
+		P.KeyDown += (_, e) => {
+			switch (e.Key, Keyboard.Modifiers) {
+			case (Key.F1, 0):
+				if (_cRegex.IsChecked) _ShowRegexInfo((e.OriginalSource as TextBox) ?? _tFind, F1: true);
+				break;
+			default: return;
+			}
+			e.Handled = true;
+		};
 	}
+
+	public UserControl P { get; } = new();
 
 	#region control events
 
@@ -93,22 +105,11 @@ class PanelFind : UserControl {
 		m["Rece_nt\0" + "M-click"] = o => _RecentPopupList(c);
 	}
 
-	protected override void OnKeyDown(KeyEventArgs e) {
-		base.OnKeyDown(e);
-		switch ((e.Key, Keyboard.Modifiers)) {
-		case (Key.F1, 0):
-			if (_cRegex.IsChecked) _ShowRegexInfo((e.OriginalSource as TextBox) ?? _tFind, F1: true);
-			break;
-		default: return;
-		}
-		e.Handled = true;
-	}
-
 	private void _tFindReplace_KeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
 		if (!_cRegex.IsChecked) return;
 		var tb = sender as TextBox;
 		if (e.NewFocus == tb) {
-			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
+			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window
 			timer.after(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, F1: false); });
 		} else if ((_regexWindow?.IsVisible ?? false)) {
 			timer.after(70, _ => {
@@ -133,7 +134,7 @@ class PanelFind : UserControl {
 				_adorner1.Text = "Find";
 			}
 		}
-		aaUpdateQuickResults();
+		UpdateQuickResults();
 	}
 
 	RegexWindow _regexWindow;
@@ -148,7 +149,7 @@ class PanelFind : UserControl {
 		}
 
 		if (_regexWindow.Hwnd.Is0) {
-			var r = this.RectInScreen();
+			var r = P.RectInScreen();
 			r.Offset(0, -20);
 			_regexWindow.ShowByRect(App.Wmain, Dock.Right, r, true);
 		} else _regexWindow.Hwnd.ShowL(true);
@@ -213,8 +214,8 @@ class PanelFind : UserControl {
 	/// <summary>
 	/// Makes visible and sets find text = s (should be selected text of a control; can be null/"").
 	/// </summary>
-	public void aaCtrlF(string s/*, bool findInFiles = false*/) {
-		Panels.PanelManager[this].Visible = true;
+	public void CtrlF(string s/*, bool findInFiles = false*/) {
+		Panels.PanelManager[P].Visible = true;
 		_tFind.Focus();
 		if (s.NE()) {
 			_tFind.SelectAll(); //often user wants to type new text
@@ -229,7 +230,7 @@ class PanelFind : UserControl {
 	/// Makes visible and sets find text = selected text of e.
 	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
 	/// </summary>
-	public void aaCtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
+	public void CtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
 		string s = null;
 		switch (e) {
 		case KScintilla c:
@@ -239,7 +240,7 @@ class PanelFind : UserControl {
 			s = c.SelectedText;
 			break;
 		}
-		aaCtrlF(s/*, findInFiles*/);
+		CtrlF(s/*, findInFiles*/);
 	}
 
 	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
@@ -252,12 +253,12 @@ class PanelFind : UserControl {
 	/// Called when changed find text or options. Also when activated another document.
 	/// Async-updates find-hiliting in editor.
 	/// </summary>
-	public void aaUpdateQuickResults() {
-		if (!IsVisible) return;
+	public void UpdateQuickResults() {
+		if (!P.IsVisible) return;
 
 		_timerUQR ??= new timer(_ => {
 			_FindAllInEditor();
-			Panels.Editor.aaActiveDoc?.EInicatorsFind_(_aEditor);
+			Panels.Editor.ActiveDoc?.EInicatorsFind_(_aEditor);
 		});
 
 		_timerUQR.After(150);
@@ -299,7 +300,7 @@ class PanelFind : UserControl {
 
 		if (!noRecent) _AddToRecent(f);
 
-		if (forReplace && (Panels.Editor.aaActiveDoc?.aaaIsReadonly ?? true)) return false;
+		if (forReplace && (Panels.Editor.ActiveDoc?.aaaIsReadonly ?? true)) return false;
 		return true;
 	}
 
@@ -322,7 +323,7 @@ class PanelFind : UserControl {
 
 	void _FindNextInEditor(_TextToFind f, bool replace) {
 		_ttNext?.Close();
-		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		var text = doc.aaaText; if (text.Length == 0) return;
 		int i, to, len = 0, from8 = replace ? doc.aaaSelectionStart8 : doc.aaaSelectionEnd8, from = doc.aaaPos16(from8), to8 = doc.aaaSelectionEnd8;
 		RXMatch rm = null;
@@ -373,7 +374,7 @@ class PanelFind : UserControl {
 		} else {
 			if (CiStyling.IsProtected(doc, i, to)) {
 				//print.it("hidden");
-				//if (1 != dialog.show("Select hidden text?", "The found text is in a hidden text range. Do you want to select it?", "Yes|No", owner: this, defaultButton: 2)) {
+				//if (1 != dialog.show("Select hidden text?", "The found text is in a hidden text range. Do you want to select it?", "Yes|No", owner: Base, defaultButton: 2)) {
 				doc.aaaGoToPos(false, CiStyling.SkipProtected(doc, to));
 				return;
 				//}
@@ -399,7 +400,7 @@ class PanelFind : UserControl {
 	}
 
 	void _ReplaceAllInEditor(_TextToFind f) {
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		if (doc.aaaIsReadonly) return;
 		var text = doc.aaaText;
 		var repl = f.replaceText;
@@ -460,7 +461,7 @@ class PanelFind : UserControl {
 	void _FindAllInEditor() {
 		_aEditor.Clear();
 		if (!_GetTextToFind(out var f, noRecent: true, noErrorTooltip: true)) return;
-		var text = Panels.Editor.aaActiveDoc?.aaaText; if (text.NE()) return;
+		var text = Panels.Editor.ActiveDoc?.aaaText; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -480,7 +481,7 @@ class PanelFind : UserControl {
 	public KScintilla PrepareFindResultsPanel() {
 		Panels.PanelManager["Found"].Visible = true;
 
-		var cFound = Panels.Found.aaControl;
+		var cFound = Panels.Found.Scintilla;
 		cFound.aaaClearText();
 
 		if (!_init1) {
@@ -488,20 +489,20 @@ class PanelFind : UserControl {
 
 			App.Model.WorkspaceLoadedAndDocumentsOpened += () => cFound.aaaClearText();
 
-			cFound.aaTags.AddLinkTag("+open", s => {
+			cFound.AaTags.AddLinkTag("+open", s => {
 				_OpenLinkClicked(s);
 			});
 
-			cFound.aaTags.AddLinkTag("+ra", s => {
+			cFound.AaTags.AddLinkTag("+ra", s => {
 				if (!_OpenLinkClicked(s, replaceAll: true)) return;
 				timer.after(10, _ => _ReplaceAllInFile());
 				//info: without timer sometimes does not set cursor pos correctly
 			});
 
-			cFound.aaTags.AddLinkTag("+f", s => {
+			cFound.AaTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
 				if (!_OpenLinkClicked(a[0])) return;
-				var doc = Panels.Editor.aaActiveDoc;
+				var doc = Panels.Editor.ActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
 				timer.after(10, _ => {
@@ -527,14 +528,14 @@ class PanelFind : UserControl {
 				return true;
 			}
 
-			cFound.aaTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
+			cFound.AaTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
 
-			cFound.aaTags.AddLinkTag("+caf", s => {
+			cFound.AaTags.AddLinkTag("+caf", s => {
 				App.Model.CloseFiles(_lastFindAll.files, _lastFindAll.wasOpen);
 				App.Model.CollapseAll(exceptWithOpenFiles: true);
 			});
 
-			cFound.aaTags.AddLinkTag("+caff", s => Panels.Files.aaCloseAll());
+			cFound.AaTags.AddLinkTag("+caff", s => Panels.Files.CloseAll());
 
 			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
 			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
@@ -562,7 +563,7 @@ class PanelFind : UserControl {
 		List<FileNode> aFiles = new();
 
 		var folder = App.Model.Root;
-		if (_cFolder.IsChecked && Panels.Editor.aaActiveDoc?.EFile is FileNode fn) {
+		if (_cFolder.IsChecked && Panels.Editor.ActiveDoc?.EFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}
@@ -709,7 +710,7 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 			&& f.wholeWord == _cWord.IsChecked
 			&& (f.rx != null) == _cRegex.IsChecked;
 		if (!ok) {
-			dialog.show(null, "Please click 'In files' to update the Found panel.", owner: this);
+			dialog.show(null, "Please click 'In files' to update the Found panel.", owner: P);
 			return false;
 		}
 		f.replaceText = _tReplace.Text;
@@ -805,7 +806,7 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 				_cRegex.IsChecked = 0 != (k & 4);
 			}
 		};
-		Dispatcher.InvokeAsync(() => p.IsOpen = true);
+		P.Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
 
 	//rejected: save recent find/replace strings in separate csv files, not in App.Settings

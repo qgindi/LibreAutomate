@@ -2,19 +2,20 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-class PanelTasks : DockPanel
-{
+class PanelTasks {
 	KTreeView _tv;
 	bool _updatedOnce;
 
 	public PanelTasks() {
-		//this.UiaSetName("Tasks panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		//P.UiaSetName("Tasks panel"); //no UIA element for Panel
 
 		_tv = new KTreeView { Name = "Tasks_list" };
-		this.Children.Add(_tv);
+		P.Children.Add(_tv);
 	}
 
-	public void aaUpdateList() {
+	public DockPanel P { get; } = new();
+
+	public void UpdateList() {
 		_tv.SetItems(App.Tasks.Items, _updatedOnce);
 		if (!_updatedOnce) {
 			_updatedOnce = true;
@@ -38,7 +39,7 @@ class PanelTasks : DockPanel
 			m["End task  '" + name + "'"] = _ => App.Tasks.EndTask(t);
 			m["End all  '" + name + "'"] = _ => App.Tasks.EndTasksOf(f);
 			m.Separator();
-			m["Close\tM-click", disable: null == Panels.Editor.aaGetOpenDocOf(f)] = _ => App.Model.CloseFile(f, selectOther: true);
+			m["Close\tM-click", disable: null == Panels.Editor.GetOpenDocOf(f)] = _ => App.Model.CloseFile(f, selectOther: true);
 			//m.Separator();
 			//m["Recent tasks and triggers..."] = _ => RecentTT.Show(); //rejected. It is in menu Run. Or would also need to show context menu when rclicked in empty space.
 			m.Show();

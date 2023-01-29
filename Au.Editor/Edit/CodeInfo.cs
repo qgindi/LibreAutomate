@@ -47,7 +47,7 @@ static class CodeInfo {
 			for (int i = 0; i < aEnable.Length; i++)
 				if (aEnable[i].IsEnabled()) aEnable[i].Enable(false); else aEnable[i] = default;
 		});
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		if (doc != null) doc.Visibility = Visibility.Hidden; //hide document window. The black unfolded text is distracting. Does not have sense to show it.
 
 		Task.Run(() => {
@@ -77,7 +77,7 @@ static class CodeInfo {
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
 					ReadyForStyling = null; //GC
-					Panels.Editor.aaActiveDocChanged += Stop;
+					Panels.Editor.ActiveDocChanged += Stop;
 					App.Timer025sWhenVisible += _Timer025sWhenVisible;
 					_Finally();
 				});
@@ -142,7 +142,7 @@ static class CodeInfo {
 		if (!_isWarm) return false;
 		if (doc == null) return false;
 		if (!doc.EFile.IsCodeFile) return false;
-		if (doc != Panels.Editor.aaActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
+		if (doc != Panels.Editor.ActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
 
@@ -330,7 +330,7 @@ static class CodeInfo {
 	}
 
 	public static void ShowSignature(SciCode doc = null) {
-		doc ??= Panels.Editor.aaActiveDoc;
+		doc ??= Panels.Editor.ActiveDoc;
 		if (!_CanWork(doc)) return;
 		_signature.ShowSignature(doc);
 	}
@@ -345,7 +345,7 @@ static class CodeInfo {
 		int pos16 = doc.aaaPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
-		if (doc != Panels.Editor.aaActiveDoc || (object)text0 != doc.aaaText) return; //changed while awaiting
+		if (doc != Panels.Editor.ActiveDoc || (object)text0 != doc.aaaText) return; //changed while awaiting
 
 		if (diag == null && quick == null) {
 			HideTextPopup();
@@ -400,7 +400,7 @@ static class CodeInfo {
 		public Context(int pos) {
 			Debug.Assert(Environment.CurrentManagedThreadId == 1);
 
-			sci = Panels.Editor.aaActiveDoc;
+			sci = Panels.Editor.ActiveDoc;
 			code = sci.aaaText;
 			this.pos = pos switch { -1 => sci.aaaCurrentPos16, -2 => sci.aaaSelectionStart16, _ => pos };
 			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
@@ -623,20 +623,23 @@ for (int i = 0; i < count; i++) { }
 	public static MetaComments Meta => _meta;
 
 	static void _CreateWorkspace(SciCode sci) {
+		//SHOULDDO: use same workspace if project/solution not changed. (here "solution" means when a project or file uses project references)
+		//	Now eg slow GetSemanticModelAsync when [re]opening a file in a large project/solution.
+
 		var f = sci.EFile;
 		_diag.ClearMetaErrors();
 		InternalsVisible.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
 
 		_solution = CurrentWorkspace.CurrentSolution;
-		_projectId = _AddProject(f, true, isWpfPreview: sci.IsWpfPreview);
+		_projectId = _AddProject(f, true, isWpfPreview: sci.EIsWpfPreview);
 
 		static ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
 			var f0 = f;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
 			var m = new MetaComments();
-			m.Parse(f, projFolder, EMPFlags.ForCodeInfoInEditor | (isWpfPreview ? EMPFlags.WpfPreview : 0));
+			m.Parse(f, projFolder, MCPFlags.ForCodeInfoInEditor | (isWpfPreview ? MCPFlags.WpfPreview : 0));
 			if (isMain) _meta = m;
 			if (m.TestInternal is string[] testInternal) InternalsVisible.Add(f.Name, testInternal);
 
@@ -667,7 +670,7 @@ for (int i = 0; i < count; i++) { }
 	}
 
 	private static void _Timer025sWhenVisible() {
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		if (!_CanWork(doc)) {
 			Panels.Outline.Clear();
 			return;
@@ -675,7 +678,7 @@ for (int i = 0; i < count; i++) { }
 
 		//cancel if changed the screen rectangle of the document window
 		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _tpVisible) {
-			var r = Panels.Editor.aaActiveDoc.Hwnd().Rect;
+			var r = Panels.Editor.ActiveDoc.Hwnd().Rect;
 			if (!_isUI) {
 				_isUI = true;
 				_sciRect = r;

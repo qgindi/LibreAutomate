@@ -90,7 +90,7 @@ partial class SciCode {
 				Call(SCI_INDICSETSTYLE, c_indicImages, INDIC_HIDDEN);
 				int descent = 16 - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT);
 				if (descent > 0) {
-					bool caretVisible = aaWnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, aaaCurrentPos8));
+					bool caretVisible = AaWnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, aaaCurrentPos8));
 					Call(SCI_SETEXTRADESCENT, descent); //note: later don't set = 0 when no visible images. Then bad scrolling and can start to repeat.
 					if (caretVisible) Call(SCI_SCROLLCARET);
 				}
@@ -110,7 +110,7 @@ partial class SciCode {
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
 		var (left, right) = aaaGetMarginX(c_marginImages);
 		_ImagesMarginAutoWidth(right - left, maxWidth);
-		if (maxWidth > 0) Api.InvalidateRect(aaWnd, new RECT(left, 0, maxWidth, short.MaxValue));
+		if (maxWidth > 0) Api.InvalidateRect(AaWnd, new RECT(left, 0, maxWidth, short.MaxValue));
 		//SHOULDDO: draw only when need, ie when new indicators are different than old.
 		//	Now draws on each text change, eg added character, unless changes are frequent. But not too slow.
 		//	And probably then also draws all other margins.
@@ -273,7 +273,7 @@ partial class SciCode {
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
 		int oldWidth = c.rect.Width;
 		if (maxWidth != oldWidth)
-			if (maxWidth > oldWidth || (c.rect.top == 0 && c.rect.bottom == aaWnd.ClientRect.bottom))
+			if (maxWidth > oldWidth || (c.rect.top == 0 && c.rect.bottom == AaWnd.ClientRect.bottom))
 				_ImagesMarginAutoWidth(oldWidth, maxWidth);
 	}
 
@@ -282,7 +282,7 @@ partial class SciCode {
 		//when shrinking, in wrap mode could start autorepeating, when makes less lines wrapped and it uncovers wider images at the bottom and need to expand again.
 		//	Tried to delay or to not change if changed recently, but not good. Never mind.
 		if (width < oldWidth && App.Settings.edit_wrap) return;
-		aaWnd.Post(SCI_SETMARGINWIDTHN, c_marginImages, width);
+		AaWnd.Post(SCI_SETMARGINWIDTHN, c_marginImages, width);
 	}
 
 	void _ImagesOnOff() {
@@ -294,7 +294,7 @@ partial class SciCode {
 			aaaIndicatorClear(c_indicImages);
 			_im.a = null;
 		} else {
-			if (this == Panels.Editor.aaActiveDoc) CodeInfo._styling.Update();
+			if (this == Panels.Editor.ActiveDoc) CodeInfo._styling.Update();
 		}
 	}
 

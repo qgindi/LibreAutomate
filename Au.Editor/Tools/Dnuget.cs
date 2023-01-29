@@ -17,7 +17,7 @@ using Au.Tools;
 //Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
 
 class DNuget : KDialogWindow {
-	public static void aaShow(string package = null) {
+	public static void AaShow(string package = null) {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -496,7 +496,7 @@ A script can use packages from multiple folders if they are compatible.");
 
 	void _AddMeta() {
 #if !SCRIPT
-		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		var meta = new MetaCommentsParser(doc.aaaText);
 		meta.nuget.Add($@"{_Selected.Parent.Name}\{_Selected.Name}");
 		meta.Apply();

@@ -318,7 +318,7 @@ class CiFolding {
 		}
 
 		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
-			fixed (int* ip = a) Sci_SetFoldLevels(doc.aaSciPtr, 0, -1, a.Lenn_(), ip);
+			fixed (int* ip = a) Sci_SetFoldLevels(doc.AaSciPtr, 0, -1, a.Lenn_(), ip);
 		}
 		//p1.Next('f');
 		doc.ERestoreEditorData_();
@@ -472,7 +472,7 @@ partial class SciCode {
 							//	Don't need when saving document line, not visible line.
 							//if (top > 0 && 0 != Call(SCI_GETWRAPMODE)) {
 							//	timer.after(10, _ => {
-							//		if (this == Panels.Editor.aaActiveDoc && aaaCurrentPos8 == pos)
+							//		if (this == Panels.Editor.ActiveDoc && aaaCurrentPos8 == pos)
 							//			Call(SCI_SETFIRSTVISIBLELINE, top);
 							//	});
 							//}

@@ -108,7 +108,7 @@ public static class ScriptEditor {
 	}
 
 	///
-	[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), Obsolete("use Open")]
+	[Obsolete("use Open"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static void OpenAndGoToLine([ParamString(PSFormat.FileInWorkspace)] string file, int line) => Open(file, line);
 
 	/// <summary>

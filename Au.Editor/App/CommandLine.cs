@@ -82,7 +82,11 @@ static class CommandLine {
 		}
 
 		//single instance
+#if IDE_LA
+		s_mutex = new Mutex(true, "Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ_IDE_LA", out bool createdNew);
+#else
 		s_mutex = new Mutex(true, "Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ", out bool createdNew);
+#endif
 		if (createdNew) return false;
 		if (restarting) return Api.WaitForSingleObject(s_mutex.SafeWaitHandle.DangerousGetHandle(), 5000) is Api.WAIT_TIMEOUT or Api.WAIT_FAILED;
 
@@ -162,12 +166,12 @@ static class CommandLine {
 	static nint _WndProc(wnd w, int message, nint wparam, nint lparam) {
 		switch (message) {
 		case Api.WM_COPYDATA:
-			if (App.Loaded >= EProgramState.Unloading) return default;
+			if (App.Loaded >= AppState.Unloading) return default;
 			try { return _WmCopyData(wparam, lparam); }
 			catch (Exception ex) { print.it(ex.Message); }
 			return default;
 		case Api.WM_USER:
-			if (App.Loaded >= EProgramState.Unloading) return default;
+			if (App.Loaded >= AppState.Unloading) return default;
 			switch (wparam) {
 			case 0: //ScriptEditor.MainWindow, etc
 				if (lparam == 1) App.ShowWindow(); //else returns default(wnd) if never was visible

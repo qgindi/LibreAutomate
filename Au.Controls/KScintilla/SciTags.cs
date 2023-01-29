@@ -64,7 +64,7 @@ using static Sci;
 /// Also you can register custom link tags that call your callback functions.
 /// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 /// 
-/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.aaInitTagsStyle"/> and optionally <see cref="KScintilla.aaInitImages"/>.
+/// Tags are supported by some existing controls based on <see cref="KScintilla"/>. In editor it is the output (use <see cref="print.it"/>, like in the example below). In this library - the <see cref="KSciInfoBox"/> control. To enable tags in other <see cref="KScintilla"/> controls, use <see cref="KScintilla.AaInitTagsStyle"/> and optionally <see cref="KScintilla.AaInitImages"/>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -702,7 +702,7 @@ public unsafe class SciTags {
 	/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 	/// </param>
 	/// <remarks>
-	/// Call this function when control handle is already created. Until that <see cref="KScintilla.aaTags"/> returns null.
+	/// Call this function when control handle is already created. Until that <see cref="KScintilla.AaTags"/> returns null.
 	/// </remarks>
 	/// <seealso cref="AddCommonLinkTag"/>
 	public void AddLinkTag(string name, Action<string> a) {
@@ -739,7 +739,7 @@ public unsafe class SciTags {
 	/// <exception cref="ArgumentException">name does not start with '.'.</exception>
 	/// <exception cref="InvalidOperationException">Trying to add more than 100 styles.</exception>
 	/// <remarks>
-	/// Call this function when control handle is already created. Until that <see cref="KScintilla.aaTags"/> returns null.
+	/// Call this function when control handle is already created. Until that <see cref="KScintilla.AaTags"/> returns null.
 	/// </remarks>
 	public void AddStyleTag(string name, UserDefinedStyle style) {
 		if (_userStyles == null) _userStyles = new Dictionary<string, _TagStyle>();
@@ -752,7 +752,7 @@ public unsafe class SciTags {
 	public Func<string, byte[]> CodeStylesProvider;
 
 	internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus) {
-		if (setFocus && _c.aaInitReadOnlyAlways && !keys.gui.isAlt) {
+		if (setFocus && _c.AaInitReadOnlyAlways && !keys.gui.isAlt) {
 			int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
 			//print.it(pos);
 			if (pos >= 0 && _c.aaaStyleHotspot(_c.aaaGetStyleAt(pos))) setFocus = false;

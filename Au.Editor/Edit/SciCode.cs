@@ -68,13 +68,13 @@ partial class SciCode : KScintilla {
 		_fn = file;
 		_fls = fls;
 
-		if (fls.IsBinary) aaInitReadOnlyAlways = true;
-		if (fls.IsImage) aaInitImages = true;
+		if (fls.IsBinary) AaInitReadOnlyAlways = true;
+		if (fls.IsImage) AaInitImages = true;
 
 		Name = "document";
 	}
 
-	protected override void aaOnHandleCreated() {
+	protected override void AaOnHandleCreated() {
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
@@ -140,7 +140,7 @@ partial class SciCode : KScintilla {
 	//Called by PanelEdit.aaOpen.
 	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
-		Debug.Assert(!aaWnd.Is0);
+		Debug.Assert(!AaWnd.Is0);
 
 		bool editable = _fls.SetText(this, text);
 		if (!EIsBinary) _fn.UpdateFileModTime();
@@ -163,9 +163,9 @@ partial class SciCode : KScintilla {
 				print.it($@"<>Note: text of {_fn.Name} contains single \r (CR) as line end characters. It can create problems. <+badCR s>Show<>, <+badCR h>hide<>, <+badCR f>fix<>.");
 				if (!s_badCR) {
 					s_badCR = true;
-					Panels.Output.aaOutput.aaTags.AddLinkTag("+badCR", s1 => {
+					Panels.Output.Scintilla.AaTags.AddLinkTag("+badCR", s1 => {
 						bool fix = s1.Starts('f');
-						Panels.Editor.aaActiveDoc?.Call(fix ? SCI_CONVERTEOLS : SCI_SETVIEWEOL, fix || s1.Starts('h') ? 0 : 1); //tested: SCI_CONVERTEOLS ignored if readonly
+						Panels.Editor.ActiveDoc?.Call(fix ? SCI_CONVERTEOLS : SCI_SETVIEWEOL, fix || s1.Starts('h') ? 0 : 1); //tested: SCI_CONVERTEOLS ignored if readonly
 					});
 				}
 			}
@@ -183,7 +183,7 @@ partial class SciCode : KScintilla {
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
 
-	protected override void aaOnSciNotify(ref SCNotification n) {
+	protected override void AaOnSciNotify(ref SCNotification n) {
 		//if (test_) {
 		//	switch (n.nmhdr.code) {
 		//	case NOTIF.SCN_UPDATEUI:
@@ -227,7 +227,7 @@ partial class SciCode : KScintilla {
 				if (CodeInfo.SciModified(this, n)) {
 					_CodeModifiedAndCodeinfoOK();
 				}
-				Panels.Find.aaUpdateQuickResults();
+				Panels.Find.UpdateQuickResults();
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
 				//	//print.it(n.TextForFind);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {
@@ -255,7 +255,7 @@ partial class SciCode : KScintilla {
 			if (0 != (n.updated & 3)) { //text (1), selection/click (2)
 				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
 				if (0 != (n.updated & 2)) App.Model.EditGoBack.OnPosChanged(this);
-				Panels.Editor.aaUpdateUI_EditEnabled_();
+				Panels.Editor.UpdateUI_EditEnabled_();
 			}
 			CodeInfo.SciUpdateUI(this, n.updated);
 			break;
@@ -287,7 +287,7 @@ partial class SciCode : KScintilla {
 			//	break;
 		}
 
-		base.aaOnSciNotify(ref n);
+		base.AaOnSciNotify(ref n);
 	}
 	bool _modified;
 
@@ -340,7 +340,7 @@ partial class SciCode : KScintilla {
 					ModifyCode.CommentLines(null, notSlashStar: true);
 					break;
 				case c_marginFold:
-					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: aaWnd) - 1; //note: no "toggle", it's not useful
+					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: AaWnd) - 1; //note: no "toggle", it's not useful
 					if (fold >= 0) Call(SCI_FOLDALL, fold);
 					break;
 				}
@@ -445,7 +445,7 @@ partial class SciCode : KScintilla {
 		Call(SCI_SETSAVEPOINT);
 
 		//rejected: print info. VS and VSCode reload silently.
-		//if (this == Panels.Editor.aaActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
+		//if (this == Panels.Editor.ActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
 	}
 
 	//never mind: not called when zoom changes.
@@ -600,22 +600,22 @@ partial class SciCode : KScintilla {
 	internal static void EToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			App.Settings.edit_wrap ^= true;
-			foreach (var v in Panels.Editor.aaOpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
+			foreach (var v in Panels.Editor.OpenDocs) v.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
 		}
 		if (what.Has(EView.Images)) {
 			App.Settings.edit_noImages ^= true;
-			foreach (var v in Panels.Editor.aaOpenDocs) v._ImagesOnOff();
+			foreach (var v in Panels.Editor.OpenDocs) v._ImagesOnOff();
 		}
 
 		//should not need this, because this func called from menu commands only.
 		//	But somehow KMenuCommands does not auto change menu/toolbar checked state for Edit menu. Need to fix it.
-		Panels.Editor.aaUpdateUI_EditView_();
+		Panels.Editor.UpdateUI_EditView_();
 	}
 
 	void _CodeModifiedAndCodeinfoOK() {
 		if (!_wpfPreview) return;
 		s_timer1 ??= new(static t => {
-			var doc = Panels.Editor.aaActiveDoc;
+			var doc = Panels.Editor.ActiveDoc;
 			if (doc == t.Tag) doc._WpfPreviewRun(false);
 		});
 		s_timer1.Tag = this;
@@ -624,7 +624,7 @@ partial class SciCode : KScintilla {
 	static timer s_timer1;
 	static bool s_wpfPreviewInited;
 	bool _wpfPreview;
-	internal bool IsWpfPreview => _wpfPreview;
+	internal bool EIsWpfPreview => _wpfPreview;
 
 	void _WpfPreviewRun(bool starting) {
 		if (!_wpfPreview) return;
@@ -669,7 +669,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	}
 
 	public static void WpfPreviewStartStop(MenuItem mi) {
-		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		bool start = mi.IsChecked;
 		if (start == doc._wpfPreview) return;
 		doc._wpfPreview = start;
@@ -678,8 +678,8 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 		if (!s_wpfPreviewInited) {
 			s_wpfPreviewInited = true;
-			Panels.Editor.aaActiveDocChanged += () => {
-				mi.IsChecked = Panels.Editor.aaActiveDoc?._wpfPreview ?? false;
+			Panels.Editor.ActiveDocChanged += () => {
+				mi.IsChecked = Panels.Editor.ActiveDoc?._wpfPreview ?? false;
 			};
 		}
 
@@ -910,11 +910,11 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 
 	#region acc
 
-	protected override ERole aaAccessibleRole => ERole.DOCUMENT;
+	protected override ERole AaAccessibleRole => ERole.DOCUMENT;
 
-	protected override string aaAccessibleName => "document - " + _fn.DisplayName;
+	protected override string AaAccessibleName => "document - " + _fn.DisplayName;
 
-	protected override string aaAccessibleDescription => _fn.FilePath;
+	protected override string AaAccessibleDescription => _fn.FilePath;
 
 	#endregion
 }

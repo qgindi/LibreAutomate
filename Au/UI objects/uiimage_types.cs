@@ -157,7 +157,7 @@ public class IFArea {
 	internal bool GetOcrData_(OcrFlags flags, out Bitmap b, out POINT resultOffset) {
 		if (Type == AreaType.Bitmap) { b = B; resultOffset = default; return true; }
 		if (!GetRect_(out RECT r, out resultOffset, (IFFlags)flags)) { b = null; return false; }
-		b = Type == AreaType.Screen ? CaptureScreen.Image(r) : CaptureScreen.Image(W, r, flags.ToICHow_());
+		b = Type == AreaType.Screen ? CaptureScreen.Image(r) : CaptureScreen.Image(W, r, flags.ToCIFlags_());
 		return true;
 	}
 
@@ -254,7 +254,7 @@ public enum IFFlags {
 	///// </summary>
 	//WindowDwm = 4,
 
-	//note: the above values must be the same in ICHow, ICFlags, IFFlags, OcrFlags.
+	//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
 	//rejected: this was used in QM2. Now can use png alpha instead.
 	///// <summary>

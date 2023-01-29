@@ -33,27 +33,27 @@ public unsafe partial class KScintilla : HwndHost {
 		//filesystem.more.loadDll64or32Bit_("Lexilla.dll");
 	}
 
-	public nint aaSciPtr => _sciPtr;
+	public nint AaSciPtr => _sciPtr;
 
-	public SciImages aaImages { get; private set; }
+	public SciImages AaImages { get; private set; }
 
-	public SciTags aaTags { get; private set; }
+	public SciTags AaTags { get; private set; }
 
 	#region HwndHost
 
-	public wnd aaWnd => _w;
+	public wnd AaWnd => _w;
 
-	public event Action aaHandleCreated;
+	public event Action AaHandleCreated;
 
 	/// <summary>
-	/// Invokes event <see cref="aaHandleCreated"/>.
+	/// Invokes event <see cref="AaHandleCreated"/>.
 	/// </summary>
-	protected virtual void aaOnHandleCreated() => aaHandleCreated?.Invoke();
+	protected virtual void AaOnHandleCreated() => AaHandleCreated?.Invoke();
 
 	protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 		var wParent = (wnd)hwndParent.Handle;
 		_dpi = Dpi.OfWindow(wParent);
-		WS style = WS.CHILD; if (aaInitBorder) style |= WS.BORDER;
+		WS style = WS.CHILD; if (AaInitBorder) style |= WS.BORDER;
 		//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
 		_w = Api.CreateWindowEx(0, "Scintilla", Name, style, 0, 0, 0, 0, wParent);
 		//size 0 0 is not the best, but it is a workaround for WPF bugs
@@ -61,16 +61,16 @@ public unsafe partial class KScintilla : HwndHost {
 		_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 		Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
-		bool hasTags = aaInitTagsStyle != aaTagsStyle.NoTags;
-		if (aaInitReadOnlyAlways) {
+		bool hasTags = AaInitTagsStyle != AaTagsStyle.NoTags;
+		if (AaInitReadOnlyAlways) {
 			MOD mask = 0;
-			if (aaInitImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
+			if (AaInitImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
 			Call(SCI_SETMODEVENTMASK, (int)mask);
 		}
 		_InitDocument();
 		Call(SCI_SETSCROLLWIDTHTRACKING, 1);
 		Call(SCI_SETSCROLLWIDTH, 1); //SHOULDDO: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
-		if (!aaInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
+		if (!AaInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
 		Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 
 		//Need to set selection colors or layer, because the default inactive selection color is darker than active.
@@ -79,24 +79,24 @@ public unsafe partial class KScintilla : HwndHost {
 		Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, unchecked((int)0xA0A0A0A0)); //use alpha to mix with indicators
 		Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_INACTIVE_BACK, 0x60A0A0A0);
 
-		if (aaInitWrapVisuals) {
+		if (AaInitWrapVisuals) {
 			Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
 			Call(SCI_SETWRAPVISUALFLAGSLOCATION, SC_WRAPVISUALFLAGLOC_END_BY_TEXT);
 			Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT);
 		}
-		if (aaWrapLines) {
+		if (AaWrapLines) {
 			Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 		}
 
 		//note: cannot set styles here, because later derived class will call aaaStyleClearAll, which sets some special styles.
 
-		if (aaInitImages) aaImages = new SciImages(this);
-		if (hasTags) aaTags = new SciTags(this);
+		if (AaInitImages) AaImages = new SciImages(this);
+		if (hasTags) AaTags = new SciTags(this);
 
 		if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
 			Api.SetFocus(_w);
 
-		aaOnHandleCreated();
+		AaOnHandleCreated();
 
 		if (!_text.NE()) aaaSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
 
@@ -116,7 +116,7 @@ public unsafe partial class KScintilla : HwndHost {
 
 		Call(SCI_SETCODEPAGE, Api.CP_UTF8);
 		Call(SCI_SETTABWIDTH, 4);
-		if (aaInitReadOnlyAlways) {
+		if (AaInitReadOnlyAlways) {
 			Call(SCI_SETREADONLY, 1);
 			Call(SCI_SETUNDOCOLLECTION);
 		} //else if (_isReadOnly) Call(SCI_SETREADONLY, 1);
@@ -139,8 +139,8 @@ public unsafe partial class KScintilla : HwndHost {
 		MButtons button = msg switch { Api.WM_LBUTTONDOWN => MButtons.Left, Api.WM_RBUTTONDOWN => MButtons.Right, Api.WM_MBUTTONDOWN => MButtons.Middle, _ => 0 };
 		if (button != 0 && Api.GetFocus() != _w) {
 			bool setFocus = true;
-			if (msg == Api.WM_LBUTTONDOWN) aaTags?.OnLButtonDownWhenNotFocused_(wp, lp, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-			if (setFocus && !aaNoMouseSetFocus.Has(button)) this.Focus();
+			if (msg == Api.WM_LBUTTONDOWN) AaTags?.OnLButtonDownWhenNotFocused_(wp, lp, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
+			if (setFocus && !AaNoMouseSetFocus.Has(button)) this.Focus();
 		}
 
 		switch (msg) {
@@ -273,43 +273,43 @@ public unsafe partial class KScintilla : HwndHost {
 				_posState = default;
 				_aPos.Clear();
 
-				aaImages?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
-				aaTags?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+				AaImages?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+				AaTags?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
 			}
 			//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
-			if (aaDisableModifiedNotifications) return;
+			if (AaDisableModifiedNotifications) return;
 			break;
 		case NOTIF.SCN_HOTSPOTRELEASECLICK:
-			aaTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+			AaTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
 			break;
 		}
-		aaOnSciNotify(ref n);
+		AaOnSciNotify(ref n);
 	}
 
 	/// <summary>
-	/// Raises the <see cref="aaNotify"/> event.
+	/// Raises the <see cref="AaNotify"/> event.
 	/// </summary>
-	protected virtual void aaOnSciNotify(ref SCNotification n) {
-		aaNotify?.Invoke(this, ref n);
+	protected virtual void AaOnSciNotify(ref SCNotification n) {
+		AaNotify?.Invoke(this, ref n);
 		switch (n.nmhdr.code) {
 		case NOTIF.SCN_MODIFIED:
-			var e = aaTextChanged;
+			var e = AaTextChanged;
 			if (e != null && n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) e(this, EventArgs.Empty);
 			break;
 		}
 	}
 
-	public delegate void aaEventHandler(KScintilla c, ref SCNotification n);
+	public delegate void AaEventHandler(KScintilla c, ref SCNotification n);
 
 	/// <summary>
 	/// Occurs when any Scintilla notification is received.
 	/// </summary>
-	public event aaEventHandler aaNotify;
+	public event AaEventHandler AaNotify;
 
 	/// <summary>
 	/// Occurs when text changed.
 	/// </summary>
-	public event EventHandler aaTextChanged;
+	public event EventHandler AaTextChanged;
 
 	/// <summary>
 	/// Sends a Scintilla message to the control and returns int.
@@ -346,7 +346,7 @@ public unsafe partial class KScintilla : HwndHost {
 	[DebuggerStepThrough]
 	public nint CallRetPtr(int sciMessage, nint wParam = 0, nint lParam = 0) {
 #if DEBUG
-		if (aaDebugPrintMessages_) _DebugPrintMessage(sciMessage);
+		if (AaDebugPrintMessages_) _DebugPrintMessage(sciMessage);
 #endif
 
 		Debug.Assert(!_w.Is0);
@@ -389,7 +389,7 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 	static Dictionary<int, string> s_debugPM;
 
-	internal bool aaDebugPrintMessages_ { get; set; }
+	internal bool AaDebugPrintMessages_ { get; set; }
 #endif
 
 	#region properties
@@ -398,32 +398,32 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Border style.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool aaInitBorder { get; set; }
+	public virtual bool AaInitBorder { get; set; }
 
 	/// <summary>
 	/// Use the default Scintilla's context menu.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool aaInitUseDefaultContextMenu { get; set; }
+	public virtual bool AaInitUseDefaultContextMenu { get; set; }
 
 	/// <summary>
 	/// This control is used just to display text, not to edit.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool aaInitReadOnlyAlways { get; set; }
+	public virtual bool AaInitReadOnlyAlways { get; set; }
 
 	/// <summary>
 	/// Whether to show images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.
 	/// Must be set before creating control handle.
-	/// If false, <see cref="aaImages"/> property is null.
+	/// If false, <see cref="AaImages"/> property is null.
 	/// </summary>
-	public virtual bool aaInitImages { get; set; }
+	public virtual bool AaInitImages { get; set; }
 
 	/// <summary>
-	/// See <see cref="aaInitTagsStyle"/>.
+	/// See <see cref="AaInitTagsStyle"/>.
 	/// </summary>
-	public enum aaTagsStyle {
-		/// <summary>Don't support tags. The <see cref="aaTags"/> property is null.</summary>
+	public enum AaTagsStyle {
+		/// <summary>Don't support tags. The <see cref="AaTags"/> property is null.</summary>
 		NoTags,
 
 		/// <summary>Let <see cref="aaaText"/>, aaaSetText and aaaAppendText parse tags when the text has prefix "&lt;&gt;".</summary>
@@ -440,18 +440,18 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Whether and when supports tags.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual aaTagsStyle aaInitTagsStyle { get; set; }
+	public virtual AaTagsStyle AaInitTagsStyle { get; set; }
 
 	/// <summary>
 	/// Whether to show arrows etc to make wrapped lines more visible.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool aaInitWrapVisuals { get; set; } = true;
+	public virtual bool AaInitWrapVisuals { get; set; } = true;
 
 	/// <summary>
 	/// Word-wrap.
 	/// </summary>
-	public virtual bool aaWrapLines {
+	public virtual bool AaWrapLines {
 		get => _wrapLines;
 		set {
 			if (value != _wrapLines) {
@@ -464,20 +464,20 @@ public unsafe partial class KScintilla : HwndHost {
 
 	/// <summary>
 	/// Whether uses Enter key.
-	/// If null (default), false if <see cref="aaInitReadOnlyAlways"/> is true.
+	/// If null (default), false if <see cref="AaInitReadOnlyAlways"/> is true.
 	/// </summary>
-	public bool? aaUsesEnter { get; set; }
+	public bool? AaUsesEnter { get; set; }
 
 	/// <summary>
-	/// On SCN_MODIFIED notifications suppress <see cref="aaOnSciNotify"/>, <see cref="aaNotify"/> and <see cref="aaTextChanged"/>.
+	/// On SCN_MODIFIED notifications suppress <see cref="AaOnSciNotify"/>, <see cref="AaNotify"/> and <see cref="AaTextChanged"/>.
 	/// Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
 	/// </summary>
-	public bool aaDisableModifiedNotifications { get; set; }
+	public bool AaDisableModifiedNotifications { get; set; }
 
 	/// <summary>
 	/// Don't set focus on mouse left/right/middle button down.
 	/// </summary>
-	public MButtons aaNoMouseSetFocus { get; set; }
+	public MButtons AaNoMouseSetFocus { get; set; }
 
 	#endregion
 
@@ -488,17 +488,17 @@ public unsafe partial class KScintilla : HwndHost {
 	class _Accessible : HwndHostAccessibleBase_ {
 		readonly KScintilla _sci;
 
-		internal _Accessible(KScintilla sci) : base(sci, sci.aaWnd) {
+		internal _Accessible(KScintilla sci) : base(sci, sci.AaWnd) {
 			_sci = sci;
 		}
 
-		public override ERole Role(int child) => _sci.aaAccessibleRole;
+		public override ERole Role(int child) => _sci.AaAccessibleRole;
 
-		public override string Name(int child) => _sci.aaAccessibleName;
+		public override string Name(int child) => _sci.AaAccessibleName;
 
-		public override string Description(int child) => _sci.aaAccessibleDescription;
+		public override string Description(int child) => _sci.AaAccessibleDescription;
 
-		public override string Value(int child) => _sci.aaAccessibleValue;
+		public override string Value(int child) => _sci.AaAccessibleValue;
 
 		public override EState State(int child) {
 			var r = base.State(child);
@@ -507,13 +507,13 @@ public unsafe partial class KScintilla : HwndHost {
 		}
 	}
 
-	protected virtual ERole aaAccessibleRole => ERole.TEXT; //_sci.aaInitReadOnlyAlways ? ERole.STATICTEXT : ERole.TEXT;
+	protected virtual ERole AaAccessibleRole => ERole.TEXT;
 
-	protected virtual string aaAccessibleName => Name;
+	protected virtual string AaAccessibleName => Name;
 
-	protected virtual string aaAccessibleDescription => null;
+	protected virtual string AaAccessibleDescription => null;
 
-	protected virtual string aaAccessibleValue => aaInitReadOnlyAlways ? aaaText?.Limit(0xffff) : null;
+	protected virtual string AaAccessibleValue => AaInitReadOnlyAlways ? aaaText?.Limit(0xffff) : null;
 
 	#endregion
 }

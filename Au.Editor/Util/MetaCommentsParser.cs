@@ -7,7 +7,7 @@ class MetaCommentsParser
 	FileNode _fn;
 	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,
-		outputPath, console, icon, manifest, sign, xmlDoc;
+		outputPath, console, icon, manifest, sign, xmlDoc, miscFlags, noRef;
 	List<string> _pr, _r, _com, _nuget, _c, _resource, _file;
 
 	public List<string> pr => _pr ??= new();
@@ -49,6 +49,8 @@ class MetaCommentsParser
 		case "manifest": manifest = value; break;
 		case "sign": sign = value; break;
 		case "xmlDoc": xmlDoc = value; break;
+		case "miscFlags": miscFlags = value; break;
+		case "noRef": noRef = value; break;
 		case "pr": pr.Add(value); break;
 		case "r": r.Add(value); break;
 		case "com": com.Add(value); break;
@@ -94,6 +96,8 @@ class MetaCommentsParser
 		_Append("bit32", bit32);
 		_Append("console", console);
 		_Append("xmlDoc", xmlDoc);
+		_Append("miscFlags", miscFlags);
+		_Append("noRef", noRef);
 
 		_AppendList("pr", _pr);
 		_AppendList("r", _r);
@@ -123,7 +127,7 @@ class MetaCommentsParser
 	public bool Multiline { get; set; }
 
 	public void Apply() {
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		var f = doc.EFile;
 		var code = doc.aaaText;
 		var meta = MetaComments.FindMetaComments(code);
