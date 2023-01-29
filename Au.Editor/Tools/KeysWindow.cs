@@ -15,8 +15,8 @@ class KeysWindow : InfoWindow //KPopup
 
 	protected override void OnHandleCreated() {
 		var c = Control1;
-		c.aaTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
-		c.aaTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+		c.AaTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
+		c.AaTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
 		_SetText();
 
@@ -35,7 +35,7 @@ class KeysWindow : InfoWindow //KPopup
 	}
 
 	/// <summary>
-	/// Inserts s in InsertInControl, which can be either Panels.Editor.aaActiveDoc or a TextBox (only for a hotkey).
+	/// Inserts s in InsertInControl, which can be either Panels.Editor.ActiveDoc or a TextBox (only for a hotkey).
 	/// </summary>
 	void _Insert(string s) {
 		FrameworkElement con = InsertInControl;
@@ -49,7 +49,7 @@ class KeysWindow : InfoWindow //KPopup
 			}
 			if (s.Ends(false, "Alt", "Ctrl", "Shift", "Win") > 0) s += "+";
 		} else {
-			Debug.Assert(con == Panels.Editor.aaActiveDoc);
+			Debug.Assert(con == Panels.Editor.ActiveDoc);
 			if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return;
 			if (true != token.IsInString(cd.pos, cd.code, out var si)) return;
 			int pos = cd.pos, from = si.textSpan.Start, to = si.textSpan.End;

@@ -15,11 +15,11 @@ static class QuickCapture {
 	}
 
 	public static void RegisterHotkeys() {
-		_Register(ref _rk1, ERegisteredHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing));
-		_Register(ref _rk2, ERegisteredHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd));
-		_Register(ref _rk3, ERegisteredHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm));
+		_Register(ref _rk1, AppHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing));
+		_Register(ref _rk2, AppHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd));
+		_Register(ref _rk3, AppHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm));
 
-		static void _Register(ref RegisteredHotkey rk, ERegisteredHotkeyId id, string keys, string menu) { //ref, not in!
+		static void _Register(ref RegisteredHotkey rk, AppHotkeyId id, string keys, string menu) { //ref, not in!
 			if (!keys.NE()) {
 				try {
 					if (!rk.Register((int)id, keys, App.Hmain)) {

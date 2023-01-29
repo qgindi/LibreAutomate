@@ -30,7 +30,7 @@ class DCommandline : KDialogWindow {
 		b.End();
 	}
 
-	public static void aaShow() {
+	public static void AaShow() {
 		new DCommandline().Show();
 		//never mind: possible multiple instances
 	}

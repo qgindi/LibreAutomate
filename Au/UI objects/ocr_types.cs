@@ -131,7 +131,7 @@ public enum OcrFlags {
 	///// <inheritdoc cref="IFFlags.WindowDwm"/>
 	//WindowDwm = 4,
 
-	//note: the above values must be the same in ICHow, ICFlags, IFFlags, OcrFlags.
+	//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
 	//rejected. Maybe in the future.
 	///// <summary>

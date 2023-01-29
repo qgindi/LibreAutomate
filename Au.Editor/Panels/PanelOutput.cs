@@ -2,48 +2,50 @@ using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class PanelOutput : DockPanel {
+class PanelOutput {
 	readonly _SciOutput _c;
 	readonly KPanels.ILeaf _leaf;
 	readonly Queue<PrintServerMessage> _history;
 
-	public KScintilla aaOutput => _c;
+	public KScintilla Scintilla => _c;
 
 	public PanelOutput() {
-		//this.UiaSetName("Output panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		//P.UiaSetName("Output panel"); //no UIA element for Panel
 
 		_c = new _SciOutput(this) { Name = "Output_text" };
-		this.Children.Add(_c);
+		P.Children.Add(_c);
 		_history = new Queue<PrintServerMessage>();
-		App.Commands.BindKeysTarget(this, "Output");
+		App.Commands.BindKeysTarget(P, "Output");
 		_leaf = Panels.PanelManager["Output"];
 	}
 
-	public void aaClear() { _c.aaaClearText(); _c.Call(SCI_SETSCROLLWIDTH, 1); }
+	public DockPanel P { get; } = new();
 
-	public void aaCopy() { _c.Call(SCI_COPY); }
+	public void Clear() { _c.aaaClearText(); _c.Call(SCI_SETSCROLLWIDTH, 1); }
 
-	public void aaFind() { Panels.Find.aaCtrlF(_c); }
+	public void Copy() { _c.Call(SCI_COPY); }
 
-	public void aaHistory() {
-		var p = new KPopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+	public void Find() { Panels.Find.CtrlF(_c); }
+
+	public void History() {
+		var p = new KPopupListBox { PlacementTarget = P, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
 		p.Control.ItemsSource = _history;
 		p.OK += o => print.it((o as PrintServerMessage).Text);
-		Dispatcher.InvokeAsync(() => p.IsOpen = true);
+		P.Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
 
 	void _c_HandleCreated() {
 		_inInitSettings = true;
-		if (aaWrapLines) aaWrapLines = true;
-		if (aaWhiteSpace) aaWhiteSpace = true;
-		if (aaTopmost) App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = true; //see also OnParentChanged, below
-		_c.aaNoMouseSetFocus = MButtons.Middle;
+		if (WrapLines) WrapLines = true;
+		if (WhiteSpace) WhiteSpace = true;
+		if (Topmost) App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = true; //see also OnParentChanged, below
+		_c.AaNoMouseSetFocus = MButtons.Middle;
 		_inInitSettings = false;
 		_leaf.FloatingChanged += (_, floating) => _SetTopmost(floating ? 1 : 0);
 	}
 	bool _inInitSettings;
 
-	public bool aaWrapLines {
+	public bool WrapLines {
 		get => App.Settings.output_wrap;
 		set {
 			Debug.Assert(!_inInitSettings || value);
@@ -55,7 +57,7 @@ class PanelOutput : DockPanel {
 		}
 	}
 
-	public bool aaWhiteSpace {
+	public bool WhiteSpace {
 		get => App.Settings.output_white;
 		set {
 			Debug.Assert(!_inInitSettings || value);
@@ -66,7 +68,7 @@ class PanelOutput : DockPanel {
 		}
 	}
 
-	public bool aaTopmost {
+	public bool Topmost {
 		get => App.Settings.output_topmost;
 		set {
 			App.Settings.output_topmost = value;
@@ -77,9 +79,9 @@ class PanelOutput : DockPanel {
 
 	//action: 0 dock, 1 undock, 2 changed while floating
 	void _SetTopmost(int action) {
-		var w = this.Hwnd().Window;
+		var w = P.Hwnd().Window;
 		if (action >= 1) {
-			if (aaTopmost) {
+			if (Topmost) {
 				WndUtil.SetOwnerWindow(w, default);
 				w.ZorderTopmost();
 				//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
@@ -92,7 +94,7 @@ class PanelOutput : DockPanel {
 
 		//Windows bug: sometimes the floating/topmost output panel becomes behind normal windows, although has topmost style. Until clicked.
 		//	To reproduce: in a ribbon show a dropdown, eg a popup menu. If can't reproduce, try others.
-		bool needTimer = aaTopmost && action >= 1;
+		bool needTimer = Topmost && action >= 1;
 		if (needTimer != _workaround1.isTimer) {
 			if (_workaround1.isTimer = needTimer) App.Timer1s += _WorkaroundTimer; else App.Timer1s -= _WorkaroundTimer;
 			if (needTimer) _workaround1.w = w;
@@ -118,43 +120,43 @@ class PanelOutput : DockPanel {
 		public _SciOutput(PanelOutput panel) {
 			_p = panel;
 
-			aaInitReadOnlyAlways = true;
-			aaInitTagsStyle = aaTagsStyle.AutoWithPrefix;
-			aaInitImages = true;
+			AaInitReadOnlyAlways = true;
+			AaInitTagsStyle = AaTagsStyle.AutoWithPrefix;
+			AaInitImages = true;
 
 			//App.Commands[nameof(Menus.Tools.Output)].SetKeysTarget(this);
 		}
 
-		protected override void aaOnHandleCreated() {
+		protected override void AaOnHandleCreated() {
 			_p._c_HandleCreated();
 			aaaSetMarginWidth(1, 3);
 
 			var styles = new CiStyling.TStyles { FontName = "Consolas", FontSize = 9, BackgroundColor = 0xF7F7F7 };
 			styles.ToScintilla(this);
-			aaTags.CodeStylesProvider = code => CiUtil.GetScintillaStylingBytes(code);
+			AaTags.CodeStylesProvider = code => CiUtil.GetScintillaStylingBytes(code);
 
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
-			aaTags.AddLinkTag("+properties", fid => {
+			AaTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindCodeFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
-			aaTags.AddLinkTag("+DCustomize", DCustomize.aaShow);
+			AaTags.AddLinkTag("+DCustomize", DCustomize.AaShow);
 
-			App.PrintServer.SetNotifications(aaWnd, Api.WM_APP);
+			App.PrintServer.SetNotifications(AaWnd, Api.WM_APP);
 
-			base.aaOnHandleCreated();
+			base.AaOnHandleCreated();
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 			//WndUtil.PrintMsg(out var s, default, msg, wParam, lParam); print.qm2.write(s);
 			switch (msg) {
 			case Api.WM_APP:
-				aaTags.PrintServerProcessMessages(App.PrintServer, _onServerMessage ??= _OnServerMessage);
+				AaTags.PrintServerProcessMessages(App.PrintServer, _onServerMessage ??= _OnServerMessage);
 				return default;
 			case Api.WM_MBUTTONDOWN:
-				_p.aaClear();
+				_p.Clear();
 				return default;
 			case Api.WM_CONTEXTMENU:
 				var m = new ContextMenu { PlacementTarget = this };

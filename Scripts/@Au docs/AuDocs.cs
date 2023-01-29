@@ -57,11 +57,9 @@ partial class AuDocs {
 		
 		//info: currently there are no excluded .cs files. Would need to parse Au.csproj.
 		
-		if (!testSmall) { //DocFX does not support global using. Get global usings from global.cs and add to all other files.
-			_usings = File.ReadAllText(sourceDir + @"\resources\global.cs");
-			if (0 == _usings.RxReplace(@"(?s)^.*#if !NO_GLOBAL\R(.+?)#else\R.+", "$1", out _usings, 1)) throw new Exception("bad regex");
-			_usings = _usings.RxReplace(@"(^|\R)global ", "");
-			
+		if (!testSmall) { //DocFX does not support global using. Get global usings from global2.cs and add to all other files.
+			_usings = File.ReadAllText(sourceDir + @"\resources\global2.cs");
+			_usings = string.Join(' ', _usings.RxFindAll(@"(?m)^global (using .+)", 1)) + "\r\n";
 			_analyze.AddUsings(ref _usings);
 		}
 		

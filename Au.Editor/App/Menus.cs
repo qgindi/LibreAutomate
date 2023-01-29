@@ -47,7 +47,7 @@ static class Menus {
 		[Command("Copy, paste")]
 		public static class CopyPaste {
 			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo" + green, tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
-			public static void MultiSelect_files() { Panels.Files.aaTreeControl.SetMultiSelect(toggle: true); }
+			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
 
 			[Command("Cu_t", separator = true, keysText = "Ctrl+X")]
 			public static void Cut_file() { App.Model.CutCopySelected(true); }
@@ -171,49 +171,49 @@ static class Menus {
 	[Command(target = "Edit")]
 	public static class Edit {
 		[Command(keysText = "Ctrl+Z", image = iconUndo)]
-		public static void Undo() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_UNDO); }
+		public static void Undo() { Panels.Editor.ActiveDoc.Call(Sci.SCI_UNDO); }
 
 		[Command(keysText = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
-		public static void Redo() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_REDO); }
+		public static void Redo() { Panels.Editor.ActiveDoc.Call(Sci.SCI_REDO); }
 
 		[Command('t', separator = true, keysText = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
-		public static void Cut() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_CUT); }
+		public static void Cut() { Panels.Editor.ActiveDoc.Call(Sci.SCI_CUT); }
 
 		[Command(keysText = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
-		public static void Copy() { Panels.Editor.aaActiveDoc.ECopy(); }
+		public static void Copy() { Panels.Editor.ActiveDoc.ECopy(); }
 
 		[Command(keysText = "Ctrl+V", image = iconPaste)]
-		public static void Paste() { Panels.Editor.aaActiveDoc.EPaste(); }
+		public static void Paste() { Panels.Editor.ActiveDoc.EPaste(); }
 
 		[Command]
 		public static class Other_formats {
 			[Command(image = "*Material.ForumOutline" + brown, text = "Copy _forum code")]
-			public static void Forum_copy() { Panels.Editor.aaActiveDoc.ECopy(SciCode.ECopyAs.Forum); }
+			public static void Forum_copy() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.Forum); }
 
 			[Command("Copy HTML <span style>")]
-			public static void Copy_HTML_span_style() { Panels.Editor.aaActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanStyle); }
+			public static void Copy_HTML_span_style() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanStyle); }
 
 			[Command("Copy HTML <span class> and CSS")]
-			public static void Copy_HTML_span_class_CSS() { Panels.Editor.aaActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanClassCss); }
+			public static void Copy_HTML_span_class_CSS() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanClassCss); }
 
 			[Command("Copy HTML <span class>")]
-			public static void Copy_HTML_span_class() { Panels.Editor.aaActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanClass); }
+			public static void Copy_HTML_span_class() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.HtmlSpanClass); }
 
 			[Command]
-			public static void Copy_markdown() { Panels.Editor.aaActiveDoc.ECopy(SciCode.ECopyAs.Markdown); }
+			public static void Copy_markdown() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.Markdown); }
 
 			[Command]
-			public static void Copy_without_screenshots() { Panels.Editor.aaActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
+			public static void Copy_without_screenshots() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 
 		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
-		public static void Find() { Panels.Find.aaCtrlF(Panels.Editor.aaActiveDoc); }
+		public static void Find() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
 
 		//[Command(keys = "Ctrl+Shift+F")]
-		//public static void Find_in_files() { Panels.Find.aaCtrlF(Panels.Editor.aaActiveDoc, findInFiles: true); }
+		//public static void Find_in_files() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc, findInFiles: true); }
 
 		[Command(separator = true, keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + purple)]
-		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.aaActiveDoc); }
+		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ActiveDoc); }
 
 		[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + purple)]
 		public static void Parameter_info() { CodeInfo.ShowSignature(); }
@@ -244,23 +244,23 @@ static class Menus {
 			public static void Uncomment() { ModifyCode.CommentLines(false); }
 
 			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown)]
-			public static void Indent() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_TAB); }
+			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
 			//SHOULDDO: now does not indent empty lines if was no indentation.
 
 			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
-			public static void Unindent() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_BACKTAB); }
+			public static void Unindent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_BACKTAB); }
 
 			//[Command(keysText = "Ctrl+D")]
-			//public static void Duplicate() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
+			//public static void Duplicate() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
 
 			[Command]
 			public static void Format_selection() { ModifyCode.Format(true); }
 
 			[Command]
-			public static void Remove_screenshots() { Panels.Editor.aaActiveDoc.EImageRemoveScreenshots(); }
+			public static void Remove_screenshots() { Panels.Editor.ActiveDoc.EImageRemoveScreenshots(); }
 
 			[Command(separator = true, keysText = "Ctrl+A")]
-			public static void Select_all() { Panels.Editor.aaActiveDoc.Call(Sci.SCI_SELECTALL); }
+			public static void Select_all() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 
 		[Command]
@@ -374,7 +374,7 @@ static class Menus {
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 
 		[Command(separator = true)]
-		public static void Script_triggers() { DCommandline.aaShow(); }
+		public static void Script_triggers() { DCommandline.AaShow(); }
 	}
 
 	[Command(target = "Edit")]
@@ -424,45 +424,45 @@ static class Menus {
 	[Command(target = "")]
 	public static class Tools {
 		[Command(image = "*PicolIcons.Settings" + green)]
-		public static void Options() { DOptions.aaShow(); }
+		public static void Options() { DOptions.AaShow(); }
 
 		[Command(image = iconIcons)]
-		public static void Icons() { DIcons.aaShow(); }
+		public static void Icons() { DIcons.AaShow(); }
 
 		[Command(image = "*SimpleIcons.NuGet" + green)]
-		public static void NuGet() { DNuget.aaShow(); }
+		public static void NuGet() { DNuget.AaShow(); }
 
 		[Command(image = "*Codicons.SymbolSnippet" + green)]
-		public static void Snippets() { DSnippets.aaShow(); }
+		public static void Snippets() { DSnippets.AaShow(); }
 
 		[Command]
-		public static void Customize() { DCustomize.aaShow(); }
+		public static void Customize() { DCustomize.AaShow(); }
 
 		[Command]
-		public static void Portable() { DPortable.aaShow(); }
+		public static void Portable() { DPortable.AaShow(); }
 
 		[Command(separator = true, target = "Output")]
 		public static class Output {
 			[Command(keysText = "M-click")]
-			public static void Clear() { Panels.Output.aaClear(); }
+			public static void Clear() { Panels.Output.Clear(); }
 
 			[Command("Copy", keysText = "Ctrl+C")]
-			public static void Copy_output() { Panels.Output.aaCopy(); }
+			public static void Copy_output() { Panels.Output.Copy(); }
 
 			[Command(keys = "Ctrl+F")]
-			public static void Find_selected_text() { Panels.Output.aaFind(); }
+			public static void Find_selected_text() { Panels.Output.Find(); }
 
 			[Command]
-			public static void History() { Panels.Output.aaHistory(); }
+			public static void History() { Panels.Output.History(); }
 
 			[Command("Wrap lines", separator = true, checkable = true)]
-			public static void Wrap_lines_in_output() { Panels.Output.aaWrapLines ^= true; }
+			public static void Wrap_lines_in_output() { Panels.Output.WrapLines ^= true; }
 
 			[Command("White space", checkable = true)]
-			public static void White_space_in_output() { Panels.Output.aaWhiteSpace ^= true; }
+			public static void White_space_in_output() { Panels.Output.WhiteSpace ^= true; }
 
 			[Command(checkable = true)]
-			public static void Topmost_when_floating() { Panels.Output.aaTopmost ^= true; }
+			public static void Topmost_when_floating() { Panels.Output.Topmost ^= true; }
 		}
 	}
 
@@ -483,7 +483,7 @@ static class Menus {
 			if (w.ClassNameIs("HwndWrapper*")) {
 				//var e = Keyboard.FocusedElement as FrameworkElement;
 
-			} else if (w == Panels.Editor.aaActiveDoc.aaWnd) {
+			} else if (w == Panels.Editor.ActiveDoc.AaWnd) {
 				CiUtil.OpenSymbolOrKeywordFromPosHelp();
 			}
 		}

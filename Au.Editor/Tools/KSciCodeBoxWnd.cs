@@ -17,9 +17,9 @@ class KSciCodeBoxWnd : KSciCodeBox {
 	/// Else creates code "var w = wnd.find(...);". If w is invalid, creates code "wnd w = default;".
 	/// The returned wndVar is final wnd variable name (of window or control).
 	/// </summary>
-	public (string code, string wndVar) a4GetWndFindCode(bool test, wnd w, wnd con = default, bool private1 = false) {
+	public (string code, string wndVar) AaGetWndFindCode(bool test, wnd w, wnd con = default, bool private1 = false) {
 		if (test) { //remove 'wait' and 'activate' from wnd.find and wnd.Child. If no 'wait', insert 0 to throw notfoundexception.
-			var k = a4GetWndFindCode(false, w, con, private1: true);
+			var k = AaGetWndFindCode(false, w, con, private1: true);
 			var s = k.code;
 			var p = _ParseWndFind(s, test: true);
 			if (p?.wVar != null) {
@@ -222,17 +222,17 @@ class KSciCodeBoxWnd : KSciCodeBox {
 	/// <summary>
 	/// Shows <see cref="Dwnd"/> and updates text.
 	/// </summary>
-	public (bool ok, wnd w, wnd con, bool useCon) a4ShowWndTool(Window owner, wnd w, wnd con, bool checkControl) {
+	public (bool ok, wnd w, wnd con, bool useCon) AaShowWndTool(Window owner, wnd w, wnd con, bool checkControl) {
 		var flags = DwndFlags.DontInsert; if (checkControl) flags |= DwndFlags.CheckControl;
 		var d = new Dwnd(con.Is0 ? w : con, flags);
-		d.aaShowAndWait(owner, hideOwner: true);
-		var code = d.aaResultCode; if (code == null) return default;
-		_wnd = d.aaResultWindow;
-		_con = d.aaResultUseControl ? d.aaResultControl : default;
+		d.AaShowAndWait(owner, hideOwner: true);
+		var code = d.AaResultCode; if (code == null) return default;
+		_wnd = d.AaResultWindow;
+		_con = d.AaResultUseControl ? d.AaResultControl : default;
 		int i = _ReadonlyStartUtf8;
 		var code2 = aaaRangeText(false, i, i + _readonlyLenUtf8);
 		aaaIsReadonly = false;
 		aaaSetText(code + code2);
-		return (true, d.aaResultWindow, d.aaResultControl, d.aaResultUseControl);
+		return (true, d.AaResultWindow, d.AaResultControl, d.AaResultUseControl);
 	}
 }

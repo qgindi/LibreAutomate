@@ -34,8 +34,4 @@
     <PackageReference Include="memberpage" Version="2.59.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Au\Au.csproj" />
-  </ItemGroup>
-
 </Project>

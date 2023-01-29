@@ -3,19 +3,17 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Documents;
 
-using Au.Controls;
-
-partial class PanelFiles : UserControl {
+partial class PanelFiles {
 	FilesModel.FilesView _tv;
 	TextBox _tFind;
 	timer _timerFind;
 	List<FileNode> _aClose;
 
 	public PanelFiles() {
-		this.UiaSetName("Files panel");
-		this.Background = SystemColors.ControlBrush;
+		P.UiaSetName("Files panel");
+		P.Background = SystemColors.ControlBrush;
 
-		var b = new wpfBuilder(this).Columns(-1).Options(margin: new());
+		var b = new wpfBuilder(P).Columns(-1).Options(margin: new());
 		b.Row(-1).Add(out _tv).Name("Files_list", true);
 
 		b.Row(4).Add<Border>().Border(thickness2: new(0, 1, 0, 1));
@@ -30,13 +28,15 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		b.End();
 
 		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(200); };
-		_tFind.GotKeyboardFocus += (_, _) => Dispatcher.InvokeAsync(() => _tFind.SelectAll());
+		_tFind.GotKeyboardFocus += (_, _) => P.Dispatcher.InvokeAsync(() => _tFind.SelectAll());
 		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
 
 		EditGoBack.DisableUI();
 	}
 
-	public FilesModel.FilesView aaTreeControl => _tv;
+	public UserControl P { get; } = new();
+
+	public FilesModel.FilesView TreeControl => _tv;
 
 	private void _Find() {
 		var cFound = Panels.Find.PrepareFindResultsPanel();
@@ -80,7 +80,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		cFound.aaaSetText(b.ToString());
 	}
 
-	public void aaCloseAll() {
+	public void CloseAll() {
 		App.Model.CloseFiles(_aClose);
 		App.Model.CollapseAll(exceptWithOpenFiles: true);
 	}

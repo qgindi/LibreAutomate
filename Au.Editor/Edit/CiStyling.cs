@@ -26,7 +26,7 @@ partial class CiStyling
 			doc.Dispatcher.InvokeAsync(() => _DocChanged(doc, true), System.Windows.Threading.DispatcherPriority.Loaded);
 			//info: if Normal priority, scintilla says there is 0 visible lines, and will need to do styling again. Timer would be OK too.
 		} else { //at program startup
-			CodeInfo.ReadyForStyling += () => { if (!doc.aaWnd.Is0) _DocChanged(doc, true); };
+			CodeInfo.ReadyForStyling += () => { if (!doc.AaWnd.Is0) _DocChanged(doc, true); };
 		}
 	}
 
@@ -74,7 +74,7 @@ partial class CiStyling
 			else _Work(doc, cancel: true);
 		} else {
 			//using var p1 = perf.local();
-			Sci_GetVisibleRange(doc.aaSciPtr, out var vr); //fast
+			Sci_GetVisibleRange(doc.AaSciPtr, out var vr); //fast
 			if (vr != _visibleLines) {
 				_Work(doc);
 			} else if (_diagCounter > 0 && --_diagCounter == 0) {
@@ -112,7 +112,7 @@ partial class CiStyling
 	void _ModifiedTimer(timer t) {
 		//var p1 = perf.local();
 		var doc = t.Tag as SciCode;
-		if (doc != Panels.Editor.aaActiveDoc) return;
+		if (doc != Panels.Editor.ActiveDoc) return;
 		if (_cancelTS != null) return;
 		_Work(doc, doc.aaaLineStartFromPos(false, _modStart), doc.aaaLineEndFromPos(false, doc.aaaLen8 - _modFromEnd, withRN: true));
 		//p1.NW('a'); //we return without waiting for the async task to complete
@@ -140,7 +140,7 @@ partial class CiStyling
 		var code = cd.code;
 		_PN('d');
 		try {
-			Sci_GetVisibleRange(doc.aaSciPtr, out var vr);
+			Sci_GetVisibleRange(doc.AaSciPtr, out var vr);
 			//print.it(vr);
 
 			bool minimal = end8 >= 0;
@@ -164,7 +164,7 @@ partial class CiStyling
 					CiFolding.Fold(doc, af);
 					_folded = true;
 				}
-				Sci_GetVisibleRange(doc.aaSciPtr, out vr);
+				Sci_GetVisibleRange(doc.AaSciPtr, out vr);
 				_PN('F');
 				start8 = vr.posFrom;
 				end8 = vr.posTo;
@@ -202,7 +202,7 @@ partial class CiStyling
 
 			await Task.Run(async () => {
 				semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
-				_PN('m');
+				_PN('m'); //BAD: slow when [re]opening a file in a large project
 				for (int i = 0; i < ar8.Count; i++) {
 					var r = ar[i].r;
 					ar[i].a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(r.start, r.end), cancelToken).Result;
@@ -276,7 +276,7 @@ partial class CiStyling
 #endif
 				return true;
 			}
-			if (doc != Panels.Editor.aaActiveDoc) {
+			if (doc != Panels.Editor.ActiveDoc) {
 #if PRINT
 				print.it("<><c red>switched doc<>");
 #endif

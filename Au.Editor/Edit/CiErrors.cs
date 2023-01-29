@@ -458,7 +458,7 @@ class CiErrors {
 		if (action == 'u' || action == 'p') { //add 'using', prefix namespace
 			int pos8 = s.ToInt(2, out int i);
 			s = s[i..];
-			var doc = Panels.Editor.aaActiveDoc;
+			var doc = Panels.Editor.ActiveDoc;
 			EraseIndicatorsInLine(doc, pos8);
 			if (action == 'p') {
 				doc.aaaInsertText(false, pos8, s + ".", addUndoPointAfter: true);

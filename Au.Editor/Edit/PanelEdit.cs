@@ -6,35 +6,36 @@ using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class PanelEdit : Grid
-{
+class PanelEdit {
 	readonly List<SciCode> _docs = new();
 	SciCode _activeDoc;
 
 	public PanelEdit() {
-		this.Background = SystemColors.AppWorkspaceBrush;
-		App.Commands.BindKeysTarget(this, "Edit");
+		P.Background = SystemColors.AppWorkspaceBrush;
+		App.Commands.BindKeysTarget(P, "Edit");
 		_UpdateUI_IsOpen();
-		aaUpdateUI_EditView_();
+		UpdateUI_EditView_();
 	}
 
-	public SciCode aaActiveDoc => _activeDoc;
+	public Grid P { get; } = new();
 
-	public event Action aaActiveDocChanged;
+	public SciCode ActiveDoc => _activeDoc;
 
-	public bool aaIsOpen => _activeDoc != null;
+	public event Action ActiveDocChanged;
+
+	public bool IsOpen => _activeDoc != null;
 
 	/// <summary>
 	/// Documents that are actually open currently.
 	/// Note: <see cref="FilesModel.OpenFiles"/> contains not only these.
 	/// </summary>
-	public IReadOnlyList<SciCode> aaOpenDocs => _docs;
+	public IReadOnlyList<SciCode> OpenDocs => _docs;
 
 	/// <summary>
 	/// If f is open (active or not), returns its SciCode, else null.
-	/// See <see cref="aaOpenDocs"/>.
+	/// See <see cref="OpenDocs"/>.
 	/// </summary>
-	public SciCode aaGetOpenDocOf(FileNode f) {
+	public SciCode GetOpenDocOf(FileNode f) {
 		foreach (var v in _docs) if (v.EFile == f) return v;
 		return null;
 	}
@@ -50,13 +51,13 @@ class PanelEdit : Grid
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
 	/// <param name="focusEditor">If null, focus later, when mouse enters editor. Ignored if editor was focused (sets focus). Also depends on <i>newFile</i>.</param>
 	/// <param name="noTemplate">New file was created with custom text (option 'replaceTemplate').</param>
-	public bool aaOpen(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
+	public bool Open(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
 		if (f == _activeDoc?.EFile) return true;
 
 		//print.it(focusEditor, new StackTrace(true));
-		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.aaWnd.IsFocused ?? false));
+		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.AaWnd.IsFocused ?? false));
 
 		void _ShowHideActiveDoc(bool show) {
 			if (show) {
@@ -68,15 +69,15 @@ class PanelEdit : Grid
 			}
 		}
 
-		var doc = aaGetOpenDocOf(f);
+		var doc = GetOpenDocOf(f);
 		if (doc != null) {
 			_ShowHideActiveDoc(false);
 			_activeDoc = doc;
 			_ShowHideActiveDoc(true);
 			doc.EOpenDocActivated();
 			_UpdateUI_IsOpen();
-			aaUpdateUI_EditEnabled_();
-			aaActiveDocChanged?.Invoke();
+			UpdateUI_EditEnabled_();
+			ActiveDocChanged?.Invoke();
 		} else {
 			var path = f.FilePath;
 			byte[] text = null;
@@ -89,11 +90,11 @@ class PanelEdit : Grid
 			doc = new SciCode(f, fls);
 			_docs.Add(doc);
 			_activeDoc = doc;
-			Children.Add(doc);
+			P.Children.Add(doc);
 			doc.EInit_(text, newFile, noTemplate);
 			_UpdateUI_IsOpen();
-			aaUpdateUI_EditEnabled_();
-			aaActiveDocChanged?.Invoke();
+			UpdateUI_EditEnabled_();
+			ActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
 
@@ -106,9 +107,9 @@ class PanelEdit : Grid
 			App.Timer025sWhenVisible += _Timer;
 			void _Timer() {
 				//print.it("timer");
-				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.aaTreeControl.IsFocused) {
-					if (wnd.fromMouse() != doc.aaWnd
-						|| !Panels.Files.aaTreeControl.IsKeyboardFocused //editing item label
+				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.TreeControl.IsFocused) {
+					if (wnd.fromMouse() != doc.AaWnd
+						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
 						) return;
 					doc.Focus();
 				}
@@ -116,7 +117,7 @@ class PanelEdit : Grid
 			}
 		}
 
-		Panels.Find.aaUpdateQuickResults();
+		Panels.Find.UpdateQuickResults();
 		return true;
 	}
 
@@ -127,19 +128,19 @@ class PanelEdit : Grid
 	/// Does not show another document when closed the active document.
 	/// </summary>
 	/// <param name="f"></param>
-	public void aaClose(FileNode f) {
+	public void Close(FileNode f) {
 		Debug.Assert(f != null);
 		SciCode doc;
 		if (f == _activeDoc?.EFile) {
 			App.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
-			aaActiveDocChanged?.Invoke();
+			ActiveDocChanged?.Invoke();
 		} else {
-			doc = aaGetOpenDocOf(f);
+			doc = GetOpenDocOf(f);
 			if (doc == null) return;
 		}
-		Children.Remove(doc);
+		P.Children.Remove(doc);
 		if (doc.IsFocused) App.Wmain.Focus();
 		//CodeInfo.FileClosed(doc);
 		doc.Dispose();
@@ -150,12 +151,12 @@ class PanelEdit : Grid
 	/// <summary>
 	/// Closes all documents and destroys controls.
 	/// </summary>
-	public void aaCloseAll(bool saveTextIfNeed) {
+	public void CloseAll(bool saveTextIfNeed) {
 		if (saveTextIfNeed) App.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
-		aaActiveDocChanged?.Invoke();
+		ActiveDocChanged?.Invoke();
 		foreach (var doc in _docs) {
-			Children.Remove(doc);
+			P.Children.Remove(doc);
 			if (doc.IsFocused) App.Wmain.Focus();
 			doc.Dispose();
 		}
@@ -163,17 +164,17 @@ class PanelEdit : Grid
 		_UpdateUI_IsOpen();
 	}
 
-	public bool aaSaveText() {
+	public bool SaveText() {
 		return _activeDoc?.ESaveText_() ?? true;
 	}
 
-	public void aaSaveEditorData() {
+	public void SaveEditorData() {
 		_activeDoc?.ESaveEditorData_();
 	}
 
-	//public bool aaIsModified => _activeDoc?.IsModified ?? false;
+	//public bool IsModified => _activeDoc?.IsModified ?? false;
 
-	internal void aaOnAppActivated_() {
+	internal void OnAppActivated_() {
 		foreach (var doc in _docs) {
 			doc.EFile.OnAppActivatedAndThisIsOpen(doc);
 		}
@@ -202,7 +203,7 @@ class PanelEdit : Grid
 	/// Enables/disables commands (toolbar buttons, menu items) depending on document state such as "can undo".
 	/// Called on SCN_UPDATEUI.
 	/// </summary>
-	internal void aaUpdateUI_EditEnabled_() {
+	internal void UpdateUI_EditEnabled_() {
 		_EUpdateUI disable = 0;
 		var d = _activeDoc;
 		if (d == null) return; //we disable the toolbar and menu
@@ -226,7 +227,7 @@ class PanelEdit : Grid
 	}
 	_EUpdateUI _editDisabled;
 
-	internal void aaUpdateUI_EditView_() {
+	internal void UpdateUI_EditView_() {
 		App.Commands[nameof(Menus.Edit.View.Wrap_lines)].Checked = App.Settings.edit_wrap;
 		App.Commands[nameof(Menus.Edit.View.Images_in_code)].Checked = !App.Settings.edit_noImages;
 	}
@@ -236,8 +237,7 @@ class PanelEdit : Grid
 	//}
 
 	[Flags]
-	enum _EUpdateUI
-	{
+	enum _EUpdateUI {
 		Undo = 1,
 		Redo = 2,
 		Cut = 4,

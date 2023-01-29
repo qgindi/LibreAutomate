@@ -35,7 +35,7 @@ static class CiUtil {
 	//}
 
 	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd, bool metaToo = false) {
-		var doc = Panels.Editor.aaActiveDoc; if (doc == null) { cd = default; return default; }
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) { cd = default; return default; }
 		if (!CodeInfo.GetContextAndDocument(out cd, metaToo: metaToo)) return default;
 		return GetSymbolOrKeywordFromPos(cd.document, cd.pos, cd.code);
 	}
@@ -216,7 +216,7 @@ static class CiUtil {
 		int pos8 = pos16 < 0 ? doc.aaaCurrentPos8 : doc.aaaPos8(pos16);
 		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos8), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos8);
 		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.aaaLineFromPos(false, pos8)) + 2);
-		if (inScreen) doc.aaWnd.MapClientToScreen(ref r);
+		if (inScreen) doc.AaWnd.MapClientToScreen(ref r);
 		return r;
 	}
 
@@ -380,7 +380,7 @@ global using System.Windows.Media;
 		if (!f.IsCodeFile) return null;
 
 		var m = new MetaComments();
-		if (!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) return null; //with this flag never returns false, but anyway
+		if (!m.Parse(f, projFolder, MCPFlags.ForCodeInfo)) return null; //with this flag never returns false, but anyway
 
 		var pOpt = m.CreateParseOptions();
 		var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
@@ -405,7 +405,7 @@ global using System.Windows.Media;
 		if (!f.IsCodeFile) return default;
 
 		var m = new MetaComments();
-		if (!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) return default; //with this flag never returns false, but anyway
+		if (!m.Parse(f, projFolder, MCPFlags.ForCodeInfo)) return default; //with this flag never returns false, but anyway
 
 		var projectId = ProjectId.CreateNewId();
 		var adi = new List<DocumentInfo>();
@@ -456,9 +456,15 @@ global using System.Windows.Media;
 	public static bool IsScript(string code) {
 		var cu = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
 		var f = cu.Members.FirstOrDefault();
-		if (f is GlobalStatementSyntax or null) return true;
-		if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
-		if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text == "Main") return true;
+		if (f != null) {
+			if (f is GlobalStatementSyntax) return true;
+			if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
+			if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text == "Main") return true;
+		} else {
+			var u = cu.Usings.FirstOrDefault();
+			if (u != null && u.GlobalKeyword.RawKind != 0) return false; //global.cs?
+			return !cu.AttributeLists.Any(); //AssemblyInfo.cs?
+		}
 		return false;
 	}
 
@@ -480,7 +486,7 @@ global using System.Windows.Media;
 	}
 
 	public static void HiliteRange(int start, int end) {
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		doc.EInicatorsFind_(null);
 		doc.EInicatorsFind_(new List<Range> { start..end });
 	}

@@ -2,20 +2,21 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-class PanelOpen : DockPanel
-{
+class PanelOpen {
 	KTreeView _tv;
 	bool _updatedOnce;
 	bool _closing;
 
 	public PanelOpen() {
-		//this.UiaSetName("Open panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		//P.UiaSetName("Open panel"); //no UIA element for Panel
 
 		_tv = new KTreeView { Name = "Open_list" };
-		this.Children.Add(_tv);
+		P.Children.Add(_tv);
 	}
 
-	public void aaUpdateList() {
+	public DockPanel P { get; } = new();
+
+	public void UpdateList() {
 		//_tv.SetItems(App.Model.OpenFiles, _updatedOnce); //this would be ok, but displays yellow etc
 		var a = App.Model.OpenFiles;
 		_tv.SetItems(a.Select(o => new _Item { f = o }), _updatedOnce);
@@ -67,8 +68,7 @@ class PanelOpen : DockPanel
 		}
 	}
 
-	class _Item : ITreeViewItem
-	{
+	class _Item : ITreeViewItem {
 		public FileNode f;
 
 		#region ITreeViewItem

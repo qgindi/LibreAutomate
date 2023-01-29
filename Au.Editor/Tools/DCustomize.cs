@@ -15,7 +15,7 @@ namespace Script;
 #endif
 
 class DCustomize : KDialogWindow {
-	public static void aaShow(string commandName = null) {
+	public static void AaShow(string commandName = null) {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -34,7 +34,7 @@ class DCustomize : KDialogWindow {
 	/// <summary>
 	/// If the dialog is open, sets its Image field text and returns true;
 	/// </summary>
-	public static bool aaSetImage(string s) {
+	public static bool AaSetImage(string s) {
 		if (s_dialog == null) return false;
 		if (s_dialog._panelProp.IsVisible) s_dialog._tImage.Text = s;
 		return true;
@@ -84,7 +84,7 @@ class DCustomize : KDialogWindow {
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
 			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => _ColorTool(), "Colors"); b.Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
-			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.aaShow(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
+			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.AaShow(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
 			.xAddButtonIcon("*Material.KeyboardOutline" + Menus.green, _ => _KeysTool(), "Keys tool");
 		b.xAddButtonIcon("*FeatherIcons.Eye" + Menus.blue, _ => _KeysList(), "Existing hotkeys");

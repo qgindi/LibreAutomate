@@ -2,9 +2,10 @@ using Au.Controls;
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
+using System.Reflection;
 
 [assembly: AssemblyTitle(App.AppNameLong)]
-//more attributes in global.cs
+//more attributes in global2.cs
 
 static class App {
 	public const string
@@ -84,7 +85,7 @@ static class App {
 		//perf.next('W');
 		CommandLine.ProgramLoaded();
 		//perf.next('c');
-		Loaded = EProgramState.LoadedWorkspace;
+		Loaded = AppState.LoadedWorkspace;
 
 		timer.every(1000, _TimerProc);
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
@@ -111,29 +112,35 @@ static class App {
 	}
 
 	internal static void MainFinally_() {
-		Loaded = EProgramState.Unloading;
+		Loaded = AppState.Unloading;
 		var fm = Model; Model = null;
 		fm.Dispose(); //stops tasks etc
-		Loaded = EProgramState.Unloaded;
+		Loaded = AppState.Unloaded;
 
 		PrintServer.Stop();
 	}
 
-	/// <summary>
-	/// WPF <b>Application</b> of main thread.
-	/// </summary>
-	public static Au.Editor.WpfApp WpfApp => _app;
-	static Au.Editor.WpfApp _app;
+	class _Application : Application {
+		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
+			base.OnSessionEnding(e);
+			if (!App.Hmain.Is0) Menus.File.Exit();
+			App.MainFinally_();
+			process.thisProcessExitInvoke(); //OS terminates this process before or during process.thisProcessExit event
+		}
+	}
+
+	//public static Application Instance => _app; //Application.Current
+	static _Application _app;
 
 	/// <summary>
-	/// WpfApp.Dispatcher.
+	/// <b>Dispatcher</b> of main thread.
 	/// </summary>
 	public static Dispatcher Dispatcher => _app.Dispatcher;
 
 	/// <summary>
 	/// Main window.
 	/// Auto-creates if this property never was accessed or if the main window never was visible; but does not show and does not create hwnd.
-	/// Use only in main thread; if other threads need <b>Dispatcher</b> of main thread, use that of <see cref="WpfApp"/>.
+	/// Use only in main thread; if other threads need <b>Dispatcher</b> of main thread, use <see cref="Dispatcher"/>.
 	/// </summary>
 	public static MainWindow Wmain {
 		get {
@@ -142,10 +149,17 @@ static class App {
 				_app.DispatcherUnhandledException += (_, e) => {
 					e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
 				};
-				_app.InitializeComponent();
+
+#if IDE_LA
+				_app.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("App-resources.xaml")) as ResourceDictionary;
+#else
+				Application.LoadComponent(_app, new("/Au.Editor;component/app/app.xaml", UriKind.Relative)); //15 ms
+				//_app.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Au.Editor.App.App-resources.xaml")) as ResourceDictionary; //47 ms
+#endif
+
 				_app.MainWindow = _wmain = new MainWindow();
 				_app.ShutdownMode = ShutdownMode.OnMainWindowClose;
-				_wmain.aaInit();
+				_wmain.AaInit();
 			}
 			return _wmain;
 		}
@@ -293,7 +307,7 @@ static class App {
 	</fold>
 """;
 				print.it(s);
-				Panels.Output.aaOutput.aaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
+				Panels.Output.Scintilla.AaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
 			} else if (CommandLine.Raa) { //restarted because clicked link "Restart as administrator: now and always"
 				var name = IsAuHomePC ? "_Au.Editor" : "Au.Editor";
 				bool ok = WinTaskScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
@@ -328,11 +342,11 @@ static class App {
 	/// <param name="commandLine">Command line arguments to append. Don't use /n and /v because this func manages it.</param>
 	/// <param name="admin">UAC-elevate (verb runas).</param>
 	public static void Restart(string commandLine = null, bool admin = false) {
-		Debug.Assert(Loaded == EProgramState.LoadedUI);
+		Debug.Assert(Loaded == AppState.LoadedUI);
 		var cl = Hmain.IsVisible ? "/n /v /restart " : "/n /restart";
 		if (!commandLine.NE()) cl = cl + " " + commandLine;
 		Menus.File.Exit();
-		if (Loaded < EProgramState.Unloading) return;
+		if (Loaded < AppState.Unloading) return;
 		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, admin ? RFlags.Admin : RFlags.InheritAdmin); };
 	}
 
@@ -376,7 +390,7 @@ static class App {
 		}
 	}
 
-	public static EProgramState Loaded;
+	public static AppState Loaded;
 
 	/// <summary>
 	/// Gets Keyboard.FocusedElement. If null, and a HwndHost-ed control is focused, returns the HwndHost.
@@ -500,7 +514,7 @@ static class App {
 	}
 }
 
-enum EProgramState {
+enum AppState {
 	/// <summary>
 	/// Before the first workspace fully loaded.
 	/// </summary>
@@ -527,20 +541,8 @@ enum EProgramState {
 	Unloaded,
 }
 
-enum ERegisteredHotkeyId {
+enum AppHotkeyId {
 	QuickCaptureMenu = 1,
 	QuickCaptureDwnd = 2,
 	QuickCaptureDelm = 3,
-}
-
-namespace Au.Editor {
-	partial class WpfApp : Application {
-		///
-		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
-			base.OnSessionEnding(e);
-			if (!App.Hmain.Is0) Menus.File.Exit();
-			App.MainFinally_();
-			process.thisProcessExitInvoke(); //OS terminates this process before or during process.thisProcessExit event
-		}
-	}
 }

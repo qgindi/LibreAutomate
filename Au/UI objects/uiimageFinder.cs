@@ -578,7 +578,7 @@ public unsafe class uiimageFinder {
 		_ad.DontSetAlpha_ = !toImage0;
 		bool ok = _area.Type == IFArea.AreaType.Screen
 			? _ad.Capture(r, relaxed: true)
-			: _ad.Capture(_area.W, r, _flags.ToICHow_() | ICHow.Relaxed);
+			: _ad.Capture(_area.W, r, _flags.ToCIFlags_() | CIFlags.Relaxed);
 		if (!ok) return false; //r not in client area. Probably the window resized since r.Intersect(clientArea).
 
 		if (toImage0) {

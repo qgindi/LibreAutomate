@@ -1,5 +1,7 @@
 namespace Au.Types;
 
+//#pragma warning disable 649 //field never assigned
+
 static unsafe partial class Api {
 	[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
 	internal static extern nint SendMessage(wnd hWnd, int msg, nint wParam, nint lParam);

@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Documents;
 
 class DOptions : KDialogWindow {
-	public static void aaShow() {
+	public static void AaShow() {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -145,7 +145,7 @@ class DOptions : KDialogWindow {
 		var b = _Page("Font", WBPanelType.Dock);
 
 		b.Add(out KScintilla sciStyles).Width(150);
-		sciStyles.aaInitBorder = true;
+		sciStyles.AaInitBorder = true;
 		sciStyles.Name = "styles";
 		//note: not readonly. Eg users may want to paste and see any character in multiple fonts.
 
@@ -242,7 +242,7 @@ Line number";
 			}
 			//when selected line changed
 			int currentLine = -1;
-			sciStyles.aaNotify += (KScintilla c, ref Sci.SCNotification n) => {
+			sciStyles.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.nmhdr.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
 					int line = c.aaaLineFromPos(false, c.aaaCurrentPos8);
@@ -318,7 +318,7 @@ Line number";
 
 				if (styles != CiStyling.TStyles.Settings || inverted) {
 					CiStyling.TStyles.Settings = styles;
-					foreach (var v in Panels.Editor.aaOpenDocs) {
+					foreach (var v in Panels.Editor.OpenDocs) {
 						styles.ToScintilla(v);
 						v.ESetLineNumberMarginWidth_();
 					}
@@ -353,7 +353,7 @@ To apply changes after deleting etc, restart this application.
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
 		b.R.Add("Template", out ComboBox template).Items("Script|Class")
 			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
-		b.Row(-1).Add(out KSciCodeBoxWnd sci); sci.aaInitBorder = true;
+		b.Row(-1).Add(out KSciCodeBoxWnd sci); sci.AaInitBorder = true;
 		//b.R.Add(out KCheckBox fold, "Fold script").Checked(0 == (1 & App.Settings.templ_flags));
 		b.End();
 
@@ -362,7 +362,7 @@ To apply changes after deleting etc, restart this application.
 
 		template.SelectionChanged += _Combo_Changed;
 		use.SelectionChanged += _Combo_Changed;
-		sci.aaTextChanged += (_, _) => customText[template.SelectedIndex] = sci.aaaText;
+		sci.AaTextChanged += (_, _) => customText[template.SelectedIndex] = sci.aaaText;
 		b.Loaded += () => {
 			_Combo_Changed(template, null);
 		};
@@ -399,7 +399,7 @@ To apply changes after deleting etc, restart this application.
 				if (custom) text = customText[i];
 			}
 			text ??= FileNode.Templates.Load(tt, custom);
-			sci.a4SetText(text, readonlyFrom: custom ? -1 : 0);
+			sci.AaSetText(text, readonlyFrom: custom ? -1 : 0);
 		}
 	}
 
@@ -435,6 +435,8 @@ To apply changes after deleting etc, restart this application.
 			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 		};
+
+		//CONSIDER: completion list: option to single-click.
 	}
 
 	void _Hotkeys() {

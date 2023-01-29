@@ -1,10 +1,8 @@
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Automation;
 
-class PanelMouse : Grid
-{
+class PanelMouse {
 	KScintilla _sci;
 	POINT _prevXY;
 	wnd _prevWnd;
@@ -12,16 +10,18 @@ class PanelMouse : Grid
 	int _prevCounter;
 
 	public PanelMouse() {
-		//this.UiaSetName("Mouse panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		//P.UiaSetName("Mouse panel"); //no UIA element for Panel
 
 		_sci = new KScintilla {
 			Name = "Mouse_info",
-			aaInitReadOnlyAlways = true,
-			aaInitTagsStyle = KScintilla.aaTagsStyle.AutoAlways
+			AaInitReadOnlyAlways = true,
+			AaInitTagsStyle = KScintilla.AaTagsStyle.AutoAlways
 		};
-		_sci.aaHandleCreated += _sci_aaHandleCreated;
-		this.Children.Add(_sci);
+		_sci.AaHandleCreated += _sci_aaHandleCreated;
+		P.Children.Add(_sci);
 	}
+
+	public Grid P { get; } = new();
 
 	private void _sci_aaHandleCreated() {
 		_sci.aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
@@ -37,7 +37,7 @@ class PanelMouse : Grid
 
 	void _MouseInfo() {
 		//using var p1 = perf.local();
-		if (!this.IsVisible) return;
+		if (!P.IsVisible) return;
 
 		var p = mouse.xy;
 		if (p == _prevXY && ++_prevCounter < 4) return; _prevCounter = 0; //use less CPU. c and wName rarely change when same p.
@@ -84,7 +84,7 @@ class PanelMouse : Grid
 		}
 	}
 
-	//public void aaSetMouseInfoText(string text)
+	//public void SetMouseInfoText(string text)
 	//{
 	//	if(Dispatcher.Thread == Thread.CurrentThread) _SetMouseInfoText(text);
 	//	else Dispatcher.InvokeAsync(() => _SetMouseInfoText(text));

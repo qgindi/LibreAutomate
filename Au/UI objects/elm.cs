@@ -62,9 +62,10 @@ namespace Au
 	///  <td>Java applications that use AWT/Swing. Window class name starts with "SunAwt".</td>
 	///  <td>
 	///   <ol>
+	///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is missing/disabled/broken, the "Find UI element" tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
+	///    <li>JAB is part of Java. Install Java 64-bit.</li>
+	///    <li>If your process is 32-bit (unlikely), install Java 32-bit.</li>
 	///    <li>Not supported on 32-bit OS.</li>
-	///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is disabled or does not work, the "Find UI element" tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
-	///    <li>Your process must have the same 32/64 bitness as the installed Java. To remove this limitation, install Java 32-bit and 64-bit (they coexist).</li>
 	///   </ol>
 	///  </td>
 	/// </tr>

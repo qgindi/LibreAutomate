@@ -17,21 +17,24 @@
 		<NoWin32Manifest>true</NoWin32Manifest>
 		<IsPublishable>True</IsPublishable>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<Deterministic>False</Deterministic>
+		<NoWarn>1701;1702;8002;419</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>TRACE</DefineConstants>
-		<Deterministic>False</Deterministic>
-		<NoWarn>1701;1702;8002;419</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants></DefineConstants>
-		<Deterministic>False</Deterministic>
-		<NoWarn>1701;1702;8002;419</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="_postbuild.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="App\1App, @~`!$^()-=+[{]};'.spaceą.json" />
 		<None Remove="Default\Commands.xml" />
 		<None Remove="Default\Layout.xml" />
 		<None Remove="Default\Snippets.xml" />
@@ -41,6 +44,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Page Remove="App\1App, @~`!$^()-=+[{]};'.space.xaml" />
+		<Page Remove="App\1App, @~`!$^()-=+[{]};'.spaceą.xaml" />
+		<Page Remove="App\App-resources.xaml" />
 		<Page Remove="resources\ci\Class.xaml" />
 		<Page Remove="resources\ci\Constant.xaml" />
 		<Page Remove="resources\ci\Delegate.xaml" />
@@ -74,7 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Au\Resources\global.cs" Link="resources\global.cs" />
+		<Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -88,6 +94,11 @@
 		<Content Include="Default\Snippets.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="App\App-resources.xaml" />
+	  <None Include="_postbuild.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

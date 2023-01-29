@@ -1,4 +1,4 @@
-/*/ role editorExtension; define SCRIPT; testInternal Au,Au.Editor,Au.Controls; r Au.Editor.dll; r Au.Controls.dll; /*/
+/* role editorExtension; define SCRIPT; testInternal Au,Au.Editor,Au.Controls; r Au.Editor.dll; r Au.Controls.dll; /*/
 
 using System.Windows.Controls;
 using Au.Controls;
@@ -99,7 +99,7 @@ class Docr : KDialogWindow {
 	}
 
 	void _bWnd_Click() {
-		var r = _code.a4ShowWndTool(this, _wnd, _con, checkControl: _wnd.Is0 || _useCon);
+		var r = _code.AaShowWndTool(this, _wnd, _con, checkControl: _wnd.Is0 || _useCon);
 		if (r.ok) _SetWndCon(r.w, r.con, r.useCon);
 	}
 
@@ -180,7 +180,7 @@ class Docr : KDialogWindow {
 			b.Append(waitNot ? "ocr.waitNot(" : "ocr.find(");
 			if (wait || waitNot || orThrow) if (b.AppendWaitTime(waitTime ?? "0", orThrow, appendAlways: waitNot)) b.Append(", ");
 
-			(wndCode, wndVar) = _code.a4GetWndFindCode(forTest, _wnd, _useCon ? _con : default);
+			(wndCode, wndVar) = _code.AaGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			bb.AppendLine(wndCode);
 
 			if (rectC.GetText(out var sRect)) b.AppendFormat("new({0}, {1})", wndVar, sRect);
@@ -249,7 +249,7 @@ class Docr : KDialogWindow {
 		var R = bb.Append(b).ToString();
 
 		if (!forTest) {
-			_code.a4SetText(R, wndCode.Lenn());
+			_code.AaSetText(R, wndCode.Lenn());
 			_bTest.IsEnabled = true; _bInsert.IsEnabled = true;
 		}
 
@@ -260,8 +260,8 @@ class Docr : KDialogWindow {
 
 	wnd _AreaWnd => _useCon ? _con : _wnd;
 
-	bool _CaptureRect(out ICResult r) {
-		if (!CaptureScreen.ImageUI(out r, ICFlags.Rectangle, this)) return false;
+	bool _CaptureRect(out CIUResult r) {
+		if (!CaptureScreen.ImageColorRectUI(out r, CIUFlags.Rectangle, this)) return false;
 
 		var w2 = _useCon ? r.w : r.w.Window;
 		string es = null;
@@ -325,7 +325,7 @@ class Docr : KDialogWindow {
 		//_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = c_dialogInfo;
-		_info.a4AddElem(this, c_dialogInfo);
+		_info.AaAddElem(this, c_dialogInfo);
 
 		_info.InfoCT(rectC,
 @"Limit the area to this rectangle in the client area of the window or control. Smaller = faster.

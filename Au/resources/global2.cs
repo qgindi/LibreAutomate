@@ -1,6 +1,5 @@
 //This file is used by several projects: Au, Au.Controls, Au.Editor.
 
-#if !NO_GLOBAL
 global using Au;
 global using Au.Types;
 global using Au.More;
@@ -28,10 +27,6 @@ global using CancelEventHandler = System.ComponentModel.CancelEventHandler;
 global using CancelEventArgs = System.ComponentModel.CancelEventArgs;
 global using IEnumerable = System.Collections.IEnumerable;
 global using IEnumerator = System.Collections.IEnumerator;
-#else
-using System.Reflection;
-using System.Runtime.InteropServices;
-#endif
 
 [module: DefaultCharSet(CharSet.Unicode)]
 

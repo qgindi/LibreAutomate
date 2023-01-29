@@ -11,7 +11,7 @@ class DWinapi : KDialogWindow {
 
 	public DWinapi(string name = null) {
 		Title = "Find Windows API";
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		Owner = GetWindow(doc);
 
 		if (name == null) {
@@ -24,7 +24,7 @@ class DWinapi : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(800, 500);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add("Name", out tName, name);
-		b.Row(-1).Add(out code); code.aaInitBorder = true;
+		b.Row(-1).Add(out code); code.AaInitBorder = true;
 		b.R.AddButton("?", _ => _Help());
 		b.AddOkCancel("OK, copy to clipboard");
 		b.End();
@@ -52,7 +52,7 @@ and select from the list. It adds the declaration to the class, and more declara
 The database contains ~51000 declarations. They are not perfect. You can edit.
 If some really useful API are missing, tell about it: https://www.libreautomate.com/forum/ or support@quickmacros.com.
 */";
-			code.a4SetText(s);
+			code.AaSetText(s);
 		}
 	}
 
@@ -94,6 +94,6 @@ If some really useful API are missing, tell about it: https://www.libreautomate.
 			if (a.Count > 1) s = string.Join(s.Starts("internal const") ? "\r\n" : "\r\n\r\n", a.Select(o => o.code));
 			s += "\r\n";
 		}
-		code.a4SetText(s);
+		code.AaSetText(s);
 	}
 }

@@ -20,7 +20,7 @@ public class KDialogWindow : Window {
 	/// <param name="owner"></param>
 	/// <param name="hideOwner">Temporarily hide owner.</param>
 	/// <param name="disableOwner">Temporarily disable owner.</param>
-	public bool aaShowAndWait(Window owner, bool hideOwner = false, bool disableOwner = false) {
+	public bool AaShowAndWait(Window owner, bool hideOwner = false, bool disableOwner = false) {
 		Owner = owner;
 		wnd ow = hideOwner || disableOwner ? owner.Hwnd() : default;
 		if (hideOwner) ow.ShowL(false); //not owner.Hide(), it closes owner if it is modal

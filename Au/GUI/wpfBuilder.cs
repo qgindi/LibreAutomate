@@ -713,7 +713,7 @@ public class wpfBuilder {
 					break;
 				case ToggleButton:
 					c.HorizontalAlignment = HorizontalAlignment.Left; //default stretch
-					c.VerticalContentAlignment = VerticalAlignment.Center; //default top
+					c.VerticalAlignment = VerticalAlignment.Center; //default top. Note: VerticalContentAlignment bad on Win7.
 
 					//partial workaround for squint CheckBox/RadioButton when High DPI.
 					//	Without it, check mark size/alignment is different depending on control's xy.
@@ -1927,7 +1927,7 @@ public class wpfBuilder {
 			case WebBrowser u: u.Source = new Uri(source); break;
 			case Frame u: u.Source = new Uri(source); break;
 			case RichTextBox u when source.Ends(".rtf", true):
-				using (var fs = filesystem.loadStream(source)) { u.Selection.Load(fs, DataFormats.Rtf); }
+				using (var fs = File.OpenRead(source)) { u.Selection.Load(fs, DataFormats.Rtf); }
 				//also supports DataFormats.TextForFind,Xaml,XamlPackage. If need HTML, download and try HtmlToXamlConverter. See https://www.codeproject.com/Articles/1097390/Displaying-HTML-in-a-WPF-RichTextBox
 				break;
 			default: bad = true; break;

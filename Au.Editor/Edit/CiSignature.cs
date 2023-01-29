@@ -127,7 +127,7 @@ class CiSignature {
 			_CancelUI();
 			return;
 		}
-		Debug.Assert(doc == Panels.Editor.aaActiveDoc); //when active doc changed, cancellation must be requested
+		Debug.Assert(doc == Panels.Editor.ActiveDoc); //when active doc changed, cancellation must be requested
 		if (cd.pos != doc.aaaCurrentPos16 || (object)cd.code != doc.aaaText) return; //changed while awaiting
 																				   //p1.Next('s');
 
@@ -189,8 +189,8 @@ class CiSignature {
 		}, SciCode.TempRangeFlags.NoDuplicate);
 
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos));
-		doc.aaWnd.MapClientToScreen(ref rect);
-		rect.Width += Dpi.Scale(200, doc.aaWnd);
+		doc.AaWnd.MapClientToScreen(ref rect);
+		rect.Width += Dpi.Scale(200, doc.AaWnd);
 		rect.left -= 6;
 
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
@@ -205,7 +205,7 @@ class CiSignature {
 			if (methodCompletion) CodeInfo._compl.ShowList(ch); //when autocompletion added (); may need to show enum list 
 		}
 
-		_textPopup.Show(Panels.Editor.aaActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
+		_textPopup.Show(Panels.Editor.ActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
 
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);

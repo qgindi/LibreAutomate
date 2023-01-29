@@ -181,12 +181,15 @@ namespace Au.More {
 		//	return Application.GetResourceStream(new Uri(name)).Stream as UnmanagedMemoryStream;
 		//}
 
-		static object _GetObject(ref string name) {
-			return _RS(ref name).GetObject(name) ?? throw new FileNotFoundException($"Cannot find resource '{name}'.");
-		}
+		static object _GetObject(ref string name)
+			=> _TryGetObject(ref name) ?? throw new FileNotFoundException($"Cannot find resource '{name}'.");
 
 		static object _TryGetObject(ref string name) {
-			return _RS(ref name, true)?.GetObject(name);
+			var rs = _RS(ref name, true);
+			if (rs == null) return null;
+			var r = rs.GetObject(name);
+			if (r == null) r = rs.GetObject(name.Lower());
+			return r;
 		}
 
 		static ResourceSet _RS(ref string name, bool noThrow = false) {
@@ -196,7 +199,6 @@ namespace Au.More {
 				asmName = name[1..i];
 				name = name[++i..];
 			}
-			name = name.Lower(); //first time 15-40 ms, the slowest part. Just calls ToLowerInvariant.
 
 			lock (s_dict) {
 				if (!s_dict.TryGetValue(asmName, out var rs)) {

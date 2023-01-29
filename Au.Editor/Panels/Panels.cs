@@ -78,16 +78,16 @@ static class Panels {
 	public static void CreatePanels() {
 		var pm = PanelManager;
 
-		pm["Files"].Content = Files = new();
-		_AddDontFocus("Outline", Outline = new());
-		pm["Cookbook"].Content = Cookbook = new();
-		_AddDontFocus("Open", Open = new());
-		_AddDontFocus("Tasks", Tasks = new());
-		pm["Find"].Content = Find = new();
-		_AddDontFocus("Output", Output = new());
-		_AddDontFocus("Mouse", Mouse = new());
-		_AddDontFocus("Found", Found = new());
-		_AddDontFocus("Recipe", Recipe = new());
+		pm["Files"].Content = (Files = new()).P;
+		_AddDontFocus("Outline", (Outline = new()).P);
+		pm["Cookbook"].Content = (Cookbook = new()).P;
+		_AddDontFocus("Open", (Open = new()).P);
+		_AddDontFocus("Tasks", (Tasks = new()).P);
+		pm["Find"].Content = (Find = new()).P;
+		_AddDontFocus("Output", (Output = new()).P);
+		_AddDontFocus("Mouse", (Mouse = new()).P);
+		_AddDontFocus("Found", (Found = new()).P);
+		_AddDontFocus("Recipe", (Recipe = new()).P);
 
 		void _AddDontFocus(string panel, FrameworkElement content) {
 			var p = pm[panel];
@@ -95,9 +95,9 @@ static class Panels {
 			p.DontFocusTab = true;
 		}
 
-		pm["documents"].Content = Editor = new();
+		pm["documents"].Content = (Editor = new()).P;
 		//DocPlaceholder_ = pm["documents"];
 
-		var ti1 = Panels.PanelManager[Panels.Files].Parent.TabItem; if (ti1 != null) ti1.MinWidth = 56; //make Files tabitem wider
+		var ti1 = PanelManager[Files.P].Parent.TabItem; if (ti1 != null) ti1.MinWidth = 56; //make Files tabitem wider
 	}
 }

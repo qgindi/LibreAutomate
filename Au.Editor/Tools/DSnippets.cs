@@ -14,7 +14,7 @@ namespace Script;
 #endif
 
 class DSnippets : KDialogWindow {
-	public static void aaShow() {
+	public static void AaShow() {
 		if (s_dialog == null) {
 			s_dialog = new();
 			s_dialog.Show();
@@ -87,7 +87,7 @@ class DSnippets : KDialogWindow {
 		b.AddButton("...", _ => _InsertVar(null));
 		b.End();
 		b.Row(-1).xAddInBorder(out _code);
-		_code.aaTextChanged += (_, _) => { if (!_ignoreEvents) _ti.code = _code.aaaText; };
+		_code.AaTextChanged += (_, _) => { if (!_ignoreEvents) _ti.code = _code.aaaText; };
 		b.End();
 		
 		//context
@@ -170,7 +170,7 @@ class DSnippets : KDialogWindow {
 			bool isMenu = level == 2 && t.IsFolder;
 			if (!isMenu) {
 				var s = t.code;
-				_code.a4SetText(s, _readonly ? 0 : -1);
+				_code.AaSetText(s, _readonly ? 0 : -1);
 			}
 			
 			_tName.Text = level == 2 ? t.text : t.Parent.text;

@@ -859,7 +859,7 @@ static class TUtil {
 	/// Adds link +hotkey that shows dialog "Hotkeys" and updates App.Settings.delm.hk_capture and optionally App.Settings.delm.hk_insert.
 	/// </summary>
 	public static void RegisterLink_DialogHotkey(KSciInfoBox sci, bool insertToo) {
-		sci.aaTags.AddLinkTag("+hotkey", _ => {
+		sci.AaTags.AddLinkTag("+hotkey", _ => {
 			TextBox capture, insert = null;
 			var b = new wpfBuilder("Hotkey");
 			b.R.Add("Capture", out capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus().Tooltip("Used in wnd and elm tools");
@@ -1047,12 +1047,12 @@ obj.{code};
 
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.aaaText = $"<lc #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
-		t.a4SuspendElems();
+		t.AaSuspendElems();
 	}
 
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.aaaText = $"<lc #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
-		t.a4SuspendElems();
+		t.AaSuspendElems();
 	}
 
 	public static void InfoErrorOrInfo(this KSciInfoBox t, InfoStrings info) {
@@ -1063,7 +1063,7 @@ obj.{code};
 
 	public static void Info(this KSciInfoBox t, FrameworkElement e, string name, string text) {
 		text = CommonInfos.PrependName(name, text);
-		t.a4AddElem(e, text);
+		t.AaAddElem(e, text);
 	}
 
 	public static void InfoC(this KSciInfoBox t, ContentControl k, string text) => Info(t, k, _ControlName(k), text);
@@ -1071,14 +1071,14 @@ obj.{code};
 	public static void InfoCT(this KSciInfoBox t, KCheckTextBox k, string text, bool isWildex = false, string wildexPart = null) {
 		text = CommonInfos.PrependName(_ControlName(k.c), text);
 		if (isWildex) text = CommonInfos.AppendWildexInfo(text, wildexPart);
-		t.a4AddElem(k.c, text);
-		t.a4AddElem(k.t, text);
+		t.AaAddElem(k.c, text);
+		t.AaAddElem(k.t, text);
 	}
 
 	public static void InfoCO(this KSciInfoBox t, KCheckComboBox k, string text) {
 		text = CommonInfos.PrependName(_ControlName(k.c), text);
-		t.a4AddElem(k.c, text);
-		t.a4AddElem(k.t, text);
+		t.AaAddElem(k.c, text);
+		t.AaAddElem(k.t, text);
 	}
 
 	/// <summary>
@@ -1095,7 +1095,7 @@ obj.{code};
 
 		public CommonInfos(KSciInfoBox control) {
 			_control = control;
-			_control.aaTags.AddLinkTag("+regex", o => _Regex(o));
+			_control.AaTags.AddLinkTag("+regex", o => _Regex(o));
 		}
 
 		void _Regex(string _) {
