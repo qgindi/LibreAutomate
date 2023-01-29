@@ -33,7 +33,7 @@ namespace Au.Compiler {
 			}
 
 			//if empty script, error "no Main". Users would not understand why.
-			//	rejected: auto-add {}. Difficult to detect when really need it. Eg would give an incorrect/mysterious error if Main exists but is unsuitable.
+			//	rejected: auto-add {} (empty block, to make the script not empty). Difficult to detect when need it. Eg would give an incorrect/unclear error if Main exists but is unsuitable.
 			if (d.Severity == DiagnosticSeverity.Error && d.Id == "CS5001") _b.Append(". Or the script is empty.");
 		}
 

@@ -1,6 +1,5 @@
-﻿<!-- note: don't use local types (clr-namespace). Then VS compiles project 2 times. -->
-<Application x:Class="Au.Editor.WpfApp"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<!-- note: don't use local types (clr-namespace). Then VS compiles project 2 times. -->
+<Application xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              >
     <Application.Resources>

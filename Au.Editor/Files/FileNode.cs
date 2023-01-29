@@ -105,13 +105,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			x.WriteStartElement("files");
 			if (_model != null) x.WriteAttributeString("max-i", _model.MaxId.ToString()); //null when exporting
 		} else {
-			string t = "n";
-			switch (_type) {
-			case FNType.Folder: t = "d"; break;
-			case FNType.Script: t = "s"; break;
-			case FNType.Class: t = "c"; break;
-			}
-			x.WriteStartElement(t);
+			x.WriteStartElement(_type switch { FNType.Folder => "d", FNType.Script => "s", FNType.Class => "c", _ => "n" });
 			x.WriteAttributeString("n", _name);
 			if (!exporting) x.WriteAttributeString("i", _id.ToString());
 			if (_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
@@ -132,7 +126,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// Panels.Files.TreeControl.
 	/// </summary>
-	public static KTreeView TreeControl => Panels.Files.aaTreeControl;
+	public static KTreeView TreeControl => Panels.Files.TreeControl;
 
 	/// <summary>
 	/// Gets workspace that contains this file.
@@ -146,8 +140,22 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	/// <summary>
 	/// File type.
+	/// Setter can change Script to Class or vice versa; call when closing DProperties.
 	/// </summary>
-	public FNType FileType => _type;
+	public FNType FileType {
+		get => _type;
+		set {
+			Debug.Assert(IsCodeFile);
+			if (value == _type) return;
+			_type = value;
+			_testScriptId = 0;
+
+			_model.Save.WorkspaceLater();
+			Compiler.Uncache(this);
+			CodeInfo.FilesChanged();
+			FilesModel.Redraw(this);
+		}
+	}
 
 	/// <summary>
 	/// true if folder or root.
@@ -168,7 +176,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// true if script or class file.
 	/// false if folder or not a code file.
 	/// </summary>
-	public bool IsCodeFile => _type == FNType.Script || _type == FNType.Class;
+	public bool IsCodeFile => _type is FNType.Script or FNType.Class;
 
 	/// <summary>
 	/// true if not script/class/folder.
@@ -347,7 +355,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <param name="text">"" if failed (eg file not found) or folder.</param>
 	public BoolError GetCurrentText(out string text, bool silent = false) {
-		if (this == _model.CurrentFile) { text = Panels.Editor.aaActiveDoc.aaaText; return true; }
+		if (this == _model.CurrentFile) { text = Panels.Editor.ActiveDoc.aaaText; return true; }
 		return GetFileText(out text, silent);
 	}
 
@@ -493,7 +501,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	/// <summary>
 	/// Call this to update/redraw control row view when changed its data (text, image, checked, color, etc).
-	/// Redraws only this control; to updtae all, call <see cref="FilesModel.Redraw"/> instead.
+	/// Redraws only this control; to update all, call <see cref="FilesModel.Redraw"/> instead.
 	/// </summary>
 	public void UpdateControlRow() => TreeControl.Redraw(this);
 
@@ -947,14 +955,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		var type = FNType.Other;
 		if (path.Ends(".cs", true)) {
 			type = FNType.Class;
-			if (!path.Ends(@"\AssemblyInfo.cs", true)) {
-				try {
-					var code = filesystem.loadText(path);
-					if (CiUtil.IsScript(code)) type = FNType.Script;
-				}
-				catch (Exception ex) { Debug_.Print(ex); }
+			try {
+				var code = filesystem.loadText(path);
+				if (CiUtil.IsScript(code)) type = FNType.Script;
 			}
-			//FUTURE: later allow to change file type script from/to class. Eg in Properties.
+			catch (Exception ex) { Debug_.Print(ex); }
 		}
 		return type;
 	}

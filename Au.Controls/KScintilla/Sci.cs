@@ -119,7 +119,7 @@ public unsafe partial class KScintilla {
 		Debug.Assert(end8 >= start8);
 		Debug.Assert((uint)end8 <= aaaLen8);
 		if (end8 == start8) return "";
-		int gap = Sci_Range(aaSciPtr, start8, end8, out var p1, out var p2);
+		int gap = Sci_Range(AaSciPtr, start8, end8, out var p1, out var p2);
 		if (p2 != null) {
 			int n1 = gap - start8, n2 = end8 - gap;
 			int len1 = Encoding.UTF8.GetCharCount(p1, n1);
@@ -215,7 +215,7 @@ public unsafe partial class KScintilla {
 
 		public _NoReadonly(KScintilla t) {
 			_t = t;
-			_ro = _t.aaInitReadOnlyAlways || _t.aaaIsReadonly;
+			_ro = _t.AaInitReadOnlyAlways || _t.aaaIsReadonly;
 			if (_ro) _t.Call(SCI_SETREADONLY, 0);
 		}
 
@@ -229,11 +229,11 @@ public unsafe partial class KScintilla {
 		bool _noUndo, _noNotif;
 
 		public _NoUndoNotif(KScintilla t, SciSetTextFlags flags) {
-			if (t.aaInitReadOnlyAlways) flags = 0;
+			if (t.AaInitReadOnlyAlways) flags = 0;
 			_t = t;
 			_noUndo = flags.Has(SciSetTextFlags.NoUndo) && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
 			_noNotif = flags.Has(SciSetTextFlags.NoNotify);
-			if (_noNotif) _t.aaDisableModifiedNotifications = true;
+			if (_noNotif) _t.AaDisableModifiedNotifications = true;
 			if (_noUndo) _t.Call(SCI_SETUNDOCOLLECTION);
 		}
 
@@ -242,7 +242,7 @@ public unsafe partial class KScintilla {
 				_t.Call(SCI_EMPTYUNDOBUFFER);
 				_t.Call(SCI_SETUNDOCOLLECTION, 1);
 			}
-			if (_noNotif) _t.aaDisableModifiedNotifications = false;
+			if (_noNotif) _t.AaDisableModifiedNotifications = false;
 		}
 	}
 
@@ -267,12 +267,12 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	/// <param name="s">TextForFind.</param>
 	/// <param name="flags"></param>
-	/// <param name="ignoreTags">Don't parse tags, regardless of aaInitTagsStyle.</param>
+	/// <param name="ignoreTags">Don't parse tags, regardless of <b>AaInitTagsStyle</b>.</param>
 	public void aaaSetText(string s, SciSetTextFlags flags = 0, bool ignoreTags = false) {
 		using (new _NoUndoNotif(this, flags)) {
 			if (!ignoreTags && _CanParseTags(s)) {
 				aaaClearText();
-				aaTags.AddText(s, false, aaInitTagsStyle == aaTagsStyle.AutoWithPrefix);
+				AaTags.AddText(s, false, AaInitTagsStyle == AaTagsStyle.AutoWithPrefix);
 			} else {
 				using (new _NoReadonly(this))
 					aaaSetString(SCI_SETTEXT, 0, s ?? "");
@@ -282,9 +282,9 @@ public unsafe partial class KScintilla {
 
 	bool _CanParseTags(string s) {
 		if (s.NE()) return false;
-		return aaInitTagsStyle switch {
-			aaTagsStyle.AutoAlways => s.Contains('<'),
-			aaTagsStyle.AutoWithPrefix => s.Starts("<>"),
+		return AaInitTagsStyle switch {
+			AaTagsStyle.AutoAlways => s.Contains('<'),
+			AaTagsStyle.AutoWithPrefix => s.Starts("<>"),
 			_ => false,
 		};
 	}
@@ -332,11 +332,11 @@ public unsafe partial class KScintilla {
 	/// <param name="s"></param>
 	/// <param name="andRN">Also append "\r\n". Ignores (uses true) if parses tags.</param>
 	/// <param name="scroll">Move current position and scroll to the end.</param>
-	/// <param name="ignoreTags">Don't parse tags, regardless of aaInitTagsStyle.</param>
+	/// <param name="ignoreTags">Don't parse tags, regardless of <b>AaInitTagsStyle</b>.</param>
 	public void aaaAppendText(string s, bool andRN, bool scroll, bool ignoreTags = false) {
 		s ??= "";
 		if (!ignoreTags && _CanParseTags(s)) {
-			aaTags.AddText(s, true, aaInitTagsStyle == aaTagsStyle.AutoWithPrefix, scroll);
+			AaTags.AddText(s, true, AaInitTagsStyle == AaTagsStyle.AutoWithPrefix, scroll);
 		} else {
 			var a = Convert2.Utf8Encode(s, andRN ? "\r\n" : "");
 			using (new _NoReadonly(this))
@@ -402,7 +402,7 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	/// <remarks>
 	/// The 'get' function gets cached text if called not the first time after setting or modifying control text.
-	/// The 'set' function calls <see cref="aaaSetText"/> when need. Uses default parameters (with undo and notifications, unless aaInitReadOnlyAlways).
+	/// The 'set' function calls <see cref="aaaSetText"/> when need. Uses default parameters (with undo and notifications, unless <b>AaInitReadOnlyAlways</b>).
 	/// Unlike the above methods, this property can be used before creating handle.
 	/// </remarks>
 	public string aaaText {
@@ -868,7 +868,7 @@ public unsafe partial class KScintilla {
 	/// Gets annotation text of line.
 	/// Returns "" if the line does not contain annotation or is invalid line index.
 	/// </summary>
-	public string aaaAnnotationText(int line) => aaImages?.AnnotationText_(line) ?? aaaAnnotationText_(line);
+	public string aaaAnnotationText(int line) => AaImages?.AnnotationText_(line) ?? aaaAnnotationText_(line);
 
 	/// <summary>
 	/// Gets raw annotation text which can contain image info.
@@ -884,7 +884,7 @@ public unsafe partial class KScintilla {
 	/// Preserves existing image info.
 	/// </summary>
 	public void aaaAnnotationText(int line, string s) {
-		if (aaImages != null) aaImages.AnnotationText_(line, s);
+		if (AaImages != null) AaImages.AnnotationText_(line, s);
 		else aaaAnnotationText_(line, s);
 	}
 
@@ -1491,7 +1491,7 @@ public unsafe partial class KScintilla {
 
 /// <summary>
 /// Flags for 'set text', 'clear text' and similar functions. Eg you can disable Undo collection or 'changed' notifications.
-/// Note: Ignores NoUndo and NoNotify if aaInitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+/// Note: Ignores NoUndo and NoNotify if <b>AaInitReadOnlyAlways</b>, because then Undo and notifications are disabled when creating control.
 /// </summary>
 [Flags]
 public enum SciSetTextFlags {

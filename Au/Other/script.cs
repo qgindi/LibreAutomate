@@ -776,13 +776,15 @@ public static class script {
 	/// - breakpoint (set in debugger).
 	/// - exception (if debugger is configured to break on exception).
 	/// 
-	/// Best free programs that have a .NET debugger:
+	/// Some best free programs that have a .NET debugger:
 	/// - Visual Studio (Community edition). It's the best, but huge (~10 GB).
 	/// - Visual Studio Code. It's much smaller.
+	/// - (possibly free) JetBrains Rider.
 	/// 
 	/// Unlike <see cref="Debugger.Launch"/>, this function does not launch the Visual Studio debugger. It waits until you attach a debugger to this process. To attach:
 	/// - Visual Studio: menu Debug -> Attach to process. Then select the process (this function displays its name and id).
 	/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
+	/// - JetBrains Rider: menu Run -> Attach to Process. Then select the process.
 	/// 
 	/// This function can launch a script to automate attaching a debugger. See Options -> General -> Debugger script. More info in <see href="/cookbook/Script testing and debugging.html">Cookbook</see>.
 	/// 

@@ -13,7 +13,7 @@ partial class TriggersAndToolbars {
 		folder = folder.Children().First(f => f.IsFolder && f.Name.Eqi("Toolbars"));
 
 		folder.SelectSingle();
-		var tv = Panels.Files.aaTreeControl;
+		var tv = Panels.Files.TreeControl;
 		if(!folder.IsExpanded) tv.Expand(folder, true);
 		tv.EnsureVisible(folder, scrollTop: true);
 

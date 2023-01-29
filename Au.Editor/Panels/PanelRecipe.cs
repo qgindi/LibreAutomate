@@ -8,24 +8,26 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
-class PanelRecipe : DockPanel {
+class PanelRecipe {
 	_KScintilla _c;
 	string _usings;
 
-	//public KScintilla aaControl => _c;
+	//public KScintilla Scintilla => _c;
 
 	public PanelRecipe() {
-		//this.UiaSetName("Recipe panel"); //no UIA element for Panel. Use this in the future if this panel will be : UserControl.
+		//P.UiaSetName("Recipe panel"); //no UIA element for Panel
 
 		_c = new _KScintilla {
 			Name = "Recipe_text",
-			aaInitReadOnlyAlways = true,
-			aaInitTagsStyle = KScintilla.aaTagsStyle.User
+			AaInitReadOnlyAlways = true,
+			AaInitTagsStyle = KScintilla.AaTagsStyle.User
 		};
-		_c.aaHandleCreated += _c_aaHandleCreated;
+		_c.AaHandleCreated += _c_aaHandleCreated;
 
-		this.Children.Add(_c);
+		P.Children.Add(_c);
 	}
+
+	public DockPanel P { get; } = new();
 
 	private void _c_aaHandleCreated() {
 		_c.Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
@@ -43,14 +45,14 @@ class PanelRecipe : DockPanel {
 		styles.ToScintilla(_c, multiFont: true);
 		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 
-		_c.aaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
-		_c.aaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _usings); if (s != null) run.itSafe(s); });
+		_c.AaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
+		_c.AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _usings); if (s != null) run.itSafe(s); });
 		//_c.aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
-		_c.aaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
+		_c.AaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 		//_c.aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
-		_c.aaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-		_c.aaTags.AddLinkTag("+nuget", s => DNuget.aaShow(s));
-		_c.aaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
+		_c.AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
+		_c.AaTags.AddLinkTag("+nuget", s => DNuget.AaShow(s));
+		_c.AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
 
 #if DEBUG
 		_AutoRenderCurrentRecipeScript();
@@ -58,7 +60,7 @@ class PanelRecipe : DockPanel {
 	}
 
 	public void Display(string name, string code) {
-		Panels.PanelManager[this].Visible = true;
+		Panels.PanelManager[P].Visible = true;
 		_SetText(name, code);
 	}
 
@@ -126,7 +128,7 @@ class PanelRecipe : DockPanel {
 		var ac = new List<(string code, int offset8, int len8)>();
 		foreach (var (isText, s) in ParseRecipe(code, out _usings)) {
 			if (isText) {
-				_c.aaTags.AddText(s, true, false, false);
+				_c.AaTags.AddText(s, true, false, false);
 			} else {
 				int n1 = _c.aaaLineCount, offset8 = _c.aaaLen8 + 2;
 				var s8 = Encoding.UTF8.GetBytes("\r\n" + s + "\r\n\r\n");
@@ -202,8 +204,8 @@ class PanelRecipe : DockPanel {
 		SciCode prevDoc = null;
 		App.Timer1sWhenVisible += () => {
 			if (App.Model.WorkspaceName != "Cookbook") return;
-			if (!this.IsVisible) return;
-			var doc = Panels.Editor.aaActiveDoc;
+			if (!P.IsVisible) return;
+			var doc = Panels.Editor.ActiveDoc;
 			if (doc == null || !doc.EFile.IsScript || doc.EFile.Parent.Name == "-") return;
 			string text = doc.aaaText;
 			if (text == prevText) return;
@@ -211,15 +213,15 @@ class PanelRecipe : DockPanel {
 			//print.it("update");
 
 			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
-			if (n1 > 0) _c.aaWnd.Send(Api.WM_SETREDRAW);
+			if (n1 > 0) _c.AaWnd.Send(Api.WM_SETREDRAW);
 			_SetText(doc.EFile.DisplayName, text);
 			if (doc == prevDoc) {
 				if (n1 > 0)
 					//_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
 					timer.after(1, _ => {
 						_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
-						_c.aaWnd.Send(Api.WM_SETREDRAW, 1);
-						Api.RedrawWindow(_c.aaWnd, flags: Api.RDW_ERASE | Api.RDW_FRAME | Api.RDW_INVALIDATE);
+						_c.AaWnd.Send(Api.WM_SETREDRAW, 1);
+						Api.RedrawWindow(_c.AaWnd, flags: Api.RDW_ERASE | Api.RDW_FRAME | Api.RDW_INVALIDATE);
 					});
 			} else {
 				prevDoc = doc;

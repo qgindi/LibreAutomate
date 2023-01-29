@@ -47,9 +47,9 @@ static class CompileRun {
 
 		if (!f.IsCodeFile) return 0;
 
-		bool ok = Compiler.Compile(run ? ECompReason.Run : ECompReason.CompileAlways, out var r, f, projFolder);
+		bool ok = Compiler.Compile(run ? CCReason.Run : CCReason.CompileAlways, out var r, f, projFolder);
 
-		if (run && (r.role == Au.Compiler.ERole.classFile || r.role == Au.Compiler.ERole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
+		if (run && (r.role == Au.Compiler.MCRole.classFile || r.role == Au.Compiler.MCRole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
 			_OnRunClassFile(f, projFolder);
 			return 0;
 		}
@@ -57,7 +57,7 @@ static class CompileRun {
 		if (!ok) return 0;
 		if (!run) return 1;
 
-		if (r.role == Au.Compiler.ERole.editorExtension) {
+		if (r.role == Au.Compiler.MCRole.editorExtension) {
 			EditorExtension.Run_(r.file, args, handleExceptions: true);
 			return (int)script.RunResult_.editorThread;
 		}
@@ -71,7 +71,7 @@ static class CompileRun {
 		//If f is a class file, run it as a script.
 		//	Ignore its test script. For a library it wouldn't work. For a simple projectless class file usually don't need.
 
-		bool ok = Compiler.Compile(ECompReason.WpfPreview, out var r, f, projFolder, canCompile: canCompile);
+		bool ok = Compiler.Compile(CCReason.WpfPreview, out var r, f, projFolder, canCompile: canCompile);
 		if (!ok) return;
 
 		int pid = App.Tasks.RunCompiled(f, r, new string[] { "WPF_PREVIEW", s_wpfPreview.pid.ToS(), s_wpfPreview.time.ToS() });
@@ -258,7 +258,7 @@ class RunningTasks {
 	}
 
 	public void OnWorkspaceClosed() {
-		bool onExit = App.Loaded >= EProgramState.Unloading;
+		bool onExit = App.Loaded >= AppState.Unloading;
 
 		if (onExit) {
 			_disposed = true;
@@ -334,7 +334,7 @@ class RunningTasks {
 
 	void _UpdatePanels() {
 		_updateUI = false;
-		Panels.Tasks.aaUpdateList();
+		Panels.Tasks.UpdateList();
 	}
 
 	/// <summary>
@@ -397,7 +397,7 @@ class RunningTasks {
 
 	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running, bool runFromEditor = false) {
 		running = null;
-		if (r.ifRunning == EIfRunning.run || (r.ifRunning == EIfRunning.run_restart && !runFromEditor)) return true;
+		if (r.ifRunning == MCIfRunning.run || (r.ifRunning == MCIfRunning.run_restart && !runFromEditor)) return true;
 		running = _GetRunning(f);
 		return running == null;
 	}
@@ -421,21 +421,21 @@ class RunningTasks {
 		g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
-			if (!ifRunning.Has(EIfRunning._norestartFlag) && ifRunning != EIfRunning.restart) {
-				if (runFromEditor) ifRunning = EIfRunning.restart;
-				else if (ifRunning == EIfRunning.end_restart) ifRunning = EIfRunning.end;
-				else ifRunning |= EIfRunning._norestartFlag;
+			if (!ifRunning.Has(MCIfRunning._norestartFlag) && ifRunning != MCIfRunning.restart) {
+				if (runFromEditor) ifRunning = MCIfRunning.restart;
+				else if (ifRunning == MCIfRunning.end_restart) ifRunning = MCIfRunning.end;
+				else ifRunning |= MCIfRunning._norestartFlag;
 			}
 			//print.it(same, ifRunning);
 			switch (ifRunning) {
-			case EIfRunning.cancel:
+			case MCIfRunning.cancel:
 				break;
-			case EIfRunning.wait when !noDefer:
+			case MCIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
 				return (int)script.RunResult_.deferred;
-			case EIfRunning.restart when _EndTask(running):
+			case MCIfRunning.restart when _EndTask(running):
 				goto g1;
-			case EIfRunning.end:
+			case MCIfRunning.end:
 				_EndTask(running);
 				break;
 			default: //warn
@@ -450,7 +450,7 @@ class RunningTasks {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
 			var IL = uacInfo.ofThisProcess.IntegrityLevel;
-			if (r.uac == EUac.inherit) {
+			if (r.uac == MCUac.inherit) {
 				switch (IL) {
 				case UacIL.High: preIndex = 1; break;
 				case UacIL.UIAccess: uac = _SpUac.uiAccess; preIndex = 2; break;
@@ -459,10 +459,10 @@ class RunningTasks {
 				switch (IL) {
 				case UacIL.Medium:
 				case UacIL.UIAccess:
-					if (r.uac == EUac.admin) uac = _SpUac.admin;
+					if (r.uac == MCUac.admin) uac = _SpUac.admin;
 					break;
 				case UacIL.High:
-					if (r.uac == EUac.user) uac = _SpUac.userFromAdmin;
+					if (r.uac == MCUac.user) uac = _SpUac.userFromAdmin;
 					break;
 				case UacIL.Low:
 				case UacIL.Untrusted:
@@ -474,7 +474,7 @@ class RunningTasks {
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
-				if (r.uac == EUac.admin) preIndex = 1;
+				if (r.uac == MCUac.admin) preIndex = 1;
 			}
 		}
 

@@ -273,7 +273,7 @@ partial class Program {
 	}
 
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
-		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return default;
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) return default;
 		int pos = doc.aaaCurrentPos16;
 		var f = doc.EFile;
 		//is pos in a toolbar function?
@@ -296,8 +296,8 @@ partial class Program {
 
 	void _AddTriggerWindow(_Toolbar t, int pos = -1) {
 		var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-		if (!d.aaShowAndWait(null)) return;
-		string sTrigger = d.aaResultCode, sAction = t.Name, sSep = " ";
+		if (!d.AaShowAndWait(null)) return;
+		string sTrigger = d.AaResultCode, sAction = t.Name, sSep = " ";
 		if (!t.method.ReturnsVoid) {
 			sTrigger += ", later: TWLater.Name";
 			sAction = $"ta => ta.ShowToolbarWhenWindowName({sAction}, \"*window_name_when_the_toolbar_is_visible*\")";
@@ -425,13 +425,13 @@ Please edit window name strings in the toolbar trigger code.
 	}
 
 	static SciCode _OpenSourceFile(FileNode f, int pos = -1) {
-		if (App.Model.OpenAndGoTo(f, columnOrPos: pos)) return Panels.Editor.aaActiveDoc;
+		if (App.Model.OpenAndGoTo(f, columnOrPos: pos)) return Panels.Editor.ActiveDoc;
 		return null;
 	}
 
 	static SciCode _OpenSourceFile(FileNode f, TextSpan span) {
 		if (!App.Model.OpenAndGoTo(f)) return null;
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaSelect(true, span.End, span.Start, true);
 		return doc;
 	}

@@ -33,7 +33,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="resources\ResourceHacker.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Page Remove="resources\Property_16x.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="resources\ResourceHacker.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -54,6 +62,21 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <!--<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
 	  </PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 	<ProjectExtensions><VisualStudio><UserProperties nativemethods_1json__JsonSchema="https://aka.ms/CsWin32.schema.json" /></VisualStudio></ProjectExtensions>

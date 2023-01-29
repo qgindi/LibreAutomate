@@ -14,7 +14,7 @@ using Au.Tools;
 //	string/text, folder/directory, program/app/application, run/open, email/mail, regular expression/regex
 //	See _DebugGetWords.
 
-class PanelCookbook : UserControl {
+class PanelCookbook {
 	KTreeView _tv;
 	TextBox _search;
 	_Item _root;
@@ -29,9 +29,10 @@ class PanelCookbook : UserControl {
 #endif
 
 	public PanelCookbook() {
-		this.UiaSetName("Cookbook panel");
+		P = new _Base(this);
+		P.UiaSetName("Cookbook panel");
 
-		var b = new wpfBuilder(this).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
+		var b = new wpfBuilder(P).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
 		b.R.Add(out _search).Tooltip("Part of recipe name.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
@@ -58,13 +59,25 @@ class PanelCookbook : UserControl {
 #endif
 	}
 
-	protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
+	public UserControl P { get; }
+
+	void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 		if (!_loaded && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
 			_loaded = true;
 			_Load();
 			_tv.ItemActivated += e => _OpenRecipe(e.Item as _Item, false);
 		}
-		base.OnPropertyChanged(e);
+	}
+
+	class _Base : UserControl {
+		PanelCookbook _p;
+
+		public _Base(PanelCookbook p) { _p = p; }
+
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
+			_p.OnPropertyChanged(e);
+			base.OnPropertyChanged(e);
+		}
 	}
 
 	void _Load() {
@@ -246,7 +259,7 @@ class PanelCookbook : UserControl {
 	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a) _stem;
 
 	public void OpenRecipe(string s) {
-		Panels.PanelManager[this].Visible = true;
+		Panels.PanelManager[P].Visible = true;
 		_OpenRecipe(_FindRecipe(s), true);
 	}
 
@@ -266,7 +279,7 @@ class PanelCookbook : UserControl {
 	void _HistoryMenu() {
 		var m = new popupMenu();
 		for (int i = _history.Count - 1; --i >= 0;) m[_history[i]] = o => _Open(o.Text);
-		m.Show(owner: this);
+		m.Show(owner: P);
 
 		void _Open(string name) {
 			var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.name == name);

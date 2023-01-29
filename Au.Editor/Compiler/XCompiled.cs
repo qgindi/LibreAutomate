@@ -72,13 +72,13 @@ static partial class Compiler {
 					char ch = value[v.start];
 					switch (ch) {
 					case 't':
-						r.role = (ERole)value.ToInt(offs);
+						r.role = (MCRole)value.ToInt(offs);
 						break;
 					case 'n':
-						r.ifRunning = (EIfRunning)value.ToInt(offs);
+						r.ifRunning = (MCIfRunning)value.ToInt(offs);
 						break;
 					case 'u':
-						r.uac = (EUac)value.ToInt(offs);
+						r.uac = (MCUac)value.ToInt(offs);
 						break;
 					case 'b':
 						r.bit32 = true;

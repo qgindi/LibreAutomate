@@ -141,7 +141,7 @@ public static partial class ImageUtil {
 		if (image.Ends(".xaml", true)) {
 			if (ResourceUtil.HasResourcePrefix(image)) return (FrameworkElement)ResourceUtil.GetXamlObject(image);
 			if (image.Starts("imagefile:")) image = image[10..];
-			using var stream = filesystem.loadStream(image);
+			using var stream = File.OpenRead(image);
 			return (FrameworkElement)XamlReader.Load(stream);
 		} else {
 			var bf = LoadWpfImage(image);

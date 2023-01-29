@@ -121,7 +121,7 @@ class EditGoBack {
 		var v = _a[_i];
 		_UpdateUI();
 		if (!App.Model.SetCurrentFile(v.fn)) return;
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaGoToPos(false, v.pos);
 		doc.Focus();
 	}

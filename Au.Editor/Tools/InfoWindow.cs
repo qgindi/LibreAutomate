@@ -62,8 +62,8 @@ class InfoWindow : KPopup {
 		//public _Control(InfoWindow t) {
 		public _InfoBox() {
 			//_t = t;
-			this.a4InitUseSystemFont = true;
-			this.a4InitBlankMargins = (4, 4);
+			this.AaInitUseSystemFont = true;
+			this.AaInitBlankMargins = (4, 4);
 		}
 
 		//protected override void aaOnHandleCreated() {

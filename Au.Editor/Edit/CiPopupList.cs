@@ -142,7 +142,7 @@ class CiPopupList
 		if (text == null) return;
 		_textPopup.Text = text;
 		_textPopup.OnLinkClick = (ph, e) => ph.Text = _compl.GetDescriptionDoc(ci, e.ToInt(1));
-		_textPopup.Show(Panels.Editor.aaActiveDoc, _popup.Hwnd.Rect, Dock.Right);
+		_textPopup.Show(Panels.Editor.ActiveDoc, _popup.Hwnd.Rect, Dock.Right);
 	}
 
 	void _SortAndSetControlItems() {

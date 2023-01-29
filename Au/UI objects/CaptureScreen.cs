@@ -38,13 +38,13 @@ namespace Au.More {
 		/// <exception cref="ArgumentException">The rectangle is empty or does not intercect with the window's client area.</exception>
 		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
-		/// If <i>how</i> contains <b>WindowDC</b> (default) or <b>PrintWindow</b>:
+		/// If <i>flags</i> contains <b>WindowDC</b> (default) or <b>PrintWindow</b>:
 		/// - If the window is partially or completely transparent, captures its non-transparent view.
 		/// - If the window is DPI-scaled, captures its non-scaled view. However <i>r</i> must contain scaled coordinates.
 		/// </remarks>
-		public static Bitmap Image(wnd w, RECT? r = null, ICHow how = ICHow.WindowDC) {
+		public static Bitmap Image(wnd w, RECT? r = null, CIFlags flags = CIFlags.WindowDC) {
 			using var c = new CaptureScreenImage();
-			if (!c.Capture(w, r, how)) return null;
+			if (!c.Capture(w, r, flags)) return null;
 			return c.ToBitmap();
 		}
 
@@ -72,10 +72,10 @@ namespace Au.More {
 		/// Gets pixel colors from a rectangle in window client area.
 		/// </summary>
 		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
-		/// <inheritdoc cref="Image(wnd, RECT?, ICHow)"/>
-		public static uint[,] Pixels(wnd w, RECT? r = null, ICHow how = ICHow.WindowDC) {
+		/// <inheritdoc cref="Image(wnd, RECT?, CIFlags)"/>
+		public static uint[,] Pixels(wnd w, RECT? r = null, CIFlags flags = CIFlags.WindowDC) {
 			using var c = new CaptureScreenImage();
-			if (!c.Capture(w, r, how)) return null;
+			if (!c.Capture(w, r, flags)) return null;
 			return c.ToArray2D();
 		}
 
@@ -96,10 +96,10 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="p">x y in <i>w</i> client area.</param>
 		/// <returns>Pixel color in 0xAARRGGBB format. Alpha 0xFF.</returns>
-		/// <inheritdoc cref="Image(wnd, RECT?, ICHow)"/>
-		public static unsafe uint Pixel(wnd w, POINT p, ICHow how = ICHow.WindowDC) {
+		/// <inheritdoc cref="Image(wnd, RECT?, CIFlags)"/>
+		public static unsafe uint Pixel(wnd w, POINT p, CIFlags flags = CIFlags.WindowDC) {
 			using var c = new CaptureScreenImage();
-			if (!c.Capture(w, new(p.x, p.y, 1, 1), how)) return 0;
+			if (!c.Capture(w, new(p.x, p.y, 1, 1), flags)) return 0;
 			return c.Pixels[0];
 		}
 
@@ -108,7 +108,7 @@ namespace Au.More {
 		#region capture image UI
 
 		/// <summary>
-		/// Creates image from a user-selected area of screen pixels. Or gets single pixel color, or just rectangle.
+		/// UI for capturing an image, color or rectangle on screen.
 		/// </summary>
 		/// <returns>false if canceled.</returns>
 		/// <param name="result">Receives results.</param>
@@ -117,13 +117,13 @@ namespace Au.More {
 		/// <remarks>
 		/// Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
 		/// 
-		/// Some windows cannot be captured using this tool: the Windows Start menu, and topmost windows of UAC uiAccess processes (rare). Because they are always on top of normal topmost windows. It's an OS bug or undocumented feature.
+		/// Cannot capture windows that are always on top of normal topmost windows: 1. Start menu. 2. Topmost windows of UAC uiAccess processes (rare).
 		/// </remarks>
-		public static bool ImageUI(out ICResult result, ICFlags flags = 0, AnyWnd owner = default) {
+		public static bool ImageColorRectUI(out CIUResult result, CIUFlags flags = 0, AnyWnd owner = default) {
 			result = default;
 
-			switch (flags & (ICFlags.Image | ICFlags.Color | ICFlags.Rectangle)) {
-			case 0 or ICFlags.Image or ICFlags.Color or ICFlags.Rectangle: break;
+			switch (flags & (CIUFlags.Image | CIUFlags.Color | CIUFlags.Rectangle)) {
+			case 0 or CIUFlags.Image or CIUFlags.Color or CIUFlags.Rectangle: break;
 			default: throw new ArgumentException();
 			}
 
@@ -151,7 +151,7 @@ namespace Au.More {
 					}
 				}
 
-				bool windowPixels = flags.HasAny(ICFlags.WindowDC | ICFlags.PrintWindow);
+				bool windowPixels = flags.HasAny(CIUFlags.WindowDC | CIUFlags.PrintWindow);
 				g1:
 				RECT rs = screen.virtualScreen;
 				//RECT rs = screen.primary.Rect; //for testing, to see print output in other screen
@@ -167,7 +167,7 @@ namespace Au.More {
 					if (!_WaitForHotkey("Press F3 to select window from mouse pointer. Or Esc.")) return false;
 					wTL = wnd.fromMouse(WXYFlags.NeedWindow);
 					rc = wTL.ClientRect;
-					using var bw = Image(wTL, rc, flags.ToICHow_());
+					using var bw = Image(wTL, rc, flags.ToCIFlags_());
 					bs = new Bitmap(rs.Width, rs.Height);
 					using var g = Graphics.FromImage(bs);
 					g.Clear(Color.Gray);
@@ -224,7 +224,7 @@ namespace Au.More {
 			}
 			return true;
 
-			static wnd _WindowFromRect(ICResult r, wnd wTL) {
+			static wnd _WindowFromRect(CIUResult r, wnd wTL) {
 				//after closing our window, may need several ms until OS sets correct Z order. Until that may get different w1 and w2.
 				Thread.Sleep(25);
 
@@ -263,21 +263,21 @@ namespace Au.More {
 			bool _paintedOnce;
 			bool _magnMoved;
 			bool _capturing;
-			ICFlags _flags;
+			CIUFlags _flags;
 			MouseCursor _cursor;
 			SIZE _textSize;
 			int _dpi;
 			int _res;
 
-			public ICResult Result;
+			public CIUResult Result;
 
 			/// <returns>0 Cancel, 1 OK, 2 Retry.</returns>
-			public int Show(Bitmap img, ICFlags flags, RECT r) {
+			public int Show(Bitmap img, CIUFlags flags, RECT r) {
 				_img = img;
 				_flags = flags;
 				_cursor = MouseCursor.Load(ResourceUtil.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
 				_dpi = screen.primary.Dpi;
-				_w = WndUtil.CreateWindow(_WndProc, true, WndUtil.WindowClassDWP_, "Au.CaptureScreen.ImageUI", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
+				_w = WndUtil.CreateWindow(_WndProc, true, WndUtil.WindowClassDWP_, "Au.CaptureScreen", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);
 				_w.ActivateL();
 
 				try {
@@ -357,16 +357,16 @@ namespace Au.More {
 				//format text to draw below magnifier
 				string text;
 				using (new StringBuilder_(out var s)) {
-					var ic = _flags & (ICFlags.Image | ICFlags.Color | ICFlags.Rectangle);
-					if (ic == 0) ic = ICFlags.Image | ICFlags.Color;
-					bool canColor = ic.Has(ICFlags.Color);
+					var ic = _flags & (CIUFlags.Image | CIUFlags.Color | CIUFlags.Rectangle);
+					if (ic == 0) ic = CIUFlags.Image | CIUFlags.Color;
+					bool canColor = ic.Has(CIUFlags.Color);
 					if (canColor) {
 						var color = _img.GetPixel(pc.x, pc.y).ToArgb() & 0xffffff;
 						s.Append("Color  #").Append(color.ToString("X6")).Append('\n');
 					}
-					if (ic == ICFlags.Color) {
+					if (ic == CIUFlags.Color) {
 						s.Append("Click to capture color.\n");
-					} else if (ic == ICFlags.Rectangle) {
+					} else if (ic == CIUFlags.Rectangle) {
 						s.Append("Mouse-drag to capture rectangle.\n");
 					} else if (!canColor) {
 						s.Append("Mouse-drag to capture image.\n");
@@ -426,12 +426,12 @@ namespace Au.More {
 
 				//bool isAnyShape = false; //rejected. Not useful.
 				bool isColor = false;
-				var ic = _flags & (ICFlags.Image | ICFlags.Color | ICFlags.Rectangle);
-				if (ic == ICFlags.Color) {
+				var ic = _flags & (CIUFlags.Image | CIUFlags.Color | CIUFlags.Rectangle);
+				if (ic == CIUFlags.Color) {
 					isColor = true;
 				} else {
 					var mod = keys.gui.getMod();
-					if (mod != 0 && ic == ICFlags.Rectangle) return;
+					if (mod != 0 && ic == CIUFlags.Rectangle) return;
 					switch (mod) {
 					case 0: break;
 					case KMod.Ctrl when ic == 0: isColor = true; break;
@@ -439,7 +439,7 @@ namespace Au.More {
 					}
 				}
 
-				Result = new ICResult();
+				Result = new CIUResult();
 				var r = new RECT(p0.x, p0.y, 0, 0);
 				if (isColor) {
 					Result.color = (uint)_img.GetPixel(p0.x, p0.y).ToArgb();
@@ -474,7 +474,7 @@ namespace Au.More {
 						return;
 					}
 
-					if (ic != ICFlags.Rectangle) {
+					if (ic != CIUFlags.Rectangle) {
 						Result.image = _img.Clone(r, PixelFormat.Format32bppArgb);
 					}
 
@@ -496,23 +496,23 @@ namespace Au.More {
 		#region other
 
 		/// <summary>
-		/// Waits for Shift key and then captures a window or/and rectangle or point on screen.
+		/// UI for capturing a rectangle, point or/and window on screen with Shift key.
 		/// </summary>
 		/// <returns>true if captured, false if pressed Esc.</returns>
 		/// <param name="result"></param>
 		/// <param name="type"></param>
 		/// <param name="rectInClient">Get rectangle in window client area.</param>
 		/// <param name="wxyFlags"></param>
-		public static unsafe bool WindowRectUI(out CWRResult result, CWRType type, bool rectInClient = false, WXYFlags wxyFlags = 0) {
+		public static unsafe bool RectPointWindowUI(out CRUResult result, CRUType type, bool rectInClient = false, WXYFlags wxyFlags = 0) {
 			result = default;
 			var wxyFlags2 = wxyFlags & (WXYFlags.NeedWindow | WXYFlags.NeedControl);
 
 			var s = type switch {
-				CWRType.Window => "Press Shift to capture %",
-				CWRType.Rect => "Shift+mouse move to capture rectangle on screen.",
-				CWRType.Point => "Press Shift to capture mouse coordinates.",
-				CWRType.WindowAndPoint => "Press Shift to capture mouse coordinates in a %.",
-				CWRType.WindowAndRect => "Shift+mouse move to capture rectangle in a %.",
+				CRUType.Window => "Press Shift to capture %",
+				CRUType.Rect => "Shift+mouse move to capture rectangle on screen.",
+				CRUType.Point => "Press Shift to capture mouse coordinates.",
+				CRUType.WindowAndPoint => "Press Shift to capture mouse coordinates in a %.",
+				CRUType.WindowAndRect => "Shift+mouse move to capture rectangle in a %.",
 				_ => "Press Shift to capture %.\nOr Shift+mouse move to capture rectangle in a %."
 			};
 			s = s.Replace("%", wxyFlags2 switch { WXYFlags.NeedWindow => "window", WXYFlags.NeedControl => "control", _ => "window or control" });
@@ -520,7 +520,7 @@ namespace Au.More {
 			using var osd = osdText.showText(s, -1);
 
 			wnd w = default, wClip = default;
-			bool needWindow = type is not (CWRType.Rect or CWRType.Point);
+			bool needWindow = type is not (CRUType.Rect or CRUType.Point);
 			if (needWindow) { //draw black rectangle around window or control from mouse
 				using var osrw = new osdRect { };
 				osrw.Show();
@@ -543,7 +543,7 @@ namespace Au.More {
 			var p = mouse.xy;
 			RECT r = new(p.x, p.y, 0, 0);
 
-			if (type is not (CWRType.Window or CWRType.Point or CWRType.WindowAndPoint)) { //draw red rectangle
+			if (type is not (CRUType.Window or CRUType.Point or CRUType.WindowAndPoint)) { //draw red rectangle
 				if (needWindow) {
 					wClip = wxyFlags2 == WXYFlags.NeedControl ? w : w.Window;
 					var rw = rectInClient ? wClip.ClientRectInScreen : wClip.Rect;
@@ -643,22 +643,22 @@ namespace Au.More {
 		/// <param name="w">Window or control.</param>
 		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If null, uses <c>w.ClientRect</c>.</param>
 		/// <returns>false if <i>r</i> empty or not in the client area and used flag <b>Relaxed</b> (else exception).</returns>
-		public bool Capture(wnd w, RECT? r = null, ICHow how = ICHow.WindowDC) => _Capture(w.ThrowIf0(), r, how);
+		public bool Capture(wnd w, RECT? r = null, CIFlags flags = CIFlags.WindowDC) => _Capture(w.ThrowIf0(), r, flags);
 
 		/// <summary>
 		/// Captures image from screen into memory stored in this variable.
 		/// </summary>
 		/// <param name="relaxed">If <i>r</i> empty, return false instead of exception.</param>
 		/// <returns>false if <i>r</i> empty and <i>relaxed</i> true (else exception).</returns>
-		public bool Capture(RECT r, bool relaxed = false) => _Capture(default, r, how: relaxed ? ICHow.Relaxed : 0);
+		public bool Capture(RECT r, bool relaxed = false) => _Capture(default, r, flags: relaxed ? CIFlags.Relaxed : 0);
 
-		bool _Capture(wnd w, RECT? rect, ICHow how) {
-			const ICHow c_howMask = ICHow.WindowDC | ICHow.PrintWindow /*| ICHow.WindowDwm*/;
-			if ((how & c_howMask) is not (0 or ICHow.WindowDC or ICHow.PrintWindow /*or ICHow.WindowDwm*/)) throw new ArgumentException();
-			bool fromWindow = how.HasAny(c_howMask), printWindow = how.Has(ICHow.PrintWindow);
+		bool _Capture(wnd w, RECT? rect, CIFlags flags) {
+			const CIFlags c_howMask = CIFlags.WindowDC | CIFlags.PrintWindow /*| CIFlags.WindowDwm*/;
+			if ((flags & c_howMask) is not (0 or CIFlags.WindowDC or CIFlags.PrintWindow /*or CIFlags.WindowDwm*/)) throw new ArgumentException();
+			bool fromWindow = flags.HasAny(c_howMask), printWindow = flags.Has(CIFlags.PrintWindow);
 			RECT r = rect ?? default, rc = default;
 			if (!w.Is0) {
-				//if (how.Has(ICHow.WindowDwm)) { //w must be top-level window
+				//if (flags.Has(CIFlags.WindowDwm)) { //w must be top-level window
 				//	var ww = w.Window;
 				//	if (ww != w) {
 				//		ww.ThrowIf0();
@@ -682,16 +682,16 @@ namespace Au.More {
 						int dpiw = Dpi.OfWindow(ww), dpis = screen.of(ww).Dpi;
 						r = RECT.FromLTRB(Math2.MulDiv(r.left, dpiw, dpis), Math2.MulDiv(r.top, dpiw, dpis), Math2.MulDiv(r.right, dpiw, dpis), Math2.MulDiv(r.bottom, dpiw, dpis));
 					}
-					if (!r.Intersect(rc)) return how.Has(ICHow.Relaxed) ? false : throw new ArgumentException("rectangle not in window");
+					if (!r.Intersect(rc)) return flags.Has(CIFlags.Relaxed) ? false : throw new ArgumentException("rectangle not in window");
 				}
 
-				//if (how.Has(ICHow.WindowDwm)) {
+				//if (flags.Has(CIFlags.WindowDwm)) {
 				//	_dwm ??= new();
-				//	if (!_dwm.Init(w, r, dpiScaled)) return how.Has(ICHow.Relaxed) ? false : throw new ArgumentException("rectangle not in window");
+				//	if (!_dwm.Init(w, r, dpiScaled)) return flags.Has(CIFlags.Relaxed) ? false : throw new ArgumentException("rectangle not in window");
 				//	w = _dwm.WndThumbnail;
 				//}
 			}
-			if (r.NoArea) return how.Has(ICHow.Relaxed) ? false : throw new ArgumentException("empty rectangle");
+			if (r.NoArea) return flags.Has(CIFlags.Relaxed) ? false : throw new ArgumentException("empty rectangle");
 
 			int dibWidth = printWindow ? rc.Width : r.Width, dibHeight = printWindow ? rc.Height : r.Height;
 			if (_mb == null || dibWidth != _dibWidth || dibHeight != _dibHeight) {
@@ -722,7 +722,7 @@ namespace Au.More {
 						spanFrom.CopyTo(spanTo);
 					}
 				}
-				//} else if (how.Has(ICHow.WindowDwm)) {
+				//} else if (flags.Has(CIFlags.WindowDwm)) {
 				//	if (!Api.PrintWindow(w, _mb.Hdc, Api.PW_CLIENTONLY | Api.PW_RENDERFULLCONTENT)) w.ThrowNoNative("*get pixels");
 				//	_alphaOk = true;
 				//	return true;
@@ -790,8 +790,8 @@ namespace Au.More {
 		}
 
 		//rejected. Unreliable. Not all windows that require PW_RENDERFULLCONTENT have WS_EX_NOREDIRECTIONBITMAP. Eg Chrome on Win8.1.
-		//static uint _GetPrintWindowFlags(ICHow how, wnd w, RECT r) {
-		//	if (!how.Has(ICHow.PrintWindow)) return 0;
+		//static uint _GetPrintWindowFlags(CIFlags flags, wnd w, RECT r) {
+		//	if (!flags.Has(CIFlags.PrintWindow)) return 0;
 		//	var f = Api.PW_CLIENTONLY;
 		//	if (osVersion.minWin8_1) {
 		//		var wtl = w.Window;
@@ -805,7 +805,7 @@ namespace Au.More {
 		//				return true;
 		//			}, 0);
 		//	}
-		//	if (how.Has(ICHow.WindowDC) && 0 == (f & Api.PW_RENDERFULLCONTENT)) f = 0;
+		//	if (flags.Has(CIFlags.WindowDC) && 0 == (f & Api.PW_RENDERFULLCONTENT)) f = 0;
 		//	return f;
 		//}
 	}
@@ -816,7 +816,7 @@ namespace Au.Types {
 	/// Used with <see cref="CaptureScreen"/> functions.
 	/// </summary>
 	[Flags]
-	public enum ICHow {
+	public enum CIFlags {
 		/// <inheritdoc cref="IFFlags.WindowDC"/>
 		WindowDC = 1,
 
@@ -826,7 +826,7 @@ namespace Au.Types {
 		///// <inheritdoc cref="IFFlags.WindowDwm"/>
 		//WindowDwm = 4,
 
-		//note: the above values must be the same in ICHow, ICFlags, IFFlags, OcrFlags.
+		//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
 		/// <summary>
 		/// Flag: don't throw exception when the specified rectangle or point does not intersect with the window client area or when the rectangle is empty. Instead return null or 0.
@@ -841,19 +841,19 @@ namespace Au.Types {
 	}
 
 	static partial class ExtMisc {
-		internal static ICHow ToICHow_(this ICFlags t) => (ICHow)t & (ICHow.WindowDC | ICHow.PrintWindow /*| ICHow.WindowDwm*/);
-		internal static ICHow ToICHow_(this IFFlags t) => (ICHow)t & (ICHow.WindowDC | ICHow.PrintWindow /*| ICHow.WindowDwm*/);
-		internal static ICHow ToICHow_(this OcrFlags t) => (ICHow)t & (ICHow.WindowDC | ICHow.PrintWindow /*| ICHow.WindowDwm*/);
+		internal static CIFlags ToCIFlags_(this CIUFlags t) => (CIFlags)t & (CIFlags.WindowDC | CIFlags.PrintWindow /*| CIFlags.WindowDwm*/);
+		internal static CIFlags ToCIFlags_(this IFFlags t) => (CIFlags)t & (CIFlags.WindowDC | CIFlags.PrintWindow /*| CIFlags.WindowDwm*/);
+		internal static CIFlags ToCIFlags_(this OcrFlags t) => (CIFlags)t & (CIFlags.WindowDC | CIFlags.PrintWindow /*| CIFlags.WindowDwm*/);
 	}
 
 	/// <summary>
-	/// Flags for <see cref="CaptureScreen.ImageUI"/>.
+	/// Flags for <see cref="CaptureScreen.ImageColorRectUI"/>.
 	/// </summary>
 	/// <remarks>
 	/// Only one of flags <b>Image</b>, <b>Color</b> and <b>Rectangle</b> can be used. If none, can capture image or color.
 	/// </remarks>
 	[Flags]
-	public enum ICFlags {
+	public enum CIUFlags {
 		/// <inheritdoc cref="IFFlags.WindowDC"/>
 		WindowDC = 1,
 
@@ -864,7 +864,7 @@ namespace Au.Types {
 		///// <inheritdoc cref="IFFlags.WindowDwm"/>
 		//WindowDwm = 4,
 
-		//note: the above values must be the same in ICHow, ICFlags, IFFlags, OcrFlags.
+		//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
 		/// <summary>Can capture only image, not color.</summary>
 		Image = 0x100,
@@ -876,13 +876,27 @@ namespace Au.Types {
 		Rectangle = 0x400,
 	}
 
+#pragma warning disable 1591 //XML doc
+	[Flags, Obsolete("Renamed to CIUFlags"), EditorBrowsable(EditorBrowsableState.Never)]
+	public enum ICFlags {
+		WindowDC = 1,
+		PrintWindow = 2,
+		Image = 0x100,
+		Color = 0x200,
+		Rectangle = 0x400,
+	}
+
+	[Obsolete("Renamed to CIUResult"), EditorBrowsable(EditorBrowsableState.Never)]
+	public class ICResult : CIUResult { }
+#pragma warning restore 1591 //XML doc
+
 	/// <summary>
-	/// Results of <see cref="CaptureScreen.ImageUI"/>.
+	/// Results of <see cref="CaptureScreen.ImageColorRectUI"/>.
 	/// </summary>
-	public class ICResult {
+	public class CIUResult {
 		/// <summary>
 		/// Captured image.
-		/// null if captured single pixel color or used flag <see cref="ICFlags.Rectangle"/>.
+		/// null if captured single pixel color or used flag <see cref="CIUFlags.Rectangle"/>.
 		/// </summary>
 		public Bitmap image;
 
@@ -915,9 +929,9 @@ namespace Au.Types {
 	}
 
 	/// <summary>
-	/// <see cref="CaptureScreen.WindowRectUI"/> UI type.
+	/// <see cref="CaptureScreen.RectPointWindowUI"/> UI type.
 	/// </summary>
-	public enum CWRType {
+	public enum CRUType {
 		/// <summary>Capture only window.</summary>
 		Window,
 
@@ -938,7 +952,7 @@ namespace Au.Types {
 	}
 
 	/// <summary>
-	/// <see cref="CaptureScreen.WindowRectUI"/> results.
+	/// <see cref="CaptureScreen.RectPointWindowUI"/> results.
 	/// </summary>
-	public record struct CWRResult(wnd w, bool hasRect, RECT r);
+	public record struct CRUResult(wnd w, bool hasRect, RECT r);
 }

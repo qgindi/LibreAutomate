@@ -109,7 +109,7 @@ class Duiimage : KDialogWindow {
 			dialog.showWarning("Possibly wrong window", "The window that contained the captured image possibly disappeared while capturing. Please review the code. If the window is wrong, click the [Window...] button and capture the correct window; or capture later with the 'Find window' tool or 'Quick capturing' hotkey.", owner: this);
 		}
 
-		if (_Flags is 0 or ICFlags.PrintWindow && Dpi.IsWindowVirtualized(r.w)) {
+		if (_Flags is 0 or CIUFlags.PrintWindow && Dpi.IsWindowVirtualized(r.w)) {
 			TUtil.InfoTooltip(ref _ttInfo, e.Button, """
 Note: The window is DPI-scaled. Its pixel colors will change after resizing, and the code may stop working.
 To avoid it, capture with flag WindowDC. Or try to move the window to another screen.
@@ -132,7 +132,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		300.ms();
 		string es = null;
 		try {
-			using var b = CaptureScreen.Image(_AreaWnd, how: _Flags.ToICHow_());
+			using var b = CaptureScreen.Image(_AreaWnd, flags: _Flags.ToCIFlags_());
 			var im = _isColor ? (IFImage)_color : _image;
 			int maxFound = 0, minNotfound = 0;
 			if (!new uiimageFinder(im).Exists(b)) {
@@ -153,13 +153,13 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		if (es != null) TUtil.InfoTooltip(ref _ttInfo, e.Button, es);
 	}
 
-	ICFlags _Flags => !wiflagsC.c.IsChecked ? 0 : wiflagsC.t.SelectedIndex switch { 1 => ICFlags.PrintWindow, _ => ICFlags.WindowDC };
+	CIUFlags _Flags => !wiflagsC.c.IsChecked ? 0 : wiflagsC.t.SelectedIndex switch { 1 => CIUFlags.PrintWindow, _ => CIUFlags.WindowDC };
 
-	bool _CaptureImageOrRect(bool rect, out ICResult r) {
+	bool _CaptureImageOrRect(bool rect, out CIUResult r) {
 		_ttInfo?.Close();
 
-		var fl = rect ? ICFlags.Rectangle : _Flags;
-		if (!CaptureScreen.ImageUI(out r, fl, this)) return false;
+		var fl = rect ? CIUFlags.Rectangle : _Flags;
+		if (!CaptureScreen.ImageColorRectUI(out r, fl, this)) return false;
 
 		var w2 = (!rect || _useCon) ? r.w : r.w.Window;
 		string es = null;
@@ -180,7 +180,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 	}
 
 	//Use r on Capture. Use image on Open or Paste.
-	void _SetImage(ICResult r = null, Bitmap image = null) {
+	void _SetImage(CIUResult r = null, Bitmap image = null) {
 		if (r != null) { //on Capture
 			var w = r.w.Window; if (w.Is0) return;
 			_SetWndCon(w, r.w, true, false);
@@ -223,7 +223,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 	}
 
 	private void _bWnd_Click(WBButtonClickArgs e) {
-		var r = _code.a4ShowWndTool(this, _wnd, _con, checkControl: _useCon);
+		var r = _code.AaShowWndTool(this, _wnd, _con, checkControl: _useCon);
 		if (r.ok) _SetWndCon(r.w, r.con, r.useCon, true);
 	}
 
@@ -300,7 +300,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 			b.Append(waitNot ? "uiimage.waitNot(" : "uiimage.find(");
 			if (wait || waitNot || orThrow) if (b.AppendWaitTime(waitTime ?? "0", orThrow, appendAlways: waitNot)) b.Append(", ");
 
-			(wndCode, wndVar) = _code.a4GetWndFindCode(forTest, _wnd, _useCon ? _con : default);
+			(wndCode, wndVar) = _code.AaGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
 			bb.AppendLine(wndCode);
 
 			if (rectC.GetText(out var sRect)) b.AppendFormat("new({0}, {1})", wndVar, sRect);
@@ -368,7 +368,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 
 		var R = bb.Append(b).ToString();
 
-		if (!forTest) _code.a4SetText(R, wndCode.Lenn());
+		if (!forTest) _code.AaSetText(R, wndCode.Lenn());
 
 		return (R, wndVar);
 	}
@@ -511,7 +511,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		//_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = c_dialogInfo;
-		_info.a4AddElem(this, c_dialogInfo);
+		_info.AaAddElem(this, c_dialogInfo);
 
 		_info.InfoC(controlC,
 @"Search only in control (if captured), not in whole window.

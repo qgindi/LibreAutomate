@@ -110,7 +110,7 @@ class Dwnd : KDialogWindow {
 		b.Row(-1).StartGrid().Columns(-1, 0, -1);
 		b.Row(-1).xAddInBorder(out _tree, "TR");
 		b.xAddSplitterV();
-		b.xAddInBorder(out _winInfo, "TL"); _winInfo.aaWrapLines = false; _winInfo.Name = "window_info";
+		b.xAddInBorder(out _winInfo, "TL"); _winInfo.AaWrapLines = false; _winInfo.Name = "window_info";
 		b.End();
 
 		b.End();
@@ -355,7 +355,7 @@ class Dwnd : KDialogWindow {
 		var R = f.Format();
 
 		if (!forTest) {
-			_code.a4SetText(R);
+			_code.AaSetText(R);
 		}
 
 		return (R, "w");
@@ -390,25 +390,25 @@ class Dwnd : KDialogWindow {
 	#region Insert, Test
 
 	/// <summary>
-	/// When OK clicked, the top-level window (even when <see cref="aaResultUseControl"/> is true).
+	/// When OK clicked, the top-level window (even when <see cref="AaResultUseControl"/> is true).
 	/// </summary>
-	public wnd aaResultWindow => _wnd;
+	public wnd AaResultWindow => _wnd;
 
 	/// <summary>
-	/// When OK clicked, the control (even when <see cref="aaResultUseControl"/> is false) or default(wnd).
+	/// When OK clicked, the control (even when <see cref="AaResultUseControl"/> is false) or default(wnd).
 	/// </summary>
-	public wnd aaResultControl => _con;
+	public wnd AaResultControl => _con;
 
 	/// <summary>
 	/// When OK clicked, true if a control was selected and the 'Control' checkbox checked.
-	/// Use <see cref="aaResultWindow"/> or <see cref="aaResultControl"/>, depending on this property.
+	/// Use <see cref="AaResultWindow"/> or <see cref="AaResultControl"/>, depending on this property.
 	/// </summary>
-	public bool aaResultUseControl { get; private set; }
+	public bool AaResultUseControl { get; private set; }
 
 	/// <summary>
 	/// When OK clicked, contains C# code. Else null.
 	/// </summary>
-	public string aaResultCode { get; private set; }
+	public string AaResultCode { get; private set; }
 
 	//rejected. Can use Closed event; then aaResultCode not null if OK.
 	///// <summary>
@@ -422,9 +422,9 @@ class Dwnd : KDialogWindow {
 		if (_forTrigger && s != null) s = TUtil.ArgsFromWndFindCode(s);
 
 		if (_dontInsert) {
-			aaResultCode = s;
+			AaResultCode = s;
 			if (s == null) e.Cancel = true;
-			else aaResultUseControl = !_con.Is0 && _cControl.IsChecked;
+			else AaResultUseControl = !_con.Is0 && _cControl.IsChecked;
 
 			if (this.IsModal_() == false) Close();
 			else DialogResult = s != null;
@@ -674,11 +674,11 @@ class Dwnd : KDialogWindow {
 	void _FillWindowInfo(in _WinInfo f) {
 		if (_wiWCP == 0) {
 			_wiWCP = 1;
-			_winInfo.aaTags.AddLinkTag("+switch", s => {
+			_winInfo.AaTags.AddLinkTag("+switch", s => {
 				_wiWCP = s.ToInt();
 				_SetText(default);
 			});
-			_winInfo.aaTags.AddLinkTag("+rect", s => {
+			_winInfo.AaTags.AddLinkTag("+rect", s => {
 				var w = (wnd)s.ToInt(0, out int e);
 				int client = s.ToInt(e);
 				var r = client == 1 ? w.ClientRectInScreen : w.Rect;
@@ -699,7 +699,7 @@ class Dwnd : KDialogWindow {
 		_commonInfos = new TUtil.CommonInfos(_info);
 
 		_info.aaaText = _dialogInfo;
-		_info.a4AddElem(this, _dialogInfo);
+		_info.AaAddElem(this, _dialogInfo);
 		TUtil.RegisterLink_DialogHotkey(_info, insertToo: !true);
 
 		_info.InfoCT(nameW, "Window name.", true);

@@ -1,5 +1,3 @@
-//TODO: use .winmd.
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -71,7 +69,7 @@ class CiWinapi {
 		if (sr.SyntaxTree != semo.SyntaxTree) {
 			var f = App.Model.Find(sr.SyntaxTree.FilePath, FNFind.CodeFile);
 			if (!App.Model.SetCurrentFile(f, dontChangeTreeSelection: true)) return false;
-			doc = Panels.Editor.aaActiveDoc;
+			doc = Panels.Editor.ActiveDoc;
 			fSelect = cd.sci.EFile;
 		}
 

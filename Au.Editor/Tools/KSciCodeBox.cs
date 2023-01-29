@@ -2,17 +2,17 @@ namespace Au.Controls;
 
 /// <summary>
 /// Scintilla-based control that shows colored C# code.
-/// Also can be used anywhere to edit styled C# code. To make editable and set text use <see cref="a4SetText"/> with readonlyFrom=-1.
+/// Also can be used anywhere to edit styled C# code. To make editable and set text use <see cref="AaSetText"/> with readonlyFrom=-1.
 /// </summary>
 class KSciCodeBox : KScintilla {
 	public KSciCodeBox() {
-		aaInitUseDefaultContextMenu = true;
+		AaInitUseDefaultContextMenu = true;
 		//aaInitBorder = true; //no, the native border is of different color and thickness (high DPI) than other WPF controls
 		Name = "code";
 	}
 
-	protected override void aaOnHandleCreated() {
-		base.aaOnHandleCreated();
+	protected override void AaOnHandleCreated() {
+		base.AaOnHandleCreated();
 
 		aaaSetMarginWidth(1, 0);
 		aaaIsReadonly = true;
@@ -21,7 +21,7 @@ class KSciCodeBox : KScintilla {
 		styles.ToScintilla(this);
 	}
 
-	protected override void aaOnSciNotify(ref Sci.SCNotification n) {
+	protected override void AaOnSciNotify(ref Sci.SCNotification n) {
 		//switch(n.nmhdr.code) {
 		//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
 		//default: print.it(n.nmhdr.code, n.modificationType); break;
@@ -42,7 +42,7 @@ class KSciCodeBox : KScintilla {
 			break;
 		}
 
-		base.aaOnSciNotify(ref n);
+		base.AaOnSciNotify(ref n);
 	}
 
 	/// <summary>
@@ -50,7 +50,7 @@ class KSciCodeBox : KScintilla {
 	/// </summary>
 	/// <param name="s"></param>
 	/// <param name="readonlyFrom">If 0, makes all text readonly. If s.Length or -1, makes all text editable. If between 0 and s.Length, makes readonly from this position.</param>
-	public void a4SetText(string s, int readonlyFrom = 0) {
+	public void AaSetText(string s, int readonlyFrom = 0) {
 		aaaIsReadonly = false;
 		aaaSetText(s, SciSetTextFlags.NoUndoNoNotify);
 		if (readonlyFrom > 0) {
@@ -63,7 +63,7 @@ class KSciCodeBox : KScintilla {
 		}
 	}
 
-	public int a4ReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : aaaPos16(_ReadonlyStartUtf8);
+	public int AaReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : aaaPos16(_ReadonlyStartUtf8);
 
 	protected int _readonlyLenUtf8;
 

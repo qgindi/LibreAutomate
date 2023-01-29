@@ -8,7 +8,7 @@ static partial class CompilerUtil {
 	/// Returns true if the dll file is a .NET assembly (any, not only of the .NET library).
 	/// </summary>
 	public static bool IsNetAssembly(string path) {
-		using var pr = new PEReader(File.OpenRead(path));
+		using var pr = new PEReader(filesystem.loadStream(path));
 		return pr.HasMetadata;
 	}
 
@@ -17,7 +17,7 @@ static partial class CompilerUtil {
 	/// </summary>
 	public static bool IsNetAssembly(string path, out bool isRefOnly) {
 		isRefOnly = false;
-		using var pr = new PEReader(File.OpenRead(path));
+		using var pr = new PEReader(filesystem.loadStream(path));
 		if (!pr.HasMetadata) return false;
 		var mr = pr.GetMetadataReader();
 

@@ -190,14 +190,14 @@ static class InsertCode {
 		static void _FoldInsertedCode(SciCode doc, int start, int nLines) {
 			string text = doc.aaaText;
 			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
-				var d = Panels.Editor.aaActiveDoc; if (d != doc || d.aaaText != text) return;
+				var d = Panels.Editor.ActiveDoc; if (d != doc || d.aaaText != text) return;
 				for (int line = d.aaaLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
 					if (0 != (d.Call(Sci.SCI_GETFOLDLEVEL, i) & Sci.SC_FOLDLEVELHEADERFLAG)) d.Call(Sci.SCI_FOLDLINE, i);
 				}
 			});
 		}
 
-		var w = d.aaWnd.Window;
+		var w = d.AaWnd.Window;
 		if (flags.Has(ICSFlags.ActivateEditor)) w.ActivateL();
 		if (!flags.Has(ICSFlags.NoFocus) && w.IsActive) d.Focus();
 	}
@@ -282,7 +282,7 @@ static class InsertCode {
 	/// <param name="s">If contains '%', removes it and moves caret there.</param>
 	public static void TextSimply(string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
-		var d = Panels.Editor.aaActiveDoc;
+		var d = Panels.Editor.ActiveDoc;
 		if (d == null || d.aaaIsReadonly) return;
 		TextSimplyInControl(d, s);
 	}
@@ -340,7 +340,7 @@ static class InsertCode {
 	/// Ignores newline at the end of the range text.
 	/// </summary>
 	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 
 		int indent = doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
@@ -372,7 +372,7 @@ static class InsertCode {
 	/// </summary>
 	/// <param name="concise">If text is single line, surround as single line.</param>
 	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
-		var doc = Panels.Editor.aaActiveDoc;
+		var doc = Panels.Editor.ActiveDoc;
 		int from = doc.aaaSelectionStart16, to = doc.aaaSelectionEnd16;
 		if (from == to) {
 			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
@@ -543,7 +543,7 @@ static class InsertCode {
 	}
 
 	public static void AddFileDescription() {
-		var doc = Panels.Editor.aaActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}
