@@ -8,20 +8,26 @@ partial class Program {
 	void OtherTriggers() {
 		
 		if (!true) { //examples. To enable and test it, replace (!true) with (true) and run this script.
+			computer.suspendResumeEvent += _computer_suspendResumeEvent;
 			SystemEvents.PowerModeChanged += _SystemEvents_PowerModeChanged;
 			SystemEvents.DisplaySettingsChanged += _SystemEvents_DisplaySettingsChanged;
 			SystemEvents.UserPreferenceChanged += _SystemEvents_UserPreferenceChanged;
 			SystemEvents.SessionEnding += _SystemEvents_SessionEnding;
 			SystemEvents.SessionEnded += _SystemEvents_SessionEnded;
 			SystemEvents.SessionSwitch += _SystemEvents_SessionSwitch;
-			//note: all SystemEvents event handler functions run in other thread.
+			//note: all above event handler functions run in other thread.
 			
 			run.thread(_ProcessTriggers);
 			//run.thread(_FileTriggers);
 		}
 	}
 	
-	//When computer suspended (sleep, hibernate) or resumed. Also when power mode changed (battery/AC etc).
+	//When computer suspending (sleep, hibernate) or resumed.
+	void _computer_suspendResumeEvent(PowerModes pm) {
+		print.it("_computer_suspendResumeEvent", pm, Environment.CurrentManagedThreadId);
+	}
+	
+	//When power mode changed (battery/AC etc).
 	void _SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e) {
 		print.it("PowerModeChanged", e.Mode, computer.isOnBattery, Environment.CurrentManagedThreadId);
 	}

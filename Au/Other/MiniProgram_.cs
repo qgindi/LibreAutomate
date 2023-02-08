@@ -77,7 +77,7 @@ static unsafe class MiniProgram_ {
 		if (!Api.WaitNamedPipe(pipeName, -1)) return;
 #else
 //rejected: JIT some functions in other thread. Now everything much faster than with old .NET.
-Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
+//	Speed of p1: with this 3500, without 6000 (slow Deserialize JIT).
 
 		for (int i = 0; ; i++) {
 			if (Api.WaitNamedPipe(pipeName, i == 1 ? -1 : 25)) break;
@@ -117,7 +117,7 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 		//p1.Next();
 		var a = Serializer_.Deserialize(b);
 		//p1.Next('d');
-		var flags = (EFlags)(int)a[2];
+		var flags = (MPFlags)(int)a[2];
 
 		r.asmFile = Marshal.StringToCoTaskMemUTF8(a[1]);
 		//p1.Next();
@@ -133,33 +133,33 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 		script.s_wndMsg = (wnd)(int)a[8];
 		script.s_wrPipeName = a[4];
 
-		if (0 != (flags & EFlags.FromEditor)) script.testing = true;
-		if (0 != (flags & EFlags.IsPortable)) ScriptEditor.IsPortable = true;
+		if (0 != (flags & MPFlags.FromEditor)) script.testing = true;
+		if (0 != (flags & MPFlags.IsPortable)) ScriptEditor.IsPortable = true;
 
 		folders.Editor = new(folders.ThisApp);
 		folders.Workspace = new(a[5]);
 
-		if (0 != (flags & EFlags.RefPaths))
+		if (0 != (flags & MPFlags.RefPaths))
 			AssemblyLoadContext.Default.Resolving += (alc, an)
 				=> ResolveAssemblyFromRefPathsAttribute_(alc, an, Assembly.GetEntryAssembly());
 
-		if (0 != (flags & EFlags.NativePaths))
+		if (0 != (flags & MPFlags.NativePaths))
 			AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
 				=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, Assembly.GetEntryAssembly());
 
-		if (0 != (flags & EFlags.MTA))
+		if (0 != (flags & MPFlags.MTA))
 			process.ThisThreadSetComApartment_(ApartmentState.MTA);
 
-		if (0 != (flags & EFlags.Console)) {
+		if (0 != (flags & MPFlags.Console)) {
 			Api.AllocConsole();
 		} else {
-			if (0 != (flags & EFlags.RedirectConsole)) print.redirectConsoleOutput = true;
+			if (0 != (flags & MPFlags.RedirectConsole)) print.redirectConsoleOutput = true;
 			//Compiler adds this flag if the script uses System.Console assembly.
 			//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
 		}
 
-		script.Starting_(a[0], a[7]);
 		//p1.Next();
+		script.Starting_(a[0], a[7]);
 
 		//Api.QueryPerformanceCounter(out s_started);
 		//print.TaskEvent_("TS", s_started);
@@ -177,13 +177,25 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 				int iName = v.Length - name.Length - 4;
 				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
 				if (!filesystem.exists(v).File) continue;
-				//try {
-				return alc.LoadFromAssemblyPath(v);
-				//} catch(Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); break; }
+				return alc.LoadFromAssemblyPath_(v);
 			}
 		}
 		return null;
 	}
+
+	internal static Assembly LoadFromAssemblyPath_(this AssemblyLoadContext t, string path) {
+		try { return t.LoadFromAssemblyPath(path); }
+		catch (FileLoadException e1) {
+			Debug_.Print("alc.LoadFromAssemblyPath failed. Will retry with s_alc. " + e1.ToStringWithoutStack());
+		}
+		//If the assembly has the same name as one of TPA assemblies (probably it's a newer version),
+		//	the above LoadFromAssemblyPath ignores the path and tries to load the TPA assembly, and fails.
+		//	Workaround: Then try to load to another AssemblyLoadContext.
+		//return Assembly.LoadFile(path); //works, but better use the same context for all
+		s_alc ??= new("Resolving");
+		return s_alc.LoadFromAssemblyPath(path);
+	}
+	static AssemblyLoadContext s_alc;
 
 	//for assemblies used in miniProgram and editorExtension scripts
 	internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(string name, Assembly scriptAssembly) {
@@ -219,7 +231,7 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 			if (!s.Starts(@"\win", true) || s.Length < 10) continue;
 
 			int i = 4, verDll = 0;
-			if (s[i] != '-') {
+			if (s[i] is >= '0' and <= '9') {
 				verDll = s.ToInt(i, out i);
 				if (verDll != 81) verDll *= 10;
 				if (verDll > verPC) continue;
@@ -262,7 +274,7 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 		if (dr != null) AssemblyLoadContext.Default.Resolving += (alc, an) => {
 			//print.it("lib", an.Name);
 			if (!dr.TryGetValue(an.Name, out var path)) return null;
-			return alc.LoadFromAssemblyPath(path);
+			return alc.LoadFromAssemblyPath_(path);
 		};
 		if (dn != null) AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) => {
 			//print.it("native", name);
@@ -274,7 +286,7 @@ Speed of p1: with this 2500, without 5000 (slow Deserialize JIT).
 	}
 
 	[Flags]
-	public enum EFlags {
+	public enum MPFlags {
 		/// <summary>Has [RefPaths] attribute. It is when using meta r or nuget.</summary>
 		RefPaths = 1,
 

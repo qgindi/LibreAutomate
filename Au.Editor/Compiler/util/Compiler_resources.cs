@@ -1,11 +1,8 @@
 namespace Au.Compiler;
 
-static partial class Compiler
-{
-	unsafe class _Resources
-	{
-		class _Res
-		{
+partial class Compiler {
+	unsafe class _Resources {
+		class _Res {
 			public byte[] data;
 			public ushort resType, resId;
 			//don't need to support language and string type/name
@@ -70,8 +67,8 @@ static partial class Compiler
 
 		public struct ICONCONTEXT { public int groupId, iconId; }
 
-		public void AddDotnetRef() {
-			_a.Add(new _Res(220, 1, File.ReadAllBytes(folders.ThisAppBS + "dotnet_ref.txt")));
+		public void AddTpa(string tpa) {
+			_a.Add(new _Res(220, 1, Encoding.UTF8.GetBytes(tpa)));
 		}
 
 		//rejected. Rarely used. If need, users can add later, with tools like ResourceHacker. Here makes more difficult because need to support string type/name, language, etc.
@@ -84,11 +81,6 @@ static partial class Compiler
 			throw new AuException("*add resources");
 		}
 
-		static byte[] _LoadNativeResource(IntPtr hModule, ushort resType, ushort resId) {
-			if (!_LoadNativeResource(hModule, resType, resId, out var data, out var size)) _Throw();
-			return new ReadOnlySpan<byte>(data, size).ToArray();
-		}
-
 		static bool _LoadNativeResource(IntPtr hModule, ushort resType, ushort resId, out byte* ptr, out int size) {
 			ptr = null; size = 0;
 			var hRes = Api.FindResource(hModule, resId, resType); if (hRes == default) return false;
@@ -97,6 +89,16 @@ static partial class Compiler
 			size = SizeofResource(hModule, hRes);
 			return ptr != null && size > 0;
 			//info: don't need to free or unlock. It is documented.
+		}
+
+		static byte[] _LoadNativeResource(IntPtr hModule, ushort resType, ushort resId) {
+			if (!_LoadNativeResource(hModule, resType, resId, out var data, out var size)) _Throw();
+			return new ReadOnlySpan<byte>(data, size).ToArray();
+		}
+
+		internal static string LoadNativeResourceUtf8String_(ushort resType, ushort resId) {
+			if (!_LoadNativeResource(default, resType, resId, out var data, out var size)) _Throw();
+			return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(data, size));
 		}
 
 		public void WriteAll(string exeFile, byte[] exeData, bool bit32, bool console) {
@@ -271,8 +273,7 @@ static partial class Compiler
 
 #pragma warning disable 649 //field never assigned
 
-		internal struct IMAGE_SECTION_HEADER
-		{
+		internal struct IMAGE_SECTION_HEADER {
 			public fixed byte Name[8];
 			public uint VirtualSize;
 			public uint VirtualAddress;
@@ -285,15 +286,13 @@ static partial class Compiler
 			public uint Characteristics;
 		}
 
-		internal struct IMAGE_DATA_DIRECTORY
-		{
+		internal struct IMAGE_DATA_DIRECTORY {
 			public uint VirtualAddress;
 			public uint Size;
 		}
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
-		internal struct IMAGE_OPTIONAL_HEADER32
-		{
+		internal struct IMAGE_OPTIONAL_HEADER32 {
 			public ushort Magic;
 			public byte MajorLinkerVersion;
 			public byte MinorLinkerVersion;
@@ -329,8 +328,7 @@ static partial class Compiler
 		}
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
-		internal struct IMAGE_OPTIONAL_HEADER64
-		{
+		internal struct IMAGE_OPTIONAL_HEADER64 {
 			public ushort Magic;
 			public byte MajorLinkerVersion;
 			public byte MinorLinkerVersion;
@@ -364,8 +362,7 @@ static partial class Compiler
 			public IMAGE_DATA_DIRECTORY DataDirectory_Resource;
 		}
 
-		internal struct IMAGE_FILE_HEADER
-		{
+		internal struct IMAGE_FILE_HEADER {
 			public ushort Machine;
 			public ushort NumberOfSections;
 			public uint TimeDateStamp;
@@ -376,15 +373,13 @@ static partial class Compiler
 		}
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
-		internal struct IMAGE_NT_HEADERS64
-		{
+		internal struct IMAGE_NT_HEADERS64 {
 			public uint Signature;
 			public IMAGE_FILE_HEADER FileHeader;
 			public IMAGE_OPTIONAL_HEADER64 OptionalHeader;
 		}
 
-		internal struct IMAGE_RESOURCE_DIRECTORY
-		{
+		internal struct IMAGE_RESOURCE_DIRECTORY {
 			public uint Characteristics;
 			public uint TimeDateStamp;
 			public ushort MajorVersion;
@@ -393,15 +388,13 @@ static partial class Compiler
 			public ushort NumberOfIdEntries;
 		}
 
-		internal struct IMAGE_RESOURCE_DIRECTORY_ENTRY
-		{
+		internal struct IMAGE_RESOURCE_DIRECTORY_ENTRY {
 			//simplified, does not support name as string
 			public ushort Id;
 			public int OffsetToData;
 		}
 
-		internal struct IMAGE_RESOURCE_DATA_ENTRY
-		{
+		internal struct IMAGE_RESOURCE_DATA_ENTRY {
 			public uint OffsetToData;
 			public uint Size;
 			public uint CodePage;

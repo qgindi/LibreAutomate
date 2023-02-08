@@ -20,19 +20,19 @@ var verResFile2 = folders.ThisApp + $"{exe2}.res";
 
 var v = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor.dll");
 bool verChanged = !(rk.GetValue("version") is string s1 && s1 == v.FileVersion);
-//verChanged = true;
+verChanged = true;//TODO
 if (verChanged || !filesystem.exists(verResFile1)) if (!_VersionInfo(verResFile1, exe1, "LibreAutomate C#")) return 1;
 if (verChanged || !filesystem.exists(verResFile2)) if (!_VersionInfo(verResFile2, exe2, "LibreAutomate miniProgram")) return 2;
 
 var s = $"""
 [FILENAMES]
-Exe=    64\Au.AppHost.exe
-SaveAs= {exe1}
+Exe=64\Au.AppHost.exe
+SaveAs={exe1}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\app.ico, ICONGROUP,32512,0
 -add ..\Au.Editor\Resources\ico\app_disabled.ico, ICONGROUP,32513,0
 -addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add dotnet_ref.txt, 220,1,0
+-add dotnet_ref_editor.txt, 220,1,0
 -add "{verResFile1}", VERSIONINFO,1,0
 
 """;
@@ -43,12 +43,12 @@ if (verChanged || !filesystem.getProperties(dirOut + exe2, out var p2) || p1.Las
 	print.it($"Creating {exe2}");
 	s = $"""
 [FILENAMES]
-Exe=    64\Au.AppHost.exe
-SaveAs= {exe2}
+Exe=64\Au.AppHost.exe
+SaveAs={exe2}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\Script.ico, ICONGROUP,32512,0
 -addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add dotnet_ref.txt, 220,1,0
+-add dotnet_ref_task.txt, 220,1,0
 -add "{verResFile2}", VERSIONINFO,1,0
 
 """;
@@ -59,7 +59,7 @@ if (verChanged) {
 	rk.SetValue("version", v.FileVersion);
 }
 
-filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
+//filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));//TODO
 
 //perf.nw();
 return 0;

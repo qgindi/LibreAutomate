@@ -67,7 +67,7 @@ Announce in forum.
 If not beta, occasionally may want to review/update in some download websites.
 
 Release NuGet package:
-	In Au project edit version and maybe year. Can edit directly in .csproj XML. Save.
+	In Au project edit version and maybe year. Can edit directly in .csproj. Save.
 	Run script "Create NuGet package.cs". It executes dotnet pack and adds native dlls.
 	Upload to NuGet. The script prints links.
 

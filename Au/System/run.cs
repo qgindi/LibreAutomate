@@ -51,6 +51,8 @@ namespace Au {
 		/// - To open a Windows Settings page can be used <google>ms-settings</google>, like <c>"ms-settings:display"</c>. To open Settings use <c>"ms-settings:"</c>.
 		/// 
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="pathname.expand"/>.
+		/// 
+		/// By default the new process does not inherit administrator privileges of this process. More info: <see cref="RFlags"/>.
 		/// </remarks>
 		/// <seealso cref="wnd.find"/>
 		/// <seealso cref="wnd.findOrRun"/>

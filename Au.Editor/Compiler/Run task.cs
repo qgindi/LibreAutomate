@@ -493,8 +493,8 @@ class RunningTasks {
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
 
 			var f1 = r.flags;
-			if (runFromEditor) f1 |= MiniProgram_.EFlags.FromEditor;
-			if (App.IsPortable) f1 |= MiniProgram_.EFlags.IsPortable;
+			if (runFromEditor) f1 |= MiniProgram_.MPFlags.FromEditor;
+			if (App.IsPortable) f1 |= MiniProgram_.MPFlags.IsPortable;
 			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, f.IdString, process.thisProcessId, (int)CommandLine.MsgWnd);
 			wrPipeName = null;
 

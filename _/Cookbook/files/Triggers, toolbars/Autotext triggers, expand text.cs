@@ -8,6 +8,7 @@
 /// 
 /// Tips:
 /// - To get code for "run script" or "run/open file or URL" you can drag and drop scripts, files and links to the code editor.
+/// - To quickly insert <mono>Triggers.Of.Window(...)<> code, use the quick capturing hotkey (default Ctrl+Shift+Q).
 /// 
 /// See also recipe <+recipe>Triggers and toolbars<>.
 ///

@@ -731,9 +731,14 @@ namespace Au {
 				}
 				return true;
 
-				//Other possible methods:
+				//Other possible ways to allow set foreground window:
 				//1. Instead of key can use attachthreadinput. But it is less reliable, eg works first time only, and does not allow our process to activate later easily. Does not work if foreground window is higher IL.
 				//2. Call allowsetforegroundwindow from a hook from the foreground process (or from the shell process, not tested). Too dirty. Need 2 native dlls (32/64-bit). Cannot inject if higher IL.
+				
+				//Other possible ways to set foreground window:
+				//1. Create temp window, RegisterHotKey, SendInput, and call SetForegroundWindow on WM_HOTKEY. Does not work if foreground window is higher IL.
+				//2. WM_SETHOTKEY. More info below. Could not make it work well in all cases.
+				//3. IUIAutomationElement.SetFocus. Does not work if foreground window is higher IL. Slow. Briefly makes the taskbar button red.
 
 				//tested: cannot disable the foreground lock timeout with SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT) when this process cannot activate windows.
 			}
@@ -806,7 +811,7 @@ namespace Au {
 
 					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
 					if (w == getwnd.root) return active.Is0;
-					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
+					//TODO: if GetForegroundWindow is not w, send WM_NULL. Info: https://devblogs.microsoft.com/oldnewthing/20161118-00/?p=94745
 					return WndUtil.WaitForAnActiveWindow();
 				}
 				//catch(AuWndException) { return false; }

@@ -15,6 +15,14 @@ using Microsoft.CodeAnalysis.Indentation;
 //	Tab would complete without new line.
 //	But problem with @"string". Maybe on Enter show menu "New line|Exit statement".
 
+//SHOULDDO: (related to the above) now the 'complete statement on Enter' can be annoying when user wants new line inside ().
+//	Users will not read doc and will not know about Esc. Even then it isn't convenient.
+//	Ideas:
+//		Toolbar button. Maybe it would disable autocorrection entirely.
+//		After Undo don't autocorrect again.
+//		Also don't autocorrect if the argument list is already multiline.
+//	Also would be useful option on (Enter) add two newlines, like now on {Enter}. Or auto add two newlines if Enter in empty ().
+
 //SHOULDDO: when auto-adding () after func call, also add ;. Now in some cases Roslyn throws exception if ; missing (bug).
 
 class CiAutocorrect {

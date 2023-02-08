@@ -11,6 +11,7 @@
 /// Tips:
 /// - To get code for "run script" or "run/open file or URL" you can drag and drop scripts, files and links to the code editor.
 /// - To show hotkey info tools: let the text cursor be in the hotkey string. Then press Ctrl+Shift+Space, or invoke the Keys window from the Code menu or toolbar.
+/// - To quickly insert <mono>Triggers.Of.Window(...)<> code, use the quick capturing hotkey (default Ctrl+Shift+Q).
 /// 
 /// See also recipe <+recipe>Triggers and toolbars<>.
 ///

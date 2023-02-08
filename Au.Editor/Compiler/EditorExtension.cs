@@ -269,6 +269,7 @@ public static unsafe class EditorExtension {
 		//	Tested with VS tools: they don't have GC roots.
 		//	It seems it's a .NET bug. Could not find a workaround.
 		//	Never mind. It's a very small leak compared to WPF leaks.
+		//	See also: https://learn.microsoft.com/en-us/dotnet/standard/assembly/unloadability?source=recommendations
 
 		//public static void Test2() {
 		//	print.it("-- _AssemblyDtor --");

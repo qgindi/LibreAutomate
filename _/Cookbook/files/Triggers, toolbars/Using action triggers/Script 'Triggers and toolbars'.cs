@@ -14,8 +14,8 @@
 /// 
 /// Avoid multiple scripts with triggers running all the time. Each script uses some CPU, which makes the computer slightly slower. Particularly input events (key, mouse) and window events. That is why triggers should be in folder "@Triggers and toolbars".
 /// 
-/// Also you can create <+recipe Popup menu>menus<>. They are like toolbars, but displayed temporarily and therefore can be in any script.
+/// Also you can create <+recipe Popup menu>menus<>. They are like toolbars, but displayed temporarily and can be in any script.
 /// 
 /// If after editing or deleting files something does not work and you don't know how to fix it:
-/// - Click a TT menu item Edit... . It adds missing files. If you want to replace an existing file, at first remove it from the folder.
+/// - Click a TT menu item. It adds missing files. If you want to replace an existing file, at first remove it from the folder.
 /// - Or create new folder again: menu File -> New -> Default -> @Triggers and toolbars. Then either fix your old folder or move triggers etc from it to the new folder. Then delete the unused folder and restore folder name if changed.
