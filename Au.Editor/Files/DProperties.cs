@@ -858,7 +858,7 @@ To remove this meta comment, edit the code.
 
 	static void _VersionInfo() {
 		print.it($$"""
-<>To add version info when compiling, insert and edit this code near the start of any C# file of the compilation.
+<>To add assembly file version info, insert and edit this code near the start of any C# file of the compilation.
 
 <code>using System.Reflection;
 

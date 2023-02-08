@@ -106,7 +106,8 @@ bool _IsWow64() {
 struct PATHS {
 	std::wstring appDir, netCore, netDesktop, coreclrDll, exeName;
 	std::string asmDll, exePath;
-	bool isPrivateNetRuntime, isEditorOrTaskExe;
+	bool isPrivateNetRuntime;
+	BYTE isEditorOrTaskExe; //1 Au.Editor.exe, 2 Au.Task.exe
 };
 
 struct VERSTRUCT {
@@ -215,7 +216,8 @@ bool GetPaths(PATHS& p) {
 	for (lenAppDir = lenApp; w[--lenAppDir] != '\\'; ) {}
 	p.appDir.assign(w, lenAppDir);
 	p.exeName = w + lenAppDir + 1;
-	p.isEditorOrTaskExe = _StrEqualI(p.exeName, L"Au.Editor.exe") || _StrEqualI(p.exeName, L"Au.Task.exe");
+	p.isEditorOrTaskExe = _StrEqualI(p.exeName, L"Au.Editor.exe") ? 1 : _StrEqualI(p.exeName, L"Au.Task.exe") ? 2 : 0;
+	//SHOULDDO: to detect isEditorOrTaskExe don't use filename. Use eg a resource.
 
 	//get asmDll
 	if (s_asmName[0] != 0) { //exe created from script. See code in Compiler.cs, function _AppHost.
@@ -242,8 +244,8 @@ bool GetPaths(PATHS& p) {
 	wcscpy(w + lenAppDir, coreclr2);
 	if (_FileExists(w)) goto gPrivate;
 
-	//is this a script exe launched from editor and editor's dir contains coreclr.dll?
-	if (!p.isEditorOrTaskExe) {
+	//is this an exeProgram launched from editor and editor's dir contains coreclr.dll?
+	if (p.isEditorOrTaskExe == 0) {
 		auto n = GetCurrentDirectory(lenof(w), w);
 		auto s1 = L"\\Roslyn\\.exeProgram"; const int len1 = 19;
 		if (n >= 4 + len1 && n < lenof(w) - 50 && _wcsicmp(w + n - len1, s1) == 0) {
@@ -295,49 +297,40 @@ gPrivate:
 	return true;
 }
 
-void BuildTpaList(const std::wstring& dir, std::string& tpaList, bool onlyAu = false) {
-	std::string dir8, name8; _ToUtf8(dir, dir8); dir8 += '\\';
-	std::wstring wild; _WstringFrom(wild, dir, L"\\*.dll", 6);
-	WIN32_FIND_DATAW fd;
-	HANDLE h = FindFirstFileW(wild.c_str(), &fd);
-	if (h != INVALID_HANDLE_VALUE) {
-		do {
-			wchar_t* s = fd.cFileName;
-			if (onlyAu) {
-				//if (!(s[0] == 'A' && s[1] == 'u' && s[2] == '.')) continue; //Au.dll, Au.Editor.dll, etc
-			} else {
-				if (s[0] == 'a' && s[1] == 'p' && s[2] == 'i' && s[3] == '-') continue; //api-ms-
-			}
-			tpaList += dir8;
-			_ToUtf8(s, name8); tpaList += name8;
-			tpaList += ';';
-		} while (FindNextFileW(h, &fd));
-		FindClose(h);
-	}
-
-	//note: don't use stringstream, it makes file size *= 2.
-}
-
-//Get .NET assemblies from resource added from file dotnet_ref.txt.
-//The file is created by script "Create dotnet_ref.txt.cs". Need to run it for each major .NET version.
-//The script parses .NET deps.json, like dotnet does it at run time.
-//For Au.Editor.exe and Au.Task.exe the resource is added with ResourceHacker. For exe - Compiler._Resources.AddDotnetRef.
-void BuildTpaListDotnet(const PATHS& p, std::string& tpaList) {
-	std::string dirC, dirD;
-	_ToUtf8(p.netCore, dirC); dirC += '\\';
-	_ToUtf8(p.netDesktop, dirD); dirD += '\\';
-
+//Gets TPA assemblies (.NET, Au, etc) from resource added from file dotnet_ref_editor.txt or dotnet_ref_task.txt.
+//The file is created by script "Create dotnet_ref.txt.cs".
+//	The script parses .NET deps.json, like dotnet does it at run time.
+//		Need to run it for each major .NET version.
+//	The script also adds Au, and in the future maybe other omnipresent assemblies.
+//		For Au.Editor also adds Au.Controls, and in the future maybe more.
+//		Need to edit/run it when these dependencies change.
+//For Au.Editor.exe and Au.Task.exe the resource is added by script "PostBuild" (it uses ResourceHacker).
+//	The script is compiled to PostBuild.exe which is executed as a postbuild task of Au.Editor project.
+//For exeProgram the resource is added by Compiler._Resources.AddTpa.
+void BuildTpaList(const PATHS& p, std::string& tpaList) {
+	std::string dir;
 	auto ri = FindResource(0, (LPCWSTR)1, (LPCWSTR)220);
 	DWORD size = SizeofResource(0, ri);
 	auto s = (LPCSTR)LockResource(LoadResource(0, ri));
 
 	for (LPCSTR se = s + size; s < se;) {
 		auto ss = s; while (*ss != '|' && ss < se) ss++;
-		tpaList.append(*s++ == 'd' ? dirD : dirC);
-		tpaList.append(s, ss - s);
-		tpaList.append(".dll;");
+		if (*s == '*') {
+			switch (*(++s)) {
+			case 'd': _ToUtf8(p.netDesktop, dir); break;
+			case 'c': _ToUtf8(p.netCore, dir); break;
+			default: _ToUtf8(p.appDir, dir); break; //'a'
+			}
+			dir += '\\';
+		} else {
+			tpaList.append(dir);
+			tpaList.append(s, ss - s);
+			tpaList.append(".dll;");
+		}
 		s = ss + 1;
 	}
+
+	//note: don't use stringstream, it makes file size *= 2.
 }
 
 const char** ArgsUtf8(int& nArgs) {
@@ -392,8 +385,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			L"Would you like to download it now?", NETVERMAJOR, bits);
 		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
 			AllowSetForegroundWindow(ASFW_ANY);
-			int(__stdcall * ShellExecuteW)(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);
-			(*(FARPROC*)(&ShellExecuteW)) = GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
+			auto ShellExecuteW = (int(__stdcall*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
 			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
 			wsprintfW(w, L"https://aka.ms/dotnet/%i.%i/windowsdesktop-runtime-win-x%i.exe", NETVERMAJOR, NETVERMINOR, bits); //latest patch
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
@@ -411,53 +403,52 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	unsigned int domainId;
 	int hr;
 	{
-		bool noAppPaths = false;
+		//TRUSTED_PLATFORM_ASSEMBLIES
 		std::string tpaList; tpaList.reserve(30000);
-		if (p.isPrivateNetRuntime && !p.isEditorOrTaskExe) {
-			BuildTpaList(p.netCore, tpaList);
-		} else {
-			//rejected: to get dotnet assemblies enumerate their folders. Bad: it picks some native assembles too; works, but dirty.
-			//BuildTpaList(p.netDesktop, tpaList); //note: must be first, else eg WPF does not work because netCore dir contains WindowsBase too, and it is invalid
-			//BuildTpaList(p.netCore, tpaList);
+		BuildTpaList(p, tpaList);
 
-			BuildTpaListDotnet(p, tpaList);
-
-			//workaround for AssemblyLoadContext.LoadFromAssemblyPath bug:
-			//	If an assembly with same name is in APP_PATHS directories, loads it instead of the specified. Then exception if it is an older version etc.
-			//	Workaround: don't use APP_PATHS for Au.Task.exe and Au.Editor.exe (for script roles miniProgram and editorExtension).
-			//		Add Au.* assemblies to the TPA list. For others use the assembly resolve event; including Roslyn.
-			//		For this reason we also don't add Roslyn to APP_PATHS.
-			noAppPaths = p.isEditorOrTaskExe;
-			//if(noAppPaths) //no, exeProgram may want to get Au.dll with AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") like it is in miniProgram
-			BuildTpaList(p.appDir, tpaList, true);
-		}
-
-		std::string appDir8, nd8;
-		//APP_PATHS
-		_ToUtf8(p.appDir, appDir8);
-		std::string ap(appDir8);
-		appDir8 += '\\';
 		//NATIVE_DLL_SEARCH_DIRECTORIES
-		std::wstring nd16; nd16.reserve(600);
-		if (!noAppPaths) {
-			nd16 += p.appDir;
+		std::wstring nd16; nd16.reserve(1000);
+		nd16 += p.appDir;
 #if _WIN64
-			nd16 += L"\\64\\;";
+		nd16 += L"\\64\\;";
 #else
-			nd16 += L"\\32\\;";
+		nd16 += L"\\32\\;";
 #endif
-		}
+		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc.
+//		nd16 += p.appDir;
+//#if _WIN64
+//		nd16 += L"\\runtimes\\win-x64\\native\\;";
+//#else
+//		nd16 += L"\\runtimes\\win-x86\\native\\;";
+//#endif
 		if (!p.isPrivateNetRuntime) { nd16 += p.netDesktop; nd16 += L"\\;"; }
 		nd16 += p.netCore; nd16 += L"\\;";
-		_ToUtf8(nd16, nd8);
+		std::string nd8; _ToUtf8(nd16, nd8);
+
+		//APP_CONTEXT_BASE_DIRECTORY
+		std::string appDir8; _ToUtf8(p.appDir, appDir8); appDir8 += '\\';
 
 		const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "NATIVE_DLL_SEARCH_DIRECTORIES", "APP_CONTEXT_BASE_DIRECTORY", "APP_PATHS" };
-		const char* propertyValues[] = { tpaList.c_str(), nd8.c_str(), appDir8.c_str(), ap.c_str() };
-		int nProp = noAppPaths ? 3 : 4;
-		//Print("TPA:"); Print("%s", propertyValues[0]);
-		//Print("APP:"); Print("%s", propertyValues[1]);
-		//Print("ND:"); Print("%s", propertyValues[2]);
-		//Print("ABD:"); Print("%s", propertyValues[3]);
+		const char* propertyValues[] = { tpaList.c_str(), nd8.c_str(), appDir8.c_str(), nullptr };
+
+		//Note: don't add APP_PATHS. The .NET apphost does not add it too.
+		//	.NET and Au.* assemblies are in the TPA list.
+		//	For others, on assembly resolve event we call AssemblyLoadContext.LoadFromAssemblyPath.
+		//  Cannot use both APP_PATHS and event. If a dll with same name is in APP_PATHS, .NET loads it instead.
+		int nProp = 3;
+#if !true
+		std::string ap8;
+		if (p.isEditorOrTaskExe == 0) {
+			ap8.assign(appDir8, 0, appDir8.length() - 1);
+			propertyValues[nProp++] = ap8.c_str();
+		}
+		//this code adds only appDir. But if using nuget's "runtimes" subdir, at first need to add its dlls to TPA (or maybe subdirs to APP_PATHS). It is difficult here. The event code handles it.
+#endif
+		//Print("--- %S ---", p.exeName.c_str());
+		//Print("TRUSTED_PLATFORM_ASSEMBLIES:"); Print("%s", propertyValues[0]);
+		//Print("NATIVE_DLL_SEARCH_DIRECTORIES:"); Print("%s", propertyValues[1]);
+		//Print("APP_CONTEXT_BASE_DIRECTORY:"); Print("%s", propertyValues[2]);
 
 		SetEnvironmentVariableW(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
 

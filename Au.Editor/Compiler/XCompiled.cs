@@ -1,6 +1,6 @@
 namespace Au.Compiler;
 
-static partial class Compiler {
+partial class Compiler {
 	/// <summary>
 	/// Resolves whether need to [re]compile or can run previously compiled assembly.
 	/// </summary>
@@ -84,7 +84,7 @@ static partial class Compiler {
 						r.bit32 = true;
 						break;
 					case 'f':
-						r.flags = (MiniProgram_.EFlags)value.ToInt(offs);
+						r.flags = (MiniProgram_.MPFlags)value.ToInt(offs);
 						break;
 					case 'p':
 						isMultiFileProject = true;
@@ -104,8 +104,7 @@ static partial class Compiler {
 						else if (value[offs] == '?') dll = string.Concat(App.Model.DllDirectoryBS, value.AsSpan((offs + 1)..v.end));
 						else {
 							dll = value[offs..v.end];
-							if (!pathname.isFullPath(dll)) dll = folders.ThisAppBS + dll;
-							else dll = pathname.NormalizeMinimally_(dll);
+							if (!pathname.isFullPathExpand(ref dll)) dll = folders.ThisAppBS + dll;
 						}
 						if (_IsFileModified2(dll)) return false;
 						break;
@@ -164,7 +163,7 @@ static partial class Compiler {
 		/// Called when successfully compiled script f. Saves data that next time will be used by <see cref="IsCompiled"/>.
 		/// </summary>
 		/// <param name="outFile">The output assembly.</param>
-		public void AddCompiled(FileNode f, string outFile, MetaComments m, MiniProgram_.EFlags miniFlags) {
+		public void AddCompiled(FileNode f, string outFile, MetaComments m, MiniProgram_.MPFlags miniFlags) {
 			if (_data == null && !_Open()) _data = new();
 
 			/*
@@ -212,7 +211,7 @@ o - config (now removed)
 
 				//references
 				var refs = m.References.Refs;
-				int j = MetaReferences.DefaultReferences.Count;
+				int j = m.References.DefaultRefCount;
 				if (refs.Count > j) {
 					string appDir = folders.ThisAppBS, nugetDir = App.Model.NugetDirectoryBS, dllDir = App.Model.DllDirectoryBS;
 					for (; j < refs.Count; j++) {

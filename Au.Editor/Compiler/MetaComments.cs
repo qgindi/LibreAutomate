@@ -569,7 +569,7 @@ class MetaComments {
 			MiscFlags = value.ToInt();
 			return;
 		case "noRef": //undocumented
-			References.Refs.RemoveAll(o => o.FilePath.Like(value, true));
+			References.RemoveFromRefs(value);
 			return;
 		}
 		if (_flags.Has(MCPFlags.OnlyRef)) return;

@@ -8,7 +8,8 @@ int r = run.console(out var s, "dotnet.exe", $@"pack Au.csproj -o {od} --no-buil
 print.it(s);
 if (r != 0) return;
 
-s.RxMatch(@"'(.+?)'", 1, out string path);
+s.RxMatch(@"Successfully created package '(.+?)'", 1, out string path);
+if (!filesystem.exists(path)) throw null;
 
 using var za = ZipFile.Open(path, ZipArchiveMode.Update);
 za.CreateEntryFromFile(@"C:\code\au\_\64\AuCpp.dll", @"runtimes\win-x64\native\AuCpp.dll");
