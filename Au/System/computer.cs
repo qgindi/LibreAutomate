@@ -1,12 +1,12 @@
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 //FUTURE: GetCpuUsage.
+
+using Microsoft.Win32;
 
 namespace Au {
 	/// <summary>
 	/// Computer shutdown etc.
 	/// </summary>
-	public static class computer {
+	public static unsafe class computer {
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup, not including the time when the computer sleeps or hibernates.
 		/// To get time with sleep, use <see cref="Environment.TickCount64"/>.
@@ -107,8 +107,8 @@ namespace Au {
 		/// <summary>
 		/// Returns true if the computer is using battery power.
 		/// </summary>
-		/// <seealso cref="System.Windows.Forms.SystemInformation.PowerStatus"/>
-		public static bool isOnBattery => System.Windows.Forms.SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline; //first time 4 ms
+		/// <seealso cref="SystemInformation.PowerStatus"/>
+		public static bool isOnBattery => SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline; //first time 4 ms
 
 		//public static bool isOnBattery => System.Windows.SystemParameters.PowerLineStatus == System.Windows.PowerLineStatus.Offline; //first time 21 ms
 
@@ -125,6 +125,63 @@ namespace Au {
 		//public static void waitForDesktop(double secondsTimeout, bool normalDesktop) { //normal, UAC, lock, screensaver, etc
 		//																			   //using var hook = new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH);
 		//}
+
+		#region suspendResumeEvent
+
+		static Action<PowerModes> _srAction;
+		static object _srLock = new();
+		static IntPtr _srHandle;
+
+		/// <summary>
+		/// When the computer is about to enter a suspended state (sleep or hibernate) or has resumed operation after being suspended.
+		/// </summary>
+		/// <remarks>
+		/// Many system events are available in <see cref="SystemEvents"/> class. For suspend/resume notifications could be used <see cref="SystemEvents.PowerModeChanged"/>, but it does not work on most computers. Use this event instead.
+		///
+		/// The event handler is executed in other thread. The parameter can be only <b>Resume</b> or <b>Suspend</b>. See API <msdn>PBT_APMSUSPEND</msdn> and <msdn>PBT_APMRESUMESUSPEND</msdn>.
+		/// </remarks>
+		public static event Action<PowerModes> suspendResumeEvent {
+			add {
+				lock (_srLock) {
+					if (osVersion.minWin8) {
+						if (_srHandle == default) {
+							Api.DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS p = new() { Callback = &_SRCallback };
+							_srHandle = Api.RegisterSuspendResumeNotification((IntPtr)(&p), 2);
+							if (_srHandle == default) throw new AuException(0);
+						}
+					} else {
+						SystemEvents.PowerModeChanged += _SystemEvents_PowerModeChanged;
+					}
+					_srAction += value;
+				}
+			}
+			remove {
+				lock (_srLock) {
+					_srAction -= value;
+					if (osVersion.minWin8) {
+						if (_srAction == null && _srHandle != default) {
+							Api.UnregisterSuspendResumeNotification(_srHandle);
+							_srHandle = default;
+						}
+					} else {
+						SystemEvents.PowerModeChanged -= _SystemEvents_PowerModeChanged;
+					}
+				}
+
+			}
+		}
+
+		[UnmanagedCallersOnly]
+		static int _SRCallback(void* context, int type, void* setting) {
+			if (type is 4 or 7) _srAction?.Invoke(type == 4 ? PowerModes.Suspend : PowerModes.Resume);
+			return 0;
+		}
+
+		static void _SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e) {
+			if (e.Mode is PowerModes.Suspend or PowerModes.Resume) _srAction?.Invoke(e.Mode);
+		}
+
+		#endregion
 	}
 }
 

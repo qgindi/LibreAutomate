@@ -65,7 +65,6 @@ Source: "winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "cookbook.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "dotnet_ref.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\Roslyn\.exeProgram"; Attribs: hidden

@@ -12,7 +12,7 @@ namespace Au.Compiler;
 /// <summary>
 /// Compiles C# files.
 /// </summary>
-static partial class Compiler {
+partial class Compiler {
 	/// <summary>
 	/// Compiles C# file or project if need.
 	/// Returns false if fails (C# errors etc).
@@ -49,7 +49,8 @@ static partial class Compiler {
 			//print.it("COMPILE");
 			Action aFinally = null;
 			try {
-				if (_Compile(reason, f, out r, projFolder, out aFinally, canCompile)) return true;
+				var c = new Compiler();
+				if (c._Compile(reason, f, out r, projFolder, out aFinally, canCompile)) return true;
 			}
 			catch (Exception ex) {
 				if (reason != CCReason.WpfPreview) print.it($"Failed to compile '{f.Name}'. {ex}");
@@ -74,7 +75,7 @@ static partial class Compiler {
 		public MCRole role;
 		public MCIfRunning ifRunning;
 		public MCUac uac;
-		public MiniProgram_.EFlags flags;
+		public MiniProgram_.MPFlags flags;
 		public bool bit32;
 
 		/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
@@ -84,21 +85,29 @@ static partial class Compiler {
 		public MetaComments meta;
 	}
 
-	static bool _Compile(CCReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile) {
+	readonly MetaComments _meta = new();
+	CSharpCompilation _compilation;
+	Dictionary<string, string> _dr, _dn;
+	string _tpa;
+
+	Compiler() {
+
+	}
+
+	bool _Compile(CCReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile) {
 		//print.it("COMPILE");
 
 		//var p1 = perf.local();
 		r = new CompResults();
 		aFinally = null;
 
-		var m = new MetaComments();
 		var mflags = reason == CCReason.WpfPreview ? MCPFlags.WpfPreview : MCPFlags.PrintErrors;
-		if (!m.Parse(f, projFolder, mflags)) return false;
-		var err = m.Errors;
-		r.meta = m;
+		if (!_meta.Parse(f, projFolder, mflags)) return false;
+		var err = _meta.Errors;
+		r.meta = _meta;
 		//p1.Next('m');
 
-		bool needOutputFiles = m.Role != MCRole.classFile;
+		bool needOutputFiles = _meta.Role != MCRole.classFile;
 
 		//if for run, don't compile if f role is classFile
 		if (reason == CCReason.Run && !needOutputFiles) {
@@ -110,9 +119,9 @@ static partial class Compiler {
 		string outPath = null, outFile = null, fileName = null;
 		bool notInCache = false;
 		if (needOutputFiles) {
-			if (notInCache = m.OutputPath != null) {
-				outPath = m.OutputPath;
-				fileName = m.Name + ".dll";
+			if (notInCache = _meta.OutputPath != null) {
+				outPath = _meta.OutputPath;
+				fileName = _meta.Name + ".dll";
 			} else {
 				outPath = cache.CacheDirectory;
 				if (reason == CCReason.WpfPreview) fileName = "WPFpreview.dll";
@@ -123,12 +132,12 @@ static partial class Compiler {
 			filesystem.createDirectory(outPath);
 		}
 
-		if (m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
+		if (_meta.PreBuild.f != null && !_RunPrePostBuildScript(false, outFile)) return false;
 
-		var pOpt = m.CreateParseOptions();
-		var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
+		var pOpt = _meta.CreateParseOptions();
+		var trees = new CSharpSyntaxTree[_meta.CodeFiles.Count];
 		for (int i = 0; i < trees.Length; i++) {
-			var f1 = m.CodeFiles[i];
+			var f1 = _meta.CodeFiles[i];
 
 			//never mind: should use Encoding.UTF8 etc if the file is with BOM. Encoding.Default is UTF-8 without BOM.
 			//	Else, when debugging with VS or VS Code, they say "source code changed" and can't set breakpoints by default.
@@ -144,11 +153,11 @@ static partial class Compiler {
 		}
 		//p1.Next('t');
 
-		string asmName = m.Name;
-		if (m.Role == MCRole.editorExtension) { //cannot load multiple assemblies with same name
+		string asmName = _meta.Name;
+		if (_meta.Role == MCRole.editorExtension) { //cannot load multiple assemblies with same name
 			asmName = asmName + "|" + Guid.NewGuid().ToString();
 			//use GUID, not counter, because may be loaded old assembly from cache with same counter value
-		} else if (m.Role == MCRole.miniProgram) {
+		} else if (_meta.Role == MCRole.miniProgram) {
 			//workaround for: coreclr_execute_assembly and even AssemblyLoadContext.Default.LoadFromAssemblyPath fail
 			//	if asmName is the same as of a .NET etc assembly.
 			//	It seems it at first ignores path and tries to find assembly by name.
@@ -156,23 +165,23 @@ static partial class Compiler {
 			asmName = "~" + asmName;
 		}
 
-		if (m.TestInternal is string[] testInternal) {
+		if (_meta.TestInternal is string[] testInternal) {
 			InternalsVisible.Add(asmName, testInternal);
 			aFinally += () => InternalsVisible.Remove(asmName); //this func is called from try/catch/finally which calls aFinally
 		}
 
 		List<ResourceDescription> resMan = null;
 		if (needOutputFiles) { //before creating compilation. May modify trees[] elements.
-			resMan = _CreateManagedResources(m, asmName, trees);
+			resMan = _CreateManagedResources(asmName, trees);
 			if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 			//p1.Next('y');
 		}
 
-		var cOpt = m.CreateCompilationOptions();
-		var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, cOpt);
+		var cOpt = _meta.CreateCompilationOptions();
+		_compilation = CSharpCompilation.Create(asmName, trees, _meta.References.Refs, cOpt);
 		//p1.Next('c');
 
-		if (canCompile != null && !canCompile(new(m, trees, compilation))) return false;
+		if (canCompile != null && !canCompile(new(_meta, trees, _compilation))) return false;
 
 		string xdFile = null;
 		Stream xdStream = null;
@@ -180,7 +189,7 @@ static partial class Compiler {
 		EmitOptions eOpt = null;
 
 		if (needOutputFiles) {
-			r.flags |= _AddAttributesEtc(ref compilation, m);
+			r.flags |= _AddAttributesEtc();
 			//p1.Next('a');
 
 			//rejected: if empty script, add {} to avoid error "no Main". See AddErrorOrWarning.
@@ -190,10 +199,10 @@ static partial class Compiler {
 			//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error with .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
 			eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 
-			if (m.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
-				xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + m.Name + ".xml"));
+			if (_meta.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
+				xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + _meta.Name + ".xml"));
 
-			resNat = _CreateNativeResources(m, compilation);
+			resNat = _CreateNativeResources();
 			if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
 			//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
@@ -201,7 +210,7 @@ static partial class Compiler {
 
 		//p1.Next();
 		var asmStream = new MemoryStream(16000);
-		var emitResult = compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
+		var emitResult = _compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 
 		if (needOutputFiles) {
 			xdStream?.Dispose();
@@ -215,7 +224,7 @@ static partial class Compiler {
 				foreach (var d in diag) {
 					if (d.Severity == DiagnosticSeverity.Hidden) continue;
 					err.AddErrorOrWarning(d, f);
-					if (d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") MetaReferences.RemoveBadReference(d.GetMessage());
+					if (d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") MetaReferences.RemoveBadRefFromCache(d.GetMessage());
 				}
 				err.PrintAll();
 			}
@@ -229,12 +238,12 @@ static partial class Compiler {
 		}
 
 		if (needOutputFiles) {
-			if (m.Role == MCRole.miniProgram) {
+			if (_meta.Role == MCRole.miniProgram) {
 				//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
 				//FUTURE: C# 12 [assembly: MTAThread]
-				if (compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.EFlags.MTA;
+				if (_compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.MPFlags.MTA;
 
-				if (m.Console) r.flags |= MiniProgram_.EFlags.Console;
+				if (_meta.Console) r.flags |= MiniProgram_.MPFlags.Console;
 			}
 
 			//create assembly file
@@ -250,7 +259,7 @@ static partial class Compiler {
 			var b = asmStream.GetBuffer();
 
 			//prevent AV full dll scan when loading using LoadFromStream (now not used). Will load bytes, unxor and load assembly from stream. Will fully scan once, when loading assembly.
-			//if (m.Role == MCRole.editorExtension) for (int i = 0, n = (int)asmStream.Length; i < n; i++) b[i] ^= 1;
+			//if (_meta.Role == MCRole.editorExtension) for (int i = 0, n = (int)asmStream.Length; i < n; i++) b[i] ^= 1;
 
 			using (hf) if (!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
 #else //same speed, but I like code without exceptions
@@ -271,28 +280,30 @@ static partial class Compiler {
 			//p1.Next('s');
 			r.file = outFile;
 
-			if (m.Role == MCRole.exeProgram) {
-				bool need64 = !m.Bit32 || m.Optimize;
-				bool need32 = m.Bit32 || m.Optimize;
+			if (_meta.Role == MCRole.exeProgram) {
+				_GetDllPaths();
+
+				bool need64 = !_meta.Bit32 || _meta.Optimize;
+				bool need32 = _meta.Bit32 || _meta.Optimize;
 
 				//copy app host template exe, add native resources, set assembly name, set console flag if need
-				if (need64) _AppHost(outFile, fileName, m, bit32: false);
-				if (need32) _AppHost(outFile, fileName, m, bit32: true);
+				if (need64) _AppHost(outFile, fileName, bit32: false);
+				if (need32) _AppHost(outFile, fileName, bit32: true);
 				//p1.Next('h'); //very slow with AV. Eg with WD this part makes whole compilation several times slower.
 
 				//copy dlls to the output directory
-				_CopyDlls(m, asmStream, need64: need64, need32: need32);
+				_CopyDlls(asmStream, need64: need64, need32: need32);
 				//p1.Next('d');
 
 				//copy config file to the output directory
 				//var configFile = exeFile + ".config";
-				//if(m.ConfigFile != null) {
+				//if(_meta.ConfigFile != null) {
 				//	r.hasConfig = true;
-				//	_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
+				//	_CopyFileIfNeed(_meta.ConfigFile.FilePath, configFile);
 				//} else if(filesystem.exists(configFile, true).File) {
 				//	filesystem.delete(configFile);
 				//}
-			} else if (!m.Console) {
+			} else if (!_meta.Console) {
 				//if using assembly System.Console in miniProgram script, let it redirect Console.Write etc to print.it.
 				//	Don't redirect always, it's slow. Console.Write etc rarely used when there is print.it.
 				//Speed of this code: 50 mcs.
@@ -301,26 +312,29 @@ static partial class Compiler {
 				var mr = pr.GetMetadataReader();
 				foreach (var handle in mr.AssemblyReferences) {
 					var name = mr.GetString(mr.GetAssemblyReference(handle).Name);
-					if (name == "System.Console") { r.flags |= MiniProgram_.EFlags.RedirectConsole; break; }
+					if (name == "System.Console") { r.flags |= MiniProgram_.MPFlags.RedirectConsole; break; }
 				}
 			}
 		}
 
-		if (m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
+		if (_meta.PostBuild.f != null && !_RunPrePostBuildScript(true, outFile)) return false;
 
 		if (needOutputFiles && reason != CCReason.WpfPreview) {
-			cache.AddCompiled(f, outFile, m, r.flags);
+			cache.AddCompiled(f, outFile, _meta, r.flags);
 
-			if (m.Role == MCRole.classLibrary) MetaReferences.UncacheOldFiles();
+			if (_meta.Role == MCRole.classLibrary) {
+				MetaReferences.UncacheOldFiles();
+				if (MetaReferences.IsDefaultRef(_meta.Name)) print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
+			}
 
-			if (notInCache) print.it($"<>{f.SciLink()} output folder: <link>{m.OutputPath}<>");
+			if (notInCache) print.it($"<>{f.SciLink()} output folder: <link>{_meta.OutputPath}<>");
 		}
 
-		r.name = m.Name;
-		r.role = m.Role;
-		r.ifRunning = m.IfRunning;
-		r.uac = m.Uac;
-		r.bit32 = m.Bit32;
+		r.name = _meta.Name;
+		r.role = _meta.Role;
+		r.ifRunning = _meta.IfRunning;
+		r.uac = _meta.Uac;
+		r.bit32 = _meta.Bit32;
 		r.notInCache = notInCache;
 
 		//#if TRACE
@@ -332,31 +346,20 @@ static partial class Compiler {
 		//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.
 	}
 
-	public static void Warmup(Microsoft.CodeAnalysis.Document document) {
-		//using var p1 = perf.local();
-		var compilation = document.Project.GetCompilationAsync().Result;
-		//compilation.GetDiagnostics(); //just makes Emit faster, and does not make the real GetDiagnostics faster first time
-		//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
-		var asmStream = new MemoryStream(16000);
-		compilation.Emit(asmStream);
-		//compilation.Emit(asmStream, null, options: eOpt); //somehow makes slower later
-		//compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
-	}
-
 	/// <summary>
 	/// Adds some module/assembly attributes. Also adds module initializer for role exeProgram.
 	/// </summary>
-	static MiniProgram_.EFlags _AddAttributesEtc(ref CSharpCompilation compilation, MetaComments m) {
-		MiniProgram_.EFlags rflags = 0;
+	MiniProgram_.MPFlags _AddAttributesEtc() {
+		MiniProgram_.MPFlags rflags = 0;
 		//bool needDefaultCharset = true;
-		//foreach (var v in compilation.SourceModule.GetAttributes()) {
+		//foreach (var v in _compilation.SourceModule.GetAttributes()) {
 		//	//print.it(v.AttributeClass.Name);
 		//	if (v.AttributeClass.Name == "DefaultCharSetAttribute") { needDefaultCharset = false; break; }
 		//}
 		bool needTargetFramework = false, needAssemblyTitle = false;
-		if (m.Role is MCRole.exeProgram or MCRole.classLibrary) {
+		if (_meta.Role is MCRole.exeProgram or MCRole.classLibrary) {
 			needTargetFramework = needAssemblyTitle = true;
-			foreach (var v in compilation.Assembly.GetAttributes()) {
+			foreach (var v in _compilation.Assembly.GetAttributes()) {
 				//print.it(v.AttributeClass.Name);
 				switch (v.AttributeClass.Name) {
 				case "TargetFrameworkAttribute": needTargetFramework = false; break; //need for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
@@ -372,34 +375,34 @@ static partial class Compiler {
 			//if (needDefaultCharset) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
 
 			if (needTargetFramework) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
-			if (needAssemblyTitle) sb.AppendLine($"[assembly: System.Reflection.AssemblyTitle(\"{m.Name}\")]");
+			if (needAssemblyTitle) sb.AppendLine($"[assembly: System.Reflection.AssemblyTitle(\"{_meta.Name}\")]");
 
-			if (m.Role is MCRole.miniProgram or MCRole.editorExtension) {
-				var (dr, dn) = _GetDllPaths(m);
-				if (dr != null) { //add RefPaths attribute to resolve paths of managed dlls at run time
-					foreach (var v in dr) {
-						sb.Append(rflags.Has(MiniProgram_.EFlags.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"");
+			if (_meta.Role is MCRole.miniProgram or MCRole.editorExtension) {
+				_GetDllPaths();
+				if (_dr != null) { //add RefPaths attribute to resolve paths of managed dlls at run time
+					foreach (var v in _dr) {
+						sb.Append(rflags.Has(MiniProgram_.MPFlags.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"");
 						sb.Append(v.Value);
-						rflags |= MiniProgram_.EFlags.RefPaths;
+						rflags |= MiniProgram_.MPFlags.RefPaths;
 					}
 					sb.AppendLine("\")]");
 				}
-				if (dn != null) { //add NativePaths attribute to resolve paths of native dlls at run time
-					foreach (var v in dn) {
-						sb.Append(rflags.Has(MiniProgram_.EFlags.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"");
+				if (_dn != null) { //add NativePaths attribute to resolve paths of native dlls at run time
+					foreach (var v in _dn) {
+						sb.Append(rflags.Has(MiniProgram_.MPFlags.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"");
 						sb.Append(v.Value);
-						rflags |= MiniProgram_.EFlags.NativePaths;
+						rflags |= MiniProgram_.MPFlags.NativePaths;
 					}
 					sb.AppendLine("\")]");
 				}
 			}
 
-			if (m.TestInternal != null) {
+			if (_meta.TestInternal != null) {
 				//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
 				//IgnoresAccessChecksToAttribute is defined in Au assembly.
 				//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
 				//	never mind: Au.dll must exist by the compiled assembly, even if not used for other purposes.
-				foreach (var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
+				foreach (var v in _meta.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
 				//sb.Append(@"
 				//namespace System.Runtime.CompilerServices {
 				//[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
@@ -409,9 +412,9 @@ static partial class Compiler {
 				//}}");
 			}
 
-			if (m.Role is MCRole.miniProgram or MCRole.exeProgram) {
-				sb.AppendLine($"[assembly: Au.Types.PathInWorkspace(\"{m.MainFile.f.ItemPath.Escape()}\")]");
-				if (m.Role == MCRole.exeProgram) {
+			if (_meta.Role is MCRole.miniProgram or MCRole.exeProgram) {
+				sb.AppendLine($"[assembly: Au.Types.PathInWorkspace(\"{_meta.MainFile.f.ItemPath.Escape()}\")]");
+				if (_meta.Role == MCRole.exeProgram) {
 					sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(); }}");
 				}
 			}
@@ -419,29 +422,30 @@ static partial class Compiler {
 			string code = sb.ToString(); //print.it(code);
 			var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
 			//insert as first, else user's module initializers would run before. Same speed.
-			//compilation = compilation.AddSyntaxTrees(tree);
-			compilation = compilation.RemoveAllSyntaxTrees().AddSyntaxTrees(compilation.SyntaxTrees.Insert(0, tree));
+			//_compilation = _compilation.AddSyntaxTrees(tree);
+			_compilation = _compilation.RemoveAllSyntaxTrees().AddSyntaxTrees(_compilation.SyntaxTrees.Insert(0, tree));
 		}
 		return rflags;
 	}
 
 	//Gets paths of used managed and unmanaged dlls (meta nuget, r, etc).
-	//Returns: dr - managed dlls, dn - other dlls. If compiling exeProgram, dn also contains other files from nuget.
+	//Sets: _dr - managed dlls, _dn - other dlls. If compiling exeProgram, _dn also contains other files from nuget.
 	//	Full paths are in dictionary values. Keys contain filenames or nuget relative paths, and for callers almost not useful.
 	//Called when:
 	//	Compiling exeProgram. The files will be copied to the output.
 	//	Compiling miniProgram or editorExtension. Dll paths will be added to an assembly attribute. At run time will use it to find dlls.
 	//Depending on meta properties, filters out unused dlls, eg 32-bit or dlls for other OS versions.
-	static (Dictionary<string, string> dr, Dictionary<string, string> dn) _GetDllPaths(MetaComments meta) {
+	void _GetDllPaths() {
 		Dictionary<string, string> dr = null, dn = null, dr2 = null; //managed, native
-		_Project(meta);
+		_Project(_meta);
 		void _Project(MetaComments m) {
 			var ndir = App.Model.NugetDirectoryBS;
 
 			//managed dlls, except nuget
 			{
 				var refs = m.References.Refs;
-				for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
+				for (int k = m.References.DefaultRefCount; k < refs.Count; k++) {
+					if (refs[k].Properties.EmbedInteropTypes) continue;
 					var path = refs[k].FilePath;
 					if (path.Starts(ndir, true)) continue;
 					_Add(ref dr, pathname.getName(path), path);
@@ -455,7 +459,7 @@ static partial class Compiler {
 						foreach (var arh in mr.AssemblyReferences) {
 							var ar = mr.GetAssemblyReference(arh);
 							var an = mr.GetString(ar.Name);
-							if (MetaReferences.DefaultReferences.ContainsKey(an) || an == "System.Private.CoreLib") continue;
+							if (MetaReferences.IsDefaultRef(an)) continue;
 							if (dr2?.ContainsKey(an) ?? false) continue;
 							dir ??= pathname.getDirectory(path, withSeparator: true);
 							var path2 = dir + an + ".dll";
@@ -490,7 +494,7 @@ static partial class Compiler {
 								case "natives":
 									_AddGroup(f, true);
 									break;
-								case "other" when meta.Role == MCRole.exeProgram:
+								case "other" when _meta.Role == MCRole.exeProgram:
 									//copy all other files. Except XML doc, they are not in nuget.xml.
 									_Add2(ref dn, f.Value, isDll: false);
 									break;
@@ -504,9 +508,9 @@ static partial class Compiler {
 								int verBest = -1;
 
 								string skip = null;
-								if (meta.Role != MCRole.exeProgram) skip = @"-x86\";
-								else if (meta.Bit32) skip = @"-x64\";
-								else if (!meta.Optimize) skip = @"-x86\";
+								if (_meta.Role != MCRole.exeProgram) skip = @"-x86\";
+								else if (_meta.Bit32) skip = @"-x64\";
+								else if (!_meta.Optimize) skip = @"-x86\";
 
 								string sBest = null;
 								foreach (var f in x.Elements(native ? "native" : "rt")) {
@@ -516,7 +520,7 @@ static partial class Compiler {
 
 									if (skip != null && s.Eq(i, skip, true)) continue;
 
-									if (meta.Role == MCRole.exeProgram) {
+									if (_meta.Role == MCRole.exeProgram) {
 										_Add2(ref d, s); //will select at run time
 									} else {
 										if (verDll != 81) verDll *= 10;
@@ -546,11 +550,11 @@ static partial class Compiler {
 								} else if (tag == "f") {
 									if (s.Ends(".dll", true)) {
 										string skip = null;
-										if (meta.Role != MCRole.exeProgram) skip = @"\32";
-										else if (meta.Bit32) skip = @"\64";
-										else if (!meta.Optimize) skip = @"\32";
+										if (_meta.Role != MCRole.exeProgram) skip = @"\32";
+										else if (_meta.Bit32) skip = @"\64";
+										else if (!_meta.Optimize) skip = @"\32";
 										if (skip != null && s.Starts(skip)) continue;
-									} else if (meta.Role != MCRole.exeProgram) continue;
+									} else if (_meta.Role != MCRole.exeProgram) continue;
 									_Add2(ref dn, s);
 								}
 							}
@@ -563,7 +567,7 @@ static partial class Compiler {
 			}
 
 			//unmanaged dlls specified in meta file
-			if (m.OtherFiles != null && meta.Role != MCRole.exeProgram) {
+			if (m.OtherFiles != null && _meta.Role != MCRole.exeProgram) {
 				foreach (var v in m.OtherFiles) {
 					if (v.f.IsFolder) {
 						foreach (var des in v.f.Descendants()) if (!des.IsFolder) _AddOther(des);
@@ -585,9 +589,9 @@ static partial class Compiler {
 		}
 
 		void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
-			if (isDll && meta.Role == MCRole.exeProgram && meta.Name.Eqi(pathname.getNameNoExt(s)))
-				throw new InvalidOperationException($@"Can't use C# file name '{meta.Name}' because it is used by dll file '{path}'.
-	Rename this C# file: {meta.Name}");
+			if (isDll && _meta.Role == MCRole.exeProgram && _meta.Name.Eqi(pathname.getNameNoExt(s)))
+				throw new InvalidOperationException($@"Can't use C# file name '{_meta.Name}' because it is used by dll file '{path}'.
+	Rename this C# file: {_meta.Name}");
 
 			d ??= new(StringComparer.OrdinalIgnoreCase);
 			if (d.TryAdd(s, path)) return;
@@ -611,17 +615,49 @@ static partial class Compiler {
 		//print.it("dn");
 		//print.it(dn);
 
-		return (dr, dn);
+		if (_meta.Role == MCRole.exeProgram) {
+			_tpa = _GetDefaultTPA();
+			if (dr != null) {
+				//remove replaced defaults. Rare.
+				foreach (var v in dr.Keys) {
+					var fn = pathname.getNameNoExt(v);
+					int i = _tpa.Find_(fn, static (s, from, to) => s[from - 1] == '|' && (to == s.Length || s[to] == '|'), true);
+					if (i > 0) _tpa = _tpa.Remove(i - 1, fn.Length + 1);
+				}
+
+				StringBuilder b = null;
+				foreach (var v in dr.Keys) {
+					if (v.Starts(@"\runtimes\", true)) continue; //managed by ResolveNugetRuntimes_, because difficult in C++
+					b ??= new(_tpa);
+					int bs = v[0] == '\\' ? 1 : 0;
+					b.Append('|').Append(v, bs, v.Length - 4 - bs);
+				}
+				if (b != null) _tpa = b.ToString();
+			}
+		}
+
+		_dr = dr;
+		_dn = dn;
 	}
 
-	static List<ResourceDescription> _CreateManagedResources(MetaComments m, string asmName, CSharpSyntaxTree[] trees) {
+	static string _GetDefaultTPA() {
+		if (s_sDefTPA == null) {
+			var s = _Resources.LoadNativeResourceUtf8String_(220, 1);
+			int i = s.LastIndexOf("|Au|") + 3; //remove Au.Controls etc
+			s_sDefTPA = s[..i];
+		}
+		return s_sDefTPA;
+	}
+	static string s_sDefTPA;
+
+	List<ResourceDescription> _CreateManagedResources(string asmName, CSharpSyntaxTree[] trees) {
 		List<ResourceDescription> R = null;
 		ResourceWriter rw = null;
 		MemoryStream stream = null;
 		FileNode curFile = null;
 
 		try {
-			var a = m.Resources;
+			var a = _meta.Resources;
 			if (!a.NE_()) {
 				R = new();
 				foreach (var v in a) {
@@ -639,7 +675,7 @@ static partial class Compiler {
 						else if (usePath = resType.Ends(" /path")) resType = resType[..^6];
 						if (usePath) {
 							curFile = v.f;
-							pathRoot = m.MainFile.f.Parent;
+							pathRoot = _meta.MainFile.f.Parent;
 							if (!v.f.IsDescendantOf(pathRoot)) throw new ArgumentException("/path cannot be used if the file isn't in this folder");
 							if (resType == "strings") throw new ArgumentException("/path cannot be used with /strings");
 						}
@@ -691,7 +727,7 @@ static partial class Compiler {
 			}
 
 			//add XAML icons from strings like "*name #color"
-			if (m.Role != MCRole.editorExtension && 0 == (m.MiscFlags & 1)) {
+			if (_meta.Role != MCRole.editorExtension && 0 == (_meta.MiscFlags & 1)) {
 				HashSet<string> hs = null;
 				for (int i = 0; i < trees.Length; i++) {
 					List<LiteralExpressionSyntax> ai = null;
@@ -707,7 +743,7 @@ static partial class Compiler {
 								R ??= new();
 								rw ??= new(stream = new());
 								rw.AddResource(s, xaml);
-								if (m.Role == MCRole.classLibrary) (ai ??= new()).Add(les);
+								if (_meta.Role == MCRole.classLibrary) (ai ??= new()).Add(les);
 							}
 						}
 					}
@@ -734,70 +770,70 @@ static partial class Compiler {
 		}
 		catch (Exception e) {
 			rw?.Dispose();
-			_ResourceException(e, m, curFile);
+			_ResourceException(e, curFile);
 		}
 		//note: don't Close/Dispose rw. It closes stream. Compiler will close it. There is no other disposable data in rw.
 
 		return null;
 	}
 
-	static void _ResourceException(Exception e, MetaComments m, FileNode curFile) {
+	void _ResourceException(Exception e, FileNode curFile) {
 		var em = e.ToStringWithoutStack();
-		var err = m.Errors;
-		var f = m.MainFile.f;
+		var err = _meta.Errors;
+		var f = _meta.MainFile.f;
 		if (curFile == null) err.AddError(f, "Failed to add resources. " + em);
 		else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
 	}
 
-	static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation) {
+	Stream _CreateNativeResources() {
 #if true
-		if (m.Role is MCRole.exeProgram or MCRole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
-			return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
+		if (_meta.Role is MCRole.exeProgram or MCRole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
+			return _compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
 
-		if (m.IconFile != null) { //add only icon. No version, no manifest.
+		if (_meta.IconFile != null) { //add only icon. No version, no manifest.
 			Stream icoStream = null;
 			FileNode curFile = null;
 			try {
-				//if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
-				icoStream = File.OpenRead((curFile = m.IconFile).FilePath);
+				//if(_meta.ResFile != null) return File.OpenRead((curFile = _meta.ResFile).FilePath);
+				icoStream = File.OpenRead((curFile = _meta.IconFile).FilePath);
 				curFile = null;
-				return compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, icoStream);
+				return _compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, icoStream);
 			}
 			catch (Exception e) {
 				icoStream?.Dispose();
-				_ResourceException(e, m, curFile);
+				_ResourceException(e, curFile);
 			}
-		} else if (_GetMainFileIcon(m, out var stream)) {
-			return compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, stream);
+		} else if (_GetMainFileIcon(out var stream)) {
+			return _compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, stream);
 		}
 
 		return null;
 #else
-			var manifest = m.ManifestFile;
+			var manifest = _meta.ManifestFile;
 
 			string manifestPath = null;
 			if(manifest != null) manifestPath = manifest.FilePath;
-			else if(m.Role == MetaRole.exeProgram /*&& m.ResFile == null*/) manifestPath = folders.ThisAppBS + "default.exe.manifest"; //don't: uac
+			else if(_meta.Role == MetaRole.exeProgram /*&& _meta.ResFile == null*/) manifestPath = folders.ThisAppBS + "default.exe.manifest"; //don't: uac
 
 			Stream manStream = null, icoStream = null;
 			FileNode curFile = null;
 			try {
-				//if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
+				//if(_meta.ResFile != null) return File.OpenRead((curFile = _meta.ResFile).FilePath);
 				if(manifestPath != null) { curFile = manifest; manStream = File.OpenRead(manifestPath); }
-				if(m.IconFile != null) icoStream = File.OpenRead((curFile = m.IconFile).FilePath);
+				if(_meta.IconFile != null) icoStream = File.OpenRead((curFile = _meta.IconFile).FilePath);
 				curFile = null;
-				return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: manifestPath == null, manStream, icoStream);
+				return _compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: manifestPath == null, manStream, icoStream);
 			}
 			catch(Exception e) {
 				manStream?.Dispose();
 				icoStream?.Dispose();
-				_ResourceException(e, m, curFile);
+				_ResourceException(e, curFile);
 				return null;
 			}
 #endif
 	}
 
-	static string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
+	string _AppHost(string outFile, string fileName, bool bit32) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
 		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe"
 		//	and modifies it, eg copies native resources from the dll.
@@ -822,10 +858,10 @@ static partial class Compiler {
 			b[i] = 0;
 
 			var res = new _Resources();
-			if (m.IconFile != null) {
+			if (_meta.IconFile != null) {
 				_Resources.ICONCONTEXT ic = default;
-				if (m.IconFile.IsFolder) {
-					foreach (var des in m.IconFile.Descendants()) {
+				if (_meta.IconFile.IsFolder) {
+					foreach (var des in _meta.IconFile.Descendants()) {
 						if (des.IsFolder) continue;
 						if (des.Name.Ends(".ico", true)) {
 							res.AddIcon(des.FilePath, ref ic);
@@ -835,21 +871,21 @@ static partial class Compiler {
 						}
 					}
 				} else {
-					res.AddIcon(m.IconFile.FilePath, ref ic);
+					res.AddIcon(_meta.IconFile.FilePath, ref ic);
 				}
-			} else if (_GetMainFileIcon(m, out var stream)) {
+			} else if (_GetMainFileIcon(out var stream)) {
 				_Resources.ICONCONTEXT ic = default;
 				res.AddIcon(stream.ToArray(), ref ic);
 			}
 			res.AddVersion(outFile);
-			res.AddDotnetRef();
+			res.AddTpa(_tpa);
 
 			string manifest = null;
-			if (m.ManifestFile != null) manifest = m.ManifestFile.FilePath;
-			else if (m.Role == MCRole.exeProgram) manifest = folders.ThisAppBS + "default.exe.manifest"; //don't: uac
+			if (_meta.ManifestFile != null) manifest = _meta.ManifestFile.FilePath;
+			else if (_meta.Role == MCRole.exeProgram) manifest = folders.ThisAppBS + "default.exe.manifest"; //don't: uac
 			if (manifest != null) res.AddManifest(manifest);
 
-			res.WriteAll(exeFile, b, bit32, m.Console);
+			res.WriteAll(exeFile, b, bit32, _meta.Console);
 
 			//speed: AV makes this slooow.
 			//p1.NW();
@@ -860,14 +896,14 @@ static partial class Compiler {
 		return exeFile;
 	}
 
-	static bool _GetMainFileIcon(MetaComments m, out MemoryStream ms) {
+	bool _GetMainFileIcon(out MemoryStream ms) {
 		try {
-			if (DIcons.TryGetIconFromBigDB(m.MainFile.f.CustomIconName, out string xaml)) {
+			if (DIcons.TryGetIconFromBigDB(_meta.MainFile.f.CustomIconName, out string xaml)) {
 				_GetIconFromXaml(xaml, out ms);
 				return true;
 			}
 		}
-		catch (Exception e1) { _ResourceException(e1, m, null); }
+		catch (Exception e1) { _ResourceException(e1, null); }
 		ms = null;
 		return false;
 	}
@@ -878,13 +914,13 @@ static partial class Compiler {
 		ms.Position = 0;
 	}
 
-	static void _CopyDlls(MetaComments meta, Stream asmStream, bool need64, bool need32) {
+	void _CopyDlls(Stream asmStream, bool need64, bool need32) {
 		asmStream.Position = 0;
 
 		//note: need Au.dll and AuCpp.dll even if not used in code. It contains script.AppModuleInit_.
-		_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", meta.OutputPath + @"\Au.dll");
-		if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", meta.OutputPath + @"\64\AuCpp.dll");
-		if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", meta.OutputPath + @"\32\AuCpp.dll");
+		_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", _meta.OutputPath + @"\Au.dll");
+		if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
+		if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
 
 		bool usesSqlite = _UsesSqlite(asmStream);
 
@@ -906,10 +942,9 @@ static partial class Compiler {
 		}
 
 		//copy managed dlls, including from nuget
-		var (dr, dn) = _GetDllPaths(meta);
-		if (dr != null) {
-			foreach (var v in dr) {
-				_CopyFileIfNeed(v.Value, meta.OutputPath + "\\" + v.Key);
+		if (_dr != null) {
+			foreach (var v in _dr) {
+				_CopyFileIfNeed(v.Value, _meta.OutputPath + "\\" + v.Key);
 
 				if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) {
 					using var fs = filesystem.loadStream(v.Value);
@@ -919,18 +954,18 @@ static partial class Compiler {
 		}
 
 		//copy other files from nuget
-		if (dn != null) {
-			foreach (var v in dn) {
-				_CopyFileIfNeed(v.Value, meta.OutputPath + v.Key);
+		if (_dn != null) {
+			foreach (var v in _dn) {
+				_CopyFileIfNeed(v.Value, _meta.OutputPath + v.Key);
 			}
 		}
 
 		//copy files specified in meta file
-		_OtherFilesOfProject(meta);
+		_OtherFilesOfProject(_meta);
 		void _OtherFilesOfProject(MetaComments m) {
 			if (m.OtherFiles != null) {
 				foreach (var v in m.OtherFiles) {
-					var dest = meta.OutputPath;
+					var dest = _meta.OutputPath;
 					if (!v.s.NE()) dest = pathname.combine(dest, v.s, s2CanBeFullPath: true);
 
 					_CopyOther(v.f, dest);
@@ -953,8 +988,8 @@ static partial class Compiler {
 
 		//print.it(usesSqlite);
 		if (usesSqlite) {
-			if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", meta.OutputPath + @"\64\sqlite3.dll");
-			if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", meta.OutputPath + @"\32\sqlite3.dll");
+			if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", _meta.OutputPath + @"\64\sqlite3.dll");
+			if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", _meta.OutputPath + @"\32\sqlite3.dll");
 		}
 	}
 
@@ -967,8 +1002,8 @@ static partial class Compiler {
 		filesystem.copy(sFrom, sTo, FIfExists.Delete);
 	}
 
-	static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile) {
-		var x = post ? m.PostBuild : m.PreBuild;
+	bool _RunPrePostBuildScript(bool post, string outFile) {
+		var x = post ? _meta.PostBuild : _meta.PreBuild;
 		string[] args;
 		if (x.s == null) {
 			args = new string[] { _OutputFile() };
@@ -976,23 +1011,23 @@ static partial class Compiler {
 			args = StringUtil.CommandLineToArray(x.s);
 
 			//replace variables like $(variable)
-			var f = m.MainFile.f;
+			var f = _meta.MainFile.f;
 			s_rx1 ??= new regexp(@"\$\((\w+)\)");
 			string _ReplFunc(RXMatch k) {
 				switch (k[1].Value) {
 				case "outputFile": return _OutputFile();
-				case "outputPath": return m.OutputPath;
+				case "outputPath": return _meta.OutputPath;
 				case "source": return f.ItemPath;
-				case "role": return m.Role.ToString();
-				case "optimize": return m.Optimize ? "true" : "false";
-				case "bit32": return m.Bit32 ? "true" : "false";
+				case "role": return _meta.Role.ToString();
+				case "optimize": return _meta.Optimize ? "true" : "false";
+				case "bit32": return _meta.Bit32 ? "true" : "false";
 				default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
 				}
 			}
 			for (int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 		}
 
-		string _OutputFile() => m.Role == MCRole.exeProgram ? DllNameToAppHostExeName(outFile, m.Bit32) : outFile;
+		string _OutputFile() => _meta.Role == MCRole.exeProgram ? DllNameToAppHostExeName(outFile, _meta.Bit32) : outFile;
 
 		bool ok = Compile(CCReason.Run, out var r, x.f);
 		if (r.role != MCRole.editorExtension) throw new ArgumentException($"'{x.f.Name}' role must be editorExtension");
@@ -1042,6 +1077,17 @@ static partial class Compiler {
 			if (Api.DeleteFile(a[i]) || lastError.code == Api.ERROR_FILE_NOT_FOUND) a.RemoveAt(i);
 		}
 		if (a.Count == 0) timer?.Stop();
+	}
+
+	public static void Warmup(Microsoft.CodeAnalysis.Document document) {
+		//using var p1 = perf.local();
+		var compilation = document.Project.GetCompilationAsync().Result;
+		//compilation.GetDiagnostics(); //just makes Emit faster, and does not make the real GetDiagnostics faster first time
+		//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
+		var asmStream = new MemoryStream(16000);
+		compilation.Emit(asmStream);
+		//compilation.Emit(asmStream, null, options: eOpt); //somehow makes slower later
+		//compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 	}
 }
 

@@ -25,7 +25,7 @@ static class App {
 		perf.first();
 		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
-		//print.clear();
+		//print.clear(); 
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 #endif
 
@@ -40,6 +40,7 @@ static class App {
 		}
 
 		//Debug_.PrintLoadedAssemblies(true, !true);
+
 		_Main(args);
 		return 0;
 	}
@@ -192,7 +193,7 @@ static class App {
 
 		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
 
-		//print.qm2.write(an);
+		//print.qm2.write(an); 
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
 	static Dictionary<string, string> s_arDlls;

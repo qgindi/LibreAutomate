@@ -1,6 +1,5 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
-using System.Xml.Linq;
 
 namespace Au.Compiler;
 
@@ -23,6 +22,7 @@ class MetaReferences {
 	/// </summary>
 	class _MR {
 		public readonly string name, path;
+		public bool ignoreThis, ignoreDef;
 		readonly WeakReference<PortableExecutableReference> _wr = new(null);
 		PortableExecutableReference _refKeeper;
 		long _rkTimeout;
@@ -90,22 +90,26 @@ class MetaReferences {
 	static readonly List<_MR> s_cache = new();
 
 	/// <summary>
-	/// List containing <see cref="DefaultReferences"/> + references for which was called <see cref="Resolve"/> of this MetaReferences variable.
+	/// List containing most <see cref="DefaultReferences"/> + references for which was called <see cref="Resolve"/> of this MetaReferences variable.
 	/// </summary>
-	public List<PortableExecutableReference> Refs { get; }
+	public IReadOnlyList<PortableExecutableReference> Refs => _refs;
+	readonly List<PortableExecutableReference> _refs;
 
 	/// <summary>
 	/// These references are added when compiling any script/library.
 	/// Au.dll and all .NET design-time assemblies.
 	/// </summary>
-	public static readonly Dictionary<string, PortableExecutableReference> DefaultReferences;
+	public static readonly Dictionary<string, PortableExecutableReference> DefaultReferences = new(300, StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>
+	/// Returns true if <i>name</i> is in <b>DefaultReferences</b> or is a private .NET assembly. Case-insensitive.
+	/// </summary>
+	public static bool IsDefaultRef(string name) => DefaultReferences.ContainsKey(name) || name.Eqi("System.Private.CoreLib");
 
 	static MetaReferences() {
 		//var p1 = perf.local();
 		s_netDocProvider = new _NetDocumentationProvider();
 		//p1.Next('d');
-
-		DefaultReferences = new Dictionary<string, PortableExecutableReference>(300, StringComparer.OrdinalIgnoreCase);
 
 		using var db = EdDatabases.OpenRef();
 		using var stat = db.Statement("SELECT * FROM ref");
@@ -134,16 +138,26 @@ class MetaReferences {
 
 	public MetaReferences() {
 		var def = DefaultReferences;
-		Refs = new List<PortableExecutableReference>(def.Count + 10);
-		foreach (var v in def) Refs.Add(v.Value);
+		_refs = new List<PortableExecutableReference>(def.Count + 10);
+		foreach (var v in def) _refs.Add(v.Value);
+
+		DefaultRefCount = _refs.Count;
 	}
+
+	//public MetaReferences(FileNode fn) : this() {
+	//	_test = fn.Name == "test.cs";
+	//}
+	//bool _test;
 
 	/// <summary>
 	/// Finds reference assembly file, creates PortableExecutableReference and adds to the cache.
 	/// Returns false if file not found.
 	/// </summary>
-	/// <param name="reference">Assembly filename (like "My.dll" or "My"), relative path or full path. If not full path, must be in folders.ThisApp.</param>
-	/// <exception cref="Exception">Some unexpected exception, eg failed to load the found file.</exception>
+	/// <param name="reference">
+	/// Assembly filename (like "My.dll" or "My"), relative path or full path.
+	/// If not full path, must be in folders.ThisApp; if isCOM - in App.Model.WorkspaceDirectory + @"\.interop\".
+	/// </param>
+	/// <exception cref="Exception">Eg failed to load the found file.</exception>
 	/// <remarks>
 	/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
 	/// Loads the file but does not parse. If bad format, error later when compiling.
@@ -155,59 +169,110 @@ class MetaReferences {
 			alias = reference.Remove(i);
 			reference = reference[(i + 1)..];
 		}
+		if (reference.Length == 0) return false;
 
-		var a = s_cache;
-		lock (a) {
-			for (i = 0; i < a.Count; i++) {
-				if (a[i].name.Eqi(reference) && _PropEq(a[i], alias, isCOM)) {
-					_AddRef(i);
-					return true;
-				}
+		var cache = s_cache;
+		lock (cache) {
+			for (i = 0; i < cache.Count; i++) {
+				if (cache[i].name.Eqi(reference) && _PropEq(cache[i], alias, isCOM)) goto g1;
 			}
 
-			var path = _ResolvePath(reference, isCOM);
-			if (path == null) return false;
+			var path = reference;
+			bool isFull = pathname.isFullPathExpand(ref path);
+			if (!isFull && isCOM) { isFull = true; path = App.Model.WorkspaceDirectory + @"\.interop\" + path; }
+			if (!isFull) path = folders.ThisAppBS + path;
 			path = pathname.Normalize_(path);
+			if (!filesystem.exists(path, useRawPath: true).File) return false;
+			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 
-			for (i = 0; i < a.Count; i++) {
-				if (a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
+			for (i = 0; i < cache.Count; i++) {
+				if (cache[i].path.Eqi(path) && _PropEq(cache[i], alias, isCOM)) goto g1;
 			}
+
 			_MR k;
 			if (isCOM || alias != null) k = new _MR2(reference, path, alias, isCOM);
 			else k = new _MR(reference, path);
-			a.Add(k);
+
+			if (!isCOM && _BadDefReplacement(k)) throw new InvalidOperationException($"Cannot use reference '{reference}'.");
+
+			cache.Add(k);
+
 			g1:
 			_AddRef(i);
 		}
 
 		return true;
 
-		void _AddRef(int iCache) {
-			var r = s_cache[iCache].Ref;
-			if (!Refs.Contains(r))
-				Refs.Add(r);
-		}
-
-		bool _PropEq(_MR u, string alias, bool isCOM) {
+		static bool _PropEq(_MR u, string alias, bool isCOM) {
 			if (u is _MR2 m2) return m2.PropEq(alias, isCOM);
 			return !isCOM && alias == null;
 		}
+
+		void _AddRef(int iCache) {
+			var k = s_cache[iCache];
+
+			if (k.ignoreThis) return;
+
+			var r = k.Ref;
+			if (_refs.Contains(r)) return;
+
+			if (k.ignoreDef) {
+				var s = pathname.getNameNoExt(k.path);
+				for (int i = DefaultRefCount; --i >= 0;) {
+					if (_refs[i].Display.Eqi(s)) {
+						_refs.RemoveAt(i);
+						DefaultRefCount--;
+						break;
+					}
+				}
+			}
+
+			_refs.Add(r);
+		}
+
+		//Returns true if k name matches one of default refs, unless k is any version of that ref.
+		//In the later case sets k.ignoreDef=true if k is a newer version, else sets k.ignoreThis=true.
+		static bool _BadDefReplacement(_MR k) {
+			if (!DefaultReferences.TryGetValue(pathname.getNameNoExt(k.path), out var def)) return false;
+			var idR = _Identity(k.Ref); if (idR == null) return true;
+			var idD = _Identity(def);
+			//print.it(idR, idDef);
+			if (idR.Name != idD.Name || !idR.PublicKeyToken.SequenceEqual(idD.PublicKeyToken)) return true;
+			if (idR.Version > idD.Version) k.ignoreDef = true; else k.ignoreThis = true;
+			return false;
+
+			static AssemblyIdentity _Identity(PortableExecutableReference pe) {
+				if (pe.GetMetadataNoCopy() is AssemblyMetadata am && am.GetAssembly() is PEAssembly pa) return pa.Identity;
+				return null;
+			}
+
+			//SHOULDDO: also for k dependencies that aren't in meta
+		}
 	}
 
-	static string _ResolvePath(string re, bool isCOM) {
-		if (re.NE()) return null;
-		bool isFull = pathname.isFullPathExpand(ref re);
-		if (!isFull && isCOM) { isFull = true; re = App.Model.WorkspaceDirectory + @"\.interop\" + re; }
-		if (!isFull) re = folders.ThisAppBS + re;
-		return filesystem.exists(re).File ? re : null;
-		//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
+	/// <summary>
+	/// Gets the number of default references.
+	/// Note: it may be less than DefaultReferences.Count (some default references can be removed).
+	/// </summary>
+	public int DefaultRefCount { get; private set; }
+
+	/// <summary>
+	/// Removes from <b>Refs</b> all matching <i>wildcard</i>. Used for meta noRef.
+	/// </summary>
+	internal void RemoveFromRefs(string wildcard) {
+		for (int i = _refs.Count; --i >= 0;) {
+			if (_refs[i].FilePath.Like(wildcard, true)) {
+				_refs.RemoveAt(i);
+				if (i < DefaultRefCount) DefaultRefCount--;
+			}
+		}
 	}
 
 	/// <summary>
 	/// Extracts path from compiler error message CS0009 and removes the reference from cache.
 	/// </summary>
 	/// <param name="errorMessage">"Metadata file '....dll' could not be opened ..."</param>
-	public static void RemoveBadReference(string errorMessage) {
+	public static void RemoveBadRefFromCache(string errorMessage) {
 		if (errorMessage.RxMatch(@"'(.+?)'", 1, out string path))
 			lock (s_cache) { s_cache.RemoveAll(v => v.path.Eqi(path)); }
 	}

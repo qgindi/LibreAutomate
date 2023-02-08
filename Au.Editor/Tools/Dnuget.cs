@@ -268,7 +268,7 @@ A script can use packages from multiple folders if they are compatible.");
 
 				var dCompile = _GetCompileAssembliesFromAssetsJson(dirProj2 + @"\obj\project.assets.json", folderPath);
 
-#region copied from script "Create NuGet xml.cs"
+				#region copied from script "Create NuGet xml.cs"
 
 				//get lists of .NET dlls, native dlls and other files
 				List<(FEFile f, bool ro)> aDllNet = new();
@@ -284,7 +284,7 @@ A script can use packages from multiple folders if they are compatible.");
 						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || (s.Starts(@"\ref\") && package == "Microsoft.PowerShell.SDK")), s);
 					}
 					if (s.Ends(".dll", true) && (f.Level == 0 || runtimes)) {
-						if (Au.Compiler.CompilerUtil.IsNetAssembly(f.FullPath, out bool refOnly)) {
+						if (CompilerUtil.IsNetAssembly(f.FullPath, out bool refOnly)) {
 							aDllNet.Add((f, refOnly));
 						} else {
 							aDllNative.Add(f);
@@ -360,7 +360,7 @@ A script can use packages from multiple folders if they are compatible.");
 					xx.Add(new XElement("other", s));
 				}
 
-#endregion
+				#endregion
 
 				xn.SaveElem(npath, backup: true);
 
@@ -436,12 +436,11 @@ A script can use packages from multiple folders if they are compatible.");
 
 		static HashSet<string> _GetDotnetAssemblies() {
 			var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
-			var a = s.Split(';');
+			var a = s.Split(';', StringSplitOptions.RemoveEmptyEntries);
 			var h = new HashSet<string>(a.Length, StringComparer.OrdinalIgnoreCase);
-			var thisApp = folders.ThisAppBS;
+			string net1 = folders.NetRuntimeBS, net2 = folders.NetRuntimeDesktopBS;
 			foreach (var v in a) {
-				if (v.Starts(thisApp, true)) break;
-				h.Add(pathname.getName(v));
+				if (v.Starts(net1, true) || v.Starts(net2, true)) h.Add(pathname.getName(v));
 			}
 			return h;
 		}
@@ -613,7 +612,7 @@ A script can use packages from multiple folders if they are compatible.");
 		public string Name { get; }
 		public string Version { get; }
 
-#region ITreeViewItem
+		#region ITreeViewItem
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
 		bool ITreeViewItem.IsExpanded => _isExpanded;
@@ -623,6 +622,6 @@ A script can use packages from multiple folders if they are compatible.");
 		object ITreeViewItem.Image => _isExpanded ? FileNode.c_iconFolderOpen : (IsFolder ? FileNode.c_iconFolder : null);
 		//public TVCheck CheckState { get; }
 
-#endregion
+		#endregion
 	}
 }

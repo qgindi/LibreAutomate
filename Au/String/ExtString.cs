@@ -304,6 +304,20 @@ public static unsafe partial class ExtString {
 		return t.IndexOf(s, start, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	}
 
+	//CONSIDER: make public.
+	/// <summary>
+	/// Like <see cref="Find(string, string, bool)"/>, but with a predicate.
+	/// </summary>
+	/// <param name="also">Called for each found substring until returns true. Receives this string and start and end offsets of the substring.</param>
+	internal static int Find_(this string t, string s, Func<string, int, int, bool> also, bool ignoreCase = false) {
+		for (int i = 0; ; i++) {
+			i = t.Find(s, i, ignoreCase);
+			if (i < 0) break;
+			if (also(t, i, i + s.Length)) return i;
+		}
+		return -1;
+	}
+	
 	/// <summary>
 	/// Finds the first character specified in <i>chars</i>. Returns its index, or -1 if not found.
 	/// </summary>
@@ -645,6 +659,8 @@ public static unsafe partial class ExtString {
 		new Span<StartEnd>(f.p, n).CopyTo(a);
 		return a;
 	}
+	//FUTURE: add option to recognize all newline chars as documented in string.ReplaceLineEndings.
+	//	For it can use ReadOnlySpan<Char>.EnumerateLines.
 
 	/// <summary>
 	/// Returns the number of lines.

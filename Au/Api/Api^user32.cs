@@ -1592,6 +1592,11 @@ static unsafe partial class Api {
 
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern nint RegisterSuspendResumeNotification(IntPtr hRecipient, uint Flags);
+	
+	internal struct DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS {
+		public delegate* unmanaged<void*, int, void*, int> Callback;
+		public void* Context;
+	}
 
 	//internal const uint DEVICE_NOTIFY_WINDOW_HANDLE = 0x0;
 	//internal const int DEVICE_NOTIFY_CALLBACK = 2;
