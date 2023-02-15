@@ -41,7 +41,7 @@ When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, 
 #### Statement completion
 When you press Enter inside a function argument list before the last `)`, editor adds missing `;` or `{  }`, adds new line and moves the text cursor there. To avoid it, press Esc+Enter. To complete statement without new line, use `;` instead of Enter.
 
-Ctrl+Enter, Shift+Enter and Ctrl+; will complete statement when the text cursor is anywhere in it.
+Ctrl+Enter, Shift+Enter and Ctrl+; complete current statement when the text cursor is anywhere in it. If in an empty line at the end of a `{ }` block, leaves the block and removes empty lines. In a **switch** **case** section adds missing `break;`.
 
 #### Auto indentation
 When you press Enter, editor adds new line with correct number of tabs (indentation). The same with Ctrl+Enter. To avoid it, press Esc+Enter.

@@ -300,7 +300,7 @@ partial class CiCompletion {
 			var codeNow = doc.aaaText;
 			int posNow = doc.aaaCurrentPos16, posAdd = 0, codeLength = code.Length;
 			if (codeNow != code) { //changed while awaiting
-				int lenDiff = codeNow.Length - code.Length; if (lenDiff<=0) return;
+				int lenDiff = codeNow.Length - code.Length; if (lenDiff <= 0) return;
 				posAdd = posNow - position; if (posAdd != lenDiff) return;
 				if (!CodeInfo.GetContextAndDocument(out cd, posNow)) return;
 				position = cd.pos;
@@ -921,11 +921,13 @@ partial class CiCompletion {
 				switch (item.Provider) {
 				case CiComplProvider.Override:
 					newPos = -1;
-					//Replace 4 spaces with tab. Make { in same line.
-					s = s.Replace("    ", "\t").RxReplace(@"\R\t*\{", " {", 1);
-					//Correct indentation. 
-					int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
-					if (indent > indent2) s = s.RxReplace("(?m)^" + new string('\t', indent - indent2), "");
+					if (App.Settings.ci_formatTabIndent) {
+						//Replace 4 spaces with tab. Make { in same line.
+						s = s.Replace("    ", "\t").RxReplace(@"\R\t*\{", " {", 1);
+						//Correct indentation. 
+						int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
+						if (indent > indent2) s = s.RxReplace("(?m)^" + new string('\t', indent - indent2), "");
+					}
 					break;
 				case CiComplProvider.XmlDoc:
 					if (!s.Ends('>') && s.RxMatch(@"^<?(\w+)($| )", 1, out string tag)) {
@@ -1039,8 +1041,8 @@ partial class CiCompletion {
 						if (isEnter) {
 							int indent = doc.aaaLineIndentationFromPos(true, i);
 							var b = new StringBuilder(" {\r\n");
-							b.Append('\t', indent + 1);
-							b.Append("\r\n").Append('\t', indent).Append('}');
+							b.AppendIndent(indent + 1);
+							b.AppendLine().AppendIndent(indent).Append('}');
 							s2 = b.ToString();
 							positionBack = indent + 3;
 						} else {

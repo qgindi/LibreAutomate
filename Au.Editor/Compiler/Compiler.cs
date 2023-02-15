@@ -327,7 +327,7 @@ partial class Compiler {
 				if (MetaReferences.IsDefaultRef(_meta.Name)) print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
 			}
 
-			if (notInCache) print.it($"<>{f.SciLink()} output folder: <link>{_meta.OutputPath}<>");
+			if (notInCache) print.it($"<>Compiled {f.SciLink()}. Output folder: <link>{_meta.OutputPath}<>");
 		}
 
 		r.name = _meta.Name;
@@ -590,8 +590,7 @@ partial class Compiler {
 
 		void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
 			if (isDll && _meta.Role == MCRole.exeProgram && _meta.Name.Eqi(pathname.getNameNoExt(s)))
-				throw new InvalidOperationException($@"Can't use C# file name '{_meta.Name}' because it is used by dll file '{path}'.
-	Rename this C# file: {_meta.Name}");
+				throw new InvalidOperationException($@"The program uses a dll file with the same name. Rename C# file {_meta.Name}");
 
 			d ??= new(StringComparer.OrdinalIgnoreCase);
 			if (d.TryAdd(s, path)) return;

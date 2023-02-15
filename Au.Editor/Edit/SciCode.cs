@@ -684,8 +684,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 		}
 
 		//update #if WPF_PREVIEW: styling, errors.
-		CodeInfo.Stop();
-		CodeInfo._styling.Update();
+		CodeInfo.StopAndUpdateStyling();
 	}
 
 	#endregion

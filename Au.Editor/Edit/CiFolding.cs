@@ -158,7 +158,7 @@ class CiFolding {
 					if (c == '/' && _IsDotComment(s, ++i, out bool closing)) { //.
 						if (!_IsStartOfTrivia(false)) continue;
 						_AddFoldPoint(rangeStart + i0, !closing);
-					} else if (c == '*' || _IsStartOfLine(s, i0)) {
+					} else if (c == '*' || InsertCodeUtil.IsLineStart(s, i0)) {
 						i = i0 + 2;
 						bool isLineComment = c == '/';
 						if (!isLineComment) {
@@ -209,12 +209,6 @@ class CiFolding {
 						}
 						if (!_IsStartOfTrivia(isLineComment)) continue;
 						_AddFoldPoints(rangeStart + i0, rangeStart + i);
-					}
-
-					static bool _IsStartOfLine(ReadOnlySpan<char> s, int j/*, out int startOfLine*/) {
-						while (j > 0 && s[j - 1] is '\t' or ' ') j--;
-						//startOfLine = j;
-						return j == 0 || s[j - 1] == '\n';
 					}
 
 					static bool _IsDotComment(ReadOnlySpan<char> s, int j, out bool closing) {

@@ -175,25 +175,9 @@ static class ModifyCode {
 		//	//if (v is AnchorIndentationFormattingRule d) print.it(d);
 		//}
 
-		var od = CSharpSyntaxFormattingOptions.Default;
-		var options = new CSharpSyntaxFormattingOptions {
-			Common = new SyntaxFormattingOptions.CommonOptions {
-				LineFormatting = new() { IndentationSize = 4, NewLine = "\r\n", TabSize = 4, UseTabs = true },
-				SeparateImportDirectiveGroups = false,
-			},
-			Indentation = IndentationPlacement.BlockContents | IndentationPlacement.SwitchCaseContents | IndentationPlacement.SwitchCaseContentsWhenBlock,
-			Spacing = od.Spacing,
-			SpacingAroundBinaryOperator = od.SpacingAroundBinaryOperator,
-			NewLines = NewLinePlacement.BeforeCatch | NewLinePlacement.BeforeFinally | NewLinePlacement.BetweenQueryExpressionClauses,
-			LabelPositioning = LabelPositionOptions.NoIndent,
-			WrappingKeepStatementsOnSingleLine = true,
-			WrappingPreserveSingleLine = true,
-			//PreferTopLevelStatements = ?, //SHOULDDO: test.
-		};
-
 		var span = TextSpan.FromBounds(from, to);
 		var services = cd.document.Project.Solution.Services;
-		var a1 = Formatter.GetFormattedTextChanges(root, span, services, options);
+		var a1 = Formatter.GetFormattedTextChanges(root, span, services, FormattingOptions);
 		//perf.next();
 
 		string code2 = code;
@@ -230,6 +214,48 @@ static class ModifyCode {
 		//perf.nw();
 		return ret;
 	}
+
+	/// <summary>
+	/// Can be replaced by editorExtension scripts.
+	/// </summary>
+	public static CSharpSyntaxFormattingOptions FormattingOptions {
+		get {
+			if (_formattingOptions == null) {
+				switch(App.Settings.ci_formatCompact, App.Settings.ci_formatTabIndent) {
+				case (true, true): //default in this program
+					_formattingOptions = new() {
+						Common = new SyntaxFormattingOptions.CommonOptions {
+							LineFormatting = new() { UseTabs = true },
+						},
+						Indentation = IndentationPlacement.BlockContents | IndentationPlacement.SwitchCaseContents | IndentationPlacement.SwitchCaseContentsWhenBlock,
+						NewLines = NewLinePlacement.BeforeCatch | NewLinePlacement.BeforeFinally | NewLinePlacement.BetweenQueryExpressionClauses,
+						LabelPositioning = LabelPositionOptions.NoIndent,
+					};
+					break;
+				case (false, true):
+					_formattingOptions = new() {
+						Common = new SyntaxFormattingOptions.CommonOptions {
+							LineFormatting = new() { UseTabs = true },
+						},
+					};
+					break;
+				case (true, false):
+					_formattingOptions = new() {
+						Indentation = IndentationPlacement.BlockContents | IndentationPlacement.SwitchCaseContents | IndentationPlacement.SwitchCaseContentsWhenBlock,
+						NewLines = NewLinePlacement.BeforeCatch | NewLinePlacement.BeforeFinally | NewLinePlacement.BetweenQueryExpressionClauses,
+						LabelPositioning = LabelPositionOptions.NoIndent,
+					};
+					break;
+				default:
+					_formattingOptions = CSharpSyntaxFormattingOptions.Default;
+					break;
+				}
+			}
+			return _formattingOptions;
+		}
+		set { _formattingOptions = value; }
+	}
+	static CSharpSyntaxFormattingOptions _formattingOptions;
 }
 
 //gets 0 for empty lines. OK for //comments.

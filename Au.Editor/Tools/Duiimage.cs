@@ -16,8 +16,8 @@ using System.Drawing;
 namespace Au.Tools;
 
 class Duiimage : KDialogWindow {
-	public static void Dialog()
-		=> TUtil.ShowDialogInNonmainThread(() => new Duiimage());
+	public static void Dialog(wnd wCapture = default)
+		=> TUtil.ShowDialogInNonmainThread(() => new Duiimage(wCapture));
 
 	wnd _wnd, _con;
 	bool _useCon;
@@ -29,7 +29,7 @@ class Duiimage : KDialogWindow {
 
 	KSciInfoBox _info;
 	KPopup _ttInfo;
-	Button _bTest, _bInsert, _bMore;
+	Button _bTest, _bInsert, _bMore, _bCapture;
 	ComboBox _cbAction;
 	const int c_waitnot = 8, c_finder = 9;
 	_PictureBox _pict;
@@ -41,7 +41,7 @@ class Duiimage : KDialogWindow {
 	//CONSIDER: add mouse xy like in Delm.
 	//CONSIDER: add wnd Activate if pixels from screen.
 
-	public Duiimage() {
+	public Duiimage(wnd wCapture = default) {
 		Title = "Find image or color in window";
 
 		_noeventValueChanged = true;
@@ -49,7 +49,7 @@ class Duiimage : KDialogWindow {
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(76, 76, 76, -1);
 		//row 1
-		b.R.AddButton("Capture", _bCapture_Click);
+		b.R.AddButton(out _bCapture, "Capture", _ => _Capture());
 		b.AddButton(out _bTest, "Test", _Test).Disabled().Tooltip("Execute the code now (except wait/fail/mouse) and show the rectangle");
 		b.AddButton(out _bInsert, "Insert", _Insert).Disabled();
 		b.Add(out _cbAction).Align("L").Width(140).Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|PostClickD|PostClickR|waitNot|new uiimageFinder").Select(2);
@@ -80,6 +80,14 @@ class Duiimage : KDialogWindow {
 		_noeventValueChanged = false;
 
 		WndSavedRect.Restore(this, App.Settings.wndpos.uiimage, o => App.Settings.wndpos.uiimage = o);
+
+		if (!wCapture.Is0) {
+			WindowState = System.Windows.WindowState.Minimized;
+			wiflagsC.c.IsChecked = !(wCapture.HasExStyle(WSE.NOREDIRECTIONBITMAP) || wCapture.ChildAll().Any(o => o.HasExStyle(WSE.NOREDIRECTIONBITMAP)));
+			b.Loaded += () => {
+				_Capture(wCapture);
+			};
+		}
 	}
 
 	static Duiimage() {
@@ -100,8 +108,8 @@ class Duiimage : KDialogWindow {
 		App.Hmain.ActivateL();
 	}
 
-	void _bCapture_Click(WBButtonClickArgs e) {
-		if (!_CaptureImageOrRect(false, out var r)) return;
+	void _Capture(wnd wCapture = default) {
+		if (!_CaptureImageOrRect(false, out var r, wCapture)) return;
 		_imageFile = null;
 		_SetImage(r);
 
@@ -110,7 +118,7 @@ class Duiimage : KDialogWindow {
 		}
 
 		if (_Flags is 0 or CIUFlags.PrintWindow && Dpi.IsWindowVirtualized(r.w)) {
-			TUtil.InfoTooltip(ref _ttInfo, e.Button, """
+			TUtil.InfoTooltip(ref _ttInfo, _bCapture, """
 Note: The window is DPI-scaled. Its pixel colors will change after resizing, and the code may stop working.
 To avoid it, capture with flag WindowDC. Or try to move the window to another screen.
 """);
@@ -155,11 +163,11 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 
 	CIUFlags _Flags => !wiflagsC.c.IsChecked ? 0 : wiflagsC.t.SelectedIndex switch { 1 => CIUFlags.PrintWindow, _ => CIUFlags.WindowDC };
 
-	bool _CaptureImageOrRect(bool rect, out CIUResult r) {
+	bool _CaptureImageOrRect(bool rect, out CIUResult r, wnd wCapture = default) {
 		_ttInfo?.Close();
 
 		var fl = rect ? CIUFlags.Rectangle : _Flags;
-		if (!CaptureScreen.ImageColorRectUI(out r, fl, this)) return false;
+		if (!CaptureScreen.ImageColorRectUI(out r, fl, this, wCapture)) return false;
 
 		var w2 = (!rect || _useCon) ? r.w : r.w.Window;
 		string es = null;

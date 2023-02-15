@@ -546,4 +546,5 @@ enum AppHotkeyId {
 	QuickCaptureMenu = 1,
 	QuickCaptureDwnd = 2,
 	QuickCaptureDelm = 3,
+	QuickCaptureDuiimage = 4,
 }

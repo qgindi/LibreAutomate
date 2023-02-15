@@ -190,6 +190,7 @@ A script can use packages from multiple folders if they are compatible.");
 		if (folder.Eqi(package)) print.it("<><c orange>Warning: folder name should not be the same as package name."); //will fail if same
 
 		await _Build(folder, package, sAdd);
+		CodeInfo.StopAndUpdateStyling();
 	}
 
 	async Task<bool> _Build(string folder, string package = null, string sAdd = null) {
@@ -473,7 +474,10 @@ A script can use packages from multiple folders if they are compatible.");
 			}
 
 			if (!await _Build(_Selected.Parent.Name)) return;
-			if (uninstalling) print.it("========== Finished ==========");
+			if (uninstalling) {
+				CodeInfo.StopAndUpdateStyling();
+				print.it("========== Finished ==========");
+			}
 		}
 	}
 

@@ -23,19 +23,6 @@ public class uiimage {
 		_area = area;
 	}
 
-	internal uiimage(uiimage copy) {
-		_area = copy._area;
-		Rect = copy.Rect;
-		MatchIndex = copy.MatchIndex;
-		ListIndex = copy.ListIndex;
-	}
-
-	internal void Clear_() {
-		Rect = default;
-		ListIndex = 0;
-		MatchIndex = 0;
-	}
-
 	/// <summary>
 	/// Gets location of the found image, relative to the search area.
 	/// </summary>
@@ -43,7 +30,7 @@ public class uiimage {
 	/// Relative to the window/control client area (if area type is <b>wnd</b>), UI element (if <b>elm</b>), image (if <b>Bitmap</b>) or screen (if <b>RECT</b>).
 	/// More info: <see cref="find"/>.
 	/// </remarks>
-	public RECT Rect { get; internal set; }
+	public RECT Rect { get; init; }
 
 	/// <summary>
 	/// Gets location of the found image in screen coordinates.
@@ -76,12 +63,12 @@ public class uiimage {
 	/// Can be useful in <i>also</i> callback functions.
 	/// When the <i>image</i> argument is a list of images, <b>MatchIndex</b> starts from 0 for each list image.
 	/// </remarks>
-	public int MatchIndex { get; internal set; }
+	public int MatchIndex { get; init; }
 
 	/// <summary>
 	/// When the <i>image</i> argument is a list of images, gets 0-based index of the list image.
 	/// </summary>
-	public int ListIndex { get; internal set; }
+	public int ListIndex { get; init; }
 
 	/// <summary>
 	/// Can be used in <i>also</i> callback function to skip <i>n</i> matching images. Example: <c>also: o => o.Skip(n)</c>.

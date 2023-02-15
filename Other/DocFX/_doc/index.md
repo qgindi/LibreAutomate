@@ -38,9 +38,6 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 ### Where can run
 Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 
-### Is it stable
-The program and the library are very young. They don't have any known problems, but need more testing everywhere.
-
 ### Download
 [Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.13.0, 2023-01-29, 24 MB
 

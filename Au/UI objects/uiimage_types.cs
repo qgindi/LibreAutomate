@@ -256,6 +256,12 @@ public enum IFFlags {
 
 	//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
+	/// <summary>
+	/// This flag can make the function faster when <i>image</i> is a list of images. To search for each image, the function will use <see cref="Parallel.For"/> instead of <b>for</b>. For example, if the CPU has 4 cores (8 threads), can search for max 8 images simultaneously. However it does not mean it will be 8 times faster. Can be max 2 or 3 times faster, depending on the number of images, flag <b>WindowDC</b>, <i>diff</i>, <i>also</i>, CPU, RAM, area size, finds or not, image position, etc. Can be even slower. To measure speed, use <see cref="perf"/>.
+	/// If used <i>also</i> callback function, it runs in any thread and any order, but one at a time (inside <c>lock() { }</c>).
+	/// </summary>
+	Parallel = 0x100
+
 	//rejected: this was used in QM2. Now can use png alpha instead.
 	///// <summary>
 	///// Use the top-left pixel color of the image as transparent color (don't compare pixels that have this color).
