@@ -912,7 +912,7 @@ class MetaComments {
 						i = code.IndexOf('\n', i);
 						if (i < 0) break;
 					} else break;
-				} else if (!(c == '\r' || c == '\n' || c == ' ' || c == '\t')) break;
+				} else if (c is not ('\r' or '\n' or ' ' or '\t')) break;
 			}
 		}
 		return default;

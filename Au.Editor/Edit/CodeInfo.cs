@@ -170,6 +170,11 @@ static class CodeInfo {
 		_signature.Cancel();
 	}
 
+	public static void StopAndUpdateStyling() {
+		Stop();
+		_styling.Update();
+	}
+
 	/// <summary>
 	/// Called when files added, deleted, moved, copied, imported, renamed.
 	/// Eg need to update styling when a meta c file became [un]available or when project folder structure changed.
@@ -178,8 +183,7 @@ static class CodeInfo {
 		if (_filesChangedAsync) return; _filesChangedAsync = true;
 		App.Dispatcher.InvokeAsync(() => {
 			_filesChangedAsync = false;
-			Stop();
-			_styling.Update();
+			StopAndUpdateStyling();
 			FilesChangedEvent?.Invoke();
 		});
 		//why async:

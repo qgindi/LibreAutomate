@@ -734,7 +734,7 @@ namespace Au {
 				//Other possible ways to allow set foreground window:
 				//1. Instead of key can use attachthreadinput. But it is less reliable, eg works first time only, and does not allow our process to activate later easily. Does not work if foreground window is higher IL.
 				//2. Call allowsetforegroundwindow from a hook from the foreground process (or from the shell process, not tested). Too dirty. Need 2 native dlls (32/64-bit). Cannot inject if higher IL.
-				
+
 				//Other possible ways to set foreground window:
 				//1. Create temp window, RegisterHotKey, SendInput, and call SetForegroundWindow on WM_HOTKEY. Does not work if foreground window is higher IL.
 				//2. WM_SETHOTKEY. More info below. Could not make it work well in all cases.
@@ -809,10 +809,12 @@ namespace Au {
 						}
 					}
 
-					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
+					//Often after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
+					//	https://devblogs.microsoft.com/oldnewthing/20161118-00/?p=94745
 					if (w == getwnd.root) return active.Is0;
-					//TODO: if GetForegroundWindow is not w, send WM_NULL. Info: https://devblogs.microsoft.com/oldnewthing/20161118-00/?p=94745
-					return WndUtil.WaitForAnActiveWindow();
+					if (WndUtil.WaitForAnActiveWindow()) return true;
+					w.SendTimeout(1000, out _, 0);
+					return !active.Is0;
 				}
 				//catch(AuWndException) { return false; }
 				catch { return false; }
@@ -880,7 +882,7 @@ namespace Au {
 				}
 
 				for (int i = 0; i < 3; i++) {
-					bool ok = ActivateL();
+					bool ok = Internal_.ActivateL(this);
 
 					if (!ofThisThread) {
 						MinimalSleepNoCheckThread_();
@@ -964,7 +966,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Self.</returns>
 		/// <remarks>
-		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
+		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10/11.
 		/// Fails (throws exception) if cannot activate this window, except:
 		/// - When this is a control. Then activates its top-level parent window.
 		/// - When the window's process instead activates another window of the same thread.

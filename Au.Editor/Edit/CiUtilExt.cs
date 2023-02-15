@@ -289,6 +289,15 @@ static class CiUtilExt {
 		return s;
 	}
 	static ConditionalWeakTable<INamespaceSymbol, string> _namespaceNames = new();
+
+	/// <summary>
+	/// Appends n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatIndentationSpaces</b>.
+	/// </summary>
+	public static StringBuilder AppendIndent(this StringBuilder t, int n) {
+		if (App.Settings.ci_formatTabIndent) t.Append('\t', n);
+		else t.Append(' ', n * 4);
+		return t;
+	}
 }
 
 record struct CiStringInfo {

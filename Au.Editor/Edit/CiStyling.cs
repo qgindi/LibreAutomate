@@ -7,8 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-partial class CiStyling
-{
+partial class CiStyling {
 	/// <summary>
 	/// Called when opening a document, when handle created but text still not loaded.
 	/// </summary>
@@ -355,8 +354,7 @@ partial class CiStyling
 	/// <summary>
 	/// Scintilla style indices of token types.
 	/// </summary>
-	public enum EStyle : byte
-	{
+	public enum EStyle : byte {
 		None,
 		Comment,
 		String,
@@ -386,8 +384,7 @@ partial class CiStyling
 		LineNumber = 33, //STYLE_LINENUMBER
 	}
 
-	public struct TStyle
-	{
+	public struct TStyle {
 		public int color;
 		public bool bold;
 

@@ -52,11 +52,12 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
+		//CodeInfo.StopAndUpdateStyling();
+
 		var doc = Panels.Editor.ActiveDoc;
 		//doc.
 		//print.it()
 		//Panels.Mouse.
-		
 
 		//var rx = new Regex(@"");
 		//App.Model.ImportFiles(new string[] { @"\\?\C:\code\ok\files\NtSetTimerResolution, timeBeginPeriod\Script103 - Copy.cs" });

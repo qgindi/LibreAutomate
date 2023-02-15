@@ -405,15 +405,46 @@ To apply changes after deleting etc, restart this application.
 
 	void _Code() {
 		var b = _Page("Code", WBPanelType.VerticalStack);
-		b.StartGrid<GroupBox>("Completion list").Columns(300, 20, -1);
+		b.StartGrid<GroupBox>("Completion list").Columns(200, 20, -1);
 		b.R.StartGrid(); //left
-		b.R.Add(out ComboBox complParen).Items("Spacebar|Always|Never").Select(App.Settings.ci_complParen).Add<Label>("adds ( )");
+		b.R.Add("Append ( )", out ComboBox complParen).Items("If spacebar|Always|Never").Select(App.Settings.ci_complParen)
+			.Tooltip("When selected a method name, also append (). The same for keywords like if, for.");
 		b.End();
 		b.Skip().StartGrid(); //right
 		b.End();
 		b.End();
+		b.StartGrid<GroupBox>("Formatting");
+		b.R.Add(out KCheckBox formatCompact, "Compact").Checked(App.Settings.ci_formatCompact)
+			.Tooltip("""
+Brace in same line. Don't indent case in switch.
+Examples:
+
+void Checked() {
+    if (true) {
+
+    } else {
+
+    }
+}
+
+void Unchecked()
+{
+    if (true)
+    {
+
+    }
+    else
+    {
+
+    }
+}
+""");
+		b.R.Add(out KCheckBox formatTabIndent, "Tab-indent").Checked(App.Settings.ci_formatTabIndent)
+			.Tooltip("For indentation use tab character, not spaces");
+		b.End();
 		b.StartGrid<GroupBox>("Insert code");
-		b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath).Tooltip("Insert file path like folders.System + \"file.exe\"");
+		b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath)
+			.Tooltip("Insert file path like folders.System + \"file.exe\"");
 		b.End();
 		//b.StartGrid<GroupBox>("Auto correction").Columns(0, 100, -1);
 		////b.R.StartStack().Add<TextBlock>("Need Shift to exit (...) with").Add(out KCheckBox shiftEnter, "Enter").Margin("T4").Add(out KCheckBox shiftTab, "Tab").Margin("T4").End(); //rejected
@@ -430,6 +461,18 @@ To apply changes after deleting etc, restart this application.
 
 		_b.OkApply += e => {
 			App.Settings.ci_complParen = complParen.SelectedIndex;
+
+			if (formatCompact.IsChecked != App.Settings.ci_formatCompact || formatTabIndent.IsChecked != App.Settings.ci_formatTabIndent) {
+				App.Settings.ci_formatCompact = formatCompact.IsChecked;
+				App.Settings.ci_formatTabIndent = formatTabIndent.IsChecked;
+				ModifyCode.FormattingOptions = null; //recreate
+
+				//note: don't SCI_SETUSETABS(false).
+				//	Eg VS does not use it, and it's good; VSCode uses, and it's bad, eg cannot insert tab in raw strings.
+				//	All autocorrect/autoindent/format code inserts spaces if need. Users rarely have to type indentation tabs.
+				//	And don't add options to set tab/indentation size. Too many options isn't good.
+			}
+
 			App.Settings.ci_unexpandPath = unexpandPath.IsChecked;
 			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.IsChecked ? 0 : 1);
 			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
@@ -444,6 +487,7 @@ To apply changes after deleting etc, restart this application.
 		b.R.Add("Capture wnd and show menu", out TextBox captureMenu, App.Settings.hotkeys.tool_quick).xValidateHotkey();
 		b.R.Add("Capture wnd and show tool", out TextBox captureDwnd, App.Settings.hotkeys.tool_wnd).xValidateHotkey();
 		b.R.Add("Capture elm and show tool", out TextBox captureDelm, App.Settings.hotkeys.tool_elm).xValidateHotkey();
+		b.R.Add("Capture image and show tool", out TextBox captureDuiimage, App.Settings.hotkeys.tool_uiimage).xValidateHotkey();
 		b.End();
 
 		_b.OkApply += e => {
@@ -451,6 +495,7 @@ To apply changes after deleting etc, restart this application.
 				tool_quick = captureMenu.Text,
 				tool_wnd = captureDwnd.Text,
 				tool_elm = captureDelm.Text,
+				tool_uiimage = captureDuiimage.Text,
 			};
 			if (v != App.Settings.hotkeys) {
 				App.Settings.hotkeys = v;

@@ -191,8 +191,6 @@ public unsafe class uiimageFinder {
 		}
 
 		_area.Before_(_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow));
-
-		Result = new uiimage(_area);
 	}
 
 	//called at the end of _Find (if not waiting) and Wait_
@@ -204,7 +202,7 @@ public unsafe class uiimageFinder {
 
 	bool _Find() {
 		//using var p1 = perf.local();
-		Result.Clear_();
+		Result = null;
 
 		if (!_area.GetRect_(out var r, out _resultOffset, _flags)) return false;
 
@@ -238,20 +236,23 @@ public unsafe class uiimageFinder {
 			if (havePixels) {
 				//Find image(s) in area.
 				uiimage alsoResult = null;
-				for (int i = 0, n = _images.Count; i < n; i++) {
-					Result.ListIndex = i;
-					Result.MatchIndex = 0;
-					if (_FindImage(_images[i], out var alsoAction, ref alsoResult)) return true;
-					if (alsoAction is IFAlso.NotFound or IFAlso.FindOtherOfThis or IFAlso.OkFindMoreOfThis) break;
+				_DpiScaling dpiScaling = null;
+				if (_action == Action_.WaitChanged)
+					return _FindImage(0, ref alsoResult, ref dpiScaling);
+				if (_flags.Has(IFFlags.Parallel) && _images.Count > 1) {
+					Parallel.For(0, _images.Count, (i, pls) => {
+						_FindImage(i, ref alsoResult, ref dpiScaling, pls);
+					});
+				} else {
+					for (int i = 0; i < _images.Count; i++) {
+						if (_FindImage(i, ref alsoResult, ref dpiScaling)) break;
+					}
 				}
 
-				if (alsoResult != null) {
-					Result = alsoResult;
-					return true;
-				}
+				Result ??= alsoResult;
+				if (Result != null) return true;
 			}
 
-			Result.Clear_();
 			return false;
 		}
 		finally {
@@ -261,8 +262,12 @@ public unsafe class uiimageFinder {
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	bool _FindImage(_Image image, out IFAlso alsoAction, ref uiimage alsoResult) {
-		alsoAction = IFAlso.FindOtherOfList;
+	bool _FindImage(int listIndex, ref uiimage alsoResult, ref _DpiScaling dpiScaling, ParallelLoopState pls = null) {
+		//note: can run in multiple threads simultaneously. Don't modify this fields and ref params without lock.
+
+		var image = _images[listIndex];
+		var alsoAction = IFAlso.FindOtherOfList;
+		int matchIndex = 0;
 
 		int imageWidth = image.width, imageHeight = image.height;
 		if (_ad.Width < imageWidth || _ad.Height < imageHeight) return false;
@@ -270,17 +275,8 @@ public unsafe class uiimageFinder {
 			uint* imagePixelsTo = imagePixels + imageWidth * imageHeight;
 			uint* areaPixels = _ad.Pixels;
 
-			//rejected. Does not make faster, just adds more code.
-			//if image is of same size as area, simply compare. For example, when action is WaitChanged.
-			//if(imageWidth == _areaWidth && imageHeight == _areaHeight) {
-			//	//print.it("same size");
-			//	if(_skip > 0) return false;
-			//	if(!_CompareSameSize(areaPixels, imagePixels, imagePixelsTo, _colorDiff)) return false;
-			//	_tempResults ??= new List<RECT>();
-			//	_tempResults.Add(new RECT(0, 0, imageWidth, imageHeight));
-			//	return true;
-			//}
-			//else if(imagePixelCount == 1) { ... } //eg when image is color
+			//rejected: if image is of same size as area, simply compare. For example, when action is WaitChanged.
+			//	Does not make faster, just adds more code.
 
 			if (!image.optim.Init(image, _ad.Width)) return false;
 			var optim = image.optim; //copy struct, size = 9*int
@@ -308,6 +304,7 @@ public unsafe class uiimageFinder {
 			//	No problems if 64-bit.
 
 			gContinue:
+			if (pls?.IsStopped ?? false) goto gNotFound;
 			{
 				var f_ = &f; //part 2 of the workaround
 				var p_ = f_->p + 1; //register
@@ -385,40 +382,57 @@ public unsafe class uiimageFinder {
 
 			if (_action != Action_.WaitChanged) {
 				int iFound = (int)(f.p - o_pos0 - areaPixels);
-				var r = new RECT(iFound % _ad.Width, iFound / _ad.Width, imageWidth, imageHeight);
-				_DpiScaleRect(ref r);
-				r.Offset(_resultOffset.x, _resultOffset.y);
-				Result.Rect = r;
+				RECT r = new(iFound % _ad.Width, iFound / _ad.Width, imageWidth, imageHeight);
 
-				if (_also != null) {
-					var wi = new uiimage(Result); //create new uiimage object because the callback may add it to a list etc
-					switch (alsoAction = _also(wi)) {
-					case IFAlso.OkReturn:
-						alsoResult = null;
-						break;
-					case IFAlso.OkFindMore:
-					case IFAlso.OkFindMoreOfThis:
-						alsoResult = wi;
-						goto case IFAlso.FindOther;
-					case IFAlso.OkFindMoreOfList:
-						alsoResult = wi;
-						goto gNotFound;
-					case IFAlso.NotFound:
-					case IFAlso.FindOtherOfList:
-						goto gNotFound;
-					case IFAlso.FindOther:
-					case IFAlso.FindOtherOfThis:
-						Result.MatchIndex++;
-						goto gContinue;
-					default: throw new InvalidEnumArgumentException();
+				lock (this) {
+					if (pls?.IsStopped ?? false) goto gNotFound;
+
+					if (_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow)) {
+						dpiScaling ??= new(_area.W);
+						dpiScaling.ScaleRect(ref r);
 					}
+					r.Offset(_resultOffset.x, _resultOffset.y);
+
+					uiimage tempResult = new(_area) { Rect = r, MatchIndex = matchIndex, ListIndex = listIndex };
+
+					if (_also != null) {
+						alsoAction = _also(tempResult);
+						if (alsoAction is IFAlso.OkFindMoreOfThis or IFAlso.FindOtherOfThis && pls != null) {
+							//stop other threads, but not this thread
+							pls.Stop();
+							pls = null;
+							//never mind: if later _also returns "continue to search in list" (unlikely), will not search.
+							//	pls.Stop must be called while locked, to prevent other threads calling _also afterwards.
+							//	Now using the simple way (lock).
+							//	The complex way - use Monitor.Enter/Exit. Call Stop/Exit when returning. Bad: other threads would continue to search unnecessarily.
+						}
+						switch (alsoAction) {
+						case IFAlso.OkFindMore or IFAlso.OkFindMoreOfThis:
+							alsoResult = tempResult;
+							matchIndex++;
+							goto gContinue;
+						case IFAlso.FindOther or IFAlso.FindOtherOfThis:
+							matchIndex++;
+							goto gContinue;
+						case IFAlso.OkFindMoreOfList:
+							alsoResult = tempResult;
+							return false;
+						case IFAlso.FindOtherOfList:
+							return false;
+						}
+					}
+
+					if (alsoAction != IFAlso.NotFound) Result = tempResult;
+					pls?.Stop();
 				}
 			}
 		} //fixed
 
 		return true;
 		gNotFound:
-		return false;
+		return alsoAction is IFAlso.FindOtherOfThis or IFAlso.OkFindMoreOfThis;
+
+		//returns true to stop seaching (skip other images in list)
 	}
 
 	struct _FindData {
@@ -589,6 +603,7 @@ public unsafe class uiimageFinder {
 		return true;
 	}
 
+#if false
 	//r is relative to the search area
 	void _DpiScaleRect(ref RECT r) {
 		if (!_flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow)) return;
@@ -600,4 +615,31 @@ public unsafe class uiimageFinder {
 		r.right = Math2.MulDiv(r.right, d1, d2);
 		r.bottom = Math2.MulDiv(r.bottom, d1, d2);
 	}
+#else
+	//cache DPI scaling info. Getting it can make much slower if many matches found. Above is the non-cached version.
+	class _DpiScaling {
+		wnd _w;
+		ushort _dScreen, _dWindow;
+		bool _inited, _scaled;
+
+		public _DpiScaling(wnd w) { _w = w; }
+
+		//r is relative to the search area
+		public void ScaleRect(ref RECT r) {
+			if (!_inited) {
+				_inited = true;
+				if (_scaled = Dpi.IsWindowVirtualizedWin10_(_w = _w.Window)) {
+					_dScreen = (ushort)screen.of(_w).Dpi;
+					_dWindow = (ushort)Dpi.OfWindow(_w);
+				}
+			}
+			if (_scaled) {
+				r.left = Math2.MulDiv(r.left, _dScreen, _dWindow);
+				r.top = Math2.MulDiv(r.top, _dScreen, _dWindow);
+				r.right = Math2.MulDiv(r.right, _dScreen, _dWindow);
+				r.bottom = Math2.MulDiv(r.bottom, _dScreen, _dWindow);
+			}
+		}
+	}
+#endif
 }

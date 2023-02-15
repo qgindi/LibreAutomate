@@ -24,7 +24,8 @@ record AppSettings : JSettings {
 		public string
 			tool_quick = "Ctrl+Shift+Q",
 			tool_wnd = "Ctrl+Shift+W",
-			tool_elm = "Ctrl+Shift+E"
+			tool_elm = "Ctrl+Shift+E",
+			tool_uiimage
 			;
 	}
 	public hotkeys_t hotkeys = new();
@@ -51,13 +52,16 @@ record AppSettings : JSettings {
 
 	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
-	public bool ci_complGroup = true, ci_unexpandPath = true;
+	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent, ci_unexpandPath = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 
 	//CONSIDER: option to specify completion keys/chars. See https://www.quickmacros.com/forum/showthread.php?tid=7263
 	//public byte ci_complOK = 15; //1 Enter, 2 Tab, 4 Space, 8 other
 	//public byte ci_complArgs = 4; //1 Enter, 2 Tab, 4 Space (instead of ci_complParen)
 	//maybe option to use Tab for Space, and disable Space. Tab would add space or/and () like now Space does.
+
+	//public byte ci_formatBraceNewline; //0 never, 1 always, 2 type/function
+	//public byte ci_formatIndentation; //0 tab, 1 4 spaces, 2 2 spaces
 
 	public byte outline_flags;
 

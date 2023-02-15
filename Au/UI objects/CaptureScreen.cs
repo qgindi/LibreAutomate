@@ -114,12 +114,13 @@ namespace Au.More {
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">A window to minimize temporarily.</param>
+		/// <param name="wCapture">A window to capture immediately instead of waiting for F3 key. Used only with a "get window pixels" flag.</param>
 		/// <remarks>
 		/// Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
 		/// 
 		/// Cannot capture windows that are always on top of normal topmost windows: 1. Start menu. 2. Topmost windows of UAC uiAccess processes (rare).
 		/// </remarks>
-		public static bool ImageColorRectUI(out CIUResult result, CIUFlags flags = 0, AnyWnd owner = default) {
+		public static bool ImageColorRectUI(out CIUResult result, CIUFlags flags = 0, AnyWnd owner = default, wnd wCapture = default) {
 			result = default;
 
 			switch (flags & (CIUFlags.Image | CIUFlags.Color | CIUFlags.Rectangle)) {
@@ -164,8 +165,13 @@ namespace Au.More {
 					.Select(o => (w: o, r: o.ClientRectInScreen)).ToArray();
 
 				if (windowPixels) {
-					if (!_WaitForHotkey("Press F3 to select window from mouse pointer. Or Esc.")) return false;
-					wTL = wnd.fromMouse(WXYFlags.NeedWindow);
+					if (!wCapture.Is0) {
+						wTL = wCapture;
+						wCapture = default;
+					} else {
+						if (!_WaitForHotkey("Press F3 to select window from mouse pointer. Or Esc.")) return false;
+						wTL = wnd.fromMouse(WXYFlags.NeedWindow);
+					}
 					rc = wTL.ClientRect;
 					using var bw = Image(wTL, rc, flags.ToCIFlags_());
 					bs = new Bitmap(rs.Width, rs.Height);
@@ -763,8 +769,9 @@ namespace Au.More {
 		/// <summary>
 		/// Copies pixels of the captured image to new 1-D array.
 		/// </summary>
+		[SkipLocalsInit]
 		public uint[] ToArray1D() {
-			var a = new uint[_height * _width];
+			var a = GC.AllocateUninitializedArray<uint>(_height * _width);
 			fixed (uint* p = a) { MemoryUtil.Copy(_pixels, p, _width * _height * 4); }
 			return a;
 		}
