@@ -833,17 +833,18 @@ print.it(s2);
 		/// <summary>
 		/// Waits while there is no active window.
 		/// </summary>
+		/// <param name="doEvents">While waiting call <see cref="wait.doEvents"/> to process Windows messages etc.</param>
 		/// <remarks>
 		/// When there is no active window, functions <see cref="wnd.active"/> and API <msdn>GetForegroundWindow</msdn> return 0.
 		/// It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
 		/// This function waits max 500 ms, then returns false if there is no active window.
 		/// Don't need to call this after calling functions of this library.
 		/// </remarks>
-		/// <param name="doEvents">While waiting call <see cref="wait.doEvents"/> to process Windows messages etc.</param>
 		public static bool WaitForAnActiveWindow(bool doEvents = false) {
-			for (int i = 1; i < 32; i++) {
+			for (int i = 0; ;) {
 				if (doEvents) wait.doEvents();
 				if (!wnd.active.Is0) return true;
+				if (++i == 32) break;
 				wait.ms(i);
 			}
 			return false;

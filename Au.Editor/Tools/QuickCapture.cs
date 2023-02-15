@@ -3,14 +3,15 @@
 namespace Au.Tools;
 
 static class QuickCapture {
-	static RegisteredHotkey _rk1, _rk2, _rk3;
+	static RegisteredHotkey _rk1, _rk2, _rk3, _rk4;
 	static popupMenu _m;
 
 	public static void Info() {
 		print.it($@"Hotkeys for quick capturing:
 	{App.Settings.hotkeys.tool_quick} - capture window from mouse and show menu to insert code to find it etc.
-	{App.Settings.hotkeys.tool_wnd} - capture window from mouse and show dialog 'Find window'.
-	{App.Settings.hotkeys.tool_elm} - capture UI element from mouse and show dialog 'Find UI element'.
+	{App.Settings.hotkeys.tool_wnd} - capture window from mouse and show tool 'Find window'.
+	{App.Settings.hotkeys.tool_elm} - capture UI element from mouse and show tool 'Find UI element'.
+	{App.Settings.hotkeys.tool_uiimage} - capture image in window from mouse and show tool 'Find image'.
 ");
 	}
 
@@ -18,6 +19,7 @@ static class QuickCapture {
 		_Register(ref _rk1, AppHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing));
 		_Register(ref _rk2, AppHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd));
 		_Register(ref _rk3, AppHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm));
+		_Register(ref _rk4, AppHotkeyId.QuickCaptureDuiimage, App.Settings.hotkeys.tool_uiimage, nameof(Menus.Code.uiimage));
 
 		static void _Register(ref RegisteredHotkey rk, AppHotkeyId id, string keys, string menu) { //ref, not in!
 			if (!keys.NE()) {
@@ -37,6 +39,7 @@ static class QuickCapture {
 		_rk1.Unregister();
 		_rk2.Unregister();
 		_rk3.Unregister();
+		_rk4.Unregister();
 	}
 
 	//CONSIDER: while showing menu, show on-screen rectangles of the window, control and elm.
@@ -138,11 +141,15 @@ static class QuickCapture {
 		InsertCode.Statements(s);
 	}
 
-	public static void ToolDwnd() {
+	public static void AoolDwnd() {
 		Dwnd.Dialog(wnd.fromMouse());
 	}
 
 	public static void ToolDelm() {
 		Delm.Dialog(mouse.xy);
+	}
+
+	public static void ToolDuiimage() {
+		Duiimage.Dialog(wnd.fromMouse(WXYFlags.NeedWindow));
 	}
 }

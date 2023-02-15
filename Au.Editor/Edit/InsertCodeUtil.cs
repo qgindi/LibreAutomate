@@ -10,11 +10,32 @@ using Microsoft.CodeAnalysis.Text;
 /// </summary>
 static class InsertCodeUtil {
 	/// <summary>
-	/// Returns true if pos in string is at a line start + any number of spaces and tabs.
+	/// Returns true if i is at a line start + any number of spaces and tabs.
 	/// </summary>
-	public static bool IsLineStart(string s, int pos) {
-		int i = pos; while (--i >= 0 && (s[i] == ' ' || s[i] == '\t')) { }
-		return i < 0 || s[i] == '\n';
+	public static bool IsLineStart(RStr s, int i/*, out int startOfLine*/) {
+		while (i > 0 && s[i - 1] is '\t' or ' ') i--;
+		//startOfLine = j;
+		return i == 0 || s[i - 1] == '\n';
+	}
+
+	/// <summary>
+	/// Returns true if i is at a line start + any number of spaces and tabs.
+	/// </summary>
+	/// <param name="startOfLine">Receives i or the start of horizontal whitespace before i.</param>
+	public static bool IsLineStart(RStr s, int i, out int startOfLine) {
+		while (i > 0 && s[i - 1] is '\t' or ' ') i--;
+		startOfLine = i;
+		return i == 0 || s[i - 1] == '\n';
+	}
+
+	/// <summary>
+	/// Creates string containing n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatTabIndent</b>.
+	/// See also <see cref="CiUtilExt.AppendIndent"/>.
+	/// </summary>
+	public static string IndentationString(int n) {
+		if (n < 1) return "";
+		if (App.Settings.ci_formatTabIndent) return new('\t', n);
+		return new(' ', n * 4);
 	}
 
 	/// <summary>
@@ -25,7 +46,8 @@ static class InsertCodeUtil {
 	public static string IndentStringForInsertSimple(string s, SciCode doc, int pos) {
 		if (s.Contains('\n')) {
 			int indent = doc.aaaLineIndentationFromPos(true, pos);
-			if (indent > 0) s = s.RxReplace(@"(?<=\n)", new string('\t', indent));
+			//if (!App.Settings.ci_formatTabIndent) s = s.RxReplace(@"(?m)^\t+", m => IndentationString(m.Length)); //rejected. This could be useful for snippets. But then also need to apply App.Settings.ci_formatCompact=false, eg move braces to new lines, indent switch block. Then also need to do all it in code inserted by tools. Better let users format code afterwards.
+			if (indent > 0) s = s.RxReplace(@"(?<=\n)", IndentationString(indent));
 		}
 		return s;
 	}
@@ -46,7 +68,7 @@ static class InsertCodeUtil {
 					var tok = cu.FindToken(v.start);
 					canIndent = tok.IsInString(v.start, s, out _, orU8: true) == false;
 				}
-				if (canIndent) b.Append('\t', indent);
+				if (canIndent) b.AppendIndent(indent);
 				b.Append(s, v.start, v.Length);
 				if (++i < a.Length || andNewline) b.AppendLine();
 			}

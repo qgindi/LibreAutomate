@@ -51,6 +51,12 @@ and select from the list. It adds the declaration to the class, and more declara
 
 The database contains ~51000 declarations. They are not perfect. You can edit.
 If some really useful API are missing, tell about it: https://www.libreautomate.com/forum/ or support@quickmacros.com.
+
+See also:
+https://github.com/dahall/Vanara
+https://github.com/microsoft/CsWin32
+https://github.com/microsoft/win32metadata
+https://www.pinvoke.net
 */";
 			code.AaSetText(s);
 		}

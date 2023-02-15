@@ -113,7 +113,7 @@ class CiAutocorrect {
 			if (ch == '\"') return _RawString();
 			return false;
 		}
-		if (isOpenBrac && !(r.OwnerData == (object)"ac" || r.OwnerData == (object)"new")) return false;
+		if (isOpenBrac && (object)r.OwnerData is not ("ac" or "new")) return false;
 		r.GetCurrentFromTo(out int from, out int to, utf8: true);
 
 		if (isBackspace || isOpenBrac) {
@@ -125,7 +125,7 @@ class CiAutocorrect {
 			}
 			if (ch == (char)KKey.Tab && doc.aaaCharAt(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
 		}
-		for (int i = pos8; i < to; i++) switch (doc.aaaCharAt(i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
+		for (int i = pos8; i < to; i++) switch (doc.aaaCharAt(i)) { case ' ' or '\r' or '\n' or '\t': break; default: return false; } //eg space before '}'
 
 		//rejected: ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion. Probably more annoying than useful, because than may want to type (cast) or ()=>lambda or (tup, le).
 		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == doc.aaaCharAt(pos8 - 1)) {
@@ -187,7 +187,7 @@ class CiAutocorrect {
 	/// <summary>
 	/// Called on SCN_CHARADDED.
 	/// If ch is '(' etc, adds ')' etc. Similar with /*.
-	/// At the start of line corrects indentation of '}'. Removes of '#'.
+	/// At the start of line corrects indentation of '}' or '{'. Removes that of '#'.
 	/// Replaces code like 5s with 5.s(); etc.
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
@@ -243,8 +243,7 @@ class CiAutocorrect {
 		int replaceLength = 0, tempRangeFrom = cd.pos, tempRangeTo = cd.pos, newPos = 0;
 
 		if (ch == '#') { //#directive
-			int i = pos; while (i > 0 && code[i - 1] is '\t' or ' ') i--;
-			if (i < pos && (i == 0 || code[i - 1] == '\n')) {
+			if (InsertCodeUtil.IsLineStart(code, pos, out int i) && i < pos) {
 				if (root.FindTrivia(pos).IsDirective) {
 					c.doc.aaaDeleteRange(true, i, pos);
 				}
@@ -261,27 +260,25 @@ class CiAutocorrect {
 			var node = token.Parent;
 
 			if (ch == '}') { //decrease indentation
-				int i = pos; while (i > 0 && code[i - 1] is '\t' or ' ') i--;
-				if (i < 2 || code[i - 1] != '\n') return;
+				if (!InsertCodeUtil.IsLineStart(code, pos, out int i) || i < 2) return;
 				if (!token.IsKind(SyntaxKind.CloseBraceToken) || pos != token.SpanStart) return;
 				if (node is not (BlockSyntax or MemberDeclarationSyntax or AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax)) return;
+				var sInd = _GetIndentation();
+				if (!code.Eq(i..pos, sInd)) {
+					c.doc.aaaReplaceRange(true, i, pos, sInd);
+					c.ignoreChar = true;
+				}
+				return;
+			}
 
+			string _GetIndentation() {
 				int li = token.GetLocation().GetLineSpan().StartLinePosition.Line;
 				var pd = ParsedDocument.CreateSynchronously(cd.document, default);
 				var opt1 = IndentationOptions.GetDefault(cd.document.Project.Services);
 				var ir = CSharpIndentationService.Instance.GetIndentation(pd, li, opt1, default);
-
-				int ind = ir.Offset / 4; bool correct;
-				if (ind > 0) {
-					int j = i; while (j < pos && code[j] == '\t') j++;
-					correct = j - i != ind || j < pos;
-				} else correct = i < pos;
-
-				if (correct) {
-					c.doc.aaaReplaceRange(true, i, pos, new string('\t', ind));
-					c.ignoreChar = true;
-				}
-				return;
+				int ind = ir.Offset / 4;
+				if (ind > 0 && App.Settings.ci_formatCompact && node.HasAncestor<SwitchStatementSyntax>()) ind--;
+				return InsertCodeUtil.IndentationString(ind);
 			}
 
 			var kind = node.Kind();
@@ -349,7 +346,17 @@ class CiAutocorrect {
 								replaceText = " {  }";
 								tempRangeFrom++;
 								cd.pos--; replaceLength = 1; //replace the '{' too
+							} else if (InsertCodeUtil.IsLineStart(code, pos, out int i) && i >= 4
+								&& token.IsKind(SyntaxKind.OpenBraceToken) && pos == token.SpanStart) {
+								//if { at the start of line (and maybe after an indentation), correct indentation
+								var sInd = _GetIndentation();
+								if (!code.Eq(i..pos, sInd)) {
+									replaceText = sInd + "{  }";
+									tempRangeFrom = i + sInd.Length + 1;
+									cd.pos = i; replaceLength = pos - i + 1;
+								}
 							}
+
 							tempRangeTo = tempRangeFrom + 2;
 							newPos = tempRangeFrom + 1;
 						}
@@ -471,15 +478,16 @@ class CiAutocorrect {
 					break;
 				case SwitchStatementSyntax k:
 					token = k.CloseParenToken;
-					if (canExitBlock = block != null) {
-						block = k;
+					if (!k.OpenBraceToken.IsMissing) block = k;
+					if (block != null) {
+						canExitBlock = anywhere && pos > k.OpenBraceToken.SpanStart;
 					} else if (token.IsMissing && k.OpenParenToken.IsMissing) {
 						//if 'switch(word) no {}', Roslyn thinks '(word)...' is a cast expression.
 						var t1 = k.SwitchKeyword.GetNextToken();
 						if (!t1.IsKind(SyntaxKind.OpenParenToken) || t1.Parent is not CastExpressionSyntax ce) return false;
 						token = ce.CloseParenToken;
 					}
-					dontIndent = true;
+					dontIndent = App.Settings.ci_formatCompact;
 					break;
 				case LocalFunctionStatementSyntax k:
 					block = k.Body;
@@ -508,7 +516,6 @@ class CiAutocorrect {
 					else if (!(k.Name?.IsMissing ?? true)) token = k.Name.GetLastToken();
 					else return false;
 					canExitBlock = block != null;
-					//dontIndent = true;
 					break;
 				case BaseTypeDeclarationSyntax k: //class, struct, interface, enum
 					block = k;
@@ -657,31 +664,35 @@ class CiAutocorrect {
 					bcc = new BeforeCharContext { oldPosUtf8 = doc.aaaPos8(pos), newPosUtf8 = doc.aaaPos8(endOfSpan), dontSuppress = needSemicolon };
 				}
 			} else {
+				var b = new StringBuilder();
 				int indent = doc.aaaLineIndentationFromPos(true, (indentNode ?? node).SpanStart);
+
+				if (needBlock) {
+					if (App.Settings.ci_formatCompact) b.Append(' '); else b.AppendLine().AppendIndent(indent);
+					b.Append('{');
+				} else if (needSemicolon) b.Append(isCase ? ':' : ';');
+
 				if (needBlock || block != null || isCase) indent++;
 				bool indentNext = indent > 0 && code[endOfFullSpan - 1] != '\n' && endOfFullSpan < code.Length; //indent next statement (or whatever) that was in the same line
-
-				var b = new StringBuilder();
-				if (needBlock) b.Append(" {"); else if (needSemicolon) b.Append(isCase ? ':' : ';');
 
 				int replaceLen = endOfFullSpan - endOfSpan;
 				int endOfFullTrimmed = endOfFullSpan; while (code[endOfFullTrimmed - 1] <= ' ') endOfFullTrimmed--; //remove newline and spaces
 				if (endOfFullTrimmed > endOfSpan) b.Append(code, endOfSpan, endOfFullTrimmed - endOfSpan);
 				b.AppendLine();
 
-				if (indent > 0) b.Append('\t', dontIndent ? indent - 1 : indent);
+				if (indent > 0) b.AppendIndent(dontIndent ? indent - 1 : indent);
 				b.AppendLine();
 
 				int finalPos = endOfSpan + b.Length - 2;
 				if (needBlock) {
-					if (--indent > 0) b.Append('\t', indent);
+					if (--indent > 0) b.AppendIndent(indent);
 					b.AppendLine("}");
 				}
 
 				int endOfBlock = block?.CloseBraceToken.SpanStart ?? 0;
 				if (indentNext) {
 					if (endOfFullSpan == endOfBlock) indent--;
-					if (indent > 0) b.Append('\t', indent);
+					if (indent > 0) b.AppendIndent(indent);
 				}
 
 				if (endOfBlock > endOfFullSpan) { //if block contains statements, move the closing '}' down
@@ -692,7 +703,7 @@ class CiAutocorrect {
 						b.Append(code, endOfFullSpan, endOfBlock - endOfFullSpan);
 						if (!hasNewline) {
 							b.AppendLine();
-							if (--indent > 0) b.Append('\t', indent);
+							if (--indent > 0) b.AppendIndent(indent);
 						}
 					}
 				}
@@ -708,7 +719,7 @@ class CiAutocorrect {
 			//print.it(pos);
 
 			//remove spaces and tabs around the line break
-			static bool _IsSpace(char c) => c == ' ' || c == '\t';
+			static bool _IsSpace(char c) => c is ' ' or '\t';
 			int from = pos, to = pos;
 			while (from > 0 && _IsSpace(code[from - 1])) from--;
 			while (to < code.Length && _IsSpace(code[to])) to++;
@@ -748,7 +759,7 @@ class CiAutocorrect {
 				//if(v is not (CompilationUnitSyntax or TypeDeclarationSyntax or MethodDeclarationSyntax)) CiUtil.PrintNode(v);
 				switch (v) {
 				case BlockSyntax when v.Parent is not (BlockSyntax or GlobalStatementSyntax or SwitchSectionSyntax): //don't indent block that is child of function, 'if' etc which adds indentation
-				case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
+				case SwitchStatementSyntax when App.Settings.ci_formatCompact: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
 				case ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax:
 				case PropertyPatternClauseSyntax or RecursivePatternSyntax or BinaryPatternSyntax: //PropertyPatternClauseSyntax and its ancestors
 				case LabeledStatementSyntax:
@@ -821,37 +832,46 @@ class CiAutocorrect {
 					while (_IsSpace(code[i - 1])) i--;
 					if (code[i - 1] == '\n') {
 						replaceFrom = i;
-						b.Append('\t', indent - 1);
+						b.AppendIndent(indent - 1);
 						b.Append(code, j, from - j);
 					}
 				}
 			}
 
+			//move { to new line if need
+			if (expandBraces && !App.Settings.ci_formatCompact
+				&& !(node is BlockSyntax && node.Parent is BlockSyntax or GlobalStatementSyntax)
+				&& !InsertCodeUtil.IsLineStart(code, iOB - 1, out int i1)) {
+				replaceFrom = i1;
+				b.AppendLine();
+				if (indent > 1) b.AppendIndent(indent - 1);
+				b.Append('{');
+			}
+
 			//append newlines and tabs
 			if (canExitBlock) {
 				if (!dontIndent && indent > 0) indent--;
-				b.Append('\t', indent).AppendLine("}");
+				b.AppendIndent(indent).Append('}');
 			} else {
 				if (addBreak) {
-					if (code[from - 1] == '\n') b.Append('\t', indent + 1); else b.Append(' ');
+					if (code[from - 1] == '\n') b.AppendIndent(indent + 1); else b.Append(' ');
 					b.Append("break;");
 					if (node is SwitchSectionSyntax) indent--;
 				} else if (expandBraces || from == 0 || code[from - 1] == '\n') {
 					if (expandBraces) b.AppendLine();
-					b.Append('\t', indent);
+					b.AppendIndent(indent);
 				}
-				b.AppendLine();
 				if (indent > 0 && isBraceLine && !dontIndent) indent--;
 			}
-			if (indent > 0) b.Append('\t', indent);
+			int len1 = b.Length;
+			b.AppendLine();
+			if (indent > 0) b.AppendIndent(indent);
 
 			//replace text and set caret position
 			var s = b.ToString();
 			//print.it($"'{s}'");
 			doc.aaaReplaceRange(true, replaceFrom, replaceTo, s);
-			pos = replaceFrom + s.Length;
-			if (expandBraces) pos -= indent + 2;
-			doc.aaaGoToPos(true, pos);
+			doc.aaaGoToPos(true, replaceFrom + (expandBraces ? len1 : s.Length));
 		}
 		return true;
 	}
@@ -912,7 +932,7 @@ class CiAutocorrect {
 		var b = new StringBuilder();
 		//b.Append(prefix);
 		if (!newlineLast) b.AppendLine();
-		b.Append('\t', indent).Append(suffix);
+		b.AppendIndent(indent).Append(suffix);
 		if (newlineLast) b.AppendLine();
 
 		var s = b.ToString();
@@ -958,14 +978,14 @@ class CiAutocorrect {
 		}
 
 		static SyntaxToken _BraceToken(SyntaxNode n, bool right) {
-			switch (n) {
-			case BlockSyntax k: return right ? k.CloseBraceToken : k.OpenBraceToken;
-			case SwitchStatementSyntax k: return right ? k.CloseBraceToken : k.OpenBraceToken;
-			case AccessorListSyntax k: return right ? k.CloseBraceToken : k.OpenBraceToken;
-			case BaseTypeDeclarationSyntax k: return right ? k.CloseBraceToken : k.OpenBraceToken;
-			case NamespaceDeclarationSyntax k: return right ? k.CloseBraceToken : k.OpenBraceToken;
-			}
-			return default;
+			return n switch {
+				BlockSyntax k => right ? k.CloseBraceToken : k.OpenBraceToken,
+				SwitchStatementSyntax k => right ? k.CloseBraceToken : k.OpenBraceToken,
+				AccessorListSyntax k => right ? k.CloseBraceToken : k.OpenBraceToken,
+				BaseTypeDeclarationSyntax k => right ? k.CloseBraceToken : k.OpenBraceToken,
+				NamespaceDeclarationSyntax k => right ? k.CloseBraceToken : k.OpenBraceToken,
+				_ => default,
+			};
 		}
 
 		public SyntaxToken OpenBraceToken => _BraceToken(_b, false);

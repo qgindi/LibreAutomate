@@ -159,15 +159,15 @@ static class InsertCode {
 		var b = new StringBuilder(breakLine);
 		if (separate && !afterOpenBrace && !s.Starts("{\r\n") && pos > 0) {
 			int nn = 0; for (int i = pos; --i >= 0 && code[i] <= ' ';) if (code[i] == '\n' && ++nn == 2) break;
-			if (nn < 2) b.Append('\t', indent).AppendLine();
+			if (nn < 2) b.AppendIndent(indent).AppendLine();
 		}
 
 		InsertCodeUtil.AppendCodeWithIndent(b, s, indent, andNewline: true);
 
 		if (separate && !s.Ends("\n}") && replTo < code.Length && code[replTo] is not ('\r' or '}')) {
-			b.Append('\t', indent).AppendLine();
+			b.AppendIndent(indent).AppendLine();
 		}
-		if (indent > 0) b.Append('\t', beforeCloseBrace ? indent - 1 : indent);
+		if (indent > 0) b.AppendIndent(beforeCloseBrace ? indent - 1 : indent);
 		s = b.ToString();
 
 		//insert
@@ -344,7 +344,7 @@ static class InsertCode {
 
 		int indent = doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
-			var si = new string('\t', indent);
+			var si = InsertCodeUtil.IndentationString(indent);
 			before = before.RxReplace("(?m)^", si);
 			int i1 = after.IndexOf('\n') + 1;
 			if (i1 > 0) after = after.RxReplace("(?m)^", si, range: i1..);

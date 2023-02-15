@@ -143,8 +143,9 @@ partial class MainWindow : Window {
 			handled = true;
 			switch ((AppHotkeyId)(int)wParam) {
 			case AppHotkeyId.QuickCaptureMenu: Au.Tools.QuickCapture.Menu(); break;
-			case AppHotkeyId.QuickCaptureDwnd: Au.Tools.QuickCapture.ToolDwnd(); break;
+			case AppHotkeyId.QuickCaptureDwnd: Au.Tools.QuickCapture.AoolDwnd(); break;
 			case AppHotkeyId.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
+			case AppHotkeyId.QuickCaptureDuiimage: Au.Tools.QuickCapture.ToolDuiimage(); break;
 			}
 			break;
 		case Api.WM_ACTIVATEAPP:
