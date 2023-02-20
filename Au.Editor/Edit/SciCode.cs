@@ -2,14 +2,11 @@
 
 using Au.Controls;
 using static Au.Controls.Sci;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-using System.Text.RegularExpressions;
-using System.Windows;
 
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
@@ -137,6 +134,11 @@ partial class SciCode : KScintilla {
 		//base.aaOnHandleCreated();
 	}
 
+	protected override void DestroyWindowCore(HandleRef hwnd) {
+		CodeInfo._styling.DocHandleDestroyed(this);
+		base.DestroyWindowCore(hwnd);
+	}
+
 	//Called by PanelEdit.aaOpen.
 	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
@@ -212,10 +214,10 @@ partial class SciCode : KScintilla {
 			//never mind: we should cancel the 'save text later'
 			break;
 		case NOTIF.SCN_MODIFIED:
-			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.TextForFind);
+			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.Text);
 			//print.it(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
-			//	print.it($"'{n.TextForFind}'");
+			//	print.it($"'{n.Text}'");
 			//	if(n.length == 2 && n.textUTF8!=null && n.textUTF8[0]=='\r' && n.textUTF8[1] == '\n') {
 			//		Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
 			//	}
@@ -229,7 +231,7 @@ partial class SciCode : KScintilla {
 				}
 				Panels.Find.UpdateQuickResults();
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
-				//	//print.it(n.TextForFind);
+				//	//print.it(n.Text);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
@@ -550,19 +552,20 @@ partial class SciCode : KScintilla {
 	#region indicators
 
 	void _InicatorsInit() {
-		Call(SCI_INDICSETSTYLE, c_indicFind, INDIC_FULLBOX);
-		//Call(SCI_INDICSETFORE, c_indicFind, 0x00a0f0); Call(SCI_INDICSETALPHA, c_indicFind, 160); //orange-brown, almost like in VS
-		Call(SCI_INDICSETFORE, c_indicFind, 0x00ffff); Call(SCI_INDICSETALPHA, c_indicFind, 160); //yellow
-		Call(SCI_INDICSETUNDER, c_indicFind, 1); //draw before text
+		//workaround for: indicators too small if high DPI
+		int style = _dpi < 144 ? INDIC_SQUIGGLEPIXMAP : INDIC_SQUIGGLE,
+			strokeWidth = _dpi < 144 ? 100 : 200;
+		//strokeWidth = _dpi < 144 ? 100 : _dpi < 192 ? 150 : 200;
 
-		Call(SCI_INDICSETSTYLE, c_indicError, INDIC_SQUIGGLE); //INDIC_SQUIGGLEPIXMAP thicker
-		Call(SCI_INDICSETFORE, c_indicError, 0xff); //red
-		Call(SCI_INDICSETSTYLE, c_indicWarning, INDIC_SQUIGGLE);
-		Call(SCI_INDICSETFORE, c_indicWarning, 0x008000); //dark green
-		Call(SCI_INDICSETSTYLE, c_indicInfo, INDIC_DIAGONAL);
-		Call(SCI_INDICSETFORE, c_indicInfo, 0xc0c0c0);
-		Call(SCI_INDICSETSTYLE, c_indicDiagHidden, INDIC_DOTS);
-		Call(SCI_INDICSETFORE, c_indicDiagHidden, 0xc0c0c0);
+		aaaIndicatorDefine(c_indicError, style, 0xff0000, strokeWidth: strokeWidth);
+		aaaIndicatorDefine(c_indicWarning, style, 0x008000, strokeWidth: strokeWidth); //dark green
+		aaaIndicatorDefine(c_indicInfo, INDIC_DIAGONAL, 0xc0c0c0, strokeWidth: strokeWidth);
+		aaaIndicatorDefine(c_indicDiagHidden, INDIC_DOTS, 0xc0c0c0, strokeWidth: strokeWidth);
+	}
+
+	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
+		base.OnDpiChanged(oldDpi, newDpi);
+		if (!AaWnd.Is0) _InicatorsInit();
 	}
 
 	bool _indicHaveFind, _indicHaveDiag;

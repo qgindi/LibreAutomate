@@ -37,9 +37,11 @@ class CiGoTo {
 	/// </summary>
 	public CiGoTo(ISymbol sym) {
 		if (_inSource = sym.IsFromSource()) {
-			_sourceLocations = new List<_SourceLocation>();
+			_sourceLocations = new();
 			foreach (var loc in sym.Locations) {
-				if (!loc.IsVisibleSourceLocation()) continue;
+				Debug_.PrintIf(!loc.IsVisibleSourceLocation());
+				//if (!loc.IsVisibleSourceLocation()) continue;
+
 				var v = loc.GetLineSpan();
 				_sourceLocations.Add(new _SourceLocation(v.Path, v.StartLinePosition.Line, v.StartLinePosition.Character));
 			}
@@ -55,7 +57,7 @@ class CiGoTo {
 				if (s.Starts("https://github.com/")) _repo = s[19..];
 			}
 
-			//Unfortunately the github search engine is so bad, gives lots of garbage.
+			//Unfortunately the github search engine is so bad. Gives lots of garbage. Randomly returns not all results.
 			//To remove some garbage, can include namespace, filename, path (can be partial, without filename).
 			//There is no best way for all casses. GoTo() will show UI, and users can try several alternatives.
 			//At first this class used referencesource, not github. Can jump directly to the class or method etc.
@@ -234,7 +236,8 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	//}
 
 	public static void GoToDefinition() {
-		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out var cd, metaToo: true);
+		if (!CodeInfo.GetContextAndDocument(out var cd, metaToo: true)) return;
+		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(cd);
 		if (sym != null) {
 			if (sym is IParameterSymbol or ITypeParameterSymbol && !sym.IsInSource()) return;
 			if (_GetFoldersPath(token, out var fp, false)) {

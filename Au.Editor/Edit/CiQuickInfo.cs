@@ -27,7 +27,7 @@ class CiQuickInfo {
 
 		//don't show some useless quickinfos, eg for literals
 		if (r.Tags.Length == 2 && a.Length == 2 && a[1].Kind == QuickInfoSectionKinds.DocumentationComments) {
-			//print.it(r.Tags[0], a[1].Kind, a[1].TextForFind);
+			//print.it(r.Tags[0], a[1].Kind, a[1].Text);
 			var s = a[1].Text;
 			if (s.Starts("Represents ")) {
 				switch (r.Tags[0]) {

@@ -29,7 +29,7 @@ class CiPopupText
 	public Action<CiPopupText, string> OnLinkClick { get; set; }
 
 	/// <summary>
-	/// TextForFind to show. Set before calling Show.
+	/// Text to show. Set before calling Show.
 	/// </summary>
 	public System.Windows.Documents.Section Text {
 		get => _section;

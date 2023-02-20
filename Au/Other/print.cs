@@ -89,7 +89,7 @@ public static partial class print {
 	/// Writes text to the output.
 	/// </summary>
 	/// <param name="value">
-	/// TextForFind.
+	/// Text.
 	/// If <c>""</c> or null, writes empty line. To write <c>"null"</c> if null, use code like <c>print.it((object)s);</c>.
 	/// </param>
 	/// <remarks>
@@ -267,7 +267,7 @@ public static partial class print {
 	/// </summary>
 	/// <param name="text">Warning text.</param>
 	/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0. Does not append if <i>text</i> looks like a stack trace.</param>
-	/// <param name="prefix">TextForFind before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
+	/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 	/// <remarks>
 	/// Calls <see cref="print.it"/>.
 	/// Does not show more than 1 warning/second, unless <b>opt.warnings.Verbose</b> == true (see <see cref="OWarnings.Verbose"/>).

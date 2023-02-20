@@ -778,8 +778,8 @@ class CiAutocorrect {
 					//print.it("--" + v.GetType().Name, v.Span, pos);
 					continue;
 				case GlobalStatementSyntax or CompilationUnitSyntax: //don't indent top-level statements
-																	 //case ClassDeclarationSyntax k1 when k1.Identifier.TextForFind is "Program" or "Script": //rejected: don't indent script class content. Now can use top-level statements.
-																	 //case ConstructorDeclarationSyntax k2 when k2.Identifier.TextForFind is "Program" or "Script": //rejected: don't indent script constructor content
+																	 //case ClassDeclarationSyntax k1 when k1.Identifier.Text is "Program" or "Script": //rejected: don't indent script class content. Now can use top-level statements.
+																	 //case ConstructorDeclarationSyntax k2 when k2.Identifier.Text is "Program" or "Script": //rejected: don't indent script constructor content
 					goto endLoop1;
 				}
 				//print.it(v.GetType().Name, v.Span, pos);

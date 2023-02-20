@@ -57,19 +57,19 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0"); //optional, this is just an example
-		/// string s = internet.http.Get("https://httpbin.org/anything").TextForFind();
+		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
 		/// ]]></code>
 		/// The same without <b>internet.http</b>.
 		/// <code><![CDATA[
 		/// var http = new HttpClient();
 		/// http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");
-		/// string s = http.Get("https://httpbin.org/anything").TextForFind();
+		/// string s = http.Get("https://httpbin.org/anything").Text();
 		/// ]]></code>
 		/// The same again.
 		/// <code><![CDATA[
 		/// var http = new HttpClient() { BaseAddress = new("https://httpbin.org") };
 		/// http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");
-		/// string s = http.Get("anything").TextForFind();
+		/// string s = http.Get("anything").Text();
 		/// ]]></code>
 		/// </example>
 		public static HttpClient http => _lazyHC.Value; //rejected: public setter
@@ -83,7 +83,7 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
-		/// string s = internet.http.Post("https://httpbin.org/anything", content).TextForFind();
+		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
 		/// ]]></code>
 		/// </example>
 		public static MultipartFormDataContent formContent(params (string name, object value)[] fields) {
@@ -108,7 +108,7 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// var v = new POINT(10, 20);
-		/// string s = internet.http.Post("https://httpbin.org/anything", internet.jsonContent(v)).TextForFind();
+		/// string s = internet.http.Post("https://httpbin.org/anything", internet.jsonContent(v)).Text();
 		/// ]]></code>
 		/// </example>
 		public static JsonContent jsonContent<T>(T x)
@@ -121,7 +121,7 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// string json = "{ ... }";
-		/// string s = internet.http.Post("https://httpbin.org/anything", jsonContent(json)).TextForFind();
+		/// string s = internet.http.Post("https://httpbin.org/anything", jsonContent(json)).Text();
 		/// ]]></code>
 		/// </example>
 		public static StringContent jsonContent(string json) => new(json, null, "application/json");
@@ -185,7 +185,7 @@ namespace Au.Types {
 		/// <example>
 		/// <code><![CDATA[
 		/// using var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
-		/// string s = internet.http.Post("https://httpbin.org/anything", content).TextForFind();
+		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
 		/// ]]></code>
 		/// </example>
 		public static MultipartFormDataContent AddFile(this MultipartFormDataContent t, string name, string file, string contentType = null, string fileName = null) {
@@ -298,7 +298,7 @@ namespace Au.Types {
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// string s = internet.http.Get("https://httpbin.org/anything").TextForFind();
+		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
 		/// ]]></code>
 		/// </example>
 		public static HttpResponseMessage Get(this HttpClient t, string url, bool dontWait = false, string[] headers = null) {
@@ -323,7 +323,7 @@ namespace Au.Types {
 		/// <example>
 		/// <code><![CDATA[
 		/// if (!internet.http.TryGet(out var r, "https://httpbin.org/anything", printError: true)) return;
-		/// print.it(r.TextForFind());
+		/// print.it(r.Text());
 		/// ]]></code>
 		/// </example>
 		public static bool TryGet(this HttpClient t, out HttpResponseMessage r, string url, bool dontWait = false, string[] headers = null, bool printError = false) {
@@ -378,7 +378,7 @@ namespace Au.Types {
 		/// <example>
 		/// <code><![CDATA[
 		/// using var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
-		/// string s = internet.http.Post("https://httpbin.org/anything", content).TextForFind();
+		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
 		/// ]]></code>
 		/// Note: the 'using' in the above example will close the file stream. Don't need it when content does not contain files.
 		/// </example>
@@ -409,7 +409,7 @@ namespace Au.Types {
 		/// <code><![CDATA[
 		/// var content = internet.formContent(("name1", "value1"), ("name2", "value2"));
 		/// if (!internet.http.TryPost(out var r, "https://httpbin.org/anything", content, printError: true)) return;
-		/// print.it(r.TextForFind());
+		/// print.it(r.Text());
 		/// ]]></code>
 		/// </example>
 		public static bool TryPost(this HttpClient t, out HttpResponseMessage r, string url, HttpContent content, string[] headers = null, bool printError = false, bool dontWait = false) {

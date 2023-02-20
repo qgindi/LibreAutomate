@@ -3,6 +3,8 @@
 ### Editor
 New options:
 - Options -> Code -> Formatting.
+- Options -> Hotkeys -> Capture image.
+- Options -> Font -> Find highlight.
 
 ### Library
 New members:
@@ -16,6 +18,7 @@ Editor:
 - fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
 
 Library:
+- fixed v0.13 bug in documentation: text "TextForFind" everywhere instead of "Text".
 
 
 ### Breaking changes

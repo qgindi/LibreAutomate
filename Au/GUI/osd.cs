@@ -416,7 +416,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var m = new osdText { TextForFind = "TextForFind" };
+		/// var m = new osdText { Text = "Text" };
 		/// m.XY = new(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
 		/// m.Show();
 		/// ]]></code>
@@ -457,7 +457,7 @@ namespace Au
 		public bool ResizeWhenContentChanged { get; set; }
 
 		/// <summary>
-		/// TextForFind in OSD window.
+		/// Text in OSD window.
 		/// </summary>
 		/// <remarks>
 		/// This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="ResizeWhenContentChanged"/> is true.
@@ -478,7 +478,7 @@ namespace Au
 		public FontNSS Font { get; set; }
 
 		/// <summary>
-		/// TextForFind color.
+		/// Text color.
 		/// Default: <see cref="defaultTextColor"/>.
 		/// </summary>
 		/// <remarks>
@@ -773,7 +773,7 @@ namespace Au
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
 		/// </summary>
-		/// <param name="text">TextForFind in OSD window.<br/>Sets <see cref="Text"/>.</param>
+		/// <param name="text">Text in OSD window.<br/>Sets <see cref="Text"/>.</param>
 		/// <param name="secondsTimeout"><inheritdoc cref="SecondsTimeout" path="/summary/node()"/>Sets <see cref="SecondsTimeout"/>.</param>
 		/// <param name="xy"><inheritdoc cref="XY" path="/summary/node()"/>Sets <see cref="XY"/>.</param>
 		/// <param name="icon"><inheritdoc cref="Icon" path="/summary/node()"/>Sets <see cref="Icon"/>.</param>

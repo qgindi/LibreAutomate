@@ -199,9 +199,9 @@ class CiText
 		bool inParameters = isParameters == true;
 		for (int i = 0; i < a.Count; i++) {
 			var v = a[i];
-			//print.it($"{v.Tag}, '{v.TextForFind}', {v.Style}");
-			//if(lessNewlines>1) print.it($"{v.Tag}, '{v.TextForFind}', {v.Style}");
-			//print.it($"{v.Tag}, '{v.TextForFind}', {v.Style}, navHint='{v.NavigationHint}', navTarget='{v.NavigationTarget}'");
+			//print.it($"{v.Tag}, '{v.Text}', {v.Style}");
+			//if(lessNewlines>1) print.it($"{v.Tag}, '{v.Text}', {v.Style}");
+			//print.it($"{v.Tag}, '{v.Text}', {v.Style}, navHint='{v.NavigationHint}', navTarget='{v.NavigationTarget}'");
 			string s = v.Text, c = null;
 			switch (v.Tag) {
 			case TextTags.Struct:
@@ -210,7 +210,7 @@ class CiText
 				//rejected: replace parameter type ReadOnlySpan<char> with Strinĝ, and in global.cs add: global using Strinĝ = System.ReadOnlySpan<char>;
 				//	Better in XML doc tell it's a string.
 				//if (inParameters) {
-				//	if (s == "ReadOnlySpan" && i < a.Count - 3 && a[i + 2].TextForFind == "char" && a[i + 1].TextForFind == "<" && a[i + 3].TextForFind == ">") {
+				//	if (s == "ReadOnlySpan" && i < a.Count - 3 && a[i + 2].Text == "char" && a[i + 1].Text == "<" && a[i + 3].Text == ">") {
 				//		s = "Strinĝ";
 				//		i += 3;
 				//	}

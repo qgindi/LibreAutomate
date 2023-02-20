@@ -7,7 +7,6 @@ partial class PanelFiles {
 	FilesModel.FilesView _tv;
 	TextBox _tFind;
 	timer _timerFind;
-	List<FileNode> _aClose;
 
 	public PanelFiles() {
 		P.UiaSetName("Files panel");
@@ -16,7 +15,8 @@ partial class PanelFiles {
 		var b = new wpfBuilder(P).Columns(-1).Options(margin: new());
 		b.Row(-1).Add(out _tv).Name("Files_list", true);
 
-		b.Row(4).Add<Border>().Border(thickness2: new(0, 1, 0, 1));
+		b.Row(2) //maybe 4 would look better, but then can be confused with a splitter
+			.Add<Border>().Border(thickness2: new(0, 1, 0, 1));
 
 		_tFind = new() { BorderThickness = default };
 		b.R.Add<AdornerDecorator>().Add(_tFind, flags: WBAdd.ChildOfLast).Name("Find_file", true)
@@ -27,7 +27,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 
 		b.End();
 
-		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(200); };
+		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(_tFind.Text.Length switch { 1 => 1200, 2 => 600, _ => 300 }); };
 		_tFind.GotKeyboardFocus += (_, _) => P.Dispatcher.InvokeAsync(() => _tFind.SelectAll());
 		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
 
@@ -39,10 +39,13 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 	public FilesModel.FilesView TreeControl => _tv;
 
 	private void _Find() {
-		var cFound = Panels.Find.PrepareFindResultsPanel();
-		_aClose = new();
+		var s = _tFind.Text;
+		if (s.NE()) {
+			Panels.Found.ClearResults(FoundKind.Files);
+			return;
+		}
+		Panels.Found.Prepare(FoundKind.Files, s);
 
-		var s = _tFind.Text; if (s.NE()) return;
 		var wild = wildex.hasWildcardChars(s) ? new wildex(s, noException: true) : null;
 		var b = new StringBuilder();
 
@@ -69,19 +72,10 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 			}
 			if (f.IsFolder) b.Append("    <c #008000>//folder<>");
 			b.AppendLine("<>");
-
-			_aClose.Add(f);
 		}
 
 		if (b.Length == 0) return;
-
-		if (_aClose.Count > 0) b.AppendLine("<bc #FFC000><+caff><c #80ff>Close all<><><>");
-
-		cFound.aaaSetText(b.ToString());
-	}
-
-	public void CloseAll() {
-		App.Model.CloseFiles(_aClose);
-		App.Model.CollapseAll(exceptWithOpenFiles: true);
+		b.AppendLine("<bc #FFC000><+caf><c #80ff>Close opened files<><><>");
+		Panels.Found.SetFilesFindResults(b.ToString());
 	}
 }

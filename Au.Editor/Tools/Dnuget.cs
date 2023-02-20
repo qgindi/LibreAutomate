@@ -30,7 +30,7 @@ class DNuget : KDialogWindow {
 
 	protected override void OnClosed(EventArgs e) {
 		s_dialog = null;
-		App.Model.UnloadingWorkspace -= Close;
+		App.Model.UnloadingThisWorkspace -= Close;
 		base.OnClosed(e);
 	}
 
@@ -121,7 +121,7 @@ A script can use packages from multiple folders if they are compatible.");
 		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 
 		Loaded += async (_, _) => {
-			App.Model.UnloadingWorkspace += Close;
+			App.Model.UnloadingThisWorkspace += Close;
 			_FillTree();
 
 			bool sdkOK = false;

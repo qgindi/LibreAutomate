@@ -35,7 +35,7 @@ class InfoWindow : KPopup {
 	public KSciInfoBox Control2 => _c2;
 
 	/// <summary>
-	/// TextForFind with output tags.
+	/// Text with output tags.
 	/// </summary>
 	public string Text {
 		get => _c?.aaaText;
@@ -43,7 +43,7 @@ class InfoWindow : KPopup {
 	}
 
 	/// <summary>
-	/// TextForFind of second control with output tags.
+	/// Text of second control with output tags.
 	/// </summary>
 	public string Text2 {
 		get => _c2?.aaaText;

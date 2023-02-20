@@ -114,8 +114,8 @@ namespace Au.Controls
 		/// Sets image annotations for one or more lines of text.
 		/// </summary>
 		/// <param name="firstLine">First line index.</param>
-		/// <param name="text">TextForFind that starts at line firstLine.</param>
-		/// <param name="length">TextForFind length.</param>
+		/// <param name="text">Text that starts at line firstLine.</param>
+		/// <param name="length">Text length.</param>
 		/// <param name="allText">Added all text (not edited or appended).</param>
 		/// <param name="textPos">Position where the text starts.</param>
 		[SkipLocalsInit]

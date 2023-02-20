@@ -594,6 +594,7 @@ for (int i = 0; i < count; i++) { }
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
 	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false) {
+		if (Panels.Editor.ActiveDoc == null) { r = null; return false; }
 		r = new Context(position);
 		if (!r.isCodeFile) return false;
 		if (!metaToo && r.pos < r.meta.end && r.pos > r.meta.start) return false;
@@ -682,7 +683,7 @@ for (int i = 0; i < count; i++) { }
 
 		//cancel if changed the screen rectangle of the document window
 		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _tpVisible) {
-			var r = Panels.Editor.ActiveDoc.Hwnd().Rect;
+			var r = Panels.Editor.ActiveDoc.AaWnd.Rect;
 			if (!_isUI) {
 				_isUI = true;
 				_sciRect = r;
@@ -713,7 +714,7 @@ for (int i = 0; i < count; i++) { }
 	//	This test version shows above Output.
 	//static void _ShowTextPopup(SciCode doc, int pos16, System.Windows.Documents.Section text, Action<CiPopupText, string> onLinkClick = null) {
 	//	_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _tpVisible = false);
-	//	_textPopup.TextForFind = text;
+	//	_textPopup.Text = text;
 	//	_textPopup.OnLinkClick = onLinkClick;
 	//	if (keys.isScrollLock && Panels.Output.IsVisible) {
 	//		var r = Panels.Output.RectInScreen();

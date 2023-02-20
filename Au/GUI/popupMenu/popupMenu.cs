@@ -9,7 +9,7 @@ namespace Au;
 /// Can be used everywhere: in automation scripts, WPF apps, other apps, etc.
 /// Also can be used as a popup list and supports many items with scrollbar.
 /// 
-/// Menu item text can include hotkey after <c>'\t'</c> character and/or tooltip after <c>'|'</c> or <c>'\0'</c> character. Examples: <c>"TextForFind\t Hotkey"</c>, <c>"TextForFind|Tooltip"</c>, <c>"TextForFind\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg <c>'A'</c> in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="PMFlags"/>) and can be used to select the item with keyboard.
+/// Menu item text can include hotkey after <c>'\t'</c> character and/or tooltip after <c>'|'</c> or <c>'\0'</c> character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text|Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg <c>'A'</c> in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="PMFlags"/>) and can be used to select the item with keyboard.
 /// 
 /// Keyboard, mouse:
 /// - Enter, Tab, Space - close the menu and execute the focused item. Or show the submenu.
@@ -285,7 +285,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </summary>
 	/// <returns>Object for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</returns>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. TextForFind can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new popupMenu();

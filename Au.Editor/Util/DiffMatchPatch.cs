@@ -2202,7 +2202,7 @@ namespace DiffMatchPatch
 		/**
 		 * Take a list of patches and return a textual representation.
 		 * @param patches List of Patch objects.
-		 * @return TextForFind representation of patches.
+		 * @return Text representation of patches.
 		 */
 		public string patch_toText(List<Patch> patches)
 		{
@@ -2216,7 +2216,7 @@ namespace DiffMatchPatch
 		/**
 		 * Parse a textual representation of patches and return a List of Patch
 		 * objects.
-		 * @param textline TextForFind representation of patches.
+		 * @param textline Text representation of patches.
 		 * @return List of Patch objects.
 		 * @throws ArgumentException If invalid input.
 		 */

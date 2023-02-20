@@ -42,13 +42,13 @@ namespace Au;
 /// Dialog window with several controls for data input.
 /// <code><![CDATA[
 /// var b = new wpfBuilder("Example").WinSize(400); //create Window object with Grid control; set window width 400
-/// b._r.Add("TextForFind", out TextBox text1).Focus(); //add label and text box control in first row
+/// b._r.Add("Text", out TextBox text1).Focus(); //add label and text box control in first row
 /// b._r.Add("Combo", out ComboBox combo1).Items("One|Two|Three"); //in second row add label and combo box control with items
 /// b._r.Add(out CheckBox c1, "Check"); //in third row add check box control
 /// b._r.AddOkCancel(); //finally add standard OK and Cancel buttons
 /// b.End();
 /// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-/// print.it(text1.TextForFind, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
+/// print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
 /// ]]></code>
 /// </example>
 public class wpfBuilder {
@@ -493,7 +493,7 @@ public class wpfBuilder {
 	/// <code><![CDATA[
 	/// string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
 	/// var b = new wpfBuilder("Window").WinSize(300);
-	/// b.Row(0).Add("TextForFind", out TextBox _);
+	/// b.Row(0).Add("Text", out TextBox _);
 	/// b._r.AddOkCancel();
 	/// b.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o));
 	/// b.End();
@@ -672,13 +672,13 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="variable">
 	/// Receives element's variable. The function creates element of variable's type. You can use the variable to set element's properties before showing window or/and to get value after.
-	/// Examples: <c>.Add(out CheckBox c1, "TextForFind")</c>, <c>.Add(out _textBox1)</c>. If don't need a variable: <c>.Add(out Label _, "TextForFind")</c> or <c>.Add&lt;Label>("TextForFind")</c>.
+	/// Examples: <c>.Add(out CheckBox c1, "Text")</c>, <c>.Add(out _textBox1)</c>. If don't need a variable: <c>.Add(out Label _, "Text")</c> or <c>.Add&lt;Label>("Text")</c>.
 	/// </param>
 	/// <param name="text">
-	/// TextForFind, header or other content. Supported element types (or base types):
-	/// <see cref="TextBox"/> - sets <b>TextForFind</b> property.
-	/// <see cref="ComboBox"/> - sets <b>TextForFind</b> property (see also <see cref="Items"/>).
-	/// <see cref="TextBlock"/> - sets <b>TextForFind</b> property (see also <see cref="Text"/>).
+	/// Text, header or other content. Supported element types (or base types):
+	/// <see cref="TextBox"/> - sets <b>Text</b> property.
+	/// <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
+	/// <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="Text"/>).
 	/// <see cref="PasswordBox"/> - sets <b>Password</b> property.
 	/// <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property.
 	/// <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc).
@@ -795,7 +795,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
-	/// <param name="text">TextForFind, header or other content. More info - see other overload.</param>
+	/// <param name="text">Text, header or other content. More info - see other overload.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
@@ -804,17 +804,20 @@ public class wpfBuilder {
 	/// Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
 	/// </summary>
 	/// <param name="var1">Variable of first element. More info - see other overload.</param>
-	/// <param name="text1">TextForFind, header or other content of first element. More info - see other overload.</param>
+	/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
 	/// <param name="var2">Variable of second element. More info - see other overload.</param>
-	/// <param name="text2">TextForFind, header or other content of second element. More info - see other overload.</param>
+	/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
 	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
 	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for element type <i>T1</i> or <i>T2</i>.</exception>
+	/// <remarks>
+	/// If <b>T1</b> is <b>Label</b>, sets <see cref="Label.Target"/>. If <b>T1</b> is <b>Label</b> or <b>TextBlock</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
+	/// </remarks>
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 		Add(out var1, text1);
 		if (row2 != null) Row(row2.Value);
 		Add(out var2, text2); //note: no flags
-		if (var1 is Label k) {
-			k.Target = var2;
+		if (var1 is UIElement k && k is Label or TextBlock) {
+			if (k is Label la) la.Target = var2;
 			System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, k);
 		}
 		return this;
@@ -823,12 +826,15 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
 	/// </summary>
-	/// <param name="label">Label text.</param>
+	/// <param name="label">Label text. Usually string or <see cref="TextBlock"/>. Example: <c>new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "long text" }</c>.</param>
 	/// <param name="variable">Variable of second element. More info - see other overload.</param>
-	/// <param name="text">TextForFind, header or other content of second element. More info - see other overload.</param>
+	/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
 	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
 	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for this element type.</exception>
-	public wpfBuilder Add<T>(string label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
+	/// <remarks>
+	/// Sets <see cref="Label.Target"/> and calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
+	/// </remarks>
+	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
 		=> Add(out Label _, label, out variable, text, row2);
 
 	/// <summary>
@@ -847,7 +853,7 @@ public class wpfBuilder {
 	/// Adds button with <see cref="ButtonBase.Click"/> event handler.
 	/// </summary>
 	/// <param name="variable">Receives button's variable.</param>
-	/// <param name="text">TextForFind/content (<see cref="ContentControl.Content"/>).</param>
+	/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
 	/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button. Not called if validation fails.</param>
 	/// <param name="flags"></param>
 	/// <remarks>
@@ -902,7 +908,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds button that closes the window and sets <see cref="ResultButton"/>.
 	/// </summary>
-	/// <param name="text">TextForFind/content (<see cref="ContentControl.Content"/>).</param>
+	/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
 	/// <param name="result"><see cref="ResultButton"/> value when clicked this button.</param>
 	/// <remarks>
 	/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns true.
@@ -928,9 +934,9 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds OK and/or Cancel and/or Apply buttons.
 	/// </summary>
-	/// <param name="ok">TextForFind of OK button. If null, does not add the button.</param>
-	/// <param name="cancel">TextForFind of Cancel button. If null, does not add the button.</param>
-	/// <param name="apply">TextForFind of Apply button. If null, does not add the button.</param>
+	/// <param name="ok">Text of OK button. If null, does not add the button.</param>
+	/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
+	/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
 	/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If null (default), adds if not already in a stack panel, except when there is 1 button.</param>
 	/// <remarks>
 	/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
@@ -977,7 +983,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="e">Variable for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. TextForFind can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <param name="label">If not null, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a [Flags] enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
 	/// <param name="vertical">Vertical stack. Default true.</param>
 	/// <example>
@@ -1341,7 +1347,7 @@ public class wpfBuilder {
 	/// Sets tooltip text/content/object of the last added element. See <see cref="FrameworkElement.ToolTip"/>.
 	/// </summary>
 	/// <example>
-	/// TextForFind box with simple tooltip.
+	/// Text box with simple tooltip.
 	/// <code><![CDATA[
 	/// b._r.Add("Example", out TextBox _).Tooltip("Tooltip text");
 	/// ]]></code>
@@ -1350,7 +1356,7 @@ public class wpfBuilder {
 	/// //tooltip content
 	/// var btt = new wpfBuilder()
 	/// 	._r.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
-	/// 	._r.Add<TextBlock>().TextForFind("Some ", "<b>text", ".")
+	/// 	._r.Add<TextBlock>().Text("Some ", "<b>text", ".")
 	/// 	.End();
 	/// //dialog
 	/// var b = new wpfBuilder("Window").WinSize(300);
@@ -1544,13 +1550,13 @@ public class wpfBuilder {
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(300);
 	/// b._r.Add("Name", out TextBox tName)
-	/// 	.Validation(o => string.IsNullOrWhiteSpace(tName.TextForFind) ? "Name cannot be empty" : null);
+	/// 	.Validation(o => string.IsNullOrWhiteSpace(tName.Text) ? "Name cannot be empty" : null);
 	/// b._r.Add("Count", out TextBox tCount)
-	/// 	.Validation(o => int.TryParse(tCount.TextForFind, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100");
+	/// 	.Validation(o => int.TryParse(tCount.Text, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100");
 	/// b._r.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
-	/// print.it(tName.TextForFind, tCount.TextForFind.ToInt());
+	/// print.it(tName.Text, tCount.Text.ToInt());
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/) {
@@ -1850,8 +1856,8 @@ public class wpfBuilder {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// b._r.Add<TextBlock>().TextForFind(
-	/// 	"TextForFind ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
+	/// b._r.Add<TextBlock>().Text(
+	/// 	"Text ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
 	/// 	new Run("color") { Foreground = Brushes.Blue, Background = Brushes.Cornsilk, FontSize = 20 }, "\n",
 	/// 	"controls", new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }, new CheckBox() { Content = "Check" }, "\n",
 	/// 	"image", ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")
@@ -1928,7 +1934,7 @@ public class wpfBuilder {
 			case Frame u: u.Source = new Uri(source); break;
 			case RichTextBox u when source.Ends(".rtf", true):
 				using (var fs = File.OpenRead(source)) { u.Selection.Load(fs, DataFormats.Rtf); }
-				//also supports DataFormats.TextForFind,Xaml,XamlPackage. If need HTML, download and try HtmlToXamlConverter. See https://www.codeproject.com/Articles/1097390/Displaying-HTML-in-a-WPF-RichTextBox
+				//also supports DataFormats.Text,Xaml,XamlPackage. If need HTML, download and try HtmlToXamlConverter. See https://www.codeproject.com/Articles/1097390/Displaying-HTML-in-a-WPF-RichTextBox
 				break;
 			default: bad = true; break;
 			}
@@ -2039,7 +2045,7 @@ public class wpfBuilder {
 	//		if(decimalPlaces!=null) c.DecimalPlaces=decimalPlaces.Value;
 	//		if(thousandsSeparator!=null) c.ThousandsSeparator=thousandsSeparator.Value;
 	//		if(hex!=null) c.Hexadecimal=hex.Value;
-	//		if(value!=null) c.Value=value.Value; else c.TextForFind=null;
+	//		if(value!=null) c.Value=value.Value; else c.Text=null;
 	//		return this;
 	//	}
 
