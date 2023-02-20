@@ -175,7 +175,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 				}
 			}
 			//add all to menu
-			foreach (var v in a.OrderBy(o => o.Value)) {
+			foreach (var v in a.OrderBy(o => o.Value, StringComparer.OrdinalIgnoreCase)) {
 				var u = m.Add(v.Key.text + "\t" + v.Value, o => {
 					var d = o.Tag as _Default;
 					var c = _tree.SelectMany(o => o.Children()).FirstOrDefault(o => o.def == d);

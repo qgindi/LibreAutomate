@@ -423,12 +423,8 @@ public enum CPResult {
 }
 
 /// <summary>
-/// Contains file properties that can be used to uniquely identify the file on a single computer. See <see cref="filesystem.more.getFileId"/>.
+/// See <see cref="filesystem.more.getFileId"/>.
 /// </summary>
-/// <remarks>
-/// Can be used with files and directories.
-/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
-/// </remarks>
 public record struct FileId(int VolumeSerialNumber, long FileIndex);
 
 /// <summary>

@@ -392,7 +392,7 @@ class DSnippets : KDialogWindow {
 		_tv.SetItems(_files, modified: true);
 		
 		void _Context(_Item t) {
-			var a = t.Children().OrderBy(o => o.text).ToArray();
+			var a = t.Children().OrderBy(o => o.text, StringComparer.OrdinalIgnoreCase).ToArray();
 			foreach (var v in a) v.Remove();
 			foreach (var v in a) t.AddChild(v);
 		}
