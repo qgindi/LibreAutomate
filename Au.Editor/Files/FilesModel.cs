@@ -108,13 +108,17 @@ partial class FilesModel {
 	/// When need to redraw an item in controls that display it.
 	/// If the parameter is null, redraw all items.
 	/// </summary>
-	public static event Action<(FileNode f, bool remeasure)> NeedRedraw;
+	public static event Action<RedrawEventData> NeedRedraw;
+
+	public record class RedrawEventData(FileNode f, bool remeasure, bool renamed);
 
 	/// <summary>
 	/// Raises <see cref="NeedRedraw"/> event.
 	/// </summary>
 	/// <param name="f"></param>
-	public static void Redraw(FileNode f = null, bool remeasure = false) { NeedRedraw?.Invoke((f, remeasure)); }
+	public static void Redraw(FileNode f = null, bool remeasure = false, bool renamed = false) {
+		NeedRedraw?.Invoke(new(f, remeasure, renamed));
+	}
 
 	#endregion
 
@@ -1407,7 +1411,7 @@ partial class FilesModel {
 		try {
 			filesystem.createDirectory(filesDir);
 			foreach (var f in a) {
-				if (!f.IsLink) filesystem.copyTo(f.FilePath, filesDir);
+				if (!f.IsLink) filesystem.copyTo(f.FilePath, filesDir);//TODO: if symlink...
 			}
 			FileNode.Export(a, wsDir + @"\files.xml");
 		}

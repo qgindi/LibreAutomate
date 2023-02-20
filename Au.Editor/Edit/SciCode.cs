@@ -151,7 +151,7 @@ partial class SciCode : KScintilla {
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 
-		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
+		if (_fn.IsCodeFile) CiStyling.DocTextAdded();
 
 		App.Model.EditGoBack.OnPosChanged(this);
 
@@ -430,7 +430,7 @@ partial class SciCode : KScintilla {
 		Debug.Assert(!EIsBinary);
 		if (EIsUnsaved_) {
 			//print.qm2.write("saving");
-			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
+			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsExternal ? null : _fn.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);

@@ -2,8 +2,7 @@
 /// <summary>
 /// Misc util functions.
 /// </summary>
-static class EdUtil
-{
+static class EdUtil {
 
 }
 
@@ -17,8 +16,28 @@ record struct BoolError(bool ok, string error) {
 
 #if DEBUG
 
-static class EdDebug
-{
+static class EdDebug {
 }
 
 #endif
+
+/// <summary>
+/// Temporarily disables window redrawing.
+/// Ctor sends WM_SETREDRAW(0) if visible.
+/// If was visible, Dispose sends WM_SETREDRAW(1) and calls RedrawWindow.
+/// </summary>
+struct WndSetRedraw : IDisposable {
+	wnd _w;
+
+	public WndSetRedraw(wnd w) {
+		_w = w;
+		if (_w.IsVisible) _w.Send(Api.WM_SETREDRAW, 0); else _w = default;
+	}
+
+	public unsafe void Dispose() {
+		if (_w.Is0) return;
+		_w.Send(Api.WM_SETREDRAW, 1);
+		Api.RedrawWindow(_w, flags: Api.RDW_ERASE | Api.RDW_FRAME | Api.RDW_INVALIDATE | Api.RDW_ALLCHILDREN);
+		_w = default;
+	}
+}

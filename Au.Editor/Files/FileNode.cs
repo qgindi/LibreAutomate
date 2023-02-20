@@ -826,7 +826,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 		_SetName(name);
 		_model.Save.WorkspaceLater();
-		FilesModel.Redraw(this, remeasure: true);
+		FilesModel.Redraw(this, remeasure: true, renamed: true);
 		CodeInfo.FilesChanged();
 		return true;
 	}
