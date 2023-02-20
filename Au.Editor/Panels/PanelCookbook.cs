@@ -317,7 +317,7 @@ class PanelCookbook {
 			foreach (var s in a)
 				if (s.Length > 2 && !s[0].IsAsciiDigit()) hs.Add(s);
 		}
-		print.it(hs.OrderBy(o => o));
+		print.it(hs.OrderBy(o => o, StringComparer.OrdinalIgnoreCase));
 	}
 #endif
 

@@ -65,6 +65,8 @@ record AppSettings : JSettings {
 
 	public byte outline_flags;
 
+	public byte openFiles_flags;
+
 	public record delm_t {
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
 		public string wait, actionn; //named actionn because once was int action

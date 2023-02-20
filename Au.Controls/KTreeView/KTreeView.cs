@@ -145,6 +145,19 @@ public unsafe partial class KTreeView {
 	}
 
 	/// <summary>
+	/// Gets item index in visible items.
+	/// Returns -1 if not found.
+	/// </summary>
+	public int IndexOf(Func<ITreeViewItem, bool> func) {
+		if (!_avi.NE_()) {
+			for (int i = 0; i < _avi.Length; i++) {
+				if (func(_avi[i].item)) return i;
+			}
+		}
+		return -1;
+	}
+
+	/// <summary>
 	/// Gets visible item at index.
 	/// </summary>
 	/// <exception cref="IndexOutOfRangeException"></exception>

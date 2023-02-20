@@ -662,10 +662,11 @@ class PanelFind {
 		Panels.Found.SetFindInFilesResults(f, b.ToString(), aFoundInFiles);
 	}
 
-		//TODO: test "replace in files"
-	internal void _ReplaceAllInFiles(_TextToFind f, List<FileNode> files, ref HashSet<FileNode> openedFles) {
+	internal void _ReplaceAllInFiles(_TextToFind f, List<FileNode> files, ref HashSet<FileNode> openedFiles) {
 		if (!_ValidateReplacement(f)) return; //avoid opening files in editor when invalid regex replacement
 		if (!_CanReplaceInFiles(f)) return;
+
+		bool haveExternal = files.Any(o => o.IsExternal);
 
 		switch (dialog.show("Replace text in files",
 			"""
@@ -674,33 +675,41 @@ Opens files to enable Undo.
 
 Before replacing you may want to backup the workspace <a href="backup">folder</a>.
 """,
-			files.Any(o => o.IsExternal) ? "1 Replace all|2 Replace all but external|0 Cancel" : "1 Replace all|0 Cancel",
+			haveExternal ? "1 Replace all|2 Replace all but external|0 Cancel" : "1 Replace all|0 Cancel",
 			flags: /*DFlags.CommandLinks |*/ DFlags.CenterMouse,
 			owner: App.Hmain,
-			onLinkClick: e => run.selectInExplorer(folders.Workspace))) {
-		case 1: break;
-		case 2: files = files.Where(o => !o.IsExternal).ToList(); break;
+			onLinkClick: e => run.selectInExplorer(App.Model.FilesDirectory))) {
+		case 1:
+			if (haveExternal) { //remove duplicate files (two links pointing to the same file). Else possible confusion eg disabled Undo.
+				HashSet<FileId> hs = new();
+				files = files.Where(o => !o.IsExternal || !filesystem.more.getFileId(o.FilePath, out var u) || hs.Add(u)).ToList();
+			}
+			break;
+		case 2:
+			files = files.Where(o => !o.IsExternal).ToList();
+			break;
 		default: return;
 		}
 
+		WndSetRedraw redraw1 = new(Panels.Files.TreeControl.Hwnd), redraw2 = new(Panels.Open.TreeControl.Hwnd);
 		var progress = App.Hmain.TaskbarButton;
 		try {
-			progress.SetProgressState(WTBProgressState.Normal);
 			App.Wmain.IsEnabled = false;
-			for (int i = 0; i < files.Count; i++) {
+			progress.SetProgressState(WTBProgressState.Normal);
+
+			for (int i = files.Count; --i >= 0;) { //let the Open panel display files in the same order as the Found panel
 				progress.SetProgressValue(i, files.Count);
 				var v = files[i];
-				if (!App.Model.OpenFiles.Contains(v)) (openedFles ??= new()).Add(v);
-				if (!App.Model.SetCurrentFile(v)) continue; //SetCurrentFile prints "Failed..."
-				if ((i & 7) == 0) wait.doEvents(); //makes slower, but visually better
+				if (!App.Model.OpenFiles.Contains(v)) (openedFiles ??= new()).Add(v);
+				if (!App.Model.SetCurrentFile(v)) continue; //info: if fails to open, prints "Failed..."
 				_ReplaceAllInEditor(f);
-
-				//TODO: once 3 of ~200 documents were opened without Undo. All adjecent. In middle. All from symlink folder.
 			}
 		}
 		finally {
 			progress.SetProgressState(WTBProgressState.NoProgress);
 			App.Wmain.IsEnabled = true;
+			redraw1.Dispose();
+			redraw2.Dispose();
 		}
 	}
 

@@ -6,15 +6,20 @@ partial class filesystem {
 	/// </summary>
 	public static partial class more {
 		/// <summary>
-		/// Calls <see cref="getFileId"/> for two paths and returns true if both calls succeed and the ids are equal.
+		/// Returns true if two paths are of the same existing file, regardless of path format etc.
 		/// </summary>
 		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
+		/// <remarks>
+		/// If a path is of a symbolic link, this function uses its target, not the link. For example, returns false if the target doesn't exist.
+		/// </remarks>
 		/// <seealso cref="comparePaths(string, string, bool, bool)"/>
 		public static bool isSameFile(string path1, string path2) {
-			if (getFileId(path1, out var fid1) && getFileId(path2, out var fid2)) return fid1 == fid2;
-			Debug_.Print($"getFileId failed:\r\n\t{path1}\r\n\t{path2}");
-			return false;
+			using var h1 = _OpenFileHandleForFileInfo(path1); if (h1.Is0) return false;
+			using var h2 = _OpenFileHandleForFileInfo(path2); if (h2.Is0) return false;
+			return Api.GetFileInformationByHandle(h1, out var k1)
+				&& Api.GetFileInformationByHandle(h2, out var k2)
+				&& k1.FileIndex == k2.FileIndex && k1.dwVolumeSerialNumber == k2.dwVolumeSerialNumber;
 		}
 
 		/// <summary>
@@ -26,15 +31,22 @@ partial class filesystem {
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <b>FileId</b> of the link, not of its target.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetFileInformationByHandle</msdn>.
+		/// 
+		/// A file id can be used to uniquely identify a file or directory regardless of path format.
+		/// 
+		/// Note: later the function can get a different id for the same path. For example after deleting the file and then creating new file at the same path (some apps save files in this way). You may want to use <see cref="getFinalPath"/> instead.
 		/// </remarks>
 		public static unsafe bool getFileId(string path, out FileId fileId, bool ofSymlink = false) {
-			path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
-			fileId = new();
-			using var h = Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
-			if (h.Is0 || !Api.GetFileInformationByHandle(h, out var k)) return false;
-			fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
-			fileId.FileIndex = k.FileIndex;
+			using var h = _OpenFileHandleForFileInfo(path, ofSymlink);
+			if (h.Is0 || !Api.GetFileInformationByHandle(h, out var k)) { fileId = default; return false; }
+			fileId = new((int)k.dwVolumeSerialNumber, k.FileIndex);
 			return true;
+		}
+
+		static Handle_ _OpenFileHandleForFileInfo(string path, bool ofSymlink = false) {
+			path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
+			return Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
+			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
 		}
 
 		/// <summary>
@@ -53,9 +65,7 @@ partial class filesystem {
 		/// <seealso cref="shortcutFile.getTarget(string)"/>
 		public static bool getFinalPath(string path, out string result, bool ofSymlink = false, FPFormat format = FPFormat.PrefixIfLong) {
 			result = null;
-			path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
-			using Handle_ h = Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
-			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
+			using var h = _OpenFileHandleForFileInfo(path, ofSymlink);
 			if (h.Is0 || !Api.GetFinalPathNameByHandle(h, out var s, format == FPFormat.VolumeGuid ? 1u : 0u)) return false;
 			if (format == FPFormat.PrefixNever || (format == FPFormat.PrefixIfLong && s.Length <= pathname.maxDirectoryPathLength))
 				s = pathname.unprefixLongPath(s);

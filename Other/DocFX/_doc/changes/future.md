@@ -15,10 +15,11 @@ New members:
 ### Bug fixes and improvements
 
 Editor:
-- fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
+- Fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
+- Fixed: several memory leaks.
 
 Library:
-- fixed v0.13 bug in documentation: text "TextForFind" everywhere instead of "Text".
+- Fixed "TextForFind" bug in documentation.
 
 
 ### Breaking changes

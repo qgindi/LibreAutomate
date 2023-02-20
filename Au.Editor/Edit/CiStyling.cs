@@ -25,13 +25,13 @@ partial class CiStyling {
 	/// <summary>
 	/// Called after setting editor control text when a document opened (not just switched active document).
 	/// </summary>
-	public static void DocTextAdded(SciCode doc, bool newFile) => CodeInfo._styling._DocTextAdded(doc, newFile);
-	void _DocTextAdded(SciCode doc, bool newFile) {
+	public static void DocTextAdded() => CodeInfo._styling._DocTextAdded();
+	void _DocTextAdded() {
 		if (CodeInfo.IsReadyForStyling) {
-			doc.Dispatcher.InvokeAsync(() => _DocChanged(doc, true), System.Windows.Threading.DispatcherPriority.Loaded);
-			//info: if Normal priority, scintilla says there is 0 visible lines, and will need to do styling again. Timer would be OK too.
+			_timerOpened ??= new(_ => _DocChanged());
+			_timerOpened.After(10); //not Dispatcher.InvokeAsync
 		} else { //at program startup
-			CodeInfo.ReadyForStyling += () => { if (!doc.AaWnd.Is0) _DocChanged(doc, true); };
+			CodeInfo.ReadyForStyling += () => _DocChanged();
 		}
 	}
 
@@ -44,18 +44,21 @@ partial class CiStyling {
 	bool _update;
 	bool _folded;
 	Sci_VisibleRange _visibleLines;
-	timer _modTimer;
+	timer _timerModified, _timerOpened;
 	int _modStart;
 	int _modFromEnd; //like SCI_GETENDSTYLED, but from end
 	int _diagCounter;
 	CancellationTokenSource _cancelTS;
 
-	void _DocChanged(SciCode doc, bool opened) {
+	void _DocChanged(SciCode doc = null) {
+		//bool opened = doc == null;
+		doc ??= Panels.Editor.ActiveDoc;
+		if (doc == null) return;
 		_doc = doc;
 		_update = false;
 		_folded = false;
 		_visibleLines = default;
-		_modTimer?.Stop();
+		_timerModified?.Stop();
 		_modStart = _modFromEnd = int.MaxValue;
 		_diagCounter = 0;
 		_Work(doc, cancel: true);
@@ -72,13 +75,12 @@ partial class CiStyling {
 		//When modified, we do styling for the modified line(s). Redraws faster, but unreliable, eg does not update new/deleted identifiers.
 		//The timer does styling and folding for all visible lines. Redraws with a bigger delay, but updates everything after modified, scrolled, resized, folded, etc.
 
-		if (_cancelTS != null || (_modTimer?.IsRunning ?? false)) return;
+		if (_cancelTS != null || (_timerModified?.IsRunning ?? false)) return;
 		if (doc != _doc || _update) {
 			_update = false;
-			if (doc != _doc) _DocChanged(doc, false);
+			if (doc != _doc) _DocChanged(doc);
 			else _Work(doc, cancel: true);
 		} else {
-			//using var p1 = perf.local();
 			Sci_GetVisibleRange(doc.AaSciPtr, out var vr); //fast
 			if (vr != _visibleLines) {
 				_Work(doc);
@@ -99,8 +101,8 @@ partial class CiStyling {
 		_folded = false;
 		//using var p1 = perf.local();
 #if true
-		_modTimer ??= new timer(_ModifiedTimer);
-		if (!_modTimer.IsRunning) { _modTimer.Tag = doc; _modTimer.After(25); }
+		_timerModified ??= new timer(_ModifiedTimer);
+		if (!_timerModified.IsRunning) { _timerModified.Tag = doc; _timerModified.After(25); }
 #else
 		_StylingAndFolding(doc, doc.aaaLineEndFromPos(false, doc.aaaLen8 - _modFromEnd, withRN: true));
 #endif
@@ -140,6 +142,7 @@ partial class CiStyling {
 		var cancelToken = cancelTS.Token;
 
 		var cd = new CodeInfo.Context(0);
+		Debug.Assert(doc == cd.sci);
 		if (!cd.GetDocument()) return;
 		var document = cd.document;
 		var code = cd.code;
