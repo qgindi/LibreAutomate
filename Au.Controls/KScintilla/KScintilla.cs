@@ -19,7 +19,7 @@ using static Sci;
 public unsafe partial class KScintilla : HwndHost {
 	wnd _w;
 	WNDPROC _wndproc;
-	//Api.SUBCLASSPROC _wndproc2;
+	nint _wndprocScintilla;
 	nint _sciPtr;
 	Sci_NotifyCallback _notifyCallback;
 	internal int _dpi;
@@ -43,9 +43,13 @@ public unsafe partial class KScintilla : HwndHost {
 
 	public wnd AaWnd => _w;
 
+	/// <summary>
+	/// Invoked by <b>AaOnHandleCreated</b>, which is called by <see cref="BuildWindowCore"/> after initializing everything but before setting text and subclassing.
+	/// </summary>
 	public event Action AaHandleCreated;
 
 	/// <summary>
+	/// Called by <see cref="BuildWindowCore"/> after initializing everything but before setting text and subclassing.
 	/// Invokes event <see cref="AaHandleCreated"/>.
 	/// </summary>
 	protected virtual void AaOnHandleCreated() => AaHandleCreated?.Invoke();
@@ -100,13 +104,8 @@ public unsafe partial class KScintilla : HwndHost {
 
 		if (!_text.NE()) aaaSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
 
-		Api.SetWindowLongPtr(_w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndproc = _WndProc));
-		//WPF will subclass this window.
-		//	It will respect the GWL.WNDPROC subclass, but break the SetWindowSubclass subclass, therefore call it async.
-		//Dispatcher.InvokeAsync(() => {
-		//	if (_w.Is0) return;
-		//	Api.SetWindowSubclass(_w, _wndproc2 = _WndProc2, 1);
-		//});
+		_wndprocScintilla = Api.SetWindowLongPtr(_w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndproc = _WndProc));
+		//WPF will subclass this window. It respects the GWL.WNDPROC subclass, but breaks SetWindowSubclass.
 
 		return new HandleRef(this, _w.Handle);
 	}
@@ -126,11 +125,17 @@ public unsafe partial class KScintilla : HwndHost {
 		WndUtil.DestroyWindow((wnd)hwnd.Handle);
 		_w = default;
 		_acc?.Dispose(); _acc = null;
+
+		//workaround for: never GC-collected if disposed before removing from parent WPF element (shouldn't do it).
+		if (this is IKeyboardInputSink iks) {
+			Debug_.PrintIf(iks.KeyboardInputSite != null);
+			iks.KeyboardInputSite?.Unregister();
+		}
+
+		//GC.ReRegisterForFinalize(this); //to detect memory leak
 	}
 
-	//protected override void Dispose(bool disposing) {
-	//	base.Dispose(disposing); //then follows DestroyWindowCore, probably base calls it
-	//}
+	//~KScintilla() { print.it("~KScintilla"); } //to detect memory leak. Also enable the GC.ReRegisterForFinalize.
 
 	nint _WndProc(wnd w, int msg, nint wp, nint lp) {
 		//if (Name == "Recipe_text") WndUtil.PrintMsg(w, msg, wp, lp);
@@ -152,7 +157,8 @@ public unsafe partial class KScintilla : HwndHost {
 			break;
 		}
 
-		var R = CallRetPtr(msg, wp, lp);
+		//var R = CallRetPtr(msg, wp, lp); //no, then Scintilla does not process WM_NCDESTROY
+		var R = Api.CallWindowProc(_wndprocScintilla, w, msg, wp, lp);
 
 		return R;
 	}
@@ -164,10 +170,6 @@ public unsafe partial class KScintilla : HwndHost {
 		}
 		return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 	}
-
-	//nint _WndProc2(wnd w, int msg, nint wp, nint lp, nint uIdSubclass, nint dwRefData) {
-	//	return Api.DefSubclassProc(w, msg, wp, lp);
-	//}
 
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {

@@ -265,7 +265,7 @@ public unsafe partial class KScintilla {
 	/// Replaces all text.
 	/// Parses tags if need.
 	/// </summary>
-	/// <param name="s">TextForFind.</param>
+	/// <param name="s">Text.</param>
 	/// <param name="flags"></param>
 	/// <param name="ignoreTags">Don't parse tags, regardless of <b>AaInitTagsStyle</b>.</param>
 	public void aaaSetText(string s, SciSetTextFlags flags = 0, bool ignoreTags = false) {
@@ -293,7 +293,7 @@ public unsafe partial class KScintilla {
 	///// Replaces all text.
 	///// Does not parse tags.
 	///// </summary>
-	///// <param name="s">TextForFind.</param>
+	///// <param name="s">Text.</param>
 	///// <param name="startIndex"></param>
 	///// <param name="flags"></param>
 	//public void aaaSetTextUtf8(byte[] s, int startIndex = 0, SciSetTextFlags flags = 0)
@@ -407,7 +407,7 @@ public unsafe partial class KScintilla {
 	/// </remarks>
 	public string aaaText {
 		get {
-			//print.qm2.write($"TextForFind: cached={_text != null}");
+			//print.qm2.write($"Text: cached={_text != null}");
 			if (_text == null && !_w.Is0) _text = aaaGetText_(); //_NotifyModified sets _text=null
 			return _text;
 		}
@@ -916,7 +916,7 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	/// <param name="utf16"></param>
 	/// <param name="pos">Start index. Cannot be negative.</param>
-	/// <param name="s">TextForFind to insert. Can be null.</param>
+	/// <param name="s">Text to insert. Can be null.</param>
 	/// <param name="addUndoPointBefore">Call <see cref="aaaAddUndoPoint"/> before.</param>
 	/// <param name="addUndoPointAfter">Call <see cref="aaaAddUndoPoint"/> after.</param>
 	/// <param name="restoreFolding">If <i>pos</i> is hidden because of folding, finally collapse its folding again. See <see cref="aaaFoldingRestorer"/>.</param>
@@ -968,7 +968,7 @@ public unsafe partial class KScintilla {
 	///// Does not parse tags.
 	///// Does not change current selection; for it use <see cref="aaaReplaceSel"/>.
 	///// </summary>
-	///// <param name="s">TextForFind to insert. Can be null.</param>
+	///// <param name="s">Text to insert. Can be null.</param>
 	//public void aaaInsertText(string s)
 	//{
 	//	using(new _NoReadonly(this))
@@ -1409,6 +1409,28 @@ public unsafe partial class KScintilla {
 	/// SCI_GETCHARAT.
 	/// </summary>
 	public char aaaCharAt(int i) => (char)Call(Sci.SCI_GETCHARAT, i);
+
+	/// <summary>
+	/// Sets indicator style, color, etc.
+	/// </summary>
+	/// <param name="indic">Indicator index. Should be 8-31. Lexers use 0-7. Scintilla draws indicators from smaller to bigger.</param>
+	/// <param name="style">Eg Sci.INDIC_FULLBOX.</param>
+	/// <param name="color">SCI_INDICSETFORE.</param>
+	/// <param name="alpha">SCI_INDICSETALPHA. Valid for some styles.</param>
+	/// <param name="borderAlpha">SCI_INDICSETOUTLINEALPHA. Valid for some styles. If null, uses <i>alpha</i>.</param>
+	/// <param name="strokeWidth">SCI_INDICSETSTROKEWIDTH (%). Valid for some styles.</param>
+	/// <param name="underText">SCI_INDICSETUNDER (under text).</param>
+	public void aaaIndicatorDefine(int indic, int style, ColorInt color, int? alpha = null, int? borderAlpha = null, int? strokeWidth = null, bool underText = false) {
+		Call(SCI_INDICSETSTYLE, indic, style);
+		Call(SCI_INDICSETFORE, indic, color.ToBGR());
+		if (alpha.HasValue) {
+			Call(SCI_INDICSETALPHA, indic, alpha.Value);
+			if (!borderAlpha.HasValue) borderAlpha = alpha;
+		}
+		if (borderAlpha.HasValue) Call(SCI_INDICSETOUTLINEALPHA, indic, borderAlpha.Value);
+		if (strokeWidth.HasValue) Call(SCI_INDICSETSTROKEWIDTH, indic, strokeWidth.Value);
+		if (underText) Call(SCI_INDICSETUNDER, indic, underText);
+	}
 
 	public void aaaIndicatorClear(int indic) => aaaIndicatorClear(false, indic, ..);
 

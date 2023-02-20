@@ -272,7 +272,7 @@ namespace Au {
 		/// Sets text.
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">TextForFind below main instruction.</param>
+		/// <param name="text2">Text below main instruction.</param>
 		public void SetText(string text1 = null, string text2 = null) {
 			_c.pszMainInstruction = text1;
 			_c.pszContent = text2;
@@ -548,7 +548,7 @@ namespace Au {
 		/// <summary>
 		/// Adds text that the user can show and hide.
 		/// </summary>
-		/// <param name="text">TextForFind.</param>
+		/// <param name="text">Text.</param>
 		/// <param name="showInFooter">Show the text at the bottom of the dialog.</param>
 		public void SetExpandedText(string text, bool showInFooter = false) {
 			if (text.NE()) { text = null; showInFooter = false; }
@@ -573,7 +573,7 @@ namespace Au {
 		/// <summary>
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
-		/// <param name="text">TextForFind, optionally preceded by an icon character and |, like <c>"i|TextForFind"</c>. Icons: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="text">Text, optionally preceded by an icon character and |, like <c>"i|Text"</c>. Icons: x error, ! warning, i info, v shield, a app.</param>
 		public void SetFooter(string text) {
 			DIcon i = 0;
 			if (text?.Eq(1, '|') ?? false) {
@@ -586,7 +586,7 @@ namespace Au {
 		/// <summary>
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
-		/// <param name="text">TextForFind.</param>
+		/// <param name="text">Text.</param>
 		/// <param name="icon"></param>
 		public void SetFooter(string text, DIcon icon) {
 			_c.pszFooter = text;
@@ -597,7 +597,7 @@ namespace Au {
 		/// <summary>
 		/// Adds text and custom icon at the bottom of the dialog.
 		/// </summary>
-		/// <param name="text">TextForFind.</param>
+		/// <param name="text">Text.</param>
 		/// <param name="icon">Icon of size 16 (or more if high DPI). Can be <see cref="icon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
 		public void SetFooter(string text, object icon) {
 			_c.pszFooter = text;
@@ -1024,7 +1024,7 @@ namespace Au {
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// var d = new dialog("test", "TextForFind with <a href=\"link data\">links</a>.");
+		/// var d = new dialog("test", "Text with <a href=\"link data\">links</a>.");
 		/// d.HyperlinkClicked += e => { print.it(e.LinkHref); };
 		/// d.ShowDialog();
 		/// ]]></code>
@@ -1373,7 +1373,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Selected button id.</returns>
 		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">TextForFind below main instruction.</param>
+		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
 		/// Button ids and labels. Examples: <c>"OK|Cancel"</c>, <c>"1 &amp;Save|2 Do&amp;n't Save|0 Cancel"</c>.
 		/// If omitted, null or <c>""</c>, the dialog will have OK button, id 1.
@@ -1383,8 +1383,8 @@ namespace Au {
 		/// <param name="flags"></param>
 		/// <param name="icon"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">TextForFind that the user can show and hide.</param>
-		/// <param name="footer">TextForFind at the bottom of the dialog. Icon can be specified like <c>"i|TextForFind"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
@@ -1396,11 +1396,11 @@ namespace Au {
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
 		/// Example:
 		/// <code><![CDATA[
-		/// dialog.show("", "TextForFind <a href=\"example\">link</a>.", onLinkClick: e => { print.it(e.LinkHref); });
+		/// dialog.show("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { print.it(e.LinkHref); });
 		/// ]]></code>
 		/// </param>
 		/// <remarks>
-		/// Tip: Use named arguments. Example: <c>dialog.show("TextForFind", icon: DIcon.Info, title: "Title")</c> .
+		/// Tip: Use named arguments. Example: <c>dialog.show("Text", icon: DIcon.Info, title: "Title")</c> .
 		/// 
 		/// This function allows you to use many dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="dialog"/> class help.
 		/// 
@@ -1530,8 +1530,8 @@ namespace Au {
 		/// <param name="comboItems">Combo box items used when <i>editType</i> is <b>DEdit.Combo</b>.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">TextForFind that the user can show and hide.</param>
-		/// <param name="footer">TextForFind at the bottom of the dialog. Icon can be specified like <c>"i|TextForFind"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -1578,7 +1578,7 @@ namespace Au {
 		/// 
 		/// if(!dialog.showInput(out string s2, "Example", "Try to click OK while text is empty.", onButtonClick: e => {
 		/// 	if(e.Button == 1 && e.EditText.NE()) {
-		/// 		dialog.show("TextForFind cannot be empty.", owner: e.hwnd);
+		/// 		dialog.show("Text cannot be empty.", owner: e.hwnd);
 		/// 		e.d.EditControl.Focus();
 		/// 		e.DontCloseDialog = true;
 		/// 	}
@@ -1649,11 +1649,11 @@ namespace Au {
 		/// <returns>1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.</returns>
 		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">TextForFind below main instruction.</param>
+		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">TextForFind that the user can show and hide.</param>
-		/// <param name="footer">TextForFind at the bottom of the dialog. Icon can be specified like <c>"i|TextForFind"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
@@ -1823,7 +1823,7 @@ namespace Au.Types {
 	//}
 
 	/// <summary>
-	/// TextForFind edit field type for <see cref="dialog.showInput"/>, <see cref="dialog.SetEditControl"/>, etc.
+	/// Text edit field type for <see cref="dialog.showInput"/>, <see cref="dialog.SetEditControl"/>, etc.
 	/// </summary>
 	public enum DEdit {
 		None, Text, Multiline, Password, Number, Combo

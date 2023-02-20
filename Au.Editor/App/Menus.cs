@@ -483,8 +483,8 @@ static class Menus {
 			if (w.ClassNameIs("HwndWrapper*")) {
 				//var e = Keyboard.FocusedElement as FrameworkElement;
 
-			} else if (w == Panels.Editor.ActiveDoc.AaWnd) {
-				CiUtil.OpenSymbolOrKeywordFromPosHelp();
+			} else if (Panels.Editor.ActiveDoc is SciCode doc && w == doc.AaWnd) {
+				CiUtil.OpenSymbolEtcFromPosHelp();
 			}
 		}
 
@@ -510,7 +510,7 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 	}
 
 #if TRACE
-	[Command(target = "")]
+	[Command(target = "", keys ="F11")]
 	public static void TEST() { Test.FromMenubar(); }
 
 	[Command]

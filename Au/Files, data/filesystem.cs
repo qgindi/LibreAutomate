@@ -1207,7 +1207,7 @@ public static partial class filesystem {
 	/// Uses <see cref="File.ReadAllText"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 	/// </summary>
 	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
-	/// <param name="encoding">TextForFind encoding in file (if there is no BOM). Default UTF-8.</param>
+	/// <param name="encoding">Text encoding in file (if there is no BOM). Default UTF-8.</param>
 	/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
@@ -1298,8 +1298,8 @@ public static partial class filesystem {
 	/// <summary>
 	/// Writes text to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllText"/>.
 	/// </summary>
-	/// <param name="text">TextForFind to write.</param>
-	/// <param name="encoding">TextForFind encoding in file. Default is UTF-8 without BOM.</param>
+	/// <param name="text">Text to write.</param>
+	/// <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
 	/// <inheritdoc cref="save"/>
 	public static void saveText(string file, string text, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000, Encoding encoding = null) {
 		_Save(file, text ?? "", backup, tempDirectory, lockedWaitMS, encoding);

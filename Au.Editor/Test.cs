@@ -24,6 +24,9 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.Shared.Utilities;
+using Microsoft.CodeAnalysis.FindSymbols;
+
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Au.Controls;
@@ -44,7 +47,7 @@ using Au.Controls;
 
 
 static unsafe class Test {
-
+	static void AllRef(int i) { }
 
 	/// <summary>
 	/// one two three four five six seven eight none ten 
@@ -52,89 +55,45 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
-		//CodeInfo.StopAndUpdateStyling();
+		//var d = Panels.Editor.ActiveDoc;
 
-		var doc = Panels.Editor.ActiveDoc;
-		//doc.
-		//print.it()
-		//Panels.Mouse.
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		var sym = SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
+		//print.it(sym);
+		if (sym == null) return;
+		print.it(sym/*, sym.GetType()*/);
 
-		//var rx = new Regex(@"");
-		//App.Model.ImportFiles(new string[] { @"\\?\C:\code\ok\files\NtSetTimerResolution, timeBeginPeriod\Script103 - Copy.cs" });
+		print.it("references");
+		List<Range> a = new();
+		var rr = SymbolFinder.FindReferencesAsync(sym, cd.document.Project.Solution).Result;
+		foreach (var v in rr) {
+			print.it(v.Definition, v.ShouldShow(FindReferencesSearchOptions.Default));
+			var def = v.Definition;
+			foreach (var u in def.Locations) {
+				print.it($"\tdef: {u}");
+				if (u.SourceTree == cd.syntaxRoot.SyntaxTree) {
+					a.Add(u.SourceSpan.ToRange());
+				}
+			}
+			foreach (var u in v.Locations) {
+				print.it($"\t{u.Location}");
+				if (u.Document == cd.document) {
+					a.Add(u.Location.SourceSpan.ToRange());
+				}
+			}
 
-
-		//print.it(Keyboard.FocusedElement);
-
-		//App.Restart();
-
-		//var f = App.Model.Find(@"\@Au docs\AuDocs text.cs");
-		//for(int i = 0; i < 5; i++) {
-		//	wait.doEvents(100);
-		//	perf.first();
-		//	var s = f.GetText(cache: true);
-		//	perf.nw();
-		//}
-
-		//if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var tok)) return;
-		//print.it(tok.IsInString(cd.pos, cd.code, out var x, true), x);
-
-		//ModifyCode.Format(true);
-
-
-		//Menus.Edit.Surround.Surround_for();
-
-		//InsertCode.CreateDelegate();
-		//var f = App.Model.FindCodeFile("InsertCode");
-		//CompileRun.CompileAndRun(true, f, runFromEditor: true);
-
-		//InsertCode.Statements("var s = \"\"\"\r\ntext\r\ntext\r\n\"\"\";");
-
-		//var f = App.Model.FindCodeFile(@"\@DNewToolbar\test DNewToolbar.cs");
-		//CompileRun.CompileAndRun(true, f, runFromEditor: true);
-
-
-		//App.Model.NewItem("Class.cs", text: new(true, "moo"));
-
-		//		var s = @"var w = wnd.find(1, ""name"", ""class"");
-		//var w2 = w.Child(""name"");
-		//int args = 20;";
-		//		//s = @"var s = ""a""; var s = ""b"";";
-		//		InsertCode.Statements(s);
-
-		//InsertCode.SetMenuToolbarItemIcon("*Unicons.Thunderstorm #0D84F2");
-
-		//TestMarkdig();
+			//void _AddLocation(SourceLocation loc) {
+			//	if(loc.IsInSource && loc.SourceTree.doc)
+			//}
+		}
+		CiUtil.HiliteRanges(a);
 
 		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		//CiUtil.PrintNode(node);
 		//var span = node.GetRealFullSpan();
 		//cd.sci.aaaSelect(true, span.Start, span.End);
 
-		//var node = token.Parent;
-		//print.it("---------");
-		//foreach (var v in node.AncestorsAndSelf()) CiUtil.PrintNode(v);
-		//print.it("---------");
-		//for(var v=node;v!=null; v=v.Parent) CiUtil.PrintNode(v);
 
-		//var pos16 = cd.pos;
-		//bool? inString = token.IsInString(pos16, cd.code, out var x);
-		//if (inString == true) print.it($"{pos16}, {x.textSpan}, {(x.isInterpolated ? "i" : "")}, {(x.isVerbatim ? "V" : x.isRaw ? "R" : "")}");
-		//else print.it(inString);
-
-		//perf.first();
-		//var d=CiUtil.CreateRoslynDocument("using System; Console.Write(1);");
-		//perf.next();
-		//var tree = d.GetSyntaxTreeAsync().Result;
-		//perf.nw();
-
-		//EdDatabases.CreateRefAndDoc();
-		//EdDatabases.CreateWinapi();
-
-		//throw new AuException("test");
-
-		//var doc = Panels.Editor.ActiveDoc;
-		//doc.test_ = true;
-		//print.it(doc.aaaCurrentPos16);
 
 		//var v = CiUtil.GetSymbolEtcFromPos(out var k);
 		//var semo = k.semanticModel;
@@ -143,20 +102,6 @@ static unsafe class Test {
 		//var s = c.FullXmlFragment;
 		//print.it(s);
 
-
-		//Au.Compiler.MetaReferences.DebugPrintCachedRefs();
-
-		//doc.aaaSetString(SCI_EOLANNOTATIONSETTEXT, 9, "Annotation");
-		//doc.Call(SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM);
-
-		//doc.aaaReplaceRange(true, 0, 0, "//");
-		//int i = doc.aaaCurrentPos8 - 4;
-		//doc.aaaSelect(false, i, i + 2);
-
-		//print.it(CiUtil.IsScript(doc.aaaText));
-
-		//var s="aaa bbb"
-		//char c = 'a'
 
 		//Cpp.Cpp_Test();
 	}

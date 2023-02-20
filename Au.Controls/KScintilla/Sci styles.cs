@@ -2,8 +2,7 @@
 namespace Au.Controls;
 using static Sci;
 
-public unsafe partial class KScintilla
-{
+public unsafe partial class KScintilla {
 	#region styles
 
 	public void aaaStyleFont(int style, string name) {
@@ -97,7 +96,7 @@ public unsafe partial class KScintilla
 		else Call(SCI_STYLECLEARALL);
 		aaaStyleHidden(STYLE_HIDDEN, true);
 		Call(SCI_SETHOTSPOTACTIVEFORE, true, 0xFF0080); //inactive 0x0080FF
-		//Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_HOT_SPOT_ACTIVE, 0xFF0080); //why no underline? Can't use this, although SCI_SETHOTSPOTACTIVEFORE is deprecated.
+														//Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_HOT_SPOT_ACTIVE, 0xFF0080); //why no underline? Can't use this, although SCI_SETHOTSPOTACTIVEFORE is deprecated.
 
 		//STYLE_HOTSPOT currently unused
 		//aaaStyleHotspot(STYLE_HOTSPOT, true);

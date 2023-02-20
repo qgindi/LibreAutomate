@@ -87,8 +87,8 @@ namespace Au.More {
 	/// 				_tb.Clear();
 	/// 				break;
 	/// 			case PrintServerMessageType.Write:
-	/// 				//_tb.AppendText(m.TextForFind);
-	/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Caller}  {m.TextForFind}");
+	/// 				//_tb.AppendText(m.Text);
+	/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Caller}  {m.Text}");
 	/// 				break;
 	/// 			}
 	/// 		}
@@ -316,7 +316,7 @@ namespace Au.More {
 			if (setTimer && !_isLocalTimer) { _timer?.Set(10); _isLocalTimer = true; }
 		}
 
-		//static int _GetMessageMemorySize(PrintServerMessage m) => 50 + m.TextForFind.Lenn() * 2;
+		//static int _GetMessageMemorySize(PrintServerMessage m) => 50 + m.Text.Lenn() * 2;
 		//int _memSize;
 
 		/// <summary>

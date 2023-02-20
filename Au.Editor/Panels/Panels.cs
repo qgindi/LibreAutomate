@@ -46,19 +46,19 @@ static class Panels {
 		pm.Load(folders.ThisAppBS + @"Default\Layout.xml", customLayoutPath);
 
 		pm["Menu"].Content = Menu = new Menu();
-		TFile = CreateToolbar("File");
-		TEdit = CreateToolbar("Edit");
-		TRun = CreateToolbar("Run");
-		TTools = CreateToolbar("Tools");
-		THelp = CreateToolbar("Help", dp => {
+		TFile = _CreateToolbar("File");
+		TEdit = _CreateToolbar("Edit");
+		TRun = _CreateToolbar("Run");
+		TTools = _CreateToolbar("Tools");
+		THelp = _CreateToolbar("Help", dp => {
 			//dp.Children.Add(TBoxHelp = new TextBox { Height = 20, Margin = new Thickness(3, 1, 0, 2) }); //FUTURE
 			return Dock.Right;
 		});
-		TCustom1 = CreateToolbar("Custom1");
-		TCustom2 = CreateToolbar("Custom2");
+		TCustom1 = _CreateToolbar("Custom1");
+		TCustom2 = _CreateToolbar("Custom2");
 	}
 
-	public static ToolBar CreateToolbar(string name, Func<DockPanel, Dock> dockPanel = null) {
+	static ToolBar _CreateToolbar(string name, Func<DockPanel, Dock> dockPanel = null) {
 		var c = new ToolBar { Name = name };
 		c.UiaSetName(name);
 		c.HideGripAndOverflow(false);

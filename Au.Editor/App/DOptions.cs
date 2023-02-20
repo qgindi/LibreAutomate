@@ -206,11 +206,13 @@ class DOptions : KDialogWindow {
 			styles.ToScintilla(sciStyles);
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
-			var s = @"Font
+			int foundColor = styles.FindHighlightColor;
+			var s = """
+Font
 Background
 None
 //Comment
-""String"" 'c'
+"String" 'c'
 \r\n\t\0\\
 1234567890
 ()[]{},;:
@@ -223,24 +225,30 @@ Variable
 Constant
 GotoLabel
 #preprocessor
-#if-excluded
+#if-disabled
 XML doc text
 /// <doc tag>
-Line number";
+Line number
+Find highlight
+""";
 			sciStyles.aaaText = s;
-			int i = -3;
+			int i = -3, lastStyle = (int)CiStyling.EStyle.countUserDefined;
 			foreach (var v in s.Lines(..)) {
 				i++;
 				if (i < 0) { //Font, Background
 
-				} else {
-					if (i == (int)CiStyling.EStyle.countUserDefined) i = Sci.STYLE_LINENUMBER;
+				} else if (i <= lastStyle) {
+					int ii = i;
+					if (i == lastStyle) ii = Sci.STYLE_LINENUMBER;
 					//print.it(i, s[v.start..v.end]);
 					sciStyles.Call(Sci.SCI_STARTSTYLING, v.start);
-					sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, i);
+					sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, ii);
+				} else { //indicator
+					int ii = i - lastStyle;
+					sciStyles.aaaIndicatorAdd(false, ii switch { 1 => SciCode.c_indicFind, _ => 0 }, v.Range);
 				}
 			}
-			//when selected line changed
+			//when changed the selected line
 			int currentLine = -1;
 			sciStyles.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.nmhdr.code) {
@@ -248,8 +256,8 @@ Line number";
 					int line = c.aaaLineFromPos(false, c.aaaCurrentPos8);
 					if (line != currentLine) {
 						currentLine = line;
-						int k = _SciStylesLineToStyleIndex(line);
-						if (k == -2) { //Font
+						var k = _SciStylesLineToStyleIndex(line);
+						if (k.kind == _StyleKind.Font) {
 							pColor.Visibility = Visibility.Collapsed;
 							pFont.Visibility = Visibility.Visible;
 						} else {
@@ -257,13 +265,13 @@ Line number";
 							pColor.Visibility = Visibility.Visible;
 							ignoreColorEvents = true;
 							int col;
-							if (k == -1) {
-								col = backColor;
-								bold.Visibility = Visibility.Collapsed;
-							} else {
-								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k));
-								bold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k);
+							if (k.kind == _StyleKind.Style) {
+								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k.index));
+								bold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k.index);
 								bold.Visibility = Visibility.Visible;
+							} else { //Indicator, Background
+								bold.Visibility = Visibility.Collapsed;
+								col = k.kind switch { _StyleKind.Indicator => foundColor, _ => backColor };
 							}
 							color.Color = col;
 							ignoreColorEvents = false;
@@ -290,22 +298,29 @@ Line number";
 			bold.CheckChanged += (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
 			color.ColorChanged += col => { if (!ignoreColorEvents) _UpdateSci(); };
 			void _UpdateSci(object control = null) {
-				int k = _SciStylesLineToStyleIndex(sciStyles.aaaLineFromPos(false, sciStyles.aaaCurrentPos8));
+				var k = _SciStylesLineToStyleIndex(sciStyles.aaaLineFromPos(false, sciStyles.aaaCurrentPos8));
 				int col = color.Color;
-				if (k >= 0) {
-					if (control == bold) sciStyles.aaaStyleBold(k, bold.IsChecked);
-					else sciStyles.aaaStyleForeColor(k, col);
-				} else if (k == -1) {
+				if (k.kind == _StyleKind.Style) {
+					if (control == bold) sciStyles.aaaStyleBold(k.index, bold.IsChecked);
+					else sciStyles.aaaStyleForeColor(k.index, col);
+				} else if (k.kind == _StyleKind.Background) {
 					backColor = col;
 					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.aaaStyleBackColor(i, col);
+				} else if (k.kind == _StyleKind.Indicator) {
+					if (k.index == SciCode.c_indicFind) foundColor = col;
+					sciStyles.Call(Sci.SCI_INDICSETFORE, k.index, ColorInt.SwapRB(col));
 				}
 			}
 
-			int _SciStylesLineToStyleIndex(int line) {
-				line -= 2; if (line < 0) return line;
-				int k = line, nu = (int)CiStyling.EStyle.countUserDefined;
-				if (k >= nu) k = k - nu + Sci.STYLE_LINENUMBER;
-				return k;
+			(_StyleKind kind, int index) _SciStylesLineToStyleIndex(int line) {
+				const int nu = (int)CiStyling.EStyle.countUserDefined;
+				return (line -= 2) switch {
+					-2 => (_StyleKind.Font, 0),
+					-1 => (_StyleKind.Background, 0),
+					nu + 1 => (_StyleKind.Indicator, SciCode.c_indicFind),
+					nu => (_StyleKind.Style, Sci.STYLE_LINENUMBER),
+					_ => (_StyleKind.Style, line)
+				};
 			}
 
 			bool inverted = false;
@@ -348,6 +363,8 @@ To apply changes after deleting etc, restart this application.
 			};
 		};
 	}
+
+	enum _StyleKind { Style, Indicator, Font, Background }
 
 	void _Templates() {
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);

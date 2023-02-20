@@ -131,24 +131,29 @@ namespace Au.More {
 			List<wnd> amw = new();
 			try {
 				if (!owner.IsEmpty) {
-					using (new inputBlocker(BIEvents.MouseClicks)) {
-						var w = owner.Hwnd.Get.RootOwnerOrThis();
-						if (!w.Is0) {
-							w.ShowMinimized(1);
-							amw.Add(w);
-
-							//also minimize editor etc if need
-							for (int i = 0; i < 7; i++) {
-								wait.doEvents(10);
-								w = wnd.active;
-								if (!w.IsOfThisProcess || w.IsMinimized) break;
-								w = w.Get.RootOwnerOrThis();
+					if (wCapture.Is0) {
+						using (new inputBlocker(BIEvents.MouseClicks)) {
+							var w = owner.Hwnd.Get.RootOwnerOrThis();
+							if (!w.Is0) {
 								w.ShowMinimized(1);
 								amw.Add(w);
-							}
-						}
 
-						wait.doEvents(300); //time for animations
+								//also minimize editor etc if need
+								for (int i = 0; i < 7; i++) {
+									wait.doEvents(10);
+									w = wnd.active;
+									if (!w.IsOfThisProcess || w.IsMinimized) break;
+									w = w.Get.RootOwnerOrThis();
+									w.ShowMinimized(1);
+									amw.Add(w);
+								}
+							}
+
+							wait.doEvents(300); //time for animations
+						}
+					} else {
+						var w = owner.Hwnd;
+						if (w.IsMinimized) amw.Add(w);
 					}
 				}
 
@@ -281,6 +286,7 @@ namespace Au.More {
 			public int Show(Bitmap img, CIUFlags flags, RECT r) {
 				_img = img;
 				_flags = flags;
+				//SHOULDDO: cursor almost invisible on my 200% DPI tablet (somehow transparent). Test on true 200% DPI screen.
 				_cursor = MouseCursor.Load(ResourceUtil.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
 				_dpi = screen.primary.Dpi;
 				_w = WndUtil.CreateWindow(_WndProc, true, WndUtil.WindowClassDWP_, "Au.CaptureScreen", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);

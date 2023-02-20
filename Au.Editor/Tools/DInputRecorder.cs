@@ -670,7 +670,7 @@ class DInputRecorder : KDialogWindow {
 
 			_Add(new _RecoChar { c = t.c, s = t.s, alt = alt, count = 1 }, k.time, w);
 
-			//why TextForFind+ checkbox exists when we can detect AltGr:
+			//why Text+ checkbox exists when we can detect AltGr:
 			//	1. OS bugs. Eg AltGr stops working after an Open/Save dialog etc.
 			//	2. Possibly not all keyboards have RAlt.
 			//	3. Somebody may want to use Ctrl+Alt even if AltGr exists and works.

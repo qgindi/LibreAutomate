@@ -176,12 +176,12 @@ class DProperties : KDialogWindow {
 
 	protected override void OnSourceInitialized(EventArgs e) {
 		_InitInfo();
-		App.Model.UnloadingWorkspace += Close;
+		App.Model.UnloadingThisWorkspace += Close;
 		base.OnSourceInitialized(e);
 	}
 
 	protected override void OnClosed(EventArgs e) {
-		App.Model.UnloadingWorkspace -= Close;
+		App.Model.UnloadingThisWorkspace -= Close;
 		base.OnClosed(e);
 	}
 
@@ -570,7 +570,7 @@ class DProperties : KDialogWindow {
 	static string _Get(ComboBox t, bool nullIfHidden = true, bool nullIfDefault = false) {
 		if (nullIfDefault && t.SelectedIndex == 0) return null;
 		if (nullIfHidden && _IsHidden(t)) return null;
-		return t.IsEditable ? t.Text : t.SelectedItem as string; //note: t.TextForFind changes after t.SelectionChanged event
+		return t.IsEditable ? t.Text : t.SelectedItem as string; //note: t.Text changes after t.SelectionChanged event
 	}
 
 	static string _Get(KCheckBox t, bool nullIfHidden = true) {

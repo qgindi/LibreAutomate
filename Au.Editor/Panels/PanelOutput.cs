@@ -236,7 +236,7 @@ class PanelOutput {
 							b.Append(s, stackEnd, more);
 						}
 						m.Text = b.ToString();
-						//print.qm2.write("'" + m.TextForFind + "'");
+						//print.qm2.write("'" + m.Text + "'");
 					}
 					if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}

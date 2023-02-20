@@ -160,7 +160,7 @@ namespace Au {
 
 		/// <summary>
 		/// Returns the text or wildcard string.
-		/// null if <b>TextType</b> is not <b>TextForFind</b> or <b>Wildcard</b>.
+		/// null if <b>TextType</b> is not <b>Text</b> or <b>Wildcard</b>.
 		/// </summary>
 		public string Text => _o as string;
 

@@ -4,12 +4,12 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
-using Microsoft.CodeAnalysis.Shared.Utilities;
-using Microsoft.CodeAnalysis.FindSymbols;
+//using Microsoft.CodeAnalysis.Shared.Utilities;
+//using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
-using Microsoft.CodeAnalysis.Indentation;
-using Microsoft.CodeAnalysis.CSharp.Indentation;
+//using Microsoft.CodeAnalysis.Indentation;
+//using Microsoft.CodeAnalysis.CSharp.Indentation;
 
 static class ModifyCode {
 	/// <summary>

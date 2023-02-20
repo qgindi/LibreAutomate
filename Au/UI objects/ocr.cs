@@ -139,7 +139,7 @@ public class ocr {
 	/// <br/>• <see cref="IFArea"/> - can contain <b>wnd</b>, <b>elm</b> or <b>Bitmap</b>. Also allows to specify a rectangle in it, which makes the area smaller and the function faster. Example: <c>new(w, (left, top, width, height))</c>.
 	/// </param>
 	/// <param name="text">
-	/// TextForFind to find in <see cref="TextForFind"/>. Can have prefix:
+	/// Text to find in <see cref="TextForFind"/>. Can have prefix:
 	/// <br/>• <c>"**r "</c> - PCRE regular expression. Example: <c>@"**r \bwhole words\b"</c>.
 	/// <br/>• <c>"**R "</c> - .NET regular expression.
 	/// <br/>• <c>"**i "</c> - case-insensitive.
