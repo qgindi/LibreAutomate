@@ -371,14 +371,17 @@ public static unsafe class Sci
 	public const int INDIC_TEXTFORE = 17;
 	public const int INDIC_POINT = 18;
 	public const int INDIC_POINTCHARACTER = 19;
-	public const int INDIC_IME = 32;
-	public const int INDIC_IME_MAX = 35;
-	public const int INDIC_MAX = 35;
-	public const int INDIC_CONTAINER = 8;
-	public const int INDIC0_MASK = 0x20;
-	public const int INDIC1_MASK = 0x40;
-	public const int INDIC2_MASK = 0x80;
-	public const int INDICS_MASK = 0xE0;
+	public const int INDIC_GRADIENT = 20;
+	public const int INDIC_GRADIENTCENTRE = 21;
+	//deprecated
+	//public const int INDIC_IME = 32;
+	//public const int INDIC_IME_MAX = 35;
+	//public const int INDIC_MAX = 35;
+	//public const int INDIC_CONTAINER = 8;
+	//public const int INDIC0_MASK = 0x20;
+	//public const int INDIC1_MASK = 0x40;
+	//public const int INDIC2_MASK = 0x80;
+	//public const int INDICS_MASK = 0xE0;
 	public const int SCI_INDICSETSTYLE = 2080;
 	public const int SCI_INDICGETSTYLE = 2081;
 	public const int SCI_INDICSETFORE = 2082;
@@ -401,8 +404,9 @@ public static unsafe class Sci
 	public const int SCI_SETWHITESPACEBACK = 2085;
 	public const int SCI_SETWHITESPACESIZE = 2086;
 	public const int SCI_GETWHITESPACESIZE = 2087;
-	public const int SCI_SETSTYLEBITS = 2090;
-	public const int SCI_GETSTYLEBITS = 2091;
+	//deprecated
+	//public const int SCI_SETSTYLEBITS = 2090;
+	//public const int SCI_GETSTYLEBITS = 2091;
 	public const int SCI_SETLINESTATE = 2092;
 	public const int SCI_GETLINESTATE = 2093;
 	public const int SCI_GETMAXLINESTATE = 2094;

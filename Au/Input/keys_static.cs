@@ -474,7 +474,7 @@ public partial class keys {
 	/// </td>
 	/// </tr>
 	/// <tr>
-	/// <td>TextForFind keys</td>
+	/// <td>Text keys</td>
 	/// <td>
 	/// <b>Alphabetic:</b> <c>A</c>-<c>Z</c> (or <c>a</c>-<c>z</c>)
 	/// <br/><b>Number:</b> <c>0</c>-<c>9</c>
@@ -509,7 +509,7 @@ public partial class keys {
 	/// <td>
 	/// <b>Operator:</b> + * ( ) _
 	/// <br/><b>Numpad key prefix:</b> #
-	/// <br/><b>TextForFind/HTML argument prefix:</b> ! %
+	/// <br/><b>Text/HTML argument prefix:</b> ! %
 	/// <br/><b>Reserved:</b> @ $ ^ &amp;
 	/// </td>
 	/// <td>These characters cannot be used as keys. Instead use = 8 9 0 - 3 1 5 2 4 6 7.</td>
@@ -593,7 +593,7 @@ public partial class keys {
 	/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
 	/// <td>true.
 	/// Does not touch the CapsLock key.
-	/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. TextForFind of "text" arguments doesn't depend on CapsLock, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
+	/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.NoModOff"/></td>
@@ -695,8 +695,8 @@ public partial class keys {
 	/// keys.send("!Example");
 	/// keys.sendt("Example"); //same
 	/// 
-	/// //Press key End, key Backspace 3 times, send text "TextForFind".
-	/// keys.send("End Back*3", "!TextForFind");
+	/// //Press key End, key Backspace 3 times, send text "Text".
+	/// keys.send("End Back*3", "!Text");
 	/// 
 	/// //Press Tab n times, send text "user", press Tab, send text "password", press Enter.
 	/// int n = 5; string pw = "password";
@@ -735,7 +735,7 @@ public partial class keys {
 	/// 	//keys.send("Tab", "!text", 2000, "Esc"); //no
 	/// 	await Task.Run(() => { keys.send("Tab", "!text", 2000, "Esc"); }); //use other thread
 	/// });
-	/// b._r.Add("TextForFind", out TextBox text1);
+	/// b._r.Add("Text", out TextBox text1);
 	/// b._r.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
@@ -767,7 +767,7 @@ public partial class keys {
 	/// <summary>
 	/// Sends text to the active window, using virtual keystrokes or clipboard.
 	/// </summary>
-	/// <param name="text">TextForFind. Can be null.</param>
+	/// <param name="text">Text. Can be null.</param>
 	/// <param name="html">
 	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
@@ -780,7 +780,7 @@ public partial class keys {
 	/// <seealso cref="clipboard.paste"/>
 	/// <example>
 	/// <code><![CDATA[
-	/// keys.sendt("TextForFind.\r\n");
+	/// keys.sendt("Text.\r\n");
 	/// ]]></code>
 	/// Or use function <see cref="send"/> and prefix <c>"!"</c>. For HTML use prefix <c>"%"</c>.
 	/// <code><![CDATA[

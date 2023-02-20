@@ -34,7 +34,8 @@ class CiErrors {
 		//If script code is like 'usinf var c = class C1 {}'), throws ArgumentException("invalid span"), although the span is 0..code.Length.
 		//	Then semo.SyntaxTree.ToString() prints 'usinf var c = '.
 		//	Also then invalid coloring. And completion etc throws exceptions.
-		//	Never mind. Once in several years.
+		//Other case: 'int i = (i)'. Next line: 'var v = ...'. It seems only if in top-level statements.
+		//Never mind. Rare.
 
 		if (!a.IsDefaultOrEmpty) {
 			_codeDiag = new(a.Length);

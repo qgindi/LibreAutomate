@@ -14,7 +14,7 @@ namespace Au.More {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// var d = new FileOpenSaveDialog { FileTypes = "TextForFind files|*.txt|All files|*.*" };
+	/// var d = new FileOpenSaveDialog { FileTypes = "Text files|*.txt|All files|*.*" };
 	/// if(d.ShowOpen(out string s)) print.it(s);
 	/// ]]></code>
 	/// </example>
@@ -36,7 +36,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// List of file types, like with <see cref="Microsoft.Win32.FileDialog.Filter"/>.
-		/// Example: <c>"TextForFind files|*.txt|Office files|*.doc;*.xls|All files|*.*"</c>
+		/// Example: <c>"Text files|*.txt|Office files|*.doc;*.xls|All files|*.*"</c>
 		/// </summary>
 		public Strings FileTypes { get; set; }
 

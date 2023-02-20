@@ -1,4 +1,4 @@
-﻿using static Au.Controls.Sci;
+using static Au.Controls.Sci;
 using System.Windows;
 using Au.Tools;
 

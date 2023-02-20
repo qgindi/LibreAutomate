@@ -188,14 +188,16 @@ partial class FilesModel {
 		} else {
 			LoadState(openFiles: true);
 		}
-		WorkspaceLoadedAndDocumentsOpened?.Invoke();
+		ThisWorkspaceLoadedAndDocumentsOpened?.Invoke();
+		AnyWorkspaceLoadedAndDocumentsOpened?.Invoke();
 		if (!onUiLoaded) RunStartupScripts(true);
 	}
 
 	static bool s_isNewWorkspace;
 	internal bool NoGlobalCs_; //used by MetaComments.Parse
 
-	public event Action WorkspaceLoadedAndDocumentsOpened;
+	public event Action ThisWorkspaceLoadedAndDocumentsOpened;
+	public static event Action AnyWorkspaceLoadedAndDocumentsOpened;
 
 	/// <summary>
 	/// Shows "Open workspace" dialog. On OK loads the selected workspace.
@@ -449,12 +451,13 @@ partial class FilesModel {
 
 	/// <summary>
 	/// Called by <see cref="LoadWorkspace"/> before opening another workspace and disposing this.
-	/// Saves all, raises <see cref="UnloadingWorkspace"/> event, closes documents, sets _currentFile = null.
+	/// Saves all, raises <see cref="UnloadingThisWorkspace"/> event, closes documents, sets _currentFile = null.
 	/// </summary>
 	internal void UnloadingWorkspace_() {
 		Save.AllNowIfNeed();
 		EditorExtension.ClosingWorkspace_(onExit: false);
-		UnloadingWorkspace?.Invoke(); //closes dialogs that contain workspace-specific data, eg Properties
+		UnloadingThisWorkspace?.Invoke(); //closes dialogs that contain workspace-specific data, eg Properties
+		UnloadingAnyWorkspace?.Invoke();
 		_currentFile = null;
 		Panels.Editor.CloseAll(saveTextIfNeed: false);
 		OpenFiles.Clear();
@@ -464,7 +467,8 @@ partial class FilesModel {
 	/// <summary>
 	/// Note: unsubscribe to avoid memory leaks.
 	/// </summary>
-	public event Action UnloadingWorkspace;
+	public event Action UnloadingThisWorkspace;
+	public static event Action UnloadingAnyWorkspace;
 
 	//rejected. Let unsubscribe in OnClosed: App.Model.UnloadingWorkspaceEvent -= Close;
 	///// <summary>

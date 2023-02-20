@@ -168,7 +168,7 @@ public partial class KMenuCommands {
 		/// </summary>
 		/// <param name="m"></param>
 		/// <param name="image">Image element (<see cref="MenuItem.Icon"/>), if different. Must not be a child of something.</param>
-		/// <param name="text">TextForFind (<see cref="HeaderedItemsControl.Header"/>), if different.</param>
+		/// <param name="text">Text (<see cref="HeaderedItemsControl.Header"/>), if different.</param>
 		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
 		/// <remarks>
 		/// Sets these properties:
@@ -460,8 +460,8 @@ public partial class KMenuCommands {
 		public readonly MemberInfo member;
 
 		/// <summary>
-		/// TextForFind or a WPF element to add to the text part of the menu item. In/out parameter.
-		/// TextForFind may contain _ for Alt-underline, whereas <c>command.TextForFind</c> is without it.
+		/// Text or a WPF element to add to the text part of the menu item. In/out parameter.
+		/// Text may contain _ for Alt-underline, whereas <c>command.Text</c> is without it.
 		/// </summary>
 		public object text;
 
@@ -534,7 +534,7 @@ public class CommandAttribute : Attribute {
 	public string target;
 
 	/// <summary>
-	/// TextForFind for <see cref="MenuItem.InputGestureText"/>. If not set, will use <b>keys</b>.
+	/// Text for <see cref="MenuItem.InputGestureText"/>. If not set, will use <b>keys</b>.
 	/// </summary>
 	public string keysText;
 

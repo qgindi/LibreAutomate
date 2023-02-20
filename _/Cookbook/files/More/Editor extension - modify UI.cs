@@ -87,7 +87,7 @@ static void _Load() {
 	// Create new toolbar and add to a panel.
 	// The panel root element is <b>DockPanel</b> or <b>Grid</b>, or <b>UserControl</b> containing one of these. This can change in the future.
 	
-	DockPanel dp = Panels.Output;
+	DockPanel dp = Panels.Output.P;
 	dp.Children.Remove(dp.Children.OfType<ToolBarTray>().FirstOrDefault(o => o.Tag is string s1 && s1 == tag));
 	
 	var ptt = new ToolBarTray { Orientation = Orientation.Vertical, IsLocked = true, Tag = tag };
@@ -108,7 +108,7 @@ static void _Load() {
 	b1.R.AddButton("Button", _ => { print.it("Button clicked"); });
 	b1.End();
 	
-	Grid grid = Panels.Cookbook.Content as Grid;
+	Grid grid = Panels.Cookbook.P.Content as Grid;
 	int row = grid.RowDefinitions.Count;
 	if (grid.Children.OfType<Panel>().FirstOrDefault(o => o.Tag is string s1 && s1 == tag) is Panel oldPanel) { row = Grid.GetRow(oldPanel); grid.Children.Remove(oldPanel); } else grid.AddRows(0);
 	grid.AddChild(b1.Panel, row, 0, columnSpan: 9);

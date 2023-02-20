@@ -16,6 +16,12 @@ partial class CiStyling {
 		CiFolding.InitFolding(doc);
 	}
 
+	public void DocHandleDestroyed(SciCode doc) {
+		if (doc == _doc) {
+			_doc = null; //GC. Not important, but helps when trying to detect memory leaks.
+		}
+	}
+
 	/// <summary>
 	/// Called after setting editor control text when a document opened (not just switched active document).
 	/// </summary>
@@ -323,7 +329,7 @@ partial class CiStyling {
 			ClassificationTypeNames.StringEscapeCharacter => EStyle.StringEscape,
 			ClassificationTypeNames.StringLiteral => EStyle.String,
 			ClassificationTypeNames.StructName => EStyle.Type,
-			//ClassificationTypeNames.TextForFind => EStyle.None,
+			//ClassificationTypeNames.Text => EStyle.None,
 			ClassificationTypeNames.VerbatimStringLiteral => EStyle.String,
 			ClassificationTypeNames.TypeParameterName => EStyle.Type,
 			//ClassificationTypeNames.WhiteSpace => EStyle.None,
@@ -401,6 +407,8 @@ partial class CiStyling {
 		public string FontName = "Consolas";
 		public int FontSize = 10;
 		public int BackgroundColor = 0xffffff;
+		//public int FindHighlightColor = 0xf6b94d; //orange, like in VS
+		public int FindHighlightColor = 0xffff00; //yellow, like in Chrome
 
 		public TStyle None; //black
 		public TStyle Comment = 0x60A000; //light green, towards yellow
@@ -447,34 +455,37 @@ partial class CiStyling {
 					if (!a[1].NE()) FontName = a[1];
 					if (a.Length > 2) { int fs = a[2].ToInt(); if (fs >= 5 && fs <= 100) FontSize = fs; }
 					break;
-				case "Background":
-					if (!a[1].NE()) BackgroundColor = a[1].ToInt();
-					break;
-				case nameof(None): _Style(ref None, a); break;
-				case nameof(Comment): _Style(ref Comment, a); break;
-				case nameof(String): _Style(ref String, a); break;
-				case nameof(StringEscape): _Style(ref StringEscape, a); break;
-				case nameof(Number): _Style(ref Number, a); break;
-				case nameof(Punctuation): _Style(ref Punctuation, a); break;
-				case nameof(Operator): _Style(ref Operator, a); break;
-				case nameof(Keyword): _Style(ref Keyword, a); break;
-				case nameof(Namespace): _Style(ref Namespace, a); break;
-				case nameof(Type): _Style(ref Type, a); break;
-				case nameof(Function): _Style(ref Function, a); break;
-				case nameof(Variable): _Style(ref Variable, a); break;
-				case nameof(Constant): _Style(ref Constant, a); break;
-				case nameof(Label): _Style(ref Label, a); break;
-				case nameof(Preprocessor): _Style(ref Preprocessor, a); break;
-				case nameof(Excluded): _Style(ref Excluded, a); break;
-				case nameof(XmlDocText): _Style(ref XmlDocText, a); break;
-				case nameof(XmlDocTag): _Style(ref XmlDocTag, a); break;
-				case nameof(LineNumber): _Style(ref LineNumber, a); break;
+				case "Background": _Color(ref BackgroundColor); break;
+				case nameof(None): _Style(ref None); break;
+				case nameof(Comment): _Style(ref Comment); break;
+				case nameof(String): _Style(ref String); break;
+				case nameof(StringEscape): _Style(ref StringEscape); break;
+				case nameof(Number): _Style(ref Number); break;
+				case nameof(Punctuation): _Style(ref Punctuation); break;
+				case nameof(Operator): _Style(ref Operator); break;
+				case nameof(Keyword): _Style(ref Keyword); break;
+				case nameof(Namespace): _Style(ref Namespace); break;
+				case nameof(Type): _Style(ref Type); break;
+				case nameof(Function): _Style(ref Function); break;
+				case nameof(Variable): _Style(ref Variable); break;
+				case nameof(Constant): _Style(ref Constant); break;
+				case nameof(Label): _Style(ref Label); break;
+				case nameof(Preprocessor): _Style(ref Preprocessor); break;
+				case nameof(Excluded): _Style(ref Excluded); break;
+				case nameof(XmlDocText): _Style(ref XmlDocText); break;
+				case nameof(XmlDocTag): _Style(ref XmlDocTag); break;
+				case nameof(LineNumber): _Style(ref LineNumber); break;
+				case "FindHighlight": _Color(ref FindHighlightColor); break;
 				}
-			}
 
-			static void _Style(ref TStyle r, string[] a) {
-				if (!a[1].NE()) r.color = a[1].ToInt();
-				if (a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt()); else r.bold = false;
+				void _Style(ref TStyle r) {
+					if (!a[1].NE()) r.color = a[1].ToInt();
+					if (a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt()); else r.bold = false;
+				}
+
+				void _Color(ref int color) {
+					if (!a[1].NE()) color = a[1].ToInt();
+				}
 			}
 		}
 
@@ -501,6 +512,7 @@ partial class CiStyling {
 			_Style(nameof(XmlDocText), XmlDocText);
 			_Style(nameof(XmlDocTag), XmlDocTag);
 			_Style(nameof(LineNumber), LineNumber);
+			b.Append("FindHighlight, 0x").AppendLine(FindHighlightColor.ToString("X6"));
 
 			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
@@ -517,32 +529,34 @@ partial class CiStyling {
 		public TStyles(KScintilla sci) {
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
 
-			TStyle _Get(EStyle k) {
+			TStyle _Style(EStyle k) {
 				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)k));
 				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)k);
 				return new TStyle(color, bold);
 			}
 
-			None = _Get(EStyle.None);
-			Comment = _Get(EStyle.Comment);
-			String = _Get(EStyle.String);
-			StringEscape = _Get(EStyle.StringEscape);
-			Number = _Get(EStyle.Number);
-			Punctuation = _Get(EStyle.Punctuation);
-			Operator = _Get(EStyle.Operator);
-			Keyword = _Get(EStyle.Keyword);
-			Namespace = _Get(EStyle.Namespace);
-			Type = _Get(EStyle.Type);
-			Function = _Get(EStyle.Function);
-			Variable = _Get(EStyle.Variable);
-			Constant = _Get(EStyle.Constant);
-			Label = _Get(EStyle.Label);
-			Preprocessor = _Get(EStyle.Preprocessor);
-			Excluded = _Get(EStyle.Excluded);
-			XmlDocText = _Get(EStyle.XmlDocText);
-			XmlDocTag = _Get(EStyle.XmlDocTag);
+			None = _Style(EStyle.None);
+			Comment = _Style(EStyle.Comment);
+			String = _Style(EStyle.String);
+			StringEscape = _Style(EStyle.StringEscape);
+			Number = _Style(EStyle.Number);
+			Punctuation = _Style(EStyle.Punctuation);
+			Operator = _Style(EStyle.Operator);
+			Keyword = _Style(EStyle.Keyword);
+			Namespace = _Style(EStyle.Namespace);
+			Type = _Style(EStyle.Type);
+			Function = _Style(EStyle.Function);
+			Variable = _Style(EStyle.Variable);
+			Constant = _Style(EStyle.Constant);
+			Label = _Style(EStyle.Label);
+			Preprocessor = _Style(EStyle.Preprocessor);
+			Excluded = _Style(EStyle.Excluded);
+			XmlDocText = _Style(EStyle.XmlDocText);
+			XmlDocTag = _Style(EStyle.XmlDocTag);
 
-			LineNumber = _Get(EStyle.LineNumber);
+			LineNumber = _Style(EStyle.LineNumber);
+
+			FindHighlightColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFind));
 		}
 
 		/// <param name="multiFont">Set font only for code styles.</param>
@@ -578,6 +592,8 @@ partial class CiStyling {
 			_Set(EStyle.XmlDocTag, XmlDocTag);
 
 			_Set((EStyle)STYLE_LINENUMBER, LineNumber);
+
+			sci.aaaIndicatorDefine(SciCode.c_indicFind, INDIC_FULLBOX, FindHighlightColor, 255, underText: true);
 		}
 
 		//rejected
@@ -601,6 +617,7 @@ partial class CiStyling {
 		//	XmlDocText.color ^= 0xffffff;
 		//	XmlDocTag.color ^= 0xffffff;
 		//	BackgroundColor ^= 0xffffff;
+		//	... ^= 0xffffff;
 		//}
 
 		//not used

@@ -211,7 +211,7 @@ public static class clipboard {
 	/// <summary>
 	/// Pastes text or HTML into the focused app using the clipboard.
 	/// </summary>
-	/// <param name="text">TextForFind. Can be null if <i>html</i> used.</param>
+	/// <param name="text">Text. Can be null if <i>html</i> used.</param>
 	/// <param name="html">
 	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>. Can be null.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.

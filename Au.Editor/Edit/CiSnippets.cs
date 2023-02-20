@@ -283,7 +283,7 @@ static class CiSnippets {
 		//	//	pos += lenDiff;
 		//	//	endPos += lenDiff;
 		//	//}
-		//	print.it($"<>Note: for {snippet.TextForFind} code also need this at the start of the script: <c green>/*/ {attrPrint} /*/<>");
+		//	print.it($"<>Note: for {snippet.Text} code also need this at the start of the script: <c green>/*/ {attrPrint} /*/<>");
 		//}
 
 		//maybe need using directives

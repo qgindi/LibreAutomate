@@ -41,7 +41,7 @@ static class InsertCode {
 	/// If editor is null or readonly, prints in output.
 	/// Async if called from non-main thread.
 	/// </summary>
-	/// <param name="s">TextForFind. The function ignores "\r\n" at the end. Does nothing if null.</param>
+	/// <param name="s">Text. The function ignores "\r\n" at the end. Does nothing if null.</param>
 	/// <param name="separate">Prepend/append empty line to separate from surrounding code if need. If null, does it if <i>s</i> contains '\n'.</param>
 	public static void Statements(string s, ICSFlags flags = 0, bool? separate = null) {
 		if (s == null) return;
@@ -543,7 +543,7 @@ static class InsertCode {
 	}
 
 	public static void AddFileDescription() {
-		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
+		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}

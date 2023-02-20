@@ -35,7 +35,7 @@ public class KWpfMenu : ContextMenu
 	/// </summary>
 	/// <param name="text">
 	/// Label. See <see cref="HeaderedItemsControl.Header"/>.
-	/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "TextForFind\0" + "Ctrl+E".
+	/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
 	/// </param>
 	/// <param name="click">Action called on click.</param>
 	/// <param name="icon">See <see cref="this[string, bool, object]"/>.</param>
@@ -72,7 +72,7 @@ public class KWpfMenu : ContextMenu
 	/// </summary>
 	/// <param name="text">
 	/// Label. See <see cref="HeaderedItemsControl.Header"/>.
-	/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "TextForFind\0" + "Ctrl+E".
+	/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
 	/// </param>
 	/// <param name="enabled">Disabled if false. Default true.</param>
 	/// <param name="icon">

@@ -184,9 +184,9 @@ static partial class TBExt_ {
 //rejected. Instead use System.Windows.Size. It loads 1 assembly in 1.5 ms and does not add much process memory.
 //public record struct SizeD
 //{
-//	[System.TextForFind.Json.Serialization.JsonInclude]
+//	[System.Text.Json.Serialization.JsonInclude]
 //	public double width;
-//	[System.TextForFind.Json.Serialization.JsonInclude]
+//	[System.Text.Json.Serialization.JsonInclude]
 //	public double height;
 
 //	public SizeD(double width, double height) { this.width = width; this.height = height; }

@@ -61,10 +61,10 @@ namespace Au {
 		/// Adds text.
 		/// </summary>
 		/// <returns>this.</returns>
-		/// <param name="text">TextForFind.</param>
+		/// <param name="text">Text.</param>
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
-		/// TextForFind encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>.</exception>
@@ -403,7 +403,7 @@ EndFragment:0000000000
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
-		/// TextForFind encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
+		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string getText(int format = ClipFormats.Text) {
@@ -642,7 +642,7 @@ namespace Au.Types {
 		/// Registers a clipboard format and returns its id. If already registered, just returns id.
 		/// </summary>
 		/// <param name="name">Format name.</param>
-		/// <param name="textEncoding">TextForFind encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
+		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
 		/// <remarks>Calls API <msdn>RegisterClipboardFormat</msdn>.</remarks>
 		public static int Register(string name, Encoding textEncoding = null) {
 			var R = Api.RegisterClipboardFormat(name);

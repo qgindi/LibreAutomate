@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Au.Controls;
@@ -313,6 +313,42 @@ public static class KExtWpf {
 		c.Style = b.Panel.FindResource(ToolBar.ButtonStyleKey) as Style;
 		c.Focusable = false;
 		return c;
+	}
+
+	/// <summary>
+	/// Adds a toolbar button with icon and tooltip.
+	/// </summary>
+	public static Button AddButton(this ToolBar t, string icon, string tooltip, Action<Button> click, bool enabled = true) {
+		var c = new Button { Content = ImageUtil.LoadWpfImageElement(icon), ToolTip = tooltip };
+		if (click != null) c.Click += (_, _) => click(c);
+		if (!enabled) c.IsEnabled = false;
+		t.Items.Add(c);
+		return c;
+	}
+
+	/// <summary>
+	/// Adds a toolbar checkbox with icon and tooltip.
+	/// </summary>
+	public static KCheckBox AddCheckbox(this ToolBar t, string icon, string tooltip, bool enabled = true) {
+		var c = new KCheckBox { Content = ImageUtil.LoadWpfImageElement(icon), ToolTip = tooltip };
+		c.Style = t.FindResource(ToolBar.CheckBoxStyleKey) as Style; //need because this is KCheckBox, not CheckBox
+		if (!enabled) c.IsEnabled = false;
+		t.Items.Add(c);
+		return c;
+	}
+
+	public static ToolBar xAddToolBar(this wpfBuilder t, bool vertical = false, bool hideOverflow = false, bool controlBrush = false) {
+		var tt = new ToolBarTray { IsLocked = true };
+		if (vertical) tt.Orientation = Orientation.Vertical;
+		var tb = new ToolBar();
+		if (controlBrush) {
+			tt.Background = SystemColors.ControlBrush;
+			tb.Background = SystemColors.ControlBrush;
+		}
+		tt.ToolBars.Add(tb);
+		if (hideOverflow) tb.HideGripAndOverflow(false);
+		t.Add(tt);
+		return tb;
 	}
 
 	/// <summary>

@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
-//using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Classification;
 using EStyle = CiStyling.EStyle;
 
@@ -28,54 +28,46 @@ static class CiUtil {
 		return n;
 	}
 
-	//not used
-	//public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd) {
-	//	(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
-	//	return sym != null;
-	//}
-
-	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd, bool metaToo = false) {
-		var doc = Panels.Editor.ActiveDoc; if (doc == null) { cd = default; return default; }
-		if (!CodeInfo.GetContextAndDocument(out cd, metaToo: metaToo)) return default;
-		return GetSymbolOrKeywordFromPos(cd.document, cd.pos, cd.code);
+	public static (ISymbol symbol, CodeInfo.Context cd) GetSymbolFromPos() {
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return default;
+		return (GetSymbolFromPos(cd), cd);
 	}
 
-	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token)
-		GetSymbolOrKeywordFromPos(Document document, int position, string code) {
-		//using var p1 = perf.local();
+	public static ISymbol GetSymbolFromPos(CodeInfo.Context cd) {
+		return _TryGetAltSymbolFromPos(cd) ?? SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
+	}
 
-		//CONSIDER: try SymbolFinder. Same speed.
-		//var r = SymbolFinder.FindSymbolAtPositionAsync(document, position).Result;
-		//print.it(r);
+	static ISymbol _TryGetAltSymbolFromPos(CodeInfo.Context cd) {
+		if (cd.code.Eq(cd.pos, '[')) { //try to get indexer
+			var t = cd.syntaxRoot.FindToken(cd.pos, true);
+			if (t.IsKind(SyntaxKind.OpenBracketToken) && t.Parent is BracketedArgumentListSyntax b && b.Parent is ElementAccessExpressionSyntax es) {
+				return cd.semanticModel.GetSymbolInfo(es).Symbol;
+			}
+		}
+		return null;
+	}
 
-		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1]) && !code.Eq(position, '[')) position--;
+	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token) GetSymbolEtcFromPos(CodeInfo.Context cd, bool forHelp = false) {
+		var sym = _TryGetAltSymbolFromPos(cd);
+		if (sym != null) return (sym, null, default, default);
 
-		var root = document.GetSyntaxRootAsync().Result;
-		if (!root.FindTouchingToken(out var token, position, findInsideTrivia: true)) return default;
+		int pos = cd.pos; if (pos > 0 && SyntaxFacts.IsIdentifierPartCharacter(cd.code[pos - 1])) pos--;
+		if (!cd.syntaxRoot.FindTouchingToken(out var token, pos, findInsideTrivia: true)) return default;
 
-		var span = token.Span; string word = code[span.Start..span.End];
-		//PrintNode(token);
+		string word = cd.code[token.Span.ToRange()];
 
-		SyntaxNode node = token.Parent;
-		var tkind = token.Kind();
-		if (tkind == SyntaxKind.IdentifierToken) {
+		var k = token.Kind();
+		if (k == SyntaxKind.IdentifierToken) {
 			switch (word) {
-			case "var":
+			case "var" when forHelp: //else get the inferred type
 			case "dynamic":
 			case "nameof":
 			case "unmanaged": //tested cases
 				return (null, word, HelpKind.ContextualKeyword, token);
 			}
-		} else if (tkind == SyntaxKind.OpenBracketToken) { //indexer?
-			if (token.Parent is BracketedArgumentListSyntax bal && bal.Parent is ElementAccessExpressionSyntax es) node = es;
-		} else if (node is ImplicitObjectCreationExpressionSyntax ioce) { //if 'new(', get the type
-			var m1 = document.GetSemanticModelAsync().Result;
-			if (m1.GetTypeInfo(ioce).Type is INamedTypeSymbol nt) return (nt, null, default, token);
-			return default;
+		} else if (token.Parent is ImplicitObjectCreationExpressionSyntax && (!forHelp || cd.pos == token.Span.End)) {
+			//for 'new(' get the ctor or type
 		} else {
-			var k = token.Kind();
-
-			//PrintNode(token.GetPreviousToken());
 			//print.it(
 			//	//token.IsKeyword(), //IsReservedKeyword||IsContextualKeyword, but not IsPreprocessorKeyword
 			//	SyntaxFacts.IsReservedKeyword(k), //also true for eg #if
@@ -85,12 +77,11 @@ static class CiUtil {
 			//	//SyntaxFacts.IsPreprocessorKeyword(k), //true if #something or can be used in #something context. Also true for eg if without #.
 			//	//SyntaxFacts.IsPreprocessorContextualKeyword(k) //badly named. True only if #something.
 			//	);
-			//return default;
 
 			if (SyntaxFacts.IsReservedKeyword(k)) {
-				bool preproc = (word == "if" || word == "else") && token.GetPreviousToken().IsKind(SyntaxKind.HashToken);
-				if (preproc) word = "#" + word;
-				return (null, word, preproc ? HelpKind.PreprocKeyword : HelpKind.ReservedKeyword, token);
+				bool pp = (word == "if" || word == "else") && token.GetPreviousToken().IsKind(SyntaxKind.HashToken);
+				if (pp) word = "#" + word;
+				return (null, word, pp ? HelpKind.PreprocKeyword : HelpKind.ReservedKeyword, token);
 			}
 			if (SyntaxFacts.IsContextualKeyword(k)) {
 				return (null, word, SyntaxFacts.IsAttributeTargetSpecifier(k) ? HelpKind.AttributeTarget : HelpKind.ContextualKeyword, token);
@@ -100,39 +91,25 @@ static class CiUtil {
 				if (token.GetPreviousToken().IsKind(SyntaxKind.HashToken)) word = "#" + word;
 				return (null, word, HelpKind.PreprocKeyword, token);
 			}
-			switch (token.IsInString(position, code, out _)) {
+			switch (token.IsInString(cd.pos, cd.code, out _)) {
 			case true: return (null, null, HelpKind.String, token);
 			case null: return default;
 			}
 		}
-		//note: don't pass contextual keywords to GetSymbolInfo. It may get info for something other, eg for 'new' gets the ctor method.
+		//note: don't pass contextual keywords to FindSymbolAtPositionAsync or GetSymbolInfo.
+		//	It may get info for something other, eg 'new' -> ctor or type, or 'int' -> type 'Int32'.
 
-		ISymbol symbol = null;
-		var model = document.GetSemanticModelAsync().Result;
-		//p1.Next();
-		bool preferGeneric = tkind == SyntaxKind.IdentifierToken && token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
-
-		var sa = model.GetSymbolInfo(node).GetAllSymbols();
-		if (!sa.IsDefault) {
-			foreach (var v in sa) {
-				Debug_.PrintIf(v is IErrorTypeSymbol);
-				bool gen = v is INamedTypeSymbol { IsGenericType: true } or IMethodSymbol { IsGenericMethod: true };
-				//print.it(v, gen, v.Kind);
-				if (gen == preferGeneric) { symbol = v; break; }
-				symbol ??= v;
-			}
-		}
-
-		return (symbol, null, default, token);
+		return (SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result, null, default, token);
 	}
 
 	public enum HelpKind {
 		None, ReservedKeyword, ContextualKeyword, AttributeTarget, PreprocKeyword, String
 	}
 
-	public static void OpenSymbolOrKeywordFromPosHelp() {
+	public static void OpenSymbolEtcFromPosHelp() {
 		string url = null;
-		var (sym, keyword, helpKind, _) = GetSymbolEtcFromPos(out _);
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		var (sym, keyword, helpKind, _) = GetSymbolEtcFromPos(cd, forHelp: true);
 		if (sym != null) {
 			url = GetSymbolHelpUrl(sym);
 		} else if (keyword != null) {
@@ -492,6 +469,13 @@ global using System.Windows.Media;
 	}
 
 	public static void HiliteRange(TextSpan span) => HiliteRange(span.Start, span.End);
+
+	public static void HiliteRanges(List<Range> a) {
+		var doc = Panels.Editor.ActiveDoc;
+		doc.EInicatorsFind_(null);
+		doc.EInicatorsFind_(a);
+	}
+
 #endif
 
 	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {

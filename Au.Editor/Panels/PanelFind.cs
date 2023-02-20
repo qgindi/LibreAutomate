@@ -188,7 +188,16 @@ class PanelFind {
 		var b = new wpfBuilder("Find Options").WinSize(350);
 		b.R.StartGrid<GroupBox>("Find in files");
 		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn);
-		b.R.Add("Skip files where path matches wildcard", out TextBox tSkip, string.Join("\r\n", _SkipWildcards), row2: 0).Multiline(100, TextWrapping.NoWrap);
+		b.R.Add(
+			new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Skip files where path in workspace matches a wildcard from this list" },
+			out TextBox tSkip,
+			string.Join("\r\n", _SkipWildex),
+			row2: 0)
+			.Multiline(100, TextWrapping.NoWrap)
+			.Tooltip(@"Example:
+*.exe
+\FolderA\*
+*\FolderB\*");
 		int iSlow = App.Settings.find_printSlow; string sSlow = iSlow > 0 ? iSlow.ToS() : null;
 		b.R.StartStack().Add("Print file open+search times >=", out TextBox tSlow, sSlow).Width(50).Add<Label>("ms").End();
 		b.End();
@@ -205,6 +214,40 @@ class PanelFind {
 		//	To make faster, I added Windows Defender exclusion for cs file type. Remove when testing cache etc.
 		//	When testing WD impact, turn off/on its real-time protection and restart this app.
 		//	For cache use SQLite database in App.Model.CacheDirectory. Add text of files of size eg < 100 KB.
+
+		//rejected: support wildex in 'skip'. Not useful.
+		//	code here:
+		//		b.R.Add(
+		//			new TextBlock() {
+		//				TextWrapping = TextWrapping.Wrap,
+		//				Text = "Skip files where path in workspace matches a wildcard expression from this list"
+		//			},
+		//			out TextBox tSkip,
+		//			string.Join("\r\n", _SkipWildex),
+		//			row2: 0)
+		//			.Multiline(100, TextWrapping.NoWrap)
+		//			.Tooltip(@"Example:
+		//*.exe
+		//\FolderA\*
+		//*\FolderB\*
+		//**r regex")
+		//			.Validation(e => {
+		//				string s1 = null;
+		//				try { foreach (var v in (e as TextBox).Text.Lines(true)) new wildex(s1 = v); }
+		//				catch (ArgumentException e1) { return $"{e1.Message}\n{s1}"; }
+		//				return null;
+		//			});
+		//	code in the 'find' function:
+		//wildex[] aWildex = _SkipWildex is var sw && sw.Length != 0 ? sw.Select(o => new wildex(o, noException: true)).ToArray() : null;
+		//foreach (var v in folder.Descendants()) {
+		//	...
+		//	if (aWildex != null) {
+		//		var path = v.ItemPath;
+		//		if (aWildex.Any(o => o.Match(path))) continue;
+		//	}
+		//	aSearchInFiles.Add(v);
+		//}
+
 	}
 
 	#endregion
@@ -265,7 +308,7 @@ class PanelFind {
 	}
 	timer _timerUQR;
 
-	class _TextToFind {
+	internal class _TextToFind {
 		public string findText;
 		public string replaceText;
 		public regexp rx;
@@ -446,13 +489,13 @@ class PanelFind {
 		}
 	}
 
-	bool _ValidateReplacement(_TextToFind f, FileNode file) {
-		//SHOULDDO: add a ValidateReplacement function to the regex class.
-		if (f.rx != null
-			&& file.GetCurrentText(out var s, silent: true)
-			&& f.rx.Match(s, out RXMatch m)
-			&& !_TryExpandRegexReplacement(m, _tReplace.Text, out _)
-			) return false;
+	internal bool _ValidateReplacement(_TextToFind f/*, FileNode file*/) {
+		//FUTURE: add regexp.IsValidReplacement and use it here.
+		//if (f.rx != null
+		//	&& file.GetCurrentText(out var s, silent: true)
+		//	&& f.rx.Match(s, out RXMatch m)
+		//	&& !_TryExpandRegexReplacement(m, _tReplace.Text, out _)
+		//	) return false;
 		return true;
 	}
 
@@ -472,106 +515,27 @@ class PanelFind {
 	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = App.Settings.find_searchIn);
 	int _searchIn = -1;
 
-	string[] _SkipWildcards => _aSkipWildcards ??= (App.Settings.find_skip ?? "").Lines(true);
+	string[] _SkipWildex => _aSkipWildcards ??= (App.Settings.find_skip ?? "").Lines(true);
 	string[] _aSkipWildcards;
 	readonly string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
-	bool _init1;
-	const int c_indic = 0;
 
-	public KScintilla PrepareFindResultsPanel() {
-		Panels.PanelManager["Found"].Visible = true;
-
-		var cFound = Panels.Found.Scintilla;
-		cFound.aaaClearText();
-
-		if (!_init1) {
-			_init1 = true;
-
-			App.Model.WorkspaceLoadedAndDocumentsOpened += () => cFound.aaaClearText();
-
-			cFound.AaTags.AddLinkTag("+open", s => {
-				_OpenLinkClicked(s);
-			});
-
-			cFound.AaTags.AddLinkTag("+ra", s => {
-				if (!_OpenLinkClicked(s, replaceAll: true)) return;
-				timer.after(10, _ => _ReplaceAllInFile());
-				//info: without timer sometimes does not set cursor pos correctly
-			});
-
-			cFound.AaTags.AddLinkTag("+f", s => {
-				var a = s.Split(' ');
-				if (!_OpenLinkClicked(a[0])) return;
-				var doc = Panels.Editor.ActiveDoc;
-				//doc.Focus();
-				int from = a[1].ToInt(), to = a[2].ToInt();
-				timer.after(10, _ => {
-					if (to >= doc.aaaLen16) return;
-					App.Model.EditGoBack.RecordNext();
-					doc.aaaSelect(true, from, to, true);
-				});
-				//info: scrolling works better with async when now opened the file
-			});
-
-			bool _OpenLinkClicked(string file, bool replaceAll = false) {
-				var f = App.Model.Find(file); //<id>
-				if (f == null) return false;
-				if (f.IsFolder) f.SelectSingle();
-				else {
-					if (replaceAll && !_ValidateReplacement(_lastFindAll.f, f)) return false; //avoid opening the file in editor when invalid regex replacement
-					if (!App.Model.SetCurrentFile(f)) return false;
-				}
-				//add indicator to make it easier to find later
-				cFound.aaaIndicatorClear(c_indic);
-				var v = cFound.aaaLineStartEndFromPos(false, cFound.aaaCurrentPos8);
-				cFound.aaaIndicatorAdd(false, c_indic, v.start..v.end);
-				return true;
-			}
-
-			cFound.AaTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
-
-			cFound.AaTags.AddLinkTag("+caf", s => {
-				App.Model.CloseFiles(_lastFindAll.files, _lastFindAll.wasOpen);
-				App.Model.CollapseAll(exceptWithOpenFiles: true);
-			});
-
-			cFound.AaTags.AddLinkTag("+caff", s => Panels.Files.CloseAll());
-
-			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
-			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
-		}
-
-		return cFound;
-	}
-
-	void _FindAllInFiles(/*, bool forReplace*/) {
-		var cFound = PrepareFindResultsPanel();
-
+	void _FindAllInFiles() {
 		if (!_GetTextToFind(out var f)) return;
 
-		cFound.aaaText = "<c #A0A0A0>... searching ...<>";
+		Panels.Found.Prepare(FoundKind.Text, f.findText);
+
 		//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
 		wait.doEvents();
 
-		var b = new StringBuilder();
-		var a = new List<Range>();
-		int timeSlow = App.Settings.find_printSlow;
-		StringBuilder bSlow = timeSlow > 0 ? new() : null;
-		bool jited = false;
-		int searchIn = _SearchIn;
-		int nFound = 0;
-		List<FileNode> aFiles = new();
-
-		var folder = App.Model.Root;
+		FileNode folder = App.Model.Root;
 		if (_cFolder.IsChecked && Panels.Editor.ActiveDoc?.EFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}
 
+		List<FileNode> aSearchInFiles = new();
+		int searchIn = _SearchIn;
 		foreach (var v in folder.Descendants()) {
-			//using var p1 = new _Perf();
-			string text = null, path = null;
-			//perf.first();
 			if (v.IsCodeFile) {
 				switch (searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
 				case 4: continue;
@@ -583,29 +547,70 @@ class PanelFind {
 				if (v.IsFolder) continue;
 				if (v.Name.Ends(true, _aSkipImages) > 0) continue;
 			}
-			var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
+			if (_SkipWildex.Length > 0 && v.ItemPath.Like(true, _SkipWildex) > 0) continue;
+			aSearchInFiles.Add(v);
+		}
+
+		var b = new StringBuilder();
+		List<FileNode> aFoundInFiles = new();
+		var ar = new List<Range>();
+		int timeSlow = App.Settings.find_printSlow;
+		StringBuilder bSlow = timeSlow > 0 ? new() : null;
+		bool jited = false;
+		int nFound = 0;
+
+		WTaskbarButton progress = null;
+		long t0 = Environment.TickCount64;
+
+		for (int j = 0; j < aSearchInFiles.Count; j++) {
+			//using var p1 = perf.local();
+			if (progress == null && j > 100 && j < aSearchInFiles.Count - 100) {
+				long t1 = Environment.TickCount64;
+				if (t1 - t0 > 100) {
+					progress = App.Hmain.TaskbarButton;
+					progress.SetProgressState(WTBProgressState.Normal);
+				}
+			}
+			if (progress != null) {
+				long t1 = Environment.TickCount64;
+				if (t1 != t0) {
+					t0 = t1;
+					progress.SetProgressValue(j, aSearchInFiles.Count);
+				}
+			}
+			//p1.Next();
+
+			var v = aSearchInFiles[j];
+			//using var p1 = new _Perf();
 			//p1.Start(v.Name);
-			if (!v.GetCurrentText(out text, silent: true) || text.Length == 0 || text.Contains('\0')) continue;
-			//perf.nw();
+			if (!v.GetCurrentText(out var text, silent: true) || text.Length == 0 || text.Contains('\0')) continue;
+			//p1.Next();
 
 			long time = bSlow != null ? perf.ms : 0;
 
-			_FindAllInString(text, f, a);
+			_FindAllInString(text, f, ar);
 
-			if (a.Count != 0) {
+			if (ar.Count != 0) {
 				b.Append("<lc #C0E0C0>");
-				path ??= v.ItemPath;
+				var path = v.ItemPath;
 				string link = v.IdStringWithWorkspace;
 				if (v.IsFolder) {
 					b.AppendFormat("<+open \"{0}\"><c #808080>{1}<><>    <c #008000>//folder<>", link, path);
 				} else {
 					int i1 = path.Length - v.Name.Length;
 					string s1 = path[..i1], s2 = path[i1..];
-					aFiles.Add(v); nFound += a.Count;
+					aFoundInFiles.Add(v); nFound += ar.Count;
 					int ns = 120 - path.Length * 7 / 4;
 #if true //open and select the first found text
-					b.AppendFormat("<+f \"{0} {1} {2}\"><c #808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>",
-						link, a[0].Start.Value, a[0].End.Value, s1, s2, ns > 0 ? new string(' ', ns) : null);
+					b.AppendFormat(
+						"<+f \"{0} {1} {2}\"><c #808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>{6}",
+						link,
+						ar[0].Start.Value,
+						ar[0].End.Value,
+						s1,
+						s2,
+						ns > 0 ? new string(' ', ns) : null,
+						v.IsExternal ? "    <c green>//external<>" : null);
 #else //just open
 						b.AppendFormat("<+open \"{0}\"><c #808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>",
 							link, s1, s2, ns > 0 ? new string(' ', ns) : null);
@@ -613,8 +618,8 @@ class PanelFind {
 				}
 				b.AppendLine("<>");
 				if (b.Length < 10_000_000) {
-					for (int i = 0; i < a.Count; i++) {
-						var range = a[i];
+					for (int i = 0; i < ar.Count; i++) {
+						var range = ar[i];
 						int start = range.Start.Value, end = range.End.Value, lineStart = start, lineEnd = end;
 						int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
 						for (; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if (c == '\n' || c == '\r') break; }
@@ -623,7 +628,7 @@ class PanelFind {
 						bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
 						b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
 							.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
-							.Append("<bc #ffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
+							.Append("<bc #ffff00><\a>").Append(text, start, end - start).Append("</\a><>")
 							.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
 							.AppendLine("<>");
 					}
@@ -640,10 +645,10 @@ class PanelFind {
 			}
 		}
 
+		progress?.SetProgressState(WTBProgressState.NoProgress);
+
 		if (nFound > 0) {
-			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
-			b.AppendFormat("<bc #FFC000>Found {0} in {1} files.    <+raif \"{2}\"><c #80ff>Replace all...<><>    <+caf><c #80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
-			_lastFindAll = (f, aFiles, guid, null);
+			b.AppendLine($"<bc #FFC000>Found {nFound} in {aFoundInFiles.Count} files.    <+raif><c #80ff>Replace all...<><>    <+caf><c #80ff>Close opened files<><><>");
 		}
 
 		if (folder != App.Model.Root)
@@ -654,57 +659,58 @@ class PanelFind {
 			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);
 
-		cFound.aaaSetText(b.ToString());
+		Panels.Found.SetFindInFilesResults(f, b.ToString(), aFoundInFiles);
 	}
 
-	(_TextToFind f, List<FileNode> files, string guid, System.Collections.BitArray wasOpen) _lastFindAll;
+		//TODO: test "replace in files"
+	internal void _ReplaceAllInFiles(_TextToFind f, List<FileNode> files, ref HashSet<FileNode> openedFles) {
+		if (!_ValidateReplacement(f)) return; //avoid opening files in editor when invalid regex replacement
+		if (!_CanReplaceInFiles(f)) return;
 
-	void _ReplaceAllInFiles(string sGuid) {
-		var (f, files, guid, _) = _lastFindAll;
-		if (guid != sGuid) return;
-		if (!_ValidateReplacement(f, files[0])) return; //avoid opening files in editor when invalid regex replacement
-		if (!_CanReplaceInFiles()) return;
-
-		if (1 != dialog.show("Replace text in files",
+		switch (dialog.show("Replace text in files",
 			"""
 Replaces text in all files displayed in the Found panel.
 Opens files to enable Undo.
 
 Before replacing you may want to backup the workspace <a href="backup">folder</a>.
 """,
-			"Replace|Cancel",
-			flags: DFlags.CenterMouse,
+			files.Any(o => o.IsExternal) ? "1 Replace all|2 Replace all but external|0 Cancel" : "1 Replace all|0 Cancel",
+			flags: /*DFlags.CommandLinks |*/ DFlags.CenterMouse,
 			owner: App.Hmain,
-			onLinkClick: e => run.selectInExplorer(folders.Workspace))) return;
+			onLinkClick: e => run.selectInExplorer(folders.Workspace))) {
+		case 1: break;
+		case 2: files = files.Where(o => !o.IsExternal).ToList(); break;
+		default: return;
+		}
 
-		var d = dialog.showProgress(marquee: false, "Replacing", owner: App.Hmain);
+		var progress = App.Hmain.TaskbarButton;
 		try {
+			progress.SetProgressState(WTBProgressState.Normal);
 			App.Wmain.IsEnabled = false;
-			bool needWasOpen = _lastFindAll.wasOpen == null;
 			for (int i = 0; i < files.Count; i++) {
+				progress.SetProgressValue(i, files.Count);
 				var v = files[i];
-				if (needWasOpen && App.Model.OpenFiles.Contains(v)) (_lastFindAll.wasOpen ??= new(files.Count))[i] = true;
-				if (!App.Model.SetCurrentFile(v)) { print.it("Failed to open " + v.Name); continue; }
-				if ((i & 15) == 15) wait.doEvents(); //makes slower, but visually better. Without it the progress dialog almost does not respond, although other thread; maybe clicking it tries to change wmain Z order etc.
+				if (!App.Model.OpenFiles.Contains(v)) (openedFles ??= new()).Add(v);
+				if (!App.Model.SetCurrentFile(v)) continue; //SetCurrentFile prints "Failed..."
+				if ((i & 7) == 0) wait.doEvents(); //makes slower, but visually better
 				_ReplaceAllInEditor(f);
-				if (!d.IsOpen) break;
-				d.Send.Progress(Math2.PercentFromValue(files.Count, i + 1));
+
+				//TODO: once 3 of ~200 documents were opened without Undo. All adjecent. In middle. All from symlink folder.
 			}
 		}
 		finally {
-			d.Send.Close();
+			progress.SetProgressState(WTBProgressState.NoProgress);
 			App.Wmain.IsEnabled = true;
 		}
 	}
 
 	//when clicked link "Replace all" in "find in files" results. The file is already open.
-	void _ReplaceAllInFile() {
-		if (!_CanReplaceInFiles()) return;
-		_ReplaceAllInEditor(_lastFindAll.f);
+	internal void _ReplaceAllInFile(_TextToFind ttf) {
+		if (!_CanReplaceInFiles(ttf)) return;
+		_ReplaceAllInEditor(ttf);
 	}
 
-	bool _CanReplaceInFiles() {
-		var f = _lastFindAll.f;
+	bool _CanReplaceInFiles(_TextToFind f) {
 		bool ok = f.findText == _tFind.Text
 			&& f.matchCase == _cCase.IsChecked
 			&& f.wholeWord == _cWord.IsChecked

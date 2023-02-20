@@ -232,8 +232,16 @@ class MetaReferences {
 
 		//Returns true if k name matches one of default refs, unless k is any version of that ref.
 		//In the later case sets k.ignoreDef=true if k is a newer version, else sets k.ignoreThis=true.
-		static bool _BadDefReplacement(_MR k) {
-			if (!DefaultReferences.TryGetValue(pathname.getNameNoExt(k.path), out var def)) return false;
+		bool _BadDefReplacement(_MR k) {
+			var name = pathname.getNameNoExt(k.path);
+			if (!DefaultReferences.TryGetValue(name, out var def)) return false;
+
+			if (_hsNoRef?.Contains(name) ?? false) return false;
+			//SHOULDDO: what if eg two nuget packages (from different folders) have two different versions of that assembly?
+			//	Eg from _refs already removed v6 and added v8, and now trying to add v7 or v9.
+			//	Rare.
+			//	Now should try to find in _refs. If not found in default area and found in nondefault area, replace the nondefault.
+
 			var idR = _Identity(k.Ref); if (idR == null) return true;
 			var idD = _Identity(def);
 			//print.it(idR, idDef);
@@ -261,12 +269,17 @@ class MetaReferences {
 	/// </summary>
 	internal void RemoveFromRefs(string wildcard) {
 		for (int i = _refs.Count; --i >= 0;) {
-			if (_refs[i].FilePath.Like(wildcard, true)) {
+			var r = _refs[i];
+			if (r.FilePath.Like(wildcard, true)) {
 				_refs.RemoveAt(i);
-				if (i < DefaultRefCount) DefaultRefCount--;
+				if (i < DefaultRefCount) {
+					DefaultRefCount--;
+					(_hsNoRef ??= new(StringComparer.OrdinalIgnoreCase)).Add(pathname.getNameNoExt(r.Display));
+				}
 			}
 		}
 	}
+	HashSet<string> _hsNoRef; //names of refs removed by meta noRef
 
 	/// <summary>
 	/// Extracts path from compiler error message CS0009 and removes the reference from cache.

@@ -225,6 +225,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 
 	/// <summary>
 	/// true if is an external file, ie not in this workspace folder.
+	/// But not if is a file in a symlink folder.
 	/// </summary>
 	public bool IsLink => _linkTarget != null;
 
@@ -237,6 +238,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// true if is a symlink to an external directory.
 	/// </summary>
 	public bool IsSymlink => _flags.Has(_Flags.Symlink);
+
+	/// <summary>
+	/// true if <see cref="IsLink"/> or an ancestor or self is <see cref="IsSymlink"/>.
+	/// </summary>
+	public bool IsExternal {
+		get {
+			if (IsLink) return true;
+			for (var v = this; v != null; v = v.Parent) if (v.IsSymlink) return true;
+			return false;
+		}
+	}
+	//public bool IsExternal => IsLink || IsSymlink || Ancestors(noRoot: true).Any(static o => o.IsSymlink); //creates garbage
 
 	/// <summary>
 	/// Gets or sets custom icon name (like "*Pack.Icon color") or null.

@@ -333,7 +333,7 @@ public static unsafe class Convert2 {
 		}
 		return r;
 
-		//speed: faster than WideCharToMultiByte. Same as System.TextForFind.Unicode.Utf8.FromUtf16.
+		//speed: faster than WideCharToMultiByte. Same as System.Text.Unicode.Utf8.FromUtf16.
 	}
 
 	/// <summary>

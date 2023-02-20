@@ -712,8 +712,8 @@ partial class CiCompletion {
 			foreach (var v in d.items) {
 				if (v.kind == CiItemKind.None) continue; //eg regex completion
 				var s = v.ci.FilterText;
-				//Debug_.PrintIf(v.ci.FilterText != v.TextForFind, $"{v.ci.FilterText}, {v.TextForFind}");
-				//print.it(v.TextForFind, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
+				//Debug_.PrintIf(v.ci.FilterText != v.Text, $"{v.ci.FilterText}, {v.Text}");
+				//print.it(v.Text, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
 				bool found = false;
 				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
 				if (iFirst >= 0) {

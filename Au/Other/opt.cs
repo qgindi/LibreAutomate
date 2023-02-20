@@ -975,7 +975,7 @@ namespace Au.Types {
 		/// This option is recommended for long text, because other ways then are too slow.
 		/// Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="OKey.TextSpeed"/> can help.
 		/// Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete, auto-indent or auto-correct. However some apps modify even pasted text, for example trim the last newline or space.
-		/// When pasting text, previous clipboard data of some formats is lost. TextForFind is restored by default.
+		/// When pasting text, previous clipboard data of some formats is lost. Text is restored by default.
 		/// </summary>
 		Paste,
 

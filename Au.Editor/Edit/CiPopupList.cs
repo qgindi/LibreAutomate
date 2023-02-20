@@ -166,7 +166,7 @@ class CiPopupList
 			int r = string.Compare(c1.ci.SortText, c2.ci.SortText, StringComparison.OrdinalIgnoreCase);
 			if (r == 0) {
 				r = CiSnippets.Compare(c1, c2);
-				//if (r == 0) r = string.Compare(c1.TextForFind, c2.TextForFind, StringComparison.OrdinalIgnoreCase);
+				//if (r == 0) r = string.Compare(c1.Text, c2.Text, StringComparison.OrdinalIgnoreCase);
 			}
 			return r;
 		});
