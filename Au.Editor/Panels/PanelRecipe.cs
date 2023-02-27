@@ -32,7 +32,7 @@ class PanelRecipe {
 	private void _c_aaHandleCreated() {
 		_c.Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 
-		_c.aaaSetMarginWidth(1, 14);
+		_c.aaaMarginSetWidth(1, 14);
 		_c.Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
 		_c.Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
 

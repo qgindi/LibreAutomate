@@ -959,7 +959,7 @@ class MetaComments {
 /// <param name="code"></param>
 /// <param name="isMain"></param>
 /// <param name="isC">Added through meta 'c' or "global.cs".</param>
-record struct MCCodeFile(FileNode f, string code, bool isMain, bool isC) {
+record class MCCodeFile(FileNode f, string code, bool isMain, bool isC) {
 	internal bool allowAnyMeta_;
 	public override string ToString() => f.ToString();
 }

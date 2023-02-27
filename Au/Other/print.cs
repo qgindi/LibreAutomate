@@ -28,7 +28,7 @@ public static partial class print {
 				Api.GetStartupInfo(out var x);
 				_isVisibleConsole = x.hStdOutput != default || 0 == (x.dwFlags & 1) || 0 != x.wShowWindow; //redirected stdout, or visible console window
 			}
-			return _isVisibleConsole.GetValueOrDefault();
+			return _isVisibleConsole.Value;
 		}
 	}
 	static bool? _isVisibleConsole;

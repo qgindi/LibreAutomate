@@ -14,7 +14,7 @@ class KSciCodeBox : KScintilla {
 	protected override void AaOnHandleCreated() {
 		base.AaOnHandleCreated();
 
-		aaaSetMarginWidth(1, 0);
+		aaaMarginSetWidth(1, 0);
 		aaaIsReadonly = true;
 
 		var styles = new CiStyling.TStyles { FontSize = 9 };
@@ -27,7 +27,7 @@ class KSciCodeBox : KScintilla {
 		//default: print.it(n.nmhdr.code, n.modificationType); break;
 		//}
 
-		switch (n.nmhdr.code) {
+		switch (n.code) {
 		case Sci.NOTIF.SCN_UPDATEUI:
 			//make text after _ReadonlyStartUtf8 readonly
 			if (0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed

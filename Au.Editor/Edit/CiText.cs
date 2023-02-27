@@ -13,8 +13,7 @@ using System.Windows.Input;
 
 //SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
 
-class CiText
-{
+class CiText {
 	readonly Stack<TextElement> _stack = new();
 	TextElement _container = new Section();
 	TextElement _last;
@@ -646,7 +645,7 @@ class CiText
 		| SymbolDisplayParameterOptions.IncludeDefaultValue
 		| SymbolDisplayParameterOptions.IncludeExtensionThis;
 
-	internal static readonly SymbolDisplayFormat s_symbolFullFormat = new SymbolDisplayFormat(
+	internal static readonly SymbolDisplayFormat s_symbolFullFormat = new(
 				SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
 				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
@@ -659,33 +658,33 @@ class CiText
 				SymbolDisplayKindOptions.IncludeMemberKeyword | SymbolDisplayKindOptions.IncludeNamespaceKeyword | SymbolDisplayKindOptions.IncludeTypeKeyword,
 				s_miscDisplayOptions
 				);
-	static SymbolDisplayFormat s_qualifiedTypeFormat = new SymbolDisplayFormat(
+	static SymbolDisplayFormat s_qualifiedTypeFormat = new(
 				SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
 				SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
 				miscellaneousOptions: s_miscDisplayOptions
 				);
-	static SymbolDisplayFormat s_unqualifiedTypeFormat = new SymbolDisplayFormat(
+	static SymbolDisplayFormat s_unqualifiedTypeFormat = new(
 				SymbolDisplayGlobalNamespaceStyle.Omitted,
 				SymbolDisplayTypeQualificationStyle.NameOnly,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
 				miscellaneousOptions: s_miscDisplayOptions
 				);
-	static SymbolDisplayFormat s_parameterFormat = new SymbolDisplayFormat(
+	static SymbolDisplayFormat s_parameterFormat = new(
 				SymbolDisplayGlobalNamespaceStyle.Omitted,
 				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
 				parameterOptions: s_parameterDisplayOptions,
 				miscellaneousOptions: s_miscDisplayOptions
 		);
-	static SymbolDisplayFormat s_symbolWithoutParametersFormat = new SymbolDisplayFormat(
+	static SymbolDisplayFormat s_symbolWithoutParametersFormat = new(
 				SymbolDisplayGlobalNamespaceStyle.Omitted,
 				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
 				SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
 				miscellaneousOptions: s_miscDisplayOptions
 				);
-	static SymbolDisplayFormat s_nameWithoutTypeParametersFormat = new SymbolDisplayFormat(
+	static SymbolDisplayFormat s_nameWithoutTypeParametersFormat = new(
 				SymbolDisplayGlobalNamespaceStyle.Omitted,
 				SymbolDisplayTypeQualificationStyle.NameOnly,
 				miscellaneousOptions: s_miscDisplayOptions
@@ -817,8 +816,7 @@ class CiText
 	}
 }
 
-class FlowDocumentControl : FlowDocumentScrollViewer
-{
+class FlowDocumentControl : FlowDocumentScrollViewer {
 	public event Action<FlowDocumentControl, string> LinkClicked;
 
 	internal static void OnLinkClicked_(Hyperlink h, RequestNavigateEventArgs e) {

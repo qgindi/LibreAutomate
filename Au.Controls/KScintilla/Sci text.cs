@@ -1,11 +1,12 @@
-//Functions to work with Scintilla control text, code, etc.
+//Functions to work with Scintilla control text, etc.
 
-namespace Au.Controls; 
+namespace Au.Controls;
+
 using static Sci;
 
 public unsafe partial class KScintilla {
 	#region low level
-
+	
 	/// <summary>
 	/// Calls a Scintilla message that sets a string which is passed using lParam.
 	/// The string can be null if the Scintilla message allows it.
@@ -18,7 +19,7 @@ public unsafe partial class KScintilla {
 			return Call(sciMessage, wParam, s);
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls a Scintilla message that sets a string which is passed using wParam.
 	/// The string can be null if the Scintilla message allows it.
@@ -30,7 +31,7 @@ public unsafe partial class KScintilla {
 			return Call(sciMessage, lParam, s);
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls a Scintilla message and passes two strings using wParam and lParam.
 	/// wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
@@ -44,7 +45,7 @@ public unsafe partial class KScintilla {
 			return Call(sciMessage, (nint)s, s + i + 1);
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls a Scintilla message that gets a string when length is known.
 	/// Always uses <i>utf8Length</i> bytes of the result (does not find length).
@@ -58,7 +59,7 @@ public unsafe partial class KScintilla {
 	/// </param>
 	public string aaaGetStringOfLength(int sciMessage, nint wParam, int utf8Length)
 		=> _GetString(sciMessage, wParam, utf8Length, false);
-
+	
 	/// <summary>
 	/// Calls a Scintilla message that gets a string. See <see cref="aaaGetStringOfLength"/>.
 	/// To get buffer size, at first calls <i>sciMessage</i> with <i>lParam</i>=0 (null buffer).
@@ -69,7 +70,7 @@ public unsafe partial class KScintilla {
 	/// <param name="wParam"></param>
 	public string aaaGetStringGetLength(int sciMessage, nint wParam)
 		=> _GetString(sciMessage, wParam, Call(sciMessage, wParam), false);
-
+	
 	/// <summary>
 	/// Calls a Scintilla message that gets a '\0'-terminated string.
 	/// Cannot get binary string (with '\0' characters).
@@ -84,7 +85,7 @@ public unsafe partial class KScintilla {
 	/// </param>
 	public string aaaGetString0Terminated(int sciMessage, nint wParam, int bufferSize)
 		=> _GetString(sciMessage, wParam, bufferSize, true);
-
+	
 	[SkipLocalsInit]
 	string _GetString(int sciMessage, nint wParam, int len, bool findLength) {
 		if (len == 0) return "";
@@ -95,17 +96,17 @@ public unsafe partial class KScintilla {
 		if (findLength) len = b.FindByteStringLength();
 		return Encoding.UTF8.GetString(b, len);
 	}
-
+	
 	static string _FromUtf8(byte* b) => Convert2.Utf8Decode(b);
-
+	
 	static byte[] _ToUtf8(string s) => Convert2.Utf8Encode(s);
-
+	
 	static byte[] _ToUtf8(string s, out int utf8Length) {
 		var r = Convert2.Utf8Encode(s);
 		utf8Length = r.Length - 1;
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Optimized 'get text' function.
 	/// </summary>
@@ -138,7 +139,7 @@ public unsafe partial class KScintilla {
 			});
 		}
 	}
-
+	
 	/// <summary>
 	/// If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
 	/// </summary>
@@ -151,7 +152,7 @@ public unsafe partial class KScintilla {
 		if (utf16) from = aaaPos8(from);
 		if (to < 0) to = aaaLen8; else if (utf16) to = aaaPos8(to);
 	}
-
+	
 	/// <summary>
 	/// If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
 	/// </summary>
@@ -173,7 +174,7 @@ public unsafe partial class KScintilla {
 		}
 		return (from, to);
 	}
-
+	
 	/// <summary>
 	/// Same as <see cref="aaaNormalizeRange(bool, ref int, ref int)"/>, but can be <i>to</i> less than <i>from</i>. If so, returns true.
 	/// </summary>
@@ -185,49 +186,49 @@ public unsafe partial class KScintilla {
 		if (reverse && !swapFromTo) Math2.Swap(ref from, ref to);
 		return reverse;
 	}
-
+	
 	/// <summary>
 	/// => utf16 ? aaaPos8(pos) : pos;
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 	int _ParamPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? aaaPos8(pos) : pos) : throw new ArgumentOutOfRangeException();
-
+	
 	/// <summary>
 	/// => utf16 ? aaaPos16(pos) : pos;
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 	int _ReturnPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? aaaPos16(pos) : pos) : throw new ArgumentOutOfRangeException();
-
+	
 	/// <summary>
 	/// pos >= 0 ? (utf16 ? aaaPos16(pos) : pos) : pos;
 	/// </summary>
 	int _ReturnPosCanBeNegative(bool utf16, int pos) => pos >= 0 ? (utf16 ? aaaPos16(pos) : pos) : pos;
-
+	
 	/// <summary>
 	/// => line;
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 	int _ParamLine(int line) => line >= 0 ? line : throw new ArgumentOutOfRangeException();
-
+	
 	struct _NoReadonly : IDisposable {
 		KScintilla _t;
 		bool _ro;
-
+		
 		public _NoReadonly(KScintilla t) {
 			_t = t;
 			_ro = _t.AaInitReadOnlyAlways || _t.aaaIsReadonly;
 			if (_ro) _t.Call(SCI_SETREADONLY, 0);
 		}
-
+		
 		public void Dispose() {
 			if (_ro) _t.Call(SCI_SETREADONLY, 1);
 		}
 	}
-
+	
 	struct _NoUndoNotif : IDisposable {
 		KScintilla _t;
 		bool _noUndo, _noNotif;
-
+		
 		public _NoUndoNotif(KScintilla t, SciSetTextFlags flags) {
 			if (t.AaInitReadOnlyAlways) flags = 0;
 			_t = t;
@@ -236,7 +237,7 @@ public unsafe partial class KScintilla {
 			if (_noNotif) _t.AaDisableModifiedNotifications = true;
 			if (_noUndo) _t.Call(SCI_SETUNDOCOLLECTION);
 		}
-
+		
 		public void Dispose() {
 			if (_noUndo) {
 				_t.Call(SCI_EMPTYUNDOBUFFER);
@@ -245,11 +246,11 @@ public unsafe partial class KScintilla {
 			if (_noNotif) _t.AaDisableModifiedNotifications = false;
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region set/get/clear all text, append text
-
+	
 	/// <summary>
 	/// Removes all text (SCI_CLEARALL).
 	/// </summary>
@@ -260,7 +261,7 @@ public unsafe partial class KScintilla {
 		using (new _NoReadonly(this))
 			Call(SCI_CLEARALL);
 	}
-
+	
 	/// <summary>
 	/// Replaces all text.
 	/// Parses tags if need.
@@ -279,7 +280,7 @@ public unsafe partial class KScintilla {
 			}
 		}
 	}
-
+	
 	bool _CanParseTags(string s) {
 		if (s.NE()) return false;
 		return AaInitTagsStyle switch {
@@ -288,21 +289,17 @@ public unsafe partial class KScintilla {
 			_ => false,
 		};
 	}
-
+	
 	///// <summary>
 	///// Replaces all text.
 	///// Does not parse tags.
 	///// </summary>
-	///// <param name="s">Text.</param>
-	///// <param name="startIndex"></param>
-	///// <param name="flags"></param>
-	//public void aaaSetTextUtf8(byte[] s, int startIndex = 0, SciSetTextFlags flags = 0)
-	//{
+	//public void aaaSetTextUtf8(ReadOnlySpan<byte> s, SciSetTextFlags flags = 0) {
 	//	using(new _NoUndoNotif(this, flags)) {
-	//		aaaSetText_(s, startIndex);
+	//		aaaSetText_(s);
 	//	}
 	//}
-
+	
 	/// <summary>
 	/// Sets UTF-8 text.
 	/// </summary>
@@ -310,21 +307,12 @@ public unsafe partial class KScintilla {
 	/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 	/// s must end with 0. Asserts.
 	/// </remarks>
-	internal void aaaSetText_(byte[] s, int startIndex) {
+	internal void aaaSetText_(ReadOnlySpan<byte> s) {
 		Debug.Assert(s.Length > 0 && s[^1] == 0);
-		Debug.Assert((uint)startIndex < s.Length);
-		fixed (byte* p = s) aaaSetText_(p + startIndex);
-	}
-
-	/// <summary>
-	/// Sets UTF-8 text.
-	/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
-	/// </summary>
-	internal void aaaSetText_(byte* s) {
 		using (new _NoReadonly(this))
-			Call(SCI_SETTEXT, 0, s);
+			fixed (byte* p = s) Call(SCI_SETTEXT, 0, p);
 	}
-
+	
 	/// <summary>
 	/// Appends text and optionally "\r\n".
 	/// Parses tags if need. Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
@@ -341,12 +329,12 @@ public unsafe partial class KScintilla {
 			var a = Convert2.Utf8Encode(s, andRN ? "\r\n" : "");
 			using (new _NoReadonly(this))
 				fixed (byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
-
+			
 			if (scroll) Call(SCI_GOTOPOS, aaaLen8);
 		}
-
+		
 	}
-
+	
 	/// <summary>
 	/// SCI_APPENDTEXT.
 	/// </summary>
@@ -356,10 +344,10 @@ public unsafe partial class KScintilla {
 		using (new _NoReadonly(this)) {
 			fixed (byte* p = s) Call(SCI_APPENDTEXT, s.Length, p);
 		}
-
+		
 		if (scroll) Call(SCI_GOTOPOS, aaaLen8);
 	}
-
+	
 	/// <summary>
 	/// Sets or appends UTF-8 text of specified length. Does not parse tags.
 	/// If <i>scroll</i>, moves current position and scrolls to the end (SCI_GOTOPOS).
@@ -368,10 +356,10 @@ public unsafe partial class KScintilla {
 		using (new _NoReadonly(this))
 			if (append) Call(SCI_APPENDTEXT, lenToAppend, s);
 			else Call(SCI_SETTEXT, 0, s);
-
+		
 		if (scroll) Call(SCI_GOTOPOS, aaaLen8);
 	}
-
+	
 	//not used now
 	///// <summary>
 	///// Sets or appends styled UTF-8 text of specified length.
@@ -382,20 +370,20 @@ public unsafe partial class KScintilla {
 	//internal void aaaAddStyledText_(bool append, byte* s, int lenBytes)
 	//{
 	//	if(append) Call(SCI_SETEMPTYSELECTION, TextLengthBytes);
-
+	
 	//	using(new _NoReadonly(this))
 	//	if(!append) Call(SCI_SETTEXT);
 	//	Call(SCI_ADDSTYLEDTEXT, lenBytes, s);
-
+	
 	//	if(append) Call(SCI_GOTOPOS, TextLengthBytes);
 	//}
-
+	
 	/// <summary>
 	/// Gets all text directly from Scintilla.
 	/// Does not use caching like aaaText.
 	/// </summary>
 	internal string aaaGetText_() => _RangeText(0, aaaLen8);
-
+	
 	/// <summary>
 	/// Gets or sets text.
 	/// Uses caching, therefore the 'get' function is fast and garbage-free when calling multiple times.
@@ -417,16 +405,16 @@ public unsafe partial class KScintilla {
 		}
 	}
 	string _text;
-
+	
 	#endregion
-
+	
 	#region len, pos
-
+	
 	/// <summary>
 	/// UTF-8 text length.
 	/// </summary>
 	public int aaaLen8 => _posState == _PosState.Ok ? _len8 : Call(SCI_GETTEXTLENGTH);
-
+	
 	/// <summary>
 	/// UTF-16 text length.
 	/// </summary>
@@ -438,7 +426,7 @@ public unsafe partial class KScintilla {
 			return aaaPos16(Call(SCI_GETTEXTLENGTH));
 		}
 	}
-
+	
 #if true
 	/// <summary>
 	/// Converts UTF-16 position to UTF-8 position. Fast.
@@ -465,7 +453,7 @@ public unsafe partial class KScintilla {
 			//note: don't use SCI_POSITIONRELATIVECODEUNITS, it is very slow.
 		}
 	}
-
+	
 	/// <summary>
 	/// Converts UTF-8 position to UTF-16 position. Fast.
 	/// </summary>
@@ -494,26 +482,26 @@ public unsafe partial class KScintilla {
 			//note: don't use SCI_COUNTCODEUNITS, it is very slow.
 		}
 	}
-
+	
 	//public void TestCreatePosMap()
 	//{
 	//	_CreatePosMap();
 	//	//foreach(var v in _aPos) print.it(v.i8, v.i16);
 	//}
-
+	
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	unsafe void _CreatePosMap() {
 		//This func is fast and garbageless. For code edit controls don't need to optimize to avoid calling it frequently, eg for each added character.
 		//Should not be used for output/log controls if called on each "append text". Or then need to optimize.
 		//print.qm2.write(this.Name);
-
+		
 		_aPos.Clear();
-
+		
 		int textLen;
 		int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
 		int to8 = p2 == null ? textLen : gap;
 		int i8 = 0, i16 = 0;
-	g1:
+		g1:
 		int asciiStart8 = i8;
 		i8 = _SkipAscii(p, i8, to8);
 		i16 += i8 - asciiStart8;
@@ -534,24 +522,24 @@ public unsafe partial class KScintilla {
 			}
 			if (i8 > to8) goto ge;
 		}
-
+		
 		if (p2 != null) {
 			p = p2 - i8;
 			p2 = null;
 			to8 = textLen;
 			goto g1;
 		}
-
+		
 		_posState = _PosState.Ok;
 		_len8 = textLen;
 		_len16 = i16;
 		return;
-	ge:
+		ge:
 		_posState = _PosState.Error;
 		_aPos.Clear();
 		Debug_.Print("Invalid UTF-8 text");
 	}
-
+	
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	static unsafe int _SkipAscii(byte* bp, int i, int len) {
 		for (; i < len && (i & 7) != 0; i++) if (bp[i] >= 0x80) return i;
@@ -561,7 +549,7 @@ public unsafe partial class KScintilla {
 		for (i += j * 8; i < len; i++) if (bp[i] >= 0x80) break;
 		return i;
 	}
-
+	
 	struct _PosUtfRange {
 		public int i8, i16, len16, charLen; //note: len16 is UTF-16 code units; if surrogate pairs, charLen is 2 (2 bytes for each UTF-16 code unit)
 		public _PosUtfRange(int i8, int i16, int len16, int charLen) {
@@ -688,53 +676,53 @@ public unsafe partial class KScintilla {
 	}
 	List<_Pos8_16> _aPos = new List<_Pos8_16>();
 #endif
-
+	
 	enum _PosState { Default, Ok, Error }
 	_PosState _posState;
-
+	
 	int _len8, _len16;
-
+	
 	#endregion
-
+	
 	/// <summary>
 	/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
 	/// The 'set' function makes empty selection; does not scroll and does not make visible like aaaGoToPos.
 	/// </summary>
 	public int aaaCurrentPos8 { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
-
+	
 	/// <summary>
 	/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
 	/// The 'set' function makes empty selection; does not scroll and does not make visible like aaaGoToPos.
 	/// </summary>
 	public int aaaCurrentPos16 { get => aaaPos16(aaaCurrentPos8); set => Call(SCI_SETEMPTYSELECTION, aaaPos8(value)); }
-
+	
 	/// <summary>
 	/// SCI_GETSELECTIONSTART UTF-8.
 	/// </summary>
 	public int aaaSelectionStart8 => Call(SCI_GETSELECTIONSTART);
-
+	
 	/// <summary>
 	/// SCI_GETSELECTIONSTART UTF-16.
 	/// </summary>
 	public int aaaSelectionStart16 => aaaPos16(aaaSelectionStart8);
-
+	
 	/// <summary>
 	/// SCI_GETSELECTIONEND UTF-8.
 	/// Always greater or equal than SelectionStart.
 	/// </summary>
 	public int aaaSelectionEnd8 => Call(SCI_GETSELECTIONEND);
-
+	
 	/// <summary>
 	/// SCI_GETSELECTIONEND UTF-16.
 	/// Always greater or equal than SelectionStartChars.
 	/// </summary>
 	public int aaaSelectionEnd16 => aaaPos16(aaaSelectionEnd8);
-
+	
 	/// <summary>
 	/// true if !SCI_GETSELECTIONEMPTY.
 	/// </summary>
 	public bool aaaHasSelection => 0 == Call(SCI_GETSELECTIONEMPTY);
-
+	
 	/// <summary>
 	/// Gets line index from character position.
 	/// </summary>
@@ -742,14 +730,14 @@ public unsafe partial class KScintilla {
 	/// <param name="pos">A position in document text. Returns the last line if too big.</param>
 	public int aaaLineFromPos(bool utf16, int pos)
 		=> Call(SCI_LINEFROMPOSITION, _ParamPos(utf16, pos));
-
+	
 	/// <summary>
 	/// Gets line start position from line index.
 	/// </summary>
 	/// <param name="utf16">Return UTF-16.</param>
 	/// <param name="line">0-based line index. Returns text length if too big.</param>
 	public int aaaLineStart(bool utf16, int line) => _ReturnPos(utf16, _LineStart(line));
-
+	
 	int _LineStart(int line) {
 		if (line < 0) throw new ArgumentOutOfRangeException();
 		int R = Call(SCI_POSITIONFROMLINE, _ParamLine(line));
@@ -757,7 +745,7 @@ public unsafe partial class KScintilla {
 		//If line < 0, Scintilla returns line start from selection start.
 		//If line > number of lines, Scintilla returns -1.
 	}
-
+	
 	/// <summary>
 	/// Gets line end position from line index.
 	/// </summary>
@@ -768,7 +756,7 @@ public unsafe partial class KScintilla {
 		line = _ParamLine(line);
 		return _ReturnPos(utf16, withRN ? _LineStart(line + 1) : Call(SCI_GETLINEENDPOSITION, line));
 	}
-
+	
 	/// <summary>
 	/// Gets line start position from any position.
 	/// </summary>
@@ -776,7 +764,7 @@ public unsafe partial class KScintilla {
 	/// <param name="pos">A position in document text. Returns text length if too big.</param>
 	public int aaaLineStartFromPos(bool utf16, int pos)
 		=> aaaLineStart(utf16, aaaLineFromPos(utf16, pos));
-
+	
 	/// <summary>
 	/// Gets line start position from any position and gets line index.
 	/// Returns start position.
@@ -786,7 +774,7 @@ public unsafe partial class KScintilla {
 	/// <param name="line">Receives line index.</param>
 	public int aaaLineStartFromPos(bool utf16, int pos, out int line)
 		=> aaaLineStart(utf16, line = aaaLineFromPos(utf16, pos));
-
+	
 	/// <summary>
 	/// Gets line end position from any position.
 	/// </summary>
@@ -798,11 +786,11 @@ public unsafe partial class KScintilla {
 		int pos0 = pos;
 		pos = _ParamPos(utf16, pos);
 		if (lineStartIsLineEnd) {
-			if (pos == 0 || aaaCharAt(pos - 1) == '\n') return pos0;
+			if (pos == 0 || aaaCharAt8(pos - 1) == '\n') return pos0;
 		}
 		return aaaLineEnd(utf16, aaaLineFromPos(false, pos), withRN);
 	}
-
+	
 	/// <summary>
 	/// Gets line index, start and end positions from position.
 	/// </summary>
@@ -816,25 +804,25 @@ public unsafe partial class KScintilla {
 		utf16 = utf16Return ?? utf16;
 		return (line, _ReturnPos(utf16, startPos), _ReturnPos(utf16, endPos));
 	}
-
+	
 	/// <summary>
 	/// Gets line text.
 	/// </summary>
 	/// <param name="line">0-based line index. If invalid, returns "".</param>
 	/// <param name="withRN">Include \r\n.</param>
 	public string aaaLineText(int line, bool withRN = false) => _RangeText(aaaLineStart(false, line), aaaLineEnd(false, line, withRN));
-
+	
 	/// <summary>
 	/// Gets line height.
 	/// Currently all lines are of the same height.
 	/// </summary>
 	public int aaaLineHeight() => Call(SCI_TEXTHEIGHT, 0);
-
+	
 	/// <summary>
 	/// Gets the number of lines.
 	/// </summary>
 	public int aaaLineCount => Call(SCI_GETLINECOUNT);
-
+	
 	/// <summary>
 	/// Gets the number of tabs + spaces/4 at the start of the line that contains the specified position.
 	/// </summary>
@@ -847,14 +835,14 @@ public unsafe partial class KScintilla {
 		extraSpaces = i - r;
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Gets the number of tabs + spaces/4 at the start of the line that contains the specified position.
 	/// </summary>
 	/// <param name="utf16"></param>
 	/// <param name="pos">A position in document text.</param>
 	public int aaaLineIndentationFromPos(bool utf16, int pos) => aaaLineIndentationFromPos(utf16, pos, out _);
-
+	
 	/// <summary>
 	/// Gets position from point.
 	/// </summary>
@@ -863,20 +851,20 @@ public unsafe partial class KScintilla {
 	/// <param name="minusOneIfFar">Return -1 if p is not in text characters.</param>
 	public int aaaPosFromXY(bool utf16, POINT p, bool minusOneIfFar)
 		=> _ReturnPosCanBeNegative(utf16, Call(minusOneIfFar ? SCI_POSITIONFROMPOINTCLOSE : SCI_POSITIONFROMPOINT, p.x, p.y));
-
+	
 	/// <summary>
 	/// Gets annotation text of line.
 	/// Returns "" if the line does not contain annotation or is invalid line index.
 	/// </summary>
 	public string aaaAnnotationText(int line) => AaImages?.AnnotationText_(line) ?? aaaAnnotationText_(line);
-
+	
 	/// <summary>
 	/// Gets raw annotation text which can contain image info.
 	/// aaaAnnotationText gets text without image info.
 	/// Returns "" if the line does not contain annotation or is invalid line index.
 	/// </summary>
 	public string aaaAnnotationText_(int line) => aaaGetStringGetLength(SCI_ANNOTATIONGETTEXT, line);
-
+	
 	/// <summary>
 	/// Sets annotation text of line.
 	/// Does nothing if invalid line index.
@@ -887,7 +875,7 @@ public unsafe partial class KScintilla {
 		if (AaImages != null) AaImages.AnnotationText_(line, s);
 		else aaaAnnotationText_(line, s);
 	}
-
+	
 	/// <summary>
 	/// Sets raw annotation text which can contain image info.
 	/// If s is null or "", removes annotation.
@@ -896,7 +884,7 @@ public unsafe partial class KScintilla {
 		if (s.NE()) s = null;
 		aaaSetString(SCI_ANNOTATIONSETTEXT, line, s);
 	}
-
+	
 	/// <summary>
 	/// Moves <i>from</i> to the start of its line, and <i>to</i> to the end of its line.
 	/// Does not change <i>to</i> if it is at a line start.
@@ -910,7 +898,7 @@ public unsafe partial class KScintilla {
 		from = _ReturnPos(utf16, aaaLineStartFromPos(utf16, from));
 		to = _ReturnPos(utf16, aaaLineEndFromPos(utf16, to, withRN, true));
 	}
-
+	
 	/// <summary>
 	/// SCI_INSERTTEXT.
 	/// </summary>
@@ -931,7 +919,7 @@ public unsafe partial class KScintilla {
 			aaaSetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
 		if (addUndoPointAfter) aaaAddUndoPoint();
 	}
-
+	
 	/// <summary>
 	/// If ctor detects that the line from <i>pos</i> is hidden because of folding, <b>Dispose</b> collapses its folding again.
 	/// Use when modifying text to prevent unfolding.
@@ -940,7 +928,7 @@ public unsafe partial class KScintilla {
 		KScintilla _sci;
 		int _foldLine;
 		//tested: temp setting SCI_SETAUTOMATICFOLD does not work. If restoring async, does not expand, but draws incorrectly.
-
+		
 		/// <param name="sci">Can be null, then does nothing.</param>
 		/// <param name="pos"></param>
 		public aaaFoldingRestorer(KScintilla sci, int pos) {
@@ -951,18 +939,18 @@ public unsafe partial class KScintilla {
 				if (0 == sci.Call(SCI_GETLINEVISIBLE, line)) _foldLine = sci.Call(SCI_GETFOLDPARENT, line);
 			}
 		}
-
+		
 		public void Dispose() {
 			if (_foldLine < 0) return;
 			_sci.Call(SCI_FOLDLINE, _foldLine);
-
+			
 			//If at the modified line index was a nested folding point, Scintilla will expand again, very async.
 			//	Could restore again with the following code, but it can be dangerous, eg document closed. Never mind.
 			//var sci = _sci; var i = _foldLine;
 			//timer.after(300, _ => sci.Call(SCI_FOLDLINE, i));
 		}
 	}
-
+	
 	///// <summary>
 	///// Inserts text at current position.
 	///// Does not parse tags.
@@ -974,7 +962,7 @@ public unsafe partial class KScintilla {
 	//	using(new _NoReadonly(this))
 	//		aaaSetString(SCI_INSERTTEXT, -1, s ?? "");
 	//}
-
+	
 	/// <summary>
 	/// SCI_DELETERANGE.
 	/// </summary>
@@ -990,7 +978,7 @@ public unsafe partial class KScintilla {
 		using (new _NoReadonly(this))
 			Call(SCI_DELETERANGE, from, to - from);
 	}
-
+	
 	/// <summary>
 	/// Replaces text range.
 	/// </summary>
@@ -1016,7 +1004,7 @@ public unsafe partial class KScintilla {
 			if (moveCurrentPos) aaaCurrentPos8 = reverse ? from : aaaLen8 - fromEnd;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets range text.
 	/// </summary>
@@ -1027,7 +1015,7 @@ public unsafe partial class KScintilla {
 		aaaNormalizeRange(utf16, ref from, ref to);
 		return _RangeText(from, to);
 	}
-
+	
 	/// <summary>
 	/// Gets direct pointer to a text range in Scintilla buffer (SCI_GETRANGEPOINTER).
 	/// Does not validate arguments, just asserts to >= from.
@@ -1038,7 +1026,7 @@ public unsafe partial class KScintilla {
 		Debug.Assert(to >= from);
 		return (byte*)CallRetPtr(SCI_GETRANGEPOINTER, from, to - from);
 	}
-
+	
 	/// <summary>
 	/// SCI_REPLACESEL.
 	/// </summary>
@@ -1051,7 +1039,7 @@ public unsafe partial class KScintilla {
 		Debug.Assert(!aaaIsReadonly);
 		aaaSetString(SCI_REPLACESEL, 0, s ?? "");
 	}
-
+	
 	/// <summary>
 	/// Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
 	/// </summary>
@@ -1068,7 +1056,7 @@ public unsafe partial class KScintilla {
 		aaaSelect(utf16, from, to);
 		aaaSetString(SCI_REPLACESEL, 0, s ?? "");
 	}
-
+	
 	/// <summary>
 	/// SCI_GOTOPOS and ensures visible.
 	/// </summary>
@@ -1078,7 +1066,7 @@ public unsafe partial class KScintilla {
 		Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 		Call(SCI_GOTOPOS, pos);
 	}
-
+	
 	/// <summary>
 	/// SCI_GOTOLINE and ensures visible.
 	/// </summary>
@@ -1086,7 +1074,7 @@ public unsafe partial class KScintilla {
 		Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 		Call(SCI_GOTOLINE, line);
 	}
-
+	
 	/// <summary>
 	/// SCI_SETSEL and optionally ensures visible.
 	/// </summary>
@@ -1099,7 +1087,7 @@ public unsafe partial class KScintilla {
 		if (makeVisible) aaaGoToPos(false, from);
 		Call(SCI_SETSEL, from, to);
 	}
-
+	
 	/// <summary>
 	/// SCI_GETREADONLY, SCI_SETREADONLY.
 	/// </summary>
@@ -1107,7 +1095,7 @@ public unsafe partial class KScintilla {
 		get => 0 != Call(SCI_GETREADONLY);
 		set => Call(SCI_SETREADONLY, value ? 1 : 0);
 	}
-
+	
 	//public bool aaaIsReadonly {
 	//	get => _isReadOnly;
 	//	set {
@@ -1118,14 +1106,14 @@ public unsafe partial class KScintilla {
 	//	}
 	//}
 	//bool _isReadOnly;
-
+	
 	public struct aaaFileLoaderSaver {
 		_Encoding _enc;
-
+		
 		public bool IsBinary => _enc == _Encoding.Binary;
-
+		
 		public bool IsImage { get; private set; }
-
+		
 		/// <summary>
 		/// Loads file as UTF-8.
 		/// Returns byte[] that must be passed to <see cref="SetText"/>.
@@ -1145,7 +1133,7 @@ public unsafe partial class KScintilla {
 				IsImage = true;
 				return Encoding.UTF8.GetBytes($"<image \"{file}\">\0");
 			}
-
+			
 			using var fr = filesystem.loadStream(file);
 			var fileSize = fr.Length;
 			if (fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
@@ -1156,12 +1144,12 @@ public unsafe partial class KScintilla {
 			if (_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
 			int bomLength = (int)_enc >> 4;
 			//print.it(_enc, bomLength, fileSize);
-
+			
 			if (fileSize > trySize) {
 				var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
 				fr.Read(b, trySize, (int)fileSize - trySize);
 			}
-
+			
 			if (_enc == _Encoding.Ansi) {
 				//Encoding.GetEncoding(Api.GetACP()) fails,
 				//	unless at first you call Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);. But I don't trust it.
@@ -1173,7 +1161,7 @@ public unsafe partial class KScintilla {
 			}
 			return b;
 		}
-
+		
 		Encoding _EncodingEnumToObject() {
 			switch (_enc) {
 			case _Encoding.Utf16BOM or _Encoding.Utf16NoBOM: return Encoding.Unicode;
@@ -1183,7 +1171,7 @@ public unsafe partial class KScintilla {
 			}
 			return null;
 		}
-
+		
 		static unsafe _Encoding _DetectEncoding(byte* s, int len) {
 			if (len == 0) return _Encoding.Utf8NoBOM;
 			if (len == 1) return s[0] == 0 ? _Encoding.Binary : (s[0] < 128 ? _Encoding.Utf8NoBOM : _Encoding.Ansi);
@@ -1207,41 +1195,41 @@ public unsafe partial class KScintilla {
 				if (0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0)) return _Encoding.Utf16NoBOM;
 			return _Encoding.Binary;
 		}
-
+		
 		enum _Encoding : byte {
 			/// <summary>Not a text file, or loading failed, or not initialized.</summary>
 			Binary = 0, //must be 0
-
+			
 			/// <summary>ASCII or UTF-8 without BOM.</summary>
 			Utf8NoBOM = 1,
-
+			
 			/// <summary>UTF-8 with BOM (3 bytes).</summary>
 			Utf8BOM = 1 | (3 << 4),
-
+			
 			/// <summary>ANSI containing non-ASCII characters, unknown code page.</summary>
 			Ansi = 2,
-
+			
 			/// <summary>UTF-16 without BOM.</summary>
 			Utf16NoBOM = 3,
-
+			
 			/// <summary>UTF-16 with BOM (2 bytes).</summary>
 			Utf16BOM = 3 | (2 << 4),
-
+			
 			/// <summary>UTF-16 with big endian BOM (2 bytes).</summary>
 			Utf16BE = 4 | (2 << 4),
-
+			
 			/// <summary>UTF-32 with BOM (4 bytes).</summary>
 			Utf32BOM = 5 | (4 << 4),
-
+			
 			/// <summary>UTF-32 with big endian BOM (4 bytes).</summary>
 			Utf32BE = 6 | (4 << 4),
-
+			
 			//rejected. .NET does not save/load with UTF-7 BOM, so we too. Several different BOM of different length.
 			///// <summary>UTF-7 with BOM.</summary>
 			//Utf7BOM,
 		}
-
-		static unsafe byte[] _AnsiToUtf8(byte[] b) {
+		
+		static unsafe byte[] _AnsiToUtf8(byte[] b) { //SHOULDDO: review, maybe now can be optimized
 			var c = new char[b.Length];
 			fixed (byte* pb = b) fixed (char* pc = c) {
 				int n = Api.MultiByteToWideChar(0, 0, pb, b.Length, pc, c.Length);
@@ -1250,39 +1238,38 @@ public unsafe partial class KScintilla {
 			}
 			return b;
 		}
-
+		
 		/// <summary>
 		/// Sets control text.
 		/// If the file is binary or too big, shows error message or image, makes the control read-only, and returns false. Else returns true.
 		/// Uses <see cref="SciSetTextFlags"/> NoUndo and NoNotify.
 		/// </summary>
-		/// <param name="z"></param>
 		/// <param name="text">Returned by <b>Load</b>.</param>
-		public unsafe bool SetText(KScintilla z, byte[] text) {
-			using (new _NoUndoNotif(z, SciSetTextFlags.NoUndoNoNotify)) {
-				z.aaaSetText_(text, _enc == _Encoding.Utf8BOM ? 3 : 0);
+		public unsafe bool SetText(KScintilla k, ReadOnlySpan<byte> text) {
+			using (new _NoUndoNotif(k, SciSetTextFlags.NoUndoNoNotify)) {
+				if (_enc == _Encoding.Utf8BOM) text = text.Slice(3); //TODO: test
+				k.aaaSetText_(text);
 			}
 			if (_enc != _Encoding.Binary) return true;
-			z.Call(SCI_SETREADONLY, 1);
+			k.Call(SCI_SETREADONLY, 1);
 			return false;
 		}
-
+		
 #if true
 		/// <summary>
 		/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="filesystem.save"/>.
 		/// </summary>
-		/// <param name="z"></param>
 		/// <param name="file">To pass to filesystem.save.</param>
 		/// <param name="tempDirectory">To pass to filesystem.save.</param>
 		/// <exception cref="Exception">Exceptions of filesystem.save.</exception>
 		/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
-		public unsafe void Save(KScintilla z, string file, string tempDirectory = null) {
+		public unsafe void Save(KScintilla k, string file, string tempDirectory = null) {
 			if (_enc == _Encoding.Binary) throw new InvalidOperationException();
-
+			
 			//_enc = _Encoding.; //test
-
+			
 			Encoding e = _EncodingEnumToObject();
-
+			
 			int bom = (int)_enc >> 4; //BOM length
 			uint bomm = 0; //BOM memory
 			if (e != null) bomm = _enc switch {
@@ -1292,22 +1279,22 @@ public unsafe partial class KScintilla {
 				_ => 0
 			};
 			else if (bom == 3) bomm = 0xBFBBEF; //UTF8; else bom 0
-
+			
 			//print.it(_enc, bom, bomm, e);
-
+			
 			filesystem.save(file, temp => {
 				using var fs = File.OpenWrite(temp);
 				if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
 				if (e != null) { //rare
-					var bytes = e.GetBytes(z.aaaText); //convert encoding. aaaText likely gets cached text, fast
+					var bytes = e.GetBytes(k.aaaText); //convert encoding. aaaText likely gets cached text, fast
 					fs.Write(bytes);
 				} else {
-					int len = z.aaaLen8;
-					var bytes = (byte*)z.CallRetPtr(SCI_GETCHARACTERPOINTER);
+					int len = k.aaaLen8;
+					var bytes = (byte*)k.CallRetPtr(SCI_GETCHARACTERPOINTER);
 					fs.Write(new ReadOnlySpan<byte>(bytes, len));
 				}
 			}, tempDirectory: tempDirectory);
-
+			
 			//print.it("file", File.ReadAllBytes(file));
 		}
 	}
@@ -1353,7 +1340,7 @@ public unsafe partial class KScintilla {
 		}
 	}
 #endif
-
+	
 	/// <summary>
 	/// Gets text and offsets of lines containing selection.
 	/// Returns true. If <i>ifFullLines</i> is true, may return false.
@@ -1369,13 +1356,13 @@ public unsafe partial class KScintilla {
 		var (_, start, end) = aaaLineStartEndFromPos(false, x.selStart);
 		if (ifFullLines && start != x.selStart) return false;
 		x.linesStart = start;
-
+		
 		if (x.selEnd > x.selStart) {
 			(_, start, end) = aaaLineStartEndFromPos(false, x.selEnd);
 			if (!oneMore && start == x.selEnd) end = start; //selection end is at line start. We need the line only if oneMore.
 			if (ifFullLines && x.selEnd < end) return false;
 		}
-
+		
 		x.linesEnd = end;
 		x.text = _RangeText(x.linesStart, end);
 		if (utf16) {
@@ -1386,9 +1373,9 @@ public unsafe partial class KScintilla {
 		}
 		return true;
 	}
-
+	
 	public string aaaSelectedText() => _RangeText(aaaSelectionStart8, aaaSelectionEnd8);
-
+	
 	/// <summary>
 	/// SCI_FINDTEXT.
 	/// </summary>
@@ -1404,55 +1391,12 @@ public unsafe partial class KScintilla {
 		}
 		//tested: with SCI_SEARCHINTARGET slightly slower
 	}
-
+	
 	/// <summary>
 	/// SCI_GETCHARAT.
 	/// </summary>
-	public char aaaCharAt(int i) => (char)Call(Sci.SCI_GETCHARAT, i);
-
-	/// <summary>
-	/// Sets indicator style, color, etc.
-	/// </summary>
-	/// <param name="indic">Indicator index. Should be 8-31. Lexers use 0-7. Scintilla draws indicators from smaller to bigger.</param>
-	/// <param name="style">Eg Sci.INDIC_FULLBOX.</param>
-	/// <param name="color">SCI_INDICSETFORE.</param>
-	/// <param name="alpha">SCI_INDICSETALPHA. Valid for some styles.</param>
-	/// <param name="borderAlpha">SCI_INDICSETOUTLINEALPHA. Valid for some styles. If null, uses <i>alpha</i>.</param>
-	/// <param name="strokeWidth">SCI_INDICSETSTROKEWIDTH (%). Valid for some styles.</param>
-	/// <param name="underText">SCI_INDICSETUNDER (under text).</param>
-	public void aaaIndicatorDefine(int indic, int style, ColorInt color, int? alpha = null, int? borderAlpha = null, int? strokeWidth = null, bool underText = false) {
-		Call(SCI_INDICSETSTYLE, indic, style);
-		Call(SCI_INDICSETFORE, indic, color.ToBGR());
-		if (alpha.HasValue) {
-			Call(SCI_INDICSETALPHA, indic, alpha.Value);
-			if (!borderAlpha.HasValue) borderAlpha = alpha;
-		}
-		if (borderAlpha.HasValue) Call(SCI_INDICSETOUTLINEALPHA, indic, borderAlpha.Value);
-		if (strokeWidth.HasValue) Call(SCI_INDICSETSTROKEWIDTH, indic, strokeWidth.Value);
-		if (underText) Call(SCI_INDICSETUNDER, indic, underText);
-	}
-
-	public void aaaIndicatorClear(int indic) => aaaIndicatorClear(false, indic, ..);
-
-	public void aaaIndicatorClear(bool utf16, int indic, Range r) {
-		var (from, to) = aaaNormalizeRange(utf16, r);
-		Call(SCI_SETINDICATORCURRENT, indic);
-		Call(SCI_INDICATORCLEARRANGE, from, to - from);
-	}
-
-	public void aaaIndicatorAdd(bool utf16, int indic, Range r) {
-		var (from, to) = aaaNormalizeRange(utf16, r);
-		Call(SCI_SETINDICATORCURRENT, indic);
-		Call(SCI_INDICATORFILLRANGE, from, to - from);
-	}
-
-	public void aaaIndicatorAdd(bool utf16, int indic, Range r, int _value) {
-		var (from, to) = aaaNormalizeRange(utf16, r);
-		Call(SCI_SETINDICATORCURRENT, indic);
-		Call(SCI_SETINDICATORVALUE, _value);
-		Call(SCI_INDICATORFILLRANGE, from, to - from);
-	}
-
+	public char aaaCharAt8(int pos8) => (char)Call(SCI_GETCHARAT, pos8);
+	
 	/// <summary>
 	/// SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
 	/// </summary>
@@ -1460,27 +1404,27 @@ public unsafe partial class KScintilla {
 		Call(SCI_BEGINUNDOACTION);
 		Call(SCI_ENDUNDOACTION);
 	}
-
+	
 	///// <summary>
 	///// SCI_BEGINUNDOACTION.
 	///// </summary>
 	//public void aaaBeginUndoAction() {
 	//	Call(SCI_BEGINUNDOACTION);
 	//}
-
+	
 	///// <summary>
 	///// SCI_ENDUNDOACTION.
 	///// </summary>
 	//public void aaaEndUndoAction() {
 	//	Call(SCI_ENDUNDOACTION);
 	//}
-
+	
 	/// <summary>
 	/// Ctor calls SCI_BEGINUNDOACTION. Dispose() calls SCI_ENDUNDOACTION.
 	/// </summary>
 	public struct aaaUndoAction : IDisposable {
 		KScintilla _sci;
-
+		
 		/// <summary>
 		/// Calls SCI_BEGINUNDOACTION.
 		/// </summary>
@@ -1489,7 +1433,7 @@ public unsafe partial class KScintilla {
 			_sci = sci;
 			if (_sci != null) _sci.Call(SCI_BEGINUNDOACTION);
 		}
-
+		
 		/// <summary>
 		/// Calls SCI_ENDUNDOACTION and clears this variable.
 		/// </summary>
@@ -1500,15 +1444,6 @@ public unsafe partial class KScintilla {
 			}
 		}
 	}
-
-	/// <summary>
-	/// Sets scintilla's "end-styled position" = to (default int.MaxValue), to avoid SCN_STYLENEEDED notifications.
-	/// Fast, just sets a field in scintilla.
-	/// </summary>
-	/// <remarks>
-	/// Scintilla sends SCN_STYLENEEDED, unless a lexer is set. In some cases 1 or several, in some cases many, in some cases every 500 ms.
-	/// </remarks>
-	public void aaaSetStyled(int to = int.MaxValue) => Call(SCI_STARTSTYLING, to);
 }
 
 /// <summary>
@@ -1521,12 +1456,12 @@ public enum SciSetTextFlags {
 	/// Cannot be undone. Clear Undo buffer.
 	/// </summary>
 	NoUndo = 1,
-
+	
 	/// <summary>
 	/// Don't send 'modified' and 'text changed' notifications (don't call overrides and events).
 	/// </summary>
 	NoNotify = 2,
-
+	
 	/// <summary>
 	/// NoUndo | NoNotify.
 	/// </summary>
@@ -1541,7 +1476,7 @@ public enum SciSetTextFlags {
 unsafe struct SciDirectRange {
 	int _from, _to, _gap;
 	byte* _p1, _p2; //before and after gap
-
+	
 	public SciDirectRange(KScintilla sci, int from8, int to8) {
 		_from = from8;
 		_to = to8;
@@ -1555,7 +1490,7 @@ unsafe struct SciDirectRange {
 			_p2 = null;
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns character at position <i>i</i> in entire text (not from the start of the range).
 	/// </summary>

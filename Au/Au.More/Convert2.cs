@@ -346,19 +346,32 @@ public static unsafe class Convert2 {
 	public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8));
 
 	/// <summary>
-	/// If s isn't ASCII, gets UTF8 character offsets for each s character plus at s.Length. Else returns null.
+	/// Converts string to UTF-8. If non-ASCII, gets UTF-8 character offsets.
 	/// </summary>
-	internal static int[] MapUtf8Offsets_(string s) {
-		if (s == null || s.IsAscii()) return null;
-		var enc = Encoding.UTF8;
+	/// <returns>
+	/// Tuple:
+	/// <br/>• text - <c>Encoding.UTF8.GetBytes(s)</c>.
+	/// <br/>• offsets - null if <i>s</i> is ASCII. Else UTF-8 character offsets for each <i>s</i> character plus at <c>s.Length</c>.
+	/// </returns>
+	internal static (byte[] text, int[] offsets) Utf8EncodeAndGetOffsets_(string s, bool append0 = false) {
+		var s2 = append0 ? Utf8Encode(s) : Encoding.UTF8.GetBytes(s); //always creates valid UTF-8. Replaces invalid UTF-16 chars.
+		int len2 = s2.Length; if (append0) len2--;
+		if (len2 == s.Length) return (s2, null); //ASCII
+
 		var a = new int[s.Length + 1];
-		int i = 0, i8 = 0;
-		for (; i < s.Length; i++) {
-			a[i] = i8;
-			i8 += s[i] < '\x80' ? 1 : enc.GetByteCount(s, i, 1);
+		int i8 = 0, i16 = 0;
+		while (i8 < len2) {
+			a[i16++] = i8;
+			int c = s2[i8];
+			if (c < 0xC0) i8++;
+			else if (c < 0xE0) i8 += 2;
+			else if (c < 0xF0) i8 += 3;
+			else { a[i16++] = i8; i8 += 4; }
 		}
-		a[i] = i8; //makes user code simpler
-		return a;
+		Debug.Assert(i8 == len2);
+		Debug.Assert(i16 == s.Length);
+		a[i16] = i8;
+		return (s2, a);
 	}
 
 	#endregion

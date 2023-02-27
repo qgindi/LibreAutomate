@@ -585,7 +585,7 @@ partial class Compiler {
 			}
 
 			if (m.ProjectReferences is var pr && pr != null)
-				foreach (var v in pr) _Project(v.m);
+				foreach (var v in pr) _Project(v.m); //TODO: skip duplicates
 		}
 
 		void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
@@ -982,7 +982,7 @@ partial class Compiler {
 			}
 
 			if (m.ProjectReferences is var pr && pr != null)
-				foreach (var v in pr) _OtherFilesOfProject(v.m);
+				foreach (var v in pr) _OtherFilesOfProject(v.m); //TODO: skip duplicates
 		}
 
 		//print.it(usesSqlite);

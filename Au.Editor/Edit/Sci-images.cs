@@ -108,7 +108,7 @@ partial class SciCode {
 
 		//maxWidth is 0 if no images or if all images are in folded regions.
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
-		var (left, right) = aaaGetMarginX(c_marginImages);
+		var (left, right) = aaaMarginGetX(c_marginImages);
 		_ImagesMarginAutoWidth(right - left, maxWidth);
 		if (maxWidth > 0) Api.InvalidateRect(AaWnd, new RECT(left, 0, maxWidth, short.MaxValue));
 		//SHOULDDO: draw only when need, ie when new indicators are different than old.
@@ -360,9 +360,9 @@ partial class SciCode {
 		if (key is KKey.Delete or KKey.Back && !base.aaaHasSelection) {
 			int pos = base.aaaCurrentPos8, to = pos;
 			if (key == KKey.Back) {
-				while (aaaGetStyleAt(pos - 1) == STYLE_HIDDEN) pos--;
+				while (aaaStyleGetAt(pos - 1) == STYLE_HIDDEN) pos--;
 			} else {
-				while (aaaGetStyleAt(to) == STYLE_HIDDEN) to++;
+				while (aaaStyleGetAt(to) == STYLE_HIDDEN) to++;
 			}
 			if (to > pos) {
 				bool ok = s_imageDeleteAlways;

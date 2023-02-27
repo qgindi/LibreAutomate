@@ -411,7 +411,7 @@ global using System.Windows.Media;
 	/// </summary>
 	public static byte[] GetScintillaStylingBytes(string code) {
 		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
-		var map8 = Convert2.MapUtf8Offsets_(code);
+		var map8 = styles8.Length == code.Length ? null : Convert2.Utf8EncodeAndGetOffsets_(code).offsets;
 		using var ws = new AdhocWorkspace();
 		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
 		var semo = document.GetSemanticModelAsync().Result;
@@ -421,8 +421,9 @@ global using System.Windows.Media;
 			//print.it(v.TextSpan, ct, code[v.TextSpan.Start..v.TextSpan.End]);
 			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
 			if (style == EStyle.None) continue;
-			int i = v.TextSpan.Start, end = v.TextSpan.End; if (map8 != null) { i = map8[i]; end = map8[end]; }
-			for (; i < end; i++) styles8[i] = (byte)style;
+			int i = v.TextSpan.Start, end = v.TextSpan.End;
+			if (map8 != null) { i = map8[i]; end = map8[end]; }
+			while (i < end) styles8[i++] = (byte)style;
 		}
 		return styles8;
 	}

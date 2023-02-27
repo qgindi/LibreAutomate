@@ -530,7 +530,7 @@ public static unsafe partial class ExtMisc {
 	}
 
 	/// <inheritdoc cref="CollectionsMarshal.AsSpan"/>
-	internal static Span<T> AsSpan_<T>(this List<T> t) => CollectionsMarshal.AsSpan(t);
+	public static Span<T> AsSpan<T>(this List<T> t) => CollectionsMarshal.AsSpan(t);
 
 	/// <summary>
 	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.

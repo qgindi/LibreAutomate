@@ -658,14 +658,21 @@ partial class FilesModel {
 
 		//confirmation
 		var text = string.Join("\n", a.Select(f => f.Name));
-		var expandedText = "The file will be deleted, unless it is external.\r\nWill use Recycle Bin, if possible.";
-		var con = new DControls { Checkbox = "Don't delete file" };
+		bool hasLinks = a.Any(o => o.Descendants(andSelf: true).Any(u => u.IsLink || u.IsSymlink));
+		bool hasNonlinks = a.Any(o => !(o.IsLink || o.IsSymlink));
+		var expandedText = (hasLinks, hasNonlinks) switch {
+			(true, true) => "Files will be deleted. Will use the Recycle Bin, if possible.\nLink targets will NOT be deleted.",
+			(true, false) => "The link will be deleted. Its target will NOT be deleted.",
+			(false, true) => "The file will be deleted. Will use the Recycle Bin, if possible.",
+			_ => null
+		};
+		var con = hasNonlinks ? new DControls { Checkbox = "Don't delete file" } : null;
 		var r = dialog.show("Deleting", text, "1 OK|0 Cancel", owner: TreeControl, controls: con, expandedText: expandedText);
 		if (r == 0) return;
 
 		foreach (var f in a) {
 			if (f.IsDeleted) continue; //deleted together with the parent folder
-			_Delete(f, dontDeleteFile: con.IsChecked); //info: and saves everything, now and/or later
+			_Delete(f, dontDeleteFile: con?.IsChecked ?? false); //info: and saves everything, now and/or later
 		}
 	}
 

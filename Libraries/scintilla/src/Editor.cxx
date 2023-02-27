@@ -4809,7 +4809,9 @@ void Editor::SetHoverIndicatorPoint(Point pt) {
 	if(!vs.indicatorsDynamic) {
 		SetHoverIndicatorPosition(Sci::invalidPosition);
 	} else {
-		SetHoverIndicatorPosition(PositionFromLocation(pt, true, true));
+		//Au: bug fix: the hover style/cursor is not shown when mouse is 1 pixel before the indicator (but SCN_INDICATORx sent), and shown when mouse is 1-2 pixels after the indicator (but SCN_INDICATORx not sent).
+		SetHoverIndicatorPosition(PositionFromLocation(pt, true, false));
+		//SetHoverIndicatorPosition(PositionFromLocation(pt, true, true));
 	}
 }
 

@@ -244,7 +244,7 @@ namespace Au.Types
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="filesystem.save"/>.</exception>
 		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default) {
 			filesystem.save(file, temp => {
-				if (options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
+				if (options.HasValue) t.Save(temp, options.Value); else t.Save(temp);
 			}, backup);
 		}
 
@@ -255,7 +255,7 @@ namespace Au.Types
 		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="filesystem.save"/>.</exception>
 		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default) {
 			filesystem.save(file, temp => {
-				if (options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
+				if (options.HasValue) t.Save(temp, options.Value); else t.Save(temp);
 			}, backup);
 		}
 	}
