@@ -1,5 +1,9 @@
 //note: the Roslyn project has been modified. Eg added Symbols property to the CompletionItem class.
 
+//TODO: now bad grouping of locals and members if current code is in a namespace. Groups under the namespace.
+//	Should group at first locals, then members, then maybe base members, then namespaces.
+//	Also test how groups locals vs members (and base members) when there is no namespace.
+
 using Au.Controls;
 
 using System.Collections.Immutable;
@@ -1011,30 +1015,19 @@ partial class CiCompletion {
 						}
 						break;
 					default:
-						if (name.Eq(false, s_kwType) > 0) _NewExpression();
+						if (_NeedParenthesis()) ch = '(';
 						break;
 					}
 					break;
-				case CiItemKind.Class or CiItemKind.Structure:
+				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Enum:
 					if (ci.DisplayTextSuffix == "<>") ch = '<';
-					else _NewExpression();
+					else if (_NeedParenthesis()) ch = '(';
 					break;
 				}
 
 				bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
 
 				bool _IsDirective() => doc.aaaText.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
-
-				//If 'new Type', adds '()'.
-				//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
-				void _NewExpression() {
-					if (!CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) return;
-					var p1 = node.Parent; if (p1 is QualifiedNameSyntax) p1 = p1.Parent;
-					if (p1 is ObjectCreationExpressionSyntax) {
-						ch = '(';
-						bracketsOperation = CiAutocorrect.EBrackets.NewExpression;
-					}
-				}
 
 				if (isComplex = ch != default) {
 					if (ch == '{') {
@@ -1062,13 +1055,35 @@ partial class CiCompletion {
 					}
 					s += s2;
 				}
-			} else if (!(ch == '(' || ch == '<' || _data.noAutoSelect)) { //completed with ';' or ',' or '.' or '?' or '-' or any other non-identifier char space, Tab, Enter
+			} else if (!(ch is '(' or '<' or '[' or '{' || _data.noAutoSelect)) { //completed with ;,.?- etc
+				if (_NeedParenthesis()) s += "()";
+			}
+
+			bool _NeedParenthesis() {
+				if (item.kind is CiItemKind.Method or CiItemKind.ExtensionMethod) return true;
+				if (ch == '.') return false; //if 'new Word.', often can be eg 'new Word.Word()' but rarely 'new Word().'
 				switch (item.kind) {
-				case CiItemKind.Method or CiItemKind.ExtensionMethod:
-					s += "()";
+				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Enum:
+					//if (item.ci.Properties.TryGetValue("ShouldProvideParenthesisCompletion", out var v1) && v1.Eqi("True")) goto g1; //missing when eg 'new Namespace.Type'
+					//break;
+				case CiItemKind.Keyword when item.Text is "string" or "object" or "int" or "uint" or "nint" or "nuint" or "long" or "ulong" or "byte" or "sbyte" or "short" or "ushort" or "char" or "bool" or "double" or "float" or "decimal":
+					if (CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) {
+						node = node.Parent;
+						if (node is QualifiedNameSyntax) node = node.Parent;
+						if (node is ObjectCreationExpressionSyntax) goto g1;
+					}
 					break;
 				}
+				return false;
+				g1:
+				bracketsOperation = CiAutocorrect.EBrackets.NewExpression;
+				return true;
+				//If 'new Type', adds '()'.
+				//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
 			}
+
+			//bool _IsGeneric()
+			//	=> item.ci.Properties.TryGetValue("IsGeneric", out var v1) && v1.Eqi("True");
 		}
 
 		try {
@@ -1112,8 +1127,6 @@ partial class CiCompletion {
 		}
 		return false;
 	}
-
-	static string[] s_kwType = { "string", "object", "int", "uint", "nint", "nuint", "long", "ulong", "byte", "sbyte", "short", "ushort", "char", "bool", "double", "float", "decimal" };
 
 	/// <summary>
 	/// Double-clicked item in list.

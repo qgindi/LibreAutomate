@@ -628,7 +628,7 @@ namespace Au {
 		/// <param name="path">Path or filename. Can be null.</param>
 		public static int findExtension(RStr path) {
 			int i;
-			for (i = path.Length - 1; i >= 0; i--) {
+			for (i = path.Length; --i >= 0;) {
 				switch (path[i]) {
 				case '.': return i;
 				case '\\': case '/': /*case ':':*/ return -1;

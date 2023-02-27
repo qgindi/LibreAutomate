@@ -121,7 +121,7 @@ namespace Au.More
 
 			if (this.RawData != null && this.RawData.Length > 0) {
 				builder.Append(" [0x");
-				for (int i = this.RawData.Length - 1; i >= 0; i--) {
+				for (int i = this.RawData.Length; --i >= 0;) {
 					builder.Append(this.RawData[i].ToString("x2", System.Globalization.CultureInfo.InvariantCulture));
 				}
 

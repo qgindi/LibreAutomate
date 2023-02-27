@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 using Au.Tools;
@@ -111,8 +111,8 @@ partial class TriggersAndToolbars {
 		s = $"{s} = {sAction};";
 		_CorrectTriggerPlace();
 		InsertCode.Statements(s, ICSFlags.GoToPercent);
-		Menus.Edit.Parameter_info();
-		if (iType == 3) Menus.Edit.Autocompletion_list();
+		CodeInfo.ShowSignature();
+		if (iType == 3) CodeInfo.ShowCompletionList();
 	}
 
 	//rejected. It's in the quick capturing menu. The 'New trigger' dialog informs about it.

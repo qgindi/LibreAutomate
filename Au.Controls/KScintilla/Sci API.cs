@@ -3,8 +3,7 @@
 
 namespace Au.Controls;
 
-public static unsafe class Sci
-{
+public static unsafe class Sci {
 	#region au modifications
 
 	public const int SCI_MARGINSTYLENEXT = 9502;
@@ -26,8 +25,7 @@ public static unsafe class Sci
 	[DllImport("Scintilla")]
 	public static extern void Sci_SetFoldLevels(nint sci, int line, int lastLine, int len, int* a);
 
-	public record struct Sci_VisibleRange
-	{
+	public record struct Sci_VisibleRange {
 		public int dlineFrom, dlineTo, vlineFrom, vlineTo, posFrom, posTo;
 	}
 
@@ -41,22 +39,19 @@ public static unsafe class Sci
 	//public static extern nint Sci_CreateLexer(byte[] lexer);
 
 #pragma warning disable 649
-	public unsafe struct Sci_AnnotationDrawCallbackData
-	{
+	public unsafe struct Sci_AnnotationDrawCallbackData {
 		public int step;
 		public IntPtr hdc;
 		public RECT rect;
 		public byte* text;
 		public int textLen, line, annotLine;
 	};
-	public unsafe struct Sci_MarginDrawCallbackData
-	{
+	public unsafe struct Sci_MarginDrawCallbackData {
 		public IntPtr hdc;
 		public RECT rect;
 		public int margin, firstLine, lastLine;
 	};
-	public struct Sci_DragDropData
-	{
+	public struct Sci_DragDropData {
 		public int x, y;
 		public byte* text;
 		public int len;
@@ -984,8 +979,7 @@ public static unsafe class Sci
 	public const int SCI_ANNOTATIONGETSTYLES = 2545;
 	public const int SCI_ANNOTATIONGETLINES = 2546;
 	public const int SCI_ANNOTATIONCLEARALL = 2547;
-	public enum AnnotationsVisible
-	{
+	public enum AnnotationsVisible {
 		ANNOTATION_HIDDEN = 0,
 		ANNOTATION_STANDARD = 1,
 		ANNOTATION_BOXED = 2,
@@ -1171,8 +1165,7 @@ public static unsafe class Sci
 	public const int SCI_TAGSOFSTYLE = 4031;
 	public const int SCI_DESCRIPTIONOFSTYLE = 4032;
 	[Flags]
-	public enum MOD
-	{
+	public enum MOD {
 		SC_MOD_INSERTTEXT = 0x1,
 		SC_MOD_DELETETEXT = 0x2,
 		SC_MOD_CHANGESTYLE = 0x4,
@@ -1237,8 +1230,7 @@ public static unsafe class Sci
 	public const int SC_AC_TAB = 3;
 	public const int SC_AC_NEWLINE = 4;
 	public const int SC_AC_COMMAND = 5;
-	public enum NOTIF
-	{
+	public enum NOTIF {
 		SCN_STYLENEEDED = 2000,
 		SCN_CHARADDED = 2001,
 		SCN_SAVEPOINTREACHED = 2002,
@@ -1278,37 +1270,32 @@ public static unsafe class Sci
 	public const int SCI_GETBIDIRECTIONAL = 2708;
 	public const int SCI_SETBIDIRECTIONAL = 2709;
 
-	public struct Sci_CharacterRange
-	{
+	public struct Sci_CharacterRange {
 		public int cpMin;
 		public int cpMax;
 	}
 
-	public struct Sci_TextRange
-	{
+	public struct Sci_TextRange {
 		public int cpMin;
 		public int cpMax;
 		public byte* lpstrText;
 	}
 
-	public struct Sci_TextToFind
-	{
+	public struct Sci_TextToFind {
 		public int cpMin;
 		public int cpMax;
 		public byte* lpstrText;
 		public Sci_CharacterRange chrgText;
 	}
 
-	public struct Sci_Rectangle
-	{
+	public struct Sci_Rectangle {
 		public int left;
 		public int top;
 		public int right;
 		public int bottom;
 	}
 
-	public struct Sci_RangeToFormat
-	{
+	public struct Sci_RangeToFormat {
 		public IntPtr hdc;
 		public IntPtr hdcTarget;
 		public Sci_Rectangle rc;
@@ -1316,18 +1303,19 @@ public static unsafe class Sci
 		public Sci_CharacterRange chrg;
 	}
 
-	public struct Sci_NotifyHeader
-	{
+	public struct Sci_NotifyHeader {
 		public wnd hwndFrom;
 		public nint idFrom;
 		public NOTIF code;
 	}
 
-	public struct SCNotification
-	{
+	public struct SCNotification {
 #pragma warning disable 649 //field never assigned
 		public Sci_NotifyHeader nmhdr;
+		/// <summary>Returns <c>nmhdr.code</c>.</summary>
+		public NOTIF code => nmhdr.code;
 		nint _position;
+		/// <summary>Raw UTF-8 position.</summary>
 		public int position => (int)_position;
 		public int ch;
 		public int modifiers;
@@ -1356,36 +1344,35 @@ public static unsafe class Sci
 #pragma warning restore 649 //field never assigned
 
 		/// <summary>
+		/// Returns position, UTF-8. If SCN_MODIFIED(SC_MOD_INSERTTEXT|SC_MOD_BEFOREINSERT|SC_MOD_INSERTCHECK), adds length, because position then is old position.
+		/// </summary>
+		public int FinalPosition {
+			get {
+				int r = position;
+				if (length > 0 && nmhdr.code == NOTIF.SCN_MODIFIED
+					&& modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_BEFOREINSERT | MOD.SC_MOD_INSERTCHECK)
+					) r += length;
+				return r;
+			}
+		}
+
+		/// <summary>
 		/// Converts textUTF8 to C# string.
 		/// Returns null if textUTF8 is null.
 		/// Don't call this property multiple times for the same notification. Store the return value in a variable and use it.
 		/// </summary>
 		public string Text {
 			get {
-				if(textUTF8 == null) return null;
-				if(textUTF8[0] == 0) return "";
+				if (textUTF8 == null) return null;
+				if (textUTF8[0] == 0) return "";
 				return new string((sbyte*)textUTF8, 0, length, Encoding.UTF8);
-			}
-		}
-
-		/// <summary>
-		/// Returns position, UTF-8. If SCN_MODIFIED(SC_MOD_INSERTTEXT|SC_MOD_BEFOREINSERT|SC_MOD_INSERTCHECK), adds length, because position then is old position.
-		/// </summary>
-		public int FinalPosition {
-			get {
-				int r = position;
-				if(length > 0 && nmhdr.code == NOTIF.SCN_MODIFIED
-					&& modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_BEFOREINSERT | MOD.SC_MOD_INSERTCHECK)
-					) r += length;
-				return r;
 			}
 		}
 	}
 
 	//from Scintilla.h
 
-	public enum LexCppStyles
-	{
+	public enum LexCppStyles {
 		SCE_C_DEFAULT = 0,
 		SCE_C_COMMENT = 1,
 		SCE_C_COMMENTLINE = 2,

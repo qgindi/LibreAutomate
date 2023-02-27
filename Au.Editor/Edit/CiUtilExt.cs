@@ -255,6 +255,24 @@ static class CiUtilExt {
 	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
 		=> t.Eq(span.Start..span.End, s, ignoreCase);
 
+	/// <summary>
+	/// SyntaxFacts.IsNewLine(t[i]);
+	/// </summary>
+	public static bool IsCsNewlineChar(this string t, int i)
+		=> SyntaxFacts.IsNewLine(t[i]);
+
+	/// <summary>
+	/// i == 0 || SyntaxFacts.IsNewLine(t[i - 1]);
+	/// </summary>
+	public static bool IsCsStartOfLine(this string t, int i)
+		=> i == 0 || SyntaxFacts.IsNewLine(t[i - 1]);
+
+	/// <summary>
+	/// i == t.Length || SyntaxFacts.IsNewLine(t[i]);
+	/// </summary>
+	public static bool IsCsEndOfLine(this string t, int i)
+		=> i == t.Length || SyntaxFacts.IsNewLine(t[i]);
+
 	[Conditional("DEBUG")]
 	public static void DebugPrint(this CompletionItem t, string color = "blue") {
 		print.it($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");

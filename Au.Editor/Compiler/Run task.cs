@@ -265,7 +265,7 @@ class RunningTasks {
 			App.Timer1sOr025s -= _TimerUpdateUI;
 		}
 
-		for (int i = _a.Count - 1; i >= 0; i--) {
+		for (int i = _a.Count; --i >= 0;) {
 			_EndTask(_a[i], onExit: onExit);
 		}
 
@@ -314,7 +314,7 @@ class RunningTasks {
 		RecentTT.TaskEvent(false, _a[i], (int)lParam);
 		_a.RemoveAt(i);
 
-		for (int j = _q.Count - 1; j >= 0; j--) {
+		for (int j = _q.Count; --j >= 0;) {
 			var t = _q[j];
 			if (_CanRunNow(t.f, t.r, out _)) {
 				_q.RemoveAt(j);
@@ -374,7 +374,7 @@ class RunningTasks {
 	/// <param name="f">Can be null.</param>
 	public bool EndTasksOf(FileNode f) {
 		bool wasRunning = false;
-		for (int i = _a.Count - 1; i >= 0; i--) {
+		for (int i = _a.Count; --i >= 0;) {
 			var r = _a[i];
 			if (r.f != f || !r.IsRunning) continue;
 			_EndTask(r);

@@ -806,7 +806,7 @@ static class TUtil {
 								//}
 							}
 							if (r.HasValue && !t_hideCapturingRect) {
-								var rr = r.GetValueOrDefault();
+								var rr = r.Value;
 								rr.Inflate(1, 1); //1 pixel inside, 1 outside
 								_LimitInsaneRect(ref rr);
 								_osr.Rect = rr;

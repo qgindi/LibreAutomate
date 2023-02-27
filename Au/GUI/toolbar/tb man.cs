@@ -225,13 +225,13 @@ public partial class toolbar {
 			if (_timerPeriod != 250) _SetTimer(250);
 
 			//remove closed toolbars and their owners if need. Now don't need because toolbars call Remove when closing.
-			//for(int i = _atb.Count - 1; i >= 0; i--) {
+			//for(int i = _atb.Count; --i >= 0;) {
 			//	var tb = _atb[i];
 			//	if(tb._closed) Remove(tb);
 			//}
 
 			//move/close/hide/show owned toolbars together with their owners
-			for (int i = _aow.Count - 1; i >= 0; i--) {
+			for (int i = _aow.Count; --i >= 0;) {
 				var ow = _aow[i];
 				if (!_FollowOwner(ow)) {
 					for (int j = ow.a.Count; --j >= 0;) {

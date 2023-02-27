@@ -2,6 +2,7 @@
 //#define PRINT
 //#endif
 
+using Au.Controls;
 using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,12 +12,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
 class CiFolding {
-	public record struct FoldPoint(int pos, bool start, ushort separator);
-
 	//Called from CiStyling._Work -> Task.Run when document opened or modified (250 ms timer).
 	//We always set/update folding for entire code. Makes slower, but without it sometimes bad folding.
 	//Optimized, but still not very fast if big code.
-	public static List<FoldPoint> GetFoldPoints(SyntaxNode root, string code, CancellationToken cancelToken) {
+	public static List<SciFoldPoint> GetFoldPoints(SyntaxNode root, string code, CancellationToken cancelToken) {
 #if PRINT
 		using var p1 = perf.local();
 #endif
@@ -27,7 +26,7 @@ class CiFolding {
 		}
 		//using var p2 = new perf.Instance { Incremental = true };
 
-		List<FoldPoint> af = null;
+		List<SciFoldPoint> af = null;
 
 		void _AddFoldPoint(int pos, bool start, bool trimNewline = false, ushort separator = 0) {
 			if (trimNewline) {
@@ -89,7 +88,8 @@ class CiFolding {
 			if (foldStart >= 0) {
 				_AddFoldPoints(foldStart, v.Span.End, separator: 1);
 
-				//add separator before local function preceded by statement of other type. Also before other function preceded by field or simple event.
+				//add separator before local function preceded by statement of other type.
+				//	Also before other functions preceded by field or simple event.
 				if (separatorBefore) {
 					int i = prevNode.Span.End; //add separator at the bottom of line containing position i
 					if (v is LocalFunctionStatementSyntax) { //if there are empty lines, set i at the last empty line
@@ -271,87 +271,13 @@ class CiFolding {
 		return af;
 	}
 
-	public static void Fold(SciCode doc, List<FoldPoint> af) {
-		int underlinedLine = 0;
-
-		int[] a = null;
-		if (af != null) {
-			a = new int[af.Count];
-			for (int i = 0; i < a.Length; i++) {
-				var v = af[i];
-				int pos8 = doc.aaaPos8(v.pos);
-				a[i] = pos8 | (v.start ? 0 : unchecked((int)0x80000000));
-
-				if (v.separator != 0) {
-					//add separator below, or above if start
-					if (v.start) { //above
-						int k = v.pos - v.separator; if (k <= 0) continue;
-						pos8 = doc.aaaPos8(k);
-					}
-					int li = doc.aaaLineFromPos(false, pos8);
-					_DeleteUnderlinedLineMarkers(li);
-					//if(underlinedLine != li) print.it("add", li + 1);
-					if (underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
-					else underlinedLine++;
-				}
-			}
-		}
-
-		_DeleteUnderlinedLineMarkers(int.MaxValue);
-
-		void _DeleteUnderlinedLineMarkers(int beforeLine) {
-			if ((uint)underlinedLine > beforeLine) return;
-			const int marker = 1 << SciCode.c_markerUnderline;
-			for (; ; underlinedLine++) {
-				underlinedLine = doc.Call(SCI_MARKERNEXT, underlinedLine, marker);
-				if ((uint)underlinedLine >= beforeLine) break;
-				//print.it("delete", underlinedLine + 1);
-				do doc.Call(SCI_MARKERDELETE, underlinedLine, SciCode.c_markerUnderline);
-				while (0 != (marker & doc.Call(SCI_MARKERGET, underlinedLine)));
-			}
-		}
-
-		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
-			fixed (int* ip = a) Sci_SetFoldLevels(doc.AaSciPtr, 0, -1, a.Lenn_(), ip);
-		}
-		//p1.Next('f');
+	public static void Fold(SciCode doc, List<SciFoldPoint> af) {
+		doc.aaaFoldingApply(af, SciCode.c_markerUnderline);
 		doc.ERestoreEditorData_();
-		//p1.NW('F');
 	}
 
 	public static void InitFolding(SciCode doc) {
-		const int foldMargin = SciCode.c_marginFold;
-		doc.Call(SCI_SETMARGINTYPEN, foldMargin, SC_MARGIN_SYMBOL);
-		doc.Call(SCI_SETMARGINMASKN, foldMargin, SC_MASK_FOLDERS);
-		doc.Call(SCI_SETMARGINSENSITIVEN, foldMargin, 1);
-
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
-		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
-		for (int i = 25; i < 32; i++) {
-			doc.Call(SCI_MARKERSETFORE, i, 0xffffff);
-			doc.Call(SCI_MARKERSETBACK, i, 0x808080);
-			doc.Call(SCI_MARKERSETBACKSELECTED, i, i == SC_MARKNUM_FOLDER ? 0xFF : 0x808080);
-		}
-		//doc.Call(SCI_MARKERENABLEHIGHLIGHT, 1); //red [+]
-
-		doc.Call(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW //show hidden lines when header line deleted. Also when hidden text modified, and it is not always good.
-									| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
-		doc.Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
-		doc.Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
-		doc.aaaStyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
-
-		doc.Call(SCI_SETMARGINCURSORN, foldMargin, SC_CURSORARROW);
-
-		doc.aaaSetMarginWidth(foldMargin, 12);
-
-		//separator lines below functions, types and namespaces
-		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);
-		doc.Call(SCI_MARKERSETBACK, SciCode.c_markerUnderline, 0xe0e0e0);
+		doc.aaaFoldingInit(SciCode.c_marginFold, SciCode.c_markerUnderline);
 	}
 }
 
@@ -360,7 +286,7 @@ partial class SciCode {
 		int line = Call(SCI_LINEFROMPOSITION, startPos);
 		if (0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
 		bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
-		if (fold.HasValue && fold.GetValueOrDefault() != isExpanded) return false;
+		if (fold.HasValue && fold.Value != isExpanded) return false;
 		if (isExpanded) {
 			_FoldLine(line);
 			//move caret out of contracted region
@@ -409,7 +335,7 @@ partial class SciCode {
 						int k = Call(SCI_GETFOLDLEVEL, i);
 						if (0 != (k & SC_FOLDLEVELHEADERFLAG)) {
 							int j = aaaLineEnd(false, i);
-							if (aaaCharAt(j - 1) == '.' && aaaCharAt(j - 2) == '/') Call(SCI_FOLDLINE, i);
+							if (aaaCharAt8(j - 1) == '.' && aaaCharAt8(j - 2) == '/') Call(SCI_FOLDLINE, i);
 						}
 					}
 
@@ -434,7 +360,7 @@ partial class SciCode {
 					var a = p.GetList<int>(2);
 					if (a != null) {
 						_savedLinesMD5 = _Hash(a);
-						for (int i = a.Count - 1; i >= 0; i--) {
+						for (int i = a.Count; --i >= 0;) {
 							int v = a[i];
 							int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
 							if (marker == 31) _FoldLine(line);

@@ -227,7 +227,7 @@ public partial class keys
 		ge: throw _ArgumentException_ErrorInKeysString(k, i, len);
 
 		bool _FindLastKey(out _KEvent e) {
-			for (int j = _a.Count - 1; j >= 0; j--) {
+			for (int j = _a.Count; --j >= 0;) {
 				var t = _a[j];
 				if (t.IsKey) { e = t; return true; }
 			}
@@ -262,7 +262,7 @@ public partial class keys
 		if (key == 0) throw new ArgumentException("Invalid value.", nameof(key));
 
 		bool isPair; _KFlags f = 0;
-		if (!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
+		if (!(isPair = (down == null)) && !down.Value) f |= _KFlags.Up;
 		if (KeyTypes_.IsExtended(key)) f |= _KFlags.Extended;
 
 		return _AddKEvent(new _KEvent(isPair, key, f));
@@ -285,7 +285,7 @@ public partial class keys
 			//don't: if extendedKey false, set true if need. Don't do it because this func is 'raw'.
 		}
 
-		if (!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
+		if (!(isPair = (down == null)) && !down.Value) f |= _KFlags.Up;
 		if (extendedKey) f |= _KFlags.Extended;
 
 		return _AddKEvent(new _KEvent(isPair, key, f, scanCode));

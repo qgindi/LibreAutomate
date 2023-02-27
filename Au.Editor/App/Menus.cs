@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 static class Menus {
 	public const string
-		black = " #585858|#D0D0D0",
+		black = " #505050|#D0D0D0",
 		blue = " #008EEE|#77C9FF",
 		green = " #99BF00|#A9CE13",
 		brown = " #9F5300|#D0D0D0",
@@ -151,10 +151,16 @@ static class Menus {
 			[Command]
 			public static class Repair_workspace {
 				[Command]
-				public static void Find_missing_files() { RepairWorkspace.MissingFiles(); }
+				public static void Find_missing_files() { RepairWorkspace.MissingFiles(false); }
 
 				[Command]
-				public static void Find_orphaned_files() { RepairWorkspace.OrphanedFiles(); }
+				public static void Find_orphaned_files() { RepairWorkspace.OrphanedFiles(false); }
+
+				[Command]
+				public static void Find_missing_files_in_this_folder() { RepairWorkspace.MissingFiles(true); }
+
+				[Command]
+				public static void Find_orphaned_files_in_this_folder() { RepairWorkspace.OrphanedFiles(true); }
 			}
 		}
 
@@ -206,20 +212,23 @@ static class Menus {
 			public static void Copy_without_screenshots() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 
-		[Command(separator = true, keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
-		public static void Find() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
+		[Command(separator = true)]
+		public static class IntelliSense {
+			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + purple)]
+			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
 
-		//[Command(keys = "Ctrl+Shift+F")]
-		//public static void Find_in_files() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc, findInFiles: true); }
+			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + purple)]
+			public static void Parameter_info() { CodeInfo.ShowSignature(); }
+		}
 
-		[Command(separator = true, keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + purple)]
-		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ActiveDoc); }
-
-		[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + purple)]
-		public static void Parameter_info() { CodeInfo.ShowSignature(); }
-
-		[Command(keysText = "F12", image = "*RemixIcon.WalkFill" + purple)]
+		[Command(keys = "F12", image = "*RemixIcon.WalkFill" + purple)]
 		public static void Go_to_definition() { CiGoTo.GoToDefinition(); }
+
+		[Command(keys = "Shift+F12", image = "*Codicons.References" + purple)]
+		public static void Find_references() { CiSymbols.FindReferences(); }
+
+		[Command(keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
+		public static void Find_text() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
 
 		[Command(separator = true)]
 		public static class Document {
