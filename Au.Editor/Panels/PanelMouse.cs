@@ -26,7 +26,7 @@ class PanelMouse {
 	private void _sci_aaHandleCreated() {
 		_sci.aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
 		_sci.aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		_sci.aaaSetMarginWidth(1, 4);
+		_sci.aaaMarginSetWidth(1, 4);
 		_sci.aaaStyleClearAll();
 		_sci.Call(Sci.SCI_SETHSCROLLBAR);
 		_sci.Call(Sci.SCI_SETVSCROLLBAR);

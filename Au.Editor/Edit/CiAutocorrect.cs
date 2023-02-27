@@ -119,13 +119,13 @@ class CiAutocorrect {
 		if (isBackspace || isOpenBrac) {
 			if (pos8 != from) return false;
 		} else {
-			if (ch != (char)KKey.Tab && ch != doc.aaaCharAt(to)) { //info: '\0' if posUtf8 invalid
+			if (ch != (char)KKey.Tab && ch != doc.aaaCharAt8(to)) { //info: '\0' if posUtf8 invalid
 				if (ch == '\"') return _RawString();
 				return false;
 			}
-			if (ch == (char)KKey.Tab && doc.aaaCharAt(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
+			if (ch == (char)KKey.Tab && doc.aaaCharAt8(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
 		}
-		for (int i = pos8; i < to; i++) switch (doc.aaaCharAt(i)) { case ' ' or '\r' or '\n' or '\t': break; default: return false; } //eg space before '}'
+		for (int i = pos8; i < to; i++) switch (doc.aaaCharAt8(i)) { case ' ' or '\r' or '\n' or '\t': break; default: return false; } //eg space before '}'
 
 		//rejected: ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion. Probably more annoying than useful, because than may want to type (cast) or ()=>lambda or (tup, le).
 		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == doc.aaaCharAt(pos8 - 1)) {
@@ -147,7 +147,7 @@ class CiAutocorrect {
 		return true;
 
 		bool _RawString() { //close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
-			if (pos8 > 3 && doc.aaaCharAt(pos8 - 1) == '\"' && doc.aaaCharAt(pos8 - 2) == '\"' && doc.aaaCharAt(pos8 - 3) != '@') {
+			if (pos8 > 3 && doc.aaaCharAt8(pos8 - 1) == '\"' && doc.aaaCharAt8(pos8 - 2) == '\"' && doc.aaaCharAt8(pos8 - 3) != '@') {
 				if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 				var pos16 = cd.pos;
 				var token = cd.syntaxRoot.FindToken(pos16 - 1);
@@ -168,8 +168,8 @@ class CiAutocorrect {
 				} else if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
 					//if pos it at """|""", make """"|""""
 					int q1 = 0, q2 = 0;
-					for (int i = pos8; doc.aaaCharAt(--i) == '\"';) q1++;
-					for (int i = pos8; doc.aaaCharAt(i++) == '\"';) q2++;
+					for (int i = pos8; doc.aaaCharAt8(--i) == '\"';) q1++;
+					for (int i = pos8; doc.aaaCharAt8(i++) == '\"';) q2++;
 					if (q1 == q2 && q1 >= 3) {
 						if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken && token.SpanStart != pos8 - q1) return false;
 						doc.aaaInsertText(false, pos8, "\"");
@@ -202,7 +202,7 @@ class CiAutocorrect {
 		Debug.Assert(code[pos] == ch);
 		if (code[pos] != ch) return;
 
-		bool isBeforeWord = ch != '}' && cd.pos < code.Length && char.IsLetterOrDigit(code[cd.pos]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
+		bool isBeforeWord = ch != '}' && cd.pos < code.Length && SyntaxFacts.IsIdentifierStartCharacter(code[cd.pos]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
 		if (isBeforeWord && ch != '{') return;
 
 		var root = cd.syntaxRoot;
@@ -253,7 +253,6 @@ class CiAutocorrect {
 			var trivia = root.FindTrivia(pos);
 			if (!trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)) return;
 			if (trivia.SpanStart != --pos) return;
-			if (pos > 0 && code[pos - 1] == '\n') replaceText = "\r\n*/";
 			tempRangeFrom = 0;
 		} else {
 			var token = root.FindToken(pos);
@@ -878,8 +877,8 @@ class CiAutocorrect {
 
 	/// <returns>0 no, 1 yes and corrected, 2 yes and not corrected, 3 string or char. Returns 0 if isSelection and string/char.</returns>
 	static int _InNonblankTriviaOrStringOrChar(CodeInfo.Context cd, SyntaxToken token, bool isSelection) {
-		string /*prefix = null,*/ suffix = null; bool newlineLast = false;
-		int indent = 0;
+		string /*prefix = null,*/ suffix = null;
+		bool newlineLast = false, insertEmptyLine = false;
 		int pos = cd.pos, posStart = pos, posEnd = pos;
 		var span = token.Span;
 		if (pos < span.Start || pos > span.End) {
@@ -894,6 +893,9 @@ class CiAutocorrect {
 			var kind = trivia.Kind();
 			if (posStart == span.Start && kind != SyntaxKind.MultiLineDocumentationCommentTrivia) return 0; //info: /** span starts after /**
 			switch (kind) {
+			case SyntaxKind.MultiLineCommentTrivia when span.Length == 4 && pos == span.Start + 2 && !isSelection:
+				insertEmptyLine = true;
+				break;
 			case SyntaxKind.MultiLineCommentTrivia:
 			case SyntaxKind.MultiLineDocumentationCommentTrivia:
 				break;
@@ -926,17 +928,23 @@ class CiAutocorrect {
 		}
 
 		var doc = cd.sci;
-		indent += doc.aaaLineIndentationFromPos(true, posStart);
-		if (indent < 1 /*&& prefix == null*/ && suffix == null) return 2;
+		int indent = doc.aaaLineIndentationFromPos(true, posStart);
+		if (indent < 1 /*&& prefix == null*/ && suffix == null && !insertEmptyLine) return 2;
 
 		var b = new StringBuilder();
-		//b.Append(prefix);
-		if (!newlineLast) b.AppendLine();
-		b.AppendIndent(indent).Append(suffix);
-		if (newlineLast) b.AppendLine();
+		if (insertEmptyLine) {
+			b.AppendLine().AppendLine().AppendIndent(indent);
 
-		var s = b.ToString();
-		doc.aaaReplaceRange(true, posStart, posEnd, s, moveCurrentPos: true);
+			doc.aaaInsertText(true, pos, b.ToString());
+			doc.aaaCurrentPos16 = pos + 2;
+		} else {
+			//b.Append(prefix);
+			if (!newlineLast) b.AppendLine();
+			if (suffix != null) b.AppendIndent(indent).Append(suffix);
+			if (newlineLast) b.AppendLine();
+
+			doc.aaaReplaceRange(true, posStart, posEnd, b.ToString(), moveCurrentPos: true);
+		}
 
 		return 1;
 	}

@@ -21,8 +21,8 @@ namespace Au
 
 			if (allowTransparency) {
 				uint col = 0, f = 0; byte op = 0;
-				if (colorKey != null) { f |= 1; col = (uint)colorKey.GetValueOrDefault().ToBGR(); }
-				if (opacity != null) { f |= 2; op = (byte)Math.Clamp(opacity.GetValueOrDefault(), 0, 255); }
+				if (colorKey != null) { f |= 1; col = (uint)colorKey.Value.ToBGR(); }
+				if (opacity != null) { f |= 2; op = (byte)Math.Clamp(opacity.Value, 0, 255); }
 
 				if (!layered) SetExStyle(est | WSE.LAYERED, noException ? WSFlags.NoException : 0);
 				if (!Api.SetLayeredWindowAttributes(this, col, op, f) && !noException) ThrowUseNative();

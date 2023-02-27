@@ -45,9 +45,11 @@ using Au.Controls;
 
 #pragma warning disable 169
 
+namespace System {
+	
+}
 
 static unsafe class Test {
-	static void AllRef(int i) { }
 
 	/// <summary>
 	/// one two three four five six seven eight none ten 
@@ -55,38 +57,11 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
+		
+
+
 		//var d = Panels.Editor.ActiveDoc;
 
-		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-		var sym = SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
-		//print.it(sym);
-		if (sym == null) return;
-		print.it(sym/*, sym.GetType()*/);
-
-		print.it("references");
-		List<Range> a = new();
-		var rr = SymbolFinder.FindReferencesAsync(sym, cd.document.Project.Solution).Result;
-		foreach (var v in rr) {
-			print.it(v.Definition, v.ShouldShow(FindReferencesSearchOptions.Default));
-			var def = v.Definition;
-			foreach (var u in def.Locations) {
-				print.it($"\tdef: {u}");
-				if (u.SourceTree == cd.syntaxRoot.SyntaxTree) {
-					a.Add(u.SourceSpan.ToRange());
-				}
-			}
-			foreach (var u in v.Locations) {
-				print.it($"\t{u.Location}");
-				if (u.Document == cd.document) {
-					a.Add(u.Location.SourceSpan.ToRange());
-				}
-			}
-
-			//void _AddLocation(SourceLocation loc) {
-			//	if(loc.IsInSource && loc.SourceTree.doc)
-			//}
-		}
-		CiUtil.HiliteRanges(a);
 
 		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		//CiUtil.PrintNode(node);

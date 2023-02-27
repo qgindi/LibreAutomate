@@ -25,7 +25,7 @@ public class KSciInfoBox : KScintilla {
 		if (AaInitUseSystemFont) aaaStyleFont(Sci.STYLE_DEFAULT); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9, but Verdana looks better.
 		aaaStyleClearAll();
 
-		aaaSetMarginWidth(1, 0);
+		aaaMarginSetWidth(1, 0);
 
 		SIZE z = AaInitBlankMargins;
 		z = Dpi.Scale(z, AaWnd);

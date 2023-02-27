@@ -27,7 +27,7 @@ static class CodeInfo {
 	static DocumentId _documentId;
 	static Document _document;
 	static CompilationUnitSyntax _syntaxRoot;
-	static MetaComments _meta;
+	//static MetaComments _meta;
 	static string _metaText;
 	static bool _isWarm;
 	static bool _isUI;
@@ -155,7 +155,7 @@ static class CodeInfo {
 		_documentId = null;
 		_document = null;
 		_syntaxRoot = null;
-		_meta = null;
+		//_meta = null;
 		_metaText = null;
 	}
 
@@ -328,7 +328,8 @@ static class CodeInfo {
 		}
 	}
 
-	public static void ShowCompletionList(SciCode doc) {
+	public static void ShowCompletionList(SciCode doc = null) {
+		doc ??= Panels.Editor.ActiveDoc;
 		if (!_CanWork(doc)) return;
 		_compl.ShowList();
 	}
@@ -625,46 +626,63 @@ for (int i = 0; i < count; i++) { }
 
 	public static Workspace CurrentWorkspace { get; private set; }
 
-	public static MetaComments Meta => _meta;
+	//public static MetaComments Meta => _meta;
 
 	static void _CreateWorkspace(SciCode sci) {
 		//SHOULDDO: use same workspace if project/solution not changed. (here "solution" means when a project or file uses project references)
 		//	Now eg slow GetSemanticModelAsync when [re]opening a file in a large project/solution.
 
-		var f = sci.EFile;
 		_diag.ClearMetaErrors();
 		InternalsVisible.Clear();
+		_ofFile.Clear();
 		CurrentWorkspace = new AdhocWorkspace();
 
-		_solution = CurrentWorkspace.CurrentSolution;
-		_projectId = _AddProject(f, true, isWpfPreview: sci.EIsWpfPreview);
+		Dictionary<FileNode, ProjectReference> dPR = null;
 
-		static ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
+		_solution = CurrentWorkspace.CurrentSolution;
+		_projectId = _AddProject(sci.EFile, true, isWpfPreview: sci.EIsWpfPreview);
+
+		ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
 			var f0 = f;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
 			var m = new MetaComments();
 			m.Parse(f, projFolder, MCPFlags.ForCodeInfoInEditor | (isWpfPreview ? MCPFlags.WpfPreview : 0));
-			if (isMain) _meta = m;
+			//if (isMain) _meta = m;
+
 			if (m.TestInternal is string[] testInternal) InternalsVisible.Add(f.Name, testInternal);
 
 			var projectId = ProjectId.CreateNewId();
 			var adi = new List<DocumentInfo>();
 			foreach (var f1 in m.CodeFiles) {
 				var docId = DocumentId.CreateNewId(projectId);
+				var itemPath = f1.f.ItemPath;
+				_ofFile.Add(itemPath, f1.f);
 				var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
-				adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
+				adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), itemPath));
 				if (f1.f == f0 && isMain) {
 					_documentId = docId;
 				}
 			}
 			//SHOULDDO: reuse document+syntaxtree of global.cs and its meta c files if their text not changed.
 
-			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
+			List<ProjectReference> aPR = null;
+			if (m.ProjectReferences != null) {
+				dPR ??= new();
+				foreach (var v in m.ProjectReferences) {
+					if (!dPR.TryGetValue(v.f, out var pr)) {
+						pr = new ProjectReference(_AddProject(v.f, false));
+						dPR.Add(v.f, pr);
+					}
+					(aPR ??= new()).Add(pr);
+				}
+			}
+
+			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.DisplayName, f.Name, LanguageNames.CSharp, null, null,
 				m.CreateCompilationOptions(),
 				m.CreateParseOptions(),
 				adi,
-				m.ProjectReferences?.Select(f1 => new ProjectReference(_AddProject(f1.f, false))),
+				aPR,
 				m.References.Refs);
 
 			_solution = _solution.AddProject(pi);
@@ -673,6 +691,11 @@ for (int i = 0; i < count; i++) { }
 			return projectId;
 		}
 	}
+
+	public static FileNode FileOf(Document doc) => _ofFile.TryGetValue(doc.FilePath, out var v) ? v : null;
+	public static FileNode FileOf(SyntaxTree t) => _ofFile.TryGetValue(t.FilePath, out var v) ? v : null;
+
+	static readonly ConditionalWeakTable<string, FileNode> _ofFile = new(); //not Dictionary! This is much faster etc.
 
 	private static void _Timer025sWhenVisible() {
 		var doc = Panels.Editor.ActiveDoc;

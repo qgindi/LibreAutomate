@@ -1,6 +1,10 @@
 ## Version 0.14.0 (2023-02-)
 
 ### Editor
+Multiple 'Find' etc results tabs in the 'Found' panel.
+
+Menu Edit -> Find references.
+
 New options:
 - Options -> Code -> Formatting.
 - Options -> Hotkeys -> Capture image.
@@ -16,7 +20,7 @@ New members:
 
 Editor:
 - Fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
-- Fixed: several memory leaks.
+- Fixed several memory leaks and other bugs.
 
 Library:
 - Fixed "TextForFind" bug in documentation.

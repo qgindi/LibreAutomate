@@ -110,8 +110,8 @@ public unsafe class SciTags {
 
 		public _TagStyle(UserDefinedStyle k) {
 			u1 = u2 = 0;
-			if (k.textColor != null) Color = k.textColor.GetValueOrDefault().argb;
-			if (k.backColor != null) BackColor = k.backColor.GetValueOrDefault().argb;
+			if (k.textColor != null) Color = k.textColor.Value.argb;
+			if (k.backColor != null) BackColor = k.backColor.Value.argb;
 			Size = k.size;
 			Bold = k.bold;
 			Italic = k.italic;
@@ -529,7 +529,7 @@ public unsafe class SciTags {
 		}
 
 		if (folds != null) {
-			for (int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
+			for (int i = folds.Count; --i >= 0;) { //need reverse for nested folds
 				var v = folds[i];
 				int lineStart = _c.Call(SCI_LINEFROMPOSITION, v.x + prevLen), lineEnd = _c.Call(SCI_LINEFROMPOSITION, v.y + prevLen);
 				int level = _c.Call(SCI_GETFOLDLEVEL, lineStart) & SC_FOLDLEVELNUMBERMASK;
@@ -613,13 +613,13 @@ public unsafe class SciTags {
 
 		int iTag, iText, k;
 		//to find the start of link text (after <tag>), search for STYLE_HIDDEN before
-		for (iText = pos; iText > 0; iText--) if (_c.aaaGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
+		for (iText = pos; iText > 0; iText--) if (_c.aaaStyleGetAt(iText - 1) == STYLE_HIDDEN) break;
 		if (iText == 0) return false;
 		//to find the start of <tag>, search for some other style before
-		for (iTag = iText - 1; iTag > 0; iTag--) if (_c.aaaGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
+		for (iTag = iText - 1; iTag > 0; iTag--) if (_c.aaaStyleGetAt(iTag - 1) != STYLE_HIDDEN) break;
 		//to find the end of link text, search for a non-hotspot style after
 		for (pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
-			k = _c.aaaGetStyleAt(pos);
+			k = _c.aaaStyleGetAt(pos);
 			if (k < STYLE_FIRST_EX || !_c.aaaStyleHotspot(k)) break;
 		}
 		//get text <tag>LinkText
@@ -677,10 +677,10 @@ public unsafe class SciTags {
 	public void SetLinkStyle(UserDefinedStyle style, (bool use, ColorInt color)? activeColor = null, bool? activeUnderline = null) {
 		_linkStyle = style;
 		if (activeColor != null) {
-			var v = activeColor.GetValueOrDefault();
+			var v = activeColor.Value;
 			_c.Call(SCI_SETHOTSPOTACTIVEFORE, v.use, v.color.ToBGR());
 		}
-		if (activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.GetValueOrDefault());
+		if (activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.Value);
 	}
 	UserDefinedStyle _linkStyle;
 
@@ -755,7 +755,7 @@ public unsafe class SciTags {
 		if (setFocus && _c.AaInitReadOnlyAlways && !keys.gui.isAlt) {
 			int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
 			//print.it(pos);
-			if (pos >= 0 && _c.aaaStyleHotspot(_c.aaaGetStyleAt(pos))) setFocus = false;
+			if (pos >= 0 && _c.aaaStyleHotspot(_c.aaaStyleGetAt(pos))) setFocus = false;
 		}
 	}
 

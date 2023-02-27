@@ -1,9 +1,8 @@
-
 namespace Au.Controls;
+
 using static Sci;
 
 public unsafe partial class KScintilla {
-	#region styles
 
 	public void aaaStyleFont(int style, string name) {
 		aaaSetString(SCI_STYLESETFONT, style, name);
@@ -116,76 +115,16 @@ public unsafe partial class KScintilla {
 	/// Uses SCI_GETSTYLEAT.
 	/// Returns 0 if pos is invalid.
 	/// </summary>
-	public int aaaGetStyleAt(int pos) {
+	public int aaaStyleGetAt(int pos) {
 		return Call(SCI_GETSTYLEAT, pos);
 	}
-
-	#endregion
-
-	#region margins
-
-	public void aaaSetMarginType(int margin, int SC_MARGIN_) {
-		Call(SCI_SETMARGINTYPEN, margin, SC_MARGIN_);
-	}
-
-	internal int[] _marginDpi;
-
-	public void aaaSetMarginWidth(int margin, int value, bool dpiScale = true, bool chars = false) {
-		if (dpiScale && value > 0) {
-			var a = _marginDpi ??= new int[Call(SCI_GETMARGINS)];
-			if (chars) {
-				value *= aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
-				a[margin] = Dpi.Unscale(value, _dpi).ToInt();
-			} else {
-				a[margin] = value;
-				value = Dpi.Scale(value, _dpi);
-			}
-		} else {
-			var a = _marginDpi;
-			if (a != null) a[margin] = 0;
-		}
-		Call(SCI_SETMARGINWIDTHN, margin, value);
-	}
-
-	//public void aaaSetMarginWidth(int margin, string textToMeasureWidth) {
-	//	int n = aaaStyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
-	//	Call(SCI_SETMARGINWIDTHN, margin, n + 4);
-	//}
-
-	//not used
-	//public int aaaGetMarginWidth(int margin, bool dpiUnscale) {
-	//	int R = Call(SCI_GETMARGINWIDTHN, margin);
-	//	if (dpiUnscale && R > 0) {
-	//		var a = _marginDpi;
-	//		var v = a?[margin] ?? 0;
-	//		if (v > 0) R = v;
-	//	}
-	//	return R;
-	//}
-
-	internal void aaaMarginWidthsDpiChanged_() {
-		var a = _marginDpi; if (a == null) return;
-		for (int i = a.Length; --i >= 0;) {
-			if (a[i] > 0) Call(SCI_SETMARGINWIDTHN, i, Dpi.Scale(a[i], _dpi));
-		}
-	}
-
-	public int aaaMarginFromPoint(POINT p, bool screenCoord) {
-		if (screenCoord) _w.MapScreenToClient(ref p);
-		if (_w.ClientRect.Contains(p)) {
-			for (int i = 0, n = Call(SCI_GETMARGINS), w = 0; i < n; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if (w >= p.x) return i; }
-		}
-		return -1;
-	}
-
+	
 	/// <summary>
-	/// SCI_GETMARGINWIDTHN. Not DPI-scaled.
+	/// Sets scintilla's "end-styled position" = to (default int.MaxValue), to avoid SCN_STYLENEEDED notifications.
+	/// Fast, just sets a field in scintilla.
 	/// </summary>
-	public (int left, int right) aaaGetMarginX(int margin) {
-		int x = 0;
-		for (int i = 0; i < margin; i++) x += Call(SCI_GETMARGINWIDTHN, i);
-		return (x, x + Call(SCI_GETMARGINWIDTHN, margin));
-	}
-
-	#endregion
+	/// <remarks>
+	/// Scintilla sends SCN_STYLENEEDED, unless a lexer is set. In some cases 1 or several, in some cases many, in some cases every 500 ms.
+	/// </remarks>
+	public void aaaSetStyled(int to = int.MaxValue) => Call(SCI_STARTSTYLING, to);
 }

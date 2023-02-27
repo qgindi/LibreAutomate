@@ -264,7 +264,7 @@ public unsafe partial class KScintilla : HwndHost {
 	#endregion
 
 	void _NotifyCallback(void* cbParam, ref SCNotification n) {
-		var code = n.nmhdr.code;
+		var code = n.code;
 		//if(code != NOTIF.SCN_PAINTED) print.qm2.write(code.ToString());
 		switch (code) {
 		case NOTIF.SCN_MODIFIED:
@@ -275,8 +275,10 @@ public unsafe partial class KScintilla : HwndHost {
 				_posState = default;
 				_aPos.Clear();
 
-				AaImages?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
-				AaTags?.OnTextChanged_(mt.Has(MOD.SC_MOD_INSERTTEXT), n);
+				bool inserted = mt.Has(MOD.SC_MOD_INSERTTEXT);
+				_RdOnModified(inserted, n);
+				AaImages?.OnTextChanged_(inserted, n);
+				AaTags?.OnTextChanged_(inserted, n);
 			}
 			//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 			if (AaDisableModifiedNotifications) return;
@@ -293,7 +295,7 @@ public unsafe partial class KScintilla : HwndHost {
 	/// </summary>
 	protected virtual void AaOnSciNotify(ref SCNotification n) {
 		AaNotify?.Invoke(this, ref n);
-		switch (n.nmhdr.code) {
+		switch (n.code) {
 		case NOTIF.SCN_MODIFIED:
 			var e = AaTextChanged;
 			if (e != null && n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) e(this, EventArgs.Empty);
@@ -480,6 +482,131 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Don't set focus on mouse left/right/middle button down.
 	/// </summary>
 	public MButtons AaNoMouseSetFocus { get; set; }
+
+	#endregion
+
+	#region range data
+
+	//TODO: use for SciTags.
+
+	struct _RangeData {
+		public int from, to;
+		public object data;
+	}
+
+	List<_RangeData> _rd;
+	bool _rdLocked;
+
+	/// <summary>
+	/// Attaches any data to a range of text. Like a hidden indicator with attached data of any type.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Called from <see cref="AaRangeDataRemoved"/>.</exception>
+	public void AaRangeDataAdd(bool utf16, Range r, object data) {
+		if (_rdLocked) throw new InvalidOperationException("Called from event handler.");
+		var (from, to) = aaaNormalizeRange(utf16, r);
+
+		_rd ??= new();
+		_rd.Add(new() { from = from, to = to, data = data });
+	}
+
+	/// <summary>
+	/// Gets data of any type attached to a range of text with <see cref="AaRangeDataAdd"/> at the specified position.
+	/// </summary>
+	/// <returns>true if <i>pos</i> is in a range added with <see cref="AaRangeDataAdd"/>.</returns>
+	/// <exception cref="InvalidOperationException">Called from <see cref="AaRangeDataRemoved"/>.</exception>
+	public bool AaRangeDataGet(bool utf16, int pos, out object data)
+		=> _RdGet(utf16, pos, out data);
+
+	/// <summary>
+	/// Gets data of type <i>T</i> attached to a range of text with <see cref="AaRangeDataAdd"/> at the specified position.
+	/// </summary>
+	/// <returns>true if <i>pos</i> is in a range added with <see cref="AaRangeDataAdd"/> and the range data type is <i>T</i>.</returns>
+	/// <exception cref="InvalidOperationException">Called from <see cref="AaRangeDataRemoved"/>.</exception>
+	public bool AaRangeDataGet<T>(bool utf16, int pos, out T data) where T : class {
+		bool ok = _RdGet(utf16, pos, out object o, typeof(T));
+		data = Unsafe.As<T>(o);
+		return ok;
+	}
+
+	bool _RdGet(bool utf16, int pos, out object data, Type type = null) {
+		if (_rdLocked) throw new InvalidOperationException("Called from AaRangeDataRemoved.");
+		pos = _ParamPos(utf16, pos);
+		foreach (ref var v in _rd.AsSpan()) {
+			if (pos >= v.from && pos < v.to) {
+				if (type != null && v.data.GetType() != type) continue;
+				data = v.data;
+				return true;
+			}
+		}
+		data = null;
+		return false;
+	}
+
+	/// <summary>
+	/// When a text range registered with <see cref="AaRangeDataAdd"/> removed (when control text changed).
+	/// </summary>
+	/// <remarks>
+	/// The event handler must not modify control text and must not call <b>AaRangeDataX</b> functions.
+	/// </remarks>
+	public event Action<object> AaRangeDataRemoved;
+
+	void _RdOnModified(bool inserted, in SCNotification n) {
+		if (_rd.NE_()) return;
+		if (_rdLocked) throw new InvalidOperationException("Called from event handler.");
+		_rdLocked = true;
+		try {
+			int start = n.position, end = start + n.length, len = n.length;
+
+			if (inserted) {
+				foreach (ref var v in _rd.AsSpan()) {
+					if (start < v.to) {
+						if (start <= v.from) v.from += len;
+						v.to += len;
+					}
+				}
+			} else {
+				if (start == 0 && aaaLen8 == 0) { //deleted all text
+					if (AaRangeDataRemoved != null) foreach (var v in _rd) AaRangeDataRemoved(v.data);
+					_rd.Clear();
+					return;
+				}
+
+				System.Collections.BitArray remove = null;
+				int j = -1;
+				foreach (ref var v in _rd.AsSpan()) {
+					j++;
+					if (start < v.to) {
+						if (end < v.from) {
+							v.from -= len;
+							v.to -= len;
+						} else if (start <= v.from) {
+							if (end < v.to) {
+								v.to -= len;
+								v.from = start;
+							} else {
+								remove ??= new(_rd.Count);
+								remove[j] = true;
+								AaRangeDataRemoved?.Invoke(v.data);
+							}
+						} else if (end < v.to) {
+							v.to -= len;
+						} else {
+							v.to = start;
+						}
+					}
+				}
+
+				if (remove != null) {
+					for (int i = remove.Count; --i >= 0;) {
+						if (remove[i]) _rd.RemoveAt(i);
+					}
+				}
+			}
+		}
+		finally { _rdLocked = false; }
+
+		//print.it("ranges", _rd.Select(o => (o.from, o.to, o.data)));
+	}
 
 	#endregion
 

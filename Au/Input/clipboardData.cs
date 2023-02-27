@@ -201,7 +201,7 @@ namespace Au {
 #if SUPPORT_RAW_HANDLE
 				//remove caller-added handles, to avoid using the same handle twice
 				if(renderLater) return;
-				for(int i = _a.Count - 1; i >= 0; i--) {
+				for(int i = _a.Count; --i >= 0;) {
 					var v = _a[i];
 					if(format != 0 && v.format != format) continue;
 					if(v.data is IntPtr) _a.RemoveAt(i);

@@ -2645,7 +2645,7 @@ namespace Au {
 			string R;
 
 			if (getText == null) R = _GetTextFast(true);
-			else if (getText.GetValueOrDefault()) R = _GetTextSlow();
+			else if (getText.Value) R = _GetTextSlow();
 			else R = _GetTextFast(false);
 
 			if (removeUnderlineAmpersand

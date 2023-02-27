@@ -202,7 +202,7 @@ class DOptions : KDialogWindow {
 
 			//styles
 
-			sciStyles.aaaSetMarginWidth(1, 0);
+			sciStyles.aaaMarginSetWidth(1, 0);
 			styles.ToScintilla(sciStyles);
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
@@ -251,7 +251,7 @@ Find highlight
 			//when changed the selected line
 			int currentLine = -1;
 			sciStyles.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
-				switch (n.nmhdr.code) {
+				switch (n.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
 					int line = c.aaaLineFromPos(false, c.aaaCurrentPos8);
 					if (line != currentLine) {

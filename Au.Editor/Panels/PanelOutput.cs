@@ -129,7 +129,7 @@ class PanelOutput {
 
 		protected override void AaOnHandleCreated() {
 			_p._c_HandleCreated();
-			aaaSetMarginWidth(1, 3);
+			aaaMarginSetWidth(1, 3);
 
 			var styles = new CiStyling.TStyles { FontName = "Consolas", FontSize = 9, BackgroundColor = 0xF7F7F7 };
 			styles.ToScintilla(this);

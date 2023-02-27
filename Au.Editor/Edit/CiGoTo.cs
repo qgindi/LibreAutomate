@@ -8,6 +8,8 @@ using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 
+//FUTURE: try source link. Like now VS.
+
 class CiGoTo {
 	struct _SourceLocation {
 		public _SourceLocation(string file, int line, int column) {

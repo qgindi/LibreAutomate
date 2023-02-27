@@ -153,7 +153,7 @@ partial class CiStyling {
 
 			bool minimal = end8 >= 0;
 			bool needFolding = !minimal && !_folded;
-			List<CiFolding.FoldPoint> af = null;
+			List<SciFoldPoint> af = null;
 
 			if (needFolding) {
 				await Task.Run(() => {

@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Media;
 using System.Windows.Documents;
+using Microsoft.CodeAnalysis.CSharp;
 
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
@@ -14,10 +15,10 @@ class PanelFind {
 	KCheckBox _cFolder, _cCase, _cWord, _cRegex;
 	KPopup _ttRegex, _ttNext;
 	WatermarkAdorner _adorner1;
-
+	
 	public PanelFind() {
 		P.UiaSetName("Find panel");
-
+		
 		var b = new wpfBuilder(P).Columns(-1).Brush(SystemColors.ControlBrush);
 		b.Options(modifyPadding: false, margin: new Thickness(2));
 		b.AlsoAll((b, _) => { if (b.Last is Button k) k.Padding = new(1, 0, 1, 1); });
@@ -30,35 +31,35 @@ class PanelFind {
 		b.AddButton(out var bReplace, "Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
 		bReplace.MouseRightButtonUp += (_, _) => _bFind_Click(null);
 		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all in editor");
-
+		
 		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
 		b.StartStack();
 		_cFolder = b.xAddCheckIcon("*Material.FolderSearchOutline" + Menus.green, "Let 'In files' search only in current project or root folder");
 		b.Padding(1, 0, 1, 1);
-		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _bOptions_Click, "More options");
-
+		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _Options(), "More options");
+		
 		var cmd1 = App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)];
 		var bBack = b.xAddButtonIcon(Menus.iconBack, _ => Menus.File.OpenCloseGo.Go_back(), "Go back");
 		b.Disabled(!cmd1.Enabled);
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
-
+		
 		b.End();
-
+		
 		b.R.Add(out _cCase, "Case").Tooltip("Match case");
 		b.Add(out _cWord, "Word").Tooltip("Whole word");
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression.\nF1 - Regex tool and help.");
 		b.End().End();
-
+		
 		P.IsVisibleChanged += (_, _) => {
 			Panels.Editor.ActiveDoc?.EInicatorsFind_(P.IsVisible ? _aEditor : null);
 		};
-
+		
 		_tFind.TextChanged += (_, _) => UpdateQuickResults();
-
+		
 		//prevent tooltip on set focus.
 		//	Broken in .NET 6:  AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
 		_tFind.ToolTipOpening += (o, e) => { if (o is UIElement k && !k.IsMouseOver) e.Handled = true; };
-
+		
 		foreach (var v in new[] { _tFind, _tReplace }) {
 			v.AcceptsTab = true;
 			v.IsInactiveSelectionHighlightEnabled = true;
@@ -73,9 +74,9 @@ class PanelFind {
 				}
 			};
 		}
-
+		
 		foreach (var v in new[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
-
+		
 		P.KeyDown += (_, e) => {
 			switch (e.Key, Keyboard.Modifiers) {
 			case (Key.F1, 0):
@@ -86,11 +87,11 @@ class PanelFind {
 			e.Handled = true;
 		};
 	}
-
+	
 	public UserControl P { get; } = new();
-
+	
 	#region control events
-
+	
 	private void _tFindReplace_ContextMenuOpening(object sender, ContextMenuEventArgs e) {
 		var c = sender as TextBox;
 		var m = c.ContextMenu as KWpfMenu;
@@ -104,7 +105,7 @@ class PanelFind {
 		m["Cl_ear\0" + "M-click"] = o => c.Clear();
 		m["Rece_nt\0" + "M-click"] = o => _RecentPopupList(c);
 	}
-
+	
 	private void _tFindReplace_KeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
 		if (!_cRegex.IsChecked) return;
 		var tb = sender as TextBox;
@@ -120,7 +121,7 @@ class PanelFind {
 			});
 		}
 	}
-
+	
 	private void _CheckedChanged(object sender, RoutedEventArgs e) {
 		if (sender == _cWord) {
 			if (_cWord.IsChecked) _cRegex.IsChecked = false;
@@ -136,10 +137,10 @@ class PanelFind {
 		}
 		UpdateQuickResults();
 	}
-
+	
 	RegexWindow _regexWindow;
 	string _regexTopic;
-
+	
 	void _ShowRegexInfo(TextBox tb, bool F1) {
 		if (F1) {
 			_regexWindow ??= new RegexWindow();
@@ -147,15 +148,15 @@ class PanelFind {
 		} else {
 			if (_regexWindow == null || _regexWindow.UserClosed) return;
 		}
-
+		
 		if (_regexWindow.Hwnd.Is0) {
 			var r = P.RectInScreen();
 			r.Offset(0, -20);
 			_regexWindow.ShowByRect(App.Wmain, Dock.Right, r, true);
 		} else _regexWindow.Hwnd.ShowL(true);
-
+		
 		_regexWindow.InsertInControl = tb;
-
+		
 		bool replace = tb == _tReplace;
 		var s = _regexWindow.CurrentTopic;
 		if (s == "replace") {
@@ -165,27 +166,27 @@ class PanelFind {
 			_regexWindow.CurrentTopic = "replace";
 		}
 	}
-
+	
 	private void _bFind_Click(WBButtonClickArgs e) {
 		if (!_GetTextToFind(out var f)) return;
 		_FindNextInEditor(f, false);
 	}
-
+	
 	private void _bFindIF_Click(WBButtonClickArgs e) {
 		//using var _ = new _TempDisableControl(_bFindIF);
 		_FindAllInFiles();
-
+		
 		//SHOULDDO: disabled button view now not updated because UI is blocked.
 		//	Should search in other thread; at least get text.
 	}
-
+	
 	private void _bReplace_Click(WBButtonClickArgs e) {
 		if (!_GetTextToFind(out var f, forReplace: true)) return;
 		_FindNextInEditor(f, true);
 	}
-
-	private void _bOptions_Click(WBButtonClickArgs e) {
-		var b = new wpfBuilder("Find Options").WinSize(350);
+	
+	void _Options() {
+		var b = new wpfBuilder("Find text options").WinSize(350);
 		b.R.StartGrid<GroupBox>("Find in files");
 		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn);
 		b.R.Add(
@@ -208,13 +209,13 @@ class PanelFind {
 		App.Settings.find_searchIn = _searchIn = cbFileType.SelectedIndex;
 		App.Settings.find_skip = tSkip.Text; _aSkipWildcards = null;
 		App.Settings.find_printSlow = tSlow.Text.ToInt();
-
+		
 		//FUTURE: option to use cache to make faster.
 		//	Now, if many files, first time can be very slow because of AV eg Windows Defender.
 		//	To make faster, I added Windows Defender exclusion for cs file type. Remove when testing cache etc.
 		//	When testing WD impact, turn off/on its real-time protection and restart this app.
 		//	For cache use SQLite database in App.Model.CacheDirectory. Add text of files of size eg < 100 KB.
-
+		
 		//rejected: support wildex in 'skip'. Not useful.
 		//	code here:
 		//		b.R.Add(
@@ -247,13 +248,13 @@ class PanelFind {
 		//	}
 		//	aSearchInFiles.Add(v);
 		//}
-
+		
 	}
-
+	
 	#endregion
-
+	
 	#region common
-
+	
 	/// <summary>
 	/// Makes visible and sets find text = s (should be selected text of a control; can be null/"").
 	/// </summary>
@@ -268,7 +269,7 @@ class PanelFind {
 		//_tFind.SelectAll(); //no, somehow WPF makes selected text gray like disabled when non-focused
 		//if (findInFiles) _FindAllInFiles(false); //rejected. Not so useful.
 	}
-
+	
 	/// <summary>
 	/// Makes visible and sets find text = selected text of e.
 	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
@@ -285,43 +286,43 @@ class PanelFind {
 		}
 		CtrlF(s/*, findInFiles*/);
 	}
-
+	
 	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
 	///// <summary>
 	///// Makes visible and sets find text = selected text of focused control.
 	///// </summary>
 	//public void aaCtrlF() => aaCtrlF(FocusManager.GetFocusedElement(App.Wmain));
-
+	
 	/// <summary>
 	/// Called when changed find text or options. Also when activated another document.
 	/// Async-updates find-hiliting in editor.
 	/// </summary>
 	public void UpdateQuickResults() {
 		if (!P.IsVisible) return;
-
+		
 		_timerUQR ??= new timer(_ => {
 			_FindAllInEditor();
 			Panels.Editor.ActiveDoc?.EInicatorsFind_(_aEditor);
 		});
-
+		
 		_timerUQR.After(150);
 	}
 	timer _timerUQR;
-
+	
 	internal class _TextToFind {
 		public string findText;
 		public string replaceText;
 		public regexp rx;
 		public bool wholeWord;
 		public bool matchCase;
-
+		
 		public bool IsSameFindTextAndOptions(_TextToFind f)
 			=> f.findText == findText
 			&& f.matchCase == matchCase
 			&& f.wholeWord == wholeWord
 			&& (f.rx != null) == (rx != null);
 	}
-
+	
 	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false) {
 		_ttRegex?.Close();
 		string text = _tFind.Text; if (text.NE()) { f = null; return false; }
@@ -340,30 +341,30 @@ class PanelFind {
 			return false;
 		}
 		if (forReplace) f.replaceText = _tReplace.Text;
-
+		
 		if (!noRecent) _AddToRecent(f);
-
+		
 		if (forReplace && (Panels.Editor.ActiveDoc?.aaaIsReadonly ?? true)) return false;
 		return true;
 	}
-
-	void _FindAllInString(string text, _TextToFind f, List<Range> a) {
-		a.Clear();
+	
+	void _FindAllInString(string text, _TextToFind f, List<Range> ar) {
+		ar.Clear();
 		if (f.rx != null) {
-			foreach (var g in f.rx.FindAllG(text, 0)) a.Add(g.Start..g.End);
+			foreach (var g in f.rx.FindAllG(text, 0)) ar.Add(g.Start..g.End);
 		} else {
 			for (int i = 0; i < text.Length; i += f.findText.Length) {
 				i = f.wholeWord ? text.FindWord(f.findText, i.., !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
 				if (i < 0) break;
-				a.Add(i..(i + f.findText.Length));
+				ar.Add(i..(i + f.findText.Length));
 			}
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region in editor
-
+	
 	void _FindNextInEditor(_TextToFind f, bool replace) {
 		_ttNext?.Close();
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
@@ -378,7 +379,7 @@ class PanelFind {
 				i = from8; to = to8; rm = _lastFind.rm;
 				goto g2;
 			}
-
+			
 			if (f.rx.Match(text, out rm, from..)) {
 				i = rm.Start;
 				len = rm.Length;
@@ -422,10 +423,10 @@ class PanelFind {
 				return;
 				//}
 			}
-
+			
 			App.Model.EditGoBack.RecordNext();
 			doc.aaaSelect(false, i, to, true);
-
+			
 			_lastFind.f = f;
 			_lastFind.doc = doc;
 			_lastFind.text = text;
@@ -434,14 +435,14 @@ class PanelFind {
 			_lastFind.rm = rm;
 		}
 	}
-
+	
 	(_TextToFind f, SciCode doc, string text, int from8, int to8, RXMatch rm) _lastFind;
-
+	
 	private void _bReplaceAll_Click(WBButtonClickArgs e) {
 		if (!_GetTextToFind(out var f, forReplace: true)) return;
 		_ReplaceAllInEditor(f);
 	}
-
+	
 	void _ReplaceAllInEditor(_TextToFind f) {
 		var doc = Panels.Editor.ActiveDoc;
 		if (doc.aaaIsReadonly) return;
@@ -467,16 +468,16 @@ class PanelFind {
 				}
 			}
 		}
-
+		
 		void _ReplaceRange(int from, int to, string s) {
 			doc.aaaNormalizeRange(true, ref from, ref to);
 			if (CiStyling.IsProtected(doc, from, to)) return;
 			doc.aaaReplaceRange(false, from, to, s);
 		}
-
+		
 		//Easier/faster would be to create new text and call aaaSetText. But then all non-text data is lost: markers, folds, caret position...
 	}
-
+	
 	bool _TryExpandRegexReplacement(RXMatch m, string repl, out string result) {
 		try {
 			result = m.ExpandReplacement(repl);
@@ -488,7 +489,7 @@ class PanelFind {
 			return false;
 		}
 	}
-
+	
 	internal bool _ValidateReplacement(_TextToFind f/*, FileNode file*/) {
 		//FUTURE: add regexp.IsValidReplacement and use it here.
 		//if (f.rx != null
@@ -498,44 +499,48 @@ class PanelFind {
 		//	) return false;
 		return true;
 	}
-
+	
 	List<Range> _aEditor = new(); //all found in editor text
-
+	
 	void _FindAllInEditor() {
 		_aEditor.Clear();
 		if (!_GetTextToFind(out var f, noRecent: true, noErrorTooltip: true)) return;
 		var text = Panels.Editor.ActiveDoc?.aaaText; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
-
+	
 	#endregion
-
+	
 	#region in files
-
+	
 	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = App.Settings.find_searchIn);
 	int _searchIn = -1;
-
+	
 	string[] _SkipWildex => _aSkipWildcards ??= (App.Settings.find_skip ?? "").Lines(true);
 	string[] _aSkipWildcards;
 	readonly string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
-
+	
 	void _FindAllInFiles() {
 		if (!_GetTextToFind(out var f)) return;
-
-		Panels.Found.Prepare(FoundKind.Text, f.findText);
-
-		//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
-		wait.doEvents();
-
+		
+		using var workingState = Panels.Found.Prepare(PanelFound.Found.Text, f.findText, out var b);
+		const int c_markerFile = 0, c_markerInfo = 1;
+		if (workingState.NeedToInitControl) {
+			var k = workingState.Scintilla;
+			k.aaaMarkerDefine(c_markerFile, Sci.SC_MARK_BACKGROUND, backColor: 0xC0E0C0);
+			k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xADC8FF);
+		}
+		
 		FileNode folder = App.Model.Root;
 		if (_cFolder.IsChecked && Panels.Editor.ActiveDoc?.EFile is FileNode fn) {
 			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 			else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 		}
-
+		
 		List<FileNode> aSearchInFiles = new();
 		int searchIn = _SearchIn;
 		foreach (var v in folder.Descendants()) {
+			if (v.IsFolder) continue;
 			if (v.IsCodeFile) {
 				switch (searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
 				case 4: continue;
@@ -544,24 +549,22 @@ class PanelFind {
 				}
 			} else {
 				if (searchIn >= 1 && searchIn <= 3) continue;
-				if (v.IsFolder) continue;
 				if (v.Name.Ends(true, _aSkipImages) > 0) continue;
 			}
 			if (_SkipWildex.Length > 0 && v.ItemPath.Like(true, _SkipWildex) > 0) continue;
 			aSearchInFiles.Add(v);
 		}
-
-		var b = new StringBuilder();
+		
 		List<FileNode> aFoundInFiles = new();
 		var ar = new List<Range>();
 		int timeSlow = App.Settings.find_printSlow;
-		StringBuilder bSlow = timeSlow > 0 ? new() : null;
+		List<(FileNode f, int ms, int len)> aSlowFiles = new();
 		bool jited = false;
 		int nFound = 0;
-
+		
 		WTaskbarButton progress = null;
 		long t0 = Environment.TickCount64;
-
+		
 		for (int j = 0; j < aSearchInFiles.Count; j++) {
 			//using var p1 = perf.local();
 			if (progress == null && j > 100 && j < aSearchInFiles.Count - 100) {
@@ -579,95 +582,63 @@ class PanelFind {
 				}
 			}
 			//p1.Next();
-
+			
 			var v = aSearchInFiles[j];
 			//using var p1 = new _Perf();
 			//p1.Start(v.Name);
 			if (!v.GetCurrentText(out var text, silent: true) || text.Length == 0 || text.Contains('\0')) continue;
 			//p1.Next();
-
-			long time = bSlow != null ? perf.ms : 0;
-
+			
+			long time = perf.ms;
+			
 			_FindAllInString(text, f, ar);
-
+			
 			if (ar.Count != 0) {
-				b.Append("<lc #C0E0C0>");
+				//file
+				aFoundInFiles.Add(v); nFound += ar.Count;
 				var path = v.ItemPath;
-				string link = v.IdStringWithWorkspace;
-				if (v.IsFolder) {
-					b.AppendFormat("<+open \"{0}\"><c #808080>{1}<><>    <c #008000>//folder<>", link, path);
-				} else {
-					int i1 = path.Length - v.Name.Length;
-					string s1 = path[..i1], s2 = path[i1..];
-					aFoundInFiles.Add(v); nFound += ar.Count;
-					int ns = 120 - path.Length * 7 / 4;
-#if true //open and select the first found text
-					b.AppendFormat(
-						"<+f \"{0} {1} {2}\"><c #808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>{6}",
-						link,
-						ar[0].Start.Value,
-						ar[0].End.Value,
-						s1,
-						s2,
-						ns > 0 ? new string(' ', ns) : null,
-						v.IsExternal ? "    <c green>//external<>" : null);
-#else //just open
-						b.AppendFormat("<+open \"{0}\"><c #808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\"><c #80ff>Replace all<><>",
-							link, s1, s2, ns > 0 ? new string(' ', ns) : null);
-#endif
-				}
-				b.AppendLine("<>");
+				b.Marker(c_markerFile).Link2(new PanelFound.CodeLink(v, ar[0].Start.Value, ar[0].End.Value)).Gray(path.AsSpan(0..^v.Name.Length)).B(v.Name);
+				int ns = 120 - path.Length * 7 / 4; if (ns > 0) b.Text(new string(' ', ns));
+				b.Link_().Text("    ").Link(new PanelFound.ReplaceAllLink(v), "Replace");
+				if (v.IsExternal) b.Green("    //external");
+				b.NL();
+				//found text instances in that file
 				if (b.Length < 10_000_000) {
 					for (int i = 0; i < ar.Count; i++) {
 						var range = ar[i];
-						int start = range.Start.Value, end = range.End.Value, lineStart = start, lineEnd = end;
-						int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
-						for (; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if (c == '\n' || c == '\r') break; }
-						bool limitStart = lineStart == lsMax && lineStart > 0;
-						for (; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if (c == '\r' || c == '\n') break; }
-						bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
-						b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
-							.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
-							.Append("<bc #ffff00><\a>").Append(text, start, end - start).Append("</\a><>")
-							.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
-							.AppendLine("<>");
+						Panels.Found.AppendFoundLine(b, v, text, range.Start.Value, range.End.Value, displayFile: false);
 					}
 				}
 			}
-
-			if (bSlow != null) {
+			
+			if (timeSlow > 0) {
 				time = perf.ms - time;
-				if (time >= timeSlow + (jited ? 0 : 100)) {
-					if (bSlow.Length == 0) bSlow.AppendLine("<lc #FFC000>Slow files:<>");
-					bSlow.Append(time).Append(" ms <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
-				}
+				if (time >= timeSlow + (jited ? 0 : 100)) aSlowFiles.Add((v, (int)time, text.Length));
 				jited = true;
 			}
 		}
-
+		
 		progress?.SetProgressState(WTBProgressState.NoProgress);
-
-		if (nFound > 0) {
-			b.AppendLine($"<bc #FFC000>Found {nFound} in {aFoundInFiles.Count} files.    <+raif><c #80ff>Replace all...<><>    <+caf><c #80ff>Close opened files<><><>");
+		
+		b.Marker(c_markerInfo);
+		if (nFound > 0) b.Text($"Found {nFound} in {aFoundInFiles.Count} files.    ").Link("RAIF", "Replace all..."); else b.Text("Not found");
+		b.NL();
+		if (folder != App.Model.Root) b.Marker(c_markerInfo).Text($"Searched only in folder {folder.Name}").NL();
+		if (searchIn > 0) b.Marker(c_markerInfo).Link2(new Action(_Options), $"Searched only in {searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" }} files").NL();
+		if (aSlowFiles.Count > 0) {
+			b.Marker(c_markerInfo).Link2(new Action(_Options), "Slow files:").NL();
+			foreach (var v in aSlowFiles) b.Text($"{v.ms} ms ").Link(v.f, v.f.ItemPath).Text($" , length {v.len}\r\n");
 		}
-
-		if (folder != App.Model.Root)
-			b.Append("<bc #FFC000>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
-		if (searchIn > 0)
-			b.Append("<bc #FFC000>Note: searched only in ")
-			   .Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
-			   .AppendLine(" files. It is set in Find Options dialog.<>");
-		b.Append(bSlow);
-
-		Panels.Found.SetFindInFilesResults(f, b.ToString(), aFoundInFiles);
+		
+		Panels.Found.SetFindInFilesResults(workingState, b, f, aFoundInFiles);
 	}
-
+	
 	internal void _ReplaceAllInFiles(_TextToFind f, List<FileNode> files, ref HashSet<FileNode> openedFiles) {
 		if (!_ValidateReplacement(f)) return; //avoid opening files in editor when invalid regex replacement
 		if (!_CanReplaceInFiles(f)) return;
-
+		
 		bool haveExternal = files.Any(o => o.IsExternal);
-
+		
 		switch (dialog.show("Replace text in files",
 			"""
 Replaces text in all files displayed in the Found panel.
@@ -690,13 +661,13 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 			break;
 		default: return;
 		}
-
+		
 		WndSetRedraw redraw1 = new(Panels.Files.TreeControl.Hwnd), redraw2 = new(Panels.Open.TreeControl.Hwnd);
 		var progress = App.Hmain.TaskbarButton;
 		try {
 			App.Wmain.IsEnabled = false;
 			progress.SetProgressState(WTBProgressState.Normal);
-
+			
 			for (int i = files.Count; --i >= 0;) { //let the Open panel display files in the same order as the Found panel
 				progress.SetProgressValue(i, files.Count);
 				var v = files[i];
@@ -712,13 +683,13 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 			redraw2.Dispose();
 		}
 	}
-
+	
 	//when clicked link "Replace all" in "find in files" results. The file is already open.
 	internal void _ReplaceAllInFile(_TextToFind ttf) {
 		if (!_CanReplaceInFiles(ttf)) return;
 		_ReplaceAllInEditor(ttf);
 	}
-
+	
 	bool _CanReplaceInFiles(_TextToFind f) {
 		bool ok = f.findText == _tFind.Text
 			&& f.matchCase == _cCase.IsChecked
@@ -732,17 +703,17 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 		_AddToRecent(f, onlyRepl: true);
 		return true;
 	}
-
+	
 	//struct _Perf : IDisposable
 	//{
 	//	long _t;
 	//	string _file;
-
+	
 	//	public void Start(string file) {
 	//		_t = perf.mcs;
 	//		_file = file;
 	//	}
-
+	
 	//	public void Dispose() {
 	//		if (_t == 0) return;
 	//		long t=perf.mcs-_t;
@@ -750,31 +721,31 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 	//		print.it(t, _file);
 	//	}
 	//}
-
+	
 	//struct _TempDisableControl : IDisposable
 	//{
 	//	UIElement _e;
 	//	int _enableAfter;
-
+	
 	//	public _TempDisableControl(UIElement e, int enableAfter = 0) {
 	//		_e = e;
 	//		_enableAfter = enableAfter;
 	//		e.IsEnabled = false;
 	//	}
-
+	
 	//	public void Dispose() {
 	//		if (_enableAfter == 0) _e.IsEnabled = true;
 	//		else { var e = _e; timer.after(_enableAfter, _ => e.IsEnabled = true); }
 	//	}
 	//}
-
+	
 	#endregion
-
+	
 	#region recent
-
+	
 	string _recentPrevFind, _recentPrevReplace;
 	int _recentPrevOptions;
-
+	
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
 	void _AddToRecent(_TextToFind f, bool onlyRepl = false) {
 		if (!onlyRepl) {
@@ -782,7 +753,7 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 			if (f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);
 		}
 		if (!f.replaceText.NE() && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
-
+		
 		static void _Add(bool replace, string text, int options) {
 			if (text.Length > 1000) {
 				//if(0 != (options & 4)) print.warning("The find text of length > 1000 will not be saved to 'recent'.", -1);
@@ -802,7 +773,7 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 			if (replace) App.Settings.find_recentReplace = a; else App.Settings.find_recent = a;
 		}
 	}
-
+	
 	void _RecentPopupList(TextBox tb) {
 		bool replace = tb == _tReplace;
 		//var a = _RecentLoad(replace);
@@ -823,7 +794,7 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 		};
 		P.Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
-
+	
 	//rejected: save recent find/replace strings in separate csv files, not in App.Settings
 	//static FRRecentItem[] _RecentLoad(bool replace) {
 	//	var file = _RecentFile(replace);
@@ -835,7 +806,7 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 	//	}
 	//	return a;
 	//}
-
+	
 	//static void _RecentSave(bool replace, FRRecentItem[] a) {
 	//	var x = new csvTable { ColumnCount = 2, RowCount = a.Length };
 	//	for (int i = 0; i < a.Length; i++) {
@@ -844,9 +815,9 @@ Before replacing you may want to backup the workspace <a href="backup">folder</a
 	//	}
 	//	x.Save(_RecentFile(replace));
 	//}
-
+	
 	//static string _RecentFile(bool replace) => AppSettings.DirBS + (replace ? "Recent replace.csv" : "Recent find.csv");
-
+	
 	#endregion
 }
 
@@ -854,6 +825,6 @@ record FRRecentItem //not nested in PanelFind because used with JSettings (would
 {
 	public string t;
 	public int o;
-
+	
 	public override string ToString() => t.Limit(200); //ListBox item display text
 }

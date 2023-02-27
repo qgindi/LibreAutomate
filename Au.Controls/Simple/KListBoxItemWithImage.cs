@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-class KListBoxItemWithImage : ListBoxItem {
+public class KListBoxItemWithImage : ListBoxItem {
 	readonly TextBlock _tb;
 
 	public KListBoxItemWithImage(string image, string text) {
