@@ -99,6 +99,7 @@ record AppSettings : JSettings {
 
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
+	public bool find_parallel;
 	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end
 }
 

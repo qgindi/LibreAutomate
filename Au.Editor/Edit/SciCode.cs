@@ -15,18 +15,27 @@ partial class SciCode : KScintilla {
 	public override string ToString() => _fn.ToString();
 
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
-	public const int c_marginFold = 0;
-	public const int c_marginImages = 1;
-	public const int c_marginMarkers = 2; //breakpoints etc
-	public const int c_marginLineNumbers = 3;
-	public const int c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
+	public const int
+		c_marginFold = 0,
+		c_marginImages = 1,
+		c_marginMarkers = 2, //breakpoints etc
+		c_marginLineNumbers = 3,
+		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
 
-	//markers. We can use 0-24. Folding 25-31.
+	//markers. We can use 0-20. History 21-24. Folding 25-31.
 	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
 	//public const int c_markerStepNext = 3;
 
-	//indicators. We can use 8-31. Lexers use 0-7. Draws indicators from smaller to bigger, eg error on warning.
-	public const int c_indicFind = 8, c_indicImages = 9, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20;
+	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
+	public const int
+		c_indicImages = 8,
+		c_indicFound = 9,
+		c_indicRefs = 10,
+		c_indicBraces = 11,
+		c_indicDiagHidden = 17,
+		c_indicInfo = 18,
+		c_indicWarning = 19,
+		c_indicError = 20;
 
 	//#if DEBUG
 	//	public const int c_indicTest = 21;
@@ -559,17 +568,17 @@ partial class SciCode : KScintilla {
 		if (!AaWnd.Is0) _InicatorsInit();
 	}
 
-	bool _indicHaveFind, _indicHaveDiag;
+	bool _indicHaveFound, _indicHaveDiag;
 
-	internal void EInicatorsFind_(List<Range> a) {
-		if (_indicHaveFind) {
-			_indicHaveFind = false;
-			aaaIndicatorClear(c_indicFind);
+	internal void EInicatorsFound_(List<Range> a) {
+		if (_indicHaveFound) {
+			_indicHaveFound = false;
+			aaaIndicatorClear(c_indicFound);
 		}
 		if (a == null || a.Count == 0) return;
-		_indicHaveFind = true;
+		_indicHaveFound = true;
 
-		foreach (var v in a) aaaIndicatorAdd(true, c_indicFind, v);
+		foreach (var v in a) aaaIndicatorAdd(true, c_indicFound, v);
 	}
 
 	internal void EInicatorsDiag_(bool has) {

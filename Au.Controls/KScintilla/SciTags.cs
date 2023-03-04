@@ -130,9 +130,8 @@ public unsafe class SciTags {
 		public bool bold, italic, underline, eolFilled, monospace;
 	}
 
-	KScintilla _c;
-	List<_TagStyle> _styles = new List<_TagStyle>();
-	List<int> _stack = new List<int>();
+	readonly KScintilla _c;
+	readonly List<_TagStyle> _styles = new();
 
 	internal SciTags(KScintilla c) {
 		_c = c;
@@ -260,7 +259,7 @@ public unsafe class SciTags {
 			//print.qm2.write(s.Length / 1048576d);
 		}
 
-		if(scrollToTop) _c.Call(SCI_SETFIRSTVISIBLELINE);
+		if (scrollToTop) _c.Call(SCI_SETFIRSTVISIBLELINE);
 		//never mind: more print.it() may be after print.scrollToTop().
 	}
 
@@ -292,6 +291,23 @@ public unsafe class SciTags {
 		}
 	}
 
+	record struct _StackItem(byte kind, byte style, int i = 0, string s = null); //kind: 0 style, 1 link, 2 fold
+
+	class _Garbage {
+		public readonly List<_StackItem> stack = new();
+		public readonly List<StartEnd> codes = new();
+		public readonly List<POINT> folds = new();
+		public readonly List<(int start, int end, string s)> links = new();
+
+		public void Clear() {
+			stack.Clear();
+			codes.Clear();
+			folds.Clear();
+			links.Clear();
+		}
+	}
+	[ThreadStatic] static WeakReference<_Garbage> t_garbage;
+
 	void _AddText(byte* s, int len, bool append, bool? scroll) {
 		//perf.next();
 		byte* s0 = s, sEnd = s + len; //source text
@@ -301,9 +317,8 @@ public unsafe class SciTags {
 		int prevStylesCount = _styles.Count;
 		bool hasTags = false;
 		byte currentStyle = STYLE_DEFAULT;
-		_stack.Clear();
-		List<StartEnd> codes = null;
-		List<POINT> folds = null;
+
+		if ((t_garbage ??= new(null)).TryGetTarget(out var m)) m.Clear(); else t_garbage.SetTarget(m = new());
 
 		while (s < sEnd) {
 			//find '<'
@@ -318,31 +333,30 @@ public unsafe class SciTags {
 			//end tag. Support <> and </tag>, but don't care what tag it is.
 			if (s[0] == '/') {
 				s++;
-				ch = *s; if (ch == '+' || ch == '.') s++;
+				ch = *s; if ((char)ch is '+' or '.') s++;
 				while (((char)*s).IsAsciiAlpha()) s++;
 				if (s[0] != '>') goto ge;
 			}
 			if (s[0] == '>') {
-				int n = _stack.Count - 1;
+				int n = m.stack.Count - 1;
 				if (n < 0) goto ge; //<> without tag
 				s++;
-				int i = _stack[n];
-				if (i >= 0) { //the tag is a style tag or some other styled tag (eg link)
+				var v = m.stack[n];
+				if (v.kind is 0 or 1) { //the tag is a style tag or some other styled tag (eg link)
 					if (currentStyle >= STYLE_FIRST_EX && _styles[currentStyle - STYLE_FIRST_EX].Eol) {
 						if (*s == '\r') _Write(*s++, currentStyle);
 						if (*s == '\n') _Write(*s++, currentStyle);
 					}
-					currentStyle = (byte)i;
-				} else { //currently can be only <fold>
-					i &= 0x7fffffff;
+					currentStyle = v.style;
+					if (v.kind == 1) m.links.Add((v.i, (int)(t - s0), v.s));
+				} else { //currently can be only 2 for <fold>
 					if (!(s - tag == 6 && BytePtr_.AsciiStarts(tag + 1, "fold"))) goto ge;
-					(folds ??= new List<POINT>()).Add((i, (int)(t - s0)));
-					//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
+					m.folds.Add((v.i, (int)(t - s0)));
+					m.links.Add((v.i, v.i + 2, ""));
 				}
-				_stack.RemoveAt(n);
+				m.stack.RemoveAt(n);
 				continue;
 			}
-			//SHOULDDO: ignore unclosed tags, like in string "ab <b>cd".
 
 			//multi-message separator
 			if (s[0] == 0x15 && s[1] == 0 && s[2] == 4 && (s - s0 == 1 || s[-2] == 10)) {
@@ -352,12 +366,12 @@ public unsafe class SciTags {
 					while (s < sEnd && !(s[0] == '<' && s[1] == 0x15 && s[2] == 0 && s[3] == 4 && s[-1] == 10)) _Write(*s++, STYLE_DEFAULT);
 				}
 				currentStyle = STYLE_DEFAULT;
-				_stack.Clear();
+				m.stack.Clear();
 				continue;
 			}
 
 			//read tag name
-			ch = *s; if (ch == '_' || ch == '\a' || ch == '+' || ch == '.') s++;
+			ch = *s; if ((char)ch is '_' or '\a' or '+' or '.') s++;
 			while (((char)*s).IsAsciiAlpha()) s++;
 			int tagLen = (int)(s - tag);
 			if (tagLen == 0) goto ge;
@@ -365,24 +379,21 @@ public unsafe class SciTags {
 			//read attribute
 			byte* attr = null; int attrLen = 0;
 			if (*s == 32) {
+				var quot = *(++s);
+				if ((char)quot is '\'' or '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
+				attr = s;
+				while (*s != quot && *s != 0) s++;
+				if (*s == 0) goto ge; //either the end of string or a multi-message separator
+				attrLen = (int)(s - attr);
+				if (quot != '>' && *(++s) != '>') goto ge;
 				s++;
-				var quot = *s;
-				if (quot == '\'' || quot == '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
-				int n = (int)(sEnd - s);
-				int i = (quot == '>') ? BytePtr_.AsciiFindChar(s, n, quot) : BytePtr_.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
-				if (i < 0) goto ge;
-				attr = s; s += i + 1; attrLen = i;
-				if (quot != '>') s++;
-				else if (s[-2] == '<') goto ge; //<tag attr TEXT<>
 			} else {
-				if (*s != '>') goto ge;
-				s++;
+				if (*s++ != '>') goto ge;
 			}
 
 			//tags
 			_TagStyle style = default;
-			bool hideTag = false, noEndTag = false, linkTag = false;
-			int stackInt = 0;
+			bool linkTag = false;
 			int i2;
 			ch = *tag;
 			var span = new ReadOnlySpan<byte>(tag, tagLen);
@@ -414,7 +425,7 @@ public unsafe class SciTags {
 					color = c.ToArgb() & 0xffffff;
 				}
 				if (ch == 'c') style.Color = color; else style.BackColor = color;
-				if (ch == 'l' || ch == 'B' || ch == 'Z') style.Eol = true;
+				if ((char)ch is 'l' or 'B' or 'Z') style.Eol = true;
 				break;
 			case 4 << 16 | 's' when span.SequenceEqual("size"u8) && attr != null:
 				style.Size = Api.strtoi(attr);
@@ -426,8 +437,9 @@ public unsafe class SciTags {
 			//	style.Hidden = true;
 			//	break;
 			case 5 << 16 | 'i' when span.SequenceEqual("image"u8) && attr != null:
-				hideTag = noEndTag = true;
-				break;
+				for (var h = tag - 1; h < s; h++) _Write(*h, STYLE_HIDDEN);
+				hasTags = true;
+				continue;
 			case 4 << 16 | 'n' when span.SequenceEqual("nonl"u8):
 				if (s[0] == 13) s++;
 				if (s[0] == 10) s++;
@@ -437,27 +449,26 @@ public unsafe class SciTags {
 				i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if (i2 < 0) goto ge;
 				while (i2-- > 0) _Write(*s++, currentStyle);
 				s += 4;
-				//hasTags = true;
 				continue;
 			case 4 << 16 | 'c' when span.SequenceEqual("code"u8): //<code>code</code>
 				i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), "</code>"); if (i2 < 0) goto ge;
 				if (CodeStylesProvider != null) {
 					int iStartCode = (int)(t - s0);
-					(codes ??= new()).Add(new(iStartCode, iStartCode + i2));
+					m.codes.Add(new(iStartCode, iStartCode + i2));
 					hasTags = true;
 				}
 				while (i2-- > 0) _Write(*s++, STYLE_DEFAULT);
 				s += 7;
 				continue;
 			case 4 << 16 | 'f' when span.SequenceEqual("fold"u8): //<fold>text</fold>
-				stackInt = (int)(t - s0);
+				m.stack.Add(new(2, 0, (int)(t - s0)));
 				//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
-				_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
-				_WriteString(">>", _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle));
+				_WriteString(">>", _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle, m.stack));
 				//let the folded text start from next line
-				var s1 = s; if (s1[0] == '<' && (s1[1] == '_' || s1[1] == '\a') && s1[2] == '>') s1 += 3;
-				switch (*s1) { case 10: case 13: break; default: _WriteString("\r\n", currentStyle); break; }
-				break;
+				var s1 = s; if (s1[0] == '<' && (char)s1[1] is '_' or '\a' && s1[2] == '>') s1 += 3;
+				if (s1[0] is not (10 or 13)) _WriteString("\r\n", currentStyle);
+				hasTags = true;
+				continue;
 			case 4 << 16 | 'l' when span.SequenceEqual("link"u8):
 			case 6 << 16 | 'g' when span.SequenceEqual("google"u8):
 			case 4 << 16 | 'h' when span.SequenceEqual("help"u8):
@@ -469,14 +480,15 @@ public unsafe class SciTags {
 			default:
 				//user-defined tag or unknown.
 				//user-defined tags must start with '+' (links) or '.' (styles).
-				//don't hide unknown tags, unless start with '+' etc. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
+				//don't hide unknown tags, unless start with '+'. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
 				if (ch == '+') {
 					//if(!_userLinkTags.ContainsKey(new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
 					linkTag = true;
+					break;
 				} else if (ch == '.' && (_userStyles?.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style) ?? false)) {
-					//userStyleTag = true;
-				} else goto ge;
-				break;
+					break;
+				}
+				goto ge;
 			}
 
 			if (linkTag) {
@@ -486,28 +498,19 @@ public unsafe class SciTags {
 					style.Underline = true;
 				}
 				style.Hotspot = true;
-				hideTag = true;
 			}
 
-			if (hideTag) {
-				for (var h = tag - 1; h < s; h++) _Write(*h, STYLE_HIDDEN);
+			byte si = _GetStyleIndex(style, currentStyle, m.stack);
+			if (linkTag) {
+				m.stack.Add(new(1, currentStyle, (int)(t - s0), Encoding.UTF8.GetString(tag, (int)(s - tag - 1))));
+			} else {
+				m.stack.Add(new(0, currentStyle));
 			}
+			currentStyle = si;
 
 			hasTags = true;
-			if (noEndTag) continue;
-
-			if (!style.IsEmpty) {
-				byte si = _GetStyleIndex(style, currentStyle);
-				_stack.Add(currentStyle);
-				currentStyle = si;
-			} else {
-				int k = unchecked((int)0x80000000); //no-style flag
-				k |= stackInt;
-				_stack.Add(k);
-			}
-
 			continue;
-		ge: //invalid format of the tag
+			ge: //invalid format of the tag
 			_Write((byte)'<', currentStyle);
 			s = tag;
 		}
@@ -528,30 +531,30 @@ public unsafe class SciTags {
 			return;
 		}
 
-		if (folds != null) {
-			for (int i = folds.Count; --i >= 0;) { //need reverse for nested folds
-				var v = folds[i];
-				int lineStart = _c.Call(SCI_LINEFROMPOSITION, v.x + prevLen), lineEnd = _c.Call(SCI_LINEFROMPOSITION, v.y + prevLen);
-				int level = _c.Call(SCI_GETFOLDLEVEL, lineStart) & SC_FOLDLEVELNUMBERMASK;
-				_c.Call(SCI_SETFOLDLEVEL, lineStart, level | SC_FOLDLEVELHEADERFLAG);
-				for (int j = lineStart + 1; j <= lineEnd; j++) _c.Call(SCI_SETFOLDLEVEL, j, level + 1);
-				_c.Call(SCI_FOLDLINE, lineStart);
-			}
+		foreach (var v in m.links) {
+			_c.AaRangeDataAdd(false, (prevLen + v.start)..(prevLen + v.end), v.s);
+		}
+
+		for (int i = m.folds.Count; --i >= 0;) { //need reverse for nested folds
+			var v = m.folds[i];
+			int lineStart = _c.Call(SCI_LINEFROMPOSITION, v.x + prevLen), lineEnd = _c.Call(SCI_LINEFROMPOSITION, v.y + prevLen);
+			int level = _c.Call(SCI_GETFOLDLEVEL, lineStart) & SC_FOLDLEVELNUMBERMASK;
+			_c.Call(SCI_SETFOLDLEVEL, lineStart, level | SC_FOLDLEVELHEADERFLAG);
+			for (int j = lineStart + 1; j <= lineEnd; j++) _c.Call(SCI_SETFOLDLEVEL, j, level + 1);
+			_c.Call(SCI_FOLDLINE, lineStart);
 		}
 
 		int endStyled = 0;
-		if (codes != null) {
-			for (int i = 0; i < codes.Count; i++) {
-				var v = codes[i];
-				_StyleRangeTo(v.start);
-				var code = Encoding.UTF8.GetString(s0 + v.start, v.Length);
-				//print.qm2.write(v, code);
-				var b = CodeStylesProvider(code);
-				_c.Call(SCI_STARTSTYLING, v.start + prevLen);
-				fixed (byte* p = b) _c.Call(SCI_SETSTYLINGEX, b.Length, p);
-				endStyled = v.end;
-			}
+		foreach (var v in m.codes) {
+			_StyleRangeTo(v.start);
+			var code = Encoding.UTF8.GetString(s0 + v.start, v.Length);
+			//print.qm2.write(v, code);
+			var b = CodeStylesProvider(code);
+			_c.Call(SCI_STARTSTYLING, v.start + prevLen);
+			fixed (byte* p = b) _c.Call(SCI_SETSTYLINGEX, b.Length, p);
+			endStyled = v.end;
 		}
+
 		_StyleRangeTo(len);
 		//perf.next();
 		//print.qm2.write(perf.ToString());
@@ -573,15 +576,13 @@ public unsafe class SciTags {
 		}
 	}
 
-	byte _GetStyleIndex(_TagStyle style, byte currentStyle) {
+	byte _GetStyleIndex(_TagStyle style, byte currentStyle, List<_StackItem> stack) {
 		//merge nested style with ancestors
-		int k = currentStyle;
-		if (k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
-		for (int j = _stack.Count - 1; j > 0; j--) {
-			k = _stack[j];
-			if (k < 0) continue; //a non-styled tag
-			k &= 0xff; //remove other possible flags
-			if (k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
+		if (currentStyle >= STYLE_FIRST_EX) style.Merge(_styles[currentStyle - STYLE_FIRST_EX]);
+		for (int j = stack.Count; --j > 0;) {
+			var v = stack[j];
+			if (v.kind is not (0 or 1)) continue; //a non-styled tag
+			if (v.style >= STYLE_FIRST_EX) style.Merge(_styles[v.style - STYLE_FIRST_EX]);
 		}
 
 		//find or add style
@@ -609,35 +610,16 @@ public unsafe class SciTags {
 
 	public bool GetLinkFromPos(int pos, out string tag, out string attr) {
 		tag = attr = null;
-		if (pos <= 0) return false;
-
-		int iTag, iText, k;
-		//to find the start of link text (after <tag>), search for STYLE_HIDDEN before
-		for (iText = pos; iText > 0; iText--) if (_c.aaaStyleGetAt(iText - 1) == STYLE_HIDDEN) break;
-		if (iText == 0) return false;
-		//to find the start of <tag>, search for some other style before
-		for (iTag = iText - 1; iTag > 0; iTag--) if (_c.aaaStyleGetAt(iTag - 1) != STYLE_HIDDEN) break;
-		//to find the end of link text, search for a non-hotspot style after
-		for (pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
-			k = _c.aaaStyleGetAt(pos);
-			if (k < STYLE_FIRST_EX || !_c.aaaStyleHotspot(k)) break;
+		if (pos >= 0 && _c.AaRangeDataGet(false, pos, out string s, out int from, out int to)) {
+			if (s.Length == 0) { //<fold>
+				_c.Call(SCI_TOGGLEFOLD, _c.Call(SCI_LINEFROMPOSITION, pos));
+			} else if (s.RxMatch(@"(?s)^(\+?\w+)(?| '([^']*)'| ""([^""]*)""| ([^>]*))?$", out var m)) {
+				tag = m[1].Value;
+				attr = m[2].Value ?? _c.aaaRangeText(false, from, to);
+				return true;
+			}
 		}
-		//get text <tag>LinkText
-		var s = _c.aaaRangeText(false, iTag, pos);
-		//print.it(iTag, iText, pos, s);
-
-		//is it <fold>?
-		if (s == " >>") {
-			int line = _c.Call(SCI_LINEFROMPOSITION, iTag);
-			_c.Call(SCI_TOGGLEFOLD, line);
-			return false;
-		}
-		//get tag, attribute and text
-		if (!s.RxMatch(@"(?s)^<(\+?\w+)(?| '([^']*)'| ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return false;
-		tag = m[1].Value; attr = m[2].Value ?? m[3].Value;
-		//print.it($"'{tag}'  '{attr}'");
-
-		return true;
+		return false;
 	}
 
 	//note: attr can be ""

@@ -487,8 +487,6 @@ public unsafe partial class KScintilla : HwndHost {
 
 	#region range data
 
-	//TODO: use for SciTags.
-
 	struct _RangeData {
 		public int from, to;
 		public object data;
@@ -510,35 +508,34 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 
 	/// <summary>
-	/// Gets data of any type attached to a range of text with <see cref="AaRangeDataAdd"/> at the specified position.
+	/// Gets data of type <i>T</i> attached to a range of text with <see cref="AaRangeDataAdd"/> at the specified position.
 	/// </summary>
-	/// <returns>true if <i>pos</i> is in a range added with <see cref="AaRangeDataAdd"/>.</returns>
+	/// <param name="data">Receives data. Use type <b>object</b> to get data of any type.</param>
+	/// <returns>true if <i>pos</i> is in a range added with <see cref="AaRangeDataAdd"/> and the range data type is <i>T</i> (or inherited).</returns>
 	/// <exception cref="InvalidOperationException">Called from <see cref="AaRangeDataRemoved"/>.</exception>
-	public bool AaRangeDataGet(bool utf16, int pos, out object data)
-		=> _RdGet(utf16, pos, out data);
+	public bool AaRangeDataGet<T>(bool utf16, int pos, out T data) where T : class
+		=> AaRangeDataGet(utf16, pos, out data, out _, out _);
 
 	/// <summary>
 	/// Gets data of type <i>T</i> attached to a range of text with <see cref="AaRangeDataAdd"/> at the specified position.
 	/// </summary>
-	/// <returns>true if <i>pos</i> is in a range added with <see cref="AaRangeDataAdd"/> and the range data type is <i>T</i>.</returns>
+	/// <param name="data">Receives data. Use type <b>object</b> to get data of any type.</param>
+	/// <returns>true if <i>pos</i> is in a range added with <see cref="AaRangeDataAdd"/> and the range data type is <i>T</i> (or inherited).</returns>
 	/// <exception cref="InvalidOperationException">Called from <see cref="AaRangeDataRemoved"/>.</exception>
-	public bool AaRangeDataGet<T>(bool utf16, int pos, out T data) where T : class {
-		bool ok = _RdGet(utf16, pos, out object o, typeof(T));
-		data = Unsafe.As<T>(o);
-		return ok;
-	}
-
-	bool _RdGet(bool utf16, int pos, out object data, Type type = null) {
+	public bool AaRangeDataGet<T>(bool utf16, int pos, out T data, out int from, out int to) where T : class {
 		if (_rdLocked) throw new InvalidOperationException("Called from AaRangeDataRemoved.");
 		pos = _ParamPos(utf16, pos);
 		foreach (ref var v in _rd.AsSpan()) {
-			if (pos >= v.from && pos < v.to) {
-				if (type != null && v.data.GetType() != type) continue;
-				data = v.data;
+			if (pos >= v.from && pos < v.to && v.data is T d) {
+				data = d;
+				from = v.from;
+				to = v.to;
 				return true;
 			}
 		}
 		data = null;
+		from = 0;
+		to = 0;
 		return false;
 	}
 

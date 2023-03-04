@@ -5,10 +5,16 @@ Multiple 'Find' etc results tabs in the 'Found' panel.
 
 Menu Edit -> Find references.
 
+Menu Edit -> Find implementations.
+
+Highlights references of the symbol at the text cursor.
+
+Highlights matching braces and directives of the brace/directive at the text cursor.
+
 New options:
 - Options -> Code -> Formatting.
 - Options -> Hotkeys -> Capture image.
-- Options -> Font -> Find highlight.
+- Options -> Font -> Text/symbol/brace highlight.
 
 ### Library
 New members:

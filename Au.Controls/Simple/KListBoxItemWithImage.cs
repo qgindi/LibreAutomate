@@ -21,4 +21,6 @@ public class KListBoxItemWithImage : ListBoxItem {
 		_tb.Text = text;
 		ToolTip = tooltip;
 	}
+
+	public override string ToString() => _tb.Text;
 }

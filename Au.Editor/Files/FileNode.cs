@@ -416,6 +416,20 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		return new(false, es);
 	}
 
+	/// <summary>
+	/// Loads text of any file like <see cref="GetFileText"/>. Silent, thread-safe.
+	/// </summary>
+	/// <param name="filePath">Full normal path, to pass directly to <b>StreamReader</b>.</param>
+	/// <returns>null if failed or length more than 100_000_000.</returns>
+	internal static string GetFileTextLL_(string filePath) {
+		try {
+			using var sr = filesystem.waitIfLocked(() => new StreamReader(filePath));
+			if (sr.BaseStream.Length > 100_000_000) return null;
+			return sr.ReadToEnd();
+		}
+		catch { return null; }
+	}
+
 	long _fileModTime;
 
 	//called when SciDoc loaded or saved the file

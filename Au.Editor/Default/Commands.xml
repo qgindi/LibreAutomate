@@ -51,6 +51,7 @@ All attributes are optional. The Example command contains all.
 		<Images_in_code />
 		<WPF_preview />
 		<Find separator="" />
+		<Find_references />
 	</Edit>
 	<Tools>
 		<Input_recorder />

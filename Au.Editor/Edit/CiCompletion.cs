@@ -41,7 +41,8 @@ partial class CiCompletion {
 	public bool IsVisibleUI => _data != null;
 
 	public void Cancel() {
-		_cancelTS?.Cancel(); _cancelTS = null;
+		_cancelTS?.Cancel();
+		_cancelTS = null;
 		_CancelUI();
 	}
 
