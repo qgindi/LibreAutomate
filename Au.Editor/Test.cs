@@ -45,8 +45,83 @@ using Au.Controls;
 
 #pragma warning disable 169
 
-namespace System {
-	
+interface Inter {
+	void Koo(int i);
+}
+interface Inter2 : Inter {
+	void Koo2(int i);
+}
+interface Inter3 : Inter2 {
+	void Koo3(int i);
+}
+
+class C1 : Inter {
+	public void Koo(int i) {
+		
+	}
+}
+
+class C2 : Inter {
+	void Inter.Koo(int i) {
+		
+	}
+}
+
+class C22 : Inter2 {
+	void Inter.Koo(int i) { }
+	void Inter2.Koo2(int i) { }
+}
+
+class C3 : C2 {
+	public C3() {  }
+}
+
+class C4 : C2 {
+	public virtual void Vik() {  }
+}
+
+class C5 : C4 {
+	public override void Vik() {  }
+}
+
+abstract class AbsA {
+	public abstract void Koo(int i);
+}
+
+class CA1 : AbsA {
+	public override void Koo(int i) {
+		
+	}
+}
+
+class CA2 : AbsA {
+	public override void Koo(int i) {
+		
+	}
+}
+
+
+#region
+#region
+#endregion
+#endregion
+
+#if true
+#else
+#endif
+
+#if true
+#elif true
+#else
+#endif
+
+class Moo { public Moo() { } }
+
+class C {
+	public static int Prop {
+		get => 0;
+		set {  }
+	}
 }
 
 static unsafe class Test {
@@ -57,8 +132,19 @@ static unsafe class Test {
 	public static void FromMenubar() {
 		print.clear();
 
-		
+		var m = new Moo();
+		Moo m2 = new();
+		var am = new Moo[2];
 
+C.Prop = 1;
+print.it(C.Prop);
+
+		var vv = new string[2];
+		var vv2 = new string[2];
+
+		int podi;
+		podi = 1;
+		podi = 2;
 
 		//var d = Panels.Editor.ActiveDoc;
 

@@ -410,8 +410,13 @@ partial class CiStyling {
 		public string FontName = "Consolas";
 		public int FontSize = 10;
 		public int BackgroundColor = 0xffffff;
-		//public int FindHighlightColor = 0xf6b94d; //orange, like in VS
-		public int FindHighlightColor = 0xffff00; //yellow, like in Chrome
+		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
+		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome
+		public int IndicRefsColor = 0x80C000;
+		public int IndicBracesColor = 0x80C000;
+		public int IndicFoundAlpha = 255;
+		public int IndicRefsAlpha = 25;
+		public int IndicBracesAlpha = 25;
 
 		public TStyle None; //black
 		public TStyle Comment = 0x60A000; //light green, towards yellow
@@ -458,7 +463,7 @@ partial class CiStyling {
 					if (!a[1].NE()) FontName = a[1];
 					if (a.Length > 2) { int fs = a[2].ToInt(); if (fs >= 5 && fs <= 100) FontSize = fs; }
 					break;
-				case "Background": _Color(ref BackgroundColor); break;
+				case "Background": _Int(ref BackgroundColor); break;
 				case nameof(None): _Style(ref None); break;
 				case nameof(Comment): _Style(ref Comment); break;
 				case nameof(String): _Style(ref String); break;
@@ -478,16 +483,22 @@ partial class CiStyling {
 				case nameof(XmlDocText): _Style(ref XmlDocText); break;
 				case nameof(XmlDocTag): _Style(ref XmlDocTag); break;
 				case nameof(LineNumber): _Style(ref LineNumber); break;
-				case "FindHighlight": _Color(ref FindHighlightColor); break;
+				case nameof(IndicFoundColor): _Int(ref IndicFoundColor); _Alpha(ref IndicFoundAlpha); break;
+				case nameof(IndicRefsColor): _Int(ref IndicRefsColor); _Alpha(ref IndicRefsAlpha); break;
+				case nameof(IndicBracesColor): _Int(ref IndicBracesColor); _Alpha(ref IndicBracesAlpha); break;
 				}
 
 				void _Style(ref TStyle r) {
-					if (!a[1].NE()) r.color = a[1].ToInt();
-					if (a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt()); else r.bold = false;
+					if (!a[1].NE() && a[1].ToInt(out int i)) r.color = i;
+					if (a.Length > 2 && !a[2].NE() && a[2].ToInt(out int i2)) r.bold = 0 != (1 & i2); else r.bold = false;
 				}
 
-				void _Color(ref int color) {
-					if (!a[1].NE()) color = a[1].ToInt();
+				void _Int(ref int value) {
+					if (!a[1].NE() && a[1].ToInt(out int i)) value = i;
+				}
+
+				void _Alpha(ref int value) {
+					if (a.Length > 2 && !a[2].NE() && a[2].ToInt(out int i)) value = Math.Clamp(i, 0, 255);
 				}
 			}
 		}
@@ -515,7 +526,9 @@ partial class CiStyling {
 			_Style(nameof(XmlDocText), XmlDocText);
 			_Style(nameof(XmlDocTag), XmlDocTag);
 			_Style(nameof(LineNumber), LineNumber);
-			b.Append("FindHighlight, 0x").AppendLine(FindHighlightColor.ToString("X6"));
+			b.AppendLine($"{nameof(IndicFoundColor)}, 0x{IndicFoundColor:X6}, {IndicFoundAlpha}");
+			b.AppendLine($"{nameof(IndicRefsColor)}, 0x{IndicRefsColor:X6}, {IndicRefsAlpha}");
+			b.AppendLine($"{nameof(IndicBracesColor)}, 0x{IndicBracesColor:X6}, {IndicBracesAlpha}");
 
 			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
@@ -559,7 +572,12 @@ partial class CiStyling {
 
 			LineNumber = _Style(EStyle.LineNumber);
 
-			FindHighlightColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFind));
+			IndicFoundColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFound));
+			IndicRefsColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicRefs));
+			IndicBracesColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicBraces));
+			IndicFoundAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicFound);
+			IndicRefsAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicRefs);
+			IndicBracesAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicBraces);
 		}
 
 		/// <param name="multiFont">Set font only for code styles.</param>
@@ -596,7 +614,19 @@ partial class CiStyling {
 
 			_Set((EStyle)STYLE_LINENUMBER, LineNumber);
 
-			sci.aaaIndicatorDefine(SciCode.c_indicFind, INDIC_FULLBOX, FindHighlightColor, 255, underText: true);
+			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha);
+			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha);
+			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha);
+
+			void _Indic(int indic, int color, int alpha) {
+				sci.aaaIndicatorDefine(indic, INDIC_FULLBOX, color, alpha, alpha > 0 ? (255 + alpha) / 2 : 255, underText: true);
+			}
+		}
+
+		//used in DOptions
+		internal static void SetIndicAlpha_(KScintilla sci, int indic, int alpha) {
+			sci.Call(SCI_INDICSETALPHA, indic, alpha);
+			sci.Call(SCI_INDICSETOUTLINEALPHA, indic, alpha > 0 ? (255 + alpha) / 2 : 255);
 		}
 
 		//rejected

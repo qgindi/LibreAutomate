@@ -18,6 +18,7 @@ class PanelFound {
 		b.Options(modifyPadding: false, margin: new());
 		
 		var tb = b.xAddToolBar(hideOverflow: true, controlBrush: true);
+		tb.UiaSetName("Found_toolbar");
 		
 		var cKeep = tb.AddCheckbox("*RemixIcon.Lock2Line" + Menus.black, "Keep results", enabled: false);
 		cKeep.CheckChanged += (_, _) => { if (_iActive >= 0) _Sci.isLocked = cKeep.IsChecked; };
@@ -27,7 +28,7 @@ class PanelFound {
 		b.Add<Border>().Border(thickness2: new(1, 0, 0, 0)).SpanRows(2);
 		b.Add(out _grid, flags: WBAdd.ChildOfLast);
 		
-		b.Row(-1).Add(out _lb).Span(1).Width(70..).Border(thickness2: new(0, 1, 0, 0));
+		b.Row(-1).Add(out _lb).Span(1).Width(70..).Border(thickness2: new(0, 1, 0, 0)).UiaName("Found_pages");
 		_lb.SelectionChanged += (_, _) => {
 			if (_iActive >= 0) _Sci.Visibility = Visibility.Hidden;
 			_iActive = _lb.SelectedIndex;
@@ -61,9 +62,10 @@ class PanelFound {
 				i = _a.Count;
 				_a.Add(c);
 				var li = new KListBoxItemWithImage(kind switch {
-					Found.Files => "*FeatherIcons.File" + Menus.blue,
-					Found.Text => "*Material.Text" + Menus.black,
-					Found.SymbolReferences => "*Codicons.References" + Menus.purple,
+					Found.Files => "*FeatherIcons.File" + Menus.black,
+					//Found.Text => "*Material.Text" + Menus.black,
+					Found.Text => "*Material.FindReplace" + Menus.black,
+					Found.SymbolReferences => "*Codicons.References" + Menus.black,
 					_ => null
 				}, null);
 				li.ContextMenuOpening += (li, _) => {
@@ -88,14 +90,11 @@ class PanelFound {
 			Hilite2Indic = Indicators.Hilite2,
 			LinkIndic = Indicators.Link,
 			Link2Indic = Indicators.Link2,
+			ControlWidth = (int)_grid.ActualWidth,
 		};
 		
 		if (kind is Found.Files) return new(_Sci, disable: false);
-		WorkingState ws = new(_Sci, disable: true);
-		//_Sci.aaaText = "<c #A0A0A0>... searching ...<>"; //TODO: enable, or use progressbar instead
-		//Api.UpdateWindow(_Sci.AaWnd); //ok if was visible, but not if made visible now. Also does not update the listbox.
-		wait.doEvents(); //SHOULDDO: use async-await instead
-		return ws;
+		return new(_Sci, disable: true);
 	}
 	
 	public void ClearResults(Found kind) {
@@ -104,7 +103,7 @@ class PanelFound {
 		(_lb.Items[_iActive] as KListBoxItemWithImage).SetText(null, null);
 	}
 	
-	bool _IsSciOk(in WorkingState ws) {//TODO: remove
+	bool _IsSciOk(in WorkingState ws) {
 		return _iActive >= 0 && _Sci == ws.Scintilla;
 	}
 	
@@ -129,8 +128,8 @@ class PanelFound {
 	/// Appends limited text of line of text range <i>start..end</i>, as a link that opens file <i>f</i> and select text <i>start..end</i>, with highlighted range <i>start..end</i>.
 	/// </summary>
 	/// <param name="text">Text of file <i>f</i>.</param>
-	public void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile) {
-		int wid = Math.Clamp(((int)_grid.ActualWidth - 20) / 10, 30, 100);
+	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile) {
+		int wid = Math.Clamp((b.ControlWidth - 20) / 10, 30, 100);
 		int lineStart = start, lineEnd = end;
 		int lsMax = Math.Max(start - wid, 0), leMax = Math.Min(end + 200, text.Length); //start/end limits like in VS
 		while (lineStart > lsMax && !text.IsCsNewlineChar(lineStart - 1)) lineStart--;
@@ -185,11 +184,70 @@ class PanelFound {
 			AaInitTagsStyle = KScintilla.AaTagsStyle.AutoAlways;
 		}
 		
+		protected override void AaOnHandleCreated() {
+			aaaMarginSetWidth(1, 0);
+			aaaStyleFont(STYLE_DEFAULT, App.Wmain);
+			aaaStyleClearAll();
+			Call(SCI_SETCARETSTYLE, CARETSTYLE_INVISIBLE);
+			Call(SCI_SETEXTRAASCENT, 1);
+			Call(SCI_SETEXTRADESCENT, 1);
+			
+			//indicators
+			aaaIndicatorDefine(Indicators.Hilite, INDIC_STRAIGHTBOX, 0xffff00, alpha: 255, borderAlpha: 255, underText: true);
+			aaaIndicatorDefine(Indicators.Hilite2, INDIC_STRAIGHTBOX, 0xFFC000, alpha: 255, borderAlpha: 255, underText: true); //currently not used. Edit when used.
+			aaaIndicatorDefine(Indicators.FocusRect, INDIC_FULLBOX, 0x4169E1, alpha: 25, borderAlpha: 255, strokeWidth: _dpi / 96); //better than SC_ELEMENT_CARET_LINE_BACK/SCI_SETCARETLINEFRAME etc
+			
+			//link indicators
+			aaaIndicatorDefine(-Indicators.Link, INDIC_COMPOSITIONTHIN, 0x0080ff, hoverColor: 0x8000ff);
+			aaaIndicatorDefine(-Indicators.Link + 1, INDIC_TEXTFORE, 0x0080ff, hoverColor: 0x8000ff);
+			aaaIndicatorDefine(Indicators.Link2, INDIC_HIDDEN, hoverColor: 1);
+			
+			//styles
+			aaaStyleBold(Styles.Bold, true);
+			aaaStyleForeColor(Styles.Gray, 0x808080);
+			aaaStyleForeColor(Styles.Green, 0x008000);
+			
+			if (kind == Found.SymbolReferences) aaaFoldingInit(0, autoFold: true);
+			
+			base.AaOnHandleCreated();
+		}
+		
+		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+			switch (msg) {
+			case Api.WM_MBUTTONDOWN: //close file
+				int pos = Call(SCI_POSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
+				if (AaRangeDataGet(false, pos, out object o)) {
+					var f = o switch { FileNode f1 => f1, CodeLink cl => cl.file, _ => null };
+					if (f != null) App.Model.CloseFile(f, selectOther: true, focusEditor: true);
+				}
+				return default; //don't focus
+			}
+			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
+		}
+		
+		protected override void AaOnSciNotify(ref SCNotification n) {
+			//if (n.code == NOTIF.SCN_MODIFIED) print.it(n.code, n.modificationType, n.position, n.length); else if (n.code is not (NOTIF.SCN_PAINTED or NOTIF.SCN_STYLENEEDED)) print.it(n.code);
+			switch (n.code) {
+			case NOTIF.SCN_INDICATORRELEASE:
+				_OnClickIndicLink(n.position);
+				break;
+			}
+			base.AaOnSciNotify(ref n);
+		}
+		
 		public void Clear() {
 			aaaClearText();
 			ttf = null;
 			files = null;
 			_openedFiles = null;
+		}
+		
+		public void CloseOpenedFiles() {
+			if (_openedFiles != null) {
+				App.Model.CloseFiles(_openedFiles);
+				App.Model.CollapseAll(exceptWithOpenFiles: true);
+				_openedFiles = null;
+			}
 		}
 		
 		void _OnClickIndicLink(int pos8) {
@@ -244,114 +302,6 @@ class PanelFound {
 			aaaIndicatorAdd(false, Indicators.FocusRect, v.start..v.end);
 			return true;
 		}
-		
-		bool _OpenLinkClicked(string file, bool replaceAll = false) //TODO: remove
-			=> _OpenLinkClicked(App.Model.Find(file), replaceAll);
-		
-		public void CloseOpenedFiles() {
-			if (_openedFiles != null) {
-				App.Model.CloseFiles(_openedFiles);
-				App.Model.CollapseAll(exceptWithOpenFiles: true);
-				_openedFiles = null;
-			}
-		}
-		
-		protected override void AaOnHandleCreated() {
-			aaaMarginSetWidth(1, 0);
-			aaaStyleFont(STYLE_DEFAULT, App.Wmain);
-			aaaStyleClearAll();
-			Call(SCI_SETCARETSTYLE, CARETSTYLE_INVISIBLE);
-			Call(SCI_SETEXTRAASCENT, 1);
-			Call(SCI_SETEXTRADESCENT, 1);
-			
-			//indicators
-			aaaIndicatorDefine(Indicators.Hilite, INDIC_STRAIGHTBOX, 0xffff00, alpha: 255, underText: true);
-			aaaIndicatorDefine(Indicators.Hilite2, INDIC_STRAIGHTBOX, 0xFFC000, alpha: 255, underText: true); //currently not used. Edit when used.
-			aaaIndicatorDefine(Indicators.FocusRect, INDIC_FULLBOX, 0x4169E1, alpha: 25, borderAlpha: 255, strokeWidth: _dpi / 96); //better than SC_ELEMENT_CARET_LINE_BACK/SCI_SETCARETLINEFRAME etc
-			
-			//link indicators
-			aaaIndicatorDefine(-Indicators.Link, INDIC_COMPOSITIONTHIN, 0x0080ff, hoverColor: 0x8000ff);
-			aaaIndicatorDefine(-Indicators.Link + 1, INDIC_TEXTFORE, 0x0080ff, hoverColor: 0x8000ff);
-			aaaIndicatorDefine(Indicators.Link2, INDIC_HIDDEN, hoverColor: 1);
-			
-			//styles
-			aaaStyleBold(Styles.Bold, true);
-			aaaStyleForeColor(Styles.Gray, 0x808080);
-			aaaStyleForeColor(Styles.Green, 0x008000);
-			
-			//AaRangeDataRemoved += o => { print.it("removed", o); };
-			AaTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);//TODO: remove
-			
-			//open file
-			AaTags.AddLinkTag("+open", s => {
-				_OpenLinkClicked(s);
-			});
-			
-			//close all opened files
-			AaTags.AddLinkTag("+caf", s => {
-				if (_openedFiles == null) return;
-				App.Model.CloseFiles(_openedFiles);
-				App.Model.CollapseAll(exceptWithOpenFiles: true);
-				_openedFiles = null;
-			});
-			
-			if (kind != Found.Files) {
-				//open file and select range
-				AaTags.AddLinkTag("+f", s => {
-					var a = s.Split(' ');
-					if (!_OpenLinkClicked(a[0])) return;
-					var doc = Panels.Editor.ActiveDoc;
-					//doc.Focus();
-					int from = a[1].ToInt(), to = a[2].ToInt();
-					timer.after(10, _ => {
-						if (to >= doc.aaaLen16) return;
-						App.Model.EditGoBack.RecordNext();
-						doc.aaaSelect(true, from, to, true);
-					});
-					//info: scrolling works better with async when now opened the file
-				});
-			}
-			
-			if (kind == Found.Text) {
-				//replace all in current file
-				AaTags.AddLinkTag("+ra", s => {
-					if (!_OpenLinkClicked(s, replaceAll: true)) return;
-					timer.after(10, _ => Panels.Find._ReplaceAllInFile(ttf));
-					//info: without timer sometimes does not set cursor pos correctly
-				});
-				
-				//replace all in all files
-				AaTags.AddLinkTag("+raif", _ => Panels.Find._ReplaceAllInFiles(ttf, files, ref _openedFiles));
-			}
-			
-			if (kind == Found.SymbolReferences) aaaFoldingInit(0, autoFold: true);
-			
-			base.AaOnHandleCreated();
-		}
-		
-		protected override void AaOnSciNotify(ref SCNotification n) {
-			//if (n.code == NOTIF.SCN_MODIFIED) print.it(n.code, n.modificationType, n.position, n.length); else if (n.code is not (NOTIF.SCN_PAINTED or NOTIF.SCN_STYLENEEDED)) print.it(n.code);
-			switch (n.code) {
-			case NOTIF.SCN_INDICATORRELEASE:
-				_OnClickIndicLink(n.position);
-				break;
-			}
-			base.AaOnSciNotify(ref n);
-		}
-		
-		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-			switch (msg) {
-			case Api.WM_MBUTTONDOWN: //close file
-				int pos = Call(SCI_POSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
-				//if (AaTags.GetLinkFromPos(pos, out var tag, out var attr) && tag is "+f" or "+ra") { //TODO
-				//	//print.it(tag, attr);
-				//	var f = App.Model.Find(attr.Split(' ')[0]);
-				//	if (f != null) App.Model.CloseFile(f, selectOther: true, focusEditor: true);
-				//}
-				return default; //don't focus
-			}
-			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
-		}
 	}
 	
 	public enum Found {
@@ -360,7 +310,6 @@ class PanelFound {
 		SymbolReferences
 	}
 	
-	//TODO: finish.
 	//CONSIDER: instead of taskbar button progress:
 	//	While searching hide scintilla (or don't create until finished) and in its place show a WPF progressbar.
 	//	But then need to dispatch messages, eg async-await.

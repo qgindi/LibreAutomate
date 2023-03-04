@@ -5,7 +5,7 @@ using System.Windows.Controls;
 static class Menus {
 	public const string
 		black = " #505050|#D0D0D0",
-		blue = " #008EEE|#77C9FF",
+		blue = " #0080FF|#77C9FF",
 		green = " #99BF00|#A9CE13",
 		brown = " #9F5300|#D0D0D0",
 		purple = " #B340FF|#D595FF",
@@ -212,23 +212,27 @@ static class Menus {
 			public static void Copy_without_screenshots() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 
-		[Command(separator = true)]
-		public static class IntelliSense {
-			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + purple)]
-			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
+		[Command("Find text", separator = true, keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
+		public static void Find() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
+		//fbc named 'Find'. Would be better 'Find_text', but then warning if customized.
 
-			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + purple)]
-			public static void Parameter_info() { CodeInfo.ShowSignature(); }
-		}
+		[Command(keys = "Shift+F12", image = "*Codicons.References" + blue)]
+		public static void Find_references() { CiFind.FindReferencesOrImplementations(false); }
 
-		[Command(keys = "F12", image = "*RemixIcon.WalkFill" + purple)]
+		[Command]
+		public static void Find_implementations() { CiFind.FindReferencesOrImplementations(true); }
+
+		[Command(keys = "F12", image = "*RemixIcon.WalkFill" + blue)]
 		public static void Go_to_definition() { CiGoTo.GoToDefinition(); }
 
-		[Command(keys = "Shift+F12", image = "*Codicons.References" + purple)]
-		public static void Find_references() { CiSymbols.FindReferences(); }
+		[Command]
+		public static class IntelliSense {
+			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + blue)]
+			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
 
-		[Command(keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
-		public static void Find_text() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
+			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + blue)]
+			public static void Parameter_info() { CodeInfo.ShowSignature(); }
+		}
 
 		[Command(separator = true)]
 		public static class Document {

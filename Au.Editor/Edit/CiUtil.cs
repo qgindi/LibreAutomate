@@ -465,16 +465,16 @@ global using System.Windows.Media;
 
 	public static void HiliteRange(int start, int end) {
 		var doc = Panels.Editor.ActiveDoc;
-		doc.EInicatorsFind_(null);
-		doc.EInicatorsFind_(new List<Range> { start..end });
+		doc.EInicatorsFound_(null);
+		doc.EInicatorsFound_(new List<Range> { start..end });
 	}
 
 	public static void HiliteRange(TextSpan span) => HiliteRange(span.Start, span.End);
 
 	public static void HiliteRanges(List<Range> a) {
 		var doc = Panels.Editor.ActiveDoc;
-		doc.EInicatorsFind_(null);
-		doc.EInicatorsFind_(a);
+		doc.EInicatorsFound_(null);
+		doc.EInicatorsFound_(a);
 	}
 
 #endif

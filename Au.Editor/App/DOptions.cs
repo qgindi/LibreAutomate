@@ -142,7 +142,7 @@ class DOptions : KDialogWindow {
 	//}
 
 	void _Font() {
-		var b = _Page("Font", WBPanelType.Dock);
+		var b = _Page("Font, colors", WBPanelType.Dock);
 
 		b.Add(out KScintilla sciStyles).Width(150);
 		sciStyles.AaInitBorder = true;
@@ -153,12 +153,13 @@ class DOptions : KDialogWindow {
 		b.R.StartGrid();
 		var pFont = b.Panel as Grid;
 		b.R.Add("Font", out ComboBox fontName).Editable();
-		b.R.Add("Size", out TextBox fontSize).Width(40).Align("L");
+		b.R.Add("Size", out TextBox fontSize).Width(40, "L");
 		b.End();
 		b.R.StartGrid();
 		var pColor = b.Panel as Grid;
-		b.R.Add(out KColorPicker color);
-		b.R.Add(out KCheckBox bold, "Bold");
+		b.R.Add(out KColorPicker colorPicker);
+		b.R.Add(out KCheckBox cBold, "Bold");
+		b.R.Add(out Label lAlpha, "Opacity 0-255", out TextBox tAlpha).Width(50, "L");
 		b.End();
 		b.Row(-1);
 		b.R.AddSeparator();
@@ -172,6 +173,10 @@ class DOptions : KDialogWindow {
 		pColor.Visibility = Visibility.Collapsed;
 
 		b.Loaded += () => {
+			sciStyles.Call(Sci.SCI_SETCARETLINEFRAME, 1);
+			sciStyles.Call(Sci.SCI_SETELEMENTCOLOUR, Sci.SC_ELEMENT_CARET_LINE_BACK, 0xE0E0E0);
+			sciStyles.Call(Sci.SCI_SETCARETLINEVISIBLEALWAYS, 1);
+
 			var styles = CiStyling.TStyles.Settings;
 
 			//font
@@ -206,7 +211,6 @@ class DOptions : KDialogWindow {
 			styles.ToScintilla(sciStyles);
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
-			int foundColor = styles.FindHighlightColor;
 			var s = """
 Font
 Background
@@ -229,7 +233,9 @@ GotoLabel
 XML doc text
 /// <doc tag>
 Line number
-Find highlight
+Text highlight
+Symbol highlight
+Brace highlight
 """;
 			sciStyles.aaaText = s;
 			int i = -3, lastStyle = (int)CiStyling.EStyle.countUserDefined;
@@ -245,7 +251,7 @@ Find highlight
 					sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, ii);
 				} else { //indicator
 					int ii = i - lastStyle;
-					sciStyles.aaaIndicatorAdd(false, ii switch { 1 => SciCode.c_indicFind, _ => 0 }, v.Range);
+					sciStyles.aaaIndicatorAdd(false, ii switch { 1 => SciCode.c_indicFound, 2 => SciCode.c_indicRefs, 3 => SciCode.c_indicBraces, _ => 0 }, v.Range);
 				}
 			}
 			//when changed the selected line
@@ -265,21 +271,26 @@ Find highlight
 							pColor.Visibility = Visibility.Visible;
 							ignoreColorEvents = true;
 							int col;
+							cBold.Visibility = k.kind == _StyleKind.Style ? Visibility.Visible : Visibility.Collapsed;
+							lAlpha.Visibility = k.kind == _StyleKind.Indicator ? Visibility.Visible : Visibility.Collapsed;
+							tAlpha.Visibility = k.kind == _StyleKind.Indicator ? Visibility.Visible : Visibility.Collapsed;
 							if (k.kind == _StyleKind.Style) {
 								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k.index));
-								bold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k.index);
-								bold.Visibility = Visibility.Visible;
-							} else { //Indicator, Background
-								bold.Visibility = Visibility.Collapsed;
-								col = k.kind switch { _StyleKind.Indicator => foundColor, _ => backColor };
+								cBold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k.index);
+							} else if (k.kind == _StyleKind.Indicator) {
+								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_INDICGETFORE, k.index));
+								tAlpha.Text = sciStyles.Call(Sci.SCI_INDICGETALPHA, k.index).ToS();
+							} else { //Background
+								col = backColor;
 							}
-							color.Color = col;
+							colorPicker.Color = col;
 							ignoreColorEvents = false;
 						}
 					}
 					break;
 				}
 			};
+
 			//when values of style controls changed
 			TextChangedEventHandler textChanged = (sender, _) => _ChangeFont(sender);
 			fontName.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
@@ -295,20 +306,24 @@ Find highlight
 				var s = fontName.Text; if (s == "" || s.Starts("[ ")) s = "Consolas";
 				return (s, fontSize.Text.ToInt());
 			}
-			bold.CheckChanged += (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
-			color.ColorChanged += col => { if (!ignoreColorEvents) _UpdateSci(); };
+
+			colorPicker.ColorChanged += _ => _UpdateSci();
+			cBold.CheckChanged += (sender, _) => _UpdateSci(sender);
+			tAlpha.TextChanged += (sender, _) => _UpdateSci(sender);
+
 			void _UpdateSci(object control = null) {
+				if (ignoreColorEvents) return;
 				var k = _SciStylesLineToStyleIndex(sciStyles.aaaLineFromPos(false, sciStyles.aaaCurrentPos8));
-				int col = color.Color;
+				int col = colorPicker.Color;
 				if (k.kind == _StyleKind.Style) {
-					if (control == bold) sciStyles.aaaStyleBold(k.index, bold.IsChecked);
+					if (control == cBold) sciStyles.aaaStyleBold(k.index, cBold.IsChecked);
 					else sciStyles.aaaStyleForeColor(k.index, col);
+				} else if (k.kind == _StyleKind.Indicator) {
+					if (control == tAlpha) CiStyling.TStyles.SetIndicAlpha_(sciStyles, k.index, Math.Clamp(tAlpha.Text.ToInt(), 0, 255));
+					else sciStyles.Call(Sci.SCI_INDICSETFORE, k.index, ColorInt.SwapRB(col));
 				} else if (k.kind == _StyleKind.Background) {
 					backColor = col;
 					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.aaaStyleBackColor(i, col);
-				} else if (k.kind == _StyleKind.Indicator) {
-					if (k.index == SciCode.c_indicFind) foundColor = col;
-					sciStyles.Call(Sci.SCI_INDICSETFORE, k.index, ColorInt.SwapRB(col));
 				}
 			}
 
@@ -317,21 +332,21 @@ Find highlight
 				return (line -= 2) switch {
 					-2 => (_StyleKind.Font, 0),
 					-1 => (_StyleKind.Background, 0),
-					nu + 1 => (_StyleKind.Indicator, SciCode.c_indicFind),
+					nu + 1 => (_StyleKind.Indicator, SciCode.c_indicFound),
+					nu + 2 => (_StyleKind.Indicator, SciCode.c_indicRefs),
+					nu + 3 => (_StyleKind.Indicator, SciCode.c_indicBraces),
 					nu => (_StyleKind.Style, Sci.STYLE_LINENUMBER),
 					_ => (_StyleKind.Style, line)
 				};
 			}
 
-			bool inverted = false;
-
 			_b.OkApply += e => {
-				var styles = new CiStyling.TStyles(sciStyles); //gets colors and bold
+				var styles = new CiStyling.TStyles(sciStyles); //gets colors, bold, indicators
 				var (fname, fsize) = _GetFont();
 				styles.FontName = fname;
 				styles.FontSize = fsize;
 
-				if (styles != CiStyling.TStyles.Settings || inverted) {
+				if (styles != CiStyling.TStyles.Settings) {
 					CiStyling.TStyles.Settings = styles;
 					foreach (var v in Panels.Editor.OpenDocs) {
 						styles.ToScintilla(v);

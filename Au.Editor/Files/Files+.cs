@@ -48,7 +48,7 @@ class DNewWorkspace : KDialogWindow {
 		TextBox tName, tLocation = null;
 		b.R.Add("Folder name", out tName, _name).Validation(_Validate).Focus();
 		b.R.Add("Parent folder", out tLocation, _location).Validation(_Validate);
-		b.R.AddButton("Browse...", _Browse).Width(70).Align("L");
+		b.R.AddButton("Browse...", _Browse).Width(70, "L");
 		b.R.AddOkCancel();
 		b.End();
 
