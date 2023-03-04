@@ -530,7 +530,17 @@ public static unsafe partial class ExtMisc {
 	}
 
 	/// <inheritdoc cref="CollectionsMarshal.AsSpan"/>
-	public static Span<T> AsSpan<T>(this List<T> t) => CollectionsMarshal.AsSpan(t);
+	public static Span<T> AsSpan<T>(this List<T> t) where T : struct
+		=> CollectionsMarshal.AsSpan(t);
+
+	/// <summary>
+	/// Gets a reference to an item.
+	/// List items must not be added or removed while it is in use.
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="i">Item index.</param>
+	public static ref T Ref<T>(this List<T> t, int i) where T : struct
+		=> ref CollectionsMarshal.AsSpan(t)[i];
 
 	/// <summary>
 	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.

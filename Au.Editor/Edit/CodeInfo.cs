@@ -320,11 +320,12 @@ static class CodeInfo {
 		if (0 != (updated & 3)) { //text (1), selection/click (2)
 			_compl.SciUpdateUI(doc);
 			_signature.SciPositionChanged(doc);
+			CiFind.SciUpdateUI(doc, 0 != (updated & 1));
 		} else if (0 != (updated & 12)) { //scrolled
 			Cancel();
-			if (0 != (updated & 4)) { //vertically
-									  //_styling.Timer250msWhenVisibleAndWarm(doc); //rejected. Uses much CPU. The 250 ms timer is OK.
-			}
+			//if (0 != (updated & 4)) { //vertically
+			//	_styling.Timer250msWhenVisibleAndWarm(doc); //rejected. Uses much CPU. The 250 ms timer is OK.
+			//}
 		}
 	}
 

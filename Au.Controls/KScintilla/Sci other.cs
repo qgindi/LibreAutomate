@@ -3,9 +3,9 @@ namespace Au.Controls;
 using static Sci;
 
 public partial class KScintilla {
-	
+
 	#region markers
-	
+
 	/// <summary>
 	/// Sets marker style and colors.
 	/// </summary>
@@ -19,11 +19,11 @@ public partial class KScintilla {
 		if (foreColor != null) Call(SCI_MARKERSETFORE, marker, foreColor.Value.ToBGR());
 		if (backColor != null) Call(SCI_MARKERSETBACK, marker, backColor.Value.ToBGR());
 	}
-	
+
 	#endregion
-	
+
 	#region indicators
-	
+
 	/// <summary>
 	/// Sets indicator style, color, etc.
 	/// </summary>
@@ -31,47 +31,44 @@ public partial class KScintilla {
 	/// <param name="style">Eg Sci.INDIC_FULLBOX.</param>
 	/// <param name="color">SCI_INDICSETFORE.</param>
 	/// <param name="alpha">SCI_INDICSETALPHA. Valid for some styles.</param>
-	/// <param name="borderAlpha">SCI_INDICSETOUTLINEALPHA. Valid for some styles. If null, uses <i>alpha</i>.</param>
+	/// <param name="borderAlpha">SCI_INDICSETOUTLINEALPHA. Valid for some styles.</param>
 	/// <param name="strokeWidth">SCI_INDICSETSTROKEWIDTH (%). Valid for some styles.</param>
 	/// <param name="underText">SCI_INDICSETUNDER (under text).</param>
 	/// <param name="hoverColor">SCI_INDICSETHOVERFORE.</param>
 	/// <param name="hoverStyle">SCI_INDICSETHOVERSTYLE</param>
-	public void aaaIndicatorDefine(int indic, int style, ColorInt color = default, int? alpha = null, int? borderAlpha = null, int? strokeWidth = null, bool underText = false, ColorInt? hoverColor = null, int? hoverStyle = null) {
+	public void aaaIndicatorDefine(int indic, int style, ColorInt? color = null, int? alpha = null, int? borderAlpha = null, int? strokeWidth = null, bool underText = false, ColorInt? hoverColor = null, int? hoverStyle = null) {
 		if ((uint)indic > 31) throw new ArgumentOutOfRangeException(nameof(indic));
 		Call(SCI_INDICSETSTYLE, indic, style);
 		if (style != INDIC_HIDDEN) {
-			Call(SCI_INDICSETFORE, indic, color.ToBGR());
-			if (alpha.HasValue) {
-				Call(SCI_INDICSETALPHA, indic, alpha.Value);
-				if (!borderAlpha.HasValue) borderAlpha = alpha;
-			}
-			if (borderAlpha.HasValue) Call(SCI_INDICSETOUTLINEALPHA, indic, borderAlpha.Value);
-			if (strokeWidth.HasValue) Call(SCI_INDICSETSTROKEWIDTH, indic, strokeWidth.Value);
+			if (color != null) Call(SCI_INDICSETFORE, indic, color.Value.ToBGR());
+			if (alpha != null) Call(SCI_INDICSETALPHA, indic, alpha.Value);
+			if (borderAlpha != null) Call(SCI_INDICSETOUTLINEALPHA, indic, borderAlpha.Value);
+			if (strokeWidth != null) Call(SCI_INDICSETSTROKEWIDTH, indic, strokeWidth.Value);
 			if (underText) Call(SCI_INDICSETUNDER, indic, underText);
 		}
 		if (hoverColor != null) Call(SCI_INDICSETHOVERFORE, indic, hoverColor.Value.ToBGR());
 		if (hoverStyle != null) Call(SCI_INDICSETHOVERSTYLE, indic, hoverStyle.Value);
 	}
-	
+
 	public void aaaIndicatorClear(int indic) => aaaIndicatorClear(false, indic, ..);
-	
+
 	public void aaaIndicatorClear(bool utf16, int indic, Range r) {
 		var (from, to) = aaaNormalizeRange(utf16, r);
 		Call(SCI_SETINDICATORCURRENT, indic);
 		Call(SCI_INDICATORCLEARRANGE, from, to - from);
 	}
-	
+
 	public void aaaIndicatorAdd(bool utf16, int indic, Range r, int value = 0) {
 		var (from, to) = aaaNormalizeRange(utf16, r);
 		Call(SCI_SETINDICATORCURRENT, indic);
 		Call(SCI_SETINDICATORVALUE, value);
 		Call(SCI_INDICATORFILLRANGE, from, to - from);
 	}
-	
+
 	#endregion
-	
+
 	#region margins
-	
+
 	/// <summary>
 	/// SCI_SETMARGINTYPEN.
 	/// </summary>
@@ -80,9 +77,9 @@ public partial class KScintilla {
 	public void aaaMarginSetType(int margin, int type) {
 		Call(SCI_SETMARGINTYPEN, margin, type);
 	}
-	
+
 	internal int[] _marginDpi;
-	
+
 	public void aaaMarginSetWidth(int margin, int value, bool dpiScale = true, bool chars = false) {
 		if (dpiScale && value > 0) {
 			var a = _marginDpi ??= new int[Call(SCI_GETMARGINS)];
@@ -99,12 +96,12 @@ public partial class KScintilla {
 		}
 		Call(SCI_SETMARGINWIDTHN, margin, value);
 	}
-	
+
 	//public void aaaMarginSetWidth(int margin, string textToMeasureWidth) {
 	//	int n = aaaStyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
 	//	Call(SCI_SETMARGINWIDTHN, margin, n + 4);
 	//}
-	
+
 	//not used
 	//public int aaaMarginGetWidth(int margin, bool dpiUnscale) {
 	//	int R = Call(SCI_GETMARGINWIDTHN, margin);
@@ -115,14 +112,14 @@ public partial class KScintilla {
 	//	}
 	//	return R;
 	//}
-	
+
 	internal void aaaMarginWidthsDpiChanged_() {
 		var a = _marginDpi; if (a == null) return;
 		for (int i = a.Length; --i >= 0;) {
 			if (a[i] > 0) Call(SCI_SETMARGINWIDTHN, i, Dpi.Scale(a[i], _dpi));
 		}
 	}
-	
+
 	public int aaaMarginFromPoint(POINT p, bool screenCoord) {
 		if (screenCoord) _w.MapScreenToClient(ref p);
 		if (_w.ClientRect.Contains(p)) {
@@ -130,7 +127,7 @@ public partial class KScintilla {
 		}
 		return -1;
 	}
-	
+
 	/// <summary>
 	/// SCI_GETMARGINWIDTHN. Not DPI-scaled.
 	/// </summary>
@@ -139,7 +136,7 @@ public partial class KScintilla {
 		for (int i = 0; i < margin; i++) x += Call(SCI_GETMARGINWIDTHN, i);
 		return (x, x + Call(SCI_GETMARGINWIDTHN, margin));
 	}
-	
+
 	/// <summary>
 	/// Initializes folding margin and optionally separator marker.
 	/// </summary>
@@ -150,7 +147,7 @@ public partial class KScintilla {
 		Call(SCI_SETMARGINTYPEN, foldMargin, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINMASKN, foldMargin, SC_MASK_FOLDERS);
 		Call(SCI_SETMARGINSENSITIVEN, foldMargin, 1);
-		
+
 		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
 		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
 		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
@@ -172,18 +169,18 @@ public partial class KScintilla {
 		Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
 		Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
 		aaaStyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
-		
+
 		Call(SCI_SETMARGINCURSORN, foldMargin, SC_CURSORARROW);
-		
+
 		aaaMarginSetWidth(foldMargin, 12);
-		
+
 		//separator lines below functions, types and namespaces
 		if (separatorMarker >= 0) {
 			Call(SCI_MARKERDEFINE, separatorMarker, SC_MARK_UNDERLINE);
 			Call(SCI_MARKERSETBACK, separatorMarker, 0xe0e0e0);
 		}
 	}
-	
+
 	/// <summary>
 	/// Adds or updates fold points and optionally separators.
 	/// </summary>
@@ -191,7 +188,7 @@ public partial class KScintilla {
 	/// <param name="separatorMarker">Separator marker index, or -1 if never using seperators in this control. The marker should have an underline style.</param>
 	public void aaaFoldingApply(List<SciFoldPoint> af, int separatorMarker = -1) {
 		int underlinedLine = 0;
-		
+
 		int[] a = null;
 		if (af != null) {
 			a = new int[af.Count];
@@ -199,7 +196,7 @@ public partial class KScintilla {
 				var v = af[i];
 				int pos8 = aaaPos8(v.pos);
 				a[i] = pos8 | (v.start ? 0 : unchecked((int)0x80000000));
-				
+
 				if (separatorMarker >= 0 && v.separator != 0) {
 					//add separator below, or above if start
 					if (v.start) { //above
@@ -214,9 +211,9 @@ public partial class KScintilla {
 				}
 			}
 		}
-		
+
 		if (separatorMarker >= 0) _DeleteUnderlinedLineMarkers(int.MaxValue);
-		
+
 		void _DeleteUnderlinedLineMarkers(int beforeLine) {
 			if ((uint)underlinedLine > beforeLine) return;
 			int marker = 1 << separatorMarker;
@@ -228,13 +225,13 @@ public partial class KScintilla {
 				while (0 != (marker & Call(SCI_MARKERGET, underlinedLine)));
 			}
 		}
-		
+
 		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
 			fixed (int* ip = a) Sci_SetFoldLevels(AaSciPtr, 0, -1, a.Lenn_(), ip);
 		}
 		//p1.NW('F');
 	}
-	
+
 	#endregion
 }
 

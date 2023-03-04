@@ -1247,7 +1247,7 @@ public unsafe partial class KScintilla {
 		/// <param name="text">Returned by <b>Load</b>.</param>
 		public unsafe bool SetText(KScintilla k, ReadOnlySpan<byte> text) {
 			using (new _NoUndoNotif(k, SciSetTextFlags.NoUndoNoNotify)) {
-				if (_enc == _Encoding.Utf8BOM) text = text.Slice(3); //TODO: test
+				if (_enc == _Encoding.Utf8BOM) text = text.Slice(3);
 				k.aaaSetText_(text);
 			}
 			if (_enc != _Encoding.Binary) return true;

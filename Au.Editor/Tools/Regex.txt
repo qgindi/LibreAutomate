@@ -1,4 +1,4 @@
-﻿<+p help>Help<>
+<+p help>Help<>
 <+p options>Options<> <.r>(?imsnxUJ)<> and <.r>(*...)<>
 <+p meta>Metacharacters<> <.r>^ $ . [ | ( ) * + ? { \<>
 <+p escape>Escaped chars<> <.r>\^ \n<> etc and text <.r>\Q...\E<>
@@ -11,7 +11,7 @@
 <+p assertions>Follows/precedes<> <.r>(?=...)<> etc and <.r>\K<>
 
 <b>Advanced and rarely used<>
-<+p extended>Extended syntax<> <.r>(?e)<> and <.r>#comments<>
+<+p extended>Extended syntax<> <.r>(?x)<> and <.r>#comments<>
 <+p conditional>Conditional groups<> <.r>(?(if)yes|no)<>
 <+p subroutines>Subroutines, recursion<> <.r>(?&name) (?1) (?R)<>
 <+p callouts>Callouts<> <.r>(?C) (?C0) (?C'text')<> etc
