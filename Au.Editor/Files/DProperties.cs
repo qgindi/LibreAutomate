@@ -165,7 +165,6 @@ class DProperties : KDialogWindow {
 			_ShowCollapse(_role is MCRole.exeProgram, manifest, bit32);
 			_ShowCollapse(_role == MCRole.classLibrary, xmlDoc);
 			_ShowCollapse(_role != MCRole.classFile, gAssembly, gCompile);
-			addProject.IsEnabled = _role != MCRole.classFile;
 		}
 
 		//rejected. Will display error in code editor. Rarely used. For some would need to remove /suffix.
@@ -285,7 +284,7 @@ class DProperties : KDialogWindow {
 
 	void _ButtonClick_addProject(WBButtonClickArgs e)
 		=> _AddFromWorkspace(
-			f => (f != _f && f.GetClassFileRole() == FileNode.EClassFileRole.Library) ? f : null,
+			f => (f != _f && f.GetClassFileRole() == FNClassFileRole.Library) ? f : null,
 			_meta.pr, e.Button);
 
 	void _ButtonClick_addClass(WBButtonClickArgs e) {
@@ -297,7 +296,7 @@ class DProperties : KDialogWindow {
 			if (f.FindProject(out var prFolder, out var prMain) && !prFolder.Name.Starts("@@")) { //exclude class files that are in projects, except if project name starts with @@
 				if (prFolder != prFolder1) return false; //but if _f is a non-project script in a project folder, include local classes
 			}
-			return f.GetClassFileRole() == FileNode.EClassFileRole.Class;
+			return f.GetClassFileRole() == FNClassFileRole.Class;
 		}
 
 		_AddFromWorkspace(f => _Include(f) ? f : null, _meta.c, e.Button);

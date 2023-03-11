@@ -319,7 +319,7 @@ Brace highlight
 					if (control == cBold) sciStyles.aaaStyleBold(k.index, cBold.IsChecked);
 					else sciStyles.aaaStyleForeColor(k.index, col);
 				} else if (k.kind == _StyleKind.Indicator) {
-					if (control == tAlpha) CiStyling.TStyles.SetIndicAlpha_(sciStyles, k.index, Math.Clamp(tAlpha.Text.ToInt(), 0, 255));
+					if (control == tAlpha) sciStyles.Call(Sci.SCI_INDICSETALPHA, k.index, Math.Clamp(tAlpha.Text.ToInt(), 0, 255));
 					else sciStyles.Call(Sci.SCI_INDICSETFORE, k.index, ColorInt.SwapRB(col));
 				} else if (k.kind == _StyleKind.Background) {
 					backColor = col;

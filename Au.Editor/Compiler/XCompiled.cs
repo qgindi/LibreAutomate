@@ -189,7 +189,7 @@ o - config (now removed)
 			string value = null;
 			using (new StringBuilder_(out var b)) {
 				if (m.OutputPath != null) b.Append("|=").Append(folders.unexpandPath(outFile)); //else f.Id in cache
-				if (m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
+				if (m.Role != MetaComments.DefaultRole(m.MainFile.f.IsScript)) b.Append("|t").Append((int)m.Role);
 				if (m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
 				if (m.Uac != default) b.Append("|u").Append((int)m.Uac);
 				if (miniFlags != default) b.Append("|f").Append((int)miniFlags);

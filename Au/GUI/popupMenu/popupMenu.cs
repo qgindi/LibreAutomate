@@ -585,7 +585,7 @@ public unsafe partial class popupMenu : MTBase {
 		RECT r = new(0, 0, z.width, z.height);
 		Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
 		_size.window = r.Size; _size.client = z; _size.border = -r.top;
-		Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.Value, out r);
+		Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
 
 		_w = WndUtil.CreateWindow(_WndProc, true, "Au.popupMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
 		_SetScrollbar(needScroll);

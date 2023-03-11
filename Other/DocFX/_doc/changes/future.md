@@ -1,11 +1,13 @@
 ## Version 0.14.0 (2023-02-)
 
 ### Editor
-Multiple 'Find' etc results tabs in the 'Found' panel.
+Multiple 'Find' etc results pages in the 'Found' panel.
 
 Menu Edit -> Find references.
 
 Menu Edit -> Find implementations.
+
+Menu Edit -> Go to base.
 
 Highlights references of the symbol at the text cursor.
 
@@ -14,7 +16,9 @@ Highlights matching braces and directives of the brace/directive at the text cur
 New options:
 - Options -> Code -> Formatting.
 - Options -> Hotkeys -> Capture image.
-- Options -> Font -> Text/symbol/brace highlight.
+- Options -> Font -> highlight.
+
+Now `/*/ pr /*/` can be used in any file of a project, not just in the main file.
 
 ### Library
 New members:
@@ -26,6 +30,7 @@ New members:
 
 Editor:
 - Fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
+- Fixed: error message box on exit.
 - Fixed several memory leaks and other bugs.
 
 Library:

@@ -8,20 +8,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 partial class CiStyling {
-	/// <summary>
-	/// Called when opening a document, when handle created but text still not loaded.
-	/// </summary>
-	public static void DocHandleCreated(SciCode doc) {
-		TStyles.Settings.ToScintilla(doc);
-		CiFolding.InitFolding(doc);
-	}
-
 	public void DocHandleDestroyed(SciCode doc) {
 		if (doc == _doc) {
 			_doc = null; //GC. Not important, but helps when trying to detect memory leaks.
 		}
 	}
-
+	
 	/// <summary>
 	/// Called after setting editor control text when a document opened (not just switched active document).
 	/// </summary>
@@ -34,12 +26,12 @@ partial class CiStyling {
 			CodeInfo.ReadyForStyling += () => _DocChanged();
 		}
 	}
-
+	
 	/// <summary>
 	/// Sets timer to updates styling and folding from 0 to the end of the visible area.
 	/// </summary>
 	public void Update() => _update = true;
-
+	
 	SciCode _doc; //to detect when the active document changed
 	bool _update;
 	bool _folded;
@@ -49,7 +41,7 @@ partial class CiStyling {
 	int _modFromEnd; //like SCI_GETENDSTYLED, but from end
 	int _diagCounter;
 	CancellationTokenSource _cancelTS;
-
+	
 	void _DocChanged(SciCode doc = null) {
 		//bool opened = doc == null;
 		doc ??= Panels.Editor.ActiveDoc;
@@ -65,7 +57,7 @@ partial class CiStyling {
 		//if (opened) {
 		//}
 	}
-
+	
 	/// <summary>
 	/// Called every 250 ms while editor is visible.
 	/// </summary>
@@ -74,7 +66,7 @@ partial class CiStyling {
 		//To detect when need styling and folding we use 'opened' and 'modified' events and 250 ms timer.
 		//When modified, we do styling for the modified line(s). Redraws faster, but unreliable, eg does not update new/deleted identifiers.
 		//The timer does styling and folding for all visible lines. Redraws with a bigger delay, but updates everything after modified, scrolled, resized, folded, etc.
-
+		
 		if (_cancelTS != null || (_timerModified?.IsRunning ?? false)) return;
 		if (doc != _doc || _update) {
 			_update = false;
@@ -89,7 +81,7 @@ partial class CiStyling {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Called when editor text modified.
 	/// </summary>
@@ -115,7 +107,7 @@ partial class CiStyling {
 			doc.aaaSetStyled();
 		}
 	}
-
+	
 	void _ModifiedTimer(timer t) {
 		//var p1 = perf.local();
 		var doc = t.Tag as SciCode;
@@ -124,7 +116,7 @@ partial class CiStyling {
 		_Work(doc, doc.aaaLineStartFromPos(false, _modStart), doc.aaaLineEndFromPos(false, doc.aaaLen8 - _modFromEnd, withRN: true));
 		//p1.NW('a'); //we return without waiting for the async task to complete
 	}
-
+	
 	async void _Work(SciCode doc, int start8 = 0, int end8 = -1, bool cancel = false) {
 #if PRINT
 		using var p1 = perf.local();
@@ -134,13 +126,13 @@ partial class CiStyling {
 			p1.Next(ch);
 #endif
 		}
-
+		
 		if (cancel) { _cancelTS?.Cancel(); _cancelTS = null; }
 		Debug.Assert(_cancelTS == null);
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
 		var cancelToken = cancelTS.Token;
-
+		
 		var cd = new CodeInfo.Context(0);
 		Debug.Assert(doc == cd.sci);
 		if (!cd.GetDocument()) return;
@@ -150,11 +142,11 @@ partial class CiStyling {
 		try {
 			Sci_GetVisibleRange(doc.AaSciPtr, out var vr);
 			//print.it(vr);
-
+			
 			bool minimal = end8 >= 0;
 			bool needFolding = !minimal && !_folded;
 			List<SciFoldPoint> af = null;
-
+			
 			if (needFolding) {
 				await Task.Run(() => {
 					_PN('s');
@@ -163,7 +155,7 @@ partial class CiStyling {
 				if (_Cancelled()) return;
 			}
 			_PN('p');
-
+			
 			if (minimal) {
 				start8 = Math.Max(start8, vr.posFrom);
 				end8 = Math.Min(end8, vr.posTo);
@@ -179,11 +171,11 @@ partial class CiStyling {
 			}
 			//if (end8 == vr.posTo) _modFromEnd = doc.aaaLen8 - end8; //old code, now don't know its purpose. If need, then maybe do the same for _modStart.
 			if (end8 <= start8) return;
-
+			
 #if PRINT
 			//print.it($"<><c green>lines {doc.aaaLineFromPos(false, start8) + 1}-{doc.aaaLineFromPos(false, end8)}, range {start8}-{end8}, {vr}<>");
 #endif
-
+			
 			var ar8 = _GetVisibleRanges();
 			List<StartEnd> _GetVisibleRanges() {
 				//print.it(vr);
@@ -203,11 +195,11 @@ partial class CiStyling {
 				//print.it("a", a);
 				return a;
 			}
-
+			
 			var ar = new (IEnumerable<ClassifiedSpan> a, StartEnd r)[ar8.Count];
 			for (int i = 0; i < ar8.Count; i++) ar[i].r = new StartEnd(doc.aaaPos16(ar8[i].start), doc.aaaPos16(ar8[i].end));
 			SemanticModel semo = null;
-
+			
 			await Task.Run(async () => {
 				semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
 				_PN('m'); //BAD: slow when [re]opening a file in a large project
@@ -221,14 +213,14 @@ partial class CiStyling {
 			});
 			if (_Cancelled()) return;
 			_PN('c');
-
+			
 			var b = new byte[end8 - start8];
-
+			
 			foreach (var (a, r) in ar) {
 				foreach (var v in a) {
 					//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
 					EStyle style = StyleFromClassifiedSpan(v, semo);
-
+					
 					if (style == EStyle.None) {
 #if DEBUG
 						switch (v.ClassificationType) {
@@ -241,12 +233,12 @@ partial class CiStyling {
 #endif
 						continue;
 					}
-
+					
 					//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
 					int spanStart16 = Math.Max(v.TextSpan.Start, r.start), spanEnd16 = Math.Min(v.TextSpan.End, r.end);
 					int spanStart8 = doc.aaaPos8(spanStart16), spanEnd8 = doc.aaaPos8(spanEnd16);
 					_SetStyleRange((byte)style);
-
+					
 					void _SetStyleRange(byte style) {
 						for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
 					}
@@ -257,7 +249,7 @@ partial class CiStyling {
 			doc.Call(SCI_STARTSTYLING, start8);
 			unsafe { fixed (byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
 			doc.aaaSetStyled(minimal ? int.MaxValue : end8);
-
+			
 			_modStart = _modFromEnd = int.MaxValue;
 			_visibleLines = minimal ? default : vr;
 			_PN('S');
@@ -275,7 +267,7 @@ partial class CiStyling {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;
 		}
-
+		
 		bool _Cancelled() {
 			if (cancelToken.IsCancellationRequested) {
 				_PN();
@@ -299,7 +291,7 @@ partial class CiStyling {
 #if TRACE
 	//static bool s_debugPerf;
 #endif
-
+	
 	public static EStyle StyleFromClassifiedSpan(ClassifiedSpan cs, SemanticModel semo) {
 		return cs.ClassificationType switch {
 			ClassificationTypeNames.ClassName => EStyle.Type,
@@ -336,7 +328,7 @@ partial class CiStyling {
 			ClassificationTypeNames.VerbatimStringLiteral => EStyle.String,
 			ClassificationTypeNames.TypeParameterName => EStyle.Type,
 			//ClassificationTypeNames.WhiteSpace => EStyle.None,
-
+			
 			ClassificationTypeNames.XmlDocCommentText => EStyle.XmlDocText,
 			ClassificationTypeNames.XmlDocCommentAttributeName => EStyle.XmlDocTag,
 			ClassificationTypeNames.XmlDocCommentAttributeQuotes => EStyle.XmlDocTag,
@@ -347,19 +339,19 @@ partial class CiStyling {
 			ClassificationTypeNames.XmlDocCommentEntityReference => EStyle.XmlDocTag,
 			ClassificationTypeNames.XmlDocCommentName => EStyle.XmlDocTag,
 			ClassificationTypeNames.XmlDocCommentProcessingInstruction => EStyle.XmlDocTag,
-
+			
 			//FUTURE: Regex. But how to apply it to regexp?
 			//ClassificationTypeNames. => EStyle.,
 			_ => EStyle.None
 		};
-
+		
 		EStyle _TryResolveMethod() { //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
 			var node = semo.Root.FindNode(cs.TextSpan);
 			if (node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EStyle.Function; //not too slow
 			return EStyle.None;
 		}
 	}
-
+	
 	/// <summary>
 	/// Scintilla style indices of token types.
 	/// </summary>
@@ -382,29 +374,29 @@ partial class CiStyling {
 		Excluded,
 		XmlDocText,
 		XmlDocTag, //tags, CDATA, ///, etc
-
+		
 		countUserDefined,
-
+		
 		Image = countUserDefined,
-
+		
 		//STYLE_HIDDEN=31,
 		//STYLE_DEFAULT=32,
-
+		
 		LineNumber = 33, //STYLE_LINENUMBER
 	}
-
+	
 	public struct TStyle {
 		public int color;
 		public bool bold;
-
+		
 		public TStyle(int color, bool bold) {
 			this.color = color;
 			this.bold = bold;
 		}
-
+		
 		public static implicit operator TStyle(int color) => new(color, false);
 	}
-
+	
 	public record TStyles //note: must be record, because uses synthesized ==
 	{
 		public string FontName = "Consolas";
@@ -415,9 +407,12 @@ partial class CiStyling {
 		public int IndicRefsColor = 0x80C000;
 		public int IndicBracesColor = 0x80C000;
 		public int IndicFoundAlpha = 255;
-		public int IndicRefsAlpha = 25;
-		public int IndicBracesAlpha = 25;
-
+		public int IndicRefsAlpha = 40;
+		public int IndicBracesAlpha = 80;
+		//public bool IndicFoundGradient;
+		//public bool IndicRefsGradient;
+		//public bool IndicBracesGradient;
+		
 		public TStyle None; //black
 		public TStyle Comment = 0x60A000; //light green, towards yellow
 		public TStyle String = 0xA07040; //brown, more green
@@ -436,9 +431,9 @@ partial class CiStyling {
 		public TStyle Excluded = 0x808080; //gray
 		public TStyle XmlDocText = 0x408000; //green
 		public TStyle XmlDocTag = 0x808080; //gray
-
+		
 		public TStyle LineNumber = 0x808080;
-
+		
 		public static TStyles Settings {
 			get => s_styles ??= new TStyles();
 			set {
@@ -449,14 +444,14 @@ partial class CiStyling {
 		}
 		static TStyles s_styles;
 		internal static readonly string s_settingsFile = AppSettings.DirBS + "Font.csv";
-
+		
 		public TStyles() {
 			csvTable csv;
 			if (!filesystem.exists(s_settingsFile).File) return;
 			try { csv = csvTable.load(s_settingsFile); }
 			catch (Exception e1) { print.it(e1.ToStringWithoutStack()); return; }
 			if (csv.ColumnCount < 2) return;
-
+			
 			foreach (var a in csv.Rows) {
 				switch (a[0]) {
 				case "Font":
@@ -487,22 +482,22 @@ partial class CiStyling {
 				case nameof(IndicRefsColor): _Int(ref IndicRefsColor); _Alpha(ref IndicRefsAlpha); break;
 				case nameof(IndicBracesColor): _Int(ref IndicBracesColor); _Alpha(ref IndicBracesAlpha); break;
 				}
-
+				
 				void _Style(ref TStyle r) {
 					if (!a[1].NE() && a[1].ToInt(out int i)) r.color = i;
 					if (a.Length > 2 && !a[2].NE() && a[2].ToInt(out int i2)) r.bold = 0 != (1 & i2); else r.bold = false;
 				}
-
+				
 				void _Int(ref int value) {
 					if (!a[1].NE() && a[1].ToInt(out int i)) value = i;
 				}
-
+				
 				void _Alpha(ref int value) {
 					if (a.Length > 2 && !a[2].NE() && a[2].ToInt(out int i)) value = Math.Clamp(i, 0, 255);
 				}
 			}
 		}
-
+		
 		void _Save() {
 			var b = new StringBuilder(); //don't need csvTable for such simple values
 			b.AppendFormat("Font, {0}, {1}\r\n", FontName, FontSize);
@@ -529,28 +524,28 @@ partial class CiStyling {
 			b.AppendLine($"{nameof(IndicFoundColor)}, 0x{IndicFoundColor:X6}, {IndicFoundAlpha}");
 			b.AppendLine($"{nameof(IndicRefsColor)}, 0x{IndicRefsColor:X6}, {IndicRefsAlpha}");
 			b.AppendLine($"{nameof(IndicBracesColor)}, 0x{IndicBracesColor:X6}, {IndicBracesAlpha}");
-
+			
 			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
 				if (r.bold) b.Append(", 1");
 				b.AppendLine();
 			}
-
+			
 			filesystem.saveText(s_settingsFile, b.ToString());
 		}
-
+		
 		/// <summary>
 		/// Gets colors, bold, but not font properties.
 		/// </summary>
 		public TStyles(KScintilla sci) {
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
-
+			
 			TStyle _Style(EStyle k) {
 				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)k));
 				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)k);
 				return new TStyle(color, bold);
 			}
-
+			
 			None = _Style(EStyle.None);
 			Comment = _Style(EStyle.Comment);
 			String = _Style(EStyle.String);
@@ -569,9 +564,9 @@ partial class CiStyling {
 			Excluded = _Style(EStyle.Excluded);
 			XmlDocText = _Style(EStyle.XmlDocText);
 			XmlDocTag = _Style(EStyle.XmlDocTag);
-
+			
 			LineNumber = _Style(EStyle.LineNumber);
-
+			
 			IndicFoundColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFound));
 			IndicRefsColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicRefs));
 			IndicBracesColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicBraces));
@@ -579,20 +574,20 @@ partial class CiStyling {
 			IndicRefsAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicRefs);
 			IndicBracesAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicBraces);
 		}
-
+		
 		/// <param name="multiFont">Set font only for code styles.</param>
 		public void ToScintilla(KScintilla sci, bool multiFont = false) {
 			if (!multiFont) sci.aaaStyleFont(STYLE_DEFAULT, FontName, FontSize);
 			sci.aaaStyleBackColor(STYLE_DEFAULT, BackgroundColor);
 			//if(None.color != 0) sci.aaaStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			sci.aaaStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
-
+			
 			void _Set(EStyle k, TStyle sty) {
 				sci.aaaStyleForeColor((int)k, sty.color);
 				if (sty.bold) sci.aaaStyleBold((int)k, true);
 				if (multiFont) sci.aaaStyleFont((int)k, FontName, FontSize);
 			}
-
+			
 			_Set(EStyle.None, None);
 			_Set(EStyle.Comment, Comment);
 			_Set(EStyle.String, String);
@@ -611,24 +606,23 @@ partial class CiStyling {
 			_Set(EStyle.Excluded, Excluded);
 			_Set(EStyle.XmlDocText, XmlDocText);
 			_Set(EStyle.XmlDocTag, XmlDocTag);
-
+			
 			_Set((EStyle)STYLE_LINENUMBER, LineNumber);
-
+			
+			sci.aaaStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
+			
 			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha);
 			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha);
 			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha);
-
+			
 			void _Indic(int indic, int color, int alpha) {
-				sci.aaaIndicatorDefine(indic, INDIC_FULLBOX, color, alpha, alpha > 0 ? (255 + alpha) / 2 : 255, underText: true);
+				sci.aaaIndicatorDefine(indic, INDIC_FULLBOX, color, alpha, 255, underText: true);
 			}
+			//void _Indic(int indic, int color, int alpha, bool gradient) {
+			//	sci.aaaIndicatorDefine(indic, gradient ? INDIC_GRADIENT : INDIC_FULLBOX, color, alpha, 255, underText: true);
+			//}
 		}
-
-		//used in DOptions
-		internal static void SetIndicAlpha_(KScintilla sci, int indic, int alpha) {
-			sci.Call(SCI_INDICSETALPHA, indic, alpha);
-			sci.Call(SCI_INDICSETOUTLINEALPHA, indic, alpha > 0 ? (255 + alpha) / 2 : 255);
-		}
-
+		
 		//rejected
 		//public void InvertAllColors() {
 		//	None.color ^= 0xffffff;
@@ -652,7 +646,7 @@ partial class CiStyling {
 		//	BackgroundColor ^= 0xffffff;
 		//	... ^= 0xffffff;
 		//}
-
+		
 		//not used
 		//public TStyle GetStyle(EStyle k) {
 		//	return k switch {
@@ -678,7 +672,7 @@ partial class CiStyling {
 		//		_ => default,
 		//	};
 		//}
-
+		
 		//public void SetStyle(EStyle k, TStyle style) {
 		//	switch(k) {
 		//	case EStyle.None: None = style; break;
@@ -703,12 +697,12 @@ partial class CiStyling {
 		//	}
 		//}
 	}
-
+	
 	/// <summary>
 	/// Returns true if character at pos8 is in a hidden text.
 	/// </summary>
 	public static bool IsProtected(KScintilla sci, int pos8) => sci.Call(Sci.SCI_GETSTYLEAT, pos8) == STYLE_HIDDEN;
-
+	
 	/// <summary>
 	/// Returns true if range from8..to8 intersects a hidden text, except when it is greater or equal than the hidden text range.
 	/// It means the range should not be selected or modified.
@@ -720,7 +714,7 @@ partial class CiStyling {
 		if (IsProtected(sci, to8 - 1)) return IsProtected(sci, to8);
 		return false;
 	}
-
+	
 	public static int SkipProtected(KScintilla sci, int pos8) {
 		while (IsProtected(sci, pos8)) pos8++;
 		return pos8;

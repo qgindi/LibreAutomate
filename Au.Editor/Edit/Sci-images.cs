@@ -50,8 +50,6 @@ partial class SciCode {
 				imType = _ImageTypeFromString(false, code.AsSpan(sr.start, sr.Length));
 				if (imType == 0) continue;
 				s = sr.ToString();
-			} else if (null != (s = _IsFolders(a[i], ref i))) {
-				imType = _ImageTypeFromString(true, s);
 			} else if (i < a.Length && a[i].ClassificationType == CT.Comment) {
 				var ts = a[i].TextSpan;
 				if (!code.Eq(ts.Start, "/*")) continue;
@@ -62,6 +60,8 @@ partial class SciCode {
 				s = code[j..k];
 				imType = ImageType.Base64Image;
 				isComment = true;
+			} else if (null != (s = _IsFoldersEtc(a[i], ref i, out imType))) {
+				if (imType == 0) imType = _ImageTypeFromString(true, s);
 			}
 			if (imType == 0) continue;
 			Bitmap b;
@@ -88,10 +88,12 @@ partial class SciCode {
 			if (_im.a == null) {
 				_im.a = new();
 				Call(SCI_INDICSETSTYLE, c_indicImages, INDIC_HIDDEN);
-				int descent = 16 - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT);
+				int descent = Dpi.Scale(16, _dpi) - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT) + Call(SCI_GETEXTRAASCENT);
 				if (descent > 0) {
 					bool caretVisible = AaWnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, aaaCurrentPos8));
-					Call(SCI_SETEXTRADESCENT, descent); //note: later don't set = 0 when no visible images. Then bad scrolling and can start to repeat.
+					Call(SCI_SETEXTRAASCENT, descent / 2);
+					Call(SCI_SETEXTRADESCENT, descent - descent / 2);
+					//note: later don't restore when no visible images. Then bad scrolling and can start to repeat.
 					if (caretVisible) Call(SCI_SCROLLCARET);
 				}
 				if (_im.callback == null) _im.callbackPtr = Marshal.GetFunctionPointerForDelegate(_im.callback = _ImagesMarginDrawCallback);
@@ -133,18 +135,28 @@ partial class SciCode {
 			return true;
 		}
 
-		string _IsFolders(ClassifiedSpan v, ref int i) {
-			if (_Eq(i, CT.ClassName, "folders") && _Eq(++i, CT.Operator, ".")) {
-				int i1 = ++i;
-				if (_Eq(i, CT.PropertyName)
-					|| (_Eq(i, CT.ClassName, "shell") && _Eq(++i, CT.Operator, ".") && _Eq(++i, CT.PropertyName))
-					) {
-					var fp = folders.getFolder(code[a[i1].TextSpan.Start..a[i].TextSpan.End]);
-					if (!fp.IsNull) return _Plus(fp, ref i);
-				} else if (_Eq(i = i1, CT.MethodName) && _Eq(i + 1, CT.Punctuation, "(") && _Eq(i + 2, CT.Punctuation, ")")) {
-					i += 2;
-					if (code[a[i1].TextSpan.ToRange()] == "sourceCode") return _Plus(folders.sourceCode(_fn.FilePath), ref i);
+		string _IsFoldersEtc(ClassifiedSpan v, ref int i, out ImageType imageType) {
+			imageType = 0;
+			if (_Eq(i, CT.ClassName, "folders")) {
+				if (_Eq(++i, CT.Operator, ".")) {
+					int i1 = ++i;
+					if (_Eq(i, CT.PropertyName)
+						|| (_Eq(i, CT.ClassName, "shell") && _Eq(++i, CT.Operator, ".") && _Eq(++i, CT.PropertyName))
+						) {
+						var fp = folders.getFolder(code[a[i1].TextSpan.Start..a[i].TextSpan.End]);
+						if (!fp.IsNull) return _Plus(fp, ref i);
+					} else if (_Eq(i = i1, CT.MethodName) && _Eq(i + 1, CT.Punctuation, "(") && _Eq(i + 2, CT.Punctuation, ")")) {
+						i += 2;
+						if (code[a[i1].TextSpan.ToRange()] == "sourceCode") return _Plus(folders.sourceCode(_fn.FilePath), ref i);
+					}
 				}
+			} else if (_Eq(i, CT.EnumName, "StockIcon")) {
+				if (_Eq(++i, CT.Operator, ".") && _Eq(++i, CT.EnumMemberName))
+					if (Enum.TryParse(code.AsSpan(a[i].TextSpan.ToRange()), out StockIcon si))
+						if (icon.GetStockIconLocation_(si, out string path, out int index)) {
+							imageType = ImageType.IconLib;
+							return path + "," + index.ToS();
+						}
 			}
 			return null;
 
@@ -290,6 +302,7 @@ partial class SciCode {
 		if (_im.a != null) {
 			Call(SCI_SETMARGINDRAWCALLBACK);
 			Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
+			Call(SCI_SETEXTRAASCENT, 0);
 			Call(SCI_SETEXTRADESCENT, 1);
 			aaaIndicatorClear(c_indicImages);
 			_im.a = null;

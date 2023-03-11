@@ -68,7 +68,7 @@ partial class FilesModel
 		public void TextNowIfNeed(bool onlyText = false) {
 			if (_textAfterS > 0) _SaveTextNow();
 			if (onlyText) return;
-			Panels.Editor.SaveEditorData();
+			Panels.Editor?.SaveEditorData();
 		}
 
 		void _SaveWorkspaceNow() {

@@ -1106,9 +1106,9 @@ static class InternalsVisible {
 				foreach (var v in a)
 					if (v == thisName)
 						return true;
-			} else if (thisName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) {
+			} else if (thisName.Ends(".cs", true)) {
 				foreach (var v in a)
-					if (v.Length == thisName.Length - 3 && thisName.StartsWith(v, StringComparison.Ordinal))
+					if (v.Length == thisName.Length - 3 && thisName.Starts(v))
 						return true;
 			}
 

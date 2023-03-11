@@ -5,23 +5,23 @@ using System.Xml.Linq;
 
 partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	#region types
-
+	
 	//Not saved in file.
 	[Flags]
 	enum _State : byte {
 		Deleted = 1,
 	}
-
+	
 	//Saved in file.
 	[Flags]
 	enum _Flags : byte {
 		Symlink = 1,
 	}
-
+	
 	#endregion
-
+	
 	#region fields, ctors, load/save
-
+	
 	FilesModel _model;
 	string _name;
 	string _displayName;
@@ -32,7 +32,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	string _linkTarget;
 	string _icon;
 	uint _testScriptId;
-
+	
 	//this ctor is used when creating new item of known type
 	public FileNode(FilesModel model, string name, FNType type) {
 		_model = model;
@@ -40,7 +40,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_SetName(name);
 		_id = _model.AddGetId(this);
 	}
-
+	
 	//this ctor is used when importing items from files etc.
 	//name is filename with extension.
 	//filePath is used when !isDir: 1. To detect type. 2. If isLink, to set link target.
@@ -56,7 +56,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			//if (isLink) _linkTarget = folders.unexpandPath(filePath); //rejected. Too much trouble with it.
 		}
 	}
-
+	
 	//this ctor is used when copying or importing a workspace.
 	//Deep-copies fields from f, except _model, _name, _id (generates new) and _testScriptId.
 	FileNode(FilesModel model, FileNode f, string name) {
@@ -69,7 +69,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_icon = f.CustomIconName;
 		_id = _model.AddGetId(this);
 	}
-
+	
 	//this ctor is used when reading files.xml
 	FileNode(XmlReader x, FileNode parent, FilesModel model) {
 		_model = model;
@@ -95,11 +95,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			_id = _model.AddGetId(this, id);
 		}
 	}
-
+	
 	public static FileNode Load(string file, FilesModel model) => XmlLoad(file, (x, p) => new FileNode(x, p, model));
-
+	
 	public void Save(string file) => XmlSave(file, (x, n) => n._XmlWrite(x, false));
-
+	
 	void _XmlWrite(XmlWriter x, bool exporting) {
 		if (Parent == null) {
 			x.WriteStartElement("files");
@@ -114,30 +114,30 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (!exporting && _testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
 		}
 	}
-
+	
 	public static void Export(FileNode[] a, string file) => new FileNode().XmlSave(file, (x, n) => n._XmlWrite(x, true), children: a);
-
+	
 	FileNode() { } //used by Export
-
+	
 	#endregion
-
+	
 	#region properties
-
+	
 	/// <summary>
 	/// Panels.Files.TreeControl.
 	/// </summary>
 	public static KTreeView TreeControl => Panels.Files.TreeControl;
-
+	
 	/// <summary>
 	/// Gets workspace that contains this file.
 	/// </summary>
 	public FilesModel Model => _model;
-
+	
 	/// <summary>
 	/// Gets the root node (Model.Root).
 	/// </summary>
 	public FileNode Root => _model.Root;
-
+	
 	/// <summary>
 	/// File type.
 	/// Setter can change Script to Class or vice versa; call when closing DProperties.
@@ -149,96 +149,96 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (value == _type) return;
 			_type = value;
 			_testScriptId = 0;
-
+			
 			_model.Save.WorkspaceLater();
 			Compiler.Uncache(this);
 			CodeInfo.FilesChanged();
 			FilesModel.Redraw(this);
 		}
 	}
-
+	
 	/// <summary>
 	/// true if folder or root.
 	/// </summary>
 	public bool IsFolder => _type == FNType.Folder;
-
+	
 	/// <summary>
 	/// true if script file.
 	/// </summary>
 	public bool IsScript => _type == FNType.Script;
-
+	
 	/// <summary>
 	/// true if class file.
 	/// </summary>
 	public bool IsClass => _type == FNType.Class;
-
+	
 	/// <summary>
 	/// true if script or class file.
 	/// false if folder or not a code file.
 	/// </summary>
 	public bool IsCodeFile => _type is FNType.Script or FNType.Class;
-
+	
 	/// <summary>
 	/// true if not script/class/folder.
 	/// </summary>
 	public bool IsOtherFileType => _type == FNType.Other;
-
+	
 	/// <summary>
 	/// File name with extension.
 	/// </summary>
 	public string Name => _name;
-
+	
 	/// <summary>
 	/// File name. Without extension if ends with ".cs".
 	/// </summary>
 	public string DisplayName => _displayName ??= _name.RemoveSuffix(".cs", true);
-
+	
 	void _SetName(string name) {
 		if (_name != null) _model._nameMap.MultiRemove_(_name, this); //renaming
 		_model._nameMap.MultiAdd_(_name = name, this);
 		_displayName = null;
 	}
-
+	
 	/// <summary>
 	/// Unique id in this workspace. To find faster, with database, etc.
 	/// Root id is 0.
 	/// Ids of deleted items are not reused.
 	/// </summary>
 	public uint Id => _id;
-
+	
 	/// <summary>
 	/// <see cref="Id"/> as string.
 	/// </summary>
 	public string IdString => _id.ToString();
-
+	
 	/// <summary>
 	/// Formats string like "&lt;0x10000000A&gt;", with <see cref="Id"/> in low-order int and <see cref="FilesModel.WorkspaceSN"/> in high-order int.
 	/// Such string can be passed to <see cref="FilesModel.Find"/>.
 	/// </summary>
 	public string IdStringWithWorkspace => "<0x" + (_id | ((long)_model.WorkspaceSN << 32)).ToString("X") + ">";
-
+	
 	/// <summary>
 	/// Formats SciTags &lt;open&gt; link tag to open this file.
 	/// </summary>
 	/// <param name="path">In link name use <see cref="ItemPath"/> instead of name.</param>
 	public string SciLink(bool path = false) => $"<open \"{IdStringWithWorkspace}\">{(path ? ItemPath : _name)}<>";
-
+	
 	/// <summary>
 	/// true if is an external file, ie not in this workspace folder.
 	/// But not if is a file in a symlink folder.
 	/// </summary>
 	public bool IsLink => _linkTarget != null;
-
+	
 	/// <summary>
 	/// If <see cref="IsLink"/>, returns target path, else null.
 	/// </summary>
 	public string LinkTarget => _linkTarget;
-
+	
 	/// <summary>
 	/// true if is a symlink to an external directory.
 	/// </summary>
 	public bool IsSymlink => _flags.Has(_Flags.Symlink);
-
+	
 	/// <summary>
 	/// true if <see cref="IsLink"/> or an ancestor or self is <see cref="IsSymlink"/>.
 	/// </summary>
@@ -250,7 +250,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 	}
 	//public bool IsExternal => IsLink || IsSymlink || Ancestors(noRoot: true).Any(static o => o.IsSymlink); //creates garbage
-
+	
 	/// <summary>
 	/// Gets or sets custom icon name (like "*Pack.Icon color") or null.
 	/// </summary>
@@ -268,12 +268,12 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			FilesModel.Redraw(this);
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets custom or default icon name or file path.
 	/// </summary>
 	public string IconString => CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType));
-
+	
 	/// <summary>
 	/// Gets or sets other item to run instead of this. None if null.
 	/// The setter will save workspace.
@@ -293,7 +293,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			_model.Save.WorkspaceLater();
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets or sets 'Delete' flag. Does nothing more.
 	/// </summary>
@@ -301,25 +301,25 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		get => 0 != (_state & _State.Deleted);
 		set { Debug.Assert(value); _state |= _State.Deleted; }
 	}
-
+	
 	/// <summary>
 	/// true if is deleted or is not in current workspace.
 	/// </summary>
 	public bool IsAlien => IsDeleted || _model != App.Model;
-
+	
 	/// <summary>
 	/// Returns item path in workspace, like @"\Folder\Name.cs" or @"\Name.cs".
 	/// Returns null if this item is deleted.
 	/// </summary>
 	public string ItemPath => _ItemPath();
-
+	
 	/// <summary>
 	/// Returns item path relative to <i>ancestor</i>, like @"Folder\Name.cs" or @"Name.cs".
 	/// Returns null if this item is deleted or not in <i>ancestor</i>.
 	/// If <i>ancestor</i> is null or <b>Root</b>, the result is the same as <b>ItemPath</b>.
 	/// </summary>
 	public string ItemPathIn(FileNode ancestor) => _ItemPath(null, ancestor);
-
+	
 	[SkipLocalsInit]
 	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null) {
 		int len = prefix.Lenn();
@@ -338,7 +338,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (ancestor != null && ancestor.Parent != null) return new string(p, 1, len - 1);
 		return new string(p, 0, len);
 	}
-
+	
 	/// <summary>
 	/// Gets full path of the file.
 	/// If this is a link, it is the link target.
@@ -349,42 +349,48 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (IsDeleted) return null;
 			if (IsLink) return LinkTarget;
 			return _ItemPath(_model.FilesDirectory);
+			//TODO: optimization to avoid many allocations:
+			//	Store the created path. Next time compare it with ancestor names, and return if unchanged.
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns Name.
 	/// </summary>
 	public override string ToString() => _name;
-
+	
+	///// <summary>
+	///// Data used by code info classes.
+	///// </summary>
+	//public CiFileData ci;
+	
 	#endregion
-
+	
 	#region text
-
+	
 	/// <summary>
 	/// Gets text from editor (if this is the active open document) or file (<see cref="GetFileText"/>).
-	/// If fails (eg file not found), sets text="" and returns (false, error). Else returns (true, null).
-	/// If folder, sets text="" and returns (true, null).
 	/// </summary>
-	/// <param name="text">"" if failed (eg file not found) or folder.</param>
-	public BoolError GetCurrentText(out string text, bool silent = false) {
+	/// <param name="text">"" if failed (eg file not found) or is folder.</param>
+	/// <param name="silent">Don't print warning when failed. If null, silent only if file not found.</param>
+	/// <returns>(true, null) if got text or is folder. (false, error) if failed.</returns>
+	public BoolError GetCurrentText(out string text, bool? silent = false) {
 		if (this == _model.CurrentFile) { text = Panels.Editor.ActiveDoc.aaaText; return true; }
 		return GetFileText(out text, silent);
 	}
-
+	
 	/// <summary>
 	/// Gets text from file.
 	/// Does not get editor text like <see cref="GetCurrentText"/>.
-	/// If fails (eg file not found), sets text="" and returns (false, error). Else returns (true, null).
-	/// If folder, sets text="" and returns (true, null).
 	/// </summary>
-	/// <param name="text">"" if failed (eg file not found) or folder.</param>
-	public BoolError GetFileText(out string text, bool silent = false) {
+	/// <param name="text">"" if failed (eg file not found) or is folder.</param>
+	/// <returns>(true, null) if got text or is folder. (false, error) if failed.</returns>
+	public BoolError GetFileText(out string text, bool? silent = false) {
 		text = "";
 		if (IsFolder) return true;
-
+		
 		//rejected: cache text. OS caching isn't too slow.
-
+		
 		string path = FilePath, es = null;
 		if (path == null) { //IsDeleted
 			es = "Deleted.";
@@ -392,10 +398,10 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		} else {
 			try {
 				using var sr = filesystem.waitIfLocked(() => new StreamReader(path));
-
+				
 				if (sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
 				else text = sr.ReadToEnd();
-
+				
 				//rejected: update _fileModTime. Would need to call OnAppActivatedAndThisIsOpen if changed.
 				//var fs = (FileStream)sr.BaseStream;
 				//if (fs.Length > 100_000_000) es = "File too big, > 100_000_000.";
@@ -405,38 +411,44 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				//}
 			}
 			catch (Exception ex) {
-				Debug_.PrintIf(silent && !(ex is FileNotFoundException or DirectoryNotFoundException), ex);
+				bool notFound = ex is FileNotFoundException or DirectoryNotFoundException;
+				Debug_.PrintIf(!notFound && silent == true, ex);
+				if (notFound) silent ??= true;
 				es = ex.ToStringWithoutStack();
 			}
 		}
-
+		
 		if (es == null) return true;
 		es = $"Failed to get text of <open>{ItemPath}<>, file <explore>{path}<>\r\n\t{es}";
-		if (!silent) print.warning(es, -1);
+		if (silent != true) print.warning(es, -1);
 		return new(false, es);
 	}
-
+	
 	/// <summary>
-	/// Loads text of any file like <see cref="GetFileText"/>. Silent, thread-safe.
+	/// Loads text of any file like <see cref="GetFileText"/>.
+	/// Thread-safe. Silent when file not found or too big.
 	/// </summary>
-	/// <param name="filePath">Full normal path, to pass directly to <b>StreamReader</b>.</param>
-	/// <returns>null if failed or length more than 100_000_000.</returns>
+	/// <param name="filePath">Full path, to pass directly to .NET <b>File</b> function.</param>
+	/// <returns>null if failed or file size more than 100_000_000.</returns>
 	internal static string GetFileTextLL_(string filePath) {
 		try {
 			using var sr = filesystem.waitIfLocked(() => new StreamReader(filePath));
 			if (sr.BaseStream.Length > 100_000_000) return null;
 			return sr.ReadToEnd();
 		}
-		catch { return null; }
+		catch (Exception ex) {
+			if (ex is not (FileNotFoundException or DirectoryNotFoundException)) print.warning(ex.ToStringWithoutStack(), -1);
+		}
+		return null;
 	}
-
+	
 	long _fileModTime;
-
+	
 	//called when SciDoc loaded or saved the file
 	internal void UpdateFileModTime() {
 		_fileModTime = Api.GetFileAttributesEx(FilePath, 0, out var d) ? d.ftLastWriteTime : 0;
 	}
-
+	
 	internal void OnAppActivatedAndThisIsOpen(SciCode doc) {
 		if (doc.EIsBinary) return;
 		Debug_.PrintIf(_fileModTime == 0);
@@ -444,32 +456,32 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_fileModTime = d.ftLastWriteTime;
 		doc.EFileModifiedExternally_(); //calls GetFileText
 	}
-
+	
 	#endregion
-
+	
 	#region ITreeViewItem
-
+	
 	IEnumerable<ITreeViewItem> ITreeViewItem.Items => Children();
-
+	
 	/// <summary>
 	/// Gets or sets expanded state.
 	/// The setter sets to save later but does not update the control (for it use <see cref="KTreeView.Expand"/> instead, it calls the setter).
 	/// </summary>
 	public bool IsExpanded => _isExpanded;
 	bool _isExpanded;
-
+	
 	public void SetIsExpanded(bool yes) { if (yes != _isExpanded) { _isExpanded = yes; _model.Save.StateLater(); } }
-
+	
 	string ITreeViewItem.DisplayText => DisplayName;
-
+	
 	void ITreeViewItem.SetNewText(string text) { FileRename(text); }
-
+	
 	public const string
 		c_iconScript = "*Material.ScriptOutline #73BF00",
 		c_iconClass = "*Codicons.SymbolClass #008EEE",
 		c_iconFolder = "*Material.Folder #EABB00",
 		c_iconFolderOpen = "*Material.FolderOpen #EABB00";
-
+	
 	public static string GetFileTypeImageSource(FNType ft, bool openFolder = false)
 		=> ft switch {
 			FNType.Script => App.Settings.icons.ft_script ?? c_iconScript,
@@ -479,7 +491,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				: App.Settings.icons.ft_folder ?? c_iconFolder,
 			_ => null
 		};
-
+	
 	public object Image {
 		get {
 			var s = CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
@@ -487,28 +499,28 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			return s;
 		}
 	}
-
+	
 	//TVCheck ITreeViewItem.CheckState { get; }
-
+	
 	//bool ITreeViewItem.IsDisabled { get; }
-
+	
 	//bool ITreeViewItem.IsBold => this == _model.CurrentFile;
 	//bool ITreeViewItem.IsBold => TreeControl.FocusedItem == this;
-
+	
 	//bool ITreeViewItem.IsSelectable { get; }
-
+	
 	int ITreeViewItem.Color => !IsFolder && _model.OpenFiles.Contains(this) && _IsTextBlack ? 0x1fafad2 : -1;
-
+	
 	int ITreeViewItem.TextColor => _model.IsCut(this) ? 0xff0000 : -1;
-
+	
 	int ITreeViewItem.BorderColor => this == _model.CurrentFile ? 0x1A0A0FF : -1;
-
+	
 	static bool _IsTextBlack => (uint)Api.GetSysColor(Api.COLOR_WINDOWTEXT) == 0; //if not high-contrast theme
-
+	
 	#endregion
-
+	
 	#region tree view
-
+	
 	/// <summary>
 	/// Unselects all and selects this. Ensures visible. Does not open document.
 	/// If this is root, just unselects all.
@@ -520,22 +532,22 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			TreeControl.SelectSingle(this, andFocus: true);
 		}
 	}
-
+	
 	public bool IsSelected {
 		get => TreeControl.IsSelected(this);
 		set => TreeControl.Select(this, value);
 	}
-
+	
 	/// <summary>
 	/// Call this to update/redraw control row view when changed its data (text, image, checked, color, etc).
 	/// Redraws only this control; to update all, call <see cref="FilesModel.Redraw"/> instead.
 	/// </summary>
 	public void UpdateControlRow() => TreeControl.Redraw(this);
-
+	
 	#endregion
-
+	
 	#region find
-
+	
 	/// <summary>
 	/// Finds descendant file or folder by name or @"\relative path".
 	/// Returns null if not found; also if name is null/"".
@@ -547,7 +559,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (name[0] == '\\') return _FindRelative(name, kind);
 		return _FindIn(Descendants(), name, kind, true);
 	}
-
+	
 	static FileNode _FindIn(IEnumerable<FileNode> e, ReadOnlySpan<char> name, FNFind kind, bool preferFile) {
 		FileNode folder = null;
 		foreach (var f in e) {
@@ -558,7 +570,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		return folder;
 	}
-
+	
 	FileNode _FindRelative(string name, FNFind kind, bool orAnywhere = false) {
 #if true //fast, but allocates
 		int i = name.LastIndexOf('\\');
@@ -572,7 +584,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			}
 		}
 		return null;
-
+		
 		bool _Cmp(FileNode f) {
 			if (null == FilesModel.KindFilter_(f, kind)) return false;
 			f = f.Parent;
@@ -604,7 +616,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		return f;
 #endif
 	}
-
+	
 	/// <summary>
 	/// Finds file or folder by name or path relative to: this folder, parent folder (if this is file) or root (if relativePath starts with @"\").
 	/// Returns null if not found; also if name is null/"".
@@ -629,7 +641,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		return p._FindRelative(s, kind, orAnywhere);
 	}
-
+	
 	/// <summary>
 	/// Finds all descendant files (and not folders) that have the specified name.
 	/// Returns empty array if not found.
@@ -646,28 +658,39 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		return Array.Empty<FileNode>();
 	}
-
+	
 	/// <summary>
 	/// Finds ancestor (including self) project folder and its main file.
-	/// If both found, sets folder and main and returns true. If some not found, sets folder=null, main=null, and returns false.
-	/// If ofAnyScript, gets project even if this is a non-main script in project folder. 
 	/// </summary>
+	/// <returns>true if this is in a project folder and found its main file.</returns>
+	/// <param name="folder">If the function returns true, receives the project folder, else null.</param>
+	/// <param name="main">If the function returns true, receives the project-main file, else null.</param>
+	/// <param name="ofAnyScript">Get project even if this is a non-main script in project folder.</param>
 	public bool FindProject(out FileNode folder, out FileNode main, bool ofAnyScript = false) {
-		folder = main = null;
 		for (FileNode r = Root, f = IsFolder ? this : Parent; f != r && f != null; f = f.Parent) {
-			if (!f.IsProjectFolder(out main)) continue;
-			if (this.IsScript && this != main && !ofAnyScript) { //non-main scripts are not part of project
-				main = null;
-				break;
-			}
+			if (!f.IsProjectFolder(out var fm)) continue;
+			if (this.IsScript && this != fm && !ofAnyScript) break; //non-main scripts are not part of project
+			main = fm;
 			folder = f;
 			return true;
 		}
+		folder = main = null;
 		return false;
 	}
-
 	//CONSIDER: multiscript project. Each script in it is compiled together with cs files.
-
+	
+	/// <summary>
+	/// If this is in a project, returns the project-main file. Else returns this.
+	/// This must be a code file (asserts).
+	/// </summary>
+	/// <param name="ofAnyScript">Get project even if this is a non-main script in project folder.</param>
+	public FileNode GetProjectMainOrThis(bool ofAnyScript = false) {
+		Debug.Assert(IsCodeFile);
+		return FindProject(out _, out var pm, ofAnyScript) ? pm : this;
+	}
+	
+	//public FileNode GetProjectMainOrThis
+	
 	/// <summary>
 	/// Returns true if this is a folder and Name starts with '@' and contains main code file.
 	/// </summary>
@@ -675,61 +698,50 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public bool IsProjectFolder(out FileNode main) {
 		main = null;
 		if (IsFolder && _name[0] == '@') {
-			foreach (var f in Children()) {
+			for (var f = FirstChild; f != null; f = f.Next) {
 				if (f.IsCodeFile) { main = f; return true; }
 			}
 		}
 		return false;
 	}
-
+	
 	public IEnumerable<FileNode> EnumProjectClassFiles(FileNode fSkip = null) {
 		foreach (var f in Descendants()) {
 			if (f._type == FNType.Class && f != fSkip) yield return f;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets class file role from metacomments.
 	/// Note: can be slow, because loads file text if this is a class file.
 	/// </summary>
-	public EClassFileRole GetClassFileRole() {
-		if (_type != FNType.Class) return EClassFileRole.None;
-		if (GetCurrentText(out var code, silent: true)) {
+	public FNClassFileRole GetClassFileRole() {
+		if (_type != FNType.Class) return FNClassFileRole.None;
+		if (GetCurrentText(out var code, silent: null)) {
 			var meta = MetaComments.FindMetaComments(code);
 			if (meta.end > 0) {
 				foreach (var v in MetaComments.EnumOptions(code, meta)) {
 					if (!v.NameIs("role")) continue;
-					if (v.ValueIs("classLibrary")) return EClassFileRole.Library;
+					if (v.ValueIs("classLibrary")) return FNClassFileRole.Library;
 					if (v.ValueIs("classFile")) break;
-					return EClassFileRole.App;
+					return FNClassFileRole.App;
 				}
 			}
 		}
-		return EClassFileRole.Class;
+		return FNClassFileRole.Class;
 	}
-
-	public enum EClassFileRole {
-		/// <summary>Not a class file.</summary>
-		None,
-		/// <summary>Has meta role miniProgram/exeProgram/editorExtension.</summary>
-		App,
-		/// <summary>Has meta role classLibrary.</summary>
-		Library,
-		/// <summary>Has meta role classFile, or no meta role.</summary>
-		Class,
-	}
-
+	
 	#endregion
-
+	
 	#region new item
-
+	
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder, bool autoGenerated = false, bool moving = false, FileNode renaming = null) {
 		if (!forFolder && !moving && fromName.Eqi("global.cs")) {
 			if (null == folder.Model.Find("global.cs", FNFind.Class)) return fromName;
 		} else {
 			if (!_Exists(fromName)) return fromName;
 		}
-
+		
 		string oldName = fromName, ext = null;
 		if (!forFolder) {
 			int i = fromName.LastIndexOf('.');
@@ -743,7 +755,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				return s;
 			}
 		}
-
+		
 		bool _Exists(string s) {
 			var f = _FindIn(folder.Children(), s, FNFind.Any, false);
 			if (f != null) return f != renaming;
@@ -751,35 +763,35 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			return false;
 		}
 	}
-
+	
 	public static class Templates {
 		public static readonly string DefaultDirBS = folders.ThisAppBS + @"Templates\files\";
 		public static readonly string UserDirBS = AppSettings.DirBS + @"Templates\";
-
+		
 		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", _ => "Script.cs" };
-
+		
 		public static string FilePathRaw(ETempl templ, bool user) => (user ? UserDirBS : DefaultDirBS) + FileName(templ);
-
+		
 		public static string FilePathReal(ETempl templ, bool? user = null) {
 			bool u = user ?? ((ETempl)App.Settings.templ_use).Has(templ);
 			var file = FilePathRaw(templ, u);
 			if (u && !filesystem.exists(file, true)) file = FilePathRaw(templ, false);
 			return file;
 		}
-
+		
 		public static string Load(ETempl templ, bool? user = null) {
 			return filesystem.loadText(FilePathReal(templ, user));
 		}
-
+		
 		public static bool IsStandardTemplateName(string template, out ETempl result, bool ends = false) {
 			int i = ends ? template.Ends(false, s_names) : template.Eq(false, s_names);
 			if (i-- == 0) { result = 0; return false; }
 			result = (ETempl)(1 << i);
 			return true;
 		}
-
+		
 		readonly static string[] s_names = { "Script.cs", "Class.cs" };
-
+		
 		/// <summary>
 		/// Loads Templates\files.xml and optionally finds a template in it.
 		/// Returns null if template not found. Exception if fails to load file.
@@ -793,7 +805,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				s_xml = XmlUtil.LoadElem(s_xmlFilePath);
 				s_xmlFileTime = fp.LastWriteTimeUtc;
 			}
-
+			
 			var x = s_xml;
 			if (template != null) {
 				var a = template.Split('\\');
@@ -805,17 +817,17 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		static XElement s_xml;
 		static readonly string s_xmlFilePath = folders.ThisAppBS + @"Templates\files.xml";
 		static DateTime s_xmlFileTime;
-
+		
 		public static bool IsInDefault(XElement x) => x.Ancestors().Any(o => o.Attr("n") == "Default");
 	}
-
+	
 	[Flags]
 	public enum ETempl { Script = 1, Class = 2 }
-
+	
 	#endregion
-
+	
 	#region rename, move, copy
-
+	
 	/// <summary>
 	/// Changes Name of this object and renames its file (if not link).
 	/// Returns false if name is empty or fails to rename its file.
@@ -833,18 +845,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		if (name == _name) return true;
 		name = CreateNameUniqueInFolder(Parent, name, IsFolder, renaming: this);
-
+		
 		if (!IsLink) {
 			if (!_model.TryFileOperation(() => filesystem.rename(this.FilePath, name, FIfExists.Fail))) return false;
 		}
-
+		
 		_SetName(name);
 		_model.Save.WorkspaceLater();
 		FilesModel.Redraw(this, remeasure: true, renamed: true);
 		CodeInfo.FilesChanged();
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Returns true if can move the tree node into the specified position.
 	/// For example, cannot move parent into child etc.
@@ -853,7 +865,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public bool CanMove(FileNode target, FNInsert pos) {
 		//cannot move into self or descendants
 		if (target == this || target.IsDescendantOf(this)) return false;
-
+		
 		//cannot move into a non-folder or before/after self
 		switch (pos) {
 		case FNInsert.Inside:
@@ -868,7 +880,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Moves this into, before or after target.
 	/// Also moves file if need.
@@ -878,30 +890,30 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public bool FileMove(FileNode target, FNInsert pos) {
 		if (target == null) { target = Root; pos = FNInsert.Inside; }
 		if (!CanMove(target, pos)) return false;
-
+		
 		var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 		if (newParent != Parent) {
 			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder, moving: true);
-
+			
 			if (!IsLink) {
 				if (!_model.TryFileOperation(() => filesystem.move(this.FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return false;
 			}
-
+			
 			if (name != _name) _SetName(name);
 		}
-
+		
 		//move tree node
 		Remove();
 		Common_MoveCopyNew(target, pos);
-
+		
 		return true;
 	}
-
+	
 	public void Common_MoveCopyNew(FileNode target, FNInsert pos) {
 		target.AddChildOrSibling(this, pos, true);
 		CodeInfo.FilesChanged();
 	}
-
+	
 	/// <summary>
 	/// Adds f to the tree, updates control, optionally sets to save workspace.
 	/// </summary>
@@ -910,7 +922,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_model.UpdateControlItems();
 		if (setSaveWorkspace) _model.Save.WorkspaceLater();
 	}
-
+	
 	/// <summary>
 	/// Copies this into, before or after target.
 	/// Also copies file if need.
@@ -922,21 +934,21 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	internal FileNode FileCopy(FileNode target, FNInsert pos, FilesModel newModel = null) {
 		_model.Save?.TextNowIfNeed(true);
 		if (target == null) { target = Root; pos = FNInsert.Inside; }
-
+		
 		//create unique name
 		var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 		string name = CreateNameUniqueInFolder(newParent, _name, IsFolder);
-
+		
 		//copy file or directory
 		if (!IsLink) {
 			if (!_model.TryFileOperation(() => filesystem.copy(FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return null;
 		}
-
+		
 		//create new FileNode with descendants
 		var model = newModel ?? _model;
 		var f = new FileNode(model, this, name);
 		_CopyChildren(this, f);
-
+		
 		void _CopyChildren(FileNode from, FileNode to) {
 			if (!from.IsFolder) return;
 			foreach (var v in from.Children()) {
@@ -945,22 +957,22 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				_CopyChildren(v, t);
 			}
 		}
-
+		
 		//insert at the specified place and set to save
 		f.Common_MoveCopyNew(target, pos);
 		return f;
 	}
-
+	
 	#endregion
-
+	
 	#region util
-
+	
 	//public bool ContainsName(string name, bool printInfo = false) {
 	//	if (null == _FindIn(Children(), name, null, false)) return false;
 	//	if (printInfo) print.it(name + " exists in this folder.");
 	//	return true;
 	//}
-
+	
 	/// <summary>
 	/// Gets file type from XML tag which should be "d", "s", "c" or "n".
 	/// If none, throws ArgumentException if canThrow, else returns FNType.Other.
@@ -972,7 +984,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		"n" => FNType.Other,
 		_ => !canThrow ? FNType.Other : throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'")
 	};
-
+	
 	/// <summary>
 	/// Detects file type from extension and code.
 	/// If .cs, returns Class or Script, else Other.
@@ -990,6 +1002,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		return type;
 	}
-
+	
 	#endregion
 }
