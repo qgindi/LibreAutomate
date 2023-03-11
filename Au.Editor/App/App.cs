@@ -48,6 +48,7 @@ static class App {
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _Main(string[] args) {
 		//Debug_.PrintLoadedAssemblies(true, !true);
+		//perf.next();
 
 		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
@@ -69,7 +70,7 @@ static class App {
 #endif
 
 		//perf.next('o');
-		Settings = AppSettings.Load(); /*the slowest part, >30 ms. Loads many dlls for JSON.*/
+		Settings = AppSettings.Load();
 		//perf.next('s');
 		//Debug_.PrintLoadedAssemblies(true, !true);
 
@@ -88,21 +89,32 @@ static class App {
 		//perf.next('c');
 		Loaded = AppState.LoadedWorkspace;
 
+		TrayIcon.Update_();
+		//perf.next('i');
+
+		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose };
+		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
+		_app.DispatcherUnhandledException += (_, e) => {
+			e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
+		};
+		//perf.next('a');
+
+		_app.MainWindow = Wmain = new MainWindow();
+		//perf.next('w');
+		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
+		//perf.next('W');
+
 		timer.every(1000, _TimerProc);
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
 
-		TrayIcon.Update_();
-		//perf.next('i');
+		_app.Dispatcher.InvokeAsync(() => {
+			//perf.next('r');
+			Model.RunStartupScripts(false);
+			//perf.nw('s');
+		});
 
-		_app = new() {
-			ShutdownMode = ShutdownMode.OnExplicitShutdown //will set OnMainWindowClose when creating main window. If now, would exit if a startup script shows/closes a WPF window.
-		};
-
-		_app.Dispatcher.InvokeAsync(() => Model.RunStartupScripts(false));
-
-		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
 		try {
 			_app.Run();
 			//Hidden app should start as fast as possible, because usually starts with Windows.
@@ -113,9 +125,12 @@ static class App {
 	}
 
 	internal static void MainFinally_() {
+		if (Loaded == AppState.Unloaded) return;
 		Loaded = AppState.Unloading;
+
 		var fm = Model; Model = null;
 		fm.Dispose(); //stops tasks etc
+
 		Loaded = AppState.Unloaded;
 
 		PrintServer.Stop();
@@ -124,8 +139,8 @@ static class App {
 	class _Application : Application {
 		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
 			base.OnSessionEnding(e);
-			if (!App.Hmain.Is0) Menus.File.Exit();
-			App.MainFinally_();
+			Wmain.Close();
+			MainFinally_();
 			process.thisProcessExitInvoke(); //OS terminates this process before or during process.thisProcessExit event
 		}
 	}
@@ -140,45 +155,23 @@ static class App {
 
 	/// <summary>
 	/// Main window.
-	/// Auto-creates if this property never was accessed or if the main window never was visible; but does not show and does not create hwnd.
+	/// Not loaded if never was visible.
 	/// Use only in main thread; if other threads need <b>Dispatcher</b> of main thread, use <see cref="Dispatcher"/>.
 	/// </summary>
-	public static MainWindow Wmain {
-		get {
-			if (_wmain == null) {
-				AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
-				_app.DispatcherUnhandledException += (_, e) => {
-					e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
-				};
-
-#if IDE_LA
-				_app.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("App-resources.xaml")) as ResourceDictionary;
-#else
-				Application.LoadComponent(_app, new("/Au.Editor;component/app/app.xaml", UriKind.Relative)); //15 ms
-				//_app.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Au.Editor.App.App-resources.xaml")) as ResourceDictionary; //47 ms
-#endif
-
-				_app.MainWindow = _wmain = new MainWindow();
-				_app.ShutdownMode = ShutdownMode.OnMainWindowClose;
-				_wmain.AaInit();
-			}
-			return _wmain;
-		}
-	}
-	static MainWindow _wmain;
+	public static MainWindow Wmain { get; private set; }
 
 	/// <summary>
 	/// Main window handle.
 	/// defaul(wnd) if never was visible.
 	/// </summary>
-	public static wnd Hmain;
+	public static wnd Hmain { get; internal set; }
 
 	public static void ShowWindow() {
 		Wmain.Show(); //auto-creates MainWindow if never was visible
 		Hmain.ActivateL(true);
 	}
 
-	private static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
+	static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
 #if TRACE
 		print.qm2.write(e.ExceptionObject);
 #else
@@ -346,9 +339,8 @@ static class App {
 		Debug.Assert(Loaded == AppState.LoadedUI);
 		var cl = Hmain.IsVisible ? "/n /v /restart " : "/n /restart";
 		if (!commandLine.NE()) cl = cl + " " + commandLine;
-		Menus.File.Exit();
-		if (Loaded < AppState.Unloading) return;
 		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, admin ? RFlags.Admin : RFlags.InheritAdmin); };
+		_app.Shutdown(); //closes window async, with no possibility to cancel
 	}
 
 	/// <summary>
@@ -379,7 +371,7 @@ static class App {
 
 	static void _TimerProc(timer t) {
 		Timer1sOr025s?.Invoke();
-		bool needFast = _wmain?.IsVisible ?? false;
+		bool needFast = Wmain.IsVisible;
 		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
 		if (needFast) {
 			Timer025sWhenVisible?.Invoke();

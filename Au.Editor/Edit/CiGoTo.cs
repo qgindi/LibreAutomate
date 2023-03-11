@@ -18,21 +18,21 @@ class CiGoTo {
 		public string file;
 		public int line, column;
 	}
-
+	
 	bool _canGoTo, _inSource;
 	//if in source
 	List<_SourceLocation> _sourceLocations;
 	//if in metadata
 	string _assembly, _repo, _type, _member, _namespace, _filename, _alt;
-
+	
 	/// <summary>
 	/// true if can go to the symbol source. Then caller eg can add link to HTML.
 	/// May return true even if can't go to. Then on link click nothing happens. Next time will return false.
 	/// </summary>
 	public bool CanGoTo => _canGoTo;
-
+	
 	CiGoTo(bool inSource) { _canGoTo = true; _inSource = inSource; }
-
+	
 	/// <summary>
 	/// Gets info required to go to symbol source file/line/position or website.
 	/// This function is fast. The slower code is in the <b>GoTo</b> functions.
@@ -43,7 +43,7 @@ class CiGoTo {
 			foreach (var loc in sym.Locations) {
 				Debug_.PrintIf(!loc.IsVisibleSourceLocation());
 				//if (!loc.IsVisibleSourceLocation()) continue;
-
+				
 				var v = loc.GetLineSpan();
 				_sourceLocations.Add(new _SourceLocation(v.Path, v.StartLinePosition.Line, v.StartLinePosition.Character));
 			}
@@ -53,24 +53,24 @@ class CiGoTo {
 			if (sym is INamespaceSymbol) return; //not useful
 			_canGoTo = true;
 			_assembly = asm.Name;
-
+			
 			if (asm.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "AssemblyMetadataAttribute" && "RepositoryUrl" == o.ConstructorArguments[0].Value as string)?.ConstructorArguments[1].Value is string s) {
 				if (s.Starts("git:")) s = s.ReplaceAt(0, 3, "https"); //eg .NET
 				if (s.Starts("https://github.com/")) _repo = s[19..];
 			}
-
+			
 			//Unfortunately the github search engine is so bad. Gives lots of garbage. Randomly returns not all results.
 			//To remove some garbage, can include namespace, filename, path (can be partial, without filename).
 			//There is no best way for all casses. GoTo() will show UI, and users can try several alternatives.
 			//At first this class used referencesource, not github. Can jump directly to the class or method etc.
 			//	But it seems it is now almost dead. Many API either don't exist or are obsolete (I guess) or only Unix version.
 			//	And it was only for .NET and Roslyn.
-
+			
 			if (sym is not INamedTypeSymbol ts) {
 				ts = sym.ContainingType;
 				_member = sym.Name;
 				if (_member.Starts('.')) _member = null; //".ctor"
-
+				
 				//CONSIDER: for methods etc prepend the return type, like "int Method" instead of Method.
 			}
 			ts = ts.OriginalDefinition; //eg List<int> -> List<T>
@@ -89,7 +89,7 @@ class CiGoTo {
 			_alt = ts.ToString(); //for source.dot.net need exact generic, preferably fully qualified, like Namespace.List<T>, but without in/out like ToNameDisplayString
 		}
 	}
-
+	
 	string _GetLinkData() {
 		if (!_canGoTo) return null;
 		if (_inSource) {
@@ -100,13 +100,13 @@ class CiGoTo {
 			return $"||{_assembly}|{_repo}|{_type}|{_member}|{_namespace}|{_filename}|{_alt}";
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets link data string for <see cref="LinkGoTo"/>. Returns null if unavailable.
 	/// This function is fast. The slower code is in the <b>GoTo</b> function.
 	/// </summary>
 	public static string GetLinkData(ISymbol sym) => new CiGoTo(sym)._GetLinkData();
-
+	
 	/// <summary>
 	/// Opens symbol source file/line/position or shows github search UI. Used on link click.
 	/// </summary>
@@ -134,7 +134,7 @@ class CiGoTo {
 		}
 		g.GoTo();
 	}
-
+	
 	/// <summary>
 	/// Opens symbol source file/line/position or website.
 	/// If need to open website, runs async task.
@@ -148,12 +148,12 @@ class CiGoTo {
 				int i = popupMenu.showSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray());
 				if (i > 0) _GoTo(_sourceLocations[i - 1]);
 			}
-
+			
 			static void _GoTo(_SourceLocation v) => App.Model.OpenAndGoTo(v.file, v.line, v.column);
 		} else {
 			AssemblySett se = null;
 			App.Settings.ci_gotoAsm?.TryGetValue(_assembly, out se);
-
+			
 			var b = new wpfBuilder("GitHub search").WinSize(450).Columns(-1);
 			b.StartGrid<GroupBox>("Query").Columns(70, -1);
 			b.R.Add("Type", out TextBox tType, _type);
@@ -177,10 +177,10 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 			b.End();
 			b.AddOkCancel(apply: "Search");
 			b.End();
-
+			
 			//b.Window.ShowInTaskbar = false; b.Window.Owner = App.Wmain;
 			b.Window.Show();
-
+			
 			b.OkApply += _ => {
 				string repo = tRepo.Text.NullIfEmpty_(), path = tPath.Text.NullIfEmpty_(); bool csharp = cSharp.IsChecked;
 				if (repo == _repo && path == null && csharp) {
@@ -190,7 +190,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 					//print.it("save");
 					(App.Settings.ci_gotoAsm ??= new())[_assembly] = new() { repo = repo == _repo ? null : repo, path = path, csharp = csharp };
 				}
-
+				
 				var q = new StringBuilder(tType.Text);
 				if (!tMember.Text.NE()) q.Append(' ').Append(tMember.Text);
 				if (cText.IsChecked && !tText.Text.NE()) q.Append(' ').Append(tText.Text);
@@ -202,7 +202,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 				//if (!keys.isScrollLock) return;
 				run.itSafe(url);
 			};
-
+			
 			void _Link1() {
 				var s = "https://source.dot.net/#q=" + _alt;
 				if (_member != null) s = s + "." + _member;
@@ -211,12 +211,12 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 			}
 		}
 	}
-
+	
 	internal record AssemblySett {
 		public string repo, path;
 		public bool csharp;
 	}
-
+	
 	//This was used with referencesource. Not sure whether need it now too.
 	///// <summary>
 	///// If _filename or its ancestor type is forwarded to another assembly, replaces _assembly with the name of that assembly.
@@ -226,7 +226,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	//void _GetAssemblyNameOfForwardedType() {
 	//	var path = folders.NetRuntimeBS + _assembly + ".dll";
 	//	if (!(filesystem.exists(path).File || filesystem.exists(path = folders.NetRuntimeDesktopBS + _assembly + ".dll").File)) return;
-
+	
 	//	var alc = new System.Runtime.Loader.AssemblyLoadContext(null, true);
 	//	try {
 	//		var asm = alc.LoadFromAssemblyPath(path);
@@ -236,7 +236,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	//	catch (Exception ex) { Debug_.Print(ex); }
 	//	finally { alc.Unload(); }
 	//}
-
+	
 	public static void GoToDefinition() {
 		if (!CodeInfo.GetContextAndDocument(out var cd, metaToo: true)) return;
 		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(cd);
@@ -278,7 +278,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 				_Open(code[from..to]);
 			}
 		}
-
+		
 		//if s is script, opens it. If file path, selects in Explorer. If folder path, opens the folder. If URL, opens the web page.
 		static bool _Open(string s, SyntaxToken token = default) {
 			if (s.NE()) return false;
@@ -298,7 +298,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 			}
 			return true;
 		}
-
+		
 		//If t is "string" in 'folders.Folder + "string"' or Folder in 'folders.Folder', gets folder path and return true.
 		static bool _GetFoldersPath(SyntaxToken t, out string s, bool isString) {
 			s = null;
@@ -313,6 +313,29 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 			s = folders.getFolder(s2);
 			return s != null;
 		}
+	}
+	
+	public static void GoToBase() {
+		var (sym, cd) = CiUtil.GetSymbolFromPos();
+		List<ISymbol> a = new();
+		if (sym is INamedTypeSymbol nt && nt.TypeKind is TypeKind.Class or TypeKind.Interface) {
+			if (nt.TypeKind == TypeKind.Interface) {
+				a.AddRange(nt.AllInterfaces);
+			} else if (nt.BaseType != null) { //else object
+				a.AddRange(nt.GetBaseTypes().SkipLast(1).Concat(nt.AllInterfaces));
+			}
+		} else if (sym.Kind is SymbolKind.Method or SymbolKind.Property or SymbolKind.Event) {
+			a.AddRange(Microsoft.CodeAnalysis.FindSymbols.FindReferences.BaseTypeFinder.FindOverriddenAndImplementedMembersAsync(sym, cd.document.Project.Solution, default).Result);
+		}
+		if (a.Count == 0) return;
+		if (a.Count == 1) sym = a[0];
+		else {
+			int i = popupMenu.showSimple(a.Select(o => o.Name).ToArray());
+			if (--i < 0) return;
+			sym = a[i];
+		}
+		var g = new CiGoTo(sym);
+		if (g.CanGoTo) g.GoTo();
 	}
 }
 

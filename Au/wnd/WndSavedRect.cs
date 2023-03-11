@@ -20,8 +20,7 @@ namespace Au.More;
 /// if (!b.ShowDialog()) return;
 /// ]]></code>
 /// </example>
-public struct WndSavedRect
-{
+public struct WndSavedRect {
 	/// <summary>
 	/// Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
 	/// </summary>
@@ -140,7 +139,9 @@ public struct WndSavedRect
 			w.SetRect(r);
 		}
 		if (save != null) {
-			w.Closing += (o, _) => save(new WndSavedRect(o as System.Windows.Window).ToString());
+			w.Closing += (_, _) => {
+				if (w.IsLoaded) save(new WndSavedRect(w).ToString());
+			};
 		}
 		return ret;
 	}
@@ -160,7 +161,9 @@ public struct WndSavedRect
 			if (v.Maximize) form.WindowState = System.Windows.Forms.FormWindowState.Maximized;
 		}
 		if (save != null) {
-			form.FormClosing += (o, _) => save(new WndSavedRect(o as System.Windows.Forms.Form).ToString());
+			form.FormClosing += (_, _) => {
+				if (form.IsHandleCreated) save(new WndSavedRect(form).ToString());
+			};
 		}
 		return ret;
 	}

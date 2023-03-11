@@ -27,16 +27,14 @@ static class CiUtil {
 		n ??= node.FirstAncestorOrSelf<SyntaxNode>(o => o.Parent is CompilationUnitSyntax); //using directive etc
 		return n;
 	}
-
+	
 	public static (ISymbol symbol, CodeInfo.Context cd) GetSymbolFromPos() {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return default;
 		return (GetSymbolFromPos(cd), cd);
 	}
-
-	public static ISymbol GetSymbolFromPos(CodeInfo.Context cd) {
-		return _TryGetAltSymbolFromPos(cd) ?? SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
-	}
-
+	
+	public static ISymbol GetSymbolFromPos(CodeInfo.Context cd) => _TryGetAltSymbolFromPos(cd) ?? _GetSymbolFromPos(cd);
+	
 	static ISymbol _TryGetAltSymbolFromPos(CodeInfo.Context cd) {
 		if (cd.code.Eq(cd.pos, '[')) { //try to get indexer
 			var t = cd.syntaxRoot.FindToken(cd.pos, true);
@@ -46,16 +44,22 @@ static class CiUtil {
 		}
 		return null;
 	}
-
+	
+	public static ISymbol _GetSymbolFromPos(CodeInfo.Context cd) {
+		var sym = SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
+		if (sym is IMethodSymbol ims) sym = ims.PartialImplementationPart ?? sym;
+		return sym;
+	}
+	
 	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token) GetSymbolEtcFromPos(CodeInfo.Context cd, bool forHelp = false) {
 		var sym = _TryGetAltSymbolFromPos(cd);
 		if (sym != null) return (sym, null, default, default);
-
+		
 		int pos = cd.pos; if (pos > 0 && SyntaxFacts.IsIdentifierPartCharacter(cd.code[pos - 1])) pos--;
 		if (!cd.syntaxRoot.FindTouchingToken(out var token, pos, findInsideTrivia: true)) return default;
-
+		
 		string word = cd.code[token.Span.ToRange()];
-
+		
 		var k = token.Kind();
 		if (k == SyntaxKind.IdentifierToken) {
 			switch (word) {
@@ -77,7 +81,7 @@ static class CiUtil {
 			//	//SyntaxFacts.IsPreprocessorKeyword(k), //true if #something or can be used in #something context. Also true for eg if without #.
 			//	//SyntaxFacts.IsPreprocessorContextualKeyword(k) //badly named. True only if #something.
 			//	);
-
+			
 			if (SyntaxFacts.IsReservedKeyword(k)) {
 				bool pp = (word == "if" || word == "else") && token.GetPreviousToken().IsKind(SyntaxKind.HashToken);
 				if (pp) word = "#" + word;
@@ -98,14 +102,14 @@ static class CiUtil {
 		}
 		//note: don't pass contextual keywords to FindSymbolAtPositionAsync or GetSymbolInfo.
 		//	It may get info for something other, eg 'new' -> ctor or type, or 'int' -> type 'Int32'.
-
-		return (SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result, null, default, token);
+		
+		return (_GetSymbolFromPos(cd), null, default, token);
 	}
-
+	
 	public enum HelpKind {
 		None, ReservedKeyword, ContextualKeyword, AttributeTarget, PreprocKeyword, String
 	}
-
+	
 	public static void OpenSymbolEtcFromPosHelp() {
 		string url = null;
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -134,9 +138,9 @@ static class CiUtil {
 		}
 		if (url != null) run.itSafe(url);
 	}
-
+	
 	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(query);
-
+	
 	public static string GetSymbolHelpUrl(ISymbol sym) {
 		//print.it(sym);
 		//print.it(sym.IsInSource(), sym.IsFromSource());
@@ -157,13 +161,13 @@ static class CiUtil {
 			} else {
 				query = sym.QualifiedName();
 			}
-
+			
 			if (query.Ends("..ctor")) query = query.ReplaceAt(^6.., au ? ".-ctor" : " constructor");
 			else if (query.Ends(".this[]")) query = query.ReplaceAt(^7.., ".Item");
-
+			
 			if (au) return HelpUtil.AuHelpUrl(query);
 			if (metadata.Name.Starts("Au.")) return null;
-
+			
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
 		} else if (!sym.IsInSource()) { //eg an operator of string etc
@@ -181,10 +185,10 @@ static class CiUtil {
 		} else {
 			return null;
 		}
-
+		
 		return _GoogleURL(query);
 	}
-
+	
 	/// <summary>
 	/// Gets rectangle of caret if it was at the specified UTF-16 position.
 	/// If <i>pos16</i> less than 0, uses current caret position.
@@ -196,7 +200,7 @@ static class CiUtil {
 		if (inScreen) doc.AaWnd.MapClientToScreen(ref r);
 		return r;
 	}
-
+	
 	public static PSFormat GetParameterStringFormat(SyntaxNode node, SemanticModel semo, bool isString) {
 		var kind = node.Kind();
 		//print.it(kind);
@@ -204,9 +208,9 @@ static class CiUtil {
 		if (isString || kind == SyntaxKind.StringLiteralExpression) parent = node.Parent;
 		else if (kind == SyntaxKind.InterpolatedStringText) parent = node.Parent.Parent;
 		else return PSFormat.None;
-
+		
 		while (parent is BinaryExpressionSyntax && parent.IsKind(SyntaxKind.AddExpression)) parent = parent.Parent; //"string"+"string"+...
-
+		
 		PSFormat format = PSFormat.None;
 		if (parent is ArgumentSyntax asy) {
 			if (parent.Parent is ArgumentListSyntax alis) {
@@ -233,7 +237,7 @@ static class CiUtil {
 					if (ims != null) format = _GetFormat(ims, balis);
 				}
 			}
-
+			
 			PSFormat _GetFormat(IMethodSymbol ims, BaseArgumentListSyntax alis) {
 				IParameterSymbol p = null;
 				var pa = ims.Parameters;
@@ -256,7 +260,7 @@ static class CiUtil {
 		}
 		return format;
 	}
-
+	
 	//rejected. Was useful when we did not have global usings. May cause confusion. May remove directives needed in the future.
 	//public static string GetTextWithoutUnusedUsingDirectives() {
 	//	if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
@@ -282,7 +286,7 @@ static class CiUtil {
 	//	b.Append(code, i, code.Length - i);
 	//	return b.ToString();
 	//}
-
+	
 	/// <summary>
 	/// Gets "global using Namespace;" directives from all files of compilation. Skips aliases and statics.
 	/// </summary>
@@ -295,7 +299,7 @@ static class CiUtil {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// From C# code creates a Roslyn workspace+project+document for code analysis.
 	/// If <i>needSemantic</i>, adds default references and a document with default global usings (same as in default global.cs).
@@ -316,11 +320,11 @@ static class CiUtil {
 			sol = sol.AddDocument(DocumentId.CreateNewId(projectId), "g.cs", c_globalUsingsText);
 		}
 		return sol.AddDocument(documentId, "l.cs", code).GetDocument(documentId);
-
+		
 		//It seems it's important to dispose workspaces.
 		//	In the docs project at first didn't dispose. After maybe 300_000 times: much slower, process memory 3 GB, sometimes hangs.
 	}
-
+	
 	public const string c_globalUsingsText = """
 global using Au;
 global using Au.Types;
@@ -345,7 +349,7 @@ global using System.Windows;
 global using System.Windows.Controls;
 global using System.Windows.Media;
 """;
-
+	
 	/// <summary>
 	/// Creates Compilation from a file or project folder.
 	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
@@ -355,21 +359,21 @@ global using System.Windows.Media;
 	public static Compilation CreateCompilationFromFileNode(FileNode f) { //not CSharpCompilation, it creates various small problems
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return null;
-
+		
 		var m = new MetaComments();
 		if (!m.Parse(f, projFolder, MCPFlags.ForCodeInfo)) return null; //with this flag never returns false, but anyway
-
+		
 		var pOpt = m.CreateParseOptions();
 		var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
 		for (int i = 0; i < trees.Length; i++) {
 			var f1 = m.CodeFiles[i];
 			trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, Encoding.Default) as CSharpSyntaxTree;
 		}
-
+		
 		var cOpt = m.CreateCompilationOptions();
 		return CSharpCompilation.Create("Compilation", trees, m.References.Refs, cOpt);
 	} //FUTURE: remove if unused
-
+	
 	/// <summary>
 	/// Creates Solution from a file or project folder.
 	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
@@ -380,10 +384,10 @@ global using System.Windows.Media;
 	public static (Solution sln, MetaComments meta) CreateSolutionFromFileNode(AdhocWorkspace ws, FileNode f) {
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return default;
-
+		
 		var m = new MetaComments();
 		if (!m.Parse(f, projFolder, MCPFlags.ForCodeInfo)) return default; //with this flag never returns false, but anyway
-
+		
 		var projectId = ProjectId.CreateNewId();
 		var adi = new List<DocumentInfo>();
 		foreach (var f1 in m.CodeFiles) {
@@ -391,17 +395,17 @@ global using System.Windows.Media;
 			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
 			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
 		}
-
+		
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
 			m.CreateCompilationOptions(),
 			m.CreateParseOptions(),
 			adi,
 			null,
 			m.References.Refs);
-
+		
 		return (ws.CurrentSolution.AddProject(pi), m);
 	}
-
+	
 	/// <summary>
 	/// For C# code gets style bytes that can be used with SCI_SETSTYLINGEX for UTF-8 text.
 	/// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
@@ -427,7 +431,7 @@ global using System.Windows.Media;
 		}
 		return styles8;
 	}
-
+	
 	/// <summary>
 	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
 	/// </summary>
@@ -445,40 +449,40 @@ global using System.Windows.Media;
 		}
 		return false;
 	}
-
+	
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }
 		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.FullSpan}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
-
+	
 	public static void PrintNode(SyntaxToken x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x.ToString().Limit(10, middle: true, lines: true)}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
-
+	
 	public static void PrintNode(SyntaxTrivia x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x.ToString().Limit(10, middle: true, lines: true)}<>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
-
+	
 	public static void HiliteRange(int start, int end) {
 		var doc = Panels.Editor.ActiveDoc;
 		doc.EInicatorsFound_(null);
 		doc.EInicatorsFound_(new List<Range> { start..end });
 	}
-
+	
 	public static void HiliteRange(TextSpan span) => HiliteRange(span.Start, span.End);
-
+	
 	public static void HiliteRanges(List<Range> a) {
 		var doc = Panels.Editor.ActiveDoc;
 		doc.EInicatorsFound_(null);
 		doc.EInicatorsFound_(a);
 	}
-
+	
 #endif
-
+	
 	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {
 		return m switch {
 			ClassDeclarationSyntax => CiItemKind.Class,
@@ -498,7 +502,7 @@ global using System.Windows.Media;
 			_ => CiItemKind.None
 		};
 	}
-
+	
 	public static void TagsToKindAndAccess(ImmutableArray<string> tags, out CiItemKind kind, out CiItemAccess access) {
 		kind = CiItemKind.None;
 		access = default;
@@ -536,7 +540,7 @@ global using System.Windows.Media;
 			};
 		}
 	}
-
+	
 	//The order must match CiItemKind.
 	public static string[] ItemKindNames { get; } = new[] {
 		"Class",
@@ -559,7 +563,7 @@ global using System.Windows.Media;
 		"Snippet",
 		"TypeParameter"
 	};
-
+	
 #if DEBUG
 	//unfinished. Just prints what we can get from CSharpSyntaxContext.
 	public static /*CiContextType*/void GetContextType(/*in CodeInfo.Context cd,*/ CSharpSyntaxContext c) {
@@ -618,16 +622,16 @@ global using System.Windows.Media;
 		//_Print("", c.);
 		//_Print("", c.);
 		//_Print("", c.);
-
+		
 		static void _Print(string s, bool value) {
 			if (value) print.it($"<><c red>{s}<>");
 			else print.it(s);
 		}
-
+		
 		//return CiContextType.Namespace;
 	}
 #endif
-
+	
 	//unfinished. Also does not support namespaces.
 	//public static CiContextType GetContextType(CompilationUnitSyntax t, int pos) {
 	//	var members = t.Members;
@@ -648,7 +652,7 @@ global using System.Windows.Media;
 	//	} else {
 	//		int i = members.IndexOf(o => o is not GlobalStatementSyntax);
 	//		if (i < 0 || pos <= members[i].SpanStart) return CiContextType.Method;
-
+	
 	//		//now the difficult part
 	//		ms = members[i].Span;
 	//		print.it(pos, ms);

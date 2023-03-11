@@ -7,3 +7,6 @@ miscFlags 1;
 noRef *\_\Au.dll;
 resource resources\red_cross_cursor.cur /path;
 /*/
+
+//TODO
+//[assembly: InternalsVisibleTo("Au.Editor.cs")]

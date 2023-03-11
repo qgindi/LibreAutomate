@@ -2,7 +2,7 @@
 role exeProgram;
 define IDE_LA,NO_GLOBAL,NO_DEFAULT_CHARSET_UNICODE;
 noWarnings 1701,1702,8002,419;
-testInternal Au.Controls,Au,Microsoft.CodeAnalysis,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis.Features,Microsoft.CodeAnalysis.CSharp.Features,Microsoft.CodeAnalysis.Workspaces,Microsoft.CodeAnalysis.CSharp.Workspaces;
+testInternal Au,Au.Controls,Microsoft.CodeAnalysis,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis.Features,Microsoft.CodeAnalysis.CSharp.Features,Microsoft.CodeAnalysis.Workspaces,Microsoft.CodeAnalysis.CSharp.Workspaces;
 postBuild _postbuild.cs /$(outputPath);
 outputPath %folders.Workspace%\exe\Au.Editor;
 icon resources\ico;
@@ -28,3 +28,7 @@ file Default;
 
 /*
 */
+
+//TODO
+//[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo("Au")]
+//Api

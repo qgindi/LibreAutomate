@@ -133,7 +133,7 @@ static class CommandLine {
 	}
 
 	/// <summary>
-	/// Called at the end of MainWindow.OnSourceInitialized.
+	/// Called from MainWindow.Loaded.
 	/// </summary>
 	public static void UILoaded() {
 		if (_importWorkspace != null || _importFiles != null) {
@@ -178,13 +178,8 @@ static class CommandLine {
 				return App.Hmain.Handle;
 			case 1: //ScriptEditor.ShowMainWindow
 				if (lparam == 0) lparam = App.Wmain.IsVisible ? 2 : 1; //toggle
-				if (lparam == 1) {
-					App.ShowWindow();
-				} else if (App.Wmain.IsVisible) {
-					App.Wmain.tempHideWhenClosing = true; //hide regardless of App.Settings.runHidden
-					App.Wmain.Close();
-					App.Wmain.tempHideWhenClosing = false;
-				}
+				if (lparam == 1) App.ShowWindow();
+				else App.Wmain.Hide_();
 				return 0;
 			case 3: //get wpf preview window saved xy
 				return App.Settings.wpfpreview_xy;

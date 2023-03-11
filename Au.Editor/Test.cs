@@ -53,6 +53,7 @@ interface Inter2 : Inter {
 }
 interface Inter3 : Inter2 {
 	void Koo3(int i);
+	new void Koo2(int i);
 }
 
 class C1 : Inter {
@@ -73,15 +74,15 @@ class C22 : Inter2 {
 }
 
 class C3 : C2 {
-	public C3() {  }
+	public C3() { }
 }
 
 class C4 : C2 {
-	public virtual void Vik() {  }
+	public virtual void Vik() { }
 }
 
 class C5 : C4 {
-	public override void Vik() {  }
+	public override void Vik() { }
 }
 
 abstract class AbsA {
@@ -120,74 +121,134 @@ class Moo { public Moo() { } }
 class C {
 	public static int Prop {
 		get => 0;
-		set {  }
+		set { }
 	}
 }
 
-static unsafe class Test {
+///// <summary>
+///// <see cref="Kia"/>
+///// </summary>
+//class Moka {
+//	public void Kia(int x) {  }
+//	public void Kia(int x, int y) {  }
+//	void User() {
+//		Kia(1);
+//		Kia(1, 2);
+//		Kia();
+//	}
+//}
 
+static unsafe class Test {
+	
+	static void getFileProp(string path) {
+		using Handle_ h = new(Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING));
+		if (h.Is0) { /*print.it(path);*/return; }
+		if (!GetFileTime(h, out _, out _, out var t)) print.it(path);
+	}
+	[DllImport("kernel32.dll")]
+	internal static extern bool GetFileTime(IntPtr hFile, out long lpCreationTime, out long lpLastAccessTime, out long lpLastWriteTime);
+	
 	/// <summary>
 	/// one two three four five six seven eight none ten 
 	/// </summary>
 	public static void FromMenubar() {
-		print.clear();
-
-		var m = new Moo();
-		Moo m2 = new();
-		var am = new Moo[2];
-
-C.Prop = 1;
-print.it(C.Prop);
-
-		var vv = new string[2];
-		var vv2 = new string[2];
-
-		int podi;
-		podi = 1;
-		podi = 2;
-
+		//print.clear();
+		
+		//CiGoTo.GoToBase();
+		//CiFind.RenameSymbol();
+		
+		//TestDeps();
+		//CodeInfo._projects.Test();
+		
+		var (sym, cd) = CiUtil.GetSymbolFromPos(); if(sym==null)return;
+		//if(sym is IAliasSymbol alias) sym = alias.Target;
+		//if (sym is ILocalSymbol k && keys.isScrollLock) sym=k.Type;
+		//print.it(sym, sym.Kind, sym.DeclaredAccessibility, sym.CanBeReferencedByName);
+		
+		//var t=cd.syntaxRoot.SyntaxTree as CSharpSyntaxTree;
+		//print.it(t.Encoding, t.Options.);
+		
+		//bool test = keys.isScrollLock;
+		//test = true;
+		//var a = App.Model.Root.Descendants().Where(o => o.IsCodeFile).Select(o => (o, o.FilePath)).ToArray();
+		//perf.first();
+		//foreach (var v in a) {
+		//	filesystem.getProperties(v.FilePath, out var p, FAFlags.UseRawPath | FAFlags.DontThrow);
+		//}
+		//perf.next();
+		//foreach (var v in a) {
+		//	if (test) {
+		//		try {
+		//			using var stream = filesystem.loadStream(v.FilePath);
+		//			if (stream.Length > 100_000_000) continue;
+		//			var b = new byte[stream.Length];
+		//			stream.Read(b);
+		//			Hash.MD5(b);
+		//		}
+		//		catch { }
+		//	} else {
+		//		FileNode.GetFileTextLL_(v.FilePath);
+		
+		//	}
+		//}
+		//perf.nw();
+		
+		//		var m = new Moo();
+		//		Moo m2 = new();
+		//		var am = new Moo[2];
+		
+		//C.Prop = 1;
+		//print.it(C.Prop);
+		
+		//		var vv = new string[2];
+		//		var vv2 = new string[2];
+		
+		//int podi;
+		//podi = 1;
+		//podi = 2;
+		
 		//var d = Panels.Editor.ActiveDoc;
-
-
+		
+		
 		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		//CiUtil.PrintNode(node);
 		//var span = node.GetRealFullSpan();
 		//cd.sci.aaaSelect(true, span.Start, span.End);
-
-
-
+		
+		
+		
 		//var v = CiUtil.GetSymbolEtcFromPos(out var k);
 		//var semo = k.semanticModel;
 		//var comp = semo.Compilation;
 		//var c = v.symbol.GetDocumentationComment(comp, expandIncludes: true, expandInheritdoc: true);
 		//var s = c.FullXmlFragment;
 		//print.it(s);
-
-
+		
+		
 		//Cpp.Cpp_Test();
 	}
-
+	
 	//static void TestFormatting() {
 	//	//works, but:
 	//	//	Moves { to new line. Don't know how to change.
 	//	//	Removes tabs from empty lines.
-
+	
 	//	if (!CodeInfo.GetContextAndDocument(out var k)) return;
 	//	var cu = k.syntaxRoot;
-
+	
 	//	var workspace = k.document.Project.Solution.Workspace;
 	//	var o = workspace.Options;
 	//	o = o.WithChangedOption(FormattingOptions.UseTabs, "C#", true);
 	//	//o = o.WithChangedOption(FormattingOptions.SmartIndent, "C#", FormattingOptions.IndentStyle.Block);
 	//	//Microsoft.CodeAnalysis.Formatting.
-
+	
 	//	var f = Microsoft.CodeAnalysis.Formatting.Formatter.Format(cu, workspace, o);
 	//	print.it(f);
 	//}
-
+	
 	//static void TestScripting() {
 	//	string code = @"if(!keys.isScrollLock) print.it(""test"");";
-
+	
 	//	if (Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: !true, dll: false, load: "")) {
 	//		c.method.Invoke(null, new object[1]);
 	//	} else {
@@ -199,7 +260,7 @@ print.it(C.Prop);
 	bbb
 	ccc
 	*/
-
+	
 	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
@@ -212,12 +273,12 @@ print.it(C.Prop);
 		}
 	}
 	static bool s_debug2;
-
+	
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();
-
+		
 		//	//timer.every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;

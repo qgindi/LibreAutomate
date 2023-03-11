@@ -2,8 +2,9 @@ using Au.Compiler;
 
 //SHOULDDO: preserve order.
 
-class MetaCommentsParser
-{
+/// <seealso cref="MetaComments.FindMetaComments"/>
+/// <seealso cref="MetaComments.EnumOptions"/>
+class MetaCommentsParser {
 	FileNode _fn;
 	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,

@@ -9,11 +9,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
-
+	
 	public FileNode EFile => _fn;
-
+	
 	public override string ToString() => _fn.ToString();
-
+	
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	public const int
 		c_marginFold = 0,
@@ -21,11 +21,11 @@ partial class SciCode : KScintilla {
 		c_marginMarkers = 2, //breakpoints etc
 		c_marginLineNumbers = 3,
 		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
-
+	
 	//markers. We can use 0-20. History 21-24. Folding 25-31.
 	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
 	//public const int c_markerStepNext = 3;
-
+	
 	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
 	public const int
 		c_indicImages = 8,
@@ -36,24 +36,24 @@ partial class SciCode : KScintilla {
 		c_indicInfo = 18,
 		c_indicWarning = 19,
 		c_indicError = 20;
-
+	
 	//#if DEBUG
 	//	public const int c_indicTest = 21;
 	//	internal void TestHidden_() {
 	//		string code = aaaText;
 	//		int start8 = code.Find("/*image:")+7;
 	//		int end8 = code.Find("*/");
-
+	
 	//		byte style = 27;
 	//		aaaStyleHidden(style, true);
-
+	
 	//		var b = new byte[end8-start8];
 	//		Array.Fill(b, style);
-
+	
 	//		Call(SCI_STARTSTYLING, start8);
 	//		unsafe { fixed (byte* bp = b) Call(SCI_SETSTYLINGEX, b.Length, bp); }
 	//	}
-
+	
 	//	internal void TestIndicators_() {
 	//		Call(SCI_INDICSETFORE, c_indicTest, 0x008000);
 	//		Call(SCI_INDICSETSTYLE, c_indicTest, INDIC_BOX);
@@ -62,27 +62,27 @@ partial class SciCode : KScintilla {
 	//		aaaIndicatorAdd(false, c_indicTest, start..end, 1);
 	//	}
 	//#endif
-
+	
 	//static int _test;
-
+	
 	internal SciCode(FileNode file, aaaFileLoaderSaver fls) {
 		//if(_test++==1) Tag = "test";
-
+		
 		//_edit = edit;
 		_fn = file;
 		_fls = fls;
-
+		
 		if (fls.IsBinary) AaInitReadOnlyAlways = true;
 		if (fls.IsImage) AaInitImages = true;
-
+		
 		Name = "document";
 	}
-
+	
 	protected override void AaOnHandleCreated() {
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
-
+		
 		aaaMarginSetType(c_marginFold, SC_MARGIN_SYMBOL);
 		aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
@@ -91,19 +91,23 @@ partial class SciCode : KScintilla {
 		//aaaSetMarginType(c_marginChanges, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINWIDTHN, c_marginChanges, 4);
 		Call(SCI_SETMARGINLEFT, 0, 2);
-
-		_InicatorsInit();
-
+		
 		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
+		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 		Call(SCI_ASSIGNCMDKEY, Math2.MakeLparam(SCK_RETURN, SCMOD_CTRL | SCMOD_SHIFT), SCI_NEWLINE);
-
+		
+		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
+		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
+		
+		_InicatorsInit();
+		
 		if (_fn.IsCodeFile) {
 			Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
-
+			
 			Call(SCI_SETCARETLINEFRAME, 1);
 			Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_CARET_LINE_BACK, 0xEEEEEE);
 			Call(SCI_SETCARETLINEVISIBLEALWAYS, 1);
-
+			
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
 			//	Scintilla and C++ lexer support it, but by default it is disabled.
 			//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
@@ -113,55 +117,38 @@ partial class SciCode : KScintilla {
 			//		But if we temporarily set C++ lexer for <code>, newlines are displayed in whole text.
 			//	Somehow this disables <fold> tag, therefore now not used for output etc.
 			Call(SCI_SETLINEENDTYPESALLOWED, 1);
-
+			
 			Call(SCI_SETMOUSEDWELLTIME, 500);
-
-			CiStyling.DocHandleCreated(this);
-
-			//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
-
-			//aaaStyleFont(STYLE_CALLTIP, "Calibri");
-			//aaaStyleBackColor(STYLE_CALLTIP, 0xf8fff0);
-			//aaaStyleForeColor(STYLE_CALLTIP, 0);
-			//Call(SCI_CALLTIPUSESTYLE);
-		} else {
-			aaaStyleFont(STYLE_DEFAULT, "Consolas", 9);
-			aaaStyleClearAll();
 		}
-
-		aaaStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
-		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
-
-		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
-
-		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
-
+		
+		CiStyling.TStyles.Settings.ToScintilla(this);
+		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
 		_InitDragDrop();
-
+		
 		//base.aaOnHandleCreated();
 	}
-
+	
 	protected override void DestroyWindowCore(HandleRef hwnd) {
 		CodeInfo._styling.DocHandleDestroyed(this);
 		base.DestroyWindowCore(hwnd);
 	}
-
+	
 	//Called by PanelEdit.aaOpen.
 	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
 		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!AaWnd.Is0);
-
+		
 		bool editable = _fls.SetText(this, text);
 		if (!EIsBinary) _fn.UpdateFileModTime();
 		ESetLineNumberMarginWidth_();
-
+		
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
-
+		
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded();
-
+		
 		App.Model.EditGoBack.OnPosChanged(this);
-
+		
 		//detect \r without '\n', because it is not well supported
 		if (editable) {
 			bool badCR = false;
@@ -181,17 +168,17 @@ partial class SciCode : KScintilla {
 		}
 	}
 	static bool s_badCR;
-
+	
 	//protected override void Dispose(bool disposing)
 	//{
 	//	print.qm2.write($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
 	//	base.Dispose(disposing);
 	//}
-
+	
 	internal void EOpenDocActivated() {
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
-
+	
 	protected override void AaOnSciNotify(ref SCNotification n) {
 		//if (test_) {
 		//	switch (n.nmhdr.code) {
@@ -211,8 +198,8 @@ partial class SciCode : KScintilla {
 		//		break;
 		//	}
 		//}
-
-
+		
+		
 		switch (n.code) {
 		case NOTIF.SCN_SAVEPOINTLEFT:
 			App.Model.Save.TextLater();
@@ -241,7 +228,7 @@ partial class SciCode : KScintilla {
 				//	//print.it(n.Text);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
-
+				
 				//	//}
 				if (n.linesAdded != 0) ESetLineNumberMarginWidth_(onModified: true);
 			}
@@ -295,18 +282,18 @@ partial class SciCode : KScintilla {
 			//	_Paint(true);
 			//	break;
 		}
-
+		
 		base.AaOnSciNotify(ref n);
 	}
 	bool _modified;
-
+	
 	protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 		nint lResult = 0;
 		handled = _WndProc((wnd)hwnd, msg, wParam, lParam, ref lResult);
 		if (handled) return lResult;
 		return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 	}
-
+	
 	bool _WndProc(wnd w, int msg, nint wparam, nint lparam, ref nint lresult) {
 		switch (msg) {
 		case Api.WM_CHAR: {
@@ -364,9 +351,9 @@ partial class SciCode : KScintilla {
 			//		return true;
 			//	}
 		}
-
+		
 		//Call(msg, wparam, lparam);
-
+		
 		//in winforms version this was after base.WndProc. Now in hook cannot do it, therefore using async.
 		//SHOULDDO: superclass and use normal wndproc instead of hook. Now possible various anomalies because of async.
 		switch (msg) {
@@ -384,10 +371,10 @@ partial class SciCode : KScintilla {
 			//	}
 			//	break;
 		}
-
+		
 		return false;
 	}
-
+	
 	protected override bool TranslateAcceleratorCore(ref System.Windows.Interop.MSG msg, ModifierKeys mod) {
 		if (msg.message is Api.WM_KEYDOWN or Api.WM_SYSKEYDOWN) {
 			var key = (KKey)msg.wParam;
@@ -414,7 +401,7 @@ partial class SciCode : KScintilla {
 		base.OnGotFocus(e);
 	}
 	bool _noModelEnsureCurrentSelected;
-
+	
 	internal bool EIsUnsaved_ {
 		get => _isUnsaved || 0 != Call(SCI_GETMODIFY);
 		set {
@@ -422,9 +409,9 @@ partial class SciCode : KScintilla {
 		}
 	}
 	bool _isUnsaved;
-
+	
 	public bool EIsBinary => _fls.IsBinary;
-
+	
 	//Called by PanelEdit.aaSaveText.
 	internal bool ESaveText_() {
 		Debug.Assert(!EIsBinary);
@@ -438,18 +425,18 @@ partial class SciCode : KScintilla {
 		}
 		return true;
 	}
-
+	
 	//Called by FileNode.OnAppActivatedAndThisIsOpen.
 	internal void EFileModifiedExternally_() {
 		Debug.Assert(!EIsBinary); //caller must check it
 		if (!_fn.GetFileText(out var text) || text == this.aaaText) return;
 		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-
+		
 		//rejected: print info. VS and VSCode reload silently.
 		//if (this == Panels.Editor.ActiveDoc) print.it($"<>Info: file {_fn.SciLink()} has been reloaded because modified outside. You can Undo.");
 	}
-
+	
 	//never mind: not called when zoom changes.
 	internal void ESetLineNumberMarginWidth_(bool onModified = false) {
 		int c = 4, lines = aaaLineCount;
@@ -457,9 +444,9 @@ partial class SciCode : KScintilla {
 		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
 	}
 	int _prevLineNumberMarginWidth;
-
+	
 	#region copy paste
-
+	
 	/// <summary>
 	/// Called when copying (menu or Ctrl+C).
 	/// Caller must not copy text to clipboard, and must not pass the event to Scintilla.
@@ -497,16 +484,16 @@ partial class SciCode : KScintilla {
 			clipboard.text = s;
 		}
 	}
-
+	
 	public enum ECopyAs { Text, Forum, HtmlSpanStyle, HtmlSpanClassCss, HtmlSpanClass, Markdown, TextWithoutScreenshots }
-
+	
 	/// <summary>
 	/// Called when pasting (menu or Ctrl+V). Inserts text, possibly with processed forum bbcode etc.
 	/// Caller must not insert text, and must not pass the event to Scintilla.
 	/// </summary>
 	public void EPaste() {
 		var s1 = clipboard.text; if (s1.NE()) return;
-
+		
 		var (isFC, text, name, isClass) = EIsForumCode_(s1, false);
 		if (isFC) {
 			string buttons = _fn.FileType != (isClass ? FNType.Class : FNType.Script)
@@ -529,47 +516,49 @@ partial class SciCode : KScintilla {
 			Call(SCI_PASTE); //not aaaReplaceSel, because can be SCI_SETMULTIPASTE etc
 		}
 	}
-
+	
 	internal static (bool yes, string text, string filename, bool isClass) EIsForumCode_(string s, bool newFile) {
 		if (!s.RxMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return default;
-
+		
 		bool isClass = s[3] == 'c';
 		s = s[m.End..];
 		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
-
+		
 		if (newFile && dialog.showOkCancel("Import C# file from clipboard?", "Source file: " + name, owner: App.Hmain))
 			_NewFileFromForumCode(s, name, isClass);
-
+		
 		return (true, s, name, isClass);
 	}
-
+	
 	static void _NewFileFromForumCode(string text, string name, bool isClass) {
 		App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new NewFileText(replaceTemplate: true, text));
 	}
-
+	
 	#endregion
-
+	
 	#region indicators
-
+	
 	void _InicatorsInit() {
+		if (!_fn.IsCodeFile) return;
+		
 		//workaround for: indicators too small if high DPI
 		int style = _dpi < 144 ? INDIC_SQUIGGLEPIXMAP : INDIC_SQUIGGLE,
 			strokeWidth = _dpi < 144 ? 100 : 200;
 		//strokeWidth = _dpi < 144 ? 100 : _dpi < 192 ? 150 : 200;
-
+		
 		aaaIndicatorDefine(c_indicError, style, 0xff0000, strokeWidth: strokeWidth);
 		aaaIndicatorDefine(c_indicWarning, style, 0x008000, strokeWidth: strokeWidth); //dark green
 		aaaIndicatorDefine(c_indicInfo, INDIC_DIAGONAL, 0xc0c0c0, strokeWidth: strokeWidth);
 		aaaIndicatorDefine(c_indicDiagHidden, INDIC_DOTS, 0xc0c0c0, strokeWidth: strokeWidth);
 	}
-
+	
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		base.OnDpiChanged(oldDpi, newDpi);
 		if (!AaWnd.Is0) _InicatorsInit();
 	}
-
+	
 	bool _indicHaveFound, _indicHaveDiag;
-
+	
 	internal void EInicatorsFound_(List<Range> a) {
 		if (_indicHaveFound) {
 			_indicHaveFound = false;
@@ -577,10 +566,10 @@ partial class SciCode : KScintilla {
 		}
 		if (a == null || a.Count == 0) return;
 		_indicHaveFound = true;
-
+		
 		foreach (var v in a) aaaIndicatorAdd(true, c_indicFound, v);
 	}
-
+	
 	internal void EInicatorsDiag_(bool has) {
 		if (_indicHaveDiag) {
 			_indicHaveDiag = false;
@@ -592,14 +581,14 @@ partial class SciCode : KScintilla {
 		if (!has) return;
 		_indicHaveDiag = true;
 	}
-
+	
 	#endregion
-
+	
 	#region view
-
+	
 	[Flags]
 	public enum EView { Wrap = 1, Images = 2 }
-
+	
 	internal static void EToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			App.Settings.edit_wrap ^= true;
@@ -609,12 +598,12 @@ partial class SciCode : KScintilla {
 			App.Settings.edit_noImages ^= true;
 			foreach (var v in Panels.Editor.OpenDocs) v._ImagesOnOff();
 		}
-
+		
 		//should not need this, because this func called from menu commands only.
 		//	But somehow KMenuCommands does not auto change menu/toolbar checked state for Edit menu. Need to fix it.
 		Panels.Editor.UpdateUI_EditView_();
 	}
-
+	
 	void _CodeModifiedAndCodeinfoOK() {
 		if (!_wpfPreview) return;
 		s_timer1 ??= new(static t => {
@@ -628,7 +617,7 @@ partial class SciCode : KScintilla {
 	static bool s_wpfPreviewInited;
 	bool _wpfPreview;
 	internal bool EIsWpfPreview => _wpfPreview;
-
+	
 	void _WpfPreviewRun(bool starting) {
 		if (!_wpfPreview) return;
 		CompileRun.RunWpfPreview(_fn, k => {
@@ -670,35 +659,35 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 			return !k.compilation.GetDiagnostics().Any(o => o.Severity == DiagnosticSeverity.Error);
 		});
 	}
-
+	
 	public static void WpfPreviewStartStop(MenuItem mi) {
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		bool start = mi.IsChecked;
 		if (start == doc._wpfPreview) return;
 		doc._wpfPreview = start;
-
+		
 		if (start) doc._WpfPreviewRun(true);
-
+		
 		if (!s_wpfPreviewInited) {
 			s_wpfPreviewInited = true;
 			Panels.Editor.ActiveDocChanged += () => {
 				mi.IsChecked = Panels.Editor.ActiveDoc?._wpfPreview ?? false;
 			};
 		}
-
+		
 		//update #if WPF_PREVIEW: styling, errors.
 		CodeInfo.StopAndUpdateStyling();
 	}
-
+	
 	#endregion
-
+	
 	#region acc
-
+	
 	protected override ERole AaAccessibleRole => ERole.DOCUMENT;
-
+	
 	protected override string AaAccessibleName => "document - " + _fn.DisplayName;
-
+	
 	protected override string AaAccessibleDescription => _fn.FilePath;
-
+	
 	#endregion
 }

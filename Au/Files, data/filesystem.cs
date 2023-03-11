@@ -34,7 +34,7 @@ public static partial class filesystem {
 	/// You can also get most of these properties with <see cref="enumerate"/>.
 	/// </remarks>
 	public static unsafe bool getProperties(string path, out FileProperties properties, FAFlags flags = 0) {
-		properties = new FileProperties();
+		properties = new();
 		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
 		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
 			if (!_GetAttributesOnError(path, flags, out _, out _, &d)) return false;

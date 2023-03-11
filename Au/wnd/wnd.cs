@@ -2642,11 +2642,7 @@ namespace Au {
 		/// <seealso cref="NameElm"/>
 		/// <seealso cref="NameWinforms"/>
 		public string GetText(bool? getText = null, bool removeUnderlineAmpersand = true) {
-			string R;
-
-			if (getText == null) R = _GetTextFast(true);
-			else if (getText.Value) R = _GetTextSlow();
-			else R = _GetTextFast(false);
+			var R = getText switch { true => _GetTextSlow(), false => _GetTextFast(false), _ => _GetTextFast(true) };
 
 			if (removeUnderlineAmpersand
 				&& !R.NE()
