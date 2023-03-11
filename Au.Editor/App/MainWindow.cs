@@ -5,8 +5,26 @@ using System.Windows.Interop;
 using System.Windows.Input;
 
 partial class MainWindow : Window {
-	public void AaInit() {
+	protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
+		if (e.Property == VisibilityProperty && (Visibility)e.NewValue == Visibility.Visible) {
+			//This is the first OnX when showing window.
+			//	Window.Show just sets the Visibility property.
+			//	Then WPF changes Left, Top, some other properties, and calls OnInitialized.
+			if (!_inited) { _inited = true; _Init(); }
+		}
+		base.OnPropertyChanged(e);
+	}
+	bool _inited;
+
+	void _Init() {
 		//_StartProfileOptimization();
+
+#if IDE_LA
+		Application.Current.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("App-resources.xaml")) as ResourceDictionary;
+#else
+		//Application.Current.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Au.Editor.App.App-resources.xaml")) as ResourceDictionary; //47 ms
+		Application.LoadComponent(Application.Current, new("/Au.Editor;component/app/app.xaml", UriKind.Relative)); //15 ms
+#endif
 
 		Title = App.AppNameShort; //don't append document name etc
 
@@ -64,34 +82,6 @@ partial class MainWindow : Window {
 #endif
 	}
 
-	protected override void OnClosing(CancelEventArgs e) {
-		if (!e.Cancel) {
-			App.Model.Save.AllNowIfNeed();
-			Panels.PanelManager.Save();
-
-			if (IsVisible) {
-				if (App.Settings.runHidden || tempHideWhenClosing) e.Cancel = true;
-				Hide();
-			}
-			if (e.Cancel) {
-				process.ThisProcessMinimizePhysicalMemory_(1000);
-			} else {
-				Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc
-				EditorExtension.ClosingWorkspace_(onExit: true);
-			}
-		}
-		base.OnClosing(e); //note: must be at the end, after we set Cancel
-	}
-	internal bool tempHideWhenClosing;
-
-	protected override void OnClosed(EventArgs e) {
-		App.Loaded = AppState.Unloading;
-		base.OnClosed(e);
-		UacDragDrop.AdminProcess.Enable(false);
-		CodeInfo.Stop();
-		App.Model.Save.AllNowIfNeed();
-	}
-
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
@@ -123,7 +113,10 @@ partial class MainWindow : Window {
 
 		//Created?.Invoke();
 
-		CommandLine.UILoaded();
+		Loaded += (_, _) => {
+			EditorExtension.WindowLoaded_();
+			CommandLine.UILoaded();
+		};
 	}
 
 	///// <summary>
@@ -131,6 +124,33 @@ partial class MainWindow : Window {
 	///// Documents are open, etc.
 	///// </summary>
 	//public event Action Created;
+
+	protected override void OnClosing(CancelEventArgs e) {
+		//note: called by Window.Close (sync) and Application.Shutdown (async) even if the window never was loaded.
+
+		if (App.Loaded == AppState.LoadedUI) {
+			App.Model.Save.AllNowIfNeed();
+			Panels.PanelManager.Save();
+			Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc
+		}
+
+		EditorExtension.ClosingWorkspace_(onExit: true); //must be called before closing documents
+
+		base.OnClosing(e);
+	}
+
+	protected override void OnClosed(EventArgs e) {
+		//note: called by Window.Close (sync) and Application.Shutdown (async) even if the window never was loaded.
+
+		bool loaded = App.Loaded == AppState.LoadedUI;
+		App.Loaded = AppState.Unloading;
+		base.OnClosed(e);
+		if (loaded) {
+			UacDragDrop.AdminProcess.Enable(false);
+			CodeInfo.Stop();
+			App.Model.Save.AllNowIfNeed();
+		}
+	}
 
 	unsafe nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
 		var w = (wnd)hwnd;
@@ -158,11 +178,23 @@ partial class MainWindow : Window {
 				_appActivatedTimer?.Stop();
 			}
 			break;
+		case Api.WM_SYSCOMMAND when wParam == Api.SC_CLOSE:
+			if (handled = App.Settings.runHidden) Hide_();
+			break;
 		}
 
 		return default;
 	}
 	timer _appActivatedTimer;
+
+	internal void Hide_() {
+		if (IsVisible) {
+			App.Model.Save.AllNowIfNeed();
+			Panels.PanelManager.Save();
+			Hide();
+			process.ThisProcessMinimizePhysicalMemory_(1000);
+		}
+	}
 
 	//this could be a workaround for the inactive window at startup, but probably don't need when we call Activete() in OnSourceInitialized
 	//protected override void OnActivated(EventArgs e) {
@@ -227,7 +259,7 @@ partial class MainWindow : Window {
 
 	public void AaShowAndActivate() {
 		Show();
-		var w = this.Hwnd();
+		var w = App.Hmain;
 		w.ShowNotMinimized();
 		w.ActivateL();
 	}

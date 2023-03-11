@@ -14,13 +14,13 @@ There are several ways to include class files in a C# file X:
 - create a project and add class files to the project folder. Used when the classes are used only in that project.
 
 #### Projects
-A folder named like <i>@Project</i> is a project folder. To create: menu -> File -> New -> New project.
+A folder named like <i>@Project</i> (starts with @) is a project folder. To create: menu -> File -> New -> New project.
 
 Projects are used to compile multiple C# files together. The compilation creates a single assembly file that can be executed as a script or .exe program or used as a .dll library.
 
 The first code file in the project folder is the project's main file. All class files are compiled together with it when you try to compile or run any file of the project.
 
-The main file can be a script or a class file. Most of its properties are applied to whole compilation. If it's a script, it runs when you click Run; such project is a *script project* and also can be used to create .exe programs. Else the project is a *library project* and can be used to create .dll files.
+The main file can be a script or a class file. Most of its properties are applied to whole compilation. If it's a script, it runs when you click Run; such project is a *script project* and also can be used to create .exe programs. Else the project is a *library project* and produces a .dll file.
 
 The folder can contain more scripts, but they are not part of the project. If they want to use project's class files, add them explicitly: Properties -> Add file -> Class file.
 

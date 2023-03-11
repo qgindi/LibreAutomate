@@ -10,19 +10,17 @@ using System.Windows.Controls;
 
 partial class FilesModel {
 	public readonly FileNode Root;
-	public readonly int WorkspaceSN; //sequence number of workspace open in this process: 1, 2...
+	public readonly int WorkspaceSN; //sequence number of workspace opened in this process: 1, 2...
 	static int s_workspaceSN;
 	public readonly string WorkspaceName;
 	public readonly string WorkspaceDirectory;
 	public readonly string WorkspaceFile; //.xml file containing the tree of .cs etc files
 	public readonly string FilesDirectory; //.cs etc files
-										   //public readonly string CacheDirectory; //any cache files
 	public readonly string TempDirectory; //any temporary files
 	public readonly string NugetDirectory; //NuGet libraries
 	public readonly string NugetDirectoryBS; //NugetDirectory\
 	public readonly string DllDirectory; //user-created or downloaded libraries
 	public readonly string DllDirectoryBS; //LibrariesDirectory\
-										   //public readonly string ExeDirectory; //user-created exe files
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	internal readonly Dictionary<string, object> _nameMap;

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
+using Au.Compiler;
 
 /// <summary>
 /// File type of a <see cref="FileNode"/>.
@@ -21,12 +22,23 @@ enum FNFind {
 	Any, File, Folder, CodeFile, Class/*, Script*/ //Script not useful because class files can be executable too
 }
 
+enum FNClassFileRole {
+	/// <summary>Not a class file.</summary>
+	None,
+	/// <summary>Has meta role miniProgram/exeProgram/editorExtension.</summary>
+	App,
+	/// <summary>Has meta role classLibrary.</summary>
+	Library,
+	/// <summary>Has meta role classFile, or no meta role.</summary>
+	Class,
+}
+
 class NewFileText {
 	public bool replaceTemplate;
 	public string text, meta;
-
+	
 	public NewFileText() { }
-
+	
 	public NewFileText(bool replaceTemplate, string text, string meta = null) {
 		this.replaceTemplate = replaceTemplate;
 		this.text = text;
@@ -37,13 +49,13 @@ class NewFileText {
 class DNewWorkspace : KDialogWindow {
 	string _name, _location;
 	public string ResultPath { get; private set; }
-
+	
 	public DNewWorkspace(string name, string location) {
 		_name = name;
 		_location = location;
-
+		
 		Title = "New workspace";
-
+		
 		var b = new wpfBuilder(this).WinSize(600);
 		TextBox tName, tLocation = null;
 		b.R.Add("Folder name", out tName, _name).Validation(_Validate).Focus();
@@ -51,14 +63,14 @@ class DNewWorkspace : KDialogWindow {
 		b.R.AddButton("Browse...", _Browse).Width(70, "L");
 		b.R.AddOkCancel();
 		b.End();
-
+		
 		void _Browse(WBButtonClickArgs e) {
 			var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") {
 				InitFolderNow = filesystem.exists(tLocation.Text).Directory ? tLocation.Text : folders.ThisAppDocuments,
 			};
 			if (d.ShowOpen(out string s, this, selectFolder: true)) tLocation.Text = s;
 		}
-
+		
 		string _Validate(FrameworkElement e) {
 			var s = (e as TextBox).Text.Trim();
 			if (e == tLocation) {
@@ -70,7 +82,7 @@ class DNewWorkspace : KDialogWindow {
 			}
 			return null;
 		}
-
+		
 		//b.OkApply += e => {
 		//	print.it(ResultPath); e.Cancel = true;
 		//};
@@ -85,12 +97,12 @@ class RepairWorkspace {
 		dialog.showInfo(null, "Please right-click or select a folder.");
 		return null;
 	}
-
+	
 	public static void MissingFiles(bool inSelectedFolder) {
 		if (_GetFolder(inSelectedFolder) is not FileNode rootFolder) return;
 		print.clear();
 		print.it("<><lc YellowGreen>Missing files<>\r\nThese items represent files that already don't exist. You may want to delete them from the Files panel.\r\n");
-
+		
 		_Folder(rootFolder);
 		void _Folder(FileNode folder) {
 			foreach (var f in folder.Children()) {
@@ -108,12 +120,12 @@ class RepairWorkspace {
 			}
 		}
 		//note: don't use folder.Descendants(). It would also print files in missing folders.
-
+		
 		print.scrollToTop();
 	}
-
+	
 	static HashSet<string> _clickedLinks = new();
-
+	
 	public static void OrphanedFiles(bool inSelectedFolder) {
 		Panels.Output.Scintilla.AaTags.AddLinkTag("+missingAdd", static s => {
 			if (!_clickedLinks.Add(s)) return;
@@ -129,14 +141,14 @@ class RepairWorkspace {
 			}
 			App.Model.ImportFiles(new[] { a[1] }, f, pos, dontPrint: true);
 		});
-
+		
 		if (_GetFolder(inSelectedFolder) is not FileNode rootFolder) return;
 		print.clear();
 		print.it("<><lc YellowGreen>Orphaned files<>\r\nThese files are in the workspace folder but not in the Files panel. You may want to import or delete them.\r\n");
-
+		
 		_clickedLinks.Clear();
 		var hs = rootFolder.Descendants().Where(o => !o.IsLink).Select(o => o.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
+		
 		_Folder(rootFolder.FilePath);
 		void _Folder(string folder) {
 			foreach (var f in filesystem.enumerate(folder, FEFlags.IgnoreInaccessible | FEFlags.UseRawPath)) {
@@ -150,7 +162,7 @@ class RepairWorkspace {
 				} else if (f.IsDirectory) _Folder(fp);
 			}
 		}
-
+		
 		print.scrollToTop();
 	}
 }

@@ -143,15 +143,32 @@ namespace Au.Compiler;
 /// If 'resFile' not specified when creating .exe or .dll file, adds version resource, with values from attributes such as [assembly: AssemblyVersion("...")]; see how it is in Visual Studio projects, in file Properties\AssemblyInfo.cs.
 /// </example>
 class MetaComments {
+	MCPFlags _flags;
+
 	/// <summary>
 	/// Name of the main C# file, without ".cs".
 	/// </summary>
 	public string Name { get; private set; }
 
 	/// <summary>
-	/// True if the main C# file is C# script, not regular C# file.
+	/// The compilation entry file. Probably not <c>CodeFiles[0]</c>.
 	/// </summary>
-	public bool IsScript { get; private set; }
+	public MCCodeFile MainFile { get; private set; }
+
+	/// <summary>
+	/// All C# files of this compilation.
+	/// The order is optimized for compilation and does not match the natural order:
+	/// - If there is global.cs, it is the first, followed by its descendant meta c files, total <see cref="GlobalCount"/>.
+	/// - Then main file, preceded by its descendant meta c files.
+	/// - Then project files, each preceded by its descendant meta c files.
+	/// </summary>
+	public List<MCCodeFile> CodeFiles { get; private set; }
+
+	/// <summary>
+	/// Count of global files, ie global.cs and its meta c descendants. They are at the start of <see cref="CodeFiles"/>.
+	/// Note: if main file is a descendant of global.cs, it and its descendants are not included.
+	/// </summary>
+	public int GlobalCount { get; private set; }
 
 	/// <summary>
 	/// Meta option 'optimize'.
@@ -220,6 +237,19 @@ class MetaComments {
 	/// </summary>
 	public List<(FileNode f, MetaComments m)> ProjectReferences { get; private set; }
 
+	///// <summary>
+	///// Gets all unique project references of this and pr descendants.
+	///// </summary>
+	///// <returns></returns>
+	//public List<(FileNode f, MetaComments m)> ProjectReferencesOfCompilation() {
+	//	if (ProjectReferences == null || !ProjectReferences.Any(o => o.m.ProjectReferences != null)) return ProjectReferences;
+	//	var a = new List<(FileNode f, MetaComments m)>(ProjectReferences);
+	//	foreach (var v in ProjectReferences) {
+	//		//todo
+	//	}
+	//	return a;
+	//}
+
 	/// <summary>
 	/// Meta nuget, like @"-\PackageName".
 	/// </summary>
@@ -230,26 +260,6 @@ class MetaComments {
 	/// </summary>
 	public XElement NugetXmlRoot => _xnuget;
 	XElement _xnuget;
-
-	/// <summary>
-	/// All C# files of this compilation.
-	/// The order is optimized for compilation and does not match the natural order:
-	/// - If there is global.cs, it is the first, followed by its descendant meta c files, total <see cref="GlobalCount"/>.
-	/// - Then main file, preceded by its descendant meta c files.
-	/// - Then project files, each preceded by its descendant meta c files.
-	/// </summary>
-	public List<MCCodeFile> CodeFiles { get; private set; }
-
-	/// <summary>
-	/// The compilation entry file. Probably not <c>CodeFiles[0]</c>.
-	/// </summary>
-	public MCCodeFile MainFile { get; private set; }
-
-	/// <summary>
-	/// Count of global files, ie global.cs and its meta c descendants. They are at the start of <see cref="CodeFiles"/>.
-	/// Note: if main file is a descendant of global.cs, it and its descendants are not included.
-	/// </summary>
-	public int GlobalCount { get; private set; }
 
 	/// <summary>
 	/// Unique resource files added through meta option 'resource' in all C# files of this compilation.
@@ -363,8 +373,6 @@ class MetaComments {
 	/// </summary>
 	public int MiscFlags { get; private set; }
 
-	MCPFlags _flags;
-
 	/// <summary>
 	/// Extracts meta comments from all C# files of this compilation, including project files and files added through meta option 'c'.
 	/// Returns false if there are errors, except with flag ForCodeInfo. Then use <see cref="Errors"/>.
@@ -420,7 +428,6 @@ class MetaComments {
 			MainFile = cf;
 
 			Name = pathname.getNameNoExt(f.Name);
-			IsScript = isScript;
 
 			Optimize = DefaultOptimize;
 			WarningLevel = DefaultWarningLevel;
@@ -506,7 +513,7 @@ class MetaComments {
 		switch (name) {
 		case "r":
 		case "com":
-		case "pr" when _f.isMain:
+		case "pr":
 			if (name[0] == 'p') {
 				//Specified |= EMSpecified.pr;
 				if (!_PR(ref value) || forCodeInfo) return;
@@ -598,7 +605,7 @@ class MetaComments {
 				_ErrorN("unknown meta comment option");
 			}
 
-			_ErrorN($"in this file only these options can be used: r, com, nuget, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
+			_ErrorN($"in this file only these options can be used: r, pr, nuget, com, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
 			return;
 		}
 
@@ -629,7 +636,7 @@ class MetaComments {
 			_Specified(MCSpecified.role);
 			if (_Enum(out MCRole ro, value)) {
 				Role = ro;
-				if (IsScript && (ro == MCRole.classFile || Role == MCRole.classLibrary)) _ErrorV("role classFile and classLibrary can be only in class files");
+				if (MainFile.f.IsScript && (ro == MCRole.classFile || Role == MCRole.classLibrary)) _ErrorV("role classFile and classLibrary can be only in class files");
 			}
 			break;
 		case "preBuild":
@@ -755,6 +762,15 @@ class MetaComments {
 		return f;
 	}
 
+	public static FileNode FindFile(FileNode fRelativeTo, string metaValue, FNFind kind) {
+		var f = fRelativeTo.FindRelative(metaValue, kind, orAnywhere: true);
+		if (f != null) {
+			int v = filesystem.exists(f.FilePath, true);
+			if (v != (f.IsFolder ? 2 : 1)) return null;
+		}
+		return f;
+	}
+
 	MCFileAndString _GetFileAndString(string s, FNFind kind) {
 		string s2 = null;
 		int i = s.Find(" /");
@@ -793,9 +809,10 @@ class MetaComments {
 	#endregion
 
 	bool _PR(ref string value) {
-		var f = _GetFile(value, FNFind.CodeFile); if (f == null) return false;
+		if (_GetFile(value, FNFind.CodeFile) is not FileNode f) return false;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (f == MainFile.f) return _ErrorV("circular reference");
+		if (ProjectReferences != null) foreach (var v in ProjectReferences) if (v.f == f) return false;
 		MetaComments m = null;
 		if (!_flags.Has(MCPFlags.ForCodeInfo)) {
 			if (!Compiler.Compile(CCReason.CompileIfNeed, out var r, f, projFolder, needMeta: true))
@@ -897,6 +914,7 @@ class MetaComments {
 	/// Returns (start, end) of metacomments "/*/ ... /*/" at the start of code (before can be comments, empty lines, spaces, tabs). Returns default if no metacomments.
 	/// </summary>
 	/// <param name="code">Code. Can be null.</param>
+	/// <seealso cref="MetaCommentsParser"/>
 	public static StartEnd FindMetaComments(string code) {
 		if (code != null) {
 			for (int i = 0; i <= code.Length - 6; i++) {
@@ -923,6 +941,7 @@ class MetaComments {
 	/// </summary>
 	/// <param name="code">Code that starts with metacomments "/*/ ... /*/".</param>
 	/// <param name="meta">The range of metacomments, returned by <see cref="FindMetaComments"/>.</param>
+	/// <seealso cref="MetaCommentsParser"/>
 	public static IEnumerable<Token> EnumOptions(string code, StartEnd meta) {
 		for (int i = meta.start + 3, iEnd = meta.end - 3; i < iEnd; i++) {
 			Token t = default;

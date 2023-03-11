@@ -94,7 +94,6 @@ record AppSettings : JSettings {
 	public Au.Tools.OcrEngineSettings ocr;
 
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
-
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
 
 	public string find_skip;
@@ -112,4 +111,5 @@ record WorkspaceSettings : JSettings {
 
 	public FilesModel.UserData[] users;
 
+	public string ci_exclude;//TODO: UI
 }

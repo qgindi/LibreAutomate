@@ -18,8 +18,7 @@ namespace Au;
 /// keys.sendt("text\r\n"); //send text that ends with newline
 /// ]]></code>
 /// </example>
-public partial class keys
-{
+public partial class keys {
 	/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If null, uses default options.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -40,8 +39,7 @@ public partial class keys
 
 	//KEYEVENTF_ flags for API SendInput.
 	[Flags]
-	enum _KFlags : byte
-	{
+	enum _KFlags : byte {
 		Extended = 1,
 		Up = 2,
 		Unicode = 4,
@@ -49,8 +47,7 @@ public partial class keys
 	};
 
 	//_KEvent type - key, text, sleep, etc.
-	enum _KType : byte
-	{
+	enum _KType : byte {
 		KeyEvent, //send key down or up event, depending on _KFlags.Up. In _KEvent used vk and scan.
 		KeyPair, //send key down and up events. In _KEvent used vk and scan.
 		Char, //send character using keys. In _KEvent used ch.
@@ -61,8 +58,7 @@ public partial class keys
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
-	struct _KEvent
-	{
+	struct _KEvent {
 		[FieldOffset(0)] internal KKey vk; //byte
 		[FieldOffset(1)] byte _flags; //_KFlags in 0x0F and _KType in 0xF0
 		[FieldOffset(2)] internal ushort scan; //scan code if IsKey
@@ -112,16 +108,14 @@ public partial class keys
 	}
 
 	//This struct is used to separate parsing-only fields from other fields.
-	struct _KParsingState
-	{
+	struct _KParsingState {
 		public Stack<_KEvent> mod; //pushed on "+" or "+(". Then popped on key not preceded by +, and also in Send().
 		public bool paren; //we are between "+(" and ")"
 		public bool plus; //we are between "+" and key or text
 	}
 
 	//This struct is used to separate sending-only fields from other fields.
-	struct _KSendingState
-	{
+	struct _KSendingState {
 		public wnd wFocus;
 		public OKey options;
 
@@ -261,11 +255,11 @@ public partial class keys
 		_ThrowIfSending();
 		if (key == 0) throw new ArgumentException("Invalid value.", nameof(key));
 
-		bool isPair; _KFlags f = 0;
-		if (!(isPair = (down == null)) && !down.Value) f |= _KFlags.Up;
+		_KFlags f = 0;
+		if (down == false) f |= _KFlags.Up;
 		if (KeyTypes_.IsExtended(key)) f |= _KFlags.Extended;
 
-		return _AddKEvent(new _KEvent(isPair, key, f));
+		return _AddKEvent(new _KEvent(down == null, key, f));
 	}
 
 	/// <summary>
@@ -279,16 +273,16 @@ public partial class keys
 	/// <exception cref="ArgumentException">Invalid scan code.</exception>
 	public keys AddKey(KKey key, ushort scanCode, bool extendedKey, bool? down = null) {
 		_ThrowIfSending();
-		bool isPair; _KFlags f = 0;
+		_KFlags f = 0;
 		if (key == 0) f = _KFlags.Scancode;
 		else {
 			//don't: if extendedKey false, set true if need. Don't do it because this func is 'raw'.
 		}
 
-		if (!(isPair = (down == null)) && !down.Value) f |= _KFlags.Up;
+		if (down == false) f |= _KFlags.Up;
 		if (extendedKey) f |= _KFlags.Extended;
 
-		return _AddKEvent(new _KEvent(isPair, key, f, scanCode));
+		return _AddKEvent(new _KEvent(down == null, key, f, scanCode));
 	}
 
 	/// <summary>

@@ -174,26 +174,25 @@ public static unsafe class EditorExtension {
 	/// </remarks>
 	public static event Action WindowLoaded {
 		add {
-			if (App.Wmain.IsLoaded) {
+			if (App.Loaded == AppState.LoadedUI) {
 				_InvokeAction(value);
-			} else {
+			} else if (App.Loaded < AppState.LoadedUI) {
 				_windowLoaded += value;
-				if (_windowLoaded2 == null) {
-					_windowLoaded2 = static (_, _) => { _InvokeAction(_windowLoaded); _windowLoaded = null; };
-					App.Wmain.Loaded += _windowLoaded2;
-				}
 			}
 		}
 		remove { _windowLoaded -= value; }
 	}
 	static Action _windowLoaded;
-	static RoutedEventHandler _windowLoaded2;
-	//note: cannot add event WindowCreated (before loaded, when still invisible). If editor starts visible, startup scripts run when it is already loaded/visible.
+
+	internal static void WindowLoaded_() {
+		var v = _windowLoaded; _windowLoaded = null;
+		_InvokeAction(v);
+	}
 
 	static void _InvokeAction(Action a) {
 		if (a == null) return;
 		try { a(); }
-		catch(Exception e1) { print.it(e1); }
+		catch (Exception e1) { print.it(e1); }
 	}
 
 	/// <summary>
@@ -206,6 +205,8 @@ public static unsafe class EditorExtension {
 		add { if (CodeInfo.IsReadyForEditing) _InvokeAction(value); else CodeInfo.ReadyForEditing += value; } //handles exceptions
 		remove { CodeInfo.ReadyForEditing -= value; }
 	}
+
+	//note: cannot add event WindowCreated (before loaded, when still invisible). If editor starts visible, startup scripts run when it is already loaded/visible.
 
 	/// <summary>
 	/// When closing current workspace.
@@ -227,7 +228,7 @@ public static unsafe class EditorExtension {
 		var v = _closingWorkspace; _closingWorkspace = null;
 		try { v(onExit); }
 		catch (Exception e1) { dialog.showError("Exception in EditorExtension.ClosingWorkspace event handler", e1.ToString(), owner: App.Hmain.IsVisible ? App.Hmain : default, secondsTimeout: 5); }
-		App.Model.Save.AllNowIfNeed();
+		if (App.Loaded >= AppState.LoadedUI) App.Model.Save.AllNowIfNeed();
 	}
 	static Action<bool> _closingWorkspace;
 
