@@ -15,43 +15,43 @@ public record struct ColorInt {
 	/// </summary>
 	[JsonInclude]
 	public int argb;
-
+	
 	/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-	/// <param name="makeOpaque">Set alpha = 0xFF.</param>
-	public ColorInt(int colorARGB, bool makeOpaque) {
-		if (makeOpaque) colorARGB |= 0xFF << 24;
+	/// <param name="makeOpaque">Set alpha = 0xFF. If null (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+	public ColorInt(int colorARGB, bool? makeOpaque = null) {
+		if (makeOpaque == true || (makeOpaque == null && (colorARGB & ~0xFFFFFF) == 0)) colorARGB |= 0xFF << 24;
 		argb = colorARGB;
 	}
-
+	
 	/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-	/// <param name="makeOpaque">Set alpha = 0xFF.</param>
-	public ColorInt(uint colorARGB, bool makeOpaque) : this((int)colorARGB, makeOpaque) { }
-
+	/// <param name="makeOpaque">Set alpha = 0xFF. If null (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+	public ColorInt(uint colorARGB, bool? makeOpaque) : this((int)colorARGB, makeOpaque) { }
+	
 	/// <summary>
 	/// Converts from an int color value in 0xRRGGBB or 0xAARRGGBB format.
-	/// Sets alpha 0xFF.
+	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
 	//[Obsolete] //to find all references
-	public static implicit operator ColorInt(int color) => new(color, true);
-
+	public static implicit operator ColorInt(int color) => new(color);
+	
 	/// <summary>
-	/// Converts from an int color value in 0xRRGGBB or 0xAARRGGBB format.
-	/// Sets alpha 0xFF.
+	/// Converts from an uint color value in 0xRRGGBB or 0xAARRGGBB format.
+	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
 	//[Obsolete] //to find all references
-	public static implicit operator ColorInt(uint color) => new((int)color, true);
-
+	public static implicit operator ColorInt(uint color) => new((int)color);
+	
 	/// <summary>
 	/// Converts from <see cref="Color"/>.
 	/// </summary>
 	public static implicit operator ColorInt(Color color) => new(color.ToArgb(), false);
-
+	
 	/// <summary>
 	/// Converts from <see cref="System.Windows.Media.Color"/>.
 	/// </summary>
 	public static implicit operator ColorInt(System.Windows.Media.Color color)
 		=> new((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
-
+	
 	/// <summary>
 	/// Converts from a color name (<see cref="Color.FromName(string)"/>) or string <c>"0xRRGGBB"</c> or <c>"#RRGGBB"</c>.
 	/// </summary>
@@ -76,14 +76,14 @@ public record struct ColorInt {
 		}
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Converts from Windows native <b>COLORREF</b> (0xBBGGRR to 0xAARRGGBB).
 	/// </summary>
 	/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
-	/// <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
-	public static ColorInt FromBGR(int colorBGR, bool makeOpaque = true) => new(SwapRB(colorBGR), makeOpaque);
-
+	/// <param name="makeOpaque">Set alpha = 0xFF. If null (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+	public static ColorInt FromBGR(int colorBGR, bool? makeOpaque = null) => new(SwapRB(colorBGR), makeOpaque);
+	
 	/// <summary>
 	/// Converts to Windows native <b>COLORREF</b> (0xBBGGRR from 0xAARRGGBB).
 	/// </summary>
@@ -94,47 +94,47 @@ public record struct ColorInt {
 		if (zeroAlpha) r &= 0xFFFFFF;
 		return r;
 	}
-
+	
 	//rejected. Easy to create bugs when actually need BGR. Let use ToBGR() when need BGR, or argb field when need ARGB.
 	///// <summary>Returns <c>c.argb</c>.</summary>
 	//public static explicit operator int(ColorInt c) => c.argb;
-
+	
 	///// <summary>Returns <c>(uint)c.argb</c>.</summary>
 	//public static explicit operator uint(ColorInt c) => (uint)c.argb;
-
+	
 	/// <summary>Converts to <see cref="Color"/>.</summary>
 	public static explicit operator Color(ColorInt c) => Color.FromArgb(c.argb);
-
+	
 	/// <summary>Converts to <see cref="System.Windows.Media.Color"/>.</summary>
 	public static explicit operator System.Windows.Media.Color(ColorInt c) {
 		uint k = (uint)c.argb;
 		return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
 	}
-
+	
 	internal static System.Windows.Media.Color WpfColor_(int rgb)
 		=> System.Windows.Media.Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
-
+	
 	internal static System.Windows.Media.SolidColorBrush WpfBrush_(int rgb)
 		=> new(WpfColor_(rgb));
-
+	
 	///// <summary>
 	///// <c>FromBGR(GetSysColor)</c>.
 	///// </summary>
 	//internal static ColorInt FromSysColor_(int colorIndex) => FromBGR(Api.GetSysColor(colorIndex), true);
-
+	
 	///
 	public override string ToString() => "#" + argb.ToString("X8");
-
+	
 	/// <summary>
 	/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
 	/// ARGB is used in .NET, GDI+ and HTML/CSS.
 	/// ABGR is used by most Windows API; aka <b>COLORREF</b>.
 	/// </summary>
 	public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
-
+	
 	/// <inheritdoc cref="SwapRB(int)"/>
 	public static uint SwapRB(uint color) => (color & 0xff00ff00) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
-
+	
 	//rejected. Unclear usage. Instead let users call ToHLS, change L how they want, and call FromHLS.
 	///// <summary>
 	///// Changes color's luminance (makes darker or brighter).
@@ -152,7 +152,7 @@ public record struct ColorInt {
 	//	return new((int)u, false);
 	//	//tested: with SwapRB the same.
 	//}
-
+	
 	/// <summary>
 	/// Converts from hue-luminance-saturation (HLS).
 	/// </summary>
@@ -170,7 +170,7 @@ public record struct ColorInt {
 		if (!bgr) color = SwapRB(color);
 		return color;
 	}
-
+	
 	/// <summary>
 	/// Converts to hue-luminance-saturation (HLS).
 	/// </summary>
@@ -182,7 +182,7 @@ public record struct ColorInt {
 		Api.ColorRGBToHLS(color, out var H, out var L, out var S);
 		return (H, L, S);
 	}
-
+	
 	/// <summary>
 	/// Calculates color's perceived brightness.
 	/// </summary>
@@ -199,7 +199,7 @@ public record struct ColorInt {
 		uint R = u >> 16 & 0xff, G = u >> 8 & 0xff, B = u & 0xff;
 		return (float)(Math.Sqrt(R * R * .299 + G * G * .587 + B * B * .114) / 255);
 	}
-
+	
 	//same result as ColorAdjustLuma. Probably slower.
 	//internal static int SetLuminance(int color, bool bgr, double percent, bool totalRange) {
 	//	var (H, L, S) = ToHLS(color, bgr);

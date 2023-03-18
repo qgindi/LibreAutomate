@@ -32,8 +32,13 @@ static class Menus {
 			[Command('c', image = FileNode.c_iconClass)]
 			public static void New_class() { _New("Class.cs"); }
 			
+			[Command('t', image = "*FeatherIcons.FileText" + black)]
+			public static void New_text_file() { _New("File.txt"); }
+			
 			[Command('f', image = FileNode.c_iconFolder)]
 			public static void New_folder() { _New(null); }
+			
+			public const int ItemCount = 4;
 		}
 		
 		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete" + black)]

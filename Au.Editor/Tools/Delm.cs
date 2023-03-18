@@ -913,7 +913,7 @@ class Delm : KDialogWindow {
 
 		void _Osd(string s, bool error) {
 			if (!captured) return;
-			osdText.showTransparentText(s, 2, PopupXY.Mouse, error ? 0xFF6040 : 0xC000, showMode: OsdMode.ThisThread);
+			osdText.showTransparentText(s, 2, PopupXY.Mouse, error ? 0xFF6040 : 0x00C000, showMode: OsdMode.ThisThread);
 		}
 	}
 	bool _testing;

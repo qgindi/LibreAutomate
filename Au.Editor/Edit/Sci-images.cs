@@ -33,7 +33,7 @@ partial class SciCode {
 		//remove StaticSymbol. It is added for each static symbol, randomly before or after. Makes code difficult.
 		var a = list.Where(o => o.ClassificationType != CT.StaticSymbol).ToArray();
 
-		if (a.Length > 0) aaaIndicatorClear(true, c_indicImages, a[0].TextSpan.Start..a[^1].TextSpan.End);
+		if (a.Length > 0) aaaIndicatorClear(c_indicImages, true, a[0].TextSpan.Start..a[^1].TextSpan.End);
 
 		string code = cd.code;
 		int maxWidth = 0;
@@ -105,7 +105,7 @@ partial class SciCode {
 			if (ii == ab.Count) ab.Add(new() { image = b, isImage = isImage, isComment = isComment });
 			//print.it(ii, s);
 
-			aaaIndicatorAdd(true, c_indicImages, start..(start + 1), ii + 1);
+			aaaIndicatorAdd(c_indicImages, true, start..(start + 1), ii + 1);
 		}
 
 		//maxWidth is 0 if no images or if all images are in folded regions.

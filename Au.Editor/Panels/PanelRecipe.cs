@@ -52,7 +52,7 @@ class PanelRecipe {
 		//_c.aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 		_c.AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
 		_c.AaTags.AddLinkTag("+nuget", s => DNuget.AaShow(s));
-		_c.AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xFF, bold = true }); //keyword
+		_c.AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0x0000FF, bold = true }); //keyword
 
 #if DEBUG
 		_AutoRenderCurrentRecipeScript();

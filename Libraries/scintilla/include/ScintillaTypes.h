@@ -476,7 +476,8 @@ enum class Technology {
 };
 
 enum class LineEndType {
-	Default = 0,
+	//Default = 0,
+	Default = 1, //au
 	Unicode = 1,
 };
 

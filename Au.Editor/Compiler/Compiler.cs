@@ -39,8 +39,8 @@ partial class Compiler {
 		if (reason is not (CCReason.CompileAlways or CCReason.WpfPreview) && cache.IsCompiled(f, out r, projFolder)) {
 			//print.it("cached");
 			if (needMeta) {
-				var m = new MetaComments();
-				if (!m.Parse(f, projFolder, MCPFlags.PrintErrors | MCPFlags.OnlyRef)) return false;
+				var m = new MetaComments(MCPFlags.PrintErrors | MCPFlags.OnlyRef);
+				if (!m.Parse(f, projFolder)) return false;
 				r.meta = m;
 				//FUTURE: save used dll etc paths in xcompiled, to avoid parsing meta of all pr.
 			}
@@ -85,7 +85,7 @@ partial class Compiler {
 		public MetaComments meta;
 	}
 
-	readonly MetaComments _meta = new();
+	MetaComments _meta;
 	CSharpCompilation _compilation;
 	Dictionary<string, string> _dr, _dn;
 	string _tpa;
@@ -101,8 +101,8 @@ partial class Compiler {
 		r = new CompResults();
 		aFinally = null;
 
-		var mflags = reason == CCReason.WpfPreview ? MCPFlags.WpfPreview : MCPFlags.PrintErrors;
-		if (!_meta.Parse(f, projFolder, mflags)) return false;
+		_meta = new(reason == CCReason.WpfPreview ? MCPFlags.WpfPreview : MCPFlags.PrintErrors);
+		if (!_meta.Parse(f, projFolder)) return false;
 		var err = _meta.Errors;
 		r.meta = _meta;
 		//p1.Next('m');
@@ -166,8 +166,8 @@ partial class Compiler {
 		}
 
 		if (_meta.TestInternal is string[] testInternal) {
-			InternalsVisible.Add(asmName, testInternal);
-			aFinally += () => InternalsVisible.Remove(asmName); //this func is called from try/catch/finally which calls aFinally
+			TestInternal.CompilerStart(asmName, testInternal);
+			aFinally += TestInternal.CompilerEnd; //this func is called from try/catch/finally which calls aFinally
 		}
 
 		List<ResourceDescription> resMan = null;
@@ -1091,42 +1091,5 @@ partial class Compiler {
 }
 
 enum CCReason { Run, CompileAlways, CompileIfNeed, WpfPreview }
-
-static class InternalsVisible {
-	static ConcurrentDictionary<string, string[]> _d = new();
-
-	static InternalsVisible() {
-		PEAssembly.AuInternalsVisible = _Callback;
-	}
-
-	//called from any thread
-	static bool _Callback(string thisName, string toName, bool source) {
-		if (_d.TryGetValue(toName, out var a)) {
-			if (!source) {
-				foreach (var v in a)
-					if (v == thisName)
-						return true;
-			} else if (thisName.Ends(".cs", true)) {
-				foreach (var v in a)
-					if (v.Length == thisName.Length - 3 && thisName.Starts(v))
-						return true;
-			}
-
-		}
-		return false;
-	}
-
-	public static void Add(string asmName, string[] testInternals) {
-		_d[asmName] = testInternals;
-	}
-
-	public static void Remove(string asmName) {
-		_d.TryRemove(asmName, out _);
-	}
-
-	public static void Clear() {
-		_d.Clear();
-	}
-}
 
 record CanCompileArgs(MetaComments m, CSharpSyntaxTree[] trees, CSharpCompilation compilation);

@@ -14,9 +14,9 @@ Highlights references of the symbol at the text cursor.
 Highlights matching braces and directives of the brace/directive at the text cursor.
 
 New options:
-- Options -> Code -> Formatting.
+- Options -> Font, colors -> highlight, selection.
+- Options -> Code editor -> Formatting.
 - Options -> Hotkeys -> Capture image.
-- Options -> Font -> highlight.
 
 Now `/*/ pr /*/` can be used in any file of a project, not just in the main file.
 
@@ -38,3 +38,4 @@ Library:
 
 
 ### Breaking changes
+When converting **int**/**uint** to **ColorInt**, now by default sets alpha 255 only if it is 0 in the specified value. It allows to specify alpha in implicit conversion.

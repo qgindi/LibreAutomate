@@ -16,6 +16,7 @@ static class QuickCapture {
 	}
 
 	public static void RegisterHotkeys() {
+#if !IDE_LA //avoid warnings
 		_Register(ref _rk1, AppHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing));
 		_Register(ref _rk2, AppHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd));
 		_Register(ref _rk3, AppHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm));
@@ -33,6 +34,7 @@ static class QuickCapture {
 			}
 			App.Commands[menu].MenuItem.InputGestureText = keys;
 		}
+#endif
 	}
 
 	public static void UnregisterHotkeys() {

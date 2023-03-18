@@ -7,6 +7,14 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+//SHOULDDO: now preprocessor symbol bold if followed by a bold style. Example code:
+/*
+#if DEBUG
+#endif
+Fun();
+void Fun() {  }
+*/
+
 partial class CiStyling {
 	public void DocHandleDestroyed(SciCode doc) {
 		if (doc == _doc) {
@@ -405,13 +413,16 @@ partial class CiStyling {
 		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
 		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome
 		public int IndicRefsColor = 0x80C000;
-		public int IndicBracesColor = 0x80C000;
+		public int IndicBracesColor = 0xC0A000;
 		public int IndicFoundAlpha = 255;
-		public int IndicRefsAlpha = 40;
-		public int IndicBracesAlpha = 80;
+		public int IndicRefsAlpha = 25;
+		public int IndicBracesAlpha = 50;
 		//public bool IndicFoundGradient;
 		//public bool IndicRefsGradient;
 		//public bool IndicBracesGradient;
+		
+		public int SelColor = unchecked((int)0xA0A0A0A0);
+		public int SelNofocusColor = 0x60A0A0A0;
 		
 		public TStyle None; //black
 		public TStyle Comment = 0x60A000; //light green, towards yellow
@@ -481,6 +492,8 @@ partial class CiStyling {
 				case nameof(IndicFoundColor): _Int(ref IndicFoundColor); _Alpha(ref IndicFoundAlpha); break;
 				case nameof(IndicRefsColor): _Int(ref IndicRefsColor); _Alpha(ref IndicRefsAlpha); break;
 				case nameof(IndicBracesColor): _Int(ref IndicBracesColor); _Alpha(ref IndicBracesAlpha); break;
+				case nameof(SelColor): _Int(ref SelColor); break;
+				case nameof(SelNofocusColor): _Int(ref SelNofocusColor); break;
 				}
 				
 				void _Style(ref TStyle r) {
@@ -500,8 +513,8 @@ partial class CiStyling {
 		
 		void _Save() {
 			var b = new StringBuilder(); //don't need csvTable for such simple values
-			b.AppendFormat("Font, {0}, {1}\r\n", FontName, FontSize);
-			b.Append("Background, 0x").AppendLine(BackgroundColor.ToString("X6"));
+			b.AppendLine($"Font, {FontName}, {FontSize}");
+			_Int("Background", BackgroundColor);
 			_Style(nameof(None), None);
 			_Style(nameof(Comment), Comment);
 			_Style(nameof(String), String);
@@ -521,15 +534,21 @@ partial class CiStyling {
 			_Style(nameof(XmlDocText), XmlDocText);
 			_Style(nameof(XmlDocTag), XmlDocTag);
 			_Style(nameof(LineNumber), LineNumber);
-			b.AppendLine($"{nameof(IndicFoundColor)}, 0x{IndicFoundColor:X6}, {IndicFoundAlpha}");
-			b.AppendLine($"{nameof(IndicRefsColor)}, 0x{IndicRefsColor:X6}, {IndicRefsAlpha}");
-			b.AppendLine($"{nameof(IndicBracesColor)}, 0x{IndicBracesColor:X6}, {IndicBracesAlpha}");
+			_Indic(nameof(IndicFoundColor), IndicFoundColor, IndicFoundAlpha);
+			_Indic(nameof(IndicRefsColor), IndicRefsColor, IndicRefsAlpha);
+			_Indic(nameof(IndicBracesColor), IndicBracesColor, IndicBracesAlpha);
+			_Int(nameof(SelColor), SelColor);
+			_Int(nameof(SelNofocusColor), SelNofocusColor);
 			
 			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
 				if (r.bold) b.Append(", 1");
 				b.AppendLine();
 			}
+			
+			void _Int(string name, int i) => b.AppendLine($"{name}, 0x{i:X8}");
+			
+			void _Indic(string name, int color, int alpha) => b.AppendLine($"{name}, 0x{color:X6}, {alpha}");
 			
 			filesystem.saveText(s_settingsFile, b.ToString());
 		}
@@ -573,6 +592,9 @@ partial class CiStyling {
 			IndicFoundAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicFound);
 			IndicRefsAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicRefs);
 			IndicBracesAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicBraces);
+			
+			SelColor = sci.aaaGetElementColor(SC_ELEMENT_SELECTION_BACK).argb;
+			SelNofocusColor = sci.aaaGetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK).argb;
 		}
 		
 		/// <param name="multiFont">Set font only for code styles.</param>
@@ -611,16 +633,19 @@ partial class CiStyling {
 			
 			sci.aaaStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
 			
-			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha);
-			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha);
-			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha);
+			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_FULLBOX);
 			
-			void _Indic(int indic, int color, int alpha) {
-				sci.aaaIndicatorDefine(indic, INDIC_FULLBOX, color, alpha, 255, underText: true);
+			void _Indic(int indic, int color, int alpha, int style) {
+				sci.aaaIndicatorDefine(indic, style, color, alpha, 255, underText: true);
 			}
 			//void _Indic(int indic, int color, int alpha, bool gradient) {
 			//	sci.aaaIndicatorDefine(indic, gradient ? INDIC_GRADIENT : INDIC_FULLBOX, color, alpha, 255, underText: true);
 			//}
+			
+			sci.aaaSetElementColor(SC_ELEMENT_SELECTION_BACK, SelColor);
+			sci.aaaSetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK, SelNofocusColor);
 		}
 		
 		//rejected

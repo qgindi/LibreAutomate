@@ -667,7 +667,7 @@ static class TUtil {
 	/// <summary>
 	/// Creates standard <see cref="osdRect"/>.
 	/// </summary>
-	public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFFFF0000, Thickness = thickness, TopmostWorkaround_ = true }; //red
+	public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFF0000, Thickness = thickness, TopmostWorkaround_ = true }; //red
 
 	/// <summary>
 	/// Briefly shows standard blinking on-screen rectangle.
@@ -680,7 +680,7 @@ static class TUtil {
 		}
 
 		int thick = error ? 6 : 2;
-		var osr = new osdRect { Color = 0xFFFFFF00, Thickness = thick * 2, TopmostWorkaround_ = true }; //yellow
+		var osr = new osdRect { Color = 0xFFFF00, Thickness = thick * 2, TopmostWorkaround_ = true }; //yellow
 		r.Inflate(thick, thick); //2 pixels inside, 2 outside
 		if (limitToScreen) {
 			var k = screen.of(r).Rect;
@@ -694,7 +694,7 @@ static class TUtil {
 		timer.every(250, t => {
 			if (i++ < 5) {
 				osr.Hwnd.ZorderTopRaw_();
-				osr.Color = (i & 1) != 0 ? (error ? 0xFFFF0000 : 0xFF0000FF) : 0xFFFFFF00; //(red : blue) : yellow
+				osr.Color = (i & 1) != 0 ? (error ? 0xFF0000 : 0x0000FF) : 0xFFFF00; //(red : blue) : yellow
 			} else {
 				t.Stop();
 				osr.Dispose();

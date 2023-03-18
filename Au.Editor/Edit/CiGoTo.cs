@@ -316,7 +316,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 	}
 	
 	public static void GoToBase() {
-		var (sym, cd) = CiUtil.GetSymbolFromPos();
+		var (sym, cd) = CiUtil.GetSymbolFromPos(andZeroLength: true);
 		List<ISymbol> a = new();
 		if (sym is INamedTypeSymbol nt && nt.TypeKind is TypeKind.Class or TypeKind.Interface) {
 			if (nt.TypeKind == TypeKind.Interface) {

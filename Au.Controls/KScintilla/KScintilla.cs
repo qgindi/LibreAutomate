@@ -78,10 +78,10 @@ public unsafe partial class KScintilla : HwndHost {
 		Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 
 		//Need to set selection colors or layer, because the default inactive selection color is darker than active.
-		//	It is 0x3F808080, but it seems alpha is ignored if SC_LAYER_BASE (default).
+		//	It is 0x3F808080, but alpha is ignored if SC_LAYER_BASE (default).
 		Call(SCI_SETSELECTIONLAYER, SC_LAYER_UNDER_TEXT);
-		Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, unchecked((int)0xA0A0A0A0)); //use alpha to mix with indicators
-		Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_INACTIVE_BACK, 0x60A0A0A0);
+		aaaSetElementColor(SC_ELEMENT_SELECTION_BACK, 0xA0A0A0A0); //use alpha to mix with indicators
+		aaaSetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK, 0x60A0A0A0);
 
 		if (AaInitWrapVisuals) {
 			Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
@@ -143,9 +143,20 @@ public unsafe partial class KScintilla : HwndHost {
 
 		MButtons button = msg switch { Api.WM_LBUTTONDOWN => MButtons.Left, Api.WM_RBUTTONDOWN => MButtons.Right, Api.WM_MBUTTONDOWN => MButtons.Middle, _ => 0 };
 		if (button != 0 && Api.GetFocus() != _w) {
-			bool setFocus = true;
-			if (msg == Api.WM_LBUTTONDOWN) AaTags?.OnLButtonDownWhenNotFocused_(wp, lp, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-			if (setFocus && !AaNoMouseSetFocus.Has(button)) this.Focus();
+			bool setFocus = !AaNoMouseSetFocus.Has(button);
+			if (setFocus && msg == Api.WM_LBUTTONDOWN && AaInitReadOnlyAlways && !keys.gui.isAlt) { //don't focus if link clicked
+				int pos = Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lp), Math2.HiShort(lp));
+				if (pos >= 0) {
+					if (aaaStyleHotspot(aaaStyleGetAt(pos))) setFocus = false;
+					else { //indicator-link?
+						uint indic = (uint)Call(SCI_INDICATORALLONFOR, pos);
+						for (int i = 0; indic != 0; i++, indic >>>= 1)
+							if (0 != (indic & 1) && 0 != Call(SCI_INDICGETHOVERFORE, i))
+								setFocus = false;
+					}
+				}
+			}
+			if (setFocus) this.Focus();
 		}
 
 		switch (msg) {

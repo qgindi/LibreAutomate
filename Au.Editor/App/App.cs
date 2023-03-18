@@ -2,7 +2,6 @@ using Au.Controls;
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
-using System.Reflection;
 
 [assembly: AssemblyTitle(App.AppNameLong)]
 //more attributes in global2.cs
@@ -109,11 +108,13 @@ static class App {
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
 
+#if !IDE_LA
 		_app.Dispatcher.InvokeAsync(() => {
 			//perf.next('r');
 			Model.RunStartupScripts(false);
 			//perf.nw('s');
 		});
+#endif
 
 		try {
 			_app.Run();
