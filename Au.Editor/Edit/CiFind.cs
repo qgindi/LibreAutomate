@@ -33,26 +33,11 @@ static class CiFind {
 				k.aaaIndicatorDefine(c_indicProject, Sci.INDIC_GRADIENT, 0xCDE87C, alpha: 255, underText: true);
 			}
 			
-			perf.first();
+			//perf.first();
 			Au.Compiler.TestInternal.RefsStart();
 			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
 			
-			//TODO
-			//print.it("--------------------");
-			//foreach (var p in solution.Projects) {
-			//	print.it($"<><c blue>{p.Name}, asm={p.AssemblyName}");
-			//	print.it("pr:");
-			//	foreach (var v in p.ProjectReferences) {
-			//		print.it(CiProjects.FileOf(v.ProjectId));
-			//	}
-			//	print.it("r:");
-			//	foreach (var v in p.MetadataReferences) {
-			//		if(!v.Display.RxIsMatch(@"\bAu\b") || v.Display.Contains("Roslyn")) continue;
-			//		print.it(v.Display);
-			//	}
-			//}
-			
-			perf.next('s');
+			//perf.next('s');
 			bool multiProj = solution.ProjectIds.Count > 1;
 			_LocationComparer locComp = new();
 			var symComp = new _SymbolComparer(locComp);
@@ -93,7 +78,7 @@ static class CiFind {
 				HashSet<_Ref> seen = new();
 				var options = FindReferencesSearchOptions.GetFeatureOptionsForStartingSymbol(sym);
 				var rr = await SymbolFinder.FindReferencesAsync(sym, solution, options, default);
-				perf.next('f');
+				//perf.next('f');
 				
 				//sort. Join duplicate definitions of logically same symbol added through meta c or in a case of partial method.
 				var refSymbols = rr.Where(o => o.ShouldShow(options))
@@ -137,7 +122,7 @@ static class CiFind {
 					}
 				}
 			}
-			perf.next();
+			//perf.next();
 			
 			if (!info.NE()) {
 				b.Marker(c_markerInfo).Text(info).NL();
@@ -168,7 +153,7 @@ static class CiFind {
 			Panels.Found.SetSymbolReferencesResults(workingState, b);
 			
 			timer.after(1, _ => GC.Collect());
-			perf.nw();
+			//perf.nw();
 		}
 		finally {
 			_working = false;
@@ -265,6 +250,9 @@ static class CiFind {
 		}
 		//See also: Roslyn -> AbstractDocumentHighlightsService.cs.
 		
+		//CONSIDER: now brace hiliting is distracting and I as a user rarely need it.
+		//	Maybe hilite only when a single brace selected.
+		//	But other IDEs hilite like this.
 		_HighlightMatchingBracesOrDirectives(cd);
 	}
 	

@@ -413,10 +413,10 @@ partial class CiStyling {
 		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
 		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome
 		public int IndicRefsColor = 0x80C000;
-		public int IndicBracesColor = 0xC0A000;
+		public int IndicBracesColor = 0x808080;
 		public int IndicFoundAlpha = 255;
 		public int IndicRefsAlpha = 25;
-		public int IndicBracesAlpha = 50;
+		public int IndicBracesAlpha = 25;
 		//public bool IndicFoundGradient;
 		//public bool IndicRefsGradient;
 		//public bool IndicBracesGradient;
