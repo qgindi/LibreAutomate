@@ -12,11 +12,11 @@ using Au.Controls;
 //TODO: doc about 'Find references/implementations', 'hilite references', 'go to base'.
 
 static class CiFind {
-	const int c_markerSymbol = 0, c_indicProject = 15;
+	const int c_markerSymbol = 0, c_markerInfo = 1, c_indicProject = 15;
 	static bool _working;
 	
 	public static async void FindReferencesOrImplementations(bool implementations) {
-		if (_working) return; //don't use cancellation. Should never be that slow.
+		if (_working) return;
 		_working = true;
 		try {
 			var (sym, cd) = CiUtil.GetSymbolFromPos();
@@ -29,13 +29,34 @@ static class CiFind {
 			if (workingState.NeedToInitControl) {
 				var k = workingState.Scintilla;
 				k.aaaMarkerDefine(c_markerSymbol, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
+				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xADC8FF);
 				k.aaaIndicatorDefine(c_indicProject, Sci.INDIC_GRADIENT, 0xCDE87C, alpha: 255, underText: true);
 			}
 			
-			var solution = CiProjects.GetSolutionForFindReferences(sym, cd);
+			perf.first();
+			Au.Compiler.TestInternal.RefsStart();
+			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
+			
+			//TODO
+			//print.it("--------------------");
+			//foreach (var p in solution.Projects) {
+			//	print.it($"<><c blue>{p.Name}, asm={p.AssemblyName}");
+			//	print.it("pr:");
+			//	foreach (var v in p.ProjectReferences) {
+			//		print.it(CiProjects.FileOf(v.ProjectId));
+			//	}
+			//	print.it("r:");
+			//	foreach (var v in p.MetadataReferences) {
+			//		if(!v.Display.RxIsMatch(@"\bAu\b") || v.Display.Contains("Roslyn")) continue;
+			//		print.it(v.Display);
+			//	}
+			//}
+			
+			perf.next('s');
 			bool multiProj = solution.ProjectIds.Count > 1;
+			_LocationComparer locComp = new();
+			var symComp = new _SymbolComparer(locComp);
 			if (implementations) {
-				//TODO: sorting etc (meta c, pr)
 				if (sym is INamedTypeSymbol nts) {
 					if (nts.TypeKind == TypeKind.Interface) {
 						_AppendSymbols("Implementations", await SymbolFinder.FindImplementationsAsync(nts, solution));
@@ -51,33 +72,43 @@ static class CiFind {
 					}
 				}
 				if (b.Length == 0) return;
+				//never mind: Roslyn gives 1 result when implemented in 2 projects and same type name and assembly name.
+				//	Same in VS.
+				//	We could generate unique assembly names, but it breaks [InternalsVisibleTo] and testInternal.
+				//	Too difficult to modify Roslyn code.
 				
 				void _AppendSymbols(string header, IEnumerable<ISymbol> e) {
+					e = e.Where(o => o.IsInSource());
 					if (e.Any()) {
+						//join duplicates added through meta c
+						var implSymbols = e.GroupBy(o => o, (k, e) => (sym: k, locs: e.SelectMany(o => o.Locations).Distinct(locComp)), symComp)
+							.OrderBy(o => o.sym.Name);
+						
 						_Fold(true).Marker(c_markerSymbol).Text(header).NL();
-						foreach (var v in e.OrderBy(o => o.Name)) _AppendSymbol(v);
+						foreach (var v in implSymbols) _AppendSymbol(v.sym, false, v.locs);
 						_Fold(false);
 					}
 				}
 			} else {
 				HashSet<_Ref> seen = new();
-				_LocationComparer locComp = new();
 				var options = FindReferencesSearchOptions.GetFeatureOptionsForStartingSymbol(sym);
 				var rr = await SymbolFinder.FindReferencesAsync(sym, solution, options, default);
+				perf.next('f');
+				
+				//sort. Join duplicate definitions of logically same symbol added through meta c or in a case of partial method.
 				var refSymbols = rr.Where(o => o.ShouldShow(options))
-					.GroupBy(o => o.Definition.ToString(), (_, e) => (defSym: e.First().Definition, e.SelectMany(k => k.Definition.Locations), e.SelectMany(k => k.Locations))) //join duplicate definitions of logically same symbol added because of meta c or in a case of partial method
+					.GroupBy(o => o.Definition, (defSym, e) => (defSym, e.SelectMany(k => k.Definition.Locations), e.SelectMany(k => k.Locations)), symComp)
 					.OrderByDescending(o => o.defSym.Kind)
 					.ThenBy(o => o.defSym.ContainingAssembly?.Name != cd.document.Project.AssemblyName) //let current project be the first
 					.ThenBy(o => o.defSym.ContainingAssembly?.Name);
+				
 				foreach (var (defSym, defLocs, refs) in refSymbols) {
-					//definition
-					
-					_Fold(true).Marker(c_markerSymbol);
-					_AppendSymbol(defSym, true, defLocs.Distinct(locComp));
-					
-					//references
-					
 					if (refs.Any()) {
+						//definition
+						_Fold(true).Marker(c_markerSymbol);
+						_AppendSymbol(defSym, true, defLocs.Distinct(locComp));
+						
+						//references
 						if (multiProj) _Fold(true);
 						ProjectId prevProjId = null;
 						var refs2 = refs
@@ -101,12 +132,16 @@ static class CiFind {
 							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, displayFile: true);
 						}
 						if (multiProj) _Fold(false);
+						
+						_Fold(false);
 					}
-					
-					_Fold(false);
 				}
 			}
-			//BAD: no results for meta testInternal internals.
+			perf.next();
+			
+			if (!info.NE()) {
+				b.Marker(c_markerInfo).Text(info).NL();
+			}
 			
 			void _AppendSymbol(ISymbol sym, bool refDef = false, IEnumerable<Location> locations = null) {
 				var sDef = sym is INamespaceSymbol
@@ -131,25 +166,51 @@ static class CiFind {
 			SciTextBuilder _Fold(bool start) => b.Fold(new(b.Length - (start ? 0 : 2), start));
 			
 			Panels.Found.SetSymbolReferencesResults(workingState, b);
+			
+			timer.after(1, _ => GC.Collect());
+			perf.nw();
 		}
-		finally { _working = false; }
+		finally {
+			_working = false;
+			Au.Compiler.TestInternal.RefsEnd();
+		}
 	}
 	
 	record struct _Ref(FileNode f, TextSpan span);
 	
 	class _LocationComparer : IEqualityComparer<Location> {
-		public bool Equals(Location x, Location y) => x.IsInSource && y.IsInSource && x.SourceSpan == y.SourceSpan && x.SourceTree.FilePath == y.SourceTree.FilePath;
+		public bool Equals(Location x, Location y)
+			=> x.IsInSource && y.IsInSource && x.SourceSpan == y.SourceSpan && x.SourceTree.FilePath == y.SourceTree.FilePath;
 		
-		public int GetHashCode(Location x) => (int)x.Kind;
+		public int GetHashCode(Location x)
+			=> x.Kind == LocationKind.SourceFile ? x.SourceSpan.Start : x.GetHashCode();
+	}
+	
+	class _SymbolComparer : IEqualityComparer<ISymbol> {
+		_LocationComparer _locComp;
+		
+		public _SymbolComparer(_LocationComparer locComp) { _locComp = locComp; }
+		
+		//public bool Equals(ISymbol x, ISymbol y) => x.Locations.Intersect(y.Locations, _locComp).Any();
+		public bool Equals(ISymbol x, ISymbol y) { //faster, no garbage
+			foreach (var xl in x.Locations)
+				foreach (var yl in y.Locations)
+					if (_locComp.Equals(xl, yl)) return true;
+			return false;
+		}
+		
+		public int GetHashCode(ISymbol x) => x.Name.GetHashCode();
 	}
 	
 	public static void SciUpdateUI(SciCode doc, bool modified) {
-		doc.aaaIndicatorClear(SciCode.c_indicRefs);
+		if (modified || 0 == doc.Call(Sci.SCI_INDICATORVALUEAT, SciCode.c_indicRefs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
+			doc.aaaIndicatorClear(SciCode.c_indicRefs);
 		doc.aaaIndicatorClear(SciCode.c_indicBraces);
 		_cancelTS?.Cancel();
 		_cancelTS = null;
 		_doc = doc;
-		_timer1.After(modified ? 1000 : 250);
+		//_timer1.After(modified ? 1000 : 200);
+		if (!modified) _timer1.After(200);
 	}
 	
 	static readonly timer _timer1 = new(_SciUpdateUI);
@@ -158,6 +219,7 @@ static class CiFind {
 	
 	static async void _SciUpdateUI(timer _1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd) || cd.sci != _doc) return;
+		if (cd.sci.aaaHasSelection) return;
 		
 		//hilite symbol references
 		if (CiUtil.GetSymbolFromPos(cd) is ISymbol sym) {
@@ -166,7 +228,11 @@ static class CiFind {
 			var cancelToken = _cancelTS.Token;
 			try {
 				var options = FindReferencesSearchOptions.GetFeatureOptionsForStartingSymbol(sym);
-				var rr = await SymbolFinder.FindReferencesAsync(sym, cd.document.Project.Solution, (IFindReferencesProgress)null, ImmutableHashSet.Create(cd.document), options, cancelToken);
+				
+				var solution = cd.document.Project.Solution;
+				var ihs = ImmutableHashSet.Create(cd.document);
+				var rr = await SymbolFinder.FindReferencesAsync(sym, solution, (IFindReferencesProgress)null, ihs, options, cancelToken);
+				
 				if (Panels.Editor.ActiveDoc != cd.sci) return;
 				
 				foreach (var v in rr) {
@@ -181,14 +247,15 @@ static class CiFind {
 					
 					//references
 					foreach (var rloc in v.Locations) {
-						var span = rloc.Location.SourceSpan;
 						if (rloc.Document == cd.document) {
+							var span = rloc.Location.SourceSpan;
+							if (span.Length == 0 && span.Start < cd.code.Length) span = new(span.Start, 1); //indexer
 							ar.Add(span.ToRange());
 						}
 					}
 				}
 				
-				foreach (var v in ar) cd.sci.aaaIndicatorAdd(true, SciCode.c_indicRefs, v);
+				foreach (var v in ar) cd.sci.aaaIndicatorAdd(SciCode.c_indicRefs, true, v);
 			}
 			catch (OperationCanceledException) { }
 			finally {
@@ -241,8 +308,8 @@ static class CiFind {
 				}
 			}
 			if (posR < 0 || !(posL == pos || posR == pos)) return;
-			cd.sci.aaaIndicatorAdd(true, SciCode.c_indicBraces, posL..(posL + 1));
-			cd.sci.aaaIndicatorAdd(true, SciCode.c_indicBraces, posR..(posR + 1));
+			cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, posL..(posL + 1));
+			cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, posR..(posR + 1));
 		}
 		
 		void _Directive() {
@@ -256,40 +323,81 @@ static class CiFind {
 				if (node2 != null) a = new[] { node, node2 };
 			}
 			if (a == null) return;
-			foreach (var v in a) cd.sci.aaaIndicatorAdd(true, SciCode.c_indicBraces, v.Span.ToRange());
+			foreach (var v in a) cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, v.Span.ToRange());
 		}
 	}
 	
-	public static void RenameSymbol() {//TODO
+	#if true
+	public static async void RenameSymbol() {//TODO
 		print.clear();
-		var (sym, cd) = CiUtil.GetSymbolFromPos();
-		if (sym == null) return;
-		var solution = cd.document.Project.Solution;
-		//print.it(solution.Projects.Select(o=>o.Name));
-		var sol2 = Microsoft.CodeAnalysis.Rename.Renamer.RenameSymbolAsync(solution, sym, new SymbolRenameOptions(), "newName").Result;
-		//print.it(sol2.GetChangedDocuments(solution));
-		
-		foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
-			print.it("PROJECT", projChange.NewProject.Name);
-			foreach (var docId in projChange.GetChangedDocuments(true)) {
-				var doc = projChange.NewProject.GetDocument(docId);
-				print.it("FILE", doc.Name);
-				var oldDoc = projChange.OldProject.GetDocument(docId);
-				foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
-					print.it(tc);
+		if (_working) return;
+		_working = true;
+		try {
+			var (sym, cd) = CiUtil.GetSymbolFromPos();
+			if (sym == null || !sym.IsInSource()) return;
+			
+			perf.first();
+			Au.Compiler.TestInternal.RefsStart();
+			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
+			perf.next('s');
+			SymbolRenameOptions sro = new();
+			var sol2 = await Microsoft.CodeAnalysis.Rename.Renamer.RenameSymbolAsync(solution, sym, sro, "newName");
+			//print.it(sol2.GetChangedDocuments(solution));
+			perf.next('r');
+			
+			foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
+				print.it("<><c blue>PROJECT", projChange.NewProject.Name, "<>");
+				foreach (var docId in projChange.GetChangedDocuments(true)) {
+					var doc = projChange.NewProject.GetDocument(docId);
+					print.it("FILE", doc.Name);
+					var oldDoc = projChange.OldProject.GetDocument(docId);
+					foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
+						print.it(tc);
+					}
 				}
 			}
+			perf.nw();
 		}
-		//foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
-		//	print.it("PROJECT", projChange.NewProject.Name);
-		//	foreach (var docId in projChange.GetChangedDocuments(true)) {
-		//		var doc = projChange.NewProject.GetDocument(docId);
-		//		print.it("FILE", doc.Name);
-		//		var oldDoc = projChange.OldProject.GetDocument(docId);
-		//		foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
-		//			print.it(tc);
-		//		}
-		//	}
-		//}
+		finally {
+			_working = false;
+			Au.Compiler.TestInternal.RefsEnd();
+		}
 	}
+	#else
+	public static async void RenameSymbol() {//TODO
+		print.clear();
+		if (_working) return;
+		_working = true;
+		try {
+			var (sym, cd) = CiUtil.GetSymbolFromPos();
+			if (sym == null || !sym.IsInSource()) return;
+			
+			perf.first();
+			Au.Compiler.TestInternal.RefsStart();
+			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
+			perf.next('s');
+			SymbolRenameOptions sro = new();
+			var sol2 = await Microsoft.CodeAnalysis.Rename.Renamer.RenameSymbolAsync(solution, sym, sro, "newName");
+			//print.it(sol2.GetChangedDocuments(solution));
+			perf.next('r');
+			
+			foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
+				print.it("<><c blue>PROJECT", projChange.NewProject.Name, "<>");
+				foreach (var docId in projChange.GetChangedDocuments(true)) {
+					var doc = projChange.NewProject.GetDocument(docId);
+					print.it("FILE", doc.Name);
+					var oldDoc = projChange.OldProject.GetDocument(docId);
+					foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
+						print.it(tc);
+					}
+				}
+			}
+			perf.nw();
+		}
+		finally {
+			_working = false;
+			Au.Compiler.TestInternal.RefsEnd();
+		}
+	}
+	#endif
 }

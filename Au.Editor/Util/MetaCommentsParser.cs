@@ -25,7 +25,7 @@ class MetaCommentsParser {
 		var meta = MetaComments.FindMetaComments(code);
 		if (meta.end == 0) return;
 		MetaRange = meta;
-		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name(), t.Value());
+		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name, t.Value.ToString());
 		Multiline = code[meta.start..meta.end].Contains('\n');
 	}
 

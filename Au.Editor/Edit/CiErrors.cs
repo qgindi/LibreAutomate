@@ -70,7 +70,7 @@ class CiErrors {
 
 				if (!has) doc.EInicatorsDiag_(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
-				doc.aaaIndicatorAdd(true, indic, start..end);
+				doc.aaaIndicatorAdd(indic, true, start..end);
 				_codeDiag.Add((d, start, end));
 
 				if (d.Severity == DiagnosticSeverity.Error) {
@@ -96,14 +96,14 @@ class CiErrors {
 				int from = v.from + offs, to = v.to + offs;
 				if (to <= start16 || from >= end16) continue;
 				if (!has) doc.EInicatorsDiag_(has = true);
-				doc.aaaIndicatorAdd(true, SciCode.c_indicError, from..to);
+				doc.aaaIndicatorAdd(SciCode.c_indicError, true, from..to);
 			}
 		}
 		_Strings(semo, cd, start16, end16);
 		if (_stringErrors.Count > 0) {
 			if (!has) doc.EInicatorsDiag_(has = true);
 			foreach (var v in _stringErrors) {
-				doc.aaaIndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
+				doc.aaaIndicatorAdd(SciCode.c_indicWarning, true, v.from..v.to);
 			}
 		}
 		if (!has) {
@@ -232,10 +232,10 @@ class CiErrors {
 
 	public void EraseIndicatorsInLine(SciCode doc, int pos8) {
 		var (_, start, end) = doc.aaaLineStartEndFromPos(false, pos8, withRN: true);
-		doc.aaaIndicatorClear(false, SciCode.c_indicDiagHidden, start..end);
-		doc.aaaIndicatorClear(false, SciCode.c_indicInfo, start..end);
-		doc.aaaIndicatorClear(false, SciCode.c_indicWarning, start..end);
-		doc.aaaIndicatorClear(false, SciCode.c_indicError, start..end);
+		doc.aaaIndicatorClear(SciCode.c_indicDiagHidden, false, start..end);
+		doc.aaaIndicatorClear(SciCode.c_indicInfo, false, start..end);
+		doc.aaaIndicatorClear(SciCode.c_indicWarning, false, start..end);
+		doc.aaaIndicatorClear(SciCode.c_indicError, false, start..end);
 	}
 
 	public void SciModified(SciCode doc, in Sci.SCNotification n) {

@@ -111,5 +111,5 @@ record WorkspaceSettings : JSettings {
 
 	public FilesModel.UserData[] users;
 
-	public string ci_exclude;//TODO: UI
+	public string ci_skipFolders;
 }

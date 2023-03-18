@@ -733,14 +733,6 @@ public unsafe class SciTags {
 
 	public Func<string, byte[]> CodeStylesProvider;
 
-	internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus) {
-		if (setFocus && _c.AaInitReadOnlyAlways && !keys.gui.isAlt) {
-			int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
-			//print.it(pos);
-			if (pos >= 0 && _c.aaaStyleHotspot(_c.aaaStyleGetAt(pos))) setFocus = false;
-		}
-	}
-
 	//FUTURE: add control-tags, like <clear> (clear output), <scroll> (ensure line visible), <mark x> (add some marker etc).
 	//FUTURE: let our links be accessible objects.
 }

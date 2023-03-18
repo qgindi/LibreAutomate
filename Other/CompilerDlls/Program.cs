@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 //using System.Linq;
 using System.Text;
@@ -23,7 +23,6 @@ using System.IO;
 //	Add this in editor project for each Roslyn reference: <DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
 //	On build VS will copy the dlls to _\Roslyn.
 //	VS will detect when the dlls modified when building Roslyn.
-//	(obsolete) Edit AppHost.cpp, let it add subfolder Roslyn like it does for subfolder Libraries.
 //To get other dlls:
 //	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
 //	Compile. Copy all dlls from the bin folder to _\Roslyn.
@@ -114,8 +113,8 @@ namespace CompilerDlls
 }
 
 #if false
-//Edit these manually, because either difficult to automate or Roslyn source in new version is very likely changed in that place.
-//Add only internal members. If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
+//Edit these manually, because either difficult to automate or Roslyn source in new version is likely changed in that place.
+//Add only internal members (where possible). If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
 
 // - In all 6 projects + Scripting .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
 
@@ -148,6 +147,15 @@ namespace CompilerDlls
 // - Let it don't try to load VB assemblies, because then exception when debugging:
 //In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VB assemblies.
 
+// - In project Microsoft.CodeAnalysis add link to Au.TestInternal.cs. It is in this project.
+
+// - In project Microsoft.CodeAnalysis, in file PublicAPI.Shipped.txt, append:
+RoslynMod.TestInternal
+static RoslynMod.TestInternal.IsInternalsVisible(string thisName, string toName) -> System.Collections.Generic.IEnumerable<System.Collections.Immutable.ImmutableArray<byte>>
+static RoslynMod.TestInternal.AppendInternalsVisible(string thisName, System.Collections.Generic.HashSet<string> toNames) -> void
+RoslynMod.Print
+static RoslynMod.Print.it(object o) -> void
+
 // - In project Microsoft.CodeAnalysis, in MetadataReader\PEAssembly.cs, replace GetInternalsVisibleToPublicKeys with:
 
         internal IEnumerable<ImmutableArray<byte>> GetInternalsVisibleToPublicKeys(string simpleName)
@@ -160,19 +168,7 @@ namespace CompilerDlls
             _lazyInternalsVisibleToMap.TryGetValue(simpleName, out result);
 
             //au
-            return result
-                ?? GetAuInternalsVisible(this.Identity.Name, simpleName, false)
-                ?? SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
-        }
-
-        //au
-        internal static Func<string, string, bool, bool> AuInternalsVisible;
-        static ImmutableArray<byte>[] s_aivIA;
-        internal static ImmutableArray<byte>[] GetAuInternalsVisible(string thisName, string toName, bool source)
-        {
-            if (AuInternalsVisible?.Invoke(thisName, toName, source) ?? false)
-                return s_aivIA ??= new ImmutableArray<byte>[1] { default };
-            return null;
+            return result ?? RoslynMod.TestInternal.IsInternalsVisible(this.Identity.Name, simpleName);
         }
 
 // - In project Microsoft.CodeAnalysis.CSharp, in Symbols\Source\SourceAssemblySymbol.cs, replace GetInternalsVisibleToPublicKeys with:
@@ -185,8 +181,7 @@ namespace CompilerDlls
             if (_lazyInternalsVisibleToMap != null && _lazyInternalsVisibleToMap.TryGetValue(simpleName, out var result))
                 return result.Keys;
 
-            return PEAssembly.GetAuInternalsVisible(this.Name, simpleName, true)
-                ?? SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
+            return RoslynMod.TestInternal.IsInternalsVisible(this.Name, simpleName);
         }
         //internal override IEnumerable<ImmutableArray<byte>> GetInternalsVisibleToPublicKeys(string simpleName)
         //{
@@ -205,6 +200,10 @@ namespace CompilerDlls
 
         //    return (result != null) ? result.Keys : SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
         //}
+
+// - In project Microsoft.CodeAnalysis.Workspaces, in file DependencyProjectsFinder.cs, in GetInternalsVisibleToSet, insert before 'return':
+            //au:
+            RoslynMod.TestInternal.AppendInternalsVisible(assembly.Name, set);
 
 // - (bug fix) In SignatureHelpUtilities.cs, function GetSignatureHelpState, remove the 'if' block:
             //au: bug fix. This code replaces correct ArgumentIndex with incorrect. Then another function throws exception. Editor could handle the exception, but then no parameter info.

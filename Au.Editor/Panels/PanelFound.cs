@@ -181,7 +181,7 @@ class PanelFound {
 			this.kind = kind;
 			Name = "Found_" + kind;
 			AaInitReadOnlyAlways = true;
-			AaInitTagsStyle = KScintilla.AaTagsStyle.AutoAlways;
+			AaInitTagsStyle = AaTagsStyle.AutoAlways;
 		}
 		
 		protected override void AaOnHandleCreated() {
@@ -262,7 +262,12 @@ class PanelFound {
 							var doc = Panels.Editor.ActiveDoc;
 							if (doc?.EFile != k.file || k.end >= doc.aaaLen16) return;
 							App.Model.EditGoBack.RecordNext();
-							doc.aaaSelect(true, k.start, k.end, true);
+							doc.aaaGoToPos(true, k.start);
+							doc.Focus();
+
+							//rejected: briefly show a marker, or hilite the line, or change caret color/width.
+							//	More distracting than useful.
+							//	The default blinking caret + default highlighting are easy to notice.
 						});
 						//info: scrolling works better with async when now opened the file
 					}
@@ -299,7 +304,7 @@ class PanelFound {
 			//add indicator to help the user to find this line later
 			aaaIndicatorClear(Indicators.FocusRect);
 			var v = aaaLineStartEndFromPos(false, aaaCurrentPos8);
-			aaaIndicatorAdd(false, Indicators.FocusRect, v.start..v.end);
+			aaaIndicatorAdd(Indicators.FocusRect, false, v.start..v.end);
 			return true;
 		}
 	}

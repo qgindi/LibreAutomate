@@ -114,6 +114,10 @@ static class CodeInfo {
 				try { ReadyForEditing(); } catch (Exception e1) { print.it(e1); } //used in editorExtension scripts
 				ReadyForEditing = null; //GC
 			}
+
+#if DEBUG
+			RoslynMod.Print.PrintItCallback = o => print.it(o);
+#endif
 		}
 	}
 	
@@ -636,7 +640,7 @@ for (int i = 0; i < count; i++) { }
 		//	Now eg slow GetSemanticModelAsync when [re]opening a file in a large project/solution.
 		
 		_diag.ClearMetaErrors();
-		InternalsVisible.Clear();
+		TestInternal.CiClear();
 		CurrentWorkspace = new AdhocWorkspace();
 		
 		Dictionary<FileNode, ProjectReference> dPR = null;
@@ -648,13 +652,11 @@ for (int i = 0; i < count; i++) { }
 			var fCurrentDoc = f;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 			
-			var m = new MetaComments();
-			m.Parse(f, projFolder, MCPFlags.ForCodeInfoInEditor | (isWpfPreview ? MCPFlags.WpfPreview : 0));
+			var m = new MetaComments(MCPFlags.ForCodeInfoInEditor | (isWpfPreview ? MCPFlags.WpfPreview : 0));
+			m.Parse(f, projFolder);
 			//if (isMain) _meta = m;
 			
-			if (m.TestInternal is string[] testInternal) InternalsVisible.Add(f.Name, testInternal);
-			//TODO: for pr instead add [assembly: InternalsVisibleTo("Au.Editor.cs")] to target assemblies.
-			//	Now no symbol references, and possible other anomalies.
+			if (m.TestInternal is string[] testInternal) TestInternal.CiAdd(m.Name, testInternal);
 			
 			var projectId = ProjectId.CreateNewId();
 			CiProjects.AttachFileOf(projectId, f);
@@ -682,7 +684,7 @@ for (int i = 0; i < count; i++) { }
 				}
 			}
 			
-			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, m.Name, f.Name, LanguageNames.CSharp, null, null,
+			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, m.Name, m.Name, LanguageNames.CSharp, null, null,
 				m.CreateCompilationOptions(),
 				m.CreateParseOptions(),
 				adi,

@@ -638,6 +638,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				if (i == s.Length) return (p == Root || !(kind is FNFind.Any or FNFind.Folder)) ? null : p;
 				s = s[i..];
 			}
+			orAnywhere = false;
 		}
 		return p._FindRelative(s, kind, orAnywhere);
 	}

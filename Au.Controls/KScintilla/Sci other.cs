@@ -10,7 +10,7 @@ public partial class KScintilla {
 	/// Sets marker style and colors.
 	/// </summary>
 	/// <param name="marker">Marker index, 0-31. Indices 25-31 are used for folding markers (SC_MARKNUM_FOLDERx). Indices 21-24 are used for change history markers. Scintilla draws markers from smaller to bigger index.</param>
-	/// <param name="style">SCI_MARKERDEFINE.</param>
+	/// <param name="style">SC_MARK_.</param>
 	/// <param name="foreColor">SCI_MARKERSETFORE.</param>
 	/// <param name="backColor">SCI_MARKERSETBACK.</param>
 	public void aaaMarkerDefine(int marker, int style, ColorInt? foreColor = null, ColorInt? backColor = null) {
@@ -18,6 +18,42 @@ public partial class KScintilla {
 		Call(SCI_MARKERDEFINE, marker, style);
 		if (foreColor != null) Call(SCI_MARKERSETFORE, marker, foreColor.Value.ToBGR());
 		if (backColor != null) Call(SCI_MARKERSETBACK, marker, backColor.Value.ToBGR());
+	}
+
+	/// <summary>
+	/// SCI_MARKERADD.
+	/// </summary>
+	public void aaaMarkerAdd(int marker, int line) {
+		Call(SCI_MARKERADD, line, marker);
+	}
+
+	/// <summary>
+	/// SCI_MARKERADD in line containing <i>pos</i>.
+	/// </summary>
+	public void aaaMarkerAdd(int marker, bool utf16, int pos) {
+		aaaMarkerAdd(marker, aaaLineFromPos(utf16, pos));
+	}
+
+	/// <summary>
+	/// SCI_MARKERDELETE.
+	/// </summary>
+	public void aaaMarkerDelete(int marker, int line) {
+		Call(SCI_MARKERDELETE, line, marker);
+	}
+
+	/// <summary>
+	/// SCI_MARKERDELETE in line containing <i>pos</i>.
+	/// </summary>
+	public void aaaMarkerDelete(int marker, bool utf16, int pos) {
+		aaaMarkerDelete(marker, aaaLineFromPos(utf16, pos));
+	}
+
+	/// <summary>
+	/// SCI_MARKERDELETEALL.
+	/// </summary>
+	/// <param name="marker">If -1, delete all markers from all lines.</param>
+	public void aaaMarkerDelete(int marker) {
+		Call(SCI_MARKERDELETEALL, marker);
 	}
 
 	#endregion
@@ -50,15 +86,15 @@ public partial class KScintilla {
 		if (hoverStyle != null) Call(SCI_INDICSETHOVERSTYLE, indic, hoverStyle.Value);
 	}
 
-	public void aaaIndicatorClear(int indic) => aaaIndicatorClear(false, indic, ..);
+	public void aaaIndicatorClear(int indic) => aaaIndicatorClear(indic, false, ..);
 
-	public void aaaIndicatorClear(bool utf16, int indic, Range r) {
+	public void aaaIndicatorClear(int indic, bool utf16, Range r) {
 		var (from, to) = aaaNormalizeRange(utf16, r);
 		Call(SCI_SETINDICATORCURRENT, indic);
 		Call(SCI_INDICATORCLEARRANGE, from, to - from);
 	}
 
-	public void aaaIndicatorAdd(bool utf16, int indic, Range r, int value = 0) {
+	public void aaaIndicatorAdd(int indic, bool utf16, Range r, int value = 1) {
 		var (from, to) = aaaNormalizeRange(utf16, r);
 		Call(SCI_SETINDICATORCURRENT, indic);
 		Call(SCI_SETINDICATORVALUE, value);
