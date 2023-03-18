@@ -21,7 +21,7 @@ static class App {
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
 #if TRACE //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
-		perf.first();
+		//perf.first();
 		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
 		//print.clear(); 
