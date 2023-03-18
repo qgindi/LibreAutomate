@@ -41,18 +41,18 @@ public class SciTextBuilder {
 			fixed (byte* p = styles8) sci.Call(SCI_SETSTYLINGEX, styles8.Length, p);
 		}
 		foreach (var v in _markers) {
-			sci.Call(SCI_MARKERADD, sci.aaaLineFromPos(true, v.pos), v.marker);
+			sci.aaaMarkerAdd(v.marker, true, v.pos);
 		}
 		foreach (var v in _indicators.AsSpan()) {
-			sci.aaaIndicatorAdd(true, v.indic, v.start..v.end, v.value);
+			sci.aaaIndicatorAdd(v.indic, true, v.start..v.end, v.value);
 		}
 		foreach (var v in _links.AsSpan()) {
 			var (start, end) = sci.aaaNormalizeRange(true, v.start..v.end);
 			if (v.indic < 0) {
-				sci.aaaIndicatorAdd(false, -v.indic, start..end);
-				sci.aaaIndicatorAdd(false, -v.indic + 1, start..end);
+				sci.aaaIndicatorAdd(-v.indic, false, start..end);
+				sci.aaaIndicatorAdd(-v.indic + 1, false, start..end);
 			} else {
-				sci.aaaIndicatorAdd(false, v.indic, start..end);
+				sci.aaaIndicatorAdd(v.indic, false, start..end);
 			}
 			sci.AaRangeDataAdd(false, start..end, v.data);
 		}
@@ -93,7 +93,7 @@ public class SciTextBuilder {
 	/// </summary>
 	/// <param name="indic">Indicator index, 0-31.</param>
 	/// <exception cref="ArgumentOutOfRangeException"><i>range</i> is not within current text.</exception>
-	public SciTextBuilder Indic(int indic, int start, int end, int value = 0) {
+	public SciTextBuilder Indic(int indic, int start, int end, int value = 1) {
 		_indicators.Add((indic, start, end, value));
 		return this;
 	}
@@ -102,7 +102,7 @@ public class SciTextBuilder {
 	/// Adds text with indicator.
 	/// </summary>
 	/// <param name="indic">Indicator index, 0-31.</param>
-	public SciTextBuilder Indic(int indic, RStr text, int value = 0) {
+	public SciTextBuilder Indic(int indic, RStr text, int value = 1) {
 		int start = Length;
 		_b.Append(text);
 		return Indic(indic, start, Length, value);
@@ -112,7 +112,7 @@ public class SciTextBuilder {
 	/// Starts indicator range from current text length. Later use <see cref="Indic_"/> to end it.
 	/// </summary>
 	/// <param name="indic">Indicator index, 0-31.</param>
-	public SciTextBuilder Indic(int indic, int value = 0) {
+	public SciTextBuilder Indic(int indic, int value = 1) {
 		_stackIndicator.Push((indic, Length, value));
 		return this;
 	}

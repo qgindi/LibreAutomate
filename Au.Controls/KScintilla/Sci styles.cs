@@ -87,19 +87,14 @@ public unsafe partial class KScintilla {
 
 	/// <summary>
 	/// Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
-	/// Then also sets some special styles, eg STYLE_HIDDEN and hotspot color.
+	/// Then also sets some special styles: STYLE_HIDDEN, SC_ELEMENT_HOT_SPOT_ACTIVE.
 	/// </summary>
 	/// <param name="belowDefault">Clear only styles 0..STYLE_DEFAULT.</param>
 	public void aaaStyleClearAll(bool belowDefault = false) {
 		if (belowDefault) aaaStyleClearRange(0, STYLE_DEFAULT);
 		else Call(SCI_STYLECLEARALL);
 		aaaStyleHidden(STYLE_HIDDEN, true);
-		Call(SCI_SETHOTSPOTACTIVEFORE, true, 0xFF0080); //inactive 0x0080FF
-														//Call(SCI_SETELEMENTCOLOUR, SC_ELEMENT_HOT_SPOT_ACTIVE, 0xFF0080); //why no underline? Can't use this, although SCI_SETHOTSPOTACTIVEFORE is deprecated.
-
-		//STYLE_HOTSPOT currently unused
-		//aaaStyleHotspot(STYLE_HOTSPOT, true);
-		//aaaStyleForeColor(STYLE_HOTSPOT, 0xFF8000);
+		aaaSetElementColor(SC_ELEMENT_HOT_SPOT_ACTIVE, 0x8000FF);
 	}
 
 	/// <summary>
@@ -127,4 +122,21 @@ public unsafe partial class KScintilla {
 	/// Scintilla sends SCN_STYLENEEDED, unless a lexer is set. In some cases 1 or several, in some cases many, in some cases every 500 ms.
 	/// </remarks>
 	public void aaaSetStyled(int to = int.MaxValue) => Call(SCI_STARTSTYLING, to);
+	
+	/// <summary>
+	/// SCI_SETELEMENTCOLOUR.
+	/// </summary>
+	/// <param name="element">SC_ELEMENT_.</param>
+	/// <param name="color">Color. Can be with alpha.</param>
+	public void aaaSetElementColor(int element, ColorInt color) {
+		Call(SCI_SETELEMENTCOLOUR, element, color.ToBGR(zeroAlpha: false));
+	}
+	
+	/// <summary>
+	/// SCI_GETELEMENTCOLOUR.
+	/// </summary>
+	/// <param name="element">SC_ELEMENT_.</param>
+	public ColorInt aaaGetElementColor(int element) {
+		return ColorInt.FromBGR(Call(SCI_GETELEMENTCOLOUR, element), false);
+	}
 }

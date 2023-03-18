@@ -123,6 +123,8 @@ class C {
 		get => 0;
 		set { }
 	}
+	public C() { }
+	static C() { }
 }
 
 ///// <summary>
@@ -153,77 +155,9 @@ static unsafe class Test {
 	/// </summary>
 	public static void FromMenubar() {
 		//print.clear();
-		
+		//C c = new C();
 		//CiGoTo.GoToBase();
-		//CiFind.RenameSymbol();
-		
-		//TestDeps();
-		//CodeInfo._projects.Test();
-		
-		var (sym, cd) = CiUtil.GetSymbolFromPos(); if(sym==null)return;
-		//if(sym is IAliasSymbol alias) sym = alias.Target;
-		//if (sym is ILocalSymbol k && keys.isScrollLock) sym=k.Type;
-		//print.it(sym, sym.Kind, sym.DeclaredAccessibility, sym.CanBeReferencedByName);
-		
-		//var t=cd.syntaxRoot.SyntaxTree as CSharpSyntaxTree;
-		//print.it(t.Encoding, t.Options.);
-		
-		//bool test = keys.isScrollLock;
-		//test = true;
-		//var a = App.Model.Root.Descendants().Where(o => o.IsCodeFile).Select(o => (o, o.FilePath)).ToArray();
-		//perf.first();
-		//foreach (var v in a) {
-		//	filesystem.getProperties(v.FilePath, out var p, FAFlags.UseRawPath | FAFlags.DontThrow);
-		//}
-		//perf.next();
-		//foreach (var v in a) {
-		//	if (test) {
-		//		try {
-		//			using var stream = filesystem.loadStream(v.FilePath);
-		//			if (stream.Length > 100_000_000) continue;
-		//			var b = new byte[stream.Length];
-		//			stream.Read(b);
-		//			Hash.MD5(b);
-		//		}
-		//		catch { }
-		//	} else {
-		//		FileNode.GetFileTextLL_(v.FilePath);
-		
-		//	}
-		//}
-		//perf.nw();
-		
-		//		var m = new Moo();
-		//		Moo m2 = new();
-		//		var am = new Moo[2];
-		
-		//C.Prop = 1;
-		//print.it(C.Prop);
-		
-		//		var vv = new string[2];
-		//		var vv2 = new string[2];
-		
-		//int podi;
-		//podi = 1;
-		//podi = 2;
-		
-		//var d = Panels.Editor.ActiveDoc;
-		
-		
-		//if (!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
-		//CiUtil.PrintNode(node);
-		//var span = node.GetRealFullSpan();
-		//cd.sci.aaaSelect(true, span.Start, span.End);
-		
-		
-		
-		//var v = CiUtil.GetSymbolEtcFromPos(out var k);
-		//var semo = k.semanticModel;
-		//var comp = semo.Compilation;
-		//var c = v.symbol.GetDocumentationComment(comp, expandIncludes: true, expandInheritdoc: true);
-		//var s = c.FullXmlFragment;
-		//print.it(s);
-		
+		CiFind.RenameSymbol();
 		
 		//Cpp.Cpp_Test();
 	}

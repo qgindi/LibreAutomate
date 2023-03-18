@@ -196,7 +196,9 @@ public static partial class print {
 	static readonly object[] s_oaNull = { null };
 
 	internal static string MultiToString_(object value1, object value2, params object[] more) {
-		if (more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
+		if (more == null) more = s_oaNull; //workaround for: if the third argument is null, we receive null and not object[] { null }
+		else if (more.GetType() != typeof(object[])) more = new object[] { more }; //workaround for: if the third argument is an array, prints its elements without { }. If empty array, prints nothing (even no comma). With this workaround - only if object[], which is rare; and it's good, because may be used in a wrapper function that passes its 'params object[]' parameter here.
+
 		using (new StringBuilder_(out var b)) {
 			for (int i = 0, n = 2 + more.Length; i < n; i++) {
 				if (i > 0) b.Append(", ");

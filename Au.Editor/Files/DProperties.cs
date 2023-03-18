@@ -4,6 +4,10 @@ using Au.Controls;
 using Au.Compiler;
 using Microsoft.Win32;
 
+//TODO: somewhere display the target file path of link non-cs files and folders. Tooltip or dialog.
+
+//TODO: validate icon, manifest, sign. Add a dropdown menu to choose.
+
 class DProperties : KDialogWindow {
 	readonly FileNode _f;
 	readonly MetaCommentsParser _meta;
@@ -640,9 +644,12 @@ Read more in Cookbook -> Script (classes, .exe) and online help -> Editor (scrip
 <b>testScript</b> - a script to run when you click the Run button.
 Usually it is used to test this class file or class library. It can contain meta comment <c green>c this file<> that adds this file to the compilation, or <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
 
-Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
+Can be:
+ • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
+ • Path relative to this file. Examples: Folder\Script5.cs, .\Script5.cs, ..\Folder\Script5.cs.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
-This option is saved in current workspace, not in meta comments.
+This option is saved not in meta comments.
 """);
 		info.AaAddElem(ifRunning, """
 <b>ifRunning</b> - when trying to start this script, what to do if it is already running.
@@ -681,7 +688,10 @@ If role classLibrary, the dll file is named like the class file. It can be used 
 The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add all .ico and .xaml icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
-Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
+Can be:
+ • Path in the workspace. Examples: \App.ico, \Folder\App.ico.
+ • Path relative to this file. Examples: Folder\App.ico, .\App.ico, ..\Folder\App.ico.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
 If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
 """);
@@ -689,7 +699,10 @@ If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
 <b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
-Can be path relative to this file (examples: App.manifest, Folder\App.manifest, ..\Folder\App.manifest) or path in the workspace (examples: \App.manifest, \Folder\App.manifest).
+Can be:
+ • Path in the workspace. Examples: \App.manifest, \Folder\App.manifest.
+ • Path relative to this file. Examples: Folder\App.manifest, .\App.manifest, ..\Folder\App.manifest.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
 The manifest will be added as a native resource.
 """);
@@ -697,7 +710,10 @@ The manifest will be added as a native resource.
 <b>sign</b> - strong-name signing key file, to sign the output assembly.
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
-Can be path relative to this file (examples: App.snk, Folder\App.snk, ..\Folder\App.snk) or path in the workspace (examples: \App.snk, \Folder\App.snk).
+Can be:
+ • Path in the workspace. Examples: \App.snk, \Folder\App.snk.
+ • Path relative to this file. Examples: Folder\App.snk, .\App.snk, ..\Folder\App.snk.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 """);
 		info.AaAddElem(console, """
 <b>console</b> - let the program run with console.
@@ -766,7 +782,10 @@ By default it receives full path of the output exe or dll file in args[0]. If ne
  • $(optimize) - meta comment 'optimize'.
  • $(bit32) - meta comment 'bit32'.
 
-Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
+Can be:
+ • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
+ • Path relative to this file. Examples: Folder\Script5.cs, .\Script5.cs, ..\Folder\Script5.cs.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 """);
 		info.AaAddElem(postBuild, """
 <b>postBuild</b> - a script to run after compiling this code file successfully.
@@ -808,9 +827,11 @@ To remove this meta comment, edit the code. Optionally delete unused dll files.
 <b>Class file<> - add a C# code file that contains some classes/functions used by this file.
 Adds meta comment <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
-Can be path relative to this file (examples: Class5.cs, Folder\Class5.cs, ..\Folder\Class5.cs) or path in the workspace (examples: \Class5.cs, \Folder\Class5.cs).
-If folder, adds all its descendant class files.
+The file must be in this workspace. Import files if need, for example drag-drop. Can be a link. If folder, adds all its descendant class files.
+Can be:
+ • Path in the workspace. Examples: \Class5.cs, \Folder\Class5.cs.
+ • Path relative to this file. Examples: Folder\Class5.cs, .\Class5.cs, ..\Folder\Class5.cs.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
 If this file is in a project, don't add class files that are in the project folder.
 To remove this meta comment, edit the code.
@@ -822,9 +843,11 @@ Adds meta comment <c green>resource File<>.
 
 Default resource type is Stream. You can append <c green>/byte[]<> or <c green>/string<>, like <c green>resource file.txt /string<>. Or <c green>/strings<>, to add multiple strings from 2-column CSV file (name, value). Or <c green>/embedded<>, to add as a separate top-level stream that can be loaded with <google>Assembly.GetManifestResourceStream<> (others are in top-level stream "AssemblyName.g.resources").
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
-Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folder\File.png) or path in the workspace (examples: \File.png, \Folder\File.png).
-If folder, will add all its descendant files.
+The file must be in this workspace. Import files if need, for example drag-drop. Can be a link. If folder, will add all its descendant files.
+Can be:
+ • Path in the workspace. Examples: \File.png, \Folder\File.png.
+ • Path relative to this file. Examples: Folder\File.png, .\File.png, ..\Folder\File.png.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
 To remove this meta comment, edit the code.
 
@@ -844,7 +867,10 @@ If role of this file is classFile, the above actions will be used when compiling
 If role of this file is classLibrary, the above actions will be used when compiling scripts that use it as a project reference. The compiler never copies these files to the output folder of the library.
 
 The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
-Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folder\File.png) or path in the workspace (examples: \File.png, \Folder\File.png).
+Can be:
+ • Path in the workspace. Examples: \File.png, \Folder\File.png.
+ • Path relative to this file. Examples: Folder\File.png, .\File.png, ..\Folder\File.png.
+ • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
 If folder, will include all its descendant files. Will copy them into folders like in the workspace. If a folder name ends with -, will copy its contents only.
 

@@ -239,7 +239,7 @@ public unsafe partial class KTreeView {
 							if (color != -1 || (backColor & 0xe0e0e0) == 0xe0e0e0) { //custom color, or default color is [almost] white
 								if (color != -1) //draw custom color
 									using (var b1 = GdiObject_.ColorBrush(color)) b1.BrushFill(dc, r);
-								int alpha = color >> 24;
+								int alpha = color >>> 24;
 								if (color == -1 || alpha is >= 1 and <= 3) { //if no custom color or if custom color's alpha is 1 - 3, draw selection or hot background
 									color = -1;
 									if (v.isSelected) {
@@ -258,7 +258,7 @@ public unsafe partial class KTreeView {
 
 							color = item.BorderColor;
 							if (color != -1) {
-								int alpha = color >> 24;
+								int alpha = color >>> 24;
 								var r2 = r; if (alpha == 1) r2.left = xText - _imageMarginX / 2 - 1;
 								using (var b3 = GdiObject_.ColorBrush(color)) b3.BrushRect(dc, r2);
 							}
