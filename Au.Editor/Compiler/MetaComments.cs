@@ -392,7 +392,7 @@ class MetaComments {
 	/// <param name="f">Main C# file. If projFolder not null, must be the main file of the project.</param>
 	/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
 	public bool Parse(FileNode f, FileNode projFolder) {
-		if (!_flags.HasAny(MCPFlags.ForCodeInfo | MCPFlags.ForFindReferences)) Errors = new ErrBuilder();
+		if (!_flags.Has(MCPFlags.ForCodeInfo)) Errors = new ErrBuilder();
 		
 		if (_ParseFile(f, true, false)) {
 			if (projFolder != null) {
@@ -450,15 +450,13 @@ class MetaComments {
 			
 			Optimize = DefaultOptimize;
 			WarningLevel = DefaultWarningLevel;
+			NoWarnings = DefaultNoWarnings != null ? new(DefaultNoWarnings) : new();
 			Defines = new();
 			Role = DefaultRole(isScript);
 			
 			CodeFiles = new();
-			if (!_flags.Has(MCPFlags.ForFindReferences)) {
-				References = new();
-				NugetPackages = new();
-				NoWarnings = DefaultNoWarnings != null ? new(DefaultNoWarnings) : new();
-			}
+			References = new();
+			NugetPackages = new();
 		}
 		
 		CodeFiles.Add(cf);
@@ -485,11 +483,7 @@ class MetaComments {
 			if (isMain) MetaRange = meta;
 			foreach (var t in EnumOptions(code, meta)) {
 				//var p1 = perf.local();
-				if (_flags.Has(MCPFlags.ForFindReferences)) {
-					_ParseOptionForFindReferences(t);
-				} else {
-					_ParseOption(t.Name, t.Value, t.nameStart, t.valueStart);
-				}
+				_ParseOption(t.Name, t.Value, t.nameStart, t.valueStart);
 				//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) print.it(t1, t.Name(), t.Value());
 			}
 		}
@@ -534,7 +528,7 @@ class MetaComments {
 		_valueFrom = iValue; _valueTo = iValue + value.Length;
 		
 		if (value.Length == 0) { _ErrorV("value cannot be empty"); return; }
-		bool forCodeInfo = _flags.Has(MCPFlags.ForCodeInfo);
+		bool forCodeInfo = _flags.Has(MCPFlags.ForCodeInfo), forPR = _flags.Has(MCPFlags.ForFindReferences);
 		
 		switch (name) {
 		case "r":
@@ -561,6 +555,7 @@ class MetaComments {
 				NugetPackages.Add(value);
 				try {
 					_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
+					//TODO: avoid loading multiple times when forPR
 					var xx = _xnuget?.Elem("package", "path", value, true);
 					if (xx == null) {
 						_ErrorV("nuget package not installed: " + value);
@@ -581,17 +576,26 @@ class MetaComments {
 			}
 			return;
 		case "c":
-			_ParseC(value);
+			if (_GetFile(value, FNFind.Any) is FileNode ff) {
+				if (ff.IsFolder) {
+					foreach (var v in ff.Descendants()) if (v.IsClass) _ParseFile(v, false, true);
+				} else {
+					if (ff.IsClass) _ParseFile(ff, false, true);
+					else _ErrorV("must be a class file");
+				}
+			}
 			return;
 		case "file":
-			var fs1 = _GetFileAndString(value, FNFind.Any);
-			if (!forCodeInfo && fs1.f != null) {
-				OtherFiles ??= new();
-				if (!OtherFiles.Exists(o => o == fs1)) OtherFiles.Add(fs1);
+			if (!forPR) {
+				var fs1 = _GetFileAndString(value, FNFind.Any);
+				if (!forCodeInfo && fs1.f != null) {
+					OtherFiles ??= new();
+					if (!OtherFiles.Exists(o => o == fs1)) OtherFiles.Add(fs1);
+				}
 			}
 			return;
 		case "miscFlags":
-			MiscFlags = value.ToInt();
+			if (!forCodeInfo) MiscFlags = value.ToInt();
 			return;
 		case "noRef" when _f.isMain: //undocumented
 			References.RemoveFromRefs(value);
@@ -600,30 +604,34 @@ class MetaComments {
 		if (_flags.Has(MCPFlags.OnlyRef)) return;
 		
 		if (name is "resource") {
-			//if (value.Ends(" /resources")) { //add following resources in value.resources instead of in AssemblyName.g.resources. //rejected. Rarely used. Would need more code, because meta resource can be in multiple files.
-			//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
-			//	return;
-			//}
-			var fs1 = _GetFileAndString(value, FNFind.Any);
-			if (!forCodeInfo && fs1.f != null) {
-				Resources ??= new();
-				if (!Resources.Exists(o => o == fs1)) Resources.Add(fs1);
+			if (!forPR) {
+				//if (value.Ends(" /resources")) { //add following resources in value.resources instead of in AssemblyName.g.resources. //rejected. Rarely used. Would need more code, because meta resource can be in multiple files.
+				//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
+				//	return;
+				//}
+				var fs1 = _GetFileAndString(value, FNFind.Any);
+				if (!forCodeInfo && fs1.f != null) {
+					Resources ??= new();
+					if (!Resources.Exists(o => o == fs1)) Resources.Add(fs1);
+				}
 			}
 			return;
 		}
 		
 		if (!_f.isMain) {
-			//In class files compiled as not main silently ignore all options if the first option is role other than class.
-			//	It allows to test a class file without a test script etc.
-			//	How: In meta define symbol X. Then #if X, enable executable code that uses the class.
-			if (name is "role") {
-				if (_f.allowAnyMeta_ = _Enum(out MCRole ro1, value) && ro1 != MCRole.classFile) return;
-			} else if (_f.allowAnyMeta_) {
-				if (name is "optimize" or "define" or "warningLevel" or "noWarnings" or "testInternal" or "preBuild" or "postBuild" or "outputPath" or "ifRunning" or "uac" or "bit32" or "console" or "manifest" or "icon" or "sign" or "xmlDoc") return;
-				_ErrorN("unknown meta comment option");
+			if (!forPR) {
+				//In class files compiled as not main silently ignore all options if the first option is role other than class.
+				//	It allows to test a class file without a test script etc.
+				//	How: In meta define symbol X. Then #if X, enable executable code that uses the class.
+				if (name is "role") {
+					if (_f.allowAnyMeta_ = _Enum(out MCRole ro1, value) && ro1 != MCRole.classFile) return;
+				} else if (_f.allowAnyMeta_) {
+					if (name is "optimize" or "define" or "warningLevel" or "noWarnings" or "testInternal" or "preBuild" or "postBuild" or "outputPath" or "ifRunning" or "uac" or "bit32" or "console" or "manifest" or "icon" or "sign" or "xmlDoc") return;
+					_ErrorN("unknown meta comment option");
+				}
+				
+				_ErrorN($"in this file only these options can be used: r, pr, nuget, com, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
 			}
-			
-			_ErrorN($"in this file only these options can be used: r, pr, nuget, com, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
 			return;
 		}
 		
@@ -634,15 +642,27 @@ class MetaComments {
 				Role = ro;
 				if (MainFile.f.IsScript && (ro == MCRole.classFile || Role == MCRole.classLibrary)) _ErrorV("role classFile and classLibrary can be only in class files");
 			}
-			break;
+			return;
 		case "optimize":
 			_Specified(MCSpecified.optimize);
 			if (_TrueFalse(out bool optim, value)) Optimize = optim;
-			break;
+			return;
 		case "define":
 			_Specified(MCSpecified.define);
 			Defines.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-			break;
+			return;
+		case "testInternal":
+			_Specified(MCSpecified.testInternal);
+			TestInternal = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+			return;
+		case "sign":
+			_Specified(MCSpecified.sign);
+			SignFile = _GetFile(value, FNFind.File);
+			return;
+		}
+		if (forPR) return;
+		
+		switch (name) {
 		case "warningLevel":
 			_Specified(MCSpecified.warningLevel);
 			int wl = value.ToInt();
@@ -652,10 +672,6 @@ class MetaComments {
 		case "noWarnings":
 			_Specified(MCSpecified.noWarnings);
 			NoWarnings.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-			break;
-		case "testInternal":
-			_Specified(MCSpecified.testInternal);
-			TestInternal = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 			break;
 		case "preBuild":
 			_Specified(MCSpecified.preBuild);
@@ -697,10 +713,6 @@ class MetaComments {
 		//	_Specified(EMSpecified.resFile);
 		//	ResFile = _GetFile(value);
 		//	break;
-		case "sign":
-			_Specified(MCSpecified.sign);
-			SignFile = _GetFile(value, FNFind.File);
-			break;
 		case "xmlDoc":
 			_Specified(MCSpecified.xmlDoc);
 			if (_TrueFalse(out bool xmlDOc, value)) XmlDoc = xmlDOc;
@@ -708,36 +720,6 @@ class MetaComments {
 		default:
 			_ErrorN("unknown meta comment option");
 			break;
-		}
-	}
-	
-	void _ParseOptionForFindReferences(in Token t) {
-		if (t.valueLen == 0) return;
-		if (t.NameIs("c")) {
-			_ParseC(t.Value);
-		} else if (_f.isMain) {
-			if (t.NameIs("role")) {
-				if (_Enum(out MCRole ro, t.Value)) Role = ro;
-			} else if (t.NameIs("optimize")) {
-				if (_TrueFalse(out bool optim, t.Value)) Optimize = optim;
-			} else if (t.NameIs("define")) {
-				Defines.AddRange(t.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-			} else if (t.NameIs("testInternal")) {
-				TestInternal = t.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-			} else if (t.NameIs("sign")) {
-				SignFile = _GetFile(t.Value, FNFind.File);
-			}
-		}
-	}
-	
-	void _ParseC(string value) {
-		if (_GetFile(value, FNFind.Any) is FileNode ff) {
-			if (ff.IsFolder) {
-				foreach (var v in ff.Descendants()) if (v.IsClass) _ParseFile(v, false, true);
-			} else {
-				if (ff.IsClass) _ParseFile(ff, false, true);
-				else _ErrorV("must be a class file");
-			}
 		}
 	}
 	
@@ -954,10 +936,10 @@ class MetaComments {
 	}
 	
 	public CSharpParseOptions CreateParseOptions() {
-		var docMode =
-			_flags.Has(MCPFlags.ForCodeInfo) ? DocumentationMode.Diagnose
-			: _flags.Has(MCPFlags.ForFindReferences) || XmlDoc ? DocumentationMode.Parse
-			: DocumentationMode.None;
+		var docMode = DocumentationMode.None;
+		if (_flags.Has(MCPFlags.ForFindReferences) || XmlDoc) docMode = DocumentationMode.Parse; //TODO: why not Diagnose when XmlDoc?
+		else if (_flags.Has(MCPFlags.ForCodeInfo)) docMode = DocumentationMode.Diagnose;
+		
 		return new(LanguageVersion.Preview, docMode, SourceCodeKind.Regular, Defines);
 	}
 	
@@ -1045,37 +1027,37 @@ enum MCIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wai
 [Flags]
 enum MCPFlags {
 	/// <summary>
-	/// Call <see cref="ErrBuilder.PrintAll"/>.
-	/// </summary>
-	PrintErrors = 1,
-	
-	/// <summary>
 	/// Used for code info, not when compiling.
 	/// Ignores meta such as run options (ifRunning etc) and non-code/reference files (resource etc).
 	/// </summary>
-	ForCodeInfo = 2,
-	
-	/// <summary>
-	/// Need only references (r, pr, com, nuget) and file.
-	/// </summary>
-	OnlyRef = 4,
+	ForCodeInfo = 1,
 	
 	/// <summary>
 	/// Used for code info in editor. Includes ForCodeInfo.
 	/// Same as ForCodeInfo; also adds some editor-specific stuff, like CodeInfo._diag.AddMetaError.
 	/// </summary>
-	ForCodeInfoInEditor = 2 | 8,
+	ForCodeInfoInEditor = 2 | 1,
+	
+	/// <summary>
+	/// Used by <see cref="CiProjects.GetSolutionForFindReferences"/>.
+	/// </summary>
+	ForFindReferences = 4 | 1,
+	
+	/// <summary>
+	/// Call <see cref="ErrBuilder.PrintAll"/>.
+	/// </summary>
+	PrintErrors = 8,
+	
+	/// <summary>
+	/// Need only references (r, pr, com, nuget) and file.
+	/// </summary>
+	OnlyRef = 16,
 	
 	/// <summary>
 	/// Compiling for WPF preview.
 	/// Defines WPF_PREVIEW and resets some meta.
 	/// </summary>
-	WpfPreview = 16,
-	
-	/// <summary>
-	/// Used by <see cref="CiProjects.GetSolutionForFindReferences"/>.
-	/// </summary>
-	ForFindReferences = 32,
+	WpfPreview = 32,
 }
 
 [Flags]
