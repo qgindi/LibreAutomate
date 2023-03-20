@@ -555,7 +555,6 @@ class MetaComments {
 				NugetPackages.Add(value);
 				try {
 					_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
-					//TODO: avoid loading multiple times when forPR
 					var xx = _xnuget?.Elem("package", "path", value, true);
 					if (xx == null) {
 						_ErrorV("nuget package not installed: " + value);
@@ -937,8 +936,8 @@ class MetaComments {
 	
 	public CSharpParseOptions CreateParseOptions() {
 		var docMode = DocumentationMode.None;
-		if (_flags.Has(MCPFlags.ForFindReferences) || XmlDoc) docMode = DocumentationMode.Parse; //TODO: why not Diagnose when XmlDoc?
-		else if (_flags.Has(MCPFlags.ForCodeInfo)) docMode = DocumentationMode.Diagnose;
+		if (_flags.Has(MCPFlags.ForFindReferences)) docMode = DocumentationMode.Parse;
+		else if (_flags.Has(MCPFlags.ForCodeInfoInEditor) || XmlDoc) docMode = DocumentationMode.Diagnose;
 		
 		return new(LanguageVersion.Preview, docMode, SourceCodeKind.Regular, Defines);
 	}
@@ -1029,17 +1028,20 @@ enum MCPFlags {
 	/// <summary>
 	/// Used for code info, not when compiling.
 	/// Ignores meta such as run options (ifRunning etc) and non-code/reference files (resource etc).
+	/// This flag is included in <b>ForCodeInfoInEditor</b> and <b>ForFindReferences</b>.
 	/// </summary>
 	ForCodeInfo = 1,
 	
 	/// <summary>
-	/// Used for code info in editor. Includes ForCodeInfo.
-	/// Same as ForCodeInfo; also adds some editor-specific stuff, like CodeInfo._diag.AddMetaError.
+	/// Used for code info in editor.
+	/// Includes <b>ForCodeInfo</b>.
+	/// Same as <b>ForCodeInfo</b>; also adds some editor-specific stuff, like CodeInfo._diag.AddMetaError and DocumentationMode.Diagnose.
 	/// </summary>
 	ForCodeInfoInEditor = 2 | 1,
 	
 	/// <summary>
 	/// Used by <see cref="CiProjects.GetSolutionForFindReferences"/>.
+	/// Includes <b>ForCodeInfo</b>.
 	/// </summary>
 	ForFindReferences = 4 | 1,
 	

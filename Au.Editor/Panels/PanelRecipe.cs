@@ -41,7 +41,7 @@ class PanelRecipe {
 		//_c.aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
 		//_c.aaaStyleFont(STYLE_DEFAULT, "Calibri", 9); //too small
 		_c.aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9);
-		var styles = new CiStyling.TStyles { FontSize = 9 };
+		var styles = new CiStyling.TStyles(customized: false) { FontSize = 9 };
 		styles.ToScintilla(_c, multiFont: true);
 		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 

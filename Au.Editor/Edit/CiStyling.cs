@@ -446,7 +446,7 @@ partial class CiStyling {
 		public TStyle LineNumber = 0x808080;
 		
 		public static TStyles Settings {
-			get => s_styles ??= new TStyles();
+			get => s_styles ??= new TStyles(customized: true);
 			set {
 				s_styles = value;
 				if (value != null) value._Save();
@@ -456,9 +456,9 @@ partial class CiStyling {
 		static TStyles s_styles;
 		internal static readonly string s_settingsFile = AppSettings.DirBS + "Font.csv";
 		
-		public TStyles() {
+		public TStyles(bool customized) {
+			if (!customized || !filesystem.exists(s_settingsFile).File) return;
 			csvTable csv;
-			if (!filesystem.exists(s_settingsFile).File) return;
 			try { csv = csvTable.load(s_settingsFile); }
 			catch (Exception e1) { print.it(e1.ToStringWithoutStack()); return; }
 			if (csv.ColumnCount < 2) return;

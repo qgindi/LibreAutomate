@@ -1416,7 +1416,7 @@ partial class FilesModel {
 		try {
 			filesystem.createDirectory(filesDir);
 			foreach (var f in a) {
-				if (!f.IsLink) filesystem.copyTo(f.FilePath, filesDir);//TODO: if symlink...
+				if (!f.IsLink) filesystem.copyTo(f.FilePath, filesDir);
 			}
 			FileNode.Export(a, wsDir + @"\files.xml");
 		}
