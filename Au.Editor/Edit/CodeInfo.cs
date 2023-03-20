@@ -20,7 +20,6 @@ static class CodeInfo {
 	internal static readonly CiStyling _styling = new();
 	internal static readonly CiErrors _diag = new();
 	internal static readonly CiTools _tools = new();
-	//internal static readonly CiFavorite _favorite = new();
 	internal static readonly CiProjects _projects = new();
 	
 	static Solution _solution;

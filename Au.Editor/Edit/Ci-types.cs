@@ -163,7 +163,6 @@ enum CiComplProvider : byte
 
 	//ours
 	Snippet,
-	//Favorite,
 	Winapi,
 }
 

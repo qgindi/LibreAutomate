@@ -264,7 +264,7 @@ class PanelFound {
 							App.Model.EditGoBack.RecordNext();
 							doc.aaaGoToPos(true, k.start);
 							doc.Focus();
-
+							
 							//rejected: briefly show a marker, or hilite the line, or change caret color/width.
 							//	More distracting than useful.
 							//	The default blinking caret + default highlighting are easy to notice.

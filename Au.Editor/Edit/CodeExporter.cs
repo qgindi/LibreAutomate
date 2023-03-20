@@ -141,7 +141,7 @@ static class CodeExporter {
 			_ => "xd" //XmlDocText
 		};
 	
-	static CiStyling.TStyles _styles = new();
+	static CiStyling.TStyles _styles = new(customized: false);
 	
 	static TStyle _StyleToStruct(EStyle style)
 		=> style switch {

@@ -295,7 +295,11 @@ public unsafe partial class KScintilla : HwndHost {
 			if (AaDisableModifiedNotifications) return;
 			break;
 		case NOTIF.SCN_HOTSPOTRELEASECLICK:
+			if (aaaHasSelection) return;
 			AaTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+			break;
+		case NOTIF.SCN_INDICATORRELEASE:
+			if (aaaHasSelection) return;
 			break;
 		}
 		AaOnSciNotify(ref n);
