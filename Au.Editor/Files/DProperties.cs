@@ -3,10 +3,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using Au.Compiler;
 using Microsoft.Win32;
-
-//TODO: somewhere display the target file path of link non-cs files and folders. Tooltip or dialog.
-
-//TODO: validate icon, manifest, sign. Add a dropdown menu to choose.
+using System.Drawing;
 
 class DProperties : KDialogWindow {
 	readonly FileNode _f;
@@ -14,23 +11,24 @@ class DProperties : KDialogWindow {
 	readonly bool _isClass;
 	MCRole _role;
 	int _miscFlags;
-
+	
 	//controls
 	readonly KSciInfoBox info;
 	readonly ComboBox role, ifRunning, uac, warningLevel;
-	readonly TextBox testScript, outputPath, icon, manifest, sign, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
+	readonly TextBox testScript, outputPath, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
+	readonly ComboBox icon, manifest, sign;
 	readonly KCheckBox bit32, xmlDoc, console, optimize, cMultiline;
 	readonly GroupBox gRun, gAssembly, gCompile;
 	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bOutputPath, bVersion;
-
+	
 	public DProperties(FileNode f) {
 		_f = f;
 		_isClass = f.IsClass;
 		_meta = new MetaCommentsParser(_f);
-
+		
 		Owner = App.Wmain;
 		Title = "Properties of " + _f.Name;
-
+		
 		var b = new wpfBuilder(this).WinSize(640).Columns(-1, 0);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
@@ -39,14 +37,14 @@ class DProperties : KDialogWindow {
 			.R.Add("role", out role).Skip()
 			.Add("testScript", out testScript);
 		b.End();
-
+		
 		b.StartStack(out gRun, "Run", vertical: true);
 		b.StartGrid().Columns(0, 120, -1, 0, 80)
 			.Add("ifRunning", out ifRunning).Skip()
 			.Add("uac", out uac);
 		b.End();
 		b.End();
-
+		
 		b.StartGrid(out gCompile, "Compile").Columns(0, 50, 20, 0, -1);
 		b.R.Add(out optimize, "optimize").Skip(2)
 			.Add("define", out define);
@@ -58,16 +56,19 @@ class DProperties : KDialogWindow {
 			.Add("postBuild", out postBuild);
 		b.End();
 		b.End();
-
+		
 		b.StartStack(out gAssembly, "Assembly", vertical: true);
 		b.StartGrid().Columns(0, -1, 30)
 			.Add("outputPath", out outputPath)
 			.AddButton(out bOutputPath, "...", _ButtonClick_outputPath)
 			.End();
 		b.StartGrid().Columns(0, -1, 20, 0, -1);
-		b.R.Add("icon", out icon).Skip()
-			.Add("manifest", out manifest);
-		b.R.Add("sign", out sign).Skip();
+		b.R.Add("icon", out icon).Editable().Skip()
+			.Add("manifest", out manifest).Editable();
+		b.R.Add("sign", out sign).Editable().Skip();
+		icon.DropDownOpened += _IconManifestSign_DropDownOpened;
+		manifest.DropDownOpened += _IconManifestSign_DropDownOpened;
+		sign.DropDownOpened += _IconManifestSign_DropDownOpened;
 		b.StartDock()
 			.Add(out console, "console")
 			.Add(out bit32, "bit32").Margin(15)
@@ -76,7 +77,7 @@ class DProperties : KDialogWindow {
 			.End();
 		b.End();
 		b.End();
-
+		
 		b.End();
 		b.StartStack(vertical: true).Margin("L20"); //right column
 		b.StartGrid<GroupBox>("Add reference");
@@ -102,7 +103,7 @@ class DProperties : KDialogWindow {
 		b.AddOkCancel();
 		b.End();
 		b.End();
-
+		
 		_role = _meta.role switch {
 			"miniProgram" => MCRole.miniProgram,
 			"exeProgram" => MCRole.exeProgram,
@@ -133,7 +134,7 @@ class DProperties : KDialogWindow {
 				};
 				if (d.ShowOpen(out string s, this, selectFolder: true)) outputPath.Text = folders.unexpandPath(s);
 			};
-			m.Show();
+			m.Show(owner: this);
 		}
 		icon.Text = _meta.icon;
 		manifest.Text = _meta.manifest;
@@ -149,14 +150,14 @@ class DProperties : KDialogWindow {
 		testInternal.Text = _meta.testInternal;
 		preBuild.Text = _meta.preBuild;
 		postBuild.Text = _meta.postBuild;
-
+		
 		static void _InitCombo(ComboBox c, string items, string meta, int index = -1) {
 			var a = items.Split('|');
 			if (meta != null) index = Array.IndexOf(a, meta);
 			foreach (var v in a) c.Items.Add(v);
 			c.SelectedIndex = Math.Max(0, index);
 		}
-
+		
 		_ChangedRole();
 		role.SelectionChanged += (_, _) => {
 			_role = (MCRole)role.SelectedIndex;
@@ -170,40 +171,40 @@ class DProperties : KDialogWindow {
 			_ShowCollapse(_role == MCRole.classLibrary, xmlDoc);
 			_ShowCollapse(_role != MCRole.classFile, gAssembly, gCompile);
 		}
-
+		
 		//rejected. Will display error in code editor. Rarely used. For some would need to remove /suffix.
 		//string _ValidateFile(FrameworkElement e, string name, FNFind kind) =>
-
+		
 		b.OkApply += _OkApply;
 	}
-
+	
 	protected override void OnSourceInitialized(EventArgs e) {
 		_InitInfo();
 		App.Model.UnloadingThisWorkspace += Close;
 		base.OnSourceInitialized(e);
 	}
-
+	
 	protected override void OnClosed(EventArgs e) {
 		App.Model.UnloadingThisWorkspace -= Close;
 		base.OnClosed(e);
 	}
-
+	
 	void _GetMeta() {
 		//info: _Get returns null if hidden
-
+		
 		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, FNFind.CodeFile, orAnywhere: true) : null; //validated
-
+		
 		_meta.ifRunning = _Get(ifRunning, nullIfDefault: true);
 		_meta.uac = _Get(uac, nullIfDefault: true);
 		_meta.bit32 = _Get(bit32);
-
+		
 		_meta.console = _Get(console);
 		_meta.icon = _Get(icon);
 		_meta.manifest = _Get(manifest);
 		//_meta.resFile = _Get(resFile);
 		_meta.sign = _Get(sign);
 		_meta.xmlDoc = _Get(xmlDoc);
-
+		
 		_meta.optimize = _Get(optimize);
 		_meta.define = _Get(define);
 		_meta.warningLevel = _Get(warningLevel, nullIfDefault: true);
@@ -211,7 +212,7 @@ class DProperties : KDialogWindow {
 		_meta.testInternal = _Get(testInternal);
 		_meta.preBuild = _Get(preBuild);
 		_meta.postBuild = _Get(postBuild);
-
+		
 		_meta.role = null;
 		_meta.outputPath = null;
 		if (_role != MCRole.classFile) {
@@ -223,17 +224,17 @@ class DProperties : KDialogWindow {
 				break;
 			}
 		}
-
+		
 		_meta.miscFlags = _miscFlags == 0 ? null : _miscFlags.ToS();
 	}
-
+	
 	void _OkApply(WBButtonClickArgs e) {
 		if (App.Model.CurrentFile != _f && !App.Model.SetCurrentFile(_f)) return;
 		_GetMeta();
 		_meta.Multiline = cMultiline.IsChecked;
 		_meta.Apply();
 	}
-
+	
 	void _ButtonClick_addLibrary(WBButtonClickArgs e) {
 		string dir1 = App.Model.DllDirectory, dir2 = folders.ThisAppBS + "Libraries", initDir = null;
 		bool exists1 = filesystem.exists(dir1).Directory, exists2 = filesystem.exists(dir2).Directory;
@@ -250,13 +251,13 @@ class DProperties : KDialogWindow {
 			InitFolderNow = initDir
 		};
 		if (!d.ShowOpen(out string[] a, this)) return;
-
+		
 		foreach (var v in a) {
 			if (CompilerUtil.IsNetAssembly(v)) continue;
 			dialog.showError("Not a .NET assembly.", v, owner: this);
 			return;
 		}
-
+		
 		string appDir = folders.ThisAppBS, dllDir = App.Model.DllDirectoryBS;
 		if (a[0].Starts(appDir, true)) {
 			for (int i = 0; i < a.Length; i++) a[i] = a[i][appDir.Length..];
@@ -265,11 +266,11 @@ class DProperties : KDialogWindow {
 		} else { //unexpand path
 			for (int i = 0; i < a.Length; i++) a[i] = folders.unexpandPath(a[i]);
 		}
-
+		
 		_meta.r.AddRange(a);
 		_ShowInfo_Added(e.Button, _meta.r);
 	}
-
+	
 	void _ButtonClick_addNuget(WBButtonClickArgs e) {
 		var a = DNuget.GetInstalledPackages();
 		if (a == null) {
@@ -285,16 +286,16 @@ class DProperties : KDialogWindow {
 		_meta.nuget.Add(a[i]);
 		_ShowInfo_Added(e.Button, _meta.nuget);
 	}
-
+	
 	void _ButtonClick_addProject(WBButtonClickArgs e)
 		=> _AddFromWorkspace(
 			f => (f != _f && f.GetClassFileRole() == FNClassFileRole.Library) ? f : null,
-			_meta.pr, e.Button);
-
+			_meta.pr, false, e.Button);
+	
 	void _ButtonClick_addClass(WBButtonClickArgs e) {
 		FileNode prFolder1 = null;
 		if (_f.IsScript && _f.FindProject(out prFolder1, out var prMain1, ofAnyScript: true) && _f == prMain1) prFolder1 = null;
-
+		
 		bool _Include(FileNode f) {
 			if (!f.IsClass || f == _f) return false;
 			if (f.FindProject(out var prFolder, out var prMain) && !prFolder.Name.Starts("@@")) { //exclude class files that are in projects, except if project name starts with @@
@@ -302,10 +303,10 @@ class DProperties : KDialogWindow {
 			}
 			return f.GetClassFileRole() == FNClassFileRole.Class;
 		}
-
-		_AddFromWorkspace(f => _Include(f) ? f : null, _meta.c, e.Button);
+		
+		_AddFromWorkspace(f => _Include(f) ? f : null, _meta.c, false, e.Button);
 	}
-
+	
 	void _ButtonClick_addFile(WBButtonClickArgs e) {
 		bool isResource = e.Button == addResource;
 		var a = isResource ? _meta.resource : _meta.file;
@@ -321,7 +322,7 @@ class DProperties : KDialogWindow {
 			});
 		}
 		m.Show(owner: this);
-
+		
 		void _AddFW(popupMenu m, FileNode proj = null, bool sortByType = false) {
 			_AddFromWorkspace(
 				f => {
@@ -333,56 +334,66 @@ class DProperties : KDialogWindow {
 						if (!has) return null;
 					}
 					return f;
-				}, a, e.Button, proj, m, sortByType);
+				}, a, true, e.Button, proj, m, sortByType);
 		}
 	}
-
-	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, Button button, FileNode folder = null, popupMenu pm = null, bool sortByType = false) {
+	
+	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, bool withIcons, UIElement clicked, FileNode folder = null, popupMenu pm = null, bool sortByType = false, bool noInfo = false) {
 		var sFind = findInLists.Text;
 		List<(FileNode f, string s)> a = new();
 		folder ??= App.Model.Root;
 		foreach (var f in folder.Descendants()) {
-			var f2 = filter(f);
-			if (f2 == null) continue;
-			var path = f2.ItemPathIn(folder);
+			if (filter(f) is not FileNode f2) continue;
+			
+			var path = f2.ItemPath;
 			if (sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
+			
+			if (_f.Parent.Parent != null && f.IsDescendantOf(_f.Parent)) path = @".\" + f.ItemPathIn(_f.Parent);
+			
 			if (!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add((f2, path));
 		}
 		if (a.Count == 0) {
-			if (pm == null) _ShowInfo_ListEmpty(button, sFind);
+			if (pm == null) _ShowInfo_ListEmpty(clicked, sFind);
 			return;
 		}
-
+		
 		if (sortByType) {
-			a.Sort((x, y) => {
-				int r = string.Compare(_GetExt(x.f), _GetExt(y.f), StringComparison.OrdinalIgnoreCase);
-				return r != 0 ? r : string.Compare(x.s, y.s, StringComparison.OrdinalIgnoreCase);
-			});
+			a = a.OrderBy(o => _GetFileExt(o.f)).ThenBy(o => o.s).ToList();
 		} else {
-			a.Sort((x, y) => string.Compare(x.s, y.s, StringComparison.OrdinalIgnoreCase));
+			a = a.OrderBy(o => o.s).ToList();
 		}
-
-		bool withIcons = metaList == _meta.resource || metaList == _meta.file;
+		
 		var m = pm ?? new popupMenu();
 		string prevExt = null;
 		foreach (var (f, s) in a) {
 			if (sortByType) {
-				var ext = _GetExt(f);
+				var ext = _GetFileExt(f);
 				if (prevExt != null && !ext.Eqi(prevExt)) m.Separator();
 				prevExt = ext;
 			}
-			m[s.Limit(80, middle: true), withIcons ? f.FilePath : null] = o => {
+			var v = m.Add(s.Limit(80, middle: true), o => {
 				metaList.Add(s);
-				_ShowInfo_Added(button, metaList);
-			};
+				if (!noInfo) _ShowInfo_Added(clicked, metaList);
+			}, withIcons ? f.FilePath : null);
+			if (s[0] == '.') v.TextColor = 0x0080ff;
 		}
-		if (pm == null) m.Show();
-
-		static string _GetExt(FileNode f) => pathname.getExtension(f.IsLink ? f.LinkTarget : f.Name);
+		if (pm == null) m.Show(owner: this);
 	}
-
+	
+	static string _GetFileExt(FileNode f) => pathname.getExtension(f.IsLink ? f.LinkTarget : f.Name);
+	
+	void _IconManifestSign_DropDownOpened(object sender, EventArgs e) {
+		var cb = sender as ComboBox;
+		cb.IsDropDownOpen = false;
+		
+		var ext = cb == icon ? ".ico" : cb == manifest ? ".manifest" : ".snk";
+		List<string> r = new();
+		_AddFromWorkspace(f => f.FileType == FNType.Other && _GetFileExt(f).Eqi(ext) ? f : null, r, cb == icon, cb, noInfo: true);
+		if (r.Count > 0) cb.Text = r[0];
+	}
+	
 	#region COM
-
+	
 	void _bAddComBrowse_Click(WBButtonClickArgs e) {
 		var m = new popupMenu();
 		m["Select and convert a COM library..."] = _ => {
@@ -406,7 +417,7 @@ class DProperties : KDialogWindow {
 		}
 		m.Show(owner: this);
 	}
-
+	
 	void _bAddComRegistry_Click(WBButtonClickArgs e) {
 		//HKCU\TypeLib\typelibGuid\version\
 		var sFind = findInLists.Text;
@@ -429,13 +440,13 @@ class DProperties : KDialogWindow {
 		}
 		if (a.Count == 0) { _ShowInfo_ListEmpty(e.Button, sFind); return; }
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
-
+		
 		var m = new popupMenu();
 		foreach (var v in a) {
 			m[v.text] = o => _ConvertTypeLibrary(v, e.Button);
 		}
-		m.Show();
-
+		m.Show(owner: this);
+		
 		//slow and with scrolling problems
 		//	var p = new KPopupListBox { PlacementTarget = e.Button };
 		//	p.Control.ItemsSource = a;
@@ -445,7 +456,7 @@ class DProperties : KDialogWindow {
 		//	p.IsOpen = true;
 		//}
 	}
-
+	
 	//To convert a COM type library we use TypeLibConverter class. However .NET Core+ does not have it.
 	//Workaround: the code is in Au.Net4.exe. It uses .NET Framework 4.8. We call it through run.console.
 	//We don't use tlbimp.exe:
@@ -454,12 +465,12 @@ class DProperties : KDialogWindow {
 	//	3. My PC somehow has MS Office PIA installed and there is no uninstaller. After deleting the GAC files tlbimp.exe created all files, but it took several minutes.
 	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
 	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core+ assemblies, and they don't have the class. Need exe.
-
+	
 	class _RegTypelib {
 		public string text, guid, version;
-
+		
 		public override string ToString() => text;
-
+		
 		public string GetPath(string locale) {
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
 			for (int i = 0; i < 2; i++) {
@@ -470,7 +481,7 @@ class DProperties : KDialogWindow {
 			return null;
 		}
 	}
-
+	
 	async void _ConvertTypeLibrary(object tlDef, Button button) {
 		string comDll = null;
 		switch (tlDef) {
@@ -507,7 +518,7 @@ class DProperties : KDialogWindow {
 			}
 			break;
 		}
-
+		
 		print.it($"Converting COM type library to .NET assembly.");
 		List<string> converted = new();
 		int rr = -1;
@@ -534,28 +545,28 @@ class DProperties : KDialogWindow {
 			_ShowInfo_Added(button, _meta.com);
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region util
-
+	
 	static void _Show(FrameworkElement e, Visibility vis) {
 		e.Visibility = vis;
 		if (System.Windows.Automation.AutomationProperties.GetLabeledBy(e) is UIElement label) label.Visibility = vis;
 	}
-
+	
 	static void _ShowHide(FrameworkElement e, bool show) => _Show(e, show ? Visibility.Visible : Visibility.Hidden);
-
+	
 	static void _ShowCollapse(FrameworkElement e, bool show) => _Show(e, show ? Visibility.Visible : Visibility.Collapsed);
-
+	
 	static void _ShowHide(bool show, params FrameworkElement[] a) {
 		foreach (var v in a) _ShowHide(v, show);
 	}
-
+	
 	static void _ShowCollapse(bool show, params FrameworkElement[] a) {
 		foreach (var v in a) _ShowCollapse(v, show);
 	}
-
+	
 	static bool _IsHidden(FrameworkElement t) {
 		if (t.IsVisible) return false;
 		if (t.Visibility != Visibility.Visible) return true;
@@ -563,29 +574,29 @@ class DProperties : KDialogWindow {
 		while ((t = t.Parent as FrameworkElement) != null) if (t is Expander e) return !e.IsVisible;
 		return true;
 	}
-
+	
 	static string _Get(TextBox t, bool nullIfHidden = true) {
 		if (nullIfHidden && _IsHidden(t)) return null;
 		var r = t.Text.Trim();
 		return r == "" ? null : r;
 	}
-
+	
 	static string _Get(ComboBox t, bool nullIfHidden = true, bool nullIfDefault = false) {
 		if (nullIfDefault && t.SelectedIndex == 0) return null;
 		if (nullIfHidden && _IsHidden(t)) return null;
 		return t.IsEditable ? t.Text : t.SelectedItem as string; //note: t.Text changes after t.SelectionChanged event
 	}
-
+	
 	static string _Get(KCheckBox t, bool nullIfHidden = true) {
 		if (nullIfHidden && _IsHidden(t)) return null;
 		return t.IsChecked ? "true" : null;
 	}
-
+	
 	static bool _IsChecked(KCheckBox t, bool falseIfHidden = true) {
 		if (falseIfHidden && _IsHidden(t)) return false;
 		return t.IsChecked;
 	}
-
+	
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
 		if (!getDefault && _Get(outputPath) is string r) {
 			if (expandEnvVar) r = pathname.expand(r);
@@ -594,26 +605,24 @@ class DProperties : KDialogWindow {
 		}
 		return r;
 	}
-
-	void _ShowInfo_ListEmpty(Button button, string sFind) {
-		var s = "The list is empty";
-		if (sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
-		_ShowInfoTooltip(button, s);
+	
+	void _ShowInfo_ListEmpty(UIElement by, string sFind) {
+		_ShowInfoTooltip(by, sFind.Length > 0 ? "There are no items containing " + sFind : "The list is empty");
 	}
-
-	void _ShowInfo_Added(Button button, List<string> metaList) {
-		_ShowInfoTooltip(button, string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.");
+	
+	void _ShowInfo_Added(UIElement by, List<string> metaList) {
+		_ShowInfoTooltip(by, string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.");
 	}
-
-	void _ShowInfoTooltip(Button button, string s) {
-		Au.Tools.TUtil.InfoTooltip(ref _tt, button, s, Dock.Right);
+	
+	void _ShowInfoTooltip(UIElement by, string s) {
+		Au.Tools.TUtil.InfoTooltip(ref _tt, by, s, Dock.Right);
 	}
 	KPopup _tt;
-
+	
 	#endregion
-
+	
 	#region info
-
+	
 	void _InitInfo() {
 		info.AaTags.AddLinkTag("+changeFileType", _ => {
 			if (!dialog.showOkCancel($"Change file type to: {(_f.IsScript ? "class" : "script")}", "This also will close the Properties dialog as if clicked Cancel.", owner: this)) return;
@@ -627,7 +636,7 @@ Path: <explore>{_f.FilePath}<>
 C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
 """;
-
+		
 		info.AaAddElem(role, """
 <b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.
  • <i>miniProgram</i> - execute in a separate host process started from editor.
@@ -724,8 +733,7 @@ Can be:
  • <i>true</i> (checked) - the process is 32-bit on all computers.
 """);
 		info.AaAddElem(xmlDoc, """
-<b>xmlDoc</b> - create XML documentation file from /// XML comments of classes, functions, etc.
-Creates in the 'outputPath' folder.
+<b>xmlDoc</b> - create XML documentation file from /// comments. And print errors in /// comments.
 
 XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create HTML documentation.
 """);
@@ -806,7 +814,7 @@ Adds meta comment <c green>nuget folder\package<>.
 
 To remove this meta comment, edit the code.
 """);
-
+		
 		const string c_com = """
  COM component's type library to an <i>interop assembly<>, and use it.
 Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%folders.Workspace%\.interop<>.
@@ -880,7 +888,7 @@ To remove this meta comment, edit the code.
 """);
 		info.AaAddElem(bVersion, "<b>Version</b> - how to add version info.");
 	}
-
+	
 	static void _VersionInfo() {
 		print.it($$"""
 <>To add assembly file version info, insert and edit this code near the start of any C# file of the compilation.
@@ -899,6 +907,6 @@ To remove this meta comment, edit the code.
 </code>
 """);
 	}
-
+	
 	#endregion
 }

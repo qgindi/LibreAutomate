@@ -131,7 +131,7 @@ class PanelOutput {
 			_p._c_HandleCreated();
 			aaaMarginSetWidth(1, 3);
 
-			var styles = new CiStyling.TStyles { FontName = "Consolas", FontSize = 9, BackgroundColor = 0xF7F7F7 };
+			var styles = new CiStyling.TStyles(customized: false) { FontName = "Consolas", FontSize = 9, BackgroundColor = 0xF7F7F7 };
 			styles.ToScintilla(this);
 			AaTags.CodeStylesProvider = code => CiUtil.GetScintillaStylingBytes(code);
 

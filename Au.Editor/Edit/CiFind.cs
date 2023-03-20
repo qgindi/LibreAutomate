@@ -329,10 +329,17 @@ static class CiFind {
 			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
 			perf.next('s');
 			SymbolRenameOptions sro = new();
+			
+			var h = await Microsoft.CodeAnalysis.Rename.Renamer.FindRenameLocationsAsync(solution, sym, sro, default, default);
+			print.it(h.Locations.Length);
+			//return;
+			perf.next('L');
+			
 			var sol2 = await Microsoft.CodeAnalysis.Rename.Renamer.RenameSymbolAsync(solution, sym, sro, "newName");
 			//print.it(sol2.GetChangedDocuments(solution));
 			perf.next('r');
 			
+			int n=0;
 			foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
 				print.it("<><c blue>PROJECT", projChange.NewProject.Name, "<>");
 				foreach (var docId in projChange.GetChangedDocuments(true)) {
@@ -341,10 +348,12 @@ static class CiFind {
 					var oldDoc = projChange.OldProject.GetDocument(docId);
 					foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
 						print.it(tc);
+						n++;
 					}
 				}
 			}
 			perf.nw();
+			print.it(n);
 		}
 		finally {
 			_working = false;

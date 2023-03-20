@@ -260,8 +260,7 @@ This setting also is used by 'Find references' etc.
 		m.Show();
 		if (f != _filter) {
 			_filter = f;
-			e.Button.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f > 0 ? Menus.red : Menus.green));
-			//e.Button.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? Menus.orange : Menus.red));
+			e.Button.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? " #FFA500" : Menus.red));
 			e.Button.ToolTip = f switch { 0 => "Search in entire workspace", 1 => "Search in current root folder", _ => "Search in current @project or root folder" };
 		}
 	}

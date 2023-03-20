@@ -349,8 +349,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (IsDeleted) return null;
 			if (IsLink) return LinkTarget;
 			return _ItemPath(_model.FilesDirectory);
-			//TODO: optimization to avoid many allocations:
-			//	Store the created path. Next time compare it with ancestor names, and return if unchanged.
 		}
 	}
 	

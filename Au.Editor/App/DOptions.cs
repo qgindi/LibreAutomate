@@ -6,6 +6,7 @@ using System.Windows.Controls.Primitives;
 using Au.Tools;
 using System.Windows.Media;
 using System.Windows.Documents;
+using EStyle = CiStyling.EStyle;
 
 class DOptions : KDialogWindow {
 	public static void AaShow() {
@@ -39,8 +40,8 @@ class DOptions : KDialogWindow {
 		
 		_General();
 		//_Files();
-		_Font();
-		_Edit();
+		_FontAndColors();
+		_CodeEditor();
 		_Templates();
 		_Hotkeys();
 		_OS();
@@ -141,7 +142,7 @@ class DOptions : KDialogWindow {
 	//	};
 	//}
 	
-	void _Font() {
+	void _FontAndColors() {
 		var b = _Page("Font, colors", WBPanelType.Dock);
 		
 		b.Add(out KScintilla sciStyles).Width(150);
@@ -207,69 +208,68 @@ class DOptions : KDialogWindow {
 			
 			//styles
 			
+			const int indicHidden = 0;
+			sciStyles.aaaIndicatorDefine(indicHidden, Sci.INDIC_HIDDEN);
 			sciStyles.aaaMarginSetWidth(1, 0);
 			styles.ToScintilla(sciStyles);
+			
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
-			var s = """
-Font
-Background
-None
-//Comment
-"String" 'c'
-\r\n\t\0\\
-1234567890
-()[]{},;:
-Operator
-Keyword
-Namespace
-Type
-Function
-Variable
-Constant
-GotoLabel
-#preprocessor
-#if-disabled
-XML doc text
-/// <doc tag>
-Line number
-Text highlight
-Symbol highlight
-Brace highlight
-Selection
-Selection no focus
-""";
-			//TODO: apply background color in SciTags. Now bad if background is dark and text colors bright.
 			
-			sciStyles.aaaText = s;
-			int i = -3, lastStyle = (int)CiStyling.EStyle.countUserDefined;
-			foreach (var v in s.Lines(..)) {
-				i++;
-				if (i < 0) { //Font, Background
-					
-				} else if (i <= lastStyle) {
-					int ii = i;
-					if (i == lastStyle) ii = Sci.STYLE_LINENUMBER;
-					//print.it(i, s[v.start..v.end]);
-					sciStyles.Call(Sci.SCI_STARTSTYLING, v.start);
-					sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, ii);
-				} else if (i <= lastStyle + 3) { //indicator
-					int ii = i - lastStyle;
-					sciStyles.aaaIndicatorAdd(ii switch { 1 => SciCode.c_indicFound, 2 => SciCode.c_indicRefs, 3 => SciCode.c_indicBraces, _ => 0 }, false, v.Range);
-				} else { //element
-					
+			var table = new _TableItem[] {
+				new("Font", _StyleKind.Font, 0),
+				
+				new("Background", _StyleKind.Background, 0),
+				
+				new("Text", _StyleKind.Style, (int)EStyle.None),
+				new("//Comment", _StyleKind.Style, (int)EStyle.Comment),
+				new(@"""String"" 'c'", _StyleKind.Style, (int)EStyle.String),
+				new(@"\r\n\t\0\\", _StyleKind.Style, (int)EStyle.StringEscape),
+				new("1234567890", _StyleKind.Style, (int)EStyle.Number),
+				new("()[]{},;:", _StyleKind.Style, (int)EStyle.Punctuation),
+				new("Operator", _StyleKind.Style, (int)EStyle.Operator),
+				new("Keyword", _StyleKind.Style, (int)EStyle.Keyword),
+				new("Namespace", _StyleKind.Style, (int)EStyle.Namespace),
+				new("Type", _StyleKind.Style, (int)EStyle.Type),
+				new("Function", _StyleKind.Style, (int)EStyle.Function),
+				new("Variable", _StyleKind.Style, (int)EStyle.Variable),
+				new("Constant", _StyleKind.Style, (int)EStyle.Constant),
+				new("GotoLabel", _StyleKind.Style, (int)EStyle.Label),
+				new("#preprocessor", _StyleKind.Style, (int)EStyle.Preprocessor),
+				new("#if-disabled", _StyleKind.Style, (int)EStyle.Excluded),
+				new("/// doc text", _StyleKind.Style, (int)EStyle.XmlDocText),
+				new("/// <doc tag>", _StyleKind.Style, (int)EStyle.XmlDocTag),
+				new("Line number", _StyleKind.Style, (int)EStyle.LineNumber),
+				
+				new("Text highlight", _StyleKind.Indicator, SciCode.c_indicFound),
+				new("Symbol highlight", _StyleKind.Indicator, SciCode.c_indicRefs),
+				new("Brace highlight", _StyleKind.Indicator, SciCode.c_indicBraces),
+				
+				new("Selection", _StyleKind.Element, Sci.SC_ELEMENT_SELECTION_BACK),
+				new("Sel. no focus", _StyleKind.Element, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
+			};
+			
+			sciStyles.aaaText = string.Join("\r\n", table.Select(o => o.name));
+			for (int i = 0; i < table.Length; i++) {
+				int lineStart = sciStyles.aaaLineStart(false, i), lineEnd = sciStyles.aaaLineEnd(false, i);
+				sciStyles.aaaIndicatorAdd(indicHidden, false, lineStart..lineEnd, i + 1);
+				if (table[i].kind == _StyleKind.Style) {
+					sciStyles.Call(Sci.SCI_STARTSTYLING, lineStart);
+					sciStyles.Call(Sci.SCI_SETSTYLING, lineEnd - lineStart, table[i].index);
+				} else if (table[i].kind == _StyleKind.Indicator) {
+					sciStyles.aaaIndicatorAdd(table[i].index, false, lineStart..lineEnd);
 				}
 			}
 			
-			//when changed the selected line
-			int currentLine = -1;
+			//when changed current line
+			int currentItem = 0;
 			sciStyles.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
-					int line = c.aaaLineFromPos(false, c.aaaCurrentPos8);
-					if (line != currentLine) {
-						currentLine = line;
-						var k = _SciStylesLineToStyleIndex(line);
+					int i = sciStyles.Call(Sci.SCI_INDICATORVALUEAT, indicHidden, sciStyles.aaaLineStartFromPos(false, sciStyles.aaaCurrentPos8)) - 1;
+					if (i != currentItem && i >= 0) {
+						currentItem = i;
+						var k = table[i];
 						if (k.kind == _StyleKind.Font) {
 							pColor.Visibility = Visibility.Collapsed;
 							pFont.Visibility = Visibility.Visible;
@@ -323,8 +323,8 @@ Selection no focus
 			tAlpha.TextChanged += (sender, _) => _UpdateSci(sender);
 			
 			void _UpdateSci(object control = null) {
-				if (ignoreColorEvents) return;
-				var k = _SciStylesLineToStyleIndex(sciStyles.aaaLineFromPos(false, sciStyles.aaaCurrentPos8));
+				if (ignoreColorEvents || currentItem < 0) return;
+				var k = table[currentItem];
 				int col = colorPicker.Color;
 				if (k.kind == _StyleKind.Style) {
 					if (control == cBold) sciStyles.aaaStyleBold(k.index, cBold.IsChecked);
@@ -341,21 +341,6 @@ Selection no focus
 					backColor = col;
 					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.aaaStyleBackColor(i, col);
 				}
-			}
-			
-			(_StyleKind kind, int index) _SciStylesLineToStyleIndex(int line) {
-				const int nu = (int)CiStyling.EStyle.countUserDefined;
-				return (line -= 2) switch {
-					-2 => (_StyleKind.Font, 0),
-					-1 => (_StyleKind.Background, 0),
-					nu + 1 => (_StyleKind.Indicator, SciCode.c_indicFound),
-					nu + 2 => (_StyleKind.Indicator, SciCode.c_indicRefs),
-					nu + 3 => (_StyleKind.Indicator, SciCode.c_indicBraces),
-					nu + 4 => (_StyleKind.Element, Sci.SC_ELEMENT_SELECTION_BACK),
-					nu + 5 => (_StyleKind.Element, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
-					nu => (_StyleKind.Style, Sci.STYLE_LINENUMBER),
-					_ => (_StyleKind.Style, line)
-				};
 			}
 			
 			_b.OkApply += e => {
@@ -399,7 +384,9 @@ To apply changes after deleting etc, restart this application.
 	
 	enum _StyleKind { Style, Indicator, Element, Font, Background }
 	
-	void _Edit() {
+	record struct _TableItem(string name, _StyleKind kind, int index);
+	
+	void _CodeEditor() {
 		var b = _Page("Code editor").Columns(200, 20, -1);
 		b.R.StartStack(vertical: true); //left
 		
