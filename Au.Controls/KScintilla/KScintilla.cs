@@ -22,6 +22,7 @@ public unsafe partial class KScintilla : HwndHost {
 	nint _wndprocScintilla;
 	nint _sciPtr;
 	Sci_NotifyCallback _notifyCallback;
+	int _managedThreadId;
 	internal int _dpi;
 
 #if DEBUG
@@ -63,6 +64,7 @@ public unsafe partial class KScintilla : HwndHost {
 		//size 0 0 is not the best, but it is a workaround for WPF bugs
 
 		_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
+		_managedThreadId = Environment.CurrentManagedThreadId;
 		Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
 		bool hasTags = AaInitTagsStyle != AaTagsStyle.NoTags;
@@ -124,6 +126,7 @@ public unsafe partial class KScintilla : HwndHost {
 	protected override void DestroyWindowCore(HandleRef hwnd) {
 		WndUtil.DestroyWindow((wnd)hwnd.Handle);
 		_w = default;
+		_sciPtr = 0;
 		_acc?.Dispose(); _acc = null;
 
 		//workaround for: never GC-collected if disposed before removing from parent WPF element (shouldn't do it).
@@ -141,24 +144,6 @@ public unsafe partial class KScintilla : HwndHost {
 		//if (Name == "Recipe_text") WndUtil.PrintMsg(w, msg, wp, lp);
 		//if(Name == "Recipe_text") WndUtil.PrintMsg(_w, msg, wp, lp, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
-		MButtons button = msg switch { Api.WM_LBUTTONDOWN => MButtons.Left, Api.WM_RBUTTONDOWN => MButtons.Right, Api.WM_MBUTTONDOWN => MButtons.Middle, _ => 0 };
-		if (button != 0 && Api.GetFocus() != _w) {
-			bool setFocus = !AaNoMouseSetFocus.Has(button);
-			if (setFocus && msg == Api.WM_LBUTTONDOWN && AaInitReadOnlyAlways && !keys.gui.isAlt) { //don't focus if link clicked
-				int pos = Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lp), Math2.HiShort(lp));
-				if (pos >= 0) {
-					if (aaaStyleHotspot(aaaStyleGetAt(pos))) setFocus = false;
-					else { //indicator-link?
-						uint indic = (uint)Call(SCI_INDICATORALLONFOR, pos);
-						for (int i = 0; indic != 0; i++, indic >>>= 1)
-							if (0 != (indic & 1) && 0 != Call(SCI_INDICGETHOVERFORE, i))
-								setFocus = false;
-					}
-				}
-			}
-			if (setFocus) this.Focus();
-		}
-
 		switch (msg) {
 		case Api.WM_SETFOCUS:
 			if (!_inOnWmSetFocus) if (_OnWmSetFocus()) return 0;
@@ -166,16 +151,42 @@ public unsafe partial class KScintilla : HwndHost {
 		case Api.WM_KILLFOCUS:
 			if (_inOnWmSetFocus) return 0;
 			break;
+		case Api.WM_LBUTTONDOWN or Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN:
+			if (Api.GetFocus() != _w) {
+				bool setFocus = !AaNoMouseSetFocus.Has(_MouseButton(msg));
+				if (setFocus && msg == Api.WM_LBUTTONDOWN && AaInitReadOnlyAlways) { //don't focus if link clicked
+					int pos = Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math2.LoShort(lp), Math2.HiShort(lp));
+					if (pos >= 0) {
+						if (aaaStyleHotspot(aaaStyleGetAt(pos))) setFocus = false;
+						else { //indicator-link?
+							uint indic = (uint)Call(SCI_INDICATORALLONFOR, pos);
+							for (int i = 0; indic != 0; i++, indic >>>= 1)
+								if (0 != (indic & 1) && 0 != Call(SCI_INDICGETHOVERFORE, i))
+									setFocus = false;
+						}
+					}
+				}
+				if (setFocus) this.Focus();
+			}
+			break;
+		case Api.WM_LBUTTONUP:
+			if (AaInitReadOnlyAlways && Api.GetFocus() != _w)
+				if (aaaHasSelection) this.Focus();
+			break;
 		}
 
-		//var R = CallRetPtr(msg, wp, lp); //no, then Scintilla does not process WM_NCDESTROY
-		var R = Api.CallWindowProc(_wndprocScintilla, w, msg, wp, lp);
+		static MButtons _MouseButton(int msg) => msg switch { Api.WM_LBUTTONDOWN or Api.WM_LBUTTONUP => MButtons.Left, Api.WM_RBUTTONDOWN or Api.WM_RBUTTONUP => MButtons.Right, Api.WM_MBUTTONDOWN or Api.WM_MBUTTONUP => MButtons.Middle, _ => 0 };
 
-		return R;
+		return WndProc(w, msg, wp, lp);
+	}
+
+	protected virtual nint WndProc(wnd w, int msg, nint wp, nint lp) {
+		//return CallRetPtr(msg, wp, lp); //no, then Scintilla does not process WM_NCDESTROY
+		return Api.CallWindowProc(_wndprocScintilla, w, msg, wp, lp);
 	}
 
 	protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-		if (msg == Api.WM_GETOBJECT) { //WPF steals it from _WndProc
+		if (msg == Api.WM_GETOBJECT) { //WPF steals it from _WndProc //TODO
 			handled = true;
 			return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);
 		}
@@ -275,34 +286,41 @@ public unsafe partial class KScintilla : HwndHost {
 	#endregion
 
 	void _NotifyCallback(void* cbParam, ref SCNotification n) {
-		var code = n.code;
-		//if(code != NOTIF.SCN_PAINTED) print.qm2.write(code.ToString());
-		switch (code) {
-		case NOTIF.SCN_MODIFIED:
-			var mt = n.modificationType;
-			//if(this.Name!= "Output_text") print.it(mt, n.position);
-			if (mt.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
-				_text = null;
-				_posState = default;
-				_aPos.Clear();
+		try {
+			var code = n.code;
+			//if(code != NOTIF.SCN_PAINTED) print.qm2.write(code.ToString());
+			switch (code) {
+			case NOTIF.SCN_MODIFIED:
+				var mt = n.modificationType;
+				//if(this.Name!= "Output_text") print.it(mt, n.position);
+				if (mt.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
+					_text = null;
+					_posState = default;
+					_aPos.Clear();
 
-				bool inserted = mt.Has(MOD.SC_MOD_INSERTTEXT);
-				_RdOnModified(inserted, n);
-				AaImages?.OnTextChanged_(inserted, n);
-				AaTags?.OnTextChanged_(inserted, n);
+					bool inserted = mt.Has(MOD.SC_MOD_INSERTTEXT);
+					_RdOnModified(inserted, n);
+					AaImages?.OnTextChanged_(inserted, n);
+					AaTags?.OnTextChanged_(inserted, n);
+				}
+				//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
+				if (AaDisableModifiedNotifications) return;
+				break;
+			case NOTIF.SCN_HOTSPOTRELEASECLICK:
+				if (aaaHasSelection) return;
+				AaTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+				break;
+			case NOTIF.SCN_INDICATORRELEASE:
+				if (aaaHasSelection) return;
+				break;
 			}
-			//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
-			if (AaDisableModifiedNotifications) return;
-			break;
-		case NOTIF.SCN_HOTSPOTRELEASECLICK:
-			if (aaaHasSelection) return;
-			AaTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
-			break;
-		case NOTIF.SCN_INDICATORRELEASE:
-			if (aaaHasSelection) return;
-			break;
+			AaOnSciNotify(ref n);
 		}
-		AaOnSciNotify(ref n);
+		catch (Exception e1) when (!Debugger.IsAttached) {
+			//DispatcherUnhandledException not raised on exception here. Let's add handler code here like in App._Main.
+			if (1 != dialog.showError("Exception", e1.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, _w.Window, e1.ToString()))
+				Environment.Exit(1);
+		}
 	}
 
 	/// <summary>
@@ -366,16 +384,18 @@ public unsafe partial class KScintilla : HwndHost {
 	public nint CallRetPtr(int sciMessage, nint wParam = 0, nint lParam = 0) {
 #if DEBUG
 		if (AaDebugPrintMessages_) _DebugPrintMessage(sciMessage);
+
+		Debug.Assert(_sciPtr != 0);
+		//0 before creating or after destroying Scintilla window.
+		//note: don't auto-create handle. It can be dangerous, create parked control, etc.
+
+		Debug.Assert(Environment.CurrentManagedThreadId == _managedThreadId);
+		//possible wrong thread eg if an async continuation cannot be executed in correct thread,
+		//	probably because there is no WPF SynchronizationContext, eg Application.Run ended on exception.
+#else
+		if (_sciPtr == 0) throw new InvalidOperationException("KScintilla.CallRetPtr: _sciPtr==null");
+		if (Environment.CurrentManagedThreadId != _managedThreadId) throw new InvalidOperationException("KScintilla.CallRetPtr: wrong thread");
 #endif
-
-		Debug.Assert(!_w.Is0);
-		//Debug.Assert(!_w.Is0 || this.DesignMode);
-		//if(!IsHandleCreated) CreateHandle();
-		//note: auto-creating handle is not good:
-		//	1. May create parked control. Not good for performance.
-		//	2. Can be dangerous, eg if passing a reusable buffer that also is used when creating handle.
-
-		Debug_.PrintIf(process.thisThreadId != _w.ThreadId, "wrong thread");
 
 		return Sci_Call(_sciPtr, sciMessage, wParam, lParam);
 	}

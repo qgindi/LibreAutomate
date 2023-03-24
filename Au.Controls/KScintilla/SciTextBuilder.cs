@@ -81,10 +81,11 @@ public class SciTextBuilder {
 	}
 
 	/// <summary>
-	/// Adds marker in current line.
+	/// Adds marker in current or previous line.
 	/// </summary>
-	public SciTextBuilder Marker(int marker) {
-		_markers.Add((marker, Length));
+	/// <param name="prevLine">Add at the line of position <c>Length - 2</c>.</param>
+	public SciTextBuilder Marker(int marker, bool prevLine = false) {
+		_markers.Add((marker, Length - (prevLine ? 2 : 0)));
 		return this;
 	}
 

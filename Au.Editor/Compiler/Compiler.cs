@@ -35,7 +35,7 @@ partial class Compiler {
 	public static bool Compile(CCReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false, Func<CanCompileArgs, bool> canCompile = null) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		r = null;
-		var cache = XCompiled.OfWorkspace(f.Model);
+		var cache = XCompiled.OfWorkspace;
 		if (reason is not (CCReason.CompileAlways or CCReason.WpfPreview) && cache.IsCompiled(f, out r, projFolder)) {
 			//print.it("cached");
 			if (needMeta) {
@@ -115,7 +115,7 @@ partial class Compiler {
 			return false;
 		}
 		
-		XCompiled cache = XCompiled.OfWorkspace(f.Model);
+		XCompiled cache = XCompiled.OfWorkspace;
 		string outPath = null, outFile = null, fileName = null;
 		bool notInCache = false;
 		if (needOutputFiles) {

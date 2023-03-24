@@ -19,8 +19,7 @@ class PanelOpen {
 	public KTreeView TreeControl => _tv;
 
 	public void UpdateList() {
-		var a = App.Model.OpenFiles;
-		var e = a.Select(o => new _Item { f = o });
+		var e = App.Model.OpenFiles.Select(o => new _Item { f = o });
 		if (_Sort) e = e.OrderBy(o => o.f.Name, StringComparer.OrdinalIgnoreCase)
 				.ThenBy(o => o.f.Id); //to make stable when there are multiple files with same name
 		_tv.SetItems(e, _updatedOnce);

@@ -1,16 +1,14 @@
 //Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
 //Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Splits a string into substrings as start/end offsets or strings.
 	/// </summary>
 	/// <remarks>
 	/// Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="ExtString.Segments"/> with foreach.
 	/// </remarks>
-	public struct SegParser : IEnumerable<StartEnd>, IEnumerator<StartEnd>
-	{
+	public struct SegParser : IEnumerable<StartEnd>, IEnumerator<StartEnd> {
 		readonly string _separators;
 		readonly string _s;
 		readonly int _sStart, _sEnd;
@@ -155,13 +153,11 @@ namespace Au.More
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
 	/// </summary>
-	public static class SegSep
-	{
+	public static class SegSep {
 		/// <summary>
 		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
 		/// </summary>
@@ -184,8 +180,7 @@ namespace Au.Types
 	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
 	/// </summary>
 	[Flags]
-	public enum SegFlags : byte
-	{
+	public enum SegFlags : byte {
 		/// <summary>
 		/// Don't return empty substrings.
 		/// For example, is string is <c>"one  two "</c> and separators is <c>" "</c>, return <c>{"one", "two"}</c> instead of <c>{"one", "", "two", ""}</c>.
@@ -206,10 +201,9 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// struct with fields int start and int end.
+	/// Struct with fields <b>int start</b> and <b>int end</b>.
 	/// </summary>
-	public record struct StartEnd
-	{
+	public record struct StartEnd {
 		///
 		public int start;
 		///
@@ -238,10 +232,5 @@ namespace Au.Types
 
 		///
 		public override string ToString() => $"({start}, {end})";
-
-		///// <summary>
-		///// Returns <c>s[Range]</c>.
-		///// </summary>
-		//public string ToString(string s) => s[Range];
 	}
 }

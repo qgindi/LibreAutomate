@@ -13,6 +13,8 @@ Highlights references of the symbol at the text cursor.
 
 Highlights matching braces and directives of the brace/directive at the text cursor.
 
+Improved replacing text in multiple files. Multi-file undo/redo.
+
 New options:
 - Options -> Font, colors -> highlight, selection.
 - Options -> Code editor -> Formatting.
@@ -32,6 +34,7 @@ Editor:
 - Fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
 - Fixed: error message box on exit.
 - Fixed several memory leaks and other bugs.
+- Improvements in several editor features.
 
 Library:
 - Fixed "TextForFind" bug in documentation.

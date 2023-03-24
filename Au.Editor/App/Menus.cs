@@ -179,19 +179,19 @@ static class Menus {
 	
 	[Command(target = "Edit")]
 	public static class Edit {
-		[Command(keysText = "Ctrl+Z", image = iconUndo)]
-		public static void Undo() { Panels.Editor.ActiveDoc.Call(Sci.SCI_UNDO); }
+		[Command(keys = "Ctrl+Z", image = iconUndo)]
+		public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
 		
-		[Command(keysText = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
-		public static void Redo() { Panels.Editor.ActiveDoc.Call(Sci.SCI_REDO); }
+		[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
+		public static void Redo() { SciUndo.OfWorkspace.UndoRedo(true); }
 		
-		[Command('t', separator = true, keysText = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
+		[Command('t', separator = true, keys = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
 		public static void Cut() { Panels.Editor.ActiveDoc.Call(Sci.SCI_CUT); }
 		
-		[Command(keysText = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
+		[Command(keys = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
 		public static void Copy() { Panels.Editor.ActiveDoc.ECopy(); }
 		
-		[Command(keysText = "Ctrl+V", image = iconPaste)]
+		[Command(keys = "Ctrl+V", image = iconPaste)]
 		public static void Paste() { Panels.Editor.ActiveDoc.EPaste(); }
 		
 		[Command]
@@ -226,6 +226,12 @@ static class Menus {
 			
 			[Command]
 			public static void Find_implementations() { CiFind.FindReferencesOrImplementations(true); }
+			
+			[Command("Undo multi-file replace", separator = true)]
+			public static void Undo_multi_file_replace() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
+			
+			[Command("Redo multi-file replace")]
+			public static void Redo_multi_file_replace() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
 		}
 		
 		[Command]
