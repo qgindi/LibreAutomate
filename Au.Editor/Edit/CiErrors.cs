@@ -11,8 +11,8 @@ using System.Collections.Immutable;
 class CiErrors {
 	SemanticModel _semo;
 	List<(Diagnostic d, int start, int end)> _codeDiag;
-	readonly List<(int from, int to, string s)> _stringErrors = new();
-	readonly List<(int from, int to, string s)> _metaErrors = new();
+	readonly List<StartEndText> _stringErrors = new();
+	readonly List<StartEndText> _metaErrors = new();
 	StartEnd _metaRange;
 
 	public void Indicators(int start16, int end16, bool pasting = false, bool pastingSilent = false) {
@@ -93,7 +93,7 @@ class CiErrors {
 			if (cd.meta.end - cd.meta.start == _metaRange.end - _metaRange.start) offs = cd.meta.start - _metaRange.start;
 
 			foreach (var v in _metaErrors) {
-				int from = v.from + offs, to = v.to + offs;
+				int from = v.start + offs, to = v.end + offs;
 				if (to <= start16 || from >= end16) continue;
 				if (!has) doc.EInicatorsDiag_(has = true);
 				doc.aaaIndicatorAdd(SciCode.c_indicError, true, from..to);
@@ -103,7 +103,7 @@ class CiErrors {
 		if (_stringErrors.Count > 0) {
 			if (!has) doc.EInicatorsDiag_(has = true);
 			foreach (var v in _stringErrors) {
-				doc.aaaIndicatorAdd(SciCode.c_indicWarning, true, v.from..v.to);
+				doc.aaaIndicatorAdd(SciCode.c_indicWarning, true, v.start..v.end);
 			}
 		}
 		if (!has) {
@@ -218,7 +218,7 @@ class CiErrors {
 
 			void _AddError(SyntaxNode node, string es) {
 				var span = node.Span;
-				_stringErrors.Add((span.Start, span.End, es));
+				_stringErrors.Add(new(span.Start, span.End, es));
 			}
 		}
 	}
@@ -227,7 +227,7 @@ class CiErrors {
 
 	public void AddMetaError(StartEnd metaRange, int from, int to, string s) {
 		_metaRange = metaRange;
-		_metaErrors.Add((from, to > from ? to : from + 1, s));
+		_metaErrors.Add(new(from, to > from ? to : from + 1, s));
 	}
 
 	public void EraseIndicatorsInLine(SciCode doc, int pos8) {
@@ -318,11 +318,11 @@ class CiErrors {
 
 		_Also(_metaErrors, "Error: ");
 		_Also(_stringErrors, null);
-		void _Also(List<(int from, int to, string s)> a, string prefix) {
+		void _Also(List<StartEndText> a, string prefix) {
 			foreach (var v in a) {
-				if (pos16 < v.from || pos16 > v.to) continue;
+				if (pos16 < v.start || pos16 > v.end) continue;
 				x.LineBreak(prefix, notIfFirstInParagraph: true);
-				x.Append(v.s);
+				x.Append(v.text);
 			}
 		}
 

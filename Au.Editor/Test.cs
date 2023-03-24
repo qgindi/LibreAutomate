@@ -29,7 +29,7 @@ using Au.Controls;
 #pragma warning disable 169
 
 static unsafe class Test {
-	
+
 	//static void getFileProp(string path) {
 	//	using Handle_ h = new(Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING));
 	//	if (h.Is0) { /*print.it(path);*/return; }
@@ -37,14 +37,28 @@ static unsafe class Test {
 	//}
 	//[DllImport("kernel32.dll")]
 	//internal static extern bool GetFileTime(IntPtr hFile, out long lpCreationTime, out long lpLastAccessTime, out long lpLastWriteTime);
-	
+
 	public static void FromMenubar() {
 		//print.clear();
-		CiFind.RenameSymbol();
+		//CiFind.RenameSymbol();
+
+		var d = Panels.Editor.ActiveDoc;
+		//{
+		//	using var undo = new KScintilla.aaaUndoAction(d);
+		//	d.Call(Sci.SCI_PASTE);
+		//	if(keys.isScrollLock) d.Call(SCI_ADDUNDOACTION, 1);
+		//}
+
+		//print.it(d.Call(Sci.SCI_CANUNDO), Sci.Sci_CanUndoRedoContainer(d.AaSciPtr, false, 1));
+
+		//if(keys.isScrollLock) Sci.Sci_SetUndoMark(d.AaSciPtr, 1);
+		//else print.it(Sci.Sci_GetUndoMark(d.AaSciPtr, false), Sci.Sci_GetUndoMark(d.AaSciPtr, true));
 		
+		SciUndo.OfWorkspace.UndoRedoMultiFileReplace(keys.isScrollLock);
+
 		//Cpp.Cpp_Test();
 	}
-	
+
 	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
@@ -57,12 +71,12 @@ static unsafe class Test {
 		}
 	}
 	static bool s_debug2;
-	
+
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();
-		
+
 		//	//timer.every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;

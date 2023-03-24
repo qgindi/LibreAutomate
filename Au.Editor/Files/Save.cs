@@ -1,8 +1,6 @@
 
-partial class FilesModel
-{
-	public class AutoSave
-	{
+partial class FilesModel {
+	public class AutoSave {
 		FilesModel _model;
 		int _workspaceAfterS, _stateAfterS, _textAfterS;
 		internal bool LoadingState;
@@ -112,7 +110,7 @@ partial class FilesModel
 	bool _SaveWorkspaceNow() {
 		try {
 			//print.it("saving");
-			Root.Save(WorkspaceFile);
+			Root.SaveWorkspace(WorkspaceFile);
 			return true;
 		}
 		catch (Exception ex) { //XElement.Save exceptions are undocumented
@@ -132,9 +130,8 @@ partial class FilesModel
 					string.Join(" ", Root.Descendants().Where(n => n.IsExpanded).Select(n => n.IdString)));
 
 				using (new StringBuilder_(out var b)) {
-					var a = OpenFiles;
-					b.Append(a.IndexOf(_currentFile));
-					foreach (var v in a) b.Append(' ').Append(v.IdString); //FUTURE: also save current position and scroll position, eg "id.pos.scroll"
+					b.Append(_openFiles.IndexOf(_currentFile));
+					foreach (var v in _openFiles) b.Append(' ').Append(v.IdString); //FUTURE: also save current position and scroll position, eg "id.pos.scroll"
 					DB.Execute("REPLACE INTO _misc VALUES ('open',?)", b.ToString());
 				}
 
@@ -151,7 +148,7 @@ partial class FilesModel
 	/// <summary>
 	/// Called at the end of opening this workspace.
 	/// </summary>
-	public void LoadState(bool expandFolders=false, bool openFiles=false) {
+	public void LoadState(bool expandFolders = false, bool openFiles = false) {
 		if (DB == null) return;
 		try {
 			Save.LoadingState = true;
@@ -175,12 +172,12 @@ partial class FilesModel
 					foreach (var v in s.Segments(" ")) {
 						i++; if (i < 0) continue;
 						var fn = FindById(s[v.Range]); if (fn == null) continue;
-						OpenFiles.Add(fn);
+						_openFiles.Add(fn);
 						if (i == iActive) fnActive = fn;
 					}
 					//perf.next();
 					if (fnActive == null || !SetCurrentFile(fnActive)) _UpdateOpenFiles(null); //disable Previous command
-					//perf.nw();
+																							   //perf.nw();
 				}
 			}
 		}

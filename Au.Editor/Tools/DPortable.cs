@@ -191,7 +191,7 @@ class DPortable : KDialogWindow {
 			ws2 = "%folders.ThisAppDocuments%" + ws2;
 
 			print.it("Changing settings");
-			var settFile = _dirData + @"\doc\.settings\settings.json";
+			var settFile = _dirData + @"\doc\.settings\Settings.json";
 			var j = JsonNode.Parse(filesystem.loadBytes(settFile));
 			j["workspace"] = ws2;
 			//print.it(j);

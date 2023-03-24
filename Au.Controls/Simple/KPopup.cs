@@ -383,12 +383,8 @@ namespace Au.Controls {
 					}
 				}
 				break;
-			case Api.WM_SYSCOMMAND:
-				switch ((uint)wParam & 0xFFF0) {
-				case Api.SC_CLOSE:
-					UserClosed = true;
-					break;
-				}
+			case Api.WM_SYSCOMMAND when (wParam & 0xFFF0) == Api.SC_CLOSE:
+				UserClosed = true;
 				break;
 			case Api.WM_CLOSE:
 				if (CloseHides) { _w.ShowL(false); return 0; }
@@ -399,6 +395,12 @@ namespace Au.Controls {
 				break;
 			case Api.WM_TIMER when wParam == c_ccTimer:
 				_ClickCloseTimer(null);
+				break;
+			case Api.WM_SHOWWINDOW:
+				if (wParam == 0 && w.IsActive) {
+					var ow = w.Get.Owner;
+					if (ow.IsVisible) ow.ActivateL();
+				}
 				break;
 			}
 			return null;

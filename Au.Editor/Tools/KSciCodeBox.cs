@@ -30,7 +30,7 @@ class KSciCodeBox : KScintilla {
 		switch (n.code) {
 		case Sci.NOTIF.SCN_UPDATEUI:
 			//make text after _ReadonlyStartUtf8 readonly
-			if (0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
+			if (n.updated.Has(Sci.UPDATE.SC_UPDATE_SELECTION)) { //selection changed
 				if (_readonlyLenUtf8 > 0) {
 					int i = Call(Sci.SCI_GETSELECTIONEND);
 					aaaIsReadonly = i > _ReadonlyStartUtf8 || _LenUtf8 == 0; //small bug: if caret is at the boundary, allows to delete readonly text, etc.

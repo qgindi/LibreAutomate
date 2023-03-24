@@ -10,7 +10,11 @@ record AppSettings : JSettings {
 
 	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
 
+#if IDE_LA
+	public static readonly string DirBS = folders.ThisAppDocuments + @".settings_\";
+#else
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings\";
+#endif
 
 	public string user, workspace;
 	public string[] recentWS;

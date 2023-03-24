@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 
+//TODO: when disabling main window, also disable its owned windows. At least floating panels.
+//	Because for dialogs often is used 'owner: App.Hmain'.
+
 partial class MainWindow : Window {
 	protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 		if (e.Property == VisibilityProperty && (Visibility)e.NewValue == Visibility.Visible) {
@@ -178,7 +181,7 @@ partial class MainWindow : Window {
 				_appActivatedTimer?.Stop();
 			}
 			break;
-		case Api.WM_SYSCOMMAND when wParam == Api.SC_CLOSE:
+		case Api.WM_SYSCOMMAND when (wParam & 0xFFF0) == Api.SC_CLOSE:
 			if (handled = App.Settings.runHidden) Hide_();
 			break;
 		}

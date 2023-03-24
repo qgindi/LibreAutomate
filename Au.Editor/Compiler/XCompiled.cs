@@ -5,22 +5,16 @@ partial class Compiler {
 	/// Resolves whether need to [re]compile or can run previously compiled assembly.
 	/// </summary>
 	unsafe class XCompiled {
-		readonly FilesModel _model;
 		readonly string _file;
 		Dictionary<uint, string> _data;
 		string _environmentString;
 
 		public string CacheDirectory { get; }
 
-		public static XCompiled OfWorkspace(FilesModel m) {
-			var cc = m.CompilerContext;
-			if (cc == null) m.CompilerContext = cc = new XCompiled(m);
-			return cc as XCompiled;
-		}
+		public static XCompiled OfWorkspace => (App.Model.CompilerContext ??= new XCompiled()) as XCompiled;
 
-		public XCompiled(FilesModel m) {
-			_model = m;
-			CacheDirectory = _model.WorkspaceDirectory + @"\.compiled";
+		public XCompiled() {
+			CacheDirectory = App.Model.WorkspaceDirectory + @"\.compiled";
 			_file = CacheDirectory + @"\compiled.log";
 
 			//The first line in the log file contains .NET version, Au.dll version, OS version and workspace path,
@@ -117,7 +111,7 @@ partial class Compiler {
 					case 's':
 						//case 'o':
 						value.ToInt(out uint u1, offs);
-						var f2 = _model.FindById(u1);
+						var f2 = App.Model.FindById(u1);
 						if (f2 == null) return false;
 						if (ch == 'l') {
 							if (f2.FindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
@@ -275,7 +269,7 @@ o - config (now removed)
 					_data = new(sData.LineCount());
 				} else {
 					sData.ToInt(out uint id, v.start, out int idEnd);
-					if (null != _model.FindById(id))
+					if (null != App.Model.FindById(id))
 						_data[id] = v.end > idEnd ? sData[idEnd..v.end] : null;
 				}
 			}
@@ -291,8 +285,6 @@ o - config (now removed)
 			_ClearCache();
 			return false;
 		}
-
-
 
 		void _Save() {
 			filesystem.createDirectory(CacheDirectory);
@@ -312,6 +304,6 @@ o - config (now removed)
 	}
 
 	public static void Uncache(FileNode f) {
-		XCompiled.OfWorkspace(f.Model).Remove(f, true);
+		XCompiled.OfWorkspace.Remove(f, true);
 	}
 }

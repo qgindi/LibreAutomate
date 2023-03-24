@@ -24,14 +24,14 @@ partial class FilesModel {
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	internal readonly Dictionary<string, object> _nameMap;
-	public List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	public readonly sqlite DB;
 	public readonly string SettingsFile;
 	public readonly WorkspaceSettings WSSett;
 	readonly bool _importing;
 	readonly bool _initedFully;
-	public object CompilerContext;
+	internal object CompilerContext;
+	internal IDisposable UndoContext;
 	
 	/// <param name="file">Path of workspace tree file (files.xml).</param>
 	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
@@ -57,7 +57,7 @@ partial class FilesModel {
 		_idMap = new();
 		_nameMap = new(StringComparer.OrdinalIgnoreCase);
 		
-		Root = FileNode.Load(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
+		Root = FileNode.LoadWorkspace(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
 		
 		if (!_importing) {
 			WSSett = WorkspaceSettings.Load(SettingsFile = WorkspaceDirectory + @"\settings.json");
@@ -89,6 +89,7 @@ partial class FilesModel {
 		}
 		Save?.Dispose();
 		DB?.Dispose();
+		UndoContext?.Dispose();
 		WSSett?.Dispose();
 		EditGoBack.DisableUI();
 	}
@@ -182,7 +183,6 @@ partial class FilesModel {
 	public void WorkspaceLoadedWithUI(bool onUiLoaded) {
 		if (!s_isNewWorkspace) LoadState(expandFolders: true);
 		TreeControl.SetItems();
-		OpenFiles = new List<FileNode>();
 		if (s_isNewWorkspace) {
 			s_isNewWorkspace = false;
 			AddMissingDefaultFiles(true, true);
@@ -403,15 +403,14 @@ partial class FilesModel {
 	/// <param name="focusEditor">If <i>activateOther</i> true, focus code editor.</param>
 	public bool CloseFile(FileNode f, bool activateOther = true, bool selectOther = false, bool focusEditor = false) {
 		if (IsAlien(f)) return false;
-		var of = OpenFiles;
-		if (!of.Remove(f)) return false;
+		if (!_openFiles.Remove(f)) return false;
 		
 		Panels.Editor.Close(f);
 		f.IsSelected = false;
 		
 		if (f == _currentFile) {
-			if (activateOther && of.Count > 0) {
-				var ff = of[0];
+			if (activateOther && _openFiles.Count > 0) {
+				var ff = _openFiles[0];
 				if (selectOther) ff.SelectSingle();
 				if (_SetCurrentFile(ff, focusEditor: focusEditor)) return true;
 			}
@@ -431,7 +430,7 @@ partial class FilesModel {
 	/// <param name="files">Any <b>IEnumerable</b> except <b>OpenFiles</b>.</param>
 	/// <param name="dontClose">null or <b>FileNode</b> or <b>BitArray</b> to not close.</param>
 	public void CloseFiles(IEnumerable<FileNode> files, object dontClose = null) {
-		if (files == OpenFiles) files = OpenFiles.ToArray();
+		if (files == _openFiles) files = _openFiles.ToArray();
 		bool closeCurrent = false;
 		int i = 0;
 		foreach (var f in files) {
@@ -448,7 +447,7 @@ partial class FilesModel {
 	/// </summary>
 	void _UpdateOpenFiles(FileNode current) {
 		Panels.Open.UpdateList();
-		App.Commands[nameof(Menus.File.OpenCloseGo.Previous_document)].Enabled = OpenFiles.Count > 1;
+		App.Commands[nameof(Menus.File.OpenCloseGo.Previous_document)].Enabled = _openFiles.Count > 1;
 	}
 	
 	/// <summary>
@@ -462,7 +461,7 @@ partial class FilesModel {
 		UnloadingAnyWorkspace?.Invoke();
 		_currentFile = null;
 		Panels.Editor.CloseAll(saveTextIfNeed: false);
-		OpenFiles.Clear();
+		_openFiles.Clear();
 		_UpdateOpenFiles(null);
 	}
 	
@@ -483,6 +482,13 @@ partial class FilesModel {
 	//	closed = (_, _) => { UnloadingWorkspaceEvent -= aClose; w.Closed -= closed; };
 	//	w.Closed += closed;
 	//}
+	
+	/// <summary>
+	/// Files that are displayed in the Open panel.
+	/// Some of them are open in editor (see <see cref="PanelEdit.OpenDocs"/>, <see cref="FileNode.OpenDoc"/>), others just were open when closing this workspace the last time.
+	/// </summary>
+	public IReadOnlyList<FileNode> OpenFiles => _openFiles;
+	List<FileNode> _openFiles = new();
 	
 	/// <summary>
 	/// Gets the current file. It is open/active in the code editor.
@@ -523,16 +529,15 @@ partial class FilesModel {
 		
 		if (!Panels.Editor.Open(f, newFile, focusEditor, noTemplate)) {
 			_currentFile = fPrev;
-			if (OpenFiles.Contains(f)) _UpdateOpenFiles(_currentFile); //?
+			if (_openFiles.Contains(f)) _UpdateOpenFiles(_currentFile); //?
 			return false;
 		}
 		
 		fPrev?.UpdateControlRow();
 		_currentFile?.UpdateControlRow();
 		
-		var of = OpenFiles;
-		of.Remove(f);
-		of.Insert(0, f);
+		_openFiles.Remove(f);
+		_openFiles.Insert(0, f);
 		_UpdateOpenFiles(f);
 		Save.StateLater();
 		
@@ -811,7 +816,7 @@ partial class FilesModel {
 			else CloseFile(_currentFile);
 			break;
 		case ECloseCmd.CloseAll:
-			CloseFiles(OpenFiles, dontClose);
+			CloseFiles(_openFiles, dontClose);
 			CollapseAll();
 			if (dontClose != null) TreeControl.EnsureVisible(dontClose);
 			break;
@@ -828,7 +833,7 @@ partial class FilesModel {
 		bool update = false;
 		foreach (var v in Root.Descendants()) {
 			if (v.IsExpanded) {
-				if (exceptWithOpenFiles && v.Descendants().Any(o => OpenFiles.Contains(o))) continue;
+				if (exceptWithOpenFiles && v.Descendants().Any(o => _openFiles.Contains(o))) continue;
 				update = true;
 				v.SetIsExpanded(false);
 			}
