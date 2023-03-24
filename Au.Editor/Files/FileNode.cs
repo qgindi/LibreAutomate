@@ -96,9 +96,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 	}
 	
-	public static FileNode Load(string file, FilesModel model) => XmlLoad(file, (x, p) => new FileNode(x, p, model));
+	public static FileNode LoadWorkspace(string file, FilesModel model) => XmlLoad(file, (x, p) => new FileNode(x, p, model));
 	
-	public void Save(string file) => XmlSave(file, (x, n) => n._XmlWrite(x, false));
+	public void SaveWorkspace(string file) => XmlSave(file, (x, n) => n._XmlWrite(x, false));
 	
 	void _XmlWrite(XmlWriter x, bool exporting) {
 		if (Parent == null) {
@@ -353,6 +353,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	/// <summary>
+	/// If is open (active or not), returns the <b>SciCode</b>, else null.
+	/// </summary>
+	public SciCode OpenDoc { get; internal set; }
+	
+	/// <summary>
 	/// Returns Name.
 	/// </summary>
 	public override string ToString() => _name;
@@ -382,6 +387,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// Does not get editor text like <see cref="GetCurrentText"/>.
 	/// </summary>
 	/// <param name="text">"" if failed (eg file not found) or is folder.</param>
+	/// <param name="silent">Don't print warning when failed. If null, silent only if file not found.</param>
 	/// <returns>(true, null) if got text or is folder. (false, error) if failed.</returns>
 	public BoolError GetFileText(out string text, bool? silent = false) {
 		text = "";
@@ -447,12 +453,62 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_fileModTime = Api.GetFileAttributesEx(FilePath, 0, out var d) ? d.ftLastWriteTime : 0;
 	}
 	
-	internal void OnAppActivatedAndThisIsOpen(SciCode doc) {
+	internal void OnAppActivatedAndThisIsOpen_(SciCode doc) {
 		if (doc.EIsBinary) return;
 		Debug_.PrintIf(_fileModTime == 0);
 		if (!Api.GetFileAttributesEx(FilePath, 0, out var d) || d.ftLastWriteTime == _fileModTime) return;
 		_fileModTime = d.ftLastWriteTime;
 		doc.EFileModifiedExternally_(); //calls GetFileText
+	}
+	
+	/// <summary>
+	/// Replaces all specified text ranges with specified texts.
+	/// If the file is open in editor, replaces it there; saves if it isn't the active document. Else replaces file text.
+	/// </summary>
+	/// <param name="text">Current text.</param>
+	/// <param name="a">Text ranges and replacement texts.</param>
+	/// <returns>false if a is empty or failed to save.</returns>
+	/// <param name="newText"></param>
+	public bool ReplaceAllInText(string text, List<StartEndText> a, out string newText) {
+		newText = null;
+		if (a.Count > 0) {
+			var doc = OpenDoc;
+			if (doc != null) {
+				Debug.Assert(!doc.aaaIsReadonly);
+				
+				using (var undo = new KScintilla.aaaUndoAction(doc)) {
+					for (int i = a.Count; --i >= 0;) {
+						var (from, to, s) = a[i];
+						doc.aaaNormalizeRange(true, ref from, ref to);
+						if (CiStyling.IsProtected(doc, from, to)) continue; //hidden text (embedded image)
+						doc.aaaReplaceRange(false, from, to, s);
+					}
+				}
+				
+				newText = doc.aaaText;
+				if (doc != Panels.Editor.ActiveDoc) SaveNewText(newText);
+				return true;
+			} else {
+				newText = StartEndText.ReplaceAll(text, a);
+				return SaveNewText(newText);
+			}
+		}
+		return false;
+	}
+	
+	/// <summary>
+	/// Saves new text.
+	/// </summary>
+	/// <param name="text">New text.</param>
+	/// <returns>false if failed.</returns>
+	public bool SaveNewText(string text) {
+		try {
+			filesystem.saveText(FilePath, text);
+			CodeInfo.FilesChanged();
+			return true;
+		}
+		catch (Exception e1) { print.warning($"Failed to save {SciLink()}. {e1.ToStringWithoutStack()}"); }
+		return false;
 	}
 	
 	#endregion

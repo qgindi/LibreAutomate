@@ -547,6 +547,14 @@ public:
 			r.posTo = (int)pdoc->Length();
 		}
 	}
+
+	void Sci_SetUndoMark(int mark) {
+		pdoc->cb.uh.SetMark(mark);
+	}
+
+	int Sci_GetUndoMark(bool redo) {
+		return pdoc->cb.uh.GetMark(redo);
+	}
 };
 
 HINSTANCE ScintillaWin::hInstance {};
@@ -3792,4 +3800,11 @@ EXPORT void __stdcall Sci_GetVisibleRange(ScintillaWin* sci, struct ScintillaWin
 	sci->Sci_GetVisibleRange(r);
 }
 
+EXPORT void __stdcall Sci_SetUndoMark(ScintillaWin* sci, int mark) {
+	return sci->Sci_SetUndoMark(mark);
+}
+
+EXPORT int __stdcall Sci_GetUndoMark(ScintillaWin* sci, BOOL redo) {
+	return sci->Sci_GetUndoMark(redo);
+}
 }

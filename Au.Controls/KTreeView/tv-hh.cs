@@ -64,7 +64,7 @@ public unsafe partial class KTreeView : HwndHost {
 			_height = Math2.HiWord(lParam);
 			_Measure();
 			break;
-		case Api.WM_SYSCOMMAND when ((int)wParam & 0xfff0) is Api.SC_VSCROLL or Api.SC_HSCROLL: //note: Windows bug: swapped SC_VSCROLL and SC_HSCROLL
+		case Api.WM_SYSCOMMAND when (wParam & 0xFFF0) is Api.SC_VSCROLL or Api.SC_HSCROLL: //note: Windows bug: swapped SC_VSCROLL and SC_HSCROLL
 			try {
 				_inScrollbarScroll = true;
 				return Api.DefWindowProc(w, msg, wParam, lParam);

@@ -93,9 +93,10 @@ static class App {
 
 		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose };
 		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
-		_app.DispatcherUnhandledException += (_, e) => {
-			e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
-		};
+		if (!Debugger.IsAttached)
+			_app.DispatcherUnhandledException += (_, e) => {
+				e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
+			};
 		//perf.next('a');
 
 		_app.MainWindow = Wmain = new MainWindow();
@@ -103,7 +104,7 @@ static class App {
 		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
 		//perf.next('W');
 
-		timer.every(1000, _TimerProc);
+		s_timer = timer.every(1000, _TimerProc);
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
@@ -122,12 +123,19 @@ static class App {
 			//Tested with native message loop (before show window). Faster by 70 ms (240 vs 310 without the .NET startup time).
 			//	But then problems. Eg cannot auto-create main window synchronously, because need to exit native loop and start WPF loop.
 		}
+		catch (Exception e1) when (!Debugger.IsAttached) {
+			Wmain.Close();
+			s_timer.Stop();
+			dialog.showError("Exception", e1.ToString(), flags: DFlags.Wider);
+		}
 		finally { MainFinally_(); }
 	}
 
 	internal static void MainFinally_() {
 		if (Loaded == AppState.Unloaded) return;
 		Loaded = AppState.Unloading;
+
+		s_timer.Stop(); //eg if will show a Debug.Assert dialog
 
 		var fm = Model; Model = null;
 		fm.Dispose(); //stops tasks etc
@@ -383,6 +391,7 @@ static class App {
 			if (needFast) Timer1sWhenVisible?.Invoke();
 		}
 	}
+	static timer s_timer;
 
 	public static AppState Loaded;
 

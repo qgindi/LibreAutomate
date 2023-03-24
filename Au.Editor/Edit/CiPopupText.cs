@@ -2,8 +2,7 @@ using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
-class CiPopupText
-{
+class CiPopupText {
 	public enum UsedBy { PopupList, Signature, Info }
 
 	KPopup _w;

@@ -459,42 +459,42 @@ namespace Au {
 
 		/// <summary>Calls <sqlite>sqlite3_bind_int</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, int value)
 			=> _Err(SLApi.sqlite3_bind_int(_st, _B(sqlParam), value), "sqlite3_bind_int");
 
 		/// <summary>Calls <sqlite>sqlite3_bind_int</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, uint value)
 			=> Bind(sqlParam, (int)value);
 
 		/// <summary>Calls <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, long value)
 			=> _Err(SLApi.sqlite3_bind_int64(_st, _B(sqlParam), value), "sqlite3_bind_int64");
 
 		/// <summary>Calls <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, ulong value)
 			=> Bind(sqlParam, (long)value);
 
 		/// <summary>Calls <google>sqlite3_bind_int</google> (0 or 1).</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, bool value)
 			=> Bind(sqlParam, value ? 1 : 0);
 
 		/// <summary>Binds an enum value as int or long. Calls <sqlite>sqlite3_bind_int</sqlite> or <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining)] //ensure that value is copied to the parameter, because must not be smaller than int
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T value) where T : unmanaged, Enum
@@ -502,21 +502,21 @@ namespace Au {
 
 		/// <summary>Calls <sqlite>sqlite3_bind_double</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, double value)
 			=> _Err(SLApi.sqlite3_bind_double(_st, _B(sqlParam), value), "sqlite3_bind_double");
 
 		/// <summary>Calls <sqlite>sqlite3_bind_text16</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, string value)
 			=> _Err(SLApi.sqlite3_bind_text16(_st, _B(sqlParam), value, (value?.Length ?? 0) * 2), "sqlite3_bind_text16");
 
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, void* blob, long nBytes)
 			=> _Err(SLApi.sqlite3_bind_blob64(_st, _B(sqlParam), blob, nBytes), "sqlite3_bind_blob64");
@@ -527,35 +527,35 @@ namespace Au {
 
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, ReadOnlySpan<T> blob) where T : unmanaged
 			=> _Bind(sqlParam, MemoryMarshal.AsBytes(blob));
 
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, Span<T> blob) where T : unmanaged
 			=> _Bind(sqlParam, MemoryMarshal.AsBytes(blob));
 
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T[] array) where T : unmanaged
 			=> Bind(sqlParam, array.AsSpan());
 
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, List<T> list) where T : unmanaged
 			=> Bind(sqlParam, CollectionsMarshal.AsSpan(list));
 
 		/// <summary>Binds a value as blob. Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		/// <remarks>Can be any value type that does not contain fields of reference types. Examples: <b>Guid</b>, <b>POINT</b>, <b>int</b>, <b>decimal</b>.</remarks>
 		public sqliteStatement BindStruct<T>(SLIndexOrName sqlParam, T value) where T : unmanaged
@@ -563,7 +563,7 @@ namespace Au {
 
 		/// <summary>Calls <sqlite>sqlite3_bind_null</sqlite>.</summary>
 		/// <returns>this.</returns>
-		/// <param name="sqlParam">Parameter name of 1-based index.</param>
+		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		/// <remarks>Usually don't need to call this function. Unset parameter values are null. The <b>Bind</b> functions set null too if the value is null.</remarks>
 		public sqliteStatement BindNull(SLIndexOrName sqlParam)
@@ -762,6 +762,7 @@ namespace Au {
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google>.
 		/// </summary>
+		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards. For zero-length BLOB returns null.</returns>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <param name="nBytes">Blob size.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>
@@ -770,6 +771,28 @@ namespace Au {
 			var r = (byte*)SLApi.sqlite3_column_blob(_st, icol);
 			if (r == null) { nBytes = 0; _WarnGet(); } else nBytes = SLApi.sqlite3_column_bytes(_st, icol);
 			return r;
+		}
+
+		/// <summary>
+		/// Calls <google>sqlite3_column_blob</google>.
+		/// </summary>
+		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards.</returns>
+		/// <param name="column">Column name of 0-based index in results.</param>
+		/// <exception cref="SLException">The column does not exist in query results.</exception>
+		public ReadOnlySpan<byte> GetBlob(SLIndexOrName column) {
+			var p = GetBlob(column, out int n);
+			return new(p, n);
+		}
+
+		/// <summary>
+		/// Calls <google>sqlite3_column_blob</google>.
+		/// </summary>
+		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards.</returns>
+		/// <param name="column">Column name of 0-based index in results.</param>
+		/// <exception cref="SLException">The column does not exist in query results.</exception>
+		public ReadOnlySpan<T> GetBlob<T>(SLIndexOrName column) where T: unmanaged {
+			var p = GetBlob(column, out int n);
+			return new(p, n / sizeof(T));
 		}
 
 		/// <summary>
@@ -884,7 +907,7 @@ namespace Au.Types {
 	/// A SQLite transaction or savepoint. The main purpose is to automatically rollback if not explicitly committed.
 	/// Usage: <c>using(var trans = new SLTransaction(db)) { ... trans.Commit(); }</c>
 	/// </summary>
-	public struct SLTransaction : IDisposable {
+	public struct SLTransaction : IDisposable {//TODO: class. Because not immutable. Also review all similar structs.
 		sqlite _db;
 
 		/// <summary>

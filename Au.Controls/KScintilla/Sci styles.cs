@@ -79,7 +79,7 @@ public unsafe partial class KScintilla {
 	}
 
 	/// <summary>
-	/// Measures string width.
+	/// SCI_TEXTWIDTH.
 	/// </summary>
 	public int aaaStyleMeasureStringWidth(int style, string s) {
 		return aaaSetString(SCI_TEXTWIDTH, style, s);

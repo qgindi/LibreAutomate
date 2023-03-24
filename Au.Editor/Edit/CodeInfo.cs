@@ -174,14 +174,19 @@ static class CodeInfo {
 		_signature.Cancel();
 	}
 	
+	/// <summary>
+	/// Similar to <see cref="FilesChanged"/>, but called when other conditions changed, eg a nuget package [un]installed.
+	/// Not async, and does not fire an event.
+	/// </summary>
 	public static void StopAndUpdateStyling() {
 		Stop();
 		_styling.Update();
 	}
 	
 	/// <summary>
-	/// Called when files added, deleted, moved, copied, imported, renamed.
-	/// Eg need to update styling when a meta c file became [un]available or when project folder structure changed.
+	/// Called when files added, deleted, moved, copied, imported, renamed, text replaced.
+	/// Eg need to update styling and diagnostics when a meta c file became [un]available or when project folder structure changed.
+	/// Will update async, eg single updating for multiple calls. Will call <see cref="StopAndUpdateStyling"/> and <see cref="FilesChangedEvent"/>.
 	/// </summary>
 	public static void FilesChanged() {
 		if (_filesChangedAsync) return; _filesChangedAsync = true;
@@ -198,7 +203,7 @@ static class CodeInfo {
 	static bool _filesChangedAsync;
 	
 	/// <summary>
-	/// When files added, deleted, moved, copied, imported, renamed.
+	/// When files added, deleted, moved, copied, imported, renamed, text replaced.
 	/// Called through Dispatcher.InvokeAsync and may consolidate multiple changes.
 	/// </summary>
 	public static event Action FilesChangedEvent;
@@ -314,18 +319,18 @@ static class CodeInfo {
 		//		_correct on ';' moves caret after ')', and finally we have 'Write(true);', and caret after ';'.
 	}
 	
-	public static void SciUpdateUI(SciCode doc, int updated) {
+	public static void SciUpdateUI(SciCode doc, Sci.UPDATE updated) {
 #if NO_COMPL_CORR_SIGN
 		return;
 #endif
 		//print.it("SciUpdateUI", modified, _tempNoAutoComplete);
 		if (!_CanWork(doc)) return;
 		
-		if (0 != (updated & 3)) { //text (1), selection/click (2)
+		if (updated.HasAny(Sci.UPDATE.SC_UPDATE_CONTENT | Sci.UPDATE.SC_UPDATE_SELECTION)) {
 			_compl.SciUpdateUI(doc);
 			_signature.SciPositionChanged(doc);
-			CiFind.SciUpdateUI(doc, 0 != (updated & 1));
-		} else if (0 != (updated & 12)) { //scrolled
+			CiFind.SciUpdateUI(doc, updated.Has(Sci.UPDATE.SC_UPDATE_CONTENT));
+		} else if (updated.HasAny(Sci.UPDATE.SC_UPDATE_V_SCROLL | Sci.UPDATE.SC_UPDATE_H_SCROLL)) {
 			Cancel();
 			//if (0 != (updated & 4)) { //vertically
 			//	_styling.Timer250msWhenVisibleAndWarm(doc); //rejected. Uses much CPU. The 250 ms timer is OK.
@@ -368,17 +373,6 @@ static class CodeInfo {
 			_ShowTextPopup(doc, pos16, text, onLinkClick);
 		}
 	}
-	
-	public static void SciMouseDwellEnded(SciCode doc) {
-		if (!_CanWork(doc)) return;
-		//_diag.SciMouseDwellEnded(doc);
-	}
-	
-	//public static void SciMouseMoved(SciCode doc, int x, int y)
-	//{
-	//	if(!_CanWork(doc)) return;
-	//	_quickInfo.SciMouseMoved(x, y);
-	//}
 	
 	/// <summary>
 	/// Call this before pasting or inserting text when may need special processing, eg auto-inserting 'using' directives.

@@ -129,7 +129,7 @@ class PanelFound {
 	/// </summary>
 	/// <param name="text">Text of file <i>f</i>.</param>
 	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile) {
-		int wid = Math.Clamp((b.ControlWidth - 20) / 10, 30, 100);
+		int wid = Math.Clamp((b.ControlWidth - 20) / 10 - (displayFile ? f.Name.Length + 4 : 0), 30, 100);
 		int lineStart = start, lineEnd = end;
 		int lsMax = Math.Max(start - wid, 0), leMax = Math.Min(end + 200, text.Length); //start/end limits like in VS
 		while (lineStart > lsMax && !text.IsCsNewlineChar(lineStart - 1)) lineStart--;
@@ -138,11 +138,11 @@ class PanelFound {
 		while (lineEnd < leMax && !text.IsCsNewlineChar(lineEnd)) lineEnd++;
 		bool limitEnd = lineEnd < text.Length && !text.IsCsNewlineChar(lineEnd);
 		b.Link2(new CodeLink(f, start, end));
+		if (displayFile) b.Gray(f.Name).Text("        ");
 		if (limitStart) b.Text("…");
 		b.Text(text.AsSpan(lineStart..lineEnd));
 		b.Hilite(b.Length - (lineEnd - start), b.Length - (lineEnd - end));
 		if (limitEnd) b.Text("…");
-		if (displayFile) b.Text("      ").Gray(f.Name);
 		b.Link_().NL();
 	}
 	
@@ -272,17 +272,17 @@ class PanelFound {
 						//info: scrolling works better with async when now opened the file
 					}
 					break;
-				case ReplaceAllLink k:
+				case ReplaceInFileLink k:
 					if (_OpenLinkClicked(k.file, replaceAll: true)) {
 						timer.after(10, _ => {
 							if (Panels.Editor.ActiveDoc?.EFile != k.file) return;
-							Panels.Find._ReplaceAllInFile(ttf);
+							Panels.Find.ReplaceAllInEditorFromFoundPanel_(ttf);
 						});
 						//info: without timer sometimes does not set cursor pos correctly
 					}
 					break;
 				case string s when s == "RAIF": //Replace all in all files
-					Panels.Find._ReplaceAllInFiles(ttf, files, ref _openedFiles);
+					Panels.Find.ReplaceAllInFilesFromFoundPanel_(ttf, files);
 					break;
 				case Action k:
 					k.Invoke();
@@ -296,7 +296,7 @@ class PanelFound {
 			if (f.IsFolder) f.SelectSingle();
 			else {
 				//avoid opening the file in editor when invalid regex replacement
-				if (replaceAll && !Panels.Find._ValidateReplacement(ttf)) return false;
+				if (replaceAll && !Panels.Find.ValidateReplacement_(ttf)) return false;
 				
 				if (!App.Model.OpenFiles.Contains(f)) (_openedFiles ??= new()).Add(f);
 				if (!App.Model.SetCurrentFile(f)) return false;
@@ -345,7 +345,7 @@ class PanelFound {
 	
 	public record class CodeLink(FileNode file, int start, int end);
 	
-	public record class ReplaceAllLink(FileNode file);
+	public record class ReplaceInFileLink(FileNode file);
 	
 	/// <summary>
 	/// Indices of indicators defined by this control.

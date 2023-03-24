@@ -245,7 +245,6 @@ public:
 
 private:
 	int refCount;
-	CellBuffer cb;
 	CharClassify charClass;
 	CharacterCategoryMap charMap;
 	std::unique_ptr<CaseFolder> pcf;
@@ -275,6 +274,7 @@ private:
 	std::unique_ptr<LexInterface> pli;
 
 public:
+	CellBuffer cb; //Au: made public to simplify other modifications
 
 	struct CharacterExtracted {
 		unsigned int character;

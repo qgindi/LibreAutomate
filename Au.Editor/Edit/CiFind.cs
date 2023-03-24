@@ -12,7 +12,7 @@ using Au.Controls;
 //TODO: doc about 'Find references/implementations', 'hilite references', 'go to base'.
 
 static class CiFind {
-	const int c_markerSymbol = 0, c_markerInfo = 1, c_indicProject = 15;
+	const int c_markerSymbol = 0, c_markerInfo = 1, c_markerSeparator = 2, c_indicProject = 15;
 	static bool _working;
 	
 	public static async void FindReferencesOrImplementations(bool implementations) {
@@ -30,6 +30,7 @@ static class CiFind {
 				var k = workingState.Scintilla;
 				k.aaaMarkerDefine(c_markerSymbol, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
 				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xADC8FF);
+				k.aaaMarkerDefine(c_markerSeparator, Sci.SC_MARK_UNDERLINE, backColor: 0xe0e0e0);
 				k.aaaIndicatorDefine(c_indicProject, Sci.INDIC_GRADIENT, 0xCDE87C, alpha: 255, underText: true);
 			}
 			
@@ -96,6 +97,7 @@ static class CiFind {
 						//references
 						if (multiProj) _Fold(true);
 						ProjectId prevProjId = null;
+						FileNode prevFile = null;
 						var refs2 = refs
 							.OrderBy(o => o.Document.Project.Id != cd.document.Project.Id) //let current project be the first
 							.ThenBy(o => o.Document.Project.Name)
@@ -112,7 +114,10 @@ static class CiFind {
 								_Fold(false);
 								_Fold(true);
 								b.Indic(c_indicProject).Text("Project ").B(rloc.Document.Project.Name).Indic_().NL();
+							} else if (f != prevFile) {
+								if (prevFile != null) b.Marker(c_markerSeparator, prevLine: true);
 							}
+							prevFile = f;
 							
 							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, displayFile: true);
 						}
@@ -315,7 +320,7 @@ static class CiFind {
 		}
 	}
 	
-	#if true
+#if true
 	public static async void RenameSymbol() {//TODO
 		print.clear();
 		if (_working) return;
@@ -339,7 +344,7 @@ static class CiFind {
 			//print.it(sol2.GetChangedDocuments(solution));
 			perf.next('r');
 			
-			int n=0;
+			int n = 0;
 			foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
 				print.it("<><c blue>PROJECT", projChange.NewProject.Name, "<>");
 				foreach (var docId in projChange.GetChangedDocuments(true)) {
@@ -360,7 +365,7 @@ static class CiFind {
 			Au.Compiler.TestInternal.RefsEnd();
 		}
 	}
-	#else
+#else
 	public static async void RenameSymbol() {//TODO
 		print.clear();
 		if (_working) return;
@@ -396,5 +401,5 @@ static class CiFind {
 			Au.Compiler.TestInternal.RefsEnd();
 		}
 	}
-	#endif
+#endif
 }

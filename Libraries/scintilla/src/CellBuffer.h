@@ -37,6 +37,7 @@ public:
 	std::unique_ptr<char[]> data;
 	Sci::Position lenData;
 	bool mayCoalesce;
+	int mark; //Au
 
 	Action() noexcept;
 	// Deleted so Action objects can not be copied.
@@ -100,6 +101,10 @@ public:
 	int StartRedo();
 	const Action &GetRedoStep() const;
 	void CompletedRedoStep();
+
+	//Au
+	void SetMark(int mark);
+	int GetMark(bool redo);
 };
 
 struct SplitView {
@@ -144,7 +149,6 @@ private:
 	Scintilla::LineEndType utf8LineEnds;
 
 	bool collectingUndo;
-	UndoHistory uh;
 
 	std::unique_ptr<ILineVector> plv;
 
@@ -158,6 +162,7 @@ private:
 	void BasicDeleteChars(Sci::Position position, Sci::Position deleteLength);
 
 public:
+	UndoHistory uh; //Au: made public to simplify other modifications
 
 	CellBuffer(bool hasStyles_, bool largeDocument_);
 	// Deleted so CellBuffer objects can not be copied.

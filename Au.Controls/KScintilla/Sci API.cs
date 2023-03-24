@@ -60,6 +60,15 @@ public static unsafe class Sci {
 #pragma warning restore 649
 	#endregion
 
+	//[DllImport("Scintilla")]
+	//public static extern bool Sci_CanUndoRedoContainer(nint sci, bool redo, int token);
+
+	[DllImport("Scintilla")]
+	public static extern void Sci_SetUndoMark(nint sci, int mark);
+
+	[DllImport("Scintilla")]
+	public static extern int Sci_GetUndoMark(nint sci, bool redo);
+
 	#region au constants etc
 
 	public const int STYLE_HIDDEN = 31; //DEFAULT-1
@@ -1191,11 +1200,14 @@ public static unsafe class Sci {
 		SC_MOD_CHANGEEOLANNOTATION = 0x400000,
 		SC_MODEVENTMASKALL = 0x7FFFFF,
 	}
-	public const int SC_UPDATE_NONE = 0x0;
-	public const int SC_UPDATE_CONTENT = 0x1;
-	public const int SC_UPDATE_SELECTION = 0x2;
-	public const int SC_UPDATE_V_SCROLL = 0x4;
-	public const int SC_UPDATE_H_SCROLL = 0x8;
+	[Flags]
+	public enum UPDATE {
+		SC_UPDATE_CONTENT=1,
+		SC_UPDATE_SELECTION=2,
+		SC_UPDATE_V_SCROLL=4,
+		SC_UPDATE_H_SCROLL=8,
+	}
+	
 	public const int SCEN_CHANGE = 768;
 	public const int SCEN_SETFOCUS = 512;
 	public const int SCEN_KILLFOCUS = 256;
@@ -1339,7 +1351,7 @@ public static unsafe class Sci {
 		public int token;
 		nint _annotationLinesAdded;
 		public int annotationLinesAdded => (int)_annotationLinesAdded;
-		public int updated;
+		public UPDATE updated;
 		public int listCompletionMethod;
 #pragma warning restore 649 //field never assigned
 
