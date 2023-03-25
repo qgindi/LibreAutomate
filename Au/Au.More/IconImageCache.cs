@@ -198,7 +198,7 @@ namespace Au.More {
 					//p1.Next('b');
 					if (useDB && !inDB) {
 						try {
-							using var tra = _sqlite.Transaction();
+							using var trans = _sqlite.Transaction();
 
 							if (!isImage && b != null) {
 								_sHashInsert ??= _sqlite.Statement($"INSERT OR IGNORE INTO hashed VALUES (?, ?)");
@@ -210,7 +210,7 @@ namespace Au.More {
 							if (b == null) si.BindNull(2); else if (isImage) si.Bind(2, span); else si.BindStruct(2, hash);
 							si.Step();
 
-							tra.Commit();
+							trans.Commit();
 						}
 						catch (Exception e1) { Debug_.Print(e1); }
 						finally { dd.sInsert?.Reset(); _sHashInsert?.Reset(); }
@@ -270,7 +270,7 @@ namespace Au.More {
 			try {
 				_sqlite ??= new(_dbFile, sql: @"PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=100;");
 				//_sqlite.Execute("DELETE FROM (SELECT name FROM sqlite_master WHERE type='table'); VACUUM;"); //error. SELECT is not supported here.
-				using var tra = _sqlite.Transaction();
+				using var trans = _sqlite.Transaction();
 				using var sTables = _sqlite.Statement("SELECT name FROM sqlite_master WHERE type='table'");
 				while (sTables.Step()) {
 					var table = sTables.GetText(0);
@@ -278,7 +278,7 @@ namespace Au.More {
 					if (table == "misc") continue;
 					_sqlite.Execute("DELETE FROM " + table);
 				}
-				tra.Commit();
+				trans.Commit();
 				_sqlite.Execute("VACUUM");
 			}
 			catch (Exception e1) { print.warning("Failed to clear icon cache. " + e1); }

@@ -248,50 +248,6 @@ namespace Au
 					fixed (long* p = _a) { return (long)(s_freqMCS * p[n - 1]); }
 				}
 			}
-
-			//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
-			///// <summary>
-			///// Executes <i>code</i> (lambda) <i>count</i> times, and then calls <see cref="Next"/>.
-			///// </summary>
-			//public void execute(int count, Action code)
-			//{
-			//	while(count-- > 0) code();
-			//	Next();
-			//}
-
-			///// <summary>
-			///// <i>countAll</i> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
-			///// </summary>
-			//public void executeMulti(int countAll, int countEach, params Action[] codes)
-			//{
-			//	while(countAll-- > 0) {
-			//		First();
-			//		foreach(Action a in codes) Execute(countEach, a);
-			//		Write();
-			//	}
-			//}
-
-			//rejected. It's easier to use microseconds in the same way.
-			///// <summary>
-			///// Converts this variable to string that can be used to create a copy of this variable with <see cref="Instance(string)"/>.
-			///// </summary>
-			//public string serialize()
-			//{
-			//	var si = sizeof(Instance);
-			//	var b = new byte[si];
-			//	fixed (long* p = _a) Marshal.Copy((IntPtr)p, b, 0, si);
-			//	return Convert.ToBase64String(b);
-			//}
-			///// <summary>
-			///// Initializes this variable as a copy of another variable that has been converted to string with <see cref="Serialize"/>.
-			///// </summary>
-			//public Instance(string serialized) : this()
-			//{
-			//	var si = sizeof(Instance);
-			//	var b = Convert.FromBase64String(serialized);
-			//	if(b.Length == si)
-			//		fixed (long* p = _a) Marshal.Copy(b, 0, (IntPtr)p, si);
-			//}
 		}
 
 		/// <summary>

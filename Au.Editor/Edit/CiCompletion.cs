@@ -907,6 +907,7 @@ partial class CiCompletion {
 			Debug_.PrintIf(changes.Length != 1 && item.Provider != CiComplProvider.Override, changes); //eg the override provider also may add 'using'
 			var lastChange = changes.Last();
 			s = lastChange.NewText;
+			if (s.NE()) return CiComplResult.None; //Roslyn bug: fails if there are parameters of type nint. Same in VS.
 			var span = lastChange.Span;
 			i = span.Start;
 			len = span.Length + codeLenDiff;

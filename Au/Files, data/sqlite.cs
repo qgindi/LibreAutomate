@@ -907,16 +907,8 @@ namespace Au.Types {
 	/// A SQLite transaction or savepoint. The main purpose is to automatically rollback if not explicitly committed.
 	/// Usage: <c>using(var trans = new SLTransaction(db)) { ... trans.Commit(); }</c>
 	/// </summary>
-	public struct SLTransaction : IDisposable {//TODO: class. Because not immutable. Also review all similar structs.
+	public sealed class SLTransaction : IDisposable {
 		sqlite _db;
-
-		/// <summary>
-		/// Gets or sets SQL to execute when disposing this variable if not called <see cref="Commit"/> or <see cref="Rollback"/>.
-		/// Initially = parameter <c>sqlOfDispose</c> of constructor.
-		/// </summary>
-		public string SqlOfDispose { get; set; }
-
-		//public string ErrorMessage { get; set; }
 
 		/// <summary>
 		/// Begins a SQLite transaction and prepares for automatic rollback if not explicitly committed.
@@ -930,7 +922,7 @@ namespace Au.Types {
 		/// See also: <see cref="SqlOfDispose"/>.
 		/// </param>
 		/// <exception cref="SLException">Failed to execute <i>sql</i>.</exception>
-		public SLTransaction(sqlite db, string sql = "BEGIN", string sqlOfDispose = "ROLLBACK") : this() {
+		public SLTransaction(sqlite db, string sql = "BEGIN", string sqlOfDispose = "ROLLBACK") {
 			Not_.Null(db);
 			db.Execute(sql);
 			_db = db;
@@ -943,6 +935,11 @@ namespace Au.Types {
 		/// <exception cref="SLException">Failed to execute <see cref="SqlOfDispose"/>.</exception>
 		public void Dispose() {
 			if (_db != null) Rollback(SqlOfDispose);
+		}
+		
+		///
+		~SLTransaction() {
+			if (_db != null) print.warning($"Non-disposed SLTransaction variable.");
 		}
 
 		/// <summary>
@@ -970,6 +967,14 @@ namespace Au.Types {
 			_db.Execute(sql);
 			_db = null;
 		}
+
+		/// <summary>
+		/// Gets or sets SQL to execute when disposing this variable if not called <see cref="Commit"/> or <see cref="Rollback"/>.
+		/// Initially = parameter <c>sqlOfDispose</c> of constructor.
+		/// </summary>
+		public string SqlOfDispose { get; set; }
+
+		//public string ErrorMessage { get; set; }
 	}
 
 	/// <summary>

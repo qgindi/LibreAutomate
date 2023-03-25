@@ -68,14 +68,14 @@ public partial class keys {
 		[FieldOffset(2)] internal ushort ch; //character if IsChar
 
 		//Event type KeyEvent or KeyPair.
-		internal _KEvent(bool pair, KKey vk, _KFlags siFlags, ushort scan = 0) : this() {
+		internal _KEvent(bool pair, KKey vk, _KFlags siFlags, ushort scan = 0) {
 			this.vk = vk;
 			var f = (byte)siFlags; if (pair) f |= 16; _flags = f;
 			this.scan = scan;
 		}
 
 		//Event of any type except KeyEvent and KeyPair.
-		internal _KEvent(_KType type, ushort data) : this() {
+		internal _KEvent(_KType type, ushort data) {
 			Debug.Assert(type > _KType.KeyPair);
 			_flags = (byte)((byte)type << 4);
 			this.data = data;

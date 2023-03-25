@@ -138,7 +138,7 @@ static unsafe partial class Api {
 		/// <summary>
 		/// If ex null, sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
 		/// </summary>
-		public WNDCLASSEX(RWCEtc ex) : this() {
+		public WNDCLASSEX(RWCEtc ex) {
 			cbSize = sizeof(WNDCLASSEX);
 			if (ex == null) {
 				hCursor = LoadCursor(default, MCursor.Arrow);
@@ -1364,7 +1364,7 @@ static unsafe partial class Api {
 		public int cch;
 		public IntPtr hbmpItem;
 
-		public MENUITEMINFO(uint miim) : this() {
+		public MENUITEMINFO(uint miim) {
 			cbSize = sizeof(MENUITEMINFO);
 			fMask = miim;
 		}
@@ -1408,7 +1408,7 @@ static unsafe partial class Api {
 		public int nPos;
 		public int nTrackPos;
 
-		public SCROLLINFO(uint mask) : this() {
+		public SCROLLINFO(uint mask) {
 			cbSize = sizeof(SCROLLINFO);
 			fMask = mask;
 		}

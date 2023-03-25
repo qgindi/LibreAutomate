@@ -91,7 +91,7 @@ static class Menus {
 			[Command(target = "")]
 			public static void Close_all() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll); }
 			
-			[Command(target = "", image = "*Codicons.CollapseAll" + black)]
+			[Command(separator = true, target = "", image = "*Codicons.CollapseAll" + black)]
 			public static void Collapse_all_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseAllFolders); }
 			
 			[Command(target = "", image = "*Codicons.CollapseAll" + black)]

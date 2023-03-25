@@ -8,8 +8,7 @@ namespace Au {
 	/// <remarks>
 	/// Native icons must be destroyed. An <b>icon</b> variable destroys its native icon when disposing. To dispose, call <b>Dispose</b> or use <c>using</c> statement. Or use functions like <see cref="ToGdipBitmap"/>, <see cref="ToWpfImage"/>; by default they dispose the <b>icon</b> variable. It's OK to not dispose if you use few icons; GC will do it.
 	/// </remarks>
-	public class icon : IDisposable //rejected: base SafeHandle.
-	{
+	public class icon : IDisposable { //rejected: base SafeHandle.
 		IntPtr _handle;
 		
 		/// <summary>
@@ -36,13 +35,18 @@ namespace Au {
 		/// Destroys native icon handle.
 		/// </summary>
 		public void Dispose() {
-			var h = Detach();
-			if (h != default) Api.DestroyIcon(h);
+			Dispose(true);
 			GC.SuppressFinalize(this); //never mind: actually this should be in Detach, but then intellisense gives 2 notes
 		}
 		
 		///
-		~icon() { Dispose(); }
+		protected void Dispose(bool disposing) {
+			var h = Detach();
+			if (h != default) Api.DestroyIcon(h);
+		}
+		
+		///
+		~icon() { Dispose(false); }
 		
 		/// <summary>
 		/// Clears this variable and returns its native icon handle.

@@ -496,14 +496,12 @@ public partial class toolbar : MTBase {
 		case Api.WM_ERASEBKGND:
 			return 0;
 		case Api.WM_PAINT:
-			//			perf.first();
 			using (BufferedPaint bp = new(w, true)) {
 				var dc = bp.DC;
 				using var g = System.Drawing.Graphics.FromHdc(dc);
 				g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 				_WmPaint(dc, g, bp.Rect, bp.UpdateRect);
 			}
-			//			perf.nw();
 			return default;
 		case Api.WM_MOUSEACTIVATE:
 			return Api.MA_NOACTIVATE;

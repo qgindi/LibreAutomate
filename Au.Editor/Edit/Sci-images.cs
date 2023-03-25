@@ -15,7 +15,7 @@ partial class SciCode {
 		public bool isImage; //draw frame; else icon, draw without frame
 		public bool isComment; /*image:...*/
 	}
-
+	
 	//fields for drawing images in margin
 	struct _Images {
 		public List<_Image> a; //images retrieved by _ImagesGet on styling
@@ -24,23 +24,23 @@ partial class SciCode {
 		public IntPtr callbackPtr;
 	}
 	_Images _im;
-
+	
 	//Called by CiStyling._StylingAndFolding.
 	internal void EImagesGet_(CodeInfo.Context cd, IEnumerable<ClassifiedSpan> list, in Sci_VisibleRange vr) {
 		if (App.Settings.edit_noImages) return;
 		//using var p1 = perf.local(); //fast when bitmaps loaded/cached
-
+		
 		//remove StaticSymbol. It is added for each static symbol, randomly before or after. Makes code difficult.
 		var a = list.Where(o => o.ClassificationType != CT.StaticSymbol).ToArray();
-
+		
 		if (a.Length > 0) aaaIndicatorClear(c_indicImages, true, a[0].TextSpan.Start..a[^1].TextSpan.End);
-
+		
 		string code = cd.code;
 		int maxWidth = 0;
 		int nextLineStart = 0;
-
+		
 		//CONSIDER: prefer /*image:...*/? Now, if before is eg "file path", displays file icon. Or draw both somehow.
-
+		
 		for (int i = 0; i < a.Length; i++) {
 			if (a[i].TextSpan.Start < nextLineStart) continue; //max 1 image/line
 			string s;
@@ -76,15 +76,15 @@ partial class SciCode {
 				b = IconImageCache.Common.Get(s, _dpi, imType == ImageType.XamlIconName);
 			}
 			if (b == null) continue;
-
+			
 			nextLineStart = code.IndexOf('\n', a[i].TextSpan.End) + 1;
 			if (nextLineStart == 0) nextLineStart = code.Length;
-
+			
 			int start = a[i].TextSpan.Start;
 			int line = aaaLineFromPos(true, start), vi = Call(SCI_VISIBLEFROMDOCLINE, line);
 			if (vi >= vr.vlineFrom && vi < vr.vlineTo && 0 != Call(SCI_GETLINEVISIBLE, line))
 				maxWidth = Math.Max(maxWidth, _ImageDisplaySize(!isImage, b, isComment).Width);
-
+			
 			if (_im.a == null) {
 				_im.a = new();
 				Call(SCI_INDICSETSTYLE, c_indicImages, INDIC_HIDDEN);
@@ -104,10 +104,10 @@ partial class SciCode {
 			for (ii = 0; ii < ab.Count; ii++) if (ab[ii].image == b) break;
 			if (ii == ab.Count) ab.Add(new() { image = b, isImage = isImage, isComment = isComment });
 			//print.it(ii, s);
-
+			
 			aaaIndicatorAdd(c_indicImages, true, start..(start + 1), ii + 1);
 		}
-
+		
 		//maxWidth is 0 if no images or if all images are in folded regions.
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
 		var (left, right) = aaaMarginGetX(c_marginImages);
@@ -116,12 +116,12 @@ partial class SciCode {
 		//SHOULDDO: draw only when need, ie when new indicators are different than old.
 		//	Now draws on each text change, eg added character, unless changes are frequent. But not too slow.
 		//	And probably then also draws all other margins.
-
+		
 		#region local util
-
+		
 		bool _Eq(int i, string ctype, string text = null)
 			=> (uint)i < a.Length && a[i].ClassificationType == ctype && (text == null || code.Eq(a[i].TextSpan, text));
-
+		
 		bool _IsString(ClassifiedSpan v, out CiStringRange r) {
 			r = default;
 			bool verbatim = false;
@@ -134,7 +134,7 @@ partial class SciCode {
 			r = new(code, start, end, verbatim);
 			return true;
 		}
-
+		
 		string _IsFoldersEtc(ClassifiedSpan v, ref int i, out ImageType imageType) {
 			imageType = 0;
 			if (_Eq(i, CT.ClassName, "folders")) {
@@ -159,7 +159,7 @@ partial class SciCode {
 						}
 			}
 			return null;
-
+			
 			string _Plus(FolderPath fp, ref int i) {
 				//print.it("FOLDERS", fp.Path);
 				if (i < a.Length - 2 && (_Eq(i + 1, CT.OperatorOverloaded, "+") || _Eq(i + 1, CT.Operator, "+")) && _IsString(a[i + 2], out var r)) {
@@ -169,11 +169,11 @@ partial class SciCode {
 				return fp.Path;
 			}
 		}
-
+		
 		static ImageType _ImageTypeFromString(bool folders, ReadOnlySpan<char> s/*, out int prefixLength*/) {
 			//prefixLength = 0;
 			if (s.Length < 2) return default;
-
+			
 			//special strings
 			switch (s[0]) {
 			case 'i' when s.StartsWith("image:"):
@@ -200,7 +200,7 @@ partial class SciCode {
 			case ':':
 				return s[1] == ':' ? ImageType.ShellIcon : default;
 			}
-
+			
 			//file path or URL
 			//string expanded = null;
 			//if (s[0] == '%') {
@@ -227,17 +227,17 @@ partial class SciCode {
 					if (!(s.Starts("shell:") || s.Starts("ms-settings:"))) return default;
 				} else if (!s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return default;
 			}
-
+			
 			return ImageType.ShellIcon;
 		}
-
+		
 		#endregion
 	}
-
+	
 	unsafe void _ImagesMarginDrawCallback(ref Sci_MarginDrawCallbackData c) {
 		//print.it(c.rect, c.firstLine, c.lastLine);
 		//using var p1 = perf.local();
-
+		
 		int pos = aaaLineStart(false, c.firstLine) - 1, posEnd = aaaLineEnd(false, c.lastLine);
 		int topVisibleLine = Call(SCI_GETFIRSTVISIBLELINE), lineH = Call(SCI_TEXTHEIGHT);
 		int maxWidth = 0;
@@ -250,7 +250,7 @@ partial class SciCode {
 				if ((uint)i >= _im.a.Count) break; //should never
 				int line = aaaLineFromPos(false, pos);
 				if (0 == Call(SCI_GETLINEVISIBLE, line)) continue; //folded?
-
+				
 				//print.it(pos, i, line);
 				var v = _im.a[i];
 #if SMALLER_SCREENSHOTS
@@ -262,16 +262,16 @@ partial class SciCode {
 				maxWidth = Math.Max(maxWidth, z.Width);
 				int x = c.rect.CenterX - z.Width / 2;
 				int y = (Call(SCI_VISIBLEFROMDOCLINE, line) - topVisibleLine) * lineH;
-
+				
 				RECT r = new(x, y, z.Width, z.Height);
 				if (!c.rect.IntersectsWith(r)) continue;
 				if (g == null) {
 					g = Graphics.FromHdc(c.hdc);
 					g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 				}
-
+				
 				g.IntersectClip(c.rect); //limit image width, because not clipped
-
+				
 				if (v.isImage) g.DrawRectangleInset(Color.Green, 1, r, outset: true);
 				g.DrawImage(v.image, r);
 			}
@@ -279,7 +279,7 @@ partial class SciCode {
 		finally {
 			g?.Dispose();
 		}
-
+		
 		//auto-correct margin width, in case _ImagesGet not called because styling is valid.
 		//	Need it eg after expanding/collapsing a folding containing images. Also sometimes after resizing the control or after zoom changed.
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
@@ -288,7 +288,7 @@ partial class SciCode {
 			if (maxWidth > oldWidth || (c.rect.top == 0 && c.rect.bottom == AaWnd.ClientRect.bottom))
 				_ImagesMarginAutoWidth(oldWidth, maxWidth);
 	}
-
+	
 	void _ImagesMarginAutoWidth(int oldWidth, int width) {
 		if (width == oldWidth) return;
 		//when shrinking, in wrap mode could start autorepeating, when makes less lines wrapped and it uncovers wider images at the bottom and need to expand again.
@@ -296,7 +296,7 @@ partial class SciCode {
 		if (width < oldWidth && App.Settings.edit_wrap) return;
 		AaWnd.Post(SCI_SETMARGINWIDTHN, c_marginImages, width);
 	}
-
+	
 	void _ImagesOnOff() {
 		if (App.Settings.edit_noImages == (_im.a == null)) return;
 		if (_im.a != null) {
@@ -310,7 +310,7 @@ partial class SciCode {
 			if (this == Panels.Editor.ActiveDoc) CodeInfo._styling.Update();
 		}
 	}
-
+	
 	Size _ImageDisplaySize(bool isIcon16, Bitmap b, bool smaller) {
 		var z = b.Size;
 		if (isIcon16) {
@@ -325,7 +325,7 @@ partial class SciCode {
 #endif
 		return z;
 	}
-
+	
 	/// <summary>
 	/// Finds all /*image:Base64*/ and @"image:Base64" in scintilla text range from8..to8 (UTF-8) and sets style STYLE_HIDDEN for the Base64.
 	/// If <i>styles</i> != null, writes STYLE_HIDDEN in <i>styles</i>, else uses SCI_STARTSTYLING/SCI_SETSTYLING.
@@ -335,23 +335,28 @@ partial class SciCode {
 	/// </remarks>
 	internal unsafe void EHideImages_(int from8, int to8, byte[] styles = null, [CallerMemberName] string caller = null) {
 		if (styles == null) from8 = aaaLineStartFromPos(false, from8);
-		if (to8 - from8 < 40) return;
-		//print.it("HI", from8, to8, styles != null);
+		if (to8 - from8 < 49) return;
+		
 		var r = new Au.Controls.SciDirectRange(this, from8, to8);
-		for (int j = from8 + 2, to2 = to8 - 30; j <= to2;) {
+		for (int j = from8 + 2, to2 = to8 - 47; j <= to2;) {
 			int i = j;
 			for (; ; i++) {
 				if (i > to2) return;
 				if (r[i] == 'i' && r[i + 1] == 'm' && r[i + 2] == 'a' && r[i + 3] == 'g' && r[i + 4] == 'e' && r[i + 5] == ':') break;
 			}
 			j = i + 6;
+			
 			char c1 = r[i - 1], c2 = r[i - 2];
 			if (!((c1 == '*' && c2 == '/') || (c1 == '\"' && c2 == '@'))) continue;
-			for (int j2 = to8 - (c1 == '\"' ? 1 : 2); j < j2; j++) {
-				if (r[j] is not ((>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '+' or '/' or '=')) break;
-			}
-			if (j - i < 30 || r[j] != c1 || (c1 == '*' && '/' != r[j + 1])) continue;
+			
+			int j2 = to8 - (c1 == '\"' ? 1 : 2);
+			while (j < j2 && r[j] is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '+' or '/') j++;
+			if (j - i < 46) continue; //match regex image:[A-Za-z0-9/+]{40,}
+			while (j < j2 && r[j] == '=') j++;
+			
+			if (r[j] != c1 || (c1 == '*' && '/' != r[j + 1])) continue;
 			if (c1 == '\"') i += 6; else { i -= 2; j += 2; }
+			
 			if (styles != null) {
 				styles.AsSpan(i - from8, j - i).Fill(STYLE_HIDDEN);
 			} else {
@@ -359,7 +364,7 @@ partial class SciCode {
 				Call(SCI_SETSTYLING, j - i, STYLE_HIDDEN);
 			}
 		}
-
+		
 		//note: don't use SCI_SETTARGETRANGE here. In some cases scintilla does not work well with it. It may create bugs.
 	}
 	//Not easy to use hidden style because:
@@ -368,7 +373,7 @@ partial class SciCode {
 	//		Workaround: at first hide all on SCN_STYLENEEDED.
 	//	2. User cannot delete text containing hidden text.
 	//		Workaround: modify scintilla source in Editor::RangeContainsProtected.
-
+	
 	bool _ImageDeleteKey(KKey key) {
 		if (key is KKey.Delete or KKey.Back && !base.aaaHasSelection) {
 			int pos = base.aaaCurrentPos8, to = pos;
@@ -395,11 +400,11 @@ partial class SciCode {
 		return false;
 	}
 	static bool s_imageDeleteAlways;
-
+	
 	static string _ImageRemoveScreenshots(string s) {
-		return s.RxReplace(@"/\*image:[\w/+]{40,}=*\*/", "");
+		return s.RxReplace(@"/\*image:[A-Za-z0-9/+]{40,}=*\*/", "");
 	}
-
+	
 	public void EImageRemoveScreenshots() {
 		if (aaaIsReadonly || !_fn.IsCodeFile) return;
 		bool isSel = aaaHasSelection;

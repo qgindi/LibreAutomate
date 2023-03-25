@@ -198,7 +198,13 @@ static unsafe partial class Api {
 		/// <summary>
 		/// Sets width/height/bitcount/planes fields. Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
 		/// </summary>
-		public BITMAPINFO(int width, int height, int bitCount = 32) : this() { biWidth = width; biHeight = height; biBitCount = (ushort)bitCount; biPlanes = 1; }
+		public BITMAPINFO(int width, int height, int bitCount = 32) {
+			biSize = sizeof(BITMAPINFOHEADER);
+			biWidth = width;
+			biHeight = height;
+			biBitCount = (ushort)bitCount;
+			biPlanes = 1;
+		}
 
 		//little tested
 		///// <summary>
@@ -576,7 +582,7 @@ static unsafe partial class Api {
 		/// </summary>
 		/// <param name="wNotify"></param>
 		/// <param name="nifFlags"></param>
-		public NOTIFYICONDATA(wnd wNotify, uint nifFlags = 0) : this() {
+		public NOTIFYICONDATA(wnd wNotify, uint nifFlags = 0) {
 			cbSize = Api.SizeOf<Api.NOTIFYICONDATA>();
 			hWnd = wNotify;
 			uFlags = nifFlags;

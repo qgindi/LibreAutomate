@@ -139,10 +139,12 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 
 	//~KScintilla() { print.it("~KScintilla"); } //to detect memory leak. Also enable the GC.ReRegisterForFinalize.
+	
+	//static PrintMsgOptions s_pmo = new(Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
 	nint _WndProc(wnd w, int msg, nint wp, nint lp) {
 		//if (Name == "Recipe_text") WndUtil.PrintMsg(w, msg, wp, lp);
-		//if(Name == "Recipe_text") WndUtil.PrintMsg(_w, msg, wp, lp, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
+		//if(Name == "Recipe_text") WndUtil.PrintMsg(_w, msg, wp, lp, s_pmo);
 
 		switch (msg) {
 		case Api.WM_SETFOCUS:
@@ -186,7 +188,7 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 
 	protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-		if (msg == Api.WM_GETOBJECT) { //WPF steals it from _WndProc //TODO
+		if (msg == Api.WM_GETOBJECT) { //WPF steals it from _WndProc
 			handled = true;
 			return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);
 		}

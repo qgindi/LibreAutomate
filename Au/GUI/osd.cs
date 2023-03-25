@@ -1,15 +1,13 @@
 
 using System.Drawing;
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Transparent window that can be used for on-screen display. Derived classes on it can draw non-transparent text, rectangle, image, anything.
 	/// </summary>
-	public abstract class OsdWindow : IDisposable
-	{
+	public abstract class OsdWindow : IDisposable {
 		wnd _w;
-
+		
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing) {
 			if (_w.Is0) return;
@@ -18,21 +16,21 @@ namespace Au.Types
 			var w = _w; _w = default;
 			if (!Api.DestroyWindow(w)) w.Post(Api.WM_CLOSE);
 		}
-
+		
 		/// <summary>Destroys the OSD window.</summary>
 		public void Dispose() => Dispose(true);
-
+		
 		/// <summary>Destroys the OSD window.</summary>
 		public void Close() => Dispose(true);
-
+		
 		/// <summary>OSD window handle or <c>default(wnd)</c>.</summary>
 		public wnd Hwnd => _w;
-
+		
 		/// <summary>
 		/// Returns true if the OSD window is created.
 		/// </summary>
 		protected bool IsHandleCreated => !_w.Is0;
-
+		
 		/// <summary>
 		/// Redraws the OSD window immediately.
 		/// Does nothing it is not created or not visible.
@@ -42,7 +40,7 @@ namespace Au.Types
 			Api.InvalidateRect(_w);
 			Api.UpdateWindow(_w);
 		}
-
+		
 		/// <summary>
 		/// Sets to redraw the OSD window later.
 		/// Does nothing it is not created or not visible.
@@ -51,7 +49,7 @@ namespace Au.Types
 			if (!Visible) return;
 			Api.InvalidateRect(_w);
 		}
-
+		
 		/// <summary>
 		/// Gets or sets the opacity of the OSD window, from 0 to 1.
 		/// If 1 (default), completely opaque. If 0, pixels of <see cref="TransparentColor"/> are transparent, others opaque. If between 0 and 1, partially transparent.
@@ -72,15 +70,15 @@ namespace Au.Types
 			}
 		}
 		double _opacity = 1d;
-
+		
 		void _SetOpacity() {
 			if (_opacity > 0) Api.SetLayeredWindowAttributes(_w, 0, (byte)(uint)(_opacity * 255), 2);
 			else Api.SetLayeredWindowAttributes(_w, (uint)TransparentColor.ToBGR(), 0, 1);
-
+			
 			//never mind: when resizing an alpha-transparent window by moving the top-left corner, the opposite corner shakes.
 			//	It's a Windows problem, and I could not find a workaround.
 		}
-
+		
 		/// <summary>
 		/// Gets or sets transparent color, default 0xF5F4F5. Pixels of this color will be transparent, unless <see cref="Opacity"/> is not 0.
 		/// </summary>
@@ -89,7 +87,7 @@ namespace Au.Types
 		/// Note: when used for transparent text, text edges are blended with this color, and it can become visible if the color is not chosen carefully.
 		/// </remarks>
 		public ColorInt TransparentColor { get; set; } = 0xF5F4F5;
-
+		
 		/// <summary>
 		/// Gets or sets OSD window size and position in screen.
 		/// </summary>
@@ -108,7 +106,7 @@ namespace Au.Types
 			}
 		}
 		RECT _r;
-
+		
 		/// <summary>
 		/// Gets or sets whether the OSD window is visible.
 		/// The 'set' function calls <see cref="Show"/> (it creates OSD window if need) or <see cref="Hide"/> (it does not destroy the OSD window).
@@ -117,7 +115,7 @@ namespace Au.Types
 			get => _w.IsVisible;
 			set { if (value) Show(); else Hide(); } //note: if overridden, calls the override func
 		}
-
+		
 		/// <summary>
 		/// Shows the OSD window. Creates if need.
 		/// </summary>
@@ -136,7 +134,7 @@ namespace Au.Types
 				Api.UpdateWindow(_w);
 			}
 		}
-
+		
 		/// <summary>
 		/// Hides the OSD window. Does not destroy; use <see cref="Close"/> or <see cref="Dispose"/> for it.
 		/// Does nothing if not created or not visible.
@@ -145,7 +143,7 @@ namespace Au.Types
 			if (!Visible) return;
 			_w.ShowL(false);
 		}
-
+		
 		void _CreateWindow() {
 			//register window class if need. Need another class if shadow.
 			string cn; byte regMask;
@@ -156,7 +154,7 @@ namespace Au.Types
 				WndUtil.RegisterWindowClass(cn, null, ce);
 				s_isWinClassRegistered |= regMask;
 			}
-
+			
 			var es = WSE.TOOLWINDOW | WSE.TOPMOST | WSE.LAYERED | WSE.TRANSPARENT | WSE.NOACTIVATE;
 			if (ClickToClose) es &= ~WSE.TRANSPARENT;
 			_w = WndUtil.CreateWindow(WndProc, true, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
@@ -164,7 +162,7 @@ namespace Au.Types
 			if (!_r.Is0) _w.SetWindowPos(SWPFlags.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHWND.TOPMOST);
 		}
 		static byte s_isWinClassRegistered;
-
+		
 		/// <summary>
 		/// Called when the OSD window receives a message.
 		/// If your derived class overrides this function, it must call <c>base.WndProc</c> and return its return value, except when don't need default processing.
@@ -193,10 +191,10 @@ namespace Au.Types
 				if (ClickToClose) w.Post(Api.WM_CLOSE);
 				break;
 			}
-
+			
 			return Api.DefWindowProc(w, message, wParam, lParam);
 		}
-
+		
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn.
 		/// Derived classes should override this function and draw anything. Don't need to call <c>base.OnPaint</c> of <see cref="OsdWindow"/>, it does nothing.
@@ -206,7 +204,7 @@ namespace Au.Types
 		/// </remarks>
 		protected virtual void OnPaint(IntPtr dc, Graphics g, RECT r) {
 		}
-
+		
 		/// <summary>
 		/// If true, the OSD window will have shadow.
 		/// </summary>
@@ -214,7 +212,7 @@ namespace Au.Types
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		protected bool Shadow { get; set; }
-
+		
 		/// <summary>
 		/// If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
 		/// </summary>
@@ -222,7 +220,7 @@ namespace Au.Types
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		protected bool ClickToClose { get; set; }
-
+		
 		/// <summary>
 		/// OSD window name. Optional, default null.
 		/// </summary>
@@ -231,7 +229,7 @@ namespace Au.Types
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public string Name { get; set; }
-
+		
 		/// <summary>
 		/// Closes all OSD windows of this process.
 		/// </summary>
@@ -239,9 +237,9 @@ namespace Au.Types
 		public static void closeAll([ParamString(PSFormat.Wildex)] string name = null) {
 			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Post(Api.WM_CLOSE);
 		}
-
+		
 		#region topmost workaround
-
+		
 		//SHOULDDO: find a better workaround for: our topmost window is below some other topmost windows (Win8+).
 		//	Window examples:
 		//	A. Windows Start menu, search, TaskListThumbnailWnd.
@@ -252,9 +250,9 @@ namespace Au.Types
 		//	2. Temporarily set partially transparent. But it is useful only for on-screen rect. Not useful for menus and toolbars. Fails if not admin. Fails with WPF windows.
 		//	3. Set window region. Too crazy. Tested, does not work with eg OSK, although works with eg Notepad.
 		//	4. Run tools in uiAccess processes. Too crazy and limited.
-
+		
 		internal bool TopmostWorkaround_ { get; set; }
-
+		
 		void _TopmostWorkaroundApply() {
 			if (!TopmostWorkaround_ || !osVersion.minWin10) return; //never mind: on Win8 not tested. Would be bad to make full-screen windows transparent.
 			var w = wnd.fromXY(new(_r.CenterX, _r.CenterY), WXYFlags.NeedWindow);
@@ -290,7 +288,7 @@ namespace Au.Types
 			}
 			if (apply) w.SetTransparency(true, 200, noException: true);
 		}
-
+		
 		void _TopmostWorkaroundUndo() {
 			if (!TopmostWorkaround_ || !osVersion.minWin10) return;
 			List<wnd> aw = null;
@@ -309,16 +307,15 @@ namespace Au.Types
 			}
 			if (aw != null) foreach (var w in aw) w.SetTransparency(!true, 255, noException: true);
 		}
-
+		
 		static List<(wnd w, List<OsdWindow> a)> s_twList = new();
 		static timer2 s_twTimer;
-
+		
 		#endregion
 	}
 }
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Shows a mouse-transparent rectangle on screen. Just visible outline, or filled but partially transparent.
 	/// </summary>
@@ -339,13 +336,12 @@ namespace Au
 	/// }
 	/// ]]></code>
 	/// </example>
-	public class osdRect : OsdWindow
-	{
+	public class osdRect : OsdWindow {
 		///
 		public osdRect() {
 			Opacity = 0d;
 		}
-
+		
 		/// <summary>
 		/// Gets or sets rectangle color.
 		/// </summary>
@@ -363,7 +359,7 @@ namespace Au
 			set { if (value != _color) { _color = value; Redraw(); } }
 		}
 		ColorInt _color = 0; //=0 adds alpha 0xFF
-
+		
 		/// <summary>
 		/// Gets or sets rectangle frame width.
 		/// Used only if <see cref="OsdWindow.Opacity"/> is 0 (default).
@@ -376,7 +372,7 @@ namespace Au
 			set { if (value != _thickness) { _thickness = value; Redraw(); } }
 		}
 		int _thickness = 3;
-
+		
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn. Draws rectangle. More info: <see cref="OsdWindow.OnPaint"/>.
 		/// </summary>
@@ -388,7 +384,7 @@ namespace Au
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Shows text on screen, like a tooltip or with transparent background.
 	/// </summary>
@@ -396,16 +392,15 @@ namespace Au
 	/// Creates a temporary partially transparent window, and draws text in it.
 	/// Most properties cannot be changed after creating OSD window.
 	/// </remarks>
-	public class osdText : OsdWindow
-	{
+	public class osdText : OsdWindow {
 		NativeFont_ _font;
-
+		
 		///
 		protected override void Dispose(bool disposing) {
 			base.Dispose(disposing);
 			_font?.Dispose(); _font = null;
 		}
-
+		
 		/// <summary>
 		/// Coordinates.
 		/// Default: null (screen center).
@@ -430,7 +425,7 @@ namespace Au
 			}
 		}
 		PopupXY _xy;
-
+		
 		/// <summary>
 		/// Gets or sets OSD window size and position in screen.
 		/// </summary>
@@ -444,18 +439,18 @@ namespace Au
 			set { _rectIsSet = true; base.Rect = value; }
 		}
 		bool _rectIsSet;
-
+		
 		void _ResizeOrInvalidate() {
 			if (ResizeWhenContentChanged) base.Rect = Measure(); //info: invalidates if resized, because of the CS_ styles
 			Invalidate();
 		}
-
+		
 		/// <summary>
 		/// When changing text, resize/move the OSD window if need.
 		/// Default: false.
 		/// </summary>
 		public bool ResizeWhenContentChanged { get; set; }
-
+		
 		/// <summary>
 		/// Text in OSD window.
 		/// </summary>
@@ -467,7 +462,7 @@ namespace Au
 			set { if (value != _text) { _text = value; _ResizeOrInvalidate(); } }
 		}
 		string _text;
-
+		
 		/// <summary>
 		/// Font.
 		/// Default: <see cref="defaultSmallFont"/>.
@@ -476,7 +471,7 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public FontNSS Font { get; set; }
-
+		
 		/// <summary>
 		/// Text color.
 		/// Default: <see cref="defaultTextColor"/>.
@@ -489,7 +484,7 @@ namespace Au
 			set { if (value != _textColor) { _textColor = value; Invalidate(); } }
 		}
 		ColorInt _textColor;
-
+		
 		/// <summary>
 		/// Background color.
 		/// Default: <see cref="defaultBackColor"/>.
@@ -503,7 +498,7 @@ namespace Au
 			set { if (value != _backColor) { _backColor = value; Invalidate(); } }
 		}
 		ColorInt _backColor;
-
+		
 		/// <summary>
 		/// Border color.
 		/// Default: <see cref="defaultBorderColor"/>.
@@ -517,7 +512,7 @@ namespace Au
 			set { if (value != _borderColor) { _borderColor = value; Invalidate(); } }
 		}
 		private ColorInt _borderColor;
-
+		
 		/// <summary>
 		/// Background image.
 		/// </summary>
@@ -525,9 +520,9 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public Image BackgroundImage { get; set; }
-
+		
 		//public ImageLayout BackgroundImageLayout { get; set; } //FUTURE
-
+		
 		/// <summary>
 		/// When used <see cref="BackgroundImage"/>, the OSD window has the same size as the image, plus borders.
 		/// Else OSD window size is calculated from sizes of text and icon. Then image is displayed scaled or clipped if need.
@@ -536,7 +531,7 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public bool IsOfImageSize { get; set; }
-
+		
 		/// <summary>
 		/// Maximal text width.
 		/// Default: 0 - no limit (depends on screen width etc).
@@ -545,7 +540,7 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public int WrapWidth { get; set; }
-
+		
 		/// <summary>
 		/// Gets or sets text format flags.
 		/// Default: <c>TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS</c>.
@@ -554,7 +549,7 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public TFFlags TextFormatFlags { get; set; } = TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS;
-
+		
 		/// <summary>
 		/// Icon or image at the left. Can be <see cref="icon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
 		/// For example <b>System.Drawing.SystemIcons.Information</b> or <c>icon.stock(StockIcon.INFO)</c>.
@@ -564,7 +559,7 @@ namespace Au
 		/// </remarks>
 		public object Icon { get; set; }
 		SIZE _iconSize;
-
+		
 		/// <summary>
 		/// If true, the OSD window will have shadow.
 		/// </summary>
@@ -573,7 +568,7 @@ namespace Au
 		/// Window shadows can be disabled. See <msdn>SPI_SETDROPSHADOW</msdn>.
 		/// </remarks>
 		public new bool Shadow { get => base.Shadow; set => base.Shadow = value; }
-
+		
 		/// <summary>
 		/// If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
 		/// </summary>
@@ -581,7 +576,7 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public new bool ClickToClose { get => base.ClickToClose; set => base.ClickToClose = value; }
-
+		
 		/// <summary>
 		/// Close the OSD window after this time, seconds.
 		/// If 0 (default), depends on text length. Can be <see cref="Timeout.Infinite"/> (-1).
@@ -590,7 +585,7 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public int SecondsTimeout { get; set; }
-
+		
 		/// <summary>
 		/// See <see cref="OsdMode"/>.
 		/// </summary>
@@ -598,9 +593,9 @@ namespace Au
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public OsdMode ShowMode { get; set; }
-
+		
 		//CONSIDER: public AnyWnd Owner { get; set; }
-
+		
 		///
 		public osdText() {
 			Font = defaultSmallFont;
@@ -608,7 +603,7 @@ namespace Au
 			_backColor = defaultBackColor;
 			_borderColor = defaultBorderColor;
 		}
-
+		
 		/// <summary>
 		/// Shows the OSD window. Creates if need.
 		/// By default does not wait; the window will be closed after <see cref="SecondsTimeout"/>.
@@ -634,14 +629,14 @@ namespace Au
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
 				run.thread(() => _Show(true), ShowMode == OsdMode.WeakThread);
 				Au.wait.forCondition(30, () => IsHandleCreated);
-
+				
 				//CONSIDER: make smaller timeout when main thread ended if OsdShowMode.Auto
 			}
 		}
-
+		
 		void _Show(bool sync) {
 			if (!_rectIsSet) base.Rect = Measure();
-
+			
 			int t = SecondsTimeout;
 			if (t == 0) t = Math.Min(Text.Lenn(), 1000) / 10 + 3; //calc time from text length
 			base.Show();
@@ -654,7 +649,7 @@ namespace Au
 				timer.after(t, _ => Close());
 			}
 		}
-
+		
 		/// <summary>
 		/// Draws OSD text etc.
 		/// </summary>
@@ -662,23 +657,23 @@ namespace Au
 			//print.it(Api.GetCurrentThreadId());
 			if (Opacity != 0) {
 				g.Clear((Color)BackColor); //else OsdWindow cleared with TransparentColor
-
+				
 				if (BorderColor != BackColor) { //border
 					g.DrawRectangleInset((Color)BorderColor, 1, r);
 					r.Inflate(-1, -1);
 				}
 			}
-
+			
 			if (BackgroundImage != null) {
 				g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 				g.DrawImageUnscaledAndClipped(BackgroundImage, r); //info: if image smaller - scales; if bigger - clips.
 			}
-
+			
 			_EnsureFontAndMargin(Dpi.OfWindow(Hwnd)); //eg if Measure not called because Rect is set
-
+			
 			r.Inflate(-_margin, -_margin);
 			if (Font.Italic) r.Width += _margin / 2; //avoid clipping part of last char
-
+			
 			if (_iconSize != default) {
 				int x = r.left + c_iconPadding, y = r.top + c_iconPadding;
 				if (Icon is Image im) {
@@ -689,7 +684,7 @@ namespace Au
 				}
 				r.left += _iconSize.width + c_iconPadding * 2;
 			}
-
+			
 			if (!Text.NE()) {
 				Api.SetTextColor(dc, TextColor.ToBGR());
 				Api.SetBkMode(dc, 1);
@@ -699,10 +694,10 @@ namespace Au
 				Api.DrawText(dc, Text, ref rt, tff);
 			}
 		}
-
+		
 		const int c_iconPadding = 5;
 		int _margin;
-
+		
 		void _EnsureFontAndMargin(int dpi) {
 			if (Text.NE()) {
 				_margin = 0;
@@ -712,7 +707,7 @@ namespace Au
 				_margin = Dpi.Scale(Math.Max(f.Size / 3, 3), dpi);
 			}
 		}
-
+		
 		/// <summary>
 		/// Calculates OSD window size and position.
 		/// Can be called before showing OSD.
@@ -732,7 +727,7 @@ namespace Au
 					_iconSize = zi;
 					if (zi != default) { zi.Width += c_iconPadding * 2; zi.Height += c_iconPadding * 2; }
 				}
-
+				
 				var scrn = XY?.GetScreen() ?? defaultScreen.Now;
 				int dpi = scrn.Dpi;
 				_margin = 0;
@@ -745,20 +740,20 @@ namespace Au
 					using var dc = new FontDC_(_font);
 					z = dc.MeasureDT(Text, tff, maxWidth);
 				}
-
+				
 				z.Width += zi.Width;
 				z.Height = Math.Max(z.Height, zi.Height);
-
+				
 				z.Width += _margin * 2; z.Height += _margin * 2;
 			}
-
+			
 			if (Opacity != 0 && BorderColor != BackColor) { //border
 				z.Width += 2; z.Height += 2;
 			}
-
+			
 			RECT r = new(0, 0, z.Width, z.Height);
 			//print.it(r);
-
+			
 			if (XY != null) {
 				if (XY.inRect) r.MoveInRect(XY.rect, XY.x, XY.y, ensureInRect: false);
 				else r.MoveInScreen(XY.x, XY.y, XY.screen, XY.workArea, ensureInScreen: false);
@@ -766,10 +761,10 @@ namespace Au
 			} else {
 				r.MoveInScreen(Coord.Center, Coord.Center, defaultScreen, workArea: true, ensureInScreen: true);
 			}
-
+			
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
 		/// </summary>
@@ -804,11 +799,11 @@ namespace Au
 				ClickToClose = true,
 				Shadow = true
 			};
-
+			
 			if (!dontShow) o.Show();
 			return o;
 		}
-
+		
 		/// <summary>
 		/// Shows a big-font text with transparent background.
 		/// </summary>
@@ -832,11 +827,11 @@ namespace Au
 				ShowMode = showMode,
 				Opacity = 0d
 			};
-
+			
 			if (!dontShow) o.Show();
 			return o;
 		}
-
+		
 		/// <summary>
 		/// Shows on-screen image.
 		/// </summary>
@@ -859,33 +854,33 @@ namespace Au
 				ClickToClose = true
 			};
 			o._backColor = o.TransparentColor;
-
+			
 			if (!dontShow) o.Show();
 			return o;
 		}
-
+		
 		/// <summary>Default font for <see cref="showText"/> and <b>osdText</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_smallFont = new(12);
-
+		
 		/// <summary>Default font for <see cref="showTransparentText"/>. Default: standard GUI font (usually Segoe UI), size 24.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_bigFont = new(24);
-
+		
 		/// <summary>Default text color for <see cref="showText"/> and <b>osdText</b>. Default: 0x(dark gray).</summary>
 		public static ColorInt defaultTextColor { get; set; } = 0x404040;
-
+		
 		/// <summary>Default border color for <see cref="showText"/> and <b>osdText</b>. Default: 0x404040 (dark gray).</summary>
 		public static ColorInt defaultBorderColor { get; set; } = 0x404040;
-
+		
 		/// <summary>Default background color for <see cref="showText"/> and <b>osdText</b>. Default: 0xFFFFF0 (light yellow).</summary>
 		public static ColorInt defaultBackColor { get; set; } = 0xFFFFF0;
-
+		
 		/// <summary>Default text color for <see cref="showTransparentText"/>. Default: 0x8A2BE2 (<b>Color.BlueViolet</b>).</summary>
 		public static ColorInt defaultTransparentTextColor { get; set; } = 0x8A2BE2;
-
+		
 		/// <summary>
 		/// Default screen when <see cref="XY"/> is not set.
 		/// The <b>screen</b> must be lazy or empty.
@@ -904,31 +899,29 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Whether <see cref="osdText.Show"/> waits or shows the OSD window in this or new thread.
 	/// </summary>
 	/// <remarks>
 	/// If this thread has windows, any value can be used, but usually <b>Auto</b> (default) or <b>ThisThread</b> is the best.
 	/// </remarks>
-	public enum OsdMode
-	{
+	public enum OsdMode {
 		/// <summary>Depends on <see cref="process.thisThreadHasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
 		Auto,
-
+		
 		/// <summary>
 		/// Show the OSD window in this thread and don't wait.
 		/// This thread must must be a UI thread (with windows etc).
 		/// </summary>
 		ThisThread,
-
+		
 		/// <summary>Show the OSD window in new thread and don't wait. Set <see cref="Thread.IsBackground"/>=true, so that the OSD is closed when other threads of this app end.</summary>
 		WeakThread,
-
+		
 		/// <summary>Show the OSD window in new thread and don't wait. Set <see cref="Thread.IsBackground"/>=false, so that the OSD is not closed when other threads of this app end.</summary>
 		StrongThread,
-
+		
 		/// <summary>
 		/// Show the OSD window in this thread and wait until it disappears.
 		/// Waits <see cref="osdText.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="wait.doEvents(int)"/>.
