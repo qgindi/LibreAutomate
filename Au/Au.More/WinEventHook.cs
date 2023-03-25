@@ -1,5 +1,4 @@
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Helps with UI element event hooks. See API <msdn>SetWinEventHook</msdn>.
 	/// </summary>
@@ -24,13 +23,12 @@ namespace Au.More
 	/// ]]></code>
 	/// </example>
 	[DebuggerStepThrough]
-	public class WinEventHook : IDisposable
-	{
+	public sealed class WinEventHook : IDisposable {
 		IntPtr[] _a;
 		Api.WINEVENTPROC _proc1; //our intermediate hook proc that calls _proc2
 		Action<HookData.WinEvent> _proc2; //caller's hook proc
 		[ThreadStatic] static List<WinEventHook> t_antiGC;
-
+		
 		/// <summary>
 		/// Sets a hook for an event or a range of events.
 		/// </summary>
@@ -49,7 +47,7 @@ namespace Au.More
 			_proc2 = hookProc;
 			(t_antiGC ??= new()).Add(this);
 		}
-
+		
 		/// <summary>
 		/// Sets multiple hooks.
 		/// </summary>
@@ -62,7 +60,7 @@ namespace Au.More
 			_proc2 = hookProc;
 			(t_antiGC ??= new()).Add(this);
 		}
-
+		
 		/// <exception cref="InvalidOperationException">Hooks are already set and <see cref="Unhook"/> not called.</exception>
 		/// <inheritdoc cref="WinEventHook(EEvent, EEvent, Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public void Hook(EEvent eventMin, EEvent eventMax = 0, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
@@ -70,7 +68,7 @@ namespace Au.More
 			_a = new IntPtr[1];
 			_SetHook(0, eventMin, eventMax, idProcess, idThread, flags);
 		}
-
+		
 		/// <exception cref="InvalidOperationException">Hooks are already set and <see cref="Unhook"/> not called.</exception>
 		/// <inheritdoc cref="WinEventHook(EEvent[], Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public void Hook(EEvent[] events, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
@@ -78,7 +76,7 @@ namespace Au.More
 			_a = new IntPtr[events.Length];
 			for (int i = 0; i < events.Length; i++) _SetHook(i, events[i], 0, idProcess, idThread, flags);
 		}
-
+		
 		void _SetHook(int i, EEvent eMin, EEvent eMax, int idProcess, int idThread, EHookFlags flags) {
 			if (eMin == 0) return;
 			if (eMax == 0) eMax = eMin;
@@ -90,12 +88,12 @@ namespace Au.More
 			}
 			_a[i] = hh;
 		}
-
+		
 		void _Throw1() {
 			if (_a != null) throw new InvalidOperationException();
 			if (_proc1 == null) throw new ObjectDisposedException(nameof(WinEventHook));
 		}
-
+		
 		/// <summary>
 		/// Adds a hook for an event or a range of events.
 		/// </summary>
@@ -119,7 +117,7 @@ namespace Au.More
 			_SetHook(i, eventMin, eventMax, idProcess, idThread, flags);
 			return i + 1;
 		}
-
+		
 		/// <summary>
 		/// Removes a hook added by <see cref="Add"/>.
 		/// </summary>
@@ -131,12 +129,12 @@ namespace Au.More
 			if (!Api.UnhookWinEvent(_a[addedId])) print.warning("Failed to unhook WinEventHook.");
 			_a[addedId] = default;
 		}
-
+		
 		///// <summary>
 		///// True if hooks are set.
 		///// </summary>
 		//public bool Installed => _a != null;
-
+		
 		/// <summary>
 		/// Removes all hooks.
 		/// </summary>
@@ -153,7 +151,7 @@ namespace Au.More
 				_a = null;
 			}
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="Unhook"/>.
 		/// </summary>
@@ -163,7 +161,7 @@ namespace Au.More
 			t_antiGC.Remove(this);
 			GC.SuppressFinalize(this);
 		}
-
+		
 		/// <summary>
 		/// Prints a warning if the variable is not disposed. Cannot dispose in finalizer.
 		/// </summary>
@@ -171,7 +169,7 @@ namespace Au.More
 			//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
 			if (_a != null) print.warning("Non-disposed WinEventHook variable.");
 		}
-
+		
 		void _HookProc(IntPtr hHook, EEvent ev, wnd w, EObjid idObject, int idChild, int thread, int time) {
 			try {
 				_proc2(new HookData.WinEvent(this, ev, w, idObject, idChild, thread, time));
@@ -181,37 +179,34 @@ namespace Au.More
 	}
 }
 
-namespace Au.Types
-{
-	public static partial class HookData
-	{
+namespace Au.Types {
+	public static partial class HookData {
 		/// <summary>
 		/// Hook data for the hook procedure set by <see cref="WinEventHook"/>.
 		/// More info: API <msdn>WinEventProc</msdn>.
 		/// </summary>
-		public unsafe struct WinEvent
-		{
+		public unsafe struct WinEvent {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WinEventHook hook;
-
+			
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly EEvent event_;
-
+			
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly wnd w;
-
+			
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly EObjid idObject;
-
+			
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int idChild;
-
+			
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int thread;
-
+			
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int time;
-
+			
 			internal WinEvent(WinEventHook hook, EEvent event_, wnd hwnd, EObjid idObject, int idChild, int thread, int time) {
 				this.hook = hook;
 				this.event_ = event_;
@@ -221,7 +216,7 @@ namespace Au.Types
 				this.thread = thread;
 				this.time = time;
 			}
-
+			
 			/// <summary>
 			/// Calls <see cref="elm.fromEvent"/>.
 			/// </summary>

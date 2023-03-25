@@ -28,18 +28,18 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	public int aaaSetString(int sciMessage, string wParam, nint lParam) {
 		fixed (byte* s = _ToUtf8(wParam)) {
-			return Call(sciMessage, lParam, s);
+			return Call(sciMessage, (nint)s, lParam);
 		}
 	}
 	
 	/// <summary>
 	/// Calls a Scintilla message and passes two strings using wParam and lParam.
-	/// wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
+	/// <i>wParamlParam</i> must be like "WPARAM\0LPARAM". Asserts if no '\0'.
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
 	/// </summary>
-	public int aaaSetStringString(int sciMessage, string wParam0lParam) {
-		fixed (byte* s = _ToUtf8(wParam0lParam, out var len)) {
+	public int aaaSetStringString(int sciMessage, string wParamlParam) {
+		fixed (byte* s = _ToUtf8(wParamlParam, out var len)) {
 			int i = BytePtr_.Length(s);
 			Debug.Assert(i < len);
 			return Call(sciMessage, (nint)s, s + i + 1);

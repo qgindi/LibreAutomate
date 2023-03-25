@@ -103,7 +103,8 @@ public struct RegisteredHotkey : IDisposable {
 				print.warning($"Failed to unregister hotkey, id={_id}. {es}");
 				return;
 			}
-			_id = 0; _w = default;
+			_id = 0;
+			_w = default;
 			//Hotkey = default;
 		}
 	}

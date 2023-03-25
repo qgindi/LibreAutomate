@@ -23,41 +23,39 @@ namespace Au.Triggers;
 /// <summary>
 /// Thread containing low-level keyboard and mouse hooks.
 /// </summary>
-class HooksThread : IDisposable
-{
+class HooksThread : IDisposable {
 	[Flags]
-	public enum UsedEvents
-	{
+	public enum UsedEvents {
 		Keyboard = 1, //Hotkey and Autotext triggers
 		Mouse = 2, //Mouse and Autotext triggers. Just sets the hook and resets autotext; to receive events, also add other MouseX flags.
 		MouseClick = 0x10, //Mouse click triggers
 		MouseWheel = 0x20, //Mouse wheel triggers
 		MouseEdgeMove = 0x40, //Mouse edge and move triggers
 	}
-
+	
 	int _tid;
 	UsedEvents _usedEvents;
 	wnd _wMsg;
 	MouseTriggers.EdgeMoveDetector_ _emDetector;
 	Handle_ _eventStartStop = Api.CreateEvent(false);
-
+	
 	public HooksThread(UsedEvents usedEvents, wnd wMsg) {
 		_usedEvents = usedEvents;
 		_wMsg = wMsg;
 		run.thread(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
 		Api.WaitForSingleObject(_eventStartStop, -1);
 	}
-
+	
 	public void Dispose() {
 		Api.PostThreadMessage(_tid, Api.WM_QUIT, 0, 0);
 		Api.WaitForSingleObject(_eventStartStop, -1);
 		_eventStartStop.Dispose();
 		_eventSendData.Dispose();
 	}
-
+	
 	void _Thread() {
 		_tid = Api.GetCurrentThreadId();
-
+		
 		WindowsHook hookK = null, hookM = null;
 		if (_usedEvents.Has(UsedEvents.Keyboard)) {
 			hookK = WindowsHook.Keyboard(_KeyboardHookProc); //note: if lambda, very slow JIT on first hook event
@@ -69,11 +67,11 @@ class HooksThread : IDisposable
 			_emDetector = new MouseTriggers.EdgeMoveDetector_();
 		}
 		//tested: don't need JIT-compiling.
-
+		
 		nint idTimer = (hookK != null || hookM != null) ? Api.SetTimer(default, 0, 10_000, null) : 0;
-
+		
 		Api.SetEvent(_eventStartStop);
-
+		
 		while (Api.GetMessage(out var m) > 0) {
 			if (m.message == Api.WM_TIMER && m.wParam == idTimer) {
 				if (Debugger.IsAttached) continue;
@@ -83,19 +81,19 @@ class HooksThread : IDisposable
 			}
 			Api.DispatchMessage(m);
 		}
-
+		
 		//print.it("hooks thread ended");
 		hookK?.Dispose();
 		hookM?.Dispose();
 		_emDetector = null;
 		Api.SetEvent(_eventStartStop);
 	}
-
+	
 	unsafe void _KeyboardHookProc(HookData.Keyboard k) {
 		_keyData = *k.NativeStructPtr_;
 		if (_Send(UsedEvents.Keyboard)) k.BlockEvent();
 	}
-
+	
 	unsafe bool _MouseHookProc(nint wParam, nint lParam) {
 		int msg = (int)wParam;
 		if (msg == Api.WM_MOUSEMOVE) {
@@ -116,7 +114,7 @@ class HooksThread : IDisposable
 		}
 		return false;
 	}
-
+	
 	/// <summary>
 	/// Sends key/mouse event data (copied to _keyData etc) to the main thread.
 	/// Returns true to eat (block, discard) the event.
@@ -124,7 +122,7 @@ class HooksThread : IDisposable
 	/// </summary>
 	bool _Send(UsedEvents eventType) {
 		//using var p1 = perf.local();
-		bool ok=_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
+		bool ok = _wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
 		bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
 		lock (this) {
 			if (timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
@@ -133,7 +131,7 @@ class HooksThread : IDisposable
 		}
 		//info: HookWin._HookProcLL will print warning if > LowLevelHooksTimeout-50. Max LowLevelHooksTimeout is 1000.
 	}
-
+	
 	//fields for passing key/mouse event data to the main thread and getting its return value
 	Handle_ _eventSendData = Api.CreateEvent(false); //sync
 	int _messageId; //sync
@@ -142,7 +140,7 @@ class HooksThread : IDisposable
 	Api.MSLLHOOKSTRUCT _mouseData;
 	int _mouseMessage;
 	MouseTriggers.EdgeMoveDetector_.Result _emData;
-
+	
 	/// <summary>
 	/// Called by the main thread to resume the hooks thread (_Send) and pass the return value (eat).
 	/// Returns false on timeout.
@@ -155,7 +153,7 @@ class HooksThread : IDisposable
 		}
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Called by the main thread to get key event data sent by _Send.
 	/// Returns false on timeout.
@@ -164,7 +162,7 @@ class HooksThread : IDisposable
 		data = _keyData;
 		return messageId == _messageId;
 	}
-
+	
 	/// <summary>
 	/// Called by the main thread to get mouse click/wheel event data sent by _Send.
 	/// Returns false on timeout.
@@ -174,7 +172,7 @@ class HooksThread : IDisposable
 		message = _mouseMessage;
 		return messageId == _messageId;
 	}
-
+	
 	/// <summary>
 	/// Called by the main thread to get mouse edge/move event data sent by _Send.
 	/// Returns false on timeout.

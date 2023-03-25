@@ -253,7 +253,6 @@ partial class SciCode : KScintilla {
 	}
 	bool _modified;
 	
-	//override //TODO: if autocompleted WndProc, damages code at the start. Probably unsuccessfully tries to add an using.
 	protected override nint WndProc(wnd w, int msg, nint wp, nint lp) {
 		switch (msg) {
 		case Api.WM_CHAR: {

@@ -2,10 +2,18 @@ namespace Au.More;
 
 /// <summary>
 /// File system redirection functions. Can temporarily disable redirection, to allow this 32-bit process access the 64-bit System32 directory.
+/// Example: <c>using (FileSystemRedirection r1 = new()) { r1.Disable(); ... }</c>.
 /// </summary>
 public struct FileSystemRedirection : IDisposable {
 	bool _redirected;
 	IntPtr _redirValue;
+
+	/// <summary>
+	/// Calls <see cref="Revert"/>.
+	/// </summary>
+	public void Dispose() {
+		Revert();
+	}
 
 	/// <summary>
 	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/>, calls API <msdn>Wow64DisableWow64FsRedirection</msdn>, which disables file system redirection.
@@ -56,12 +64,5 @@ public struct FileSystemRedirection : IDisposable {
 		var s = path.ReplaceAt(0, i, folders.SystemX64);
 		if (ifExistsOnlyThere && !filesystem.exists(s)) return path;
 		return s;
-	}
-
-	/// <summary>
-	/// Calls <see cref="Revert"/>.
-	/// </summary>
-	public void Dispose() {
-		Revert();
 	}
 }

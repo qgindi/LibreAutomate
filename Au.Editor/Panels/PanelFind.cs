@@ -257,17 +257,17 @@ This setting also is used by 'Find references' etc.
 		var m = new popupMenu();
 		m.AddRadio("Search in entire workspace", f == 0, _ => f = 0);
 		m.AddRadio("Search in current root folder", f == 1, _ => f = 1);
-		m.AddRadio("Search in current @project or root folder", f == 2, _ => f = 2);
+		m.AddRadio("Search in current @Project", f == 2, _ => f = 2);
 		m.Show();
 		_SetFilter(f);
 	}
 	int _filter; //0 workspace, 1 root folder, 2 project or root folder
-
+	
 	void _SetFilter(int f) {
 		if (f != _filter) {
 			_filter = f;
 			_bFilter.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? " #FFA500" : Menus.red));
-			_bFilter.ToolTip = f switch { 0 => "Search in entire workspace", 1 => "Search in current root folder", _ => "Search in current @project or root folder" };
+			_bFilter.ToolTip = f switch { 0 => "Search in entire workspace", 1 => "Search in current root folder", _ => "Search in current @Project" };
 		}
 	}
 	
@@ -371,16 +371,59 @@ This setting also is used by 'Find references' etc.
 	}
 	
 	static void _FindAllInString(string text, _TextToFind ttf, Action<int, int> found) {
-		//TODO: skip images
+		_SkipImages si = new(text);
+		
 		if (ttf.rx != null) {
-			foreach (var g in ttf.rx.FindAllG(text, 0)) found(g.Start, g.End);
+			foreach (var g in ttf.rx.FindAllG(text, 0)) {
+				if (si.Skip(g.Start, g.End)) continue;
+				found(g.Start, g.End);
+			}
 		} else {
 			for (int i = 0; i < text.Length; i += ttf.findText.Length) {
 				i = ttf.wholeWord ? text.FindWord(ttf.findText, i.., !ttf.matchCase, "_") : text.Find(ttf.findText, i, !ttf.matchCase);
 				if (i < 0) break;
-				found(i, i + ttf.findText.Length);
+				int to = i + ttf.findText.Length;
+				if (si.Skip(i, to)) continue;
+				found(i, to);
 			}
 		}
+	}
+	
+	/// <summary>
+	/// Finds hidden images and determines whether a found text range is in an image.
+	/// </summary>
+	struct _SkipImages {
+		string _text;
+		int _imageStart, _imageEnd;
+		
+		public _SkipImages(string text) { _text = text; }
+		
+		/// <summary>
+		/// Returns true if <i>start</i> or <i>end</i> is inside a hidden @"image:Base64" or /*image:Base64*/.
+		/// </summary>
+		public bool Skip(int start, int end) {
+			while (start >= _imageEnd) _FindImage();
+			if (end > _imageStart) {
+				if (end < _imageEnd || start > _imageStart) return true;
+			}
+			return false;
+		}
+		
+		void _FindImage() {
+			for (int i = _imageEnd + 2; i < _text.Length; i += 6) {
+				i = _text.Find("image:", i);
+				if (i < 0) break;
+				if (s_rx.Match(_text, 0, out RXGroup g, (i - 2)..)) {
+					bool isString = _text[i - 1] == '\"';
+					_imageStart = i + (isString ? 6 : -2);
+					_imageEnd = g.End - (isString ? 1 : 0);
+					return;
+				}
+			}
+			_imageStart = _imageEnd = int.MaxValue;
+		}
+		
+		static regexp s_rx = new(@"@""image:[A-Za-z0-9/+]{40,}=*""|/\*image:[A-Za-z0-9/+]{40,}=*\*/", RXFlags.ANCHORED);
 	}
 	
 	#endregion
@@ -405,7 +448,6 @@ This setting also is used by 'Find references' etc.
 			if (ttf.rx.Match(text, out rm, from..)) {
 				i = rm.Start;
 				len = rm.Length;
-				//print.it(i, len);
 				if (i == from && len == 0 && !(replace | retryRx | retryFromStart)) {
 					if (++i > text.Length) i = -1;
 					else {
@@ -419,7 +461,6 @@ This setting also is used by 'Find references' etc.
 			i = ttf.wholeWord ? text.FindWord(ttf.findText, from.., !ttf.matchCase, "_") : text.Find(ttf.findText, from, !ttf.matchCase);
 			len = ttf.findText.Length;
 		}
-		//print.it(from, i, len);
 		if (i < 0) {
 			SystemSounds.Asterisk.Play();
 			_lastFind.ttf = null;
@@ -487,7 +528,9 @@ This setting also is used by 'Find references' etc.
 		var repl = ttf.replaceText;
 		if (ttf.rx != null) {
 			if (ttf.rx.FindAll(text, out var ma)) {
+				_SkipImages si = new(text);
 				foreach (var m in ma) {
+					if (si.Skip(m.Start, m.End)) continue;
 					if (!_TryExpandRegexReplacement(m, repl, out var r)) break;
 					a.Add(new(m.Start, m.End, r));
 				}
@@ -538,7 +581,7 @@ This setting also is used by 'Find references' etc.
 	
 	string[] _SkipWildex => _aSkipWildcards ??= (App.Settings.find_skip ?? "").Lines(true);
 	string[] _aSkipWildcards;
-	readonly string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
+	readonly string[] _aSkipImagesEtc = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani", ".snk", ".dll" };
 	
 	async void _FindAllInFiles(WBButtonClickArgs e) {
 		if (_cancelTS != null) {
@@ -560,7 +603,7 @@ This setting also is used by 'Find references' etc.
 			if (workingState.NeedToInitControl) {
 				var k = workingState.Scintilla;
 				k.aaaMarkerDefine(c_markerFile, Sci.SC_MARK_BACKGROUND, backColor: 0xC0E0A0);
-				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xADC8FF);
+				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
 			}
 			
 			FileNode folder = App.Model.Root;
@@ -581,7 +624,7 @@ This setting also is used by 'Find references' etc.
 					}
 				} else {
 					if (searchIn >= 1 && searchIn <= 3) continue;
-					if (v.Name.Ends(true, _aSkipImages) > 0) continue;
+					if (v.Name.Ends(true, _aSkipImagesEtc) > 0) continue;
 				}
 				if (_SkipWildex.Length > 0 && v.ItemPath.Like(true, _SkipWildex) > 0) continue;
 				aSearchInFiles.Add((v, v.FilePath, 0, 0));
@@ -631,7 +674,7 @@ This setting also is used by 'Find references' etc.
 				
 				void _File(FileNode f, string text, List<Range> ar, int i) {
 					if (text.NE() || text.Contains('\0')) return;
-
+					
 					ar.Clear();
 					_FindAllInString(text, ttf, (start, end) => ar.Add(start..end));
 					

@@ -28,8 +28,8 @@ static class CiFind {
 			using var workingState = Panels.Found.Prepare(PanelFound.Found.SymbolReferences, sym.Name, out var b);
 			if (workingState.NeedToInitControl) {
 				var k = workingState.Scintilla;
-				k.aaaMarkerDefine(c_markerSymbol, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
-				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xADC8FF);
+				k.aaaMarkerDefine(c_markerSymbol, Sci.SC_MARK_BACKGROUND, backColor: 0xC0C0FF);
+				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
 				k.aaaMarkerDefine(c_markerSeparator, Sci.SC_MARK_UNDERLINE, backColor: 0xe0e0e0);
 				k.aaaIndicatorDefine(c_indicProject, Sci.INDIC_GRADIENT, 0xCDE87C, alpha: 255, underText: true);
 			}

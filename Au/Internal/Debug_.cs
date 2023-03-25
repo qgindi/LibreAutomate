@@ -1,5 +1,4 @@
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Functions useful to debug code.
 	/// </summary>
@@ -16,14 +15,14 @@ namespace Au.More
 			s = $"{prefix}Debug: {m_} ({pathname.getName(f_)}:{l_}):  {s}";
 			_Print2(s);
 		}
-
+		
 		static void _Print2(object o) {
 			string s = o?.ToString();
 			if (UseQM2) print.qm2.write(s); else print.it(s);
 		}
-
+		
 		internal static bool UseQM2;
-
+		
 		/// <summary>
 		/// Calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
@@ -33,7 +32,7 @@ namespace Au.More
 		[Conditional("DEBUG")]
 		public static void Print(object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
 			=> _Print(text, f_, l_, m_);
-
+		
 		/// <summary>
 		/// If condition is true, calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
@@ -44,7 +43,7 @@ namespace Au.More
 		public static void PrintIf(bool condition, object text = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null, [CallerArgumentExpression("condition")] string ae_ = null) {
 			if (condition) _Print(text ?? ae_, f_, l_, m_);
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="print.it"/> with current function name.
 		/// Works only if DEBUG is defined. Read more in class help.
@@ -53,7 +52,7 @@ namespace Au.More
 		[Conditional("DEBUG")]
 		public static void PrintFunc([CallerMemberName] string m_ = null)
 			=> _Print2(m_);
-
+		
 		/// <summary>
 		/// In DEBUG config prints lastError.message. Only if condition true (default).
 		/// </summary>
@@ -61,14 +60,14 @@ namespace Au.More
 		internal static void PrintNativeError_(bool condition = true, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
 			if (condition) _Print(lastError.message, f_, l_, m_);
 		}
-
+		
 		/// <summary>
 		/// In DEBUG config prints lastError.messageFor(code).
 		/// </summary>
 		[Conditional("DEBUG")]
 		internal static void PrintNativeError_(int code, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
 			=> _Print(lastError.messageFor(code), f_, l_, m_);
-
+		
 		/// <summary>
 		/// Calls <see cref="dialog.show"/> to show some debug info.
 		/// Works only if DEBUG is defined. Read more in class help.
@@ -79,7 +78,7 @@ namespace Au.More
 			string s = print.ObjectToString_(text);
 			dialog.show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{m_} ({pathname.getName(f_)}:{l_})");
 		}
-
+		
 		//rejected: use if(opt.warnings.Verbose) dialog.showWarning(...). It adds stack trace.
 		///// <summary>
 		///// If opt.warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="dialog.show"/> with text and stack trace.
@@ -92,7 +91,7 @@ namespace Au.More
 		//	var x = new StackTrace(1, true);
 		//	dialog.show("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
 		//}
-
+		
 		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use print.warning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
 		///// If opt.warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="print.it(string)"/>.
@@ -102,7 +101,7 @@ namespace Au.More
 		//{
 		//	if(opt.warnings.Verbose) _Print("Debug: " + text);
 		//}
-
+		
 		//rejected: Don't need multiple warning functions. Now print.warning does not show more than 1 warning/second if opt.warnings.Verbose is false.
 		///// <summary>
 		///// If opt.warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="print.warning"/>.
@@ -113,7 +112,7 @@ namespace Au.More
 		//{
 		//	if(opt.warnings.Verbose) print.warning(text, 1);
 		//}
-
+		
 		/// <summary>
 		/// Checks flags and throws ArgumentException if some flags are invalid. The error message includes valid flag names.
 		/// </summary>
@@ -126,13 +125,13 @@ namespace Au.More
 		/// </remarks>
 		internal static unsafe void CheckFlagsOpt_<T>(T flags, T goodFlags) where T : unmanaged, Enum {
 			//FUTURE: if this is really often useful, make it public. If not used - remove.
-
+			
 			Debug.Assert(sizeof(T) == 4);
 			int a = *(int*)&flags;
 			int b = *(int*)&goodFlags;
 			if (a != (a & b)) _CheckFlagsOpt(typeof(T), b);
 		}
-
+		
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static void _CheckFlagsOpt(Type t, int goodFlags) {
 			if (!opt.warnings.Verbose) return;
@@ -147,7 +146,7 @@ namespace Au.More
 			//print.warning(s.ToString(), 1);
 			throw new ArgumentException(s.ToString());
 		}
-
+		
 		/// <summary>
 		/// Returns true if using Debug configuration of Au.dll.
 		/// </summary>
@@ -160,9 +159,9 @@ namespace Au.More
 #endif
 			}
 		}
-
+		
 		//CONSIDER: move the MemoryX functions to perf as public.
-
+		
 #if TRACE
 		/// <summary>
 		/// Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
@@ -172,7 +171,7 @@ namespace Au.More
 			Marshal.AddRef(obj);
 			return Marshal.Release(obj);
 		}
-
+		
 		/// <summary>
 		/// Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
 		/// Available if TRACE defined.
@@ -185,28 +184,27 @@ namespace Au.More
 			return (mem / 1024d / 1024d).ToS("F3");
 		}
 		static long s_mem0;
-
+		
 		/// <summary>
 		/// Prints managed memory size. Uses GC.GetTotalMemory.
 		/// Available if TRACE defined.
 		/// </summary>
 		/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
 		internal static void MemoryPrint_(bool fromAnchor = true) => _Print2(MemoryGet_(fromAnchor));
-
+		
 		/// <summary>
 		/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
 		/// Available if TRACE defined.
 		/// </summary>
 		internal static void MemorySetAnchor_() { s_mem0 = GC.GetTotalMemory(false); }
-
+		
 		/// <summary>
 		/// Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
 		/// Available if TRACE defined.
 		/// </summary>
-		internal struct NoGcRegion : IDisposable
-		{
+		internal struct NoGcRegion : IDisposable {
 			bool _restore, _print;
-
+			
 			/// <summary>
 			/// Suspends GC collections if possible.
 			/// Does nothing in 32-bit process.
@@ -222,7 +220,7 @@ namespace Au.More
 				try { _restore = GC.TryStartNoGCRegion(memSize); }
 				catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
 			}
-
+			
 			/// <summary>
 			/// Restores suspended GC collections.
 			/// </summary>
@@ -238,7 +236,7 @@ namespace Au.More
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Prints assemblies already loaded or/and loaded in the future.
 		/// Works in Release too, if TRACE defined.

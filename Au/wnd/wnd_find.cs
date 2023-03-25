@@ -612,9 +612,9 @@ namespace Au.Types {
 
 		//readonly byte _ownerLevel; //rejected. Rarely used. Can use *also* instead.
 
-		WOwner(string s) : this() => _s = s;
+		WOwner(string s) => _s = s;
 
-		WOwner(int i, byte what) : this() { _i = i; _what = what; }
+		WOwner(int i, byte what) { _i = i; _what = what; }
 
 		/// <summary>Program name like <c>"notepad.exe"</c>, or null. See <see cref="wnd.ProgramName"/>.</summary>
 		public static implicit operator WOwner([ParamString(PSFormat.Wildex)] string program) => new(program);
