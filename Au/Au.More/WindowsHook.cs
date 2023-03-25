@@ -1,5 +1,4 @@
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Wraps API <msdn>SetWindowsHookEx</msdn>.
 	/// </summary>
@@ -21,8 +20,7 @@ namespace Au.More
 	/// Exists an alternative way to monitor keyboard or mouse events - raw input API. Good: less overhead; can detect from which device the input event came. Bad: cannot block events; incompatible with low-level keyboard hooks. This library does not have functions to make the API easier to use.
 	/// </remarks>
 	[DebuggerStepThrough]
-	public class WindowsHook : IDisposable
-	{
+	public sealed class WindowsHook : IDisposable {
 		IntPtr _hh; //HHOOK
 		readonly Api.HOOKPROC _proc1; //our intermediate dispatcher hook proc that calls _proc2
 		Delegate _proc2; //caller's hook proc
@@ -549,8 +547,7 @@ namespace Au.More
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.
-		internal struct SharedMemoryData_
-		{
+		internal struct SharedMemoryData_ {
 			public long dontBlockModUntil, dontBlocLShiftCapsUntil;
 			//16 bytes reserved
 		}
@@ -585,19 +582,16 @@ namespace Au.More
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Contains types of hook data for hook procedures set by <see cref="WindowsHook"/> and <see cref="WinEventHook"/>.
 	/// </summary>
-	public static partial class HookData
-	{
+	public static partial class HookData {
 		/// <summary>
 		/// Event data for the hook procedure set by <see cref="WindowsHook.Keyboard"/>.
 		/// More info: API <msdn>LowLevelKeyboardProc</msdn>.
 		/// </summary>
-		public unsafe struct Keyboard
-		{
+		public unsafe struct Keyboard {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
@@ -715,15 +709,14 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.Mouse"/>.
 		/// More info: API <msdn>LowLevelMouseProc</msdn>.
 		/// </summary>
-		public unsafe struct Mouse
-		{
+		public unsafe struct Mouse {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
 			readonly Api.MSLLHOOKSTRUCT* _x;
 			readonly MouseEvent _event;
 
-			internal Mouse(WindowsHook hook, nint wParam, nint lParam) : this() {
+			internal Mouse(WindowsHook hook, nint wParam, nint lParam) {
 				this.hook = hook;
 				var p = (Api.MSLLHOOKSTRUCT*)lParam;
 				_x = p;
@@ -841,8 +834,7 @@ namespace Au.Types
 		/// <summary>
 		/// Mouse hook event types. See <see cref="Mouse.Event"/>.
 		/// </summary>
-		public enum MouseEvent
-		{
+		public enum MouseEvent {
 #pragma warning disable 1591 //no XML doc
 			Move = 0x0200, //WM_MOUSEMOVE
 			LeftButton = 0x0201, //WM_LBUTTONDOWN
@@ -861,8 +853,7 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.ThreadCbt"/>.
 		/// More info: API <msdn>CBTProc</msdn>.
 		/// </summary>
-		public struct ThreadCbt
-		{
+		public struct ThreadCbt {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
@@ -894,8 +885,7 @@ namespace Au.Types
 			/// <summary>
 			/// API <msdn>CBTACTIVATESTRUCT</msdn>.
 			/// </summary>
-			public struct CBTACTIVATESTRUCT
-			{
+			public struct CBTACTIVATESTRUCT {
 				///
 				public bool fMouse;
 				///
@@ -912,8 +902,7 @@ namespace Au.Types
 			/// <summary>
 			/// API <msdn>CBT_CREATEWND</msdn>.
 			/// </summary>
-			public unsafe struct CBT_CREATEWND
-			{
+			public unsafe struct CBT_CREATEWND {
 				///
 				public CREATESTRUCT* lpcs;
 				///
@@ -971,8 +960,7 @@ namespace Au.Types
 		/// CBT hook event types. Used with <see cref="ThreadCbt"/>.
 		/// More info: API <msdn>CBTProc</msdn>.
 		/// </summary>
-		public enum CbtEvent
-		{
+		public enum CbtEvent {
 #pragma warning disable 1591 //no XML doc
 			MOVESIZE = 0,
 			MINMAX = 1,
@@ -991,8 +979,7 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.ThreadGetMessage"/>.
 		/// More info: API <msdn>GetMsgProc</msdn>.
 		/// </summary>
-		public unsafe struct ThreadGetMessage
-		{
+		public unsafe struct ThreadGetMessage {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
@@ -1018,8 +1005,7 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.ThreadKeyboard"/>.
 		/// More info: API <msdn>KeyboardProc</msdn>.
 		/// </summary>
-		public struct ThreadKeyboard
-		{
+		public struct ThreadKeyboard {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
@@ -1055,8 +1041,7 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.ThreadMouse"/>.
 		/// More info: API <msdn>MouseProc</msdn>.
 		/// </summary>
-		public unsafe struct ThreadMouse
-		{
+		public unsafe struct ThreadMouse {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
@@ -1086,8 +1071,7 @@ namespace Au.Types
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		/// <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
-		public struct MOUSEHOOKSTRUCT
-		{
+		public struct MOUSEHOOKSTRUCT {
 			public POINT pt;
 			public wnd hwnd;
 			public int wHitTestCode;
@@ -1095,8 +1079,7 @@ namespace Au.Types
 		}
 
 		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
-		public struct CWPSTRUCT
-		{
+		public struct CWPSTRUCT {
 			public nint lParam;
 			public nint wParam;
 			public int message;
@@ -1104,8 +1087,7 @@ namespace Au.Types
 		}
 
 		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
-		public struct CWPRETSTRUCT
-		{
+		public struct CWPRETSTRUCT {
 			public nint lResult;
 			public nint lParam;
 			public nint wParam;
@@ -1118,8 +1100,7 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.ThreadCallWndProc"/>.
 		/// More info: API <msdn>CallWndProc</msdn>.
 		/// </summary>
-		public unsafe struct ThreadCallWndProc
-		{
+		public unsafe struct ThreadCallWndProc {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 
@@ -1145,8 +1126,7 @@ namespace Au.Types
 		/// Hook data for the hook procedure set by <see cref="WindowsHook.ThreadCallWndProcRet"/>.
 		/// More info: API <msdn>CallWndRetProc</msdn>.
 		/// </summary>
-		public unsafe struct ThreadCallWndProcRet
-		{
+		public unsafe struct ThreadCallWndProcRet {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WindowsHook hook;
 

@@ -181,12 +181,12 @@ namespace Au {
 				IEnumerator<wnd> _en;
 				ArrayBuilder_<wnd> _ab;
 
-				internal WndList_(ArrayBuilder_<wnd> ab) : this() {
+				internal WndList_(ArrayBuilder_<wnd> ab) {
 					_ab = ab;
 					_t = ListType.ArrayBuilder;
 				}
 
-				internal WndList_(IEnumerable<wnd> en) : this() {
+				internal WndList_(IEnumerable<wnd> en) {
 					var e = en?.GetEnumerator();
 					if (e != null) {
 						_en = e;
@@ -194,7 +194,7 @@ namespace Au {
 					}
 				}
 
-				internal WndList_(wnd w) : this() {
+				internal WndList_(wnd w) {
 					if (!w.Is0) {
 						_w = w;
 						_t = ListType.SingleWnd;

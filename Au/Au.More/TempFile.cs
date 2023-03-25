@@ -15,7 +15,7 @@ namespace Au.More;
 /// } //now auto-deletes the file
 /// ]]></code>
 /// </example>
-public class TempFile : IDisposable {
+public sealed class TempFile : IDisposable {
 	readonly string _file;
 
 	/// <summary>

@@ -1,5 +1,4 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Shows tray icon.
 	/// </summary>
@@ -12,26 +11,25 @@ namespace Au
 	/// 
 	/// Creates a hidden window that receives tray icon events (click etc).
 	/// </remarks>
-	public class trayIcon : IDisposable
-	{
+	public class trayIcon : IDisposable {
 		readonly int _id;
 		readonly bool _disposeOnExit;
 		wnd _w;
-
+		
 		//rejected. Various problems, eg the program file cannot be moved. Unclear documentation.
 		//	Guid _guid;
-
+		
 		static trayIcon() {
 			s_msgTaskbarCreated = WndUtil.RegisterMessage("TaskbarCreated", uacEnable: true);
 			WndUtil.RegisterWindowClass("trayIcon");
 		}
 		static int s_msgTaskbarCreated;
-
+		
 		/// <summary>
 		/// Tray icon notification message.
 		/// </summary>
 		protected const int MsgNotify = Api.WM_USER + 145;
-
+		
 		/// <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
 		/// <param name="disposeOnExit">
 		/// Remove tray icon when process exits (<see cref="process.thisProcessExit"/>).
@@ -43,14 +41,15 @@ namespace Au
 			///// <param name="guid">A GUID that identifies the tray icon.</param>
 			//_guid=guid;
 		}
-
+		
 		/// <summary>
 		/// Removes tray icon and disposes other resources.
 		/// </summary>
-		public void Dispose() {
-			_Delete(disposing: true);
-		}
-
+		public void Dispose() { Dispose(true); }
+		
+		///
+		protected void Dispose(bool disposing) { _Delete(disposing: true); }
+		
 		void _Delete(bool disposing = false) {
 			lock (this) {
 				if (_visible) {
@@ -63,7 +62,7 @@ namespace Au
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets or sets whether the tray icon is visible.
 		/// </summary>
@@ -81,7 +80,7 @@ namespace Au
 			}
 		}
 		bool _visible;
-
+		
 		/// <summary>
 		/// Gets or sets icon.
 		/// </summary>
@@ -100,7 +99,7 @@ namespace Au
 			}
 		}
 		icon _icon;
-
+		
 		/// <summary>
 		/// Gets or sets tooltip text.
 		/// </summary>
@@ -119,7 +118,7 @@ namespace Au
 			}
 		}
 		string _tooltip;
-
+		
 		Api.NOTIFYICONDATA _NewND(uint nifFlags = 0, bool setTT = false) {
 			var d = new Api.NOTIFYICONDATA(_w, nifFlags) { uID = _id, uCallbackMessage = MsgNotify, uVersion = Api.NOTIFYICON_VERSION_4 };
 			//if (_guid!=default) { d.uFlags|=Api.NIF_GUID; d.guidItem=_guid; }
@@ -130,7 +129,7 @@ namespace Au
 			}
 			return d;
 		}
-
+		
 		bool _Update(bool icon = false, bool tooltip = false, _Notification n = null, bool taskbarCreated = false) {
 			if (script.Exiting_) return false;
 			lock (this) {
@@ -138,13 +137,13 @@ namespace Au
 					if (_disposeOnExit) process.thisProcessExit += _ => _Delete();
 					_w = WndUtil.CreateWindow(WndProc, true, "trayIcon", script.name, WS.POPUP, WSE.NOACTIVATE);
 				}
-
+				
 				if (taskbarCreated) _visible = false;
-
+				
 				if (!_visible) { icon = _icon != null; tooltip = !_tooltip.NE(); }
 				var d = _NewND(Api.NIF_MESSAGE, setTT: tooltip || _customPopup);
 				if (icon) { d.uFlags |= Api.NIF_ICON; d.hIcon = _icon; }
-
+				
 				if (n != null) {
 					d.uFlags |= Api.NIF_INFO;
 					if (n.flags.Has(TINFlags.Realtime)) d.uFlags |= Api.NIF_REALTIME;
@@ -154,7 +153,7 @@ namespace Au
 					d.szInfo = n.text?.Limit(255);
 					//if(!_visible) if(_icon==null && _tooltip.NE()) { d.uFlags|=Api.NIF_STATE; d.dwState=d.dwStateMask=1; } //hidden icon. But then no notification.
 				}
-
+				
 				int nim = _visible ? Api.NIM_MODIFY : Api.NIM_ADD;
 				bool ok = Api.Shell_NotifyIcon(nim, d);
 				if (!ok && 4 == (d.dwInfoFlags & 15)) {
@@ -176,7 +175,7 @@ namespace Au
 				return ok;
 			}
 		}
-
+		
 		/// <summary>
 		/// Shows temporary notification window by the tray icon.
 		/// </summary>
@@ -194,9 +193,9 @@ namespace Au
 		public void ShowNotification(string title, string text, TINFlags flags = 0, icon icon = default) {
 			if (!_Update(n: new(title, text, flags, icon))) print.warning("ShowNotification() failed. " + lastError.message);
 		}
-
+		
 		record class _Notification(string title, string text, TINFlags flags, icon icon);
-
+		
 		/// <summary>
 		/// Hides notification.
 		/// </summary>
@@ -205,7 +204,7 @@ namespace Au
 				if (_visible) Api.Shell_NotifyIcon(Api.NIM_MODIFY, _NewND(Api.NIF_INFO));
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets icon size for <see cref="ShowNotification"/>.
 		/// </summary>
@@ -216,7 +215,7 @@ namespace Au
 				return r;
 			}
 		}
-
+		
 		/// <summary>
 		/// Activates taskbar and makes the tray icon focused for keyboard.
 		/// </summary>
@@ -228,17 +227,17 @@ namespace Au
 				Api.Shell_NotifyIcon(Api.NIM_SETFOCUS, _NewND());
 			}
 		}
-
+		
 		/// <summary>
 		/// Together with <see cref="Hwnd"/> identifies this tray icon.
 		/// </summary>
 		protected int Id => _id;
-
+		
 		/// <summary>
 		/// A hidden window automatically created for this tray icon to receive its notifications.
 		/// </summary>
 		protected internal wnd Hwnd => _w;
-
+		
 		/// <summary>
 		/// Window procedure of the hidden window that receives tray icon notifications (<see cref="MsgNotify"/>) in version 4 format.
 		/// If you override it, call the base function.
@@ -274,16 +273,16 @@ namespace Au
 					_Update(taskbarCreated: true);
 				}
 			}
-
+			
 			var R = Api.DefWindowProc(w, msg, wParam, lParam);
-
+			
 			if (msg == Api.WM_NCDESTROY) {
 				_Delete();
 			}
-
+			
 			return R;
 		}
-
+		
 		/// <summary>
 		/// When received any message from the tray icon.
 		/// </summary>
@@ -291,7 +290,7 @@ namespace Au
 		/// Receives mouse messages, <b>NIN_</b> messages and some other. See <msdn>Shell_NotifyIconW</msdn>.
 		/// </remarks>
 		public event Action<TIEventArgs> Message;
-
+		
 		/// <summary>
 		/// When default action should be invoked (on click, Space/Enter, automation/accessibility API).
 		/// </summary>
@@ -300,27 +299,27 @@ namespace Au
 		/// On double click there are two <b>Click</b> events. To distinguish click and double click events, use <see cref="Message"/> instead.
 		/// </remarks>
 		public event Action<TIEventArgs> Click;
-
+		
 		/// <summary>
 		/// When a context menu should be shown (on right click or Apps key).
 		/// </summary>
 		public event Action<TIEventArgs> RightClick;
-
+		
 		/// <summary>
 		/// When the tray icon clicked with the middle button.
 		/// </summary>
 		public event Action<TIEventArgs> MiddleClick;
-
+		
 		/// <summary>
 		/// When clicked the notification window.
 		/// </summary>
 		public event Action<TIEventArgs> NotificationClick;
-
+		
 		/// <summary>
 		/// When it's time to close custom tooltip etc shown on <see cref="PopupOpen"/>.
 		/// </summary>
 		public event Action<TIEventArgs> PopupClose;
-
+		
 		/// <summary>
 		/// When it's time to open custom tooltip or some temporary popup window.
 		/// If this event is used, does not show standard tooltip.
@@ -329,10 +328,10 @@ namespace Au
 			add => _SetPopupOpen(true, value);
 			remove => _SetPopupOpen(false, value);
 		}
-
+		
 		event Action<TIEventArgs> _popupOpen;
 		bool _customPopup;
-
+		
 		void _SetPopupOpen(bool add, Action<TIEventArgs> a) {
 			if (add) _popupOpen += a; else _popupOpen -= a;
 			bool customPopup = _popupOpen != null;
@@ -341,7 +340,7 @@ namespace Au
 				if (_visible) Api.Shell_NotifyIcon(Api.NIM_MODIFY, _NewND(setTT: true));
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets tray icon rectangle in screen.
 		/// </summary>
@@ -354,7 +353,7 @@ namespace Au
 			lastError.code = hr;
 			return false;
 		}
-
+		
 		//	public bool GetPopupRect(int width, int height) {
 		//		if(!_visible) return false;
 		//		//what if hidden in overflow area? Then should not show popup. Then OS does not show notifications.
@@ -363,14 +362,12 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="trayIcon.ShowNotification"/>. See <b>NIIF_</b> flags of API <msdn>NOTIFYICONDATAW</msdn>.
 	/// </summary>
 	[Flags]
-	public enum TINFlags
-	{
+	public enum TINFlags {
 #pragma warning disable 1591 //no doc
 		InfoIcon = 1,
 		WarningIcon,
@@ -380,15 +377,15 @@ namespace Au.Types
 		//LargeIcon=0x20,
 		//RespectQuietTime=0x80,
 #pragma warning restore
-
+		
 		/// <summary>
 		/// Flag <b>NIF_REALTIME</b>.
 		/// </summary>
 		Realtime = 0x10000000,
 	}
-
+	
 #pragma warning disable 1591
 	public record class TIEventArgs(int Message, POINT XY);
 #pragma warning restore
-
+	
 }

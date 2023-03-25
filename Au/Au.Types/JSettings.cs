@@ -2,8 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Base of record classes that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
 	/// </summary>
@@ -41,15 +40,14 @@ namespace Au.Types
 	/// }
 	/// ]]></code>
 	/// </example>
-	public abstract record class JSettings : IDisposable
-	{
+	public abstract record class JSettings : IDisposable {
 		string _file;
 		bool _loadedFile;
 		byte[] _old;
-
+		
 		static readonly List<JSettings> s_list = new();
 		static int s_loadedOnce;
-
+		
 		/// <summary>
 		/// Loads a JSON file and deserializes to an object of type T, or creates a new object of type T.
 		/// </summary>
@@ -61,7 +59,7 @@ namespace Au.Types
 		/// </remarks>
 		protected static T Load<T>(string file, bool useDefault = false) where T : JSettings
 			=> (T)_Load(file, typeof(T), useDefault);
-
+		
 		static JSettings _Load(string file, Type type, bool useDefault) {
 			//using var p1 = perf.local();
 			JSettings R = null;
@@ -93,15 +91,15 @@ $@"Failed to load settings from {file}. Will use default settings.
 					}
 				}
 			}
-
+			
 			if (R == null) R = Activator.CreateInstance(type) as JSettings; else R._loadedFile = true;
 			//p1.Next('c');
-
+			
 			if (file != null) {
 				R._file = file;
 				R._old = JsonSerializer.SerializeToUtf8Bytes(R, type, s_jsOptions.Value);
 				//p1.Next('s');
-
+				
 				//autosave
 				if (Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
 					run.thread(() => {
@@ -112,28 +110,31 @@ $@"Failed to load settings from {file}. Will use default settings.
 							//Debug_.MemoryPrint_(); //editor ~4 KB
 						}
 					}, sta: false);
-
+					
 					process.thisProcessExit += _ => _SaveAllIfNeed(); //info: .NET does not call finalizers when process exits
 				}
 				lock (s_list) s_list.Add(R);
 			}
-
+			
 			return R;
-
+			
 			static void _SaveAllIfNeed() {
 				lock (s_list) foreach (var v in s_list) v.SaveIfNeed();
 			}
 		}
-
+		
 		/// <summary>
 		/// Call this when finished using the settings. Saves now if need, and stops autosaving.
 		/// Don't need to call if the settings are used until process exit.
 		/// </summary>
-		public void Dispose() {
-			lock (s_list) s_list.Remove(this);
+		public void Dispose() { Dispose(true); }
+		
+		///
+		protected void Dispose(bool disposing) {
+			lock (s_list) if (!s_list.Remove(this)) return;
 			SaveIfNeed();
 		}
-
+		
 		//repeated serialization speed with same options ~50 times better, eg 15000 -> 300 mcs cold. It's documented. Can be shared by multiple types.
 		static readonly Lazy<JsonSerializerOptions> s_jsOptions = new(() => new() {
 			//IgnoreNullValues = true, //obsolete, use DefaultIgnoreCondition
@@ -145,7 +146,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 			AllowTrailingCommas = true,
 		});
-
+		
 		/// <summary>
 		/// Saves now if need.
 		/// Don't need to call explicitly. Autosaving is every 2 s, also on process exit and <b>Dispose</b>.
@@ -168,7 +169,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 				print.it($"Failed to save settings to '{_file}'. {ex}");
 			}
 		}
-
+		
 		/// <summary>
 		/// true if settings were loaded from file.
 		/// </summary>

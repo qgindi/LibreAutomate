@@ -1,17 +1,15 @@
-﻿
-using Microsoft.Win32.SafeHandles;
+﻿using Microsoft.Win32.SafeHandles;
 
 namespace Au.More;
 
-unsafe struct ProcessStarter_
-{
+unsafe struct ProcessStarter_ {
 	public char[] cl;
 	public Api.STARTUPINFO si;
 	public uint flags;
 	public string curDir;
 	public string envVar;
 	string _exe; //for errors only
-
+	
 	/// <summary>
 	/// Prepares parameters for API <msdn>CreateProcess</msdn> and similar.
 	/// </summary>
@@ -30,18 +28,18 @@ unsafe struct ProcessStarter_
 	/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
 	/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
 	/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
-	public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) : this() {
+	public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) {
 		if (!rawExe) exe = pathname.normalize(exe, folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
 		_exe = exe;
 		cl = (args == null ? ("\"" + exe + "\"" + "\0") : ("\"" + exe + "\" " + args + "\0")).ToCharArray();
 		if (curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
 		else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? pathname.getDirectory(exe) : pathname.expand(curDir));
-
+		
 		si.cb = Api.SizeOf<Api.STARTUPINFO>();
 		si.dwFlags = Api.STARTF_FORCEOFFFEEDBACK;
-
+		
 		flags = Api.CREATE_UNICODE_ENVIRONMENT;
-
+		
 		if (envVar != null && !envVar.Ends("\0\0")) {
 			var es = Api.GetEnvironmentStrings();
 			int len1; for (var k = es; ; k++) if (k[0] == 0 && k[1] == 0) { len1 = (int)(k - es) + 2; break; }
@@ -55,7 +53,7 @@ unsafe struct ProcessStarter_
 			Api.FreeEnvironmentStrings(es);
 		} else this.envVar = null;
 	}
-
+	
 	/// <summary>
 	/// Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
 	/// </summary>
@@ -69,7 +67,7 @@ unsafe struct ProcessStarter_
 			return Api.CreateProcess(null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 		}
 	}
-
+	
 	/// <summary>
 	/// Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
 	/// </summary>
@@ -84,7 +82,7 @@ unsafe struct ProcessStarter_
 		if (!ok) throw new AuException(0, $"*start process '{_exe}'");
 		return new Result(pi, need, suspended);
 	}
-
+	
 	/// <summary>
 	/// Starts UAC Medium integrity level (IL) process from this admin process.
 	/// </summary>
@@ -99,7 +97,7 @@ unsafe struct ProcessStarter_
 		if (s_userToken == null) {
 			Debug.Assert(uacInfo.isAdmin); //else cannot set privilege
 			if (!SecurityUtil.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
-
+			
 			//perf.first();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
 			var s = $"\"{folders.ThisAppBS}{(osVersion.is32BitProcess ? "32" : "64")}\\AuCpp.dll\",Cpp_RunDll";
@@ -121,20 +119,20 @@ unsafe struct ProcessStarter_
 				500.ms();
 				w = Api.GetShellWindow();
 			}
-
+			
 			var hUserProcess = Handle_.OpenProcess(w);
 			if (hUserProcess.Is0) {
 				if (retry) goto ge;
 				retry = true; 500.ms(); goto g1;
 			}
-
+			
 			//two other ways:
 			//1. Enum processes and find one that has Medium IL. Unreliable, eg its token may be modified.
 			//2. Start a service process. Let it start a Medium IL process like in QM2. Because LocalSystem can get token with WTSQueryUserToken.
 			//tested: does not work with GetTokenInformation(TokenLinkedToken). Even if would work, in non-admin session it is wrong token.
 #endif
 			//perf.nw();
-
+			
 			using (hUserProcess) {
 				if (Api.OpenProcessToken(hUserProcess, Api.TOKEN_DUPLICATE, out Handle_ hShellToken)) {
 					using (hShellToken) {
@@ -146,38 +144,36 @@ unsafe struct ProcessStarter_
 			}
 			if (s_userToken == null) goto ge;
 		}
-
+		
 		bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
 		if (suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
 		bool ok = Api.CreateProcessWithTokenW(s_userToken.DangerousGetHandle(), 0, null, cl, flags, envVar, curDir, si, out var pi);
 		if (resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
 		if (!ok) goto ge;
 		return new Result(pi, need, suspended);
-
+		
 		ge: throw new AuException(0, $"*start process '{_exe}' as user");
 	}
 	static SafeAccessTokenHandle s_userToken;
-
+	
 	/// <summary>
 	/// Results of <see cref="ProcessStarter_"/> functions.
 	/// </summary>
-	public class Result
-	{
+	public class Result {
 		/// <summary>
 		/// Which field to set.
 		/// </summary>
-		public enum Need
-		{
+		public enum Need {
 			None,
 			//NativeHandle,
 			WaitHandle,
 			NetProcess,
 		}
-
+		
 		public int pid;
 		public WaitHandle waitHandle;
 		public Process netProcess;
-
+		
 		internal Result(in Api.PROCESS_INFORMATION pi, Need need, bool suspended) {
 			pid = pi.dwProcessId;
 			switch (need) {
@@ -194,7 +190,7 @@ unsafe struct ProcessStarter_
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Creates new .NET Process object with attached handle and/or id.
 	/// </summary>
@@ -205,7 +201,7 @@ unsafe struct ProcessStarter_
 		/// It depends on .NET framework version, because uses private methods of Process class through reflection.
 		/// </summary>
 		public static bool IsFast { get; } = _CanSetHandleId();
-
+		
 		public static bool _CanSetHandleId() {
 			const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod;
 			s_mi1 = typeof(Process).GetMethod("SetProcessHandle", flags);
@@ -215,7 +211,7 @@ unsafe struct ProcessStarter_
 			return false;
 		}
 		static MethodInfo s_mi1, s_mi2;
-
+		
 		/// <summary>
 		/// Creates new .NET Process object with attached handle and/or id.
 		/// Can be specified both handle and id, or one of them (then .NET will open process or get id from handle when need).
@@ -225,7 +221,7 @@ unsafe struct ProcessStarter_
 				if (id == 0) id = process.processIdFromHandle(handle);
 				return Process.GetProcessById(id); //3 ms, much garbage, gets all processes, can throw
 			}
-
+			
 			var p = new Process();
 			var o = new object[1];
 			if (handle != default) {
@@ -238,7 +234,7 @@ unsafe struct ProcessStarter_
 			}
 			return p;
 		}
-
+		
 		/// <summary>
 		/// Creates new .NET Process object with attached handle and id.
 		/// Closes thread handle. If suspended, resumes thread.

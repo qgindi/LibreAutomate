@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 
-//TODO: when disabling main window, also disable its owned windows. At least floating panels.
+//SHOULDDO: when disabling main window, also disable its owned windows. At least floating panels.
 //	Because for dialogs often is used 'owner: App.Hmain'.
 
 partial class MainWindow : Window {

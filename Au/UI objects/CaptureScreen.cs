@@ -618,7 +618,7 @@ namespace Au.More {
 	/// var f = folders.Temp + "test.png"; b.Save(f); run.it(f);
 	/// ]]></code>
 	/// </example>
-	public unsafe class CaptureScreenImage : IDisposable {
+	public unsafe sealed class CaptureScreenImage : IDisposable {
 		MemoryBitmap _mb;
 		uint* _pixels;
 		int _width, _height;
