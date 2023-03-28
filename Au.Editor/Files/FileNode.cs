@@ -467,15 +467,17 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// If the file is open in editor, replaces it there; saves if it isn't the active document. Else replaces file text.
 	/// </summary>
 	/// <param name="text">Current text.</param>
-	/// <param name="a">Text ranges and replacement texts.</param>
+	/// <param name="a">Text ranges and replacement texts. Must be sorted by range. Ranges must not overlap.</param>
 	/// <returns>false if a is empty or failed to save.</returns>
 	/// <param name="newText"></param>
+	/// <exception cref="ArgumentException">Ranges are overlapped or not sorted. Only #if DEBUG.</exception>
 	public bool ReplaceAllInText(string text, List<StartEndText> a, out string newText) {
 		newText = null;
 		if (a.Count > 0) {
 			var doc = OpenDoc;
 			if (doc != null) {
 				Debug.Assert(!doc.aaaIsReadonly);
+				StartEndText.ThrowIfNotSorted(a);
 				
 				using (var undo = new KScintilla.aaaUndoAction(doc)) {
 					for (int i = a.Count; --i >= 0;) {

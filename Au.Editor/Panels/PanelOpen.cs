@@ -2,6 +2,8 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows.Input;
 
+//TODO: Ctrl+Tab stops working if current document closed from Open or Tasks panel. Starts working when something focused.
+
 class PanelOpen {
 	KTreeView _tv;
 	bool _updatedOnce;

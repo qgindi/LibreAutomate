@@ -10,18 +10,18 @@ partial class SciCode : KScintilla {
 		/// Call onLeave etc when current position != current end of range.
 		/// </summary>
 		LeaveIfPosNotAtEndOfRange = 1,
-
+		
 		/// <summary>
 		/// Call onLeave etc when range text modified.
 		/// </summary>
 		LeaveIfRangeTextModified = 2,
-
+		
 		/// <summary>
 		/// Don't add new range if already exists a range with same current from, to, owner and flags. Then returns that range.
 		/// </summary>
 		NoDuplicate = 4,
 	}
-
+	
 	public interface ITempRange {
 		/// <summary>
 		/// Removes this range from the collection of ranges of the document.
@@ -29,33 +29,33 @@ partial class SciCode : KScintilla {
 		/// Does nothing if already removed.
 		/// </summary>
 		void Remove();
-
+		
 		/// <summary>
 		/// Gets current start and end positions of this range added with <see cref="ETempRanges_Add"/>.
 		/// Returns false if the range is removed; then sets from = to = -1.
 		/// </summary>
 		bool GetCurrentFromTo(out int from, out int to, bool utf8 = false);
-
+		
 		/// <summary>
 		/// Gets current start position of this range added with <see cref="ETempRanges_Add"/>. UTF-16.
 		/// Returns -1 if the range is removed.
 		/// </summary>
 		int CurrentFrom { get; }
-
+		
 		/// <summary>
 		/// Gets current end position of this range added with <see cref="ETempRanges_Add"/>. UTF-16.
 		/// Returns -1 if the range is removed.
 		/// </summary>
 		int CurrentTo { get; }
-
+		
 		object Owner { get; }
-
+		
 		/// <summary>
 		/// Any data. Not used by temp range functions.
 		/// </summary>
 		object OwnerData { get; set; }
 	}
-
+	
 	class _TempRange : ITempRange {
 		SciCode _doc;
 		readonly object _owner;
@@ -64,7 +64,7 @@ partial class SciCode : KScintilla {
 		internal int to;
 		internal readonly Action onLeave;
 		readonly TempRangeFlags _flags;
-
+		
 		internal _TempRange(SciCode doc, object owner, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, TempRangeFlags flags) {
 			_doc = doc;
 			_owner = owner;
@@ -74,7 +74,7 @@ partial class SciCode : KScintilla {
 			this.onLeave = onLeave;
 			_flags = flags;
 		}
-
+		
 		public void Remove() {
 			_TraceTempRange("remove", _owner);
 			if (_doc != null) {
@@ -82,9 +82,9 @@ partial class SciCode : KScintilla {
 				_doc = null;
 			}
 		}
-
+		
 		internal void Leaved() => _doc = null;
-
+		
 		public bool GetCurrentFromTo(out int from, out int to, bool utf8 = false) {
 			if (_doc == null) { from = to = -1; return false; }
 			if (utf8) {
@@ -96,24 +96,24 @@ partial class SciCode : KScintilla {
 			}
 			return true;
 		}
-
+		
 		public int CurrentFrom => _doc != null ? _fromUtf16 : -1;
-
+		
 		public int CurrentTo => _doc?.aaaPos16(to) ?? -1;
-
+		
 		public object Owner => _owner;
-
+		
 		public object OwnerData { get; set; }
-
+		
 		internal bool MustLeave(int pos, int pos2, int modLen) {
 			return pos < from || pos2 > to
 				|| (0 != (_flags & TempRangeFlags.LeaveIfPosNotAtEndOfRange) && pos2 != to)
 				|| (0 != (_flags & TempRangeFlags.LeaveIfRangeTextModified) && modLen != 0);
 		}
-
+		
 		internal bool Contains(int pos, object owner, bool endPosition)
 			=> (endPosition ? (pos == to) : (pos >= from || pos <= to)) && (owner == null || ReferenceEquals(owner, _owner));
-
+		
 		internal bool Equals(int from2, int to2, object owner2, TempRangeFlags flags2) {
 			if (from2 != from || to2 != to || flags2 != _flags
 				//|| onLeave2 != onLeave //delegate always different if captured variables
@@ -121,12 +121,12 @@ partial class SciCode : KScintilla {
 				) return false;
 			return ReferenceEquals(owner2, _owner);
 		}
-
+		
 		public override string ToString() => $"({CurrentFrom}, {CurrentTo}), owner={_owner}";
 	}
-
+	
 	List<_TempRange> _tempRanges = new();
-
+	
 	/// <summary>
 	/// Marks a temporary working range of text and later notifies when it is leaved.
 	/// Will automatically update range bounds when editing text inside it.
@@ -154,20 +154,20 @@ partial class SciCode : KScintilla {
 			//CiUtil.HiliteRange(from, to);
 		}
 #endif
-
+		
 		if (flags.Has(TempRangeFlags.NoDuplicate)) {
 			for (int i = _tempRanges.Count; --i >= 0;) {
 				var t = _tempRanges[i];
 				if (t.Equals(from, to, owner, flags)) return t;
 			}
 		}
-
+		
 		_TraceTempRange("ADD", owner);
 		var r = new _TempRange(this, owner, fromUtf16, from, to, onLeave, flags);
 		_tempRanges.Add(r);
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Gets ranges containing the specified position and optionally of the specified owner, in LIFO order.
 	/// It's safe to remove the retrieved ranges while enumerating.
@@ -183,7 +183,7 @@ partial class SciCode : KScintilla {
 			if (r.Contains(position, owner, endPosition)) yield return r;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets ranges of the specified owner, in LIFO order.
 	/// It's safe to remove the retrieved ranges while enumerating.
@@ -195,7 +195,19 @@ partial class SciCode : KScintilla {
 			if (ReferenceEquals(owner, r.Owner)) yield return r;
 		}
 	}
-
+	
+	internal void ETempRanges_HidingOrClosingActiveDoc_() {
+		if (_tempRanges.Count == 0) return;
+		//_TraceTempRange("CLEAR", null);
+		for (int i = _tempRanges.Count; --i >= 0;) {
+			var r = _tempRanges[i];
+			_TraceTempRange("leave", r.Owner);
+			r.Leaved();
+			r.onLeave?.Invoke();
+		}
+		_tempRanges.Clear();
+	}
+	
 	void _TempRangeOnModifiedOrPosChanged(MOD mod, int pos, int len) {
 		if (_tempRanges.Count == 0) return;
 		if (mod == 0) pos = aaaCurrentPos8;
@@ -214,7 +226,7 @@ partial class SciCode : KScintilla {
 			}
 		}
 	}
-
+	
 	[Conditional("TRACE_TEMP_RANGES")]
 	static void _TraceTempRange(string action, object owner) => print.it(action, owner);
 }

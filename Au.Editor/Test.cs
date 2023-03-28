@@ -30,7 +30,7 @@ using Au.Controls;
 
 static unsafe class Test {
 
-	//static void getFileProp(string path) {
+	//static void /*REPLACED*/ getFileProp(string path) {
 	//	using Handle_ h = new(Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING));
 	//	if (h.Is0) { /*print.it(path);*/return; }
 	//	if (!GetFileTime(h, out _, out _, out var t)) print.it(path);
@@ -38,9 +38,9 @@ static unsafe class Test {
 	//[DllImport("kernel32.dll")]
 	//internal static extern bool GetFileTime(IntPtr hFile, out long lpCreationTime, out long lpLastAccessTime, out long lpLastWriteTime);
 
-	public static void FromMenubar() {
+	public static void /*REPLACED*/ FromMenubar() {
 		//print.clear();
-		CiFind.RenameSymbol();
+		//CiFind.RenameSymbol();
 
 		//var d = Panels.Editor.ActiveDoc;
 		//{
@@ -79,7 +79,7 @@ static unsafe class Test {
 	}
 	static bool s_debug2;
 
-	public static void MonitorGC() {
+	public static void /*REPLACED*/ MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();

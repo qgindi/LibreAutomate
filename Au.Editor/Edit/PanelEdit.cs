@@ -60,6 +60,7 @@ class PanelEdit {
 			} else if (_activeDoc != null) {
 				_activeDoc.Visibility = Visibility.Hidden;
 				//Children.Remove(_activeDoc);
+				_activeDoc.ETempRanges_HidingOrClosingActiveDoc_();
 			}
 		}
 		
@@ -129,6 +130,7 @@ class PanelEdit {
 		Debug.Assert(f != null);
 		SciCode doc;
 		if (f == _activeDoc?.EFile) {
+			_activeDoc.ETempRanges_HidingOrClosingActiveDoc_();
 			App.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
@@ -154,6 +156,7 @@ class PanelEdit {
 	/// Closes all documents and destroys controls.
 	/// </summary>
 	public void CloseAll(bool saveTextIfNeed) {
+		_activeDoc?.ETempRanges_HidingOrClosingActiveDoc_();
 		if (saveTextIfNeed) App.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
 		ActiveDocChanged?.Invoke();

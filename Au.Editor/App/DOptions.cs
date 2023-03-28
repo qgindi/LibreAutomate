@@ -266,7 +266,7 @@ class DOptions : KDialogWindow {
 			sciStyles.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
-					int i = sciStyles.Call(Sci.SCI_INDICATORVALUEAT, indicHidden, sciStyles.aaaLineStartFromPos(false, sciStyles.aaaCurrentPos8)) - 1;
+					int i = sciStyles.aaaIndicGetValue(indicHidden, sciStyles.aaaLineStartFromPos(false, sciStyles.aaaCurrentPos8)) - 1;
 					if (i != currentItem && i >= 0) {
 						currentItem = i;
 						var k = table[i];

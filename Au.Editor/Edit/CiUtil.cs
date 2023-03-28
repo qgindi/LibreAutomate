@@ -479,6 +479,10 @@ global using System.Windows.Media;
 		doc.EInicatorsFound_(null);
 		doc.EInicatorsFound_(a);
 	}
+	
+	static IEnumerable<string> GetSymbolInterfaces(ISymbol sym) {
+		return sym.GetType().FindInterfaces((t, _) => t.Name.Ends("Symbol") && t.Name != "ISymbol", null).Select(o => o.Name);
+	}
 
 #endif
 
