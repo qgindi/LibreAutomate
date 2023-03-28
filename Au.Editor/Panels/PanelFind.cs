@@ -807,7 +807,7 @@ This setting also is used by 'Find references' etc.
 			
 		}
 		finally {
-			undoInFiles.FinishReplaceInFiles($"replace text '{ttf.findText.Limit(50)}' -> '{ttf.replaceText.Limit(50)}'");
+			undoInFiles.FinishReplaceInFiles($"replace text '{ttf.findText.Limit(50)}' with '{ttf.replaceText.Limit(50)}'");
 			progress.SetProgressState(WTBProgressState.NoProgress);
 			CodeInfo.FilesChanged();
 		}

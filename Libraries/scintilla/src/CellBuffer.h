@@ -37,7 +37,7 @@ public:
 	std::unique_ptr<char[]> data;
 	Sci::Position lenData;
 	bool mayCoalesce;
-	int mark; //Au
+	int auMark; //Au
 
 	Action() noexcept;
 	// Deleted so Action objects can not be copied.

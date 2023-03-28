@@ -58,6 +58,7 @@ record AppSettings : JSettings {
 	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
 	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent, ci_unexpandPath = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
+	public int ci_rename;
 
 	//CONSIDER: option to specify completion keys/chars. See https://www.quickmacros.com/forum/showthread.php?tid=7263
 	//public byte ci_complOK = 15; //1 Enter, 2 Tab, 4 Space, 8 other

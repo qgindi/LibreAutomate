@@ -227,11 +227,14 @@ static class Menus {
 			[Command]
 			public static void Find_implementations() { CiFind.FindReferencesOrImplementations(true); }
 			
-			[Command("Undo multi-file replace", separator = true)]
-			public static void Undo_multi_file_replace() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
+			[Command(keys = "F2", image = "*Codicons.ReplaceAll" + blue)]
+			public static void Rename_symbol() { CiFind.RenameSymbol(); }
 			
-			[Command("Redo multi-file replace")]
-			public static void Redo_multi_file_replace() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
+			[Command(separator = true)]
+			public static void Undo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
+			
+			[Command]
+			public static void Redo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
 		}
 		
 		[Command]

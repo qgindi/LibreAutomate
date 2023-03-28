@@ -327,7 +327,7 @@ Action::Action() noexcept {
 	position = 0;
 	lenData = 0;
 	mayCoalesce = false;
-	mark = 0; //Au
+	auMark = 0; //Au
 }
 
 Action::~Action() {
@@ -343,7 +343,7 @@ void Action::Create(ActionType at_, Sci::Position position_, const char *data_, 
 	}
 	lenData = lenData_;
 	mayCoalesce = mayCoalesce_;
-	mark = 0; //Au
+	auMark = 0; //Au
 }
 
 void Action::Clear() noexcept {
@@ -558,16 +558,16 @@ int UndoHistory::StartUndo() {
 //Au
 void UndoHistory::SetMark(int mark) {
 	if (CanUndo() && actions[currentAction].at == ActionType::start) {
-		for (int i = currentAction - 1; i > 0 && actions[i].at != ActionType::start; ) actions[i--].mark = mark;
+		for (int i = currentAction - 1; i > 0 && actions[i].at != ActionType::start; ) actions[i--].auMark = mark;
 	}
 }
 int UndoHistory::GetMark(bool redo) {
 	if (redo) {
 		if (currentAction < maxAction && actions[currentAction].at == ActionType::start)
-			return actions[currentAction + 1].mark;
+			return actions[currentAction + 1].auMark;
 	} else {
 		if (CanUndo() && actions[currentAction].at == ActionType::start)
-			return actions[currentAction - 1].mark;
+			return actions[currentAction - 1].auMark;
 	}
 	return 0;
 }
