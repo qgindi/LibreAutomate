@@ -152,101 +152,96 @@ partial class SciCode : KScintilla {
 	
 	protected override void AaOnSciNotify(ref SCNotification n) {
 		bool isActive = this == Panels.Editor.ActiveDoc;
-		if (isActive) {
-			//if (test_) {
-			//	switch (n.nmhdr.code) {
-			//	case NOTIF.SCN_UPDATEUI:
-			//	case NOTIF.SCN_NEEDSHOWN:
-			//	case NOTIF.SCN_PAINTED:
-			//	case NOTIF.SCN_FOCUSIN:
-			//	case NOTIF.SCN_FOCUSOUT:
-			//	case NOTIF.SCN_DWELLSTART:
-			//	case NOTIF.SCN_DWELLEND:
-			//		break;
-			//	case NOTIF.SCN_MODIFIED:
-			//		print.it(n.nmhdr.code, n.modificationType);
-			//		break;
-			//	default:
-			//		print.it(n.nmhdr.code);
-			//		break;
-			//	}
-			//}
-		} else {
-#if DEBUG
-			if (n.code is not (NOTIF.SCN_FOCUSOUT or NOTIF.SCN_DWELLEND
-				or NOTIF.SCN_SAVEPOINTLEFT or NOTIF.SCN_SAVEPOINTREACHED or NOTIF.SCN_MODIFIED or NOTIF.SCN_UPDATEUI or NOTIF.SCN_STYLENEEDED
-				)) Debug_.Print($"AaOnSciNotify in background, {_fn}, {n.nmhdr.code}");
-			Debug_.PrintIf(_tempRanges.Count > 0);
-#endif
-			_modified = false; //SCN_UPDATEUI is async. Can be isActive true in SCN_MODIFIED but false in SCN_UPDATEUI. Or vice versa.
-		}
+		//if (isActive) {
+		//	//if (test_) {
+		//	//	switch (n.nmhdr.code) {
+		//	//	case NOTIF.SCN_UPDATEUI:
+		//	//	case NOTIF.SCN_NEEDSHOWN:
+		//	//	case NOTIF.SCN_PAINTED:
+		//	//	case NOTIF.SCN_FOCUSIN:
+		//	//	case NOTIF.SCN_FOCUSOUT:
+		//	//	case NOTIF.SCN_DWELLSTART:
+		//	//	case NOTIF.SCN_DWELLEND:
+		//	//		break;
+		//	//	case NOTIF.SCN_MODIFIED:
+		//	//		print.it(n.nmhdr.code, n.modificationType);
+		//	//		break;
+		//	//	default:
+		//	//		print.it(n.nmhdr.code);
+		//	//		break;
+		//	//	}
+		//	//}
+		//} else {
+		//	//#if DEBUG
+		//	//			if (n.code is not (NOTIF.SCN_FOCUSOUT or NOTIF.SCN_DWELLEND
+		//	//				or NOTIF.SCN_SAVEPOINTLEFT or NOTIF.SCN_SAVEPOINTREACHED or NOTIF.SCN_MODIFIED or NOTIF.SCN_UPDATEUI or NOTIF.SCN_STYLENEEDED
+		//	//				)) Debug_.Print($"AaOnSciNotify in background, {_fn}, {n.nmhdr.code}");
+		//	//#endif
+		//}
 		
-		if (n.code == NOTIF.SCN_SAVEPOINTLEFT) {
+		switch (n.code) {
+		case NOTIF.SCN_SAVEPOINTLEFT:
 			App.Model.Save.TextLater();
 			//never mind: we should cancel the 'save text later' on SCN_SAVEPOINTREACHED
-		} else if (n.code == NOTIF.SCN_MODIFIED) {
+			break;
+		case NOTIF.SCN_MODIFIED:
 			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.Text);
 			if (n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
+				_modified = true;
+				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
 				if (isActive) {
-					_modified = true;
-					_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
 					if (CodeInfo.SciModified(this, n)) _CodeModifiedAndCodeinfoOK(); //WPF preview
 					Panels.Find.UpdateQuickResults();
 				}
 				App.Model.EditGoBack.OnTextModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
 				if (n.linesAdded != 0) ESetLineNumberMarginWidth_(onModified: true);
 			}
-		} else if (isActive) {
-			switch (n.code) {
-			case NOTIF.SCN_UPDATEUI:
-				//print.it(_modified, n.updated);
-				if (n.updated.Has(UPDATE.SC_UPDATE_CONTENT)) {
-					if (_modified) _modified = false;
-					else if (n.updated == UPDATE.SC_UPDATE_CONTENT) break; //ignore when changed styling or markers
-				}
-				if (n.updated.HasAny(UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) {
-					_TempRangeOnModifiedOrPosChanged(0, 0, 0);
+			break;
+		case NOTIF.SCN_UPDATEUI:
+			//note: SCN_UPDATEUI is async. Can be isActive true in SCN_MODIFIED but false in SCN_UPDATEUI. Or vice versa.
+			//print.it(_modified, n.updated);
+			if (n.updated.Has(UPDATE.SC_UPDATE_CONTENT)) {
+				if (_modified) _modified = false;
+				else if (n.updated == UPDATE.SC_UPDATE_CONTENT) break; //ignore when changed styling or markers
+			}
+			if (n.updated.HasAny(UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) {
+				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
+				if (isActive) {
 					if (n.updated.Has(UPDATE.SC_UPDATE_SELECTION)) App.Model.EditGoBack.OnPosChanged(this);
 					Panels.Editor.UpdateUI_EditEnabled_();
 				}
-				CodeInfo.SciUpdateUI(this, n.updated);
-				break;
-			case NOTIF.SCN_CHARADDED:
-				//print.it($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
-				if (n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
-					aaaAddUndoPoint();
-				}
-				if (n.ch != '\r' && n.ch <= 0xffff) { //on Enter we receive notifications for '\r' and '\n'
-					CodeInfo.SciCharAdded(this, (char)n.ch);
-				}
-				break;
-			case NOTIF.SCN_DWELLSTART:
-				CodeInfo.SciMouseDwellStarted(this, n.position);
-				break;
-			case NOTIF.SCN_MARGINCLICK:
-				if (_fn.IsCodeFile) {
-					CodeInfo.Cancel();
-					if (n.margin == c_marginFold) {
-						_FoldOnMarginClick(null, n.position);
-					}
-				}
-				break;
-			case NOTIF.SCN_STYLENEEDED:
-				//print.it("SCN_STYLENEEDED");
-				if (_fn.IsCodeFile) {
-					EHideImages_(Call(SCI_GETENDSTYLED), n.position);
-					Call(SCI_STARTSTYLING, n.position); //need this even if would not hide images
-				} else {
-					aaaSetStyled();
-				}
-				break;
 			}
-		} else { //!isActive
-			switch (n.code) {
-			case NOTIF.SCN_STYLENEEDED:
+			if (isActive) CodeInfo.SciUpdateUI(this, n.updated);
+			break;
+		case NOTIF.SCN_CHARADDED when isActive:
+			//print.it($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
+			if (n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
+				aaaAddUndoPoint();
+			}
+			if (n.ch != '\r' && n.ch <= 0xffff) { //on Enter we receive notifications for '\r' and '\n'
+				CodeInfo.SciCharAdded(this, (char)n.ch);
+			}
+			break;
+		case NOTIF.SCN_DWELLSTART when isActive:
+			CodeInfo.SciMouseDwellStarted(this, n.position);
+			break;
+		case NOTIF.SCN_MARGINCLICK when isActive:
+			if (_fn.IsCodeFile) {
+				CodeInfo.Cancel();
+				if (n.margin == c_marginFold) {
+					_FoldOnMarginClick(null, n.position);
+				}
+			}
+			break;
+		case NOTIF.SCN_STYLENEEDED:
+			//print.it("SCN_STYLENEEDED");
+			if (isActive && _fn.IsCodeFile) {
+				EHideImages_(Call(SCI_GETENDSTYLED), n.position);
+				Call(SCI_STARTSTYLING, n.position); //need this even if would not hide images
+			} else {
 				aaaSetStyled();
-				break;
 			}
+			break;
 		}
 		
 		base.AaOnSciNotify(ref n);

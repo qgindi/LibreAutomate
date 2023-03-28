@@ -415,8 +415,8 @@ partial class CiStyling {
 		public int IndicRefsColor = 0x80C000;
 		public int IndicBracesColor = 0x808080;
 		public int IndicFoundAlpha = 255;
-		public int IndicRefsAlpha = 25;
-		public int IndicBracesAlpha = 25;
+		public int IndicRefsAlpha = 40;
+		public int IndicBracesAlpha = 40;
 		//public bool IndicFoundGradient;
 		//public bool IndicRefsGradient;
 		//public bool IndicBracesGradient;

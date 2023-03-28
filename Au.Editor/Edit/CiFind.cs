@@ -8,11 +8,17 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Rename;
 using Au.Controls;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
 
 //TODO: doc about 'Find references/implementations', 'hilite references', 'go to base'.
 
 static class CiFind {
 	const int c_markerSymbol = 0, c_markerInfo = 1, c_markerSeparator = 2, c_indicProject = 15;
+	const int c_markerRenameComment = 3, c_markerRenameDisabled = 4, c_markerRenameString = 5, c_markerRenameError = 6;
 	static bool _working;
 	
 	public static async void FindReferencesOrImplementations(bool implementations) {
@@ -31,7 +37,7 @@ static class CiFind {
 				k.aaaMarkerDefine(c_markerSymbol, Sci.SC_MARK_BACKGROUND, backColor: 0xC0C0FF);
 				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
 				k.aaaMarkerDefine(c_markerSeparator, Sci.SC_MARK_UNDERLINE, backColor: 0xe0e0e0);
-				k.aaaIndicatorDefine(c_indicProject, Sci.INDIC_GRADIENT, 0xCDE87C, alpha: 255, underText: true);
+				k.aaaIndicatorDefine(c_indicProject, Sci.INDIC_GRADIENT, 0xC0C0C0, alpha: 255, underText: true);
 			}
 			
 			//perf.first();
@@ -119,7 +125,7 @@ static class CiFind {
 							}
 							prevFile = f;
 							
-							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, displayFile: true);
+							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, displayFile: true, indicHilite: PanelFound.Indicators.HiliteG);
 						}
 						if (multiProj) _Fold(false);
 						
@@ -129,9 +135,7 @@ static class CiFind {
 			}
 			//perf.next();
 			
-			if (!info.NE()) {
-				b.Marker(c_markerInfo).Text(info).NL();
-			}
+			if (!info.NE()) b.Marker(c_markerInfo).Text(info).NL();
 			
 			void _AppendSymbol(ISymbol sym, bool refDef = false, IEnumerable<Location> locations = null) {
 				var sDef = sym is INamespaceSymbol
@@ -155,7 +159,7 @@ static class CiFind {
 			
 			SciTextBuilder _Fold(bool start) => b.Fold(new(b.Length - (start ? 0 : 2), start));
 			
-			Panels.Found.SetSymbolReferencesResults(workingState, b);
+			Panels.Found.SetResults(workingState, b);
 			
 			timer.after(1, _ => GC.Collect());
 			//perf.nw();
@@ -193,7 +197,7 @@ static class CiFind {
 	}
 	
 	public static void SciUpdateUI(SciCode doc, bool modified) {
-		if (modified || 0 == doc.Call(Sci.SCI_INDICATORVALUEAT, SciCode.c_indicRefs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
+		if (modified || 0 == doc.aaaIndicGetValue(SciCode.c_indicRefs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
 			doc.aaaIndicatorClear(SciCode.c_indicRefs);
 		doc.aaaIndicatorClear(SciCode.c_indicBraces);
 		_cancelTS?.Cancel();
@@ -213,6 +217,7 @@ static class CiFind {
 		
 		//hilite symbol references
 		if (CiUtil.GetSymbolFromPos(cd) is ISymbol sym) {
+			if (sym is IAliasSymbol a1 && a1.Target is INamespaceSymbol ns1 && ns1.ContainingNamespace == null) return; //'global' keyword. Would hilite entire code.
 			List<Range> ar = new();
 			_cancelTS = new CancellationTokenSource();
 			var cancelToken = _cancelTS.Token;
@@ -301,6 +306,7 @@ static class CiFind {
 				}
 			}
 			if (posR < 0 || !(posL == pos || posR == pos)) return;
+			if (posR - posL < 4) return; //don't hilite () etc
 			cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, posL..(posL + 1));
 			cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, posR..(posR + 1));
 		}
@@ -320,86 +326,195 @@ static class CiFind {
 		}
 	}
 	
-#if true
-	public static async void RenameSymbol() {//TODO
-		print.clear();
+	public static void RenameSymbol() {
 		if (_working) return;
 		_working = true;
-		try {
-			var (sym, cd) = CiUtil.GetSymbolFromPos();
-			if (sym == null || !sym.IsInSource()) return;
+		try { new _Renamer().Rename(); }
+		finally { _working = false; }
+	}
+	
+	class _Renamer {
+		string _oldName, _newName, _info;
+		bool _overloads, _comments, _strings, _preview;
+		List<_File> _a;
+		KScintilla _sciPreview;
+		static WeakReference<KScintilla> s_sciPreview;
+		
+		public async void Rename() {
+			if(s_sciPreview?.TryGetTarget(out var sciPreview) ?? false) Panels.Found.Close(sciPreview);
+			s_sciPreview = null;
 			
-			perf.first();
+			//print.clear();
+			if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+			
+			//int indic = 6; cd.sci.aaaIndicatorDefine(indic, Sci.INDIC_GRADIENT, 0x0000ff, 120); cd.sci.aaaIndicatorClear(indic);
+			
+			var sym = await Microsoft.CodeAnalysis.Rename.RenameUtilities.TryGetRenamableSymbolAsync(cd.document, cd.pos, default);
+			
+			if (sym == null || !sym.IsInSource() || sym.IsImplicitlyDeclared || !sym.Locations[0].FindToken(default).IsKind(SyntaxKind.IdentifierToken)) {
+				dialog.show("This element cannot be renamed", owner: App.Hmain);
+				return;
+			}
+			
+			if (!_Dialog(sym)) return;
+			
+			//using var p1 = perf.local();
+			Solution solution;
+			ImmutableArray<RenameLocation> locs;
 			Au.Compiler.TestInternal.RefsStart();
-			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
-			perf.next('s');
-			SymbolRenameOptions sro = new();
+			try {
+				(solution, _info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
+				//p1.Next('s');
+				
+				SymbolRenameOptions sro = new(_overloads, _strings, _comments);
+				locs = (await Microsoft.CodeAnalysis.Rename.Renamer.FindRenameLocationsAsync(solution, sym, sro, default, default)).Locations;
+			}
+			finally { Au.Compiler.TestInternal.RefsEnd(); }
+			//p1.Next('f');
 			
-			var h = await Microsoft.CodeAnalysis.Rename.Renamer.FindRenameLocationsAsync(solution, sym, sro, default, default);
-			print.it(h.Locations.Length);
-			//return;
-			perf.next('L');
+			Dictionary<FileNode, _File> df = new();
+			HashSet<_Ref> seen = new();
+			foreach (var v in locs) {
+				var f = CiProjects.FileOf(v.DocumentId);
+				var span = v.Location.SourceSpan;
+				if (!seen.Add(new(f, span))) continue; //remove logical duplicates added because of meta c
+				
+				//if (f == cd.sci.EFile) cd.sci.aaaIndicatorAdd(indic, true, span.ToRange());
+				//print.it(v.Location.SourceSpan, v.IsWrittenTo, v.CandidateReason, v.IsRenameInStringOrComment);
+				
+				if (!df.TryGetValue(f, out var x)) {
+					if (!solution.GetDocument(v.DocumentId).TryGetText(out var st)) { Debug_.Print(f); continue; }
+					df.Add(f, x = new(f, st.ToString(), new()));
+				}
+				
+				int marker = 0;
+				if (v.IsRenameInStringOrComment) {
+					var trivia = v.Location.SourceTree.GetRoot(default).FindTrivia(v.Location.SourceSpan.Start);
+					marker = trivia.Kind() switch { SyntaxKind.None => c_markerRenameString, SyntaxKind.DisabledTextTrivia => c_markerRenameDisabled, _ => c_markerRenameComment };
+				} else if (v.CandidateReason != CandidateReason.None) marker = c_markerRenameError;
+				if (marker > 0) _preview = true;
+				
+				x.a.Add(new(span.Start, marker));
+			}
+			_a = df.Values.OrderBy(o => o.f.Name).ToList();
+			foreach (var v in _a) v.a.Sort((x, y) => x.pos - y.pos);
 			
-			var sol2 = await Microsoft.CodeAnalysis.Rename.Renamer.RenameSymbolAsync(solution, sym, sro, "newName");
-			//print.it(sol2.GetChangedDocuments(solution));
-			perf.next('r');
+			//p1.Next();
 			
-			int n = 0;
-			foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
-				print.it("<><c blue>PROJECT", projChange.NewProject.Name, "<>");
-				foreach (var docId in projChange.GetChangedDocuments(true)) {
-					var doc = projChange.NewProject.GetDocument(docId);
-					print.it("FILE", doc.Name);
-					var oldDoc = projChange.OldProject.GetDocument(docId);
-					foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
-						print.it(tc);
-						n++;
+			if (_preview) _Preview();
+			else _Finish();
+		}
+		
+		bool _Dialog(ISymbol sym) {
+			_oldName = sym.Name;
+			bool hasOverloads = Microsoft.CodeAnalysis.Rename.RenameUtilities.GetOverloadedSymbols(sym).Any();
+			
+			var b = new wpfBuilder("Rename symbol").WinSize(300);
+			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
+			b.R.Add(out TextBox newName, _oldName).Focus(); newName.SelectAll();
+			b.R.Add(out KCheckBox cOverloads, "Include overloads").Hidden(!hasOverloads).Checked(0 == (App.Settings.ci_rename & 1));
+			b.R.Add(out KCheckBox cComments, "Include comments and #if-disabled code").Checked(0 == (App.Settings.ci_rename & 2)).Tooltip("If found, before renaming will show in the Found panel.");
+			b.R.Add(out KCheckBox cStrings, "Include strings").Checked(0 == (App.Settings.ci_rename & 4)).Tooltip("If found, before renaming will show in the Found panel.");
+			//b.R.Add(out KCheckBox cPreview, "Preview");
+			b.R.AddOkCancel();
+			b.End();
+			if (!b.ShowDialog(App.Wmain)) return false;
+			_overloads = cOverloads.IsChecked;
+			_comments = cComments.IsChecked;
+			_strings = cStrings.IsChecked;
+			//_preview = cPreview.IsChecked;
+			App.Settings.ci_rename = (_overloads ? 0 : 1) | (_comments ? 0 : 2) | (_strings ? 0 : 4);
+			_newName = newName.Text;
+			return _newName != _oldName;
+		}
+		
+		void _Preview() {
+			using var workingState = Panels.Found.Prepare(PanelFound.Found.SymbolRename, $"Renaming", out var b);
+			if (workingState.NeedToInitControl) {
+				var k = workingState.Scintilla;
+				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
+				k.aaaMarkerDefine(c_markerSeparator, Sci.SC_MARK_UNDERLINE, backColor: 0xe0e0e0);
+				k.aaaMarginSetWidth(1, 12);
+				k.aaaMarkerDefine(c_markerRenameComment, Sci.SC_MARK_SMALLRECT, backColor: 0x80C000);
+				k.aaaMarkerDefine(c_markerRenameDisabled, Sci.SC_MARK_SMALLRECT, backColor: 0);
+				k.aaaMarkerDefine(c_markerRenameString, Sci.SC_MARK_SMALLRECT, backColor: 0xC09060);
+				k.aaaMarkerDefine(c_markerRenameError, Sci.SC_MARK_SMALLRECT, backColor: 0xFF0000);
+			}
+			
+			FileNode prevFile = null;
+			foreach (var (f, text, a) in _a) {
+				foreach (var v in a) {
+					//if (v.marker > 0) b.Marker(v.marker);
+					if (v.marker == 0) continue;
+					b.Marker(v.marker);
+					if (f != prevFile) { if (prevFile != null) b.Marker(c_markerSeparator, prevLine: true); prevFile = f; }
+					PanelFound.AppendFoundLine(b, f, text, v.pos, v.pos + _oldName.Length, displayFile: true, indicHilite: PanelFound.Indicators.HiliteB);
+					//rejected: in results display newName (hilited) as if already replaced. Or old red and new green, like in VSCode.
+				}
+			}
+			
+			b.Marker(c_markerInfo).Text("You may want to exclude some of these. Right-click.\r\n");
+			b.Marker(c_markerInfo)
+				.Link(() => _Link(false)).B("Rename").Link_()
+				.Text("  ").Link(() => _Link(true)).Text("Cancel").Link_().NL();
+			b.Marker(c_markerInfo).Text("Margin box color: green - comment, black - #if, brown - string, red - error or ambiguous.");
+			if (!_info.NE()) b.NL().Marker(c_markerInfo).Text(_info);
+			
+			Panels.Found.SetResults(workingState, b);
+			s_sciPreview = new(_sciPreview = workingState.Scintilla);
+		}
+		
+		void _Link(bool cancel) {
+			//async because cannot close Scintilla from link click notification
+			App.Dispatcher.InvokeAsync(() => {
+				if (!cancel) _Finish();
+				Panels.Found.Close(_sciPreview);
+			});
+			s_sciPreview = null;
+		}
+		
+		void _Finish() {
+			foreach (var (f, text, _) in _a) {
+				if (f.GetCurrentText(out var t1, null) && t1 != text) {
+					dialog.show(null, $"Cannot rename symbol, because '{f.Name}' text changed in the meantime.", owner: App.Hmain);
+					return;
+				}
+			}
+			
+			if (_sciPreview != null) { //remove excluded items
+				int line = 0;
+				for (int j = 0; j < _a.Count; j++) {
+					var a = _a[j].a;
+					for (int i = 0; i < a.Count; i++) {
+						if (a[i].marker == 0) continue;
+						if (0 != _sciPreview.aaaIndicGetValue(PanelFound.Indicators.Excluded, _sciPreview.aaaLineStart(false, line++)))
+							a.RemoveAt(i--);
+					}
+					if (a.Count == 0) _a.RemoveAt(j--);
+				}
+				if (_a.Count == 0) return;
+			}
+			
+			//var progress = App.Hmain.TaskbarButton;
+			var undoInFiles = SciUndo.OfWorkspace;
+			try {
+				undoInFiles.StartReplaceInFiles();
+				foreach (var (f, text, a1) in _a) {
+					var a = a1.Select(o => new StartEndText(o.pos, o.pos + _oldName.Length, _newName)).ToList();
+					if (f.ReplaceAllInText(text, a, out var text2)) {
+						if (f.OpenDoc != null) undoInFiles.RifAddFile(f.OpenDoc, text, text2, a);
+						else undoInFiles.RifAddFile(f, text, text2, a);
 					}
 				}
 			}
-			perf.nw();
-			print.it(n);
-		}
-		finally {
-			_working = false;
-			Au.Compiler.TestInternal.RefsEnd();
-		}
-	}
-#else
-	public static async void RenameSymbol() {//TODO
-		print.clear();
-		if (_working) return;
-		_working = true;
-		try {
-			var (sym, cd) = CiUtil.GetSymbolFromPos();
-			if (sym == null || !sym.IsInSource()) return;
-			
-			perf.first();
-			Au.Compiler.TestInternal.RefsStart();
-			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
-			perf.next('s');
-			SymbolRenameOptions sro = new();
-			var sol2 = await Microsoft.CodeAnalysis.Rename.Renamer.RenameSymbolAsync(solution, sym, sro, "newName");
-			//print.it(sol2.GetChangedDocuments(solution));
-			perf.next('r');
-			
-			foreach (var projChange in sol2.GetChanges(solution).GetProjectChanges()) {
-				print.it("<><c blue>PROJECT", projChange.NewProject.Name, "<>");
-				foreach (var docId in projChange.GetChangedDocuments(true)) {
-					var doc = projChange.NewProject.GetDocument(docId);
-					print.it("FILE", doc.Name);
-					var oldDoc = projChange.OldProject.GetDocument(docId);
-					foreach (var tc in doc.GetTextChangesAsync(oldDoc).Result) {
-						print.it(tc);
-					}
-				}
+			finally {
+				undoInFiles.FinishReplaceInFiles($"rename symbol {_oldName} to {_newName}");
+				//progress.SetProgressState(WTBProgressState.NoProgress);
+				CodeInfo.FilesChanged();
 			}
-			perf.nw();
 		}
-		finally {
-			_working = false;
-			Au.Compiler.TestInternal.RefsEnd();
-		}
+		
+		record struct _Pos(int pos, int marker);
+		record struct _File(FileNode f, string text, List<_Pos> a);
 	}
-#endif
 }

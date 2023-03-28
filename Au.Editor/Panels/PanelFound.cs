@@ -38,7 +38,7 @@ class PanelFound {
 			} else {
 				cKeep.IsChecked = false;
 			}
-			cKeep.IsEnabled = _iActive >= 0;
+			cKeep.IsEnabled = _iActive >= 0 && _Sci.kind != Found.SymbolRename;
 			bCloseOF.IsEnabled = _iActive >= 0;
 		};
 		
@@ -66,6 +66,7 @@ class PanelFound {
 					//Found.Text => "*Material.Text" + Menus.black,
 					Found.Text => "*Material.FindReplace" + Menus.black,
 					Found.SymbolReferences => "*Codicons.References" + Menus.black,
+					Found.SymbolRename => "*Codicons.ReplaceAll #4040FF|#8080FF",
 					_ => null
 				}, null);
 				li.ContextMenuOpening += (li, _) => {
@@ -86,8 +87,9 @@ class PanelFound {
 			BoldStyle = Styles.Bold,
 			GrayStyle = Styles.Gray,
 			GreenStyle = Styles.Green,
-			HiliteIndic = Indicators.Hilite,
-			Hilite2Indic = Indicators.Hilite2,
+			//IndicHiliteY = Indicators.HiliteY,
+			//IndicHiliteG = Indicators.HiliteG,
+			//IndicHiliteR = Indicators.HiliteR,
 			LinkIndic = Indicators.Link,
 			Link2Indic = Indicators.Link2,
 			ControlWidth = (int)_grid.ActualWidth,
@@ -107,7 +109,7 @@ class PanelFound {
 		return _iActive >= 0 && _Sci == ws.Scintilla;
 	}
 	
-	public void SetFilesFindResults(in WorkingState ws, SciTextBuilder b) {
+	public void SetResults(in WorkingState ws, SciTextBuilder b) {
 		if (!_IsSciOk(ws)) return;
 		b.Apply(_Sci);
 	}
@@ -119,16 +121,11 @@ class PanelFound {
 		_Sci.files = files;
 	}
 	
-	public void SetSymbolReferencesResults(in WorkingState ws, SciTextBuilder b) {
-		if (!_IsSciOk(ws)) return;
-		b.Apply(_Sci);
-	}
-	
 	/// <summary>
 	/// Appends limited text of line of text range <i>start..end</i>, as a link that opens file <i>f</i> and select text <i>start..end</i>, with highlighted range <i>start..end</i>.
 	/// </summary>
 	/// <param name="text">Text of file <i>f</i>.</param>
-	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile) {
+	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile, int indicHilite = Indicators.HiliteY) {
 		int wid = Math.Clamp((b.ControlWidth - 20) / 10 - (displayFile ? f.Name.Length + 4 : 0), 30, 100);
 		int lineStart = start, lineEnd = end;
 		int lsMax = Math.Max(start - wid, 0), leMax = Math.Min(end + 200, text.Length); //start/end limits like in VS
@@ -140,15 +137,23 @@ class PanelFound {
 		b.Link2(new CodeLink(f, start, end));
 		if (displayFile) b.Gray(f.Name).Text("        ");
 		if (limitStart) b.Text("…");
-		b.Text(text.AsSpan(lineStart..lineEnd));
-		b.Hilite(b.Length - (lineEnd - start), b.Length - (lineEnd - end));
+		
+		b.Text(text.AsSpan(lineStart..start));
+		b.Indic(indicHilite, text.AsSpan(start..end));
+		b.Text(text.AsSpan(end..lineEnd));
+		
 		if (limitEnd) b.Text("…");
 		b.Link_().NL();
 	}
 	
-	void _Close(object li) {
-		int i = _lb.Items.IndexOf(li as KListBoxItemWithImage); if (i < 0) return;
+	public void Close(KScintilla sci) => _Close(_a.IndexOf(sci as _KScintilla));
+	
+	void _Close(object li) => _Close(_lb.Items.IndexOf(li as KListBoxItemWithImage));
+	
+	void _Close(int i) {
+		if (i < 0) return;
 		if (i == _iActive && _a.Count > 1) _lb.SelectedIndex = _iActive == _a.Count - 1 ? _iActive - 1 : _iActive + 1;
+		else if (i < _iActive) _iActive--;
 		var sci = _a[i];
 		_a.RemoveAt(i);
 		if (_a.Count == 0) _iActive = -1;
@@ -181,6 +186,7 @@ class PanelFound {
 			this.kind = kind;
 			Name = "Found_" + kind;
 			AaInitReadOnlyAlways = true;
+			AaNoMouseSetFocus = MButtons.Right;
 			AaInitTagsStyle = AaTagsStyle.AutoAlways;
 		}
 		
@@ -193,9 +199,11 @@ class PanelFound {
 			Call(SCI_SETEXTRADESCENT, 1);
 			
 			//indicators
-			aaaIndicatorDefine(Indicators.Hilite, INDIC_STRAIGHTBOX, 0xffff00, alpha: 255, borderAlpha: 255, underText: true);
-			aaaIndicatorDefine(Indicators.Hilite2, INDIC_STRAIGHTBOX, 0xFFC000, alpha: 255, borderAlpha: 255, underText: true); //currently not used. Edit when used.
+			aaaIndicatorDefine(Indicators.HiliteY, INDIC_STRAIGHTBOX, 0xffff00, alpha: 255, borderAlpha: 255, underText: true);
+			aaaIndicatorDefine(Indicators.HiliteG, INDIC_STRAIGHTBOX, 0xC0FF60, alpha: 255, borderAlpha: 255, underText: true);
+			aaaIndicatorDefine(Indicators.HiliteB, INDIC_GRADIENT, 0xA0A0FF, alpha: 255, underText: true);
 			aaaIndicatorDefine(Indicators.FocusRect, INDIC_FULLBOX, 0x4169E1, alpha: 25, borderAlpha: 255, strokeWidth: _dpi / 96); //better than SC_ELEMENT_CARET_LINE_BACK/SCI_SETCARETLINEFRAME etc
+			aaaIndicatorDefine(Indicators.Excluded, INDIC_STRIKE, 0xFF0000);
 			
 			//link indicators
 			aaaIndicatorDefine(-Indicators.Link, INDIC_COMPOSITIONTHIN, 0x0080ff, hoverColor: 0x8000ff);
@@ -212,24 +220,36 @@ class PanelFound {
 			base.AaOnHandleCreated();
 		}
 		
-		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+		protected override nint WndProc(wnd w, int msg, nint wp, nint lp) {
 			switch (msg) {
 			case Api.WM_MBUTTONDOWN: //close file
-				int pos = Call(SCI_POSITIONFROMPOINTCLOSE, Math2.LoShort(lParam), Math2.HiShort(lParam));
-				if (AaRangeDataGet(false, pos, out object o)) {
+				int pos = Call(SCI_POSITIONFROMPOINTCLOSE, Math2.LoShort(lp), Math2.HiShort(lp));
+				if (pos >= 0 && AaRangeDataGet(false, pos, out object o)) {
 					var f = o switch { FileNode f1 => f1, CodeLink cl => cl.file, _ => null };
-					if (f != null) App.Model.CloseFile(f, selectOther: true, focusEditor: true);
+					if (f != null && (_openedFiles?.Contains(f) ?? false)) //close only if opened from this panel. Else may accidentally close (eg confuse middle/right button) and lose the undo history etc.
+						App.Model.CloseFile(f, selectOther: true, focusEditor: true);
 				}
-				return default; //don't focus
+				return 0; //don't focus
+			case Api.WM_CONTEXTMENU:
+				if (kind == Found.SymbolRename) {
+					int i = aaaCurrentPos8;
+					if (0 != aaaIndicGetValue(Indicators.Link2, i)) {
+						var v = aaaLineStartEndFromPos(false, i);
+						if (0 == aaaIndicGetValue(Indicators.Excluded, i)) aaaIndicatorAdd(Indicators.Excluded, false, v.start..v.end);
+						else aaaIndicatorClear(Indicators.Excluded, false, v.start..v.end);
+					}
+				}
+				return 0;
 			}
-			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
+			
+			return base.WndProc(w, msg, wp, lp);
 		}
 		
 		protected override void AaOnSciNotify(ref SCNotification n) {
 			//if (n.code == NOTIF.SCN_MODIFIED) print.it(n.code, n.modificationType, n.position, n.length); else if (n.code is not (NOTIF.SCN_PAINTED or NOTIF.SCN_STYLENEEDED)) print.it(n.code);
 			switch (n.code) {
 			case NOTIF.SCN_INDICATORRELEASE:
-				_OnClickIndicLink(n.position);
+				if (n.modifiers == 0) _OnClickIndicLink(n.position);
 				break;
 			}
 			base.AaOnSciNotify(ref n);
@@ -312,7 +332,8 @@ class PanelFound {
 	public enum Found {
 		Files,
 		Text,
-		SymbolReferences
+		SymbolReferences,
+		SymbolRename
 	}
 	
 	//CONSIDER: instead of taskbar button progress:
@@ -351,7 +372,7 @@ class PanelFound {
 	/// Indices of indicators defined by this control.
 	/// </summary>
 	public static class Indicators {
-		public const int Hilite = 0, Hilite2 = 1, FocusRect = 2, Link = -16, Link2 = 18;
+		public const int HiliteY = 0, HiliteG = 1, HiliteB = 2, FocusRect = 3, Excluded = 4, Link = -16, Link2 = 18;
 	}
 	
 	/// <summary>

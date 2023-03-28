@@ -46,9 +46,7 @@ record struct StartEndText(int start, int end, string text) {
 	public int Length => end - start;
 	public Range Range => start..end;
 	
-	/// <summary>
-	/// Replaces all text ranges specified in <i>a</i> with strings specified in <i>a</i>.
-	/// </summary>
+	/// <inheritdoc cref="ReplaceAll(string, List{StartEndText}, ref StringBuilder)"/>
 	public static string ReplaceAll(string s, List<StartEndText> a) {
 		StringBuilder b = null;
 		ReplaceAll(s, a, ref b);
@@ -58,8 +56,11 @@ record struct StartEndText(int start, int end, string text) {
 	/// <summary>
 	/// Replaces all text ranges specified in <i>a</i> with strings specified in <i>a</i>.
 	/// </summary>
+	/// <param name="a">Text ranges and replacement texts. Must be sorted by range. Ranges must not overlap.</param>
 	/// <param name="b">Receives new text. If null, the function creates new, else at first calls <c>b.Clear()</c>.</param>
+	/// <exception cref="ArgumentException">Ranges are overlapped or not sorted. Only #if DEBUG.</exception>
 	public static void ReplaceAll(string s, List<StartEndText> a, ref StringBuilder b) {
+		ThrowIfNotSorted(a);
 		int cap = s.Length - a.Sum(o => o.Length) + a.Sum(o => o.text.Length);
 		if (b == null) b = new(cap);
 		else {
@@ -73,5 +74,11 @@ record struct StartEndText(int start, int end, string text) {
 			i = v.end;
 		}
 		b.Append(s, i, s.Length - i);
+	}
+	
+	/// <exception cref="ArgumentException">Ranges are overlapped or not sorted. [Conditional("DEBUG")].</exception>
+	[Conditional("DEBUG")]
+	internal static void ThrowIfNotSorted(List<StartEndText> a) {
+		for (int i = 1; i < a.Count; i++) if (a[i].start < a[i - 1].end) throw new ArgumentException("ranges must be sorted and not overlapped");
 	}
 }

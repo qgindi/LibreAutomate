@@ -65,7 +65,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 			b.Link2(f).Gray(path.AsSpan(0, i1)).Text(name);
 			if (i >= 0) {
 				i += b.Length - name.Length;
-				b.Hilite(i, i + s.Length);
+				b.Indic(PanelFound.Indicators.HiliteY, i, i + s.Length);
 			}
 			b.Link_();
 			if (f.IsFolder) b.Green("    //folder");
@@ -74,6 +74,6 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		
 		if (b.Length == 0) return;
 		
-		Panels.Found.SetFilesFindResults(workingState, b);
+		Panels.Found.SetResults(workingState, b);
 	}
 }

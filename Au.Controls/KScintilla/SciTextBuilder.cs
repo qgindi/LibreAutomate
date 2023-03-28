@@ -221,17 +221,21 @@ public class SciTextBuilder {
 	public SciTextBuilder Green() => Style(GreenStyle);
 	public SciTextBuilder Green_() => Style_();
 
-	public int HiliteIndic { get; set; }
-	public SciTextBuilder Hilite(int start, int end) => Indic(HiliteIndic, start, end);
-	public SciTextBuilder Hilite(RStr text) => Indic(HiliteIndic, text);
-	public SciTextBuilder Hilite() => Indic(HiliteIndic);
-	public SciTextBuilder Hilite_() => Indic_();
+	//public int IndicHiliteY { get; set; }
+	//public SciTextBuilder HiliteY(int start, int end) => Indic(IndicHiliteY, start, end);
+	//public SciTextBuilder HiliteY(RStr text) => Indic(IndicHiliteY, text);
+	//public SciTextBuilder HiliteY() => Indic(IndicHiliteY);
+	//public SciTextBuilder Hilite_() => Indic_();
 
-	public int Hilite2Indic { get; set; }
-	public SciTextBuilder Hilite2(int start, int end) => Indic(Hilite2Indic, start, end);
-	public SciTextBuilder Hilite2(RStr text) => Indic(Hilite2Indic, text);
-	public SciTextBuilder Hilite2() => Indic(Hilite2Indic);
-	public SciTextBuilder Hilite2_() => Indic_();
+	//public int IndicHiliteG { get; set; }
+	//public SciTextBuilder HiliteG(int start, int end) => Indic(IndicHiliteG, start, end);
+	//public SciTextBuilder HiliteG(RStr text) => Indic(IndicHiliteG, text);
+	//public SciTextBuilder HiliteG() => Indic(IndicHiliteG);
+
+	//public int IndicHiliteR { get; set; }
+	//public SciTextBuilder HiliteR(int start, int end) => Indic(IndicHiliteR, start, end);
+	//public SciTextBuilder HiliteR(RStr text) => Indic(IndicHiliteR, text);
+	//public SciTextBuilder HiliteR() => Indic(IndicHiliteR);
 
 	public int LinkIndic { get; set; }
 	public SciTextBuilder Link(object data, int start, int end) => Link(data, start, end, LinkIndic);
