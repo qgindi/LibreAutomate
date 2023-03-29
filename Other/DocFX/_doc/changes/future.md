@@ -1,11 +1,13 @@
 ## Version 0.14.0 (2023-02-)
 
 ### Editor
-Multiple 'Find' etc results pages in the 'Found' panel.
+Multiple pages in the 'Found' panel.
 
 Menu Edit -> Find references.
 
 Menu Edit -> Find implementations.
+
+Menu Edit -> Rename symbol.
 
 Menu Edit -> Go to base.
 

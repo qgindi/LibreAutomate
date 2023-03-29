@@ -90,6 +90,8 @@ class DNewWorkspace : KDialogWindow {
 }
 
 class RepairWorkspace {
+	const int c_markerInfo = 0;
+	
 	static FileNode _GetFolder(bool inSelectedFolder) {
 		if (!inSelectedFolder) return App.Model.Root;
 		var a = FilesModel.TreeControl.SelectedItems;
@@ -98,21 +100,36 @@ class RepairWorkspace {
 		return null;
 	}
 	
+	static PanelFound.WorkingState _Prepare(out SciTextBuilder b, string title, string info) {
+		var ws = Panels.Found.Prepare(PanelFound.Found.Repair, title, out b);
+		if (ws.NeedToInitControl) {
+			var k = ws.Scintilla;
+			k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
+		}
+		b.Marker(c_markerInfo).Text(info).NL();
+		return ws;
+	}
+	
 	public static void MissingFiles(bool inSelectedFolder) {
 		if (_GetFolder(inSelectedFolder) is not FileNode rootFolder) return;
-		print.clear();
-		print.it("<><lc YellowGreen>Missing files<>\r\nThese items represent files that already don't exist. You may want to delete them from the Files panel.\r\n");
+		using var workingState = _Prepare(out var b, "Missing files", "These items represent files that already don't exist. You may want to delete them from the Files panel.");
 		
 		_Folder(rootFolder);
 		void _Folder(FileNode folder) {
 			foreach (var f in folder.Children()) {
 				var path = f.FilePath;
 				if (!filesystem.exists(path)) {
-					int linkLen = 0; for (var s = path; !(s = pathname.getDirectory(s)).NE();) { if (filesystem.exists(s).Directory) { linkLen = s.Length; break; } }
-					print.it($"<>{f.SciLink(path: true)}{(f.IsFolder ? " (folder)" : null)}\r\n\tMissing: <link>{path[..linkLen]}<>{path[linkLen..]}\r\n");
+					int linkLen = 0;
+					for (var s = path; !(s = pathname.getDirectory(s)).NE();) {
+						if (filesystem.exists(s).Directory) { linkLen = s.Length; break; }
+					}
+					b.NL().Link(f, f.ItemPath); if (f.IsFolder) b.Text(" (folder)");
+					var dir = path[..linkLen];
+					b.NL().Link2(() => { run.itSafe(dir); }, $"\tMissing: {dir}").Text(path.AsSpan(linkLen..)).NL();
 				} else if (f.IsFolder) {
 					if (f.IsSymlink && !filesystem.more.getFileId(path, out _)) {
-						print.it($"<>{f.SciLink(path: true)} (folder link)\r\n\tMissing target of symbolic link <explore>{path}<>\r\n");
+						b.NL().Link(f, f.ItemPath).Text(" (folder link)");
+						b.Text("\r\n\tMissing target of symbolic link ").Link2(() => { run.selectInExplorer(path); }, path).NL();
 					} else {
 						_Folder(f);
 					}
@@ -121,30 +138,14 @@ class RepairWorkspace {
 		}
 		//note: don't use folder.Descendants(). It would also print files in missing folders.
 		
-		print.scrollToTop();
+		Panels.Found.SetResults(workingState, b);
 	}
 	
 	static HashSet<string> _clickedLinks = new();
 	
 	public static void OrphanedFiles(bool inSelectedFolder) {
-		Panels.Output.Scintilla.AaTags.AddLinkTag("+missingAdd", static s => {
-			if (!_clickedLinks.Add(s)) return;
-			var a = s.Split('|');
-			var f = App.Model.Find(a[0], FNFind.Folder);
-			var pos = FNInsert.Inside;
-			if (f != null) {
-				f.SelectSingle();
-				FilesModel.TreeControl.Expand(f, true);
-			} else {
-				f = App.Model.Root.FirstChild;
-				if (f != null) pos = FNInsert.Before; else f = App.Model.Root;
-			}
-			App.Model.ImportFiles(new[] { a[1] }, f, pos, dontPrint: true);
-		});
-		
 		if (_GetFolder(inSelectedFolder) is not FileNode rootFolder) return;
-		print.clear();
-		print.it("<><lc YellowGreen>Orphaned files<>\r\nThese files are in the workspace folder but not in the Files panel. You may want to import or delete them.\r\n");
+		using var workingState = _Prepare(out var b, "Orphaned files", "These files are in the workspace folder but not in the Files panel. You may want to import or delete them.");
 		
 		_clickedLinks.Clear();
 		var hs = rootFolder.Descendants().Where(o => !o.IsLink).Select(o => o.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -156,13 +157,28 @@ class RepairWorkspace {
 				if (!hs.Contains(fp)) {
 					string rp = fp[App.Model.FilesDirectory.Length..];
 					string addTo = pathname.getDirectory(rp);
-					var s = $"<><explore {fp}>{rp}<>{(f.IsDirectory ? " (folder)" : null)}\r\n\t<+missingAdd {addTo}|{fp}>Import<>";
-					s += addTo.NE() ? "\r\n" : $" to folder <open {addTo}|expand>{addTo}<>\r\n";
-					print.it(s);
+					b.NL().Link(() => { run.selectInExplorer(fp); }, rp); if(f.IsDirectory) b.Text(" (folder)");
+					b.Text("\r\n\t").Link(() => { _Import(addTo, fp); }, "Import");
+					if (!addTo.NE()) b.Text(" to folder ").Link(() => { App.Model.OpenAndGoTo2(addTo, "expand"); }, addTo);
+					b.NL();
 				} else if (f.IsDirectory) _Folder(fp);
 			}
 		}
 		
-		print.scrollToTop();
+		void _Import(string addTo, string fp) {
+			if (!_clickedLinks.Add(fp)) return;
+			var f = App.Model.Find(addTo, FNFind.Folder);
+			var pos = FNInsert.Inside;
+			if (f != null) {
+				f.SelectSingle();
+				FilesModel.TreeControl.Expand(f, true);
+			} else {
+				f = App.Model.Root.FirstChild;
+				if (f != null) pos = FNInsert.Before; else f = App.Model.Root;
+			}
+			App.Model.ImportFiles(new[] { fp }, f, pos, dontPrint: true);
+		}
+		
+		Panels.Found.SetResults(workingState, b);
 	}
 }

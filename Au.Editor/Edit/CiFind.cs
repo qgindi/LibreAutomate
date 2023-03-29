@@ -115,15 +115,17 @@ static class CiFind {
 							if (!rloc.Document.TryGetText(out var st)) { Debug_.Print(f); continue; }
 							var text = st.ToString();
 							
+							if (f != prevFile) {
+								if (prevFile != null) b.Marker(c_markerSeparator, prevLine: true);
+								prevFile = f;
+							}
+							
 							if (multiProj && rloc.Document.Project.Id != prevProjId) {
 								prevProjId = rloc.Document.Project.Id;
 								_Fold(false);
 								_Fold(true);
 								b.Indic(c_indicProject).Text("Project ").B(rloc.Document.Project.Name).Indic_().NL();
-							} else if (f != prevFile) {
-								if (prevFile != null) b.Marker(c_markerSeparator, prevLine: true);
 							}
-							prevFile = f;
 							
 							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, displayFile: true, indicHilite: PanelFound.Indicators.HiliteG);
 						}
@@ -341,7 +343,7 @@ static class CiFind {
 		static WeakReference<KScintilla> s_sciPreview;
 		
 		public async void Rename() {
-			if(s_sciPreview?.TryGetTarget(out var sciPreview) ?? false) Panels.Found.Close(sciPreview);
+			if (s_sciPreview?.TryGetTarget(out var sciPreview) ?? false) Panels.Found.Close(sciPreview);
 			s_sciPreview = null;
 			
 			//print.clear();
@@ -429,7 +431,7 @@ static class CiFind {
 		}
 		
 		void _Preview() {
-			using var workingState = Panels.Found.Prepare(PanelFound.Found.SymbolRename, $"Renaming", out var b);
+			using var workingState = Panels.Found.Prepare(PanelFound.Found.SymbolRename, "Renaming", out var b);
 			if (workingState.NeedToInitControl) {
 				var k = workingState.Scintilla;
 				k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
@@ -455,9 +457,9 @@ static class CiFind {
 			
 			b.Marker(c_markerInfo).Text("You may want to exclude some of these. Right-click.\r\n");
 			b.Marker(c_markerInfo)
-				.Link(() => _Link(false)).B("Rename").Link_()
-				.Text("  ").Link(() => _Link(true)).Text("Cancel").Link_().NL();
-			b.Marker(c_markerInfo).Text("Margin box color: green - comment, black - #if, brown - string, red - error or ambiguous.");
+				.B().Link(() => _Link(false), "Rename").B_()
+				.Text("  ").Link(() => _Link(true), "Cancel").NL();
+			b.Marker(c_markerInfo).Text("Margin markers: green - comment, black - #if, brown - string, red - error or ambiguous.");
 			if (!_info.NE()) b.NL().Marker(c_markerInfo).Text(_info);
 			
 			Panels.Found.SetResults(workingState, b);

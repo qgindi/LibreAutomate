@@ -67,6 +67,7 @@ class PanelFound {
 					Found.Text => "*Material.FindReplace" + Menus.black,
 					Found.SymbolReferences => "*Codicons.References" + Menus.black,
 					Found.SymbolRename => "*Codicons.ReplaceAll #4040FF|#8080FF",
+					Found.Repair => "*RPGAwesome.Repair" + Menus.black,
 					_ => null
 				}, null);
 				li.ContextMenuOpening += (li, _) => {
@@ -87,9 +88,6 @@ class PanelFound {
 			BoldStyle = Styles.Bold,
 			GrayStyle = Styles.Gray,
 			GreenStyle = Styles.Green,
-			//IndicHiliteY = Indicators.HiliteY,
-			//IndicHiliteG = Indicators.HiliteG,
-			//IndicHiliteR = Indicators.HiliteR,
 			LinkIndic = Indicators.Link,
 			Link2Indic = Indicators.Link2,
 			ControlWidth = (int)_grid.ActualWidth,
@@ -134,14 +132,11 @@ class PanelFound {
 		while (lineStart < start && text[lineStart] is ' ' or '\t') lineStart++;
 		while (lineEnd < leMax && !text.IsCsNewlineChar(lineEnd)) lineEnd++;
 		bool limitEnd = lineEnd < text.Length && !text.IsCsNewlineChar(lineEnd);
+		
 		b.Link2(new CodeLink(f, start, end));
 		if (displayFile) b.Gray(f.Name).Text("        ");
 		if (limitStart) b.Text("…");
-		
-		b.Text(text.AsSpan(lineStart..start));
-		b.Indic(indicHilite, text.AsSpan(start..end));
-		b.Text(text.AsSpan(end..lineEnd));
-		
+		b.Text(text.AsSpan(lineStart..start)).Indic(indicHilite, text.AsSpan(start..end)).Text(text.AsSpan(end..lineEnd));
 		if (limitEnd) b.Text("…");
 		b.Link_().NL();
 	}
@@ -307,6 +302,9 @@ class PanelFound {
 				case Action k:
 					k.Invoke();
 					break;
+				default:
+					Debug_.Print(o);
+					break;
 				}
 			} else Debug_.Print(pos8);
 		}
@@ -333,7 +331,8 @@ class PanelFound {
 		Files,
 		Text,
 		SymbolReferences,
-		SymbolRename
+		SymbolRename,
+		Repair
 	}
 	
 	//CONSIDER: instead of taskbar button progress:
