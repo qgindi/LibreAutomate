@@ -221,22 +221,6 @@ public class SciTextBuilder {
 	public SciTextBuilder Green() => Style(GreenStyle);
 	public SciTextBuilder Green_() => Style_();
 
-	//public int IndicHiliteY { get; set; }
-	//public SciTextBuilder HiliteY(int start, int end) => Indic(IndicHiliteY, start, end);
-	//public SciTextBuilder HiliteY(RStr text) => Indic(IndicHiliteY, text);
-	//public SciTextBuilder HiliteY() => Indic(IndicHiliteY);
-	//public SciTextBuilder Hilite_() => Indic_();
-
-	//public int IndicHiliteG { get; set; }
-	//public SciTextBuilder HiliteG(int start, int end) => Indic(IndicHiliteG, start, end);
-	//public SciTextBuilder HiliteG(RStr text) => Indic(IndicHiliteG, text);
-	//public SciTextBuilder HiliteG() => Indic(IndicHiliteG);
-
-	//public int IndicHiliteR { get; set; }
-	//public SciTextBuilder HiliteR(int start, int end) => Indic(IndicHiliteR, start, end);
-	//public SciTextBuilder HiliteR(RStr text) => Indic(IndicHiliteR, text);
-	//public SciTextBuilder HiliteR() => Indic(IndicHiliteR);
-
 	public int LinkIndic { get; set; }
 	public SciTextBuilder Link(object data, int start, int end) => Link(data, start, end, LinkIndic);
 	public SciTextBuilder Link(object data, RStr text) => Link(data, text, LinkIndic);
