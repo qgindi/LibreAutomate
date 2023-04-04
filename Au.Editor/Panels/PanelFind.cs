@@ -5,7 +5,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Media;
 using System.Windows.Documents;
-using Microsoft.CodeAnalysis.CSharp;
 
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
@@ -56,10 +55,6 @@ class PanelFind {
 		};
 		
 		_tFind.TextChanged += (_, _) => UpdateQuickResults();
-		
-		//prevent tooltip on set focus.
-		//	Broken in .NET 6:  AppContext.SetSwitch("Switch.UseLegacyToolTipDisplay", true); //must be before creating Application object
-		_tFind.ToolTipOpening += (o, e) => { if (o is UIElement k && !k.IsMouseOver) e.Handled = true; };
 		
 		foreach (var v in new[] { _tFind, _tReplace }) {
 			v.AcceptsTab = true;
@@ -266,7 +261,7 @@ This setting also is used by 'Find references' etc.
 	void _SetFilter(int f) {
 		if (f != _filter) {
 			_filter = f;
-			_bFilter.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? " #FFA500" : Menus.red));
+			_bFilter.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? Menus.orange : Menus.red));
 			_bFilter.ToolTip = f switch { 0 => "Search in entire workspace", 1 => "Search in current root folder", _ => "Search in current @Project" };
 		}
 	}
@@ -716,7 +711,7 @@ This setting also is used by 'Find references' etc.
 			} else b.Text("Not found.");
 			b.NL();
 			
-			if (folder != App.Model.Root) b.Marker(c_markerInfo).Text($"Searched only in folder {folder.Name}.").NL();
+			if (folder != App.Model.Root) b.Marker(c_markerInfo).Text($"Searched only in folder '{folder.Name}'.").NL();
 			if (searchIn > 0) b.Marker(c_markerInfo).Link2(new Action(_Options), $"Searched only in {searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" }} files.").NL();
 			
 			if (App.Settings.find_printSlow > 0) {

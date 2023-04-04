@@ -1,13 +1,18 @@
 //CONSIDER: move snippets from XML to a workspace, like now Cookbook and Templates.
 //	Maybe only code of some snippets, eg dialogs (big code).
 
+extern alias CAW;
+
 using System.Xml.Linq;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 static class CiSnippets {

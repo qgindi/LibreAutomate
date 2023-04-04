@@ -1,12 +1,16 @@
-using Au.Controls;
+extern alias CAW;
 
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
+using Au.Controls;
 using System.Collections.Immutable;
+
+using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 class CiErrors {
 	SemanticModel _semo;
@@ -267,7 +271,7 @@ class CiErrors {
 		x.StartParagraph();
 
 		ErrorCode ecPrev = 0;
-		int implPos = -1; bool implInterface = false;
+		int implPos = -1;
 		for (int i = 0, n = _codeDiag?.Count ?? 0; i < n; i++) {
 			var v = _codeDiag[i];
 			if (pos16 < v.start || pos16 > v.end) continue;
@@ -293,7 +297,6 @@ class CiErrors {
 					case ErrorCode.ERR_UnimplementedInterfaceMember or ErrorCode.ERR_UnimplementedAbstractMethod:
 						Debug.Assert(implPos == -1 || implPos == v.start);
 						implPos = v.start;
-						implInterface = ec == ErrorCode.ERR_UnimplementedInterfaceMember;
 						break;
 					case ErrorCode.ERR_BadBinaryOps:
 						//New users may not know how to use multiple flags, and intuitively try operator +. Let's add more info.
@@ -314,7 +317,7 @@ class CiErrors {
 				}
 			}
 		}
-		if (implPos >= 0) _Implement(x, implPos, implInterface);
+		if (implPos >= 0) x.Hyperlink("^ii" + implPos, "\nImplement");
 
 		_Also(_metaErrors, "Error: ");
 		_Also(_stringErrors, null);
@@ -471,13 +474,8 @@ class CiErrors {
 		} else if (action == 'r') { //Add reference
 			Menus.File.Properties();
 		} else if (action == 'i') { //implement interface or abstract class
-			InsertCode.ImplementInterfaceOrAbstractClass(s[2] == 'e', s.ToInt(3));
+			GenerateCode.ImplementInterfaceOrAbstractClass(s.ToInt(3));
 		}
-	}
-
-	static void _Implement(CiText x, int pos, bool isInterface) {
-		x.Hyperlink("^ii" + pos, "\nImplement " + (isInterface ? "interface" : "abstract class"));
-		if (isInterface) x.Hyperlink("^ie" + pos, "\nImplement explicitly");
 	}
 
 	static void _XmlComment(CiText x/*, in (Diagnostic d, int start, int end) v*/) {

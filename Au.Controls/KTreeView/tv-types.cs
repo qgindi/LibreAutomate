@@ -85,18 +85,30 @@ public interface ITreeViewItem {
 	/// Background color 0xRRGGBB. If -1 (default), uses default colors, depending on state (normal, selected, hot).
 	/// If alpha is 1 - 3: if contains flag 1, draws selection color when selected; if 2, draws hot color when hot.
 	/// </summary>
-	int Color => -1;
+	int Color(TVColorInfo ci) => -1;
+
+	/// <summary>
+	/// Selected item background color 0xRRGGBB. If -1 (default), uses default color.
+	/// Not called if the background color isn't near white or if <see cref="Color"/> sets a custom color.
+	/// </summary>
+	int SelectedColor(TVColorInfo ci) => -1;
 
 	/// <summary>
 	/// Text color 0xRRGGBB. If -1 (default), uses default colors, depending on state (normal, disabled).
 	/// </summary>
-	int TextColor => -1;
+	int TextColor(TVColorInfo ci) => -1;
 
 	/// <summary>
 	/// Border color 0xRRGGBB. No border if -1 (default).
 	/// If alpha is 1, draws left edge between text and icon.
 	/// </summary>
-	int BorderColor => -1;
+	int BorderColor(TVColorInfo ci) => -1;
+	
+	/// <summary>
+	/// Called to measure text width.
+	/// If not implemented or returns -1, will measure <see cref="DisplayText"/>.
+	/// </summary>
+	int MesureTextWidth(GdiTextRenderer tr) => -1;
 }
 
 /// <summary>
@@ -217,6 +229,11 @@ public class TVDrawInfo {
 
 	/// <summary>Checkbox size.</summary>
 	public SIZE checkSize;
+	
+	/// <summary>
+	/// Item height without added custom height (<see cref="KTreeView.CustomItemHeightAddPercent"/>).
+	/// </summary>
+	public int lineHeight;
 
 	public bool isSelected, isHot, isFocusedItem, isFocusedControl;
 
@@ -226,6 +243,10 @@ public class TVDrawInfo {
 		this.graphics = graphics;
 		this.dpi = dpi;
 	}
+}
+
+public struct TVColorInfo {
+	public bool isSelected, isHot, isFocusedItem, isFocusedControl, isHighContrast, isHighContrastDark, isTextBlack;
 }
 
 /// <summary>See <see cref="KTreeView.GetDropInfo"/>.</summary>

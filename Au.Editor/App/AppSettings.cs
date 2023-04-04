@@ -35,7 +35,7 @@ record AppSettings : JSettings {
 	public hotkeys_t hotkeys = new();
 
 	public record wndpos_t {
-		public string main, wnd, elm, uiimage, ocr, recorder, icons;
+		public string main, wnd, elm, uiimage, ocr, recorder, icons, symbol;
 	}
 	public wndpos_t wndpos = new();
 

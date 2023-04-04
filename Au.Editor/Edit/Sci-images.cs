@@ -1,13 +1,22 @@
+extern alias CAW;
+
 //#define SMALLER_SCREENSHOTS //smaller if /*image:...*/
 
 using static Au.Controls.Sci;
 using System.Drawing;
-using Microsoft.CodeAnalysis.Classification;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using static Au.Controls.KImageUtil;
 using System.Buffers;
-using CT = Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
+using static Au.Controls.KImageUtil;
+
+using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Classification;
+using CAW::Microsoft.CodeAnalysis.Classification;
+using CT = CAW::Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
 
 partial class SciCode {
 	struct _Image {

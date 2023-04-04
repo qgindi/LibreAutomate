@@ -7,10 +7,12 @@ static class Menus {
 	public const string
 		black = " #505050|#D0D0D0",
 		blue = " #0080FF|#77C9FF",
+		darkBlue = " #4040FF|#8080FF",
 		green = " #99BF00|#A9CE13",
 		brown = " #9F5300|#D0D0D0",
 		purple = " #B340FF|#D595FF",
-		orange = " #EABB00",
+		darkYellow = " #EABB00",
+		orange = " #FFA500",
 		red = " #FF4040|#FF9595"
 		;
 	public const string
@@ -154,8 +156,8 @@ static class Menus {
 			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black)]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 			
-			[Command]
-			public static class Repair_workspace {
+			[Command("Repair workspace")]
+			public static class Repair {
 				[Command]
 				public static void Find_missing_files() { RepairWorkspace.MissingFiles(false); }
 				
@@ -179,24 +181,33 @@ static class Menus {
 	
 	[Command(target = "Edit")]
 	public static class Edit {
-		[Command(keys = "Ctrl+Z", image = iconUndo)]
-		public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
-		
-		[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
-		public static void Redo() { SciUndo.OfWorkspace.UndoRedo(true); }
-		
-		[Command('t', separator = true, keys = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
-		public static void Cut() { Panels.Editor.ActiveDoc.Call(Sci.SCI_CUT); }
-		
-		[Command(keys = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
-		public static void Copy() { Panels.Editor.ActiveDoc.ECopy(); }
-		
-		[Command(keys = "Ctrl+V", image = iconPaste)]
-		public static void Paste() { Panels.Editor.ActiveDoc.EPaste(); }
+		[Command("Undo, redo")]
+		public static class UndoRedo {
+			[Command(keys = "Ctrl+Z", image = iconUndo)]
+			public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
+			
+			[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
+			public static void Redo() { SciUndo.OfWorkspace.UndoRedo(true); }
+			
+			[Command(separator = true)]
+			public static void Undo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
+			
+			[Command]
+			public static void Redo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
+		}
 		
 		[Command]
-		public static class Other_formats {
-			[Command(image = "*Material.ForumOutline" + brown, text = "Copy _forum code")]
+		public static class Clipboard {
+			[Command('t', keys = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
+			public static void Cut() { Panels.Editor.ActiveDoc.Call(Sci.SCI_CUT); }
+			
+			[Command(keys = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
+			public static void Copy() { Panels.Editor.ActiveDoc.ECopy(); }
+			
+			[Command(keys = "Ctrl+V", image = iconPaste)]
+			public static void Paste() { Panels.Editor.ActiveDoc.EPaste(); }
+			
+			[Command(image = "*Material.ForumOutline" + brown, text = "Copy _forum code", separator = true)]
 			public static void Forum_copy() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.Forum); }
 			
 			[Command("Copy HTML <span style>")]
@@ -215,39 +226,32 @@ static class Menus {
 			public static void Copy_without_screenshots() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 		
-		[Command("Find, replace", separator = true)]
-		public static class FindReplace {
+		[Command("Find", separator = true)]
+		public static class Find {
 			[Command("Find text", keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
-			public static void Find() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
-			//fbc named 'Find'. Would be better 'Find_text', but then warning if customized.
+			public static void Find_text() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
 			
-			[Command(keys = "Shift+F12", image = "*Codicons.References" + blue)]
+			[Command("...", keys = "Ctrl+T", image = "*FontAwesome.SearchLocationSolid" + blue)]
+			public static void Find_symbol() { CiFindGo.FindSymbol(); }
+			
+			[Command(keys = "Shift+F12", image = "*Codicons.References" + blue, separator = true)]
 			public static void Find_references() { CiFind.FindReferencesOrImplementations(false); }
 			
-			[Command]
+			[Command(image = "*Material.InformationVariant" + blue)]
 			public static void Find_implementations() { CiFind.FindReferencesOrImplementations(true); }
 			
-			[Command(keys = "F2", image = "*Codicons.ReplaceAll" + blue)]
-			public static void Rename_symbol() { CiFind.RenameSymbol(); }
-			
-			[Command(separator = true)]
-			public static void Undo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
-			
-			[Command]
-			public static void Redo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
-		}
-		
-		[Command]
-		public static class Go_to {
-			[Command(keys = "F12", image = "*RemixIcon.WalkFill" + blue)]
+			[Command(keys = "F12", image = "*RemixIcon.WalkFill" + blue, separator = true)]
 			public static void Go_to_definition() { CiGoTo.GoToDefinition(); }
 			
 			[Command]
 			public static void Go_to_base() { CiGoTo.GoToBase(); }
+			
+			[Command(keys = "F2", image = "*PicolIcons.Edit" + blue, separator = true)]
+			public static void Rename_symbol() { CiFind.RenameSymbol(); }
 		}
 		
 		[Command]
-		public static class IntelliSense {
+		public static class Intellisense {
 			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + blue)]
 			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
 			
@@ -309,16 +313,13 @@ static class Menus {
 		[Command]
 		public static class Generate {
 			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda" + brown)]
-			public static void Create_delegate() { InsertCode.CreateDelegate(); }
+			public static void Create_delegate() { GenerateCode.CreateDelegate(); }
 			
-			[Command(tooltip = "Implement interface or abstract class")]
-			public static void Implement_interface() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: false); }
-			
-			[Command(tooltip = "Implement interface, private functions")]
-			public static void Implement_interface_explicitly() { InsertCode.ImplementInterfaceOrAbstractClass(explicitly: true); }
+			[Command(tooltip = "Implement members of interface or abstract base class")]
+			public static void Implement_interface() { GenerateCode.ImplementInterfaceOrAbstractClass(); }
 		}
 		
-		[Command]
+		[Command(separator = true)]
 		public static class View {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap" + green)]
 			public static void Wrap_lines() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
@@ -502,13 +503,13 @@ static class Menus {
 	
 	[Command(target = "")]
 	public static class Help {
-		[Command(image = "*FontAwesome.QuestionCircleRegular" + orange)]
+		[Command(image = "*FontAwesome.QuestionCircleRegular" + darkYellow)]
 		public static void Program_help() { HelpUtil.AuHelp(""); }
 		
-		[Command(image = "*BoxIcons.RegularLibrary" + orange)]
+		[Command(image = "*BoxIcons.RegularLibrary" + darkYellow)]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
 		
-		[Command(text = "C# help", image = "*Modern.LanguageCsharp" + orange)]
+		[Command(text = "C# help", image = "*Modern.LanguageCsharp" + darkYellow)]
 		public static void CSharp_help() { run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/"); }
 		
 		[Command(keys = "F1", image = "*Unicons.MapMarkerQuestion" + purple)]

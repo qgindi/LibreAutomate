@@ -1,14 +1,18 @@
+extern alias CAW;
+
 using System.Windows.Input;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Indentation;
-using Microsoft.CodeAnalysis.Indentation;
+using CAW::Microsoft.CodeAnalysis.Indentation;
 
 //CONSIDER: menu command "Exit statement on Enter" and toolbar check-button [;].
 //	Would complete statement from anywhere in statement.

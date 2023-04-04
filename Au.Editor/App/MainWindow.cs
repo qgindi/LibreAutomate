@@ -22,12 +22,7 @@ partial class MainWindow : Window {
 	void _Init() {
 		//_StartProfileOptimization();
 
-#if IDE_LA
-		Application.Current.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("App-resources.xaml")) as ResourceDictionary;
-#else
-		//Application.Current.Resources = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Au.Editor.App.App-resources.xaml")) as ResourceDictionary; //47 ms
-		Application.LoadComponent(Application.Current, new("/Au.Editor;component/app/app.xaml", UriKind.Relative)); //15 ms
-#endif
+		Application.Current.Resources = Application.LoadComponent(new("/Au.Editor;component/app/app-resources.xaml", UriKind.Relative)) as ResourceDictionary;
 
 		Title = App.AppNameShort; //don't append document name etc
 

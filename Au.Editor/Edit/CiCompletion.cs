@@ -1,15 +1,19 @@
+extern alias CAW;
+
 //note: the Roslyn project has been modified. Eg added Symbols property to the CompletionItem class.
 
+using System.Collections.Immutable;
 using Au.Controls;
 
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Completion;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 //PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
@@ -146,7 +150,7 @@ partial class CiCompletion {
 		//p1.Next('d');
 		
 		if (ch == '/') {
-			InsertCode.DocComment(cd);
+			GenerateCode.DocComment(cd);
 			return;
 		}
 		
@@ -162,8 +166,7 @@ partial class CiCompletion {
 		ISymbol symL = null;
 		int typenameStart = -1;
 		
-		_cancelTS = new CancellationTokenSource();
-		var cancelTS = _cancelTS;
+		var cancelTS = _cancelTS = new CancellationTokenSource();
 		var cancelToken = cancelTS.Token;
 #if DEBUG
 		if (Debugger.IsAttached) { cancelToken = default; _cancelTS = null; }

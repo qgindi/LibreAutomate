@@ -1,12 +1,17 @@
+extern alias CAW;
+
 using System.Web;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.CSharp;
-
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
+
+using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 
 //FUTURE: try source link. Like now VS.
 
@@ -325,7 +330,7 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 				a.AddRange(nt.GetBaseTypes().SkipLast(1).Concat(nt.AllInterfaces));
 			}
 		} else if (sym.Kind is SymbolKind.Method or SymbolKind.Property or SymbolKind.Event) {
-			a.AddRange(Microsoft.CodeAnalysis.FindSymbols.FindReferences.BaseTypeFinder.FindOverriddenAndImplementedMembersAsync(sym, cd.document.Project.Solution, default).Result);
+			a.AddRange(CAW::Microsoft.CodeAnalysis.FindSymbols.FindReferences.BaseTypeFinder.FindOverriddenAndImplementedMembersAsync(sym, cd.document.Project.Solution, default).Result);
 		}
 		if (a.Count == 0) return;
 		if (a.Count == 1) sym = a[0];

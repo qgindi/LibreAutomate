@@ -2,14 +2,19 @@
 //#define PRINT
 //#endif
 
+extern alias CAW;
+
 using Au.Controls;
 using static Au.Controls.Sci;
 
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 
 class CiFolding {
 	//Called from CiStyling._Work -> Task.Run when document opened or modified (250 ms timer).

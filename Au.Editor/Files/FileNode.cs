@@ -489,29 +489,26 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				}
 				
 				newText = doc.aaaText;
-				if (doc != Panels.Editor.ActiveDoc) SaveNewText(newText);
+				if (doc != Panels.Editor.ActiveDoc) doc.ESaveText_(true);
 				return true;
 			} else {
 				newText = StartEndText.ReplaceAll(text, a);
-				return SaveNewText(newText);
+				try {
+					SaveNewTextOfClosedFile(newText);
+					return true;
+				}
+				catch (Exception e1) { print.warning($"Failed to save {SciLink()}. {e1.ToStringWithoutStack()}"); }
 			}
 		}
 		return false;
 	}
 	
-	/// <summary>
-	/// Saves new text.
-	/// </summary>
-	/// <param name="text">New text.</param>
-	/// <returns>false if failed.</returns>
-	public bool SaveNewText(string text) {
-		try {
-			filesystem.saveText(FilePath, text);
-			CodeInfo.FilesChanged();
-			return true;
-		}
-		catch (Exception e1) { print.warning($"Failed to save {SciLink()}. {e1.ToStringWithoutStack()}"); }
-		return false;
+	/// <exception cref="Exception"></exception>
+	public void SaveNewTextOfClosedFile(string text) {
+		Debug.Assert(OpenDoc == null);
+		filesystem.saveText(FilePath, text);
+		UpdateFileModTime();
+		CodeInfo.FilesChanged();
 	}
 	
 	#endregion
@@ -557,22 +554,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 	}
 	
-	//TVCheck ITreeViewItem.CheckState { get; }
+	int ITreeViewItem.Color(TVColorInfo ci) => ci.isTextBlack && !IsFolder && _model.OpenFiles.Contains(this) ? 0x1fafad2 : -1;
 	
-	//bool ITreeViewItem.IsDisabled { get; }
+	int ITreeViewItem.TextColor(TVColorInfo ci) => _model.IsCut(this) ? 0xff0000 : -1;
 	
-	//bool ITreeViewItem.IsBold => this == _model.CurrentFile;
-	//bool ITreeViewItem.IsBold => TreeControl.FocusedItem == this;
-	
-	//bool ITreeViewItem.IsSelectable { get; }
-	
-	int ITreeViewItem.Color => !IsFolder && _model.OpenFiles.Contains(this) && _IsTextBlack ? 0x1fafad2 : -1;
-	
-	int ITreeViewItem.TextColor => _model.IsCut(this) ? 0xff0000 : -1;
-	
-	int ITreeViewItem.BorderColor => this == _model.CurrentFile ? 0x1A0A0FF : -1;
-	
-	static bool _IsTextBlack => (uint)Api.GetSysColor(Api.COLOR_WINDOWTEXT) == 0; //if not high-contrast theme
+	int ITreeViewItem.BorderColor(TVColorInfo ci) => this == _model.CurrentFile ? (ci.isTextBlack ? 0x1A0A0FF : 0xFF8000) : -1;
 	
 	#endregion
 	

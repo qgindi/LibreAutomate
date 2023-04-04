@@ -1,11 +1,14 @@
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Emit;
+extern alias CAW;
+
 using System.Resources;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Emit;
 
 namespace Au.Compiler;
 
@@ -1086,7 +1089,7 @@ partial class Compiler {
 		if (a.Count == 0) timer?.Stop();
 	}
 	
-	public static void Warmup(Microsoft.CodeAnalysis.Document document) {
+	public static void Warmup(CAW::Microsoft.CodeAnalysis.Document document) {
 		//using var p1 = perf.local();
 		var compilation = document.Project.GetCompilationAsync().Result;
 		//compilation.GetDiagnostics(); //just makes Emit faster, and does not make the real GetDiagnostics faster first time

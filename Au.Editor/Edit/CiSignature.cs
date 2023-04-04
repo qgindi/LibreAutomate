@@ -1,9 +1,9 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.CSharp;
 
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
@@ -77,8 +77,7 @@ class CiSignature {
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos < 2) return; //returns false if position is in meta comments
 
 		_cancelTS?.Cancel();
-		_cancelTS = new CancellationTokenSource();
-		var cancelTS = _cancelTS;
+		var cancelTS = _cancelTS = new CancellationTokenSource();
 		var cancelToken = cancelTS.Token;
 #if DEBUG
 		if (Debugger.IsAttached) { cancelToken = default; _cancelTS = null; }
