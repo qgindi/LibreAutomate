@@ -55,31 +55,31 @@ public class wpfBuilder {
 	//readonly FrameworkElement _container; //now used only in ctor
 	readonly Window _window; //= _container or null
 	_PanelBase _p; //current grid/stack/dock/canvas panel, either root or nested
-
+	
 	abstract class _PanelBase {
 		protected readonly wpfBuilder _b;
 		public readonly _PanelBase parent;
 		public Panel panel; //or Grid etc
 		public FrameworkElement lastAdded;
 		public bool ended;
-
+		
 		protected _PanelBase(wpfBuilder b, Panel p) {
 			_b = b;
 			parent = b._p;
 			lastAdded = panel = p;
 		}
-
+		
 		public virtual void BeforeAdd(WBAdd flags = 0) {
 			if (ended) throw new InvalidOperationException("Cannot add after End()");
 			if (flags.Has(WBAdd.ChildOfLast) && lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
 		}
-
+		
 		public virtual void Add(FrameworkElement c) {
 			panel.Children.Add(lastAdded = c);
 		}
-
+		
 		public virtual void End() { ended = true; }
-
+		
 		public FrameworkElement LastDirect {
 			get {
 				if (lastAdded == panel) {
@@ -94,35 +94,35 @@ public class wpfBuilder {
 			}
 		}
 	}
-
+	
 	class _Canvas : _PanelBase {
 		public _Canvas(wpfBuilder b) : base(b, new Canvas()) {
 			panel.HorizontalAlignment = HorizontalAlignment.Left;
 			panel.VerticalAlignment = VerticalAlignment.Top;
 		}
 	}
-
+	
 	class _DockPanel : _PanelBase {
 		public _DockPanel(wpfBuilder b) : base(b, new DockPanel()) {
 		}
 	}
-
+	
 	class _StackPanel : _PanelBase {
 		public _StackPanel(wpfBuilder b, bool vertical) : base(b, new StackPanel { Orientation = vertical ? Orientation.Vertical : Orientation.Horizontal }) {
 		}
 	}
-
+	
 	class _Grid : _PanelBase {
 		readonly Grid _grid; //same as panel, just to avoid casting everywhere
 		int _row = -1, _col;
 		bool _isSpan;
 		double? _andWidth;
-
+		
 		public _Grid(wpfBuilder b) : base(b, new Grid()) {
 			_grid = panel as Grid;
 			if (gridLines) _grid.ShowGridLines = true;
 		}
-
+		
 		public void Row(WBGridLength height) {
 			if (_andWidth != null) throw new InvalidOperationException("And().Row()");
 			if (_row >= 0) {
@@ -135,14 +135,14 @@ public class wpfBuilder {
 			_row++;
 			_grid.RowDefinitions.Add(height.Row);
 		}
-
+		
 		public override void BeforeAdd(WBAdd flags = 0) {
 			base.BeforeAdd(flags);
 			if (flags.Has(WBAdd.ChildOfLast)) return;
 			if (_row < 0 || _col >= _grid.ColumnDefinitions.Count) Row(0);
 			_isSpan = false;
 		}
-
+		
 		public override void Add(FrameworkElement c) {
 			if (_andWidth != null) {
 				var width = _andWidth.Value; _andWidth = null;
@@ -165,7 +165,7 @@ public class wpfBuilder {
 			Grid.SetRow(c, _row);
 			base.Add(c);
 		}
-
+		
 		public void And(double width) {
 			if (_col == 0 || _andWidth != null || lastAdded == panel) throw new InvalidOperationException("And()");
 			var c = LastDirect;
@@ -180,7 +180,7 @@ public class wpfBuilder {
 			_andWidth = width;
 			_col--;
 		}
-
+		
 		public void Span(int span) {
 			if (_col == 0) throw new InvalidOperationException("Span() at row start");
 			int cc = _grid.ColumnDefinitions.Count;
@@ -192,7 +192,7 @@ public class wpfBuilder {
 			}
 			_isSpan = true;
 		}
-
+		
 		//If not all row cells filled, let the last control span all remaining cells, unless its span specified explicitly.
 		void _SetLastSpan() {
 			if (!_isSpan && _row >= 0 && _col > 0) {
@@ -201,23 +201,23 @@ public class wpfBuilder {
 			}
 			_isSpan = false;
 		}
-
+		
 		public void Skip(int span = 1) {
 			BeforeAdd();
 			_col += span;
 			_isSpan = true;
 		}
-
+		
 		public override void End() {
 			base.End();
 			_SetLastSpan();
 		}
-
+		
 		public (int column, int row) NextCell => (_col, _row);
 	}
-
+	
 	#region current panel
-
+	
 	/// <summary>
 	/// Ends adding controls etc to the window or nested panel (<see cref="StartGrid"/> etc).
 	/// </summary>
@@ -230,12 +230,12 @@ public class wpfBuilder {
 			if (_p.parent != null) {
 				_p = _p.parent;
 			} else {
-
+				
 			}
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets column count and widths of current grid.
 	/// </summary>
@@ -259,7 +259,7 @@ public class wpfBuilder {
 		foreach (var v in widths) g.ColumnDefinitions.Add(v.Column);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Starts new row in current grid.
 	/// </summary>
@@ -282,21 +282,21 @@ public class wpfBuilder {
 		g.Row(height);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Starts new auto-sized row in current grid. The same as <c>Row(0)</c>. See <see cref="Row"/>.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">In non-grid panel.</exception>
 	public wpfBuilder R => Row(0);
-
+	
 	#endregion
-
+	
 	#region ctors, window
-
+	
 	//	static readonly DependencyProperty _wpfBuilderProperty = DependencyProperty.RegisterAttached("_wpfBuilder", typeof(wpfBuilder), typeof(Panel));
 	static ConditionalWeakTable<Panel, wpfBuilder> s_cwt = new();
 	//which is better? Both fast.
-
+	
 	/// <summary>
 	/// This constructor creates <see cref="System.Windows.Window"/> object with panel of specified type (default is <see cref="Grid"/>).
 	/// </summary>
@@ -307,7 +307,7 @@ public class wpfBuilder {
 		_window = new Window() { Title = windowTitle };
 		_AddRootPanel(_window, false, panelType, true);
 	}
-
+	
 	/// <summary>
 	/// This constructor creates panel of specified type (default is <see cref="Grid"/>) and optionally adds to a container.
 	/// </summary>
@@ -328,7 +328,7 @@ public class wpfBuilder {
 		_window = container as Window;
 		_AddRootPanel(container, true, panelType, setProperties);
 	}
-
+	
 	void _AddRootPanel(FrameworkElement container, bool externalContainer, WBPanelType panelType, bool setProperties) {
 		switch (panelType) {
 		case WBPanelType.Grid:
@@ -365,17 +365,17 @@ public class wpfBuilder {
 					}
 				}
 				_window.SnapsToDevicePixels = true; //workaround for black line at bottom, for example when there is single CheckBox in Grid.
-													//_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
+				//_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
 				if (_window.WindowStartupLocation == default) _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 				if (winTopmost) _window.Topmost = true;
 				if (!winWhite) _window.Background = SystemColors.ControlBrush;
 			}
 		}
 		s_cwt.Add(_p.panel, this);
-
+		
 		if (script.role == SRole.MiniProgram && _window != null) Loaded += () => { }; //set custom icon if need
 	}
-
+	
 	/// <summary>
 	/// Shows the window and waits until closed.
 	/// </summary>
@@ -396,7 +396,7 @@ public class wpfBuilder {
 		_window.Owner = owner; //SHOULDDO: try to support AnyWnd. Why WPF here supports only Window? Why if we need Popup or HwndSource?
 		return true == _window.ShowDialog();
 	}
-
+	
 	/// <summary>
 	/// Sets window width and/or height or/and min/max width/height.
 	/// </summary>
@@ -422,7 +422,7 @@ public class wpfBuilder {
 		_window.SizeToContent = u;
 		return this;
 	}
-
+	
 	void _ThrowIfWasWinRectXY([CallerMemberName] string m_ = null) {
 		if (_wasWinXY != 0) throw new InvalidOperationException(m_ + " cannot be after WinXY, WinRect or WinSaved.");
 	}
@@ -430,7 +430,7 @@ public class wpfBuilder {
 		if (_wasWinXY == 2) throw new InvalidOperationException(m_ + " cannot be after WinRect or WinSaved.");
 	}
 	byte _wasWinXY; //1 xy, 2 rect
-
+	
 	/// <summary>
 	/// Sets window location.
 	/// </summary>
@@ -452,7 +452,7 @@ public class wpfBuilder {
 		_window.SetXY(x, y);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets window rectangle (location and size).
 	/// </summary>
@@ -473,7 +473,7 @@ public class wpfBuilder {
 		_window.SetRect(r);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Saves window xy/size/state when closing and restores when opening.
 	/// </summary>
@@ -505,7 +505,7 @@ public class wpfBuilder {
 		WndSavedRect.Restore(_window, saved, save);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Changes various window properties.
 	/// </summary>
@@ -539,22 +539,22 @@ public class wpfBuilder {
 		if (icon != null) _window.Icon = icon;
 		return this;
 	}
-
+	
 	#endregion
-
+	
 	#region properties, events
-
+	
 	/// <summary>
 	/// Gets the top-level window.
 	/// </summary>
 	/// <returns>null if container is not of type <b>Window</b>.</returns>
 	public Window Window => _window;
-
+	
 	/// <summary>
 	/// Gets current <see cref="Grid"/> or <see cref="StackPanel"/> or etc.
 	/// </summary>
 	public Panel Panel => _p.panel;
-
+	
 	/// <summary>
 	/// Gets the last child or descendant element added in current panel. Before that returns current panel.
 	/// </summary>
@@ -562,13 +562,13 @@ public class wpfBuilder {
 	/// The "set properties of last element" functions set properties of this element.
 	/// </remarks>
 	public FrameworkElement Last => _p.lastAdded;
-
+	
 	//	not useful
 	//	/// <summary>
 	//	/// Gets the last direct child element added in current panel. Before that returns current panel or its parent <b>GroupBox</b>.
 	//	/// </summary>
 	//	public FrameworkElement LastDirect => _p.LastDirect;
-
+	
 	/// <summary>
 	/// When root panel loaded and visible. Once.
 	/// </summary>
@@ -587,12 +587,12 @@ public class wpfBuilder {
 	}
 	Action _loadedEvent;
 	bool _loadedEvent2;
-
+	
 	private void _Panel_Loaded(object sender, RoutedEventArgs e) {
 		var p = sender as Panel;
 		if (!p.IsVisible) return;
 		p.Loaded -= _Panel_Loaded;
-
+		
 		//if role miniProgram, use assembly icon instead of apphost icon
 		if (script.role == SRole.MiniProgram && _window != null && _window.Icon == null) {
 			var hm = Api.GetModuleHandle(Assembly.GetEntryAssembly().Location);
@@ -602,10 +602,10 @@ public class wpfBuilder {
 				icon.FromModuleHandle_(hm, Dpi.Scale(32, w))?.SetWindowIcon(w, true);
 			}
 		}
-
+		
 		_loadedEvent?.Invoke();
 	}
-
+	
 	/// <summary>
 	/// When clicked OK or Apply button.
 	/// </summary>
@@ -614,23 +614,23 @@ public class wpfBuilder {
 	/// The parameter's property <b>Cancel</b> can be used to prevent closing the window.
 	/// </remarks>
 	public event Action<WBButtonClickArgs> OkApply;
-
+	
 	#endregion
-
+	
 	#region static
-
+	
 	/// <summary>
 	/// <see cref="Grid.ShowGridLines"/> of grid panels created afterwards.
 	/// To be used at design time only.
 	/// </summary>
 	public static bool gridLines { get; set; }
-
+	
 	/// <summary>
 	/// <see cref="Window.Topmost"/> of windows created afterwards.
 	/// Usually used at design time only, to make always on top of editor window.
 	/// </summary>
 	public static bool winTopmost { get; set; }
-
+	
 	/// <summary>
 	/// If true, constructor does not change color of windows created afterwards; then color normally is white.
 	/// If false constructor sets standard color of dialogs, usually light gray.
@@ -639,26 +639,28 @@ public class wpfBuilder {
 	//	public static bool winWhite { get; set; } = _IsCustomTheme(); //no, called too early
 	public static bool winWhite { get => s_winWhite ??= _IsCustomTheme(); set { s_winWhite = value; } }
 	static bool? s_winWhite;
-
+	
 	//	/// <summary>
 	//	/// Default modifyPadding option value. See <see cref="Options"/>.
 	//	/// </summary>
 	//	public static bool modifyPadding { get; set; }
-
+	
 	#endregion
-
+	
 	#region add
-
+	
 	/// <summary>
 	/// Changes some options for elements added afterwards.
 	/// </summary>
 	/// <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align content better when using default theme. Default value of this option depends on application's theme.</param>
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default margin is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
-	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null) {
+	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If true, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
+	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 		if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
 		if (margin != null) _opt_margin = margin.Value;
+		if (showToolTipOnKeyboardFocus != null) _showToolTipOnKeyboardFocus = showToolTipOnKeyboardFocus.Value;
 		return this;
 	}
 	bool _opt_modifyPadding = !_IsCustomTheme();
@@ -666,7 +668,8 @@ public class wpfBuilder {
 	Thickness _opt_margin = new(3);
 	//string _opt_radioGroup; //rejected. Radio buttons have problems with high DPI and should not be used. Or can put groups in panels.
 	//	double _opt_checkMargin=3; //rejected
-
+	bool _showToolTipOnKeyboardFocus;
+	
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (control etc of any type).
 	/// </summary>
@@ -692,7 +695,7 @@ public class wpfBuilder {
 		_Add(variable, text, flags, true);
 		return this;
 	}
-
+	
 	void _Add(FrameworkElement e, object text, WBAdd flags, bool add) {
 		bool childOfLast = flags.Has(WBAdd.ChildOfLast);
 		if (!flags.Has(WBAdd.DontSetProperties)) {
@@ -714,7 +717,7 @@ public class wpfBuilder {
 				case ToggleButton:
 					c.HorizontalAlignment = HorizontalAlignment.Left; //default stretch
 					c.VerticalAlignment = VerticalAlignment.Center; //default top. Note: VerticalContentAlignment bad on Win7.
-
+					
 					//partial workaround for squint CheckBox/RadioButton when High DPI.
 					//	Without it, check mark size/alignment is different depending on control's xy.
 					//	With it at least all controls are equal, either bad (eg DPI 125%) or good (DPI 150%).
@@ -736,7 +739,7 @@ public class wpfBuilder {
 			} else if (e is Image) {
 				e.UseLayoutRounding = true; //workaround for blurred images
 			}
-
+			
 			//workaround for:
 			//	1. Blurred images in some cases.
 			//	2. High DPI: Different height of controls of same class, eg TextBox, ComboBox.
@@ -745,7 +748,7 @@ public class wpfBuilder {
 			//	Rejected. Thick border is very noticeable, especially TabControl. Different control sizes, v check mark and v arrow aren't so noticeable. Radio buttons and null checkboxes rarely used. Most my tested WPF programs don't use this.
 			//			e.UseLayoutRounding=true;
 			//			e.SnapsToDevicePixels=true; //does not help
-
+			
 			if (text != null) {
 				switch (e) {
 				case HeaderedContentControl u: u.Header = text; break; //GroupBox, Expander
@@ -761,7 +764,7 @@ public class wpfBuilder {
 			}
 		}
 		if (!(childOfLast || e is GridSplitter)) e.Margin = _opt_margin;
-
+		
 		if (add) {
 			_AddToParent(e, childOfLast);
 			if (_alsoAll != null) {
@@ -777,7 +780,7 @@ public class wpfBuilder {
 			}
 		}
 	}
-
+	
 	void _AddToParent(FrameworkElement e, bool childOfLast) {
 		if (childOfLast) { //info: BeforeAdd throws exception if Last is panel
 			switch (Last) {
@@ -791,7 +794,7 @@ public class wpfBuilder {
 			_p.Add(e);
 		}
 	}
-
+	
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
@@ -799,7 +802,7 @@ public class wpfBuilder {
 	/// <param name="flags"></param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
-
+	
 	/// <summary>
 	/// Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
 	/// </summary>
@@ -822,7 +825,7 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
 	/// </summary>
@@ -836,7 +839,7 @@ public class wpfBuilder {
 	/// </remarks>
 	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
 		=> Add(out Label _, label, out variable, text, row2);
-
+	
 	/// <summary>
 	/// Adds an existing element (control etc of any type).
 	/// </summary>
@@ -848,7 +851,7 @@ public class wpfBuilder {
 		_Add(element, null, flags, true);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds button with <see cref="ButtonBase.Click"/> event handler.
 	/// </summary>
@@ -899,12 +902,12 @@ public class wpfBuilder {
 	//	/// If not null, creates split-button. Action to call when the arrow part clicked. Example:
 	//	/// <br/><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c>
 	//	/// </param>
-
+	
 	/// <inheritdoc cref="AddButton(out Button, object, Action{WBButtonClickArgs}, WBBFlags)"/>
 	public wpfBuilder AddButton(object text, Action<WBButtonClickArgs> click, WBBFlags flags = 0/*, Action<WBButtonClickArgs> clickSplit = null*/) {
 		return AddButton(out _, text, click, flags);
 	}
-
+	
 	/// <summary>
 	/// Adds button that closes the window and sets <see cref="ResultButton"/>.
 	/// </summary>
@@ -923,14 +926,14 @@ public class wpfBuilder {
 	//	/// If not null, creates split-button. Action to call when the arrow part clicked. Example:
 	//	/// <br/><c>b => { int mi = popupMenu.showSimple("1 One|2 Two", b, (0, b.Height)); }</c>
 	//	/// </param>
-
+	
 	/// <summary>
 	/// If the window closed with an <see cref="AddButton(object, int)"/> button, returns its <i>result</i>. Else returns 0.
 	/// Note: if the button is in a tab page, use the <b>wpfBuilder</b> variable of that page.
 	/// </summary>
 	public int ResultButton => _resultButton;
 	int _resultButton;
-
+	
 	/// <summary>
 	/// Adds OK and/or Cancel and/or Apply buttons.
 	/// </summary>
@@ -944,7 +947,7 @@ public class wpfBuilder {
 	/// </remarks>
 	public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
 		=> AddOkCancel(out _, out _, out _, ok, cancel, apply, stackPanel);
-
+	
 	/// <param name="bOK">Variable of OK button.</param>
 	/// <param name="bCancel">Variable of Cancel button.</param>
 	/// <param name="bApply">Variable of Apply button.</param>
@@ -960,7 +963,7 @@ public class wpfBuilder {
 		if (stack) End();
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds <see cref="Separator"/> control.
 	/// </summary>
@@ -977,7 +980,7 @@ public class wpfBuilder {
 		return this;
 	}
 	Style _style_VertSep;
-
+	
 	/// <summary>
 	/// Adds enum members as <b>StackPanel</b> with checkboxes (if it's a [Flags] enum) or <b>ComboBox</b> control.
 	/// </summary>
@@ -1011,7 +1014,7 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds one or more empty cells in current row of current grid.
 	/// </summary>
@@ -1026,7 +1029,7 @@ public class wpfBuilder {
 		g.Skip(span);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets to add next element in the same grid cell as previous element.
 	/// </summary>
@@ -1046,11 +1049,11 @@ public class wpfBuilder {
 		g.And(width);
 		return this;
 	}
-
+	
 	#endregion
-
+	
 	#region set common properties of last added element
-
+	
 	/// <summary>
 	/// Sets column span of the last added element.
 	/// </summary>
@@ -1060,7 +1063,7 @@ public class wpfBuilder {
 		_ParentOfLastAsOrThrow<_Grid>().Span(columns);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets row span of the last added element.
 	/// </summary>
@@ -1075,7 +1078,7 @@ public class wpfBuilder {
 		Grid.SetRowSpan(c, rows);
 		return this;
 	}
-
+	
 	//rejected
 	///// <summary>
 	///// Calls your callback function.
@@ -1085,7 +1088,7 @@ public class wpfBuilder {
 	//	action(this);
 	//	return this;
 	//}
-
+	
 	/// <summary>
 	/// Sets callback function to be called by <b>AddX</b> functions for each element added afterwards. Not called by <b>StartX</b> functions for panels.
 	/// </summary>
@@ -1103,7 +1106,7 @@ public class wpfBuilder {
 	}
 	Action<wpfBuilder, WBAlsoAllArgs> _alsoAll;
 	WBAlsoAllArgs _alsoAllArgs;
-
+	
 	/// <summary>
 	/// Sets width and height of the last added element. Optionally sets alignment.
 	/// </summary>
@@ -1119,7 +1122,7 @@ public class wpfBuilder {
 		if (alignX != null || alignY != null) Align(alignX, alignY);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets width of the last added element. Optionally sets alignment.
 	/// </summary>
@@ -1131,7 +1134,7 @@ public class wpfBuilder {
 		if (alignX != null) Align(alignX);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets height of the last added element. Optionally sets alignment.
 	/// </summary>
@@ -1143,7 +1146,7 @@ public class wpfBuilder {
 		if (alignY != null) Align(null, alignY);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets position of the last added element in <b>Canvas</b> panel. Optionally sets size.
 	/// </summary>
@@ -1163,7 +1166,7 @@ public class wpfBuilder {
 		height?.ApplyTo(c, true);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Docks the last added element in <see cref="DockPanel"/>.
 	/// </summary>
@@ -1174,7 +1177,7 @@ public class wpfBuilder {
 		DockPanel.SetDock(c, dock);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets horizontal and/or vertical alignment of the last added element.
 	/// </summary>
@@ -1188,7 +1191,7 @@ public class wpfBuilder {
 		if (y != null) c.VerticalAlignment = y.Value;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets horizontal and/or vertical alignment of the last added element.
 	/// </summary>
@@ -1197,13 +1200,13 @@ public class wpfBuilder {
 	/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 	public wpfBuilder Align(string x = null, string y = null) => Align(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
-
+	
 	HorizontalAlignment? _AlignmentFromStringX(string s, [CallerMemberName] string m_ = null)
 		=> s.NE() ? default(HorizontalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'L' => HorizontalAlignment.Left, 'C' => HorizontalAlignment.Center, 'R' => HorizontalAlignment.Right, 'S' => HorizontalAlignment.Stretch, _ => throw new ArgumentException(m_ + "(x)") });
-
+	
 	VerticalAlignment? _AlignmentFromStringY(string s, [CallerMemberName] string m_ = null)
 		=> s.NE() ? default(VerticalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'T' => VerticalAlignment.Top, 'C' => VerticalAlignment.Center, 'B' => VerticalAlignment.Bottom, 'S' => VerticalAlignment.Stretch, _ => throw new ArgumentException(m_ + "(y)") });
-
+	
 	/// <summary>
 	/// Sets content alignment of the last added element.
 	/// </summary>
@@ -1216,7 +1219,7 @@ public class wpfBuilder {
 		if (y != null) c.VerticalContentAlignment = y.Value;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets content alignment of the last added element.
 	/// </summary>
@@ -1225,7 +1228,7 @@ public class wpfBuilder {
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 	public wpfBuilder AlignContent(string x = null, string y = null) => AlignContent(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
-
+	
 	/// <summary>
 	/// Sets margin of the last added element.
 	/// </summary>
@@ -1233,7 +1236,7 @@ public class wpfBuilder {
 		Last.Margin = margin;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets margin of the last added element.
 	/// </summary>
@@ -1247,7 +1250,7 @@ public class wpfBuilder {
 		c.Margin = new Thickness(left.Value, top.Value, right.Value, bottom.Value);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets margin of the last added element.
 	/// </summary>
@@ -1263,14 +1266,14 @@ public class wpfBuilder {
 		c.Margin = m;
 		return this;
 	}
-
+	
 	static void _ThicknessFromString(ref Thickness t, string s, [CallerMemberName] string m_ = null) {
 		if (s.NE()) return;
 		if (s.ToInt(out int v1, 0, out int e1) && e1 == s.Length) {
 			t = new Thickness(v1);
 			return;
 		}
-
+		
 		for (int i = 0; i < s.Length; i++) {
 			var c = s[i]; if (c == ' ') continue;
 			int v = s.ToInt(i + 1, out int end); if (end > 0) i = end - 1; //never mind: should be double. Currently we don't have a function that can recognize and convert part of string to double.
@@ -1283,7 +1286,7 @@ public class wpfBuilder {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Sets padding of the last added control.
 	/// </summary>
@@ -1292,7 +1295,7 @@ public class wpfBuilder {
 		_LastAsControlOrThrow().Padding = thickness;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets padding of the last added control.
 	/// </summary>
@@ -1307,7 +1310,7 @@ public class wpfBuilder {
 		c.Padding = new Thickness(left.Value, top.Value, right.Value, bottom.Value);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets padding of the last added control.
 	/// </summary>
@@ -1324,7 +1327,7 @@ public class wpfBuilder {
 		c.Padding = p;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="UIElement.IsEnabled"/> of the last added element.
 	/// </summary>
@@ -1333,7 +1336,7 @@ public class wpfBuilder {
 		Last.IsEnabled = !disabled;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="UIElement.Visibility"/> of the last added element.
 	/// </summary>
@@ -1342,10 +1345,11 @@ public class wpfBuilder {
 		Last.Visibility = hidden switch { true => Visibility.Hidden, false => Visibility.Visible, _ => Visibility.Collapsed };
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets tooltip text/content/object of the last added element. See <see cref="FrameworkElement.ToolTip"/>.
 	/// </summary>
+	/// <param name="tooltip">Tooltip text (string), or tooltip content element, or <b>ToolTip</b> object.</param>
 	/// <example>
 	/// Text box with simple tooltip.
 	/// <code><![CDATA[
@@ -1368,11 +1372,12 @@ public class wpfBuilder {
 	/// </example>
 	public wpfBuilder Tooltip(object tooltip) {
 		Last.ToolTip = tooltip;
+		if (!_showToolTipOnKeyboardFocus) ToolTipService.SetShowsToolTipOnKeyboardFocus(Last, false);
 		return this;
 	}
 	//FUTURE: make easier to create tooltip content, eg Inlines of TextBlock. Would be good to create on demand.
 	//FUTURE: hyperlinks in tooltip. Now does not work because tooltip closes when mouse leaves the element.
-
+	
 	/// <summary>
 	/// Sets UI Automation name of the last added element.
 	/// </summary>
@@ -1380,7 +1385,7 @@ public class wpfBuilder {
 		Last.UiaSetName(name);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets background and/or foreground brush (color, gradient, etc) of the last added element.
 	/// </summary>
@@ -1414,7 +1419,7 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets border properties of the last added element, which can be <b>Border</b> or a <b>Control</b>-derived class.
 	/// </summary>
@@ -1449,7 +1454,7 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets font properties of the last added element and its descendants.
 	/// </summary>
@@ -1465,10 +1470,10 @@ public class wpfBuilder {
 		if (italic != null) TextElement.SetFontStyle(c, italic == true ? FontStyles.Italic : FontStyles.Normal);
 		return this;
 		//rejected: FontStretch? stretch=null. Rarely used. Most fonts don't support.
-
+		
 		//not sure is this OK or should set font properties for each supporting class separately.
 	}
-
+	
 	/// <summary>
 	/// Attempts to set focus to the last added element when it'll become visible.
 	/// </summary>
@@ -1476,7 +1481,7 @@ public class wpfBuilder {
 		Last.Focus();
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets <b>Tag</b> property of the last added element.
 	/// </summary>
@@ -1484,7 +1489,7 @@ public class wpfBuilder {
 		Last.Tag = tag;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="FrameworkElement.DataContext"/> property of the last added element.
 	/// Then with <see cref="Bind"/> of this and descendant elements don't need to specify data source object because it is set by this function.
@@ -1494,7 +1499,7 @@ public class wpfBuilder {
 		Last.DataContext = source;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="FrameworkElement.SetBinding(DependencyProperty, string)"/> of the last added element.
 	/// </summary>
@@ -1504,7 +1509,7 @@ public class wpfBuilder {
 		Last.SetBinding(property, path);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="FrameworkElement.SetBinding(DependencyProperty, BindingBase)"/> of the last added element.
 	/// </summary>
@@ -1514,7 +1519,7 @@ public class wpfBuilder {
 		Last.SetBinding(property, binding);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="FrameworkElement.SetBinding(DependencyProperty, BindingBase)"/> of the last added element and gets its return value.
 	/// </summary>
@@ -1525,7 +1530,7 @@ public class wpfBuilder {
 		r = Last.SetBinding(property, binding);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="FrameworkElement.SetBinding(DependencyProperty, BindingBase)"/> of the last added element. Creates <see cref="Binding"/> that uses <i>source</i> and <i>path</i>.
 	/// </summary>
@@ -1537,7 +1542,7 @@ public class wpfBuilder {
 		Last.SetBinding(property, binding);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets a validation callback function for the last added element.
 	/// </summary>
@@ -1563,7 +1568,7 @@ public class wpfBuilder {
 		var c = Last;
 		//validate on click of OK or some other button. Often eg text fields initially are empty and must be filled.
 		(_validations ??= new List<_Validation>()).Add(new _Validation { e = c, func = func });
-
+		
 		//rejected: also validate on lost focus or changed property value. Maybe in the future.
 		//		if(property==null) {
 		//			c.LostFocus+=(o,e)=> { print.it(func(o as FrameworkElement)); };
@@ -1573,14 +1578,14 @@ public class wpfBuilder {
 		//		}
 		return this;
 	}
-
+	
 	class _Validation {
 		public FrameworkElement e;
 		public Func<FrameworkElement, string> func;
 	}
-
+	
 	List<_Validation> _validations;
-
+	
 	bool _Validate(Window w, Button b) {
 		TextBlock tb = null;
 		foreach (var gb in _GetAllWpfBuilders(w)) { //find all wpfBuilder used to build this window
@@ -1611,7 +1616,7 @@ public class wpfBuilder {
 		//never mind: could add eg red rectangle, like WPF does on binding validation error. Not easy.
 		return false;
 	}
-
+	
 	static List<wpfBuilder> _GetAllWpfBuilders(DependencyObject root) {
 		var a = new List<wpfBuilder>();
 		_Enum(root, 0);
@@ -1624,7 +1629,7 @@ public class wpfBuilder {
 		}
 		return a;
 	}
-
+	
 	static bool _FindAncestorTabItem(DependencyObject e, out TabItem ti) {
 		ti = null;
 		for (; ; )
@@ -1635,7 +1640,7 @@ public class wpfBuilder {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="FrameworkElement.Name"/> of the last added element.
 	/// </summary>
@@ -1650,7 +1655,7 @@ public class wpfBuilder {
 		if (andUia) UiaName(name);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets watermark/hint/cue text of the last added <b>TextBox</b> or editable <b>ComboBox</b> control.
 	/// The text is visible only when the control text is empty.
@@ -1664,7 +1669,7 @@ public class wpfBuilder {
 	/// <exception cref="NotSupportedException">The last added element isn't <b>TextBox</b> or editable <b>ComboBox</b> control.</exception>
 	/// <exception cref="InvalidOperationException">The control isn't in an <b>AdornerDecorator</b>.</exception>
 	public wpfBuilder Watermark(string text) => Watermark(out _, text);
-
+	
 	/// <param name="adorner">Receives the adorner. It can be used to change watermark text later.</param>
 	/// <param name="text"></param>
 	/// <inheritdoc cref="Watermark(string)"/>
@@ -1675,11 +1680,11 @@ public class wpfBuilder {
 		adorner.SetAdornerVisibility();
 		return this;
 	}
-
+	
 	#endregion
-
+	
 	#region set type-specific properties of last added element
-
+	
 	/// <summary>
 	/// Sets <see cref="ToggleButton.IsChecked"/> and <see cref="ToggleButton.IsThreeState"/> of the last added check box or radio button.
 	/// </summary>
@@ -1692,7 +1697,7 @@ public class wpfBuilder {
 		c.IsChecked = check;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="ToggleButton.IsChecked"/> of the specified <see cref="RadioButton"/>.
 	/// </summary>
@@ -1705,7 +1710,7 @@ public class wpfBuilder {
 		control.IsChecked = check;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="TextBoxBase.IsReadOnly"/> or <see cref="ComboBox.IsReadOnly"/> of the last added text box or editable combo box.
 	/// </summary>
@@ -1724,7 +1729,7 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Makes the last added <see cref="TextBox"/> multiline.
 	/// </summary>
@@ -1740,7 +1745,7 @@ public class wpfBuilder {
 		height?.ApplyTo(c, true);
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Makes the last added <see cref="ComboBox"/> editable.
 	/// </summary>
@@ -1751,7 +1756,7 @@ public class wpfBuilder {
 		if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 2, 2); //default (2) or set by _Add() for non-editable
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Splits string and ads substrings as items to the last added <see cref="ItemsControl"/> (<see cref="ComboBox"/>, etc).
 	/// </summary>
@@ -1761,7 +1766,7 @@ public class wpfBuilder {
 	/// If it is a non-editable <b>ComboBox</b>, selects the first item. See also <see cref="Select"/>.
 	/// </remarks>
 	public wpfBuilder Items(string items) => _Items(items.Split('|'), null);
-
+	
 	/// <summary>
 	/// Adds items of any type to the last added <see cref="ItemsControl"/> (<see cref="ComboBox"/>, etc).
 	/// </summary>
@@ -1771,7 +1776,7 @@ public class wpfBuilder {
 	/// If it is a non-editable <b>ComboBox</b>, selects the first item. See also <see cref="Select"/>.
 	/// </remarks>
 	public wpfBuilder Items(params object[] items) => _Items(items, null);
-
+	
 	wpfBuilder _Items(object[] a, IEnumerable e) {
 		var ic = Last as ItemsControl ?? throw new NotSupportedException("Items(): Last added must be ItemsControl, for example ComboBox");
 		ic.ItemsSource = null;
@@ -1784,7 +1789,7 @@ public class wpfBuilder {
 		if (Last is ComboBox cb && !cb.IsEditable && cb.HasItems) cb.SelectedIndex = 0;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds items as <b>IEnumerable</b> to the last added <see cref="ItemsControl"/> (<see cref="ComboBox"/>, etc), with "lazy" option.
 	/// </summary>
@@ -1795,7 +1800,7 @@ public class wpfBuilder {
 	/// - <i>lazy</i> is true and the last added element is not <b>ComboBox</b>.
 	/// </exception>
 	public wpfBuilder Items(IEnumerable items, bool lazy = false) => lazy ? Items(true, o => o.ItemsSource = items) : _Items(null, items);
-
+	
 	/// <summary>
 	/// Sets callback function that should add items to the last added <see cref="ComboBox"/> later.
 	/// </summary>
@@ -1813,7 +1818,7 @@ public class wpfBuilder {
 		c.DropDownOpened += d;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Selects an item of the last added <see cref="Selector"/> (<see cref="ComboBox"/>, etc).
 	/// </summary>
@@ -1825,7 +1830,7 @@ public class wpfBuilder {
 		c.SelectedIndex = index;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Selects an item of the last added <see cref="Selector"/> (<see cref="ComboBox"/>, etc).
 	/// </summary>
@@ -1837,7 +1842,7 @@ public class wpfBuilder {
 		c.SelectedItem = item;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds inlines to the last added <see cref="TextBlock"/>.
 	/// </summary>
@@ -1909,7 +1914,7 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Loads a web page or RTF text from a file or URL into the last added element.
 	/// </summary>
@@ -1943,7 +1948,7 @@ public class wpfBuilder {
 		if (bad) throw new NotSupportedException("LoadFile(): Unsupported type of element or source.");
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Loads image into the last added <see cref="System.Windows.Controls.Image"/>.
 	/// </summary>
@@ -1958,7 +1963,7 @@ public class wpfBuilder {
 	/// <seealso cref="ImageUtil"/>
 	public wpfBuilder Image(ImageSource source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 		 => _Image(source, null, stretch, stretchDirection);
-
+	
 	wpfBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection) {
 		var c = Last as Image ?? throw new NotSupportedException("Image(): Last added must be Image");
 		if (file != null) {
@@ -1971,7 +1976,7 @@ public class wpfBuilder {
 		c.Source = source;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Loads image from a file or URL into the last added <see cref="System.Windows.Controls.Image"/>.
 	/// </summary>
@@ -1984,7 +1989,7 @@ public class wpfBuilder {
 	/// </remarks>
 	public wpfBuilder Image(string source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 		=> _Image(null, source, stretch, stretchDirection);
-
+	
 	/// <summary>
 	/// Sets vertical or horizontal splitter properties of the last added <see cref="GridSplitter"/>.
 	/// </summary>
@@ -2035,7 +2040,7 @@ public class wpfBuilder {
 		c.ResizeBehavior = GridResizeBehavior.PreviousAndNext;
 		return this;
 	}
-
+	
 	//FUTURE: need a numeric input control. This code is for WinForms NumericUpDown.
 	//	public wpfBuilder Number(decimal? value = null, decimal? min = null, decimal? max=null, decimal? increment=null, int? decimalPlaces=null, bool? thousandsSeparator=null, bool? hex =null) {
 	//		var c = Last as NumericUpDown ?? throw new NotSupportedException("Number(): Last added must be NumericUpDown");
@@ -2048,18 +2053,18 @@ public class wpfBuilder {
 	//		if(value!=null) c.Value=value.Value; else c.Text=null;
 	//		return this;
 	//	}
-
+	
 	#endregion
-
+	
 	#region nested panel
-
+	
 	wpfBuilder _Start(_PanelBase p, bool childOfLast) {
 		_p.BeforeAdd(childOfLast ? WBAdd.ChildOfLast : 0);
 		_AddToParent(p.panel, childOfLast);
 		_p = p;
 		return this;
 	}
-
+	
 	wpfBuilder _Start<T>(_PanelBase p, out T container, object header) where T : HeaderedContentControl, new() {
 		Add(out container, header);
 		container.Content = p.panel;
@@ -2067,7 +2072,7 @@ public class wpfBuilder {
 		_p = p;
 		return this;
 	}
-
+	
 	/// <summary>
 	/// Adds <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
@@ -2076,7 +2081,7 @@ public class wpfBuilder {
 	/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> false, else its parent. The same with all <b>StartX</b> functions.
 	/// </remarks>
 	public wpfBuilder StartGrid(bool childOfLast = false) => _Start(new _Grid(this), childOfLast);
-
+	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
@@ -2090,7 +2095,7 @@ public class wpfBuilder {
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder StartGrid<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out T _, header);
-
+	
 	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -2099,7 +2104,7 @@ public class wpfBuilder {
 	/// </example>
 	/// <inheritdoc cref="StartGrid{T}(object)"/>
 	public wpfBuilder StartGrid<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out container, header);
-
+	
 	/// <summary>
 	/// Adds <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
@@ -2108,17 +2113,17 @@ public class wpfBuilder {
 	/// For each added control call <see cref="XY"/> or use indexer like <c>[x, y]</c> or <c>[x, y, width, height]</c>.
 	/// </remarks>
 	public wpfBuilder StartCanvas(bool childOfLast = false) => _Start(new _Canvas(this), childOfLast);
-
+	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="header">Header text/content.</param>
 	public wpfBuilder StartCanvas<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out T _, header);
-
+	
 	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 	/// <inheritdoc cref="StartCanvas{T}(object)"/>
 	public wpfBuilder StartCanvas<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out container, header);
-
+	
 	/// <summary>
 	/// Adds <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
@@ -2127,35 +2132,35 @@ public class wpfBuilder {
 	/// For added elements call <see cref="Dock"/>, maybe except for the last element that fills remaining space.
 	/// </remarks>
 	public wpfBuilder StartDock(bool childOfLast = false) => _Start(new _DockPanel(this), childOfLast);
-
+	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="header">Header text/content.</param>
 	public wpfBuilder StartDock<T>(object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out T _, header);
-
+	
 	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 	/// <inheritdoc cref="StartDock{T}(object)"/>
 	public wpfBuilder StartDock<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out container, header);
-
+	
 	/// <summary>
 	/// Adds <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="vertical"></param>
 	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
 	public wpfBuilder StartStack(bool vertical = false, bool childOfLast = false) => _Start(new _StackPanel(this, vertical), childOfLast);
-
+	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="header">Header text/content.</param>
 	/// <param name="vertical"></param>
 	public wpfBuilder StartStack<T>(object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out T _, header);
-
+	
 	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 	/// <inheritdoc cref="StartStack{T}(object, bool)"/>
 	public wpfBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out container, header);
-
+	
 	/// <summary>
 	/// Adds right-bottom-aligned horizontal stack panel (<see cref="StartStack"/>) for adding OK, Cancel and more buttons.
 	/// When don't need more buttons, use just <see cref="AddOkCancel"/>.
@@ -2175,37 +2180,37 @@ public class wpfBuilder {
 		}
 		return this;
 	}
-
+	
 	#endregion
-
+	
 	#region util
-
+	
 	bool _IsNested => _p.parent != null;
-
+	
 	bool _IsWindowEnded => _p.ended && _p.parent == null;
-
+	
 	Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c); //CONSIDER: support top-level HwndSource window
-
+	
 	void _ThrowIfNotWindow([CallerMemberName] string m_ = null) {
 		if (_window == null) throw new InvalidOperationException(m_ + "(): Container is not Window");
 	}
-
+	
 	Control _LastAsControlOrThrow([CallerMemberName] string m_ = null) => (Last as Control) ?? throw new InvalidOperationException(m_ + "(): Last added element is not Control");
-
+	
 	_PanelBase _ParentOfLast => ReferenceEquals(Last, _p.panel) ? _p.parent : _p;
-
+	
 	T _ParentOfLastAsOrThrow<T>([CallerMemberName] string m_ = null) where T : _PanelBase {
 		return _ParentOfLast is T t ? t : throw new InvalidOperationException($"{m_}() not in {typeof(T).Name[1..]} panel.");
 	}
-
+	
 	//	void _ThrowIfParentOfLastIs<TControl>([CallerMemberName] string caller = null) where TControl : Panel {
 	//		if(Last.Parent is TControl) throw new InvalidOperationException($"{caller}() in {typeof(TControl).Name} panel.");
 	//	}
-
+	
 	static string _UriNormalize(string source) => pathname.normalize(source, flags: PNFlags.CanBeUrlOrShell);
-
+	
 	static Uri _Uri(string source) => new Uri(_UriNormalize(source));
-
+	
 	//Returns true if probably using a custom theme. I don't know what is the correct way, but this should work in most cases. Fast.
 	static bool _IsCustomTheme() {
 		if (s_isCustomTheme == null) {
@@ -2215,6 +2220,6 @@ public class wpfBuilder {
 		return s_isCustomTheme == true;
 	}
 	static bool? s_isCustomTheme;
-
+	
 	#endregion
 }

@@ -98,8 +98,12 @@ static unsafe partial class Api {
 	[DllImport("gdi32.dll", EntryPoint = "GetObjectW")]
 	internal static extern int GetObject(IntPtr h, int c, void* pv);
 
+	/// <param name="mode">1 transparent, 2 opaque.</param>
 	[DllImport("gdi32.dll")]
 	internal static extern int SetBkMode(IntPtr hdc, int mode);
+	
+	[DllImport("gdi32.dll")]
+	internal static extern int SetBkColor(IntPtr hdc, int color);
 
 	[DllImport("gdi32.dll", EntryPoint = "TextOutW")]
 	internal static extern bool TextOut(IntPtr hdc, int x, int y, string lpString, int c);

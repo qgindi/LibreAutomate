@@ -1,6 +1,7 @@
+using System.Runtime.Loader;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Runtime.Loader;
 
 namespace Au.Compiler;
 

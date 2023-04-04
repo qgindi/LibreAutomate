@@ -436,8 +436,8 @@ protected:	// ScintillaBase subclass needs access to much of Editor
 	virtual void Paste() = 0;
 	void Clear();
 	virtual void SelectAll();
-	virtual void Undo();
-	virtual void Redo();
+	virtual void Undo(bool dontChangePos); //Au: added dontChangePos
+	virtual void Redo(bool dontChangePos); //Au: added dontChangePos
 	void DelCharBack(bool allowLineStartDeletion);
 	virtual void ClaimSelection() = 0;
 

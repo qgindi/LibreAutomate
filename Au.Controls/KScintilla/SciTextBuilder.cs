@@ -234,5 +234,5 @@ public class SciTextBuilder {
 	/// <summary>
 	/// Callers can use this as they want. Not used by this class.
 	/// </summary>
-	public int ControlWidth { get; set; }
+	public (int i, object o) user;
 }

@@ -400,19 +400,25 @@ partial class FilesModel {
 	/// <param name="f">Can be any item or null. Does nothing if it is null, folder or not open.</param>
 	/// <param name="activateOther">When closing current file, if there are more open files, activate another open file.</param>
 	/// <param name="selectOther">Select the activated file.</param>
-	/// <param name="focusEditor">If <i>activateOther</i> true, focus code editor.</param>
-	public bool CloseFile(FileNode f, bool activateOther = true, bool selectOther = false, bool focusEditor = false) {
+	public bool CloseFile(FileNode f, bool activateOther = true, bool selectOther = false) {
 		if (IsAlien(f)) return false;
 		if (!_openFiles.Remove(f)) return false;
+		
+		bool isCurrent = f == _currentFile;
+		bool setFocus = isCurrent && activateOther && f.OpenDoc.IsFocused;
 		
 		Panels.Editor.Close(f);
 		f.IsSelected = false;
 		
-		if (f == _currentFile) {
-			if (activateOther && _openFiles.Count > 0) {
-				var ff = _openFiles[0];
-				if (selectOther) ff.SelectSingle();
-				if (_SetCurrentFile(ff, focusEditor: focusEditor)) return true;
+		if (isCurrent) {
+			if (activateOther) {
+				if (_openFiles.Count > 0) {
+					var ff = _openFiles[0];
+					if (selectOther) ff.SelectSingle();
+					if (_SetCurrentFile(ff, focusEditor: setFocus)) return true;
+				} else if (setFocus) {
+					App.Wmain.Focus(); //else would not work any hotkeys and even Alt+menu keys until something focused
+				}
 			}
 			_currentFile = null;
 		}

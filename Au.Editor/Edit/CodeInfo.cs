@@ -1,16 +1,22 @@
+extern alias CAW;
+
 //#define NO_COMPL_CORR_SIGN
 
+using System.Windows.Input;
+using System.Windows;
 using Au.Compiler;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Windows.Input;
-using System.Windows;
-using Microsoft.CodeAnalysis.Completion;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Classification;
+using CAW::Microsoft.CodeAnalysis.Classification;
+using Microsoft.CodeAnalysis.Completion;
 
 static class CodeInfo {
 	internal static readonly CiCompletion _compl = new();
@@ -70,7 +76,7 @@ static class CodeInfo {
 				//p1.Next('s');
 				
 				//let the coloring and folding in editor start working immediately
-				Microsoft.CodeAnalysis.Classification.Classifier.GetClassifiedSpansAsync(document, new TextSpan(0, code.Length)).Wait();
+				Classifier.GetClassifiedSpansAsync(document, new TextSpan(0, code.Length)).Wait();
 				//p1.Next('c');
 				
 				App.Dispatcher.InvokeAsync(() => {

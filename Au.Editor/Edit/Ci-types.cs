@@ -33,14 +33,15 @@ class CiComplItem : ITreeViewItem
 		CiUtil.TagsToKindAndAccess(ci.Tags, out kind, out access);
 		//ci.DebugPrint();
 	}
-
-	public CiComplItem(CiComplProvider provider, TextSpan span, ISymbol sym, CiItemKind kind, string name = null) {
-		_provider = provider;
-		_symbols = sym;
-		this.kind = kind;
-		bool gen = sym switch { INamedTypeSymbol nt => nt.IsGenericType, IMethodSymbol ms => ms.IsGenericMethod, _ => false };
-		ci = CompletionItem.Create(name ?? sym.Name, displayTextSuffix: gen ? "<>" : null);
-	}
+	
+	//not used
+	//public CiComplItem(CiComplProvider provider, TextSpan span, ISymbol sym, CiItemKind kind, string name = null) {
+	//	_provider = provider;
+	//	_symbols = sym;
+	//	this.kind = kind;
+	//	bool gen = sym switch { INamedTypeSymbol nt => nt.IsGenericType, IMethodSymbol ms => ms.IsGenericMethod, _ => false };
+	//	ci = CompletionItem.Create(name ?? sym.JustName(), displayTextSuffix: gen ? "<>" : null);
+	//}
 
 	public CiComplItem(CiComplProvider provider, TextSpan span, string name, CiItemKind kind, CiItemAccess access = default) {
 		_provider = provider;

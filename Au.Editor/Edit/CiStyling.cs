@@ -1,11 +1,17 @@
+extern alias CAW;
+
 //Code colors. Also calls functions of folding, images, errors.
 
 using Au.Controls;
 using static Au.Controls.Sci;
-using Microsoft.CodeAnalysis.Classification;
-using Microsoft.CodeAnalysis.Text;
+
 using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+//using Microsoft.CodeAnalysis.Classification;
+using CAW::Microsoft.CodeAnalysis.Classification;
 
 //SHOULDDO: now preprocessor symbol bold if followed by a bold style. Example code:
 /*
@@ -137,8 +143,7 @@ partial class CiStyling {
 		
 		if (cancel) { _cancelTS?.Cancel(); _cancelTS = null; }
 		Debug.Assert(_cancelTS == null);
-		_cancelTS = new CancellationTokenSource();
-		var cancelTS = _cancelTS;
+		var cancelTS = _cancelTS = new CancellationTokenSource();
 		var cancelToken = cancelTS.Token;
 		
 		var cd = new CodeInfo.Context(0);
@@ -408,7 +413,7 @@ partial class CiStyling {
 	public record TStyles //note: must be record, because uses synthesized ==
 	{
 		public string FontName = "Consolas";
-		public int FontSize = 10;
+		public int FontSize = 9;
 		public int BackgroundColor = 0xffffff;
 		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
 		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome

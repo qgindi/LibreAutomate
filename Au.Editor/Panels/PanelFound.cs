@@ -6,8 +6,8 @@ using Au.Tools;
 using static Au.Controls.Sci;
 
 class PanelFound {
-	List<_KScintilla> _a = new();
-	int _iActive = -1;
+	_LbItem _li;
+	_KScintilla _sci;
 	Grid _grid;
 	ListBox _lb;
 	
@@ -21,25 +21,26 @@ class PanelFound {
 		tb.UiaSetName("Found_toolbar");
 		
 		var cKeep = tb.AddCheckbox("*RemixIcon.Lock2Line" + Menus.black, "Keep results", enabled: false);
-		cKeep.CheckChanged += (_, _) => { if (_iActive >= 0) _Sci.isLocked = cKeep.IsChecked; };
+		cKeep.CheckChanged += (_, _) => { if (_sci != null) _sci.isLocked = cKeep.IsChecked; };
 		
-		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + Menus.black, "Close opened files", _ => _Sci?.CloseOpenedFiles(), enabled: false);
+		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + Menus.black, "Close opened files", _ => _sci?.CloseOpenedFiles(), enabled: false);
 		
 		b.Add<Border>().Border(thickness2: new(1, 0, 0, 0)).SpanRows(2);
 		b.Add(out _grid, flags: WBAdd.ChildOfLast);
 		
 		b.Row(-1).Add(out _lb).Span(1).Width(70..).Border(thickness2: new(0, 1, 0, 0)).UiaName("Found_pages");
 		_lb.SelectionChanged += (_, _) => {
-			if (_iActive >= 0) _Sci.Visibility = Visibility.Hidden;
-			_iActive = _lb.SelectedIndex;
-			if (_iActive >= 0) {
-				_Sci.Visibility = Visibility.Visible;
-				cKeep.IsChecked = _Sci.isLocked;
+			if (_sci != null) _sci.Visibility = Visibility.Hidden;
+			_li = _lb.SelectedItem as _LbItem;
+			_sci = _li?.sci;
+			if (_sci != null) {
+				_sci.Visibility = Visibility.Visible;
+				cKeep.IsChecked = _sci.isLocked;
 			} else {
 				cKeep.IsChecked = false;
 			}
-			cKeep.IsEnabled = _iActive >= 0 && _Sci.kind != Found.SymbolRename;
-			bCloseOF.IsEnabled = _iActive >= 0;
+			cKeep.IsEnabled = _sci != null && _sci.kind != Found.SymbolRename;
+			bCloseOF.IsEnabled = _sci != null;
 		};
 		
 		b.End();
@@ -49,40 +50,37 @@ class PanelFound {
 	
 	public UserControl P { get; } = new();
 	
-	_KScintilla _Sci => _a[_iActive];
-	
 	public WorkingState Prepare(Found kind, string text, out SciTextBuilder builder) {
 		Panels.PanelManager[P].Visible = true;
 		
-		if (_iActive < 0 || _Sci.kind != kind || _Sci.isLocked) {
-			int i = _a.FindIndex(o => o.kind == kind && !o.isLocked);
-			if (i < 0) {
+		if (_sci == null || _sci.kind != kind || _sci.isLocked) {
+			var li = _lb.Items.Cast<_LbItem>().FirstOrDefault(o => o.sci.kind == kind && !o.sci.isLocked);
+			if (li == null) {
 				var c = new _KScintilla(kind);
 				_grid.Children.Add(c);
-				i = _a.Count;
-				_a.Add(c);
-				var li = new KListBoxItemWithImage(kind switch {
+				li = new _LbItem(c, kind switch {
 					Found.Files => "*FeatherIcons.File" + Menus.black,
 					//Found.Text => "*Material.Text" + Menus.black,
 					Found.Text => "*Material.FindReplace" + Menus.black,
+					Found.SymbolFind => "*FontAwesome.SearchDollarSolid" + Menus.black,
 					Found.SymbolReferences => "*Codicons.References" + Menus.black,
-					Found.SymbolRename => "*Codicons.ReplaceAll #4040FF|#8080FF",
+					Found.SymbolRename => "*PicolIcons.Edit" + Menus.red,
 					Found.Repair => "*RPGAwesome.Repair" + Menus.black,
 					_ => null
 				}, null);
-				li.ContextMenuOpening += (li, _) => {
+				li.ContextMenuOpening += (_, _) => {
 					var m = new popupMenu();
 					m["Close\tM-click"] = o => _Close(li);
 					m.Show();
 				};
-				li.MouseDown += (li, e) => { if (e.ChangedButton == MouseButton.Middle) _Close(li); };
+				li.MouseDown += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _Close(li); };
 				_lb.Items.Add(li);
 			}
-			_lb.SelectedIndex = i;
+			_lb.SelectedItem = li;
 		}
 		
-		_Sci.Clear();
-		(_lb.Items[_iActive] as KListBoxItemWithImage).SetText(text.Limit(15).RxReplace(@"\R", " "), text);
+		_sci.Clear();
+		_li.SetText(text.Limit(15).RxReplace(@"\R", " "), text);
 		
 		builder = new SciTextBuilder() {
 			BoldStyle = Styles.Bold,
@@ -90,33 +88,33 @@ class PanelFound {
 			GreenStyle = Styles.Green,
 			LinkIndic = Indicators.Link,
 			Link2Indic = Indicators.Link2,
-			ControlWidth = (int)_grid.ActualWidth,
+			user = (0, _sci)
 		};
 		
-		if (kind is Found.Files) return new(_Sci, disable: false);
-		return new(_Sci, disable: true);
+		if (kind is Found.Files) return new(_sci, disable: false);
+		return new(_sci, disable: true);
 	}
 	
 	public void ClearResults(Found kind) {
-		if (_iActive < 0 || _Sci.kind != kind || _Sci.isLocked) return;
-		_Sci.Clear();
-		(_lb.Items[_iActive] as KListBoxItemWithImage).SetText(null, null);
+		if (_sci == null || _sci.kind != kind || _sci.isLocked) return;
+		_sci.Clear();
+		_li.SetText(null, null);
 	}
 	
 	bool _IsSciOk(in WorkingState ws) {
-		return _iActive >= 0 && _Sci == ws.Scintilla;
+		return _sci == ws.Scintilla;
 	}
 	
 	public void SetResults(in WorkingState ws, SciTextBuilder b) {
 		if (!_IsSciOk(ws)) return;
-		b.Apply(_Sci);
+		b.Apply(_sci);
 	}
 	
 	public void SetFindInFilesResults(in WorkingState ws, SciTextBuilder b, PanelFind._TextToFind ttf, List<FileNode> files) {
 		if (!_IsSciOk(ws)) return;
-		b.Apply(_Sci);
-		_Sci.ttf = ttf;
-		_Sci.files = files;
+		b.Apply(_sci);
+		_sci.ttf = ttf;
+		_sci.files = files;
 	}
 	
 	/// <summary>
@@ -124,7 +122,12 @@ class PanelFound {
 	/// </summary>
 	/// <param name="text">Text of file <i>f</i>.</param>
 	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile, int indicHilite = Indicators.HiliteY) {
-		int wid = Math.Clamp((b.ControlWidth - 20) / 10 - (displayFile ? f.Name.Length + 4 : 0), 30, 100);
+		if (b.user.i == 0) {
+			var k = b.user.o as KScintilla;
+			b.user.i = Math.Max((int)k.ActualWidth - k.aaaMarginGetX(4, dpiUnscale: true).right - 20, 1); //logical pixels
+		}
+		var fileName = displayFile ? f.Name.Limit(30) : null;
+		int wid = Math.Clamp(b.user.i / 10 - (displayFile ? fileName.Length + 4 : 0), 20, 100); //chars
 		int lineStart = start, lineEnd = end;
 		int lsMax = Math.Max(start - wid, 0), leMax = Math.Min(end + 200, text.Length); //start/end limits like in VS
 		while (lineStart > lsMax && !text.IsCsNewlineChar(lineStart - 1)) lineStart--;
@@ -134,26 +137,25 @@ class PanelFound {
 		bool limitEnd = lineEnd < text.Length && !text.IsCsNewlineChar(lineEnd);
 		
 		b.Link2(new CodeLink(f, start, end));
-		if (displayFile) b.Gray(f.Name).Text("        ");
+		if (displayFile) b.Gray(fileName).Text("        ");
 		if (limitStart) b.Text("…");
 		b.Text(text.AsSpan(lineStart..start)).Indic(indicHilite, text.AsSpan(start..end)).Text(text.AsSpan(end..lineEnd));
 		if (limitEnd) b.Text("…");
 		b.Link_().NL();
 	}
 	
-	public void Close(KScintilla sci) => _Close(_a.IndexOf(sci as _KScintilla));
+	public void Close(KScintilla sci) {
+		var li = _lb.Items.OfType<_LbItem>().First(o => o.sci == sci);
+		if (li != null) _Close(li);
+	}
 	
-	void _Close(object li) => _Close(_lb.Items.IndexOf(li as KListBoxItemWithImage));
-	
-	void _Close(int i) {
-		if (i < 0) return;
-		if (i == _iActive && _a.Count > 1) _lb.SelectedIndex = _iActive == _a.Count - 1 ? _iActive - 1 : _iActive + 1;
-		else if (i < _iActive) _iActive--;
-		var sci = _a[i];
-		_a.RemoveAt(i);
-		if (_a.Count == 0) _iActive = -1;
-		_lb.Items.RemoveAt(i);
-		_CloseSci(sci);
+	void _Close(_LbItem li) {
+		if (li == _li && _lb.Items.Count is int n && n > 1) {
+			int i = _lb.Items.IndexOf(li);
+			_lb.SelectedIndex = i == n - 1 ? i - 1 : i + 1;
+		}
+		_lb.Items.Remove(li);
+		_CloseSci(li.sci);
 	}
 	
 	void _CloseSci(_KScintilla sci) {
@@ -163,11 +165,9 @@ class PanelFound {
 	}
 	
 	void _CloseAll() {
-		if (_a.Count == 0) return;
-		_iActive = -1;
+		var a = _lb.Items.OfType<_LbItem>().ToArray();
 		_lb.Items.Clear();
-		foreach (var sci in _a) _CloseSci(sci);
-		_a.Clear();
+		foreach (var v in a) _CloseSci(v.sci);
 	}
 	
 	class _KScintilla : KScintilla {
@@ -181,7 +181,7 @@ class PanelFound {
 			this.kind = kind;
 			Name = "Found_" + kind;
 			AaInitReadOnlyAlways = true;
-			AaNoMouseSetFocus = MButtons.Right;
+			AaNoMouseSetFocus = MButtons.Right | MButtons.Middle;
 			AaInitTagsStyle = AaTagsStyle.AutoAlways;
 		}
 		
@@ -222,9 +222,9 @@ class PanelFound {
 				if (pos >= 0 && AaRangeDataGet(false, pos, out object o)) {
 					var f = o switch { FileNode f1 => f1, CodeLink cl => cl.file, _ => null };
 					if (f != null && (_openedFiles?.Contains(f) ?? false)) //close only if opened from this panel. Else may accidentally close (eg confuse middle/right button) and lose the undo history etc.
-						App.Model.CloseFile(f, selectOther: true, focusEditor: true);
+						App.Model.CloseFile(f, selectOther: true);
 				}
-				return 0; //don't focus
+				return 0;
 			case Api.WM_CONTEXTMENU:
 				if (kind == Found.SymbolRename) {
 					int i = aaaCurrentPos8;
@@ -327,9 +327,15 @@ class PanelFound {
 		}
 	}
 	
+	class _LbItem : KListBoxItemWithImage {
+		public readonly _KScintilla sci;
+		public _LbItem(_KScintilla sci, object image, string text) : base(image, text) { this.sci = sci; }
+	}
+	
 	public enum Found {
 		Files,
 		Text,
+		SymbolFind,
 		SymbolReferences,
 		SymbolRename,
 		Repair

@@ -578,17 +578,12 @@ class DSnippets : KDialogWindow {
 		
 		TVCheck ITreeViewItem.CheckState => Level is not (0 or 2) ? TVCheck.None : isChecked ? TVCheck.Checked : TVCheck.Unchecked;
 
-		//bool ITreeViewItem.IsDisabled { get; }
-
-		//bool ITreeViewItem.IsBold { get; }
-
-		//bool ITreeViewItem.IsSelectable { get; }
-
-		int ITreeViewItem.Color => (Level == 1 && this != _d._tv.SelectedItem) ? 0xC0E0A0 : -1;
+		int ITreeViewItem.Color(TVColorInfo ci) => (Level == 1 && this != _d._tv.SelectedItem) ? 0xC0E0A0 : -1;
 		
-		int ITreeViewItem.TextColor => this == _d._clip ? (_d._cut ? 0xFF0000 : 0x00A000) : (Level == 1 ? 0 : -1);
-		
-		//int ITreeViewItem.BorderColor { get; }
+		int ITreeViewItem.TextColor(TVColorInfo ci)
+			=> this == _d._clip ? (_d._cut ? 0xFF0000 : 0x00A000)
+			: Level == 1 ? 0
+			: -1;
 		
 		#endregion
 	}

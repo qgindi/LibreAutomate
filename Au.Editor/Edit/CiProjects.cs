@@ -1,9 +1,15 @@
+extern alias CAW;
+
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using SymAcc = Microsoft.CodeAnalysis.Accessibility;
+
 using Au.Compiler;
 
 class CiProjects {

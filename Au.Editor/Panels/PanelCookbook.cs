@@ -37,10 +37,10 @@ class PanelCookbook {
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
-		b.xAddButtonIcon("*Material.TextSearch" + Menus.orange, _ => _Search(true), "Find in recipe text");
-		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.orange, _ => _HistoryMenu(), "Go back...");
+		b.xAddButtonIcon("*Material.TextSearch" + Menus.darkYellow, _ => _Search(true), "Find in recipe text");
+		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.darkYellow, _ => _HistoryMenu(), "Go back...");
 		b.Margin(right: 3);
-		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true, BackgroundColor = 0xf8fff0 };
+		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true, BackgroundColor = 0xf0f8e8 };
 		b.Row(-1).Add(_tv);
 		b.End();
 
@@ -336,7 +336,7 @@ class PanelCookbook {
 
 		string ITreeViewItem.DisplayText => name;
 
-		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie" + Menus.orange);
+		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie" + Menus.darkYellow);
 
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 

@@ -1,15 +1,19 @@
+extern alias CAW;
+
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
 using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using acc = Microsoft.CodeAnalysis.Accessibility;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Rename;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
+using CAW::Microsoft.CodeAnalysis.Rename;
+using acc = Microsoft.CodeAnalysis.Accessibility;
 
 /// <summary>Flags for <see cref="InsertCode.Statements"/>.</summary>
 [Flags]
@@ -384,6 +388,36 @@ static class InsertCode {
 		Surround(from, to, before, after, indentPlus, concise);
 	}
 
+	//FUTURE: dialogs in SurroundFor and SurroundTryCatch. Eg to set variable name, count, whether to add finally.
+	public static void SurroundFor() {
+		var before = """
+for (int i = 0; i < count; i++) {
+
+""";
+		var after = """
+
+}
+
+""";
+		Surround(before, after, 1);
+	}
+
+	public static void SurroundTryCatch() {
+		//SHOULDDO: If a statement is like 'var v = expression;', make 'Type v = null; try { v = expression; } catch {  }'.
+
+		var before = """
+try {
+
+""";
+		var after = """
+
+}
+catch (Exception) {  }
+
+""";
+		Surround(before, after, 1, concise: true);
+	}
+
 	/// <summary>
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
 	/// Returns true if inserted.
@@ -484,64 +518,6 @@ static class InsertCode {
 	//	return false;
 	//}
 
-	/// <summary>
-	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
-	/// </summary>
-	public static void DocComment(CodeInfo.Context cd) {
-		int pos = cd.pos;
-		string code = cd.code;
-		SciCode doc = cd.sci;
-
-		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !InsertCodeUtil.IsLineStart(code, pos - 3)) return;
-
-		var root = cd.syntaxRoot;
-		var node = root.FindToken(pos).Parent;
-		var start = node.SpanStart;
-		if (start < pos) return;
-
-		while (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
-			node = node.Parent;
-			if (node == null) return;
-		}
-		if (node is GlobalStatementSyntax || node.SpanStart != start) return;
-
-		//already has doc comment?
-		foreach (var v in node.GetLeadingTrivia()) {
-			if (v.IsDocumentationCommentTrivia) { //singleline (preceded by ///) or multiline (preceded by /**)
-				var span = v.Span;
-				if (span.Start != pos || span.Length > 2) return; //when single ///, span includes only newline after ///
-			}
-		}
-		//print.it(pos);
-		//CiUtil.PrintNode(node);
-
-		string s = @" <summary>
-/// 
-/// </summary>";
-		BaseParameterListSyntax pl = node switch {
-			BaseMethodDeclarationSyntax met => met.ParameterList,
-			RecordDeclarationSyntax rec => rec.ParameterList,
-			IndexerDeclarationSyntax ids => ids.ParameterList,
-			_ => null
-		};
-		if (pl != null) {
-			var b = new StringBuilder(s);
-			foreach (var p in pl.Parameters) {
-				b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
-			}
-			if ((node is MethodDeclarationSyntax mm && !code.Eq(mm.ReturnType.Span, "void")) || node is IndexerDeclarationSyntax)
-				b.Append("\r\n/// <returns></returns>");
-
-			s = b.ToString();
-			//rejected: <typeparam name="TT"></typeparam>. Rarely used.
-		}
-
-		s = InsertCodeUtil.IndentStringForInsertSimple(s, doc, pos);
-
-		doc.aaaInsertText(true, pos, s, true, true);
-		doc.aaaGoToPos(true, pos + s.Find("/ ") + 2);
-	}
-
 	public static void AddFileDescription() {
 		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
@@ -591,220 +567,6 @@ class Program {
 	}
 }";
 		Surround(start, end, before, after, indentPlus: 2);
-	}
-
-	/// <summary>
-	/// Prints delegate code. Does not insert.
-	/// </summary>
-	public static void CreateDelegate() {
-		if (!_CreateDelegate()) print.it("To create delegate code, the text cursor must be where a delegate can be used, for example after 'Event+=' or in a function argument list.");
-	}
-
-	static bool _CreateDelegate() {
-		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return false;
-		int pos = cd.pos;
-		var semo = cd.semanticModel;
-
-		if (token.IsKind(SyntaxKind.SemicolonToken)) {
-			if (pos > token.SpanStart) return false;
-			token = token.GetPreviousToken();
-		}
-
-		for (var node = token.Parent; node != null; node = node.Parent) {
-			if (node is AssignmentExpressionSyntax aes) {
-				if (node.Kind() is SyntaxKind.SimpleAssignmentExpression or SyntaxKind.AddAssignmentExpression or SyntaxKind.SubtractAssignmentExpression)
-					//if (pos >= aes.OperatorToken.Span.End)
-					return _GetTypeAndFormat(aes.Left, aes);
-			} else if (node is BaseArgumentListSyntax als) {
-				if (!node.Span.ContainsInside(pos)) continue;
-				var (arg, ps) = InsertCodeUtil.GetArgumentParameterFromPos(als, pos, semo);
-				if (ps != null) return _Format(ps.Type);
-			} else if (node is ReturnStatementSyntax rss) {
-				//if (pos >= rss.ReturnKeyword.Span.End)
-				return _GetTypeAndFormat(rss.GetAncestor<MethodDeclarationSyntax>()?.ReturnType);
-			} else if (node is ArrowExpressionClauseSyntax ae) {
-				//if (pos >= ae.ArrowToken.Span.End)
-				switch (node.Parent) {
-				case MethodDeclarationSyntax m: return _GetTypeAndFormat(m.ReturnType);
-				case PropertyDeclarationSyntax p: return _GetTypeAndFormat(p.Type);
-				}
-			} else continue;
-			break;
-		}
-
-		return false;
-
-		bool _GetTypeAndFormat(SyntaxNode sn, AssignmentExpressionSyntax aes = null) {
-			if (sn == null) return false;
-			return _Format(semo.GetTypeInfo(sn).Type, aes);
-		}
-
-		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
-			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol || t.TypeKind != TypeKind.Delegate) return false;
-			var b = new StringBuilder("<><lc #A0C0A0>Delegate method and lambda<>\r\n<code>");
-			var m = t.DelegateInvokeMethod;
-
-			//method
-
-			var format = new SymbolDisplayFormat(
-				memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef,
-				miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers,
-				parameterOptions: SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeDefaultValue
-				);
-
-			b.Append(m.ToMinimalDisplayString(semo, pos, format));
-
-			string methodName = "_RenameMe";
-			if (aes != null) {
-				if (aes.Left is IdentifierNameSyntax ins) {
-					methodName = $"_{ins.Identifier.Text}";
-				} else if (aes.Left is MemberAccessExpressionSyntax maes) {
-					if (maes.Expression is IdentifierNameSyntax ins2) {
-						methodName = $"_{ins2.Identifier.Text}_{maes.Name.Identifier.Text}";
-					} else {
-						methodName = $"_{maes.Name.Identifier.Text}";
-					}
-				}
-			}
-			b.Replace(" Invoke(", $" {methodName}(");
-
-			b.Append(" {\r\n\t");
-			if (!m.ReturnsVoid) b.Append("return default;"); //never mind ref return
-			b.Append("\r\n}\r\n");
-
-			//lambda
-
-			var s = "()";
-			if (m.Parameters.Any()) {
-				format = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeParameters);
-				bool withTypes = m.Parameters.Any(o => o.RefKind != 0 || o.IsParams);
-				if (withTypes) format = format.RemoveParameterOptions(SymbolDisplayParameterOptions.IncludeDefaultValue);
-				else format = format.WithParameterOptions(SymbolDisplayParameterOptions.IncludeName);
-				s = m.ToMinimalDisplayString(semo, pos, format);
-				if (m.Parameters.Length == 1 && !withTypes) s = s[7..^1]; else s = s[6..]; //remove 'Invoke' and maybe '()'
-			}
-			b.Append(s).AppendLine(" => </code>");
-
-			print.it(b);
-			return true;
-		}
-	}
-
-	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1) {
-		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
-		var semo = cd.semanticModel;
-		var node = semo.Root.FindToken(cd.pos).Parent;
-		//CiUtil.PrintNode(node);
-
-		bool haveBaseType = false;
-		for (var n = node; n != null; n = n.Parent) {
-			//print.it(n.Kind());
-			if (n is BaseTypeSyntax bts) {
-				node = bts.Type;
-				haveBaseType = true;
-			} else if (n is TypeDeclarationSyntax tds) {
-				if (!haveBaseType) try { node = tds.BaseList.Types[0].Type; } catch { return; }
-				position = tds.CloseBraceToken.Span.Start;
-				goto g1;
-			}
-		}
-		return;
-		g1:
-
-		var baseType = semo.GetTypeInfo(node).Type as INamedTypeSymbol;
-		if (baseType == null) return;
-		bool isInterface = false;
-		switch (baseType.TypeKind) {
-		case TypeKind.Interface: isInterface = true; break;
-		case TypeKind.Class when baseType.IsAbstract: break;
-		default: return;
-		}
-
-		var b = new StringBuilder();
-		var format = CiText.s_symbolFullFormat.WithParameterOptions(CiText.s_symbolFullFormat.ParameterOptions & ~SymbolDisplayParameterOptions.IncludeOptionalBrackets);
-		var formatExp = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeRef);
-
-		b.Append("\r\n#region ").Append(baseType.ToMinimalDisplayString(semo, position, CiText.s_symbolFullFormat));
-
-		if (isInterface) {
-			_Base(baseType, explicitly);
-			foreach (var bi in baseType.AllInterfaces) {
-				_Base(bi,
-					explicitly || (baseType.IsGenericType && !bi.IsGenericType) //eg public IEnumerable<T> and explicit IEnumerable
-					);
-			}
-		} else {
-			for (; baseType != null && baseType.IsAbstract; baseType = baseType.BaseType) {
-				_Base(baseType, false);
-			}
-		}
-
-		b.AppendLine("\r\n\r\n#endregion");
-
-		void _Base(INamedTypeSymbol type, bool explicitly) {
-			foreach (var v in type.GetMembers()) {
-				//print.it(v, v.IsStatic, v.GetType().GetInterfaces());
-				bool isAbstract = v.IsAbstract;
-				if (!isAbstract && !isInterface) continue;
-				if (v.IsStatic) continue;
-				bool expl = explicitly || (isInterface && v.DeclaredAccessibility != acc.Public);
-
-				string append = null;
-				switch (v) {
-				case IMethodSymbol ims when ims.MethodKind == MethodKind.Ordinary:
-					append = ims.ReturnsVoid ? @" {
-	
-}" : @" {
-	
-	return default;
-}";
-					break;
-				case IPropertySymbol ips:
-					if (!expl && isInterface) {
-						if (ips.GetMethod != null && ips.GetMethod.DeclaredAccessibility != acc.Public) expl = true;
-						if (ips.SetMethod != null && ips.SetMethod.DeclaredAccessibility != acc.Public) expl = true;
-					}
-					break;
-				case IEventSymbol:
-					append = !expl ? ";" : @" {
-	add {  }
-	remove {  }
-}";
-					break;
-				default:
-					continue;
-				}
-
-				//if(null != classType.FindImplementationForInterfaceMember(v)) continue; //never mind
-
-				b.AppendLine("\r\n");
-				if (isInterface) {
-					if (!isAbstract) b.AppendLine("//has default implementation");
-					if (!expl) b.Append("public ");
-				} else {
-					b.Append(v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" });
-					b.Append(" override ");
-				}
-				b.Append(v.ToMinimalDisplayString(semo, position, expl ? formatExp : format)).Append(append);
-			}
-		}
-
-		var text = b.ToString();
-		text = text.Replace("] { get; set; }", @"] {
-	get { return default; }
-	set {  }
-}"); //indexers
-		text = text.RxReplace(@"[^\]] \{\K set; \}", @"
-	set {  }
-}"); //write-only properties
-
-		//print.it(text);
-		//clipboard.text = text;
-
-		cd.sci.aaaInsertText(true, position, text, addUndoPointAfter: true);
-		cd.sci.aaaGoToPos(true, position);
-
-		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
 	}
 
 	/// <summary>
@@ -866,35 +628,5 @@ class Program {
 		//print.it(cd.pos, replFrom, replTo, icon);
 
 		cd.sci.aaaReplaceRange(true, replFrom, replTo, icon);
-	}
-
-	//FUTURE: dialogs in SurroundFor and SurroundTryCatch. Eg to set variable name, count, whether to add finally.
-	public static void SurroundFor() {
-		var before = """
-for (int i = 0; i < count; i++) {
-
-""";
-		var after = """
-
-}
-
-""";
-		Surround(before, after, 1);
-	}
-
-	public static void SurroundTryCatch() {
-		//SHOULDDO: If a statement is like 'var v = expression;', make 'Type v = null; try { v = expression; } catch {  }'.
-
-		var before = """
-try {
-
-""";
-		var after = """
-
-}
-catch (Exception) {  }
-
-""";
-		Surround(before, after, 1, concise: true);
 	}
 }

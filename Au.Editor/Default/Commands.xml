@@ -41,17 +41,21 @@ All attributes are optional. The Example command contains all.
 	<Edit>
 		<Undo />
 		<Redo />
-		<Cut separator="" />
-		<Copy />
-		<Paste />
-		<Comment separator="" />
+		<Cut hide="always" separator="" />
+		<Copy hide="always" />
+		<Paste hide="always" />
+		<Format_document separator="" />
+		<Comment />
 		<Uncomment />
-		<Format_document />
+		<Surround_for />
+		<Surround_try_catch />
+		<Create_delegate />
+		<Find separator="" />
+		<Find_symbol />
+		<Find_references />
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<WPF_preview />
-		<Find separator="" />
-		<Find_references />
 	</Edit>
 	<Tools>
 		<Input_recorder />

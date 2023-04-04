@@ -1,3 +1,5 @@
+extern alias CAW;
+
 //using System.Xml.Linq;
 
 //using System.Windows;
@@ -12,49 +14,36 @@ using Au.Compiler;
 using Au.Triggers;
 
 using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Utilities;
-using Microsoft.CodeAnalysis.FindSymbols;
+using CAW::Microsoft.CodeAnalysis.Shared.Utilities;
+using CAW::Microsoft.CodeAnalysis.FindSymbols;
 
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using Au.Controls;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 
 #if TRACE
 
 #pragma warning disable 169
 
 static unsafe class Test {
-
-	//static void /*REPLACED*/ getFileProp(string path) {
-	//	using Handle_ h = new(Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING));
-	//	if (h.Is0) { /*print.it(path);*/return; }
-	//	if (!GetFileTime(h, out _, out _, out var t)) print.it(path);
-	//}
-	//[DllImport("kernel32.dll")]
-	//internal static extern bool GetFileTime(IntPtr hFile, out long lpCreationTime, out long lpLastAccessTime, out long lpLastWriteTime);
-
-	public static void /*REPLACED*/ FromMenubar() {
-		//print.clear();
-		//CiFind.RenameSymbol();
-
-		//var d = Panels.Editor.ActiveDoc;
-		//{
-		//	using var undo = new KScintilla.aaaUndoAction(d);
-		//	d.Call(Sci.SCI_PASTE);
-		//	if(keys.isScrollLock) d.Call(SCI_ADDUNDOACTION, 1);
-		//}
-
-		//print.it(d.Call(Sci.SCI_CANUNDO), Sci.Sci_CanUndoRedoContainer(d.AaSciPtr, false, 1));
-
-		//if(keys.isScrollLock) Sci.Sci_SetUndoMark(d.AaSciPtr, 1);
-		//else print.it(Sci.Sci_GetUndoMark(d.AaSciPtr, false), Sci.Sci_GetUndoMark(d.AaSciPtr, true));
+	
+	public static void FromMenubar() {
 		
-		//SciUndo.OfWorkspace.UndoRedoMultiFileReplace(keys.isScrollLock);
+		//print.clear();
+		
+		//var d = Panels.Editor.ActiveDoc;
 		
 		//for (int i = 16; i < 32; i++) {
 		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");
@@ -65,6 +54,12 @@ static unsafe class Test {
 
 		//Cpp.Cpp_Test();
 	}
+
+	static void MintaKigenToke() { }
+
+	static void mintaKigenToke() { }
+
+	static void MintaKigentoke() { }
 
 	class TestGC {
 		~TestGC() {
@@ -79,7 +74,7 @@ static unsafe class Test {
 	}
 	static bool s_debug2;
 
-	public static void /*REPLACED*/ MonitorGC() {
+	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();

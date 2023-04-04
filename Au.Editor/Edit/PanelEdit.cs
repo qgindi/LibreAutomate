@@ -145,7 +145,7 @@ class PanelEdit {
 	}
 	
 	void _Close(SciCode doc) {
-		if (doc.IsFocused) doc.IsEnabled = false; //prevent focusing after hiding/parking
+		if (doc.IsFocused) doc.IsEnabled = false; //prevent focusing the scintilla control after hiding/parking
 		P.Children.Remove(doc);
 		//CodeInfo.FileClosed(doc);
 		doc.EFile.OpenDoc = null;
@@ -166,7 +166,7 @@ class PanelEdit {
 	}
 	
 	public bool SaveText() {
-		return _activeDoc?.ESaveText_() ?? true;
+		return _activeDoc?.ESaveText_(false) ?? true;
 	}
 	
 	public void SaveEditorData() {
@@ -219,10 +219,10 @@ class PanelEdit {
 		if (dif == 0) return;
 		
 		_editDisabled = disable;
-		if (dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.Undo)].Enabled = !disable.Has(_EUpdateUI.Undo);
-		if (dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.Redo)].Enabled = !disable.Has(_EUpdateUI.Redo);
-		if (dif.Has(_EUpdateUI.Cut)) App.Commands[nameof(Menus.Edit.Cut)].Enabled = !disable.Has(_EUpdateUI.Cut);
-		if (dif.Has(_EUpdateUI.Copy)) App.Commands[nameof(Menus.Edit.Copy)].Enabled = !disable.Has(_EUpdateUI.Copy);
+		if (dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.UndoRedo.Undo)].Enabled = !disable.Has(_EUpdateUI.Undo);
+		if (dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.UndoRedo.Redo)].Enabled = !disable.Has(_EUpdateUI.Redo);
+		if (dif.Has(_EUpdateUI.Cut)) App.Commands[nameof(Menus.Edit.Clipboard.Cut)].Enabled = !disable.Has(_EUpdateUI.Cut);
+		if (dif.Has(_EUpdateUI.Copy)) App.Commands[nameof(Menus.Edit.Clipboard.Copy)].Enabled = !disable.Has(_EUpdateUI.Copy);
 		//if(dif.Has(EUpdateUI.Paste)) App.Commands[nameof(Menus.Edit.Paste)].Enabled = !disable.Has(EUpdateUI.Paste);
 		
 	}

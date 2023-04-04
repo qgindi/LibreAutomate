@@ -1,10 +1,15 @@
+extern alias CAW;
+
 using System.Collections.Immutable;
+
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Completion;
 //using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //using Microsoft.CodeAnalysis.Tags;
@@ -37,13 +42,13 @@ static class CiUtilExt {
 			k = t.Kind();
 		}
 		//CiUtil.PrintNode(t);
-
+		
 		var span = t.Span;
 		int start = span.Start, end = span.End;
 		if (position < start || position > end) return false;
 		bool isInterpolated = false, isVerbatim = false, isRaw = false, isRawPrefixCenter = false, isU8 = false;
 		var node = t.Parent;
-
+		
 		if (node.IsKind(SyntaxKind.StringLiteralExpression) || (orU8 && (isU8 = node.IsKind(SyntaxKind.Utf8StringLiteralExpression)))) {
 			if (position == start) return false;
 			if (k is not (SyntaxKind.StringLiteralToken or SyntaxKind.Utf8StringLiteralToken)) isRaw = true;
@@ -72,12 +77,12 @@ static class CiUtilExt {
 					if (code[start++] != '\n') return null;
 				}
 				if (position < start) return null; //before newline
-
+				
 				if (position == end) {
 					if (!isU8 && node.NoClosingQuote()) goto gTrue;
 					return false;
 				}
-
+				
 				if (isU8) end -= 2;
 				while (nq > 0 && end > start && code[--end] == '\"') nq--;
 				if (nq > 0) goto gTrue; //unterminated
@@ -93,7 +98,7 @@ static class CiUtilExt {
 			}
 		}
 		isInterpolated = true;
-
+		
 		bool _IsRawPrefixCenter(int iq, int nq) {
 			//most likely the user will write a raw string at """|""" and not at """"""|
 			if (nq < 6 || 0 != (nq & 1)) return false;
@@ -103,13 +108,13 @@ static class CiUtilExt {
 			start = end = iq;
 			return isRawPrefixCenter = true;
 		}
-
+		
 		if (k is SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
 			int iq = start, nq = 0; while (code[iq] == '$') iq++;
 			while (code.Eq(iq + nq, '\"')) nq++;
 			if (_IsRawPrefixCenter(iq, nq)) goto gTrue;
 		}
-
+		
 		switch (k) {
 		case SyntaxKind.InterpolatedStringTextToken:
 			goto gTrue;
@@ -133,7 +138,7 @@ static class CiUtilExt {
 			if (code.Eq(position - 1, "}}")) return null;
 			break;
 		}
-
+		
 		bool _BackToTextToken(ref SyntaxToken t) {
 			var tt = t.GetPreviousToken();
 			var kk = tt.Kind();
@@ -142,7 +147,7 @@ static class CiUtilExt {
 			else end = start;
 			return true;
 		}
-
+		
 		return false;
 		gTrue:
 		x.textSpan = TextSpan.FromBounds(start, end);
@@ -161,7 +166,7 @@ static class CiUtilExt {
 		x.isU8 = isU8;
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Returns true if this token is a string, and the closing quote(s) is missing (contains diagnostics error).
 	/// </summary>
@@ -169,21 +174,21 @@ static class CiUtilExt {
 		=> t.ContainsDiagnostics && t.GetDiagnostics().Any(o => o.Id is "CS1010" or "CS1039" or "CS8997");
 	//Newline in constant, Unterminated string literal, Unterminated raw string literal.
 	//note: SyntaxToken may contain the same diagnostics too, but not always, eg no if $$"""""". Same speed.
-
+	
 	public static void Deconstruct(this TextSpan t, out int Start, out int End) { Start = t.Start; End = t.End; }
-
+	
 	public static Range ToRange(this TextSpan t) => t.Start..t.End;
-
+	
 	/// <summary>
 	/// <c>position &gt; t.Start &amp;&amp; position &lt; t.End;</c>
 	/// </summary>
 	public static bool ContainsInside(this TextSpan t, int position) => position > t.Start && position < t.End;
-
+	
 	/// <summary>
 	/// <c>position &gt;= t.Start &amp;&amp; position &lt;= t.End;</c>
 	/// </summary>
 	public static bool ContainsOrTouches(this TextSpan t, int position) => position >= t.Start && position <= t.End;
-
+	
 	/// <summary>
 	/// Finds child trivia of this token. Returns default if <i>position</i> is not in child trivia of this token. Does not descend into structured trivia.
 	/// The code is from Roslyn source function FindTriviaByOffset. Roslyn has function to find trivia in SyntaxNode (recursive), but not in SyntaxToken.
@@ -209,7 +214,7 @@ static class CiUtilExt {
 		}
 		return default;
 	}
-
+	
 	/// <summary>
 	/// Finds token at <i>position</i>. Returns true if its span contains or touches <i>position</i>.
 	/// May return previous token in some cases, eg if the found token is EndOfFileToken.
@@ -222,7 +227,7 @@ static class CiUtilExt {
 		token = default;
 		return false;
 	}
-
+	
 	/// <summary>
 	/// Gets full span of a method or type declaration node, not including leading trivia that is not comments/doccomments touching the declaration.
 	/// </summary>
@@ -251,39 +256,51 @@ static class CiUtilExt {
 		}
 		return TextSpan.FromBounds(from, t.FullSpan.End);
 	}
-
+	
 	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
 		=> t.Eq(span.Start..span.End, s, ignoreCase);
-
+	
 	/// <summary>
 	/// SyntaxFacts.IsNewLine(t[i]);
 	/// </summary>
 	public static bool IsCsNewlineChar(this string t, int i)
 		=> SyntaxFacts.IsNewLine(t[i]);
-
+	
 	/// <summary>
 	/// i == 0 || SyntaxFacts.IsNewLine(t[i - 1]);
 	/// </summary>
 	public static bool IsCsStartOfLine(this string t, int i)
 		=> i == 0 || SyntaxFacts.IsNewLine(t[i - 1]);
-
+	
 	/// <summary>
 	/// i == t.Length || SyntaxFacts.IsNewLine(t[i]);
 	/// </summary>
 	public static bool IsCsEndOfLine(this string t, int i)
 		=> i == t.Length || SyntaxFacts.IsNewLine(t[i]);
-
+	
 	[Conditional("DEBUG")]
 	public static void DebugPrint(this CompletionItem t, string color = "blue") {
 		print.it($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
 		print.it(string.Join("\n", t.Properties));
 	}
-
+	
 	[Conditional("DEBUG")]
 	public static void DebugPrintIf(this CompletionItem t, bool condition, string color = "blue") {
 		if (condition) DebugPrint(t, color);
 	}
-
+	
+	/// <summary>
+	/// Gets <b>Name</b>. If it isn't valid identifier, tries to get it as valid identifier.
+	/// Noticed cased when <b>Name</b> isn't valid identifier:
+	/// .ctor -> TypeName.
+	/// Class.Interface.Explicit (or even Class1.Class2.Class3.Interface.Explicit etc) -> Explicit.
+	/// </summary>
+	public static string JustName(this ISymbol t) {
+		var s = t.Name;
+		if (!SyntaxFacts.IsValidIdentifier(s)) s = t.ToDisplayString(SymbolDisplayFormat.ShortFormat);
+		return s;
+	}
+	
 	public static string QualifiedName(this ISymbol t, bool onlyNamespace = false, bool noDirectName = false) {
 		var g = t_qnStack ??= new Stack<string>();
 		g.Clear();
@@ -293,21 +310,104 @@ static class CiUtilExt {
 		return string.Join(".", g);
 	}
 	[ThreadStatic] static Stack<string> t_qnStack;
-
+	
 	/// <summary>
 	/// Cached, thread-safe.
 	/// </summary>
 	public static string QualifiedNameCached(this INamespaceSymbol t) { //only 2 times faster than QualifiedName, but no garbage. Same speed with Dictionary.
-																		//if (t.IsGlobalNamespace || t.ContainingNamespace.IsGlobalNamespace) return t.Name; //same speed. Few such namespaces.
+		//if (t.IsGlobalNamespace || t.ContainingNamespace.IsGlobalNamespace) return t.Name; //same speed. Few such namespaces.
 		if (!_namespaceNames.TryGetValue(t, out var s)) {
 			s = t.QualifiedName();
 			_namespaceNames.AddOrUpdate(t, s); //OrUpdate for thread safety
-											   //print.it(s);
+			//print.it(s);
 		}
 		return s;
 	}
 	static ConditionalWeakTable<INamespaceSymbol, string> _namespaceNames = new();
-
+	
+	/// <summary>
+	/// Like <b>GetEnclosingNamedType</b>, but <i>pos</i> can be anywhere in the class/struct/interface/enum definition span, not just in { }.
+	/// </summary>
+	public static INamedTypeSymbol GetEnclosingNamedType2(this SemanticModel t, int pos, out SyntaxNode posNode, out BaseTypeDeclarationSyntax declNode) {
+		posNode = t.Root.FindToken(pos).Parent;
+		declNode = posNode?.GetAncestorOrThis<BaseTypeDeclarationSyntax>();
+		if (declNode == null || !declNode.Span.Contains(pos) || declNode.CloseBraceToken.IsMissing) return null;
+		return t.GetEnclosingNamedType(declNode.OpenBraceToken.SpanStart+1, default);
+	}
+	
+	public static (string kind, string access) ImageResource(this ISymbol t) {
+		var glyph = t.GetGlyph();
+		return glyph switch {
+			Glyph.ClassPublic => ("resources/ci/class.xaml", null),
+			Glyph.ClassInternal => ("resources/ci/class.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.ClassPrivate => ("resources/ci/class.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.ClassProtected => ("resources/ci/class.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.ConstantPublic => ("resources/ci/constant.xaml", null),
+			Glyph.ConstantInternal => ("resources/ci/constant.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.ConstantPrivate => ("resources/ci/constant.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.ConstantProtected => ("resources/ci/constant.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.DelegatePublic => ("resources/ci/delegate.xaml", null),
+			Glyph.DelegateInternal => ("resources/ci/delegate.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.DelegatePrivate => ("resources/ci/delegate.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.DelegateProtected => ("resources/ci/delegate.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.EnumPublic => ("resources/ci/enum.xaml", null),
+			Glyph.EnumInternal => ("resources/ci/enum.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.EnumPrivate => ("resources/ci/enum.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.EnumProtected => ("resources/ci/enum.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.EnumMemberPublic => ("resources/ci/enummember.xaml", null),
+			Glyph.EnumMemberInternal => ("resources/ci/enummember.xaml", "resources/ci/overlayinternal.xaml"), //?
+			Glyph.EnumMemberPrivate => ("resources/ci/enummember.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.EnumMemberProtected => ("resources/ci/enummember.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.EventPublic => ("resources/ci/event.xaml", null),
+			Glyph.EventInternal => ("resources/ci/event.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.EventPrivate => ("resources/ci/event.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.EventProtected => ("resources/ci/event.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.ExtensionMethodPublic => ("resources/ci/extensionmethod.xaml", null),
+			Glyph.ExtensionMethodInternal => ("resources/ci/extensionmethod.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.ExtensionMethodPrivate => ("resources/ci/extensionmethod.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.ExtensionMethodProtected => ("resources/ci/extensionmethod.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.FieldPublic => ("resources/ci/field.xaml", null),
+			Glyph.FieldInternal => ("resources/ci/field.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.FieldPrivate => ("resources/ci/field.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.FieldProtected => ("resources/ci/field.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.InterfacePublic => ("resources/ci/interface.xaml", null),
+			Glyph.InterfaceInternal => ("resources/ci/interface.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.InterfacePrivate => ("resources/ci/interface.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.InterfaceProtected => ("resources/ci/interface.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.MethodPublic => ("resources/ci/method.xaml", null),
+			Glyph.MethodInternal => ("resources/ci/method.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.MethodPrivate => ("resources/ci/method.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.MethodProtected => ("resources/ci/method.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.PropertyPublic => ("resources/ci/property.xaml", null),
+			Glyph.PropertyInternal => ("resources/ci/property.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.PropertyPrivate => ("resources/ci/property.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.PropertyProtected => ("resources/ci/property.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.StructurePublic => ("resources/ci/structure.xaml", null),
+			Glyph.StructureInternal => ("resources/ci/structure.xaml", "resources/ci/overlayinternal.xaml"),
+			Glyph.StructurePrivate => ("resources/ci/structure.xaml", "resources/ci/overlayprivate.xaml"),
+			Glyph.StructureProtected => ("resources/ci/structure.xaml", "resources/ci/overlayprotected.xaml"),
+			
+			Glyph.Keyword => ("resources/ci/keyword.xaml", null), //implicit 'value' parameter in a property etc
+			Glyph.Label => ("resources/ci/label.xaml", null),
+			Glyph.Local or Glyph.Parameter or Glyph.RangeVariable => ("resources/ci/localvariable.xaml", null),
+			Glyph.Namespace => ("resources/ci/namespace.xaml", null),
+			Glyph.Operator => ("resources/ci/operator.xaml", null),
+			Glyph.TypeParameter => ("resources/ci/typeparameter.xaml", null),
+			_ => default
+		};
+	}
+	
 	/// <summary>
 	/// Appends n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatIndentationSpaces</b>.
 	/// </summary>
@@ -323,19 +423,19 @@ record struct CiStringInfo {
 	/// The text part of string literal or a text part of interpolated string. Without enclosing and prefix.
 	/// </summary>
 	public TextSpan textSpan;
-
+	
 	/// <summary>
 	/// Entire string node. Can be either <b>LiteralExpressionSyntax</b> or <b>InterpolatedStringExpressionSyntax</b>.
 	/// </summary>
 	public SyntaxNode stringNode;
-
+	
 	public bool isVerbatim, isRaw, isInterpolated, isU8;
-
+	
 	/// <summary>
 	/// Not verbatim/raw. Can be "...", $"..." or "..."u8.
 	/// </summary>
 	public bool isClassic;
-
+	
 	/// <summary>
 	/// At """|""".
 	/// </summary>

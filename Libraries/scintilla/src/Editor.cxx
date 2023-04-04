@@ -2286,24 +2286,48 @@ void Editor::SelectAll() {
 	Redraw();
 }
 
-void Editor::Undo() {
-	if(pdoc->CanUndo()) {
+void Editor::Undo(bool dontChangePos) {
+	if (pdoc->CanUndo()) {
 		InvalidateCaret();
 		const Sci::Position newPos = pdoc->Undo();
-		if(newPos >= 0)
-			SetEmptySelection(newPos);
-		EnsureCaretVisible();
+		if (!dontChangePos) {
+			if (newPos >= 0)
+				SetEmptySelection(newPos);
+			EnsureCaretVisible();
+			SetLastXChosen();
+		}
 	}
 }
 
-void Editor::Redo() {
+void Editor::Redo(bool dontChangePos) {
 	if(pdoc->CanRedo()) {
 		const Sci::Position newPos = pdoc->Redo();
-		if(newPos >= 0)
-			SetEmptySelection(newPos);
-		EnsureCaretVisible();
+		if (!dontChangePos) {
+			if (newPos >= 0)
+				SetEmptySelection(newPos);
+			EnsureCaretVisible();
+		}
 	}
 }
+//
+//void Editor::Undo() {
+//	if(pdoc->CanUndo()) {
+//		InvalidateCaret();
+//		const Sci::Position newPos = pdoc->Undo();
+//		if(newPos >= 0)
+//			SetEmptySelection(newPos);
+//		EnsureCaretVisible();
+//	}
+//}
+//
+//void Editor::Redo() {
+//	if(pdoc->CanRedo()) {
+//		const Sci::Position newPos = pdoc->Redo();
+//		if(newPos >= 0)
+//			SetEmptySelection(newPos);
+//		EnsureCaretVisible();
+//	}
+//}
 
 void Editor::DelCharBack(bool allowLineStartDeletion) {
 	RefreshStyleData();
@@ -6010,8 +6034,9 @@ sptr_t Editor::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) {
 		break;
 
 	case Message::Undo:
-		Undo();
-		SetLastXChosen();
+		Undo(wParam & 1); //Au
+		//Undo();
+		//SetLastXChosen();
 		break;
 
 	case Message::CanUndo:
@@ -6500,7 +6525,8 @@ sptr_t Editor::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) {
 			return pdoc->StyleAt(PositionFromUPtr(wParam));
 
 	case Message::Redo:
-		Redo();
+		Redo(wParam & 1); //Au
+		//Redo();
 		break;
 
 	case Message::SelectAll:
