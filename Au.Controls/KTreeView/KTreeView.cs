@@ -7,7 +7,7 @@ namespace Au.Controls;
 public unsafe partial class KTreeView {
 	_VisibleItem[] _avi;
 	Dictionary<ITreeViewItem, int> _dvi; //for IndexOf
-	int _width, _height, _itemHeight, _imageSize, _imageMarginX, _marginLeft, _marginRight, _itemsWidth, _dpi;
+	int _width, _height, _itemHeight, _itemLineHeight, _imageSize, _imageMarginX, _marginLeft, _marginRight, _itemsWidth, _dpi;
 	int _focusedIndex, _hotIndex;
 	(int indexPlus1, bool scrollTop) _ensureVisible;
 	NativeScrollbar_ _vscroll, _hscroll;
@@ -43,7 +43,8 @@ public unsafe partial class KTreeView {
 		_marginRight = _DpiScale(ItemMarginRight);
 
 		using var tr = new GdiTextRenderer(dpi);
-		_itemHeight = Math.Max(_imageSize, tr.MeasureText("A").height) + _DpiScale(2);
+		_itemHeight = _itemLineHeight = Math.Max(_imageSize, tr.MeasureText("A").height) + _DpiScale(2);
+		if (CustomItemHeightAddPercent > 0) _itemHeight += Math2.PercentToValue(_itemHeight, CustomItemHeightAddPercent, true);
 	}
 
 	///
@@ -346,7 +347,7 @@ public unsafe partial class KTreeView {
 		if (_mouse.active) {
 			if (0 != (wParam & (_mouse.button switch { MouseButton.Left => Api.MK_LBUTTON, MouseButton.Right => Api.MK_RBUTTON, _ => Api.MK_MBUTTON }))) {
 				//print.it("move");
-				if (Math2.Distance(_w.MouseClientXY, _mouse.xy) > _itemHeight / 4) {
+				if (Math2.Distance(_w.MouseClientXY, _mouse.xy) > _itemLineHeight / 4) {
 					//print.it("drag");
 					int i = _mouse.h.index;
 					if (!IsSelected(i)) SelectSingle(i, andFocus: true);

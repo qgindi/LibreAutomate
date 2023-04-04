@@ -1,7 +1,7 @@
-## Version 0.14.0 (2023-02-)
+## Version 0.14.0 (2023-04-04)
 
 ### Editor
-Multiple pages in the 'Found' panel.
+Menu Edit -> Find symbol.
 
 Menu Edit -> Find references.
 
@@ -17,6 +17,8 @@ Highlights matching braces and directives of the brace/directive at the text cur
 
 Improved replacing text in multiple files. Multi-file undo/redo.
 
+Multiple pages in the 'Found' panel.
+
 New options:
 - Options -> Font, colors -> highlight, selection.
 - Options -> Code editor -> Formatting.
@@ -29,6 +31,9 @@ New members:
 - Event **computer.suspendResumeEvent**.
 - Flag **IFFlags.Parallel** for **uiimage.find**.
 
+New parameters:
+- **string.FindWord**: *isWordChar* (callback).
+- **wpfBuilder.Options**: *showToolTipOnKeyboardFocus*. And changed the default behavior of tooltips on keyboard focus.
 
 ### Bug fixes and improvements
 
@@ -40,6 +45,7 @@ Editor:
 
 Library:
 - Fixed "TextForFind" bug in documentation.
+- Several improvements.
 
 
 ### Breaking changes

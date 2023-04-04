@@ -1,3 +1,5 @@
+//TODO: upgrade sqlite.
+
 namespace Au {
 	/// <summary>
 	/// A SQLite database connection.

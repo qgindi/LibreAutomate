@@ -173,12 +173,17 @@ public partial class KScintilla {
 	}
 	
 	/// <summary>
-	/// SCI_GETMARGINWIDTHN. Not DPI-scaled.
+	/// SCI_GETMARGINWIDTHN.
 	/// </summary>
-	public (int left, int right) aaaMarginGetX(int margin) {
+	public (int left, int right) aaaMarginGetX(int margin, bool dpiUnscale = false) {
 		int x = 0;
 		for (int i = 0; i < margin; i++) x += Call(SCI_GETMARGINWIDTHN, i);
-		return (x, x + Call(SCI_GETMARGINWIDTHN, margin));
+		var r = (left: x, right: x + Call(SCI_GETMARGINWIDTHN, margin));
+		if (dpiUnscale) {
+			r.left = Dpi.Unscale(r.left, _dpi).ToInt();
+			r.right = Dpi.Unscale(r.right, _dpi).ToInt();
+		}
+		return r;
 	}
 	
 	/// <summary>

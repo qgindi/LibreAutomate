@@ -73,7 +73,7 @@ public unsafe partial class KTreeView
 	void _GetPartOffsets(int i, out _PartOffsets p) {
 		p.left = -_hscroll.Offset;
 		p.checkbox = p.left + _avi[i].level * _imageSize;
-		p.marginLeft = p.checkbox; if (HasCheckboxes) p.marginLeft += _itemHeight;
+		p.marginLeft = p.checkbox; if (HasCheckboxes) p.marginLeft += _itemLineHeight;
 		p.image = p.marginLeft + _marginLeft;
 		p.text = p.image + _imageSize + _imageMarginX * 2;
 		p.marginRight = p.text + _avi[i].measured;

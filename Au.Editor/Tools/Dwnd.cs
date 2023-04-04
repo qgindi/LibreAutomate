@@ -537,9 +537,13 @@ class Dwnd : KDialogWindow {
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
 
-		object ITreeViewItem.Image => _isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
+		object ITreeViewItem.Image
+			=> _isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
 
-		int ITreeViewItem.TextColor => _isFailed ? 0xff : ColorInt.SwapRB(c.IsVisible ? Api.GetSysColor(Api.COLOR_WINDOWTEXT) : Api.GetSysColor(Api.COLOR_GRAYTEXT));
+		int ITreeViewItem.TextColor(TVColorInfo ci)
+			=> _isFailed ? 0xff
+			: !c.IsVisible ? ColorInt.SwapRB(Api.GetSysColor(Api.COLOR_GRAYTEXT))
+			: -1;
 
 		#endregion
 	}

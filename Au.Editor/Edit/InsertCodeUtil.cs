@@ -1,9 +1,13 @@
+extern alias CAW;
+
 using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 
 /// <summary>
 /// Util used by <see cref="InsertCode"/>. Also can be used everywhere.
@@ -40,14 +44,13 @@ static class InsertCodeUtil {
 
 	/// <summary>
 	/// Returns string with same indentation as of the document line from pos.
-	/// Does not add indentation to the first line.
 	/// The string must not contain multiline raw/verbatim strings; this func ignores it.
 	/// </summary>
-	public static string IndentStringForInsertSimple(string s, SciCode doc, int pos) {
+	public static string IndentStringForInsertSimple(string s, SciCode doc, int pos, bool indentFirstLine = false, int indentPlus = 0) {
 		if (s.Contains('\n')) {
-			int indent = doc.aaaLineIndentationFromPos(true, pos);
+			int indent = doc.aaaLineIndentationFromPos(true, pos) + indentPlus;
 			//if (!App.Settings.ci_formatTabIndent) s = s.RxReplace(@"(?m)^\t+", m => IndentationString(m.Length)); //rejected. This could be useful for snippets. But then also need to apply App.Settings.ci_formatCompact=false, eg move braces to new lines, indent switch block. Then also need to do all it in code inserted by tools. Better let users format code afterwards.
-			if (indent > 0) s = s.RxReplace(@"(?<=\n)", IndentationString(indent));
+			if (indent > 0) s = s.RxReplace(indentFirstLine ? @"(?m)^" : @"(?<=\n)", IndentationString(indent));
 		}
 		return s;
 	}

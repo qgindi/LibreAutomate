@@ -1,18 +1,24 @@
+extern alias CAW;
+
+using System.Collections.Immutable;
 using Au.Controls;
 using Au.Compiler;
-using System.Collections.Immutable;
+using EStyle = CiStyling.EStyle;
+
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Tags;
-using Microsoft.CodeAnalysis.Completion;
+using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
-using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Classification;
-using EStyle = CiStyling.EStyle;
+using CAW::Microsoft.CodeAnalysis.Classification;
+using CAW::Microsoft.CodeAnalysis.Tags;
+using CAW::Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Completion;
 
 static class CiUtil {
 	/// <summary>

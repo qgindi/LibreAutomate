@@ -44,7 +44,7 @@ CREATE TABLE files (id INTEGER, fileId INTEGER, oldHash BLOB, newHash BLOB, undo
 		if (_db == null) return;
 		if (_nFiles == 1 && Panels.Editor.ActiveDoc is SciCode ad && _lastDoc == ad) { //if replaced only in Panels.Editor.ActiveDoc
 			_nFiles--;
-			Sci_SetUndoMark(ad.AaSciPtr, 0);
+			Sci_SetUndoMark(ad.AaSciPtr, -1);
 		}
 		if (_nFiles > 0) {
 			try {
@@ -125,7 +125,7 @@ CREATE TABLE files (id INTEGER, fileId INTEGER, oldHash BLOB, newHash BLOB, undo
 		if (id < 1 || id > _id) return false;
 		_db.Get(out string descr, "SELECT descr FROM records WHERE id=?", id);
 		_db.Get(out int count, "SELECT COUNT(*) FROM files WHERE id=?", id);
-		if (!dialog.showOkCancel($"{(redo ? "Redo" : "Undo")} in {count} files", "It was: " + descr, DFlags.CenterMouse, owner: App.Hmain))
+		if (!dialog.showOkCancel($"{(redo ? "Redo" : "Undo")} in {count} files", "It was:\n" + descr, DFlags.CenterMouse, owner: App.Hmain))
 			return false; //rejected: option to undo/redo only in this file. Confusing and probably not useful.
 
 		StringBuilder skipped = null;
@@ -140,10 +140,10 @@ CREATE TABLE files (id INTEGER, fileId INTEGER, oldHash BLOB, newHash BLOB, undo
 			if (App.Model.FindById(x.GetInt(0)) is not FileNode f) continue;
 			//print.it(f);
 			if (f.OpenDoc is SciCode doc) {
-				int m = Sci_GetUndoMark(doc.AaSciPtr, redo);
-				if (m == id) {
+				int mark = Sci_GetUndoMark(doc.AaSciPtr, redo);
+				if (mark == id) {
 					Debug_.PrintIf(Hash.MD5(doc.aaaText) != _HashBefore());
-					doc.Call(redo ? SCI_REDO : SCI_UNDO);
+					_UndoRedo(doc, redo, mark);
 					Debug_.PrintIf(Hash.MD5(doc.aaaText) != _HashAfter());
 				} else if (0 == doc.Call(SCI_CANUNDO) && 0 == doc.Call(SCI_CANREDO) && Hash.MD5(doc.aaaText) == _HashBefore()) { //opened later
 					doc.EReplaceTextGently(_TextFromBlob(doc.aaaText));
@@ -152,15 +152,12 @@ CREATE TABLE files (id INTEGER, fileId INTEGER, oldHash BLOB, newHash BLOB, undo
 					_Skipped(f);
 					continue;
 				}
-				f.SaveNewText(doc.aaaText);
+				doc.ESaveText_(true);
 			} else {
 				try {
-					var path = f.FilePath;
-					var textNow = filesystem.loadText(path);
+					var textNow = filesystem.loadText(f.FilePath);
 					if (Hash.MD5(textNow) == _HashBefore()) {
-						var text2 = _TextFromBlob(textNow);
-						filesystem.saveText(path, text2);
-						CodeInfo.FilesChanged();
+						f.SaveNewTextOfClosedFile(_TextFromBlob(textNow));
 					} else {
 						_Skipped(f);
 					}
@@ -203,14 +200,20 @@ CREATE TABLE files (id INTEGER, fileId INTEGER, oldHash BLOB, newHash BLOB, undo
 
 	public void UndoRedo(bool redo) {
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
-		if (Sci_GetUndoMark(doc.AaSciPtr, redo) is int mark && mark != 0)
+		int mark = Sci_GetUndoMark(doc.AaSciPtr, redo);
+		if (mark > 0)
 			_RifUndoRedo(redo, mark);
 		else
-			doc.Call(redo ? SCI_REDO : SCI_UNDO);
+			_UndoRedo(doc, redo, mark);
+	}
 
-		//never mind: on undo of a multi-replace operation Scintilla sets position at the last its part.
-		//	VS does not change current position.
-		//		But often it's bad: on Undo it does not scroll to the change, although you want to see it.
+	/// <summary>
+	/// Calls SCI_UNDO or SCI_REDO.
+	/// If <i>mark</i> != 0, does not change current position at the end of the operation.
+	/// To set and get mark use <see cref="Sci_SetUndoMark"/> and <see cref="Sci_GetUndoMark"/>.
+	/// </summary>
+	static void _UndoRedo(SciCode doc, bool redo, int mark) {
+		doc.Call(redo ? SCI_REDO : SCI_UNDO, mark != 0);
 	}
 
 	public void UndoRedoMultiFileReplace(bool redo) {

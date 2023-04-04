@@ -458,35 +458,37 @@ public static unsafe partial class ExtString {
 	/// <param name="s">Subtring to find.</param>
 	/// <param name="range">The search range.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <param name="otherWordChars">Additional word characters, for which <see cref="char.IsLetterOrDigit"/> returns false. For example <c>"_"</c>.</param>
+	/// <param name="otherWordChars">Additional word characters. For example <c>"_"</c>.</param>
+	/// <param name="isWordChar">Function that returns true for word characters. If null, uses <see cref="char.IsLetterOrDigit"/>.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <remarks>
-	/// If <i>s</i> starts with a word character finds substring that is not preceded by a word character.
+	/// If <i>s</i> starts with a word character, finds substring that is not preceded by a word character.
 	/// If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
-	/// Word characters are those for which <see cref="char.IsLetterOrDigit"/> returns true plus those specified in <i>otherWordChars</i>.
+	/// Word characters are those for which <i>isWordChar</i> or <see cref="char.IsLetterOrDigit"/> returns true plus those specified in <i>otherWordChars</i>.
 	/// Uses ordinal comparison (does not depend on current culture/locale).
+	/// For Unicode surrogates (2-char characters) calls <see cref="char.IsLetterOrDigit(string, int)"/> and ignores <i>isWordChar</i> and <i>otherWordChars</i>.
 	/// </remarks>
-	public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null) {
+	public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null, Func<char, bool> isWordChar = null) {
 		Not_.Null(s);
 		var (start, end) = range.GetStartEnd(t.Length);
 		int lens = s.Length;
 		if (lens == 0) return 0; //like IndexOf and Find
 
-		bool wordStart = _IsWordChar(s, 0, false, otherWordChars),
-			wordEnd = _IsWordChar(s, lens - 1, true, otherWordChars);
+		bool wordStart = _IsWordChar(s, 0, false),
+			wordEnd = _IsWordChar(s, lens - 1, true);
 
 		for (int i = start, iMax = end - lens; i <= iMax; i++) {
 			i = t.IndexOf(s, i, end - i, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 			if (i < 0) break;
-			if (wordStart && i > 0 && _IsWordChar(t, i - 1, true, otherWordChars)) continue;
-			if (wordEnd && i < iMax && _IsWordChar(t, i + lens, false, otherWordChars)) continue;
+			if (wordStart && i > 0 && _IsWordChar(t, i - 1, true)) continue;
+			if (wordEnd && i < iMax && _IsWordChar(t, i + lens, false)) continue;
 			return i;
 		}
 		return -1;
-
-		static bool _IsWordChar(string s, int i, bool expandLeft, string otherWordChars) {
-			//SHOULDDO: use Rune
+		
+		bool _IsWordChar(string s, int i, bool expandLeft) {
+			//CONSIDER: use Rune
 			char c = s[i];
 			if (c >= '\uD800' && c <= '\uDFFF') { //Unicode surrogates
 				if (expandLeft) {
@@ -495,7 +497,7 @@ public static unsafe partial class ExtString {
 					if (char.IsHighSurrogate(s[i])) return i < s.Length - 1 && char.IsLowSurrogate(s[i + 1]) && char.IsLetterOrDigit(s, i);
 				}
 			} else {
-				if (char.IsLetterOrDigit(c)) return true;
+				if (isWordChar?.Invoke(c) ?? char.IsLetterOrDigit(c)) return true;
 				if (otherWordChars?.Contains(c) ?? false) return true;
 			}
 			return false;

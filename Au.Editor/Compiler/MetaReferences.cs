@@ -1,5 +1,9 @@
-using Microsoft.CodeAnalysis;
+extern alias CAW;
+
 using System.Collections.Immutable;
+
+using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
 
 namespace Au.Compiler;
 

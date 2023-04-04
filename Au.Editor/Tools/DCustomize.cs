@@ -487,11 +487,18 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 
 		string ITreeViewItem.DisplayText => displayText;
 
-		object ITreeViewItem.Image => Level == 0 ? (_isExpanded ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml") : (image ?? def.attr.image);
+		object ITreeViewItem.Image
+			=> Level == 0 ? (_isExpanded ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml") : (image ?? def.attr.image);
 
-		int ITreeViewItem.Color => Level > 0 ? -1 : isMenu ? 0xF0C080 : 0xC0E0A0;
+		int ITreeViewItem.Color(TVColorInfo ci)
+			=> Level > 0 ? -1 : isMenu ? 0xF0C080 : 0xC0E0A0;
 
-		int ITreeViewItem.TextColor => this == _d._clip ? 0xFF0000 : (hide == "always" ? 0x808080 : IsCustomized() ? (WpfUtil_.IsHighContrastDark ? 0xFFFF00 : 0x0000FF) : Level > 0 ? -1 : 0);
+		int ITreeViewItem.TextColor(TVColorInfo ci)
+			=> this == _d._clip ? 0xFF0000
+			: hide == "always" ? 0x808080
+			: IsCustomized() ? (ci.isHighContrastDark ? 0xFFFF00 : 0x0000FF)
+			: Level == 0 ? 0
+			: -1;
 
 		#endregion
 

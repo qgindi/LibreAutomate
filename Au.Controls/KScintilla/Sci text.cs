@@ -13,7 +13,7 @@ public unsafe partial class KScintilla {
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
 	/// </summary>
-	public int aaaSetString(int sciMessage, nint wParam, string lParam, bool useUtf8LengthForWparam = false) {
+	public int aaaSetString(int sciMessage, nint wParam, RStr lParam, bool useUtf8LengthForWparam = false) {
 		fixed (byte* s = _ToUtf8(lParam, out var len)) {
 			if (useUtf8LengthForWparam) wParam = len;
 			return Call(sciMessage, wParam, s);
@@ -26,7 +26,7 @@ public unsafe partial class KScintilla {
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
 	/// </summary>
-	public int aaaSetString(int sciMessage, string wParam, nint lParam) {
+	public int aaaSetString(int sciMessage, RStr wParam, nint lParam) {
 		fixed (byte* s = _ToUtf8(wParam)) {
 			return Call(sciMessage, (nint)s, lParam);
 		}
@@ -38,7 +38,7 @@ public unsafe partial class KScintilla {
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
 	/// </summary>
-	public int aaaSetStringString(int sciMessage, string wParamlParam) {
+	public int aaaSetStringString(int sciMessage, RStr wParamlParam) {
 		fixed (byte* s = _ToUtf8(wParamlParam, out var len)) {
 			int i = BytePtr_.Length(s);
 			Debug.Assert(i < len);
@@ -99,9 +99,9 @@ public unsafe partial class KScintilla {
 	
 	static string _FromUtf8(byte* b) => Convert2.Utf8Decode(b);
 	
-	static byte[] _ToUtf8(string s) => Convert2.Utf8Encode(s);
+	static byte[] _ToUtf8(RStr s) => Convert2.Utf8Encode(s);
 	
-	static byte[] _ToUtf8(string s, out int utf8Length) {
+	static byte[] _ToUtf8(RStr s, out int utf8Length) {
 		var r = Convert2.Utf8Encode(s);
 		utf8Length = r.Length - 1;
 		return r;
@@ -1383,7 +1383,7 @@ public unsafe partial class KScintilla {
 	/// <param name="s"></param>
 	/// <param name="start"></param>
 	/// <param name="end">If -1, text length.</param>
-	public unsafe int aaaFindText(bool utf16, string s, int start = 0, int end = -1) {
+	public unsafe int aaaFindText(bool utf16, RStr s, int start = 0, int end = -1) {
 		aaaNormalizeRange(utf16, ref start, ref end);
 		fixed (byte* b = _ToUtf8(s)) {
 			var k = new Sci_TextToFind { cpMin = start, cpMax = end, lpstrText = b, chrgText = default };
@@ -1440,6 +1440,7 @@ public unsafe partial class KScintilla {
 		public void Dispose() {
 			if (_sci != null) {
 				_sci.Call(SCI_ENDUNDOACTION);
+				Sci_SetUndoMark(_sci.AaSciPtr, -1);
 				_sci = null;
 			}
 		}

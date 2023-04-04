@@ -3,6 +3,7 @@ using static Au.Controls.Sci;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -76,17 +77,17 @@ partial class SciCode : KScintilla {
 		
 		Call(SCI_SETMOUSEDWELLTIME, 500);
 		
+		CiStyling.TStyles.Settings.ToScintilla(this);
+		_InicatorsInit();
+		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
+		_InitDragDrop();
+		
 		//C# interprets Unicode newline characters NEL, LS and PS as newlines.
 		//	If editor does not support it, line numbers in errors/warnings/stacktraces may be incorrect.
 		//	Visual Studio supports it. VSCode no; when pasted, suggests to replace to normal.
 		//	Scintilla supports it (SCI_SETLINEENDTYPESALLOWED) only if using C++ lexer.
 		//		Modified: now supports by default.
 		//	Ascii VT and FF are not interpreted as newlines by C# and Scintilla.
-		
-		CiStyling.TStyles.Settings.ToScintilla(this);
-		_InicatorsInit();
-		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
-		_InitDragDrop();
 	}
 	
 	protected override void DestroyWindowCore(HandleRef hwnd) {
@@ -180,13 +181,10 @@ partial class SciCode : KScintilla {
 		//}
 		
 		switch (n.code) {
-		case NOTIF.SCN_SAVEPOINTLEFT:
-			App.Model.Save.TextLater();
-			//never mind: we should cancel the 'save text later' on SCN_SAVEPOINTREACHED
-			break;
 		case NOTIF.SCN_MODIFIED:
 			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.Text);
 			if (n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
+				App.Model.Save.TextLater(); //just compares/sets a field. Note: don't use SCN_SAVEPOINTLEFT. No SCN_SAVEPOINTLEFT if text modified externally. Then would not save subsequent changes in editor.
 				_modified = true;
 				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
 				if (isActive) {
@@ -202,7 +200,7 @@ partial class SciCode : KScintilla {
 			//print.it(_modified, n.updated);
 			if (n.updated.Has(UPDATE.SC_UPDATE_CONTENT)) {
 				if (_modified) _modified = false;
-				else if (n.updated == UPDATE.SC_UPDATE_CONTENT) break; //ignore when changed styling or markers
+				else if ((n.updated &= ~UPDATE.SC_UPDATE_CONTENT) == 0) break; //ignore when changed styling or markers
 			}
 			if (n.updated.HasAny(UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) {
 				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
@@ -287,6 +285,7 @@ partial class SciCode : KScintilla {
 					ModifyCode.CommentLines(null, notSlashStar: true);
 					break;
 				case c_marginFold:
+					//TODO: need options to hide certain level. Now eg hides the class but not its members.
 					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: AaWnd) - 1; //note: no "toggle", it's not useful
 					if (fold >= 0) Call(SCI_FOLDALL, fold);
 					break;
@@ -337,16 +336,17 @@ partial class SciCode : KScintilla {
 	
 	public bool EIsBinary => _fls.IsBinary;
 	
-	//Called by PanelEdit.aaSaveText.
-	internal bool ESaveText_() {
+	//Called by PanelEdit.SaveText.
+	internal bool ESaveText_(bool force) {
 		Debug.Assert(!EIsBinary);
-		if (EIsUnsaved_) {
+		if (force || EIsUnsaved_) {
 			//print.qm2.write("saving");
 			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsExternal ? null : _fn.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
 			_fn.UpdateFileModTime();
+			if (this != Panels.Editor.ActiveDoc) CodeInfo.FilesChanged();
 		}
 		return true;
 	}

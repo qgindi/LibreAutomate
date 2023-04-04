@@ -46,7 +46,6 @@
 	<ItemGroup>
 		<Page Remove="App\1App, @~`!$^()-=+[{]};'.space.xaml" />
 		<Page Remove="App\1App, @~`!$^()-=+[{]};'.spaceą.xaml" />
-		<Page Remove="App\App-resources.xaml" />
 		<Page Remove="resources\ci\Class.xaml" />
 		<Page Remove="resources\ci\Constant.xaml" />
 		<Page Remove="resources\ci\Delegate.xaml" />
@@ -97,7 +96,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Include="App\App-resources.xaml" />
 	  <None Include="_postbuild.cs" />
 	</ItemGroup>
 
@@ -163,6 +161,7 @@
 		<Reference Include="Microsoft.CodeAnalysis.Workspaces">
 			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
 			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+			<Aliases>CAW</Aliases>
 		</Reference>
 	</ItemGroup>
 

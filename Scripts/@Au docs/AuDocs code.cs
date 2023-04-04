@@ -9,7 +9,7 @@ using EStyle = CiStyling.EStyle;
 
 partial class AuDocs {
 	static void _CreateCodeCss(string siteDir) {
-		var s = new CiStyling.TStyles();
+		var s = new CiStyling.TStyles(customized: false);
 		var b = new StringBuilder();
 		
 		_Style("c", s.Comment);

@@ -1,15 +1,22 @@
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.DocumentationComments;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.SignatureHelp;
+extern alias CAW;
+
 using System.Windows.Documents;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using System.Windows.Input;
+using System.Collections.Immutable;
+
+using Microsoft.CodeAnalysis;
+using CAW::Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Shared.Extensions;
+using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.DocumentationComments;
+using Microsoft.CodeAnalysis.SignatureHelp;
 
 //SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
 
@@ -17,9 +24,9 @@ class CiText {
 	readonly Stack<TextElement> _stack = new();
 	TextElement _container = new Section();
 	TextElement _last;
-
+	
 	public Section Result => (Section)_container;
-
+	
 	/// <summary>
 	/// Starts Block or Span. Or adds empty.
 	/// </summary>
@@ -37,87 +44,87 @@ class CiText {
 			_container = e;
 		}
 	}
-
+	
 	/// <summary>
 	/// Ends Block or Span.
 	/// </summary>
 	void _End() { _container = _stack.Pop(); }
-
+	
 	public Run Append(string text) {
 		var r = new Run(text);
 		Append(r);
 		return r;
 	}
-
+	
 	public void Append(Inline i) {
 		_Inlines().Add(i);
 		_last = i;
 	}
-
+	
 	public void Append(UIElement e) {
 		_Inlines().Add(e);
 	}
-
+	
 	InlineCollection _Inlines() => _container switch { Paragraph p => p.Inlines, Span s => s.Inlines, _ => throw new InvalidOperationException() };
-
+	
 	public Run Run(string style, string text, string append = null) {
 		var r = Append(text);
 		Style(style);
 		if (append != null) Append(append);
 		return r;
 	}
-
+	
 	public void Style(string style) {
 		//_last.Style = (Style)Application.Current.Resources[style]; //finds slower
 		_last.Style = (Style)Application.Current.FindResource(style);
 	}
-
+	
 	public Paragraph StartParagraph(string style = null) {
 		var p = new Paragraph();
 		_Start(p, true);
 		if (style != null) Style(style);
 		return p;
 	}
-
+	
 	public void EndParagraph() => _End();
-
+	
 	/// <summary>
 	/// <c>StartParagraph("div");</c>
 	/// </summary>
 	public Paragraph StartDiv() => StartParagraph("div");
-
+	
 	public void EndDiv() => _End();
-
+	
 	public (Paragraph, Run) Header(string text) {
 		var p = StartParagraph("header");
 		var r = Append(text);
 		EndParagraph();
 		return (p, r);
 	}
-
+	
 	public Separator Separator() {
 		var r = new Separator { Margin = new(4) };
 		var v = new BlockUIContainer(r);
 		_Start(v, false);
 		return r;
 	}
-
+	
 	public void LineBreak(string append = null, bool notIfFirstInParagraph = false) {
 		if (!(notIfFirstInParagraph && _last is Paragraph)) Append(new LineBreak());
 		if (append != null) Append(append);
 	}
-
+	
 	public void StartOverload(bool selected, int index) {
 		StartParagraph(selected ? "overloadSelected" : "overload");
 		if (!selected) { StartHyperlink($"^{index}"); Style("divLink"); }
 		Run(selected ? "dotSelected" : "dot", "● ");
 	}
-
+	
 	public void EndOverload(bool selected) {
 		if (!selected) EndHyperlink();
 		EndParagraph();
 	}
-
+	
 	/// <summary>
 	/// Appends codeBlock paragraph with text.
 	/// </summary>
@@ -127,7 +134,7 @@ class CiText {
 		Append(code);
 		EndParagraph();
 	}
-
+	
 	/// <summary>
 	/// Appends Span with a defined style (like HTML class).
 	/// </summary>
@@ -138,30 +145,30 @@ class CiText {
 		if (style != null) Style(style);
 		return r;
 	}
-
+	
 	public void EndSpan() => _End();
-
+	
 	public void StartBold() => _Start(new Bold(), true);
-
+	
 	public void EndBold() => _End();
-
+	
 	public void Bold(string text) => _Start(new Bold(new Run(text)), false);
-
+	
 	public void StartItalic() => _Start(new Italic(), true);
-
+	
 	public void EndItalic() => _End();
-
+	
 	public void Italic(string text) => _Start(new Italic(new Run(text)), false);
-
+	
 	public Hyperlink StartHyperlink(string uri) {
 		var h = new Hyperlink { NavigateUri = new(uri, UriKind.RelativeOrAbsolute) };
 		h.RequestNavigate += (o, e) => FlowDocumentControl.OnLinkClicked_(o as Hyperlink, e);
 		_Start(h, true);
 		return h;
 	}
-
+	
 	public void EndHyperlink() => _End();
-
+	
 	public Hyperlink Hyperlink(string uri, string text, string append = null) {
 		var h = StartHyperlink(uri);
 		if (WpfUtil_.IsHighContrastDark) h.Foreground = Brushes.RoyalBlue;
@@ -170,11 +177,11 @@ class CiText {
 		if (append != null) Append(append);
 		return h;
 	}
-
+	
 	public void Image(CiItemKind i) => Image(CiComplItem.ImageResource(i));
-
+	
 	public void Image(CiItemAccess i) => Image(CiComplItem.AccessImageResource(i));
-
+	
 	/// <summary>
 	/// Adds xaml or png etc image from app resources.
 	/// </summary>
@@ -188,7 +195,7 @@ class CiText {
 			Append(c);
 		}
 	}
-
+	
 	public void AppendTaggedParts(IEnumerable<TaggedText> tags, bool? isParameters = null) {
 		if (tags == null) return;
 		//need IReadOnlyList to easier replace something. Usually it is ImmutableArray or List.
@@ -205,7 +212,7 @@ class CiText {
 			switch (v.Tag) {
 			case TextTags.Struct:
 				c = "type";
-
+				
 				//rejected: replace parameter type ReadOnlySpan<char> with Strinĝ, and in global.cs add: global using Strinĝ = System.ReadOnlySpan<char>;
 				//	Better in XML doc tell it's a string.
 				//if (inParameters) {
@@ -275,21 +282,21 @@ class CiText {
 				break;
 #endif
 			}
-
+			
 			switch (v.Style) {
 			case TaggedTextStyle.Strong: StartBold(); break;
 			case TaggedTextStyle.Emphasis: StartItalic(); break;
 			case TaggedTextStyle.Code: StartSpan("codeSpan"); break;
 			}
-
+			
 			if (c != null) Run(c, s); else Append(s);
-
+			
 			switch (v.Style) {
 			case TaggedTextStyle.Code: EndSpan(); break;
 			case TaggedTextStyle.Emphasis: EndItalic(); break;
 			case TaggedTextStyle.Strong: EndBold(); break;
 			}
-
+			
 			void _ProcessText() {
 				//replace [](xref:topic_id) with Hyperlink
 				if (!s.Contains("](xref:")) return;
@@ -314,12 +321,12 @@ class CiText {
 			}
 		}
 	}
-
+	
 	static Dictionary<string, (string url, string text)> s_xrefmap;
-
+	
 	public void AppendTaggedParts(ImmutableArray<SymbolDisplayPart> parts, bool? isParameters = null)
 		=> AppendTaggedParts(parts.ToTaggedText(), isParameters);
-
+	
 	public static Section FromTaggedParts(IEnumerable<TaggedText> tags) {
 		var x = new CiText();
 		x.StartParagraph();
@@ -327,14 +334,14 @@ class CiText {
 		x.EndParagraph();
 		return x.Result;
 	}
-
+	
 	public static Section FromSymbols(IEnumerable<ISymbol> symbols, int iSelect, SemanticModel model, int position) {
 		//perf.first();
 		var x = new CiText();
 		x.AppendSymbols(symbols, iSelect, model, position);
 		return x.Result;
 	}
-
+	
 	public void AppendSymbols(IEnumerable<ISymbol> symbols, int iSelect, SemanticModel model, int position) {
 		//perf.first();
 		ISymbol sym = null;
@@ -348,11 +355,11 @@ class CiText {
 			EndOverload(i == iSelect);
 		}
 		//perf.next();
-
+		
 		if (sym != null) {
 			//print.it($"<><c blue>{sym}<>");
 			//print.it(sym.GetType().GetInterfaces());
-
+			
 			var parts = GetSymbolDescription(sym, model, position);
 			//print.it(parts);
 			if (parts.Any()) {
@@ -360,9 +367,9 @@ class CiText {
 				AppendTaggedParts(parts, false);
 				EndParagraph();
 			}
-
+			
 			//print.it(sym.GetDocumentationCommentXml());
-
+			
 			ISymbol enclosing = null;
 			switch (sym.Kind) {
 			case SymbolKind.NamedType:
@@ -371,12 +378,12 @@ class CiText {
 			case SymbolKind.Method:
 			case SymbolKind.Property:
 				Separator();
-
+				
 				//HELP AND SOURCE LINKS
 				StartDiv();
 				AppendSymbolLinks(sym);
 				EndDiv();
-
+				
 				//CONTAINER namespace/type and assembly
 				StartDiv();
 				Append("In ");
@@ -388,7 +395,7 @@ class CiText {
 				}
 				Append(sym.IsFromSource() ? "file " : "assembly "); Append(sym.ContainingAssembly.Name);
 				EndDiv();
-
+				
 				//MODIFIERS
 				bool isReadonly = false, isConst = false, isVolatile = false, isAsync = false, isEnumMember = false;
 				var tKind = TypeKind.Unknown; //0
@@ -436,7 +443,7 @@ class CiText {
 						_ => null
 					};
 					if (s1 != null) _AppendKeyword(s1);
-
+					
 					if (isConst) _AppendSpaceKeyword("const"); else if (sym.IsStatic) _AppendSpaceKeyword("static");
 					if (sym.IsAbstract && tKind != TypeKind.Interface) _AppendSpaceKeyword("abstract");
 					if (sym.IsSealed && (tKind == TypeKind.Class || tKind == TypeKind.Unknown)) _AppendSpaceKeyword("sealed");
@@ -452,7 +459,7 @@ class CiText {
 						Run("keyword", name);
 					}
 				}
-
+				
 				//BASE TYPES AND IMPLEMENTED INTERFACES
 				if (baseType != null || enumBaseType != null || !interfaces.IsDefaultOrEmpty) {
 					StartDiv();
@@ -478,7 +485,7 @@ class CiText {
 					}
 					EndDiv();
 				}
-
+				
 				//ATTRIBUTES
 				_AppendAttributes(sym.GetAttributes());
 				switch (sym) {
@@ -498,7 +505,7 @@ class CiText {
 					if (ipfs != null) _AppendAttributes(ipfs.GetAttributes(), "field");
 					break;
 				}
-
+				
 				//TYPE MEMBERS NOT SHOWN IN THE COMPLETION LIST: constructors, finalizers, operators
 				if ((tKind == TypeKind.Class || tKind == TypeKind.Struct /*|| tKind == TypeKind.Interface*/) && sym is INamespaceOrTypeSymbol t) {
 					List<ISymbol> a = null;
@@ -517,7 +524,7 @@ class CiText {
 								//case MethodKind.Destructor: goto g1; //don't check is accessible etc
 							}
 							if (m.IsImplicitlyDeclared) continue; //eg default ctor of struct
-																  //print.it(m.MethodKind, m);
+							//print.it(m.MethodKind, m);
 							break;
 						//case IPropertySymbol p when p.IsIndexer: //now indexers are in completion list
 						//	break;
@@ -553,7 +560,7 @@ class CiText {
 				break;
 			}
 			//perf.nw();
-
+			
 			bool _IsAccessible(ISymbol symbol) {
 				enclosing ??= model.GetEnclosingNamedTypeOrAssembly(position, default);
 				return enclosing != null && symbol.IsAccessibleWithin(enclosing);
@@ -615,20 +622,20 @@ class CiText {
 			Run("comment", "   //" + s);
 		}
 	}
-
+	
 	public static ImmutableArray<TaggedText> GetSymbolDescription(ISymbol sym, SemanticModel model, int position) {
 		return sym.GetDocumentationParts(model, position, _Formatter, default);
 	}
-
+	
 	//public static IEnumerable<TaggedText> GetTaggedTextForXml(string xml, SemanticModel model, int position)
 	//{
 	//	if(xml == null) return Enumerable.Empty<TaggedText>();
 	//	return _Formatter.Format(xml, model, position, ISymbolExtensions2.CrefFormat); //error in new Roslyn
 	//}
-
+	
 	static IDocumentationCommentFormattingService _Formatter => s_formatter ??= CodeInfo.CurrentWorkspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();
 	static IDocumentationCommentFormattingService s_formatter;
-
+	
 	const SymbolDisplayMiscellaneousOptions s_miscDisplayOptions =
 		SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral
 		| SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
@@ -644,56 +651,56 @@ class CiText {
 		| SymbolDisplayParameterOptions.IncludeOptionalBrackets
 		| SymbolDisplayParameterOptions.IncludeDefaultValue
 		| SymbolDisplayParameterOptions.IncludeExtensionThis;
-
+	
 	internal static readonly SymbolDisplayFormat s_symbolFullFormat = new(
-				SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
-				SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
-				SymbolDisplayDelegateStyle.NameAndSignature,
-				SymbolDisplayExtensionMethodStyle.Default,
-				s_parameterDisplayOptions,
-				SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
-				SymbolDisplayLocalOptions.IncludeType | SymbolDisplayLocalOptions.IncludeRef | SymbolDisplayLocalOptions.IncludeConstantValue,
-				SymbolDisplayKindOptions.IncludeMemberKeyword | SymbolDisplayKindOptions.IncludeNamespaceKeyword | SymbolDisplayKindOptions.IncludeTypeKeyword,
-				s_miscDisplayOptions
-				);
+		SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+		SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+		SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
+		SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
+		SymbolDisplayDelegateStyle.NameAndSignature,
+		SymbolDisplayExtensionMethodStyle.Default,
+		s_parameterDisplayOptions,
+		SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
+		SymbolDisplayLocalOptions.IncludeType | SymbolDisplayLocalOptions.IncludeRef | SymbolDisplayLocalOptions.IncludeConstantValue,
+		SymbolDisplayKindOptions.IncludeMemberKeyword | SymbolDisplayKindOptions.IncludeNamespaceKeyword | SymbolDisplayKindOptions.IncludeTypeKeyword,
+		s_miscDisplayOptions
+		);
 	static SymbolDisplayFormat s_qualifiedTypeFormat = new(
-				SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-				SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
-				miscellaneousOptions: s_miscDisplayOptions
-				);
+		SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+		SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+		SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+		miscellaneousOptions: s_miscDisplayOptions
+		);
 	static SymbolDisplayFormat s_unqualifiedTypeFormat = new(
-				SymbolDisplayGlobalNamespaceStyle.Omitted,
-				SymbolDisplayTypeQualificationStyle.NameOnly,
-				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
-				miscellaneousOptions: s_miscDisplayOptions
-				);
+		SymbolDisplayGlobalNamespaceStyle.Omitted,
+		SymbolDisplayTypeQualificationStyle.NameOnly,
+		SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+		miscellaneousOptions: s_miscDisplayOptions
+		);
 	static SymbolDisplayFormat s_parameterFormat = new(
-				SymbolDisplayGlobalNamespaceStyle.Omitted,
-				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-				genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
-				parameterOptions: s_parameterDisplayOptions,
-				miscellaneousOptions: s_miscDisplayOptions
+		SymbolDisplayGlobalNamespaceStyle.Omitted,
+		SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+		genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+		parameterOptions: s_parameterDisplayOptions,
+		miscellaneousOptions: s_miscDisplayOptions
 		);
 	static SymbolDisplayFormat s_symbolWithoutParametersFormat = new(
-				SymbolDisplayGlobalNamespaceStyle.Omitted,
-				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
-				SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
-				miscellaneousOptions: s_miscDisplayOptions
-				);
+		SymbolDisplayGlobalNamespaceStyle.Omitted,
+		SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+		SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
+		SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
+		miscellaneousOptions: s_miscDisplayOptions
+		);
 	static SymbolDisplayFormat s_nameWithoutTypeParametersFormat = new(
-				SymbolDisplayGlobalNamespaceStyle.Omitted,
-				SymbolDisplayTypeQualificationStyle.NameOnly,
-				miscellaneousOptions: s_miscDisplayOptions
-				);
-
+		SymbolDisplayGlobalNamespaceStyle.Omitted,
+		SymbolDisplayTypeQualificationStyle.NameOnly,
+		miscellaneousOptions: s_miscDisplayOptions
+		);
+	
 	public void AppendSymbolWithoutParameters(ISymbol sym) {
 		AppendTaggedParts(sym.ToDisplayParts(sym is INamedTypeSymbol ? s_nameWithoutTypeParametersFormat : s_symbolWithoutParametersFormat), false);
 	}
-
+	
 	public void AppendParameters(ISymbol sym, int iSel = -1, SignatureHelpItem sh = null) {
 		ImmutableArray<IParameterSymbol> ap;
 		switch (sym) {
@@ -722,7 +729,7 @@ class CiText {
 			Debug_.Print(sym);
 			return;
 		}
-
+		
 		for (int i = 0; i < ap.Length; i++) _Param(ap[i], i, 0);
 		if (sh != null) { //eg properties in [Attribute(params, properties)]. Can be used for params too, but formats not as I like.
 			var ap2 = sh.Parameters;
@@ -733,7 +740,7 @@ class CiText {
 				if (i == iSel) EndBold();
 			}
 		}
-
+		
 		void _Param(ISymbol p, int i, byte kind) { //kind: 0 param, 1 field, 2 typeparam
 			if (i > 0) Append(", ");
 			if (i == iSel) StartBold();
@@ -742,7 +749,7 @@ class CiText {
 			if (i == iSel) EndBold();
 		}
 	}
-
+	
 	//public void AppendParameters(SignatureHelpItem sh, int iSel = -1)
 	//{
 	//	var ap = sh.Parameters;
@@ -753,7 +760,7 @@ class CiText {
 	//		if(i == iSel) EndBold();
 	//	}
 	//}
-
+	
 	public bool AppendSymbolLinks(ISymbol sym) {
 		string helpUrl = CiUtil.GetSymbolHelpUrl(sym);
 		string sourceUrl = CiGoTo.GetLinkData(sym);
@@ -761,7 +768,7 @@ class CiText {
 		AppendSymbolLinks(helpUrl, sourceUrl);
 		return true;
 	}
-
+	
 	public void AppendSymbolLinks(string helpUrl, string sourceUrl) {
 		Append(helpUrl != null && sourceUrl != null ? "Links: " : "Link: ");
 		if (helpUrl != null) Hyperlink(helpUrl, "more info");
@@ -770,7 +777,7 @@ class CiText {
 			Hyperlink(sourceUrl, "source code");
 		}
 	}
-
+	
 	public static Section FromKeyword(string name) {
 		//var url = "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/";
 		var url = "https://www.google.com/search?q=C%23+keyword";
@@ -787,7 +794,7 @@ class CiText {
 		x.EndParagraph();
 		return x.Result;
 	}
-
+	
 	public static Section FromLabel(string name) {
 		var x = new CiText();
 		x.StartParagraph();
@@ -795,7 +802,7 @@ class CiText {
 		x.EndParagraph();
 		return x.Result;
 	}
-
+	
 	public static FlowDocumentControl CreateControl(int colorRGB = 0xfffff0) {
 		var d = new FlowDocument {
 			//FontFamily = App.Wmain.FontFamily,
@@ -818,7 +825,7 @@ class CiText {
 
 class FlowDocumentControl : FlowDocumentScrollViewer {
 	public event Action<FlowDocumentControl, string> LinkClicked;
-
+	
 	internal static void OnLinkClicked_(Hyperlink h, RequestNavigateEventArgs e) {
 		var s = e.Uri.OriginalString;
 		//print.it(s);
@@ -828,7 +835,7 @@ class FlowDocumentControl : FlowDocumentScrollViewer {
 				break;
 			}
 	}
-
+	
 	/// <summary>
 	/// Clears text (removes all blocks) and applies a workaround for a WPF bug.
 	/// </summary>
@@ -836,7 +843,7 @@ class FlowDocumentControl : FlowDocumentScrollViewer {
 		Document.Blocks.Clear();
 		_ = Selection?.IsEmpty; //workaround for WPF bug: if some text was selected, would select all new text
 	}
-
+	
 	protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
 		if (!Selection.IsEmpty) this.Hwnd().ActivateL(); //user may want to copy text with Ctrl+C
 		base.OnPreviewMouseLeftButtonUp(e);
