@@ -51,8 +51,8 @@ All attributes are optional. The Example command contains all.
 		<Surround_try_catch />
 		<Create_delegate />
 		<Find separator="" />
-		<Find_symbol />
 		<Find_references />
+		<Find_symbol />
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<WPF_preview />

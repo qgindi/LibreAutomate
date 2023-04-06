@@ -196,7 +196,7 @@ static class InsertCode {
 			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
 				var d = Panels.Editor.ActiveDoc; if (d != doc || d.aaaText != text) return;
 				for (int line = d.aaaLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
-					if (0 != (d.Call(Sci.SCI_GETFOLDLEVEL, i) & Sci.SC_FOLDLEVELHEADERFLAG)) d.Call(Sci.SCI_FOLDLINE, i);
+					if (d.aaaFoldingLevel(i).isHeader) d.EFoldLine(i);
 				}
 			});
 		}
@@ -358,9 +358,9 @@ static class InsertCode {
 		var b = new StringBuilder();
 
 		if (concise && s.LineCount() <= 1) {
-			b.Append(before.TrimEnd("\r\n")).Append(' ');
-			b.Append(s.TrimEnd("\r\n")).Append(' ');
-			b.Append(after.TrimStart("\r\n"));
+			b.Append(before.TrimEnd()).Append(' ');
+			b.Append(s.Trim()).Append(' ');
+			b.Append(after.TrimStart());
 		} else {
 			b.Append(before);
 			InsertCodeUtil.AppendCodeWithIndent(b, s, indentPlus, andNewline: false);
@@ -446,7 +446,14 @@ catch (Exception) {  }
 	}
 
 	/// <summary>
-	/// Finds where new using directives can be inserted: end of existing using directives or 0 or end of extern aliases or #directives or meta or doc comments or 1 comments line.
+	/// Finds where new using directives can be inserted:
+	/// <br/>• after existing using directives
+	/// <br/>• or at 0
+	/// <br/>• or after extern aliases
+	/// <br/>• or after #directives
+	/// <br/>• or after meta
+	/// <br/>• or after doc comments
+	/// <br/>• or after 1 comments line.
 	/// If namespaces!=null, clears existing namespaces in it (sets =null); if all cleared, returns -1.
 	/// </summary>
 	static int _FindUsingsInsertPos(CodeInfo.Context k, string[] namespaces = null) {
@@ -490,13 +497,13 @@ catch (Exception) {  }
 			if (end >= 0 && namespaces == null) break;
 		}
 
-		if (end < 0) { //insert at start but after #directives and certain comments
+		if (end < 0) { //insert at the start but after #directives and certain comments
 			int end2 = -1;
 			foreach (var v in cu.GetLeadingTrivia()) if (v.IsDirective) end2 = v.FullSpan.End; //skip directives
 			if (end2 < 0) {
 				end2 = k.meta.end; //skip meta
-				if (end2 == 0) if (k.code.RxMatch(@"(\s*///.*\R)+", 0, out RXGroup g1, RXFlags.ANCHORED, end2..)) end2 = g1.End; //skip ///comments
-				if (k.code.RxMatch(@"\s*//.+\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip 1 line of //comments, because usually it is //. for folding
+				if (end2 == 0) if (k.code.RxMatch(@"^(///.*\R)+(?=\R|$)", 0, out RXGroup g1)) end2 = g1.End; //skip ///comments
+				if (k.code.RxMatch(@"\s*//\.(?: .*)?\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip //. used for folding
 			}
 			end = end2;
 		}

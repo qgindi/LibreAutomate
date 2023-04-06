@@ -15,16 +15,20 @@ Highlights references of the symbol at the text cursor.
 
 Highlights matching braces and directives of the brace/directive at the text cursor.
 
-Improved replacing text in multiple files. Multi-file undo/redo.
-
 Multiple pages in the 'Found' panel.
+
+Now `/*/ pr /*/` can be used in any file of a project, not just in the main file.
+
+Improved:
+- Replacing text in multiple files. Multi-file undo/redo.
+- Implement interface.
+- Folding margin context menu.
+- And more.
 
 New options:
 - Options -> Font, colors -> highlight, selection.
 - Options -> Code editor -> Formatting.
 - Options -> Hotkeys -> Capture image.
-
-Now `/*/ pr /*/` can be used in any file of a project, not just in the main file.
 
 ### Library
 New members:
@@ -35,13 +39,12 @@ New parameters:
 - **string.FindWord**: *isWordChar* (callback).
 - **wpfBuilder.Options**: *showToolTipOnKeyboardFocus*. And changed the default behavior of tooltips on keyboard focus.
 
-### Bug fixes and improvements
+### Bug fixes
 
 Editor:
 - Fixed: cannot use NuGet packages that depend on .NET 7 assemblies.
 - Fixed: error message box on exit.
 - Fixed several memory leaks and other bugs.
-- Improvements in several editor features.
 
 Library:
 - Fixed "TextForFind" bug in documentation.

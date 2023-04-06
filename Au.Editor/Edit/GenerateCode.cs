@@ -207,6 +207,8 @@ static class GenerateCode {
 		}
 		
 		position = declNode.CloseBraceToken.Span.Start;
+		while (cd.code[position - 1] is ' ' or '\t') position--;
+		
 		var b = new StringBuilder();
 		var format = CiText.s_symbolFullFormat.WithParameterOptions(CiText.s_symbolFullFormat.ParameterOptions & ~SymbolDisplayParameterOptions.IncludeOptionalBrackets);
 		var formatExp = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeRef);
@@ -214,8 +216,8 @@ static class GenerateCode {
 		var hsMembers = thisType.MemberNames.ToHashSet(); //nevermind method overloads, it's rare
 		
 		foreach (var (type, members) in types) {
-			//print.it(type, members);
 			b.AppendLine().AppendLine("//" + type.ToMinimalDisplayString(semo, position, CiText.s_symbolFullFormat));
+			
 			bool isInterface = type.TypeKind == TypeKind.Interface;
 			foreach (var v in members) {
 				bool expl = false;
@@ -246,7 +248,7 @@ static class GenerateCode {
 				default:
 					continue;
 				}
-
+				
 				b.AppendLine();
 				if (isInterface) {
 					if (!v.IsAbstract) b.AppendLine("//has default implementation");
@@ -270,11 +272,10 @@ static class GenerateCode {
 }"); //write-only properties
 		
 		text = InsertCodeUtil.IndentStringForInsertSimple(text, cd.sci, position, true, 1);
-		//print.it($"'{text}'");
-		//clipboard.text = text;
 		
 		cd.sci.aaaInsertText(true, position, text, addUndoPointAfter: true);
 		cd.sci.aaaGoToPos(true, position);
+		cd.sci.aaaSelect(true, position + text.Length, position);
 		
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
 	}

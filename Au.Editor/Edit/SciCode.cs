@@ -227,10 +227,11 @@ partial class SciCode : KScintilla {
 			if (_fn.IsCodeFile) {
 				CodeInfo.Cancel();
 				if (n.margin == c_marginFold) {
-					_FoldOnMarginClick(null, n.position);
+					_FoldOnMarginClick(n.position, n.modifiers);
 				}
 			}
 			break;
+		//case NOTIF.SCN_MARGINRIGHTCLICK: break; //can't use it because: 1. Need to handle WM_RBUTTONDOWN. 2. Need notification on button up.
 		case NOTIF.SCN_STYLENEEDED:
 			//print.it("SCN_STYLENEEDED");
 			if (isActive && _fn.IsCodeFile) {
@@ -258,37 +259,51 @@ partial class SciCode : KScintilla {
 			}
 			break;
 		case Api.WM_RBUTTONDOWN: {
-				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
 				POINT p = Math2.NintToPOINT(lp);
-				int margin = aaaMarginFromPoint(p, false);
+				int margin = aaaMarginFromPoint(p);
 				if (margin >= 0) {
+					//prevent changing the caret/selection when rclicked some margins
+					if (margin == c_marginFold) return 0;
+					
+					//prevent changing the caret/selection if it is in the rclicked line
 					var selStart = aaaSelectionStart8;
 					var (_, start, end) = aaaLineStartEndFromPos(false, aaaPosFromXY(false, p, false));
 					if (selStart >= start && selStart <= end) return 0;
-					//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
+					//do vice versa if the end of non-empty selection is at the start of the rclicked line, to avoid comment/uncomment wrong lines
 					if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
 						if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
 					}
 				}
 			}
 			break;
+		case Api.WM_RBUTTONUP: {
+				POINT p = Math2.NintToPOINT(lp);
+				int margin = aaaMarginFromPoint(p);
+				if (margin >= 0) {
+					switch (margin) {
+					case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
+						ModifyCode.CommentLines(null, notSlashStar: true);
+						break;
+					case c_marginFold:
+						_FoldContextMenu(aaaPosFromXY(false, p, false));
+						break;
+					}
+					return 0;
+				}
+			}
+			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lp == -1;
-				int margin = kbd ? -1 : aaaMarginFromPoint(Math2.NintToPOINT(lp), true);
-				switch (margin) {
-				case -1:
+				int margin = -1;
+				POINT p = default;
+				if (!kbd) {
+					p = Math2.NintToPOINT(lp);
+					margin = aaaMarginFromPoint(p, screenCoord: true);
+				}
+				if (margin < 0) {
 					var m = new KWpfMenu();
 					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
 					m.Show(this, byCaret: kbd);
-					break;
-				case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
-					ModifyCode.CommentLines(null, notSlashStar: true);
-					break;
-				case c_marginFold:
-					//TODO: need options to hide certain level. Now eg hides the class but not its members.
-					int fold = popupMenu.showSimple("Folding: hide all|Folding: show all", owner: AaWnd) - 1; //note: no "toggle", it's not useful
-					if (fold >= 0) Call(SCI_FOLDALL, fold);
-					break;
 				}
 				return 0;
 			}

@@ -43,7 +43,7 @@ static unsafe class Test {
 		
 		//print.clear();
 		
-		//var d = Panels.Editor.ActiveDoc;
+		var d = Panels.Editor.ActiveDoc;
 		
 		//for (int i = 16; i < 32; i++) {
 		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");
@@ -54,12 +54,6 @@ static unsafe class Test {
 
 		//Cpp.Cpp_Test();
 	}
-
-	static void MintaKigenToke() { }
-
-	static void mintaKigenToke() { }
-
-	static void MintaKigentoke() { }
 
 	class TestGC {
 		~TestGC() {
