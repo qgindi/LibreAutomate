@@ -163,7 +163,9 @@ The Back and Forward buttons work like the ones in web browsers.
 Different kinds of code parts have different colors. Comments, strings, keywords, types, functions, etc.
 
 ### Text folding
-You can hide and show code regions like in a tree view control: click the minus (-) or plus (+) in the left margin. Folding is available for functions, types, multiline comments, disabled code (`#if`), `#region` ... `#endregion` and `//.` ... `//..`.
+You can hide and show code regions like in a tree view control: click the [-] or [+] in the left margin. Folding is available for functions, events, types, multiline comments, disabled code (`#if`), `#region` ... `#endregion` and `//.` ... `//..`.
+
+Ctrl+click to show/hide descendant folds as well. Shift+click to show descendants. For more options right-click the folding margin.
 
 ### Separators between functions/types
 Editor draws horizontal lines at the end of each function and type definition.

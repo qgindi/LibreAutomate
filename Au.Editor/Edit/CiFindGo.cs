@@ -149,7 +149,7 @@ Filters: t Type, m Member, n Namespace.
 				text = sym.ToDisplayString(s_symbolFormat);
 				if (name.Length < text.Length) {
 					nameStart = text.FindWord(name, isWordChar: c => SyntaxFacts.IsIdentifierPartCharacter(c));
-					Debug_.PrintIf(nameStart < 0);
+					Debug_.PrintIf(nameStart < 0, $"{name}, {text}");
 				}
 			}
 			

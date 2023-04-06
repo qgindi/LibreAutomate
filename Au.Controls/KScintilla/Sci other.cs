@@ -164,7 +164,8 @@ public partial class KScintilla {
 		}
 	}
 	
-	public int aaaMarginFromPoint(POINT p, bool screenCoord) {
+	/// <returns>Margin index, or -1 if not in a margin.</returns>
+	public int aaaMarginFromPoint(POINT p, bool screenCoord = false) {
 		if (screenCoord) _w.MapScreenToClient(ref p);
 		if (_w.ClientRect.Contains(p)) {
 			for (int i = 0, n = Call(SCI_GETMARGINS), w = 0; i < n; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if (w >= p.x) return i; }
@@ -279,6 +280,15 @@ public partial class KScintilla {
 			fixed (int* ip = a) Sci_SetFoldLevels(AaSciPtr, 0, -1, a.Lenn_(), ip);
 		}
 		//p1.NW('F');
+	}
+	
+	/// <summary>
+	/// SCI_GETFOLDLEVEL.
+	/// </summary>
+	/// <returns>0-based level (never less than 0) and whether it has SC_FOLDLEVELHEADERFLAG.</returns>
+	public (int level, bool isHeader) aaaFoldingLevel(int line) {
+		int r = Call(SCI_GETFOLDLEVEL, line);
+		return (Math.Max(0, (r & SC_FOLDLEVELNUMBERMASK) - SC_FOLDLEVELBASE), 0 != (r & SC_FOLDLEVELHEADERFLAG));
 	}
 	
 	#endregion

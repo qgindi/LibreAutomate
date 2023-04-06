@@ -769,7 +769,7 @@ This setting also is used by 'Find references' etc.
 		bool haveExternal = files.Any(o => o.IsExternal);
 		
 		switch (dialog.show("Replace text in files", "Replaces text in all files displayed in the Found panel.",
-			haveExternal ? "1 Replace all|2 Replace all but external|0 Cancel" : "1 Replace all|0 Cancel",
+			haveExternal ? "1 Replace all|2 Replace all except external|0 Cancel" : "1 Replace all|0 Cancel",
 			flags: /*DFlags.CommandLinks |*/ DFlags.CenterMouse,
 			owner: App.Hmain)) {
 		case 1:
