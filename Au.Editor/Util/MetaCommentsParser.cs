@@ -134,7 +134,7 @@ class MetaCommentsParser {
 		var meta = MetaComments.FindMetaComments(code);
 		string prepend = null, append = null;
 		if (meta.end == 0) {
-			if (code.RxMatch(@"(?s)^(\s*///\N*\R|\s*/\*\*.*?\*/\R)+", 0, out RXGroup g)) { //description
+			if (code.RxMatch(@"^(///.*\R)+(?=\R|$)", 0, out RXGroup g)) { //description
 				meta = new(g.End, g.End);
 				prepend = "\r\n";
 			}

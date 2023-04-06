@@ -290,15 +290,16 @@ static class CiUtilExt {
 	}
 	
 	/// <summary>
-	/// Gets <b>Name</b>. If it isn't valid identifier, tries to get it as valid identifier.
-	/// Noticed cased when <b>Name</b> isn't valid identifier:
-	/// .ctor -> TypeName.
-	/// Class.Interface.Explicit (or even Class1.Class2.Class3.Interface.Explicit etc) -> Explicit.
+	/// Gets symbol name as single word good for displaying etc.
+	/// Known cases when the return value != <b>Name</b>:
+	/// ".ctor" -> "TypeName".
+	/// "Finalize" -> "~TypeName".
+	/// "QualifiedInterface.Explicit" -> "Explicit".
 	/// </summary>
 	public static string JustName(this ISymbol t) {
 		var s = t.Name;
-		if (!SyntaxFacts.IsValidIdentifier(s)) s = t.ToDisplayString(SymbolDisplayFormat.ShortFormat);
-		return s;
+		if (SyntaxFacts.IsValidIdentifier(s) && !t.IsDestructor()) return s;
+		return t.ToDisplayString(SymbolDisplayFormat.ShortFormat);
 	}
 	
 	public static string QualifiedName(this ISymbol t, bool onlyNamespace = false, bool noDirectName = false) {
@@ -332,7 +333,7 @@ static class CiUtilExt {
 		posNode = t.Root.FindToken(pos).Parent;
 		declNode = posNode?.GetAncestorOrThis<BaseTypeDeclarationSyntax>();
 		if (declNode == null || !declNode.Span.Contains(pos) || declNode.CloseBraceToken.IsMissing) return null;
-		return t.GetEnclosingNamedType(declNode.OpenBraceToken.SpanStart+1, default);
+		return t.GetEnclosingNamedType(declNode.OpenBraceToken.SpanStart + 1, default);
 	}
 	
 	public static (string kind, string access) ImageResource(this ISymbol t) {

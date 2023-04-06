@@ -30,25 +30,27 @@ class CiFolding {
 #endif
 		}
 		//using var p2 = new perf.Instance { Incremental = true };
-
+		
 		List<SciFoldPoint> af = null;
-
-		void _AddFoldPoint(int pos, bool start, bool trimNewline = false, ushort separator = 0) {
+		s_foldPoints.Clear();
+		
+		void _AddFoldPoint(FoldKind what, int pos, bool start, bool trimNewline = false, ushort separator = 0) {
 			if (trimNewline) {
 				if (code[pos - 1] == '\n') pos--;
 				if (code[pos - 1] == '\r') pos--;
 			}
 			(af ??= new()).Add(new(pos, start, separator));
+			if (start) s_foldPoints.Add((pos, what));
 		}
-		void _AddFoldPoints(int start, int end, ushort separator = 0) {
+		void _AddFoldPoints(FoldKind what, int start, int end, ushort separator = 0) {
 			if (separator == 0) {
 				int k = code.IndexOf('\n', start, end - start);
 				if (k < 0 || k == end - 1) return;
 			}
-			_AddFoldPoint(start, true);
-			_AddFoldPoint(end, false, true, separator);
+			_AddFoldPoint(what, start, true);
+			_AddFoldPoint(what, end, false, true, separator);
 		}
-
+		
 		var nodes = root.DescendantNodes(o => {
 			//don't descend into functions etc. Much faster.
 			if (o is MemberDeclarationSyntax) return o is BaseNamespaceDeclarationSyntax or TypeDeclarationSyntax;
@@ -60,11 +62,12 @@ class CiFolding {
 			//CiUtil.PrintNode(v);
 			//print.it(v.GetType().Name);
 			//bool noSeparator = false;
-			bool separatorBefore = false;
+			bool separatorBefore = false, isType = false;
 			int foldStart = -1;
 			switch (v) {
 			case BaseTypeDeclarationSyntax d: //class, struct, interface, enum
 				foldStart = d.Identifier.SpanStart;
+				isType = true;
 				break;
 			case BaseMethodDeclarationSyntax d: //method, ctor, etc
 				if (d.Body == null && d.ExpressionBody == null) continue; //extern, interface, partial
@@ -75,7 +78,7 @@ class CiFolding {
 				foldStart = d.Type.FullSpan.End; //not perfect, but the best common property
 				separatorBefore = prevNode is BaseFieldDeclarationSyntax;
 				break;
-
+			
 			case LocalFunctionStatementSyntax d:
 				foldStart = d.Identifier.SpanStart;
 				separatorBefore = prevNode is not (LocalFunctionStatementSyntax or null);
@@ -89,10 +92,10 @@ class CiFolding {
 				//	noSeparator = true;
 				//	break;
 			}
-
+			
 			if (foldStart >= 0) {
-				_AddFoldPoints(foldStart, v.Span.End, separator: 1);
-
+				_AddFoldPoints(isType ? FoldKind.Type : FoldKind.Member, foldStart, v.Span.End, separator: 1);
+				
 				//add separator before local function preceded by statement of other type.
 				//	Also before other functions preceded by field or simple event.
 				if (separatorBefore) {
@@ -113,7 +116,7 @@ class CiFolding {
 			if (cancelToken.IsCancellationRequested) return null;
 		}
 		_PN('n');
-
+		
 		List<TextSpan> disabledRanges = null;
 		var dir = root.GetDirectives(o => o is RegionDirectiveTriviaSyntax or EndRegionDirectiveTriviaSyntax or BranchingDirectiveTriviaSyntax or EndIfDirectiveTriviaSyntax);
 		_PN('d');
@@ -122,14 +125,14 @@ class CiFolding {
 			//print.it(v.IsActive, v.GetType());
 			//if(v is BranchingDirectiveTriviaSyntax br) print.it(br, br.BranchTaken, br.GetRelatedDirectives());
 			if (v is RegionDirectiveTriviaSyntax or EndRegionDirectiveTriviaSyntax) {
-				_AddFoldPoint(v.SpanStart, v is RegionDirectiveTriviaSyntax);
+				_AddFoldPoint(FoldKind.Region, v.SpanStart, v is RegionDirectiveTriviaSyntax);
 			} else if (v is BranchingDirectiveTriviaSyntax br && !br.BranchTaken) {
 				var rd = br.GetRelatedDirectives();
 				for (int i = 0; i < rd.Count - 1;) {
 					if (rd[i++] == v) {
 						int start = v.SpanStart, end = rd[i].SpanStart;
 						while (end > start && code[end - 1] is not ('\n' or '\r')) end--;
-						_AddFoldPoints(start, end);
+						_AddFoldPoints(FoldKind.Disabled, start, end);
 						(disabledRanges ??= new()).Add(TextSpan.FromBounds(start, end));
 						break;
 					}
@@ -137,7 +140,7 @@ class CiFolding {
 			}
 		}
 		_PN();
-
+		
 		//Find comments that need to fold:
 		//	1. Blocks of //comments of >= 4 lines. Include empty lines, but split at the last empty line if last comments are followed by non-comments or other type of comments.
 		//	2. Blocks of ///comments of >= 2 lines.
@@ -145,7 +148,7 @@ class CiFolding {
 		//	4. //. is like #region, but can be not at the start of line too. Must not be followed by a non-space character.
 		//	5. //.. is like #endregion, but can be not at the start of line too. Must not be followed by a non-space character.
 		//		Rejected: //... unfolds 2 levels, //.... 3 levels and so on. Often //... comment used for "more code" or "etc". Also now not useful (was useful when C# did not have top-level statements).
-
+		
 		//Since root.DescendantTrivia is slow, we parse code
 		//	and then use Roslyn just to verify that the found // etc is at start of trivia, ie isn't inside a string or other comments or #directive.
 		//We skip disabled code (!BranchingDirectiveTriviaSyntax.BranchTaken).
@@ -157,15 +160,15 @@ class CiFolding {
 				var s = code.AsSpan(rangeStart, rangeLength); //current non-disabled range in code
 				for (int i = 0; i <= s.Length - 4;) { //until last possible //..
 					if (cancelToken.IsCancellationRequested) return null;
-
+					
 					int i0 = i = s.IndexOf(i, '/'); if ((uint)i > s.Length - 4) break;
 					char c = s[++i]; if (c is not ('/' or '*')) continue;
 					if (c == '/' && _IsDotComment(s, ++i, out bool closing)) { //.
 						if (!_IsStartOfTrivia(false)) continue;
-						_AddFoldPoint(rangeStart + i0, !closing);
+						_AddFoldPoint(FoldKind.DotFold, rangeStart + i0, !closing);
 					} else if (c == '*' || InsertCodeUtil.IsLineStart(s, i0)) {
 						i = i0 + 2;
-						bool isLineComment = c == '/';
+						bool isLineComment = c == '/', isDocComment = false;
 						if (!isLineComment) {
 							//ignore /*single line*/
 							int k = s.IndexOf(i, '\n');
@@ -173,11 +176,12 @@ class CiFolding {
 						} else if (s.Eq(i, '/') && !s.Eq(++i, '/')) { //doc comment ///
 							isLineComment = false;
 							i0 = i; //somehow Span of doc comment trivia starts after ///
-
+							
 							//ignore single-line doc comments
 							int k = s.IndexOf(i, '\n'); if (k++ < 0) continue;
 							while (k < s.Length && s[k] is '\t' or ' ') k++;
 							if (!s.Eq(k, "///")) continue;
+							isDocComment = true;
 						} else {
 							int nlines = 0, joinAt = 0, joinNlines = 0;
 							for (; ; nlines++) {
@@ -213,9 +217,9 @@ class CiFolding {
 							if (nlines < 4) continue;
 						}
 						if (!_IsStartOfTrivia(isLineComment)) continue;
-						_AddFoldPoints(rangeStart + i0, rangeStart + i);
+						_AddFoldPoints(isDocComment ? FoldKind.Doc : FoldKind.Comment, rangeStart + i0, rangeStart + i);
 					}
-
+					
 					static bool _IsDotComment(ReadOnlySpan<char> s, int j, out bool closing) {
 						if (s.Eq(j, '.')) {
 							if (closing = ++j < s.Length && s[j] == '.') j++;
@@ -223,7 +227,7 @@ class CiFolding {
 						} else closing = false;
 						return false;
 					}
-
+					
 					bool _IsStartOfTrivia(bool isLineComment) {
 						//p2.First();
 						int start = rangeStart + i0;
@@ -262,7 +266,7 @@ class CiFolding {
 			if (ir == nr) break;
 		}
 		_PN('t');
-
+		
 		if (af != null) {
 			af.Sort((x, y) => x.pos - y.pos);
 			//remove redundant fold end points
@@ -275,75 +279,43 @@ class CiFolding {
 		}
 		return af;
 	}
-
+	
 	public static void Fold(SciCode doc, List<SciFoldPoint> af) {
 		doc.aaaFoldingApply(af, SciCode.c_markerUnderline);
 		doc.ERestoreEditorData_();
 	}
-
+	
 	public static void InitFolding(SciCode doc) {
 		doc.aaaFoldingInit(SciCode.c_marginFold, SciCode.c_markerUnderline);
 	}
+	
+	[Flags]
+	internal enum FoldKind : byte { Member = 1, Type = 2, Region = 4, Comment = 8, Doc = 16, DotFold = 32, Disabled = 64 }
+	
+	/// <summary>
+	/// Fold points (start position and kind) of the last <see cref="GetFoldPoints"/>. Later used for the context menu.
+	/// </summary>
+	internal static readonly List<(int pos, FoldKind kind)> s_foldPoints = new();
 }
 
 partial class SciCode {
-	bool _FoldOnMarginClick(bool? fold, int startPos) {
-		int line = Call(SCI_LINEFROMPOSITION, startPos);
-		if (0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
-		bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
-		if (fold.HasValue && fold.Value != isExpanded) return false;
-		if (isExpanded) {
-			_FoldLine(line);
-			//move caret out of contracted region
-			int pos = aaaCurrentPos8;
-			if (pos > startPos) {
-				int i = aaaLineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
-				if (pos <= i) aaaCurrentPos8 = startPos;
-			}
-		} else {
-			Call(SCI_FOLDLINE, line, 1);
-		}
-		return true;
-	}
-
-	void _FoldLine(int line) {
-#if false
-		Call(SCI_FOLDLINE, line);
-#else
-		string s = aaaLineText(line), s2 = "";
-		for (int i = 0; i < s.Length; i++) {
-			char c = s[i];
-			if (c == '{') { s2 = "... }"; break; }
-			if (c == '/' && i < s.Length - 1) {
-				c = s[i + 1];
-				if (c == '*') break;
-				if (i < s.Length - 3 && c == '/' && s[i + 2] == '-' && s[i + 3] == '{') break;
-			}
-		}
-		//quite slow. At startup ~250 mcs. The above code is fast.
-		if (s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
-		else aaaSetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
-#endif
-	}
-
 	internal void ERestoreEditorData_() {
 		//print.it(_openState);
 		if (_openState == _EOpenState.FoldingDone) return;
 		var os = _openState; _openState = _EOpenState.FoldingDone;
-
+		
 		if (os is _EOpenState.NewFileFromTemplate) {
 			if (_fn.IsScript) {
 				var code = aaaText;
 				if (!code.NE()) {
 					//fold all //.
 					for (int i = base.aaaLineCount - 1; --i >= 0;) {
-						int k = Call(SCI_GETFOLDLEVEL, i);
-						if (0 != (k & SC_FOLDLEVELHEADERFLAG)) {
+						if (aaaFoldingLevel(i).isHeader) {
 							int j = aaaLineEnd(false, i);
 							if (aaaCharAt8(j - 1) == '.' && aaaCharAt8(j - 2) == '/') Call(SCI_FOLDLINE, i);
 						}
 					}
-
+					
 					if (code.RxMatch(@"//\.\.+\R\R?(?=\z|\R)", 0, out RXGroup g)) {
 						aaaGoToPos(true, g.End);
 					}
@@ -368,7 +340,7 @@ partial class SciCode {
 						for (int i = a.Count; --i >= 0;) {
 							int v = a[i];
 							int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-							if (marker == 31) _FoldLine(line);
+							if (marker == 31) EFoldLine(line);
 							else Call(SCI_MARKERADDSET, line, 1 << marker);
 						}
 						if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, aaaLineFromPos(false, cp));
@@ -379,20 +351,20 @@ partial class SciCode {
 						} else if (cp == 0) {
 							_savedTop = top;
 							_savedPos = pos;
-
+							
 							//workaround for:
 							//	When reopening a non-first document, scrollbar position remains at the top, although scrolls the view.
 							//	Scintilla calls SetScrollInfo(pos), but it does not work because still didn't call SetScrollInfo(max).
 							//	Another possible workaround would be a timer, but even 50 ms is too small.
 							Call(SCI_SETVSCROLLBAR, false);
 							Call(SCI_SETVSCROLLBAR, true);
-
+							
 							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, Call(SCI_VISIBLEFROMDOCLINE, top));
 							if (pos <= aaaLen8) {
 								App.Model.EditGoBack.OnRestoringSavedPos();
 								aaaGoToPos(false, pos);
 							}
-
+							
 							//workaround for: in wrap mode SCI_SETFIRSTVISIBLELINE sets wrong line because still not wrapped.
 							//	Don't need when saving document line, not visible line.
 							//if (top > 0 && 0 != Call(SCI_GETWRAPMODE)) {
@@ -408,10 +380,10 @@ partial class SciCode {
 			catch (SLException ex) { Debug_.Print(ex); }
 		}
 	}
-
+	
 	enum _EOpenState : byte { Open, Reopen, NewFileFromTemplate, NewFileNoTemplate, FoldingDone }
 	_EOpenState _openState;
-
+	
 	/// <summary>
 	/// Saves folding, markers etc in database.
 	/// </summary>
@@ -419,9 +391,9 @@ partial class SciCode {
 		//CONSIDER: save styling and fold levels of the visible part of current doc. Then at startup can restore everything fast, without waiting for warmup etc.
 		//_TestSaveFolding();
 		//return;
-
+		
 		//never mind: should update folding if edited and did not fold until end. Too slow. Not important.
-
+		
 		if (_openState < _EOpenState.FoldingDone) return; //if did not have time to open editor data, better keep old data than delete. Also if not a code file.
 		var db = App.Model.DB; if (db == null) return;
 		//var p1 = perf.local();
@@ -447,7 +419,7 @@ partial class SciCode {
 			catch (SLException ex) { Debug_.Print(ex); }
 		}
 		//p1.NW('D');
-
+		
 		// <summary>
 		// Gets indices of lines containing markers or contracted folding points.
 		// </summary>
@@ -459,17 +431,17 @@ partial class SciCode {
 				if (marker == 31) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
 				else i = Call(SCI_MARKERNEXT, i, 1 << marker);
 				if ((uint)i > 0x7FFFFFF) break; //-1 if no more; ensure we have 5 high-order bits for marker; max 134 M lines.
-												//if(i < skipLineTo && i >= skipLineFrom) continue;
+				//if(i < skipLineTo && i >= skipLineFrom) continue;
 				a.Add(i | (marker << 27));
 			}
 		}
 	}
-
+	
 	//unsafe void _TestSaveFolding()
 	//{
 	//	//int n = aaaLineCount;
 	//	//for(int i = 0; i < n; i++) print.it(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
-
+	
 	//	var a = new List<POINT>();
 	//	for(int i = 0; ; i++) {
 	//		i = Call(SCI_CONTRACTEDFOLDNEXT, i);
@@ -478,12 +450,12 @@ partial class SciCode {
 	//		//print.it(i, j);
 	//		a.Add((i, j));
 	//	}
-
+	
 	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
 	//	Sci_SetFoldLevels(SciPtr, 0, aaaLineCount - 1, 0, null);
 	//	timer.after(1000, _ => _TestRestoreFolding(a));
 	//}
-
+	
 	//unsafe void _TestRestoreFolding(List<POINT> lines)
 	//{
 	//	var a = new int[lines.Count * 2];
@@ -495,14 +467,173 @@ partial class SciCode {
 	//	Array.Sort(a, (e1, e2) => (e1 & 0x7fffffff) - (e2 & 0x7fffffff));
 	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, aaaLineCount - 1, a.Length, ip);
 	//}
-
+	
 	int _savedTop, _savedPos;
 	Hash.MD5Result _savedLinesMD5;
-
+	
 	static Hash.MD5Result _Hash(List<int> a) {
 		if (a.Count == 0) return default;
 		Hash.MD5Context md5 = default;
 		foreach (var v in a) md5.Add(v);
 		return md5.Hash;
+	}
+	
+	public void EFoldLine(int line, bool unfold = false, bool andDescendants = false) {
+		if (unfold) {
+			Call(andDescendants ? SCI_FOLDCHILDREN : SCI_FOLDLINE, line, 1);
+			return;
+		}
+		
+		if (0 != Call(SCI_GETFOLDEXPANDED, line)) {
+			//get text for SCI_TOGGLEFOLDSHOWTEXT
+			string s = aaaLineText(line), s2 = null;
+			int i = 0; while (i < s.Length && s[i] is ' ' or '\t') i++;
+			if (s.Eq(i, "///")) { //let s2 = summary text
+				s_rxFold.summary1 ??= new regexp(@"\h*<summary>\h*$", RXFlags.ANCHORED);
+				if (s_rxFold.summary1.IsMatch(s, (i + 3)..)) {
+					i = aaaLineStart(false, line + 1);
+					int len = aaaLen8;
+					if (i < len) {
+						const int maxLen = 100;
+						s = aaaRangeText(false, i, Math.Min(len, i + maxLen + 10));
+						int to = s.Find("</summary>");
+						bool limited = to < 0;
+						if (limited) to = Math.Min(s.Length, maxLen); //Min to avoid partial </summary> at the end
+						s_rxFold.summary2 ??= new regexp(@"\h*///\h*\K.+");
+						using (new StringBuilder_(out var b)) {
+							foreach (var g in s_rxFold.summary2.FindAllG(s, 0, 0..to)) {
+								if (b.Length > 0) b.Append(' ');
+								b.Append(s, g.Start, g.Length);
+							}
+							if (limited) b.Append(" …");
+							s2 = b.ToString();
+						}
+					}
+				}
+			} else { //if like 'void Method() {', let s2 = "... }"
+				for (; i < s.Length; i++) {
+					char c = s[i];
+					if (c == '{') { s2 = "... }"; break; }
+					if (c == '/' && i < s.Length - 1) {
+						c = s[i + 1];
+						if (c == '/') break;
+						if (c == '*') {
+							if (i >= s.Length - 4) break;
+							i = s.Find("*/", i + 2); if (++i == 0) break;
+						}
+					}
+				}
+			}
+			
+			if (s2 != null) aaaSetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+			else Call(SCI_FOLDLINE, line);
+		}
+		
+		if (andDescendants) {
+			for (int last = Call(SCI_GETLASTCHILD, line, -1); ++line < last;) {
+				if (aaaFoldingLevel(line).isHeader) EFoldLine(line);
+			}
+		}
+	}
+	static (regexp summary1, regexp summary2) s_rxFold;
+	
+	/// <param name="modifiers">
+	/// 0 - toggle this.
+	/// Shift (1) - expand this and descendants.
+	/// Ctrl (2) - toggle this and descendants.
+	/// </param>
+	void _FoldOnMarginClick(int pos8, int modifiers) {
+		if (modifiers > 2) return;
+		int line = Call(SCI_LINEFROMPOSITION, pos8);
+		if (!aaaFoldingLevel(line).isHeader) return;
+		if (modifiers == 1) {
+			Call(SCI_FOLDCHILDREN, line, 1);
+			return;
+		}
+		bool hide = 0 != Call(SCI_GETFOLDEXPANDED, line);
+		EFoldLine(line, !hide, modifiers == 2);
+		if (hide) {
+			//move caret out of contracted region
+			int pos = aaaCurrentPos8;
+			if (pos > pos8) {
+				int i = aaaLineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
+				if (pos <= i) aaaCurrentPos8 = pos8;
+			}
+		}
+	}
+	
+	void _FoldContextMenu(int pos8 = -1) {
+		if (!_fn.IsCodeFile) return;
+		
+		//get the fold kind for "Fold all of this kind"
+		int headLine = aaaLineFromPos(false, pos8 < 0 ? aaaCurrentPos8 : pos8);
+		if (!aaaFoldingLevel(headLine).isHeader) headLine = Call(SCI_GETFOLDPARENT, headLine);
+		var kind = headLine < 0 ? 0 : _Folds().FirstOrDefault(o => o.line == headLine).kind;
+		
+		var m = new popupMenu();
+		if (kind != default) {
+			m["Fold all of this kind"] = o => _Fold(false, kind);
+			m["Unfold all of this kind"] = o => _Fold(true, kind);
+			m.Separator();
+		}
+		m["Fold functions, events"] = o => _Fold(false, CiFolding.FoldKind.Member);
+		m["Fold regions"] = o => _Fold(false, CiFolding.FoldKind.Region);
+		m["Fold //."] = o => _Fold(false, CiFolding.FoldKind.DotFold);
+		m["Fold ///documentation"] = o => _Fold(false, CiFolding.FoldKind.Doc);
+		m["Fold comments, #if"] = o => _Fold(false, CiFolding.FoldKind.Comment | CiFolding.FoldKind.Disabled);
+		m["Fold all except types"] = o => _Fold(false, CiFolding.FoldKind.Comment | CiFolding.FoldKind.Disabled | CiFolding.FoldKind.Doc | CiFolding.FoldKind.DotFold | CiFolding.FoldKind.Member | CiFolding.FoldKind.Region);
+		m.Separator();
+		m["Unfold all"] = o => _Fold(true, 0); //not SCI_FOLDALL because need to skip meta
+		
+		m.Show(owner: AaWnd);
+		
+		void _Fold(bool expand, CiFolding.FoldKind kind) {
+			var meta = Au.Compiler.MetaComments.FindMetaComments(aaaText);
+			int metaLine = meta.end == 0 ? -1 : aaaLineFromPos(true, meta.start);
+			var a = _Folds().ToArray();
+			List<int> a2 = new();
+			for (int i = 0; i < a.Length; i++) {
+				var v = a[i];
+				if (v.line == metaLine) continue;
+				if (kind != 0) {
+					if (!kind.Has(v.kind)) continue;
+					//together with members and types also fold/unfold their ///documentation
+					if (kind is CiFolding.FoldKind.Member or CiFolding.FoldKind.Type) {
+						if (i > 0 && a[i - 1].kind == CiFolding.FoldKind.Doc) {
+							int line2 = a[i - 1].line;
+							if (v.line - 1 == Call(SCI_GETLASTCHILD, line2, -1)) a2.Add(line2);
+						}
+					}
+				}
+				a2.Add(v.line);
+			}
+			
+			//In some cases something changes current pos. Also scrolls and unfolds. May be bad styling.
+			//	Difficult to find the reason.
+			//	Workaround: hide in ascending order; show in descending order.
+			if (expand) {
+				for (int i = 0; i < a2.Count; i++) {
+					EFoldLine(a2[i], expand);
+				}
+			} else {
+				for (int i = a2.Count; --i >= 0;) {
+					EFoldLine(a2[i], expand);
+				}
+				
+				//move caret out of contracted region
+				int line = aaaLineFromPos(false, aaaCurrentPos8), line0 = line;
+				while (0 == Call(SCI_GETLINEVISIBLE, line)) {
+					int i = Call(SCI_GETFOLDPARENT, line);
+					if ((uint)i >= line) break;
+					line = i;
+				}
+				if (line < line0) aaaCurrentPos8 = aaaLineStart(false, line);
+			}
+		}
+		
+		//Gets an ordered copy of CiFolding.s_foldPoints with offsets converted to line indices.
+		//	GetFoldPoints does not do it because it would make slower there.
+		IEnumerable<(int line, CiFolding.FoldKind kind)> _Folds()
+			=> CiFolding.s_foldPoints.OrderBy(o => o.pos).Select(o => (line: aaaLineFromPos(true, o.pos), kind: o.kind));
 	}
 }

@@ -471,7 +471,7 @@ partial class CiCompletion {
 						INamespaceOrTypeSymbol nts;
 						if (!isDot) {
 							nts = sym.ContainingNamespace;
-							if (sym.ContainingType != null) //put locals and class members at the top
+							if (sym.ContainingType != null && !v.ci.DisplayText.Contains('.')) //put locals and class members at the top, except if like 'Enum.Member' or 'Class.Member'
 								while (nts.ContainingNamespace is INamespaceSymbol n1) nts = n1; //global namespace
 						}
 						//else if(sym is ReducedExtensionMethodSymbol em) nts = em.ReceiverType; //rejected. Didn't work well, eg with linq.
