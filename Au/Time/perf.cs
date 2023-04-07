@@ -1,17 +1,15 @@
 //#define PREPAREMETHOD //now slow anyway. Does not JIT everything.
 
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Code execution time measurement with high precision (API <msdn>QueryPerformanceCounter</msdn>).
 	/// </summary>
-	public static unsafe class perf
-	{
+	public static unsafe class perf {
 		//info: we don't use Stopwatch. It used to load System.dll (before .NET Core, now don't know), which is slow and can make speed measurement incorrect and confusing in some cases.
-
+		
 		static readonly double s_freqMCS = Api.QueryPerformanceFrequency(out long f) ? 1_000_000d / f : 0d, s_freqMS = s_freqMCS / 1000d;
 		//note: don't use static ctor. Makes some simplest functions much slower.
-
+		
 		/// <summary>
 		/// Gets the number of microseconds elapsed since Windows startup. Uses the high-resolution system timer (API <msdn>QueryPerformanceCounter</msdn>).
 		/// </summary>
@@ -26,7 +24,7 @@ namespace Au
 		//Speed of 1000 calls when cold CPU: PerfMilliseconds 97, WinMillisecondsWithoutSleep 76, WinMilliseconds64/GetTickCount64 12.
 		//The double cast/multiply/cast is fast. The API is much much slower. And Math.BigMul is much slower.
 		//rejected: make corrections based on GetTickCount64. It makes slower and is not necessary.
-
+		
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup. Uses the high-resolution system timer (API <msdn>QueryPerformanceCounter</msdn>).
 		/// </summary>
@@ -36,7 +34,7 @@ namespace Au
 		/// Independent of computer clock time changes.
 		/// </remarks>
 		public static long ms { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMS); } }
-
+		
 		/// <summary>
 		/// Performs time measurements and stores measurement data.
 		/// </summary>
@@ -47,8 +45,7 @@ namespace Au
 		/// This type is a struct (value type), and not small (184 bytes). Don't use it as a function parameter without ref. To share a variable between functions use a field in your class.
 		/// Don't need to dispose variables of this type. The <see cref="Dispose"/> function just calls <see cref="NW"/>.
 		/// </remarks>
-		public unsafe struct Instance : IDisposable
-		{
+		public unsafe struct Instance : IDisposable {
 			static Instance() {
 				//Prevent JIT delay when calling Next etc
 #if PREPAREMETHOD
@@ -60,22 +57,22 @@ namespace Au
 				perf.next(); perf.nw(); perf.first(); //JIT-compiles everything we need. s_enabled prevents calling print.it etc.
 				s_enabled = true;
 #endif
-
+				
 				//JIT speed: 1 ms.
 			}
-
+			
 #if !PREPAREMETHOD
 			readonly static bool s_enabled;
 #endif
 			const int _nElem = 16;
-
+			
 			fixed long _a[_nElem];
 			fixed char _aMark[_nElem];
 			volatile int _counter;
 			bool _incremental;
 			int _nMeasurements; //used with incremental to display n measurements and average times
 			long _time0;
-
+			
 			/// <summary>See <see cref="perf.incremental"/>.</summary>
 			/// <example>
 			/// <code><![CDATA[
@@ -102,7 +99,7 @@ namespace Au
 					}
 				}
 			}
-
+			
 			/// <summary><see cref="perf.first()"/></summary>
 			public void First() {
 #if !PREPAREMETHOD
@@ -112,7 +109,7 @@ namespace Au
 				_counter = 0;
 				_nMeasurements++;
 			}
-
+			
 			//rejected. See comments in static.
 			///// <summary>
 			///// Calls <see cref="Cpu"/> and <see cref="First()"/>.
@@ -122,7 +119,7 @@ namespace Au
 			//	Cpu(timeSpeedUpCPU);
 			//	First();
 			//}
-
+			
 			/// <summary><see cref="perf.next"/></summary>
 			public void Next(char cMark = '\0') {
 #if !PREPAREMETHOD
@@ -137,14 +134,14 @@ namespace Au
 					char* c = (char*)(p + _nElem); c[n] = cMark;
 				}
 			}
-
+			
 			/// <summary>
 			/// Calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
 			/// <param name="cMark">A character to add to the results string like <c>"A=150"</c>.</param>
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public void NW(char cMark = '\0') { Next(cMark); Write(); }
-
+			
 			/// <summary>
 			/// Calls <see cref="NW"/>, which calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
@@ -167,7 +164,7 @@ namespace Au
 				Write();
 			}
 			//public void Dispose() => NW();
-
+			
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
 			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
@@ -178,7 +175,7 @@ namespace Au
 #endif
 				print.it(ToString());
 			}
-
+			
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
@@ -190,7 +187,7 @@ namespace Au
 					return b.ToString();
 				}
 			}
-
+			
 			/// <summary>
 			/// Return array of time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 			/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
@@ -201,11 +198,11 @@ namespace Au
 				_Results(n, null, a);
 				return a;
 			}
-
+			
 			void _Results(int n, StringBuilder b, long[] a) {
 				if (n == 0) return;
 				bool average = false; int nMeasurements = 1;
-
+				
 				fixed (long* p = _a) fixed (char* c = _aMark) {
 					g1:
 					double t = 0d, tPrev = 0d;
@@ -223,12 +220,12 @@ namespace Au
 						}
 					}
 					if (b == null) return;
-
+					
 					if (n > 1) {
 						if (average) t /= nMeasurements;
 						b.Append("  (").Append((long)t).Append(")");
 					}
-
+					
 					if (!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
 						average = true;
 						b.Append(";  measured ").Append(nMeasurements).Append(" times, average");
@@ -236,7 +233,7 @@ namespace Au
 					}
 				}
 			}
-
+			
 			/// <summary>
 			/// Gets the number of microseconds between <see cref="First"/> and the last <see cref="Next"/>.
 			/// </summary>
@@ -249,13 +246,13 @@ namespace Au
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// This static variable is used by the static functions.
 		/// </summary>
 		static Instance s_static;
 		//rejected: public. Needed for Serialize. Maybe in the future will be implemented somehow differently.
-
+		
 		/// <summary>
 		/// Creates and returns new <see cref="Instance"/> variable and calls its <see cref="Instance.First"/>.
 		/// </summary>
@@ -264,7 +261,7 @@ namespace Au
 			R.First();
 			return R;
 		}
-
+		
 		/// <summary>
 		/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
 		/// Finally you can call <see cref="write"/> or <see cref="toString"/> to get the sums.
@@ -290,18 +287,18 @@ namespace Au
 			get => s_static.Incremental;
 			set => s_static.Incremental = value;
 		}
-
+		
 		/// <summary>
 		/// Stores current time in the first element of an internal array.
 		/// </summary>
 		public static void first() => s_static.First();
-
+		
 		//rejected. Unclear. Can confuse int timeSpeedUpCPU with char cMark.
 		///// <summary>
 		///// Calls <see cref="Cpu"/> and <see cref="First()"/>.
 		///// </summary>
 		//public static void first(int timeSpeedUpCPU) => s_static.First(timeSpeedUpCPU);
-
+		
 		/// <summary>
 		/// Stores current time in next element of an internal array.
 		/// </summary>
@@ -310,13 +307,13 @@ namespace Au
 		/// </remarks>
 		/// <param name="cMark">A character to mark this time in the results string, like <c>"A=150"</c>.</param>
 		public static void next(char cMark = '\0') => s_static.Next(cMark);
-
+		
 		/// <summary>
 		/// Calls <see cref="next"/> and <see cref="write"/>.
 		/// </summary>
 		/// <param name="cMark">A character to add to the results string like <c>"A=150"</c>.</param>
 		public static void nw(char cMark = '\0') => s_static.NW(cMark);
-
+		
 		/// <summary>
 		/// Formats a string from time values collected by calling <see cref="first"/> and <see cref="next"/>, and shows it in the output.
 		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
@@ -332,24 +329,24 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static void write() => s_static.Write();
-
+		
 		/// <summary>
 		/// Formats a string from time values collected by calling <see cref="first"/> and <see cref="next"/>.
 		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
 		public static string toString() => s_static.ToString();
-
+		
 		/// <summary>
 		/// Return array of time values collected by calling <see cref="first"/> and <see cref="next"/>.
 		/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
 		public static long[] toArray() => s_static.ToArray();
-
+		
 		/// <summary>
 		/// Gets the number of microseconds between <see cref="first"/> and the last <see cref="next"/>.
 		/// </summary>
 		public static long timeTotal => s_static.TimeTotal;
-
+		
 		/// <summary>
 		/// Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
 		/// </summary>
@@ -365,18 +362,18 @@ namespace Au
 			for (long t0 = mcs; mcs - t0 < timeMilliseconds * 1000L; n++) { }
 			//print.it(n);
 		}
-
+		
 		//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
 		///// <summary>
 		///// Executes <i>code</i> (lambda) <i>count</i> times, and then calls <see cref="Next"/>.
 		///// </summary>
 		//public static void execute(int count, Action code) => s_static.Execute(count, code);
-
+		
 		///// <summary>
 		///// <i>countAll</i> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 		///// </summary>
 		//public static void executeMulti(int countAll, int countEach, params Action[] codes) => s_static.ExecuteMulti(countAll, countEach, codes);
-
+		
 		/// <summary>
 		/// Gets a reference to a <see cref="Instance"/> variable in shared memory.
 		/// </summary>
