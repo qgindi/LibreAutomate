@@ -29,7 +29,7 @@ public class KListBoxItemWithImage : ListBoxItem {
 		var im = image as FrameworkElement;
 		if (im == null && image is string s) try { im = ImageUtil.LoadWpfImageElement(s); } catch {  }
 		if (im != null) {
-			im.Margin = new(-2, 0, 4, 0);
+			im.Margin = new(0, 1, 4, 1);
 			p.Children.Add(im);
 		}
 		
