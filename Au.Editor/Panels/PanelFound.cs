@@ -28,7 +28,7 @@ class PanelFound {
 		b.Add<Border>().Border(thickness2: new(1, 0, 0, 0)).SpanRows(2);
 		b.Add(out _grid, flags: WBAdd.ChildOfLast);
 		
-		b.Row(-1).Add(out _lb).Span(1).Width(70..).Border(thickness2: new(0, 1, 0, 0)).UiaName("Found_pages");
+		b.Row(-1).Add(out _lb).Span(1).Border(thickness2: new(0, 1, 0, 0)).UiaName("Found_pages");
 		_lb.SelectionChanged += (_, _) => {
 			if (_sci != null) _sci.Visibility = Visibility.Hidden;
 			_li = _lb.SelectedItem as _LbItem;

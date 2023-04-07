@@ -52,7 +52,7 @@ public static class ExtWpf {
 	//	if(PresentationSource.FromDependencyObject(t) is HwndSource hs) return (wnd)hs.Handle;
 	//	return default;
 	//}
-
+	
 	/// <summary>
 	/// Gets <b>IWin32Window</b> of this window for <b>System.Windows.Forms</b> functions like <b>Form.ShowDialog</b> and <b>ColorDialog.ShowDialog</b>.
 	/// </summary>
@@ -61,7 +61,7 @@ public static class ExtWpf {
 		nw.AssignHandle(t.Hwnd().Handle);
 		return nw;
 	}
-
+	
 	/// <summary>
 	/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
 	/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
@@ -76,7 +76,7 @@ public static class ExtWpf {
 		}
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Enumerates visual descendant objects, including parts of composite controls.
 	/// </summary>
@@ -90,7 +90,7 @@ public static class ExtWpf {
 			//	See ExtMisc.Descendants. But it cannot be used here because VisualTreeHelper does not give an IEnumerable.
 		}
 	}
-
+	
 	/// <summary>
 	/// Enumerates logical descendant objects, including parts of composite controls.
 	/// </summary>
@@ -102,7 +102,7 @@ public static class ExtWpf {
 		//}
 		return LogicalTreeHelper.GetChildren(t).Descendants_(o => o is DependencyObject d ? LogicalTreeHelper.GetChildren(d) : null);
 	}
-
+	
 	/// <summary>
 	/// Gets visual ancestors (<see cref="VisualTreeHelper.GetParent"/>).
 	/// </summary>
@@ -116,7 +116,7 @@ public static class ExtWpf {
 			if (v == last) yield break;
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls callback function <i>f</i> for each visual ancestor (<see cref="VisualTreeHelper.GetParent"/>), and returns the ancestor for which <i>f</i> returns true.
 	/// Also can return <i>last</i> or null.
@@ -134,7 +134,7 @@ public static class ExtWpf {
 		}
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Returns the nearest visual ancestor (<see cref="VisualTreeHelper.GetParent"/>) of type <i>T</i>.
 	/// Also can return <i>last</i> or null.
@@ -151,7 +151,7 @@ public static class ExtWpf {
 		}
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Gets rectangle of this element in screen coordinates.
 	/// </summary>
@@ -160,14 +160,14 @@ public static class ExtWpf {
 		Point p1 = t.PointToScreen(default), p2 = t.PointToScreen(new Point(t.ActualWidth, t.ActualHeight));
 		return RECT.FromLTRB(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt());
 	}
-
+	
 	/// <summary>
 	/// Sets UI Automation name.
 	/// </summary>
 	public static void UiaSetName(this DependencyObject t, string name) {
 		System.Windows.Automation.AutomationProperties.SetName(t, name);
 	}
-
+	
 	//rejected, FBC. Looks not good. Better .IsChecked == true.
 	/// <summary>
 	/// Returns true if <c>IsChecked == true</c>.
@@ -175,7 +175,7 @@ public static class ExtWpf {
 	[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 	//[Obsolete("use code IsChecked == true")]
 	public static bool True(this CheckBox t) => t.IsChecked == true;
-
+	
 #if true
 	//SHOULDDO: does not work if this is called in ctor and caller sets Title afterwards.
 	static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {
@@ -187,10 +187,10 @@ public static class ExtWpf {
 			if (andSize) w.MoveL(r); else w.MoveL(x, y);
 		} else {
 			//tested: don't need this for Popup. Its PlacementRectangle can use physical pixels.
-
+			
 			t.WindowStartupLocation = WindowStartupLocation.Manual;
 			if (wstate == WindowState.Minimized) t.ShowActivated = false;
-
+			
 			WindowsHook.ThreadCbt(k => {
 				if (k.code == HookData.CbtEvent.CREATEWND) {
 					var c = k.CreationInfo->lpcs;
@@ -212,14 +212,14 @@ public static class ExtWpf {
 				}
 				return false;
 			});
-
+			
 			t.Left = double.NaN;
 			t.Top = double.NaN;
 			if (andSize) {
 				t.Width = double.NaN;
 				t.Height = double.NaN;
 			}
-
+			
 			//temporarily change Title. I didn't find other ways to recognize the window in the hook proc. Also in title we can pass r or x y.
 			string title = t.Title, s;
 			if (andSize) s = "m8KFOuCJOUmjziONcXEi3A " + r.ToStringSimple(); else s = $"m8KFOuCJOUmjziONcXEi3A {x} {y};";
@@ -350,7 +350,7 @@ public static class ExtWpf {
 		}
 	}
 #endif
-
+	
 	/// <summary>
 	/// Sets window startup location before showing it first time. Also can move already loaded window.
 	/// </summary>
@@ -365,7 +365,7 @@ public static class ExtWpf {
 	/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 	/// </remarks>
 	public static void SetXY(this Window t, int x, int y) => _Move(t, x, y, default, false);
-
+	
 	/// <summary>
 	/// Sets window startup rectangle (location and size) before showing it first time. Also can move/resize already loaded window.
 	/// </summary>
@@ -379,7 +379,7 @@ public static class ExtWpf {
 	/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 	/// </remarks>
 	public static void SetRect(this Window t, RECT r) => _Move(t, 0, 0, r, true);
-
+	
 	/// <summary>
 	/// Inserts row and adjusts row indices of children that are in other rows.
 	/// </summary>
@@ -387,7 +387,7 @@ public static class ExtWpf {
 		_GridShift(t, true, index, 1);
 		t.RowDefinitions.Insert(index, d);
 	}
-
+	
 	/// <summary>
 	/// Inserts column and adjusts column indices of children that are in other columns.
 	/// </summary>
@@ -395,7 +395,7 @@ public static class ExtWpf {
 		_GridShift(t, false, index, 1);
 		t.ColumnDefinitions.Insert(index, d);
 	}
-
+	
 	/// <summary>
 	/// Removes row and adjusts row indices of children that are in other rows.
 	/// </summary>
@@ -407,7 +407,7 @@ public static class ExtWpf {
 		t.RowDefinitions.RemoveAt(index);
 		_GridShift(t, true, index, -1);
 	}
-
+	
 	/// <summary>
 	/// Removes column and adjusts column indices of children that are in other columns.
 	/// </summary>
@@ -419,7 +419,7 @@ public static class ExtWpf {
 		t.ColumnDefinitions.RemoveAt(index);
 		_GridShift(t, false, index, -1);
 	}
-
+	
 	/// <summary>
 	/// Removes a child element and its row from this grid. Adjusts row indices of children that are in other rows.
 	/// </summary>
@@ -431,7 +431,7 @@ public static class ExtWpf {
 		_GridRemoveChild(t, e);
 		RemoveRow(t, i, removeOtherElements);
 	}
-
+	
 	/// <summary>
 	/// Removes a child element and its column from this grid. Adjusts column indices of children that are in other columns.
 	/// </summary>
@@ -443,7 +443,7 @@ public static class ExtWpf {
 		_GridRemoveChild(t, e);
 		RemoveColumn(t, i, removeOtherElements);
 	}
-
+	
 	static void _GridShift(Grid g, bool rows, int startIndex, int shift) {
 		if (startIndex >= (rows ? g.RowDefinitions.Count : g.ColumnDefinitions.Count)) return;
 		foreach (UIElement e in g.Children) {
@@ -453,7 +453,7 @@ public static class ExtWpf {
 			if (rows) Grid.SetRow(e, k); else Grid.SetColumn(e, k);
 		}
 	}
-
+	
 	static void _GridRemoveRowColChildren(Grid g, bool row, int index) {
 		var cc = g.Children;
 		for (int i = cc.Count; --i >= 0;) {
@@ -462,13 +462,13 @@ public static class ExtWpf {
 			if (rc == index) _GridRemoveChild(g, e);
 		}
 	}
-
+	
 	static void _GridRemoveChild(Grid g, UIElement e) {
 		g.Children.Remove(e);
 		Grid.SetRow(e, 0);
 		Grid.SetColumn(e, 0);
 	}
-
+	
 	/// <summary>
 	/// Adds a child element in specified row/column.
 	/// </summary>
@@ -479,7 +479,7 @@ public static class ExtWpf {
 		if (columnSpan > 1) Grid.SetColumnSpan(e, columnSpan);
 		g.Children.Add(e);
 	}
-
+	
 	/// <summary>
 	/// Adds one or more columns. Like <see cref="wpfBuilder.Columns"/>, but does not clear existing columns.
 	/// </summary>
@@ -487,7 +487,7 @@ public static class ExtWpf {
 	public static void AddColumns(this Grid g, params WBGridLength[] widths) {
 		foreach (var v in widths) g.ColumnDefinitions.Add(v.Column);
 	}
-
+	
 	/// <summary>
 	/// Adds one or more rows. Like <see cref="wpfBuilder.Row"/>.
 	/// </summary>
@@ -495,19 +495,19 @@ public static class ExtWpf {
 	public static void AddRows(this Grid g, params WBGridLength[] heights) {
 		foreach (var v in heights) g.RowDefinitions.Add(v.Row);
 	}
-
+	
 	/// <summary>
 	/// Workaround for WPF bug: on DPI change tries to activate window.
 	/// Call on <b>WM_DPICHANED</b> message or in <b>OnDpiChanged</b> override.
 	/// </summary>
 	public static void DpiChangedWorkaround(this Window t) => _DCW(t.Dispatcher, t.Hwnd());
-
+	
 	/// <summary>
 	/// Workaround for WPF bug: on DPI change tries to activate window.
 	/// Call on <b>WM_DPICHANED</b> message or in <b>OnDpiChanged</b> override. Only if top-level window.
 	/// </summary>
 	public static void DpiChangedWorkaround(this HwndSource t) => _DCW(t.Dispatcher, (wnd)t.Handle);
-
+	
 	static void _DCW(Dispatcher d, wnd w) {
 		if (wnd.active != w) {
 			bool wasVisible = w.IsVisible; //allow to activate when opening window in non-primary screen
@@ -515,7 +515,7 @@ public static class ExtWpf {
 			d.InvokeAsync(() => h.Dispose());
 		}
 	}
-
+	
 	/// <returns>true if in ShowDialog, false if not, null if failed (uses reflection).</returns>
 	internal static bool? IsModal_(this Window t) {
 		try {
@@ -527,7 +527,7 @@ public static class ExtWpf {
 			return null;
 		}
 	}
-
+	
 	/// <summary>
 	/// Hides the grip and/or overflow controls in this toolbar.
 	/// Call before the toolbar is loaded.
@@ -540,9 +540,9 @@ public static class ExtWpf {
 		if (hideGrip) ToolBarTray.SetIsLocked(t, true);
 		if (hideOverflow) {
 			if (t.IsLoaded) throw new InvalidOperationException("loaded");
-			RoutedEventHandler h = null;
+			SizeChangedEventHandler h = null;
 			h = (_, _) => {
-				t.Loaded -= h;
+				t.SizeChanged -= h;
 				if (t.Template.FindName("OverflowButton", t) is ButtonBase ob) {
 					ob.SetBinding(
 						UIElement.VisibilityProperty,
@@ -552,10 +552,11 @@ public static class ExtWpf {
 						});
 				}
 			};
-			t.Loaded += h;
+			t.SizeChanged += h;
+			//note: in Loaded event handler randomly does not work. Somehow t still does not have the overflow button.
 		}
 	}
-
+	
 	/// <summary>
 	/// Shows the window in [preview mode](xref:code_editor).
 	/// </summary>
@@ -571,13 +572,13 @@ public static class ExtWpf {
 		if (!Environment.CommandLine.RxMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$", out var m)) Environment.Exit(0);
 		int pid = m[1].Value.ToInt();
 		m[2].Value.ToInt(out long time);
-
+		
 		t.Title = "WPF preview";
 		t.ShowActivated = false;
 		t.WindowStartupLocation = WindowStartupLocation.Manual;
 		t.ShowInTaskbar = false;
 		t.WindowState = WindowState.Normal;
-
+		
 		t.Loaded += (_, _) => {
 			var w = t.Hwnd();
 			//unsafe { int BOOL = 1; Api.DwmSetWindowAttribute(w, Api.DWMWINDOWATTRIBUTE.DWMWA_TRANSITIONS_FORCEDISABLED, &BOOL, 0); } //does not disable the inflate/deflate animation; and don't need, with it even better
@@ -591,7 +592,7 @@ public static class ExtWpf {
 			//_TerminatePrevious(); pid = 0; //async less flickering, especially when no animations, eg toolwindow
 			t.Dispatcher.InvokeAsync(() => { _TerminatePrevious(); pid = 0; }, DispatcherPriority.ApplicationIdle);
 			WndUtil.SetOwnerWindow(w, wMain);
-
+			
 			//workaround for: when the window is inactive, on click nonclient (eg to close), the window hangs until mouse moved. Only when using SetOwnerWindow.
 			var hs = PresentationSource.FromVisual(t) as HwndSource;
 			hs.AddHook(_WndProc);
@@ -611,7 +612,7 @@ public static class ExtWpf {
 				return 0;
 			}
 		};
-
+		
 		try {
 			t.ShowDialog();
 		}
@@ -619,7 +620,7 @@ public static class ExtWpf {
 			_TerminatePrevious();
 			Environment.Exit(0);
 		}
-
+		
 		void _TerminatePrevious() {
 			if (pid == 0) return;
 			if (process.getTimes(pid, out long tc, out _) && tc <= time) {
