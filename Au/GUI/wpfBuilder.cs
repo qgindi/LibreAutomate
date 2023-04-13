@@ -1668,6 +1668,12 @@ public class wpfBuilder {
 	/// </remarks>
 	/// <exception cref="NotSupportedException">The last added element isn't <b>TextBox</b> or editable <b>ComboBox</b> control.</exception>
 	/// <exception cref="InvalidOperationException">The control isn't in an <b>AdornerDecorator</b>.</exception>
+	/// <example>
+	/// <code><![CDATA[
+	/// b.R.Add<AdornerDecorator>().Add(out TextBox text1, flags: WBAdd.ChildOfLast).Watermark("Water");
+	/// ]]></code>
+	/// More examples in Cookbook.
+	/// </example>
 	public wpfBuilder Watermark(string text) => Watermark(out _, text);
 	
 	/// <param name="adorner">Receives the adorner. It can be used to change watermark text later.</param>

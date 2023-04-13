@@ -436,10 +436,12 @@ partial class CiCompletion {
 					if (typenameStart >= 0 && ci.DisplayText == "l" && CiWinapi.IsWinapiClassSymbol(symL as INamedTypeSymbol)) v.hidden = CiComplItemHiddenBy.Always; //not continue;, then no groups
 					break;
 				case CiItemKind.EnumMember when !isDot:
-					//workaround for Roslyn bug: if Enum.Member, members are sorted by value, not by name. Same in VS.
-					bool good = ci.SortText == ci.DisplayText;
-					//Debug_.PrintIf(good, "Roslyn bug fixed"); //occasionally prints
-					if (!good) v.ci = ci = ci.WithSortText(ci.DisplayText);
+					//workaround for: if Enum.Member, members are sorted by value, not by name. Same in VS.
+					if (ci.SortText != ci.DisplayText) {
+						string ss = ci.SortText, se = sym.ContainingType.Name;
+						if (ss.Length == se.Length + 5 && ss.Starts(se) && ss[se.Length] == '_') //like "EnumName_0001"
+							v.ci = ci = ci.WithSortText(se + "." + sym.Name);
+					}
 					break;
 				case CiItemKind.EnumMember when isDot:
 				case CiItemKind.Label:
@@ -461,6 +463,16 @@ partial class CiCompletion {
 			//p1.Next('i');
 			
 			if (canGroup) {
+				INamedTypeSymbol enclosingType = null;
+				bool _IsMemberOfEnclosingType(ISymbol sym) {
+					var ct = sym.ContainingType; if (ct == null) return false;
+					enclosingType ??= model.GetEnclosingNamedType(position, default);
+					for (var et = enclosingType; et != null; et = et.ContainingType) {
+						if (ct == et || sym == et) return true;
+					}
+					return false;
+				}
+				
 				for (int i = 0; i < d.items.Count; i++) {
 					var v = d.items[i];
 					var sym = v.FirstSymbol;
@@ -471,8 +483,18 @@ partial class CiCompletion {
 						INamespaceOrTypeSymbol nts;
 						if (!isDot) {
 							nts = sym.ContainingNamespace;
-							if (sym.ContainingType != null && !v.ci.DisplayText.Contains('.')) //put locals and class members at the top, except if like 'Enum.Member' or 'Class.Member'
+							
+							//put locals and members of enclosing class[es] at the top
+							if (_IsMemberOfEnclosingType(sym))
 								while (nts.ContainingNamespace is INamespaceSymbol n1) nts = n1; //global namespace
+							
+							//CONSIDER grouping:
+							//Namespaces
+							//Locals
+							//Members of enclosing class
+							//Members of other enclosing classes (ancestors)
+							//consider: Group of current namespace, and maybe of its ancestors.
+							//Namespace groups (like now)
 						}
 						//else if(sym is ReducedExtensionMethodSymbol em) nts = em.ReceiverType; //rejected. Didn't work well, eg with linq.
 						else nts = sym.ContainingType;

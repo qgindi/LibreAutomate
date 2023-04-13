@@ -10,7 +10,7 @@ namespace Au.More {
 	internal static class Debug_ //FUTURE: make public, when will be more tested and if really need.
 	{
 		static void _Print(object text, string f_, int l_, string m_) {
-			string s = print.ObjectToString_(text);
+			string s = print.util.toString(text);
 			string prefix = null; if (s.Starts("<>")) { prefix = "<>"; s = s[2..]; }
 			s = $"{prefix}Debug: {m_} ({pathname.getName(f_)}:{l_}):  {s}";
 			_Print2(s);
@@ -75,7 +75,7 @@ namespace Au.More {
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void Dialog(object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
-			string s = print.ObjectToString_(text);
+			string s = print.util.toString(text);
 			dialog.show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{m_} ({pathname.getName(f_)}:{l_})");
 		}
 		

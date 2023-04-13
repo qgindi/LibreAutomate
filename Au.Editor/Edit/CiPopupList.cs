@@ -152,11 +152,14 @@ class CiPopupList {
 			if (_groupsEnabled) {
 				diff = c1.group - c2.group;
 				if (diff != 0) return diff;
+				
 				if (_groups[c1.group].NE()) {
 					CiItemKind k1 = c1.kind, k2 = c2.kind;
-					//let EnumMember be by Enum. In CiItemKind they are not adjacent, it would be not good.
-					if (k1 > CiItemKind.Enum) { if (k1 == CiItemKind.EnumMember) k1 = CiItemKind.Enum + 1; else k1++; }
-					if (k2 > CiItemKind.Enum) { if (k2 == CiItemKind.EnumMember) k2 = CiItemKind.Enum + 1; else k2++; }
+					
+					//group Enum and Enum.Member together
+					if (k1 == CiItemKind.EnumMember) k1 = CiItemKind.Enum;
+					if (k2 == CiItemKind.EnumMember) k2 = CiItemKind.Enum;
+					
 					diff = k1 - k2;
 					if (diff != 0) return diff;
 				}

@@ -235,7 +235,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		if (r.ok) _SetWndCon(r.w, r.con, r.useCon, true);
 	}
 
-	//when checked/unchecked any checkbox, and when text changed of any textbox
+	//when checked/unchecked any checkbox, and when text changed of any textbox or combobox
 	void _AnyCheckTextBoxComboValueChanged(object source) {
 		if (!_noeventValueChanged) {
 			_noeventValueChanged = true;
@@ -488,7 +488,6 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			string newline = _cbAction.SelectedIndex is 0 or >= c_finder ? "\r\n" : null; //if no action, add empty line
 			InsertCode.Statements(s);
 			_close = true;
 			_bInsert.Content = "Close";

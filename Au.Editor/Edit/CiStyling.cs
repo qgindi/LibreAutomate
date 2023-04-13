@@ -640,7 +640,7 @@ partial class CiStyling {
 			
 			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha, INDIC_FULLBOX);
-			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_FULLBOX);//TODO: use some other indicator. Now difficult to see caret if touches it.
 			
 			void _Indic(int indic, int color, int alpha, int style) {
 				sci.aaaIndicatorDefine(indic, style, color, alpha, 255, underText: true);

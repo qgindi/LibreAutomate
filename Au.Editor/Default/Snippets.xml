@@ -63,7 +63,7 @@ default:
 }]]>
 			</list>
 			<list item="switch (type)">
-				<![CDATA[switch ($end$type$end$) {
+				<![CDATA[switch ($end$variable$end$) {
 case Type1 _:
 	
 	break;

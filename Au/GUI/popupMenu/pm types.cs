@@ -12,7 +12,7 @@ public class PMItem : MTItem {
 	internal byte checkType; //1 checkbox, 2 radio
 	internal bool checkDontClose;
 	internal bool rawText;
-
+	
 	internal PMItem(popupMenu m, bool isDisabled, bool isChecked = false) {
 		_m = m;
 		_isDisabled = isDisabled;
@@ -20,19 +20,19 @@ public class PMItem : MTItem {
 		checkDontClose = m.CheckDontClose;
 		rawText = m.RawText;
 	}
-
+	
 	/// <summary>Gets item action.</summary>
 	public Action<PMItem> Clicked => base.clicked as Action<PMItem>;
-
+	
 	/// <summary>Gets or sets menu item id.</summary>
 	public int Id { get; set; }
-
+	
 	/// <summary>true if is a submenu-item.</summary>
 	public bool IsSubmenu { get; init; }
-
+	
 	/// <summary>true if is a separator.</summary>
 	public bool IsSeparator { get; init; }
-
+	
 	/// <summary>
 	/// Gets or sets disabled state.
 	/// </summary>
@@ -46,7 +46,7 @@ public class PMItem : MTItem {
 		}
 	}
 	bool _isDisabled;
-
+	
 	/// <summary>
 	/// Gets or sets checked state.
 	/// </summary>
@@ -62,17 +62,31 @@ public class PMItem : MTItem {
 		}
 	}
 	bool _isChecked;
-
+	
 	/// <summary>Gets or sets whether to use bold font.</summary>
 	public bool FontBold { get; set; }
-
+	
 	/// <summary>Gets or sets background color.</summary>
 	public ColorInt BackgroundColor { get; set; }
-
+	
 	/// <summary>
 	/// Hotkey display text.
 	/// </summary>
 	public string Hotkey { get; set; }
+	
+	/// <summary>
+	/// Invokes <see cref="Clicked"/> if not null.
+	/// Handles exceptions if need. Invokes in new thread if need.
+	/// </summary>
+	internal void InvokeAction_() {
+		if (clicked is Action<PMItem> action) {
+			if (actionThread) run.thread(() => _Invoke(), background: false); else _Invoke();
+			void _Invoke() {
+				try { action(this); }
+				catch (Exception ex) when (!this.actionException) { print.warning(ex.ToString(), -1); }
+			}
+		}
+	}
 }
 
 /// <summary>
@@ -85,30 +99,30 @@ public class PMItem : MTItem {
 public enum PMFlags {
 	/// <summary>Show by the caret (text cursor) position. If not possible, use flag <b>WindowCenter</b> or <b>ScreenCenter</b> or <i>xy</i> or mouse position.</summary>
 	ByCaret = 0x1000000,
-
+	
 	/// <summary>Show in the center of the screen that contains the mouse pointer.</summary>
 	ScreenCenter = 0x2000000,
-
+	
 	/// <summary>Show in the center of the active window.</summary>
 	WindowCenter = 0x4000000,
-
+	
 	/// <summary>Underline characters preceded by &amp;, regardless of Windows settings. More info: <see cref="StringUtil.RemoveUnderlineChar"/>.</summary>
 	Underline = 0x8000000,
-
+	
 	//TPM_ flags
-
+	
 	/// <summary>Horizontally align the menu so that the show position would be in its center.</summary>
 	AlignCenterH = 0x4,
-
+	
 	/// <summary>Horizontally align the menu so that the show position would be at its right side.</summary>
 	AlignRight = 0x8,
-
+	
 	/// <summary>Vertically align the menu so that the show position would be in its center.</summary>
 	AlignCenterV = 0x10,
-
+	
 	/// <summary>Vertically align the menu so that the show position would be at its bottom.</summary>
 	AlignBottom = 0x20,
-
+	
 	/// <summary>Show at the bottom or top of <i>excludeRect</i>, not at the right/left.</summary>
 	AlignRectBottomTop = 0x40,
 }
@@ -119,13 +133,13 @@ public enum PMFlags {
 public enum PMKHook {
 	/// <summary>Process the key event as usually.</summary>
 	Default,
-
+	
 	/// <summary>Close the menu.</summary>
 	Close,
-
+	
 	/// <summary>Do nothing.</summary>
 	None,
-
+	
 	/// <summary>Execute the focused item and close the menu.</summary>
 	ExecuteFocused,
 }
