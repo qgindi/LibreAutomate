@@ -754,6 +754,9 @@ namespace Au {
 		/// Gets canonical names and paths of all known folders, including custom known folders registered by applications.
 		/// These names can be used with <see cref="getFolder"/>.
 		/// </summary>
+		/// <remarks>
+		/// Paths of virtual and unavailable folders are returnsed as <![CDATA["<virtual>"]]> and <![CDATA["<unavailable>"]]>.
+		/// </remarks>
 		public static unsafe Dictionary<string, string> getKnownFolders() {
 			var dict = new Dictionary<string, string>();
 

@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Au.Controls;
-using Au.Tools;
 using static Au.Controls.Sci;
 
 class PanelFound {

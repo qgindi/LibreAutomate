@@ -1023,18 +1023,16 @@ partial class Compiler {
 			//replace variables like $(variable)
 			var f = _meta.MainFile.f;
 			s_rx1 ??= new regexp(@"\$\((\w+)\)");
-			string _ReplFunc(RXMatch k) {
-				switch (k[1].Value) {
-				case "outputFile": return _OutputFile();
-				case "outputPath": return _meta.OutputPath;
-				case "source": return f.ItemPath;
-				case "role": return _meta.Role.ToString();
-				case "optimize": return _meta.Optimize ? "true" : "false";
-				case "bit32": return _meta.Bit32 ? "true" : "false";
-				default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
-				}
-			}
-			for (int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
+			for (int i = 0; i < args.Length; i++)
+				args[i] = s_rx1.Replace(args[i], k => k[1].Value switch {
+					"outputFile" => _OutputFile(),
+					"outputPath" => _meta.OutputPath,
+					"source" => f.ItemPath,
+					"role" => _meta.Role.ToString(),
+					"optimize" => _meta.Optimize ? "true" : "false",
+					"bit32" => _meta.Bit32 ? "true" : "false",
+					_ => throw new ArgumentException("error in meta: unknown variable " + k.Value)
+				});
 		}
 		
 		string _OutputFile() => _meta.Role == MCRole.exeProgram ? DllNameToAppHostExeName(outFile, _meta.Bit32) : outFile;

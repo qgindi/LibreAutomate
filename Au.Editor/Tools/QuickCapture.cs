@@ -60,12 +60,12 @@ static class QuickCapture {
 		m.Submenu("Find+", m => {
 			m["Find and activate"] = _ => _Insert(_Wnd_Find(w, activate: true));
 			m["Find or run"] = _ => {
-				var pi = TUtil.PathInfo.FromWindow(w);
-				if (pi != null) _Insert(_Wnd_Find(w, activate: true, orRun: pi.FormatCode(1)));
+				var k = TUtil.PathInfo.FromWindow(w);
+				if (k != null) _Insert(_Wnd_Find(w, activate: true, orRun: k.FormatCode(TUtil.PathCode.Run)));
 			};
 			m["Run and find"] = _ => {
-				var pi = TUtil.PathInfo.FromWindow(w);
-				if (pi != null) _Insert(_Wnd_Find(w, activate: true, andRun: pi.FormatCode(1)));
+				var k = TUtil.PathInfo.FromWindow(w);
+				if (k != null) _Insert(_Wnd_Find(w, activate: true, andRun: k.FormatCode(TUtil.PathCode.Run)));
 			};
 			m["wndFinder"] = _ => _Insert("var f = new wndFinder(" + TUtil.ArgsFromWndFindCode(_Wnd_Find(w)) + ");");
 			m["Find control"] = _ => _Insert(_Wnd_Find(w, c));
@@ -92,15 +92,18 @@ static class QuickCapture {
 			m.Last.Tooltip = "Hotkey/autotext/mouse triggers added afterwards will work only when a window of this program is active";
 		});
 		m.Submenu("Program", m => {
-			var pi = TUtil.PathInfo.FromWindow(w);
-			if (pi != null) {
-				m["string s = path;"] = _ => _Insert(pi.FormatCode(0));
-				m["run.it(path);"] = _ => _Insert(pi.FormatCode(1));
-				m["t[name] = o => run.it(path);"] = _ => _Insert(pi.FormatCode(2));
+			var k = TUtil.PathInfo.FromWindow(w);
+			if (k != null) {
+				TUtil.PathInfo.QuickCaptureMenu(m, o => _Insert(k.FormatCode(o)));
 				m.Separator();
-				m["Copy path"] = _ => clipboard.text = pi.filePath;
+				m["Copy path"] = _ => clipboard.text = k.fileRaw;
+				m["Copy @\"path\""] = _ => clipboard.text = k.fileString;
 			}
 			if (w.ProgramName is string pn) m["Copy filename"] = _ => clipboard.text = pn;
+			if (k != null) {
+				m.Separator();
+				m["Select in Explorer"] = _ => run.selectInExplorer(k.fileRaw);
+			}
 		});
 		m.Submenu("Color", m => {
 			string s0 = color.ToString("X6"), s1 = "#" + s0, s2 = $"0x" + s0, s3 = $"0x" + ColorInt.SwapRB(color).ToString("X6");

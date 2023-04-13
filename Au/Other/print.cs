@@ -9,8 +9,8 @@ public static partial class print {
 	/// Returns true if this process is attached to a console.
 	/// </summary>
 	public static bool isConsoleProcess => Api.GetConsoleOutputCP() != 0; //fast
-																		  //public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //no, may be true even if not attached to a console, eg if this non-console program started from cmd/bat on Win7
-
+	//public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //no, may be true even if not attached to a console, eg if this non-console program started from cmd/bat on Win7
+	
 	/// <summary>
 	/// Returns true if is writing to console, false if to the output window etc.
 	/// </summary>
@@ -32,14 +32,14 @@ public static partial class print {
 		}
 	}
 	static bool? _isVisibleConsole;
-
+	
 	/// <summary>
 	/// If true, in console process will not use the console window. Then everything is like in non-console process.
 	/// </summary>
 	/// <seealso cref="redirectConsoleOutput"/>
 	/// <seealso cref="redirectDebugOutput"/>
 	public static bool ignoreConsole { get; set; }
-
+	
 	/// <summary>
 	/// Clears the output window or console text (if <see cref="isWritingToConsole"/>) or log file (if <see cref="logFile"/> not null).
 	/// </summary>
@@ -54,7 +54,7 @@ public static partial class print {
 			_ServerAction(PrintServerMessageType.Clear);
 		}
 	}
-
+	
 	/// <summary>
 	/// Scrolls the output window or console to the top.
 	/// </summary>
@@ -67,7 +67,7 @@ public static partial class print {
 			_ServerAction(PrintServerMessageType.ScrollToTop);
 		}
 	}
-
+	
 	[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
 	static void _ConsoleAction(PrintServerMessageType action) {
 		try {
@@ -84,18 +84,14 @@ public static partial class print {
 		}
 		catch { }
 	}
-
+	
 	/// <summary>
-	/// Writes text to the output.
+	/// Writes string to the output.
 	/// </summary>
-	/// <param name="value">
-	/// Text.
-	/// If <c>""</c> or null, writes empty line. To write <c>"null"</c> if null, use code like <c>print.it((object)s);</c>.
-	/// </param>
 	/// <remarks>
-	/// Can display links, colors, images, etc. More info: [](xref:output_tags).
-	/// 
 	/// Appends newline (<c>"\r\n"</c>), unless text is like <c>"&lt;&gt;text&lt;nonl&gt;"</c>.
+	/// 
+	/// Can display links, colors, images, etc. More info: [](xref:output_tags).
 	/// 
 	/// Where the text goes:
 	/// - If redirected, to wherever it is redirected. See <see cref="writer"/>.
@@ -108,81 +104,69 @@ public static partial class print {
 	public static void it(string value) {
 		writer.WriteLine(value);
 	}
-
+	
 	/// <summary>
 	/// Writes value of any type to the output.
 	/// </summary>
 	/// <param name="value">Value of any type. If null, writes <c>"null"</c>.</param>
 	/// <remarks>
-	/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
+	/// If the type is unsigned integer (uint, ulong, ushort, byte, nuint), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> true.
 	/// 
 	/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
 	/// For <b>Span</b> and other ref struct types use <c>print.it(x.ToString());</c>.
 	/// </remarks>
 	public static void it(object value) {
-		it(ObjectToString_(value));
+		it(util.toString(value));
 	}
-
+	
 	/// <summary>
-	/// Converts object to string like <see cref="it(object)"/> does.
+	/// Writes interpolated string to the output.
 	/// </summary>
-	internal static string ObjectToString_(object value) {
-		switch (value) {
-		case null: return "null";
-		case string t: return t;
-		case ulong or uint or ushort or byte or nuint or System.Collections.IEnumerable or System.Collections.DictionaryEntry:
-			using (new StringBuilder_(out var b)) {
-				ObjectToString_(b, value, false);
-				return b.ToString();
-			}
-		default: return value.ToString();
-		}
+	/// <param name="value">Interpolated string. Can contain <c>:print</c> format like in the example, to display the value like <see cref="it(object)"/>.</param>
+	/// <example>
+	/// <code><![CDATA[
+	/// int[] a = { 1, 2, 3 };
+	/// print.it($"a: {a}"); //a: System.Int32[]
+	/// print.it($"a: {a:print}"); //a: { 1, 2, 3 }
+	/// ]]></code>
+	/// </example>
+	public static void it(InterpolatedString value) {
+		writer.WriteLine(value.GetFormattedText());
 	}
-
-	internal static void ObjectToString_(StringBuilder b, object value, bool compact) {
-		switch (value) {
-		case null: b.Append("null"); break;
-		case string s: b.Append(s); break;
-		case ulong u: _Unsigned(b, u); break;
-		case uint u: _Unsigned(b, u); break;
-		case ushort u: _Unsigned(b, u); break;
-		case byte u: _Unsigned(b, u); break;
-		case nuint u: _Unsigned(b, u); break;
-		case char[] a:
-			b.Append("{ ");
-			foreach (var c in a) {
-				if (c < ' ') b.Append('x').Append(((byte)c).ToString("X"));
-				else b.Append(c);
-				b.Append(' ');
-			}
-			b.Append('}');
-			break; //always compact
-		case System.Collections.IEnumerable e:
-			if (compact) b.Append("{ ");
-			string sep = null;
-			foreach (var v in e) {
-				if (sep == null) sep = compact ? ", " : "\r\n"; else b.Append(sep);
-				ObjectToString_(b, v, compact);
-			}
-			if (compact) b.Append(" }");
-			break;
-		case System.Collections.DictionaryEntry de:
-			b.AppendFormat("[{0}, {1}]", de.Key, de.Value);
-			break;
-		default: b.Append(value); break;
-		}
-
-		static void _Unsigned(StringBuilder b, ulong u) => b.Append("0x").Append(u.ToString("X"));
-	}
-
+	
 	/// <summary>
-	/// Writes array, <b>List</b>, <b>Dictionary</b> or other generic collection to the output, as a list of items separated by <c>"\r\n"</c>.
+	/// Writes an array or generic collection to the output.
+	/// </summary>
+	/// <param name="value">
+	/// Array or generic collection of any type.
+	/// If null, writes <c>"null"</c>.
+	/// The format depends on type:
+	/// <br/>• char[] - like string.
+	/// <br/>• byte[] - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> true.
+	/// <br/>• Other - multiple lines.
+	/// </param>
+	public static void it<T>(IEnumerable<T> value) {
+		if (value is char[] or byte[]) print.it(util.toString(value));
+		else list("\r\n", value);
+	}
+	
+	/// <summary>
+	/// Writes an array or generic collection to the output, as a list of items separated by <i>separator</i>.
 	/// </summary>
 	/// <param name="value">Array or generic collection of any type. If null, writes <c>"null"</c>.</param>
-	public static void it<T>(IEnumerable<T> value) {
-		it(value switch { null => "null", char[] a => ObjectToString_(a), _ => string.Join("\r\n", value) });
+	public static void list<T>(string separator, IEnumerable<T> value) {
+		string s = "null";
+		if (value != null)
+			using (new StringBuilder_(out var b)) {
+				foreach (var v in value) {
+					if (b.Length > 0) b.Append(separator);
+					util.toString(b, v, compact: true);
+				}
+				s = b.ToString();
+			}
+		print.it(s);
 	}
-
+	
 	/// <summary>
 	/// Writes multiple arguments of any type to the output, using separator <c>", "</c>.
 	/// </summary>
@@ -191,29 +175,17 @@ public static partial class print {
 	/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
 	/// </remarks>
 	public static void it(object value1, object value2, params object[] more) {
-		it(MultiToString_(value1, value2, more));
+		it(util.toList(", ", value1, value2, more));
 	}
-	static readonly object[] s_oaNull = { null };
-
-	internal static string MultiToString_(object value1, object value2, params object[] more) {
-		if (more == null) more = s_oaNull; //workaround for: if the third argument is null, we receive null and not object[] { null }
-		else if (more.GetType() != typeof(object[])) more = new object[] { more }; //workaround for: if the third argument is an array, prints its elements without { }. If empty array, prints nothing (even no comma). With this workaround - only if object[], which is rare; and it's good, because may be used in a wrapper function that passes its 'params object[]' parameter here.
-
-		using (new StringBuilder_(out var b)) {
-			for (int i = 0, n = 2 + more.Length; i < n; i++) {
-				if (i > 0) b.Append(", ");
-				ObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]), compact: true);
-			}
-			return b.ToString();
-
-			//rejected: escape strings (eg if contains characters "\r\n,\0"):
-			//	it can damage formatting tags etc;
-			//	the string may be already escaped, eg wnd.ToString or elm.ToString;
-			//	we don't know whether the caller wants it;
-			//	let the caller escape it if wants, it's easy.
-		}
+	
+	/// <summary>
+	/// Writes multiple arguments of any type to the output, using <i>separator</i>.
+	/// </summary>
+	/// <inheritdoc cref="it(object, object, object[])"/>
+	public static void list(string separator, object value1, object value2, params object[] more) {
+		it(util.toList(separator, value1, value2, more));
 	}
-
+	
 	/// <summary>
 	/// Gets or sets object that actually writes text when is called <see cref="it"/>.
 	/// </summary>
@@ -236,16 +208,16 @@ public static partial class print {
 	/// ]]></code>
 	/// </example>
 	public static TextWriter writer { get; set; } = new _OutputWriter();
-
+	
 	/// <summary>
 	/// Our default writer class for the Writer property.
 	/// </summary>
 	class _OutputWriter : LineWriter_ {
 		public override Encoding Encoding => Encoding.Unicode;
-
+		
 		protected override void WriteLineNow(string s) => directly(s);
 	}
-
+	
 	/// <summary>
 	/// Same as <see cref="it"/>, but does not pass the string to <see cref="writer"/>.
 	/// </summary>
@@ -253,16 +225,16 @@ public static partial class print {
 	public static void directly(string value) {
 		value ??= "";
 		//qm2.write($"'{value}'");
-
+		
 		if (logFile != null) _WriteToLogFile(value);
 		else if (isWritingToConsole) _ConsoleWriteLine(value);
 		else if (qm2.use) qm2.write(value);
 		else _ServerWrite(value);
 	}
-
+	
 	[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
 	static void _ConsoleWriteLine(string value) => Console.WriteLine(value);
-
+	
 	/// <summary>
 	/// Writes a warning text to the output.
 	/// By default appends the stack trace.
@@ -279,24 +251,24 @@ public static partial class print {
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void warning(string text, int showStackFromThisFrame = 0, string prefix = "<>Warning: ") {
 		if (opt.warnings.IsDisabled(text)) return;
-
+		
 		if (!opt.warnings.Verbose) {
 			var t = Api.GetTickCount64();
 			if (t - s_warningTime < 1000) return;
 			s_warningTime = t;
 		}
-
+		
 		string s = text ?? "";
 		if (showStackFromThisFrame >= 0 && !(s.Contains("\n   at ") && s.RxIsMatch(@"Exception: .*\R   at "))) { //include stack unless text contains stack
 			var x = new StackTrace(showStackFromThisFrame + 1, true);
 			var st = x.ToString(); var rn = st.Ends('\n') ? "" : "\r\n";
 			s = $"{prefix}{s} <fold><\a>\r\n{st}{rn}</\a></fold>";
 		} else s = prefix + s;
-
+		
 		it(s);
 	}
 	static long s_warningTime;
-
+	
 	/// <summary>
 	/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
 	/// </summary>
@@ -322,7 +294,7 @@ public static partial class print {
 	}
 	static TextWriter _prevConsoleOut;
 	//note: don't call this before AllocConsole. Then can't restore, and IsOutputRedirected always returns true.
-
+	
 	/// <summary>
 	/// Let <b>Debug.Write</b>, <b>Trace.Write</b> and similar methods also write to the same destination as <see cref="it"/>.
 	/// </summary>
@@ -348,7 +320,7 @@ public static partial class print {
 		get => _traceListener != null;
 	}
 	static TextWriterTraceListener _traceListener;
-
+	
 	/// <summary>
 	/// Sets log file path.
 	/// When set (not null), text passed to <see cref="it"/> will be written to the file.
@@ -373,17 +345,17 @@ public static partial class print {
 				} else _logFile = null;
 			}
 		}
-
+		
 	}
 	static string _logFile;
 	static _LogFile _hFile;
 	static readonly object _lockObj1 = new();
-
+	
 	/// <summary>
 	/// If true, will add current local time when using log file (see <see cref="logFile"/>).
 	/// </summary>
 	public static bool logFileTimestamp { get; set; }
-
+	
 	static void _WriteToLogFile(string s) {
 		lock (_lockObj1) {
 			if (_hFile == null) {
@@ -405,7 +377,7 @@ public static partial class print {
 			_hFile.WriteLine(s);
 		}
 	}
-
+	
 	static void _ClearToLogFile() {
 		lock (_lockObj1) {
 			if (_hFile == null) {
@@ -415,15 +387,15 @@ public static partial class print {
 			}
 		}
 	}
-
+	
 	unsafe class _LogFile {
 		//info: We don't use StreamWriter. It creates more problems than would make easier.
 		//	Eg its finalizer does not write to file. If we try to Close it in our finalizer, it throws 'already disposed'.
 		//	Also we don't need such buffering. Better to write to the OS file buffer immediately, it's quite fast.
-
+		
 		Handle_ _h;
 		string _name;
-
+		
 		/// <summary>
 		/// Opens LogFile file handle for writing.
 		/// Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
@@ -434,7 +406,7 @@ public static partial class print {
 			if (h.Is0) return null;
 			return new _LogFile() { _h = h, _name = path };
 		}
-
+		
 		/// <summary>
 		/// Writes <c>s + "\r\n"</c> and optionally timestamp.
 		/// </summary>
@@ -461,7 +433,7 @@ public static partial class print {
 				Encoding.UTF8.GetBytes(s, new Span<byte>(p, n));
 			}
 			p[n - 1] = 13; p[n++] = 10;
-
+			
 			ok = Api.WriteFile(_h, p, n, out _);
 			if (!ok) {
 				string emsg = lastError.message;
@@ -472,7 +444,7 @@ public static partial class print {
 			}
 			return ok;
 		}
-
+		
 		/// <summary>
 		/// Sets file size = 0.
 		/// </summary>
@@ -481,13 +453,13 @@ public static partial class print {
 			Debug.Assert(ok);
 			return ok;
 		}
-
+		
 		/// <summary>
 		/// Closes file handle.
 		/// </summary>
 		public void Close() => _h.Dispose();
 	}
-
+	
 	/// <summary>
 	/// Calls Api.CreateFile to open file or mailslot.
 	/// </summary>
@@ -495,10 +467,10 @@ public static partial class print {
 	/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
 	internal static Handle_ CreateFile_(string name, bool openExisting) {
 		return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
-
+		
 		//tested: CREATE_ALWAYS works with mailslot too. Does not erase messages. Undocumented what to use.
 	}
-
+	
 	///
 #if DEBUG
 	public
@@ -510,17 +482,17 @@ public static partial class print {
 		/// Sets to use QM2 as the output server.
 		/// </summary>
 		public static bool use { get; set; }
-
+		
 		/// <summary>
 		/// Clears QM2 output panel.
 		/// </summary>
 		public static void clear() => _WriteToQM2(null);
-
+		
 		/// <summary>
 		/// Writes line to QM2.
 		/// </summary>
 		public static void write(object o) => _WriteToQM2(o?.ToString() ?? "");
-
+		
 		/// <summary>
 		/// Writes multiple arguments of any type to the output, using separator ", ".
 		/// </summary>
@@ -529,9 +501,9 @@ public static partial class print {
 		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
 		/// </remarks>
 		public static void write(object value1, object value2, params object[] more) {
-			write(MultiToString_(value1, value2, more));
+			write(util.toList(", ", value1, value2, more));
 		}
-
+		
 		/// <param name="s">If null, clears output.</param>
 		static void _WriteToQM2(string s) {
 			if (!_hwndQM2.IsAlive) {
@@ -541,5 +513,145 @@ public static partial class print {
 			_hwndQM2.Send(Api.WM_SETTEXT, -1, s);
 		}
 		static wnd _hwndQM2;
+	}
+	
+	/// <summary>
+	/// Write unsigned numeric types in decimal format, not hexadecimal.
+	/// </summary>
+	public static bool noHex { get; set; }
+	
+	/// <summary>
+	/// Some functions used by the <b>print</b> class.
+	/// </summary>
+	public static class util {
+		/// <summary>
+		/// Converts value of any type to string. Formats it like <see cref="it(object)"/>.
+		/// </summary>
+		/// <param name="value">Value of any type. If null, returns <c>"null"</c>.</param>
+		/// <param name="compact">If <i>value</i> is <b>IEnumerable</b>, format it like <c>"{ item1, item2 }"</c>.</param>
+		public static string toString(object value, bool compact = false) {
+			switch (value) {
+			case null: return "null";
+			case string t: return t;
+			case ulong or uint or ushort or byte or nuint when !noHex:
+			case System.Collections.IEnumerable or System.Collections.DictionaryEntry:
+				using (new StringBuilder_(out var b)) {
+					toString(b, value, compact);
+					return b.ToString();
+				}
+			default: return value.ToString();
+			}
+		}
+		
+		/// <summary>
+		/// Appends value of any type to <b>StringBuilder</b>. Formats it like <see cref="it(object)"/>.
+		/// </summary>
+		/// <inheritdoc cref="toString(object, bool)"/>
+		public static void toString(StringBuilder b, object value, bool compact) {
+			switch (value) {
+			case null: b.Append("null"); break;
+			case string s: b.Append(s); break;
+			case ulong u: _Unsigned(b, u); break;
+			case uint u: _Unsigned(b, u); break;
+			case ushort u: _Unsigned(b, u); break;
+			case byte u: _Unsigned(b, u); break;
+			case nuint u: _Unsigned(b, u); break;
+			case char[] a: b.Append(a); break;
+			case byte[] a:
+				if (noHex) b.AppendJoin('-', a);
+				else b.Append(System.BitConverter.ToString(a));
+				break;
+			case System.Collections.IEnumerable e:
+				if (compact) b.Append("{ ");
+				string sep = null;
+				foreach (var v in e) {
+					if (sep == null) sep = compact ? ", " : "\r\n"; else b.Append(sep);
+					toString(b, v, compact);
+				}
+				if (compact) b.Append(" }");
+				break;
+			case System.Collections.DictionaryEntry de:
+				b.AppendFormat("[{0}, {1}]", de.Key, de.Value);
+				break;
+			default: b.Append(value); break;
+			}
+			
+			static void _Unsigned(StringBuilder b, ulong u) {
+				if (noHex) b.Append(u);
+				else b.Append("0x").Append(u.ToString("X"));
+			}
+		}
+		
+		/// <summary>
+		/// Converts multiple values of any type to string like <see cref="list(string, object, object, object[])"/>.
+		/// </summary>
+		public static string toList(string sep, object value1, object value2, params object[] more) {
+			if (more == null) more = s_oaNull; //workaround for: if the third argument is null, we receive null and not object[] { null }
+			else if (more.GetType() != typeof(object[])) more = new object[] { more }; //workaround for: if the third argument is an array, prints its elements without { }. If empty array, prints nothing (even no comma). With this workaround - only if object[], which is rare; and it's good, because may be used in a wrapper function that passes its 'params object[]' parameter here.
+			
+			using (new StringBuilder_(out var b)) {
+				for (int i = 0, n = 2 + more.Length; i < n; i++) {
+					if (i > 0) b.Append(sep);
+					util.toString(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]), compact: true);
+				}
+				return b.ToString();
+				
+				//rejected: escape strings (eg if contains characters "\r\n,\0"):
+				//	it can damage formatting tags etc;
+				//	the string may be already escaped, eg wnd.ToString or elm.ToString;
+				//	we don't know whether the caller wants it;
+				//	let the caller escape it if wants, it's easy.
+			}
+		}
+		static readonly object[] s_oaNull = { null };
+	}
+	
+#pragma warning disable 1591 //no XML doc
+	/// <summary>
+	/// Interpolated string handler that adds <c>:print</c> format like <see cref="it(InterpolatedString)"/>.
+	/// </summary>
+	[InterpolatedStringHandler, EditorBrowsable(EditorBrowsableState.Never)]
+	public ref struct InterpolatedString {
+		DefaultInterpolatedStringHandler _f;
+		
+		public InterpolatedString(int literalLength, int formattedCount) {
+			_f = new(literalLength, formattedCount);
+		}
+		
+		public void AppendLiteral(string value)
+			 => _f.AppendLiteral(value);
+		
+		public void AppendFormatted<T>(T value)
+			 => _f.AppendFormatted(value);
+		
+		public void AppendFormatted<T>(T value, int alignment)
+			 => _f.AppendFormatted(value, alignment);
+		
+		public void AppendFormatted<T>(T value, string format) {
+			if (format == "print") _f.AppendLiteral(util.toString(value, compact: true));
+			else _f.AppendFormatted(value, format);
+		}
+		
+		public void AppendFormatted<T>(T value, int alignment, string format) {
+			if (format == "print") _f.AppendFormatted(util.toString(value, compact: true), alignment);
+			else _f.AppendFormatted(value, alignment, format);
+		}
+		
+		public void AppendFormatted(ReadOnlySpan<char> value)
+			=> _f.AppendFormatted(value);
+		
+		public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string format = null)
+			=> _f.AppendFormatted(value, alignment, format);
+		
+		public void AppendFormatted(string value)
+			=> _f.AppendFormatted(value);
+		
+		public void AppendFormatted(string value, int alignment = 0, string format = null)
+			=> _f.AppendFormatted(value, alignment, format);
+		
+		public void AppendFormatted(object value, int alignment = 0, string format = null)
+			=> _f.AppendFormatted(value, alignment, format);
+		
+		public string GetFormattedText() => _f.ToStringAndClear();
 	}
 }

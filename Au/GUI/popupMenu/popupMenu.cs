@@ -467,14 +467,7 @@ public unsafe partial class popupMenu : MTBase {
 
 		var b = _result;
 		if (b != null) {
-			if (b.clicked != null) {
-				if (b.actionThread) run.thread(() => _ExecItem(), background: false); else _ExecItem();
-				void _ExecItem() {
-					var action = b.clicked as Action<PMItem>;
-					try { action(b); }
-					catch (Exception ex) when (!b.actionException) { print.warning(ex.ToString(), -1); }
-				}
-			}
+			b.InvokeAction_();
 			R = b.Id;
 		}
 
@@ -542,7 +535,7 @@ public unsafe partial class popupMenu : MTBase {
 		var scrn = screen.of(p);
 		_dpi = scrn.Dpi;
 		var rs = scrn.WorkArea;
-		rs.Inflate(-4, -4);
+		rs.Inflate(-8, -8);
 
 		if (byCaret) {
 			if (excludeRect == null) {
@@ -586,6 +579,8 @@ public unsafe partial class popupMenu : MTBase {
 		Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
 		_size.window = r.Size; _size.client = z; _size.border = -r.top;
 		Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
+		
+		if (r.bottom > rs.bottom && r.top > rs.top - 4) r.Move(r.left, rs.top - 4);
 
 		_w = WndUtil.CreateWindow(_WndProc, true, "Au.popupMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
 		_SetScrollbar(needScroll);
@@ -829,7 +824,10 @@ public unsafe partial class popupMenu : MTBase {
 					return true;
 				}
 			}
-			if (b.checkDontClose) return;
+			if (b.checkDontClose) {
+				b.InvokeAction_();
+				return;
+			}
 		}
 
 		if (b.IsSubmenu) {

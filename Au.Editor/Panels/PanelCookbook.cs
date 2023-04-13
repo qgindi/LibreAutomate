@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml.Linq;
 using Au.Controls;
-using Au.Tools;
 
 //CONSIDER: Add a menu-button. Menu:
 //	Item "Request a recipe for this search query (uses internet)".

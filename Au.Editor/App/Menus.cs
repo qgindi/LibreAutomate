@@ -351,6 +351,9 @@ static class Menus {
 		public static void ocr() { Docr.Dialog(); }
 		
 		[Command]
+		public static void Get_files_in_folder() { DEnumDir.Dialog(); }
+		
+		[Command]
 		public static void Quick_capturing() { QuickCapture.Info(); }
 		
 		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline" + blue)]

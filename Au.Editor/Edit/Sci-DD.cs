@@ -8,16 +8,16 @@ partial class SciCode {
 		Api.RegisterDragDrop(AaWnd, _ddTarget = new _DragDrop(this));
 		//Scintilla will call RevokeDragDrop when destroying window
 	}
-
+	
 	_DragDrop _ddTarget;
-
+	
 	class _DragDrop : Api.IDropTarget {
 		readonly SciCode _sci;
 		DDData _data;
 		bool _canDrop, _justText;
-
+		
 		public _DragDrop(SciCode sci) { _sci = sci; }
-
+		
 		void Api.IDropTarget.DragEnter(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect) {
 			_data = default;
 			_justText = false;
@@ -27,7 +27,7 @@ partial class SciCode {
 			effect = _GetEffect(effect, grfKeyState);
 			CodeInfo.Cancel();
 		}
-
+		
 		unsafe void Api.IDropTarget.DragOver(int grfKeyState, POINT p, ref int effect) {
 			if ((effect = _GetEffect(effect, grfKeyState)) != 0) {
 				_GetDropPos(ref p, out _);
@@ -35,19 +35,19 @@ partial class SciCode {
 				_sci.Call(SCI_DRAGDROP, 1, &z);
 			}
 		}
-
+		
 		void Api.IDropTarget.DragLeave() {
 			if (_canDrop) {
 				_canDrop = false;
 				_sci.Call(SCI_DRAGDROP, 3);
 			}
 		}
-
+		
 		void Api.IDropTarget.Drop(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect) {
 			if ((effect = _GetEffect(effect, grfKeyState)) != 0) _Drop(pt, effect);
 			_canDrop = false;
 		}
-
+		
 		int _GetEffect(int effect, int grfKeyState) {
 			if (!_canDrop) return 0;
 			if (_sci.aaaIsReadonly) return 0;
@@ -64,7 +64,7 @@ partial class SciCode {
 			else r = ae;
 			return (int)r;
 		}
-
+		
 		void _GetDropPos(ref POINT p, out int pos) {
 			_sci.AaWnd.MapScreenToClient(ref p);
 			if (!_justText) { //if files etc, drop as lines, not anywhere
@@ -74,47 +74,58 @@ partial class SciCode {
 				p.y = _sci.Call(SCI_POINTYFROMPOSITION, 0, pos);
 			} else pos = 0;
 		}
-
+		
 		unsafe void _Drop(POINT xy, int effect) {
 			_GetDropPos(ref xy, out int pos8);
 			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 			string s = null;
 			var b = new StringBuilder();
-			int what = 0, index = 0;
-
+			bool isCodeFile = _sci._fn.IsCodeFile;
+			
 			if (_justText) {
 				s = _data.text;
 			} else {
 				_sci.Call(SCI_DRAGDROP, 2, &z); //just hides the drag indicator and sets caret position
-
-				if (_sci._fn.IsCodeFile) {
-					string mi = _data.scripts
-						? "1 string s = name;|2 string s = path;|3 script.run(path);|4 t[name] = o => script.run(path);"
-						: "11 string s = path;|12 run.it(path);|13 t[name] = o => run.it(path);";
-					what = popupMenu.showSimple(mi);
-					if (what == 0) return;
-				}
-
+				
 				if (_data.scripts) {
+					int what = 0;
+					if (isCodeFile) {
+						what = popupMenu.showSimple("1 string s = name;|2 string s = path;|3 script.run(path);|4 t[name] = o => script.run(path);");
+						if (what == 0) return;
+					}
 					var a = Panels.Files.TreeControl.DragDropFiles;
 					if (a != null) {
-						foreach (var f in a) {
-							_AppendScriptOrLink(f.ItemPath, f.Name, f);
+						for (int i = 0; i < a.Length; i++)
+							_AppendScriptOrLink(what, a[i].ItemPath, a[i].Name, i + 1, a[i]);
+					}
+				} else if (_data.files != null || _data.shell != null) {
+					string[] files = null, names = null;
+					files = _data.shell != null ? _GetShell(_data.shell, out names) : _data.files;
+					if (isCodeFile) {
+						var what = TUtil.PathInfo.InsertCodeMenu(files, _sci.AaWnd);
+						if (what == 0) return;
+						for (int i = 0; i < files.Length; i++) {
+							if (i > 0) b.AppendLine();
+							var k = new TUtil.PathInfo(files[i], names?[i]);
+							b.Append(k.FormatCode(what, i + 1));
+						}
+					} else {
+						for (int i = 0; i < files.Length; i++) {
+							if (i > 0) b.AppendLine();
+							b.Append(files[i]);
 						}
 					}
-				} else if (_data.files != null) {
-					foreach (var path in _data.files) _AppendFileOrShell(path);
-				} else if (_data.shell != null) {
-					_GetShell(_data.shell, out var shells, out var names);
-					if (shells != null) {
-						for (int i = 0; i < shells.Length; i++) _AppendFileOrShell(shells[i], names[i]);
-					}
 				} else if (_data.linkName != null) {
-					_AppendScriptOrLink(_data.text, _GetLinkName(_data.linkName));
+					int what = 0;
+					if (isCodeFile) {
+						what = popupMenu.showSimple("11 string s = URL;|12 run.it(URL);|13 t[name] = o => run.it(URL);");
+						if (what == 0) return;
+					}
+					_AppendScriptOrLink(what, _data.text, _GetLinkName(_data.linkName));
 				}
 				s = b.ToString();
 			}
-
+			
 			if (!s.NE()) {
 				if (_justText) { //a simple drag-drop inside scintilla or text-only from outside
 					var s8 = Encoding.UTF8.GetBytes(s);
@@ -126,7 +137,9 @@ partial class SciCode {
 						_sci.Call(SCI_DRAGDROP, 2, &z);
 					}
 				} else { //file, script or URL
-					InsertCode.Statements(s, ICSFlags.NoFocus);
+					if (isCodeFile) InsertCode.Statements(s, ICSFlags.NoFocus);
+					else if(!_sci.aaaIsReadonly) _sci.aaaReplaceSel(s + "\r\n");
+					else print.it(s);
 				}
 				if (!_sci.IsFocused && _sci.AaWnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
 					_sci._noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
@@ -136,28 +149,22 @@ partial class SciCode {
 			} else {
 				_sci.Call(SCI_DRAGDROP, 3);
 			}
-
-			void _AppendFileOrShell(string path, string name = null) {
-				if (b.Length > 0) b.AppendLine();
-				var pi = new TUtil.PathInfo(path, name);
-				b.Append(pi.FormatCode(what - 11, ++index));
-			}
-
-			void _AppendScriptOrLink(string path, string name, FileNode fn = null) {
+			
+			void _AppendScriptOrLink(int what, string path, string name, int index = 0, FileNode fn = null) {
 				if (b.Length > 0) b.AppendLine();
 				if (what == 0) {
 					b.Append(path);
 				} else {
 					if (what == 4) name = name.RemoveSuffix(".cs");
 					name = name.Escape();
-
+					
 					if (what is 4 or 13) {
 						var t = InsertCodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
 						b.Append($"{t?.Name ?? "t"}[\"{name}\"] = o => ");
 					} else if (what is 1 or 2 or 11) {
-						b.Append($"string s{++index} = ");
+						b.Append($"string s{index} = ");
 					}
-
+					
 					b.Append(what switch {
 						1 => $"\"{name}\";",
 						2 or 11 => $"@\"{path}\";",
@@ -166,32 +173,35 @@ partial class SciCode {
 					});
 				}
 			}
-
-			static unsafe void _GetShell(byte[] b, out string[] shells, out string[] names) {
-				shells = names = null;
+			
+			static unsafe string[] _GetShell(byte[] b, out string[] names) {
 				fixed (byte* p = b) {
 					int* pi = (int*)p;
-					int n = *pi++; if (n < 1) return;
-					shells = new string[n]; names = new string[n];
-					IntPtr pidlFolder = (IntPtr)(p + *pi++);
-					for (int i = 0; i < n; i++) {
-						using var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]));
-						//if from Winstore apps folder, get "shell:..."
-						if (folders.shell.pidlApps_Win8.ValueEquals(pidlFolder)) {
-							//var s11 = pidl.ToShellString(SIGDN.DESKTOPABSOLUTEPARSING); //same as PARENTRELATIVEPARSING, not full
-							var s1 = pidl.ToShellString(SIGDN.PARENTRELATIVEPARSING);
-							if (s1 != null && !s1.Starts('{') && s1.Contains('!')) shells[i] = @"shell:AppsFolder\" + s1;
-							//if (s1 != null) {
-							//	if (s1.Starts('{')) shells[i] = s1; //like "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\charmap.exe". run.it fails etc. Cannot get path. The ITEMIDLIST is insanely long.
-							//	else if (s1.Contains('!')) shells[i] = @"shell:AppsFolder\" + s1;
-							//}
+					int n = *pi++;
+					var paths = new string[n];
+					names = new string[n];
+					if (n > 0) {
+						IntPtr pidlFolder = (IntPtr)(p + *pi++);
+						for (int i = 0; i < n; i++) {
+							using var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]));
+							//if from Winstore apps folder, get "shell:..."
+							if (folders.shell.pidlApps_Win8.ValueEquals(pidlFolder)) {
+								//var s11 = pidl.ToShellString(SIGDN.DESKTOPABSOLUTEPARSING); //same as PARENTRELATIVEPARSING, not full
+								var s1 = pidl.ToShellString(SIGDN.PARENTRELATIVEPARSING);
+								if (s1 != null && !s1.Starts('{') && s1.Contains('!')) paths[i] = @"shell:AppsFolder\" + s1;
+								//if (s1 != null) {
+								//	if (s1.Starts('{')) paths[i] = s1; //like "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\charmap.exe". run.it fails etc. Cannot get path. The ITEMIDLIST is insanely long.
+								//	else if (s1.Contains('!')) paths[i] = @"shell:AppsFolder\" + s1;
+								//}
+							}
+							paths[i] ??= pidl.ToString();
+							names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 						}
-						shells[i] ??= pidl.ToString();
-						names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
 					}
+					return paths;
 				}
 			}
-
+			
 			static unsafe string _GetLinkName(byte[] b) {
 				if (b.Length != 596) return null; //sizeof(FILEGROUPDESCRIPTORW) with 1 FILEDESCRIPTORW
 				fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
