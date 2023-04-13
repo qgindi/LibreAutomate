@@ -30,22 +30,39 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="_postbuild.cs" />
+		<Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="App\1App, @~`!$^()-=+[{]};'.spaceą.json" />
+	  <Compile Remove="_prePostBuild.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="_prePostBuild.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Remove="Default\Commands.xml" />
 		<None Remove="Default\Layout.xml" />
 		<None Remove="Default\Snippets.xml" />
-		<None Remove="Default\Snippets2.xml" />
 		<None Remove="Tools\Keys.txt" />
 		<None Remove="Tools\Regex.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Page Remove="App\1App, @~`!$^()-=+[{]};'.space.xaml" />
-		<Page Remove="App\1App, @~`!$^()-=+[{]};'.spaceą.xaml" />
+		<Content Include="Default\Commands.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Default\Layout.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<SubType>Designer</SubType>
+		</Content>
+		<Content Include="Default\Snippets.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
 		<Page Remove="resources\ci\Class.xaml" />
 		<Page Remove="resources\ci\Constant.xaml" />
 		<Page Remove="resources\ci\Delegate.xaml" />
@@ -79,27 +96,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="Default\Commands.xml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-		<Content Include="Default\Layout.xml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<SubType>Designer</SubType>
-		</Content>
-		<Content Include="Default\Snippets.xml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="_postbuild.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Resource Include="resources\ci\Class.xaml" />
 		<Resource Include="resources\ci\Constant.xaml" />
 		<Resource Include="resources\ci\Delegate.xaml" />
@@ -130,6 +126,8 @@
 		<Resource Include="resources\Images\ExpandDown_16x.xaml" />
 		<Resource Include="resources\Images\ExpandRight_16x.xaml" />
 		<Resource Include="resources\Images\SettingsGroup_16x.xaml" />
+		<Resource Include="Tools\Keys.txt" />
+		<Resource Include="Tools\Regex.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -163,11 +161,6 @@
 			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
 			<Aliases>CAW</Aliases>
 		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Resource Include="Tools\Keys.txt" />
-		<Resource Include="Tools\Regex.txt" />
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

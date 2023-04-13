@@ -10,7 +10,7 @@ namespace Au.Tools;
 
 static class TUtil {
 	#region text
-
+	
 	/// <summary>
 	/// Appends ', ' and string argument to this StringBuilder.
 	/// </summary>
@@ -25,7 +25,7 @@ static class TUtil {
 		else t.Append(s.Escape(quote: true));
 		return t;
 	}
-
+	
 	/// <summary>
 	/// Appends ', ' and non-string argument to this StringBuilder.
 	/// </summary>
@@ -39,12 +39,12 @@ static class TUtil {
 		t.Append(s);
 		return t;
 	}
-
+	
 	static void _AppendArgPrefix(StringBuilder t, string param, bool noComma) {
 		if (!noComma && t.Length > 1 && t[^1] is not ('(' or '[' or '{' or '<' or ',')) t.Append(", ");
 		if (param != null) t.Append(param).Append(param == "null" ? ", " : ": ");
 	}
-
+	
 	/// <summary>
 	/// Appends waitTime. If !orThrow, appends "-" if need.
 	/// If !orThrow and !appendAlways and waitTime == "0", appends nothing and returns false.
@@ -58,25 +58,23 @@ static class TUtil {
 		t.Append(waitTime);
 		return true;
 	}
-
+	
 	/// <summary>
-	/// If some 'use' are true, formats a flags argument like "Enum.Flag1|Enum.Flag2" and returns true.
+	/// If some 'use' are true, formats a flags argument like "Enum.Flag1 | Enum.Flag2" and returns true.
 	/// </summary>
 	public static bool FormatFlags<T>(out string s, params (bool use, T flag)[] af) where T : unmanaged, Enum {
 		if (!af.Any(o => o.use)) { s = null; return false; }
-		s = string.Join('|', af.Where(o => o.use).Select(o => typeof(T).Name + "." + o.flag));
+		s = string.Join(" | ", af.Where(o => o.use).Select(o => typeof(T).Name + "." + o.flag));
 		return true;
 	}
-
+	
 	/// <summary>
-	/// If some 'flags' checkbox controls are checked, formats a flags argument like "Enum.Flag1|Enum.Flag2" and returns true. Ignores null controls.
+	/// If some 'flags' checkbox controls are checked or indeterminate, formats a flags argument like "Enum.Flag1 | Enum.Flag2" and returns true. Ignores null controls.
 	/// </summary>
 	public static bool FormatFlags<T>(out string s, params (CheckBox use, T flag)[] af) where T : unmanaged, Enum {
-		if (!af.Any(o => o.use?.IsChecked == true)) { s = null; return false; }
-		s = string.Join('|', af.Where(o => o.use?.IsChecked == true).Select(o => typeof(T).Name + "." + o.flag));
-		return true;
+		return FormatFlags(out s, af.Select(o => (o.use != null && o.use.IsChecked != false, o.flag)).ToArray());
 	}
-
+	
 	/// <summary>
 	/// Returns true if s is like '@"*"' or '$"*"' or '$@"*"' or '@$"*"'.
 	/// s can be null.
@@ -85,7 +83,7 @@ static class TUtil {
 		prefixLength = (s.Like(false, "@\"*\"", "$\"*\"", "$@\"*\"", "@$\"*\"") + 1) / 2;
 		return prefixLength > 0;
 	}
-
+	
 	/// <summary>
 	/// If s contains \ and no newlines/controlchars: replaces all " with "", prepends @", appends " and returns true.
 	/// </summary>
@@ -96,7 +94,7 @@ static class TUtil {
 		s = "@\"" + s.Replace("\"", "\"\"") + "\"";
 		return true;
 	}
-
+	
 	/// <summary>
 	/// If s has *? characters, prepends "**t ".
 	/// s can be null.
@@ -105,7 +103,7 @@ static class TUtil {
 		if (wildex.hasWildcardChars(s)) s = "**t " + s;
 		return s;
 	}
-
+	
 	/// <summary>
 	/// If s has *? characters, prepends "**t ".
 	/// If <i>canMakeVerbatim</i>, finally calls <see cref="MakeVerbatim"/>.
@@ -137,7 +135,7 @@ static class TUtil {
 	//	if (canMakeVerbatim) MakeVerbatim(ref s);
 	//	return s;
 	//}
-
+	
 	/// <summary>
 	/// Returns true if newRawValue does not match wildex tbValue, unless contains is like $"..." or $@"...".
 	/// </summary>
@@ -153,7 +151,7 @@ static class TUtil {
 		var x = new wildex(tbValue, noException: true);
 		return !x.Match(newRawValue);
 	}
-
+	
 	/// <summary>
 	/// Replaces known non-constant window class names with wildcard. Eg "WindowsForms10.EDIT..." with "*.EDIT.*".
 	/// </summary>
@@ -167,16 +165,16 @@ static class TUtil {
 		}
 		return s;
 	}
-
+	
 	public static string ArgsFromWndFindCode(string wndFind) {
 		if (wndFind.RxMatch(@"\bwnd.find\((?:-?\d+, )?(.+)\);", 1, out RXGroup g)) return g.Value;
 		return null;
 	}
-
+	
 	#endregion
-
+	
 	#region formatters
-
+	
 	public record WindowFindCodeFormatter {
 		public string nameW, classW, programW, containsW, alsoW, waitW, orRunW, andRunW;
 		public bool hiddenTooW, cloakedTooW, programNotStringW;
@@ -184,12 +182,12 @@ static class TUtil {
 		public bool hiddenTooC;
 		public bool NeedWindow = true, NeedControl, Throw, Activate, Test, Finder;
 		public string CodeBefore, VarWindow = "w", VarControl = "c";
-
+		
 		public string Format() {
 			if (!(NeedWindow || NeedControl)) return CodeBefore;
 			var b = new StringBuilder(CodeBefore);
 			if (CodeBefore != null && !CodeBefore.Ends('\n')) b.AppendLine();
-
+			
 			bool orThrow = false, orRun = false, andRun = false, activate = false, needWndFinder = false, needChildFinder = false;
 			if (!(Test || Finder)) {
 				orThrow = Throw;
@@ -201,16 +199,16 @@ static class TUtil {
 				needChildFinder = NeedControl;
 				needWndFinder = !needChildFinder;
 			}
-
+			
 			if (NeedWindow && !needChildFinder) {
 				bool orThrowW = orThrow || NeedControl;
-
+				
 				if (needWndFinder) {
 					b.Append("wndFinder f = new(");
 				} else {
 					b.Append(Test ? "wnd " : "var ").Append(VarWindow);
 					if (Test) b.AppendLine(";").Append(VarWindow);
-
+					
 					if (orRun) {
 						b.Append(" = wnd.findOrRun(");
 					} else if (andRun) {
@@ -222,7 +220,7 @@ static class TUtil {
 						else if (orThrowW) b.Append('0');
 					}
 				}
-
+				
 				b.AppendStringArg(nameW);
 				int m = 0;
 				if (classW != null) m |= 1;
@@ -236,7 +234,7 @@ static class TUtil {
 				if (FormatFlags(out var s1, (hiddenTooW, WFlags.HiddenToo), (cloakedTooW, WFlags.CloakedToo))) b.AppendOtherArg(s1, m < 2 ? "flags" : null);
 				if (alsoW != null) b.AppendOtherArg(alsoW, "also");
 				if (containsW != null) b.AppendStringArg(containsW, "contains");
-
+				
 				if (orRun) {
 					b.Append(", run: () => { ").Append(orRunW).Append(" }");
 					if (!orThrowW) b.Append(", waitS: -60");
@@ -249,7 +247,7 @@ static class TUtil {
 				if (activate && orThrowW) { b.Append(".Activate()"); activate = false; }
 				b.Append(';');
 			}
-
+			
 			if (NeedControl) {
 				if (needChildFinder) {
 					b.Append("wndChildFinder cf = new(");
@@ -269,7 +267,7 @@ static class TUtil {
 				if (alsoC != null) b.AppendOtherArg(alsoC, "also");
 				if (skipC != null) b.AppendOtherArg(skipC, "skip");
 				b.Append(");");
-
+				
 				if (!Test && nameC == null) { //if no control name, append // classC_comments nameC_comments
 					string sn = nameC == null ? nameC_comments : null, sc = classC == null ? classC_comments : null;
 					int m = 0; if (!sn.NE()) m |= 1; if (!sc.NE()) m |= 2;
@@ -283,22 +281,22 @@ static class TUtil {
 					}
 				}
 			}
-
+			
 			if (!orThrow && !Test && !Finder) {
 				b.Append("\r\nif(").Append(NeedControl ? VarControl : VarWindow).Append(".Is0) { print.it(\"not found\"); }");
 				if (activate) b.Append(" else { ").Append(VarWindow).Append(".Activate(); }");
 			}
-
+			
 			return b.ToString();
 		}
-
+		
 		/// <summary>
 		/// Sets <b>skipC</b> if <i>c</i> is not the first found <i>w</i> child control with <b>nameC</b>/<b>classC</b>/<b>hiddenTooC</b>.
 		/// </summary>
 		public void SetSkipC(wnd w, wnd c) {
 			skipC = GetControlSkip(w, c, nameC, classC, hiddenTooC);
 		}
-
+		
 		/// <summary>
 		/// Fills top-level window fields.
 		/// Call once, because does not clear unused fields.
@@ -313,7 +311,7 @@ static class TUtil {
 			classW = StripWndClassName(w.ClassName, true);
 			if (programNotStringW = owner != null) programW = owner; else if (name.NE()) programW = w.ProgramName;
 		}
-
+		
 		/// <summary>
 		/// Fills control fields.
 		/// Call once, because does not clear unused fields.
@@ -322,16 +320,16 @@ static class TUtil {
 		/// <param name="c">Control.</param>
 		public void RecordControlFields(wnd w, wnd c) {
 			NeedControl = true;
-
+			
 			string name = null, cn = StripWndClassName(c.ClassName, true);
 			if (cn == null) return;
-
+			
 			bool _Name(string prefix, string value) {
 				if (value.NE()) return false;
 				name = prefix + EscapeWildex(value);
 				return true;
 			}
-
+			
 			if (GetUsefulControlId(c, w, out int id)) {
 				idC = id.ToS();
 				classC_comments = cn;
@@ -341,7 +339,7 @@ static class TUtil {
 				_ = _Name(null, c.Name) || _Name("***wfName ", c.NameWinforms);
 				nameC = name;
 				classC = cn;
-
+				
 #if true
 				SetSkipC(w, c);
 				if (name == null && _Name("***elmName ", c.NameElm)) {
@@ -360,11 +358,11 @@ static class TUtil {
 			}
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region misc
-
+	
 	//Tool dialogs such as Delm normally run in new thread. If started from another such dialog - in its thread.
 	//	Else main thread would hang when something is slow or hangs when working with UI elements or executing 'also' code.
 	public static void ShowDialogInNonmainThread(Func<KDialogWindow> newDialog) {
@@ -377,7 +375,7 @@ static class TUtil {
 				wait.doEvents();
 			}).Name = "tool"; //info: thread name used for debugging
 		}
-
+		
 		bool _Show(bool dialog) {
 			try { //unhandled exception kills process if in nonmain thread
 				var d = newDialog();
@@ -424,14 +422,14 @@ static class TUtil {
 		}
 #endif
 	}
-
+	
 	public static void CloseDialogsInNonmainThreads() {
 		//close tool windows running in other threads. Elso they would not save their rect etc.
 		var aw = wnd.findAll(null, "HwndWrapper[*", WOwner.Process(process.thisProcessId), WFlags.CloakedToo | WFlags.HiddenToo,
 			also: o => o.Prop["close me on exit"] == 1);
 		foreach (var v in aw) v.SendTimeout(1000, out _, Api.WM_CLOSE);
 	}
-
+	
 	/// <summary>
 	/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
 	/// </summary>
@@ -441,12 +439,12 @@ static class TUtil {
 		//info: some apps use negative ids, eg FileZilla. Usually >= -0xffff. Id -1 is often used for group buttons and separators.
 		//if(id == (int)wControl) return false; //.NET forms, delphi. //possible coincidence //rejected, because window handles are > 0xffff
 		Debug.Assert((int)wControl > 0xffff);
-
+		
 		//if(wWindow.Child(id: id) != wControl) return false; //problem with combobox child Edit that all have id 1001
 		if (wWindow.ChildAll(id: id).Length != 1) return false; //note: searching only visible controls; else could find controls with same id in hidden pages of tabbed dialog.
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Returns <b>wnd.Child</b> parameter <i>skip</i> if <i>c</i> is not the first found <i>w</i> child control with <i>name</i> and <i>cn</i>.
 	/// </summary>
@@ -460,7 +458,7 @@ static class TUtil {
 		}
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Calls EventManager.RegisterClassHandler for CheckBox.CheckedEvent, CheckBox.UncheckedEvent, TextBox.TextChangedEvent and optionally ComboBox.SelectionChangedEvent.
 	/// Call from static ctor of KDialogWindow-based classes.
@@ -488,19 +486,19 @@ static class TUtil {
 		EventManager.RegisterClassHandler(typeof(T), TextBoxBase.TextChangedEvent, h);
 		if (comboToo) EventManager.RegisterClassHandler(typeof(T), Selector.SelectionChangedEvent, h);
 	}
-
+	
 	/// <summary>
-	/// From path gets name and various path formats (raw, unexpanded, shortcut) for inserting in code.
+	/// From path gets name and various path formats (raw, @"string", unexpanded, shortcut) for inserting in code.
 	/// If shortcut, also gets arguments.
 	/// Supports ":: ITEMIDLIST".
 	/// </summary>
 	public class PathInfo {
-		public readonly string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
+		public readonly string fileRaw, lnkRaw, fileString, lnkString, fileUnexpanded, lnkUnexpanded;
 		readonly string _name, _name2, _args;
 		readonly bool _elevated, _argsComment;
-
+		
 		public PathInfo(string path, string name = null, string args = null, bool elevated = false, bool argsComment = false) {
-			filePath = path;
+			fileRaw = path;
 			_name = name ?? _Name(path);
 			_args = args;
 			_elevated = elevated;
@@ -518,21 +516,21 @@ static class TUtil {
 							if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))
 								_name2 = _Name(target);
 					}
-					lnkPath = path;
-					filePath = target;
+					lnkRaw = path;
+					fileRaw = target;
 				}
 				catch { }
 			}
-
-			_Format(ref filePath, out fileUnexpanded);
-			if (lnkPath != null) _Format(ref lnkPath, out lnkUnexpanded);
-			if (_args != null) _args = _Str(args);
-
-			static void _Format(ref string s, out string unexpanded) {
-				if (folders.unexpandPath(s, out unexpanded, out var sn) && !sn.NE()) unexpanded = unexpanded + " + " + _Str(sn);
-				s = _Str(s);
+			
+			_Format(fileRaw, out fileString, out fileUnexpanded);
+			if (lnkRaw != null) _Format(lnkRaw, out lnkString, out lnkUnexpanded);
+			if (_args != null) _args = _Str(_args);
+			
+			static void _Format(string raw, out string str, out string unexpanded) {
+				str = _Str(raw);
+				if (folders.unexpandPath(raw, out unexpanded, out var sn) && !sn.NE()) unexpanded = unexpanded + " + " + _Str(sn);
 			}
-
+			
 			static string _Name(string path) {
 				if (path.Starts("shell:") || path.Starts("::")) return "";
 				var s = pathname.getNameNoExt(path);
@@ -543,13 +541,13 @@ static class TUtil {
 				return s;
 			}
 		}
-
+		
 		static string _Str(string s) {
 			if (s == null) return "null";
 			if (!MakeVerbatim(ref s)) s = s.Escape(quote: true);
 			return s;
 		}
-
+		
 		/// <summary>
 		/// Gets path of window's program for <see cref="run.it"/>. Supports appid, folder, mmc, itemidlist.
 		/// Returns null if failed to get path or app id.
@@ -582,61 +580,114 @@ static class TUtil {
 						args = s;
 						argsComment = args != null;
 					}
-
+					
 				}
 			}
 			var r = new PathInfo(path, name, args, elevated, argsComment);
 			return r;
 		}
-
+		
 		/// <summary>
-		/// Gets path/name/args code for inserting in editor. Unexpands if App.Settings.ci_unexpandPath.
+		/// Gets path/name/args code for inserting in editor.
 		/// path is escaped/enclosed and may be unexpanded (depends on settings), like <c>@"x:\a\b.c"</c> or <c>folders.Example + @"a\b.c"</c>.
 		/// If args not null, it is escaped/enclosed is like ", args" or "/*, args*/".
-		/// If shortcut, shows dialog, let the user choose target path or lnk path.
 		/// </summary>
 		public (string path, string name, string args) GetStringsForCode() {
-			bool u = App.Settings.ci_unexpandPath, u1 = u && fileUnexpanded != null, u2 = u && lnkUnexpanded != null;
-			int i;
-			if (lnkPath == null) i = u1 ? 2 : 1;
-			else {
-				string s1 = u1 ? fileUnexpanded : filePath;
-				string s2 = u2 ? lnkUnexpanded : lnkPath;
-				string sb = $"{(u1 ? 2 : 1)} Target path\n{s1.Limit(99, middle: true)}|{(u2 ? 4 : 3)} Shortcut path\n{s2.Limit(99, middle: true)}";
-				i = dialog.show("Shortcut", buttons: sb, flags: DFlags.CommandLinks | DFlags.CenterMouse | DFlags.Wider);
-			}
-			var path = i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null };
-			//rejected: if path unexpanded, first time in process print info about the setting. Not so hard to find it in Options.
-			var name = i <= 2 ? _name2 ?? _name : _name;
-			var args = i <= 2 ? _args : null;
+			bool lnk = App.Settings.tools_pathLnk && lnkString != null;
+			var path = lnk
+				? (App.Settings.tools_pathUnexpand && lnkUnexpanded != null ? lnkUnexpanded : lnkString)
+				: (App.Settings.tools_pathUnexpand && fileUnexpanded != null ? fileUnexpanded : fileString);
+			var name = lnk ? _name : (_name2 ?? _name);
+			var args = lnk ? null : _args;
 			if (args != null) args = _argsComment ? "/*, " + args + "*/" : ", " + args;
 			return (path, name, args);
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="GetStringsForCode"/> and returns code like <c>run.it(path);</c>.
 		/// </summary>
-		/// <param name="what">0 'var s = path', 1 'run.it', 2 toolbar button with 'run.it'.</param>
+		/// <param name="what">Var, Run or RunMenu.</param>
 		/// <param name="varIndex">If not 0, appends to s in 'var s = path'.</param>
-		public string FormatCode(int what, int varIndex = 0) {
+		public string FormatCode(PathCode what, int varIndex = 0) {
 			var (path, name, args) = GetStringsForCode();
-			string nameComment = (what <= 1 && (path.Starts("\":: ") || path.Like("folders.shell.*\"")) && !name.NE()) ? $"/* {name} */ " : null;
-			if (what is not (1 or 2)) {
+			string nameComment = (what is PathCode.Var or PathCode.Run && (path.Starts("\":: ") || path.Like("folders.shell.*\"")) && !name.NE()) ? $"/* {name} */ " : null;
+			if (what is PathCode.Var) {
 				string si = varIndex > 0 ? varIndex.ToS() : null;
 				return $"string s{si} = {nameComment}{path};"; //not var s, because may be FolderPath
+			} else if (what is PathCode.Run or PathCode.RunMenu) {
+				var b = new StringBuilder();
+				if (what is PathCode.RunMenu) {
+					var t = InsertCodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
+					b.Append($"{t?.Name ?? "t"}[{_Str(name)}] = o => ");
+				}
+				b.Append("run.it(").Append(nameComment).Append(path).Append(args);
+				if (_elevated) b.Append(", flags: RFlags.Admin");
+				b.Append(");");
+				return b.ToString();
 			}
-			var b = new StringBuilder();
-			if (what == 2) {
-				var t = InsertCodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
-				b.Append($"{t?.Name ?? "t"}[{_Str(name)}] = o => ");
+			return null;
+		}
+		
+		/// <summary>
+		/// Shows "insert file path code" menu and returns its result.
+		/// Called for drag-dropped files or shell items.
+		/// </summary>
+		public static PathCode InsertCodeMenu(string[] paths, AnyWnd owner) {
+			var m = new popupMenu { CheckDontClose = true };
+			
+			void _Add(PathCode what, string text) { m.Add((int)what, text); }
+			
+			_Add(PathCode.Var, "string s = path;");
+			_Add(PathCode.Run, "run.it(path);");
+			_Add(PathCode.RunMenu, "t[name] = o => run.it(path);");
+			if (paths.All(o => filesystem.exists(o).Directory)) {
+				_Add(PathCode.EnumDir, "Get files in folder...");
+			} else if (paths.All(o => filesystem.exists(o).File && o.Ends(".dll", true))) {
+				_Add(PathCode.MetaR, "/*/ r path; /*/");
 			}
-			b.Append("run.it(").Append(nameComment).Append(path).Append(args);
-			if (_elevated) b.Append(", flags: RFlags.Admin");
-			b.Append(");");
-			return b.ToString();
+			m.Separator();
+			m.AddCheck("Unexpand path", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
+			if (paths.Any(o => o.Ends(".lnk", true)))
+				m.AddCheck("Shortcut path", App.Settings.tools_pathLnk, o => App.Settings.tools_pathLnk ^= true);
+			
+			var R = (PathCode)m.Show(owner: owner);
+			
+			if (R is PathCode.EnumDir) {
+				DEnumDir.Dialog(paths[0]);
+				return 0;
+			}
+			
+			if (R is PathCode.MetaR) {
+				var p = new MetaCommentsParser(App.Model.CurrentFile);
+				if (!App.Settings.tools_pathUnexpand) p.r.AddRange(paths);
+				else foreach (var v in paths) p.r.Add(folders.unexpandPath(v));
+				p.Apply();
+				return 0;
+			}
+			
+			return R;
+		}
+		
+		/// <summary>
+		/// Adds "insert file path code" items to the quick capture menu.
+		/// </summary>
+		/// <param name="m">Submenu "Program".</param>
+		/// <param name="click"></param>
+		public static void QuickCaptureMenu(popupMenu m, Action<PathCode> click) {
+			m.CheckDontClose = true;
+			
+			void _Add(PathCode what, string text) { m[text] = o => click(what); }
+			
+			_Add(PathCode.Var, "string s = path;");
+			_Add(PathCode.Run, "run.it(path);");
+			_Add(PathCode.RunMenu, "t[name] = o => run.it(path);");
+			m.Separator();
+			m.AddCheck("Unexpand path", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
 		}
 	}
-
+	
+	public enum PathCode { None, Var, Run, RunMenu, EnumDir, MetaR }
+	
 	/// <summary>
 	/// Takes screenshot of standard size to display in editor's margin.
 	/// Color-quantizes, compresses and converts to a comment string to embed in code.
@@ -659,16 +710,16 @@ static class TUtil {
 		}
 		return s;
 	}
-
+	
 	#endregion
-
+	
 	#region OnScreenRect
-
+	
 	/// <summary>
 	/// Creates standard <see cref="osdRect"/>.
 	/// </summary>
 	public static osdRect CreateOsdRect(int thickness = 4) => new() { Color = 0xFF0000, Thickness = thickness, TopmostWorkaround_ = true }; //red
-
+	
 	/// <summary>
 	/// Briefly shows standard blinking on-screen rectangle.
 	/// If disp, shows async in its thread.
@@ -678,7 +729,7 @@ static class TUtil {
 			disp.InvokeAsync(() => ShowOsdRect(r, error, limitToScreen));
 			return;
 		}
-
+		
 		int thick = error ? 6 : 2;
 		var osr = new osdRect { Color = 0xFFFF00, Thickness = thick * 2, TopmostWorkaround_ = true }; //yellow
 		r.Inflate(thick, thick); //2 pixels inside, 2 outside
@@ -689,7 +740,7 @@ static class TUtil {
 		osr.Rect = r;
 		t_hideCapturingRect = true;
 		osr.Show();
-
+		
 		int i = 0;
 		timer.every(250, t => {
 			if (i++ < 5) {
@@ -702,9 +753,9 @@ static class TUtil {
 			}
 		});
 	}
-
+	
 	[ThreadStatic] static bool t_hideCapturingRect;
-
+	
 	//eg VS Code code editor and output are {W=1000000 H=1000000}. Then the rect drawing code would fail.
 	static void _LimitInsaneRect(ref RECT r) {
 		if (r.Width > 2000 || r.Height > 1200) {
@@ -712,11 +763,11 @@ static class TUtil {
 			r.Intersect(rs);
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region capture
-
+	
 	/// <summary>
 	/// Common code for tools that capture UI objects with F3.
 	/// </summary>
@@ -732,7 +783,7 @@ static class TUtil {
 		const string c_propName = "Au.Capture";
 		readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);
 		const int c_hotkeyCapture = 1623031890, c_hotkeyInsert = 1623031891;
-
+		
 		/// <param name="captureCheckbox">Checkbox that turns on/off capturing.</param>
 		/// <param name="getRect">Called to get rectangle of object from mouse. Receives mouse position. Can return default to hide the rectangle.</param>
 		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<POINT, (RECT? r, string s)> getRect, (string hotkey, Action a) capture, (string hotkey, Action a) insert = default) {
@@ -741,7 +792,7 @@ static class TUtil {
 			_dCapture = capture;
 			_dInsert = insert;
 		}
-
+		
 		/// <summary>
 		/// Starts or stops capturing.
 		/// Does nothing if already in that state.
@@ -759,7 +810,7 @@ static class TUtil {
 						if (o != wDialog && o.Prop[c_propName] == 1) o.Send(s_stopMessage);
 						return false;
 					});
-
+					
 					bool _RegisterHotkey(int id, string hotkey) {
 						string es = null;
 						try {
@@ -774,7 +825,7 @@ static class TUtil {
 					if (!_RegisterHotkey(c_hotkeyCapture, _dCapture.hotkey)) return;
 					if (_dInsert.hotkey != null) _RegisterHotkey(c_hotkeyInsert, _dInsert.hotkey);
 					_capturing = true;
-
+					
 					if (_hs == null) {
 						_hs = PresentationSource.FromDependencyObject(_captureCheckbox) as HwndSource;
 						_hs.Disposed += (_, _) => {
@@ -784,19 +835,19 @@ static class TUtil {
 						};
 					}
 					_hs.AddHook(_WndProc);
-
+					
 					//set timer to show rectangles of UI element from mouse
 					if (_timer == null) {
 						_osr = CreateOsdRect(2);
 						_timer = new timer(t => {
 							int t1 = Environment.TickCount;
-
+							
 							POINT p = mouse.xy;
 							wnd w = wnd.fromXY(p, WXYFlags.NeedWindow);
 							RECT? r = default; string text = null;
 							if (!(w.Is0 || w == wDialog || (w.ThreadId == wDialog.ThreadId && w.ZorderIsAbove(wDialog)))) {
 								(r, text) = _dGetRect(p);
-
+								
 								//F3 does not work if this process has lower UAC IL than the foreground process.
 								//	Normally editor is admin, but if portable etc...
 								//	Shift+F3 too. But Ctrl+F3 works.
@@ -825,7 +876,7 @@ static class TUtil {
 								_osr.Visible = false;
 								if (_ost != null) _ost.Visible = false;
 							}
-
+							
 							_timer.After(Math.Min(Environment.TickCount - t1 + 200, 2000)); //normally the timer priod is ~250 ms
 						});
 					}
@@ -842,7 +893,7 @@ static class TUtil {
 				}
 			}
 		}
-
+		
 		nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
 			if (msg == s_stopMessage) {
 				handled = true;
@@ -854,7 +905,7 @@ static class TUtil {
 			return default;
 		}
 	}
-
+	
 	/// <summary>
 	/// Adds link +hotkey that shows dialog "Hotkeys" and updates App.Settings.delm.hk_capture and optionally App.Settings.delm.hk_insert.
 	/// </summary>
@@ -873,13 +924,13 @@ static class TUtil {
 			}
 		});
 	}
-
+	
 	#endregion
-
+	
 	#region test
-
+	
 	public record RunTestFindResult(object obj, long speed, InfoStrings info);
-
+	
 	/// <summary>
 	/// Executes test code that finds an object in window.
 	/// Returns the found object, speed and info strings to display. On error speed negative.
@@ -909,15 +960,15 @@ static class TUtil {
 		Func<MethodInfo, object> invoke = null
 		*/
 		bool activateWindow = false, int[] restoreOwner = null, Dispatcher rectDisp = null) {
-
+		
 		Debug.Assert(!code.NE());
-
+		
 		wnd dlg = owner.Hwnd;
 		bool dlgWasActive = dlg.IsActive, dlgMinimized = false;
-
+		
 		//print.it(code);
 		//perf.first();
-
+		
 		var code0 = code;
 		var b = new StringBuilder();
 		b.AppendLine(@"static object[] __TestFunc__() {");
@@ -934,7 +985,7 @@ static class TUtil {
 		b.AppendLine($"return new object[] {{ _p_.ToArray(), _a_, {wndVar} }};");
 		b.AppendLine("\r\n}");
 		code = b.ToString(); //print.it(code);
-
+		
 		(long[] speed, object obj, wnd w) r = default;
 		try {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
@@ -960,21 +1011,21 @@ static class TUtil {
 			}
 			return new(null, -2, new(true, s1, s2));
 		}
-
+		
 		//perf.nw();
 		//print.it(r);
-
+		
 		static double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
 		double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of wnd.find and Object.Find
 		string sSpeed;
 		if (lastLine == 1 && lines[0] == "wnd w;") sSpeed = t1.ToS() + " ms"; //only wnd.find: "wnd w;\r\nw = wnd.find(...);"
 		else sSpeed = t0.ToS() + " + " + t1.ToS() + " ms";
-
+		
 		if (r.obj is wnd w1 && w1.Is0) r.obj = null;
 		if (r.obj != null) {
 			var re = getRect(r.obj);
 			ShowOsdRect(re, disp: rectDisp);
-
+			
 			//if dlg covers the found object, temporarily minimize it (may be always-on-top) and activate object's window. Never mind owners.
 			var wTL = r.w.Window;
 			if (dlgMinimized = dlg.Rect.IntersectsWith(re) && !r.w.IsOfThisThread && !dlg.IsMinimized) {
@@ -983,7 +1034,7 @@ static class TUtil {
 				wait.doEvents(1000);
 			}
 		}
-
+		
 		if (dlgWasActive || dlgMinimized) {
 			int after = activateWindow && !dlgMinimized && r.w == w ? 1500 : 500;
 			timer.after(after, t => {
@@ -999,7 +1050,7 @@ static class TUtil {
 				}
 			});
 		}
-
+		
 		if (r.w != w && !r.w.Is0) {
 			ShowOsdRect(r.w.Rect, error: true, limitToScreen: true, disp: rectDisp);
 			//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
@@ -1007,14 +1058,14 @@ static class TUtil {
 			//wndCode = "wnd w = wnd.find(\"Other\");";
 			return new(null, -3, new(true, "Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}"));
 		}
-
+		
 		return new(r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
 	}
-
+	
 	public record InfoStrings(bool isError, string header, string text, string headerSmall = null) {
 		//public string text2 { get; set; }
 	}
-
+	
 	/// <summary>
 	/// Executes action code for a found UI element etc.
 	/// </summary>
@@ -1028,11 +1079,11 @@ static class TUtil {
 obj.{code};
 }}";
 		//print.it(code);
-
+		
 		try {
 			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true))
-				return new(true, "Errors:", $"{c.errors}\r\n\r\n<lc #C0C0C0><b>Code:<><>\r\n<code>obj.{code0};</code>");
-			c.method.Invoke(null, new[] { obj });
+				return new(true, "Errors:", $"{c.errors}\r\n\r\n<b>Code:<>\r\n<code>obj.{code0};</code>");
+			c.method.Invoke(null, new object[] { obj });
 			return null;
 		}
 		catch (Exception e) {
@@ -1040,76 +1091,98 @@ obj.{code};
 			return new(true, "Action failed", e.GetType().Name + ". " + e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", ""));
 		}
 	}
-
+	
+	public static async Task<InfoStrings> RunTestCodeAsync(string code, CancellationToken cancel = default) {
+		var code0 = code;
+		code = $@"static void __TestFunc__(CancellationToken cancel) {{
+#line 1
+{code}
+}}";
+		//print.it(code);
+		
+		try {
+			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
+				Debug_.Print("---- CODE ----\r\n" + code + "--------------");
+				return new(true, "Errors:", $"{c.errors}\r\n\r\n<b>Code:<>\r\n<code>{code0};</code>");
+			}
+			await Task.Run(() => { c.method.Invoke(null, new object[] { cancel }); });
+			return null;
+		}
+		catch (Exception e) {
+			if (e is TargetInvocationException tie) e = tie.InnerException;
+			return new(true, "Failed", e.GetType().Name + ". " + e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", ""));
+		}
+	}
+	
 	#endregion
-
+	
 	#region info
-
+	
 	public static void InfoError(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.aaaText = $"<lc #F0E080><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.AaSuspendElems();
 	}
-
+	
 	public static void InfoInfo(this KSciInfoBox t, string header, string text, string headerSmall = null) {
 		t.aaaText = $"<lc #C0E0C0><b>{header}<>{headerSmall}<>\r\n{text}";
 		t.AaSuspendElems();
 	}
-
+	
 	public static void InfoErrorOrInfo(this KSciInfoBox t, InfoStrings info) {
 		var text = info.text /*?? info.text2*/;
 		if (info.isError) InfoError(t, info.header, text, info.headerSmall);
 		else InfoInfo(t, info.header, text, info.headerSmall);
 	}
-
+	
 	public static void Info(this KSciInfoBox t, FrameworkElement e, string name, string text) {
 		text = CommonInfos.PrependName(name, text);
 		t.AaAddElem(e, text);
 	}
-
+	
 	public static void InfoC(this KSciInfoBox t, ContentControl k, string text) => Info(t, k, _ControlName(k), text);
-
+	
 	public static void InfoCT(this KSciInfoBox t, KCheckTextBox k, string text, bool isWildex = false, string wildexPart = null) {
 		text = CommonInfos.PrependName(_ControlName(k.c), text);
 		if (isWildex) text = CommonInfos.AppendWildexInfo(text, wildexPart);
 		t.AaAddElem(k.c, text);
 		t.AaAddElem(k.t, text);
 	}
-
+	
 	public static void InfoCO(this KSciInfoBox t, KCheckComboBox k, string text) {
 		text = CommonInfos.PrependName(_ControlName(k.c), text);
 		t.AaAddElem(k.c, text);
 		t.AaAddElem(k.t, text);
 	}
-
+	
 	/// <summary>
 	/// Returns k text without '_' character used for Alt+underline.
 	/// </summary>
 	static string _ControlName(ContentControl k) => StringUtil.RemoveUnderlineChar(k.Content as string, '_');
-
+	
 	/// <summary>
 	/// Can be used by tool dialogs to display common info in <see cref="KSciInfoBox"/> control.
 	/// </summary>
 	public class CommonInfos {
 		KSciInfoBox _control;
 		RegexWindow _regexWindow;
-
+		
 		public CommonInfos(KSciInfoBox control) {
 			_control = control;
 			_control.AaTags.AddLinkTag("+regex", o => _Regex(o));
 		}
-
+		
 		void _Regex(string _) {
 			_regexWindow ??= new RegexWindow();
 			if (_regexWindow.Hwnd.Is0) {
 				_regexWindow.ShowByRect(_control.Hwnd().Window, Dock.Bottom);
 			} else _regexWindow.Hwnd.ShowL(true);
 		}
-
+		
 		/// <summary>
 		/// Formats "name - text" string, where name is bold: <![CDATA["<b>" + name + "<> - " + text]]>.
 		/// </summary>
 		public static string PrependName(string name, string text) => "<b>" + name + "<> - " + text;
-
+		
 		public static string AppendWildexInfo(string s, string part = null) => s + "\r\n" + (part ?? "The text") +
 @" is <help articles/Wildcard expression>wildcard expression<>. Can be <+regex>regex<>, like <mono>**rc regex<>.
 Examples:
@@ -1128,12 +1201,12 @@ time ??:??
 **m(^^^) this^^^or this^^^or this
 @""C# verbatim string""
 <>";
-
+		
 		public const string c_alsoParameter = @"<i>also<> lambda.
 Can be multiline.
 Can use global usings and classes/functions from file ""global.cs"".";
 	}
-
+	
 	/// <summary>
 	/// Auto-creates and shows click-closed system-colored tooltip below element e.
 	/// </summary>
@@ -1145,7 +1218,7 @@ Can use global usings and classes/functions from file ""global.cs"".";
 		(p.Content as Label).Content = text;
 		p.ShowByRect(e, side);
 	}
-
+	
 	///// <summary>
 	///// Auto-creates and shows tooltip below element e. The tooltip has system colors, not WPF colors.
 	///// </summary>
@@ -1156,7 +1229,7 @@ Can use global usings and classes/functions from file ""global.cs"".";
 	//	tt.IsOpen = false;
 	//	tt.IsOpen = true;
 	//}
-
+	
 	public static void InfoRectCoord(wnd w, string rect) {
 		if (!rect.RxMatch(@"^ *\( *(\d+) *, *(\d+) *, *(\d+) *, *(\d+) *\) *", out var m)) return;
 		InfoRectCoord(w.ClientRect, new RECT(m[1].Value.ToInt(), m[2].Value.ToInt(), m[3].Value.ToInt(), m[4].Value.ToInt()));
@@ -1178,7 +1251,7 @@ Can use global usings and classes/functions from file ""global.cs"".";
 		b.Append("</fold>");
 		print.it(b);
 	}
-
+	
 	#endregion
 }
 

@@ -4,10 +4,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Au.Controls;
-using Au.Tools;
 using System.Xml.Linq;
 using System.Windows.Documents;
-using System.ComponentModel;
 
 #if SCRIPT
 namespace Script;

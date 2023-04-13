@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Au.Controls;
-using Au.Tools;
 
 class DIcons : KDialogWindow {
 	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>

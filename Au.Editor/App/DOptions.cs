@@ -70,7 +70,7 @@ class DOptions : KDialogWindow {
 		//right column
 		b.StartStack(vertical: true);
 		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(110, TextWrapping.NoWrap)
-			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms")
+			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
 			.Validation(_startupScripts_Validation);
 		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.DebuggerScript)
 			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.")
@@ -425,10 +425,10 @@ void Unchecked()
 			.Tooltip("For indentation use tab character, not spaces");
 		b.End();
 		
-		b.StartGrid<GroupBox>("Insert code");
-		b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath)
-			.Tooltip("Insert file path like folders.System + \"file.exe\"");
-		b.End();
+		//b.StartGrid<GroupBox>("Insert code");
+		//b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath)
+		//	.Tooltip("Insert file path like folders.System + \"file.exe\"");
+		//b.End();
 		
 		b.End(); //left
 		
@@ -464,7 +464,7 @@ Example:
 				//	And don't add options to set tab/indentation size. Too many options isn't good.
 			}
 			
-			App.Settings.ci_unexpandPath = unexpandPath.IsChecked;
+			//App.Settings.ci_unexpandPath = unexpandPath.IsChecked;
 			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.IsChecked ? 0 : 1);
 			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;

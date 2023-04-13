@@ -6,7 +6,6 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Au.Compiler;
 using Au.Controls;
-using Au.Tools;
 
 //For NuGet management we use dotnet.exe.
 //	BAD: requires installed .NET SDK.

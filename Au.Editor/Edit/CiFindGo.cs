@@ -17,8 +17,9 @@ using CAW::Microsoft.CodeAnalysis.PatternMatching;
 using CAW::Microsoft.CodeAnalysis.Shared.Collections;
 
 using Au.Controls;
-using Au.Tools;
 using System.Windows.Input;
+
+//TODO: option to double-click to go to. Eg I'm accustomed to VS and often d-click; it usually selects text.
 
 class CiFindGo : KDialogWindow {
 	static CiFindGo s_dialog;

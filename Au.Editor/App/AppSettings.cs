@@ -15,15 +15,16 @@ record AppSettings : JSettings {
 #else
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings\";
 #endif
-
+	
+	public bool runHidden;
 	public string user, workspace;
 	public string[] recentWS;
-
-	public bool runHidden, files_multiSelect;
 
 	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
 	//	Somehow .NET does not support struct and record struct, InvalidCastException.
 	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
+	
+	//Options -> Hotkeys
 	public record hotkeys_t {
 		public string
 			tool_quick = "Ctrl+Shift+Q",
@@ -33,30 +34,16 @@ record AppSettings : JSettings {
 			;
 	}
 	public hotkeys_t hotkeys = new();
-
-	public record wndpos_t {
-		public string main, wnd, elm, uiimage, ocr, recorder, icons, symbol;
-	}
-	public wndpos_t wndpos = new();
-
-	public bool edit_wrap, edit_noImages, output_wrap, output_white, output_topmost;
-
+	
+	//Options -> Templates
 	public int templ_use;
 	//public int templ_flags;
+	
+	//code editor
+	public bool edit_wrap, edit_noImages;
 
-	public record icons_t {
-		public string
-			ft_script,
-			ft_class,
-			ft_folder,
-			ft_folderOpen
-			;
-	}
-	public icons_t icons = new();
-
-	//public byte ci_shiftEnterAlways, ci_shiftTabAlways;
-	//public SIZE ci_sizeSignXaml, ci_sizeComplXaml, ci_sizeComplList;
-	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent, ci_unexpandPath = true;
+	//code info
+	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 	public int ci_rename;
 
@@ -67,40 +54,79 @@ record AppSettings : JSettings {
 
 	//public byte ci_formatBraceNewline; //0 never, 1 always, 2 type/function
 	//public byte ci_formatIndentation; //0 tab, 1 4 spaces, 2 2 spaces
-
+	
+	//panel Files
+	public bool files_multiSelect;
+	
+	//file type icons
+	public record icons_t {
+		public string
+			ft_script,
+			ft_class,
+			ft_folder,
+			ft_folderOpen
+			;
+	}
+	public icons_t icons = new();
+	
+	//panel Output
+	public bool output_wrap, output_white, output_topmost;
+	
+	//panel Outline
 	public byte outline_flags;
 
+	//panel Open
 	public byte openFiles_flags;
-
+	
+	//panel Recipe
+	public sbyte recipe_zoom;
+	
+	//settings common to various tools
+	public bool tools_pathUnexpand = true, tools_pathLnk;
+	
+	//saved positions of various windows
+	public record wndpos_t {
+		public string main, wnd, elm, uiimage, ocr, recorder, icons, symbol;
+	}
+	public wndpos_t wndpos = new();
+	
+	//Delm
 	public record delm_t {
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
 		public string wait, actionn; //named actionn because once was int action
 		public int flags;
 	}
 	public delm_t delm = new();
-
+	
+	//DInputRecorder
 	public record recorder_t {
 		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
 		public int xyIn;
 		public string speed = "10";
 	}
 	public recorder_t recorder = new();
-
+	
+	//DIcons
 	public int dicons_listColor;
 	public bool dicons_contrastUse;
 	public string dicons_contrastColor = "#E0E000";
-
-	public sbyte recipe_zoom;
-
-	public int wpfpreview_xy;
-
+	
+	//DPortable
 	public string portable_dir;
-
+	
+	//DOcr
 	public Au.Tools.OcrEngineSettings ocr;
-
+	
+	//WPF preview
+	public int wpfpreview_xy;
+	
+	//DSnippets
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
+	
+	//CiGoTo
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
-
+	
+	//panel Find
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel;

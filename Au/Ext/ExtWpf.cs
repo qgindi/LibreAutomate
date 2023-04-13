@@ -576,12 +576,15 @@ public static class ExtWpf {
 		t.Title = "WPF preview";
 		t.ShowActivated = false;
 		t.WindowStartupLocation = WindowStartupLocation.Manual;
-		t.ShowInTaskbar = false;
 		t.WindowState = WindowState.Normal;
+		t.ShowInTaskbar = true;
+		t.Topmost = true;
 		
 		t.Loaded += (_, _) => {
 			var w = t.Hwnd();
 			//unsafe { int BOOL = 1; Api.DwmSetWindowAttribute(w, Api.DWMWINDOWATTRIBUTE.DWMWA_TRANSITIONS_FORCEDISABLED, &BOOL, 0); } //does not disable the inflate/deflate animation; and don't need, with it even better
+			
+			//move to App.Settings.wpfpreview_xy or to the right side of the primary screen
 			if ((int)ScriptEditor.WndMsg_.Send(Api.WM_USER, 3) is int xy && xy != 0) {
 				var p = Math2.NintToPOINT(xy);
 				w.MoveL(p.x, p.y);
@@ -589,20 +592,29 @@ public static class ExtWpf {
 			} else {
 				w.MoveInScreen(^1, .5f);
 			}
+			
 			//_TerminatePrevious(); pid = 0; //async less flickering, especially when no animations, eg toolwindow
 			t.Dispatcher.InvokeAsync(() => { _TerminatePrevious(); pid = 0; }, DispatcherPriority.ApplicationIdle);
-			WndUtil.SetOwnerWindow(w, wMain);
 			
-			//workaround for: when the window is inactive, on click nonclient (eg to close), the window hangs until mouse moved. Only when using SetOwnerWindow.
+			//rejected. See the commented out workaround below. Instead set Topmost = true and ShowInTaskbar = true.
+			//	The workaround may not always work, eg for other windows.
+			//	Also noticed other anomalies, eg in some cases OS activates wrong window when this window closed.
+			//if (!WndUtil.SetOwnerWindow(w, wMain)) w.ZorderTopmost();
+			
 			var hs = PresentationSource.FromVisual(t) as HwndSource;
 			hs.AddHook(_WndProc);
 			nint _WndProc(nint hwnd, int msg, nint wp, nint lp, ref bool handled) {
 				var w = (wnd)hwnd;
 				switch (msg) {
-				case Api.WM_NCLBUTTONDOWN or Api.WM_NCRBUTTONDOWN: //the window is already active
-					Task.Run(() => { var p = mouse.xy; Api.SetCursorPos(p.x, p.y); });
-					break;
+				//case Api.WM_NCLBUTTONDOWN or Api.WM_NCRBUTTONDOWN: //the window is already active
+				//case Api.WM_LBUTTONDOWN or Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN: //for checkboxes etc
+				//	Task.Run(() => { var p = mouse.xy; Api.SetCursorPos(p.x, p.y); });
+				//	//workaround for: if using SetOwnerWindow:
+				//	//	When the window is inactive, on click nonclient (eg to close), the window hangs until mouse moved.
+				//	//	Similar happens after clicking a checkbox ~30 times. Maybe other controls too.
+				//	break;
 				case Api.WM_EXITSIZEMOVE:
+					//save wpfpreview_xy
 					if (!(w.IsMinimized || w.IsMaximized)) {
 						var r = w.Rect; if (r.left == 0 && r.top == 0) r.top++;
 						ScriptEditor.WndMsg_.Send(Api.WM_USER, 4, Math2.MakeLparam(r.left, r.top));

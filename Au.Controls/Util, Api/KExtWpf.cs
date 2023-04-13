@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using Au.Controls;
+using System.Windows.Data;
 
-namespace Au.Tools;
+namespace Au.Controls;
 
 /// <summary>
 /// KCheckBox and KTextBox. Optionally + Button and KPopupListBox.
@@ -14,7 +14,7 @@ public class KCheckTextBox {
 	readonly Button _button;
 	KPopupListBox _popup;
 	object _items; //List<string> or Func<List<string>>
-
+	
 	///
 	public KCheckTextBox(KCheckBox c, KTextBox t, Button button = null) {
 		this.c = c;
@@ -52,10 +52,10 @@ public class KCheckTextBox {
 			};
 		}
 	}
-
+	
 	///
 	public void Deconstruct(out KCheckBox c, out TextBox t) { c = this.c; t = this.t; }
-
+	
 	/// <summary>
 	/// Gets or sets <b>Visibility</b> of controls. If false, <b>Visibility</b> is <b>Collapsed</b>.
 	/// </summary>
@@ -68,24 +68,24 @@ public class KCheckTextBox {
 			if (_button != null) _button.Visibility = vis;
 		}
 	}
-
+	
 	public void Set(bool check, string text) {
 		c.IsChecked = check;
 		t.Text = text;
 	}
-
+	
 	public void Set(bool check, string text, List<string> items) {
 		c.IsChecked = check;
 		t.Text = text;
 		_items = items;
 	}
-
+	
 	public void Set(bool check, string text, Func<List<string>> items) {
 		c.IsChecked = check;
 		t.Text = text;
 		_items = items;
 	}
-
+	
 	/// <summary>
 	/// If checked and visible and text not empty, gets text and returns true. Else sets s=null and returns false.
 	/// </summary>
@@ -99,7 +99,7 @@ public class KCheckTextBox {
 		s = v;
 		return true;
 	}
-
+	
 	public bool CheckIfTextNotEmpty() {
 		if (!c.IsChecked && t.Text.Length > 0) { c.IsChecked = true; return true; }
 		return false;
@@ -112,7 +112,7 @@ public class KCheckTextBox {
 public class KCheckComboBox {
 	public readonly KCheckBox c;
 	public readonly ComboBox t;
-
+	
 	///
 	public KCheckComboBox(KCheckBox c, ComboBox t) {
 		this.c = c;
@@ -120,10 +120,10 @@ public class KCheckComboBox {
 		c.Tag = this;
 		t.Tag = this;
 	}
-
+	
 	///
 	public void Deconstruct(out KCheckBox c, out ComboBox t) { c = this.c; t = this.t; }
-
+	
 	/// <summary>
 	/// Gets or sets <b>Visibility</b> of controls. If false, <b>Visibility</b> is <b>Collapsed</b>.
 	/// </summary>
@@ -135,7 +135,7 @@ public class KCheckComboBox {
 			t.Visibility = vis;
 		}
 	}
-
+	
 	/// <summary>
 	/// If checked and visible, gets selected item index and returns true. Else sets index=-1 and returns false.
 	/// </summary>
@@ -145,7 +145,7 @@ public class KCheckComboBox {
 		index = t.SelectedIndex;
 		return index >= 0;
 	}
-
+	
 	/// <summary>
 	/// If checked and visible, gets selected item text and returns true. Else sets text=null and returns false.
 	/// </summary>
@@ -153,6 +153,113 @@ public class KCheckComboBox {
 		if (!GetIndex(out int i)) { text = null; return false; }
 		text = t.Items[i] as string;
 		return true;
+	}
+}
+
+/// <summary>
+/// TextBox for a file or folder path.
+/// Supports drag-drop and Browse dialog (right-click).
+/// </summary>
+public class KTextBoxFile : TextBox {
+	bool _canDrop;
+	
+	///
+	protected override void OnPreviewDragEnter(DragEventArgs e) {
+		if (e.Handled = _canDrop = e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effects = DragDropEffects.Link;
+		base.OnPreviewDragEnter(e);
+	}
+	
+	///
+	protected override void OnPreviewDragOver(DragEventArgs e) {
+		if (e.Handled = _canDrop) e.Effects = DragDropEffects.Link;
+		base.OnPreviewDragEnter(e);
+	}
+	
+	///
+	protected override void OnDrop(DragEventArgs e) {
+		if (e.Data.GetData(DataFormats.FileDrop) is string[] a && a.Length > 0) {
+			var s = a[0];
+			if (s.Ends(".lnk", true) && filesystem.exists(s).File)
+				try { s = shortcutFile.getTarget(s); }
+				catch (Exception) {  }
+			Text = s;
+		}
+		base.OnDrop(e);
+	}
+	
+	///
+	protected override void OnContextMenuOpening(ContextMenuEventArgs e) {
+		var m = new popupMenu { CheckDontClose = true };
+		
+		m["Browse..."] = o => {
+			var d = new FileOpenSaveDialog(ClientGuid ?? (IsFolder ? "3d4a9167-929a-4346-adfb-e2f03427412c" : "6a7d02c0-7f98-4808-b764-84985ca6e767"));
+			if (d.ShowOpen(out string s, owner: this.Hwnd(), selectFolder: IsFolder)) _SetText(s);
+		};
+		m["folders.EditMe + @\"EditMe\""] = o => _SetText(o.Text);
+		m.Submenu("Known folders", m => {
+			foreach (var v in typeof(folders).GetProperties()) {
+				bool nac = folders.noAutoCreate;
+				folders.noAutoCreate = true;
+				string path = v.GetValue(null) switch { string k => k, FolderPath k => k.Path, _ => null };
+				folders.noAutoCreate = nac;
+				if (path == null) continue;
+				var name = v.Name;
+				m[$"{name}\t{path.Limit(80, middle: true)}"] = o => _SetText(Unexpand ? $"folders.{name} + @\"EditMe\"" : path + (path.Ends('\\') ? "" : "\\"));
+			}
+		});
+		m.Submenu("Environment variables", m => {
+			foreach (var (name, path) in Environment.GetEnvironmentVariables().OfType<System.Collections.DictionaryEntry>().Select(o => (o.Key as string, o.Value as string)).OrderBy(o => o.Item1)) {
+				if (!pathname.isFullPath(path, orEnvVar: true)) continue;
+				int i = path.IndexOf(';'); if (i > 0 && pathname.isFullPath(path.AsSpan(i + 1), orEnvVar: true)) continue; //list of paths
+				if (IsFolder && filesystem.exists(path).File) continue;
+				m[$"{name}\t{path.Limit(80, middle: true)}"] = o => _SetText(Unexpand ? $"%{name}%\\" : pathname.expand(path));
+			}
+		});
+		m.Submenu("Folder windows", m => {
+			foreach (var v in ExplorerFolder.All(onlyFilesystem: true).Select(o => o.GetFolderPath())) {
+				m[v.Limit(100, middle: true)] = o => _SetText(v);
+			}
+		});
+		m.Separator();
+		m.AddCheck("Unexpand", Unexpand, o => { Unexpand ^= true; UnexpandChanged?.Invoke(); });
+		
+		void _SetText(string s) {
+			Text = s;
+			CaretIndex = s.Length;
+		}
+		
+		m.Show(owner: this.Hwnd());
+		e.Handled = true;
+	}
+	
+	/// <summary>
+	/// true if this control is for a folder path.
+	/// </summary>
+	public bool IsFolder { get; set; }
+	
+	/// <summary>
+	/// For <see cref="FileOpenSaveDialog"/>.
+	/// If not set, uses 2 different GUIDs: one for folders (see <see cref="IsFolder"/>), other for files.
+	/// </summary>
+	public string ClientGuid { get; set; }
+	
+	/// <summary>
+	/// Let <b>GetCode</b> unexpand path.
+	/// Also used/changed by the context menu.
+	/// Default true.
+	/// </summary>
+	public bool Unexpand { get; set; } = true;
+	
+	public event Action UnexpandChanged;
+	
+	/// <summary>
+	/// Formats code like '@"path"' or 'folders.X + @"relative"' or 'folders.X'.
+	/// </summary>
+	public string GetCode() {
+		var s = Text;
+		if (s.Contains('\"') || s.Starts("folders.")) return s;
+		if (Unexpand && folders.unexpandPath(s, out var s1, out var s2)) return s2.NE() ? s1 : $"{s1} + @\"{s2}\"";
+		return $"@\"{s}\"";
 	}
 }
 
@@ -174,7 +281,7 @@ public static class KExtWpf {
 		if (check) b.Checked();
 		return b;
 	}
-
+	
 	/// <summary>
 	/// Adds KTextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
 	/// Sets multiline with limited height. If in grid, sets padding/margin for propertygrid.
@@ -184,7 +291,7 @@ public static class KExtWpf {
 		if (b.Panel is Grid) b.Padding(new Thickness(0, -1, 0, 1)).Margin(left: 4);
 		return b;
 	}
-
+	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline KTextBox (<see cref="xAddText"/>) in a propertygrid row.
 	/// </summary>
@@ -198,7 +305,7 @@ public static class KExtWpf {
 		xAddText(b, out var t, text);
 		return new(c, t);
 	}
-
+	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline KTextBox (<see cref="xAddText"/>) in a propertygrid row.
 	/// Also adds ▾ button that shows a drop-down list (see <see cref="KCheckTextBox.Set(bool, string, List{string})"/>).
@@ -215,7 +322,7 @@ public static class KExtWpf {
 		k.Width += 4;
 		return new(c, t, k);
 	}
-
+	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and readonly ComboBox (<see cref="xAddOther"/>) in a propertygrid row.
 	/// </summary>
@@ -230,7 +337,7 @@ public static class KExtWpf {
 		if (index != 0) t.SelectedIndex = index;
 		return new(c, t);
 	}
-
+	
 	/// <summary>
 	/// Adds any control that can be used in a propertygrid row.
 	/// </summary>
@@ -240,12 +347,12 @@ public static class KExtWpf {
 		_xSetOther(b, other);
 		return b;
 	}
-
+	
 	static void _xSetOther(wpfBuilder b, FrameworkElement e) {
 		b.Height(18).Margin(left: 4);
 		if (e is Control) b.Padding(new Thickness(4, 0, 4, 0)); //tested with Button and ComboBox
 	}
-
+	
 	/// <summary>
 	/// Adds button that can be used in a propertygrid row.
 	/// </summary>
@@ -253,12 +360,12 @@ public static class KExtWpf {
 		b.AddButton(out button, text, click);
 		_xSetOther(b, button);
 	}
-
+	
 	/// <summary>
 	/// Adds button that can be used in a propertygrid row.
 	/// </summary>
 	public static void xAddButton(this wpfBuilder b, string text, Action<WBButtonClickArgs> click) => xAddButton(b, out _, text, click);
-
+	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and other control (<see cref="xAddOther"/>) in a propertygrid row.
 	/// </summary>
@@ -271,7 +378,7 @@ public static class KExtWpf {
 		xAddOther(b, out other, text);
 		return c;
 	}
-
+	
 	/// <summary>
 	/// Adds Border with standard thickness/color and an element in it.
 	/// </summary>
@@ -281,7 +388,7 @@ public static class KExtWpf {
 		b.Add(out var, flags: WBAdd.ChildOfLast);
 		return c;
 	}
-
+	
 	/// <summary>
 	/// Adds Border with standard thickness/color and an element in it.
 	/// </summary>
@@ -291,7 +398,7 @@ public static class KExtWpf {
 		b.Add(e, flags: WBAdd.ChildOfLast);
 		return c;
 	}
-
+	
 	/// <summary>
 	/// Adds KCheckBox with icon like in a toolbar.
 	/// </summary>
@@ -304,7 +411,7 @@ public static class KExtWpf {
 		//c.Unchecked += (_, _) => p.Fill.Opacity = 0.3;
 		return c;
 	}
-
+	
 	/// <summary>
 	/// Adds Button with icon like in a toolbar.
 	/// </summary>
@@ -314,7 +421,7 @@ public static class KExtWpf {
 		c.Focusable = false;
 		return c;
 	}
-
+	
 	/// <summary>
 	/// Adds a toolbar button with icon and tooltip.
 	/// </summary>
@@ -325,7 +432,7 @@ public static class KExtWpf {
 		t.Items.Add(c);
 		return c;
 	}
-
+	
 	/// <summary>
 	/// Adds a toolbar checkbox with icon and tooltip.
 	/// </summary>
@@ -336,7 +443,7 @@ public static class KExtWpf {
 		t.Items.Add(c);
 		return c;
 	}
-
+	
 	public static ToolBar xAddToolBar(this wpfBuilder t, bool vertical = false, bool hideOverflow = false, bool controlBrush = false) {
 		var tt = new ToolBarTray { IsLocked = true };
 		if (vertical) tt.Orientation = Orientation.Vertical;
@@ -350,7 +457,7 @@ public static class KExtWpf {
 		t.Add(tt);
 		return tb;
 	}
-
+	
 	/// <summary>
 	/// Adds ScrollViewer, adds 2-column grid or vertical stack panel in it (StartGrid, StartStack), and calls <c>Options(modifyPadding: false, margin: new(1))</c>.
 	/// </summary>
@@ -363,7 +470,7 @@ public static class KExtWpf {
 		b.Options(modifyPadding: false, margin: new(1));
 		return v;
 	}
-
+	
 	/// <summary>
 	/// Ends grid/stack set by <see cref="xStartPropertyGrid"/> and restores options.
 	/// </summary>
@@ -372,7 +479,7 @@ public static class KExtWpf {
 		b.Options(modifyPadding: true, margin: new Thickness(3));
 		b.End();
 	}
-
+	
 	/// <summary>
 	/// Sets header control properties: center, bold, dark gray text.
 	/// It can be Label, TextBlock or CheckBox. Not tested others.
@@ -389,21 +496,21 @@ public static class KExtWpf {
 	//		b.Align("C");
 	//	}
 	//}
-
+	
 	/// <summary>
 	/// Adds vertical splitter.
 	/// </summary>
 	public static void xAddSplitterV(this wpfBuilder b, int span = 1, double thickness = 4) {
 		b.Add<GridSplitter2>().Splitter(true, span, thickness);
 	}
-
+	
 	/// <summary>
 	/// Adds horizontal splitter.
 	/// </summary>
 	public static void xAddSplitterH(this wpfBuilder b, int span = 1, double thickness = 4) {
 		b.R.Add<GridSplitter2>().Splitter(false, span, thickness);
 	}
-
+	
 	/// <summary>
 	/// Can be used like <see cref="wpfBuilder.Validation"/> with hotkey <b>TextBox</b> controls.
 	/// </summary>
@@ -415,4 +522,13 @@ public static class KExtWpf {
 			return "Invalid hotkey";
 		});
 	}
+	
+	/// <summary>
+	/// Sets binding to show/hide the last added element when the specified <b>CheckBox</b> checked/unchecked.
+	/// </summary>
+	public static wpfBuilder xBindCheckedVisible(this wpfBuilder t, CheckBox c) {
+		t.Bind(FrameworkElement.VisibilityProperty, new Binding("IsChecked") { Source = c, Converter = s_bvc ??= new() });
+		return t;
+	}
+	static BooleanToVisibilityConverter s_bvc;
 }

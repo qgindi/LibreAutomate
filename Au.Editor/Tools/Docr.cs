@@ -289,7 +289,6 @@ class Docr : KDialogWindow {
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			string newline = _cbAction.SelectedIndex is 0 or >= c_finder ? "\r\n" : null; //if no action, add empty line
 			InsertCode.Statements(s);
 			//if (_Opt.Has(_EOptions.InsertClose)) {
 			//	base.Close();

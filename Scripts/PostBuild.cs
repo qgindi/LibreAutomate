@@ -20,7 +20,7 @@ var verResFile2 = folders.ThisApp + $"{exe2}.res";
 
 var v = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor.dll");
 bool verChanged = !(rk.GetValue("version") is string s1 && s1 == v.FileVersion);
-verChanged = true;//TODO
+//verChanged = true;
 if (verChanged || !filesystem.exists(verResFile1)) if (!_VersionInfo(verResFile1, exe1, "LibreAutomate C#")) return 1;
 if (verChanged || !filesystem.exists(verResFile2)) if (!_VersionInfo(verResFile2, exe2, "LibreAutomate miniProgram")) return 2;
 
@@ -59,7 +59,7 @@ if (verChanged) {
 	rk.SetValue("version", v.FileVersion);
 }
 
-//filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));//TODO
+filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
 
 //perf.nw();
 return 0;
