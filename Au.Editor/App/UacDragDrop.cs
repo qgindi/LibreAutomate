@@ -208,7 +208,7 @@ class UacDragDrop
 			Api.SetLayeredWindowAttributes(_w, 0, 1, 2);
 
 			Thread.CurrentThread.TrySetApartmentState(ApartmentState.Unknown); //uninit MTA
-			Api.OleInitialize(default);
+			Api.OleInitialize(default); //somehow RDD fails if process.ThisThreadSetComApartment_(ApartmentState.STA);
 			Api.RegisterDragDrop(_w, _dt = new _DropTarget());
 			_msgWnd.Send(Api.WM_USER, 10, (nint)_w);
 			Api.SetTimer(_w, 1, 1000, null);

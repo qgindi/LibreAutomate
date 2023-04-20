@@ -1,5 +1,4 @@
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// The base exception class used in this library.
 	/// Thrown when something fails and there is no better exception type for that failure.
@@ -175,8 +174,7 @@ namespace Au.Types
 	/// Functions that search for an object can throw this exception when not found.
 	/// </summary>
 	//[Serializable]
-	public class NotFoundException : Exception
-	{
+	public class NotFoundException : Exception {
 		/// <summary>
 		/// Sets <c>Message = "Not found."</c>.
 		/// </summary>
@@ -196,12 +194,32 @@ namespace Au.Types
 
 		//#endregion
 	}
+
+	/// <summary>
+	/// This exception is thrown when current thread is not on the input desktop and therefore cannot use mouse, keyboard, clipboard and window functions. 
+	/// For example when PC locked (Win+L), screen saver, UAC consent, Ctrl+Alt+Delete.
+	/// </summary>
+	/// <seealso cref="miscInfo.isInputDesktop"/>
+	public class InputDesktopException : AuException {
+		/// <param name="message">Message text before the standard message text of this exception.</param>
+		public InputDesktopException(string message = null)
+			: base(message.NE() ? c_message : message + (message.Ends('.') ? " " : ". ") + c_message) { }
+
+		const string c_message = "Other input desktop is active.";
+
+		/// <summary>
+		/// Calls <see cref="miscInfo.isInputDesktop"/>. If it returns false, throws <b>InputDesktopException</b>.
+		/// </summary>
+		/// <param name="message">Message text before the standard message text of this exception.</param>
+		/// <exception cref="InputDesktopException"></exception>
+		public static void ThrowIfBadDesktop(string message = null, bool detectLocked = false) {
+			if (!miscInfo.isInputDesktop(detectLocked)) throw new InputDesktopException(message);
+		}
+	}
 }
 
-namespace Au.Types
-{
-	static partial class ExtMisc
-	{
+namespace Au.Types {
+	static partial class ExtMisc {
 		/// <summary>
 		/// Returns string containing exception type name and message.
 		/// </summary>

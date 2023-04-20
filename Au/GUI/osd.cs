@@ -551,8 +551,8 @@ namespace Au {
 		public TFFlags TextFormatFlags { get; set; } = TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS;
 		
 		/// <summary>
-		/// Icon or image at the left. Can be <see cref="icon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
-		/// For example <b>System.Drawing.SystemIcons.Information</b> or <c>icon.stock(StockIcon.INFO)</c>.
+		/// Icon or image at the left. Can be <see cref="icon"/>, <b>System.Drawing.Icon</b> or <b>System.Drawing.Image</b>. Any size.
+		/// For example <b>System.Drawing.SystemIcons.Information</b> or <c>icon.stock(StockIcon.INFO)</c> or <c>ImageUtil.LoadGdipBitmapFromXaml("XAML copied from the Icons tool. You can edit, Width, Height and Fill (color).", screen.primary.Dpi)</c>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.

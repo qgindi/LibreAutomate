@@ -34,6 +34,11 @@ print.it(d.ToString("D", c) + "; " + d.ToString("t", c));
 
 process.thisProcessCultureIsInvariant = false;
 
+/// <google C# date time format>Format<> date-time string.
+
+print.it(d.ToString("yyyy-MM-dd HH:mm"));
+print.it($"Today is {d:yyyy-MM-dd}. Time {d:HH:mm}.");
+
 /// Convert string to DateTime.
 
 var d3 = DateTime.Parse("2022-01-29");

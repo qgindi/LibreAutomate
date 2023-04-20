@@ -446,7 +446,8 @@ public partial class keys {
 	/// <br/>• char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator ^.
 	/// </param>
 	/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
-	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
+	/// <exception cref="AuException">Failed. When sending text, fails if there is no focused window.</exception>
+	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
 	/// Usually keys are specified in string, like in this example:
 	/// <code><![CDATA[keys.send("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
@@ -758,7 +759,7 @@ public partial class keys {
 	/// - <b>NoModOff</b> = true.
 	/// </remarks>
 	/// <seealso cref="more.sendKey"/>
-		/// <inheritdoc cref="keys.send" path="/param"/>
+	/// <inheritdoc cref="keys.send" path="//param|//exception"/>
 	public static void sendL([ParamString(PSFormat.Keys)] params KKeysEtc[] keysEtc) {
 		var o = new OKey() { KeySpeed = 0, NoBlockInput = true, NoCapsOff = true, NoModOff = true, SleepFinally = 0 };
 		new keys(o).Add(keysEtc).SendNow();
@@ -772,7 +773,8 @@ public partial class keys {
 	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
 	/// </param>
-	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). Also fails if there is no focused window.</exception>
+	/// <exception cref="AuException">Failed. Fails if there is no focused window.</exception>
+	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
 	/// Calls <see cref="AddText(string, string)"/> and <see cref="SendNow"/>.
 	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.

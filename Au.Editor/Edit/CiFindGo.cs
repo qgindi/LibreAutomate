@@ -19,8 +19,6 @@ using CAW::Microsoft.CodeAnalysis.Shared.Collections;
 using Au.Controls;
 using System.Windows.Input;
 
-//TODO: option to double-click to go to. Eg I'm accustomed to VS and often d-click; it usually selects text.
-
 class CiFindGo : KDialogWindow {
 	static CiFindGo s_dialog;
 	TextBox _tQuery;
@@ -46,7 +44,7 @@ class CiFindGo : KDialogWindow {
 	CiFindGo() {
 		_timer1 = new(_ => _Update());
 		
-		var b = new wpfBuilder(this).WinSize(600, 600).Columns(-1, 0, 0);
+		var b = new wpfBuilder(this).WinSize(600, 600).Columns(-1, 0, 0, 0);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		Title = "Find symbol";
 		Owner = App.Wmain;
@@ -62,6 +60,7 @@ Filters: t Type, m Member, n Namespace.
 		b.Add(out _cFuzzy, "Fuzzy");
 		_cFuzzy.CheckChanged += (_, _) => _timer1.After(200);
 		
+		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _Options, "Tool settings");
 		_cKeepOpen = b.xAddCheckIcon("*MaterialLight.Pin" + Menus.black, "Keep this window open");
 		
 		b.Row(-1).Add(out _tv);
@@ -69,7 +68,7 @@ Filters: t Type, m Member, n Namespace.
 		_tv.CustomItemHeightAddPercent = 100;
 		_tv.ItemMarginLeft = 8;
 		_tv.HotTrack = true;
-		_tv.SingleClickActivate = true;
+		_tv.SingleClickActivate = !App.Settings.ci_findgoDclick;
 		_tv.ItemActivated += e => {
 			if (!_cKeepOpen.IsChecked) Close();
 			(e.Item as _TvItem).Clicked();
@@ -81,7 +80,7 @@ Filters: t Type, m Member, n Namespace.
 			_tQuery.SelectAll();
 			_timer1.After(1);
 		}
-
+		
 		b.WinSaved(App.Settings.wndpos.symbol, o => App.Settings.wndpos.symbol = o);
 	}
 	
@@ -164,7 +163,9 @@ Filters: t Type, m Member, n Namespace.
 			string type = sym is INamespaceOrTypeSymbol ? null : sym.ContainingType?.ToDisplayString(s_symbolFormat);
 			
 			foreach (var loc in sym.Locations) {
-				string path = loc.SourceTree.FilePath;
+				var st = loc.SourceTree;
+				if (st == null) continue;
+				string path = st.FilePath;
 				string text2 = type != null ? $"in {type},  {path}" : path;
 				var fn = CiProjects.FileOf(loc.SourceTree, solution);
 				
@@ -340,12 +341,23 @@ Filters: t Type, m Member, n Namespace.
 		}
 		base.OnPreviewKeyDown(e);
 	}
-
+	
 	protected override void OnDeactivated(EventArgs e) {
 		base.OnDeactivated(e);
 		if (IsVisible && !_cKeepOpen.IsChecked) {
 			//need timer, else something activates wrong window, even with InvokeAsync
 			timer.after(25, _ => { if (!IsActive) Close(); });
 		}
+	}
+	
+	void _Options(WBButtonClickArgs e) {
+		var m = new popupMenu();
+		
+		m.AddCheck("Double-click", App.Settings.ci_findgoDclick, _ => {
+			App.Settings.ci_findgoDclick ^= true;
+			_tv.SingleClickActivate = !App.Settings.ci_findgoDclick;
+		});
+		
+		m.Show(owner: this);
 	}
 }

@@ -580,7 +580,7 @@ public unsafe partial class popupMenu : MTBase {
 		_size.window = r.Size; _size.client = z; _size.border = -r.top;
 		Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
 		
-		if (r.bottom > rs.bottom && r.top > rs.top - 4) r.Move(r.left, rs.top - 4);
+		if (r.bottom > rs.bottom && r.top > rs.top - 4) r.Move(r.left, r.top - 4); //let the bottom edge not touch the bottom edge of the screen
 
 		_w = WndUtil.CreateWindow(_WndProc, true, "Au.popupMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
 		_SetScrollbar(needScroll);

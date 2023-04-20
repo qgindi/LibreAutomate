@@ -418,10 +418,10 @@ partial class CiStyling {
 		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
 		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome
 		public int IndicRefsColor = 0x80C000;
-		public int IndicBracesColor = 0x808080;
+		public int IndicBracesColor = 0x80C000;
 		public int IndicFoundAlpha = 255;
 		public int IndicRefsAlpha = 40;
-		public int IndicBracesAlpha = 40;
+		public int IndicBracesAlpha = 255;
 		//public bool IndicFoundGradient;
 		//public bool IndicRefsGradient;
 		//public bool IndicBracesGradient;
@@ -640,7 +640,7 @@ partial class CiStyling {
 			
 			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha, INDIC_FULLBOX);
-			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_FULLBOX);//TODO: use some other indicator. Now difficult to see caret if touches it.
+			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_GRADIENT);
 			
 			void _Indic(int indic, int color, int alpha, int style) {
 				sci.aaaIndicatorDefine(indic, style, color, alpha, 255, underText: true);
