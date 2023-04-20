@@ -411,6 +411,7 @@ public partial class keys {
 		/// </summary>
 		/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 		/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
+		/// <exception cref="InputDesktopException"></exception>
 		internal static wnd GetWndFocusedOrActive(bool requireFocus) {
 			for (int i = 0; i < (requireFocus ? 100 : 20); i++) {
 				miscInfo.getGUIThreadInfo(out var g);
@@ -419,7 +420,7 @@ public partial class keys {
 				if (!requireFocus && !g.hwndActive.Is0) return g.hwndActive;
 				wait.ms(i < 20 ? 1 : 10);
 			}
-			if (!miscInfo.isInputDesktop()) throw new AuException("Other desktop is active");
+			InputDesktopException.ThrowIfBadDesktop();
 			if (requireFocus) throw new AuException("There is no focused window"); //SHOULDDO: test various windows and data types, maybe somewhere could work without focus
 			return default;
 
@@ -441,6 +442,7 @@ public partial class keys {
 	/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be <c>default(wnd)</c> if Hook is null.</param>
 	/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 	/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
+	/// <exception cref="InputDesktopException"></exception>
 	internal (OKey optk, wnd wFocus) GetOptionsAndWndFocused_(bool getWndAlways, bool requireFocus = false) {
 		if (Options.Hook == null && !getWndAlways) return (Options, default);
 		var w = Internal_.GetWndFocusedOrActive(requireFocus);

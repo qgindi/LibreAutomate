@@ -5,10 +5,8 @@ using System.Windows.Controls.Primitives;
 
 namespace Au.Controls;
 
-public partial class KPanels
-{
-	partial class _Node
-	{
+public partial class KPanels {
+	partial class _Node {
 		[Flags]
 		enum _DockState { Hide = 1, Float = 2, }
 
@@ -42,7 +40,7 @@ public partial class KPanels
 
 			_ContextMenu_Move(m);
 
-			if(_leaf?.isExtension ?? false) {
+			if (_leaf?.isExtension ?? false) {
 				m["Remove..."] = o => {
 					var s1 = _leafType == LeafType.Toolbar ? "toolbar" : "panel";
 					if (!dialog.showYesNo($"Remove this extension {s1}?", this.Name, owner: _pm._ContainerWindow)) return;
@@ -381,7 +379,16 @@ public partial class KPanels
 				oldParent._RemoveFromParentWhenMovingOrDeleting();
 				oldParent._RemoveParentIfNeedAfterMovingOrDeleting(pp);
 			} else if (n == 1) {
-				if (!_IsDocument) oldParent.FirstChild._MoveTo(oldParent, _HowToMove.BeforeTarget);
+				if (!_IsDocument) {
+					var f = oldParent.FirstChild;
+					if(oldParent.Parent != null) {
+						f._MoveTo(oldParent, _HowToMove.BeforeTarget);
+					} else {
+						f._RemoveFromParentWhenMovingOrDeleting();
+						_pm._rootStack = f;
+						_pm._setContainer(f._stack.grid);
+					}
+				}
 			} else if (oldParent._IsTab && Parent != oldParent) {
 				oldParent._VerticalTabHeader(onMove: true);
 			}
@@ -389,6 +396,14 @@ public partial class KPanels
 
 		void _ShiftSiblingIndices(int n) {
 			for (var v = this; (v = v.Next) != null;) v._index += n;
+		}
+	}
+
+	[Conditional("DEBUG")]
+	internal void PrintTree_(string header = null) {
+		print.qm2.write("-----" + header);
+		foreach (var v in _rootStack.Descendants(true)) {
+			print.qm2.write(new string('\t', v.Level) + v);
 		}
 	}
 }

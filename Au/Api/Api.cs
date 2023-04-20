@@ -996,9 +996,6 @@ static unsafe partial class Api {
 	//[DllImport("ole32.dll", PreserveSig = true)]
 	//internal static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
 
-	//[DllImport("ole32.dll", PreserveSig = true)]
-	//internal static extern int OleInitialize(IntPtr pvReserved);
-
 	[DllImport("ole32.dll", PreserveSig = true)]
 	internal static extern int OleInitialize(IntPtr pvReserved);
 

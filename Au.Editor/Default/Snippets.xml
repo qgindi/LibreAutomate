@@ -207,7 +207,7 @@ mouse.move(w, );]]>
 			</list>
 		</snippet>
 
-		<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add it in a file that contains triggers of this type. To open, use menu TT.">
+		<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add triggers in a file that contains triggers of this type. To open, use menu TT. Local triggers can be in any other script.">
 			<list item="Hotkey">
 				<![CDATA[hk["$end$"] = o => {  };]]>
 			</list>
@@ -233,6 +233,34 @@ mouse.move(w, );]]>
 			</list>
 			<list item="Window">
 				<![CDATA[Triggers.Window[TWEvent.ActiveNew, "$end$"] = o => {  };]]>
+			</list>
+			<list item="Local triggers" using="Au.Triggers">
+				<![CDATA[//Script-local triggers running all the time, as main script code.
+ActionTriggers Triggers = new();
+
+//trigger examples
+var hk = Triggers.Hotkey;
+hk["Ctrl+F1"] = o => { print.it(o); };
+hk["Win+F1"] = o => { Triggers.Stop(); };
+
+Triggers.Run(); //waits
+]]>
+			</list>
+			<list item="Local triggers thread" using="Au.Triggers">
+				<![CDATA[//Script-local triggers running simultaneously with main script code until it ends.
+run.thread(() => {
+	ActionTriggers Triggers = new();
+	
+	//trigger examples
+	var hk = Triggers.Hotkey;
+	hk["Ctrl+F1"] = o => { print.it(o); };
+	
+	Triggers.Mouse[TMEdge.Right] = o => { print.it(o); };
+	
+	Triggers.Run();
+});
+dialog.show("Testing triggers thread"); //replace this line with real script code
+]]>
 			</list>
 		</snippet>
 
@@ -453,6 +481,10 @@ script.setup(trayIcon: true, sleepExit: true);
 
 		<snippet name="failedSnippet" info="Throw 'failed' exception." more="Exception text is optional.">
 			<![CDATA[throw new AuException($end$);]]>
+		</snippet>
+
+		<snippet name="pauseSnippet" info="Pause the script if the pause key was pressed.">
+			<![CDATA[script.pause();]]>
 		</snippet>
 
 	</group>

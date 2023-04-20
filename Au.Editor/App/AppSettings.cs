@@ -126,6 +126,9 @@ record AppSettings : JSettings {
 	//CiGoTo
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
 	
+	//CiFindGo
+	public bool ci_findgoDclick;
+	
 	//panel Find
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;

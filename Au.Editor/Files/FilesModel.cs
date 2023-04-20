@@ -528,6 +528,8 @@ partial class FilesModel {
 		//print.it(f);
 		if (f.IsFolder) return false;
 		
+		CodeInfo.WaitUntilReadyForStyling();
+		
 		if (_currentFile != null) Save.TextNowIfNeed();
 		
 		var fPrev = _currentFile;

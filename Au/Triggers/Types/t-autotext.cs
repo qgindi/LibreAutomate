@@ -796,14 +796,19 @@ public class AutotextTriggerArgs : TriggerArgs {
 			}
 		}
 
-		k.SendNow();
+		try { k.SendNow(); }
+		catch { } //unlikely
 	}
 
 	/// <summary>
 	/// If <see cref="HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="Text"/>) to the active window.
 	/// </summary>
 	public void SendPostfix() {
-		if (this.HasPostfixChar) new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar).SendNow();
+		if (this.HasPostfixChar) {
+			var k = new keys(opt.key).AddText(this.Text[^1..], OKeyText.KeysOrChar);
+			try { k.SendNow(); }
+			catch { } //unlikely
+		}
 		//CONSIDER: AddText -> AddChar. Also in other place. But the speed option is different.
 	}
 

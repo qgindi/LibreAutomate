@@ -40,10 +40,12 @@ using System.Windows.Media;
 static unsafe class Test {
 	
 	public static void FromMenubar() {
+		//print.clear();
+		//Panels.PanelManager.PrintTree_();
 		
 		//print.clear();
 		
-		var d = Panels.Editor.ActiveDoc;
+		//var d = Panels.Editor.ActiveDoc;
 		
 		//for (int i = 16; i < 32; i++) {
 		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");

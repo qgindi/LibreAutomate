@@ -144,7 +144,7 @@ class PanelFound {
 	}
 	
 	public void Close(KScintilla sci) {
-		var li = _lb.Items.OfType<_LbItem>().First(o => o.sci == sci);
+		var li = _lb.Items.OfType<_LbItem>().FirstOrDefault(o => o.sci == sci);
 		if (li != null) _Close(li);
 	}
 	

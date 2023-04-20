@@ -56,7 +56,7 @@ static class CodeInfo {
 		var doc = Panels.Editor.ActiveDoc;
 		if (doc != null) doc.Visibility = Visibility.Hidden; //hide document window. The black unfolded text is distracting. Does not have sense to show it.
 		
-		Task.Run(() => {
+		_warmupTask = Task.Run(() => {
 			//using var p1 = perf.local();
 			try {
 				var code = @"using Au; print.it(""t"" + 1);";
@@ -113,6 +113,7 @@ static class CodeInfo {
 					if (!aEnable[i].Is0) aEnable[i].Enable(true);
 			}
 			//perf.nw('R');
+			_warmupTask = null;
 			
 			IsReadyForEditing = true;
 			if (ReadyForEditing != null) {
@@ -147,6 +148,16 @@ static class CodeInfo {
 	/// Runs in main thread, after <b>ReadyForStyling</b>.
 	/// </summary>
 	public static event Action ReadyForEditing;
+	
+	/// <summary>
+	/// If the warmup task is still running, which means that still not ready for styling etc and should not open files, waits until the task completes.
+	/// </summary>
+	public static void WaitUntilReadyForStyling() {
+		if (_warmupTask == null) return;
+		_warmupTask.Wait();
+		wait.doEvents(); //run Dispatcher.InvokeAsync(_Finally)
+	}
+	static Task _warmupTask;
 	
 	static bool _CanWork(SciCode doc) {
 		if (!_isWarm) return false;

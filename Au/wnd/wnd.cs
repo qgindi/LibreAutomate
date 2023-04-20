@@ -851,6 +851,7 @@ namespace Au {
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
+		/// <exception cref="InputDesktopException"></exception>
 		internal bool Activate_(Internal_.ActivateFlags flags) {
 			if (!flags.Has(Internal_.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
 			if (flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
@@ -943,7 +944,7 @@ namespace Au {
 			}
 
 			if (!R) {
-				if (!miscInfo.isInputDesktop(detectLocked: true)) ThrowNoNative("*activate window. Other desktop is active");
+				InputDesktopException.ThrowIfBadDesktop("*activate window", detectLocked: true);
 				ThrowNoNative("*activate*");
 			}
 			if (forScreenCapture) MinimalSleepIfOtherThread_();
@@ -973,6 +974,7 @@ namespace Au {
 		/// - If this is <see cref="getwnd.root"/>, just deactivates the currently active window.
 		/// </remarks>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
+		/// <exception cref="InputDesktopException"></exception>
 		/// <seealso cref="ActivateL"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="active"/>
@@ -1035,6 +1037,7 @@ namespace Au {
 		/// - Failed to set focus.
 		/// - Failed to activate parent window.
 		/// </exception>
+		/// <exception cref="InputDesktopException"></exception>
 		/// <seealso cref="focused"/>
 		/// <seealso cref="IsFocused"/>
 		/// <seealso cref="elm.Focus"/>
