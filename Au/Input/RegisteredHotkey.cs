@@ -52,10 +52,10 @@ namespace Au.More;
 public struct RegisteredHotkey : IDisposable {
 	wnd _w;
 	int _id;
-
+	
 	///// <summary>The hotkey.</summary>
 	//public KHotkey Hotkey { get; private set; }
-
+	
 	/// <summary>
 	/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
 	/// </summary>
@@ -63,6 +63,7 @@ public struct RegisteredHotkey : IDisposable {
 	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
 	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
+	///	<param name="noRepeat">Add flag <b>MOD_NOREPEAT</b>.</param>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
 	/// <remarks>
@@ -71,23 +72,24 @@ public struct RegisteredHotkey : IDisposable {
 	/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 	/// </remarks>
 	/// <seealso cref="keys.waitForHotkey"/>
-	public bool Register(int id, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, AnyWnd window = default) {
+	public bool Register(int id, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, AnyWnd window = default, bool noRepeat = true) {
 		if (_id != 0) throw new InvalidOperationException("This variable already registered a hotkey. Use multiple variables or call Unregister.");
 		var w = window.Hwnd;
 		var (mod, key) = Normalize_(hotkey);
+		if (noRepeat) mod |= Api.MOD_NOREPEAT;
 		if (!Api.RegisterHotKey(w, id, mod, key)) return false;
 		_w = w; _id = id;
 		//Hotkey = hotkey;
 		return true;
 	}
-
-	internal static (int mod, KKey key) Normalize_(KHotkey hotkey) {
+	
+	internal static (uint mod, KKey key) Normalize_(KHotkey hotkey) {
 		var (mod, key) = hotkey;
 		if (key == KKey.Pause && mod.Has(KMod.Ctrl)) key = KKey.Break;
 		//if(key == KKey.NumPad5 && mod.Has(KMod.Shift)) key = KKey.Clear; //Shift+numpad don't work
-		return (Math2.SwapBits((int)mod, 0, 2, 1), key);
+		return (Math2.SwapBits((uint)mod, 0, 2, 1), key);
 	}
-
+	
 	/// <summary>
 	/// Unregisters the hotkey.
 	/// </summary>
@@ -108,14 +110,14 @@ public struct RegisteredHotkey : IDisposable {
 			//Hotkey = default;
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="Unregister"/>.
 	/// </summary>
 	public void Dispose() => Unregister();
-
+	
 	//~Hotkey() => Unregister(); //makes no sense. Called from wrong thread and when the window is already destroyed.
-
+	
 	/// <summary>
 	/// This message is posted to the window or to the thread's message loop.
 	/// More info: <msdn>WM_HOTKEY</msdn>.

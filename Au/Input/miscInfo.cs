@@ -94,6 +94,7 @@ public static class miscInfo {
 	/// <remarks>
 	/// Usually this app is running on default desktop. Examples of other desktops: the Ctrl+Alt+Delete screen, the PC locked screen, screen saver, UAC consent, custom desktops. If one of these is active, this app cannot use many mouse, keyboard, clipboard and window functions. They either throw exception or do nothing.
 	/// </remarks>
+	/// <seealso cref="InputDesktopException"/>
 	public static unsafe bool isInputDesktop(bool detectLocked = false) {
 		var w = wnd.active;
 		if (w.Is0) { //tested: last error code 0

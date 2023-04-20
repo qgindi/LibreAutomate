@@ -494,7 +494,8 @@ public partial class keys {
 	/// </summary>
 	/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
 	/// <exception cref="ArgumentException"><i>canSendAgain</i> is true and <i>keys_</i> end with + or (.</exception>
-	/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
+	/// <exception cref="AuException">Failed. For example there is no focused window when sending text.</exception>
+	/// <exception cref="InputDesktopException"></exception>
 	public void SendNow(bool canSendAgain = false) {
 		//note: the "Now" in the name is just to make it different from the static function send(). If named Send, problems with DocFX etc.
 

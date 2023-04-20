@@ -86,7 +86,7 @@ namespace Au {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				wnd.active.UacCheckAndThrow_(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
 																   //rejected: wnd.getwnd.root.ActivateL()
-				if (!miscInfo.isInputDesktop()) es += ". Other desktop is active";
+				InputDesktopException.ThrowIfBadDesktop(es);
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -242,6 +242,7 @@ namespace Au {
 		/// - Another thread blocks or modifies mouse input (API <b>BlockInput</b>, mouse hooks, frequent API <b>SendInput</b> etc).
 		/// - Some application called API <b>ClipCursor</b>. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).
 		/// </exception>
+		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
 		/// </remarks>
@@ -276,6 +277,7 @@ namespace Au {
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
 		/// </remarks>
+		/// <inheritdoc cref="move(POINT)" path="/exception"/>
 		public static void restore() {
 			if (t_prevMousePos == null) return;
 			WaitForNoButtonsPressed_();
@@ -327,8 +329,7 @@ namespace Au {
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="FormatException">Invalid Base64 string.</exception>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
-		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move to the last x y.</exception>
+		/// <inheritdoc cref="move(POINT)" path="/exception"/>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
@@ -445,7 +446,6 @@ namespace Au {
 
 			var k = new Api.INPUTM(flags, x, y, mouseData);
 			Api.SendInput(&k);
-			//note: the API never indicates a failure if arguments are valid. Tested UAC (documented), BlockInput, ClipCursor.
 		}
 
 		static void _Sleep(int ms) {
@@ -652,6 +652,7 @@ namespace Au {
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid <i>button</i> flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">If <i>lastXY</i> true and need to move the cursor - exceptions of <see cref="move(POINT)"/>.</exception>
+		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/> and maybe those used by <see cref="move(POINT)"/>.
 		/// </remarks>
@@ -711,6 +712,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="useLastXY">Use <see cref="lastXY"/>, not current cursor position. More info: <see cref="clickEx(MButton, bool)"/>.</param>
 		/// <exception cref="Exception">If <i>lastXY</i> true and need to move the cursor - exceptions of <see cref="move(POINT)"/>.</exception>
+		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/> and maybe those used by <see cref="move(POINT)"/>.
 		/// </remarks>
@@ -876,6 +878,7 @@ namespace Au {
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSleepFinally"/>.
 		/// </remarks>
+		/// <exception cref="InputDesktopException"></exception>
 		public static void wheel(double ticks, bool horizontal = false) {
 			bool neg = ticks < 0; if (neg) ticks = -ticks;
 			ticks *= 120;

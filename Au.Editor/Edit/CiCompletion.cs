@@ -21,6 +21,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
 //SHOULDDO: don't complete on ':' if it could be label. VS completes too.
 
+//CONSIDER: completion in keys string. But probably really useful only for keys like MediaNextTrack.
+
 partial class CiCompletion {
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible
@@ -319,7 +321,6 @@ partial class CiCompletion {
 			
 			var span = r.Span;
 			if (posAdd > 0) span = new(span.Start, span.Length + posAdd);
-			if (span.Length > 0 && provider == CiComplProvider.EmbeddedLanguage) span = new(position, 0);
 			
 			var d = new _Data {
 				completionService = completionService,
@@ -932,7 +933,7 @@ partial class CiCompletion {
 			Debug_.PrintIf(changes.Length != 1 && item.Provider != CiComplProvider.Override, changes); //eg the override provider also may add 'using'
 			var lastChange = changes.Last();
 			s = lastChange.NewText;
-			if (s.NE()) return CiComplResult.None; //Roslyn bug: fails if there are parameters of type nint. Same in VS.
+			if (s.NE()) return CiComplResult.None; //Roslyn bug: fails if there are parameters of type nint. Same in VS. Tried a workaround (modify ci.Properties["Symbols"]), but unsuccessfully. Tried to find/modify the Roslyn code, but it's too deep.
 			var span = lastChange.Span;
 			i = span.Start;
 			len = span.Length + codeLenDiff;
@@ -1085,7 +1086,7 @@ partial class CiCompletion {
 				if (ch == '.') return false; //if 'new Word.', often can be eg 'new Word.Word()' but rarely 'new Word().'
 				switch (item.kind) {
 				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Enum:
-				//if (item.ci.Properties.TryGetValue("ShouldProvideParenthesisCompletion", out var v1) && v1.Eqi("True")) goto g1; //missing when eg 'new Namespace.Type'
+				//if (ci.Properties.TryGetValue("ShouldProvideParenthesisCompletion", out var v1) && v1.Eqi("True")) goto g1; //missing when eg 'new Namespace.Type'
 				//break;
 				case CiItemKind.Keyword when item.Text is "string" or "object" or "int" or "uint" or "nint" or "nuint" or "long" or "ulong" or "byte" or "sbyte" or "short" or "ushort" or "char" or "bool" or "double" or "float" or "decimal":
 					if (CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) {
@@ -1104,7 +1105,7 @@ partial class CiCompletion {
 			}
 			
 			//bool _IsGeneric()
-			//	=> item.ci.Properties.TryGetValue("IsGeneric", out var v1) && v1.Eqi("True");
+			//	=> ci.Properties.TryGetValue("IsGeneric", out var v1) && v1.Eqi("True");
 		}
 		
 		try {

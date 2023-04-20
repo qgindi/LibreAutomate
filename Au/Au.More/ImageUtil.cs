@@ -265,6 +265,7 @@ public static partial class ImageUtil {
 		var (wid, hei) = Dpi.Scale(size.Value, dpi);
 		var rtb = new RenderTargetBitmap(wid, hei, dpi, dpi, PixelFormats.Pbgra32);
 		//var rtb = t_rtb ??= new RenderTargetBitmap(wid, hei, dpi, dpi, PixelFormats.Pbgra32); rtb.Clear(); //not better
+		//note: if Bgra32, throws exception "'Bgra32' PixelFormat is not supported for this operation".
 		rtb.Render(e);
 		if (!arranged) e.InvalidateArrange(); //prevent huge memory leak
 		if (!measured) e.InvalidateMeasure();

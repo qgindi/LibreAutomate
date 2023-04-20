@@ -75,9 +75,10 @@ public static class clipboard {
 	/// Options. If null (default), uses <see cref="opt.key"/>.
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.KeySpeedClipboard"/>. Does not use <see cref="OKey.Hook"/>.
 	/// </param>
-	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 	/// <param name="hotkey">Keys to use instead of Ctrl+C or Ctrl+X. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
 	/// <param name="timeoutMS">Max time to wait until the focused app sets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
+	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data.</exception>
+	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
 	/// Also can get file paths, as multiline text.
 	/// 
@@ -222,7 +223,8 @@ public static class clipboard {
 	/// </param>
 	/// <param name="hotkey">Keys to use instead of Ctrl+V. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
 	/// <param name="timeoutMS">Max time to wait until the focused app gets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
-	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
+	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data.</exception>
+	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
 	/// Sets clipboard data, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
 	/// Fails if nothing gets clipboard data in several seconds.

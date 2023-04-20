@@ -18,19 +18,20 @@ class PanelCookbook {
 	TextBox _search;
 	_Item _root;
 	bool _loaded;
+	bool _openingRecipe;
 	List<string> _history = new();
-
+	
 #if DEBUG
 	static string s_cookbookPath;
 #else
 	static sqlite s_sqlite;
 	static sqliteStatement s_sqliteGetText;
 #endif
-
+	
 	public PanelCookbook() {
 		P = new _Base(this);
 		P.UiaSetName("Cookbook panel");
-
+		
 		var b = new wpfBuilder(P).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
 		b.R.Add(out _search).Tooltip("Part of recipe name.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
@@ -42,7 +43,7 @@ class PanelCookbook {
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, HotTrack = true, BackgroundColor = 0xf0f8e8 };
 		b.Row(-1).Add(_tv);
 		b.End();
-
+		
 #if DEBUG
 		_tv.ItemClick += e => {
 			if (e.Button == MouseButton.Right) {
@@ -57,9 +58,9 @@ class PanelCookbook {
 		};
 #endif
 	}
-
+	
 	public UserControl P { get; }
-
+	
 	void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 		if (!_loaded && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
 			_loaded = true;
@@ -67,18 +68,18 @@ class PanelCookbook {
 			_tv.ItemActivated += e => _OpenRecipe(e.Item as _Item, false);
 		}
 	}
-
+	
 	class _Base : UserControl {
 		PanelCookbook _p;
-
+		
 		public _Base(PanelCookbook p) { _p = p; }
-
+		
 		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 			_p.OnPropertyChanged(e);
 			base.OnPropertyChanged(e);
 		}
 	}
-
+	
 	void _Load() {
 		try {
 #if DEBUG
@@ -90,10 +91,10 @@ class PanelCookbook {
 			var xml = _GetText("files.xml"); if (xml == null) return;
 			var xr = XElement.Parse(xml);
 #endif
-
+			
 			_root = new _Item(null, true);
 			_AddItems(xr, _root, 0);
-
+			
 			static void _AddItems(XElement xp, _Item ip, int level) {
 				foreach (var x in xp.Elements()) {
 					var name = x.Attr("n");
@@ -109,12 +110,12 @@ class PanelCookbook {
 					if (dir) _AddItems(x, i, level + 1);
 				}
 			}
-
+			
 			_tv.SetItems(_root.Children());
 		}
 		catch (Exception e1) { print.it(e1); }
 	}
-
+	
 	//Used by script "Create cookbook.db" to unlock database file and auto-reload.
 	public bool UnloadLoad(bool load) {
 		if (load == _loaded) return false;
@@ -131,7 +132,7 @@ class PanelCookbook {
 		}
 		return true;
 	}
-
+	
 #if !DEBUG
 	//In Release config loads files from database "cookbook.db" created by script "Create cookbook.db".
 	//In Debug config loads files directly. It allows to edit them and see results without creating database.
@@ -150,31 +151,37 @@ class PanelCookbook {
 		return _Unmangle(s);
 	}
 #endif
-
+	
 	void _OpenRecipe(_Item recipe, bool select) {
 		if (recipe == null || recipe.dir) return;
-
+		
 		if (select) {
+			_openingRecipe = true;
 			_search.Text = "";
+			_openingRecipe = false;
 			_tv.EnsureVisible(recipe);
 			_tv.Select(recipe);
 		}
-
+		
 		if (recipe.GetBodyText() is string code) {
 			Panels.Recipe.Display(recipe.name, code);
 			AddToHistory_(recipe.name);
 		}
 	}
-
+	
 	void _Search(bool inBody) {
 		var s = _search.Text.Trim();
 		if (s.Length < 2) {
 			_tv.SetItems(_root.Children());
+			if (!_openingRecipe && _history.LastOrDefault() is string s1 && _FindRecipe(s1, exact: true) is _Item r) {
+				_tv.EnsureVisible(r);
+				_tv.Select(r);
+			}
 			return;
 		}
-
+		
 		//print.clear();
-
+		
 		var root2 = _SearchContains(_root);
 		_Item _SearchContains(_Item parent) {
 			_Item R = null;
@@ -192,11 +199,11 @@ class PanelCookbook {
 				R.AddChild(r);
 			}
 			return R;
-
+			
 			//rejected: use SQLite FTS5. Tried but didn't like.
 			//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
 		}
-
+		
 		//try stemmed fuzzy. Max Levenshtein distance 1 for a word.
 		//	rejected: use FuzzySharp. For max distance 1 don't need it.
 		if (root2 == null && !inBody && s.Length >= 3) {
@@ -230,23 +237,23 @@ class PanelCookbook {
 		}
 		//rejected: try joined words. Eg for "webpage" also find "web page" and "web-page".
 		//	Will find all after typing "web". Never mind fuzzy.
-
+		
 		_tv.SetItems(root2?.Children());
-
+		
 		static bool _Match(string s1, string s2) {
 			if (s1[0] != s2[0] || Math.Abs(s1.Length - s2.Length) > 1) return false; //the first char must match
 			if (s1.Length > s2.Length) Math2.Swap(ref s1, ref s2); //let s1 be the shorter
-
+			
 			int ib = 0, ie1 = s1.Length, ie2 = s2.Length;
 			while (ib < s1.Length && s1[ib] == s2[ib]) ib++; //skip common prefix
 			while (ie1 > ib && s1[ie1 - 1] == s2[--ie2]) ie1--; //skip common suffix
-
+			
 			int n = ie1 - ib;
 			if (n == 1) return s1.Length == s2.Length || ib == ie1;
 			return n == 0;
 		}
 	}
-
+	
 	string[] _Stem(string s) {
 		if (_stem.stemmer == null) _stem = (new(), new());
 		_stem.a.Clear();
@@ -256,36 +263,36 @@ class PanelCookbook {
 		return _stem.a.ToArray();
 	}
 	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a) _stem;
-
+	
 	public void OpenRecipe(string s) {
 		Panels.PanelManager[P].Visible = true;
 		_OpenRecipe(_FindRecipe(s), true);
 	}
-
-	_Item _FindRecipe(string s) {
+	
+	_Item _FindRecipe(string s, bool exact = false) {
 		var d = _root.Descendants();
+		if (exact) return d.FirstOrDefault(o => !o.dir && o.name == s);
 		return d.FirstOrDefault(o => !o.dir && o.name.Like(s, true))
 			?? d.FirstOrDefault(o => !o.dir && o.name.Starts(s, true))
 			?? d.FirstOrDefault(o => !o.dir && o.name.Find(s, true) >= 0);
 	}
-
+	
 	internal void AddToHistory_(string recipe) {
 		_history.Remove(recipe);
 		_history.Add(recipe);
 		if (_history.Count > 20) _history.RemoveAt(0);
 	}
-
+	
 	void _HistoryMenu() {
 		var m = new popupMenu();
 		for (int i = _history.Count - 1; --i >= 0;) m[_history[i]] = o => _Open(o.Text);
 		m.Show(owner: P);
-
+		
 		void _Open(string name) {
-			var v = _root.Descendants().FirstOrDefault(o => !o.dir && o.name == name);
-			_OpenRecipe(v, true);
+			_OpenRecipe(_FindRecipe(name, exact: true), true);
 		}
 	}
-
+	
 #if DEBUG
 	//rejected. Now checks when building online help.
 	//void _DebugCheckLinks() {
@@ -300,7 +307,7 @@ class PanelCookbook {
 	//		}
 	//	}
 	//}
-
+	
 	void _DebugGetWords(bool body) {
 		print.clear();
 		var hs = new HashSet<string>();
@@ -319,35 +326,35 @@ class PanelCookbook {
 		print.it(hs.OrderBy(o => o, StringComparer.OrdinalIgnoreCase));
 	}
 #endif
-
+	
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		internal readonly string name;
 		internal readonly bool dir;
 		internal bool isExpanded;
 		internal string[] stemmedName;
-
+		
 		public _Item(string name, bool dir) {
 			this.name = name;
 			this.dir = dir;
 		}
-
+		
 		#region ITreeViewItem
-
+		
 		string ITreeViewItem.DisplayText => name;
-
+		
 		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie" + Menus.darkYellow);
-
+		
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
-
+		
 		bool ITreeViewItem.IsExpanded => isExpanded;
-
+		
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
-
+		
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
-
+		
 		#endregion
-
+		
 #if DEBUG
 		public string FullPath {
 			get {
@@ -365,7 +372,7 @@ class PanelCookbook {
 		}
 		string _path;
 		static Stack<string> s_stack1 = new();
-
+		
 		public string GetBodyText() {
 			try { return filesystem.loadText(FullPath); } catch { return null; }
 		}
@@ -374,7 +381,7 @@ class PanelCookbook {
 			return _GetText(name);
 		}
 #endif
-
+		
 		public string GetBodyTextWithoutLinksEtc() {
 			var t = GetBodyText(); if (t == null) return null;
 			t = t.RxReplace(@"<see cref=""(.+?)""/>", "$1");

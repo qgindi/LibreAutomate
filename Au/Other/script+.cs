@@ -34,6 +34,7 @@ public enum UExcept {
 
 	/// <summary>
 	/// Show dialog with exception info.
+	/// If editor available, the dialog contains links to functions in the call stack. To close the dialog when a link clicked, add flag <b>Print</b>.
 	/// </summary>
 	Dialog = 2,
 }
