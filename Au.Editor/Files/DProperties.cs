@@ -33,9 +33,10 @@ class DProperties : KDialogWindow {
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
 		b.R.StartStack(vertical: true); //left column
-		b.StartGrid().Columns(0, -1, 20, 0, -1.15)
-			.R.Add("role", out role).Skip()
-			.Add("testScript", out testScript);
+		b.StartGrid().Columns(0, -1, 20, 0, -1.15);
+		b.R.Add("role", out role).Skip();
+		b.Add("testScript", out testScript)
+			.Validation(_ => testScript.Text is string s1 && s1.Length > 0 && null == _f.FindRelative(s1, FNFind.CodeFile, orAnywhere: true) ? "testScript not found" : null);
 		b.End();
 		
 		b.StartStack(out gRun, "Run", vertical: true);

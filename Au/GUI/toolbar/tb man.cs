@@ -1,3 +1,7 @@
+//TODO: sometimes a topmost non-attached toolbar window is behind nontopmost windows.
+//	Noticed several times, maybe once/year.
+//	Possible workaround: every second: if (!w.ZorderIsAbove(wnd.active)) ...
+
 namespace Au;
 
 public partial class toolbar {

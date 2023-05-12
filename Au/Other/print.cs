@@ -270,6 +270,15 @@ public static partial class print {
 	static long s_warningTime;
 	
 	/// <summary>
+	/// Writes an exception warning to the output.
+	/// </summary>
+	/// <inheritdoc cref="warning(string, int, string)"/>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	public static void warning(Exception e, string prefix = "<>Warning: ") {
+		warning(e.ToString(), -1, prefix);
+	}
+	
+	/// <summary>
 	/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>

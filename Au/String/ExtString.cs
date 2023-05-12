@@ -317,7 +317,7 @@ public static unsafe partial class ExtString {
 		}
 		return -1;
 	}
-	
+
 	/// <summary>
 	/// Finds the first character specified in <i>chars</i>. Returns its index, or -1 if not found.
 	/// </summary>
@@ -360,7 +360,7 @@ public static unsafe partial class ExtString {
 			char c = t[i];
 			for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
 			return i;
-		g1:;
+			g1:;
 		}
 		return -1;
 	}
@@ -377,7 +377,7 @@ public static unsafe partial class ExtString {
 			char c = t[i];
 			for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
 			return i;
-		g1:;
+			g1:;
 		}
 		return -1;
 	}
@@ -486,7 +486,7 @@ public static unsafe partial class ExtString {
 			return i;
 		}
 		return -1;
-		
+
 		bool _IsWordChar(string s, int i, bool expandLeft) {
 			//CONSIDER: use Rune
 			char c = s[i];
@@ -734,10 +734,10 @@ public static unsafe partial class ExtString {
 
 	#region ToNumber
 
-	static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags) {
+	static long _ToInt(RStr t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags) {
 		numberEndIndex = 0;
 
-		int len = t.Lenn();
+		int len = t.Length;
 		if ((uint)startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
 		int i = startIndex;
 		char c;
@@ -805,7 +805,7 @@ public static unsafe partial class ExtString {
 				if (++nDigits >= nMaxDigits) {
 					if (nDigits > nMaxDigits) return 0;
 					if (toLong) {
-						if (string.CompareOrdinal(t, i + 1 - nDigits, "18446744073709551615", 0, nDigits) > 0) return 0;
+						if (t.Slice(i + 1 - nDigits).CompareTo("18446744073709551615", StringComparison.Ordinal) > 0) return 0;
 					} else {
 						if (R > uint.MaxValue) return 0;
 					}
@@ -936,6 +936,15 @@ public static unsafe partial class ExtString {
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out ulong result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
+
+	//FUTURE: make these public and add more overloads.
+	internal static int ToInt_(this RStr t, STIFlags flags = 0)
+		=> (int)_ToInt(t, 0, out _, false, flags);
+
+	internal static bool ToInt_(this RStr t, out int result, out int numberEndIndex, STIFlags flags = 0) {
+		result = (int)_ToInt(t, 0, out numberEndIndex, false, flags);
+		return numberEndIndex != 0;
+	}
 
 	/// <summary>
 	/// Converts this string or its part to double number.
@@ -1201,7 +1210,7 @@ public static unsafe partial class ExtString {
 		if (limit > 0) t = Limit(t, limit);
 		if (quote) t = "\"" + t + "\"";
 		return t;
-	g1:
+		g1:
 		using (new StringBuilder_(out var b, len + len / 16 + 100)) {
 			if (quote) b.Append('\"');
 			for (i = 0; i < len; i++) {
@@ -1499,7 +1508,101 @@ public static unsafe partial class ExtString {
 		return t.AsSpan(i, len);
 	}
 
-	internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
+	internal static void CopyTo_(this string t, char* p)
+		=> t.AsSpan().CopyTo(new Span<char>(p, t.Length));
+
+	/// <summary>
+	/// Converts to UTF-8 (<c>Encoding.UTF8.GetBytes</c>).
+	/// </summary>
+	public static byte[] ToUTF8(this string t)
+		=> Encoding.UTF8.GetBytes(t);
+
+	/// <summary>
+	/// Converts to UTF-8.
+	/// </summary>
+	/// <param name="append0">Return 0-terminated UTF-8 string.</param>
+	public static byte[] ToUTF8(this RStr t, bool append0 = false)
+		=> Convert2.Utf8Encode(t, append0 ? "\0" : null);
+
+	/// <summary>
+	/// Converts to UTF-8.
+	/// </summary>
+	/// <param name="append0">Return 0-terminated UTF-8 string.</param>
+	public static byte[] ToUTF8(this Span<char> t, bool append0 = false)
+		=> Convert2.Utf8Encode(t, append0 ? "\0" : null);
+
+	/// <summary>
+	/// Converts UTF-8 string to string.
+	/// </summary>
+	public static string ToStringUTF8(this byte[] t)
+		=> Encoding.UTF8.GetString(t);
+
+	/// <summary>
+	/// Converts UTF-8 string to string.
+	/// </summary>
+	public static string ToStringUTF8(this ReadOnlySpan<byte> t)
+		=> Encoding.UTF8.GetString(t);
+
+	/// <summary>
+	/// Converts UTF-8 string to string.
+	/// </summary>
+	public static string ToStringUTF8(this Span<byte> t)
+		=> Encoding.UTF8.GetString(t);
+
+	/// <summary>
+	/// Splits string <i>s</i>. Trims, and removes empty.
+	/// </summary>
+	/// <returns>Array containing 0 or more strings.</returns>
+	internal static string[] Split_(this string t, char c) {
+		return t.Split(c, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+	}
+
+	/// <summary>
+	/// Splits string <i>s</i> and creates <b>HashSet</b>. Trims, and removes empty.
+	/// </summary>
+	/// <returns><b>HashSet</b> containing 0 or more strings.</returns>
+	internal static HashSet<string> Split_(this string t, char c, bool ignoreCase) {
+		return t.Split(c, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+			.ToHashSet(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+	}
+
+	/// <summary>
+	/// Splits string <i>s</i> into 2 strings.
+	/// Tip: there are 2 overloads: for string and for RStr.
+	/// </summary>
+	/// <param name="t"></param>
+	/// <param name="c">Separator character.</param>
+	/// <param name="s1">String at the left.</param>
+	/// <param name="s2">String at the right.</param>
+	/// <param name="minLen1">Minimal <i>s1</i> length.</param>
+	/// <param name="minLen2">Minimal <i>s2</i> length.</param>
+	/// <returns>Returns false if character <i>c</i> not found or if strings are too short.</returns>
+	/// <remarks>
+	///	Can be used to split strings like "name=value" or "name: value" or "s1 s2" etc. Trims spaces.
+	/// </remarks>
+	internal static bool Split_(this string t, char c, out string s1, out string s2, int minLen1, int minLen2) {
+		if (!Split_(t, c, out RStr k1, out RStr k2, minLen1, minLen2)) {
+			s1 = s2 = null;
+			return false;
+		}
+		s1 = k1.ToString();
+		s2 = k2.ToString();
+		return true;
+	}
+
+	/// <inheritdoc cref="Split_(string, char, out string, out string, int, int)"/>
+	internal static bool Split_(this RStr t, char c, out RStr s1, out RStr s2, int minLen1, int minLen2) {
+		t = t.Trim();
+		int i = t.IndexOf(c);
+		if (i >= 0) {
+			s1 = t[..i].TrimEnd();
+			s2 = t[++i..].TrimStart();
+			if (s1.Length >= minLen1 && s2.Length >= minLen2) return true;
+		}
+		s1 = default;
+		s2 = default;
+		return false;
+	}
 }
 
 /// <summary>

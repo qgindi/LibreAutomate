@@ -99,6 +99,8 @@ class CiSignature {
 				foreach (var p in providers) {
 					//print.it(p);
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
+					//never mind: GetItemsAsync may throw exception. Rare.
+
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
@@ -114,7 +116,6 @@ class CiSignature {
 			});
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; } //never noticed
-																					 //catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;

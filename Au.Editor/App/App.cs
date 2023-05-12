@@ -1,3 +1,6 @@
+//TODO: an easy way to run scripts from other computers, like QM net.
+
+
 using Au.Controls;
 using System.Runtime.Loader;
 using System.Windows;

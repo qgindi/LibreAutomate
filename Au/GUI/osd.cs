@@ -585,6 +585,7 @@ namespace Au {
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public int SecondsTimeout { get; set; }
+		//TODO: allow to change after creating OSD window.
 		
 		/// <summary>
 		/// See <see cref="OsdMode"/>.

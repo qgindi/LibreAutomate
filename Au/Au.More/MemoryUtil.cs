@@ -1,5 +1,4 @@
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Allocates memory from native heap of this process using heap API.
 	/// Also has more functions to work with memory: copy, move, virtual alloc.
@@ -7,10 +6,9 @@ namespace Au.More
 	/// <remarks>
 	/// Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
 	/// </remarks>
-	public static unsafe class MemoryUtil
-	{
+	public static unsafe class MemoryUtil {
 		static IntPtr _processHeap = Api.GetProcessHeap();
-
+		
 		/// <summary>
 		/// Allocates new memory block and returns its address.
 		/// </summary>
@@ -23,16 +21,16 @@ namespace Au.More
 		/// </remarks>
 		public static byte* Alloc(nint size, bool zeroInit = false)
 			=> _ReAllocBytes(null, size, zeroInit);
-
+		
 		/// <param name="count">Count of elements of type T.</param>
 		/// <inheritdoc cref="Alloc(nint, bool)"/>
 		public static T* Alloc<T>(nint count, bool zeroInit = false) where T : unmanaged
 			=> (T*)_ReAllocBytes(null, count * sizeof(T), zeroInit);
-
+		
 		//Rejected. With the above overload the calling code is easier to read. Not so often used.
 		//public static void Alloc<T>(out T* mem, nint count, bool zeroInit = false) where T : unmanaged
 		//	=> mem = (T*)_ReAllocBytes(null, count * sizeof(T), zeroInit);
-
+		
 		static byte* _ReAllocBytes(void* mem, nint size, bool zeroInit = false) {
 			uint flag = zeroInit ? 8u : 0u;
 			for (int i = 0; i < 5; i++) {
@@ -47,12 +45,12 @@ namespace Au.More
 				if (r != null) return (byte*)r;
 			}
 			throw new OutOfMemoryException();
-
+			
 			//note: don't need GC.AddMemoryPressure.
 			//	Native memory usually is used for temporary buffers etc and is soon released eg with try/finally.
 			//	Marshal.AllocHGlobal does not do it too.
 		}
-
+		
 		/// <summary>
 		/// Reallocates a memory block to make it bigger or smaller.
 		/// </summary>
@@ -67,7 +65,7 @@ namespace Au.More
 		/// </remarks>
 		public static void ReAlloc<T>(ref T* mem, nint count, bool zeroInit = false) where T : unmanaged
 			=> mem = (T*)_ReAllocBytes(mem, count * sizeof(T), zeroInit);
-
+		
 		/// <summary>
 		/// Frees a memory block.
 		/// Does nothing if <i>mem</i> is null.
@@ -78,7 +76,7 @@ namespace Au.More
 		public static void Free(void* mem) {
 			if (mem != null) Api.HeapFree(_processHeap, 0, mem);
 		}
-
+		
 		/// <summary>
 		/// Frees a memory block (if not null) and allocates new.
 		/// </summary>
@@ -94,7 +92,7 @@ namespace Au.More
 			Free(m);
 			mem = Alloc<T>(count, zeroInit);
 		}
-
+		
 		/// <summary>
 		/// Allocates new virtual memory block with API <msdn>VirtualAlloc</msdn> and returns its address: <c>VirtualAlloc(default, size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE)</c>.
 		/// </summary>
@@ -115,12 +113,12 @@ namespace Au.More
 				if (r != null) return r;
 			}
 			throw new OutOfMemoryException();
-
+			
 			//note: don't need GC.AddMemoryPressure.
 			//	Native memory usually is used for temporary buffers etc and is soon released eg with try/finally.
 			//	Marshal.AllocHGlobal does not do it too.
 		}
-
+		
 		/// <summary>
 		/// Frees a memory block allocated with <see cref="VirtualAlloc"/>.
 		/// Does nothing if <i>mem</i> is null.
@@ -128,7 +126,7 @@ namespace Au.More
 		public static void VirtualFree(void* mem) {
 			if (mem != null) Api.VirtualFree(mem);
 		}
-
+		
 		/// <summary>
 		/// Copies memory with <see cref="Buffer.MemoryCopy"/>.
 		/// </summary>
@@ -138,7 +136,7 @@ namespace Au.More
 		public static void Copy(void* from, void* to, nint size) => Buffer.MemoryCopy(from, to, size, size);
 		//speed Buffer.MemoryCopy vs memcpy, non-overlapped: same if small, slightly faster if big.
 		//speed Span.CopyTo vs Buffer.MemoryCopy: same if non-overlapped, slower if overlapped.
-
+		
 		/// <summary>
 		/// Copies memory with API <msdn>memmove</msdn>.
 		/// </summary>

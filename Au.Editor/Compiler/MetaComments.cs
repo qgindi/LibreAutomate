@@ -649,11 +649,11 @@ class MetaComments {
 			return;
 		case "define":
 			_Specified(MCSpecified.define);
-			Defines.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+			Defines.AddRange(value.Split_(','));
 			return;
 		case "testInternal":
 			_Specified(MCSpecified.testInternal);
-			TestInternal = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+			TestInternal = value.Split_(',');
 			return;
 		case "sign":
 			_Specified(MCSpecified.sign);
@@ -671,7 +671,7 @@ class MetaComments {
 			break;
 		case "noWarnings":
 			_Specified(MCSpecified.noWarnings);
-			NoWarnings.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+			NoWarnings.AddRange(value.Split_(','));
 			break;
 		case "preBuild":
 			_Specified(MCSpecified.preBuild);

@@ -1,9 +1,26 @@
-﻿namespace Au.More;
+using System.Runtime.Loader;
+
+namespace Au.More;
 
 /// <summary>
 /// Assembly functions.
 /// </summary>
 internal static class AssemblyUtil_ {
+	public static Assembly GetEntryAssembly() {
+		var r = Assembly.GetEntryAssembly();
+		if (r == null) {
+			//info: null in miniProgram on AssemblyLoadContext.Default.Resolving event when the script is like:
+			//	'class Program : SomeType { static Main() { } }' where SomeType is the assembly being resolved.
+
+			//Debug_.Print("Assembly.GetEntryAssembly null");
+			if (script.role == SRole.MiniProgram) {
+				var s = "~" + script.name;
+				foreach (var v in AssemblyLoadContext.Default.Assemblies) if (v.GetName().Name == s) return v;
+			}
+		}
+		return r;
+	}
+
 	/// <summary>
 	/// Returns true if the build configuration of the assembly is Debug. Returns false if Release (optimized).
 	/// </summary>

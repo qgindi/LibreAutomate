@@ -275,7 +275,7 @@ Can be Pack.Icon, like Modern.List.")
 					var path = $"{cf.FilePath}\\{k._name}{(ico ? ".ico" : ".xaml")}";
 					//CONSIDER: if path exists, show dialog
 					if (ico) {
-						var sizes = iconSizes.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(o => o.ToInt()).ToArray();
+						var sizes = iconSizes.Text.Split_(',').Select(o => o.ToInt()).ToArray();
 						KImageUtil.XamlImageToIconFile(path, xaml, sizes);
 					} else {
 						filesystem.saveText(path, xaml);
