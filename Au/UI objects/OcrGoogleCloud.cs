@@ -1,3 +1,5 @@
+//TODO: add header to accept Brotli?
+
 using System.Drawing;
 using System.Text.Json.Nodes;
 using System.Net.Http;
@@ -35,6 +37,7 @@ public class OcrGoogleCloud : IOcrEngine {
 	public bool DpiScale { get; set; }
 	
 	/// <inheritdoc cref="IOcrEngine.Recognize"/>
+	/// <exception cref="Exception">Failed.</exception>
 	public OcrWord[] Recognize(Bitmap b, bool dispose, double scale) {
 		var b0 = b;
 		b = IOcrEngine.PrepareBitmap(b, dispose, scale);
@@ -64,33 +67,22 @@ public class OcrGoogleCloud : IOcrEngine {
 """;
 		
 		//perf.first();
-		if (!internet.http.TryPost(out var rm, url, internet.jsonContent(requestJson), dontWait: true)) throw new AuException(rm.Json(true).ToString());
+		if (!internet.http_.TryPost(out var r, url, internet.jsonContent(requestJson), new[] { "Accept-Encoding: br, gzip, deflate" }, dontWait: true))
+			throw new AuException(r.Text(true));
 		//perf.next();
-#if true
-		var j = _ReadResponse(rm);
+#if true //can be faster > 10 times. Also we use compression. Together it makes this part 100 times faster than the TryPost.
+		var j = _ReadResponse(r);
 		//perf.nw();
 		return _ParseJson(j["responses"][0], scale);
 #else
-		var j=rm.Json();
+		var j=r.Json();
 		//perf.nw();
-		return _ParseJson(j["responses"][0]);
+		return _ParseJson(j["responses"][0], scale);
 #endif
-		/* speed when full response size 5 MB
-		full:
-		speed:  2375535  5412374  (7787909)
-		speed:  2208455  3492840  (5701296)
-		speed:  1448326  2082856  (3531182)
-		speed:  1390644  2338730  (3729374)
-		part (size 0.4 MB):
-		speed:  1340167  376602  (1716770)
-		speed:  1338797  351851  (1690649)
-		speed:  1446931  367382  (1814313)
-		speed:  1367668  385796  (1753464)
-		*/
 	}
 	
 	//Reads response until "fullTextAnnotation".
-	//Can make the download size smaller > 10 times (eg 5 MB -> 0.4 MB), and the main function faster > 2 times (eg 3.7 s -> 1.7 s).
+	//Can make the download size smaller > 10 times.
 	static unsafe JsonNode _ReadResponse(HttpResponseMessage rm) {
 		var find = "\"fullTextAnnotation\":";
 		using var ab = new ArrayBuilder_<byte>() { Capacity = 250_000 };

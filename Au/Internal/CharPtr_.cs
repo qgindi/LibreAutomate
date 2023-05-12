@@ -82,6 +82,7 @@ static unsafe class BytePtr_ {
 		}
 		return true;
 	}
+
 	/// <summary>
 	/// Returns true if unmanaged string p starts with string s. Case-insensitive.
 	/// </summary>
@@ -96,6 +97,18 @@ static unsafe class BytePtr_ {
 		}
 		return true;
 	}
+
+	//rejected. Use span.StartsWith("string"u8), it's much faster.
+	///// <summary>
+	///// Returns true if <i>span</i> starts with ASCII string <i>s</i>.
+	///// </summary>
+	//public static bool AsciiStarts(ReadOnlySpan<byte> span, string s) {
+	//	if (s.Length > span.Length) return false;
+	//	for (int i = 0; i < s.Length; i++) {
+	//		if (span[i] != s[i]) return false;
+	//	}
+	//	return true;
+	//}
 
 	/// <summary>
 	/// Returns true if unmanaged string p and string s are equal. Case-sensitive.

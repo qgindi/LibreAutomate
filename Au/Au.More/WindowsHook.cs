@@ -530,7 +530,10 @@ namespace Au.More {
 				if (s_lowLevelHooksTimeout == 0) {
 					//default 300, tested on Win10 and 7
 					//max 1000 on Win10. On Win7 more. Not tested on Win8. On Win7/8 may be changed by a Windows update.
-					s_lowLevelHooksTimeout = Math.Min(1000, (int)Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LowLevelHooksTimeout", 300));
+					s_lowLevelHooksTimeout =
+						Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LowLevelHooksTimeout", null) is int v
+						? (int)Math.Min(1000u, (uint)v)
+						: 300;
 				}
 				return s_lowLevelHooksTimeout;
 			}

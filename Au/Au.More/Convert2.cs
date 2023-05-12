@@ -126,9 +126,9 @@ public static unsafe class Convert2 {
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
 	public static byte[] DeflateCompress(ReadOnlySpan<byte> data) {
-		using var ms = new MemoryStream();
-		using (var ds = new DeflateStream(ms, CompressionLevel.Optimal)) ds.Write(data); //note: must dispose before ToArray
-		return ms.ToArray();
+		using var m = new MemoryStream();
+		using (var x = new DeflateStream(m, CompressionLevel.Optimal)) x.Write(data); //note: must dispose before ToArray
+		return m.ToArray();
 		//tested: GZipStream same compression but adds 18 bytes header. DeflateStream does not add any header.
 		//tested: bz2 and 7z compression isn't much better with single 15 kb bmp file.
 	}
@@ -140,9 +140,9 @@ public static unsafe class Convert2 {
 	/// <param name="compressed">Compressed data.</param>
 	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
 	public static byte[] DeflateDecompress(ReadOnlySpan<byte> compressed) {
-		using var stream = new MemoryStream();
-		DeflateDecompress(compressed, stream);
-		return stream.ToArray();
+		using var m = new MemoryStream();
+		DeflateDecompress(compressed, m);
+		return m.ToArray();
 	}
 
 	/// <summary>
@@ -153,13 +153,50 @@ public static unsafe class Convert2 {
 	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
 	public static void DeflateDecompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
 		fixed (byte* p = compressed) {
-			using var compressStream = new UnmanagedMemoryStream(p, compressed.Length);
-			using var deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress);
-			deflateStream.CopyTo(decompressed);
+			using var m = new UnmanagedMemoryStream(p, compressed.Length);
+			using var x = new DeflateStream(m, CompressionMode.Decompress);
+			x.CopyTo(decompressed);
 		}
 
 		//note: cannot deflateStream.Read directly to array because its Length etc are not supported.
 		//note: also cannot use decompressedStream.GetBuffer because it can be bigger.
+	}
+
+	/// <summary>
+	/// Compresses data. Uses <see cref="GZipStream"/>.
+	/// </summary>
+	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
+	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
+	public static byte[] GzipCompress(ReadOnlySpan<byte> data) {
+		using var m = new MemoryStream();
+		using (var x = new GZipStream(m, CompressionLevel.Optimal)) x.Write(data);
+		return m.ToArray();
+	}
+
+	/// <summary>
+	/// Decompresses data. Uses <see cref="GZipStream"/>.
+	/// </summary>
+	/// <returns>Decompressed data.</returns>
+	/// <param name="compressed">Compressed data.</param>
+	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
+	public static byte[] GzipDecompress(ReadOnlySpan<byte> compressed) {
+		using var m = new MemoryStream();
+		GzipDecompress(compressed, m);
+		return m.ToArray();
+	}
+
+	/// <summary>
+	/// Decompresses data to a caller-provided memory stream. Uses <see cref="GZipStream"/>.
+	/// </summary>
+	/// <param name="compressed">Compressed data.</param>
+	/// <param name="decompressed">Stream for decompressed data.</param>
+	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
+	public static void GzipDecompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
+		fixed (byte* p = compressed) {
+			using var m = new UnmanagedMemoryStream(p, compressed.Length);
+			using var x = new GZipStream(m, CompressionMode.Decompress);
+			x.CopyTo(decompressed);
+		}
 	}
 
 	/// <summary>
@@ -169,8 +206,10 @@ public static unsafe class Convert2 {
 	/// <param name="level">Compression level, 0 (no compression) to 11 (maximal compression). Default 6. Bigger levels don't make much smaller but can make much slower.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>level</i>.</exception>
 	/// <exception cref="OutOfMemoryException"></exception>
+	/// <exception cref="AuException"><see cref="BrotliEncoder.TryCompress"/> failed.</exception>
 	public static unsafe byte[] BrotliCompress(ReadOnlySpan<byte> data, int level = 6) {
-		int n = BrotliEncoder.GetMaxCompressedLength(data.Length);
+		int n = BrotliEncoder.GetMaxCompressedLength(data.Length)
+			+ data.Length / 1000 + 1000; //GetMaxCompressedLength returns too small value, and TryCompress fails when data is already compressed
 		var b = MemoryUtil.Alloc(n);
 		try {
 			if (!BrotliEncoder.TryCompress(data, new(b, n), out n, level, 22)) throw new AuException();
@@ -191,9 +230,8 @@ public static unsafe class Convert2 {
 		for (int i = 0; i < 3; i++) if (n < 512_000) n *= 2;
 		//print.it(compressed.Length, n, n/compressed.Length); //usually ~ 80 KB
 		for (; ; n = checked(n * 2)) {
-			byte* b = null;
+			byte* b = MemoryUtil.Alloc(n);
 			try {
-				b = MemoryUtil.Alloc(n);
 				if (BrotliDecoder.TryDecompress(compressed, new(b, n), out int nw)) return new Span<byte>(b, nw).ToArray();
 				if (nw == 0) throw new ArgumentException("cannot decompress this data");
 				//print.it(n);

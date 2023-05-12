@@ -81,9 +81,6 @@
     <ClCompile Include="pcre2_chartables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pcre2_jit_compile.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pcre2_dfa_match.c">
       <Filter>Source Files\excluded</Filter>
     </ClCompile>
@@ -95,6 +92,9 @@
     </ClCompile>
     <ClCompile Include="pcre2_substitute.c">
       <Filter>Source Files\excluded</Filter>
+    </ClCompile>
+    <ClCompile Include="pcre2_ucptables.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

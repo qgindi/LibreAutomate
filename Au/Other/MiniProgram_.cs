@@ -141,11 +141,11 @@ static unsafe class MiniProgram_ {
 
 		if (0 != (flags & MPFlags.RefPaths))
 			AssemblyLoadContext.Default.Resolving += (alc, an)
-				=> ResolveAssemblyFromRefPathsAttribute_(alc, an, Assembly.GetEntryAssembly());
+				=> ResolveAssemblyFromRefPathsAttribute_(alc, an, AssemblyUtil_.GetEntryAssembly());
 
 		if (0 != (flags & MPFlags.NativePaths))
 			AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
-				=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, Assembly.GetEntryAssembly());
+				=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, AssemblyUtil_.GetEntryAssembly());
 
 		if (0 != (flags & MPFlags.MTA))
 			process.ThisThreadSetComApartment_(ApartmentState.MTA);
@@ -185,9 +185,10 @@ static unsafe class MiniProgram_ {
 
 	internal static Assembly LoadFromAssemblyPath_(this AssemblyLoadContext t, string path) {
 		try { return t.LoadFromAssemblyPath(path); }
-		catch (FileLoadException e1) {
-			Debug_.Print("alc.LoadFromAssemblyPath failed. Will retry with s_alc. " + e1.ToStringWithoutStack());
-		}
+		catch { }
+		//catch (FileLoadException e1) {
+		//	Debug_.Print("alc.LoadFromAssemblyPath failed. Will retry with s_alc. " + e1.ToStringWithoutStack());
+		//}
 		//If the assembly has the same name as one of TPA assemblies (probably it's a newer version),
 		//	the above LoadFromAssemblyPath ignores the path and tries to load the TPA assembly, and fails.
 		//	Workaround: Then try to load to another AssemblyLoadContext.

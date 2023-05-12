@@ -32,6 +32,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+//using System.Net.Http;
 
 #if TRACE
 
@@ -41,12 +42,11 @@ static unsafe class Test {
 	
 	public static void FromMenubar() {
 		//print.clear();
-		//Panels.PanelManager.PrintTree_();
-		
-		//print.clear();
-		
+		//HttpResponseMessage m;m.
+		//HttpRequestMessage m;m.
+
 		//var d = Panels.Editor.ActiveDoc;
-		
+
 		//for (int i = 16; i < 32; i++) {
 		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");
 		//	//d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_PLAIN);

@@ -202,7 +202,7 @@ namespace Au.More {
 
 			lock (s_dict) {
 				if (!s_dict.TryGetValue(asmName, out var rs)) {
-					var asm = asmName.Length == 0 ? Assembly.GetEntryAssembly() : _FindAssembly(asmName);
+					var asm = asmName.Length == 0 ? AssemblyUtil_.GetEntryAssembly() : _FindAssembly(asmName);
 					if (asm == null) return noThrow ? null : throw new FileNotFoundException($"Cannot find loaded resource assembly '{asmName}'.");
 					var rm = new ResourceManager(asm.GetName().Name + ".g", asm);
 					rs = rm.GetResourceSet(CultureInfo.InvariantCulture, true, false);

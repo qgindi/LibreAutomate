@@ -141,6 +141,10 @@ class PanelFound {
 		b.Text(text.AsSpan(lineStart..start)).Indic(indicHilite, text.AsSpan(start..end)).Text(text.AsSpan(end..lineEnd));
 		if (limitEnd) b.Text("…");
 		b.Link_().NL();
+		
+		//CONSIDER: comments green.
+		//	Now users don't see '//' if replaced with '...'.
+		//	But for me it never was a problem.
 	}
 	
 	public void Close(KScintilla sci) {

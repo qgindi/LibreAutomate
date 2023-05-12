@@ -270,7 +270,7 @@ int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md)
 
 //After upgrading PCRE library, this reminds to check/reapply its modifications. Then edit this line.
 //More info in config.h in PCRE project.
-static_assert(PCRE2_MAJOR == 10 && PCRE2_MINOR == 33);
+static_assert(PCRE2_MAJOR == 10 && PCRE2_MINOR == 42);
 
 //Cpp_RegexMatch results.
 struct RegexMatch

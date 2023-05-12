@@ -74,7 +74,6 @@ Arguments:
   options         option bits
   match_data      points to a match_data block
   mcontext        points to a match context
-  jit_stack       points to a JIT stack
 
 Returns:          > 0 => success; value is the number of ovector pairs filled
                   = 0 => success, but ovector is not big enough
@@ -121,7 +120,7 @@ else if ((options & PCRE2_PARTIAL_SOFT) != 0)
 if (functions == NULL || functions->executable_funcs[index] == NULL)
   return PCRE2_ERROR_JIT_BADOPTION;
 
-/* Sanity checks should be handled by pcre_exec. */
+/* Sanity checks should be handled by pcre2_match. */
 arguments.str = subject + start_offset;
 arguments.begin = subject;
 arguments.end = subject + length;
