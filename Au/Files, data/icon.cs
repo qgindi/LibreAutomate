@@ -464,7 +464,7 @@ namespace Au {
 		public static icon trayIcon(int resourceId = Api.IDI_APPLICATION/*, bool big = false*/) {
 #if true
 			IntPtr hi = default; int hr = 1;
-			if (script.role == SRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(Assembly.GetEntryAssembly().Location), resourceId, 0, out hi);
+			if (script.role == SRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(AssemblyUtil_.GetEntryAssembly().Location), resourceId, 0, out hi);
 			if (hr != 0) hr = Api.LoadIconMetric(Api.GetModuleHandle(null), resourceId, 0, out hi);
 			if (hr != 0) hr = Api.LoadIconMetric(default, resourceId, 0, out hi);
 			return hr == 0 ? _New(hi) : null;
@@ -493,7 +493,7 @@ namespace Au {
 		/// </summary>
 		internal static IntPtr GetAppIconModuleHandle_(int resourceId) {
 			if (script.role == SRole.MiniProgram) {
-				var h1 = Api.GetModuleHandle(Assembly.GetEntryAssembly().Location);
+				var h1 = Api.GetModuleHandle(AssemblyUtil_.GetEntryAssembly().Location);
 				if (default != Api.FindResource(h1, resourceId, Api.RT_GROUP_ICON)) return h1;
 			}
 			var h2 = Api.GetModuleHandle(null);

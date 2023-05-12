@@ -1,13 +1,11 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Gets [](xref:uac) integrity level and other security info of this and other processes.
 	/// </summary>
 	/// <remarks>
 	/// An <b>uacInfo</b> variable contains a process access token handle that is used to get security info. Always dispose <b>uacInfo</b> variables to close the handle.
 	/// </remarks>
-	public sealed class uacInfo : IDisposable
-	{
+	public sealed class uacInfo : IDisposable {
 		///
 		~uacInfo() => _htoken.Dispose();
 
@@ -97,8 +95,7 @@ namespace Au
 		//	}
 		//}
 
-		static class _Api
-		{
+		static class _Api {
 #pragma warning disable 649
 			internal struct TOKEN_MANDATORY_LABEL { public IntPtr Sid; public uint Attributes; }
 #pragma warning restore 649
@@ -276,7 +273,7 @@ namespace Au
 			try {
 				if (!Api.GetDelegate(out Api.CheckElevationEnabled d, "kernel32.dll", "CheckElevationEnabled") || 0 != d(out r)) {
 					Debug_.Print("CheckElevationEnabled");
-					r = (int)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1);
+					r = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", null) is int v ? v : 1;
 				}
 			}
 			catch (Exception e) { Debug_.Print(e); }
@@ -285,14 +282,12 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// UAC integrity level.
 	/// See <see cref="uacInfo.IntegrityLevel"/>.
 	/// </summary>
-	public enum UacIL
-	{
+	public enum UacIL {
 		/// <summary>The most limited rights. Rare.</summary>
 		Untrusted,
 
@@ -321,8 +316,7 @@ namespace Au.Types
 	/// <summary>
 	/// <see cref="uacInfo.Elevation"/>.
 	/// </summary>
-	public enum UacElevation
-	{
+	public enum UacElevation {
 		/// <summary>Failed to get. Normally it never happens.</summary>
 		Unknown,
 

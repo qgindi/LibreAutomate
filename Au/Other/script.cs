@@ -27,7 +27,7 @@ public static class script {
 	/// <remarks>
 	/// The default compiler adds <see cref="PathInWorkspaceAttribute"/> to the main assembly. Then at run time this property returns its value. Returns null if compiled by some other compiler.
 	/// </remarks>
-	public static string path => s_pathInWorkspace ??= Assembly.GetEntryAssembly()?.GetCustomAttribute<PathInWorkspaceAttribute>()?.Path;
+	public static string path => s_pathInWorkspace ??= AssemblyUtil_.GetEntryAssembly()?.GetCustomAttribute<PathInWorkspaceAttribute>()?.Path;
 	static string s_pathInWorkspace;
 	//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate. 
 	
@@ -40,7 +40,7 @@ public static class script {
 	/// <summary>
 	/// Returns true if the build configuration of the main assembly is Debug (default). Returns false if Release (optimize true).
 	/// </summary>
-	public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(Assembly.GetEntryAssembly());
+	public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(AssemblyUtil_.GetEntryAssembly());
 	static bool? s_debug;
 	//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
 	

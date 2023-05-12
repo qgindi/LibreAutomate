@@ -962,10 +962,6 @@ static class TUtil {
 		bool activateWindow = false, int[] restoreOwner = null, Dispatcher rectDisp = null) {
 		
 		Debug.Assert(!code.NE());
-		
-		wnd dlg = owner.Hwnd;
-		bool dlgWasActive = dlg.IsActive, dlgMinimized = false;
-		
 		//print.it(code);
 		//perf.first();
 		
@@ -987,79 +983,84 @@ static class TUtil {
 		code = b.ToString(); //print.it(code);
 		
 		(long[] speed, object obj, wnd w) r = default;
+		wnd dlg = owner.Hwnd;
+		bool dlgWasActive = dlg.IsActive, dlgMinimized = false;
 		try {
-			if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
-				Debug_.Print("---- CODE ----\r\n" + code + "--------------");
-				//shows code too, because it may be different than in the code box
-				return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<lc #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
-			}
-			//object ro = invoke?.Invoke(c.method) ?? c.method.Invoke(null, null);
-			object ro = c.method.Invoke(null, null);
-			var rr = (object[])ro; //use array because fails to cast tuple, probably because in that assembly it is new type
-			r = ((long[])rr[0], rr[1], (wnd)rr[2]);
-		}
-		catch (Exception e) {
-			if (e is TargetInvocationException tie) e = tie.InnerException;
-			string s1, s2;
-			if (e is NotFoundException) { //info: throws only when window not found
-				s1 = "Window not found";
-				s2 = "Tip: If part of window name changes, replace it with *";
-			} else {
-				s1 = e.GetType().Name;
-				s2 = e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", "");
-				if (e.StackTrace.RxMatch(@"(?m)^\s*( at .+?)\(.+\R\s+\Qat __script__.__TestFunc__()\E", 1, out string s3)) s1 += s3;
-			}
-			return new(null, -2, new(true, s1, s2));
-		}
-		
-		//perf.nw();
-		//print.it(r);
-		
-		static double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
-		double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of wnd.find and Object.Find
-		string sSpeed;
-		if (lastLine == 1 && lines[0] == "wnd w;") sSpeed = t1.ToS() + " ms"; //only wnd.find: "wnd w;\r\nw = wnd.find(...);"
-		else sSpeed = t0.ToS() + " + " + t1.ToS() + " ms";
-		
-		if (r.obj is wnd w1 && w1.Is0) r.obj = null;
-		if (r.obj != null) {
-			var re = getRect(r.obj);
-			ShowOsdRect(re, disp: rectDisp);
-			
-			//if dlg covers the found object, temporarily minimize it (may be always-on-top) and activate object's window. Never mind owners.
-			var wTL = r.w.Window;
-			if (dlgMinimized = dlg.Rect.IntersectsWith(re) && !r.w.IsOfThisThread && !dlg.IsMinimized) {
-				dlg.ShowMinimized(1);
-				wTL.ActivateL();
-				wait.doEvents(1000);
-			}
-		}
-		
-		if (dlgWasActive || dlgMinimized) {
-			int after = activateWindow && !dlgMinimized && r.w == w ? 1500 : 500;
-			timer.after(after, t => {
-				if (!dlg.IsAlive) return;
-				if (restoreOwner == null) {
-					if (dlgMinimized) dlg.ShowNotMinimized(1);
-					if (dlgWasActive) dlg.ActivateL();
-				} else if (restoreOwner[0] == 0) {
-					t.After(100);
-				} else {
-					t.After(restoreOwner[0]);
-					restoreOwner = null;
+			try {
+				if (!Au.Compiler.Scripting.Compile(code, out var c, addUsings: true, addGlobalCs: true, wrapInClass: true, dll: true)) {
+					Debug_.Print("---- CODE ----\r\n" + code + "--------------");
+					//shows code too, because it may be different than in the code box
+					return new(null, -1, new(true, "Errors:", $"{c.errors}\r\n\r\n<lc #C0C0C0><b>Code:<><>\r\n<code>{code0}</code>"));
 				}
-			});
+				//object ro = invoke?.Invoke(c.method) ?? c.method.Invoke(null, null);
+				object ro = c.method.Invoke(null, null);
+				var rr = (object[])ro; //use array because fails to cast tuple, probably because in that assembly it is new type
+				r = ((long[])rr[0], rr[1], (wnd)rr[2]);
+			}
+			catch (Exception e) {
+				if (e is TargetInvocationException tie) e = tie.InnerException;
+				string s1, s2;
+				if (e is NotFoundException) { //info: throws only when window not found
+					s1 = "Window not found";
+					s2 = "Tip: If part of window name changes, replace it with *";
+				} else {
+					s1 = e.GetType().Name;
+					s2 = e.Message.RxReplace(@"^Exception of type '.+?' was thrown. ", "");
+					if (e.StackTrace.RxMatch(@"(?m)^\s*( at .+?)\(.+\R\s+\Qat __script__.__TestFunc__()\E", 1, out string s3)) s1 += s3;
+				}
+				return new(null, -2, new(true, s1, s2));
+			}
+			
+			//perf.nw();
+			//print.it(r);
+			
+			static double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
+			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of wnd.find and Object.Find
+			string sSpeed;
+			if (lastLine == 1 && lines[0] == "wnd w;") sSpeed = t1.ToS() + " ms"; //only wnd.find: "wnd w;\r\nw = wnd.find(...);"
+			else sSpeed = t0.ToS() + " + " + t1.ToS() + " ms";
+			
+			if (r.obj is wnd w1 && w1.Is0) r.obj = null;
+			if (r.obj != null) {
+				var re = getRect(r.obj);
+				ShowOsdRect(re, disp: rectDisp);
+				
+				//if dlg covers the found object, temporarily minimize it (may be always-on-top) and activate object's window. Never mind owners.
+				var wTL = r.w.Window;
+				if (dlgMinimized = dlg.Rect.IntersectsWith(re) && !r.w.IsOfThisThread && !dlg.IsMinimized) {
+					dlg.ShowMinimized(1);
+					wTL.ActivateL();
+					wait.doEvents(1000);
+				}
+			}
+			
+			if (r.w != w && !r.w.Is0) {
+				ShowOsdRect(r.w.Rect, error: true, limitToScreen: true, disp: rectDisp);
+				//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
+				//string wndCode = null;
+				//wndCode = "wnd w = wnd.find(\"Other\");";
+				return new(null, -3, new(true, "Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}"));
+			}
+			
+			return new(r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
 		}
-		
-		if (r.w != w && !r.w.Is0) {
-			ShowOsdRect(r.w.Rect, error: true, limitToScreen: true, disp: rectDisp);
-			//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
-			//string wndCode = null;
-			//wndCode = "wnd w = wnd.find(\"Other\");";
-			return new(null, -3, new(true, "Finds another " + (r.w.IsChild ? "control" : "window"), $"<i>Need:<>  {w}\r\n<i>Found:<>  {r.w}"));
+		finally {
+			if (dlgWasActive || dlgMinimized) {
+				int after = activateWindow && !dlgMinimized && r.w == w ? 1500 : 500;
+				timer.after(after, t => {
+					if (!dlg.IsAlive) return;
+					if (restoreOwner == null) {
+						if (dlgMinimized) dlg.ShowNotMinimized(1);
+						if (dlgWasActive) dlg.ActivateL();
+					} else if (restoreOwner[0] == 0) {
+						t.After(100);
+					} else {
+						t.After(restoreOwner[0]);
+						restoreOwner = null;
+					}
+				});
+			}
 		}
-		
-		return new(r.obj, r.speed[1], new(r.obj == null, r.obj != null ? "Found" : "Not found", null, ",  speed " + sSpeed));
 	}
 	
 	public record InfoStrings(bool isError, string header, string text, string headerSmall = null) {

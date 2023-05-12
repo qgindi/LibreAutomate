@@ -188,9 +188,10 @@ partial class CiCompletion {
 					if (ch == '<') good = tok.FindTrivia(position - 1).RawKind == 0; //in XML doc
 					if (!good) return null;
 				}
-				//print.it(1);
-				
-				syncon = CSharpSyntaxContext.CreateContext(document, model, position, cancelToken);
+
+				try { syncon = CSharpSyntaxContext.CreateContext(document, model, position, cancelToken); }
+				catch (ArgumentException) { return null; } //may happen in invalid code, where probably don't need intellisense
+
 				var node = tok.Parent;
 				//p1.Next('s');
 				
@@ -402,11 +403,9 @@ partial class CiCompletion {
 							}
 						} else {
 							switch (ci.DisplayText) {
-							case "Equals":
-							case "GetHashCode":
-							case "GetType":
-							case "ToString":
+							case "Equals" or "GetHashCode" or "GetType" or "ToString":
 							case "MemberwiseClone":
+							case "Deconstruct": //record
 							case "GetEnumerator": //IEnumerable
 							case "CompareTo": //IComparable
 							case "GetTypeCode": //IConvertible
@@ -464,16 +463,6 @@ partial class CiCompletion {
 			//p1.Next('i');
 			
 			if (canGroup) {
-				INamedTypeSymbol enclosingType = null;
-				bool _IsMemberOfEnclosingType(ISymbol sym) {
-					var ct = sym.ContainingType; if (ct == null) return false;
-					enclosingType ??= model.GetEnclosingNamedType(position, default);
-					for (var et = enclosingType; et != null; et = et.ContainingType) {
-						if (ct == et || sym == et) return true;
-					}
-					return false;
-				}
-				
 				for (int i = 0; i < d.items.Count; i++) {
 					var v = d.items[i];
 					var sym = v.FirstSymbol;
@@ -485,17 +474,21 @@ partial class CiCompletion {
 						if (!isDot) {
 							nts = sym.ContainingNamespace;
 							
-							//put locals and members of enclosing class[es] at the top
-							if (_IsMemberOfEnclosingType(sym))
+							//put locals at the top
+							if (nts?.ContainingNamespace != null && sym.ContainingSymbol is not INamespaceOrTypeSymbol) {
 								while (nts.ContainingNamespace is INamespaceSymbol n1) nts = n1; //global namespace
+							}
+							//rejected: also put members of enclosing type[s] (and the type itself) at the top.
+							//	Not so easy to implement without problems like "Enum.Member" in a different group than the "Enum".
+							//	In some cases model.GetEnclosingNamedType returns other object although logically it is the same as sym.
+							//	Also then may be more confusion. Now everything is clear: locals are at the top, as well as everything namespaceless.
+							//	Simple code that does not work well:
+							//let only types be in namespace groups. Put locals and non-type members of enclosing type(s) at the top.
+							//if (nts.ContainingNamespace != null && sym is not INamespaceOrTypeSymbol) {
+							//	while (nts.ContainingNamespace is INamespaceSymbol n1) nts = n1; //global namespace
+							//}
 							
-							//CONSIDER grouping:
-							//Namespaces
-							//Locals
-							//Members of enclosing class
-							//Members of other enclosing classes (ancestors)
-							//consider: Group of current namespace, and maybe of its ancestors.
-							//Namespace groups (like now)
+							//CONSIDER: put in different groups: namespaces, locals, members of enclosing type(s), other namespaceless symbols. Now grouped by kind.
 						}
 						//else if(sym is ReducedExtensionMethodSymbol em) nts = em.ReceiverType; //rejected. Didn't work well, eg with linq.
 						else nts = sym.ContainingType;

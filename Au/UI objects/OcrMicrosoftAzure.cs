@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text.Json.Nodes;
+using System.Net.Http;
 
 namespace Au.More;
 
@@ -21,11 +22,12 @@ public class OcrMicrosoftAzure : IOcrEngine {
 		_endpointUrl = endpointUrl;
 		_apiKey = apiKey;
 	}
-
+	
 	/// <inheritdoc cref="IOcrEngine.DpiScale"/>
 	public bool DpiScale { get; set; }
 	
 	/// <inheritdoc cref="IOcrEngine.Recognize"/>
+	/// <exception cref="Exception">Failed.</exception>
 	public OcrWord[] Recognize(Bitmap b, bool dispose, double scale) {
 		var b0 = b;
 		b = IOcrEngine.PrepareBitmap(b, dispose, scale);
@@ -39,12 +41,15 @@ public class OcrMicrosoftAzure : IOcrEngine {
 "base64Source": "{{Convert.ToBase64String(png)}}"
 }
 """;
-		
-		if (!internet.http.TryPost(out var r, url, internet.jsonContent(requestJson), headers)) throw new AuException(r.Json(true).ToString());
+		if (!internet.http_.TryPost(out var r, url, internet.jsonContent(requestJson), headers))
+			throw new AuException(r.Text(true));
 		url = r.Headers.GetValues("Operation-Location").First();
 		//perf.next();
 		500.ms();
-		var j = wait.forCondition(90, () => { var v = internet.http.Get(url, headers: headers).Json(); return (string)v["status"] == "succeeded" ? v : null; }, new(300));
+		var j = wait.forCondition(90, () => {
+			var v = internet.http_.Get(url, headers: headers).Json();
+			return (string)v["status"] == "succeeded" ? v : null;
+		}, new(300));
 		//perf.nw();
 		return _ParseJson(j["analyzeResult"], scale);
 	}

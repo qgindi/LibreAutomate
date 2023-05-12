@@ -12,6 +12,7 @@ Improved:
 
 ### Library
 New classes:
+- **HttpServerSession**.
 - **print.util**.
 - **InputDesktopException**. All functions that send keyboard/mouse input or activate/focus a window now throw this exception if failed because of changed input desktop. It allows to use Ctrl+Alt+Delete or Win+L to end scripts that use these functions even without `script.setup(lockExit: true)`, unless the script handles these exceptions.
 
@@ -22,13 +23,19 @@ New members:
 - **print.noHex**.
 - **print.it** overload for interpolated strings.
 - **ExplorerFolder.All**.
+- Extension methods **string.ToUTF8**, **byte[].ToStringUTF8**.
+- **Convert2.GzipCompress**.
+- **Convert2.GzipDecompress**.
 
 New parameters:
 - **script.setup**: *exitKey*, *pauseKey*.
 - **RegisteredHotkey.Register**: *noRepeat*.
+- **HttpClient.Get** etc: *auth* (user name and password), *also*.
+- **HttpResponseMessage.Bytes**: *decompress*.
 
 Improved:
 - **script.setup** flag **UExcept.Dialog**: the dialog now has links to functions in the call stack.
+- **internet.http**: the **HttpClient** now accepts compressed content; decompresses automatically.
 
 ### Bug fixes
 
@@ -38,6 +45,7 @@ Editor:
 Library:
 - Fixed: **script.trayIcon** and some **script.setup** features don't work in exeProgram script started not from editor.
 - Fixed: **popupMenu** check/radio menu item click delegate not invoked if **CheckDontClose** true.
+- Fixed: **Convert2.BrotliCompress** fails if already compressed.
 
 
 ### Breaking changes

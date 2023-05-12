@@ -4,37 +4,36 @@ using System.Windows.Controls.Primitives;
 
 namespace Au.Controls;
 
-public unsafe partial class KTreeView
-{
+public unsafe partial class KTreeView {
 	bool _IsValid(int index) => (uint)index < _avi.Lenn_();
-
+	
 	//unused
 	//bool _IndexToItemStruct(int i, out _VisibleItem item) {
 	//	bool r = _IsValid(i);
 	//	item = r ? _avi[i] : default;
 	//	return r;
 	//}
-
+	
 	bool _IndexToItem(int i, out ITreeViewItem item) {
 		bool r = _IsValid(i);
 		item = r ? _avi[i].item : null;
 		return r;
 	}
-
+	
 	ITreeViewItem _IndexToItem(int i) => _IsValid(i) ? _avi[i].item : null;
-
+	
 	int _IndexOfOrThrow(ITreeViewItem item, bool canBeNull = false) {
 		int i = -1;
 		if (item != null) { i = IndexOf(item); if (i < 0) throw new ArgumentException(); } else if (!canBeNull) throw new ArgumentNullException();
 		return i;
 	}
-
+	
 	bool _IndexOfOrThrowIfImportant(bool important, ITreeViewItem item, out int index) {
 		index = IndexOf(item);
 		if (index < 0) return !important ? false : throw new ArgumentException();
 		return true;
 	}
-
+	
 	bool _IsInside(int iParent, int iChild) {
 		int i = iParent;
 		if (iChild > i) {
@@ -44,17 +43,17 @@ public unsafe partial class KTreeView
 		//never mind: faster would be to use Parent. Would need to add Parent to the interface. Currently don't need speed.
 		return false;
 	}
-
+	
 	//unused
 	//bool _IsInside(ITreeViewItem parent, int iChild) {
 	//	int i = IndexOf(parent);
 	//	return i >= 0 && _IsInside(i, iChild);
 	//}
-
+	
 	int _DpiScale(int value) => More.Dpi.Scale(value, _dpi);
-
+	
 	int _ItemTop(int index) => (index - _vscroll.Pos) * _itemHeight;
-
+	
 	/// <summary>
 	/// Returns item index, or -1 if not on item.
 	/// </summary>
@@ -64,12 +63,11 @@ public unsafe partial class KTreeView
 		if (!_IsValid(i)) i = -1;
 		return i;
 	}
-
-	struct _PartOffsets
-	{
+	
+	struct _PartOffsets {
 		public int left, checkbox, marginLeft, image, text, marginRight, right;
 	}
-
+	
 	void _GetPartOffsets(int i, out _PartOffsets p) {
 		p.left = -_hscroll.Offset;
 		p.checkbox = p.left + _avi[i].level * _imageSize;
@@ -80,7 +78,7 @@ public unsafe partial class KTreeView
 		p.right = p.marginRight + _marginRight;
 		//print.it(p.checkbox, p.marginLeft, p.image, p.text, p.marginRight, p.right);
 	}
-
+	
 	/// <summary>
 	/// Gets item rectangle in physical pixel units.
 	/// Horizontally the rectangle is limited to the visible area.
@@ -122,7 +120,7 @@ public unsafe partial class KTreeView
 		if (inScreen) _w.MapClientToScreen(ref r);
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Gets item rectangle in WPF logical pixel units.
 	/// </summary>
@@ -132,7 +130,7 @@ public unsafe partial class KTreeView
 		double f = 96d / _dpi;
 		return new Rect(r.left * f, r.top * f, r.Width * f, r.Height * f);
 	}
-
+	
 	/// <summary>
 	/// Gets item from point, and its part.
 	/// Returns false if not on an item.
@@ -161,26 +159,25 @@ public unsafe partial class KTreeView
 		h.index = -1;
 		return false;
 	}
-
+	
 	/// <summary>
 	/// Gets item from mouse, and its part.
 	/// Returns false if not on an item.
 	/// </summary>
 	/// <param name="h">Results.</param>
 	public bool HitTest(out TVHitTest h) => HitTest(_w.MouseClientXY, out h);
-
+	
 	_LabelTip _labeltip;
-
-	class _LabelTip
-	{
+	
+	class _LabelTip {
 		readonly KTreeView _tv;
 		ToolTip _tt;
 		timer _timer;
 		int _i;
 		_VisibleItem[] _avi;
-
+		
 		public _LabelTip(KTreeView tv) { _tv = tv; }
-
+		
 		public void HotChanged(int i) {
 			if (i >= 0) {
 				var r = _tv.GetRectPhysical(i, TVParts.Text, clampX: true);
@@ -193,7 +190,7 @@ public unsafe partial class KTreeView
 			}
 			Hide();
 		}
-
+		
 		void _Show(timer t) {
 			if (_avi != _tv._avi || _i != _tv._hotIndex) return;
 			if (_tt == null) {
@@ -211,13 +208,13 @@ public unsafe partial class KTreeView
 			_tt.Content = _avi[_i].item.DisplayText;
 			_tt.IsOpen = true;
 		}
-
+		
 		public void Hide() {
 			_avi = null;
 			_timer?.Stop();
 			if (_tt != null && _tt.IsOpen) _tt.IsOpen = false;
 		}
 	}
-
-
+	
+	
 }
