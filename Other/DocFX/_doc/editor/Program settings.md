@@ -51,7 +51,7 @@ Initial code of new scripts and class files. Can be empty.
 ### Code
 Code formatting and intellisense options.
 
-#### Completion list -> adds ()
+#### Completion list -> Append ()
 When you select a function in the completion list, whether/when to append `()`. Can append always, never or only when selected with the Spacebar key (but not Tab, doubleclick, etc).
 
 #### Insert code -> Unexpand path
