@@ -724,7 +724,7 @@ public unsafe class SciTags {
 	/// Call this function when control handle is already created. Until that <see cref="KScintilla.AaTags"/> returns null.
 	/// </remarks>
 	public void AddStyleTag(string name, UserDefinedStyle style) {
-		if (_userStyles == null) _userStyles = new Dictionary<string, _TagStyle>();
+		_userStyles ??= new();
 		if (_userStyles.Count >= 100) throw new InvalidOperationException();
 		if (!name.Starts('.')) throw new ArgumentException();
 		_userStyles.Add(name, new _TagStyle(style));

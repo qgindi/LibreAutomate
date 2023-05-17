@@ -591,7 +591,7 @@ partial class Compiler {
 				}
 			}
 			
-			if (m.ProjectReferences is var pr && pr != null)
+			if (m.ProjectReferences is { } pr)
 				foreach (var v in pr) _Project(v.m);
 		}
 		
@@ -992,7 +992,7 @@ partial class Compiler {
 				}
 			}
 			
-			if (m.ProjectReferences is var pr && pr != null)
+			if (m.ProjectReferences is { } pr)
 				foreach (var v in pr) _OtherFilesOfProject(v.m);
 		}
 		

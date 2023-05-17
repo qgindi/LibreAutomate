@@ -15,7 +15,7 @@ using static Sci;
 /// </remarks>
 public unsafe class SciImages {
 	class _Image {
-		public long nameHash;
+		public long nameHash, evictionTime;
 		public byte[] data;
 		public int width, height;
 	}
@@ -26,21 +26,39 @@ public unsafe class SciImages {
 	class _ThreadSharedData {
 		List<_Image> _a;
 		int _dpi;
+		timer _timer;
 
 		public int CacheSize { get; private set; }
 
 		public void AddImage(_Image im) {
-			_a ??= new List<_Image>();
+			_a ??= new();
 			_a.Add(im);
 			CacheSize += im.data.Length;
+
+			im.evictionTime = Environment.TickCount64 + 2000;
+			//rejected: keep im in cache longer if the loading was slow. Eg AV scans exe files when we extract icons.
+			//	Usually only the first time is slow. Later the file is in the OS file cache.
+
+			_timer ??= new(t => {
+				var now = Environment.TickCount64;
+				for (int i = _a.Count; --i >= 0;)
+					if (now - _a[i].evictionTime > 0) {
+						CacheSize -= _a[i].data.Length;
+						_a.RemoveAt(i);
+					}
+
+				if (_a.Count == 0) _timer.Stop();
+			});
+			if (!_timer.IsRunning) _timer.Every(500);
 		}
 
 		public _Image FindImage(long nameHash, int dpi) {
-			if (dpi != _dpi) {
-				ClearCache();
-				_dpi = dpi;
-			}
-			if (_a != null) {
+			if (!_a.NE_()) {
+				if (dpi != _dpi) {
+					ClearCache();
+					_dpi = dpi;
+				}
+
 				for (int j = 0; j < _a.Count; j++) if (_a[j].nameHash == nameHash) return _a[j];
 			}
 			return null;
@@ -78,7 +96,7 @@ public unsafe class SciImages {
 	/// </summary>
 	/// <param name="c">The control.</param>
 	internal SciImages(KScintilla c) {
-		if (t_data == null) t_data = new _ThreadSharedData();
+		t_data ??= new();
 		_c = c;
 		_sci_AnnotationDrawCallback = _AnnotationDrawCallback;
 		_callbackPtr = Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback);
@@ -86,24 +104,6 @@ public unsafe class SciImages {
 		_visible = AnnotationsVisible.ANNOTATION_STANDARD;
 		_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible); //keep annotations always visible. Adding annotations while visible is slower, but much faster than getting images from files etc.
 	}
-
-	/// <summary>
-	/// Removes all cached images.
-	/// Will auto-reload from files etc when need.
-	/// </summary>
-	public void ClearCache() { t_data.ClearCache(); }
-
-	/// <summary>
-	/// If cache is large (at least MaxCacheSize and 4 images), removes about 3/4 of older cached images.
-	/// Will auto-reload from files etc when need.
-	/// </summary>
-	public void CompactCache() { t_data.CompactCache(); }
-
-	/// <summary>
-	/// Maximal size of the image cache.
-	/// Default 4 MB.
-	/// </summary>
-	public int MaxCacheSize { get => t_data.MaxCacheSize; set => t_data.MaxCacheSize = value; }
 
 	/// <summary>
 	/// Sets image annotations for one or more lines of text.
@@ -316,7 +316,7 @@ public unsafe class SciImages {
 		//is already loaded?
 		long hash = Hash.Fnv1Long(s + i, i2 - i);
 		var im = d.FindImage(hash, _c._dpi);
-		//print.it(im != null, new string((sbyte*)s, i, i2 - i));
+		//print.qm2.write(im != null, new string((sbyte*)s, i, i2 - i));
 		if (im != null) return im;
 
 		//var test = s.Substring(i, i2 - i);
