@@ -72,7 +72,7 @@ namespace Au.Compiler {
 		}
 
 		void _StartAdd(bool isWarning = false) {
-			if (_b == null) _b = new StringBuilder();
+			if (_b == null) _b = new();
 			else _b.AppendLine();
 
 			if (isWarning) WarningCount++; else ErrorCount++;

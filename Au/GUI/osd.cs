@@ -578,16 +578,6 @@ namespace Au {
 		public new bool ClickToClose { get => base.ClickToClose; set => base.ClickToClose = value; }
 		
 		/// <summary>
-		/// Close the OSD window after this time, seconds.
-		/// If 0 (default), depends on text length. Can be <see cref="Timeout.Infinite"/> (-1).
-		/// </summary>
-		/// <remarks>
-		/// This property cannot be changed after creating OSD window.
-		/// </remarks>
-		public int SecondsTimeout { get; set; }
-		//TODO: allow to change after creating OSD window.
-		
-		/// <summary>
 		/// See <see cref="OsdMode"/>.
 		/// </summary>
 		/// <remarks>
@@ -638,19 +628,47 @@ namespace Au {
 		void _Show(bool sync) {
 			if (!_rectIsSet) base.Rect = Measure();
 			
-			int t = SecondsTimeout;
-			if (t == 0) t = Math.Min(Text.Lenn(), 1000) / 10 + 3; //calc time from text length
 			base.Show();
-			if (sync) {
-				if (t < 0) t = 0; else t = -t;
-				if (!wait.forMessagesAndCondition(t, () => !IsHandleCreated)) Close();
-				//if (!wait.forPostedMessage(t, (ref MSG m) => { print.it(IsHandleCreated, m); return !IsHandleCreated; })) Close();
-			} else if (t > 0) {
-				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
-				timer.after(t, _ => Close());
-			}
+			_SetCloseTimer();
+			if (sync) wait.forMessagesAndCondition(0, () => !IsHandleCreated);
 		}
 		
+		void _SetCloseTimer() {
+			int t = SecondsTimeout;
+			if (t == 0) t = Math.Min(Text.Lenn(), 1000) / 10 + 3; //calc time from text length
+			
+			if (t > 0) Api.SetTimer(Hwnd, 1, Math.Min(t, int.MaxValue / 1000) * 1000, null);
+			else Api.KillTimer(Hwnd, 1);
+		}
+		
+		/// <summary>
+		/// Close the OSD window after this time, seconds.
+		/// </summary>
+		/// <value>If 0 (default), depends on text length. Can be <see cref="Timeout.Infinite"/> (-1).</value>
+		public int SecondsTimeout {
+			get => _secondsTimeout;
+			set {
+				_secondsTimeout = value;
+				if (IsHandleCreated) Hwnd.SendNotify(Api.WM_USER + 100);
+			}
+		}
+		int _secondsTimeout;
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		protected override nint WndProc(wnd w, int message, nint wParam, nint lParam) {
+			switch (message) {
+			case Api.WM_TIMER when wParam == 1:
+				Close();
+				return 0;
+			case Api.WM_USER + 100:
+				_SetCloseTimer();
+				return 0;
+			}
+			
+			return base.WndProc(w, message, wParam, lParam);
+		}
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
 		/// <summary>
 		/// Draws OSD text etc.
 		/// </summary>
@@ -765,6 +783,8 @@ namespace Au {
 			
 			return r;
 		}
+		
+		#region public static
 		
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
@@ -897,6 +917,8 @@ namespace Au {
 			set => _defaultScreen = value.ThrowIfWithHandle_;
 		}
 		static screen _defaultScreen;
+		
+		#endregion
 	}
 }
 

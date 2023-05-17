@@ -46,10 +46,6 @@
   </Target>
 
   <ItemGroup>
-    <Compile Remove="Other\HttpServer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="resources\red_cross_cursor.cur" />
   </ItemGroup>
 
@@ -64,7 +60,6 @@
     <None Update="64\sqlite3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Other\HttpServer.cs" />
     <None Include="x\Icon-128.png" Pack="true" PackagePath="\" />
     <None Include="x\NuGet.md" Pack="true" PackagePath="\" />
   </ItemGroup>

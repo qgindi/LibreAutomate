@@ -631,9 +631,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		bool _Cmp(FileNode f) {
 			if (null == FilesModel.KindFilter_(f, kind)) return false;
 			f = f.Parent;
-			for (int j = i; j > 0; f = f.Parent) {
+			for (int j = i; j > 0 && f != null; f = f.Parent) {
 				int k = name.LastIndexOf('\\', j - 1);
-				//int k = j; while (--k >= 0 && name[k] != '\\') { }
 				if (!name.Eq((k + 1)..j, f.Name ?? "", true)) return false;
 				j = k;
 			}
