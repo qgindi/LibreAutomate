@@ -39,17 +39,18 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.14.0, 2023-04-07, 25 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.15.0, 2023-05-17, 25 MB
 
 If Chrome cannot start the downloaded setup program: right-click it and select "Show in folder".
 
 The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 
 ### Links
-- [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
-- [Source code](https://github.com/qgindi/LibreAutomate)
 - [Forum](https://www.libreautomate.com/forum/)
 - [Email](mailto:support@quickmacros.com)
+- [Source code](https://github.com/qgindi/LibreAutomate)
+- [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
+- [Donate](https://github.com/sponsors/qgindi)
 
 ### Developers
 
