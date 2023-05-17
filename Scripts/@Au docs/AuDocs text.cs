@@ -6,8 +6,8 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 
 partial class AuDocs {
-	regexp _rxRecord = new(@"(?m)^\h*([\w ]*)\brecord ((class|struct) (\w+)(?:\(([^\)]+)\))?[^\{;]*[\{;])");
-	regexp _rxRecordParam = new(@"^([\w\.<>\[\]]+)\s(\w+)");
+	regexp _rxRecord = new(@"(?m)^\h*([\w ]*)\brecord ((class|struct) (\w+)(\(([^()]++|(?-2))+\))?[^\{;]*[\{;])");
+	regexp _rxRecordParam = new(@"\G((?:[\w\.]+|\([^)]+\))(<([^<>]++|(?-2))+>)?(?:\[\])?) (\w+)(?:,\s*|$)");
 	regexp _rxRecordDocLine = new(@"\G\h*///[^/]");
 	regexp _rxRecordDocParam = new(@"(?ms)^\h*///\h*<param name=""(\w+)"">(.+?)</param>\h*\R");
 	regexp _rxSeealso1, _rxSeealso2;
@@ -29,7 +29,7 @@ partial class AuDocs {
 				_b.Clear();
 				var mod = m[1].Value;
 				var name = m[4].Value;
-				var par = m[5].Value;
+				var par = s[(m[5].Start + 1)..(m[5].End - 1)];
 				var sub = m.Subject;
 				bool noBody = sub[m.End - 1] == ';';
 				
@@ -55,10 +55,9 @@ partial class AuDocs {
 					_b.AppendFormat("public {0}({1}){{}}\n", name, par);
 					
 					//properties
-					foreach (var p in par.Split(',', StringSplitOptions.TrimEntries)) {
-						//print.it(p);
-						if (!_rxRecordParam.Match(p, out var k)) { print.warning(p); continue; }
-						string pType = k[1].Value, pName = k[2].Value;
+					foreach (var k in _rxRecordParam.FindAll(par)) {
+						string pType = k[1].Value, pName = k[4].Value;
+						//print.it($"type='{pType}', name='{pName}'");
 						_b.AppendLine();
 						var mp = ap?.FirstOrDefault(o => o[1].Value == pName);
 						if (mp != null) _b.Append("/// <summary>").Append(mp[2].Value).AppendLine("</summary>");

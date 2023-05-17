@@ -6,6 +6,7 @@ New tools:
 
 New cookbook recipes:
 - End script task.
+- Run script on another computer; HTTP server.
 
 Improved:
 - Improvemets in "drop files", "surround code", completion list sorting and more.

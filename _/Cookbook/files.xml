@@ -1,4 +1,4 @@
-﻿<files max-i="370">
+﻿<files max-i="372">
   <d n="-" i="357">
     <s n="How to write the cookbook.cs" i="360" />
     <s n="Test.cs" i="362" />
@@ -103,6 +103,7 @@
     <s n="Run script from script.cs" i="185" />
     <s n="Run script command line, shortcut, schedule.cs" i="165" />
     <s n="Run script at startup, output link.cs" i="187" />
+    <s n="Run script on another computer; HTTP server.cs" i="371" />
     <s n="Script run-time settings.cs" i="110" />
     <s n="End script task, pause, exit.cs" i="370" />
     <s n="Tray icon and notifications.cs" i="115" />
@@ -112,6 +113,7 @@
     <s n="Multi-file scripts, projects.cs" i="259" />
     <s n="Shared classes and functions, libraries.cs" i="258" />
     <s n="Create .exe program.cs" i="188" />
+    <s n="-Backup, version control.cs" i="372" />
   </d>
   <d n="Triggers, toolbars" i="17">
     <s n="Keyboard triggers (hotkeys).cs" i="160" />

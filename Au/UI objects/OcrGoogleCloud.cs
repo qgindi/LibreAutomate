@@ -1,5 +1,3 @@
-//TODO: add header to accept Brotli?
-
 using System.Drawing;
 using System.Text.Json.Nodes;
 using System.Net.Http;

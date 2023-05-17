@@ -14,19 +14,21 @@ namespace Au.More {
 		/// Simple HTTP 1.1 server.
 		/// </summary>
 		/// <param name="port">TCP port.</param>
-		/// <param name="ip">IP address. If null (default), uses <see cref="IPAddress.Any"/>.</param>
+		/// <param name="ip">A local IPv4 or IPv6 address. If null (default), uses <see cref="IPAddress.IPv6Any"/> and dual mode (supports IPv6 and IPv4 connections).</param>
 		/// <exception cref="Exception">Exceptions of <see cref="TcpListener"/> functions. Unlikely.</exception>
 		/// <remarks>
-		/// Runs all the time and listens for new client connections. For each connected client starts new thread, creates new object of your <b>HttpServerSession</b>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports basic authentication and keep-alive. Multiple sessions can run simultaneously.
+		/// Runs all the time and listens for new TCP client connections. For each connected client starts new thread, creates new object of your <b>HttpServerSession</b>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports keep-alive. Multiple sessions can run simultaneously.
 		///
 		///	Uses <see cref="TcpListener"/>, not <see cref="HttpListener"/>, therefore don't need administrator privileges, netsh and opening ports in firewall. Just the standard firewall dialog first time.
 		///
 		/// The HTTP server is accessible from local network computers. Usually not accessible from the internet. To make accessible from the internet, you can use ngrok or similar software. This server does not support https (secure connections), but ngrok makes internet connections secure.
+		/// 
+		/// If <i>ip</i> is null or an IPv6 address, supports IPv6 and IPv4 connections.
 		/// </remarks>
 		/// <example>
 		/// HTTP server.
 		/// <code><![CDATA[
-		/// HttpServerSession.Listen<MyHttpSession>(10545);
+		/// HttpServerSession.Listen<MyHttpSession>();
 		/// 
 		/// class MyHttpSession : HttpServerSession {
 		/// 	//protected override void Run() {
@@ -38,7 +40,7 @@ namespace Au.More {
 		/// 	protected override void MessageReceived(HSMessage m, HSResponse r) {
 		/// 		//Auth((u, p) => p == "password206474");
 		/// 		
-		/// 		print.it(m.Method, m.TargetPath, m.UrlParameters, m.Headers, m.GetContentText());
+		/// 		print.it(m.Method, m.TargetPath, m.UrlParameters, m.Headers, m.ContentText);
 		/// 		
 		/// 		string response = "RESPONSE";
 		/// 		r.SetContent(response);
@@ -50,14 +52,19 @@ namespace Au.More {
 		/// ]]></code>
 		/// HTTP client.
 		/// <code><![CDATA[
-		/// var res = internet.http.Get("http://127.0.0.1:10545/file.txt?a=1&b=2"/*, auth: "user:pw"*/).Text(); //from same computer
-		/// //var res = internet.http.Get("http://ComputerName:10545/file.txt?a=1&b=2"/*, auth: "user:pw"*/).Text(); //from local network
+		/// var res = internet.http.Get("http://127.0.0.1:4455/file.txt?a=1&b=2"/*, auth: "user:pw"*/).Text(); //from same computer
+		/// //var res = internet.http.Get("http://ComputerName:4455/file.txt?a=1&b=2"/*, auth: "user:pw"*/).Text(); //from local network
 		/// //var res = internet.http.Get("https://1111-11-111-11-111.ngrok-free.app/file.txt?a=1&b=2"/*, auth: "user:pw"*/).Text(); //from internet through ngrok
 		/// print.it(res);
 		/// ]]></code>
 		/// </example>
 		public static void Listen<TSession>(int port = 4455, string ip = null) where TSession : HttpServerSession, new() {
-			var server = new TcpListener(ip != null ? IPAddress.Parse(ip) : IPAddress.Any, port);
+			var server = new TcpListener(ip != null ? IPAddress.Parse(ip) : IPAddress.IPv6Any, port);
+			
+			//support IPv6 and IPv4 connections. It solves the "HttpClient 21 s delay" problem.
+			var socket = server.Server;
+			if (ip == null || socket.AddressFamily == AddressFamily.InterNetworkV6) socket.DualMode = true;
+			
 			server.Start();
 			try {
 				for (; ; ) {
@@ -101,24 +108,23 @@ namespace Au.More {
 		protected int KeepAliveTimeout { get; set; } = 10_000;
 		
 		/// <summary>
-		/// Called whenever a message received and can be processed.
-		/// Must be implemented by the derived class.
+		/// Called when the server receives a HTTP request message.
 		/// </summary>
 		/// <param name="m">Contains request info and content.</param>
 		/// <param name="r">Allows to set response info and content.</param>
 		/// <remarks>
-		///	Not called if failed to read the message or authenticate.
+		///	Not called if failed to read the message.
 		/// 
 		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> true. On unhandled exception sends error 500 (InternalServerError) and closes the connection.
 		/// </remarks>
 		protected abstract void MessageReceived(HSMessage m, HSResponse r);
 		
 		/// <summary>
-		/// Performs basic authentication. If fails (either the client did not use basic authentication or <i>auth</i> returned false), throws exception and the client will receive error 401 (Unauthorized) with header <c>WWW-Authenticate: Basic</c>. The client then can retry.
+		/// Performs basic authentication. If fails (either the client did not use basic authentication or <i>auth</i> returned false), throws exception. The client will receive error 401 (Unauthorized) and can retry.
 		/// </summary>
 		/// <param name="auth">Callback function. Receives the user name and password. Returns true to continue or false to fail.</param>
 		/// <remarks>
-		/// After successful authentication does not repeat it again when (if) the client sends more messages in this session.
+		/// After successful authentication does not repeat it again when the client sends more messages in this session.
 		/// </remarks>
 		/// <example><see cref="HttpServerSession"/></example>
 		protected void Auth(Func<string, string, bool> auth) {
@@ -275,7 +281,7 @@ namespace Au.More {
 			
 			//print.it("Target", message.RawTarget, message.TargetPath, message.UrlParameters);
 			//print.it("Headers", message.Headers);
-			//print.it("Content", message.GetContentText());
+			//print.it("Content", message.ContentText);
 			
 			return HttpStatusCode.OK;
 		}
@@ -468,23 +474,23 @@ namespace Au.Types {
 		/// <summary>
 		/// Method, like "GET" or "POST".
 		/// </summary>
-		public string Method { get; set; }
+		public string Method { get; internal set; }
 		
 		/// <summary>
 		/// Target, like "/file.html" or "/file.html?a=1&amp;b=2" or "/". May be URL-encoded.
 		/// </summary>
-		public string RawTarget { get; set; }
+		public string RawTarget { get; internal set; }
 		
 		/// <summary>
 		/// Target without URL parameters, like "/file.html" or "/". Not URL-encoded.
 		/// </summary>
-		public string TargetPath { get; set; }
+		public string TargetPath { get; internal set; }
 		
 		/// <summary>
 		/// URL parameters (query string). Not URL-encoded.
 		/// </summary>
 		/// <value>null if there are no URL parameters.</value>
-		public Dictionary<string, string> UrlParameters { get; set; }
+		public Dictionary<string, string> UrlParameters { get; internal set; }
 		
 		/// <summary>
 		/// Headers. Case-insensitive.
@@ -492,23 +498,23 @@ namespace Au.Types {
 		public Dictionary<string, string> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
 		
 		/// <summary>
-		/// Content. For example POST data.
+		/// Raw content. For example POST data as UTF-8 text or binary.
 		/// </summary>
 		/// <value>null if the message is without content.</value>
-		public byte[] Content { get; set; }
+		public byte[] Content { get; internal set; }
 		
 		/// <summary>
-		/// Gets object containing <c>Content-Type</c> header info.
+		/// <c>Content-Type</c> header info.
 		/// </summary>
 		/// <value>null if <c>Content-Type</c> header is missing or invalid.</value>
 		public HSContentType ContentType => _contentType ??= HSContentType.Create(Headers);
 		HSContentType _contentType;
 		
 		/// <summary>
-		/// Converts <see cref="Content"/> to text.
+		/// <see cref="Content"/> converted to text.
 		/// </summary>
-		/// <returns>null if there is no content or if text encoding is unknown.</returns>
-		public string GetContentText() => _contentText ??= Content == null ? null : ContentType?.Encoding?.GetString(Content);
+		/// <value>null if there is no content or if text encoding is unknown.</value>
+		public string Text => _contentText ??= Content == null ? null : ContentType?.Encoding?.GetString(Content);
 		string _contentText;
 		
 		/// <summary>
@@ -516,23 +522,25 @@ namespace Au.Types {
 		/// </summary>
 		/// <returns><c>default(T)</c> if the request does not have body data.</returns>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.Deserialize{TValue}(Stream, JsonSerializerOptions?)"/>.</exception>
-		public T GetContentJson<T>() => Content == null ? default : JsonSerializer.Deserialize<T>(Content, InternetUtil_.JsonSerializerOptions);
+		public T Json<T>() => Content == null ? default : JsonSerializer.Deserialize<T>(Content, InternetUtil_.JsonSerializerOptions);
 		
 		/// <summary>
-		/// Gets parameters from POST content with <c>Content-Type: application/x-www-form-urlencoded</c>.
+		/// Keys/values from POST content with <c>Content-Type: application/x-www-form-urlencoded</c>.
 		/// </summary>
-		/// <returns>null if the message has no content of this type.</returns>
-		public Dictionary<string, string> GetPostContentParameters() {
-			if (_contentUrlParameters == null && Content != null && Headers.TryGetValue("Content-Type", out var v) && v.Starts("application/x-www-form-urlencoded", true)) {
-				_contentUrlParameters = ParseUrlParameters_(Encoding.Latin1.GetString(Content));
+		/// <value>null if the message has no content of this type.</value>
+		public Dictionary<string, string> Urlencoded {
+			get {
+				if (_contentUrlParameters == null && Content != null && Headers.TryGetValue("Content-Type", out var v) && v.Starts("application/x-www-form-urlencoded", true)) {
+					_contentUrlParameters = ParseUrlParameters_(Encoding.Latin1.GetString(Content));
+				}
+				return _contentUrlParameters;
 			}
-			return _contentUrlParameters;
 		}
 		Dictionary<string, string> _contentUrlParameters;
 		
 		internal static Dictionary<string, string> ParseUrlParameters_(ReadOnlySpan<char> s) {
 			Dictionary<string, string> d = null;
-			for (int i = 0, j = 0; i < s.Length; i = j + 1) {
+			for (int i = 0, j; i < s.Length; i = j + 1) {
 				int q = -1;
 				for (j = i; j < s.Length && s[j] != '&'; j++) if (s[j] == '=' && q < 0) q = j;
 				if (q > 0) (d ??= new())[WebUtility.UrlDecode(s.Slice(i, q - i).ToString())] = WebUtility.UrlDecode(s.Slice(++q, j - q).ToString());
@@ -541,26 +549,27 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets parts of multipart content. For example of POST content with <c>Content-Type: multipart/form-data</c>.
+		/// Parts of multipart content. For example of POST content with <c>Content-Type: multipart/form-data</c>.
 		/// </summary>
-		/// <returns>null if the message has no multipart content.</returns>
-		public List<HSContentPart> GetPostContentParts() {
-			if (_contentParts == null && Content != null && Headers.TryGetValue("Content-Type", out var v) && v.Starts("multipart/", true)) {
-				_contentParts = _GetContentParts();
+		/// <value>null if the message has no multipart content.</value>
+		public Dictionary<string, HSContentPart> Multipart {
+			get {
+				if (_contentParts == null && Content != null && Headers.TryGetValue("Content-Type", out var v) && v.Starts("multipart/", true)) {
+					_contentParts = _GetContentMultipart();
+				}
+				return _contentParts;
 			}
-			return _contentParts;
-			
 		}
-		List<HSContentPart> _contentParts;
+		Dictionary<string, HSContentPart> _contentParts;
 		
-		List<HSContentPart> _GetContentParts() {
+		Dictionary<string, HSContentPart> _GetContentMultipart() {
 			if (Content == null || ContentType?.Boundary is not string sb || Content.Length < sb.Length * 2 + 8) return null;
 			//print.it($"'{Content.ToStringUTF8()}'");
-			List<HSContentPart> a = null;
+			Dictionary<string, HSContentPart> a = null;
 			//need to parse bytes, not string, because part bodies can be binary or use various encodings
 			ReadOnlySpan<byte> k = Content, b = Encoding.Latin1.GetBytes("--" + sb), b0 = b.Slice(2);
 			if (!_FindBound(k, b, 0, out int startBound, out int endBound, out bool last)) return null;
-			while (!last) {
+			for (int index = 0; !last;) {
 				int startPart = endBound;
 				if (!_FindBound(k, b, startPart, out startBound, out endBound, out last)) return null;
 				var part = k.Slice(startPart, startBound - startPart);
@@ -576,7 +585,8 @@ namespace Au.Types {
 						if (v.Split_(':', out var s1, out var s2, 1, 0)) dh[s1] = s2;
 					}
 				}
-				(a ??= new()).Add(new(dh, part.Slice(i + 2).ToArray()));
+				HSContentPart p = new(index++, dh, part.Slice(i + 2).ToArray());
+				(a ??= new())[p.Name] = p;
 			}
 			return a;
 			
@@ -602,17 +612,25 @@ namespace Au.Types {
 	/// <summary>
 	/// Contains a single part of a multipart POST data.
 	/// </summary>
-	public record class HSContentPart(Dictionary<string, string> Headers, byte[] Content) {
+	/// <param name="Index">0-based index of this part in the list of parts.</param>
+	/// <param name="Headers">Headers of this part.</param>
+	/// <param name="Content">Raw content of this part. For example UTF-8 text.</param>
+	public record class HSContentPart(int Index, Dictionary<string, string> Headers, byte[] Content) {
 		/// <inheritdoc cref="HSMessage.ContentType"/>
 		public HSContentType ContentType => _contentType ??= HSContentType.Create(Headers);
 		HSContentType _contentType;
 		
 		/// <summary>
-		/// Converts <see cref="Content"/> to text.
+		/// <see cref="Content"/> converted to text.
 		/// </summary>
-		/// <returns>null if there is no content or if text encoding is unknown.</returns>
-		public string GetContentText() => _contentText ??= Content == null ? null : ContentType?.Encoding?.GetString(Content);
+		/// <value>null if there is no content or if text encoding is unknown.</value>
+		public string Text => _contentText ??= Content == null ? null : ContentType?.Encoding?.GetString(Content);
 		string _contentText;
+		
+		/// <summary>
+		/// Returns <see cref="Text"/>.
+		/// </summary>
+		public static implicit operator string(HSContentPart p) =>p.Text;
 		
 		System.Net.Mime.ContentDisposition _ContentDisposition() {
 			if (_contentDisposition == null && Headers.TryGetValue("Content-Disposition", out var s)) try { _contentDisposition = new(s); } catch {  }
@@ -621,17 +639,17 @@ namespace Au.Types {
 		System.Net.Mime.ContentDisposition _contentDisposition;
 		
 		/// <summary>
-		/// Gets <c>name</c> field from <c>Content-Disposition</c> header.
+		/// Gets name from <c>Content-Disposition</c> header.
 		/// </summary>
-		/// <value>null if <c>Content-Disposition</c> header or name is missing.</value>
+		/// <value>If <c>Content-Disposition</c> header or name is missing, returns <c>Index.ToS()</c>.</value>
 		/// <remarks>
 		///	Decodes "=?utf-8?B?base64?=".
 		/// </remarks>
-		public string Name => _name ??= _DecodeMime(_ContentDisposition()?.Parameters["name"]);
+		public string Name => _name ??= _DecodeMime(_ContentDisposition()?.Parameters["name"] ?? Index.ToS());
 		string _name;
 		
 		/// <summary>
-		/// Gets <c>filename*</c> or <c>filename</c> field from <c>Content-Disposition</c> header.
+		/// Gets filename from <c>Content-Disposition</c> header.
 		/// </summary>
 		/// <value>null if <c>Content-Disposition</c> header or filename is missing.</value>
 		/// <remarks>
@@ -639,7 +657,7 @@ namespace Au.Types {
 		/// </remarks>
 		public string FileName {
 			get {
-				if (_fileName == null && _ContentDisposition() is var cd && cd != null) {
+				if (_fileName == null && _ContentDisposition() is { } cd) {
 					if (cd.Parameters["filename*"] is string s && s.Starts("utf-8''")) { //never mind: can be "any-charset'language'"
 						try { _fileName = WebUtility.UrlDecode(s[7..]); } catch {  }
 					}
@@ -698,11 +716,11 @@ namespace Au.Types {
 		/// <summary>
 		/// Gets text encoding.
 		/// </summary>
-		/// <returns>Returns:
+		/// <value>Returns:
 		/// <br/>• null if multipart content (<b>Boundary</b> not nul) or charset is invalid.
 		/// <br/>• UTF8 if charset is utf-8 or not specified.
 		/// <br/>• <b>Encoding</b> that matches charset.
-		/// </returns>
+		/// </value>
 		public Encoding Encoding { get; }
 		
 		Encoding _GetEncoding(System.Net.Mime.ContentType t) {
