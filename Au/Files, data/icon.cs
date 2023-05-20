@@ -125,7 +125,7 @@ namespace Au {
 				//is ".ext" or "protocol:"?
 				isFileType = pathname.IsExtension_(file) || (isURL = pathname.IsProtocol_(file));
 				if (!isFileType) isURL = pathname.isUrl(file);
-				if (isFileType || isURL || (isShellPath = (file[0] == ':'))) isPath = false;
+				if (isFileType || isURL || (isShellPath = file[0] == ':')) isPath = false;
 				if (isPath) {
 					//get icon index from "path,index" and remove ",index"
 					extractFromFile = parsePathIndex(file, out file, out index);
@@ -155,8 +155,8 @@ namespace Au {
 					case 0:
 						return null;
 					case 1:
-						return stock(ext == 2 || ext == 3 ? StockIcon.APPLICATION : StockIcon.DOCNOASSOC, size);
-						//case FileDir_.Directory: //folder name ends with .ico etc
+						return stock(ext is 2 or 3 ? StockIcon.APPLICATION : StockIcon.DOCNOASSOC, size);
+						//case 2: //folder name ends with .ico etc
 					}
 				} else if (file.Ends(".lnk", true)) {
 					var v = _GetLnkIcon(file, size);

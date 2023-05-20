@@ -118,7 +118,7 @@ namespace Au
 						else { k = Api.SleepEx(timeSlice, true); if (k == 0) k = Api.WAIT_TIMEOUT; }
 						if (doEvents) if (_DoEvents(msgCallback)) return nHandles;
 					}
-					if (!(k == Api.WAIT_TIMEOUT || k == Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
+					if (k is not (Api.WAIT_TIMEOUT or Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
 				}
 			}
 		}

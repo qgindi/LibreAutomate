@@ -10,9 +10,7 @@
 /// - ifRunning. Multiple instances (processes) of the program can run simultaneously. To prevent it can be used <see cref="script.single"/>.
 /// - uac. By default programs run not as administrator (unlike when launched from the editor) and therefore can't automate admin windows etc. See  <help articles/UAC>UAC<>.
 /// 
-/// You can sell your created .exe programs. If need an advanced licensing system, look for a licensing library in <+recipe>NuGet<>.
-///
-/// Program files can be easily decompiled into readable source code. For protection can be used a .NET obfuscator.
+/// Program files don't contain the source code, but can be decompiled into equivalent source code.
 ///
 /// <see cref="print.it"/> text is displayed in the editor if it is running, unless it's a console program. See also <see cref="PrintServer"/>.
 ///

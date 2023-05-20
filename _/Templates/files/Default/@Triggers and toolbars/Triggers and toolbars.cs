@@ -51,13 +51,14 @@ partial class Program {
 			
 			Triggers.ResetOptions();
 			_TriggerOptions(toolbars: tb);
-			if (tb) Triggers.Options.ThreadMain();
+			if (tb) Triggers.Options.ThreadThis();
 			
 			try { mi.Invoke(this, null); }
 			catch (TargetInvocationException ex) { print.it(ex.InnerException); return; }
 		}
 		
-		Triggers.Run();
+		run.thread(Triggers.Run);
+		wait.doEvents(-1);
 	}
 	
 	[AttributeUsage(AttributeTargets.Method)] class TriggersAttribute : Attribute { }

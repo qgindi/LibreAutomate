@@ -1,22 +1,23 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More {
 	/// <summary>
 	/// Executes actions in same UI thread as ctor.
 	/// Use <see cref="OfThisThread"/>. Cannot create more instances.
 	/// </summary>
-	class PostToThisThread_
-	{
+	class PostToThisThread_ {
 		readonly wnd _w;
 		readonly Queue<Action> _q = new();
-
+		
 		PostToThisThread_() {
 			_w = WndUtil.CreateWindowDWP_(messageOnly: true, t_wp = _WndProc);
+			ManagedThreadId = Environment.CurrentManagedThreadId;
 		}
-
+		
 		public static PostToThisThread_ OfThisThread => t_default ??= new();
 		[ThreadStatic] static PostToThisThread_ t_default;
 		[ThreadStatic] static WNDPROC t_wp;
-
+		
+		public int ManagedThreadId { get; }
+		
 		public void Post(Action a) {
 			bool post;
 			lock (this) {
@@ -25,7 +26,7 @@
 			}
 			if (post) _w.Post(Api.WM_USER);
 		}
-
+		
 		nint _WndProc(wnd w, int message, nint wParam, nint lParam) {
 			switch (message) {
 			case Api.WM_USER:
@@ -45,7 +46,7 @@
 				}
 				return default;
 			}
-
+			
 			return Api.DefWindowProc(w, message, wParam, lParam);
 		}
 	}
