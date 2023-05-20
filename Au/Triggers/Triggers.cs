@@ -548,12 +548,8 @@ public class ActionTriggers
 				//	Never mind: the timer does not work if user code creates a nested message loop in this thread. They should avoid it. It is documented, such functions must return ASAP.
 			}
 			var k = Api.MsgWaitForMultipleObjectsEx(nh, ha, slice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
-			if (k == nh) { //message, COM RPC, hook, etc
-				while (Api.PeekMessage(out var m)) {
-					Api.TranslateMessage(m);
-					Api.DispatchMessage(m);
-				}
-			} else if (!(k == Api.WAIT_TIMEOUT || k == Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
+			if (k == nh) wait.doEvents(); //message, COM RPC, hook, etc
+			else if (k is not (Api.WAIT_TIMEOUT or Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
 		}
 	}
 	long _winTimerLastTime;

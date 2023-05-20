@@ -656,11 +656,13 @@ public class wpfBuilder {
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default margin is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
 	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If true, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
-	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null) {
+	/// <param name="bindLabelVisibility">Let <b>Add</b> overloads that add 2 elements (usually the first is <b>Label</b>) bind the <b>Visibility</b> property of the first element to that of the second element, to automatically hide the first element when the second element is hidden.</param>
+	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null, bool? bindLabelVisibility = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 		if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
 		if (margin != null) _opt_margin = margin.Value;
-		if (showToolTipOnKeyboardFocus != null) _showToolTipOnKeyboardFocus = showToolTipOnKeyboardFocus.Value;
+		if (showToolTipOnKeyboardFocus != null) _opt_showToolTipOnKeyboardFocus = showToolTipOnKeyboardFocus.Value;
+		if (bindLabelVisibility != null) _opt_bindLabelVisibility = bindLabelVisibility.Value;
 		return this;
 	}
 	bool _opt_modifyPadding = !_IsCustomTheme();
@@ -668,7 +670,8 @@ public class wpfBuilder {
 	Thickness _opt_margin = new(3);
 	//string _opt_radioGroup; //rejected. Radio buttons have problems with high DPI and should not be used. Or can put groups in panels.
 	//	double _opt_checkMargin=3; //rejected
-	bool _showToolTipOnKeyboardFocus;
+	bool _opt_showToolTipOnKeyboardFocus;
+	bool _opt_bindLabelVisibility;
 	
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (control etc of any type).
@@ -823,6 +826,7 @@ public class wpfBuilder {
 			if (k is Label la) la.Target = var2;
 			System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, k);
 		}
+		if (_opt_bindLabelVisibility) var1.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = var2, Mode = BindingMode.OneWay });
 		return this;
 	}
 	
@@ -1372,7 +1376,7 @@ public class wpfBuilder {
 	/// </example>
 	public wpfBuilder Tooltip(object tooltip) {
 		Last.ToolTip = tooltip;
-		if (!_showToolTipOnKeyboardFocus) ToolTipService.SetShowsToolTipOnKeyboardFocus(Last, false);
+		if (!_opt_showToolTipOnKeyboardFocus) ToolTipService.SetShowsToolTipOnKeyboardFocus(Last, false);
 		return this;
 	}
 	//FUTURE: make easier to create tooltip content, eg Inlines of TextBlock. Would be good to create on demand.
