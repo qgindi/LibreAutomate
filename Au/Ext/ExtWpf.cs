@@ -172,7 +172,7 @@ public static class ExtWpf {
 	/// <summary>
 	/// Returns true if <c>IsChecked == true</c>.
 	/// </summary>
-	[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	//[Obsolete("use code IsChecked == true")]
 	public static bool True(this CheckBox t) => t.IsChecked == true;
 	

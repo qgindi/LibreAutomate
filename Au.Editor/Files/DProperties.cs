@@ -31,6 +31,7 @@ class DProperties : KDialogWindow {
 		
 		var b = new wpfBuilder(this).WinSize(640).Columns(-1, 0);
 		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
+		b.Options(bindLabelVisibility: true);
 		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
 		b.R.StartStack(vertical: true); //left column
 		b.StartGrid().Columns(0, -1, 20, 0, -1.15);
@@ -551,14 +552,9 @@ class DProperties : KDialogWindow {
 	
 	#region util
 	
-	static void _Show(FrameworkElement e, Visibility vis) {
-		e.Visibility = vis;
-		if (System.Windows.Automation.AutomationProperties.GetLabeledBy(e) is UIElement label) label.Visibility = vis;
-	}
+	static void _ShowHide(FrameworkElement e, bool show) => e.Visibility = show ? Visibility.Visible : Visibility.Hidden;
 	
-	static void _ShowHide(FrameworkElement e, bool show) => _Show(e, show ? Visibility.Visible : Visibility.Hidden);
-	
-	static void _ShowCollapse(FrameworkElement e, bool show) => _Show(e, show ? Visibility.Visible : Visibility.Collapsed);
+	static void _ShowCollapse(FrameworkElement e, bool show) => e.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
 	
 	static void _ShowHide(bool show, params FrameworkElement[] a) {
 		foreach (var v in a) _ShowHide(v, show);

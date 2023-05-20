@@ -6,11 +6,12 @@ class TOptions {
 	public sbyte thread; //>=0 dedicated or <0 TOThread
 	public TOFlags flags;
 	public int wait;
-
+	public PostToThisThread_ thisThread;
+	
 	public TOptions Clone() => this.MemberwiseClone() as TOptions;
 }
 
-class TOThread { public const sbyte Main = -1, New = -2, Pool = -3; }
+class TOThread { public const sbyte OfTriggers = -1, New = -2, Pool = -3, This = -4; }
 
 [Flags]
 enum TOFlags : byte {
@@ -40,9 +41,9 @@ enum TOFlags : byte {
 /// </example>
 public class TriggerOptions {
 	TOptions _new, _prev;
-
+	
 	TOptions _New() => _new ??= (_prev?.Clone() ?? new TOptions());
-
+	
 	/// <summary>
 	/// Run actions always in the same dedicated thread that does not end when actions end.
 	/// </summary>
@@ -65,20 +66,58 @@ public class TriggerOptions {
 		_new.flags = noWarning ? TOFlags.NoWarning : 0;
 	}
 	//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
-
+	
 	/// <summary>
-	/// Run trigger actions in same thread as <see cref="ActionTriggers.Run"/>.
+	/// Run trigger actions in the same thread as <see cref="ActionTriggers.Run"/>. Dangerous, rarely used.
 	/// </summary>
 	/// <remarks>
-	/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="toolbar"/>). Rarely used for other purposes.
+	/// This should not be used without a good reason. Trigger actions must be programmed carefully, to not interfere with triggers. They must be as fast as possible, else will block triggers, hooks and user input.
+	///
+	/// Before v0.16 this was named <b>ThreadMain</b> and used in the "Triggers and toolbars" script. Problem: blocks hooks etc when need long time to get file icons. Now the script uses <see cref="ThreadThis"/> instead, and calls <c>Triggers.Run</c> in another thread. Your script possibly still uses the old code. You can replace it with the new version, which can be found in menu File -> New -> Default -> Triggers and toolbars.
 	/// </remarks>
-	public void ThreadMain() {
+	public void ThreadOfTriggers() {
 		_New();
-		_new.thread = TOThread.Main;
+		_new.thread = TOThread.OfTriggers;
 		_new.wait = 0;
 		_new.flags = 0;
 	}
-
+	
+	/// <summary>
+	/// Alias of <see cref="ThreadOfTriggers"/>.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public void ThreadMain() => ThreadOfTriggers();
+	
+	/// <summary>
+	/// Run trigger actions in this thread (which called this function).
+	/// </summary>
+	/// <remarks>
+	/// <see cref="ActionTriggers.Run"/> must run in another thread.
+	/// 
+	/// This thread must have a message loop (wait and dispatch messages).
+	///
+	/// The action should be fast, else other trigger actions may be delayed. If it dispatches messages, other trigger actions can run in the meantime.
+	/// 
+	/// Can be used to create and show toolbars (<see cref="toolbar"/>). Used in the default "Triggers and toolbars" script since v0.16.
+	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// print.it(Environment.CurrentManagedThreadId);
+	/// ActionTriggers Triggers = new();
+	/// Triggers.Options.ThreadThis();
+	/// Triggers.Hotkey["F11"] = o => { print.it(Environment.CurrentManagedThreadId); };
+	/// run.thread(Triggers.Run);
+	/// wait.doEvents(-1);
+	/// ]]></code>
+	/// </example>
+	public void ThreadThis() {
+		_New();
+		_new.thread = TOThread.This;
+		_new.wait = 0;
+		_new.flags = 0;
+		_new.thisThread = PostToThisThread_.OfThisThread;
+	}
+	
 	/// <summary>
 	/// Run trigger actions in new threads.
 	/// </summary>
@@ -86,17 +125,15 @@ public class TriggerOptions {
 	/// <remarks>
 	/// The action can run simultaneously with other actions. The thread is STA.
 	/// </remarks>
-	public void ThreadNew(bool single = false/*, bool mta = false*/) {
+	public void ThreadNew(bool single = false) {
 		_New();
 		_new.thread = TOThread.New;
 		_new.wait = 0;
 		TOFlags f = 0;
 		if (single) f |= TOFlags.Single;
-		//if (mta) f |= TOFlags.MtaThread;
 		_new.flags = f;
 	}
-	///// <param name="mta">Don't set <see cref="ApartmentState.STA"/>.</param>
-
+	
 	/// <summary>
 	/// Run trigger actions in thread pool threads.
 	/// </summary>
@@ -111,7 +148,7 @@ public class TriggerOptions {
 		_new.wait = 0;
 		_new.flags = single ? TOFlags.Single : 0;
 	}
-
+	
 	/// <summary>
 	/// A function to run before the trigger action.
 	/// For example, it can set <see cref="opt"/> options.
@@ -122,7 +159,7 @@ public class TriggerOptions {
 	/// ]]></code>
 	/// </example>
 	public Action<TOBAArgs> BeforeAction { set => _New().before = value; }
-
+	
 	/// <summary>
 	/// A function to run after the trigger action.
 	/// For example, it can log exceptions.
@@ -133,7 +170,7 @@ public class TriggerOptions {
 	/// ]]></code>
 	/// </example>
 	public Action<TOBAArgs> AfterAction { set => _New().after = value; }
-
+	
 	internal TOptions Current {
 		get {
 			if (_new != null) { _prev = _new; _new = null; }
@@ -141,13 +178,13 @@ public class TriggerOptions {
 		}
 	}
 	static TOptions s_empty;
-
+	
 	/// <summary>
 	/// If true, triggers added afterwards don't depend on <see cref="ActionTriggers.Disabled"/> and <see cref="ActionTriggers.DisabledEverywhere"/>.
 	/// This property sets the <see cref="ActionTrigger.EnabledAlways"/> property of triggers added afterwards.
 	/// </summary>
 	public bool EnabledAlways { get; set; }
-
+	
 	/// <summary>
 	/// Clears all options.
 	/// </summary>
@@ -165,13 +202,13 @@ public struct TOBAArgs {
 		ActionArgs = args;
 		Exception = null;
 	}
-
+	
 	/// <summary>
 	/// Trigger event info. The same variable as passed to the trigger action.
 	/// To access the info, cast to <b>HotkeyTriggerArgs</b> etc, depending on trigger type.
 	/// </summary>
 	public TriggerArgs ActionArgs { get; }
-
+	
 	/// <summary>
 	/// If action ended with an exception, the exception. Else null.
 	/// </summary>
@@ -186,7 +223,7 @@ class TriggerActionThreads {
 			var oldOpt = o.thread == TOThread.New ? default : opt.scope.all(inherit: false);
 			try {
 				_MuteMod(ref muteMod);
-
+				
 				string sTrigger = null; long startTime = 0;
 				//perf.next();
 				if (script.role == SRole.MiniProgram) {
@@ -195,28 +232,18 @@ class TriggerActionThreads {
 					print.TaskEvent_("AS " + sTrigger, startTime, trigger.sourceFile, trigger.sourceLine);
 					//perf.next();
 				}
-
+				
 				var baArgs = new TOBAArgs(args); //struct
-#if true
 				o.before?.Invoke(baArgs);
-#else
-				if(o.before != null) {
-					bool called = false;
-					if(t_beforeCalled == null) t_beforeCalled = new List<Action<bool>> { o.before };
-					else if(!t_beforeCalled.Contains(o.before)) t_beforeCalled.Add(o.before);
-					else called = true;
-					o.before(!called);
-				}
-#endif
 				try {
 					//perf.nw();
 					trigger.Run(args);
-
+					
 					if (sTrigger != null) print.TaskEvent_("AE", startTime, trigger.sourceFile, trigger.sourceLine);
 				}
 				catch (Exception e1) {
 					if (sTrigger != null) print.TaskEvent_("AF", startTime, trigger.sourceFile, trigger.sourceLine);
-
+					
 					baArgs.Exception = e1;
 					print.it(e1);
 				}
@@ -228,21 +255,26 @@ class TriggerActionThreads {
 			finally {
 				oldOpt.Dispose();
 				if (o.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
-				if (o.thread != TOThread.Main) toolbar.TriggerActionEndedInNonmainThread_();
+				if (o.thread is not (TOThread.OfTriggers or TOThread.This)) toolbar.TriggerActionEndedInToolbarUnfriendlyThread_();
 			}
 		};
 		//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
-
+		
 		var opt1 = trigger.options;
 		int threadId = opt1.thread;
 		if (threadId >= 0) { //dedicated thread
 			_Thread h = null; foreach (var v in _a) if (v.id == threadId) { h = v; break; }
 			if (h == null) _a.Add(h = new _Thread(threadId));
 			if (h.RunAction(actionWrapper, trigger)) return;
-		} else if (threadId == TOThread.Main) {
+		} else if (threadId == TOThread.OfTriggers) {
 			actionWrapper();
 			return;
 			//note: can reenter. Probably it is better than to cancel if already running.
+		} else if (threadId == TOThread.This) {
+			if (opt1.thisThread.ManagedThreadId == Environment.CurrentManagedThreadId) print.warning("If called ThreadThis, triggers should run in another thread.");
+			opt1.thisThread.Post(actionWrapper);
+			return;
+			//note: can reenter.
 		} else {
 			bool canRun = true;
 			bool single = opt1.flags.Has(TOFlags.Single);
@@ -263,7 +295,7 @@ class TriggerActionThreads {
 					}
 				}
 			}
-
+			
 			if (canRun) {
 				if (threadId == TOThread.New) {
 					var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
@@ -286,34 +318,33 @@ class TriggerActionThreads {
 				return;
 			}
 		}
-
+		
 		if (muteMod != 0) ThreadPool.QueueUserWorkItem(_ => _MuteMod(ref muteMod));
 	}
-	//[ThreadStatic] List<Action<bool>> t_beforeCalled;
-
+	
 	public void Dispose() {
 		foreach (var v in _a) v.Dispose();
 	}
-
+	
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static void _OutOfMemory() {
 		print.warning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
 	}
-
+	
 	List<_Thread> _a = new();
 	ConcurrentDictionary<ActionTrigger, object> _d;
-
+	
 	class _Thread {
-		struct _Action { public Action actionWrapper; public long time; }
-
+		record struct _Action(Action actionWrapper, long time);
+		
 		AutoResetEvent _event;
 		Queue<_Action> _q;
 		bool _running;
 		bool _disposed;
 		public readonly int id;
-
+		
 		public _Thread(int id) { this.id = id; }
-
+		
 		/// <summary>
 		/// Adds the action to the queue and notifies the thread to execute it.
 		/// If the thread is busy, returns false; if ifRunning!=0, the action possibly will run later.
@@ -330,7 +361,7 @@ class TriggerActionThreads {
 								while (!_disposed) {
 									_Action x;
 									lock (_q) {
-									g1:
+										g1:
 										if (_q.Count == 0) { _running = false; break; }
 										x = _q.Dequeue();
 										if (x.time != 0 && perf.ms > x.time) goto g1;
@@ -343,7 +374,7 @@ class TriggerActionThreads {
 						finally {
 							_event.Dispose(); _event = null;
 							_q = null; _running = false; //restart if aborted
-														 //print.it("thread ended");
+							//print.it("thread ended");
 						}
 					});
 				}
@@ -352,7 +383,7 @@ class TriggerActionThreads {
 					_OutOfMemory();
 				}
 			}
-
+			
 			bool R = true;
 			lock (_q) {
 				int ifRunningWaitMS = trigger.options.wait;
@@ -368,12 +399,12 @@ class TriggerActionThreads {
 					_running = true;
 					//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
 				}
-				_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : perf.ms + ifRunningWaitMS });
+				_q.Enqueue(new _Action(actionWrapper, ifRunningWaitMS <= 0 ? 0 : perf.ms + ifRunningWaitMS));
 			}
 			_event.Set();
 			return R;
 		}
-
+		
 		public void Dispose() {
 			if (_disposed) return; _disposed = true;
 			_event.Set();
@@ -384,15 +415,15 @@ class TriggerActionThreads {
 	//class _Thread
 	//{
 	//	struct _Action { public Action actionWrapper; public long time; }
-
+	
 	//	Handle_ _event;
 	//	Queue<_Action> _q;
 	//	bool _running;
 	//	bool _disposed;
 	//	public readonly int id;
-
+	
 	//	public _Thread(int id) { this.id = id; }
-
+	
 	//	/// <summary>
 	//	/// Adds the action to the queue and notifies the thread to execute it.
 	//	/// If the thread is busy, returns false; if ifRunning!=0, the action possibly will run later.
@@ -432,7 +463,7 @@ class TriggerActionThreads {
 	//				_OutOfMemory();
 	//			}
 	//		}
-
+	
 	//		bool _r = true;
 	//		lock(_q) {
 	//			int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
@@ -455,14 +486,14 @@ class TriggerActionThreads {
 	//		Api.SetEvent(_event);
 	//		return _r;
 	//	}
-
+	
 	//	public void Dispose()
 	//	{
 	//		if(_disposed) return; _disposed = true;
 	//		Api.SetEvent(_event);
 	//	}
 	//}
-
+	
 	static void _MuteMod(ref int muteMod) {
 		switch (Interlocked.Exchange(ref muteMod, 0)) {
 		case c_modRelease:
@@ -473,6 +504,6 @@ class TriggerActionThreads {
 			break;
 		}
 	}
-
+	
 	public const int c_modRelease = 1, c_modCtrl = 2;
 }

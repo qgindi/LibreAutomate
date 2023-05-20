@@ -598,12 +598,12 @@ partial class FilesModel {
 		}
 		if (line >= 0 || columnOrPos >= 0) {
 			if (line >= 0) {
-				int i = doc.aaaLineStart(false, line);
-				if (columnOrPos > 0) i = doc.aaaPos8(Math.Min(doc.aaaPos16(i) + columnOrPos, doc.aaaLen16)); //not SCI_FINDCOLUMN, it calculates tabs
+				int i = doc.aaaLineStart(true, line);
+				if (columnOrPos > 0) i = Math.Min(i + columnOrPos, doc.aaaLen16); //not SCI_FINDCOLUMN, it calculates tabs
 				columnOrPos = i;
 			}
 			if (!wasOpen) wait.doEvents(); //else scrolling does not work well if now opened the file. Can't async, because caller may use the new pos immediately.
-			doc.aaaGoToPos(false, columnOrPos);
+			doc.aaaGoToPos(true, columnOrPos);
 		} else {
 			if (!wasOpen) wait.doEvents(); //caller then may call aaaGoToPos or aaaSelect etc
 		}

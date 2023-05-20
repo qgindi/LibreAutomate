@@ -122,17 +122,20 @@ public static partial class wait {
 	/// <summary>
 	/// Same as <b>doEvents(int)</b> but with parameter <i>noSetPrecision</i>.
 	/// </summary>
-	internal static void SleepDoEvents_(int timeMS, bool noSetPrecision = false) {
-		if (timeMS < 0 && timeMS != -1) throw new ArgumentOutOfRangeException();
-
-		if (timeMS == 0) {
+	internal static unsafe void SleepDoEvents_(int timeMS, bool noSetPrecision = false) {
+		if (timeMS < 0) {
+			if (timeMS != -1) throw new ArgumentOutOfRangeException();
+			for (; ; ) {
+				var k = Api.MsgWaitForMultipleObjectsEx(0, null, -1, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
+				if (k == 0) doEvents();
+			}
+		} else if (timeMS == 0) {
 			doEvents();
-			return;
+		} else {
+			if (!noSetPrecision) SleepPrecision_.TempSet1_(timeMS);
+
+			Wait_(timeMS, WHFlags.DoEvents, null, null);
 		}
-
-		if (!noSetPrecision) SleepPrecision_.TempSet1_(timeMS);
-
-		Wait_(timeMS, WHFlags.DoEvents, null, null);
 	}
 
 	/// <summary>

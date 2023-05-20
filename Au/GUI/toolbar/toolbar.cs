@@ -55,8 +55,8 @@ public partial class toolbar : MTBase {
 	public toolbar(string name = null, TBCtor flags = 0,
 		[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
 		: base(name, f_, l_, m_) {
-
-		if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) print.warning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
+		
+		if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) print.warning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadOfTriggers();</code> or <code>Triggers.Options.ThreadThis();</code>");
 
 		var path = flags.Has(TBCtor.DontSaveSettings) ? null : getSettingsFilePath(_name);
 		_sett = _Settings.Load(path, flags.Has(TBCtor.ResetSettings));
@@ -118,10 +118,9 @@ public partial class toolbar : MTBase {
 	/// </remarks>
 	public static toolbar find(string name) => _Manager._atb.Find(o => o.Name == name);
 
-	//By default trigger actions run in non-main threads. Toolbars don't work there.
-	internal static void TriggerActionEndedInNonmainThread_() {
+	internal static void TriggerActionEndedInToolbarUnfriendlyThread_() {
 		if (_Manager._atb.Count > 0)
-			print.warning("Trigger actions that create toolbars should run in the main thread. Add this code: Triggers.Options.ThreadMain(); //Triggers is an ActionTriggers variable.", -1);
+			print.warning("Toolbars in wrong thread. Insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadOfTriggers();</code> or <code>Triggers.Options.ThreadThis();</code>", -1);
 	}
 
 	#endregion

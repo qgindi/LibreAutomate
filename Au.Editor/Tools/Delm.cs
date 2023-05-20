@@ -1491,6 +1491,10 @@ class Delm : KDialogWindow {
 			App.Settings.delm.wait = _wait.t.Text;
 			_SetOpt(_EOptions.NoWait, !_wait.c.IsChecked);
 		}; m.Last.Tooltip = "Let the tool start with current wait settings";
+		//if (Java.GetJavaPath(out _)) { //moved to Options -> OS. It isn't a tool setting.
+		//	m.Separator();
+		//	m["Java..."] = o => Java.EnableDisableJabUI(this);
+		//}
 		m.Show(owner: this);
 		_SetOpt(_EOptions.AutoTest, cAT.IsChecked);
 		//bool format = _SetOpt(_EOptions.Compact, cCC.IsChecked);
@@ -1585,7 +1589,7 @@ class Delm : KDialogWindow {
 		/// <param name="owner"></param>
 		public static void EnableDisableJabUI(AnyWnd owner) {
 			bool enable;
-			switch (dialog.showList("1 Enable|2 Disable|Cancel", "Java Access Bridge", owner: owner, flags: DFlags.CenterOwner)) {
+			switch (dialog.showList("1 Enable|2 Disable|Cancel", null, "Enable or disable the Java Access Bridge.\nIt affects scripts and programs that automate Java apps.", owner: owner, flags: DFlags.CenterOwner)) {
 			case 1: enable = true; break;
 			case 2: enable = false; break;
 			default: return;

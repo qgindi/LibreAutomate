@@ -144,6 +144,7 @@ class DOptions : KDialogWindow {
 	
 	void _FontAndColors() {
 		var b = _Page("Font, colors", WBPanelType.Dock);
+		b.Options(bindLabelVisibility: true);
 		
 		b.Add(out KScintilla sciStyles).Width(150);
 		sciStyles.AaInitBorder = true;
@@ -279,7 +280,6 @@ class DOptions : KDialogWindow {
 							ignoreColorEvents = true;
 							int col;
 							cBold.Visibility = k.kind == _StyleKind.Style ? Visibility.Visible : Visibility.Collapsed;
-							lAlpha.Visibility = k.kind == _StyleKind.Style ? Visibility.Collapsed : Visibility.Visible;
 							tAlpha.Visibility = k.kind == _StyleKind.Style ? Visibility.Collapsed : Visibility.Visible;
 							if (k.kind == _StyleKind.Style) {
 								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k.index));
@@ -558,11 +558,13 @@ Example:
 		if (App.IsPortable) b.R.Add<TextBlock>().Text(new Run("Portable mode warning: portable apps should not change Windows settings.") { Foreground = Brushes.Red });
 		b.R.AddSeparator().Margin("T8B8");
 		
-		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Validation(o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
+		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Width(70, "L")
+			.Validation(o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
 		bool disableLAW = 0 == Api.SystemParametersInfo(Api.SPI_GETFOREGROUNDLOCKTIMEOUT, 0);
 		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"").Checked(disableLAW);
 		bool underlineAK = Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES);
 		b.R.Add(out KCheckBox cUnderlineAK, "Underline menu/dialog item access keys").Checked(underlineAK);
+		b.R.AddButton("Java...", _ => Delm.Java.EnableDisableJabUI(this)).Width(70, "L").Disabled(!Delm.Java.GetJavaPath(out _));
 		b.End();
 		
 		_b.OkApply += e => {
