@@ -63,15 +63,16 @@ class DOptions : KDialogWindow {
 	}
 	
 	void _General() {
-		var b = _Page("General").Columns(-1, -1);
+		var b = _Page("General").Columns(-1, 20, -1);
 		//left column
-		b.StartStack(vertical: true);
-		b.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, and don't change text, because used for the forum registration security question
-		b.Add(out KCheckBox startHidden, "Start hidden; hide when closing").Checked(App.Settings.runHidden);
-		b.Add(out KCheckBox checkForUpdates, "Check for updates").Checked(App.Settings.checkForUpdates);
+		b.StartGrid().Columns(-1, 0);
+		b.R.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, and don't change text, because used for the forum registration security question
+		b.R.Add(out KCheckBox startHidden, "Start hidden; hide when closing").Checked(App.Settings.runHidden);
+		b.R.Add(out KCheckBox checkForUpdates, "Check for updates every day").Checked(App.Settings.checkForUpdates)
+			.AddButton("Now", _ => App.CheckForUpdates(true));
 		b.End();
 		//right column
-		b.StartStack(vertical: true);
+		b.Skip().StartStack(vertical: true);
 		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(110, TextWrapping.NoWrap)
 			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
 			.Validation(_startupScripts_Validation);

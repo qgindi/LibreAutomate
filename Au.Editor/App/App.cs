@@ -413,6 +413,9 @@ static partial class App {
 		int day = (int)(DateTime.Now.Ticks / 864000000000);
 		if (!forceNow && day == App.Settings.checkForUpdatesDay) return;
 		App.Settings.checkForUpdatesDay = day;
+		string html = internet.http.Get("https://www.example.com").Text();
+print.it(html);
+
 	}
 }
 

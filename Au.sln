@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{2C
 		LICENSE.txt = LICENSE.txt
 		Notes.txt = Notes.txt
 		README.md = README.md
+		version.txt = version.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Au.Editor", "Au.Editor\Au.Editor.csproj", "{4B47A184-5CB7-4E78-8EAD-E458FB11A7EF}"
