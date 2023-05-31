@@ -170,6 +170,7 @@ partial class MainWindow : Window {
 			if (wParam != 0) {
 				_appActivatedTimer ??= new(_ => {
 					Panels.Editor.OnAppActivated_();
+					if (App.Settings.checkForUpdates) App.CheckForUpdates(false);
 				});
 				_appActivatedTimer.After(250);
 			} else {
