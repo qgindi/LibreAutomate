@@ -24,6 +24,8 @@ using System.Windows.Input;
 //	Examples: taskbar, Paint.
 //	Now by default auto-switches to UIA; it works, but then broken Invoke (in taskbar only).
 
+//CONSIDER: action "screenshot".
+
 namespace Au.Tools;
 
 class Delm : KDialogWindow {
@@ -124,7 +126,7 @@ class Delm : KDialogWindow {
 		b.xAddButtonIcon("*Material.SquareEditOutline" + Menus.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");
 		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular" + Menus.blue, _ => _wnd.ActivateL(true), "Activate captured window");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.blue, _ => _Test(testAction: true), "Test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.black, _ => _Test(testAction: true), "Test action");
 		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.blue, _ => _Test(testAction: true, actWin: true), "Activate window and test action");
 		b.AddSeparator(true);
 		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _ToolSettings(), "Tool settings");
@@ -138,7 +140,7 @@ class Delm : KDialogWindow {
 		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Execute the 'find' part of the code now and show the rectangle.\r\nRight-click for more options.");
 		_bTest.ContextMenuOpening += _bTest_ContextMenuOpening;
 		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {App.Settings.delm.hk_insert} (while capturing).");
-		b.Add(out _cbAction).Tooltip("Action. Call this function when found.");
+		b.Add(out _cbAction).Tooltip("Action. Call this function when found. Or instead of Find call FindAll or create new elmFinder.");
 		_xy = b.xAddCheckText("x, y", noR: true, check: _Opt.Has(_EOptions.MouseXY)); b.Span(1).Height(18); _xy.t.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 		b.Add(out _cScroll, "Scroll").Checked(_Opt.Has(_EOptions.MouseScroll));
 		//row 3
@@ -424,22 +426,26 @@ class Delm : KDialogWindow {
 	
 	KPopup _ttRecapture;
 	
-	(string code, string wndVar) _FormatCode(bool forTest = false) {
+	(string code, string wndVar) _FormatCode(bool test = false) {
 		if (_page == null) return default; //failed to get UI element props
 		
-		bool isFinder = !forTest && _ActionIsFinder;
-		bool orThrow = !(forTest | isFinder) && _cException.IsChecked;
-		bool isAction = !forTest && _ActionIsAction;
-		bool isVar = !(forTest | isFinder /*|| (isAction && orThrow && _Opt.Has(_EOptions.Compact))*/);
+		var action = _CurrentAction;
+		bool isFinder = !test && action.IsFinder;
+		bool isFindAll = !test && action.IsFindAll;
+		int iFindAll = isFindAll ? action.name.Ends(false, "foreach", "for", "Select", "Select 2", "table") : 0;
+		bool orThrow = !(test | isFinder | isFindAll) && _cException.IsChecked;
+		bool isAction = !test && action.code != null;
+		bool isVar = !(test | isFinder | isFindAll /*|| (isAction && orThrow && _Opt.Has(_EOptions.Compact))*/);
 		
 		var b = new StringBuilder();
 		string wndCode = null, wndVar = null;
 		if (isFinder) {
 			b.Append("var f = elm.path");
 		} else {
-			(wndCode, wndVar) = _code.AaGetWndFindCode(forTest, _wnd, _useCon ? _con : default);
+			(wndCode, wndVar) = _code.AaGetWndFindCode(test, _wnd, _useCon ? _con : default);
 			b.AppendLine(wndCode);
 			if (isVar) b.Append("var e = ");
+			else if (isFindAll) b.Append(iFindAll switch { 1 => "foreach (var e in ", 5 => "var rows = ", _ => "var a = " });
 			b.Append(wndVar).Append(".Elm");
 		}
 		
@@ -522,12 +528,48 @@ class Delm : KDialogWindow {
 		if (isFinder) {
 			b.Append(';');
 			b.Append(_screenshot);
+		} else if (isFindAll) {
+			b.Append(".FindAll()").Append(iFindAll switch {
+				1 => """
+) {
+	print.it(e);
+}
+""",
+				2 => """
+;
+for (int i = 0; i < a.Length; i++) {
+	print.it(a[i]);
+}
+""",
+				3 => """
+
+	.Select(o => o.Name).ToArray();
+foreach (var v in a) print.it(v);
+//for (int i = 0; i < a.Length; i++) print.it(a[i]);
+""",
+				4 => """
+
+	.Select(o => (name: o.Name, value: o.Value)).ToArray();
+foreach (var v in a) print.it(v.name, v.value);
+//for (int i = 0; i < a.Length; i++) print.it(a[i].name, a[i].value);
+""",
+				_ => """
+;
+for (int ir = 0; ir < rows.Length; ir++) { //for each row
+	//if (ir == 0) continue; //header?
+	var a = rows[ir].Elm[prop: "level=0"].FindAll(); //cells in this row. You may want to change level or/and use role etc.
+	print.it(rows[ir]); print.it(a.Select(o => $"\t{o.Role},  {o.Name,-30},  {o.Rect}")); //debug
+	//print.it(a[0].Name, a[1].Name); //example
+	//print.it(a[1].Navigate("fi").Name, a[2].Elm["LINK"].Find(0).Name); //examples: get or find an element inside the cell
+}
+""",
+			});
 		} else {
-			b.Append(".Find(");
-			if (!forTest && _wait.GetText(out var waitTime, emptyToo: true)) b.AppendWaitTime(waitTime, orThrow); else if (orThrow) b.Append('0');
+			b.Append(test && action.IsFindAll ? ".FindAll(" : ".Find(");
+			if (!test && _wait.GetText(out var waitTime, emptyToo: true)) b.AppendWaitTime(waitTime, orThrow); else if (orThrow) b.Append('0');
 #if true
 			b.Append(");");
-			if (!forTest) b.Append(_screenshot);
+			if (!test) b.Append(_screenshot);
 			if (isVar && !orThrow) b.Append("\r\nif(e == null) { print.it(\"not found\"); }");
 			if (isAction) {
 				b.Append("\r\ne");
@@ -553,7 +595,7 @@ class Delm : KDialogWindow {
 		
 		var R = b.ToString();
 		
-		if (!forTest) _code.AaSetText(R, wndCode.Lenn());
+		if (!test) _code.AaSetText(R, wndCode.Lenn());
 		
 		return (R, wndVar);
 	}
@@ -617,7 +659,7 @@ class Delm : KDialogWindow {
 		if (_ElmFromPoint(mouse.xy) is not elm e) return;
 		
 		_elm = e;
-		_testedAction = 0;
+		_testedAction = _aActions[0];
 		_SetElm(true);
 		var w = this.Hwnd();
 		if (w.IsMinimized) {
@@ -791,7 +833,7 @@ class Delm : KDialogWindow {
 		if (_close && !hotkey) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_ActionIsFinder) {
+			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_CurrentAction.IsFinder) {
 				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
 			}
 			InsertCode.Statements(s);
@@ -813,7 +855,7 @@ class Delm : KDialogWindow {
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;
 		var elmSelected = _page == _commonPage ? _elm : _path[^1].ti.e;
 		
-		if (testAction) testAction = _ActionCanTest;
+		if (testAction) testAction = !_CurrentAction.NoTest;
 		bool autoInsert = captured && _cAutoInsert.IsChecked;
 		
 		_testing = true;
@@ -863,7 +905,7 @@ class Delm : KDialogWindow {
 				_Osd(osd, true);
 				return;
 			}
-			if (bad) {
+			if (bad && !_CurrentAction.IsFindAll) {
 				var s2 = "Try: <b>Add to path<> or/and <b>skip<>; check/uncheck/edit other controls.\r\nIf this element cannot be uniquely identified (no name etc), try another element and use <b>navig<>.";
 				if (_PathIsIntermediate()) s2 += "\r\nTry <b>skip<> -1 to search for next path element in all matching intermediate elements.";
 				string s1 = "Found wrong element";
@@ -1247,7 +1289,89 @@ class Delm : KDialogWindow {
 	
 	#region action
 	
-	int _iAction;
+	const string c_actions = """
+No action
+Invoke | Invoke()
+WebInvoke | WebInvoke()
+Mouse
+	Mouse click | MouseClick(%)
+	Mouse 2*click | MouseClickD(%)
+	Mouse right click | MouseClickR(%)
+	Mouse move | MouseMove(%)
+	-
+	Post click | PostClick(%)
+	Post 2*click | PostClickD(%)
+	Post right click | PostClickR(%)
+Keys, text
+	Send keys | SendKeys("")
+	Replace text | SendKeys("Ctrl+A", "!text")
+	Append text | SendKeys("Ctrl+End", "!text")
+	-
+	Click, send keys | MouseClick(); keys.send("")
+	Click, replace text | MouseClick(); keys.send("Ctrl+A", "!text")
+	Click, append text | MouseClick(); keys.send("Ctrl+End", "!text")
+Focus, select
+	Focus | Focus()
+	Select | Select()
+	Select and focus | Focus(true)
+Check
+	Check | Check(true)
+	Check (keys) | Check(true, "")
+	Check (click) | Check(true, e => e.MouseClick(%))
+	Check (post) | Check(true, e => e.PostClick(%))
+	-
+	Uncheck | Check(false)
+	Uncheck (keys) | Check(false, "")
+	Uncheck (click) | Check(false, e => e.MouseClick(%))
+	Uncheck (post) | Check(false, e => e.PostClick(%))
+ComboSelect
+	ComboSelect | ComboSelect(^)
+	ComboSelect (invoke) | ComboSelect(^, "i")
+	ComboSelect (keys) | ComboSelect(^, "k")
+	ComboSelect (mouse) | ComboSelect(^, "m")
+	Item... | #cs
+Expand
+	Expand | Expand(true)
+	Expand (keys) | Expand(true, "")
+	Expand (click) | Expand(true, e => e.MouseClick(%))
+	Expand (2*click) | Expand(true, e => e.MouseClickD(%))
+	Expand (post) | Expand(true, e => e.PostClick(%))
+	Expand (2*post) | Expand(true, e => e.PostClickD(%))
+	Path... | #ep
+	-
+	Collapse | Expand(false)
+	Collapse (keys) | Expand(false, "")
+	Collapse (click) | Expand(false, e => e.MouseClick(%))
+	Collapse (2*click) | Expand(false, e => e.MouseClickD(%))
+	Collapse (post) | Expand(false, e => e.PostClick(%))
+	Collapse (2*post) | Expand(false, e => e.PostClickD(%))
+ScrollTo | ScrollTo()
+WaitFor | WaitFor(0, o => !o.IsDisabled) | 1
+-
+FindAll
+	FindAll, foreach || 3
+	FindAll, for || 3
+	FindAll, Select || 3
+	FindAll, Select 2 || 3
+	FindAll, table || 3
+	-
+	Help - table | ?table | 3
+new elmFinder || 5
+""";
+	
+	record class _Action(string name, string code, int _flags, bool isSubmenu, bool inSubmenu, bool separatorBefore, bool isNone) {
+		public bool NoTest => 0 != (_flags & 1);
+		public bool IsFindAll => 0 != (_flags & 2);
+		public bool IsFinder => 0 != (_flags & 4);
+		public bool IsMouse => code?.Contains('%') == true;
+	}
+	
+	List<_Action> _aActions; //for menu
+	_Action _selectedAction, _testedAction;
+	
+	_Action _CurrentAction => !_selectedAction.isNone ? _selectedAction : _testedAction;
+	
+	_Action _ActionFind(string name) => _aActions.FirstOrDefault(o => o.name == name && !o.isSubmenu) ?? _aActions[0];
 	
 	void _ActionInit() {
 		_cbAction.Items.Add("");
@@ -1256,161 +1380,102 @@ class Delm : KDialogWindow {
 			_ActionMenu(false);
 		};
 		
-		var s = App.Settings.delm.actionn;
-		_ActionChange(s.NE() ? 0 : _ActionFind(s));
+		_aActions = new();
+		var a = c_actions.Lines();
+		bool separatorBefore = false;
+		for (int i = 0; i < a.Length; i++) {
+			var k = a[i].Split('|', StringSplitOptions.TrimEntries);
+			var name = k[0];
+			bool inSubmenu = a[i][0] == '\t';
+			if (k.Length == 1) {
+				if (name == "-") { separatorBefore = true; continue; }
+				var x = new _Action(name, null, 0, i > 0, false, separatorBefore, i == 0);
+				_aActions.Add(x);
+			} else {
+				var x = new _Action(name, k[1], k.Length < 3 ? 0 : k[2].ToInt(), false, inSubmenu, separatorBefore, false);
+				_aActions.Add(x);
+			}
+			separatorBefore = false;
+		}
+		
+		_testedAction = _aActions[0];
+		_ActionChange(_ActionFind(App.Settings.delm.actionn));
 	}
 	
-	void _ActionChange(int i) {
-		_iAction = i;
-		_cbAction.Items[0] = s_actions[i].name;
+	void _ActionChange(_Action action) {
+		_selectedAction = action;
+		_cbAction.Items[0] = action.name;
 		_cbAction.SelectedIndex = 0;
 		_ActionSetControlsVisibility();
 		if (_page != null) _FormatCode();
 	}
 	
-	static readonly (string name, string code)[] s_actions = {
-		("No action", null),
-		("Invoke", "Invoke()"),
-		("WebInvoke", "WebInvoke()"),
-		//("JavaInvoke", "JavaInvoke()"), //rare. Usually Invoke is used. Would need UI for action name.
-		("Mouse", ""), //submenus start with ("Name", "") and end with (null, null)
-		("Mouse click", "MouseClick(%)"),
-		("Mouse 2*click", "MouseClickD(%)"),
-		("Mouse right click", "MouseClickR(%)"),
-		("Mouse move", "MouseMove(%)"),
-		("", null),
-		("Post click", "PostClick(%)"),
-		("Post 2*click", "PostClickD(%)"),
-		("Post right click", "PostClickR(%)"),
-		(null, null),
-		("Keys, text", ""),
-		("Send keys", "SendKeys(\"\")"),
-		("Replace text", "SendKeys(\"Ctrl+A\", \"!text\")"),
-		("Append text", "SendKeys(\"Ctrl+End\", \"!text\")"),
-		("", null),
-		("Click, send keys", "MouseClick(); keys.send(\"\")"),
-		("Click, replace text", "MouseClick(); keys.send(\"Ctrl+A\", \"!text\")"),
-		("Click, append text", "MouseClick(); keys.send(\"Ctrl+End\", \"!text\")"),
-		(null, null),
-		("Focus, select", ""),
-		("Focus", "Focus()"),
-		("Select", "Select()"),
-		("Select and focus", "Focus(true)"),
-		(null, null),
-		("Check", ""),
-		("Check", "Check(true)"),
-		("Check (keys)", "Check(true, \"\")"),
-		("Check (click)", "Check(true, e => e.MouseClick(%))"),
-		("Check (post)", "Check(true, e => e.PostClick(%))"),
-		("", null),
-		("Uncheck", "Check(false)"),
-		("Uncheck (keys)", "Check(false, \"\")"),
-		("Uncheck (click)", "Check(false, e => e.MouseClick(%))"),
-		("Uncheck (post)", "Check(false, e => e.PostClick(%))"),
-		(null, null),
-		("ComboSelect", ""),
-		("ComboSelect", "ComboSelect(^)"),
-		("ComboSelect (invoke)", "ComboSelect(^, \"i\")"),
-		("ComboSelect (keys)", "ComboSelect(^, \"k\")"),
-		("ComboSelect (mouse)", "ComboSelect(^, \"m\")"),
-		("Item...", "#cs"),
-		(null, null),
-		("Expand", ""),
-		("Expand", "Expand(true)"),
-		("Expand (keys)", "Expand(true, \"\")"),
-		("Expand (click)", "Expand(true, e => e.MouseClick(%))"),
-		("Expand (2*click)", "Expand(true, e => e.MouseClickD(%))"),
-		("Expand (post)", "Expand(true, e => e.PostClick(%))"),
-		("Expand (2*post)", "Expand(true, e => e.PostClickD(%))"),
-		("Path...", "#ep"),
-		("", null),
-		("Collapse", "Expand(false)"),
-		("Collapse (keys)", "Expand(false, \"\")"),
-		("Collapse (click)", "Expand(false, e => e.MouseClick(%))"),
-		("Collapse (2*click)", "Expand(false, e => e.MouseClickD(%))"),
-		("Collapse (post)", "Expand(false, e => e.PostClick(%))"),
-		("Collapse (2*post)", "Expand(false, e => e.PostClickD(%))"),
-		(null, null),
-		("ScrollTo", "ScrollTo()"),
-
-		//these must be at the end
-		("WaitFor", "WaitFor(0, o => !o.IsDisabled)"), //must be before the last
-		("new elmFinder", null), //must be the last
-	};
-	
-	int _ActionMenu(bool test) {
+	_Action _ActionMenu(bool test) {
 		var m = new popupMenu();
-		for (int i = test ? 1 : 0; i < s_actions.Length - (test ? 2 : 0); i++) {
-			var (name, code) = s_actions[i];
-			if (code == "") { //submenu
-				int from = ++i, to = i = Array.FindIndex(s_actions, i, o => o.name == null);
-				m.Submenu(name, m => { for (int i = from; i < to; i++) _Add(m, i); });
-			} else _Add(m, i);
+		for (int i = test ? 1 : 0; i < _aActions.Count; i++) {
+			var x = _aActions[i];
+			if (test && x.NoTest) break;
+			if (x.isSubmenu) {
+				if (x.separatorBefore) m.Separator();
+				int from = ++i, to = i;
+				while (to < _aActions.Count && _aActions[to].inSubmenu) i = to++;
+				m.Submenu(x.name, m => { for (int i = from; i < to; i++) _Add(m, i); });
+			} else {
+				_Add(m, i);
+			}
 			
 			void _Add(popupMenu m, int i) {
-				if (test) if (s_actions[i].code?.Starts('#') ?? false) return;
-				var s = s_actions[i].name;
-				if (s == "") m.Separator(); else m.Add(i + 1, s);
+				var x = _aActions[i];
+				if (test && x.code is ['#' or '?', ..]) return;
+				if (x.separatorBefore) m.Separator();
+				m.Add(i + 1, x.name);
 			}
 		}
 		
 		int ia;
-		if (test) {
+		if (test) { //called when testing if no action selected
 			ia = m.Show(owner: this);
-		} else { //called when testing if no action selected
+		} else {
 			var r = _cbAction.RectInScreen();
 			ia = m.Show(PMFlags.AlignRectBottomTop, new POINT(r.left, r.bottom), r, owner: this);
 		}
-		if (--ia < 0) return 0;
+		if (--ia < 0) return _aActions[0];
+		var action = _aActions[ia];
 		
-		if (!test) _testedAction = 0;
-		
-		if (s_actions[ia].code is string s1 && s1.Starts('#')) {
-			if (!_ActionInputStringArg(s1, out string selectAction)) return 0;
-			//select the first action in this submenu, but don't change if was selected an action in this submenu
-			ia = s_actions[_ActionIndex].name.Starts(selectAction) ? _ActionIndex : _ActionFind(selectAction);
-			if (test && ia == _testedAction) _FormatCode();
+		if (!test) {
+			_testedAction = _aActions[0];
+			
+			if (action.code is string s1) {
+				if (s1.Starts('#')) {
+					if (!_ActionInputStringArg(s1, out string selectAction)) return _aActions[0];
+					//select the first action in this submenu, but don't change if was selected an action in this submenu
+					action = _selectedAction.name.Starts(selectAction) ? _CurrentAction : _ActionFind(selectAction);
+					if (test && ReferenceEquals(action, _testedAction)) _FormatCode();
+				} else if (s1.Starts('?')) {
+					if (s1 == "?table") {
+						Panels.Cookbook.OpenRecipe("Extract table*UI*");
+						action = _ActionFind("FindAll, table");
+					}
+				}
+			}
 		}
 		
 		if (!test) {
-			_ActionChange(ia);
-		} else if (ia != _testedAction) {
-			_testedAction = ia;
+			_ActionChange(action);
+		} else if (!ReferenceEquals(action, _testedAction)) {
+			_testedAction = action;
 			_ActionSetControlsVisibility();
 			_FormatCode();
 		}
-		return ia;
+		return action;
 	}
-	
-	int _ActionFind(string name) {
-		if (!name.NE()) {
-			var a = s_actions;
-			for (int i = 0; i < a.Length; i++) if (a[i].name == name && a[i].code != "") return i;
-		}
-		Debug_.Print(name);
-		return 0; //No action (not -1)
-	}
-	
-	int _ActionIndex => _iAction > 0 ? _iAction : _testedAction;
-	
-	static bool _ActionIsMouse(int i) => s_actions[i].code?.Contains('%') ?? false;
-	//bool _ActionIsMouse => _ActionIsMouse(_ActionIndex());
-	
-	bool _ActionIsAction => _ActionIndex is int i && i > 0 && i < s_actions.Length - 1;
-	
-	bool _ActionIsFinder => _iAction == s_actions.Length - 1;
-	
-	bool _ActionCanTest => _ActionIndex is int i && i < s_actions.Length - 2; //if 0, will show menu
 	
 	string _ActionGetCode(bool test) {
-		int ia = test ? (_iAction > 0 ? _iAction : _ActionMenu(true)) : _ActionIndex;
+		var action = !test ? _CurrentAction : !_selectedAction.isNone ? _selectedAction : _ActionMenu(true);
 		
-		if (test && ia == 2) { //WebInvoke -> Invoke, to avoid waiting
-			Debug.Assert(s_actions[2].name == "WebInvoke" && s_actions[1].name == "Invoke");
-			ia = 1;
-		}
+		if (test && action.name == "WebInvoke") action = _ActionFind("Invoke"); //avoid waiting
 		
-		var s = s_actions[ia].code;
+		var s = action.code;
 		if (s != null) {
 			int j = s.IndexOf('%'); //mouse x y placeholder
 			if (j > 0) {
@@ -1440,7 +1505,6 @@ class Delm : KDialogWindow {
 		}
 		return s;
 	}
-	int _testedAction;
 	string _actionExpandPath, _actionComboSelectItem;
 	
 	bool _ActionInputStringArg(string what, out string selectAction) {
@@ -1463,13 +1527,13 @@ class Delm : KDialogWindow {
 	}
 	
 	void _ActionSetControlsVisibility() {
-		int i = _ActionIndex;
-		bool isMouse = _ActionIsMouse(i);
+		var action = _CurrentAction;
+		bool isMouse = action.IsMouse;
 		_xy.Visible = isMouse;
 		_cScroll.Visibility = isMouse ? Visibility.Visible : Visibility.Hidden;
-		bool vis2 = i < s_actions.Length - 1;
-		_wait.Visible = vis2;
-		_cException.Visibility = vis2 ? Visibility.Visible : Visibility.Hidden;
+		bool isFind = !(action.IsFindAll || action.IsFinder);
+		_wait.Visible = isFind;
+		_cException.Visibility = isFind ? Visibility.Visible : Visibility.Hidden;
 	}
 	
 	#endregion
@@ -1483,7 +1547,7 @@ class Delm : KDialogWindow {
 		//var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cNS.Tooltip = "Insert code without { } and don't use elm e with action";
 		m.Separator();
 		m["Save action"] = _ => {
-			App.Settings.delm.actionn = s_actions[_iAction].name;
+			App.Settings.delm.actionn = _selectedAction.name;
 			_SetOpt(_EOptions.MouseXY, _xy.c.IsChecked);
 			_SetOpt(_EOptions.MouseScroll, _cScroll.IsChecked);
 		}; m.Last.Tooltip = "Let the tool start with current action and its settings";

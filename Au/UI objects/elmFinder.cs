@@ -116,7 +116,7 @@ public unsafe class elmFinder {
 	/// <param name="skip">
 	/// 0-based index of matching UI element to use. Will skip this number of matching elements.
 	/// Value -1 means "any", and can be useful when this finder is intermediate (ie not the last) in a path or when it has <i>navig</i>. If intermediate, will search for next element in all matching intermediate elements. If has <i>navig</i>, will retry with other matching elements if fails to navigate in the first found. It is slower and not so often useful, therefore the default value of this parameter is 0, not -1.
-	/// Not used by <see cref="FindAll"/>, unless it is not in the last part of path.
+	/// Cannot be used with <see cref="FindAll"/>, unless it is not in the last part of path.
 	/// </param>
 	/// <param name="navig">If not null, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
 	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b> when appending (only the first finder can have these flags).</exception>
@@ -487,6 +487,7 @@ public unsafe class elmFinder {
 	public elm[] FindAll() {
 		var a = new List<elm>();
 		var last = _Last();
+		if (last._skip != 0) throw new ArgumentException("FindAll does not support *skip* in the last part of path");
 		(t_findAll ??= new()).Add(last, a);
 		try { Find_(_elm != null, _wnd, _elm); }
 		finally { t_findAll.Remove(last); }

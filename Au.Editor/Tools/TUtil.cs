@@ -727,25 +727,27 @@ static class TUtil {
 	public static void ShowOsdRect(RECT r, bool error = false, bool limitToScreen = false, Dispatcher disp = null) {
 		if (disp != null) {
 			disp.InvokeAsync(() => ShowOsdRect(r, error, limitToScreen));
-			return;
+		} else {
+			int thick = error ? 6 : 2;
+			var osr = new osdRect { Color = error ? 0xFF0000 : 0x0000FF, Thickness = thick * 2, TopmostWorkaround_ = true };
+			r.Inflate(thick, thick); //2 pixels inside, 2 outside
+			if (limitToScreen) {
+				var k = screen.of(r).Rect;
+				r.Intersect(k);
+			} else _LimitInsaneRect(ref r);
+			osr.Rect = r;
+			_OsdRectShow(osr, error);
 		}
-		
-		int thick = error ? 6 : 2;
-		var osr = new osdRect { Color = 0xFFFF00, Thickness = thick * 2, TopmostWorkaround_ = true }; //yellow
-		r.Inflate(thick, thick); //2 pixels inside, 2 outside
-		if (limitToScreen) {
-			var k = screen.of(r).Rect;
-			r.Intersect(k);
-		} else _LimitInsaneRect(ref r);
-		osr.Rect = r;
+	}
+	
+	static void _OsdRectShow(osdRect osr, bool error = false) {
 		t_hideCapturingRect = true;
 		osr.Show();
-		
 		int i = 0;
 		timer.every(250, t => {
-			if (i++ < 5) {
+			if (i++ < 4) {
 				osr.Hwnd.ZorderTopRaw_();
-				osr.Color = (i & 1) != 0 ? (error ? 0xFF0000 : 0x0000FF) : 0xFFFF00; //(red : blue) : yellow
+				osr.Color = (i & 1) != 0 ? 0xFFFF00 : error ? 0xFF0000 : 0x0000FF;
 			} else {
 				t.Stop();
 				osr.Dispose();
@@ -761,6 +763,22 @@ static class TUtil {
 		if (r.Width > 2000 || r.Height > 1200) {
 			var rs = screen.virtualScreen; rs.Inflate(100, 100);
 			r.Intersect(rs);
+		}
+	}
+	
+	/// <summary>
+	/// Briefly shows multiple on-screen rectangles.
+	/// If disp, shows async in its thread.
+	/// Can modify <i>a</i> elements.
+	/// </summary>
+	public static void ShowOsdRects(RECT[] a, Dispatcher disp = null) {
+		if (disp != null) {
+			disp.InvokeAsync(() => ShowOsdRects(a));
+		} else {
+			var osr = new osdRect { Color = 0x0000FF, Thickness = 2, TopmostWorkaround_ = true };
+			for (int i = 0; i < a.Length; i++) _LimitInsaneRect(ref a[i]);
+			osr.SetRects(a);
+			_OsdRectShow(osr);
 		}
 	}
 	
@@ -935,11 +953,12 @@ static class TUtil {
 	/// Executes test code that finds an object in window.
 	/// Returns the found object, speed and info strings to display. On error speed negative.
 	/// </summary>
+	/// <param name="owner">Owner dialog.</param>
 	/// <param name="code">
 	/// Must start with one or more lines that find window or control and set wnd variable named <i>wndVar</i>. Can be any code.
-	/// The last line must be a 'find object' function call, like <c>uiimage.find(...);</c>. No 'var x = ', no 'not found' exception, no wait, no action.
+	/// The last line must be a 'find object' or 'find all objects' function call, like <c>uiimage.find(...);</c>. No 'var x = ', no 'not found' exception, no wait, no action.
+	/// If 'find all objects', will display rectangles of all found objects and return the first found object.
 	/// </param>
-	/// <param name="owner">Owner dialog.</param>
 	/// <param name="wndVar">Name of wnd variable of the window or control in which to search.</param>
 	/// <param name="w">Window or control in which to search.</param>
 	/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
@@ -1021,9 +1040,22 @@ static class TUtil {
 			else sSpeed = t0.ToS() + " + " + t1.ToS() + " ms";
 			
 			if (r.obj is wnd w1 && w1.Is0) r.obj = null;
+			
+			//FindAll used instead of Find?
+			var en = r.obj as IEnumerable<object>;
+			if (en != null && !en.Any()) r.obj = null;
+			
 			if (r.obj != null) {
-				var re = getRect(r.obj);
-				ShowOsdRect(re, disp: rectDisp);
+				RECT re;
+				if (en != null) {
+					var ar = en.Select(o => getRect(o)).ToArray();
+					re = RECT.FromLTRB(ar.Min(o => o.left), ar.Min(o => o.top), ar.Max(o => o.right), ar.Max(o => o.bottom));
+					r.obj = en.First();
+					ShowOsdRects(ar, disp: rectDisp);
+				} else {
+					re = getRect(r.obj);
+					ShowOsdRect(re, disp: rectDisp);
+				}
 				
 				//if dlg covers the found object, temporarily minimize it (may be always-on-top) and activate object's window. Never mind owners.
 				var wTL = r.w.Window;

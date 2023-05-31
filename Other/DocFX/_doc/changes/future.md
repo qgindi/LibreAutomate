@@ -15,7 +15,9 @@ New classes:
 - 
 
 New members:
-- 
+- **osdRect.SetRects**.
+- **Triggers.RunThread**.
+- **run.thread** overload.
 
 New parameters:
 - 

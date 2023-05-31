@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+
+namespace Au.Controls;
 
 public class KListBoxItemWithImage : ListBoxItem {
 	readonly TextBlock _tb;

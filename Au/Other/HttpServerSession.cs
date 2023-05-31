@@ -1,3 +1,7 @@
+//TODO: in cookbook write how other programs can communicate with a LA script using HTTP server. QM, AHK, etc.
+//	And maybe add a faster way, eg a pipe server; probably not COM (problems with UAC, registration, etc).
+//	TEST: try NativeAOT to create dlls with C exports. Probably will need .NET7+.
+
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
@@ -630,7 +634,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Returns <see cref="Text"/>.
 		/// </summary>
-		public static implicit operator string(HSContentPart p) =>p.Text;
+		public static implicit operator string(HSContentPart p) => p.Text;
 		
 		System.Net.Mime.ContentDisposition _ContentDisposition() {
 			if (_contentDisposition == null && Headers.TryGetValue("Content-Disposition", out var s)) try { _contentDisposition = new(s); } catch {  }

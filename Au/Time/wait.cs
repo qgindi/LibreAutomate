@@ -59,7 +59,7 @@ public static partial class wait {
 			if (t >= 500) { timeMilliseconds = (int)t; goto g1; }
 		}
 	}
-
+	
 	/// <summary>
 	/// Waits <i>timeSeconds</i> seconds.
 	/// The same as <see cref="ms"/>, but the time is specified in seconds, not milliseconds.
@@ -80,7 +80,7 @@ public static partial class wait {
 		if ((uint)timeSeconds > int.MaxValue / 1000) throw new ArgumentOutOfRangeException();
 		ms(timeSeconds * 1000);
 	}
-
+	
 	/// <summary>
 	/// Waits <i>timeSeconds</i> seconds.
 	/// The same as <see cref="ms"/>, but the time is specified in seconds, not milliseconds.
@@ -101,59 +101,131 @@ public static partial class wait {
 	//Maybe this should not be an extension method.
 	//	Code like 0.5.s() looks weird and better should use 500.ms(). Rarely need non-integer time when > 1 s.
 	//	But: 1. Symmetry. 2. Makes easier to convert QM2 code, like 0.5 to 0.5.s(); not 500.ms();.
-
+	
 	/// <summary>
 	/// Waits <i>timeMS</i> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
 	/// </summary>
 	/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <remarks>
-	/// Unlike <see cref="ms"/>, this function retrieves and dispatches Windows messages, calls .NET event handlers, hook procedures, timer functions, COM/RPC, etc. Supports APC.
+	/// Unlike <see cref="ms"/>, this function retrieves and dispatches Windows messages, calls .NET event handlers, hook procedures, timer functions, COM/RPC, APC, etc.
 	/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/<b>Task</b>. In some places this function does not work as expected, for example in <b>Form</b>/<b>Control</b> mouse event handlers .NET blocks other mouse events.
-	/// Be careful, this function is as dangerous as <see cref="System.Windows.Forms.Application.DoEvents"/>.
 	/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="doEvents()"/>.
+	/// If <i>timeMS</i> is -1, returns when receives <msdn>WM_QUIT</msdn> message.
 	/// </remarks>
 	/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not -1 (<b>Timeout.Infinite</b>).</exception>
 	/// <seealso cref="forMessagesAndCondition"/>
 	/// <seealso cref="forPostedMessage"/>
-	public static void doEvents(int timeMS) {
-		SleepDoEvents_(timeMS);
-	}
-
-	/// <summary>
-	/// Same as <b>doEvents(int)</b> but with parameter <i>noSetPrecision</i>.
-	/// </summary>
-	internal static unsafe void SleepDoEvents_(int timeMS, bool noSetPrecision = false) {
-		if (timeMS < 0) {
-			if (timeMS != -1) throw new ArgumentOutOfRangeException();
-			for (; ; ) {
-				var k = Api.MsgWaitForMultipleObjectsEx(0, null, -1, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
-				if (k == 0) doEvents();
-			}
-		} else if (timeMS == 0) {
+	public static unsafe void doEvents(int timeMS) {
+		if (timeMS < -1) throw new ArgumentOutOfRangeException();
+		if (timeMS == 0) {
+			Api.SleepEx(0, true); //call APC
 			doEvents();
 		} else {
-			if (!noSetPrecision) SleepPrecision_.TempSet1_(timeMS);
-
-			Wait_(timeMS, WHFlags.DoEvents, null, null);
+			using var mp = new MessagePump_();
+			for (long time = timeMS, timePrev = 0; ;) {
+				if (timeMS > 0) {
+					long timeNow = computer.tickCountWithoutSleep;
+					if (timePrev > 0) time -= timeNow - timePrev;
+					if (time <= 0) return;
+					timePrev = timeNow;
+				}
+				switch (Api.MsgWaitForMultipleObjectsEx(0, null, (int)time, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE)) {
+				case 0: if (!mp.Pump() && timeMS < 0) return; break;
+				case Api.WAIT_TIMEOUT: return;
+				case Api.WAIT_IO_COMPLETION: break;
+				default: throw new Win32Exception();
+				}
+			}
 		}
+		//info: Thread.Sleep is alertable too. One reason I know is Thread.Interrupt; but with doEvents it does not work.
 	}
-
+	
+	internal struct MessagePump_ : IDisposable {
+		int? _quit;
+		
+		/// <summary>
+		/// If <see cref="Pump"/> received WM_QUIT, calls <b>PostQuitMessage</b>, unless detects that it could cause infinite loop.
+		/// </summary>
+		public void Dispose() {
+			if (_quit != null) {
+				//prevent infinite loop when eg the caller uses a loop like in doEvents(int) and ignores WM_QUIT
+				var stack = new StackTrace(false).FrameCount;
+				if (t_doeventsStack == 0 || stack < t_doeventsStack) {
+					t_doeventsStack = stack;
+					Api.PostQuitMessage(_quit.Value);
+				} else {
+					print.warning("duplicate WM_QUIT");
+				}
+				_quit = null;
+			}
+		}
+		[ThreadStatic] static int t_doeventsStack;
+		
+		/// <summary>
+		/// Calls PeekMessage/TranslateMessage/DispatchMessage while there are messages.
+		/// </summary>
+		/// <returns>false if received WM_QUIT.</returns>
+		public bool Pump() {
+			while (Api.PeekMessage(out var m)) {
+				if (m.message == Api.WM_QUIT) { _quit = (int)m.wParam; return false; }
+				Api.TranslateMessage(m);
+				Api.DispatchMessage(m);
+			}
+			return true;
+		}
+		
+		/// <summary>
+		/// Like <b>Pump</b>, but can call a callback function. Used by <see cref="Wait_(long, WHFlags, object, WaitVariable_, IntPtr[])"/>.
+		/// </summary>
+		/// <param name="msgCallback">
+		/// null or callback function of type:
+		/// <br/>• WPMCallback - called before dispatching a message. If returns true, not called for other messages. Can modify the MSG. Can set MSG.message = 0 to prevent dispatching it.
+		/// <br/>• Func&lt;bool&gt; - called after dispatching all messages.
+		/// </param>
+		/// <returns>true if <i>msgCallback</i> returned true.</returns>
+		public bool PumpWithCallback(object msgCallback) {
+			bool R = false;
+			while (Api.PeekMessage(out var m)) {
+				if (msgCallback is WPMCallback callback1) {
+					if (callback1(ref m)) { msgCallback = null; R = true; }
+					if (m.message == 0) continue;
+				}
+				if (m.message == Api.WM_QUIT) { _quit = (int)m.wParam; continue; } //now ignore, but finally repost
+				Api.TranslateMessage(m);
+				Api.DispatchMessage(m);
+			}
+			if (msgCallback is Func<bool> callback2) R = callback2();
+			return R;
+		}
+		
+		//note: never use "dispatch only sent messages". It's dangerous and not useful.
+		//	If thread has windows, hangs if we don't get posted messages.
+		//	Else PeekMessage usually does not harm.
+		
+		//note: with PeekMessage don't use |Api.PM_QS_SENDMESSAGE when don't need posted messages.
+		//	Then setwineventhook hook does not work. Although setwindowshookex hook works. COM RPC not tested.
+	}
+	
 	/// <summary>
 	/// Retrieves and dispatches events and Windows messages from the message queue of this thread.
 	/// </summary>
+	/// <returns>false if received <b>WM_QUIT</b> message.</returns>
 	/// <remarks>
 	/// Similar to <see cref="System.Windows.Forms.Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
-	/// Be careful, this function is as dangerous as <b>Application.DoEvents</b>.
 	/// </remarks>
-	public static void doEvents() {
-		while (Api.PeekMessage(out var m)) {
-			//WndUtil.PrintMsg(m);
-			if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); break; }
-			Api.TranslateMessage(m);
-			Api.DispatchMessage(m);
-		}
+	public static bool doEvents() {
+		using var mp = new MessagePump_();
+		return mp.Pump();
 	}
-
+	
+	/// <summary>
+	/// Calls <see cref="SleepPrecision_.TempSet1_"/> and <see cref="doEvents(int)"/>.
+	/// </summary>
+	internal static unsafe void doEventsPrecise_(int timeMS) {
+		SleepPrecision_.TempSet1_(timeMS);
+		doEvents(timeMS);
+	}
+	
 	/// <summary>
 	/// Temporarily changes the time resolution/precision of Thread.Sleep and some other functions.
 	/// </summary>
@@ -185,9 +257,9 @@ public static partial class wait {
 	/// </example>
 	internal sealed class SleepPrecision_ : IDisposable {
 		//info: this class could be public, but probably not useful. wait.ms automatically sets 1 ms period if need.
-
+		
 		int _period;
-
+		
 		/// <summary>
 		/// Calls API <msdn>timeBeginPeriod</msdn>.
 		/// </summary>
@@ -201,7 +273,7 @@ public static partial class wait {
 			if (Api.timeBeginPeriod((uint)periodMS) != 0) return;
 			//print.it("set");
 			_period = periodMS;
-
+			
 			//Bug in OS or drivers or some apps:
 			//	On my main PC often something briefly sets 0.5 ms resolution.
 			//	If at that time this process already has set a resolution of more than 1 ms, then after that time this process cannot change resolution.
@@ -210,7 +282,7 @@ public static partial class wait {
 			//		timeBeginPeriod(periodMS);
 			//		var r=(int)Current; if(r>periodMS) { timeEndPeriod(periodMS); timeEndPeriod(r); timeBeginPeriod(r); timeBeginPeriod(periodMS); }
 		}
-
+		
 		/// <summary>
 		/// Calls API <msdn>timeEndPeriod</msdn>.
 		/// </summary>
@@ -218,16 +290,16 @@ public static partial class wait {
 			_Dispose();
 			GC.SuppressFinalize(this);
 		}
-
+		
 		void _Dispose() {
 			if (_period == 0) return;
 			//print.it("revoke");
 			Api.timeEndPeriod((uint)_period); _period = 0;
 		}
-
+		
 		///
 		~SleepPrecision_() { _Dispose(); }
-
+		
 		/// <summary>
 		/// Gets current actual system time resolution (period).
 		/// </summary>
@@ -238,7 +310,7 @@ public static partial class wait {
 				return (float)t / 10000;
 			}
 		}
-
+		
 		/// <summary>
 		/// Temporarily sets the system wait precision to 1 ms. It will be revoked after the specified time or when this process ends.
 		/// If already set, just updates the revoking time.
@@ -282,16 +354,16 @@ public static partial class wait {
 		}
 		static SleepPrecision_ s_TS1_Obj;
 		static long s_TS1_EndTime;
-
+		
 		//never mind: finalizer is not called on process exit.
 		//	Not a problem, because OS clears our set value (tested). Or we could use process.thisProcessExit event.
-
+		
 		/// <summary>
 		/// Calls TempSet1 if sleepTimeMS is 1-89.
 		/// </summary>
 		/// <param name="sleepTimeMS">milliseconds of the caller 'sleep' function.</param>
 		internal static void TempSet1_(int sleepTimeMS) {
-			if (sleepTimeMS < 90 && sleepTimeMS > 0) TempSet1(1111);
+			if (sleepTimeMS is < 90 and > 0) TempSet1(1111);
 		}
 	}
 }

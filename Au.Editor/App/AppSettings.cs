@@ -19,6 +19,8 @@ record AppSettings : JSettings {
 	public bool runHidden;
 	public string user, workspace;
 	public string[] recentWS;
+	public bool checkForUpdates;
+	public int checkForUpdatesDay;
 
 	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
 	//	Somehow .NET does not support struct and record struct, InvalidCastException.

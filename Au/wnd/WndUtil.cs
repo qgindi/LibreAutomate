@@ -792,7 +792,7 @@ print.it(s2);
 			var x = new WDLArgs();
 			for (; ; ) {
 				if (Api.GetCapture() != w) return false;
-				if (Api.GetMessage(out x.msg) <= 0) {
+				if (!Api.GetMessage(out x.msg)) {
 					if (x.msg.message == Api.WM_QUIT) Api.PostQuitMessage((int)x.msg.wParam);
 					break;
 				}
@@ -869,7 +869,6 @@ print.it(s2);
 		}
 
 		/// <summary>
-		/// Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
 		/// Calls API <msdn>PostThreadMessage</msdn>. 
 		/// </summary>
 		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
