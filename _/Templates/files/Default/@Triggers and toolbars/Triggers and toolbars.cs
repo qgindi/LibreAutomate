@@ -57,8 +57,8 @@ partial class Program {
 			catch (TargetInvocationException ex) { print.it(ex.InnerException); return; }
 		}
 		
-		run.thread(Triggers.Run);
-		wait.doEvents(-1);
+		//run triggers in other thread, to avoid blocking hooks when getting icons etc
+		Triggers.RunThread();
 	}
 	
 	[AttributeUsage(AttributeTargets.Method)] class TriggersAttribute : Attribute { }

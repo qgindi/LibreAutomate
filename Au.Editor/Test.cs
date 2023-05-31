@@ -32,6 +32,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Threading;
 //using System.Net.Http;
 
 #if TRACE
@@ -39,8 +40,11 @@ using System.Windows.Media;
 #pragma warning disable 169
 
 static unsafe class Test {
-	
 	public static void FromMenubar() {
+		//System.Windows.Forms.Application.DoEvents();
+		var _dispFrame = new DispatcherFrame();
+		//Dispatcher.PushFrame(_dispFrame);
+
 		//print.clear();
 		//HttpResponseMessage m;m.
 		//HttpRequestMessage m;m.

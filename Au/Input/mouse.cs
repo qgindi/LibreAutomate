@@ -449,7 +449,7 @@ namespace Au {
 		}
 
 		static void _Sleep(int ms) {
-			wait.doEvents(ms);
+			wait.doEventsPrecise_(ms);
 
 			//note: always doevents, even if window from point is not of our thread. Because:
 			//	Cannot always reliably detect what window will receive the message and what then happens.

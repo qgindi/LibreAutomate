@@ -175,7 +175,7 @@ partial class AuDocs {
 			
 			//<msdn>...</msdn> -> <a href="google search in microsoft.com">
 			nr += s.RxReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:microsoft.com+$1"">$1</a>", out s);
-			if (nr > 0) print.it("SHOULDDO: if using <google> or <msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.");
+			if (nr > 0) print.warning("SHOULDDO: if using <google> or <msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.");
 		}
 		
 		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.

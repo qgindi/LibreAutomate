@@ -8,6 +8,8 @@ using System.Windows.Media;
 using System.Windows.Documents;
 using EStyle = CiStyling.EStyle;
 
+//TODO: check for new LA version.
+
 class DOptions : KDialogWindow {
 	public static void AaShow() {
 		if (s_dialog == null) {
@@ -65,7 +67,8 @@ class DOptions : KDialogWindow {
 		//left column
 		b.StartStack(vertical: true);
 		b.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, and don't change text, because used for the forum registration security question
-		b.Add(out KCheckBox startHidden, "Start hidden; hide when closing");
+		b.Add(out KCheckBox startHidden, "Start hidden; hide when closing").Checked(App.Settings.runHidden);
+		b.Add(out KCheckBox checkForUpdates, "Check for updates").Checked(App.Settings.checkForUpdates);
 		b.End();
 		//right column
 		b.StartStack(vertical: true);
@@ -85,7 +88,7 @@ class DOptions : KDialogWindow {
 		bool init_startWithWin = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string s1 && filesystem.more.isSameFile(s1.Trim('\"'), process.thisExePath);
 		startWithWin.IsChecked = init_startWithWin;
 		if (App.IsPortable) startWithWin.Checked += (_, _) => dialog.showWarning("Portable mode warning", "This setting will be saved in the Registry. Portable apps should not do it.", owner: this);
-		startHidden.IsChecked = App.Settings.runHidden;
+		
 		string init_startupScripts = App.Model.StartupScriptsCsv;
 		startupScripts.Text = init_startupScripts;
 		
@@ -99,6 +102,7 @@ class DOptions : KDialogWindow {
 				catch (Exception ex) { print.it("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 			}
 			App.Settings.runHidden = startHidden.IsChecked;
+			App.Settings.checkForUpdates = checkForUpdates.IsChecked;
 			
 			var s = startupScripts.Text;
 			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;

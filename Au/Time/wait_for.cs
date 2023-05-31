@@ -1,7 +1,5 @@
-namespace Au
-{
-	public static partial class wait
-	{
+namespace Au {
+	public static partial class wait {
 		/// <summary>
 		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
@@ -19,7 +17,7 @@ namespace Au
 				if (!to.Sleep()) return r;
 			}
 		}
-
+		
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).
 		/// </summary>
@@ -39,18 +37,21 @@ namespace Au
 		public static int forHandle(double secondsTimeout, WHFlags flags, params IntPtr[] handles) {
 			return WaitS_(secondsTimeout, flags, null, null, handles);
 		}
-
-		//Waits for handles or/and msgCallback returning true or/and stop becoming true.
-		//Calls Wait_(long timeMS, ...).
-		//Returns:
-		//	0 if timeout (if secondsTimeout<0),
-		//	1-handles.Length if signaled,
-		//	-(1-handles.Length) if abandoned mutex,
-		//	1+handles.Length if msgCallback returned true,
-		//	2+handles.Length if stop became true.
+		
+		/// <summary>
+		/// Waits for handles or/and msgCallback returning true or/and stopVar becoming true.
+		/// Calls <c>Wait_(long timeMS, ...)</c>.
+		/// </summary>
+		/// <returns>
+		/// <br/>• 0 if timeout (if secondsTimeout&lt;0),
+		/// <br/>• 1-handles.Length if signaled,
+		/// <br/>• -(1-handles.Length) if abandoned mutex,
+		/// <br/>• 1+handles.Length if msgCallback returned true,
+		/// <br/>• 2+handles.Length if stop became true.
+		/// </returns>
 		internal static int WaitS_(double secondsTimeout, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles) {
 			long timeMS = _TimeoutS2MS(secondsTimeout, out bool canThrow);
-
+			
 			int r = Wait_(timeMS, flags, msgCallback, stopVar, handles);
 			if (r < 0) throw new AuException(0);
 			if (r == Api.WAIT_TIMEOUT) {
@@ -60,17 +61,17 @@ namespace Au
 			r++; if (r > Api.WAIT_ABANDONED_0) r = -r;
 			return r;
 		}
-
+		
 		static long _TimeoutS2MS(double s, out bool canThrow) {
 			canThrow = false;
 			if (s == 0) return -1;
 			if (s < 0) s = -s; else canThrow = true;
 			return checked((long)(s * 1000d));
 		}
-
+		
 		/// <summary>
 		/// Waits for a signaled kernel handle. Or just sleeps, if handles is null/empty.
-		/// If flag DoEvents, dispatches received messages, hook notifications, etc.
+		/// If flag DoEvents, dispatches received messages etc.
 		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
 		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
@@ -79,7 +80,7 @@ namespace Au
 		internal static int Wait_(long timeMS, WHFlags flags, params IntPtr[] handles) {
 			return Wait_(timeMS, flags, null, null, handles);
 		}
-
+		
 		/// <summary>
 		/// The same as <see cref="Wait_(long, WHFlags, IntPtr[])"/> + can wait for message and variable.
 		/// If msgCallback is not null, calls it when dispatching messages. If returns true, stops waiting and returns handles?.Length.
@@ -92,12 +93,13 @@ namespace Au
 			bool doEvents = flags.Has(WHFlags.DoEvents);
 			Debug.Assert(doEvents || (msgCallback == null && stopVar == null));
 			bool all = flags.Has(WHFlags.All) && nHandles > 1;
-
+			
+			using var mp = new MessagePump_();
 			fixed (IntPtr* ha = handles) {
 				for (long timePrev = 0; ;) {
 					if (stopVar != null && stopVar.waitVar) return nHandles + 1;
-
-					int timeSlice = (all && doEvents) ? 15 : 300; //previously timeout was used to support Thread.Abort. It is disabled in Core, but maybe still safer with a timeout.
+					
+					int timeSlice = (all && doEvents) ? 50 : 5000;
 					if (timeMS > 0) {
 						long timeNow = computer.tickCountWithoutSleep;
 						if (timePrev > 0) timeMS -= timeNow - timePrev;
@@ -105,47 +107,24 @@ namespace Au
 						if (timeSlice > timeMS) timeSlice = (int)timeMS;
 						timePrev = timeNow;
 					} else if (timeMS == 0) timeSlice = 0;
-
+					
 					int k;
 					if (doEvents && !all) {
 						k = Api.MsgWaitForMultipleObjectsEx(nHandles, ha, timeSlice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
-						if (k == nHandles) { //message, COM (RPC uses postmessage), hook, etc
-							if (_DoEvents(msgCallback)) return nHandles;
+						if (k == nHandles) { //message, COM, hook, etc
+							if (mp.PumpWithCallback(msgCallback)) return nHandles;
 							continue;
 						}
 					} else {
 						if (nHandles > 0) k = Api.WaitForMultipleObjectsEx(nHandles, ha, all, timeSlice, true);
 						else { k = Api.SleepEx(timeSlice, true); if (k == 0) k = Api.WAIT_TIMEOUT; }
-						if (doEvents) if (_DoEvents(msgCallback)) return nHandles;
+						if (doEvents) if (mp.PumpWithCallback(msgCallback)) return nHandles;
 					}
 					if (k is not (Api.WAIT_TIMEOUT or Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
 				}
 			}
 		}
-
-		static bool _DoEvents(object msgCallback) {
-			bool R = false;
-			while (Api.PeekMessage(out var m)) {
-				//WndUtil.PrintMsg(m);
-				if (msgCallback is WPMCallback callback1) {
-					if (callback1(ref m)) { msgCallback = null; R = true; }
-					if (m.message == 0) continue;
-				}
-				if (m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); break; }
-				Api.TranslateMessage(m);
-				Api.DispatchMessage(m);
-			}
-			if (msgCallback is Func<bool> callback2) R = callback2();
-			return R;
-
-			//note: always dispatch posted messages, need it or not. Dispatching only sent messages is not useful.
-			//	If thread has windows, hangs if we don't get posted messages.
-			//	Else dispatching posted messages usually does not harm.
-
-			//note: with PeekMessage don't use |Api.PM_QS_SENDMESSAGE when don't need posted messages.
-			//	Then setwineventhook hook does not work. Although setwindowshookex hook works. COM RPC may not work too, because uses postmessage; not tested.
-		}
-
+		
 		/// <summary>
 		/// Waits for a posted message received by this thread.
 		/// </summary>
@@ -167,7 +146,7 @@ namespace Au
 		public static bool forPostedMessage(double secondsTimeout, WPMCallback callback) {
 			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, callback, null);
 		}
-
+		
 		/// <summary>
 		/// Waits for a condition that is changed while processing messages or other events received by this thread.
 		/// </summary>
@@ -191,7 +170,7 @@ namespace Au
 		public static bool forMessagesAndCondition(double secondsTimeout, Func<bool> condition) {
 			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, condition, null);
 		}
-
+		
 		//rejected. Rarely used; type-limited. Let use forCondition.
 		///// <summary>
 		///// Waits until a variable is set = true.
@@ -219,41 +198,38 @@ namespace Au
 		//		if (!to.Sleep()) return false;
 		//	}
 		//}
-
+		
 		//FUTURE: add misc wait functions implemented using WindowsHook and WinEventHook.
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Flags for <see cref="wait.forHandle"/>
 	/// </summary>
 	[Flags]
-	public enum WHFlags
-	{
+	public enum WHFlags {
 		/// <summary>
 		/// Wait until all handles are signaled.
 		/// </summary>
 		All = 1,
-
+		
 		/// <summary>
 		/// While waiting, dispatch Windows messages, events, hooks etc. Like <see cref="wait.doEvents(int)"/>.
 		/// </summary>
 		DoEvents = 2,
 	}
-
+	
 	/// <summary>
 	/// Delegate type for <see cref="wait.forPostedMessage(double, WPMCallback)"/>.
 	/// </summary>
 	/// <param name="m">API <msdn>MSG</msdn>.</param>
 	public delegate bool WPMCallback(ref MSG m);
-
+	
 	/// <summary>
 	/// Used with Wait_ etc instead of ref bool.
 	/// </summary>
-	internal class WaitVariable_
-	{
+	internal class WaitVariable_ {
 		public bool waitVar;
 	}
 }

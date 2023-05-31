@@ -1,10 +1,8 @@
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Interop;
 
-class UacDragDrop
-{
-	public class AdminProcess
-	{
+class UacDragDrop {
+	public class AdminProcess {
 		WinEventHook _hook; //SYSTEM_CAPTURESTART
 		timer _timer; //tracks mouse etc
 		bool _isDragMode; //is in drag-drop
@@ -192,8 +190,7 @@ class UacDragDrop
 
 	//A window in non-admin process that accepts drag-drop events and relays to the admin process.
 	//Covers our admin window. Almost transparent.
-	public static class NonAdminProcess
-	{
+	public static class NonAdminProcess {
 		static wnd _w; //our transparent window
 		static wnd _msgWnd; //message-only IPC window in admin process
 		static _DropTarget _dt; //GC
@@ -214,7 +211,7 @@ class UacDragDrop
 			Api.SetTimer(_w, 1, 1000, null);
 
 			_w.ShowL(true);
-			while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
+			while (Api.GetMessage(out var m)) Api.DispatchMessage(m);
 			Api.OleUninitialize();
 		}
 
@@ -237,8 +234,7 @@ class UacDragDrop
 
 		static void _Exit() { Api.DestroyWindow(_w); }
 
-		class _DropTarget : Api.IDropTarget
-		{
+		class _DropTarget : Api.IDropTarget {
 			void Api.IDropTarget.DragEnter(IDataObject d, int grfKeyState, POINT pt, ref int effect) {
 				if (_enteredOnce) {
 					(this as Api.IDropTarget).DragOver(grfKeyState, pt, ref effect);
@@ -275,8 +271,7 @@ class UacDragDrop
 
 }
 
-struct DDData
-{
+struct DDData {
 	public string[] files;
 	public byte[] shell, linkName;
 	public string text;

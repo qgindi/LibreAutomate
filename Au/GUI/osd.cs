@@ -1,4 +1,3 @@
-
 using System.Drawing;
 
 namespace Au.Types {
@@ -52,8 +51,9 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Gets or sets the opacity of the OSD window, from 0 to 1.
-		/// If 1 (default), completely opaque. If 0, pixels of <see cref="TransparentColor"/> are transparent, others opaque. If between 0 and 1, partially transparent.
+		/// If 1, completely opaque. If 0, pixels of <see cref="TransparentColor"/> are transparent, others opaque. If between 0 and 1, partially transparent.
 		/// </summary>
+		/// <value>Default is 1. Default in <see cref="osdRect"/> is 0.</value>
 		/// <remarks>
 		/// This property can be changed after creating OSD window.
 		/// </remarks>
@@ -313,6 +313,15 @@ namespace Au.Types {
 		
 		#endregion
 	}
+	
+	/// <summary>
+	/// Used by <see cref="osdRect.SetRects"/>.
+	/// </summary>
+	/// <param name="Placement">Label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
+	public record class ORLabelOptions(char Placement, ColorInt? BackgroundColor = null, ColorInt? TextColor = null) {
+		///
+		public static implicit operator ORLabelOptions(char placement) => new(placement);
+	}
 }
 
 namespace Au {
@@ -320,16 +329,16 @@ namespace Au {
 	/// Shows a mouse-transparent rectangle on screen. Just visible outline, or filled but partially transparent.
 	/// </summary>
 	/// <remarks>
-	/// Creates a temporary partially transparent window, and draws rectangle in it.
+	/// Creates a temporary partially transparent window, and draws rectangle in it. Can draw multiple rectangles.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// using(var x = new osdRect()) {
+	/// using (var x = new osdRect()) {
 	/// 	x.Rect = (300, 300, 100, 100);
 	/// 	x.Color = Color.SlateBlue;
 	/// 	x.Thickness = 4;
 	/// 	x.Show();
-	/// 	for(int i = 0; i < 5; i++) {
+	/// 	for (int i = 0; i < 5; i++) {
 	/// 		250.ms();
 	/// 		x.Visible = !x.Visible;
 	/// 	}
@@ -376,11 +385,73 @@ namespace Au {
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn. Draws rectangle. More info: <see cref="OsdWindow.OnPaint"/>.
 		/// </summary>
-		protected override void OnPaint(IntPtr dc, Graphics g, RECT r) {
-			if (Opacity > 0) {
-				g.Clear((Color)_color);
+		protected override void OnPaint(IntPtr dc, Graphics g, RECT ra) {
+			if (_rects == null) {
+				if (Opacity > 0) {
+					g.Clear((Color)_color);
+				} else {
+					g.DrawRectangleInset((Color)_color, _thickness, ra);
+				}
+			} else if (_rects.Length >= 0) {
+				if (Opacity > 0) g.Clear((Color)TransparentColor);
+				using var tr = _hasLabels ? new GdiTextRenderer(dc, Dpi.OfWindow(Hwnd)) : null;
+				for (int i = 0; i < _rects.Length; i++) {
+					var r = _rects[i].r; r.Offset(-Rect.left, -Rect.top);
+					g.DrawRectangleInset((Color)Color, Thickness, r);
+					if (_hasLabels) {
+						var s = _rects[i].s;
+						var z = tr.MeasureText(s);
+						int pad = z.height / 2;
+						z.width += pad;
+						int x = _labelOptions.Placement switch { 'L' => r.left - z.width - 1, 'R' => r.right, 'I' => r.left + Thickness + 1, _ => r.left };
+						int y = _labelOptions.Placement switch { 'T' => r.top - z.height - 1, 'B' => r.bottom, 'I' => r.top + Thickness + 1, _ => r.top };
+						if (x < 0) { x = 0; if (z.width >= r.left) z.width = r.left - 1; }
+						RECT rr = new(x, y, z.width, z.height);
+						if (_labelOptions.BackgroundColor != null) g.FillRectangle((Color)_labelOptions.BackgroundColor.Value, rr); else g.FillRectangle(Brushes.PaleGoldenrod, rr);
+						g.DrawRectangle(Pens.DarkGray, rr);
+						rr.Inflate(-pad / 2, 0);
+						tr.DrawText(s, rr, _labelOptions.TextColor?.ToBGR() ?? 0x404040);
+					}
+				}
+			}
+		}
+		
+		(RECT r, string s)[] _rects;
+		bool _hasLabels;
+		ORLabelOptions _labelOptions;
+		
+		/// <summary>
+		/// Sets to draw multiple rectangles.
+		/// </summary>
+		/// <param name="rects">Rectangles.</param>
+		/// <param name="indexLabels">Draw labels. The label text is the rectangle index in <i>rects</i>.</param>
+		/// <param name="labelOptions">Label options. If char - label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
+		/// <remarks>
+		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is null). <b>Opacity</b> should be 0 (default).
+		/// </remarks>
+		public void SetRects(IEnumerable<RECT> rects, bool indexLabels = false, ORLabelOptions labelOptions = null) {
+			SetRects(indexLabels ? rects?.Select((r, i) => (r, i.ToS())) : rects?.Select(r => (r, (string)null)), labelOptions);
+		}
+		
+		/// <summary>
+		/// Sets to draw multiple rectangles with labels.
+		/// </summary>
+		/// <param name="rects">Rectangles with label text. The text should be short, single line, else may draw clipped.</param>
+		/// <inheritdoc cref="SetRects(IEnumerable{RECT}, bool, ORLabelOptions)"/>
+		public void SetRects(IEnumerable<(RECT r, string s)> rects, ORLabelOptions labelOptions = null) {
+			if (rects == null) {
+				_rects = null;
+				Rect = default;
 			} else {
-				g.DrawRectangleInset((Color)_color, _thickness, r);
+				_rects = rects.ToArray();
+				var r = RECT.FromLTRB(_rects.Min(o => o.r.left), _rects.Min(o => o.r.top), _rects.Max(o => o.r.right), _rects.Max(o => o.r.bottom));
+				if (_hasLabels = _rects.Any(o => o.s != null)) {
+					int ii = screen.of(r).Dpi;
+					r.Inflate(ii * 2, ii / 4);
+				}
+				Rect = r;
+				_labelOptions = labelOptions ?? new('L');
+				Redraw();
 			}
 		}
 	}
@@ -653,7 +724,7 @@ namespace Au {
 			}
 		}
 		int _secondsTimeout;
-
+		
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		protected override nint WndProc(wnd w, int message, nint wParam, nint lParam) {
 			switch (message) {
@@ -668,7 +739,7 @@ namespace Au {
 			return base.WndProc(w, message, wParam, lParam);
 		}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
+		
 		/// <summary>
 		/// Draws OSD text etc.
 		/// </summary>

@@ -3,7 +3,7 @@ using System.Drawing;
 
 #pragma warning disable 649 //unused fields in API structs
 
-//FUTURE: ShowCheckList.
+//TODO: showCheckboxes. See also EnumUI.
 
 //rejected: by default show dialog in screen of mouse, like with <c>dialog.options.defaultScreen = screen.ofMouse;</c>.
 //	Some Windows etc dialogs do it, and for me it's probably better. Eg Explorer's Properties even is at mouse position (top-left corner).
@@ -1107,8 +1107,7 @@ namespace Au {
 			_AssertIsOtherThread();
 			while (!IsOpen) {
 				if (_isClosed) return false;
-				Thread.Sleep(15); //need ~3 loops if 15
-				wait.doEvents(); //without it this func hangs if a form is the dialog owner
+				wait.doEvents(15); //need ~3 loops if 15. Without doEvents hangs if a form is the dialog owner.
 			}
 			return true;
 		}

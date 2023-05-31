@@ -185,8 +185,14 @@ static unsafe partial class Api {
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern void PostQuitMessage(int nExitCode);
 	
-	[DllImport("user32.dll", SetLastError = true)]
-	internal static extern int GetMessage(out MSG lpMsg, wnd hWnd = default, int wMsgFilterMin = 0, int wMsgFilterMax = 0);
+	[DllImport("user32.dll", EntryPoint = "GetMessage", SetLastError = true)]
+	internal static extern int _GetMessage(out MSG lpMsg, wnd hWnd, int wMsgFilterMin, int wMsgFilterMax);
+	
+	internal static bool GetMessage(out MSG m, wnd hWnd = default, int wMsgFilterMin = 0, int wMsgFilterMax = 0) {
+		int r = _GetMessage(out m, hWnd, wMsgFilterMin, wMsgFilterMax);
+		if (r == -1) throw new Win32Exception();
+		return r != 0;
+	}
 	
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool TranslateMessage(in MSG lpMsg);
