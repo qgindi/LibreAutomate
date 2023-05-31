@@ -90,7 +90,7 @@ public struct WaitLoop {
 
 		int t = (int)Period;
 		if (_doEvents) {
-			wait.SleepDoEvents_(t, noSetPrecision: true);
+			wait.doEvents(t);
 		} else {
 			Thread.Sleep(t);
 		}

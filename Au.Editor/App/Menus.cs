@@ -3,6 +3,8 @@ using Au.Tools;
 using System.Windows;
 using System.Windows.Controls;
 
+//TODO: users want to customize the editor's context menu. Idea: create an editorExtension example that modifies it.
+
 static class Menus {
 	public const string
 		black = " #505050|#D0D0D0",
@@ -308,6 +310,9 @@ static class Menus {
 			
 			[Command("try (catch exceptions)", image = "*MaterialDesign.ErrorOutline" + brown)]
 			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
+			
+			[Command("...", separator = true)]
+			public static void Documentation_tags() { run.itSafe("https://www.libreautomate.com/forum/showthread.php?tid=7461"); }
 		}
 		
 		[Command]

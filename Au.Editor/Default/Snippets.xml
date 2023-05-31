@@ -255,7 +255,8 @@ run.thread(() => {
 	var hk = Triggers.Hotkey;
 	hk["Ctrl+F1"] = o => { print.it(o); };
 	
-	Triggers.Mouse[TMEdge.Right] = o => { print.it(o); };
+	//Triggers.Mouse[TMEdge.Right] = o => { print.it(o); };
+	//Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => { print.it(o); };
 	
 	Triggers.Run();
 });

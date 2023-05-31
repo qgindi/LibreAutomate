@@ -145,8 +145,7 @@ namespace Au.Triggers;
 /// print.it("called Triggers.Stop");
 /// ]]></code>
 /// </example>
-public class ActionTriggers
-{
+public class ActionTriggers {
 	readonly ITriggers[] _t;
 	ITriggers this[TriggerType e] => _t[(int)e];
 
@@ -294,7 +293,7 @@ public class ActionTriggers
 		_winTimerLastTime = 0;
 
 		if (hookEvents != 0) {
-			//prevent big delay later on first LL hook event while hook proc waits
+			//prevent big delay (JIT) later on first LL hook event while hook proc waits
 			if (!s_wasKM) {
 				s_wasKM = true;
 				ThreadPool.QueueUserWorkItem(_ => {
@@ -341,6 +340,14 @@ public class ActionTriggers
 				if (t?.HasTriggers ?? false) t.StartStop(start);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Executes <see cref="Run"/> in new thread and waits like <see cref="wait.doEvents(int)"/>.
+	/// </summary>
+	public void RunThread() {
+		run.thread(out var th, out _, Run);
+		wait.forHandle(0, WHFlags.DoEvents, th);
 	}
 
 	int _mainThreadId;
@@ -518,8 +525,7 @@ public class ActionTriggers
 	}
 
 	[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
-	internal struct SharedMemoryData_
-	{
+	internal struct SharedMemoryData_ {
 		public bool disabled;
 		public bool resetAutotext;
 	}
@@ -548,8 +554,9 @@ public class ActionTriggers
 				//	Never mind: the timer does not work if user code creates a nested message loop in this thread. They should avoid it. It is documented, such functions must return ASAP.
 			}
 			var k = Api.MsgWaitForMultipleObjectsEx(nh, ha, slice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
-			if (k == nh) wait.doEvents(); //message, COM RPC, hook, etc
-			else if (k is not (Api.WAIT_TIMEOUT or Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
+			if (k == nh) { //message, COM, hook, etc
+				if (!wait.doEvents()) return -1;
+			} else if (k is not (Api.WAIT_TIMEOUT or Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
 		}
 	}
 	long _winTimerLastTime;
@@ -567,8 +574,7 @@ public class ActionTriggers
 	int _winTimerPeriod;
 }
 
-enum TriggerType
-{
+enum TriggerType {
 	Hotkey,
 	Autotext,
 	Mouse,
@@ -581,8 +587,7 @@ enum TriggerType
 	//TimerAt,
 }
 
-interface ITriggers
-{
+interface ITriggers {
 	/// <summary>
 	/// Return true if added triggers of this type.
 	/// </summary>
@@ -595,8 +600,7 @@ interface ITriggers
 	void StartStop(bool start);
 }
 
-class TriggerHookContext : WFCache
-{
+class TriggerHookContext : WFCache {
 	//internal readonly ActionTriggers triggers;
 	wnd _w;
 	bool _haveWnd, _mouseWnd; POINT _p;
@@ -656,8 +660,7 @@ class TriggerHookContext : WFCache
 		_mouseWnd = true; _p = p;
 	}
 
-	struct _ScopeTime
-	{
+	struct _ScopeTime {
 		public int time_, avgTime;
 	}
 

@@ -72,7 +72,7 @@ class HooksThread : IDisposable {
 		
 		Api.SetEvent(_eventStartStop);
 		
-		while (Api.GetMessage(out var m) > 0) {
+		while (Api.GetMessage(out var m)) {
 			if (m.message == Api.WM_TIMER && m.wParam == idTimer) {
 				if (Debugger.IsAttached) continue;
 				hookK?.Restore();

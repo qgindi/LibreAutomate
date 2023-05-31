@@ -293,7 +293,7 @@ namespace Au.More {
 				_w.ActivateL();
 
 				try {
-					while (Api.GetMessage(out var m) > 0 && m.message != Api.WM_APP) {
+					while (Api.GetMessage(out var m) && m.message != Api.WM_APP) {
 						switch (m.message) {
 						case Api.WM_KEYDOWN when !_capturing:
 							switch ((KKey)(int)m.wParam) {

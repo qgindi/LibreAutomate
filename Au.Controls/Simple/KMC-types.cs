@@ -19,7 +19,7 @@ public partial class KMenuCommands {
 		readonly CommandAttribute _ca;
 		MenuItem _mi;
 		bool _enabled;
-
+		
 		internal Command(KMenuCommands mc, string name, string text, MemberInfo mi, CommandAttribute ca) {
 			_mc = mc;
 			_enabled = true;
@@ -30,55 +30,55 @@ public partial class KMenuCommands {
 			if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<MenuItem>));
 			//if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<object>));
 		}
-
+		
 		internal void SetMenuItem_(object text, string image, MenuItem miFactory = null) {
 			_mi = miFactory ?? new MenuItem { Header = text }; //factory action may have set it
 			_mi.Command = this;
 			if (image != null && miFactory?.Icon == null) _SetImage(image);
 		}
-
+		
 		MenuItem _Mi => _mi ?? throw new InvalidOperationException("Call FactoryParams.SetMenuItem before.");
-
+		
 		///
 		public MenuItem MenuItem => _mi;
-
+		
 		/// <summary>
 		/// true if this is a submenu-item.
 		/// </summary>
 		public bool IsSubmenu => _del == null;
-
+		
 		/// <summary>
 		/// Method name. If submenu-item - type name.
 		/// Or <see cref="CommandAttribute.name"/>.
 		/// May have prefix <see cref="CommandAttribute.namePrefix"/>.
 		/// </summary>
 		public string Name { get; }
-
+		
 		///
 		public override string ToString() => Name;
-
+		
 		public CommandAttribute Attribute => _ca;
-
+		
 		/// <summary>
 		/// Menu item text. Also button text/tooltip if not set.
 		/// </summary>
 		public string Text { get; }
-
+		
 		/// <summary>
 		/// Button text or tooltip. Same as menu item text but without _ for Alt-underline.
 		/// </summary>
 		public string ButtonText { get; set; }
-
+		
 		/// <summary>
 		/// <see cref="CommandAttribute.tooltip"/>.
 		/// </summary>
 		public string ButtonTooltip { get; set; }
-
+		
 		/// <summary>
 		/// Default or custom hotkey etc.
 		/// </summary>
 		public string Keys { get; private set; }
-
+		
 		/// <summary>
 		/// Setter subscribes to <see cref="MenuItem.SubmenuOpened"/> event.
 		/// Will propagate to copied submenus.
@@ -92,12 +92,12 @@ public partial class KMenuCommands {
 			}
 		}
 		RoutedEventHandler _submenuOpened;
-
+		
 		/// <summary>
 		/// Something to attach to this object. Not used by this class.
 		/// </summary>
 		public object Tag { get; set; }
-
+		
 		/// <summary>
 		/// Sets properties of a button to match properties of this menu item.
 		/// </summary>
@@ -120,7 +120,7 @@ public partial class KMenuCommands {
 			if (IsSubmenu) throw new InvalidOperationException("Submenu. Use CopyToMenu.");
 			_ = _Mi;
 			text ??= ButtonText;
-
+			
 			if (skipImage) {
 				switch (b.Content) {
 				case DockPanel dp: image = dp.Children[0]; dp.Children.Clear(); break;
@@ -131,7 +131,7 @@ public partial class KMenuCommands {
 			} else {
 				image ??= CopyImage();
 			}
-
+			
 			if (image == null) {
 				b.Content = text;
 				b.Padding = new Thickness(4, 1, 4, 2);
@@ -153,15 +153,15 @@ public partial class KMenuCommands {
 			b.Foreground = _mi.Foreground;
 			if (image != null && !text.NE()) System.Windows.Automation.AutomationProperties.SetName(b, text);
 			b.Command = this;
-
+			
 			if (_mi.IsCheckable) {
 				if (b is ToggleButton tb) tb.SetBinding(ToggleButton.IsCheckedProperty, new Binding("IsChecked") { Source = _mi });
 				else print.warning($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
 			}
 		}
-
+		
 		//public void CopyToButton<T>(out T b, Dock? imageAt = null) where T : ButtonBase, new() => CopyToButton(b = new T(), imageAt);
-
+		
 		/// <summary>
 		/// Sets properties of another menu item (not in this menu) to match properties of this menu item.
 		/// If this is a submenu-item, copies with descendants.
@@ -181,31 +181,33 @@ public partial class KMenuCommands {
 		/// - <b>IsCheckable</b> (and synchronizes checked state).
 		/// </remarks>
 		public void CopyToMenu(MenuItem m, UIElement image = null, object text = null) => _CopyToMenu(_Mi, m, image, text);
-
+		
 		static MenuItem _CopyToMenu(MenuItem from, MenuItem to, UIElement image = null, object text = null) {
 			if (from.Command is not Command c) return null;
 			to ??= new();
-
+			
 			to.Icon = image ?? _CopyImage(from);
 			if (text != null) to.Header = text; else if (from.Header is string s) to.Header = s;
-			to.InputGestureText = from.InputGestureText;
-			//never mind: no gesture text from input bindings. Currently need it for 1 item (New_script) and we specify it explicitly (keysText in attribute).
+			
+			string s1 = from.InputGestureText.NullIfEmpty_(), s2 = c.Keys;
+			if (s1 != null || s2 != null) to.InputGestureText = s1 == null ? s2 : s2 == null ? s1 : s1 + ", " + s2;
+			
 			to.ToolTip = from.ToolTip;
 			to.Foreground = from.Foreground;
 			to.Command = c;
-
+			
 			bool checkable = from.IsCheckable;
 			to.IsCheckable = checkable;
 			if (checkable) to.SetBinding(MenuItem.IsCheckedProperty, new Binding("IsChecked") { Source = from });
-
+			
 			if (from.HasItems) {
 				if (c._submenuOpened != null) to.SubmenuOpened += c._submenuOpened;
 				_CopyDescendants(from, to);
 			}
-
+			
 			return to;
 		}
-
+		
 		static void _CopyDescendants(ItemsControl from, ItemsControl to) {
 			int n = 0;
 			foreach (var v in from.Items) {
@@ -227,7 +229,7 @@ public partial class KMenuCommands {
 				n++;
 			}
 		}
-
+		
 		/// <summary>
 		/// Copies descendants of this submenu to a context menu.
 		/// </summary>
@@ -239,13 +241,13 @@ public partial class KMenuCommands {
 			if (!IsSubmenu) throw new InvalidOperationException("Not submenu");
 			_CopyDescendants(_Mi, cm);
 		}
-
+		
 		/// <summary>
 		/// Copies menu item image element. Returns null if no image or cannot copy.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
 		public UIElement CopyImage() => _CopyImage(_Mi);
-
+		
 		static UIElement _CopyImage(MenuItem from) {
 			switch (from.Icon) {
 			case Image im: return new Image { Source = im.Source };
@@ -256,7 +258,7 @@ public partial class KMenuCommands {
 			}
 			return null;
 		}
-
+		
 		bool _SetImage(string image, bool custom = false) {
 			try {
 				if (image.NE()) {
@@ -281,7 +283,7 @@ public partial class KMenuCommands {
 			}
 			return false;
 		}
-
+		
 		/// <summary>
 		/// Gets or sets enabled/disabled state of this command, menu item and all controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
 		/// If submenu-item, the 'set' function also enables/disables all descendants.
@@ -297,7 +299,7 @@ public partial class KMenuCommands {
 				if (IsSubmenu) foreach (var v in _mi.Items) if (v is MenuItem m && m.Command is Command c) c.Enabled = value;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets or sets checked state of this checkable menu item and all checkable controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
 		/// </summary>
@@ -306,11 +308,11 @@ public partial class KMenuCommands {
 			get => _Mi.IsChecked;
 			set { if (value != _Mi.IsChecked) _mi.IsChecked = value; }
 		}
-
+		
 		#region ICommand
-
+		
 		public bool CanExecute(object parameter) => _enabled;
-
+		
 		public void Execute(object parameter) {
 			switch (_del) {
 			case Action a0: a0(); break;
@@ -319,19 +321,19 @@ public partial class KMenuCommands {
 				//default: throw new InvalidOperationException("Submenu");
 			}
 		}
-
+		
 		/// <summary>
 		/// When disabled or enabled with <see cref="Enabled"/>.
 		/// </summary>
 		public event EventHandler CanExecuteChanged;
-
+		
 		#endregion
-
+		
 		/// <summary>
 		/// Finds and returns toolbar button that has this command. Returns null if not found.
 		/// </summary>
 		public ButtonBase FindButtonInToolbar(ToolBar tb) => tb.Items.OfType<ButtonBase>().FirstOrDefault(o => o.Command == this);
-
+		
 		/// <summary>
 		/// Finds and returns toolbar menu-button that has this command. Returns null if not found.
 		/// </summary>
@@ -341,19 +343,19 @@ public partial class KMenuCommands {
 			}
 			return null;
 		}
-
+		
 		//public void Test() {
 		//	foreach (var v in CanExecuteChanged.GetInvocationList()) {
 		//		print.it(v.Target);
 		//	}
 		//}
-
+		
 		internal void Customize_(XElement x, ToolBar toolbar) {
 			OverflowMode hide = default;
 			bool separator = false;
 			string text = null, btext = null;
 			Dock? imageAt = null;
-
+			
 			foreach (var a in x.Attributes()) {
 				string an = a.Name.LocalName, av = a.Value;
 				try {
@@ -390,7 +392,7 @@ public partial class KMenuCommands {
 				catch (Exception ex) { CustomizingError($"invalid '{an}' value", ex); }
 			}
 			if ((btext ?? text) != null) ButtonText = btext ?? StringUtil.RemoveUnderlineChar(text, '_');
-
+			
 			if (toolbar != null) {
 				try {
 					if (separator) {
@@ -424,53 +426,53 @@ public partial class KMenuCommands {
 				catch (Exception ex) { CustomizingError("failed to create button", ex); }
 			}
 		}
-
+		
 		public void CustomizingError(string s, Exception ex = null) {
 			_mc.OnCustomizingError?.Invoke(this, s, ex);
 		}
 	}
-
+	
 	class _XElementNameEqualityComparer : IEqualityComparer<XElement> {
 		bool IEqualityComparer<XElement>.Equals(XElement x, XElement y) => x.Name == y.Name;
 		int IEqualityComparer<XElement>.GetHashCode(XElement x) => x.Name.GetHashCode();
 	}
 	static _XElementNameEqualityComparer s_xmlNameComparer = new();
-
+	
 	/// <summary>
 	/// Called on error in a custom attribute.
 	/// </summary>
 	public Action<Command, string, Exception> OnCustomizingError;
-
+	
 	/// <summary>
 	/// Parameters for factory action of <see cref="KMenuCommands"/>.
 	/// </summary>
 	public class FactoryParams {
 		internal FactoryParams(Command command, MemberInfo member) { this.command = command; this.member = member; }
-
+		
 		/// <summary>
 		/// The new command.
 		/// <see cref="Command.MenuItem"/> is still null and you can call <see cref="SetMenuItem"/>.
 		/// </summary>
 		public readonly Command command;
-
+		
 		/// <summary>
 		/// <see cref="MethodInfo"/> of method or <see cref="TypeInfo"/> of nested class.
 		/// For example allows to get attributes of any type.
 		/// </summary>
 		public readonly MemberInfo member;
-
+		
 		/// <summary>
 		/// Text or a WPF element to add to the text part of the menu item. In/out parameter.
 		/// Text may contain _ for Alt-underline, whereas <c>command.Text</c> is without it.
 		/// </summary>
 		public object text;
-
+		
 		/// <summary><see cref="CommandAttribute.image"/>. In/out parameter.</summary>
 		public string image;
-
+		
 		/// <summary><see cref="CommandAttribute.param"/>. In/out parameter. This class does not use it.</summary>
 		public object param;
-
+		
 		/// <summary>
 		/// Sets <see cref="Command.MenuItem"/> property.
 		/// If your factory action does not call this function, the menu item will be created after it returns.
@@ -491,88 +493,88 @@ public partial class KMenuCommands {
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public class CommandAttribute : Attribute {
 	internal readonly int order_;
-
+	
 	/// <summary>
 	/// Command name to use instead of method/type name. Use to resolve duplicate name conflict.
 	/// </summary>
 	public string name;
-
+	
 	/// <summary>
 	/// Name prefix of this command, and default prefix of descendants. Use to resolve duplicate name conflict.
 	/// </summary>
 	public string namePrefix;
-
+	
 	/// <summary>
 	/// Menu item text. Use _ to Alt-underline a character. If "...", appends it to default text.
 	/// </summary>
 	public string text;
-
+	
 	/// <summary>
 	/// Alt-underlined character in menu item text.
 	/// </summary>
 	public char underlined;
-
+	
 	/// <summary>
 	/// Add separator before the menu item.
 	/// </summary>
 	public bool separator;
-
+	
 	/// <summary>
 	/// Checkable menu item.
 	/// </summary>
 	public bool checkable;
-
+	
 	/// <summary>
 	/// Default hotkey etc. See <see cref="KMenuCommands.BindKeysTarget"/>.
 	/// </summary>
 	public string keys;
-
+	
 	/// <summary>
 	/// Element where the hotkey etc (default or customized) will work. See <see cref="KMenuCommands.BindKeysTarget"/>.
 	/// If this property applied to a class (submenu), all descendant commands without this property inherit it from the ancestor class.
 	/// </summary>
 	public string target;
-
+	
 	/// <summary>
 	/// Text for <see cref="MenuItem.InputGestureText"/>. If not set, will use <b>keys</b>.
 	/// </summary>
 	public string keysText;
-
+	
 	/// <summary>
 	/// Image string.
 	/// The factory action receives this string in parameters. It can load image and set menu item's <b>Icon</b> property.
 	/// If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from database or exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="Au.More.ResourceUtil"/>.
 	/// </summary>
 	public string image;
-
+	
 	/// <summary>
 	/// Let <see cref="KMenuCommands.Command.CopyToButton"/> use this text for tooltip.
 	/// </summary>
 	public string tooltip;
-
+	
 	/// <summary>
 	/// A string or other value to pass to the factory action.
 	/// </summary>
 	public object param;
-
+	
 	/// <summary>
 	/// Don't add the <b>MenuItem</b> to menu.
 	/// </summary>
 	public bool hide;
-
+	
 	/// <summary>
 	/// Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
 	/// </summary>
 	/// <param name="l_">[](xref:caller_info)</param>
 	public CommandAttribute([CallerLineNumber] int l_ = 0) { order_ = l_; }
-
+	
 	/// <summary>
 	/// Specifies menu item text.
 	/// </summary>
 	/// <param name="text">Menu item text. Use _ to Alt-underline a character, like "_Copy".</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	public CommandAttribute(string text, [CallerLineNumber] int l_ = 0) { this.text = text; order_ = l_; }
-
+	
 	/// <summary>
 	/// Specifies Alt-underlined character. Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
 	/// </summary>

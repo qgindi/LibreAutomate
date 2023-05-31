@@ -220,7 +220,7 @@ public partial class keys {
 		/// Calls <see cref="wait.doEvents(int)"/>.
 		/// </summary>
 		internal static void Sleep(int ms) {
-			if (ms > 0) wait.doEvents(ms);
+			if (ms > 0) wait.doEventsPrecise_(ms);
 
 			//see comments in mouse._Sleep.
 		}

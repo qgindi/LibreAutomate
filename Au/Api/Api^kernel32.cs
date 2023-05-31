@@ -96,10 +96,12 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool ReleaseMutex(IntPtr hMutex);
 	
+	/// <summary>
+	/// Note: use only for private threads. Not everything works like with Thread.Start. For example .NET does not auto-release COM objects when thread ends.
+	/// </summary>
+	/// <param name="lpStartAddress">[UnmanagedCallersOnly]</param>
 	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern IntPtr CreateThread(IntPtr lpThreadAttributes, nint dwStackSize, PTHREAD_START_ROUTINE lpStartAddress, nint lpParameter, uint dwCreationFlags, out int lpThreadId);
-	
-	internal delegate void PTHREAD_START_ROUTINE(nint lpThreadParameter);
+	internal static extern IntPtr CreateThread(IntPtr lpThreadAttributes, nint dwStackSize, delegate* unmanaged<nint, void> lpStartAddress, nint lpParameter, uint dwCreationFlags, out int lpThreadId);
 	
 	[DllImport("kernel32.dll")]
 	internal static extern IntPtr GetCurrentThread();
@@ -755,6 +757,7 @@ static unsafe partial class Api {
 	internal const uint THREAD_SUSPEND_RESUME = 0x2;
 	internal const uint THREAD_SET_CONTEXT = 0x10;
 	internal const uint THREAD_QUERY_LIMITED_INFORMATION = 0x800;
+	internal const uint THREAD_ALL_ACCESS = 0x1FFFFF;
 	
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern Handle_ OpenThread(uint dwDesiredAccess, bool bInheritHandle, int dwThreadId);

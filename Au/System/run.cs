@@ -461,6 +461,29 @@ namespace Au {
 			t.Start();
 			return t;
 		}
+
+		/// <summary>
+		/// Starts new thread like <see cref="thread(Action, bool, bool)"/> and gets thread handle and native id.
+		/// </summary>
+		/// <inheritdoc cref="thread(Action, bool, bool)"/>
+		public static unsafe Thread thread(out IntPtr handle, out int id, Action threadProc, bool background = true, bool sta = true) {
+			IntPtr h = default; int i = 0;
+			using var ev = Api.CreateEvent(false);
+			var t = new Thread(() => {
+				h = Api.OpenThread(Api.THREAD_ALL_ACCESS, false, i = Api.GetCurrentThreadId());
+				Api.SetEvent(ev);
+				threadProc();
+			});
+			if (background) t.IsBackground = true;
+			if (sta) t.SetApartmentState(ApartmentState.STA);
+			t.Start();
+			Api.WaitForSingleObject(ev, -1);
+			handle = h; id = i;
+			return t;
+
+			//Almost same speed as other overload when JITed, but first time several times slower, eg 1 -> 2.5 ms.
+			//	With CreateThread faster, but it cannot be used in a public function (then some .NET features work differently).
+		}
 	}
 }
 

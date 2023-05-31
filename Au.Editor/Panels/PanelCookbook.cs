@@ -264,9 +264,16 @@ class PanelCookbook {
 	}
 	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a) _stem;
 	
+	/// <summary>
+	/// Finds and opens a recipe.
+	/// </summary>
+	/// <param name="s">Wildcard or start or any substring of recipe name.</param>
 	public void OpenRecipe(string s) {
-		Panels.PanelManager[P].Visible = true;
-		_OpenRecipe(_FindRecipe(s), true);
+		if (Environment.CurrentManagedThreadId == 1) _Open(); else App.Dispatcher.InvokeAsync(_Open);
+		void _Open() {
+			Panels.PanelManager[P].Visible = true;
+			_OpenRecipe(_FindRecipe(s), true);
+		}
 	}
 	
 	_Item _FindRecipe(string s, bool exact = false) {
