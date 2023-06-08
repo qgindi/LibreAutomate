@@ -24,10 +24,8 @@ class DEnumDir : KDialogWindow {
 		c_ThenBy = ".ThenBy(o => o.EditMe)",
 		c_Select = ".Select(o => o.EditMe)";
 	
-	public DEnumDir(string initFolder = null) {
-		Title = "Get files in folder";
-		ShowInTaskbar = false;
-		Owner = App.Wmain;
+	DEnumDir(string initFolder = null) {
+		InitWinProp("Get files in folder", App.Wmain);
 		
 		_noeventValueChanged = true;
 		var b = new wpfBuilder(this).WinSize(600).Columns(0, 90, 90, -1);

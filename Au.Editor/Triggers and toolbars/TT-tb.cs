@@ -39,7 +39,7 @@ partial class TriggersAndToolbars {
 	void _NewToolbar() {
 		var w = new KDialogWindow { Title = "New toolbar" };
 		var b = new wpfBuilder(w).WinSize(450).Columns(50, -1);
-		b.WinProperties(WindowStartupLocation.CenterOwner, ResizeMode.NoResize, showInTaskbar: false);
+		b.WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
 
 		b.R.Add("Name", out TextBox tName, "Toolbar_").Focus()
 			.Validation(_ => tName.Text is "" or "Toolbar_" ? "No name" : !SyntaxFacts.IsValidIdentifier(tName.Text) ? "Invalid function name" : null);
@@ -213,7 +213,7 @@ partial class Program {
 	void _SetToolbarTrigger(_Toolbar t, _Trigger tr) {
 		var w = new KDialogWindow { Title = "New trigger for " + t.Name };
 		var b = new wpfBuilder(w).WinSize(450);
-		b.WinProperties(WindowStartupLocation.CenterOwner, ResizeMode.NoResize, showInTaskbar: false);
+		b.WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
 
 		ComboBox cbReplace = null, cbEdge = null, cbScreen = null;
 
@@ -300,7 +300,7 @@ partial class Program {
 
 	void _AddTriggerWindow(_Toolbar t, int pos = -1) {
 		var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-		if (!d.AaShowAndWait(null)) return;
+		if (!d.ShowAndWait(null)) return;
 		string sTrigger = d.AaResultCode, sAction = t.Name, sSep = " ";
 		if (!t.method.ReturnsVoid) {
 			sTrigger += ", later: TWLater.Name";

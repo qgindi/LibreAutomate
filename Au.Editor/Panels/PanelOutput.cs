@@ -142,7 +142,7 @@ class PanelOutput {
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
-			AaTags.AddLinkTag("+DCustomize", DCustomize.AaShow);
+			AaTags.AddLinkTag("+DCustomize", DCustomize.ShowSingle);
 
 			App.PrintServer.SetNotifications(AaWnd, Api.WM_APP);
 

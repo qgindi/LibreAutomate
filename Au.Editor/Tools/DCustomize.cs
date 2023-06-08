@@ -12,28 +12,17 @@ namespace Script;
 #endif
 
 class DCustomize : KDialogWindow {
-	public static void AaShow(string commandName = null) {
-		if (s_dialog == null) {
-			s_dialog = new();
-			s_dialog.Show();
-		} else {
-			s_dialog.Hwnd().ActivateL(true);
-		}
-		if (commandName != null) s_dialog._SelectAndOpen(commandName);
-	}
-	static DCustomize s_dialog;
-
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		base.OnClosed(e);
+	public static void ShowSingle(string commandName = null) {
+		var d = ShowSingle(() => new DCustomize());
+		if (commandName != null) d._SelectAndOpen(commandName);
 	}
 
 	/// <summary>
-	/// If the dialog is open, sets its Image field text and returns true;
+	/// If the dialog is open, sets its Image field text and returns true. Called from the Icons dialog.
 	/// </summary>
 	public static bool AaSetImage(string s) {
-		if (s_dialog == null) return false;
-		if (s_dialog._panelProp.IsVisible) s_dialog._tImage.Text = s;
+		if (!GetSingle(out DCustomize d)) return false;
+		if (d._panelProp.IsVisible) d._tImage.Text = s;
 		return true;
 	}
 
@@ -55,11 +44,8 @@ class DCustomize : KDialogWindow {
 	_Custom _clip; //cut/copy item
 	bool _ignoreEvents;
 
-	///
-	public DCustomize() {
-		Title = "Customize";
-		Owner = App.Wmain;
-		ShowInTaskbar = false;
+	DCustomize() {
+		InitWinProp("Customize", App.Wmain);
 
 		var b = new wpfBuilder(this).WinSize(700, 700).Columns(220, 0, -1);
 		b.Row(-1);
@@ -81,7 +67,7 @@ class DCustomize : KDialogWindow {
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
 			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => _ColorTool(), "Colors"); b.Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
-			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.AaShow(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
+			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
 			.xAddButtonIcon("*Material.KeyboardOutline" + Menus.green, _ => _KeysTool(), "Keys tool");
 		b.xAddButtonIcon("*FeatherIcons.Eye" + Menus.blue, _ => _KeysList(), "Existing hotkeys");

@@ -56,7 +56,7 @@ class PanelRecipe {
 		_c.AaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 		//_c.aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 		_c.AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-		_c.AaTags.AddLinkTag("+nuget", s => DNuget.AaShow(s));
+		_c.AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
 		_c.AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0x0000FF, bold = true }); //keyword
 
 #if DEBUG

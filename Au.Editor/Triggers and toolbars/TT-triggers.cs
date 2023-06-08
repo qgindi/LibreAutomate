@@ -34,9 +34,7 @@ partial class TriggersAndToolbars {
 		var fn = App.Model.CurrentFile;
 		bool canRunThisScript = fn != null && fn.IsScript && !fn.ItemPath.Eqi(@"\@Triggers and toolbars\Triggers and toolbars.cs");
 
-		var w = new KDialogWindow {
-			Title = "New trigger", ShowInTaskbar = false, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize
-		};
+		var w = new KDialogWindow { Title = "New trigger", ShowInTaskbar = false, ResizeMode = ResizeMode.NoResize };
 		var b = new wpfBuilder(w).WinSize(360);
 
 		b.Add("Trigger", out ToolBar tb).Margin("LRT").Brush(SystemColors.ControlBrush);
@@ -95,7 +93,7 @@ partial class TriggersAndToolbars {
 			bOK.IsEnabled = enable;
 		}
 
-		if (!w.AaShowAndWait(App.Wmain)) return;
+		if (!w.ShowAndWait(App.Wmain)) return;
 
 		int ia = lbAction.SelectedIndex; if (iType != 2) ia += 5;
 		var sAction = aa[ia];
@@ -109,7 +107,7 @@ partial class TriggersAndToolbars {
 			s = """Triggers.Mouse[TM%]""";
 		} else if (iType == 4) {
 			var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-			if (!d.AaShowAndWait(null)) return;
+			if (!d.ShowAndWait(null)) return;
 			s = $"Triggers.Window[TWEvent.%ActiveNew, {d.AaResultCode}]";
 		}
 		s = $"{s} = {sAction};";

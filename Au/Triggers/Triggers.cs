@@ -346,8 +346,8 @@ public class ActionTriggers {
 	/// Executes <see cref="Run"/> in new thread and waits like <see cref="wait.doEvents(int)"/>.
 	/// </summary>
 	public void RunThread() {
-		run.thread(out var th, out _, Run);
-		wait.forHandle(0, WHFlags.DoEvents, th);
+		using var th = run.thread(out _, out _, Run);
+		wait.forHandle(0, WHFlags.DoEvents, th.DangerousGetHandle());
 	}
 
 	int _mainThreadId;

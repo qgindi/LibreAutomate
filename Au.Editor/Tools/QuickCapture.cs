@@ -25,7 +25,7 @@ static class QuickCapture {
 		static void _Register(ref RegisteredHotkey rk, AppHotkeyId id, string keys, string menu) { //ref, not in!
 			if (!keys.NE()) {
 				try {
-					if (!rk.Register((int)id, keys, App.Hmain)) {
+					if (!rk.Register((int)id, keys, App.Hmain, noRepeat: true)) {
 						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
 						keys = null;
 					}

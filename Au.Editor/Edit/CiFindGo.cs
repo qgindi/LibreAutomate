@@ -20,34 +20,21 @@ using Au.Controls;
 using System.Windows.Input;
 
 class CiFindGo : KDialogWindow {
-	static CiFindGo s_dialog;
 	TextBox _tQuery;
 	KCheckBox _cFuzzy, _cKeepOpen;
 	KTreeView _tv;
 	CancellationTokenSource _cancelTS;
 	
-	public static void FindSymbol() {
+	public static void ShowSingle() {
 		if (Panels.Editor.ActiveDoc?.EFile.IsCodeFile != true) return;
-		if (s_dialog != null) {
-			s_dialog.Activate();
-		} else {
-			s_dialog = new();
-			s_dialog.Show();
-		}
-	}
-	
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		base.OnClosed(e);
+		ShowSingle(() => new CiFindGo());
 	}
 	
 	CiFindGo() {
-		_timer1 = new(_ => _Update());
-		
+		InitWinProp("Find symbol", App.Wmain);
 		var b = new wpfBuilder(this).WinSize(600, 600).Columns(-1, 0, 0, 0);
-		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-		Title = "Find symbol";
-		Owner = App.Wmain;
+		
+		_timer1 = new(_ => _Update());
 		
 		b.R.Add(out _tQuery, s_lastQuery).Focus().Tooltip("""
 Symbol name.

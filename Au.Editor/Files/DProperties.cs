@@ -6,6 +6,16 @@ using Microsoft.Win32;
 using System.Drawing;
 
 class DProperties : KDialogWindow {
+	public static void ShowFor(FileNode f) {
+		if (s_d.TryGetValue(f, out var d)) {
+			d.Hwnd().ActivateL(true);
+		} else {
+			s_d[f] = d = new (f);
+			d.Show();
+		}
+	}
+	static Dictionary<FileNode, DProperties> s_d = new();
+	
 	readonly FileNode _f;
 	readonly MetaCommentsParser _meta;
 	readonly bool _isClass;
@@ -21,16 +31,14 @@ class DProperties : KDialogWindow {
 	readonly GroupBox gRun, gAssembly, gCompile;
 	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bOutputPath, bVersion;
 	
-	public DProperties(FileNode f) {
+	DProperties(FileNode f) {
 		_f = f;
 		_isClass = f.IsClass;
 		_meta = new MetaCommentsParser(_f);
 		
-		Owner = App.Wmain;
-		Title = "Properties of " + _f.Name;
+		InitWinProp("Properties of " + _f.Name, App.Wmain);
 		
 		var b = new wpfBuilder(this).WinSize(640).Columns(-1, 0);
-		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.Options(bindLabelVisibility: true);
 		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
 		b.R.StartStack(vertical: true); //left column
@@ -187,6 +195,7 @@ class DProperties : KDialogWindow {
 	}
 	
 	protected override void OnClosed(EventArgs e) {
+		s_d.Remove(_f);
 		App.Model.UnloadingThisWorkspace -= Close;
 		base.OnClosed(e);
 	}
