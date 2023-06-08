@@ -51,7 +51,7 @@ namespace Au.More;
 /// <seealso cref="keys.waitForHotkey(double, KHotkey, bool)"/>
 public struct RegisteredHotkey : IDisposable {
 	wnd _w;
-	int _id;
+	int? _id;
 	
 	///// <summary>The hotkey.</summary>
 	//public KHotkey Hotkey { get; private set; }
@@ -72,8 +72,8 @@ public struct RegisteredHotkey : IDisposable {
 	/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 	/// </remarks>
 	/// <seealso cref="keys.waitForHotkey"/>
-	public bool Register(int id, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, AnyWnd window = default, bool noRepeat = true) {
-		if (_id != 0) throw new InvalidOperationException("This variable already registered a hotkey. Use multiple variables or call Unregister.");
+	public bool Register(int id, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, AnyWnd window = default, bool noRepeat = false) {
+		if (_id != null) throw new InvalidOperationException("This variable already registered a hotkey. Use multiple variables or call Unregister.");
 		var w = window.Hwnd;
 		var (mod, key) = Normalize_(hotkey);
 		if (noRepeat) mod |= Api.MOD_NOREPEAT;
@@ -99,13 +99,13 @@ public struct RegisteredHotkey : IDisposable {
 	/// If fails, calls <see cref="print.warning"/>.
 	/// </remarks>
 	public void Unregister() {
-		if (_id != 0) {
-			if (!Api.UnregisterHotKey(_w, _id)) {
+		if (_id != null) {
+			if (!Api.UnregisterHotKey(_w, _id.Value)) {
 				var es = lastError.message;
-				print.warning($"Failed to unregister hotkey, id={_id}. {es}");
+				print.warning($"Failed to unregister hotkey, id={_id.Value}. {es}");
 				return;
 			}
-			_id = 0;
+			_id = null;
 			_w = default;
 			//Hotkey = default;
 		}
@@ -116,7 +116,7 @@ public struct RegisteredHotkey : IDisposable {
 	/// </summary>
 	public void Dispose() => Unregister();
 	
-	//~Hotkey() => Unregister(); //makes no sense. Called from wrong thread and when the window is already destroyed.
+	//~RegisteredHotkey() => Unregister(); //makes no sense. Called from wrong thread and when the window is already destroyed.
 	
 	/// <summary>
 	/// This message is posted to the window or to the thread's message loop.

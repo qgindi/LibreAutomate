@@ -5,20 +5,9 @@ using Au.Controls;
 
 class DIcons : KDialogWindow {
 	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>
-	public static void AaShow(bool fileIcon = false, string find = null, bool expandMenuIcon = false) {
-		if (s_dialog == null) {
-			s_dialog = new(expandFileIcon: fileIcon, randomizeColors: find == null, expandMenuIcon: expandMenuIcon);
-			s_dialog.Show();
-		} else {
-			s_dialog.Hwnd().ActivateL(true);
-		}
-		if (find != null) s_dialog._tName.Text = find;
-	}
-	static DIcons s_dialog;
-
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		base.OnClosed(e);
+	public static void ShowSingle(bool fileIcon = false, string find = null, bool expandMenuIcon = false) {
+		var d = ShowSingle(() => new DIcons(expandFileIcon: fileIcon, randomizeColors: find == null, expandMenuIcon: expandMenuIcon));
+		if (find != null) d._tName.Text = find;
 	}
 
 	enum _Action {
@@ -40,9 +29,7 @@ class DIcons : KDialogWindow {
 	TextBox _tName;
 
 	DIcons(bool expandFileIcon, bool randomizeColors, bool expandMenuIcon) {
-		Title = "Icons";
-		Owner = App.Wmain;
-		ShowInTaskbar = false;
+		InitWinProp("Icons", App.Wmain);
 
 		var b = new wpfBuilder(this).WinSize(600, 600);
 		b.Columns(-1, 0);
@@ -93,7 +80,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
 		b.AddButton(out var bMenuItem, "Menu or toolbar item", _ => _InsertCodeOrExport(tv, _Action.MenuIcon)).Disabled()
-			.Tooltip("To assign the selected icon to a toolbar button or menu item,\nin the code editor click its line (anywhere except action code)\nand then click this button.\n\nIf the 'Customize' window is open, this button sets Image text.");
+			.Tooltip("To assign the selected icon to a toolbar button or menu item,\nin the code editor click its line (anywhere except action code)\nand then click this button.\n\nIf the 'Customize' window is open, this button sets its Image text.");
 		b.End();
 		//rejected. Rarely used. Can copy-paste XAML.
 		//b.R.Add<Label>("Insert line: ");
@@ -163,7 +150,7 @@ Can be Pack.Icon, like Modern.List.")
 			foreach (var (table, _) in s_tables) {
 				using var stat = s_db.Statement("SELECT name FROM " + table);
 				while (stat.Step()) {
-					var k = new _Item(table, stat.GetText(0));
+					var k = new _Item(this, table, stat.GetText(0));
 					//var s = _ColorName(k); if (s.Length < 20 || s.Length > 60) print.it(s.Length, s);
 					_a.Add(k);
 				}
@@ -178,7 +165,7 @@ Can be Pack.Icon, like Modern.List.")
 			Func<_Item, bool> f = null;
 			bool select = false;
 			if (!name.NE()) {
-				if (select = name.RxMatch(@"^\*(\w+)\.(\w+) #(\w+)$", out var m)) { //full name with * and #color
+				if (select = name.RxMatch(@"^\*(\w+)\.(\w+) #(\w+)(?:\|.+)?$", out var m)) { //full name with * and #color or #color|highContrastColor
 					table = m[1].Value;
 					name = m[2].Value;
 					f = o => o._name == name && o._table == table;
@@ -338,10 +325,12 @@ Can be Pack.Icon, like Modern.List.")
 	}
 
 	class _Item : ITreeViewItem {
+		DIcons _dialog;
 		public string _table, _name;
 		public int _color;
 
-		public _Item(string table, string name) {
+		public _Item(DIcons dialog, string table, string name) {
+			_dialog = dialog;
 			_table = table; _name = name;
 		}
 
@@ -353,9 +342,9 @@ Can be Pack.Icon, like Modern.List.")
 			get {
 				try {
 					//using var p1 = perf.local();
-					if (GetIconFromBigDB(_table, _name, s_dialog._ItemColor(this), out string xaml)) {
+					if (GetIconFromBigDB(_table, _name, _dialog._ItemColor(this), out string xaml)) {
 						//p1.Next('d');
-						return ImageUtil.LoadGdipBitmapFromXaml(xaml, s_dialog._dpi, (16, 16));
+						return ImageUtil.LoadGdipBitmapFromXaml(xaml, _dialog._dpi, (16, 16));
 					}
 				}
 				catch (Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); }

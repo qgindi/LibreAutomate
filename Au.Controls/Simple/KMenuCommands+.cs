@@ -188,10 +188,7 @@ public partial class KMenuCommands {
 			
 			to.Icon = image ?? _CopyImage(from);
 			if (text != null) to.Header = text; else if (from.Header is string s) to.Header = s;
-			
-			string s1 = from.InputGestureText.NullIfEmpty_(), s2 = c.Keys;
-			if (s1 != null || s2 != null) to.InputGestureText = s1 == null ? s2 : s2 == null ? s1 : s1 + ", " + s2;
-			
+			to.InputGestureText = from.InputGestureText;
 			to.ToolTip = from.ToolTip;
 			to.Foreground = from.Foreground;
 			to.Command = c;
@@ -201,8 +198,17 @@ public partial class KMenuCommands {
 			if (checkable) to.SetBinding(MenuItem.IsCheckedProperty, new Binding("IsChecked") { Source = from });
 			
 			if (from.HasItems) {
+				//lazy. Toolbar item submenus created now don't display hotkeys, because keyboard bindings are set afterwards.
+				to.Items.Add("");
+				RoutedEventHandler smo = null;
+				smo = (_, _) => {
+					to.SubmenuOpened -= smo;
+					to.Items.Clear();
+					_CopyDescendants(from, to);
+				};
+				to.SubmenuOpened += smo;
+				
 				if (c._submenuOpened != null) to.SubmenuOpened += c._submenuOpened;
-				_CopyDescendants(from, to);
 			}
 			
 			return to;
@@ -218,10 +224,7 @@ public partial class KMenuCommands {
 					break;
 				case MenuItem g:
 					k = _CopyToMenu(g, null);
-					if (k == null) { //not Command. Added dynamically. Will add again.
-						if (n == 0) to.Items.Add(new Separator()); //let it be submenu
-						return;
-					}
+					if (k == null) continue; //not Command. Added dynamically. Will add again.
 					break;
 				default: continue;
 				}

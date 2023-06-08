@@ -48,7 +48,7 @@ Open the .iss file in Inno Script Studio. Review, compile.
 	May need to update the setup file size in the download webpage (index.md).
 
 Upload the setup file. For example with FileZilla.
-	May want to backup the old setup file at first.
+	Backup the old setup file at first: in FileZilla move the old file to the "download" folder and rename (add version).
 
 Run script "Au docs". Click the upload link.
 
@@ -61,6 +61,8 @@ Download and test the setup file.
 
 Test the setup file at virustotal.com. And separately other files (even data files).
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
+
+Edit version in version.txt. It is in public_html. Can download/upload through FileZilla, or edit in webhost CP, or create script.
 
 Announce in forum.
 

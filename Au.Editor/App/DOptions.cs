@@ -8,32 +8,16 @@ using System.Windows.Media;
 using System.Windows.Documents;
 using EStyle = CiStyling.EStyle;
 
-//TODO: check for new LA version.
-
 class DOptions : KDialogWindow {
 	public static void AaShow() {
-		if (s_dialog == null) {
-			s_dialog = new();
-			s_dialog.Show();
-		} else {
-			s_dialog.Hwnd().ActivateL(true);
-		}
-	}
-	static DOptions s_dialog;
-	
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		base.OnClosed(e);
+		ShowSingle(() => new DOptions());
 	}
 	
 	wpfBuilder _b;
 	TabControl _tc;
 	
 	DOptions() {
-		Title = "Options";
-		Owner = App.Wmain;
-		WindowStartupLocation = WindowStartupLocation.CenterOwner;
-		ShowInTaskbar = false;
+		InitWinProp("Options", App.Wmain);
 		
 		_b = new wpfBuilder(this).WinSize(550);
 		_b.Row(-1).Add(out _tc).Height(300..);
@@ -69,7 +53,7 @@ class DOptions : KDialogWindow {
 		b.R.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, and don't change text, because used for the forum registration security question
 		b.R.Add(out KCheckBox startHidden, "Start hidden; hide when closing").Checked(App.Settings.runHidden);
 		b.R.Add(out KCheckBox checkForUpdates, "Check for updates every day").Checked(App.Settings.checkForUpdates)
-			.AddButton("Now", _ => App.CheckForUpdates(true));
+			.AddButton("Now", o => App.CheckForUpdates(o.Button));
 		b.End();
 		//right column
 		b.Skip().StartStack(vertical: true);

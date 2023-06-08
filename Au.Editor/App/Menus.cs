@@ -3,8 +3,6 @@ using Au.Tools;
 using System.Windows;
 using System.Windows.Controls;
 
-//TODO: users want to customize the editor's context menu. Idea: create an editorExtension example that modifies it.
-
 static class Menus {
 	public const string
 		black = " #505050|#D0D0D0",
@@ -154,24 +152,15 @@ static class Menus {
 			
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
+		
+			[Command("...", separator = true)]
+			public static void Repair_workspace() { RepairWorkspace.Repair(false); }
+			
+			[Command("...")]
+			public static void Repair_this_folder() { RepairWorkspace.Repair(true); }
 			
 			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black)]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
-			
-			[Command("Repair workspace")]
-			public static class Repair {
-				[Command]
-				public static void Find_missing_files() { RepairWorkspace.MissingFiles(false); }
-				
-				[Command]
-				public static void Find_orphaned_files() { RepairWorkspace.OrphanedFiles(false); }
-				
-				[Command]
-				public static void Find_missing_files_in_this_folder() { RepairWorkspace.MissingFiles(true); }
-				
-				[Command]
-				public static void Find_orphaned_files_in_this_folder() { RepairWorkspace.OrphanedFiles(true); }
-			}
 		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]
@@ -183,21 +172,6 @@ static class Menus {
 	
 	[Command(target = "Edit")]
 	public static class Edit {
-		[Command("Undo, redo")]
-		public static class UndoRedo {
-			[Command(keys = "Ctrl+Z", image = iconUndo)]
-			public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
-			
-			[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
-			public static void Redo() { SciUndo.OfWorkspace.UndoRedo(true); }
-			
-			[Command(separator = true)]
-			public static void Undo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
-			
-			[Command]
-			public static void Redo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
-		}
-		
 		[Command]
 		public static class Clipboard {
 			[Command('t', keys = "Ctrl+X", image = "*Zondicons.EditCut" + brown)]
@@ -228,13 +202,28 @@ static class Menus {
 			public static void Copy_without_screenshots() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 		
+		[Command("Undo, redo")]
+		public static class UndoRedo {
+			[Command(keys = "Ctrl+Z", image = iconUndo)]
+			public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
+			
+			[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
+			public static void Redo() { SciUndo.OfWorkspace.UndoRedo(true); }
+			
+			[Command(separator = true)]
+			public static void Undo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
+			
+			[Command]
+			public static void Redo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
+		}
+		
 		[Command("Find", separator = true)]
 		public static class Find {
 			[Command("Find text", keys = "Ctrl+F", image = "*Material.FindReplace" + blue)]
 			public static void Find_text() { Panels.Find.CtrlF(Panels.Editor.ActiveDoc); }
 			
 			[Command("...", keys = "Ctrl+T", image = "*FontAwesome.SearchLocationSolid" + blue)]
-			public static void Find_symbol() { CiFindGo.FindSymbol(); }
+			public static void Find_symbol() { CiFindGo.ShowSingle(); }
 			
 			[Command(keys = "Shift+F12", image = "*Codicons.References" + blue, separator = true)]
 			public static void Find_references() { CiFind.FindReferencesOrImplementations(false); }
@@ -334,6 +323,9 @@ static class Menus {
 			
 			[Command(checkable = true, image = "*Codicons.Preview" + green)]
 			public static void WPF_preview(MenuItem mi) { SciCode.WpfPreviewStartStop(mi); }
+			
+			[Command("Customize this menu...", separator = true)]
+			public static void Customize_edit_context_menu() { DCustomizeContextMenu.Dialog("Edit", "code editor"); }
 		}
 	}
 	
@@ -417,7 +409,7 @@ static class Menus {
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 		
 		[Command(separator = true)]
-		public static void Script_triggers() { DCommandline.AaShow(); }
+		public static void Script_triggers() { DCommandline.ShowSingle(); }
 	}
 	
 	[Command(target = "Edit")]
@@ -470,19 +462,19 @@ static class Menus {
 		public static void Options() { DOptions.AaShow(); }
 		
 		[Command(image = iconIcons)]
-		public static void Icons() { DIcons.AaShow(); }
+		public static void Icons() { DIcons.ShowSingle(); }
 		
 		[Command(image = "*SimpleIcons.NuGet" + green)]
-		public static void NuGet() { DNuget.AaShow(); }
+		public static void NuGet() { DNuget.ShowSingle(); }
 		
 		[Command(image = "*Codicons.SymbolSnippet" + green)]
-		public static void Snippets() { DSnippets.AaShow(); }
+		public static void Snippets() { DSnippets.ShowSingle(); }
 		
 		[Command]
-		public static void Customize() { DCustomize.AaShow(); }
+		public static void Customize() { DCustomize.ShowSingle(); }
 		
 		[Command]
-		public static void Portable() { DPortable.AaShow(); }
+		public static void Portable() { DPortable.ShowSingle(); }
 		
 		[Command(separator = true, target = "Output")]
 		public static class Output {
@@ -535,12 +527,12 @@ static class Menus {
 		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 		
 		[Command]
-		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {_ProgramVersion}"); }
+		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {App.Version}"); }
 		
 		[Command]
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
-Version: {_ProgramVersion}
+Version: {App.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
 Uses C# 11, <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite 3.38.2<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>.
@@ -548,8 +540,6 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 -----------------------");
 		}
-		
-		static string _ProgramVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 	}
 	
 #if TRACE

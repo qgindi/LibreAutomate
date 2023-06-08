@@ -11,7 +11,7 @@ using System.Windows.Input;
 //using Au.Controls;
 using static Au.Controls.Sci;
 using Au.Compiler;
-using Au.Triggers;
+//using Au.Triggers;
 
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;
@@ -41,14 +41,7 @@ using System.Windows.Threading;
 
 static unsafe class Test {
 	public static void FromMenubar() {
-		//System.Windows.Forms.Application.DoEvents();
-		var _dispFrame = new DispatcherFrame();
-		//Dispatcher.PushFrame(_dispFrame);
-
-		//print.clear();
-		//HttpResponseMessage m;m.
-		//HttpRequestMessage m;m.
-
+		
 		//var d = Panels.Editor.ActiveDoc;
 
 		//for (int i = 16; i < 32; i++) {

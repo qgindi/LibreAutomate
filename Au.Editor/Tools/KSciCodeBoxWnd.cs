@@ -225,7 +225,7 @@ class KSciCodeBoxWnd : KSciCodeBox {
 	public (bool ok, wnd w, wnd con, bool useCon) AaShowWndTool(Window owner, wnd w, wnd con, bool checkControl) {
 		var flags = DwndFlags.DontInsert; if (checkControl) flags |= DwndFlags.CheckControl;
 		var d = new Dwnd(con.Is0 ? w : con, flags);
-		d.AaShowAndWait(owner, hideOwner: true);
+		d.ShowAndWait(owner, hideOwner: true);
 		var code = d.AaResultCode; if (code == null) return default;
 		_wnd = d.AaResultWindow;
 		_con = d.AaResultUseControl ? d.AaResultControl : default;

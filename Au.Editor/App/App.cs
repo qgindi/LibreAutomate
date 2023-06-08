@@ -10,14 +10,14 @@ static partial class App {
 	public const string
 		AppNameLong = "LibreAutomate C#",
 		AppNameShort = "LibreAutomate"; //must be without spaces etc
-
+	
 	public static string UserGuid;
 	internal static PrintServer PrintServer;
 	public static AppSettings Settings;
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
-
+	
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
 #if TRACE //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
@@ -27,9 +27,9 @@ static partial class App {
 		//print.clear(); 
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 #endif
-
+		
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
-
+		
 		//restart as admin if started as non-admin on admin user account
 		if (args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
@@ -37,18 +37,18 @@ static partial class App {
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 			if (_RestartAsAdmin(args)) return 0;
 		}
-
+		
 		//Debug_.PrintLoadedAssemblies(true, !true);
-
+		
 		_Main(args);
 		return 0;
 	}
-
+	
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _Main(string[] args) {
 		//Debug_.PrintLoadedAssemblies(true, !true);
 		//perf.next();
-
+		
 		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
@@ -58,39 +58,39 @@ static partial class App {
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		_SetThisAppFoldersEtc();
 		dialog.options.defaultTitle = AppNameShort + " message";
-
+		
 		if (CommandLine.ProgramStarted2(args)) return;
-
+		
 		PrintServer = new(true) { NoNewline = true };
 		PrintServer.Start();
 #if TRACE
 		print.qm2.use = !true;
 		//timer.after(1, _ => perf.nw());
 #endif
-
+		
 		//perf.next('o');
 		Settings = AppSettings.Load();
 		//perf.next('s');
 		//Debug_.PrintLoadedAssemblies(true, !true);
-
+		
 		UserGuid = Settings.user ??= Guid.NewGuid().ToString();
-
+		
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
 		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
-
+		
 		Tasks = new RunningTasks();
 		//perf.next('t');
-
+		
 		ScriptEditor.IconNameToXaml_ = DIcons.GetIconString;
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
 		//perf.next('W');
 		CommandLine.ProgramLoaded();
 		//perf.next('c');
 		Loaded = AppState.LoadedWorkspace;
-
+		
 		TrayIcon.Update_();
 		//perf.next('i');
-
+		
 		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose };
 		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
 		if (!Debugger.IsAttached)
@@ -98,23 +98,23 @@ static partial class App {
 				e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
 			};
 		//perf.next('a');
-
+		
 		_app.MainWindow = Wmain = new MainWindow();
 		//perf.next('w');
 		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
 		//perf.next('W');
-
+		
 		s_timer = timer.every(1000, _TimerProc);
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
-
+		
 		_app.Dispatcher.InvokeAsync(() => {
 			//perf.next('r');
 			Model.RunStartupScripts(false);
 			//perf.nw('s');
 		});
-
+		
 		try {
 			_app.Run();
 			//Hidden app should start as fast as possible, because usually starts with Windows.
@@ -128,21 +128,21 @@ static partial class App {
 		}
 		finally { MainFinally_(); }
 	}
-
+	
 	internal static void MainFinally_() {
 		if (Loaded == AppState.Unloaded) return;
 		Loaded = AppState.Unloading;
-
+		
 		s_timer.Stop(); //eg if will show a Debug.Assert dialog
-
+		
 		var fm = Model; Model = null;
 		fm.Dispose(); //stops tasks etc
-
+		
 		Loaded = AppState.Unloaded;
-
+		
 		PrintServer.Stop();
 	}
-
+	
 	class _Application : Application {
 		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
 			base.OnSessionEnding(e);
@@ -151,33 +151,33 @@ static partial class App {
 			process.thisProcessExitInvoke(); //OS terminates this process before or during process.thisProcessExit event
 		}
 	}
-
+	
 	//public static Application Instance => _app; //Application.Current
 	static _Application _app;
-
+	
 	/// <summary>
 	/// <b>Dispatcher</b> of main thread.
 	/// </summary>
 	public static Dispatcher Dispatcher => _app.Dispatcher;
-
+	
 	/// <summary>
 	/// Main window.
 	/// Not loaded if never was visible.
 	/// Use only in main thread; if other threads need <b>Dispatcher</b> of main thread, use <see cref="Dispatcher"/>.
 	/// </summary>
 	public static MainWindow Wmain { get; private set; }
-
+	
 	/// <summary>
 	/// Main window handle.
 	/// defaul(wnd) if never was visible.
 	/// </summary>
 	public static wnd Hmain { get; internal set; }
-
+	
 	public static void ShowWindow() {
 		Wmain.Show(); //auto-creates MainWindow if never was visible
 		Hmain.ActivateL(true);
 	}
-
+	
 	static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
 #if TRACE
 		print.qm2.write(e.ExceptionObject);
@@ -185,19 +185,19 @@ static partial class App {
 		dialog.showError("Exception", e.ExceptionObject.ToString(), flags: DFlags.Wider);
 #endif
 	}
-
+	
 	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
 		var dlls = s_arDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
 			.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
-
+		
 		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
-
+		
 		//print.qm2.write(an); 
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
 	static Dictionary<string, string> s_arDlls;
-
+	
 	//resolve native dlls used by meta pr libraries that are used by editorExtension scripts.
 	//	These libraries are loaded in default context.
 	//	editorExtension assemblies are loaded in other contexts.
@@ -206,7 +206,7 @@ static partial class App {
 		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
 		return default;
 	}
-
+	
 	static bool _FindEditorExtensionInStack(out Assembly asm) {
 		var st = new StackTrace(2); //not too slow
 		for (int i = 0; ; i++) {
@@ -217,7 +217,7 @@ static partial class App {
 		asm = null;
 		return false;
 	}
-
+	
 	static void _SetThisAppFoldersEtc() {
 		if (filesystem.exists(folders.ThisAppBS + "data").Directory) {
 			IsPortable = true;
@@ -234,15 +234,15 @@ static partial class App {
 						var s = folders.Documents + v;
 						if (filesystem.exists(s)) {
 							filesystem.move(s, doc);
-
+							
 							//rejected.
 							//filesystem.more.createSymbolicLink(s, thisAppDoc, CSLink.Junction);
-
+							
 							var f = doc + @"\.settings\Settings.json";
 							var text = File.ReadAllText(f);
 							text = text.Replace($@"\\{v}\\", $@"\\{AppNameShort}\\");
 							File.WriteAllText(f, text);
-
+							
 							break;
 						}
 					}
@@ -250,10 +250,10 @@ static partial class App {
 				catch { }
 			}
 		}
-
+		
 		script.role = SRole.EditorExtension;
 		folders.Editor = folders.ThisApp;
-
+		
 		try {
 			//create now if does not exist
 			_ = folders.ThisAppDocuments;
@@ -272,7 +272,7 @@ static partial class App {
 			Environment.Exit(1);
 		}
 	}
-
+	
 	internal static void OnMainWindowLoaded_() {
 		if (IsPortable) {
 			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.ThisAppBS + "data"}>data<> folder.");
@@ -298,7 +298,7 @@ static partial class App {
 					}
 				}
 			}
-
+			
 			if (_raaResult is not (WinTaskScheduler.RResult.None or WinTaskScheduler.RResult.ArgN)) {
 				var s1 = _raaResult == WinTaskScheduler.RResult.TaskNotFound ? null : $"\r\n\tFailed to run as administrator. Error: {_raaResult}.";
 				var s = $"""
@@ -313,14 +313,14 @@ static partial class App {
 				var name = IsAuHomePC ? "_Au.Editor" : "Au.Editor";
 				bool ok = WinTaskScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
 				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
-
+				
 				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
 			}
 		}
 	}
-
+	
 	static WinTaskScheduler.RResult _raaResult;
-
+	
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		bool home = IsAuHomePC;
@@ -336,7 +336,7 @@ static partial class App {
 		//Api.AllowSetForegroundWindow(pid); //fails and has no sense
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Restarts this program.
 	/// </summary>
@@ -349,33 +349,33 @@ static partial class App {
 		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, admin ? RFlags.Admin : RFlags.InheritAdmin); };
 		_app.Shutdown(); //closes window async, with no possibility to cancel
 	}
-
+	
 	/// <summary>
 	/// Timer with 1 s period.
 	/// </summary>
 	public static event Action Timer1s;
-
+	
 	/// <summary>
 	/// Timer with 1 s period when main window hidden and 0.25 s period when visible.
 	/// </summary>
 	public static event Action Timer1sOr025s;
-
+	
 	/// <summary>
 	/// Timer with 0.25 s period, only when main window visible.
 	/// </summary>
 	public static event Action Timer025sWhenVisible;
-
+	
 	/// <summary>
 	/// Timer with 1 s period, only when main window visible.
 	/// </summary>
 	public static event Action Timer1sWhenVisible;
-
+	
 	/// <summary>
 	/// True if Timer1sOr025s period is 0.25 s (when main window visible), false if 1 s (when hidden).
 	/// </summary>
 	public static bool IsTimer025 => s_timerCounter > 0;
 	static uint s_timerCounter;
-
+	
 	static void _TimerProc(timer t) {
 		Timer1sOr025s?.Invoke();
 		bool needFast = Wmain.IsVisible;
@@ -390,9 +390,9 @@ static partial class App {
 		}
 	}
 	static timer s_timer;
-
+	
 	public static AppState Loaded;
-
+	
 	/// <summary>
 	/// Gets Keyboard.FocusedElement. If null, and a HwndHost-ed control is focused, returns the HwndHost.
 	/// Slow if HwndHost-ed control.
@@ -404,20 +404,44 @@ static partial class App {
 			return wnd.Internal_.ToWpfElement(Api.GetFocus());
 		}
 	}
-
+	
 	public static bool IsAuHomePC { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
-
+	
 	public static bool IsPortable { get; private set; }
 	
-	public static void CheckForUpdates(bool forceNow) {
+	public static string Version => s_version ??= Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+	static string s_version;
+	
+	public static async void CheckForUpdates(System.Windows.Controls.Button b = null) {
+		bool forceNow = b != null;
 		int day = (int)(DateTime.Now.Ticks / 864000000000);
 		if (!forceNow && day == App.Settings.checkForUpdatesDay) return;
 		App.Settings.checkForUpdatesDay = day;
+		
+		if (forceNow) b.IsEnabled = false;
 		try {
-			string s = internet.http.Get("https://www.libreautomate.com/version.txt").Text();
-			print.it(s);
+			var r = await internet.http.GetAsync("https://www.libreautomate.com/version.txt");
+			r.EnsureSuccessStatusCode();
+			var s = await r.Content.ReadAsStringAsync();
+			s = s.Lines()[0];
+			if (s != Version) {
+				//Panels.Output.Scintilla.AaTags.AddLinkTag("+appUpdate", _Update);
+				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
+				print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
+			} else if (forceNow) {
+				dialog.showInfo($"{AppNameShort} is up to date. Version {Version}.", owner: Hmain);
+			}
 		}
 		catch (Exception e1) { if (forceNow) print.warning(e1); }
+		finally { if (forceNow) b.IsEnabled = true; }
+		
+		//static async Task _Update(string s) {
+		//	if (!dialog.showOkCancel(null, $"This will download and install the new {AppNameShort} version.")) return;
+		//	try {
+		
+		//	}
+		//	catch (Exception e1) { print.warning(e1); }
+		//}
 	}
 }
 
@@ -426,22 +450,22 @@ enum AppState {
 	/// Before the first workspace fully loaded.
 	/// </summary>
 	Loading,
-
+	
 	/// <summary>
 	/// The first workspace is fully loaded etc, but the main window not.
 	/// </summary>
 	LoadedWorkspace,
-
+	
 	/// <summary>
 	/// The main window is loaded and either visible now or was visible and now hidden.
 	/// </summary>
 	LoadedUI,
-
+	
 	/// <summary>
 	/// Unloading workspace, stopping everything.
 	/// </summary>
 	Unloading,
-
+	
 	/// <summary>
 	/// Main window closed, workspace unloaded, everything stopped.
 	/// </summary>

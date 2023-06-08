@@ -12,19 +12,8 @@ namespace Script;
 #endif
 
 class DSnippets : KDialogWindow {
-	public static void AaShow() {
-		if (s_dialog == null) {
-			s_dialog = new();
-			s_dialog.Show();
-		} else {
-			s_dialog.Hwnd().ActivateL(true);
-		}
-	}
-	static DSnippets s_dialog;
-	
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		base.OnClosed(e);
+	public static void ShowSingle() {
+		ShowSingle(() => new DSnippets());
 	}
 	
 	List<_Item> _files;
@@ -44,11 +33,8 @@ class DSnippets : KDialogWindow {
 	bool _readonly;
 	bool _ignoreEvents;
 	
-	///
-	public DSnippets() {
-		Title = "Snippets";
-		Owner = App.Wmain;
-		ShowInTaskbar = false;
+	DSnippets() {
+		InitWinProp("Snippets", App.Wmain);
 		
 		var b = new wpfBuilder(this).WinSize(800, 600).Columns(250, 0, -1);
 		b.Row(-1);
