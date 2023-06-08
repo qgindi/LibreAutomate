@@ -302,6 +302,7 @@ partial class SciCode : KScintilla {
 				}
 				if (margin < 0) {
 					var m = new KWpfMenu();
+					DCustomizeContextMenu.AddToMenu(m, "Edit");
 					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
 					m.Show(this, byCaret: kbd);
 				}

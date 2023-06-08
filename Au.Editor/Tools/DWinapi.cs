@@ -10,9 +10,8 @@ class DWinapi : KDialogWindow {
 	KSciCodeBox code;
 
 	public DWinapi(string name = null) {
-		Title = "Find Windows API";
 		var doc = Panels.Editor.ActiveDoc;
-		Owner = GetWindow(doc);
+		InitWinProp("Find Windows API", doc);
 
 		if (name == null) {
 			name = doc.aaaSelectedText();
@@ -22,7 +21,6 @@ class DWinapi : KDialogWindow {
 		}
 
 		var b = new wpfBuilder(this).WinSize(800, 500);
-		b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		b.R.Add("Name", out tName, name);
 		b.Row(-1).Add(out code); code.AaInitBorder = true;
 		b.R.AddButton("?", _ => _Help());

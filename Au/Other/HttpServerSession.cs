@@ -1,7 +1,3 @@
-//TODO: in cookbook write how other programs can communicate with a LA script using HTTP server. QM, AHK, etc.
-//	And maybe add a faster way, eg a pipe server; probably not COM (problems with UAC, registration, etc).
-//	TEST: try NativeAOT to create dlls with C exports. Probably will need .NET7+.
-
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
@@ -517,8 +513,9 @@ namespace Au.Types {
 		/// <summary>
 		/// <see cref="Content"/> converted to text.
 		/// </summary>
-		/// <value>null if there is no content or if text encoding is unknown.</value>
-		public string Text => _contentText ??= Content == null ? null : ContentType?.Encoding?.GetString(Content);
+		/// <value>null if there is no content.</value>
+		/// <remarks>If text encoding unspecified, uses UTF-8; if specified invalid, uses ASCII.</remarks>
+		public string Text => _contentText ??= Content == null ? null : (ContentType?.Encoding ?? Encoding.UTF8).GetString(Content);
 		string _contentText;
 		
 		/// <summary>
@@ -527,6 +524,13 @@ namespace Au.Types {
 		/// <returns><c>default(T)</c> if the request does not have body data.</returns>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.Deserialize{TValue}(Stream, JsonSerializerOptions?)"/>.</exception>
 		public T Json<T>() => Content == null ? default : JsonSerializer.Deserialize<T>(Content, InternetUtil_.JsonSerializerOptions);
+		
+		/// <summary>
+		/// JSON-deserializes <see cref="Content"/> to object of specified type.
+		/// </summary>
+		/// <returns>null if the request does not have body data.</returns>
+		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.Deserialize(Stream, Type, JsonSerializerOptions?)"/>.</exception>
+		public object Json(Type type) => Content == null ? default : JsonSerializer.Deserialize(Content, type, InternetUtil_.JsonSerializerOptions);
 		
 		/// <summary>
 		/// Keys/values from POST content with <c>Content-Type: application/x-www-form-urlencoded</c>.
@@ -627,14 +631,10 @@ namespace Au.Types {
 		/// <summary>
 		/// <see cref="Content"/> converted to text.
 		/// </summary>
-		/// <value>null if there is no content or if text encoding is unknown.</value>
-		public string Text => _contentText ??= Content == null ? null : ContentType?.Encoding?.GetString(Content);
+		/// <value>null if there is no content.</value>
+		/// <remarks>If text encoding unspecified, uses UTF-8; if specified invalid, uses ASCII.</remarks>
+		public string Text => _contentText ??= Content == null ? null : (ContentType?.Encoding ?? Encoding.UTF8).GetString(Content);
 		string _contentText;
-		
-		/// <summary>
-		/// Returns <see cref="Text"/>.
-		/// </summary>
-		public static implicit operator string(HSContentPart p) => p.Text;
 		
 		System.Net.Mime.ContentDisposition _ContentDisposition() {
 			if (_contentDisposition == null && Headers.TryGetValue("Content-Disposition", out var s)) try { _contentDisposition = new(s); } catch {  }
@@ -721,9 +721,10 @@ namespace Au.Types {
 		/// Gets text encoding.
 		/// </summary>
 		/// <value>Returns:
-		/// <br/>• null if multipart content (<b>Boundary</b> not nul) or charset is invalid.
+		/// <br/>• null if multipart content (<b>Boundary</b> not null).
 		/// <br/>• UTF8 if charset is utf-8 or not specified.
 		/// <br/>• <b>Encoding</b> that matches charset.
+		/// <br/>• ASCII if charset is invalid.
 		/// </value>
 		public Encoding Encoding { get; }
 		
@@ -733,7 +734,7 @@ namespace Au.Types {
 			if (s.Eqi("utf-8")) return Encoding.UTF8;
 			if (s.Eqi("us-ascii")) return Encoding.ASCII;
 			if (s.Eqi("iso-8859-1")) return Encoding.Latin1;
-			return StringUtil.GetEncoding(s);
+			return StringUtil.GetEncoding(s) ?? Encoding.ASCII;
 		}
 	}
 	

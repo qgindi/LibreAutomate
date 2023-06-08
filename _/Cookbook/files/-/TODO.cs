@@ -13,8 +13,6 @@ CONSIDER: Recipe "Other C# features". Shortly about directives, disposing, refle
 
 Log.
 
-PDF.
-
 Test Excel libraries more. Maybe use ClosedXML (free) instead of EPPlus (free for non-commercial).
 
 Create a video about all common and unique things this program can do. Toolbars, hotkeys, autotext, etc. Just what, not how. Or cookbook recipes, or scripts.

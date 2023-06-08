@@ -1,66 +1,15 @@
 <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      {{>partials/logo}}
-    </div>
-    <div class="collapse navbar-collapse" id="navbar">
-                <div class="navbar-right">
-                    <style>
-                        .gsc-control-cse {
-                            padding: 0;
-                            margin: 9px 0px 0px 0px;
-                            width: 20em;
-                        }
-
-                        form.gsc-search-box {
-                            margin-bottom: 0;
-                        }
-
-                        table.gsc-search-box {
-                            margin-bottom: 0;
-                        }
-
-                        .gsib_a {
-                            padding: 0px 4px;
-                        }
-
-                        .gsc-input {
-                            font-size: 14px;
-                        }
-
-                        .gsst_b {
-                            font-size: 14px;
-                        }
-
-                        .gscb_a {
-                            line-height: 16px;
-                            font: 16px/13px arial,sans-serif;
-                        }
-
-                        .gsc-input-box {
-                            border: none;
-                        }
-
-                        .gsc-search-button-v2 {
-                            padding: 4px 20px;
-                        }
-
-                        @media (max-width:767px) {
-                            .gsc-control-cse {
-                                display: inline-block;
-                            }
-                        }
-                    </style>
-                    <script async src="https://cse.google.com/cse.js?cx=853c63ebe7f774f31">
-                    </script>
-                    <div class="gcse-search"></div>
-                </div>
-</div>
-  </div>
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			{{>partials/logo}}
+		</div>
+		<div class="collapse navbar-collapse" id="navbar">
+		</div>
+	</div>
 </nav>

@@ -11,23 +11,12 @@ file
 #endif
 
 class DPortable : KDialogWindow {
-	public static void AaShow() {
+	public static void ShowSingle() {
 		if (App.IsPortable) {
 			dialog.showError("Portable mode", "Please restart this program in non-portable mode.", owner: App.Wmain);
 			return;
 		}
-		if (s_dialog == null) {
-			s_dialog = new();
-			s_dialog.Show();
-		} else {
-			s_dialog.Hwnd().ActivateL(true);
-		}
-	}
-	static DPortable s_dialog;
-
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		base.OnClosed(e);
+		ShowSingle(() => new DPortable());
 	}
 
 	string _dirPortableApp = App.Settings.portable_dir;
@@ -41,8 +30,7 @@ class DPortable : KDialogWindow {
 	string _dirData;
 	bool _exists, _replacePF, _replaceData;
 
-	///
-	public DPortable() {
+	DPortable() {
 		//test with smaller folders
 		//_dirThisApp = folders.ProgramFiles + "LibreAutomate";
 		//_dirWorkspace = folders.ThisAppDocuments + "Main";
@@ -51,10 +39,7 @@ class DPortable : KDialogWindow {
 		if (!filesystem.exists(_dirScriptDataLocal).Directory) _dirScriptDataLocal = null;
 		if (!filesystem.exists(_dirScriptDataRoaming).Directory) _dirScriptDataRoaming = null;
 
-		Title = "Portable LibreAutomate setup";
-		Owner = App.Wmain;
-		ShowInTaskbar = false;
-
+		InitWinProp("Portable LibreAutomate setup", App.Wmain);
 		var b = new wpfBuilder(this).WinSize(450);
 
 		if (_dirPortableApp.NE() && folders.RemovableDrive0.Path is string drive) App.Settings.portable_dir = _dirPortableApp = drive + @"PortableApps\LibreAutomate";

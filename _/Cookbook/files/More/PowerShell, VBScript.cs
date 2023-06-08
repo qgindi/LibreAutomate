@@ -4,7 +4,7 @@ string code1 = """
 [console]::OutputEncoding = [System.Text.Encoding]::Unicode
 Write-Host 'PowerShell'
 """;
-string file1 = folders.ThisAppTemp + "PowerShell.ps1";
+using var file1 = new TempFile(".ps1");
 filesystem.saveText(file1, code1, encoding: Encoding.Unicode);
 run.console("PowerShell.exe", $"-ExecutionPolicy Bypass -File \"{file1}\"", encoding: Encoding.Unicode);
 
@@ -13,7 +13,7 @@ run.console("PowerShell.exe", $"-ExecutionPolicy Bypass -File \"{file1}\"", enco
 string code2 = """
 Wscript.Echo "VBScript"
 """;
-string file2 = folders.ThisAppTemp + "VBScript.vbs";
+using var file2 = new TempFile(".vbs");
 filesystem.saveText(file2, code2, encoding: Encoding.Unicode);
 run.console("Cscript.exe", $"/e:VBScript /nologo \"{file2}\"");
 

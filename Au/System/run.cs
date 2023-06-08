@@ -1,3 +1,5 @@
+using Microsoft.Win32.SafeHandles;
+
 namespace Au {
 	/// <summary>
 	/// Execute or open programs, files, folders, web pages, etc, start new threads.
@@ -465,21 +467,26 @@ namespace Au {
 		/// <summary>
 		/// Starts new thread like <see cref="thread(Action, bool, bool)"/> and gets thread handle and native id.
 		/// </summary>
+		/// <param name="id">Native thread id.</param>
+		/// <param name="thread"><b>Thread</b> object.</param>
+		/// <param name="init">Called in the new thread before <i>threadProc</i>. This function (<b>run.thread</b>) waits until it returns.</param>
+		/// <returns>Thread handle. Don't forget to dispose.</returns>
 		/// <inheritdoc cref="thread(Action, bool, bool)"/>
-		public static unsafe Thread thread(out IntPtr handle, out int id, Action threadProc, bool background = true, bool sta = true) {
-			IntPtr h = default; int i = 0;
+		public static unsafe SafeWaitHandle thread(out int id, out Thread thread, Action threadProc, bool background = true, bool sta = true, Action init = null) {
+			SafeWaitHandle h = null; int i = 0;
 			using var ev = Api.CreateEvent(false);
-			var t = new Thread(() => {
-				h = Api.OpenThread(Api.THREAD_ALL_ACCESS, false, i = Api.GetCurrentThreadId());
+			thread = new Thread(() => {
+				init?.Invoke();
+				h = new(Api.OpenThread(Api.THREAD_ALL_ACCESS, false, i = Api.GetCurrentThreadId()), ownsHandle: true);
 				Api.SetEvent(ev);
 				threadProc();
 			});
-			if (background) t.IsBackground = true;
-			if (sta) t.SetApartmentState(ApartmentState.STA);
-			t.Start();
+			if (background) thread.IsBackground = true;
+			if (sta) thread.SetApartmentState(ApartmentState.STA);
+			thread.Start();
 			Api.WaitForSingleObject(ev, -1);
-			handle = h; id = i;
-			return t;
+			id = i;
+			return h;
 
 			//Almost same speed as other overload when JITed, but first time several times slower, eg 1 -> 2.5 ms.
 			//	With CreateThread faster, but it cannot be used in a public function (then some .NET features work differently).

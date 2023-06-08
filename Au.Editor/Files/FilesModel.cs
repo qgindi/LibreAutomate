@@ -869,9 +869,9 @@ partial class FilesModel {
 			f = _currentFile;
 		}
 		if (f == null) return;
-		if (f.IsCodeFile) new DProperties(f).Show();
-		//else if(f.IsFolder) new DFolderProperties(f).Show();
-		//else new DOtherFileProperties(f).Show();
+		if (f.IsCodeFile) DProperties.ShowFor(f);
+		//else if(f.IsFolder) DFolderProperties.ShowFor(f);
+		//else DOtherFileProperties.ShowFor(f);
 	}
 	
 	#endregion

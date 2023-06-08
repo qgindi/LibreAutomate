@@ -379,7 +379,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Shows the window and waits until closed.
 	/// </summary>
-	/// <param name="owner">Owner window. Sets <see cref="Window.Owner"/>.</param>
+	/// <param name="owner">Owner window or element. Sets <see cref="Window.Owner"/>.</param>
 	/// <exception cref="InvalidOperationException">
 	/// - Container is not of type <b>Window</b>.
 	/// - Missing <b>End</b> for a panel added with a <b>StartX</b> function.
@@ -388,12 +388,15 @@ public class wpfBuilder {
 	/// Calls <see cref="End"/>, sets <see cref="Window.Owner"/> and calls <see cref="Window.ShowDialog"/>.
 	/// You can instead call these functions directly. Or call <see cref="Window.Show"/> to show as non-modal window, ie don't wait. Or add <see cref="Panel"/> to some container window or other element, etc.
 	/// </remarks>
-	public bool ShowDialog(Window owner = null) {
+	public bool ShowDialog(DependencyObject owner = null) {
 		_ThrowIfNotWindow();
 		if (_IsNested) throw new InvalidOperationException("Missing End() for a StartX() panel");
 		End();
 		//if (script.isWpfPreview) _window.Preview(); //no
-		_window.Owner = owner; //SHOULDDO: try to support AnyWnd. Why WPF here supports only Window? Why if we need Popup or HwndSource?
+		
+		_window.Owner = owner == null ? null : owner as Window ?? Window.GetWindow(owner);
+		//SHOULDDO: try to support AnyWnd. Why WPF here supports only Window and not Popup or HwndSource?
+		
 		return true == _window.ShowDialog();
 	}
 	

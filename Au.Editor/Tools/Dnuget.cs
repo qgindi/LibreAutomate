@@ -16,21 +16,9 @@ using Au.Controls;
 //Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
 
 class DNuget : KDialogWindow {
-	public static void AaShow(string package = null) {
-		if (s_dialog == null) {
-			s_dialog = new();
-			s_dialog.Show();
-		} else {
-			s_dialog.Hwnd().ActivateL(true);
-		}
-		if (package != null) s_dialog._tPackage.Text = package;
-	}
-	static DNuget s_dialog;
-
-	protected override void OnClosed(EventArgs e) {
-		s_dialog = null;
-		App.Model.UnloadingThisWorkspace -= Close;
-		base.OnClosed(e);
+	public static void ShowSingle(string package = null) {
+		var d = ShowSingle(() => new DNuget());
+		if (package != null) d._tPackage.Text = package;
 	}
 
 	readonly TextBox _tPackage;
@@ -42,14 +30,8 @@ class DNuget : KDialogWindow {
 	readonly string _nugetDir = App.Model.NugetDirectory;
 	readonly List<string> _folders = new();
 
-	///
-	public DNuget() {
-		Title = "NuGet packages";
-#if !SCRIPT
-		Owner = App.Wmain;
-		ShowInTaskbar = false;
-#endif
-
+	DNuget() {
+		InitWinProp("NuGet packages", App.Wmain);
 		var b = new wpfBuilder(this).WinSize(550, 500).Columns(-1, 0);
 
 		b.R.StartGrid<GroupBox>("Install").Columns(0, 76, 0, -1, 0);
@@ -127,6 +109,11 @@ A script can use packages from multiple folders if they are compatible.");
 			await _RunDotnet("--list-sdks", s => { if (!sdkOK) sdkOK = s.ToInt() >= 6; }); //"6.0.2 [path]"
 			if (!sdkOK) infoSDK.Visibility = Visibility.Visible;
 		};
+	}
+
+	protected override void OnClosed(EventArgs e) {
+		App.Model.UnloadingThisWorkspace -= Close;
+		base.OnClosed(e);
 	}
 
 	void _AddFolder() {

@@ -210,3 +210,5 @@ class HttpServerSessionExamples : HttpServerSession {
 		#endregion
 	}
 }
+
+/// See also: <link>https://www.libreautomate.com/forum/showthread.php?tid=7468<>

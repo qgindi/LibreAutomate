@@ -13,7 +13,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 
 /// The above code is for a standard simple HTML table. Example: <link>https://www.w3schools.com/html/html_tables.asp</link>
 /// Many HTML tables aren't so simple. Often they are even not true HTML tables (TABLE/ROW/CELL). Often cells contain multiple elements; they are different in each column, and sometimes even different in some rows. Code like the above example can be used with such nonstandard or complex tables too, but may need more editing.
-/// In the <link https://www.libreautomate.com/forum>forum</link> you can find some real scripts that extract data from complex tables and solve various problems. Search for posts containing text elm and FindAll. And of course ask for help if need.
+/// In <link>https://www.libreautomate.com/forum<> you can find some real scripts that extract data from complex tables and solve various problems. Search for posts containing text elm and FindAll. And of course ask for help if need.
 ///
 /// To create code, use the "Find UI element" tool, action 'FindAll, table'. Recommended steps:
 /// 

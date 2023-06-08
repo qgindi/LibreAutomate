@@ -1,7 +1,7 @@
 /*
 The source of cookbook folders and recipes is workspace "Cookbook" in app folder.
 The program presents it as the cookbook tree: folder -> folder, script -> recipe, others ignored.
-	Also ignored scripts and folders if name starts with "-". Files/folders with such names are not added to the program setup file.
+	Also ignores scripts and folders if name starts with "-". Files/folders with such names are not added to the program setup file.
 When a node is selected in the tree, the program parses the script and presents as a recipe.
 A script can contain doc comments and codes.
 Doc comments (/// TEXT and /** TEXT) are rendered as text.
