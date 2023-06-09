@@ -28,8 +28,7 @@ Editor window
 ## How to build
 Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 or 11 SDK.
 
-1. Open Au.sln in Visual Studio. Ignore "failed to load project" errors.
+1. Open Au.sln in Visual Studio.
 2. Build solution (not just the startup project).
 3. Switch to platform x86, build solution, switch back to AnyCPU.
-4. Copy missing files (.db, .dll, etc) from the installed program folder to the output folder "_".
-5. Run Au.Editor project. It should open the editor window.
+4. Run Au.Editor project. It should open the editor window.
