@@ -1,0 +1,2473 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.CodeAnalysis.CSharp.Features</name>
+    </assembly>
+    <members>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0103">
+            <summary>
+            name does not exist in context
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0246">
+            <summary>
+            type or namespace could not be found
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0305">
+            <summary>
+            wrong number of type args
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1061">
+            <summary>
+            type does not contain a definition of method or extension method
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1935">
+            <summary>
+            cannot find implementation of query pattern
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0308">
+            <summary>
+            The non-generic type 'A' cannot be used with type arguments
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0122">
+            <summary>
+            'A' is inaccessible due to its protection level
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0307">
+            <summary>
+            The using alias 'A' cannot be used with type arguments
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0616">
+            <summary>
+            'A' is not an attribute class
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1501">
+            <summary>
+             No overload for method 'X' takes 'N' arguments
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1503">
+            <summary>
+            cannot convert from 'int' to 'string'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1574">
+            <summary>
+            XML comment on 'construct' has syntactically incorrect cref attribute 'name'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1580">
+            <summary>
+            Invalid type for parameter 'parameter number' in XML comment cref attribute
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1581">
+            <summary>
+            Invalid return type in XML comment cref attribute
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1584">
+            <summary>
+            XML comment has syntactically incorrect cref attribute
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1929">
+            <summary>
+            Type 'X' does not contain a valid extension method accepting 'Y'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1955">
+            <summary>
+            Property cannot be used like a method
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0428">
+            <summary>
+            Cannot convert method group 'X' to non-delegate type 'Y'. Did you intend to invoke the method?
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS7036">
+            <summary>
+             There is no argument given that corresponds to the required formal parameter 'X' of 'Y'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS8129">
+            <summary>
+            o Deconstruct instance or extension method was found for type 'X', with N out parameters
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS0281">
+            <summary>
+            Internal symbol inaccessible because public key is wrong
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS4036">
+            <summary>
+            'X' does not contain a definition for 'Y' and no extension method 'Y' accepting a first argument of type 'X' could be found (are you missing a using directive for 'System'?)
+            Specialized for WinRT
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS1579">
+            <summary>
+            foreach statement cannot operate on variables of type 'X' because 'X' does not contain a public instance or extension definition for 'GetEnumerator'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS8414">
+            <summary>
+            foreach statement cannot operate on variables of type 'X' because 'X' does not contain a public instance or extension definition for 'GetEnumerator'. Did you mean 'await foreach' rather than 'foreach'?
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS8411">
+            <summary>
+            Asynchronous foreach statement cannot operate on variables of type 'X' because 'X' does not contain a suitable public instance or extension definition for 'GetAsyncEnumerator'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AddImport.AddImportDiagnosticIds.CS8415">
+            <summary>
+            Asynchronous foreach statement cannot operate on variables of type 'X' because 'X' does not contain a suitable public instance or extension definition for 'GetAsyncEnumerator'. Did you mean 'foreach' rather than 'await foreach'?
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.AddImport.CSharpAddImportCodeFixProvider.#ctor(Microsoft.CodeAnalysis.Packaging.IPackageInstallerService,Microsoft.CodeAnalysis.SymbolSearch.ISymbolSearchService)">
+            <summary>For testing purposes only (so that tests can pass in mock values)</summary> 
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.AddMissingReference.CSharpAddMissingReferenceCodeFixProvider.#ctor(Microsoft.CodeAnalysis.Packaging.IPackageInstallerService,Microsoft.CodeAnalysis.SymbolSearch.ISymbolSearchService)">
+            <summary>For testing purposes only (so that tests can pass in mock values)</summary> 
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.BraceCompletion.AbstractCurlyBraceOrBracketCompletionService.s_closingBraceSyntaxAnnotation">
+            <summary>
+            Annotation used to find the closing brace location after formatting changes are applied.
+            The closing brace location is then used as the caret location.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.BraceCompletion.AbstractCurlyBraceOrBracketCompletionService.FormatTrackingSpan(Microsoft.CodeAnalysis.ParsedDocument,System.Int32,System.Int32,System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.Formatting.Rules.AbstractFormattingRule},Microsoft.CodeAnalysis.Indentation.IndentationOptions,System.Threading.CancellationToken)">
+            <summary>
+            Formats the span between the opening and closing points, options permitting.
+            Returns the text changes that should be applied to the input document to 
+            get the formatted text and the end of the close curly brace in the formatted text.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.BraceCompletion.InterpolatedStringBraceCompletionService">
+            <summary>
+            Brace completion service for double quotes marking an interpolated string.
+            Note that the <see cref="T:Microsoft.CodeAnalysis.CSharp.BraceCompletion.StringLiteralBraceCompletionService"/> is used for
+            other double quote completions.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.BraceCompletion.InterpolatedStringBraceCompletionService.CanProvideBraceCompletion(System.Char,System.Int32,Microsoft.CodeAnalysis.ParsedDocument,System.Threading.CancellationToken)">
+            <summary>
+            Only return this service as valid when we're starting an interpolated string.
+            Otherwise double quotes should be completed using the <see cref="T:Microsoft.CodeAnalysis.CSharp.BraceCompletion.StringLiteralBraceCompletionService"/>
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.BraceCompletion.InterpolatedStringBraceCompletionService.IsPositionInInterpolatedStringContext(Microsoft.CodeAnalysis.ParsedDocument,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Returns true when the input position could be starting an interpolated string if opening quotes were typed.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.BraceCompletion.InterpolationBraceCompletionService">
+            <summary>
+            Brace completion service used for completing curly braces inside interpolated strings.
+            In other curly brace completion scenarios the <see cref="T:Microsoft.CodeAnalysis.CSharp.BraceCompletion.CurlyBraceCompletionService"/> should be used.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.BraceCompletion.InterpolationBraceCompletionService.CanProvideBraceCompletion(System.Char,System.Int32,Microsoft.CodeAnalysis.ParsedDocument,System.Threading.CancellationToken)">
+            <summary>
+            Only return this service as valid when we're typing curly braces inside an interpolated string.
+            Otherwise curly braces should be completed using the <see cref="T:Microsoft.CodeAnalysis.CSharp.BraceCompletion.CurlyBraceCompletionService"/>
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.BraceCompletion.InterpolationBraceCompletionService.IsPositionInInterpolationContext(Microsoft.CodeAnalysis.ParsedDocument,System.Int32)">
+            <summary>
+            Returns true when the input position could be starting an interpolation expression if a curly brace was typed.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.ConvertToAsync.CSharpConvertToAsyncMethodCodeFixProvider.CS4008">
+            <summary>
+            Cannot await void.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.FullyQualify.CSharpFullyQualifyCodeFixProvider.CS0103">
+            <summary>
+            name does not exist in context
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.FullyQualify.CSharpFullyQualifyCodeFixProvider.CS0104">
+            <summary>
+            'reference' is an ambiguous reference between 'identifier' and 'identifier'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.FullyQualify.CSharpFullyQualifyCodeFixProvider.CS0246">
+            <summary>
+            type or namespace could not be found
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.FullyQualify.CSharpFullyQualifyCodeFixProvider.CS0305">
+            <summary>
+            wrong number of type args
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.FullyQualify.CSharpFullyQualifyCodeFixProvider.CS0308">
+            <summary>
+            The non-generic type 'A' cannot be used with type arguments
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.AddExplicitCast.CSharpAddExplicitCastCodeFixProvider.CS0266">
+            <summary>
+            CS0266: Cannot implicitly convert from type 'x' to 'y'. An explicit conversion exists (are you missing a cast?)
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.AddExplicitCast.CSharpAddExplicitCastCodeFixProvider.CS1503">
+            <summary>
+            CS1503: Argument 1: cannot convert from 'x' to 'y'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.AddInheritdoc.AddInheritdocCodeFixProvider.CS1591">
+            <summary>
+            CS1591: Missing XML comment for publicly visible type or member 'Type_or_Member'
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.CodeFixes.FixReturnType.CSharpFixReturnTypeCodeFixProvider">
+            <summary>
+            Helps fix void-returning methods or local functions to return a correct type.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.Iterator.CSharpAddYieldCodeFixProvider.CS0029">
+            <summary>
+            CS0029: Cannot implicitly convert from type 'x' to 'y'
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.Iterator.CSharpAddYieldCodeFixProvider.CS0266">
+            <summary>
+            CS0266: Cannot implicitly convert from type 'x' to 'y'. An explicit conversion exists (are you missing a cast?)
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.CodeFixes.Iterator.CSharpChangeToIEnumerableCodeFixProvider.CS1624">
+            <summary>
+            CS1624: The body of 'x' cannot be an iterator block because 'y' is not an iterator interface type
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CodeLens.CSharpCodeLensDisplayInfoService.GetDisplayNode(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Returns the node that should be displayed
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CodeLens.CSharpCodeLensDisplayInfoService.GetDisplayName(Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Gets the DisplayName for the given node.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.CodeRefactorings.AddAwait.CSharpAddAwaitCodeRefactoringProvider">
+            <summary>
+            This refactoring complements the AddAwait fixer. It allows adding `await` and `await ... .ConfigureAwait(false)` even there is no compiler error to trigger the fixer.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CodeRefactorings.ExtractClass.CSharpExtractClassCodeRefactoringProvider.#ctor(Microsoft.CodeAnalysis.ExtractClass.IExtractClassOptionsService)">
+            <summary>
+            Test purpose only.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp.CSharpPullMemberUpCodeRefactoringProvider.#ctor(Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog.IPullMemberUpOptionsService)">
+            <summary>
+            Test purpose only.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CodeRefactorings.UseRecursivePatterns.UseRecursivePatternsCodeRefactoringProvider.TryGetCommonReceiver(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.SemanticModel)">
+            <summary>
+            Obtain the outermost common receiver between two expressions.  This can succeed with a null 'CommonReceiver'
+            in the case that the common receiver is the 'implicit this'.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ChangeNamespace.CSharpChangeNamespaceService.TryGetReplacementReferenceSyntax(Microsoft.CodeAnalysis.SyntaxNode,System.Collections.Immutable.ImmutableArray{System.String},Microsoft.CodeAnalysis.LanguageServices.ISyntaxFactsService,Microsoft.CodeAnalysis.SyntaxNode@,Microsoft.CodeAnalysis.SyntaxNode@)">
+            <summary>
+            Try to get a new node to replace given node, which is a reference to a top-level type declared inside the namespace to be changed.
+            If this reference is the right side of a qualified name, the new node returned would be the entire qualified name. Depends on 
+            whether <paramref name="newNamespaceParts"/> is provided, the name in the new node might be qualified with this new namespace instead.
+            </summary>
+            <param name="reference">A reference to a type declared inside the namespace to be changed, which is calculated based on results from 
+            `SymbolFinder.FindReferencesAsync`.</param>
+            <param name="newNamespaceParts">If specified, and the reference is qualified with namespace, the namespace part of original reference 
+            will be replaced with given namespace in the new node.</param>
+            <param name="oldNode">The node to be replaced. This might be an ancestor of original reference.</param>
+            <param name="newNode">The replacement node.</param>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ChangeNamespace.CSharpChangeNamespaceService.ChangeNamespaceDeclaration(Microsoft.CodeAnalysis.CSharp.Syntax.CompilationUnitSyntax,System.Collections.Immutable.ImmutableArray{System.String},System.Collections.Immutable.ImmutableArray{System.String})">
+            <summary>
+            Try to change the namespace declaration based on the following rules:
+                - if neither declared nor target namespace are "" (i.e. global namespace),
+                then we try to change the name of the namespace.
+                - if declared namespace is "", then we try to move all types declared 
+                in global namespace in the document into a new namespace declaration.
+                - if target namespace is "", then we try to move all members in declared 
+                namespace to global namespace (i.e. remove the namespace declaration).    
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ChangeNamespace.CSharpChangeNamespaceService.TryGetApplicableContainerFromSpanAsync(Microsoft.CodeAnalysis.Document,Microsoft.CodeAnalysis.Text.TextSpan,System.Threading.CancellationToken)">
+             <summary>
+             For the node specified by <paramref name="span"/> to be applicable container, it must be a namespace 
+             declaration or a compilation unit, contain no partial declarations and meet the following additional
+             requirements:
+             
+             - If a namespace declaration:
+                1. It doesn't contain or is nested in other namespace declarations
+                2. The name of the namespace is valid (i.e. no errors)
+            
+             - If a compilation unit (i.e. <paramref name="span"/> is empty), there must be no namespace declaration
+               inside (i.e. all members are declared in global namespace)
+             </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ChangeNamespace.CSharpChangeNamespaceService.GetOpeningAndClosingTriviaOfNamespaceDeclaration(Microsoft.CodeAnalysis.CSharp.Syntax.BaseNamespaceDeclarationSyntax)">
+            <summary>
+            return trivia attached to namespace declaration. 
+            Leading trivia of the node and trivia around opening brace, as well as
+            trivia around closing brace are concatenated together respectively.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Completion.Providers.AwaitCompletionProvider.GetSpanStart(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Gets the span start where async keyword should go.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Completion.Providers.DeclarationNameCompletionProvider.IsRelevantSymbolKind(Microsoft.CodeAnalysis.ISymbol)">
+            <summary>
+            Check if the symbol is a relevant kind.
+            Only relevant if symbol could cause a conflict with a local variable.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Completion.Providers.FirstBuiltInCompletionProvider">
+            <summary>
+            Provides a completion provider that always appears before any built-in completion provider. This completion
+            provider does not provide any completions.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Completion.Providers.LastBuiltInCompletionProvider">
+            <summary>
+            Provides a completion provider that always appears after all built-in completion providers. This completion
+            provider does not provide any completions.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider">
+            <summary>
+            Provides completion for uncommon unnamed symbols, like conversions, indexer and operators.  These completion 
+            items will be brought up with <c>dot</c> like normal, but will end up inserting more than just a name into
+            the editor.  For example, committing a conversion will insert the conversion prior to the expression being
+            dotted off of.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.SortingPrefix">
+            <summary>
+            CompletionItems for indexers/operators should be sorted below other suggestions like methods or properties
+            of the type.  We accomplish this by placing a character known to be greater than all other normal identifier
+            characters as the start of our item's name. This doesn't affect what we insert though as all derived
+            providers have specialized logic for what they need to do.
+            </summary> 
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.KindName">
+            <summary>
+            Used to store what sort of unnamed symbol a completion item represents.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.DocumentationCommentXmlName">
+            <summary>
+            Used to store the doc comment for some operators/conversions.  This is because some of them will be
+            synthesized, so there will be no symbol we can recover after the fact in <see cref="M:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.GetDescriptionAsync(Microsoft.CodeAnalysis.Document,Microsoft.CodeAnalysis.Completion.CompletionItem,Microsoft.CodeAnalysis.Completion.CompletionOptions,Microsoft.CodeAnalysis.LanguageServices.SymbolDescriptionOptions,System.Threading.CancellationToken)"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.SortText(System.Int32,System.String)">
+            <summary>
+            We keep operators sorted in a specific order.  We don't want to sort them alphabetically, but instead want
+            to keep things like <c>==</c> and <c>!=</c> together.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.GetDotAndExpressionStart(Microsoft.CodeAnalysis.SyntaxNode,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets the dot-like token we're after, and also the start of the expression we'd want to place any text before.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.RehydrateName">
+            <summary>
+            Tag to let us know we need to rehydrate the conversion from the parameter and return type.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.s_operatorInfo">
+            <summary>
+            Ordered in the order we want to display operators in the completion list.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.Providers.UnnamedSymbolCompletionProvider.s_operatorNameToInfo">
+            <summary>
+            Mapping from operator name to info about it.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Completion.Providers.SymbolCompletionProvider.IsTriggerInArgumentListAsync(Microsoft.CodeAnalysis.Document,System.Int32,System.Threading.CancellationToken)">
+            <returns><see langword="null"/> if not an argument list character, otherwise whether the trigger is in an argument list.</returns>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Completion.Providers.FirstBuiltInArgumentProvider">
+            <summary>
+            Provides an argument provider that always appears before any built-in argument provider. This argument
+            provider does not provide any argument values.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Completion.Providers.LastBuiltInArgumentProvider">
+            <summary>
+            Provides an argumnet provider that always appears after all built-in argument providers. This argument
+            provider does not provide any argument values.
+            </summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.AbstractSyntacticSingleKeywordRecommender.DefaultMatchPriority">
+            <summary>
+            Matching priority for the provided item when <see cref="M:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.AbstractSyntacticSingleKeywordRecommender.ShouldPreselect(Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery.CSharpSyntaxContext,System.Threading.CancellationToken)"/> returns <see langword="false"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.NuintKeywordRecommender.Keyword">
+            <summary>
+            We set the <see cref="T:Microsoft.CodeAnalysis.Completion.MatchPriority"/> of this item less than the default value so that completion selects
+            the <see langword="null"/> keyword over it as the user starts typing.  Being able to type <see
+            langword="null"/> with just <c>nu</c> is ingrained in muscle memory and is more important to maintain versus
+            strict adherence to our normal textual matching procedure.  The user can always still get this item simply
+            by typing one additional character and unambiguously referring to <c>nui</c>.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.RefKeywordRecommender.RefMemberModifiers">
+            <summary>
+            Same as <see cref="F:Microsoft.CodeAnalysis.CSharp.Utilities.SyntaxKindSet.AllMemberModifiers"/> with ref specific exclusions
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.RefKeywordRecommender.RefGlobalMemberModifiers">
+            <summary>
+            Same as <see cref="F:Microsoft.CodeAnalysis.CSharp.Utilities.SyntaxKindSet.AllGlobalMemberModifiers"/> with ref-specific exclusions
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.RefKeywordRecommender.RefGlobalMemberScriptModifiers">
+            <summary>
+            Same as <see cref="F:Microsoft.CodeAnalysis.CSharp.Utilities.SyntaxKindSet.AllGlobalMemberModifiers"/> with ref-specific exclusions for C# script
+            </summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.Completion.KeywordRecommenders.UShortKeywordRecommender.DefaultMatchPriority">
+            <summary>
+            We set the <see cref="T:Microsoft.CodeAnalysis.Completion.MatchPriority"/> of this item less than the default value so that
+            completion selects the <see langword="using"/> keyword over it as the user starts typing.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.ConvertCast.CSharpConvertDirectCastToTryCastCodeRefactoringProvider">
+             <summary>
+             Refactor:
+                 var o = (object)1;
+            
+             Into:
+                 var o = 1 as object;
+             </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.ConvertCast.CSharpConvertTryCastToDirectCastCodeRefactoringProvider">
+             <summary>
+             Refactor:
+                 var o = 1 as object;
+            
+             Into:
+                 var o = (object)1;
+             </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.AbstractConverter.CreateQueryExpressionOrLinqInvocation(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken},System.Boolean)">
+            <summary>
+            Creates a query expression or a linq invocation expression.
+            </summary>
+            <param name="selectExpression">expression to be used into the last Select in the query expression or linq invocation.</param>
+            <param name="leadingTokensForSelect">extra leading tokens to be added to the select clause</param>
+            <param name="trailingTokensForSelect">extra trailing tokens to be added to the select clause</param>
+            <param name="convertToQuery">Flag indicating if a query expression should be generated</param>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.AbstractConverter.CreateQueryExpression(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken})">
+            <summary>
+            Creates a query expression.
+            </summary>
+            <param name="selectExpression">expression to be used into the last 'select ...' in the query expression</param>
+            <param name="leadingTokensForSelect">extra leading tokens to be added to the select clause</param>
+            <param name="trailingTokensForSelect">extra trailing tokens to be added to the select clause</param>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.AbstractConverter.CreateLinqInvocationOrSimpleExpression(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken})">
+            <summary>
+            Creates a linq invocation expression.
+            </summary>
+            <param name="selectExpression">expression to be used in the last 'Select' invocation</param>
+            <param name="leadingTokensForSelect">extra leading tokens to be added to the select clause</param>
+            <param name="trailingTokensForSelect">extra trailing tokens to be added to the select clause</param>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.AbstractConverter.CreateLinqInvocationForExtendedNode(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,System.Int32@,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax@,System.Boolean@)">
+            <summary>
+            Creates a linq invocation expression for the <see cref="P:Microsoft.CodeAnalysis.ConvertLinq.ConvertForEachToLinqQuery.ForEachInfo`2.ConvertingExtendedNodes"/> node at the given index <paramref name="extendedNodeIndex"/>
+            or returns the <paramref name="selectExpression"/> if all extended nodes have been processed.
+            </summary>
+            <param name="selectExpression">Innermost select expression</param>
+            <param name="extendedNodeIndex">Index into <see cref="P:Microsoft.CodeAnalysis.ConvertLinq.ConvertForEachToLinqQuery.ForEachInfo`2.ConvertingExtendedNodes"/> to be processed and updated.</param>
+            <param name="receiver">Receiver for the generated linq invocation. Updated when processing an if statement.</param>
+            <param name="hasForEachChild">Flag indicating if any of the processed <see cref="P:Microsoft.CodeAnalysis.ConvertLinq.ConvertForEachToLinqQuery.ForEachInfo`2.ConvertingExtendedNodes"/> is a <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.ForEachStatementSyntax"/>.</param>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.AbstractToMethodConverter">
+            <summary>
+            Provides a conversion to query.Method() like query.ToList(), query.Count().
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.ToCountConverter">
+            <summary>
+            Provides a conversion to query.Count().
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.ToCountConverter.CreateDefaultStatement(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
+            Input:
+            foreach(...)
+            {
+                ...
+                ...
+                counter++;
+             }
+             
+             Output:
+             counter += queryGenerated.Count();
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.ToToListConverter">
+            <summary>
+            Provides a conversion to query.ToList().
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.ToToListConverter.CanReplaceInitialization(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,System.Threading.CancellationToken)">
+            Checks that the expression is "new List();"
+            Exclude "new List(a);" and new List() { 1, 2, 3}
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.ConvertForEachToLinqQuery.ToToListConverter.CreateDefaultStatement(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
+            Input:
+            foreach(...)
+            {
+                ...
+                ...
+                list.Add(item);
+             }
+             
+             Output:
+             list.AddRange(queryGenerated);
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.CSharpConvertLinqQueryToForEachProvider.FindNodeToRefactorAsync(Microsoft.CodeAnalysis.CodeRefactorings.CodeRefactoringContext)">
+            <summary>
+            Finds a QueryExpressionSyntax node for the span.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertLinq.CSharpConvertLinqQueryToForEachProvider.Converter.CanTryConvertToLocalFunction">
+            <summary>
+            Checks if the location of the query expression allows to convert it at least to a local function.
+            It still does not guarantees that the conversion can be performed. There can be bail outs of later stages.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertNamespace.ConvertNamespaceTransform.ConvertNamespaceDeclarationAsync(Microsoft.CodeAnalysis.Document,Microsoft.CodeAnalysis.CSharp.Syntax.NamespaceDeclarationSyntax,Microsoft.CodeAnalysis.Formatting.SyntaxFormattingOptions,System.Threading.CancellationToken)">
+            <summary>
+            Asynchrounous implementation for code fixes.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ConvertNamespace.ConvertNamespaceTransform.ConvertNamespaceDeclaration(Microsoft.CodeAnalysis.ParsedDocument,Microsoft.CodeAnalysis.CSharp.Syntax.NamespaceDeclarationSyntax,Microsoft.CodeAnalysis.Formatting.SyntaxFormattingOptions,System.Threading.CancellationToken)">
+            <summary>
+            Synchronous implementation for a command handler.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Debugging.CSharpBreakpointResolutionService.ResolveBreakpointAsync(Microsoft.CodeAnalysis.Document,Microsoft.CodeAnalysis.Text.TextSpan,System.Threading.CancellationToken)">
+            <summary>
+            Returns null if a breakpoint can't be placed at the specified position.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.Debugging.CSharpProximityExpressionsService">
+            <summary>
+            Given a position in a source file, returns the expressions in close proximity that should
+            show up in the debugger 'autos' window.  In general, the expressions we place into the autos
+            window are things that appear to be 'side effect free'.  Note: because we only use the syntax
+            tree for this, it's possible for us to get this wrong.  However, this should only happen in
+            code that behaves unexpectedly.  For example, we will assume that "a + b" is side effect free
+            (when in practice it may not be).  
+            
+            The general tactic we take is to add the expressions for the statements on the
+            line the debugger is currently at.  We will also try to find the 'previous' statement as well
+            to add the expressions from that.  The 'previous' statement is a bit of an interesting beast.
+            Consider, for example, if the user has just jumped out of a switch and is the statement
+            directly following it.  What is the previous statement?  Without keeping state, there's no way
+            to know.  So, in this case, we treat all 'exit points' (i.e. the last statement of a switch
+            section) of the switch statement as the 'previous statement'.  There are many cases like this
+            we need to handle.  Basically anything that might have nested statements/blocks might
+            contribute to the 'previous statement'
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Debugging.CSharpProximityExpressionsService.GetProximityExpressionsAsync(Microsoft.CodeAnalysis.Document,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Returns null indicating a failure.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.Analyzers.CSharpPreferFrameworkTypeDiagnosticAnalyzer.IsPredefinedTypeReplaceableWithFrameworkType(Microsoft.CodeAnalysis.CSharp.Syntax.PredefinedTypeSyntax)">
+            <remarks>
+             every predefined type keyword except <c>void</c> can be replaced by its framework type in code.
+            </remarks>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Diagnostics.SimplifyTypeNames.TypeSyntaxSimplifierWalker.s_predefinedTypeMetadataNames">
+            <summary>
+            This set contains the full names of types that have equivalent predefined names in the language.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.Diagnostics.SimplifyTypeNames.TypeSyntaxSimplifierWalker._aliasedNames">
+            <summary>
+            Set of type and namespace names that have an alias associated with them.  i.e. if the
+            user has <c>using X = System.DateTime</c>, then <c>DateTime</c> will be in this set.
+            This is used so we can easily tell if we should try to simplify some identifier to an
+            alias when we encounter it.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.SimplifyTypeNames.TypeSyntaxSimplifierWalker.TrySimplify(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            This is the root helper that all other TrySimplify methods in this type must call
+            through once they think there is a good chance something is simplifiable.  It does the
+            work of actually going through the real simplification system to validate that the
+            simplification is legal and does not affect semantics.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.AddBraces.CSharpAddBracesDiagnosticAnalyzer.ContainsInterleavedDirective(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.CSharp.Syntax.StatementSyntax,System.Threading.CancellationToken)">
+            <summary>
+            Check if there are interleaved directives on the statement.
+            Handles special case with if/else.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.AddBraces.CSharpAddBracesDiagnosticAnalyzer.IsConsideredMultiLine(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            <para>In general, statements are considered multiline if any of the following span more than one line:</para>
+            <list type="bullet">
+            <item><description>The part of the statement preceding the embedded statement</description></item>
+            <item><description>The embedded statement itself</description></item>
+            <item><description>The part of the statement following the embedded statement, for example the
+            <c>while (...);</c> portion of a <c>do ... while (...);</c> statement</description></item>
+            </list>
+            <para>The third condition is not checked for <c>else</c> clauses because they are only considered multiline
+            when their embedded statement is multiline.</para>
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.AddBraces.CSharpAddBracesDiagnosticAnalyzer.RequiresBracesToMatchContext(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Determines whether <paramref name="statement"/> should use braces under a
+            <see cref="F:Microsoft.CodeAnalysis.CodeStyle.PreferBracesPreference.WhenMultiline"/> preference due to the presence of braces on one or more
+            sibling statements (the "context").
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.AddBraces.CSharpAddBracesDiagnosticAnalyzer.GetOutermostIfStatementOfSequence(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Gets the top-most <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.IfStatementSyntax"/> for which <paramref name="ifStatementOrElseClause"/> is
+            part of the <c>if</c>/<c>else if</c>/<c>else</c> sequence.
+            </summary>
+            <remarks>
+            <para>For the purpose of brace usage analysis, the embedded statements of an <c>if</c>/<c>else if</c>/<c>else</c>
+            sequence are considered sibling statements, even though they don't appear as immediate siblings in the
+            syntax tree. This method walks up the syntax tree to find the <c>if</c> statement that starts the
+            sequence.</para>
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.Diagnostics.AddBraces.CSharpAddBracesDiagnosticAnalyzer.AnyPartOfIfSequenceUsesBraces(Microsoft.CodeAnalysis.CSharp.Syntax.IfStatementSyntax)">
+            <summary>
+            Determines if any embedded statement of an <c>if</c>/<c>else if</c>/<c>else</c> sequence uses braces. Only
+            the embedded statements falling <em>immediately</em> under one of these nodes are checked.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.BreakpointSpans.TryGetClosestBreakpointSpan(Microsoft.CodeAnalysis.SyntaxNode,System.Int32,Microsoft.CodeAnalysis.Text.TextSpan@)">
+            <summary>
+            Given a syntax token determines a text span delimited by the closest applicable sequence points 
+            encompassing the token.
+            </summary>
+            <remarks>
+            If the span exists it is possible to place a breakpoint at the given position.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.BreakpointSpans.IsBreakableExpression(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
+             <summary>
+             There are a few places where we allow breakpoints on expressions. 
+            
+             1) When the expression is the body of a lambda/method/operator/property/indexer.
+             2) The expression is a breakable expression inside a query expression.
+             3) The expression is in a for statement initializer, condition or incrementor.
+             4) The expression is a foreach initializer.
+             5) The expression is the value of an arm of a switch expression
+             </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.BreakpointSpans.GetEnvelope(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Returns a span that contains all possible breakpoint spans of top-level <paramref name="declaration"/>
+            and no breakpoint spans that do not belong to the <paramref name="declaration"/>.
+            
+            Returns default if the declaration does not have any breakpoint spans.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer.TryFindMemberDeclaration(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode,Roslyn.Utilities.OneOrMany{Microsoft.CodeAnalysis.SyntaxNode}@)">
+            <returns>
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.BaseMethodDeclarationSyntax"/> for methods, operators, constructors, destructors and accessors.
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.VariableDeclaratorSyntax"/> for field initializers.
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax"/> for property initializers and expression bodies.
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.IndexerDeclarationSyntax"/> for indexer expression bodies.
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.ArrowExpressionClauseSyntax"/> for getter of an expression-bodied property/indexer.
+            </returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer.TryGetDeclarationBody(Microsoft.CodeAnalysis.SyntaxNode)">
+            <returns>
+            Given a node representing a declaration or a top-level match node returns:
+            - <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.BlockSyntax"/> for method-like member declarations with block bodies (methods, operators, constructors, destructors, accessors).
+            - <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax"/> for variable declarators of fields, properties with an initializer expression, or 
+              for method-like member declarations with expression bodies (methods, properties, indexers, operators)
+            - <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.CompilationUnitSyntax"/> for top level statements
+            
+            A null reference otherwise.
+            </returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer.TryGetActiveTokens(Microsoft.CodeAnalysis.SyntaxNode)">
+            <returns>
+            If <paramref name="node"/> is a method, accessor, operator, destructor, or constructor without an initializer,
+            tokens of its block body, or tokens of the expression body.
+            
+            If <paramref name="node"/> is an indexer declaration the tokens of its expression body.
+            
+            If <paramref name="node"/> is a property declaration the tokens of its expression body or initializer.
+              
+            If <paramref name="node"/> is a constructor with an initializer, 
+            tokens of the initializer concatenated with tokens of the constructor body.
+            
+            If <paramref name="node"/> is a variable declarator of a field with an initializer,
+            subset of the tokens of the field declaration depending on which variable declarator it is.
+            
+            If <paramref name="node"/> is a <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.CompilationUnitSyntax"/> the tokens of all its global statements.
+            Null reference otherwise.
+            </returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer.GetExceptionHandlingAncestors(Microsoft.CodeAnalysis.SyntaxNode,System.Boolean)">
+            <summary>
+            Return nodes that represent exception handlers encompassing the given active statement node.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer.GetExceptionHandlingRegion(Microsoft.CodeAnalysis.SyntaxNode,System.Boolean@)">
+            <summary>
+            An active statement (leaf or not) inside a "catch" makes the catch block read-only.
+            An active statement (leaf or not) inside a "finally" makes the whole try/catch/finally block read-only.
+            An active statement (non leaf)    inside a "try" makes the catch/finally block read-only.
+            </summary>
+            <remarks>
+            Exception handling regions are only needed to be tracked if they contain user code.
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.UsingStatementSyntax"/> and using <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.LocalDeclarationStatementSyntax"/> generate finally blocks,
+            but they do not contain non-hidden sequence points.
+            </remarks>
+            <param name="node">An exception handling ancestor of an active statement node.</param>
+            <param name="coversAllChildren">
+            True if all child nodes of the <paramref name="node"/> are contained in the exception region represented by the <paramref name="node"/>.
+            </param>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.CSharpEditAndContinueAnalyzer.ReportRudeEditsForSwitchWhenClauses(Microsoft.CodeAnalysis.PooledObjects.ArrayBuilder{Microsoft.CodeAnalysis.EditAndContinue.RudeEditDiagnostic},Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Reports rude edits when an active statement is a when clause in a switch statement and any of the switch cases or the switch value changed.
+            This is necessary since the switch emits long-lived synthesized variables to store results of pattern evaluations.
+            These synthesized variables are mapped to the slots of the new methods via ordinals. The mapping preserves the values of these variables as long as 
+            exactly the same variables are emitted for the new switch as they were for the old one and their order didn't change either.
+            This is guaranteed if none of the case clauses have changed.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.#ctor(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode,System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxNode},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxNode},System.Boolean)">
+            <summary>
+            Creates a syntax comparer
+            </summary>
+            <param name="oldRoot">The root node to start comparisons from</param>
+            <param name="newRoot">The new root node to compare against</param>
+            <param name="oldRootChildren">Child nodes that should always be compared</param>
+            <param name="newRootChildren">New child nodes to compare against</param>
+            <param name="compareStatementSyntax">Whether this comparer is in "statement mode"</param>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.TiedToAncestor(Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.Label)">
+            <summary>
+            Return 1 if it is desirable to report two edits (delete and insert) rather than a move edit
+            when the node changes its parent.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.GetDescendantTokensIgnoringSeparators``1(Microsoft.CodeAnalysis.SeparatedSyntaxList{``0})">
+            <summary>
+            Enumerates tokens of all nodes in the list. Doesn't include separators.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.ComputeDistance(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Calculates the distance between two syntax nodes, disregarding trivia. 
+            </summary>
+            <remarks>
+            Distance is a number within [0, 1], the smaller the more similar the nodes are. 
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.ComputeDistance(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.SyntaxToken)">
+            <summary>
+            Calculates the distance between two syntax tokens, disregarding trivia. 
+            </summary>
+            <remarks>
+            Distance is a number within [0, 1], the smaller the more similar the tokens are. 
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.ComputeDistance(System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken})">
+            <summary>
+            Calculates the distance between two sequences of syntax tokens, disregarding trivia. 
+            </summary>
+            <remarks>
+            Distance is a number within [0, 1], the smaller the more similar the sequences are. 
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.ComputeDistance(System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxToken})">
+            <summary>
+            Calculates the distance between two sequences of syntax tokens, disregarding trivia. 
+            </summary>
+            <remarks>
+            Distance is a number within [0, 1], the smaller the more similar the sequences are. 
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.ComputeDistance(System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxNode},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxNode})">
+            <summary>
+            Calculates the distance between two sequences of syntax nodes, disregarding trivia. 
+            </summary>
+            <remarks>
+            Distance is a number within [0, 1], the smaller the more similar the sequences are. 
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.ComputeDistance(System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxNode},System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxNode})">
+            <summary>
+            Calculates the distance between two sequences of syntax tokens, disregarding trivia. 
+            </summary>
+            <remarks>
+            Distance is a number within [0, 1], the smaller the more similar the sequences are. 
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.GetSequenceEdits(System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxNode},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxNode})">
+            <summary>
+            Calculates the edits that transform one sequence of syntax nodes to another, disregarding trivia.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.GetSequenceEdits(System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxNode},System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxNode})">
+            <summary>
+            Calculates the edits that transform one sequence of syntax nodes to another, disregarding trivia.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.GetSequenceEdits(System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Generic.IEnumerable{Microsoft.CodeAnalysis.SyntaxToken})">
+            <summary>
+            Calculates the edits that transform one sequence of syntax tokens to another, disregarding trivia.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxComparer.GetSequenceEdits(System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxToken},System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.SyntaxToken})">
+            <summary>
+            Calculates the edits that transform one sequence of syntax tokens to another, disregarding trivia.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxUtilities.IsAsyncDeclaration(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            True if the specified declaration node is an async method, anonymous function, lambda, local function.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.EditAndContinue.SyntaxUtilities.GetSuspensionPoints(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Returns a list of all await expressions, await foreach statements, await using declarations and yield statements in the given body,
+            in the order in which they occur.
+            </summary>
+            <returns>
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.AwaitExpressionSyntax"/> for await expressions,
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.YieldStatementSyntax"/> for yield return statements,
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.CommonForEachStatementSyntax"/> for await foreach statements,
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.VariableDeclaratorSyntax"/> for await using declarators.
+            <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.UsingStatementSyntax"/> for await using statements.
+            </returns>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ExtractMethod.CSharpMethodExtractor.CSharpCodeGenerator.FixDeclarationExpressionsAndDeclarationPatterns(Microsoft.CodeAnalysis.CSharp.Syntax.StatementSyntax,System.Collections.Generic.HashSet{Microsoft.CodeAnalysis.SyntaxAnnotation})">
+            <summary>
+            If the statement has an <c>out var</c> declaration expression for a variable which
+            needs to be removed, we need to turn it into a plain <c>out</c> parameter, so that
+            it doesn't declare a duplicate variable.
+            If the statement has a pattern declaration (such as <c>3 is int i</c>) for a variable
+            which needs to be removed, we will annotate it as a conflict, since we don't have
+            a better refactoring.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.GenerateConstructorFromMembers.CSharpGenerateConstructorFromMembersCodeRefactoringProvider.#ctor(Microsoft.CodeAnalysis.PickMembers.IPickMembersService)">
+            <summary>
+            For testing purposes only.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.GenerateConstructor.GenerateConstructorCodeFixProvider">
+            <summary>
+            This <see cref="T:Microsoft.CodeAnalysis.CodeFixes.CodeFixProvider"/> gives users a way to generate constructors for an existing
+            type when a user tries to 'new' up an instance of that type with a set of parameter that does
+            not match any existing constructor.  i.e. it is the equivalent of 'Generate-Method' but for
+            constructors.  Parameters for the constructor will be picked in a manner similar to Generate-
+            Method.  However, this type will also attempt to hook up those parameters to existing fields
+            and properties, or pass them to a this/base constructor if available.
+            
+            Importantly, this type is not responsible for generating constructors for a type based on 
+            the user selecting some fields/properties of that type.  Nor is it responsible for generating
+            derived class constructors for all unmatched base class constructors in a type hierarchy.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.KeywordHighlighting.KeywordHighlighters.LoopHighlighter.HighlightRelatedKeywords(Microsoft.CodeAnalysis.SyntaxNode,System.Collections.Generic.List{Microsoft.CodeAnalysis.Text.TextSpan},System.Boolean,System.Boolean)">
+            <summary>
+            Finds all breaks and continues that are a child of this node, and adds the appropriate spans to the spans list.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.KeywordHighlighting.KeywordHighlighters.ReturnStatementHighlighter.HighlightRelatedKeywords(Microsoft.CodeAnalysis.SyntaxNode,System.Collections.Generic.List{Microsoft.CodeAnalysis.Text.TextSpan})">
+            <summary>
+            Finds all returns that are children of this node, and adds the appropriate spans to the spans list.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.KeywordHighlighting.KeywordHighlighters.SwitchStatementHighlighter.HighlightRelatedKeywords(Microsoft.CodeAnalysis.SyntaxNode,System.Collections.Generic.List{Microsoft.CodeAnalysis.Text.TextSpan},System.Boolean,System.Boolean)">
+            <summary>
+            Finds all breaks and continues that are a child of this node, and adds the appropriate spans to the spans
+            list.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.KeywordHighlighting.KeywordHighlighters.YieldStatementHighlighter.HighlightRelatedKeywords(Microsoft.CodeAnalysis.SyntaxNode,System.Collections.Generic.List{Microsoft.CodeAnalysis.Text.TextSpan})">
+            <summary>
+            Finds all returns that are children of this node, and adds the appropriate spans to the spans list.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ImplementInterface.AbstractChangeImplementionCodeRefactoringProvider.GetImplementedMembers(Microsoft.CodeAnalysis.INamedTypeSymbol,System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.INamedTypeSymbol})">
+            <summary>
+            Returns a mapping from members in our containing types to all the interface members (of
+            the sort we care about) that it implements.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.InlineHints.CSharpInlineHintsService">
+            <summary>
+            The service to locate all positions where inline hints should be placed.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.InlineHints.CSharpInlineParameterNameHintsService">
+            <summary>
+            The service to locate the positions in which the adornments should appear
+            as well as associate the adornments back to the parameter name
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.IntroduceVariable.CSharpIntroduceVariableService.CanIntroduceVariableFor(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
+            <summary>
+            Checks for conditions where we should not generate a variable for an expression
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LineSeparators.CSharpLineSeparatorService.GetLineSeparatorsAsync(Microsoft.CodeAnalysis.Document,Microsoft.CodeAnalysis.Text.TextSpan,System.Threading.CancellationToken)">
+            <summary>
+            Given a tree returns line separator spans.
+            The operation may take fairly long time on a big tree so it is cancellable.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LineSeparators.CSharpLineSeparatorService.IsSeparableBlock(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>Node types that are interesting for line separation.</summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LineSeparators.CSharpLineSeparatorService.IsSeparableContainer(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>Node types that may contain separable blocks.</summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LineSeparators.CSharpLineSeparatorService.ProcessNodeList``1(Microsoft.CodeAnalysis.SyntaxList{``0},Microsoft.CodeAnalysis.PooledObjects.ArrayBuilder{Microsoft.CodeAnalysis.Text.TextSpan},System.Threading.CancellationToken)">
+            <summary>
+            If node is separable and not the last in its container => add line separator after the node
+            If node is separable and not the first in its container => ensure separator before the node
+            last separable node in Program needs separator after it.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.MakeLocalFunctionStatic.MakeLocalFunctionStaticCodeFixHelper.CreateParameterSymbols(System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.ISymbol})">
+            <summary>
+            Creates a new parameter symbol paired with the original captured symbol for each captured variables.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.MetadataAsSource.CSharpMetadataAsSourceService.AddNullableRegionsAsync(Microsoft.CodeAnalysis.Document,System.Threading.CancellationToken)">
+            <summary>
+            Adds <c>#nullable enable</c> and <c>#nullable disable</c> annotations to the file as necessary.  Note that
+            this does not try to be 100% accurate, but rather it handles the most common cases out there.  Specifically,
+            if a file contains any nullable annotated/not-annotated types, then we prefix the file with <c>#nullable
+            enable</c>.  Then if we hit any members that explicitly have *oblivious* types, but no annotated or
+            non-annotated types, then we switch to <c>#nullable disable</c> for those specific members.
+            <para/>
+            This is technically innacurate for possible, but very uncommon cases.  For example, if the user's code
+            explicitly did something like this:
+            
+            <code>
+            public void Goo(string goo,
+                            #nullable disable
+                            string bar
+                            #nullable enable
+                            string baz);
+            </code>
+            
+            Then we would be unable to handle that.  However, this is highly unlikely to happen, and so we accept the
+            inaccuracy for the purpose of simplicity and for handling the much more common cases of either the entire
+            file being annotated, or the user individually disabling annotations at the member level.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.QuickInfo.CSharpSemanticQuickInfoProvider.GetBindableNodeForTokenIndicatingLambda(Microsoft.CodeAnalysis.SyntaxToken,Microsoft.CodeAnalysis.SyntaxNode@)">
+            <summary>
+            If the token is the '=>' in a lambda, or the 'delegate' in an anonymous function,
+            return the syntax for the lambda or anonymous function.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.ReplacePropertyWithMethods.CSharpReplacePropertyWithMethodsService.IsValueName(Microsoft.CodeAnalysis.CSharp.Syntax.XmlNameSyntax)">
+            <summary>
+            Used by the documentation comment rewriters to identify top-level <c>&lt;value&gt;</c> nodes.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.SignatureHelp.AbstractCSharpSignatureHelpProvider.GetAwaitableUsage(Microsoft.CodeAnalysis.IMethodSymbol,Microsoft.CodeAnalysis.SemanticModel,System.Int32)">
+            <summary>
+            We no longer show awaitable usage text in SignatureHelp, but IntelliCode expects this
+            method to exist.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.SignatureHelp.AbstractCSharpSignatureHelpProvider.LightweightOverloadResolution.GuessCurrentSymbolAndParameter(Microsoft.CodeAnalysis.SeparatedSyntaxList{Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax},System.Collections.Immutable.ImmutableArray{Microsoft.CodeAnalysis.IMethodSymbol},System.Int32,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.LanguageServices.ISemanticFactsService)">
+            <summary>
+            If the symbol could not be bound, we could be dealing with a partial invocation, we'll try to find a possible overload.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.SignatureHelp.AbstractCSharpSignatureHelpProvider.LightweightOverloadResolution.FindParameterIndexIfCompatibleMethod(Microsoft.CodeAnalysis.SeparatedSyntaxList{Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax},Microsoft.CodeAnalysis.IMethodSymbol,System.Int32,Microsoft.CodeAnalysis.SemanticModel,Microsoft.CodeAnalysis.LanguageServices.ISemanticFactsService,System.Int32@)">
+            <summary>
+            Simulates overload resolution with the arguments provided so far and determines if you might be calling this overload.
+            Returns true if an overload is acceptable. In that case, we output the parameter that should be highlighted given the cursor's
+            position in the partial invocation.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.SignatureHelp.AbstractCSharpSignatureHelpProvider.LightweightOverloadResolution.TryPrepareArgToParamMap(Microsoft.CodeAnalysis.SeparatedSyntaxList{Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax},Microsoft.CodeAnalysis.IMethodSymbol,Microsoft.CodeAnalysis.PooledObjects.ArrayBuilder{System.Int32})">
+            <summary>
+            Find the parameter index corresponding to each argument provided
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.SignatureHelp.AbstractCSharpSignatureHelpProvider.LightweightOverloadResolution.TryGetArgumentIndex(Microsoft.CodeAnalysis.SeparatedSyntaxList{Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax},System.Int32)">
+            <summary>
+            Given the cursor position, find which argument is active.
+            This will be useful to later find which parameter should be highlighted.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.SignatureHelp.ElementAccessExpressionSignatureHelpProvider.IncompleteElementAccessExpression">
+            Error tolerance case for
+                "goo[$$]" or "goo?[$$]"
+            which is parsed as an ArrayTypeSyntax variable declaration instead of an ElementAccessExpression  
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.SignatureHelp.ElementAccessExpressionSignatureHelpProvider.ConditionalAccessExpression">
+            Error tolerance case for
+                "new String()?[$$]"
+            which is parsed as a BracketedArgumentListSyntax parented by an ElementBindingExpressionSyntax parented by a ConditionalAccessExpressionSyntax
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.SignatureHelp.PrimaryConstructorBaseTypeSignatureHelpProvider">
+            <summary>
+            Implements SignatureHelp and ParameterInfo for <see cref="T:Microsoft.CodeAnalysis.CSharp.Syntax.PrimaryConstructorBaseTypeSyntax"/>
+            such as 'record Student(int Id) : Person($$"first", "last");`.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseExpressionBodyForLambda.UseExpressionBodyForLambdaHelpers.GetOptionSeverity(Microsoft.CodeAnalysis.CodeStyle.CodeStyleOption2{Microsoft.CodeAnalysis.CodeStyle.ExpressionBodyPreference})">
+            <summary>
+            Helper to get the true ReportDiagnostic severity for a given option.  Importantly, this
+            handle ReportDiagnostic.Default and will map that back to the appropriate value in that
+            case.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseExpressionBody.UseExpressionBodyHelper`1">
+            <summary>
+            Helper class that allows us to share lots of logic between the diagnostic analyzer and the
+            code refactoring provider.  Those can't share a common base class due to their own inheritance
+            requirements with <see cref="T:Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer"/> and "CodeRefactoringProvider".
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseLocalFunction.CSharpUseLocalFunctionDiagnosticAnalyzer">
+            <summary>
+            Looks for code of the form:
+            
+                Func&lt;int, int&gt; fib = n =>
+                {
+                    if (n &lt;= 2)
+                        return 1
+                        
+                    return fib(n - 1) + fib(n - 2);
+                }
+                
+            and converts it to:
+            
+                int fib(int n)
+                {
+                    if (n &lt;= 2)
+                        return 1
+                        
+                    return fib(n - 1) + fib(n - 2);
+                }
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternMatching.CSharpIsAndCastCheckWithoutNameDiagnosticAnalyzer">
+            <summary>
+            DiagnosticAnalyzer that looks for is-tests and cast-expressions, and offers to convert them
+            to use patterns.  i.e. if the user has <c>obj is TestFile &amp;&amp; ((TestFile)obj).Name == "Test"</c>
+            it will offer to convert that <c>obj is TestFile file &amp;&amp; file.Name == "Test"</c>.
+            
+            Complements <see cref="T:Microsoft.CodeAnalysis.CSharp.UsePatternMatching.CSharpIsAndCastCheckDiagnosticAnalyzer"/> (which does the same,
+            but only for code cases where the user has provided an appropriate variable name in
+            code that can be used).
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternMatching.CSharpAsAndNullCheckDiagnosticAnalyzer">
+            <summary>
+            Looks for code of the forms:
+            
+                var x = o as Type;
+                if (x != null) ...
+            
+            and converts it to:
+            
+                if (o is Type x) ...
+                
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternMatching.CSharpIsAndCastCheckDiagnosticAnalyzer">
+            <summary>
+            Looks for code of the form:
+            
+                if (expr is Type)
+                {
+                    var v = (Type)expr;
+                }
+                
+            and converts it to:
+            
+                if (expr is Type v)
+                {
+                }
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternMatching.CSharpUseNotPatternDiagnosticAnalyzer">
+            <summary>
+            Looks for code of the forms:
+            
+                var x = o as Type;
+                if (!(x is Y y)) ...
+            
+            and converts it to:
+            
+                if (x is not Y y) ...
+                
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.IsLambda(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Returns true if the specified node represents a lambda.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.GetLambda(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Given a node that represents a lambda body returns a node that represents the lambda.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.TryGetCorrespondingLambdaBody(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            See SyntaxNode.GetCorrespondingLambdaBody.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.IsLambdaBody(Microsoft.CodeAnalysis.SyntaxNode,System.Boolean)">
+            <summary>
+            Returns true if the specified <paramref name="node"/> represents a body of a lambda.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.IsReducedSelectOrGroupByClause(Microsoft.CodeAnalysis.CSharp.Syntax.SelectOrGroupClauseSyntax,Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
+            <summary>
+            When queries are translated into expressions select and group-by expressions such that
+            1) select/group-by expression is the same identifier as the "source" identifier and
+            2) at least one Where or OrderBy clause but no other clause is present in the contained query body or
+               the expression in question is a group-by expression and the body has no clause
+            
+            do not translate into lambdas.
+            By "source" identifier we mean the identifier specified in the from clause that initiates the query or the query continuation that includes the body.
+            
+            The above condition can be derived from the language specification (chapter 7.16.2) as follows:
+            - In order for 7.16.2.5 "Select clauses" to be applicable the following conditions must hold:
+              - There has to be at least one clause in the body, otherwise the query is reduced into a final form by 7.16.2.3 "Degenerate query expressions".
+              - Only where and order-by clauses may be present in the query body, otherwise a transformation in 7.16.2.4 "From, let, where, join and orderby clauses"
+                produces pattern that doesn't match the requirements of 7.16.2.5.
+              
+            - In order for 7.16.2.6 "Groupby clauses" to be applicable the following conditions must hold:
+              - Only where and order-by clauses may be present in the query body, otherwise a transformation in 7.16.2.4 "From, let, where, join and orderby clauses"
+                produces pattern that doesn't match the requirements of 7.16.2.5.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.IsLambdaBodyStatementOrExpression(Microsoft.CodeAnalysis.SyntaxNode)">
+            <remarks>
+            In C# lambda bodies are expressions or block statements. In both cases it's a single node.
+            In VB a lambda body might be a sequence of nodes (statements). 
+            We define this function to minimize differences between C# and VB implementation.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.TryGetLambdaBodies(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode@,Microsoft.CodeAnalysis.SyntaxNode@)">
+            <summary>
+            If the specified node represents a lambda returns a node (or nodes) that represent its body (bodies).
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.AreEquivalentIgnoringLambdaBodies(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Compares content of two nodes ignoring lambda bodies and trivia.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.IsQueryPairLambda(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            "Pair lambda" is a synthesized lambda that creates an instance of an anonymous type representing a pair of values. 
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.IsClosureScope(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Returns true if the specified node is of a kind that could represent a closure scope -- that
+            is, a scope of a captured variable.
+            Doesn't check whether or not the node actually declares any captured variable.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.LambdaUtilities.GetDeclaratorPosition(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Given a node that represents a variable declaration, lambda or a closure scope return the position to be used to calculate 
+            the node's syntax offset with respect to its containing member.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.CSharpDeclarationComputer.GetExpressionBodySyntax(Microsoft.CodeAnalysis.CSharp.CSharpSyntaxNode)">
+            <summary>
+            Gets the expression-body syntax from an expression-bodied member. The
+            given syntax must be for a member which could contain an expression-body.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.ConvertTypeOfToNameOf.CSharpConvertTypeOfToNameOfDiagnosticAnalyzer">
+            <summary>
+            Finds code like typeof(someType).Name and determines whether it can be changed to nameof(someType), if yes then it offers a diagnostic
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.NewLines.ConsecutiveStatementPlacement.CSharpConsecutiveStatementPlacementDiagnosticAnalyzer">
+            <summary>
+            Analyzer that finds code of the form:
+            <code>
+            if (cond)
+            {
+            }
+            NextStatement();
+            </code>
+            
+            And requires it to be of the form:
+            <code>
+            if (cond)
+            {
+            }
+            
+            NextStatement();
+            </code>
+            
+            Specifically, all blocks followed by another statement must have a blank line between them.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryDiscardDesignation.CSharpRemoveUnnecessaryDiscardDesignationDiagnosticAnalyzer">
+            <summary>
+            Supports code like <c>o switch { int _ => ... }</c> to just <c>o switch { int => ... }</c> in C# 9 and above.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryLambdaExpression.CSharpRemoveUnnecessaryLambdaExpressionDiagnosticAnalyzer">
+            <summary>
+            DiagnosticAnalyzer that looks code like <c>Goo(() => Bar())</c> and offers to convert it to <c>Goo(Bar)</c>.
+            This is only offered on C# 11 and above where this delegate can be cached and will not cause allocations each
+            time.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.FileHeaders.CSharpFileHeaderHelper">
+            <summary>
+            Helper class used for working with file headers.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.FileHeaders.CSharpFileHeaderCodeFixProvider">
+            <summary>
+            Implements a code fix for file header diagnostics.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.InlineDeclaration.CSharpInlineDeclarationDiagnosticAnalyzer">
+            <summary>
+            Looks for code of the form:
+            
+                int i;
+                if (int.TryParse(s, out i)) { }
+                
+            And offers to convert it to:
+            
+                if (int.TryParse(s, out var i)) { }   or
+                if (int.TryParse(s, out int i)) { }   or
+            
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.MisplacedUsingDirectives.MisplacedUsingDirectivesCodeFixProvider">
+            <summary>
+            Implements a code fix for all misplaced using statements.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.SimplifyPropertyPattern.CSharpSimplifyPropertyPatternDiagnosticAnalyzer">
+            <summary>
+            Looks for code of the form:
+            
+                <c>x is { a: { b: ... } }</c>
+                
+            and converts it to:
+            
+                <c>x is { a.b: ... }</c>
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseCompoundAssignment.CSharpUseCompoundCoalesceAssignmentDiagnosticAnalyzer">
+            <summary>
+            Looks for expressions of the form:
+            <list type="number">
+                <item><c>expr ?? (expr = value)</c> and converts it to <c>expr ??= value</c>.</item>
+                <item><c>if (expr is null) expr = value</c> and converts it to <c>expr ??= value</c>.</item>
+            </list>
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseConditionalExpression.MultiLineConditionalExpressionFormattingRule">
+            <summary>
+            Special formatting rule that will convert a conditional expression into the following
+            form if it has the <see cref="F:Microsoft.CodeAnalysis.UseConditionalExpression.UseConditionalExpressionCodeFixHelpers.SpecializedFormattingAnnotation"/> on it:
+            
+            <code>
+                var v = expr
+                    ? whenTrue
+                    : whenFalse
+            </code>
+            
+            i.e. both branches will be on a newline, indented once from the parent indentation.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.RemoveUnnecessaryCast.CSharpRemoveUnnecessaryCastDiagnosticAnalyzer">
+            <summary>
+            Supports simplifying cast expressions like <c>(T)x</c> as well as try-cast expressions like <c>x as T</c>
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.RemoveUnusedMembers.CSharpRemoveUnusedMembersCodeFixProvider.AdjustAndAddAppropriateDeclaratorsToRemove(System.Collections.Generic.HashSet{Microsoft.CodeAnalysis.CSharp.Syntax.FieldDeclarationSyntax},System.Collections.Generic.HashSet{Microsoft.CodeAnalysis.SyntaxNode})">
+            <summary>
+            This method adjusts the <paramref name="declarators"/> to remove based on whether or not all variable declarators
+            within a field declaration should be removed,
+            i.e. if all the fields declared within a field declaration are unused,
+            we can remove the entire field declaration instead of individual variable declarators.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseIndexOperatorDiagnosticAnalyzer">
+             <summary>
+             <para>Analyzer that looks for code like:</para>
+            
+             <list type="number">
+             <item><description><c>s[s.Length - n]</c> and offers to change that to <c>s[^n]</c></description></item>
+             <item><description></description><c>s.Get(s.Length - n)</c> and offers to change that to <c>s.Get(^n)</c></item>
+             </list>
+            
+             <para>In order to do convert between indexers, the type must look 'indexable'.  Meaning, it must
+             have an <see cref="T:System.Int32"/>-returning property called <c>Length</c> or <c>Count</c>, and it must have both an
+             <see cref="T:System.Int32"/>-indexer, and a <see cref="T:System.Index"/>-indexer.  In order to convert between methods, the type
+             must have identical overloads except that one takes an <see cref="T:System.Int32"/>, and the other a <see cref="T:System.Index"/>.</para>
+            
+             <para>It is assumed that if the type follows this shape that it is well behaved and that this
+             transformation will preserve semantics.  If this assumption is not good in practice, we
+             could always limit the feature to only work on an allow list of known safe types.</para>
+            
+             <para>Note that this feature only works if the code literally has <c>expr1.Length - expr2</c>. If
+             code has this, and is calling into a method that takes either an <see cref="T:System.Int32"/> or a <see cref="T:System.Index"/>,
+             it feels very safe to assume this is well behaved and switching to <c>^expr2</c> is going to
+             preserve semantics.</para>
+             </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseIndexOperatorDiagnosticAnalyzer.InfoCache">
+            <summary>
+            Helper type to cache information about types while analyzing the compilation.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseIndexOperatorDiagnosticAnalyzer.InfoCache.IndexType">
+            <summary>
+            The <see cref="T:System.Index"/> type.  Needed so that we only fixup code if we see the type
+            we're using has an indexer that takes an <see cref="T:System.Index"/>.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseIndexOperatorDiagnosticAnalyzer.InfoCache._methodToMemberInfo">
+            <summary>
+            Mapping from a method like <c>MyType.Get(int)</c> to the <c>Length</c>/<c>Count</c> property for
+            <c>MyType</c> as well as the optional <c>MyType.Get(System.Index)</c> member if it exists.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseRangeOperatorDiagnosticAnalyzer">
+             <summary>
+             <para>Analyzer that looks for several variants of code like <c>s.Slice(start, end - start)</c> and
+             offers to update to <c>s[start..end]</c> or <c>s.Slice(start..end)</c>.  In order to convert to the
+             indexer, the type being called on needs a slice-like method that takes two ints, and returns
+             an instance of the same type. It also needs a <c>Length</c>/<c>Count</c> property, as well as an indexer
+             that takes a <see cref="T:System.Range"/> instance.  In order to convert between methods, there need to be
+             two overloads that are equivalent except that one takes two ints, and the other takes a
+             <see cref="T:System.Range"/>.</para>
+            
+             <para>It is assumed that if the type follows this shape that it is well behaved and that this
+             transformation will preserve semantics.  If this assumption is not good in practice, we
+             could always limit the feature to only work on an allow list of known safe types.</para>
+             </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseRangeOperatorDiagnosticAnalyzer.InfoCache">
+            <summary>
+            Helper type to cache information about types while analyzing the compilation.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseRangeOperatorDiagnosticAnalyzer.InfoCache.RangeType">
+            <summary>
+            The <see cref="T:System.Range"/> type.  Needed so that we only fixup code if we see the type
+            we're using has an indexer that takes a <see cref="T:System.Range"/>.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseRangeOperatorDiagnosticAnalyzer.Result.Op2">
+            <summary>
+            Can be null, if we are dealing with one-argument call to a slice-like method.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.TryGetLengthOrCountProperty(Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Find an `int MyType.Count` or `int MyType.Length` property.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.TryGetNoArgInt32Property(Microsoft.CodeAnalysis.ITypeSymbol,System.String)">
+            <summary>
+            Tried to find a public, non-static, int-returning property in the given type with the
+            specified <paramref name="name"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.IsInstanceLengthCheck(Microsoft.CodeAnalysis.IPropertySymbol,Microsoft.CodeAnalysis.IOperation,Microsoft.CodeAnalysis.IOperation)">
+            <summary>
+            Checks if this <paramref name="operation"/> is `expr.Length` where `expr` is equivalent
+            to the <paramref name="instance"/> we were originally invoking an accessor/method off
+            of.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.IsSubtraction(Microsoft.CodeAnalysis.IOperation,Microsoft.CodeAnalysis.Operations.IBinaryOperation@)">
+            <summary>
+            Checks if <paramref name="operation"/> is a binary subtraction operator. If so, it
+            will be returned through <paramref name="subtraction"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.IsIntIndexingMethod(Microsoft.CodeAnalysis.IMethodSymbol)">
+            <summary>
+            Look for methods like "SomeType MyType.Get(int)".  Also matches against the 'getter'
+            of an indexer like 'SomeType MyType.this[int]`
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.IsTwoArgumentSliceLikeMethod(Microsoft.CodeAnalysis.IMethodSymbol)">
+            <summary>
+            Look for methods like "SomeType MyType.Slice(int start, int length)".  Note that the
+            names of the parameters are checked to ensure they are appropriate slice-like.  These
+            names were picked by examining the patterns in the BCL for slicing members.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.IsOneArgumentSliceLikeMethod(Microsoft.CodeAnalysis.IMethodSymbol)">
+            <summary>
+            Look for methods like "SomeType MyType.Slice(int start)".  Note that the
+            name of the parameter is checked to ensure it is appropriate slice-like.
+            This name was picked by examining the patterns in the BCL for slicing members.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.GetIndexer(Microsoft.CodeAnalysis.ITypeSymbol,Microsoft.CodeAnalysis.ITypeSymbol,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Finds a public, non-static indexer in the given type.  The indexer has to accept the
+            provided <paramref name="parameterType"/> and must return the provided <paramref
+            name="returnType"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.Helpers.GetOverload(Microsoft.CodeAnalysis.IMethodSymbol,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Finds a public, non-static overload of <paramref name="method"/> in the containing type.
+            The overload must have the same return type as <paramref name="method"/>.  It must only
+            have a single parameter, with the provided <paramref name="parameterType"/>.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.MemberInfo.LengthLikeProperty">
+            <summary>
+            The <c>Length</c>/<c>Count</c> property on the type.  Must be public, non-static, no-parameter,
+            <see cref="T:System.Int32"/>-returning.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.MemberInfo.OverloadedMethodOpt">
+            <summary>
+            Optional paired overload that takes a <see cref="T:System.Range"/>/<see cref="T:System.Index"/> parameter instead.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CSharpUseRangeOperatorCodeFixProvider.IsFromEnd(Microsoft.CodeAnalysis.IPropertySymbol,Microsoft.CodeAnalysis.IOperation,Microsoft.CodeAnalysis.IOperation@)">
+            <summary>
+            check if its the form: `expr.Length - value`.  If so, update rangeOperation to then
+            point to 'value' so that we can generate '^value'.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UseIndexOrRangeOperator.CodeFixHelpers.IndexExpression(Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax)">
+            <summary>
+            Creates an `^expr` index expression from a given `expr`.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseTupleSwap.CSharpUseTupleSwapDiagnosticAnalyzer">
+             <summary>
+             Looks for code of the form:
+             
+             <code>
+                 var temp = expr_a;
+                 expr_a = expr_b;
+                 expr_b = temp;
+             </code>
+            
+             and converts it to:
+             
+             <code>
+                 (expr_b, expr_a) = (expr_a, expr_b);
+             </code>
+             
+             </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern">
+            <summary>
+            Base class to represent a pattern constructed from various checks
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern.Type">
+            <summary>
+            Represents a type-pattern, constructed from an is-expression
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern.Source">
+            <summary>
+            Represents a source-pattern, constructed from C# patterns
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern.Constant">
+            <summary>
+            Represents a constant-pattern, constructed from an equality check
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern.Relational">
+            <summary>
+            Represents a relational-pattern, constructed from relational operators
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern.Binary">
+            <summary>
+            Represents an and/or pattern, constructed from a logical and/or expression.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.AnalyzedPattern.Not">
+            <summary>
+            Represents a not-pattern, constructed from inequality check or a logical-not expression.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.CSharpUsePatternCombinatorsAnalyzer.ConstantResult.None">
+            <summary>
+            None of operands were constant.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.CSharpUsePatternCombinatorsAnalyzer.ConstantResult.Left">
+            <summary>
+            The left operand is the constant.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.CSharpUsePatternCombinatorsAnalyzer.ConstantResult.Right">
+            <summary>
+            The right operand is the constant.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.CSharp.UsePatternCombinators.CSharpUsePatternCombinatorsAnalyzer.Flip(Microsoft.CodeAnalysis.Operations.BinaryOperatorKind)">
+            <summary>
+            Changes the direction the operator is pointing at.
+            </summary>
+            <remarks>
+            Relational patterns only come in the prefix form so we'll have to
+            flip the operator if the constant happens to be on the left-hand-side.
+            For instance: `123 &gt; x` would be rewritten as `x is &lt; 123`.
+            </remarks>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseSimpleUsingStatement.UseSimpleUsingStatementDiagnosticAnalyzer">
+             <summary>
+             Looks for code like:
+            
+                 ```c#
+                 using (var a = b)
+                 using (var c = d)
+                 using (var e = f)
+                 {
+                 }
+                 ```
+             
+             And offers to convert it to:
+            
+                 ```c#
+                 using var a = b;
+                 using var c = d;
+                 using var e = f;
+                 ```
+            
+             (this of course works in the case where there is only one using).
+             
+             A few design decisions:
+                 
+             1. We only offer this if the entire group of usings in a nested stack can be
+                converted.  We don't want to take a nice uniform group and break it into
+                a combination of using-statements and using-declarations.  That may feel 
+                less pleasant to the user than just staying uniform.
+             
+             2. We're conservative about converting.  Because `using`s may be critical for
+                program correctness, we only convert when we're absolutely *certain* that
+                semantics will not change.
+             </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.CSharp.AliasAmbiguousType.CSharpAliasAmbiguousTypeCodeFixProvider.CS0104">
+            <summary>
+            'reference' is an ambiguous reference between 'identifier' and 'identifier'
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.CSharp.UseInterpolatedVerbatimString.CSharpUseInterpolatedVerbatimStringCodeFixProvider">
+            <summary>
+            Converts a verbatim interpolated string @$"" to an interpolated verbatim string $@""
+            </summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Inline_temporary_variable">
+            <summary>Inline temporary variable</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Conflict_s_detected">
+            <summary>Conflict(s) detected.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Invert_if">
+            <summary>Invert if</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Add_await_and_ConfigureAwaitFalse">
+            <summary>Add 'await' and 'ConfigureAwait(false)'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.lambda_expression">
+            <summary>&lt;lambda expression&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_potential_lambda_declaration">
+            <summary>Autoselect disabled due to potential lambda declaration.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.member_name">
+            <summary>&lt;member name&gt; =</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_possible_explicitly_named_anonymous_type_member_creation">
+            <summary>Autoselect disabled due to possible explicitly named anonymous type member creation.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.pattern_variable">
+            <summary>&lt;pattern variable&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_potential_pattern_variable_declaration">
+            <summary>Autoselect disabled due to potential pattern variable declaration.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.range_variable">
+            <summary>&lt;range variable&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_potential_range_variable_declaration">
+            <summary>Autoselect disabled due to potential range variable declaration.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Simplify_name_0">
+            <summary>Simplify name '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Simplify_member_access_0">
+            <summary>Simplify member access '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Remove_this_qualification">
+            <summary>Remove 'this' qualification</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Can_t_determine_valid_range_of_statements_to_extract">
+            <summary>Can't determine valid range of statements to extract</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Not_all_code_paths_return">
+            <summary>Not all code paths return</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_does_not_contain_a_valid_node">
+            <summary>Selection does not contain a valid node</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Contains_invalid_selection">
+            <summary>Contains invalid selection.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.The_selection_contains_syntactic_errors">
+            <summary>The selection contains syntactic errors</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_can_not_cross_over_preprocessor_directives">
+            <summary>Selection can not cross over preprocessor directives.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_can_not_contain_a_yield_statement">
+            <summary>Selection can not contain a yield statement.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_can_not_contain_throw_statement">
+            <summary>Selection can not contain throw statement.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_can_not_be_part_of_constant_initializer_expression">
+            <summary>Selection can not be part of constant initializer expression.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_can_not_contain_a_pattern_expression">
+            <summary>Selection can not contain a pattern expression.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.The_selected_code_is_inside_an_unsafe_context">
+            <summary>The selected code is inside an unsafe context.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.No_valid_statement_range_to_extract">
+            <summary>No valid statement range to extract</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.deprecated">
+            <summary>deprecated</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.extension">
+            <summary>extension</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.awaitable">
+            <summary>awaitable</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.awaitable_extension">
+            <summary>awaitable, extension</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Organize_Usings">
+            <summary>Organize Usings</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Make_0_return_Task_instead_of_void">
+            <summary>Make {0} return Task instead of void.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Generate_explicit_conversion_operator_in_0">
+            <summary>Generate explicit conversion operator in '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Generate_implicit_conversion_operator_in_0">
+            <summary>Generate implicit conversion operator in '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.try_block">
+            <summary>try block</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.catch_clause">
+            <summary>catch clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.filter_clause">
+            <summary>filter clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.finally_clause">
+            <summary>finally clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.fixed_statement">
+            <summary>fixed statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.using_statement">
+            <summary>using statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.lock_statement">
+            <summary>lock statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.foreach_statement">
+            <summary>foreach statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.asynchronous_foreach_statement">
+            <summary>asynchronous foreach statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.using_declaration">
+            <summary>using declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.asynchronous_using_declaration">
+            <summary>asynchronous using declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.checked_statement">
+            <summary>checked statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.unchecked_statement">
+            <summary>unchecked statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.yield_return_statement">
+            <summary>yield return statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.yield_break_statement">
+            <summary>yield break statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.await_expression">
+            <summary>await expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.lambda">
+            <summary>lambda</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.anonymous_method">
+            <summary>anonymous method</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.from_clause">
+            <summary>from clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.join_clause">
+            <summary>join clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.let_clause">
+            <summary>let clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.where_clause">
+            <summary>where clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.orderby_clause">
+            <summary>orderby clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.select_clause">
+            <summary>select clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.groupby_clause">
+            <summary>groupby clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.query_body">
+            <summary>query body</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.into_clause">
+            <summary>into clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.is_pattern">
+            <summary>is pattern</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.deconstruction">
+            <summary>deconstruction</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.tuple">
+            <summary>tuple</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.local_function">
+            <summary>local function</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.out_var">
+            <summary>out variable</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.ref_local_or_expression">
+            <summary>ref local or expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.switch_statement">
+            <summary>switch statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.global_statement">
+            <summary>global statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.extern_alias">
+            <summary>extern alias</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.using_directive">
+            <summary>using directive</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.struct_">
+            <summary>struct</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.event_field">
+            <summary>event field</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.conversion_operator">
+            <summary>conversion operator</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.destructor">
+            <summary>destructor</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.indexer">
+            <summary>indexer</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.property_getter">
+            <summary>property getter</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.indexer_getter">
+            <summary>indexer getter</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.property_setter">
+            <summary>property setter</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.indexer_setter">
+            <summary>indexer setter</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.attribute_target">
+            <summary>attribute target</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.The_name_0_does_not_exist_in_the_current_context">
+            <summary>The name '{0}' does not exist in the current context.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Remove_new_modifier">
+            <summary>Remove 'new' modifier</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Properties">
+            <summary>Properties</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_namespace_declaration">
+            <summary>Autoselect disabled due to namespace declaration.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.namespace_name">
+            <summary>&lt;namespace name&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_type_declaration">
+            <summary>Autoselect disabled due to type declaration.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_possible_deconstruction_declaration">
+            <summary>Autoselect disabled due to possible deconstruction declaration.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Upgrade_this_project_to_csharp_language_version_0">
+            <summary>Upgrade this project to C# language version '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Upgrade_all_csharp_projects_to_language_version_0">
+            <summary>Upgrade all C# projects to language version '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.class_name">
+            <summary>&lt;class name&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.interface_name">
+            <summary>&lt;interface name&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.designation_name">
+            <summary>&lt;designation name&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.struct_name">
+            <summary>&lt;struct name&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Make_method_async">
+            <summary>Make method async</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Make_method_async_remain_void">
+            <summary>Make method async (stay void)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_switch_statement">
+            <summary>Convert to 'switch' statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_switch_expression">
+            <summary>Convert to 'switch' expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Use_recursive_patterns">
+            <summary>Use recursive patterns</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Name">
+            <summary>&lt;Name&gt;</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Autoselect_disabled_due_to_member_declaration">
+            <summary>Autoselect disabled due to member declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Suggested_name">
+            <summary>(Suggested name)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Remove_unused_function">
+            <summary>Remove unused function</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Add_parentheses_around_conditional_expression_in_interpolated_string">
+            <summary>Add parentheses</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_foreach">
+            <summary>Convert to 'foreach'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_for">
+            <summary>Convert to 'for'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Allow_unsafe_code_in_this_project">
+            <summary>Allow unsafe code in this project</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_method">
+            <summary>Convert to method</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Add_required_braces_for_single_line_control_statements">
+            <summary>Add required braces for single-line control statements</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_expression_block_body_preferences">
+            <summary>Apply expression/block body preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_inline_out_variable_preferences">
+            <summary>Apply inline 'out' variables preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Make_private_field_readonly_when_possible">
+            <summary>Make private fields readonly when possible</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Use_0">
+            <summary>Use '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Add_missing_usings">
+            <summary>Add missing usings</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Introduce_using_statement">
+            <summary>Introduce 'using' statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Make_ref_struct">
+            <summary>Make 'ref struct'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Assign_out_parameters">
+            <summary>Assign 'out' parameters</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Assign_out_parameters_at_start">
+            <summary>Assign 'out' parameters (at start)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Warning_Inlining_temporary_into_conditional_method_call">
+            <summary>Warning: Inlining temporary into conditional method call.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Warning_Inlining_temporary_variable_may_change_code_meaning">
+            <summary>Warning: Inlining temporary variable may change code meaning.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.local_variable_declaration">
+            <summary>local variable declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.switch_statement_case_clause">
+            <summary>switch statement case clause</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Reverse_for_statement">
+            <summary>Reverse 'for' statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_regular_string">
+            <summary>Convert to regular string</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_verbatim_string">
+            <summary>Convert to verbatim string</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Remove_in_keyword">
+            <summary>Remove 'in' keyword</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Change_to_as_expression">
+            <summary>Change to 'as' expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Change_to_cast">
+            <summary>Change to cast</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.record_">
+            <summary>record</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.record_struct">
+            <summary>record struct</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Enable_nullable_reference_types_in_project">
+            <summary>Enable nullable reference types in project</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_cannot_include_global_statements">
+            <summary>Selection cannot include global statements</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Selection_cannot_include_top_level_statements">
+            <summary>Selection cannot include top-level statements</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Convert_to_raw_string">
+            <summary>Convert to raw string</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.without_leading_whitespace_may_change_semantics">
+            <summary>... without leading whitespace (may change semantics)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_blank_lines_between_consecutive_braces_preferences_experimental">
+            <summary>Apply blank lines between consecutive braces preferences (experimental)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_blank_line_after_colon_in_constructor_initializer_preferences_experimental">
+            <summary>Apply blank line after colon in constructor initializer preferences (experimental)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_conditional_delegate_call_preferences">
+            <summary>Apply conditional delegate call preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_deconstruct_preferences">
+            <summary>Apply deconstruct preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_default_T_preferences">
+            <summary>Apply default(T) preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_embedded_statements_on_same_line_preferences_experimental">
+            <summary>Apply embedded statements on same line preferences (experimental)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_local_over_anonymous_function_preferences">
+            <summary>Apply local over anonymous function preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_method_group_conversion_preferences">
+            <summary>Apply method group conversion preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_namespace_preferences">
+            <summary>Apply namespace preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_new_preferences">
+            <summary>Apply new() preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_parameter_null_preferences">
+            <summary>Apply parameter null preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_pattern_matching_preferences">
+            <summary>Apply pattern matching preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_range_preferences">
+            <summary>Apply range preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_static_local_function_preferences">
+            <summary>Apply static local function preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_throw_expression_preferences">
+            <summary>Apply throw expression preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_using_statement_preferences">
+            <summary>Apply using statement preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Apply_var_preferences">
+            <summary>Apply 'var' preferences</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Add_await">
+            <summary>Add 'await'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpFeaturesResources.Global_using_directives">
+            <summary>Global 'using' directives</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Convert_switch_statement_to_expression">
+            <summary>Convert switch statement to expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_switch_expression">
+            <summary>Use 'switch' expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_explicit_type_instead_of_var">
+            <summary>Use explicit type instead of 'var'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_explicit_type">
+            <summary>Use explicit type</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.use_var_instead_of_explicit_type">
+            <summary>use 'var' instead of explicit type</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_implicit_type">
+            <summary>Use implicit type</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Using_directive_is_unnecessary">
+            <summary>Using directive is unnecessary.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Add_braces">
+            <summary>Add braces</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Add_braces_to_0_statement">
+            <summary>Add braces to '{0}' statement.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Misplaced_using_directive">
+            <summary>Misplaced using directive</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Move_misplaced_using_directives">
+            <summary>Move misplaced using directives</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Using_directives_must_be_placed_inside_of_a_namespace_declaration">
+            <summary>Using directives must be placed inside of a namespace declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Using_directives_must_be_placed_outside_of_a_namespace_declaration">
+            <summary>Using directives must be placed outside of a namespace declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Warning_colon_Moving_using_directives_may_change_code_meaning">
+            <summary>Warning: Moving using directives may change code meaning.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_methods">
+            <summary>Use expression body for methods</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_methods">
+            <summary>Use block body for methods</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_accessors">
+            <summary>Use block body for accessors</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_constructors">
+            <summary>Use block body for constructors</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_indexers">
+            <summary>Use block body for indexers</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_operators">
+            <summary>Use block body for operators</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_conversion_operators">
+            <summary>Use block body for conversion operators</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_properties">
+            <summary>Use block body for properties</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_accessors">
+            <summary>Use expression body for accessors</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_constructors">
+            <summary>Use expression body for constructors</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_indexers">
+            <summary>Use expression body for indexers</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_operators">
+            <summary>Use expression body for operators</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_conversion_operators">
+            <summary>Use expression body for conversion operators</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_properties">
+            <summary>Use expression body for properties</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_local_functions">
+            <summary>Use block body for local functions</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_local_functions">
+            <summary>Use expression body for local functions</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Unreachable_code_detected">
+            <summary>Unreachable code detected</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_pattern_matching">
+            <summary>Use pattern matching</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_is_null_check">
+            <summary>Use 'is null' check</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Prefer_null_check_over_type_check">
+            <summary>Prefer 'null' check over type check</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_simple_using_statement">
+            <summary>Use simple 'using' statement</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.using_statement_can_be_simplified">
+            <summary>'using' statement can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.if_statement_can_be_simplified">
+            <summary>'if' statement can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Simplify_default_expression">
+            <summary>Simplify 'default' expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.default_expression_can_be_simplified">
+            <summary>'default' expression can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Make_readonly_fields_writable">
+            <summary>Make readonly fields writable</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Struct_contains_assignment_to_this_outside_of_constructor_Make_readonly_fields_writable">
+            <summary>Struct contains assignment to 'this' outside of constructor. Make readonly fields writable.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Deconstruct_variable_declaration">
+            <summary>Deconstruct variable declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Variable_declaration_can_be_deconstructed">
+            <summary>Variable declaration can be deconstructed</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Local_function_can_be_made_static">
+            <summary>Local function can be made static</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Make_local_function_static">
+            <summary>Make local function 'static'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources._0_can_be_simplified">
+            <summary>{0} can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Indexing_can_be_simplified">
+            <summary>Indexing can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_local_function">
+            <summary>Use local function</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_index_operator">
+            <summary>Use index operator</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_range_operator">
+            <summary>Use range operator</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Delegate_invocation_can_be_simplified">
+            <summary>Delegate invocation can be simplified.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Inline_variable_declaration">
+            <summary>Inline variable declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Variable_declaration_can_be_inlined">
+            <summary>Variable declaration can be inlined</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Negate_expression_changes_semantics">
+            <summary>Negate expression (changes semantics)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_operator_preserves_semantics">
+            <summary>Remove operator (preserves semantics)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_suppression_operators">
+            <summary>Remove suppression operators</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_unnecessary_suppression_operator">
+            <summary>Remove unnecessary suppression operator</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Suppression_operator_has_no_effect_and_can_be_misinterpreted">
+            <summary>Suppression operator has no effect and can be misinterpreted</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.typeof_can_be_converted__to_nameof">
+            <summary>'typeof' can be converted  to 'nameof'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_new">
+            <summary>Use 'new(...)'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.new_expression_can_be_simplified">
+            <summary>'new' expression can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Discard_can_be_removed">
+            <summary>Discard can be removed</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_unnessary_discard">
+            <summary>Remove unnecessary discard</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Embedded_statements_must_be_on_their_own_line">
+            <summary>Embedded statements must be on their own line</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Consecutive_braces_must_not_have_a_blank_between_them">
+            <summary>Consecutive braces must not have blank line between them</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Blank_line_not_allowed_after_constructor_initializer_colon">
+            <summary>Blank line not allowed after constructor initializer colon</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Null_check_can_be_clarified">
+            <summary>Null check can be clarified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Convert_to_file_scoped_namespace">
+            <summary>Convert to file-scoped namespace</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Convert_to_block_scoped_namespace">
+            <summary>Convert to block scoped namespace</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_pattern_matching_may_change_code_meaning">
+            <summary>Use pattern matching (may change code meaning)</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Property_pattern_can_be_simplified">
+            <summary>Property pattern can be simplified</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Simplify_property_pattern">
+            <summary>Simplify property pattern</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_tuple_to_swap_values">
+            <summary>Use tuple to swap values</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Lambda_expression_can_be_removed">
+            <summary>Lambda expression can be removed</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_unnecessary_lambda_expression">
+            <summary>Remove unnecessary lambda expression</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Simplify_delegate_invocation">
+            <summary>Simplify delegate invocation</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_is_not_null_check">
+            <summary>Use 'is not null' check</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_is_object_check">
+            <summary>Use 'is object' check</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Convert_to_Program_Main_style_program">
+            <summary>Convert to 'Program.Main' style program</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Convert_to_top_level_statements">
+            <summary>Convert to top-level statements</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_Utf8_string_literal">
+            <summary>Use UTF-8 string literal</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Nullable_directive_is_unnecessary">
+            <summary>Nullable directive is unnecessary</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_unnecessary_nullable_directive">
+            <summary>Remove unnecessary nullable directive</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Nullable_directive_is_redundant">
+            <summary>Nullable directive is redundant</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Remove_redundant_nullable_directive">
+            <summary>Remove redundant nullable directive</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_expression_body_for_lambda_expressions">
+            <summary>Use expression body for lambda expressions</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpAnalyzersResources.Use_block_body_for_lambda_expressions">
+            <summary>Use block body for lambda expressions</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Remove_Unnecessary_Usings">
+            <summary>Remove Unnecessary Usings</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Add_this">
+            <summary>Add 'this.'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Remove_unreachable_code">
+            <summary>Remove unreachable code</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Pass_in_captured_variables_as_arguments">
+            <summary>Pass in captured variables as arguments</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Warning_colon_Adding_parameters_to_local_function_declaration_may_produce_invalid_code">
+            <summary>Warning: Adding parameters to local function declaration may produce invalid code.</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Convert_typeof_to_nameof">
+            <summary>Convert 'typeof' to 'nameof'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Place_statement_on_following_line">
+            <summary>Place statement on following line</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Remove_blank_lines_between_braces">
+            <summary>Remove blank line between braces</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Place_colon_on_following_line">
+            <summary>Place colon on following line</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Fix_record_declaration">
+            <summary>Fix record declaration</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Fix_constraint">
+            <summary>Fix constraint</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Change_return_type_from_0_to_1">
+            <summary>Change return type from {0} to {1}</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Hide_base_member">
+            <summary>Hide base member</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Add_Obsolete">
+            <summary>Add [Obsolete]</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Explicitly_inherit_documentation">
+            <summary>Explicitly inherit documentation</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Unseal_class_0">
+            <summary>Unseal class '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Use_interpolated_verbatim_string">
+            <summary>Use interpolated verbatim string</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Add_await">
+            <summary>Add 'await'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Assign_to_0">
+            <summary>Assign to '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Compare_to_0">
+            <summary>Compare to '{0}'</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Fix_return_type">
+            <summary>Fix return type</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Replace_return_with_yield_return">
+            <summary>Replace return with yield return</summary>
+        </member>
+        <member name="P:Microsoft.CodeAnalysis.CSharp.CSharpCodeFixesResources.Declare_as_nullable">
+            <summary>Declare as nullable</summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.DiagnosticComments.CodeFixes.CSharpAddDocCommentNodesCodeFixProvider.CS1573">
+            <summary>
+            Parameter has no matching param tag in XML comment
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.DiagnosticComments.CodeFixes.CSharpRemoveDocCommentNodeCodeFixProvider.CS1571">
+            <summary>
+            Duplicate param tag
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.DiagnosticComments.CodeFixes.CSharpRemoveDocCommentNodeCodeFixProvider.CS1572">
+            <summary>
+            Param tag with no matching parameter
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.DiagnosticComments.CodeFixes.CSharpRemoveDocCommentNodeCodeFixProvider.CS1710">
+            <summary>
+            Duplicate typeparam tag
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.ExternalAccess.Pythia.PythiaSignatureHelpProvider">
+            <summary>
+            Ensure this is ordered before the regular invocation signature help provider.
+            We must replace the entire list of results, including both Pythia and non-Pythia recommendations.
+            </summary>
+        </member>
+        <member name="T:Microsoft.CodeAnalysis.Diagnostics.CSharpAnalyzerOptionsProvider">
+            <summary>
+            Provides C# analyzers a convenient access to editorconfig options with fallback to IDE default values.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.Diagnostics.CSharpAnalyzerOptionsProvider._options">
+            <summary>
+            Document editorconfig options.
+            </summary>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.Diagnostics.CSharpAnalyzerOptionsProvider._fallbackOptions">
+            <summary>
+            Fallback options - the default options in Code Style layer.
+            </summary>
+        </member>
+        <member name="M:Microsoft.CodeAnalysis.RemoveUnnecessaryNullableDirective.CSharpRemoveUnnecessaryNullableDirectiveDiagnosticAnalyzer.IsIgnoredCodeBlock(Microsoft.CodeAnalysis.SyntaxNode)">
+            <summary>
+            Determine if a code block is eligible for analysis by <see cref="M:Microsoft.CodeAnalysis.RemoveUnnecessaryNullableDirective.CSharpRemoveUnnecessaryNullableDirectiveDiagnosticAnalyzer.AnalyzeCodeBlock(Microsoft.CodeAnalysis.Diagnostics.CodeBlockAnalysisContext,System.Int32)"/>.
+            </summary>
+            <param name="codeBlock">The syntax node provided via <see cref="P:Microsoft.CodeAnalysis.Diagnostics.CodeBlockAnalysisContext.CodeBlock"/>.</param>
+            <returns><see langword="true"/> if the code block should be analyzed by <see cref="M:Microsoft.CodeAnalysis.RemoveUnnecessaryNullableDirective.CSharpRemoveUnnecessaryNullableDirectiveDiagnosticAnalyzer.AnalyzeCodeBlock(Microsoft.CodeAnalysis.Diagnostics.CodeBlockAnalysisContext,System.Int32)"/>;
+            otherwise, <see langword="false"/> to skip analysis of the block. If a block is skipped, one or more child
+            blocks may be analyzed by <see cref="M:Microsoft.CodeAnalysis.RemoveUnnecessaryNullableDirective.CSharpRemoveUnnecessaryNullableDirectiveDiagnosticAnalyzer.AnalyzeCodeBlock(Microsoft.CodeAnalysis.Diagnostics.CodeBlockAnalysisContext,System.Int32)"/>, and any remaining spans can be analyzed by
+            <see cref="M:Microsoft.CodeAnalysis.RemoveUnnecessaryNullableDirective.CSharpRemoveUnnecessaryNullableDirectiveDiagnosticAnalyzer.AnalyzeSemanticModel(Microsoft.CodeAnalysis.Diagnostics.SemanticModelAnalysisContext,System.Int32,Microsoft.CodeAnalysis.Shared.Collections.SimpleIntervalTree{Microsoft.CodeAnalysis.Text.TextSpan,Microsoft.CodeAnalysis.Shared.Collections.TextSpanIntervalIntrospector},Microsoft.CodeAnalysis.Shared.Collections.SimpleIntervalTree{Microsoft.CodeAnalysis.Text.TextSpan,Microsoft.CodeAnalysis.Shared.Collections.TextSpanIntervalIntrospector})"/>.</returns>
+        </member>
+        <member name="F:Microsoft.CodeAnalysis.RemoveUnnecessaryNullableDirective.CSharpRemoveUnnecessaryNullableDirectiveDiagnosticAnalyzer.AnalyzerImpl._codeBlockIntervals">
+            <summary>
+            Tracks the analysis state of syntax trees in a compilation.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -213,14 +213,14 @@ _Pvt_Extensions/
 ModelManifest.xml
 
 # Au
-/Test Projects/
 /Other/Api/
 
-/_/*
-!/_/Default/
-!/_/Templates/
-!/_/Cookbook/
-!/dotnet_ref_*.txt
+/_/32/*
+/_/64/*
+/_/*.exe
+/_/*.dll
+/_/*.pdb
+/_/*.xml
 
 /_/Default/*
 !/_/Default/Workspace/
