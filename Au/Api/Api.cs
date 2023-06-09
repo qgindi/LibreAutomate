@@ -7,20 +7,20 @@ namespace Au.Types;
 [DebuggerStepThrough]
 static unsafe partial class Api {
 	#region util
-
+	
 	/// <summary>
 	/// Gets the native size of a struct variable.
 	/// Returns Marshal.SizeOf(typeof(T)).
 	/// Speed: the same (in Release config) as Marshal.SizeOf(typeof(T)), and 2 times faster than Marshal.SizeOf(v).
 	/// </summary>
 	internal static int SizeOf<T>(T v) => Marshal.SizeOf<T>();
-
+	
 	/// <summary>
 	/// Gets the native size of a type.
 	/// Returns Marshal.SizeOf(typeof(T)).
 	/// </summary>
 	internal static int SizeOf<T>() => Marshal.SizeOf<T>();
-
+	
 	/// <summary>
 	/// Gets dll module handle (Api.GetModuleHandle) or loads dll (NativeLibrary.TryLoad), and returns unmanaged exported function address (Api.GetProcAddress).
 	/// See also: GetDelegate.
@@ -28,10 +28,10 @@ static unsafe partial class Api {
 	internal static IntPtr GetProcAddress(string dllName, string funcName) {
 		IntPtr hmod = GetModuleHandle(dllName);
 		if (hmod == default && !NativeLibrary.TryLoad(dllName, out hmod)) return default;
-
+		
 		return GetProcAddress(hmod, funcName);
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="GetProcAddress(string, string)"/> (loads dll or gets handle) and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 	/// </summary>
@@ -40,7 +40,7 @@ static unsafe partial class Api {
 		deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 		return deleg != null;
 	}
-
+	
 	/// <summary>
 	/// Calls API <see cref="GetProcAddress(IntPtr, string)"/> and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 	/// </summary>
@@ -50,119 +50,119 @@ static unsafe partial class Api {
 		deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 		return deleg != null;
 	}
-
+	
 	/// <summary>
 	/// If o is not null, calls <see cref="Marshal.ReleaseComObject"/>.
 	/// </summary>
 	internal static void ReleaseComObject<T>(T o) where T : class {
 		if (o != null) Marshal.ReleaseComObject(o);
 	}
-
+	
 	#endregion
-
+	
 	#region gdi32
-
+	
 	[DllImport("gdi32.dll")] //this and many other GDI functions don't use SetLastError
 	internal static extern bool DeleteObject(IntPtr ho);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr CreateRectRgn(int x1, int y1, int x2, int y2);
-
+	
 	internal const int RGN_AND = 1;
 	internal const int RGN_OR = 2;
 	internal const int RGN_XOR = 3;
 	internal const int RGN_DIFF = 4;
 	internal const int RGN_COPY = 5;
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern int CombineRgn(IntPtr hrgnDst, IntPtr hrgnSrc1, IntPtr hrgnSrc2, int iMode);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool SetRectRgn(IntPtr hrgn, int left, int top, int right, int bottom);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool PtInRegion(IntPtr hrgn, int x, int y);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool DeleteDC(IntPtr hdc);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "GetObjectW")]
 	internal static extern int GetObject(IntPtr h, int c, void* pv);
-
+	
 	/// <param name="mode">1 transparent, 2 opaque.</param>
 	[DllImport("gdi32.dll")]
 	internal static extern int SetBkMode(IntPtr hdc, int mode);
 	
 	[DllImport("gdi32.dll")]
 	internal static extern int SetBkColor(IntPtr hdc, int color);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "TextOutW")]
 	internal static extern bool TextOut(IntPtr hdc, int x, int y, string lpString, int c);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "TextOutW")]
 	internal static extern bool TextOut(IntPtr hdc, int x, int y, char* lpString, int c);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "ExtTextOutW")]
 	internal static extern bool ExtTextOut(IntPtr hdc, int x, int y, uint options, in RECT lprect, char* lpString, int c, int* lpDx = null);
 	internal const uint ETO_CLIPPED = 0x4;
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool MoveToEx(IntPtr hdc, int x, int y, out POINT lppt);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool GetCurrentPositionEx(IntPtr hdc, out POINT lppt);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern uint SetTextAlign(IntPtr hdc, uint align);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern int SetTextColor(IntPtr hdc, int color);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr CreatePen(int iStyle, int cWidth, int color);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool LineTo(IntPtr hdc, int x, int y);
-
+	
 	[DllImport("gdi32.dll")] //tested: does not set last error
 	internal static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int cx, int cy);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern int GetDeviceCaps(IntPtr hdc, int index);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
 	internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out SIZE psizl);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
 	internal static extern bool GetTextExtentPoint32(IntPtr hdc, char* lpString, int c, out SIZE psizl);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
 	internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, int bItalic = 0, int bUnderline = 0, int bStrikeOut = 0, int iCharSet = 0, int iOutPrecision = 0, int iClipPrecision = 0, int iQuality = 0, int iPitchAndFamily = 0, string pszFaceName = null);
-
+	
 	[DllImport("gdi32.dll", EntryPoint = "CreateFontIndirectW")]
 	internal static extern IntPtr CreateFontIndirect(in LOGFONT lplf);
-
+	
 	internal const uint SRCCOPY = 0xCC0020;
 	internal const uint CAPTUREBLT = 0x40000000;
-
+	
 	[DllImport("gdi32.dll")] //tested: in some cases does not set last error even if returns false
 	internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern bool StretchBlt(IntPtr hdcDest, int xDest, int yDest, int wDest, int hDest, IntPtr hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, uint rop);
 	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr CreateDIBSection(IntPtr hdc, in Api.BITMAPINFO pbmi, uint usage, out uint* ppvBits, IntPtr hSection = default, uint offset = 0);
-
+	
 	internal struct BITMAPINFOHEADER {
 		public int biSize;
 		public int biWidth;
@@ -176,7 +176,7 @@ static unsafe partial class Api {
 		public int biClrUsed;
 		public int biClrImportant;
 	}
-
+	
 	/// <summary>
 	/// BITMAPINFOHEADER members and 3 uints for color table etc.
 	/// </summary>
@@ -193,12 +193,12 @@ static unsafe partial class Api {
 		public int biClrUsed;
 		public int biClrImportant;
 		public fixed uint bmiColors[3]; //info: GetDIBits(DIB_RGB_COLORS) sets 0xFF0000, 0xFF00, 0xFF. Note: with 8-bit colors bitmaps need 256, but this library does not use it.
-
+		
 		/// <summary>
 		/// Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
 		/// </summary>
 		public BITMAPINFO() { biSize = sizeof(BITMAPINFOHEADER); }
-
+		
 		/// <summary>
 		/// Sets width/height/bitcount/planes fields. Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
 		/// </summary>
@@ -209,7 +209,7 @@ static unsafe partial class Api {
 			biBitCount = (ushort)bitCount;
 			biPlanes = 1;
 		}
-
+		
 		//little tested
 		///// <summary>
 		///// Gets DIB bits of compatible bitmap. Uses API <msdn>GetDIBits</msdn>. Returns null if failed.
@@ -231,16 +231,16 @@ static unsafe partial class Api {
 		//	return r;
 		//}
 	}
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, ref BITMAPINFO lpbmi, int usage);
-
+	
 	/// <summary>
 	/// lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
 	/// </summary>
 	[DllImport("gdi32.dll")]
 	internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse = 0); //DIB_RGB_COLORS
-
+	
 	//internal const int WHITE_BRUSH = 0;
 	//internal const int LTGRAY_BRUSH = 1;
 	//internal const int GRAY_BRUSH = 2;
@@ -261,16 +261,16 @@ static unsafe partial class Api {
 	//internal const int DEFAULT_GUI_FONT = 17;
 	//internal const int DC_BRUSH = 18;
 	//internal const int DC_PEN = 19;
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr GetStockObject(int i);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern IntPtr CreateSolidBrush(int color);
-
+	
 	[DllImport("gdi32.dll")]
 	internal static extern int IntersectClipRect(IntPtr hdc, int left, int top, int right, int bottom);
-
+	
 	internal struct LOGFONT {
 		public int lfHeight;
 		public int lfWidth;
@@ -287,7 +287,7 @@ static unsafe partial class Api {
 		public byte lfPitchAndFamily;
 		public fixed char lfFaceName[32];
 	}
-
+	
 	internal struct NONCLIENTMETRICS {
 		public int cbSize;
 		public int iBorderWidth;
@@ -306,20 +306,20 @@ static unsafe partial class Api {
 		public LOGFONT lfMessageFont;
 		public int iPaddedBorderWidth;
 	}
-
+	
 	[DllImport("gdi32.dll")] //does not set last error when fails
 	internal static extern uint GetPixel(IntPtr hdc, int x, int y);
-
+	
 	#endregion
-
+	
 	#region advapi32
-
+	
 	[DllImport("advapi32.dll")]
 	internal static extern int RegSetValueEx(IntPtr hKey, string lpValueName, int Reserved, Microsoft.Win32.RegistryValueKind dwType, void* lpData, int cbData);
-
+	
 	[DllImport("advapi32.dll")]
 	internal static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
-
+	
 	internal const uint TOKEN_WRITE = STANDARD_RIGHTS_WRITE | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_GROUPS | TOKEN_ADJUST_DEFAULT;
 	internal const uint TOKEN_SOURCE_LENGTH = 8;
 	internal const uint TOKEN_READ = STANDARD_RIGHTS_READ | TOKEN_QUERY;
@@ -339,10 +339,10 @@ static unsafe partial class Api {
 	internal const uint TOKEN_ADJUST_PRIVILEGES = 32;
 	internal const uint TOKEN_ADJUST_GROUPS = 64;
 	internal const uint TOKEN_ADJUST_DEFAULT = 128;
-
+	
 	[DllImport("advapi32.dll", SetLastError = true)]
 	internal static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out Handle_ TokenHandle);
-
+	
 	internal enum TOKEN_INFORMATION_CLASS {
 		TokenUser = 1,
 		TokenGroups,
@@ -389,62 +389,62 @@ static unsafe partial class Api {
 		TokenPrivateNameSpace,
 		MaxTokenInfoClass  // MaxTokenInfoClass should always be the last enum
 	}
-
+	
 	[DllImport("advapi32.dll", SetLastError = true)]
 	internal static extern bool GetTokenInformation(HandleRef TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, void* TokenInformation, uint TokenInformationLength, out uint ReturnLength);
-
+	
 	[DllImport("advapi32.dll")]
 	internal static extern byte* GetSidSubAuthorityCount(IntPtr pSid);
-
+	
 	[DllImport("advapi32.dll")]
 	internal static extern uint* GetSidSubAuthority(IntPtr pSid, uint nSubAuthority);
-
+	
 	internal enum SECURITY_IMPERSONATION_LEVEL {
 		SecurityAnonymous,
 		SecurityIdentification,
 		SecurityImpersonation,
 		SecurityDelegation
 	}
-
+	
 	internal enum TOKEN_TYPE {
 		TokenPrimary = 1,
 		TokenImpersonation
 	}
-
+	
 	[DllImport("advapi32.dll", SetLastError = true)]
 	internal static extern bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, SECURITY_ATTRIBUTES lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
-
+	
 	[DllImport("advapi32.dll", SetLastError = true)]
 	internal static extern bool CreateProcessWithTokenW(IntPtr hToken, uint dwLogonFlags, string lpApplicationName, char[] lpCommandLine, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
-
+	
 	internal struct LUID {
 		public uint LowPart;
 		public int HighPart;
 	}
-
+	
 	[DllImport("advapi32.dll", EntryPoint = "LookupPrivilegeValueW", SetLastError = true)]
 	internal static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, out LUID lpLuid);
-
+	
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct LUID_AND_ATTRIBUTES {
 		public LUID Luid;
 		public uint Attributes;
 	}
-
+	
 	internal struct TOKEN_PRIVILEGES {
 		public int PrivilegeCount;
 		public LUID_AND_ATTRIBUTES Privileges; //[1]
 	}
-
+	
 	[DllImport("advapi32.dll", SetLastError = true)]
 	internal static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges, in TOKEN_PRIVILEGES NewState, uint BufferLength, [Out] TOKEN_PRIVILEGES[] PreviousState, IntPtr ReturnLength);
-
+	
 	[StructLayout(LayoutKind.Sequential)]
 	internal sealed class SECURITY_ATTRIBUTES : IDisposable {
 		public int nLength;
 		public void* lpSecurityDescriptor;
 		public int bInheritHandle;
-
+		
 		/// <summary>
 		/// Creates SECURITY_ATTRIBUTES from string security descriptor.
 		/// securityDescriptor can be null; then lpSecurityDescriptor will be null;
@@ -453,47 +453,47 @@ static unsafe partial class Api {
 			nLength = IntPtr.Size * 3;
 			if (securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
 		}
-
+		
 		public void Dispose() {
 			if (lpSecurityDescriptor != null) {
 				LocalFree(lpSecurityDescriptor);
 				lpSecurityDescriptor = null;
 			}
 		}
-
+		
 		~SECURITY_ATTRIBUTES() => Dispose();
-
+		
 		/// <summary>
 		/// Creates SECURITY_ATTRIBUTES that allows UAC low IL processes to open the kernel object.
 		/// </summary>
 		public static readonly SECURITY_ATTRIBUTES ForLowIL = new SECURITY_ATTRIBUTES("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)");
-
+		
 		/// <summary>
 		/// Creates SECURITY_ATTRIBUTES that allows UAC medium IL processes to open the pipe.
 		/// Like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid.
 		/// </summary>
 		public static readonly SECURITY_ATTRIBUTES ForPipes = new SECURITY_ATTRIBUTES("D:(A;;0x12019b;;;AU)");
 	}
-
+	
 	[DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW", SetLastError = true)]
 	internal static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(string StringSecurityDescriptor, uint StringSDRevision, out void* SecurityDescriptor, uint* SecurityDescriptorSize = null);
-
+	
 	//[DllImport("advapi32.dll", EntryPoint = "ConvertSecurityDescriptorToStringSecurityDescriptorW")]
 	//internal static extern bool ConvertSecurityDescriptorToStringSecurityDescriptor(void* SecurityDescriptor, uint RequestedStringSDRevision, uint SecurityInformation, out char* StringSecurityDescriptor, out uint StringSecurityDescriptorLen);
-
+	
 	[DllImport("advapi32.dll", EntryPoint = "InitiateSystemShutdownW", SetLastError = true)]
 	internal static extern bool InitiateSystemShutdown(string lpMachineName, string lpMessage, int dwTimeout, bool bForceAppsClosed, bool bRebootAfterShutdown);
-
-
-
-
+	
+	
+	
+	
 	#endregion
-
+	
 	#region shell32
-
+	
 	//[DllImport("shell32.dll")]
 	//internal static extern bool IsUserAnAdmin();
-
+	
 	internal const uint SHGFI_ICON = 0x000000100;     // get icon;
 	internal const uint SHGFI_DISPLAYNAME = 0x000000200;     // get display name;
 	internal const uint SHGFI_TYPENAME = 0x000000400;     // get type name;
@@ -512,7 +512,7 @@ static unsafe partial class Api {
 	internal const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;     // use passed dwFileAttribute;
 	internal const uint SHGFI_ADDOVERLAYS = 0x000000020;     // apply the appropriate overlays;
 	internal const uint SHGFI_OVERLAYINDEX = 0x000000040;     // Get the index of the overlay;
-
+	
 	internal struct SHFILEINFO {
 		public IntPtr hIcon;
 		public int iIcon;
@@ -522,52 +522,52 @@ static unsafe partial class Api {
 		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
 		public string szTypeName;
 	}
-
+	
 	//[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
 	//internal static extern nint SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
 	internal static extern nint SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
-
+	
 	//[DllImport("shell32.dll", PreserveSig = true)]
 	//internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
-
+	
 	[DllImport("shell32.dll")]
 	internal static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, uint* psfgaoOut);
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHGetNameFromIDList(IntPtr pidl, SIGDN sigdnName, out string ppszName);
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHCreateShellItem(IntPtr pidlParent, IShellFolder psfParent, IntPtr pidl, out IShellItem ppsi);
 	//This classic API supports absolute PIDL and parent+relative PIDL.
 	//There are 2 newer API - SHCreateItemFromIDList (absoulte) and SHCreateItemWithParent (parent+relative). They can get IShellItem2 too, which is currently not useful here. Same speed.
-
+	
 	//[DllImport("shell32.dll", PreserveSig = true)]
 	//internal static extern int SHCreateItemFromIDList(IntPtr pidl, in Guid riid, out IShellItem ppv); //or IShellItem2
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHGetPropertyStoreForWindow(wnd hwnd, in Guid riid, out IPropertyStore ppv);
-
+	
 	internal static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
-
+	
 	[DllImport("shell32.dll")]
 	internal static extern char** CommandLineToArgvW(string lpCmdLine, out int pNumArgs);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW", SetLastError = true)]
 	internal static extern bool Shell_NotifyIcon(int dwMessage, in NOTIFYICONDATA lpData);
-
+	
 	internal const int NIM_ADD = 0x0;
 	internal const int NIM_MODIFY = 0x1;
 	internal const int NIM_DELETE = 0x2;
 	internal const int NIM_SETFOCUS = 0x3;
 	internal const int NIM_SETVERSION = 0x4;
-
+	
 	internal const int NOTIFYICON_VERSION_4 = 4;
-
+	
 	internal const uint NIF_MESSAGE = 0x1;
 	internal const uint NIF_ICON = 0x2;
 	internal const uint NIF_TIP = 0x4;
@@ -576,10 +576,10 @@ static unsafe partial class Api {
 	internal const uint NIF_GUID = 0x20;
 	internal const uint NIF_REALTIME = 0x40;
 	internal const uint NIF_SHOWTIP = 0x80;
-
+	
 	internal const uint NIS_HIDDEN = 0x1;
 	internal const uint NIS_SHAREDICON = 0x2;
-
+	
 	internal struct NOTIFYICONDATA {
 		/// <summary>
 		/// Sets cbSize, hWnd and uFlags.
@@ -591,7 +591,7 @@ static unsafe partial class Api {
 			hWnd = wNotify;
 			uFlags = nifFlags;
 		}
-
+		
 		public int cbSize;
 		public wnd hWnd;
 		public int uID;
@@ -608,7 +608,7 @@ static unsafe partial class Api {
 		public Guid guidItem;
 		public IntPtr hBalloonIcon;
 	}
-
+	
 	internal const int NIN_SELECT = 0x400;
 	internal const int NIN_KEYSELECT = 0x401;
 	internal const int NIN_BALLOONSHOW = 0x402;
@@ -617,7 +617,7 @@ static unsafe partial class Api {
 	internal const int NIN_BALLOONUSERCLICK = 0x405;
 	internal const int NIN_POPUPOPEN = 0x406;
 	internal const int NIN_POPUPCLOSE = 0x407;
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int Shell_NotifyIconGetRect(in NOTIFYICONIDENTIFIER identifier, out RECT iconLocation);
 	internal struct NOTIFYICONIDENTIFIER {
@@ -626,7 +626,7 @@ static unsafe partial class Api {
 		public int uID;
 		public Guid guidItem;
 	}
-
+	
 	internal struct SHSTOCKICONINFO {
 		public int cbSize;
 		public IntPtr hIcon;
@@ -634,24 +634,24 @@ static unsafe partial class Api {
 		public int iIcon;
 		public fixed char szPath[260];
 	}
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHGetStockIconInfo(StockIcon siid, uint uFlags, ref SHSTOCKICONINFO psii);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
 	internal static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
-
+	
 	internal const int SHIL_LARGE = 0;
 	internal const int SHIL_SMALL = 1;
 	internal const int SHIL_EXTRALARGE = 2;
 	//internal const int SHIL_SYSSMALL = 3;
 	internal const int SHIL_JUMBO = 4;
-
+	
 	//[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
 	//internal static extern int SHGetImageList(int iImageList, in Guid riid, out IImageList ppvObj);
 	[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
 	internal static extern int SHGetImageList(int iImageList, in Guid riid, out IntPtr ppvObj);
-
+	
 	internal const uint SHCNE_RENAMEITEM = 0x1;
 	internal const uint SHCNE_CREATE = 0x2;
 	internal const uint SHCNE_DELETE = 0x4;
@@ -677,7 +677,7 @@ static unsafe partial class Api {
 	internal const uint SHCNE_GLOBALEVENTS = 0xC0581E0;
 	internal const uint SHCNE_ALLEVENTS = 0x7FFFFFFF;
 	internal const uint SHCNE_INTERRUPT = 0x80000000;
-
+	
 	internal const uint SHCNF_IDLIST = 0x0;
 	internal const uint SHCNF_DWORD = 0x3;
 	internal const uint SHCNF_PATH = 0x5;
@@ -685,10 +685,10 @@ static unsafe partial class Api {
 	internal const uint SHCNF_FLUSH = 0x1000;
 	internal const uint SHCNF_FLUSHNOWAIT = 0x3000;
 	internal const uint SHCNF_NOTIFYRECURSIVE = 0x10000;
-
+	
 	[DllImport("shell32.dll")]
 	internal static extern void SHChangeNotify(uint wEventId, uint uFlags, string dwItem1, string dwItem2);
-
+	
 	internal const uint SEE_MASK_CONNECTNETDRV = 0x80;
 	internal const uint SEE_MASK_NOZONECHECKS = 0x800000;
 	internal const uint SEE_MASK_UNICODE = 0x4000;
@@ -700,7 +700,7 @@ static unsafe partial class Api {
 	//internal const uint SEE_MASK_HMONITOR = 0x200000;
 	//internal const uint SEE_MASK_WAITFORINPUTIDLE = 0x2000000;
 	internal const uint SEE_MASK_FLAG_LOG_USAGE = 0x4000000;
-
+	
 	internal struct SHELLEXECUTEINFO {
 		public int cbSize;
 		public uint fMask;
@@ -718,27 +718,27 @@ static unsafe partial class Api {
 		public IntPtr hMonitor;
 		public Handle_ hProcess;
 	}
-
+	
 	[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
 	internal static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO pExecInfo);
-
+	
 	[DllImport("shell32.dll", PreserveSig = true)]
 	internal static extern int SHOpenFolderAndSelectItems(HandleRef pidlFolder, uint cidl, IntPtr[] apidl, uint dwFlags);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "#152")]
 	internal static extern int ILGetSize(IntPtr pidl);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "#25")]
 	internal static extern IntPtr ILCombine(IntPtr pidl1, IntPtr pidl2);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "#21")]
 	internal static extern bool ILIsEqual(IntPtr pidl1, IntPtr pidl2);
-
+	
 	internal const uint FO_MOVE = 0x1;
 	internal const uint FO_COPY = 0x2;
 	internal const uint FO_DELETE = 0x3;
 	internal const uint FO_RENAME = 0x4;
-
+	
 	internal const uint FOF_MULTIDESTFILES = 0x1;
 	internal const uint FOF_CONFIRMMOUSE = 0x2;
 	internal const uint FOF_SILENT = 0x4;
@@ -756,20 +756,20 @@ static unsafe partial class Api {
 	internal const uint FOF_WANTNUKEWARNING = 0x4000;
 	internal const uint FOF_NORECURSEREPARSE = 0x8000;
 	internal const uint FOF_NO_UI = 0x614;
-
+	
 	internal struct SHFILEOPSTRUCT {
 		public wnd hwnd;
 		public uint wFunc;
 		public string pFrom;
 		public string pTo;
 		public ushort fFlags;
-
+		
 		//workaround for this problem: the 32-bit version of SHFILEOPSTRUCT uses Pack = 1, ie no 2-byte gap after fFlags.
 		//	I don't want to use two versions. Then also would need two versions of code that use this struct.
 		//	The last two members are not useful, but we need fAnyOperationsAborted. This workaround gets it through a property function.
 		//	Update: we don't need fAnyOperationsAborted. We use FOF_SILENT therefore cannot be aborted. And it is unreliable.
 		//		But the workaround is tested, on both platformas.
-
+		
 #if use_fAnyOperationsAborted
 				//public bool fAnyOperationsAborted; //BOOL
 				ushort _fAnyOperationsAborted_32, _fAnyOperationsAborted_common, _fAnyOperationsAborted_64;
@@ -789,7 +789,7 @@ static unsafe partial class Api {
 		private string lpszProgressTitle;
 		//these are private and not used, because would be at invalid offsets on 32-bit
 	}
-
+	
 	//internal struct SHFILEOPSTRUCT
 	//{
 	//	public wnd hwnd;
@@ -801,7 +801,7 @@ static unsafe partial class Api {
 	//	public IntPtr hNameMappings;
 	//	public string lpszProgressTitle;
 	//}
-
+	
 	//[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	//internal struct SHFILEOPSTRUCT__32
 	//{
@@ -814,42 +814,42 @@ static unsafe partial class Api {
 	//	public IntPtr hNameMappings;
 	//	public string lpszProgressTitle;
 	//}
-
+	
 	[DllImport("shell32.dll", EntryPoint = "SHFileOperationW")]
 	internal static extern int SHFileOperation(in SHFILEOPSTRUCT lpFileOp);
-
+	
 	[DllImport("shell32.dll", EntryPoint = "DragQueryFileW")]
 	internal static extern int DragQueryFile(IntPtr hDrop, int iFile, char* lpszFile, int cch);
-
+	
 	[DllImport("shell32.dll")]
 	internal static extern bool IsUserAnAdmin();
-
+	
 	[DllImport("shell32.dll", PreserveSig = true, EntryPoint = "SHEmptyRecycleBinW")]
 	internal static extern int SHEmptyRecycleBin(wnd hwnd, string pszRootPath, int dwFlags);
-
-
+	
+	
 	#endregion
-
+	
 	#region shlwapi
-
+	
 	[DllImport("shlwapi.dll", EntryPoint = "#176")]
 	static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, in Guid guidService, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppvOut);
-
+	
 	public static bool QueryService<T>(object from, in Guid guidService, out T result) where T : class {
 		bool ok = 0 == IUnknown_QueryService(from, guidService, typeof(T).GUID, out var o);
 		result = ok ? (T)o : null;
 		return ok;
 	}
-
+	
 	//[DllImport("shlwapi.dll")]
 	//internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
-
+	
 	[DllImport("shlwapi.dll")]
 	internal static extern void ColorRGBToHLS(int clrRGB, out ushort pwHue, out ushort pwLuminance, out ushort pwSaturation);
-
+	
 	[DllImport("shlwapi.dll")]
 	internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
-
+	
 	//internal enum ASSOCSTR
 	//{
 	//	ASSOCSTR_COMMAND = 1,
@@ -877,10 +877,10 @@ static unsafe partial class Api {
 	//	ASSOCSTR_APPICONREFERENCE,
 	//	ASSOCSTR_MAX
 	//}
-
+	
 	//[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
 	//internal static extern int AssocQueryString(uint flags, /*ASSOCSTR*/ int str, string pszAssoc, string pszExtra, char[] pszOut, ref int pcchOut);
-
+	
 	///// <summary>
 	///// Returns executable path of file type.
 	///// </summary>
@@ -892,28 +892,28 @@ static unsafe partial class Api {
 	//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = ApiBuffer_.Char_(n), ref n);
 	//	return hr == 0 ? b.ToString(n) : null;
 	//}
-
-
+	
+	
 	#endregion
-
+	
 	#region comctl32
-
+	
 	[DllImport("comctl32.dll")]
 	internal static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, uint flags);
-
+	
 	[DllImport("comctl32.dll")]
 	internal static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
-
+	
 	internal const uint TME_LEAVE = 0x2;
 	internal const uint TME_NONCLIENT = 0x10;
 	internal const uint TME_CANCEL = 0x80000000;
-
+	
 	internal struct TRACKMOUSEEVENT {
 		public int cbSize;
 		public uint dwFlags;
 		public wnd hwndTrack;
 		public int dwHoverTime;
-
+		
 		public TRACKMOUSEEVENT(wnd w, uint flags, int hoverTime = 0) {
 			cbSize = sizeof(TRACKMOUSEEVENT);
 			hwndTrack = w;
@@ -921,10 +921,10 @@ static unsafe partial class Api {
 			dwHoverTime = hoverTime;
 		}
 	}
-
+	
 	[DllImport("comctl32.dll", EntryPoint = "_TrackMouseEvent")]
 	internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
-
+	
 	/// <summary>
 	/// Calls <b>TrackMouseEvent</b> with <b>TME_LEAVE</b>.
 	/// </summary>
@@ -934,56 +934,59 @@ static unsafe partial class Api {
 		var t = new TRACKMOUSEEVENT(w, track ? TME_LEAVE : TME_LEAVE | TME_CANCEL);
 		return TrackMouseEvent(ref t);
 	}
-
+	
 	[DllImport("comctl32.dll", EntryPoint = "#380", PreserveSig = true)]
 	internal static extern int LoadIconMetric(IntPtr hinst, nint pszName, int lims, out IntPtr phico);
-
+	
 	[DllImport("comctl32.dll", EntryPoint = "#410")]
 	internal static extern bool SetWindowSubclass(wnd hWnd, SUBCLASSPROC pfnSubclass, nint uIdSubclass, nint dwRefData = 0);
-
+	
 	internal delegate nint SUBCLASSPROC(wnd hWnd, int uMsg, nint wParam, nint lParam, nint uIdSubclass, nint dwRefData);
-
+	
 	[DllImport("comctl32.dll", EntryPoint = "#413")]
 	internal static extern nint DefSubclassProc(wnd hWnd, int uMsg, nint wParam, nint lParam);
-
+	
 	[DllImport("comctl32.dll", EntryPoint = "#412")]
 	internal static extern bool RemoveWindowSubclass(wnd hWnd, SUBCLASSPROC pfnSubclass, nint uIdSubclass);
-
-
-
-
+	
+	
+	
+	
 	#endregion
-
+	
 	#region oleaut32
-
+	
 	[DllImport("oleaut32.dll", EntryPoint = "#6")]
 	internal static extern void SysFreeString(char* bstrString);
-
+	
 	[DllImport("oleaut32.dll", EntryPoint = "#7")]
 	internal static extern int SysStringLen(char* pbstr);
-
+	
 	[DllImport("oleaut32.dll", EntryPoint = "#4")]
 	internal static extern BSTR SysAllocStringLen(string strIn, int len);
-
+	
 	[DllImport("oleaut32.dll", EntryPoint = "#2")]
 	internal static extern BSTR SysAllocString(char* psz);
-
+	
 	[DllImport("oleaut32.dll", EntryPoint = "#147", PreserveSig = true)]
 	internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, in VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
-
+	
 	[DllImport("oleaut32.dll", EntryPoint = "#9", PreserveSig = true)]
 	internal static extern int VariantClear(ref VARIANT pvarg);
-
-
-
-
+	
+	[DllImport("oleaut32.dll", EntryPoint = "#35", PreserveSig = true)]
+	internal static extern int GetActiveObject(in Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
+	
+	
+	
+	
 	#endregion
-
+	
 	#region ole32
-
+	
 	[DllImport("ole32.dll", PreserveSig = true)]
 	internal static extern int PropVariantClear(ref PROPVARIANT pvar);
-
+	
 	//internal enum APTTYPE
 	//{
 	//	APTTYPE_CURRENT = -1,
@@ -992,16 +995,16 @@ static unsafe partial class Api {
 	//	APTTYPE_NA,
 	//	APTTYPE_MAINSTA
 	//}
-
+	
 	//[DllImport("ole32.dll", PreserveSig = true)]
 	//internal static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
-
+	
 	[DllImport("ole32.dll", PreserveSig = true)]
 	internal static extern int OleInitialize(IntPtr pvReserved);
-
+	
 	[DllImport("ole32.dll")]
 	internal static extern void OleUninitialize();
-
+	
 	[ComImport, Guid("00000122-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	internal interface IDropTarget {
 		void DragEnter(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect);
@@ -1009,43 +1012,45 @@ static unsafe partial class Api {
 		void DragLeave();
 		void Drop(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect);
 	}
-
+	
 	[DllImport("ole32.dll", PreserveSig = true)]
 	internal static extern int RegisterDragDrop(wnd hwnd, IDropTarget pDropTarget);
-
+	
 	[DllImport("ole32.dll", PreserveSig = true)]
 	internal static extern int RevokeDragDrop(wnd hwnd);
-
+	
 	[DllImport("ole32.dll")]
 	internal static extern void ReleaseStgMedium(ref System.Runtime.InteropServices.ComTypes.STGMEDIUM medium);
-
-
+	
+	[DllImport("ole32.dll", PreserveSig = true)]
+	internal static extern int CLSIDFromProgID(string lpszProgID, out Guid lpclsid);
+	
 	#endregion
-
+	
 	#region oleacc
-
+	
 	//internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
-
+	
 	//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
-
+	
 	//[DllImport("oleacc.dll", PreserveSig = true)]
 	//internal static extern int AccessibleObjectFromWindow(wnd hwnd, EObjid dwId, in Guid riid, out IAccessible ppvObject);
-
+	
 	//[DllImport("oleacc.dll", PreserveSig = true)]
 	//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out wnd phwnd);
-
+	
 	//[DllImport("oleacc.dll", PreserveSig = true)]
 	//internal static extern int AccessibleObjectFromPoint(POINT ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
-
+	
 	[DllImport("oleacc.dll", PreserveSig = true)]
 	internal static extern int AccessibleObjectFromEvent(wnd hwnd, EObjid dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
-
+	
 	[DllImport("oleacc.dll")]
 	internal static extern Handle_ GetProcessHandleFromHwnd(wnd hwnd);
-
+	
 	[DllImport("oleacc.dll", PreserveSig = true)]
 	internal static extern int CreateStdAccessibleObject(wnd hwnd, EObjid idObject, in Guid riid, out IAccessible ppvObject);
-
+	
 	[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
 	internal interface IAccessible {
 		IAccessible get_accParent();
@@ -1069,10 +1074,10 @@ static unsafe partial class Api {
 		void accDoDefaultAction(VarInt varChild);
 		void put_accName(VarInt varChild, string szName);
 		void put_accValue(VarInt varChild, string szValue);
-
+		
 		//NOTE: although some members are obsolete or useless, don't use default implementation, because then exception at run time.
 	}
-
+	
 #pragma warning disable 169
 	internal struct VarInt {
 		ushort _vt, _1, _2, _3;
@@ -1085,46 +1090,46 @@ static unsafe partial class Api {
 		}
 	}
 #pragma warning restore 169
-
+	
 	internal enum NAVDIR { UP = 1, DOWN, LEFT, RIGHT, NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD }
-
-
+	
+	
 	#endregion
-
+	
 	#region msvcrt
-
+	
 	//don't use, because for eg "0xffffffff" returns int.Max instead of -1.
 	//[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
 	//internal static extern int strtoi(char* s, char** endPtr = null, int radix = 0);
-
+	
 	//don't use the u API because they return 1 if the value is too big and the string contains '-'.
 	//[DllImport("msvcrt.dll", EntryPoint = "wcstoul", CallingConvention = CallingConvention.Cdecl)]
 	//internal static extern uint strtoui(char* s, char** endPtr = null, int radix = 0);
-
+	
 	[DllImport("msvcrt.dll", EntryPoint = "_wcstoi64", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern long strtoi64(char* s, char** endPtr = null, int radix = 0);
 	//info: ntdll also has wcstol, wcstoul, _wcstoui64, but not _wcstoi64.
-
+	
 	//[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
 	//internal static extern ulong strtoui64(char* s, char** endPtr = null, int radix = 0);
-
+	
 	[DllImport("msvcrt.dll", EntryPoint = "_strtoi64", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern long strtoi64(byte* s, byte** endPtr = null, int radix = 0);
-
+	
 	//not used
 	//[DllImport("msvcrt.dll", EntryPoint = "_strtoui64", CallingConvention = CallingConvention.Cdecl)]
 	//internal static extern long strtoui64(byte* s, byte** endPtr = null, int radix = 0);
-
+	
 	//This is used when working with char*. With C# strings use ExtString.ToInt32 etc.
 	internal static int strtoi(char* s, char** endPtr = null, int radix = 0) {
 		return (int)strtoi64(s, endPtr, radix);
 	}
-
+	
 	//This is used with UTF-8 text.
 	internal static int strtoi(byte* s, byte** endPtr = null, int radix = 0) {
 		return (int)strtoi64(s, endPtr, radix);
 	}
-
+	
 #if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 		/// <summary>
 		/// Converts part of string to int.
@@ -1185,57 +1190,57 @@ static unsafe partial class Api {
 			return strtoi64(s, startIndex, out _, radix);
 		}
 #endif
-
+	
 	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern char* _ltoa(int value, byte* s, int radix);
-
+	
 	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern void* memmove(void* to, void* from, nint n);
-
+	
 	//[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 	//internal static extern void* memset(void* ptr, int ch, nint n);
-
+	
 	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern int memcmp(void* p1, void* p2, nint count);
-
-
-
+	
+	
+	
 	#endregion
-
+	
 	#region winmm
-
+	
 	[DllImport("winmm.dll")]
 	internal static extern uint timeBeginPeriod(uint uPeriod);
-
+	
 	[DllImport("winmm.dll")]
 	internal static extern uint timeEndPeriod(uint uPeriod);
-
+	
 	[DllImport("winmm.dll")]
 	internal static extern uint waveOutSetVolume(IntPtr hwo, uint dwVolume);
-
+	
 	[DllImport("winmm.dll")]
 	internal static extern uint waveOutGetVolume(IntPtr hwo, out uint pdwVolume);
-
+	
 	[DllImport("winmm.dll", EntryPoint = "PlaySoundW")]
 	internal static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
-
+	
 	internal const uint SND_FILENAME = 0x20000;
 	internal const uint SND_NODEFAULT = 0x2;
 	internal const uint SND_SYSTEM = 0x200000;
 	internal const uint SND_ASYNC = 0x1;
 	internal const uint SND_ALIAS = 0x10000;
 	internal const uint SND_APPLICATION = 0x80;
-
+	
 	[DllImport("user32.dll")]
 	internal static extern bool MessageBeep(uint uType);
-
+	
 	[DllImport("kernel32.dll")]
 	internal static extern bool Beep(int dwFreq, int dwDuration);
-
+	
 	#endregion
-
+	
 	#region dwmapi
-
+	
 	internal enum DWMWA {
 		NCRENDERING_ENABLED = 1,
 		NCRENDERING_POLICY,
@@ -1254,7 +1259,7 @@ static unsafe partial class Api {
 		FREEZE_REPRESENTATION,
 		PASSIVE_UPDATE_MODE,
 	}
-
+	
 	[DllImport("dwmapi.dll")]
 	internal static extern int DwmGetWindowAttribute(wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
 	
@@ -1287,28 +1292,28 @@ static unsafe partial class Api {
 	//internal const uint DWM_TNP_RECTDESTINATION = 0x1;
 	//internal const uint DWM_TNP_VISIBLE = 0x8;
 	//internal const uint DWM_TNP_RECTSOURCE = 0x2;
-
-
-
-
+	
+	
+	
+	
 	#endregion
-
+	
 	#region uxtheme
-
+	
 	[DllImport("uxtheme.dll")]
 	static extern IntPtr OpenThemeData(wnd hwnd, string pszClassList);
-
+	
 	[DllImport("uxtheme.dll")]
 	static extern IntPtr OpenThemeDataForDpi(wnd hwnd, string pszClassList, int dpi);
-
+	
 	internal static IntPtr OpenThemeData(wnd hwnd, string classList, int dpi) {
 		if (osVersion.minWin10_1703) return OpenThemeDataForDpi(hwnd, classList, dpi);
 		return OpenThemeData(hwnd, classList); //never mind: bad on Win8.1 non-primary screen with different DPI than primary if hwnd==0
 	}
-
+	
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int CloseThemeData(IntPtr hTheme);
-
+	
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int GetThemePartSize(IntPtr hTheme, IntPtr hdc, int iPartId, int iStateId, RECT* prc, THEMESIZE eSize, out SIZE psz);
 	internal enum THEMESIZE {
@@ -1316,31 +1321,31 @@ static unsafe partial class Api {
 		TS_TRUE,
 		TS_DRAW
 	}
-
+	
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int DrawThemeBackground(IntPtr hTheme, IntPtr hdc, int iPartId, int iStateId, in RECT pRect, RECT* pClipRect = null);
-
+	
 	//[DllImport("uxtheme.dll", PreserveSig = true)]
 	//internal static extern int SetWindowTheme(wnd hwnd, string pszSubAppName, string pszSubIdList);
-
+	
 	[DllImport("uxtheme.dll")]
 	internal static extern int GetThemeSysColor(IntPtr hTheme, int iColorId);
-
+	
 	[DllImport("uxtheme.dll")]
 	internal static extern IntPtr GetThemeSysColorBrush(IntPtr hTheme, int iColorId);
-
+	
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int BufferedPaintInit();
-
+	
 	//[DllImport("uxtheme.dll", PreserveSig = true)]
 	//internal static extern int BufferedPaintUnInit();
-
+	
 	[DllImport("uxtheme.dll")]
 	internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, in RECT prcTarget, BP_BUFFERFORMAT dwFormat, ref BP_PAINTPARAMS pPaintParams, out IntPtr phdc);
-
+	
 	[DllImport("uxtheme.dll", PreserveSig = true)]
 	internal static extern int EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
-
+	
 	internal enum BP_BUFFERFORMAT {
 		BPBF_COMPATIBLEBITMAP,
 		BPBF_DIB,
@@ -1360,21 +1365,21 @@ static unsafe partial class Api {
 	//	public byte SourceConstantAlpha;
 	//	public byte AlphaFormat;
 	//}
-
-
+	
+	
 	#endregion
-
+	
 	#region wtsapi
-
+	
 	[DllImport("wtsapi32.dll", SetLastError = true)]
 	internal static extern bool WTSTerminateProcess(IntPtr hServer, int ProcessId, int ExitCode);
-
-
-
+	
+	
+	
 	#endregion
-
+	
 	#region ntdll
-
+	
 	internal struct RTL_OSVERSIONINFOW {
 		public int dwOSVersionInfoSize;
 		public uint dwMajorVersion;
@@ -1383,29 +1388,29 @@ static unsafe partial class Api {
 		public uint dwPlatformId;
 		public fixed char szCSDVersion[128];
 	}
-
+	
 	[DllImport("ntdll.dll", ExactSpelling = true)]
 	internal static extern int RtlGetVersion(ref RTL_OSVERSIONINFOW lpVersionInformation);
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
 	//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern void MD5Init(out Hash.MD5Context context);
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern void MD5Update(ref Hash.MD5Context context, void* data, int dataLen);
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern void MD5Final(ref Hash.MD5Context context);
-
+	
 #pragma warning disable 169
 	[DllImport("ntdll.dll")]
 	internal static extern int NtQueryInformationProcess(IntPtr ProcessHandle, int ProcessInformationClass, void* ProcessInformation, int ProcessInformationLength, out int ReturnLength);
-
+	
 	//all structs are same in 64-bit and 32-bit processes
-
+	
 	internal record struct PROCESS_BASIC_INFORMATION {
 		long Reserved1;
 		public long PebBaseAddress;
@@ -1413,19 +1418,19 @@ static unsafe partial class Api {
 		public long UniqueProcessId;
 		public long ParentProcessId;
 	}
-
+	
 	internal struct RTL_USER_PROCESS_PARAMETERS {
 		fixed byte Reserved[96];
 		public UNICODE_STRING ImagePathName;
 		public UNICODE_STRING CommandLine;
 	}
-
+	
 	internal struct UNICODE_STRING {
 		public ushort Length;
 		public ushort MaximumLength;
 		public char* Buffer;
 	}
-
+	
 	internal struct SYSTEM_PROCESS_INFORMATION {
 		internal uint NextEntryOffset;
 		internal uint NumberOfThreads;
@@ -1435,64 +1440,64 @@ static unsafe partial class Api {
 		internal long CreateTime;
 		internal long UserTime;
 		internal long KernelTime;
-
+		
 		internal ushort NameLength;   // UNICODE_STRING   
 		internal ushort MaximumNameLength;
 		internal IntPtr NamePtr;     // This will point into the data block returned by NtQuerySystemInformation
-
+		
 		internal int BasePriority;
 		internal IntPtr UniqueProcessId;
 		internal IntPtr InheritedFromUniqueProcessId;
 		internal uint HandleCount;
 		internal uint SessionId;
-
+		
 		//unused members
 	}
 #pragma warning restore 169
-
+	
 	internal const int STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004);
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern int NtQuerySystemInformation(int five, SYSTEM_PROCESS_INFORMATION* SystemInformation, int SystemInformationLength, out int ReturnLength);
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern int NtSuspendProcess(IntPtr handle);
-
+	
 	[DllImport("ntdll.dll")]
 	internal static extern int NtResumeProcess(IntPtr handle);
-
-
-
-
+	
+	
+	
+	
 	#endregion
-
+	
 	#region other
-
+	
 	[DllImport("msi.dll", EntryPoint = "#217")]
 	internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
-
+	
 	[DllImport("msi.dll", EntryPoint = "#173")]
 	internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
-
+	
 	[DllImport("powrprof.dll")]
 	internal static extern byte SetSuspendState(byte bHibernate, byte bForce, byte bWakeupEventsDisabled);
-
+	
 	[DllImport("powrprof.dll")]
 	internal static extern byte IsPwrSuspendAllowed();
-
+	
 	//[DllImport("urlmon.dll", PreserveSig = true)]
 	//internal static extern int FindMimeFromData(IntPtr pBC, string pwzUrl, byte[] pBuffer, int cbSize, string pwzMimeProposed, uint dwMimeFlags, out string ppwzMimeOut, uint dwReserved);
-
+	
 	#endregion
-
+	
 	#region struct
-
+	
 	internal struct NEWHEADER {
 		public ushort wReserved;
 		public ushort wResType;
 		public ushort wResCount;
 	};
-
+	
 	[StructLayout(LayoutKind.Sequential, Pack = 2)]
 	internal struct ICONDIRENTRY {
 		public byte bWidth;
@@ -1504,6 +1509,6 @@ static unsafe partial class Api {
 		public int dwBytesInRes;
 		public int dwImageOffset;
 	};
-
+	
 	#endregion
 }
