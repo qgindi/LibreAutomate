@@ -401,13 +401,15 @@ partial class CiStyling {
 	public struct TStyle {
 		public int color;
 		public bool bold;
+		public bool italic;
 		
-		public TStyle(int color, bool bold) {
+		public TStyle(int color, bool bold, bool italic) {
 			this.color = color;
 			this.bold = bold;
+			this.italic = italic;
 		}
 		
-		public static implicit operator TStyle(int color) => new(color, false);
+		public static implicit operator TStyle(int color) => new(color, false, false);
 	}
 	
 	public record TStyles //note: must be record, because uses synthesized ==
@@ -439,7 +441,7 @@ partial class CiStyling {
 		public TStyle Keyword = 0x0000ff; //blue like in VS
 		public TStyle Namespace = 0x808000; //dark yellow
 		public TStyle Type = 0x0080c0; //like in VS but more blue
-		public TStyle Function = new(0, true);
+		public TStyle Function = new(0, true, false);
 		public TStyle Variable = 0x204020; //dark green gray
 		public TStyle Constant = 0x204020; //like variable
 		public TStyle Label = 0xff00ff; //magenta
@@ -504,6 +506,7 @@ partial class CiStyling {
 				void _Style(ref TStyle r) {
 					if (!a[1].NE() && a[1].ToInt(out int i)) r.color = i;
 					if (a.Length > 2 && !a[2].NE() && a[2].ToInt(out int i2)) r.bold = 0 != (1 & i2); else r.bold = false;
+					if (a.Length > 3 && !a[3].NE() && a[3].ToInt(out int i3)) r.italic = 0 != (1 & i3); else r.italic = false;
 				}
 				
 				void _Int(ref int value) {
@@ -548,6 +551,7 @@ partial class CiStyling {
 			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
 				if (r.bold) b.Append(", 1");
+				if (r.italic) b.Append(", 1");
 				b.AppendLine();
 			}
 			
@@ -567,7 +571,9 @@ partial class CiStyling {
 			TStyle _Style(EStyle k) {
 				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)k));
 				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)k);
-				return new TStyle(color, bold);
+				bool italic = 0 != sci.Call(SCI_STYLEGETITALIC, (int)k);
+				
+				return new TStyle(color, bold, italic);
 			}
 			
 			None = _Style(EStyle.None);
@@ -612,6 +618,7 @@ partial class CiStyling {
 			void _Set(EStyle k, TStyle sty) {
 				sci.aaaStyleForeColor((int)k, sty.color);
 				if (sty.bold) sci.aaaStyleBold((int)k, true);
+				if (sty.italic) sci.aaaStyleItalic((int)k, true);
 				if (multiFont) sci.aaaStyleFont((int)k, FontName, FontSize);
 			}
 			
