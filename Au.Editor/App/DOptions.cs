@@ -149,7 +149,11 @@ class DOptions : KDialogWindow {
 		b.R.StartGrid();
 		var pColor = b.Panel as Grid;
 		b.R.Add(out KColorPicker colorPicker);
-		b.R.Add(out KCheckBox cBold, "Bold");
+		b.R.StartStack();
+		b.Add(out KCheckBox cBold, "Bold");
+		b.Add(out KCheckBox cItalic, "Italic");
+		b.Add(out KCheckBox cUnderline, "Underline");
+		b.End();
 		b.R.Add(out Label lAlpha, "Opacity 0-255", out TextBox tAlpha).Width(50, "L");
 		b.End();
 		b.Row(-1);
@@ -268,11 +272,13 @@ class DOptions : KDialogWindow {
 							pColor.Visibility = Visibility.Visible;
 							ignoreColorEvents = true;
 							int col;
-							cBold.Visibility = k.kind == _StyleKind.Style ? Visibility.Visible : Visibility.Collapsed;
+							cBold.Visibility = cItalic.Visibility = cUnderline.Visibility = (k.kind == _StyleKind.Style) ? Visibility.Visible : Visibility.Collapsed;
 							tAlpha.Visibility = k.kind == _StyleKind.Style ? Visibility.Collapsed : Visibility.Visible;
 							if (k.kind == _StyleKind.Style) {
 								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k.index));
 								cBold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k.index);
+								cItalic.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETITALIC, k.index);
+								cUnderline.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETUNDERLINE, k.index);
 							} else if (k.kind == _StyleKind.Indicator) {
 								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_INDICGETFORE, k.index));
 								tAlpha.Text = sciStyles.Call(Sci.SCI_INDICGETALPHA, k.index).ToS();
@@ -309,6 +315,8 @@ class DOptions : KDialogWindow {
 			
 			colorPicker.ColorChanged += _ => _UpdateSci();
 			cBold.CheckChanged += (sender, _) => _UpdateSci(sender);
+			cItalic.CheckChanged += (sender, _) => _UpdateSci(sender);
+			cUnderline.CheckChanged += (sender, _) => _UpdateSci(sender);
 			tAlpha.TextChanged += (sender, _) => _UpdateSci(sender);
 			
 			void _UpdateSci(object control = null) {
@@ -317,6 +325,8 @@ class DOptions : KDialogWindow {
 				int col = colorPicker.Color;
 				if (k.kind == _StyleKind.Style) {
 					if (control == cBold) sciStyles.aaaStyleBold(k.index, cBold.IsChecked);
+					else if (control == cItalic) sciStyles.aaaStyleItalic(k.index, cItalic.IsChecked);
+					else if (control == cUnderline) sciStyles.aaaStyleUnderline(k.index, cUnderline.IsChecked);
 					else sciStyles.aaaStyleForeColor(k.index, col);
 				} else if (k.kind == _StyleKind.Indicator) {
 					if (control == tAlpha) sciStyles.Call(Sci.SCI_INDICSETALPHA, k.index, Math.Clamp(tAlpha.Text.ToInt(), 0, 255));
