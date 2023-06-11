@@ -1,3 +1,6 @@
+using Microsoft.Win32;
+using System.Windows.Controls;
+using System.Windows;
 
 /// <summary>
 /// Misc util functions.
@@ -81,4 +84,92 @@ record struct StartEndText(int start, int end, string text) {
 	internal static void ThrowIfNotSorted(List<StartEndText> a) {
 		for (int i = 1; i < a.Count; i++) if (a[i].start < a[i - 1].end) throw new ArgumentException("ranges must be sorted and not overlapped");
 	}
+}
+
+static class EdComUtil {
+	
+	//To convert a COM type library we use TypeLibConverter class. However .NET Core+ does not have it.
+	//Workaround: the code is in Au.Net4.exe. It uses .NET Framework 4.8. We call it through run.console.
+	//We don't use tlbimp.exe:
+	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in a Core+ app.
+	//	2. Does not tell what files created.
+	//	3. My PC somehow has MS Office PIA installed and there is no uninstaller. After deleting the GAC files tlbimp.exe created all files, but it took several minutes.
+	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
+	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core+ assemblies, and they don't have the class. Need exe.
+	public static async Task<List<string>> ConvertTypeLibrary(object tlDef, Window owner) {
+		string comDll = null;
+		switch (tlDef) {
+		case string path:
+			comDll = path;
+			break;
+		case RegTypelib r:
+			//can be several locales
+			var aloc = new List<string>(); //registry keys like "0" or "409"
+			var aloc2 = new List<string>(); //locale names for display in the list dialog
+			using (var verKey = Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
+				foreach (var s1 in verKey.GetSubKeyNames()) {
+					int lcid = s1.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
+					if (iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
+					aloc.Add(s1);
+					var s2 = "Neutral";
+					if (lcid > 0) {
+						try { s2 = new System.Globalization.CultureInfo(lcid).DisplayName; } catch { s2 = s1; }
+					}
+					aloc2.Add(s2);
+				}
+			}
+			string locale;
+			if (aloc.Count == 1) locale = aloc[0];
+			else {
+				int i = dialog.showList(aloc2, "Locale", owner: owner);
+				if (i == 0) return null;
+				locale = aloc[i - 1];
+			}
+			comDll = r.GetPath(locale);
+			if (comDll == null || !filesystem.exists(comDll).File) {
+				dialog.showError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: owner);
+				return null;
+			}
+			break;
+		}
+		
+		print.it($"Converting COM type library to .NET assembly.");
+		List<string> converted = new();
+		int rr = -1;
+		owner.IsEnabled = false;
+		try {
+			await Task.Run(() => {
+				var dir = folders.Workspace + @".interop\";
+				filesystem.createDirectory(dir);
+				void _Callback(string s) {
+					print.it(s);
+					if (s.Starts("Converted: ")) {
+						s.RxMatch(@"""(.+?)"".$", 1, out s);
+						converted.Add(s);
+					}
+				}
+				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net4.exe", $"/typelib \"{dir}|{comDll}\"", encoding: Encoding.UTF8);
+			});
+		}
+		catch (Exception ex) { dialog.showError("Failed to convert type library", ex.ToStringWithoutStack(), owner: owner); }
+		owner.IsEnabled = true;
+		if (rr != 0) return null;
+		print.it(@"<>Converted and saved in <link>%folders.Workspace%\.interop<>.");
+		return converted;
+	}
+	
+	public record class RegTypelib(string text, string guid, string version) {
+		public override string ToString() => text;
+		
+		public string GetPath(string locale) {
+			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
+			for (int i = 0; i < 2; i++) {
+				var bits = osVersion.is32BitProcess == (i == 1) ? "32" : "64";
+				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
+				if (hk?.GetValue("") is string path) return path.Trim('\"');
+			}
+			return null;
+		}
+	}
+	
 }

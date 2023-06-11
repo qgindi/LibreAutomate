@@ -354,7 +354,7 @@ partial class SciCode : KScintilla {
 	
 	//Called by PanelEdit.SaveText.
 	internal bool ESaveText_(bool force) {
-		Debug.Assert(!EIsBinary);
+		Debug.Assert(!EIsBinary); if (EIsBinary) return false;
 		if (force || EIsUnsaved_) {
 			//print.qm2.write("saving");
 			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsExternal ? null : _fn.Model.TempDirectory))) return false;
@@ -369,7 +369,7 @@ partial class SciCode : KScintilla {
 	
 	//Called by FileNode.OnAppActivatedAndThisIsOpen.
 	internal void EFileModifiedExternally_() {
-		Debug.Assert(!EIsBinary); //caller must check it
+		Debug.Assert(!EIsBinary); if (EIsBinary) return; //caller must check it
 		if (!_fn.GetFileText(out var text) || text == this.aaaText) return;
 		EReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);

@@ -230,10 +230,9 @@ public unsafe partial class KScintilla {
 		bool _noUndo, _noNotif;
 		
 		public _NoUndoNotif(KScintilla t, SciSetTextFlags flags) {
-			if (t.AaInitReadOnlyAlways) flags = 0;
 			_t = t;
 			_noUndo = flags.Has(SciSetTextFlags.NoUndo) && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
-			_noNotif = flags.Has(SciSetTextFlags.NoNotify);
+			_noNotif = flags.Has(SciSetTextFlags.NoNotify) && !_t.AaDisableModifiedNotifications;
 			if (_noNotif) _t.AaDisableModifiedNotifications = true;
 			if (_noUndo) _t.Call(SCI_SETUNDOCOLLECTION);
 		}
