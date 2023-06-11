@@ -150,6 +150,7 @@ class DOptions : KDialogWindow {
 		var pColor = b.Panel as Grid;
 		b.R.Add(out KColorPicker colorPicker);
 		b.R.StartStack();
+		var pFontStyle = b.Panel;
 		b.Add(out KCheckBox cBold, "Bold");
 		b.Add(out KCheckBox cItalic, "Italic");
 		b.Add(out KCheckBox cUnderline, "Underline");
@@ -272,8 +273,8 @@ class DOptions : KDialogWindow {
 							pColor.Visibility = Visibility.Visible;
 							ignoreColorEvents = true;
 							int col;
-							cBold.Visibility = cItalic.Visibility = cUnderline.Visibility = (k.kind == _StyleKind.Style) ? Visibility.Visible : Visibility.Collapsed;
-							tAlpha.Visibility = k.kind == _StyleKind.Style ? Visibility.Collapsed : Visibility.Visible;
+							pFontStyle.Visibility = k.kind == _StyleKind.Style ? Visibility.Visible : Visibility.Collapsed;
+							tAlpha.Visibility = k.kind is _StyleKind.Element or _StyleKind.Indicator ? Visibility.Visible : Visibility.Collapsed;
 							if (k.kind == _StyleKind.Style) {
 								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k.index));
 								cBold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k.index);

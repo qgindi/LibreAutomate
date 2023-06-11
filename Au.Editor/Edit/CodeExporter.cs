@@ -75,6 +75,9 @@ static class CodeExporter {
 						var k = _StyleToStruct(style);
 						t.Write("<span style='color:#{0:X6}", k.color);
 						if (k.bold) t.Write(";font-weight: bold");
+						//we use default styles, and there are no styles with italic or underline
+						//if (k.italic) t.Write(";font-style: italic");
+						//if (k.underline) t.Write(";text-decoration: underline");
 					}
 					t.Write("'>");
 				}
@@ -120,6 +123,8 @@ static class CodeExporter {
 			var k = _StyleToStruct(style);
 			b.AppendFormat("pre.au .{0}{{color:#{1:X6};", _StyleToString(style), k.color);
 			if (k.bold) b.Append("font-weight: bold;");
+			//if (k.italic) b.Append("font-style: italic;");
+			//if (k.underline) b.Append("text-decoration: underline;");
 			b.Append("}");
 		}
 		
