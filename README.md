@@ -26,7 +26,7 @@ Editor window
 ![window](https://www.libreautomate.com/images/window.png#1 "Editor window")
 
 ## How to build
-Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 or 11 SDK.
+Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 or 11 SDK. Need Windows 10 or 11 64-bit; not tested on Win7.
 
 1. Open Au.sln in Visual Studio.
 2. Build solution (not just the startup project).

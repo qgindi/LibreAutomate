@@ -432,7 +432,7 @@ partial class CiStyling {
 		public TStyle None; //black
 		public TStyle Comment = 0x60A000; //light green, towards yellow
 		public TStyle String = 0xA07040; //brown, more green
-		public TStyle StringEscape = 0xB776FB; //pink-purple like in VS
+		public TStyle StringEscape = 0xFF60FF; //pink-purple
 		public TStyle Number = 0x804000; //brown, more red
 		public TStyle Punctuation; //black
 		public TStyle Operator = 0x0000ff; //blue like keyword
