@@ -509,7 +509,7 @@ partial class CiStyling {
 						r.bold = 0 != (i2 & 1);
 						r.italic = 0 != (i2 & 2);
 						r.underline = 0 != (i2 & 4);
-					}
+					} else r.bold = r.italic = r.underline = false;
 				}
 				
 				void _Int(ref int value) {
