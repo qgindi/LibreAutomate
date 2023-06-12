@@ -425,6 +425,7 @@ class DProperties : KDialogWindow {
 					};
 				}
 			});
+			m["Delete converted..."] = _ => run.itSafe(dir);
 		}
 		m.Show(owner: this);
 	}
