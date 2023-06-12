@@ -20,7 +20,7 @@ namespace other
 
 		//After unhooking, this dll remains loaded until hooked threads receive messages.
 		//	To unload when [un]installing, installer calls Cpp_Unload which broadcasts messages to all top-level and message-only windows.
-		//	To unload when building, Cpp project's pre-link event runs "unload AuCpp dll.exe" (created from QM2 macro "unload AuCpp dll") which calls Cpp_Unload.
+		//	To unload when building, Cpp project's pre-link event runs "BuildEvents.exe" (created from C# script) which calls Cpp_Unload.
 	}
 
 	EXPORT HHOOK Cpp_Clipboard(HHOOK hh) {

@@ -51,6 +51,8 @@ partial class MainWindow : Window {
 		var bNew = App.Commands[nameof(Menus.File.New)].FindMenuButtonInToolbar(Panels.TFile);
 		if (bNew != null) bNew.MouseDoubleClick += (_, e) => { e.Handled = true; Menus.File.New.New_script(); };
 
+		if (Au.Triggers.ActionTriggers.DisabledEverywhere) App.Commands[nameof(Menus.TT.Disable_triggers)].Checked = true;
+
 		Panels.CreatePanels();
 
 		App.Commands.BindKeysTarget(this, "");

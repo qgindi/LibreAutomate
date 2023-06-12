@@ -14,7 +14,7 @@ partial class TriggersAndToolbars {
 
 		folder.SelectSingle();
 		var tv = Panels.Files.TreeControl;
-		if(!folder.IsExpanded) tv.Expand(folder, true);
+		if (!folder.IsExpanded) tv.Expand(folder, true);
 		tv.EnsureVisible(folder, scrollTop: true);
 
 		//var m = new popupMenu();
@@ -106,7 +106,7 @@ partial class TriggersAndToolbars {
 	internal static void OnDisableTriggers() {
 		bool dis = ActionTriggers.DisabledEverywhere;
 		App.TrayIcon.Disabled = dis;
-		App.Commands[nameof(Menus.TT.Disable_triggers)].Checked = dis;
+		if (App.Commands is { } ac) ac[nameof(Menus.TT.Disable_triggers)].Checked = dis;
 	}
 
 	public static void ShowActiveTriggers() {

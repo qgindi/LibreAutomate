@@ -130,6 +130,10 @@ internal static unsafe partial class Cpp {
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern int Cpp_AccGetProps(Cpp_Acc a, string props, out BSTR sResult);
 	
+	/// <param name="flags">1 - wait less.</param>
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static extern void Cpp_Unload(uint flags);
+	
 #if DEBUG
 	internal static void DebugUnload() {
 		//run GC to release Firefox object wrappers. Else may not unload from Firefox.
@@ -137,9 +141,6 @@ internal static unsafe partial class Cpp {
 		GC.WaitForPendingFinalizers();
 		Cpp_Unload(0);
 	}
-	
-	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	internal static extern void Cpp_Unload(uint flags);
 #endif
 	
 	// STRING

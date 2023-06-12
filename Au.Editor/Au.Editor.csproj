@@ -168,7 +168,7 @@
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="&quot;$(SolutionDir)Other\Programs\PostBuild.exe&quot;&#xD;&#xA;" />
+	  <Exec Command="&quot;$(SolutionDir)Other\Programs\BuildEvents.exe&quot;" />
 	</Target>
 
 </Project>

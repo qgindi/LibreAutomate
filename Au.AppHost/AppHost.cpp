@@ -304,8 +304,8 @@ gPrivate:
 //	The script also adds Au, and in the future maybe other omnipresent assemblies.
 //		For Au.Editor also adds Au.Controls, and in the future maybe more.
 //		Need to edit/run it when these dependencies change.
-//For Au.Editor.exe and Au.Task.exe the resource is added by script "PostBuild" (it uses ResourceHacker).
-//	The script is compiled to PostBuild.exe which is executed as a postbuild task of Au.Editor project.
+//For Au.Editor.exe and Au.Task.exe the resource is added by script "BuildEvents" (it uses ResourceHacker).
+//	The script is compiled to BuildEvents.exe which is executed as a postbuild task of Au.Editor project.
 //For exeProgram the resource is added by Compiler._Resources.AddTpa.
 void BuildTpaList(const PATHS& p, std::string& tpaList) {
 	std::string dir;

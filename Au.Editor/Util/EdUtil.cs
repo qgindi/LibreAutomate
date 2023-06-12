@@ -126,8 +126,8 @@ static class EdComUtil {
 				locale = aloc[i - 1];
 			}
 			comDll = r.GetPath(locale);
-			if (comDll == null || !filesystem.exists(comDll).File) {
-				dialog.showError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: owner);
+			if (comDll == null /*|| !filesystem.exists(comDll).File*/) { //can be "filepath/resource"
+				dialog.showError("Failed to get file path.", owner: owner);
 				return null;
 			}
 			break;
