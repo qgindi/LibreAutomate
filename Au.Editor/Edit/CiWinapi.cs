@@ -156,7 +156,10 @@ class CiWinapi {
 					//	If parameter, it is usually null. If interface member parameter, the member is rarely used.
 					//	Let's add empty definition. It's easy to replace it with full definition when need.
 					if (name == "IBindCtx") {
-						text = "internal interface IBindCtx {}";
+						text = """
+[ComImport, Guid("0000000e-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IBindCtx {}
+""";
 						kind = CiItemKind.Interface;
 					} else if (name == "PROPVARIANT") {
 						text = "internal struct PROPVARIANT { int a, b; nint c, d; }";
