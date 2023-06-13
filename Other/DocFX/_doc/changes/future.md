@@ -1,4 +1,4 @@
-## Versions 0.15.0 (2023-05-17) to 0.15.1 (2023-05-20)
+## Version 0.17.0 (2023-)
 
 ### Editor
 New tools:
@@ -26,7 +26,8 @@ Improved:
 ### Bug fixes
 
 Editor:
-- Fixed: cannot convert some COM type libraries.
+- Fixed: If you disable triggers from the tray icon before the main window being create it will crash.
+- Fixed: Cannot convert some COM type libraries.
 
 Library:
 - .
