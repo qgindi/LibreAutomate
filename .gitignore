@@ -214,13 +214,21 @@ ModelManifest.xml
 
 # Au
 /Other/Api/
+/Other/Programs/ResourceHacker.*
+/Other/Programs/*2.exe.res
 
-/_/32/*
-/_/64/*
-/_/*.exe
-/_/*.dll
-/_/*.pdb
-/_/*.xml
+/_/*
+!/_/Cookbook/
+!/_/Default/
+!/_/Roslyn/
+!/_/Templates/
+!/*.db
+!/*.yml
+!/*.manifest
+!/*.txt
+
+#!/_/32/*
+#!/_/64/*
 
 /_/Default/*
 !/_/Default/Workspace/
@@ -229,7 +237,6 @@ ModelManifest.xml
 !/_/Default/Workspace/files/
 !/_/Default/Workspace/files.xml
 !/_/Default/Workspace/state.db
-!/_/Default/.gitignore
 
 /_/Templates/*
 !/_/Templates/files/
