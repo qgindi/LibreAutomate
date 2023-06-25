@@ -324,9 +324,10 @@ public:
 
 	STDMETHODIMP get_accHelp(VARIANT varChild, out BSTR* pszHelp)
 	{
-		if(varChild.vt == VT_I1) { //prop uiaid
+		if(varChild.vt == VT_I1) { //prop uiaid, uiacn
 			switch(varChild.cVal) {
 			case 'u': return _ae->get_CurrentAutomationId(pszHelp);
+			case 'U': return _ae->get_CurrentClassName(pszHelp);
 			}
 		}
 		return _GetProp(varChild, 'h', pszHelp);

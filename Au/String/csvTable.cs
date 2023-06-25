@@ -131,7 +131,6 @@ public class csvTable
 
 			var R = new csvTable(a, 0);
 			R.ColumnCount = nCol; //make all rows of equal length and set _columnCount
-								  //print.it(_r.RowCount, _r.ColumnCount);
 			return R;
 		} //fixed
 	}

@@ -615,6 +615,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	FileNode _FindRelative(string name, FNFind kind, bool orAnywhere = false) {
+		bool retry = false; gRetry:
 #if true //fast, but allocates
 		int i = name.LastIndexOf('\\');
 		var lastName = i < 0 ? name : name[(i + 1)..]; //never mind: allocation. To avoid allocation would need to enumerate without dictionary, and in big workspace it can be 100 times slower.
@@ -625,6 +626,10 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				if (_Cmp(v)) return v;
 				if (orAnywhere && i < 0) return v;
 			}
+		}
+		if (!retry) {
+			retry = kind is FNFind.CodeFile or FNFind.Class ? !lastName.Ends(".cs", true) : kind is FNFind.Folder ? false : !lastName.Contains('.');
+			if (retry) { name += ".cs"; goto gRetry; }
 		}
 		return null;
 		

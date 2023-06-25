@@ -44,7 +44,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Use UI Automation API.
 		/// Need this flag to find UI elements in windows that don't support accessible objects but support UI Automation elements.
-		/// UI elements found with this flag never have <b>HtmlX</b> properties, but can have <see cref="elm.UiaId"/>.
+		/// UI elements found with this flag never have <b>HtmlX</b> properties, but can have <b>UiaX</b> properties.
 		/// This flag can be used with most other windows too.
 		/// Don't use this flag when searching in elm (then it is inherited from the elm variable) or web page (role prefix <c>"web:"</c> etc).
 		/// See also: <see cref="elm.MiscFlags"/>.
@@ -528,7 +528,7 @@ namespace Au.Types {
 	/// Used with <see cref="elm.GetProperties"/>.
 	/// </summary>
 	public class EProperties {
-		public string Role, Name, Value, Description, Help, DefaultAction, KeyboardShortcut, UiaId, OuterHtml, InnerHtml;
+		public string Role, Name, Value, Description, Help, DefaultAction, KeyboardShortcut, UiaId, UiaCN, OuterHtml, InnerHtml;
 		public EState State;
 		public RECT Rect;
 		public wnd WndContainer;

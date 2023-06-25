@@ -804,15 +804,17 @@ class CiText {
 	}
 	
 	public static FlowDocumentControl CreateControl(int colorRGB = 0xfffff0) {
+		var ff = App.Wmain.FontFamily;
+		double fs = App.Wmain.FontSize;
+		if (ff.Source == "Segoe UI") { ff = new("Calibri"); fs += 2; }
 		var d = new FlowDocument {
-			//FontFamily = App.Wmain.FontFamily,
-			//FontSize = App.Wmain.FontSize,
-			FontFamily = new FontFamily("Calibri"),
-			FontSize = App.Wmain.FontSize + 2,
+			FontFamily = ff,
+			FontSize = fs,
 			Background = ColorInt.WpfBrush_(colorRGB),
 			PagePadding = default,
 			TextAlignment = TextAlignment.Left,
 		};
+		TextOptions.SetTextFormattingMode(d, TextFormattingMode.Display);
 		var c = new FlowDocumentControl {
 			Document = d,
 			FocusVisualStyle = null,

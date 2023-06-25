@@ -17,6 +17,9 @@ namespace Au {
 				if (!to.Sleep()) return r;
 			}
 		}
+		//CONSIDER: rename: wait.until. Then also forMessagesAndCondition => forMessagesUntil.
+		//	But not always it's good. Example: var link = wait.until(3, () => clipboard.text);
+		//	Maybe wait.forFunc or wait.func. Then forMessagesFunc or funcMsg.
 		
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).

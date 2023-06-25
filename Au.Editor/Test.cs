@@ -1,39 +1,39 @@
-extern alias CAW;
+//extern alias CAW;
 
-//using System.Xml.Linq;
+////using System.Xml.Linq;
 
+////using System.Windows;
+////using System.Windows.Controls;
+////using System.Windows.Media;
+////using System.Windows.Interop;
+//using System.Windows.Input;
+
+////using Au.Controls;
+//using static Au.Controls.Sci;
+//using Au.Compiler;
+////using Au.Triggers;
+
+//using Microsoft.CodeAnalysis;
+//using CAW::Microsoft.CodeAnalysis;
+//using Microsoft.CodeAnalysis.CSharp;
+//using Microsoft.CodeAnalysis.CSharp.Syntax;
+//using Microsoft.CodeAnalysis.Text;
+//using Microsoft.CodeAnalysis.Shared.Extensions;
+//using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+//using Microsoft.CodeAnalysis.CSharp.Extensions;
+//using Microsoft.CodeAnalysis.Shared.Utilities;
+//using CAW::Microsoft.CodeAnalysis.Shared.Utilities;
+//using CAW::Microsoft.CodeAnalysis.FindSymbols;
+
+//using System.Text.RegularExpressions;
+////using System.Windows.Forms;
+//using Au.Controls;
 //using System.Windows;
 //using System.Windows.Controls;
+//using System.Windows.Controls.Primitives;
 //using System.Windows.Media;
-//using System.Windows.Interop;
-using System.Windows.Input;
-
-//using Au.Controls;
-using static Au.Controls.Sci;
-using Au.Compiler;
-//using Au.Triggers;
-
-using Microsoft.CodeAnalysis;
-using CAW::Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Shared.Extensions;
-using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Extensions;
-using Microsoft.CodeAnalysis.Shared.Utilities;
-using CAW::Microsoft.CodeAnalysis.Shared.Utilities;
-using CAW::Microsoft.CodeAnalysis.FindSymbols;
-
-using System.Text.RegularExpressions;
-//using System.Windows.Forms;
-using Au.Controls;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
-using System.Windows.Threading;
-//using System.Net.Http;
+//using System.Windows.Threading;
+////using System.Net.Http;
 
 #if TRACE
 

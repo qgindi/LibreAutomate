@@ -123,7 +123,7 @@ public unsafe class elmFinder {
 	/// <remarks>
 	/// To create code for this function, use dialog "Find UI element".
 	/// 
-	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**_r "</c>). They are similar.
+	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
 	/// 
 	/// When using path like <c>["ROLE1", "Name1"]["ROLE2", "Name2"]["ROLE3", "Name3"]</c>, multiple finders are linked like finder1 -> finder2 -> finder3, so that the chain of finders will find UI element specified by the last finder.
 	/// 
@@ -172,6 +172,7 @@ public unsafe class elmFinder {
 	/// - <c>"key"</c> - <see cref="elm.KeyboardShortcut"/>.
 	/// - <c>"help"</c> - <see cref="elm.Help"/>.
 	/// - <c>"uiaid"</c> - <see cref="elm.UiaId"/>.
+	/// - <c>"uiacn"</c> - <see cref="elm.UiaCN"/>.
 	/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. Default 10000, min 1, max 1000000.\
 	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
 	/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.\

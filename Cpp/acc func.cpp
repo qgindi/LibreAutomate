@@ -391,8 +391,9 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 	case 'd': hr = acc->get_accDescription(ve, &sResult); break;
 	case 'h': hr = acc->get_accHelp(ve, &sResult); break;
 	case 'u': //uiaid
+	case 'U': //uiacn
 		if(!(a.misc.flags & eAccMiscFlags::UIA)) return 1;
-		ve.vt = VT_I1; ve.cVal = 'u'; hr = acc->get_accHelp(ve, &sResult);
+		ve.vt = VT_I1; ve.cVal = (char)prop; hr = acc->get_accHelp(ve, &sResult);
 		break;
 	case 'a': hr = acc->get_accDefaultAction(ve, &sResult); break;
 	case 'k': hr = acc->get_accKeyboardShortcut(ve, &sResult); break;

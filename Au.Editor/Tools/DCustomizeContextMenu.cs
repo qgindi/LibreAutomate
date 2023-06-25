@@ -8,7 +8,7 @@ using System.Windows.Media;
 static class DCustomizeContextMenu {
 	
 	public static void Dialog(string menuName, string ownerName) {
-		string file = AppSettings.DirBS + menuName + " context menu.txt";
+		var (file, text) = _GetFilePathAndText(menuName);
 		
 		var b = new wpfBuilder("Customize context menu").WinSize(550, 550).Columns(-1, -1);
 		b.WinProperties(showInTaskbar: false);
@@ -28,7 +28,7 @@ Right - commands to add to the context menu of the {ownerName}. Separator -.
 		
 		b.xAddInBorder(out KScintilla t2);
 		t2.AaInitUseDefaultContextMenu = true;
-		if (filesystem.exists(file)) t2.aaaText = filesystem.loadText(file);
+		t2.aaaText = text;
 		//b.Validation(o => never mind);
 		t2.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 			unsafe {
@@ -67,11 +67,17 @@ Right - commands to add to the context menu of the {ownerName}. Separator -.
 		}
 	}
 	
+	static (string path, string text) _GetFilePathAndText(string menuName) {
+		string file = AppSettings.DirBS + menuName + " context menu.txt", text = null;
+		if (filesystem.exists(file)) text = filesystem.loadText(file);
+		else if (menuName == "Edit") text = "Cut\nCopy\nPaste\n-\nCustomize_edit_context_menu\n";
+		return (file, text);
+	}
+	
 	public static void AddToMenu(KWpfMenu m, string menuName) {
 		try {
-			string file = AppSettings.DirBS + menuName + " context menu.txt";
-			if (!filesystem.exists(file)) return;
-			var a = File.ReadAllLines(file);
+			if (_GetFilePathAndText(menuName).text is not string text) return;
+			var a = text.Lines();
 			bool needSeparator = false;
 			foreach (var line in a) {
 				var s = line.Trim();

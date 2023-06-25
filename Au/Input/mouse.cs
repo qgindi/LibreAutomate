@@ -1040,13 +1040,13 @@ namespace Au {
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static MButtons buttons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		//{
-		//	MButtons _r = 0;
-		//	if(0 != (buttons & MButtons.Left) && keys.isKey(KKey.MouseLeft)) _r |= MButtons.Left;
-		//	if(0 != (buttons & MButtons.Right) && keys.isKey(KKey.MouseRight)) _r |= MButtons.Right;
-		//	if(0 != (buttons & MButtons.Middle) && keys.isKey(KKey.MouseMiddle)) _r |= MButtons.Middle;
-		//	if(0 != (buttons & MButtons.X1) && keys.isKey(KKey.MouseX1)) return _r |= MButtons.X1;
-		//	if(0 != (buttons & MButtons.X2) && keys.isKey(KKey.MouseX2)) return _r |= MButtons.X2;
-		//	return _r;
+		//	MButtons R = 0;
+		//	if(0 != (buttons & MButtons.Left) && keys.isKey(KKey.MouseLeft)) R |= MButtons.Left;
+		//	if(0 != (buttons & MButtons.Right) && keys.isKey(KKey.MouseRight)) R |= MButtons.Right;
+		//	if(0 != (buttons & MButtons.Middle) && keys.isKey(KKey.MouseMiddle)) R |= MButtons.Middle;
+		//	if(0 != (buttons & MButtons.X1) && keys.isKey(KKey.MouseX1)) return R |= MButtons.X1;
+		//	if(0 != (buttons & MButtons.X2) && keys.isKey(KKey.MouseX2)) return R |= MButtons.X2;
+		//	return R;
 		//}
 
 		//rejected: rarely used. Can use IsPressed.

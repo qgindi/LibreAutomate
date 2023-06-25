@@ -340,6 +340,7 @@ static class CiFind {
 				foreach (var v in ar) cd.sci.aaaIndicatorAdd(SciCode.c_indicRefs, true, v);
 			}
 			catch (OperationCanceledException) { return; }
+			catch (Exception e1) { Debug_.Print(e1); } //Roslyn bug: when caret at '!=' in 'if (Sheet != App.ActiveSheet)' (COM)
 			finally {
 				cancelTS.Dispose();
 				if (cancelTS == _cancelTS) _cancelTS = null;

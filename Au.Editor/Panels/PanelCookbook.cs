@@ -92,22 +92,19 @@ class PanelCookbook {
 			var xr = XElement.Parse(xml);
 #endif
 			
-			_root = new _Item(null, true);
+			_root = new _Item(null, FNType.Folder);
 			_AddItems(xr, _root, 0);
 			
 			static void _AddItems(XElement xp, _Item ip, int level) {
 				foreach (var x in xp.Elements()) {
 					var name = x.Attr("n");
 					if (name[0] == '-') continue;
-					var tag = x.Name.LocalName;
-					bool dir = tag == "d";
-					if (!dir) {
-						if (tag != "s") continue;
-						name = name[..^3];
-					}
-					var i = new _Item(name, dir);
+					var ftype = FileNode.XmlTagToFileType(x.Name.LocalName, false);
+					if (ftype == FNType.Other) continue;
+					if (ftype != FNType.Folder) name = name[..^3];
+					var i = new _Item(name, ftype);
 					ip.AddChild(i);
-					if (dir) _AddItems(x, i, level + 1);
+					if (ftype == FNType.Folder) _AddItems(x, i, level + 1);
 				}
 			}
 			
@@ -193,9 +190,9 @@ class PanelCookbook {
 				} else {
 					var t = inBody ? n.GetBodyTextWithoutLinksEtc() : n.name;
 					if (t == null || !t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
-					r = new _Item(n.name, false);
+					r = new _Item(n.name, n.ftype);
 				}
-				R ??= new _Item(parent.name, true) { isExpanded = true };
+				R ??= new _Item(parent.name, FNType.Folder) { isExpanded = true };
 				R.AddChild(r);
 			}
 			return R;
@@ -227,9 +224,9 @@ class PanelCookbook {
 							if (!(allFound &= found)) break;
 						}
 						if (!allFound) continue;
-						r = new _Item(n.name, false);
+						r = new _Item(n.name, n.ftype);
 					}
-					R ??= new _Item(parent.name, true) { isExpanded = true };
+					R ??= new _Item(parent.name, FNType.Folder) { isExpanded = true };
 					R.AddChild(r);
 				}
 				return R;
@@ -266,6 +263,7 @@ class PanelCookbook {
 	
 	/// <summary>
 	/// Finds and opens a recipe.
+	/// Thread-safe.
 	/// </summary>
 	/// <param name="s">Wildcard or start or any substring of recipe name.</param>
 	public void OpenRecipe(string s) {
@@ -274,6 +272,15 @@ class PanelCookbook {
 			Panels.PanelManager[P].Visible = true;
 			_OpenRecipe(_FindRecipe(s), true);
 		}
+	}
+	
+	/// <summary>
+	/// Opens recipe in web browser. Does not change anything in the Cookbook panel. Does not add to history.
+	/// </summary>
+	/// <param name="name">Exact recipe name. If null, opens the cookbook index page.</param>
+	public void OpenRecipeInWebBrowser(string name) {
+		var s = name?.Replace("#", "Sharp").Replace(".", "dot") ?? "index"; //see project @Au docs -> AuDocs.Cookbook
+		run.itSafe($"https://www.libreautomate.com/cookbook/{s}.html");
 	}
 	
 	_Item _FindRecipe(string s, bool exact = false) {
@@ -336,20 +343,26 @@ class PanelCookbook {
 	
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		internal readonly string name;
-		internal readonly bool dir;
+		internal readonly FNType ftype;
 		internal bool isExpanded;
 		internal string[] stemmedName;
 		
-		public _Item(string name, bool dir) {
+		public _Item(string name, FNType ftype) {
 			this.name = name;
-			this.dir = dir;
+			this.ftype = ftype;
 		}
+		
+		internal bool dir => ftype == FNType.Folder;
 		
 		#region ITreeViewItem
 		
 		string ITreeViewItem.DisplayText => name;
 		
-		object ITreeViewItem.Image => isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : "*BoxIcons.RegularCookie" + Menus.darkYellow);
+		object ITreeViewItem.Image
+			=> isExpanded ? @"resources/images/expanddown_16x.xaml"
+			: dir ? @"resources/images/expandright_16x.xaml"
+			: ftype == FNType.Class ? FileNode.c_iconClass
+			: "*BoxIcons.RegularCookie" + Menus.darkYellow;
 		
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 		
@@ -357,8 +370,7 @@ class PanelCookbook {
 		
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		
-		bool ITreeViewItem.IsFolder => _IsFolder;
-		bool _IsFolder => base.HasChildren;
+		bool ITreeViewItem.IsFolder => dir;
 		
 		#endregion
 		

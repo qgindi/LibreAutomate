@@ -176,13 +176,13 @@ class AccFinder
 					bool addToProp = true;
 					if(na[0] != '@') { //HTML attribute names have prefix "@"
 						int i = str::Switch(na, va - 1 - na, {
-							L"value", L"desc", L"help", L"action", L"key", L"uiaid", //string props
+							L"value", L"desc", L"help", L"action", L"key", L"uiaid", L"uiacn", //string props
 							L"state", L"level", L"maxcc", L"notin", L"rect", L"item",
 							L"class", L"id", //control
 							});
 
 						if(i == 0) return _Error(L"Unknown name in prop. For HTML attributes use prefix @.");
-						const int nStrProp = 6;
+						const int nStrProp = 7;
 						if(i > nStrProp) {
 							i -= nStrProp;
 							int len = (int)(s - va); if(len == 0 && i != 8) goto ge; //winforms name can be empty

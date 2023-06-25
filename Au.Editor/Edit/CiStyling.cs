@@ -415,7 +415,7 @@ partial class CiStyling {
 	public record TStyles //note: must be record, because uses synthesized ==
 	{
 		public string FontName = "Consolas";
-		public int FontSize = 9;
+		public double FontSize = 9;
 		public int BackgroundColor = 0xffffff;
 		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
 		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome
@@ -474,7 +474,7 @@ partial class CiStyling {
 				switch (a[0]) {
 				case "Font":
 					if (!a[1].NE()) FontName = a[1];
-					if (a.Length > 2) { int fs = a[2].ToInt(); if (fs >= 5 && fs <= 100) FontSize = fs; }
+					if (a.Length > 2) { var fs = a[2].ToNumber(); if (fs >= 5 && fs <= 100) FontSize = fs; }
 					break;
 				case "Background": _Int(ref BackgroundColor); break;
 				case nameof(None): _Style(ref None); break;
@@ -524,7 +524,7 @@ partial class CiStyling {
 		
 		void _Save() {
 			var b = new StringBuilder(); //don't need csvTable for such simple values
-			b.AppendLine($"Font, {FontName}, {FontSize}");
+			b.AppendLine($"Font, {FontName}, {FontSize.ToS()}");
 			_Int("Background", BackgroundColor);
 			_Style(nameof(None), None);
 			_Style(nameof(Comment), Comment);
