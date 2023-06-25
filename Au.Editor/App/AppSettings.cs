@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 /// <summary>
 /// Program settings.
 /// folders.ThisAppDocuments + @".settings\Settings.json"
@@ -7,9 +9,9 @@ record AppSettings : JSettings {
 	//	NOTE: Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
 	//	Speed tested with .NET 5: first time 40-60 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
 	//	CONSIDER: Jit_ something in other thread. But it isn't good when runs at PC startup.
-
+	
 	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
-
+	
 #if IDE_LA
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings_\";
 #else
@@ -21,9 +23,10 @@ record AppSettings : JSettings {
 	public string[] recentWS;
 	public bool checkForUpdates;
 	public int checkForUpdatesDay;
-
-	//When need a nested type, use record class. Everything works well; can add/remove members like in main type.
-	//	Somehow .NET does not support struct and record struct, InvalidCastException.
+	
+	//When need a nested type, use record struct. Everything works well; can add/remove members like in main type.
+	//	If using default field values, need ctor eg `hotkeys_t()` (else error) and `=new()`.
+	//	Note: .NET always creates new object, even if default object created, even if record class. Avoid custom ctors etc.
 	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
 	
 	//Options -> Hotkeys
@@ -37,23 +40,27 @@ record AppSettings : JSettings {
 	}
 	public hotkeys_t hotkeys = new();
 	
+	//font of various UI parts
+	public record struct font_t(string name, double size = 9);
+	public font_t font_output = new("Consolas");
+	
 	//Options -> Templates
 	public int templ_use;
 	//public int templ_flags;
 	
 	//code editor
 	public bool edit_wrap, edit_noImages;
-
+	
 	//code info
 	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 	public int ci_rename;
-
+	
 	//CONSIDER: option to specify completion keys/chars. See https://www.quickmacros.com/forum/showthread.php?tid=7263
 	//public byte ci_complOK = 15; //1 Enter, 2 Tab, 4 Space, 8 other
 	//public byte ci_complArgs = 4; //1 Enter, 2 Tab, 4 Space (instead of ci_complParen)
 	//maybe option to use Tab for Space, and disable Space. Tab would add space or/and () like now Space does.
-
+	
 	//public byte ci_formatBraceNewline; //0 never, 1 always, 2 type/function
 	//public byte ci_formatIndentation; //0 tab, 1 4 spaces, 2 2 spaces
 	
@@ -76,7 +83,7 @@ record AppSettings : JSettings {
 	
 	//panel Outline
 	public byte outline_flags;
-
+	
 	//panel Open
 	public byte openFiles_flags;
 	
@@ -94,6 +101,7 @@ record AppSettings : JSettings {
 	
 	//Delm
 	public record delm_t {
+		//public delm_t() { print.qm2.write("delm"); } //TODO
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
 		public string wait, actionn; //named actionn because once was int action
 		public int flags;
@@ -144,8 +152,8 @@ record AppSettings : JSettings {
 /// </summary>
 record WorkspaceSettings : JSettings {
 	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
-
+	
 	public FilesModel.UserData[] users;
-
+	
 	public string ci_skipFolders;
 }

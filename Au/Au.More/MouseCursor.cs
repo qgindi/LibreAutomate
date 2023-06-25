@@ -94,9 +94,9 @@ namespace Au.More
 		///// <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
 		//public System.Windows.Input.Cursor ToWpfCursor(bool destroyCursor = true) {
 		//	if (_handle == default) return null;
-		//	var _r = System.Windows.Interop.CursorInteropHelper.Create(new _CursorHandle(_handle, destroyCursor));
+		//	var R = System.Windows.Interop.CursorInteropHelper.Create(new _CursorHandle(_handle, destroyCursor));
 		//	if (destroyCursor) _handle = default;
-		//	return _r;
+		//	return R;
 		//}
 
 		//class _CursorHandle : SafeHandleZeroOrMinusOneIsInvalid

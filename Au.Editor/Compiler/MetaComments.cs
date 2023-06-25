@@ -552,28 +552,7 @@ class MetaComments {
 			}
 			return;
 		case "nuget":
-			if (!NugetPackages.Contains(value, StringComparer.OrdinalIgnoreCase)) {
-				NugetPackages.Add(value);
-				try {
-					_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
-					var xx = _xnuget?.Elem("package", "path", value, true);
-					if (xx == null) {
-						_ErrorV("nuget package not installed: " + value);
-						return;
-					}
-					var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(value);
-					foreach (var x in xx.Elements()) {
-						if (x.Name.LocalName is not ("r" or "ro")) continue;
-						var r = dir + x.Value;
-						if (!References.Resolve(r, false)) {
-							_ErrorV("nuget file not found: " + r);
-						}
-					}
-				}
-				catch (Exception e) {
-					_ErrorV("exception: " + e.Message);
-				}
-			}
+			_NuGet(value);
 			return;
 		case "c":
 			if (_GetFile(value, FNFind.Any) is FileNode ff) {
@@ -858,6 +837,52 @@ class MetaComments {
 		}
 		(ProjectReferences ??= new()).Add((f, m));
 		return true;
+	}
+	
+	void _NuGet(string value) {
+		if (NugetPackages.Contains(value, StringComparer.OrdinalIgnoreCase)) return;
+		NugetPackages.Add(value);
+		try {
+			_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
+			var xx = _xnuget?.Elem("package", "path", value, true);
+			if (xx == null) {
+				bool forCiErrors = _flags.Has(MCPFlags.ForCodeInfoInEditor);
+				var b = new StringBuilder(forCiErrors ? "<>" : null);
+				b.Append("NuGet package not installed: ").Append(value);
+				//append "install" link etc
+				if (value.Split('\\', 2) is var a && a.Length == 2 && a[0].Length > 0 && a[1].Length > 0) {
+					var sep = forCiErrors ? "\r\n" : "\r\n\t";
+					b.Append(sep);
+					//is installed in another folder?
+					bool appended = false;
+					if (_xnuget != null) {
+						var s1 = "\\" + a[1];
+						foreach (var v in _xnuget.Elements("package")) {
+							if (v.Attr("path") is string s2 && s2.Ends(s1, true)) {
+								s2 = s2[..^s1.Length];
+								b.Append(!appended ? $"Replace code `nuget {value}` with" : $" or").Append($" `nuget {s2}{s1}`");
+								appended = true;
+							}
+						}
+						if (appended) b.Append(sep).Append($"Or <+nuget {value}>install or move<> {a[1]} to folder {a[0]}.");
+					}
+					if (!appended) b.Append($"<+nuget {value}>Install {a[1]}...<>");
+				}
+				_ErrorV(b.ToString());
+				return;
+			}
+			var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(value);
+			foreach (var x in xx.Elements()) {
+				if (x.Name.LocalName is not ("r" or "ro")) continue;
+				var r = dir + x.Value;
+				if (!References.Resolve(r, false)) {
+					_ErrorV("NuGet file not found: " + r);
+				}
+			}
+		}
+		catch (Exception e) {
+			_ErrorV("exception: " + e.Message);
+		}
 	}
 	
 	bool _FinalCheckOptions() {

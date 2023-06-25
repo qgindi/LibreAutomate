@@ -557,8 +557,6 @@ partial class FilesModel {
 		if (!f.IsSelected) f.SelectSingle();
 		_ContextMenu();
 	}
-	static ContextMenu s_contextMenu;
-	bool s_inContextMenu;
 	
 	void _ContextMenu() {
 		if (s_inContextMenu) return; //workaround for: sometimes, when dying mouse generates >1 rclick, somehow the menu is at screen 0 0
@@ -572,6 +570,8 @@ partial class FilesModel {
 		s_contextMenu.IsOpen = true;
 		s_inContextMenu = true;
 	}
+	static ContextMenu s_contextMenu;
+	static bool s_inContextMenu;
 	
 	//Called when editor control focused, etc.
 	public void EnsureCurrentSelected() {

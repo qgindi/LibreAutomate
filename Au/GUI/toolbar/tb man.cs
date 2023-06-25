@@ -1,14 +1,16 @@
-//PROBLEM: sometimes a topmost non-attached toolbar window is behind nontopmost windows.
+//TODO: sometimes a topmost non-attached toolbar window is behind nontopmost windows.
 //	Noticed several times in the last year (2022-2023). It seems only on Windows 11. Impossible to reproduce.
 //	Possible workaround: every second: if (!w.ZorderIsAbove(wnd.active)) ...
 //		Tested: ZorderTop does not work. ZorderAbove(second window in Z order) works.
-//	The last time it happened during drag-drop files between 2 folder windows.
+//	Once it happened during drag-drop files between 2 folder windows.
 //		The activated folder window became on top of all windows, including taskbars.
 //		Then at first only that window was supertopmost, but afterwards activating other normal windows made them supertompmost too.
+//	Next time when activated (clicked) a folder window.
 //	It seems it's a Windows bug.
 //	But one concern: maybe our toolbars are involved. Maybe it happens when a toolbar zorders itself above the owner window in a wrong time.
-//		That folder window (all folder windows) had 1 attached toolbar.
+//		That folder window (all folder windows) had 1 attached toolbar. The toolbar was already loaded.
 //		But toolbars only zorder self, not the owner window.
+//	Try: #if DEBUG: let wnd.SetWindowPos validate the Z order before and after calling the API. If becomes invalid after calling, print. Maybe after eg 100 ms (timer).
 
 namespace Au;
 

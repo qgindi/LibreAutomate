@@ -103,7 +103,7 @@ partial class keys
 		/// <summary>
 		/// Converts string to WPF <see cref="System.Windows.Input.ModifierKeys"/> and <see cref="System.Windows.Input.Key"/> or <see cref="System.Windows.Input.MouseAction"/>.
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = ModifierKeys.Control</c> and <c>key = Key.Left</c>.
-		/// Supported mouse button strings: <c>"Click"</c>, <c>"D-click"</c>, <c>"_r-click"</c>, <c>"M-click"</c>, <c>"Wheel"</c>. Example: <c>"Ctrl+_r-click"</c>. The first character of a mouse word is case-insensitive.
+		/// Supported mouse button strings: <c>"Click"</c>, <c>"D-click"</c>, <c>"R-click"</c>, <c>"M-click"</c>, <c>"Wheel"</c>. Example: <c>"Ctrl+R-click"</c>. The first character of a mouse word is case-insensitive.
 		/// </summary>
 		/// <returns>false if the string is invalid or contains incorrectly specified mouse buttons.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Input.ModifierKeys mod, out System.Windows.Input.Key key, out System.Windows.Input.MouseAction mouse) {

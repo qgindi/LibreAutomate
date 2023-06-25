@@ -74,7 +74,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// <example>
 	/// With <b>wpfBuilder</b>.
 	/// <code><![CDATA[
-	/// b._r.StartStack(vertical: true);
+	/// b.R.StartStack(vertical: true);
 	/// var e = new EnumUI<KMod>(b.Panel as StackPanel, KMod.Ctrl|KMod.Alt);
 	/// b.End();
 	/// ...
@@ -108,7 +108,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
-	/// b._r.Add("Dock", out ComboBox cb1);
+	/// b.R.Add("Dock", out ComboBox cb1);
 	/// var e = new EnumUI<Dock>(cb1);
 	/// ...
 	/// print.it(e.Result);

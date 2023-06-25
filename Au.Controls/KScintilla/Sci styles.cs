@@ -13,7 +13,7 @@ public unsafe partial class KScintilla {
 	//	return aaaGetString(SCI_STYLEGETFONT, style, 100);
 	//}
 
-	public void aaaStyleFont(int style, string name, int size) {
+	public void aaaStyleFont(int style, string name, double size) {
 		aaaStyleFont(style, name);
 		aaaStyleFontSize(style, size);
 	}
@@ -28,8 +28,8 @@ public unsafe partial class KScintilla {
 		aaaStyleFont(style, "Segoe UI", 9);
 	}
 
-	public void aaaStyleFontSize(int style, int value) {
-		Call(SCI_STYLESETSIZE, style, value);
+	public void aaaStyleFontSize(int style, double value) {
+		Call(SCI_STYLESETSIZEFRACTIONAL, style, (int)(value*100));
 	}
 
 	//public int aaaStyleFontSize(int style)

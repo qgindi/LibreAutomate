@@ -469,7 +469,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <summary>
 	/// Used only for debug.
 	/// </summary>
-	enum _FuncId { name = 1, value, description, default_action, role, state, rectangle, parent_object, child_object, container_window, child_count, child_objects, help_text, keyboard_shortcut, html, selection, uiaid }
+	enum _FuncId { name = 1, value, description, default_action, role, state, rectangle, parent_object, child_object, container_window, child_count, child_objects, help_text, keyboard_shortcut, html, selection, uiaid, uiacn }
 	
 	/// <summary>
 	/// Calls SetLastError and returns hr.
@@ -510,6 +510,7 @@ public unsafe sealed partial class elm : IDisposable {
 			case 's': funcId = _FuncId.state; break;
 			case 'r': funcId = _FuncId.rectangle; break;
 			case 'u': funcId = _FuncId.uiaid; break;
+			case 'U': funcId = _FuncId.uiacn; break;
 			}
 		}
 		

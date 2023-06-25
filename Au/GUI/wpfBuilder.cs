@@ -42,10 +42,10 @@ namespace Au;
 /// Dialog window with several controls for data input.
 /// <code><![CDATA[
 /// var b = new wpfBuilder("Example").WinSize(400); //create Window object with Grid control; set window width 400
-/// b._r.Add("Text", out TextBox text1).Focus(); //add label and text box control in first row
-/// b._r.Add("Combo", out ComboBox combo1).Items("One|Two|Three"); //in second row add label and combo box control with items
-/// b._r.Add(out CheckBox c1, "Check"); //in third row add check box control
-/// b._r.AddOkCancel(); //finally add standard OK and Cancel buttons
+/// b.R.Add("Text", out TextBox text1).Focus(); //add label and text box control in first row
+/// b.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three"); //in second row add label and combo box control with items
+/// b.R.Add(out CheckBox c1, "Check"); //in third row add check box control
+/// b.R.AddOkCancel(); //finally add standard OK and Cancel buttons
 /// b.End();
 /// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
 /// print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
@@ -497,7 +497,7 @@ public class wpfBuilder {
 	/// string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
 	/// var b = new wpfBuilder("Window").WinSize(300);
 	/// b.Row(0).Add("Text", out TextBox _);
-	/// b._r.AddOkCancel();
+	/// b.R.AddOkCancel();
 	/// b.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o));
 	/// b.End();
 	/// ]]></code>
@@ -999,9 +999,9 @@ public class wpfBuilder {
 	/// <example>
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(250);
-	/// b._r.AddEnum<KMod>(out var e1, KMod.Ctrl | KMod.Alt, label: "Modifiers", vertical: false);
-	/// b._r.AddEnum<DayOfWeek>(out var e2, DateTime.Today.DayOfWeek, label: "Day");
-	/// b._r.AddOkCancel();
+	/// b.R.AddEnum<KMod>(out var e1, KMod.Ctrl | KMod.Alt, label: "Modifiers", vertical: false);
+	/// b.R.AddEnum<DayOfWeek>(out var e2, DateTime.Today.DayOfWeek, label: "Day");
+	/// b.R.AddOkCancel();
 	/// if (!b.ShowDialog()) return;
 	/// print.it(e1.Result);
 	/// print.it(e2.Result);
@@ -1202,7 +1202,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets horizontal and/or vertical alignment of the last added element.
 	/// </summary>
-	/// <param name="x">Horizontal alignment. String that starts with one of these letters, uppercase or lowercase: L (left), _r (right), C (center), S (stretch).</param>
+	/// <param name="x">Horizontal alignment. String that starts with one of these letters, uppercase or lowercase: L (left), R (right), C (center), S (stretch).</param>
 	/// <param name="y">Vertical alignment. String that starts with one of these letters, uppercase or lowercase: T (top), B (bottom), C (center), S (stretch).</param>
 	/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
@@ -1262,7 +1262,7 @@ public class wpfBuilder {
 	/// Sets margin of the last added element.
 	/// </summary>
 	/// <param name="margin">
-	/// String containing uppercase or lowercase letters for margin sides (L, T, _r, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
+	/// String containing uppercase or lowercase letters for margin sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
@@ -1322,7 +1322,7 @@ public class wpfBuilder {
 	/// Sets padding of the last added control.
 	/// </summary>
 	/// <param name="padding">
-	/// String containing uppercase or lowercase letters for padding sides (L, T, _r, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
+	/// String containing uppercase or lowercase letters for padding sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
@@ -1360,19 +1360,19 @@ public class wpfBuilder {
 	/// <example>
 	/// Text box with simple tooltip.
 	/// <code><![CDATA[
-	/// b._r.Add("Example", out TextBox _).Tooltip("Tooltip text");
+	/// b.R.Add("Example", out TextBox _).Tooltip("Tooltip text");
 	/// ]]></code>
 	/// Tooltip with content created by another <b>wpfBuilder</b>.
 	/// <code><![CDATA[
 	/// //tooltip content
 	/// var btt = new wpfBuilder()
-	/// 	._r.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
-	/// 	._r.Add<TextBlock>().Text("Some ", "<b>text", ".")
+	/// 	.R.Add<Image>().Image(icon.stock(StockIcon.INFO).ToWpfImage())
+	/// 	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
 	/// 	.End();
 	/// //dialog
 	/// var b = new wpfBuilder("Window").WinSize(300);
-	/// b._r.AddButton("Example", null).Tooltip(btt.Panel);
-	/// b._r.AddOkCancel();
+	/// b.R.AddButton("Example", null).Tooltip(btt.Panel);
+	/// b.R.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
@@ -1401,8 +1401,8 @@ public class wpfBuilder {
 	/// <exception cref="NotSupportedException">Last added element must be <b>Control</b>, <b>Panel</b>, <b>Border</b> or <b>TextBlock</b>. With <i>foreground</i> only <b>Control</b> or <b>TextBlock</b>.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// b._r.Add<Label>("Example1").Brush(Brushes.Cornsilk, Brushes.Green).Border(Brushes.BlueViolet, 1);
-	/// b._r.Add<Label>("Example2").Brush(new LinearGradientBrush(Colors.Chocolate, Colors.White, 0));
+	/// b.R.Add<Label>("Example1").Brush(Brushes.Cornsilk, Brushes.Green).Border(Brushes.BlueViolet, 1);
+	/// b.R.Add<Label>("Example2").Brush(new LinearGradientBrush(Colors.Chocolate, Colors.White, 0));
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Brush(Brush background = null, Brush foreground = null) { //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
@@ -1438,8 +1438,8 @@ public class wpfBuilder {
 	/// <exception cref="NotSupportedException">Last added element must be <b>Control</b> or <b>Border</b>. With <i>cornerRadius</i> only <b>Border</b>.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// b._r.Add<Label>("Example1").Border(Brushes.BlueViolet, 1, new(5)).Brush(Brushes.Cornsilk, Brushes.Green);
-	/// b._r.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast);
+	/// b.R.Add<Label>("Example1").Border(Brushes.BlueViolet, 1, new(5)).Brush(Brushes.Cornsilk, Brushes.Green);
+	/// b.R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast);
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Border(Brush color = null, double thickness = 1d, Thickness? padding = null, double? cornerRadius = null, Thickness? thickness2 = null) {
@@ -1561,11 +1561,11 @@ public class wpfBuilder {
 	/// <example>
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(300);
-	/// b._r.Add("Name", out TextBox tName)
+	/// b.R.Add("Name", out TextBox tName)
 	/// 	.Validation(o => string.IsNullOrWhiteSpace(tName.Text) ? "Name cannot be empty" : null);
-	/// b._r.Add("Count", out TextBox tCount)
+	/// b.R.Add("Count", out TextBox tCount)
 	/// 	.Validation(o => int.TryParse(tCount.Text, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100");
-	/// b._r.AddOkCancel();
+	/// b.R.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
 	/// print.it(tName.Text, tCount.Text.ToInt());
@@ -1874,7 +1874,7 @@ public class wpfBuilder {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// b._r.Add<TextBlock>().Text(
+	/// b.R.Add<TextBlock>().Text(
 	/// 	"Text ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
 	/// 	new Run("color") { Foreground = Brushes.Blue, Background = Brushes.Cornsilk, FontSize = 20 }, "\n",
 	/// 	"controls", new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }, new CheckBox() { Content = "Check" }, "\n",
@@ -2015,11 +2015,11 @@ public class wpfBuilder {
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(400)
 	/// 	.Columns(30.., 0, -1) //the middle column is for splitter; the 30 is minimal width
-	/// 	._r.Add(out TextBox _)
+	/// 	.R.Add(out TextBox _)
 	/// 	.Add<GridSplitter>().Splitter(true, 2).Brush(Brushes.Orange) //add splitter in the middle column
 	/// 	.Add(out TextBox _)
-	/// 	._r.Add(out TextBox _).Skip().Add(out TextBox _) //skip the splitter's column
-	/// 	._r.AddOkCancel()
+	/// 	.R.Add(out TextBox _).Skip().Add(out TextBox _) //skip the splitter's column
+	/// 	.R.AddOkCancel()
 	/// 	.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
@@ -2029,7 +2029,7 @@ public class wpfBuilder {
 	/// 	.Row(27..).Add("Row", out TextBox _)
 	/// 	.Add<GridSplitter>().Splitter(false, 2).Brush(Brushes.Orange)
 	/// 	.Row(-1).Add("Row", out TextBox _)
-	/// 	._r.AddOkCancel()
+	/// 	.R.AddOkCancel()
 	/// 	.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>

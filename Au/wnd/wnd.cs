@@ -2649,7 +2649,7 @@ namespace Au {
 
 			if (removeUnderlineAmpersand
 				&& !R.NE()
-				//&& _r.Contains('&') //slower than HasStyle if the string is longer than 20
+				//&& R.Contains('&') //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
 				) R = StringUtil.RemoveUnderlineChar(R);
 

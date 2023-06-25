@@ -544,7 +544,7 @@ partial class CiCompletion {
 						if (diff != 0) return diff;
 						if (em1 == 1) return string.Compare(k1.Key.Name, k2.Key.Name, StringComparison.OrdinalIgnoreCase);
 #if true
-						//sort non-extension members by inheritance base interface
+						//sort non-extension members by inheritance or base interface
 						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
 						if (t1.InheritsFromOrImplementsOrEqualsIgnoringConstruction(t2)) return -1;
 						if (t2.InheritsFromOrImplementsOrEqualsIgnoringConstruction(t1)) return 1;
@@ -552,7 +552,7 @@ partial class CiCompletion {
 						var tk1 = t1.TypeKind; var tk2 = t2.TypeKind;
 						if (tk1 == TypeKind.Class && t1.BaseType == null) return 1; //t1 is object
 						if (tk2 == TypeKind.Class && t2.BaseType == null) return -1; //t2 is object
-						Debug_.Print($"{t1}, {t2},    {t1.BaseType}, {t2.BaseType},    {tk1}, {tk2}");
+						//Debug_.Print($"{t1}, {t2},    {t1.BaseType}, {t2.BaseType},    {tk1}, {tk2}");
 #else
 						//sort non-extension members by inheritance
 						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
@@ -574,7 +574,6 @@ partial class CiCompletion {
 						Debug_.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}, {tk1}, {tk2}, {t1.BaseType}, {t2.BaseType}"); //usually because of Roslyn bugs
 #endif
 						
-						//SHOULDDO: workaround for Roslyn bug: in argument-lambda, on dot after lambda parameter, also adds members of types of parameter at that position of other overloads.
 						return 0;
 					});
 					//print.it(gs);

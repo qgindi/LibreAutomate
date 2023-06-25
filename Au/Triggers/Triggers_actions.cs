@@ -461,7 +461,7 @@ class TriggerActionThreads {
 	//			}
 	//		}
 	
-	//		bool _r = true;
+	//		bool R = true;
 	//		lock(_q) {
 	//			int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
 	//			if(_running) {
@@ -473,7 +473,7 @@ class TriggerActionThreads {
 	//							" Trigger: " + trigger);
 	//					return false;
 	//				}
-	//				_r = false;
+	//				R = false;
 	//			} else {
 	//				_running = true;
 	//				//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
@@ -481,7 +481,7 @@ class TriggerActionThreads {
 	//			_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : perf.ms + ifRunningWaitMS });
 	//		}
 	//		Api.SetEvent(_event);
-	//		return _r;
+	//		return R;
 	//	}
 	
 	//	public void Dispose()

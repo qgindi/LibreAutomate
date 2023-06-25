@@ -3,37 +3,37 @@ using Au.Controls;
 using static Au.Controls.Sci;
 
 class PanelOutput {
-	readonly _SciOutput _c;
+	readonly KScintilla_ _c;
 	readonly KPanels.ILeaf _leaf;
 	readonly Queue<PrintServerMessage> _history;
-
-	public KScintilla Scintilla => _c;
-
+	
+	public KScintilla_ Scintilla => _c;
+	
 	public PanelOutput() {
 		//P.UiaSetName("Output panel"); //no UIA element for Panel
-
-		_c = new _SciOutput(this) { Name = "Output_text" };
+		
+		_c = new KScintilla_(this) { Name = "Output_text" };
 		P.Children.Add(_c);
 		_history = new Queue<PrintServerMessage>();
 		App.Commands.BindKeysTarget(P, "Output");
 		_leaf = Panels.PanelManager["Output"];
 	}
-
+	
 	public DockPanel P { get; } = new();
-
+	
 	public void Clear() { _c.aaaClearText(); _c.Call(SCI_SETSCROLLWIDTH, 1); }
-
+	
 	public void Copy() { _c.Call(SCI_COPY); }
-
+	
 	public void Find() { Panels.Find.CtrlF(_c); }
-
+	
 	public void History() {
 		var p = new KPopupListBox { PlacementTarget = P, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
 		p.Control.ItemsSource = _history;
 		p.OK += o => print.it((o as PrintServerMessage).Text);
 		P.Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
-
+	
 	void _c_HandleCreated() {
 		_inInitSettings = true;
 		if (WrapLines) WrapLines = true;
@@ -44,7 +44,7 @@ class PanelOutput {
 		_leaf.FloatingChanged += (_, floating) => _SetTopmost(floating ? 1 : 0);
 	}
 	bool _inInitSettings;
-
+	
 	public bool WrapLines {
 		get => App.Settings.output_wrap;
 		set {
@@ -56,7 +56,7 @@ class PanelOutput {
 			App.Commands[nameof(Menus.Tools.Output.Wrap_lines_in_output)].Checked = value;
 		}
 	}
-
+	
 	public bool WhiteSpace {
 		get => App.Settings.output_white;
 		set {
@@ -67,7 +67,7 @@ class PanelOutput {
 			App.Commands[nameof(Menus.Tools.Output.White_space_in_output)].Checked = value;
 		}
 	}
-
+	
 	public bool Topmost {
 		get => App.Settings.output_topmost;
 		set {
@@ -76,7 +76,7 @@ class PanelOutput {
 			if (_leaf.Floating) _SetTopmost(2);
 		}
 	}
-
+	
 	//action: 0 dock, 1 undock, 2 changed while floating
 	void _SetTopmost(int action) {
 		var w = P.Hwnd().Window;
@@ -91,7 +91,7 @@ class PanelOutput {
 				WndUtil.SetOwnerWindow(w, App.Hmain);
 			}
 		}
-
+		
 		//Windows bug: sometimes the floating/topmost output panel becomes behind normal windows, although has topmost style. Until clicked.
 		//	To reproduce: in a ribbon show a dropdown, eg a popup menu. If can't reproduce, try others.
 		bool needTimer = Topmost && action >= 1;
@@ -112,43 +112,49 @@ class PanelOutput {
 		}
 	}
 	(bool isTimer, wnd w) _workaround1;
-
-	class _SciOutput : KScintilla {
+	
+	internal class KScintilla_ : KScintilla {
 		PanelOutput _p;
 		StringBuilder _sb;
-
-		public _SciOutput(PanelOutput panel) {
+		
+		public KScintilla_(PanelOutput panel) {
 			_p = panel;
-
+			
 			AaInitReadOnlyAlways = true;
 			AaInitTagsStyle = AaTagsStyle.AutoWithPrefix;
 			AaInitImages = true;
-
+			
 			//App.Commands[nameof(Menus.Tools.Output)].SetKeysTarget(this);
 		}
-
+		
 		protected override void AaOnHandleCreated() {
 			_p._c_HandleCreated();
 			aaaMarginSetWidth(1, 3);
-
-			var styles = new CiStyling.TStyles(customized: false) { FontName = "Consolas", FontSize = 9, BackgroundColor = 0xF7F7F7 };
-			styles.ToScintilla(this);
-			AaTags.CodeStylesProvider = code => CiUtil.GetScintillaStylingBytes(code);
-
-			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
-			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
+			
+			AaSetStyles();
+			AaTags.CodeStylesProvider = CiUtil.GetScintillaStylingBytes;
+			
+			SciTags.AddCommonLinkTag("open", _OpenLink);
+			SciTags.AddCommonLinkTag("script", _RunScript);
 			AaTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindCodeFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
 			AaTags.AddLinkTag("+DCustomize", DCustomize.ShowSingle);
-
+			AaTags.AddLinkTag("+nuget", DNuget.ShowSingle);
+			
 			App.PrintServer.SetNotifications(AaWnd, Api.WM_APP);
-
+			
 			base.AaOnHandleCreated();
 		}
-
+		
+		public void AaSetStyles() {
+			var styles = new CiStyling.TStyles(customized: false) { BackgroundColor = 0xF7F7F7 };
+			(styles.FontName, styles.FontSize) = App.Settings.font_output;
+			styles.ToScintilla(this);
+		}
+		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 			//WndUtil.PrintMsg(out var s, default, msg, wParam, lParam); print.qm2.write(s);
 			switch (msg) {
@@ -166,14 +172,14 @@ class PanelOutput {
 			}
 			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 		}
-
+		
 		Action<PrintServerMessage> _onServerMessage;
 		void _OnServerMessage(PrintServerMessage m) {
 			if (m.Type != PrintServerMessageType.Write) {
 				if (m.Type == PrintServerMessageType.TaskEvent) RecentTT.TriggerEvent(m);
 				return;
 			}
-
+			
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
@@ -211,14 +217,14 @@ class PanelOutput {
 							b.Append("   at ")
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <bc #FAFAD2>").Append(f.Name).Append("<>");
-
+							
 							isMain
 								= s.Eq(k.start, "   at Program.<Main>$(String[] args) in ") //top-level statements
 								|| s.Eq(k.start, "   at Program..ctor(String[] args) in ")
 								|| s.Eq(k.start, "   at Script..ctor(String[] args) in ");
 							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
 							b.AppendLine();
-
+							
 							replaced = true;
 						} else if (!(s.Eq(k.start, "   ---") || s.Eq(k.start, "---"))) {
 							stackEnd = k.start;
@@ -241,25 +247,25 @@ class PanelOutput {
 					if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}
 			}
-
+			
 			if (s.Length <= 10_000) { //* 50 = 1 MB
 				if (!ReferenceEquals(s, m.Text)) m = new PrintServerMessage(PrintServerMessageType.Write, s, m.TimeUtc, m.Caller);
 				var h = _p._history;
 				h.Enqueue(m);
 				if (h.Count > 50) h.Dequeue();
 			}
-
+			
 			_p._leaf.Visible = true; //SHOULDDO: if(App.Hwnd.IsVisible) ?
 		}
 		static regexp s_rx1, s_rx2;
-
+		
 		static void _OpenLink(string s) {
 			//print.it(s);
 			var a = s.Split('|');
 			if (a.Length > 3) App.Model.OpenAndGoTo3(a[0], a[3]);
 			else App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}
-
+		
 		static void _RunScript(string s) {
 			var a = s.Split('|');
 			var f = App.Model.FindCodeFile(a[0]); if (f == null) return;

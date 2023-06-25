@@ -121,13 +121,13 @@ static class EdComUtil {
 			string locale;
 			if (aloc.Count == 1) locale = aloc[0];
 			else {
-				int i = dialog.showList(aloc2, "Locale", owner: owner);
+				int i = dialog.showList(aloc2, "COM type library locale", owner: owner);
 				if (i == 0) return null;
 				locale = aloc[i - 1];
 			}
 			comDll = r.GetPath(locale);
 			if (comDll == null /*|| !filesystem.exists(comDll).File*/) { //can be "filepath/resource"
-				dialog.showError("Failed to get file path.", owner: owner);
+				print.it("Failed to get file path.");
 				return null;
 			}
 			break;
@@ -142,7 +142,9 @@ static class EdComUtil {
 				var dir = folders.Workspace + @".interop\";
 				filesystem.createDirectory(dir);
 				void _Callback(string s) {
-					print.it(s);
+					//skip some useless warnings, eg "can't convert some internal type"
+					bool mute = s.RxIsMatch(@"Warning: .+ (?:could not convert the signature for the member '(?:\w*_|tag|[A-Z]+\.)|as a pointer and may require unsafe code to manipulate.|to import this property as a method instead.)");
+					if (!mute) print.it(s);
 					if (s.Starts("Converted: ")) {
 						s.RxMatch(@"""(.+?)"".$", 1, out s);
 						converted.Add(s);
@@ -151,7 +153,7 @@ static class EdComUtil {
 				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net4.exe", $"/typelib \"{dir}|{comDll}\"", encoding: Encoding.UTF8);
 			});
 		}
-		catch (Exception ex) { dialog.showError("Failed to convert type library", ex.ToStringWithoutStack(), owner: owner); }
+		catch (Exception ex) { print.it("Failed to convert type library", ex.ToStringWithoutStack()); }
 		owner.IsEnabled = true;
 		if (rr != 0) return null;
 		print.it(@"<>Converted and saved in <link>%folders.Workspace%\.interop<>.");

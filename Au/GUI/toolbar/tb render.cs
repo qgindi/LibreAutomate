@@ -288,7 +288,7 @@ public partial class toolbar {
 		} else {
 			R = new(ww + tbp * 2, _Scale(_sett.size.Height, false));
 		}
-		//print.it(_r);
+		//print.it(R);
 
 		foreach (var b in _a) {
 			b.rect.Offset(tbp, tbp);

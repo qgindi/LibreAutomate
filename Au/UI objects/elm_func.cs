@@ -334,6 +334,17 @@ namespace Au {
 		}
 
 		/// <summary>
+		/// Gets the UI Automation <b>ClassName</b> property.
+		/// </summary>
+		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
+		/// <remarks>
+		/// Only UI elements found with flag <see cref="EFFlags.UIA"/> can have this property.
+		/// </remarks>
+		public string UiaCN {
+			get => _GetStringProp('U');
+		}
+
+		/// <summary>
 		/// Gets keyboard shortcut.
 		/// </summary>
 		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
@@ -491,6 +502,13 @@ namespace Au {
 				}
 			}
 			return false;
+
+			//TODO:
+			/*
+						bool stop = false;
+			using (new WinEventHook(EEvent.IA2_DOCUMENT_LOAD_COMPLETE, 0, k => stop = true, idThread: _w.ThreadId))
+				if (wait.forMessagesAndCondition(-3, () => stop)) return true;
+*/
 		}
 
 #if false
@@ -716,7 +734,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="props">
 		/// String that specifies properties to get, for example <c>"nv"</c> for name and value.
-		/// <br/>• _r - <see cref="Role"/>.
+		/// <br/>• R - <see cref="Role"/>.
 		/// <br/>• n - <see cref="Name"/>.
 		/// <br/>• v - <see cref="Value"/>.
 		/// <br/>• d - <see cref="Description"/>.
@@ -724,6 +742,7 @@ namespace Au {
 		/// <br/>• a - <see cref="DefaultAction"/>.
 		/// <br/>• k - <see cref="KeyboardShortcut"/>.
 		/// <br/>• u - <see cref="UiaId"/>.
+		/// <br/>• U - <see cref="UiaCN"/>.
 		/// <br/>• s - <see cref="State"/>.
 		/// <br/>• r - <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> true.
 		/// <br/>• D - <see cref="Rect"/> or <see cref="GetRect(out RECT, bool)"/> with <i>raw</i> false. Don't use with r.
@@ -741,7 +760,7 @@ namespace Au {
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this UI element was found with flag <see cref="EFFlags.NotInProc"/> etc.
 		/// </remarks>
 		public bool GetProperties(string props, out EProperties result) {
-			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
+			//CONSIDER: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
 
 			result = null;
 			ThrowIfDisposed_();
@@ -775,6 +794,7 @@ namespace Au {
 						case 'a': result.DefaultAction = s; break;
 						case 'k': result.KeyboardShortcut = s; break;
 						case 'u': result.UiaId = s; break;
+						case 'U': result.UiaCN = s; break;
 						case 'o': result.OuterHtml = s; break;
 						case 'i': result.InnerHtml = s; break;
 						}

@@ -16,40 +16,41 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 class PanelRecipe {
 	_KScintilla _c;
 	string _usings;
-
+	string _currentRecipeName;
+	
 	//public KScintilla Scintilla => _c;
-
+	
 	public PanelRecipe() {
 		//P.UiaSetName("Recipe panel"); //no UIA element for Panel
-
+		
 		_c = new _KScintilla {
 			Name = "Recipe_text",
 			AaInitReadOnlyAlways = true,
 			AaInitTagsStyle = KScintilla.AaTagsStyle.User
 		};
 		_c.AaHandleCreated += _c_aaHandleCreated;
-
+		
 		P.Children.Add(_c);
 	}
-
+	
 	public DockPanel P { get; } = new();
-
+	
 	private void _c_aaHandleCreated() {
 		_c.Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
-
+		
 		_c.aaaMarginSetWidth(1, 14);
 		_c.Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
 		_c.Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
-
+		
 		//_c.aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
 		//_c.aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
 		//_c.aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
-		//_c.aaaStyleFont(STYLE_DEFAULT, "Calibri", 9); //too small
-		_c.aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9);
+		//_c.aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
+		_c.aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
 		var styles = new CiStyling.TStyles(customized: false) { FontSize = 9 };
 		styles.ToScintilla(_c, multiFont: true);
 		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
-
+		
 		_c.AaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 		_c.AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _usings); if (s != null) run.itSafe(s); });
 		//_c.aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
@@ -58,17 +59,17 @@ class PanelRecipe {
 		_c.AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
 		_c.AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
 		_c.AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0x0000FF, bold = true }); //keyword
-
+		
 #if DEBUG
 		_AutoRenderCurrentRecipeScript();
 #endif
 	}
-
+	
 	public void Display(string name, string code) {
 		Panels.PanelManager[P].Visible = true;
 		_SetText(name, code);
 	}
-
+	
 	/// <summary>
 	/// Splits a recipe source code into text and code parts.
 	/// From text parts removes /// and replaces 'see' with '+see'.
@@ -81,7 +82,7 @@ class PanelRecipe {
 		//	2. Use {  } for scopes of variables. Its' better to use unique names.
 		//	3. Use if(...) {  } to enclose code examples to select which code to test.
 		//		Can accidentally damage real 'if' code. I didn't use it; it's better to test codes in other script.
-
+		
 		List<(bool isText, string s)> r = new();
 		StringBuilder sbUsings = null;
 		var ac = new List<(string code, int offset8, int len8)>();
@@ -91,14 +92,14 @@ class PanelRecipe {
 			//print.it(m);
 			if (code.Eq(m.Start, "/// <summary>")) continue;
 			int textTo = m.End, i = code.Find("\n/// <summary>", m.Start..m.End); if (i >= 0) textTo = i + 1;
-
+			
 			_Code(iCode, m.Start);
 			_Text(m.Start, iCode = textTo);
 		}
 		_Code(iCode, code.Length);
 		usings = sbUsings?.ToString();
 		return r;
-
+		
 		void _Text(int start, int end) {
 			while (code[end - 1] <= ' ') end--;
 			bool ml = code[start + 1] == '*';
@@ -112,24 +113,25 @@ class PanelRecipe {
 			//print.it("TEXT"); print.it(s);
 			r.Add((true, s));
 		}
-
+		
 		void _Code(int start, int end) {
 			while (end > start && code[end - 1] <= ' ') end--;
 			if (end == start) return;
 			var s = code[start..end];
 			//print.it("CODE"); print.it(s);
 			r.Add((false, s));
-
+			
 			foreach (var m in s.RxFindAll(@"(?m)^using [\w\.]+;")) {
 				(sbUsings ??= new()).AppendLine(m.Value);
 			}
 		}
 	}
-
+	
 	void _SetText(string name, string code) {
+		_currentRecipeName = name;
 		_c.aaaClearText();
-		if (!name.NE() && !code.Starts("/// <lc")) code = $"/// <lc YellowGreen><b>{name}</b><>\r\n\r\n{code}";
-
+		if (!name.NE() && !code.Starts("/// <lc")) _c.AaTags.AddText($"<lc YellowGreen><b>{name}</b><>\r\n\r\n", false, false, false);
+		
 		var ac = new List<(string code, int offset8, int len8)>();
 		foreach (var (isText, s) in ParseRecipe(code, out _usings)) {
 			if (isText) {
@@ -143,7 +145,7 @@ class PanelRecipe {
 				ac.Add((s, offset8, s8.Length - 6));
 			}
 		}
-
+		
 		//code styling
 		if (ac != null) {
 			code = string.Join("\r\n", ac.Select(o => o.code));
@@ -161,7 +163,7 @@ class PanelRecipe {
 			_c.aaaSetStyled();
 		}
 	}
-
+	
 	public static string GetSeeUrl(string s, string usings) {
 		//add same namespaces as in default global.cs. Don't include global.cs because it may be modified.
 		string code = usings + $"///<see cref='{s}'/>";
@@ -176,10 +178,19 @@ class PanelRecipe {
 		}
 		return null;
 	}
-
+	
+	void _ContextMenu() {
+		var m = new popupMenu();
+		m["Copy\tCtrl+C", disable: !_c.aaaHasSelection] = o => { _c.Call(Sci.SCI_COPY); };
+		//m["Copy this code"] = o => {  }; //rejected
+		m.Separator();
+		m["Open in web browser"] = o => { Panels.Cookbook.OpenRecipeInWebBrowser(_currentRecipeName); };
+		m.Show();
+	}
+	
 	class _KScintilla : KScintilla {
 		bool _zoomMenu;
-
+		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 			switch (msg) {
 			case Api.WM_MOUSEWHEEL:
@@ -195,14 +206,17 @@ class PanelRecipe {
 					});
 				}
 				break;
+			case Api.WM_CONTEXTMENU:
+				Panels.Recipe._ContextMenu();
+				break;
 			}
-
+			
 			var R = base.WndProc(hwnd, msg, wParam, lParam, ref handled);
-
+			
 			return R;
 		}
 	}
-
+	
 #if DEBUG
 	unsafe void _AutoRenderCurrentRecipeScript() {
 		string prevText = null;
@@ -211,12 +225,12 @@ class PanelRecipe {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!P.IsVisible) return;
 			var doc = Panels.Editor.ActiveDoc;
-			if (doc == null || !doc.EFile.IsScript || doc.EFile.Parent.Name == "-") return;
+			if (doc == null || !doc.EFile.IsCodeFile || doc.EFile.Parent.Name == "-") return;
 			string text = doc.aaaText;
 			if (text == prevText) return;
 			prevText = text;
 			//print.it("update");
-
+			
 			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
 			if (n1 > 0) _c.AaWnd.Send(Api.WM_SETREDRAW);
 			_SetText(doc.EFile.DisplayName, text);

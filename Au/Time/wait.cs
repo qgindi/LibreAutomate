@@ -19,7 +19,7 @@ namespace Au;
 /// <code><![CDATA[
 /// using System.Windows;
 /// var b = new wpfBuilder("Window").WinSize(250);
-/// b._r.AddButton("Wait", async _ => {
+/// b.R.AddButton("Wait", async _ => {
 /// 	  print.it("waiting for ScrollLock...");
 /// 	  var result = await Task.Run(() => wait.forCondition(-10, () => keys.isScrollLock));
 /// 	  print.it(result);

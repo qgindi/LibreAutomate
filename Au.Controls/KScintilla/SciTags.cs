@@ -605,7 +605,7 @@ public unsafe class SciTags {
 		if (keys.gui.isAlt) return;
 		if (!GetLinkFromPos(pos, out var tag, out var attr)) return;
 		//process it async, because bad things happen if now we remove focus or change control text etc
-		_c.Dispatcher.InvokeAsync(() => _OnLinkClick(tag, attr));
+		_c.Dispatcher.InvokeAsync(() => OnLinkClick(tag, attr));
 	}
 
 	public bool GetLinkFromPos(int pos, out string tag, out string attr) {
@@ -623,7 +623,7 @@ public unsafe class SciTags {
 	}
 
 	//note: attr can be ""
-	void _OnLinkClick(string tag, string attr) {
+	public void OnLinkClick(string tag, string attr) {
 		//print.it($"'{tag}'  '{attr}'");
 
 		if (_userLinkTags.TryGetValue(tag, out var d) || s_userLinkTags.TryGetValue(tag, out d)) {

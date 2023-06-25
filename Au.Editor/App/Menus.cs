@@ -40,6 +40,8 @@ static class Menus {
 			[Command('f', image = FileNode.c_iconFolder)]
 			public static void New_folder() { _New(null); }
 			
+			//CONSIDER: New_project. A simple dialog to make faster to enter names of the project folder and the main file. Also can display some info.
+			
 			public const int ItemCount = 4;
 		}
 		
@@ -266,11 +268,17 @@ static class Menus {
 		
 		[Command]
 		public static class Selection {
-			[Command(keysText = "R-click margin", keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
+			[Command(keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
 			public static void Comment() { ModifyCode.CommentLines(true); }
 			
-			[Command(keysText = "R-click margin", keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus" + brown)]
+			[Command(keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus" + brown)]
 			public static void Uncomment() { ModifyCode.CommentLines(false); }
+			
+			[Command(keys = "Ctrl+Shift+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
+			public static void Toggle_comment() { ModifyCode.CommentLines(null); }
+			
+			[Command(keysText = "R-click margin", keys = "Ctrl+Alt+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
+			public static void Toggle_line_comment() { ModifyCode.CommentLines(null, notSlashStar: true); }
 			
 			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown)]
 			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
@@ -324,7 +332,7 @@ static class Menus {
 			[Command(checkable = true, image = "*Codicons.Preview" + green)]
 			public static void WPF_preview(MenuItem mi) { SciCode.WpfPreviewStartStop(mi); }
 			
-			[Command("Customize this menu...", separator = true)]
+			[Command("Customize...", separator = true)]
 			public static void Customize_edit_context_menu() { DCustomizeContextMenu.Dialog("Edit", "code editor"); }
 		}
 	}

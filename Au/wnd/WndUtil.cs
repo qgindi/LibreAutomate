@@ -369,9 +369,9 @@ namespace Au.More {
 		//public static nint SetClassLong(wnd w, int index, nint newValue)
 		//{
 		//	lastError.clear();
-		//	nint _r = Api.SetClassLongPtr(w, index, newValue);
-		//	if(_r == 0 && lastError.code != 0) w.ThrowUseNative();
-		//	return _r;
+		//	nint R = Api.SetClassLongPtr(w, index, newValue);
+		//	if(R == 0 && lastError.code != 0) w.ThrowUseNative();
+		//	return R;
 		//}
 
 		//rejected. Does not work with many windows. Unreliable. Rarely used.

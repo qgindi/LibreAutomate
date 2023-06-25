@@ -1029,18 +1029,8 @@ static unsafe partial class Api {
 	
 	#region oleacc
 	
-	//internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
-	
-	//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
-	
-	//[DllImport("oleacc.dll", PreserveSig = true)]
-	//internal static extern int AccessibleObjectFromWindow(wnd hwnd, EObjid dwId, in Guid riid, out IAccessible ppvObject);
-	
-	//[DllImport("oleacc.dll", PreserveSig = true)]
-	//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out wnd phwnd);
-	
-	//[DllImport("oleacc.dll", PreserveSig = true)]
-	//internal static extern int AccessibleObjectFromPoint(POINT ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
+	[DllImport("oleacc.dll", PreserveSig = true)]
+	internal static extern int AccessibleObjectFromWindow(wnd hwnd, EObjid dwId, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object o);
 	
 	[DllImport("oleacc.dll", PreserveSig = true)]
 	internal static extern int AccessibleObjectFromEvent(wnd hwnd, EObjid dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);

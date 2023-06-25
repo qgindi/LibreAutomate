@@ -10,7 +10,7 @@ namespace Au.More;
 /// WPF window created with <see cref="wpfBuilder"/>.
 /// <code><![CDATA[
 /// const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Wpf7.Rect";
-/// var b = new wpfBuilder("Window").WinSize(400)._r.AddOkCancel().End();
+/// var b = new wpfBuilder("Window").WinSize(400).R.AddOkCancel().End();
 /// 	
 /// WndSavedRect.Restore(b.Window, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
 /// 

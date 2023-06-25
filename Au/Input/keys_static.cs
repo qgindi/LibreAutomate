@@ -732,12 +732,12 @@ public partial class keys {
 	/// Show window and send keys/text to it when button clicked.
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(250);
-	/// b._r.AddButton("Keys", async _ => {
+	/// b.R.AddButton("Keys", async _ => {
 	/// 	//keys.send("Tab", "!text", 2000, "Esc"); //no
 	/// 	await Task.Run(() => { keys.send("Tab", "!text", 2000, "Esc"); }); //use other thread
 	/// });
-	/// b._r.Add("Text", out TextBox text1);
-	/// b._r.AddOkCancel();
+	/// b.R.Add("Text", out TextBox text1);
+	/// b.R.AddOkCancel();
 	/// b.End();
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>

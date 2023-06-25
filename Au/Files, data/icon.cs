@@ -390,7 +390,7 @@ namespace Au {
 			int hr = Api.SHDefExtractIcon(file, index, 0, &hi, null, size);
 			return hr == 0 ? _New(hi) : null;
 			
-			//if(Api.PrivateExtractIcons(file, index, size, size, out _r, default, 1, 0) != 1) return null;
+			//if(Api.PrivateExtractIcons(file, index, size, size, out R, default, 1, 0) != 1) return null;
 			
 			//SHOULDOO: test LoadIconWithScaleDown. If .ico or negative index. But maybe SHDefExtractIcon uses it, that is why better quality.
 		}

@@ -335,7 +335,7 @@ namespace Au {
 	/// <code><![CDATA[
 	/// using (var x = new osdRect()) {
 	/// 	x.Rect = (300, 300, 100, 100);
-	/// 	x.Color = Color.SlateBlue;
+	/// 	x.Color = System.Drawing.Color.SlateBlue;
 	/// 	x.Thickness = 4;
 	/// 	x.Show();
 	/// 	for (int i = 0; i < 5; i++) {
@@ -360,7 +360,7 @@ namespace Au {
 		/// <example>
 		/// <code><![CDATA[
 		/// x.Color = 0xFF0000; //red
-		/// x.Color = Color.Orange;
+		/// x.Color = System.Drawing.Color.Orange;
 		/// ]]></code>
 		/// </example>
 		public ColorInt Color {
