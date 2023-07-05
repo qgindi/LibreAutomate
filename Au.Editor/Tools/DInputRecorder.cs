@@ -872,7 +872,7 @@ class DInputRecorder : KDialogWindow {
 		if (_Last is _RecoMouseMoveBy) _a.RemoveAt(_a.Count - 1);
 		if (!_a.Any()) return null;
 		var b = new StringBuilder();
-		string speed = _tSpeed.Text.NullIfEmpty_();
+		string speed = _tSpeed.TextOrNull();
 		if (speed != null) b.Append("using (opt.scope.all()) ");
 		b.AppendLine("{ //recorded");
 		if (speed != null) b.AppendLine($"opt.mouse.MoveSpeed = opt.key.KeySpeed = opt.key.TextSpeed = {speed};");

@@ -1,3 +1,8 @@
+//CONSIDER: option to expand/collapse folders when clicked once in text etc area, not only in icon area. Use with Files and Cookbook.
+//	Bad: conflicts with selecting etc.
+//	Tested several apps with this type of tree view. All exapand/collapse on single click. Eg Firefox bookmarks, VSCode.
+//	For me the current behavior is the best. But users wanted it.
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;

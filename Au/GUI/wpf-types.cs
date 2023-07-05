@@ -6,7 +6,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace Au.Types {
-
+	
 	/// <summary>
 	/// Used with <see cref="wpfBuilder"/> constructor to specify the type of the root panel.
 	/// </summary>
@@ -22,7 +22,7 @@ namespace Au.Types {
 		///
 		HorizontalStack,
 	}
-
+	
 	/// <summary>
 	/// Flags for <see cref="wpfBuilder.Add"/>.
 	/// </summary>
@@ -34,13 +34,13 @@ namespace Au.Types {
 		/// <br/>• <see cref="Decorator"/>, for example <see cref="Border"/>. Adds as its <see cref="Decorator.Child"/> property.
 		/// </summary>
 		ChildOfLast = 1,
-
+		
 		/// <summary>
 		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <i>ChildOfLast</i>.
 		/// </summary>
 		DontSetProperties = 2,
 	}
-
+	
 	/// <summary>
 	/// Used with <see cref="wpfBuilder"/> functions for width/height parameters. Allows to specify minimal and/or maximal values too.
 	/// </summary>
@@ -55,21 +55,21 @@ namespace Au.Types {
 	public struct WBLength {
 		double _v;
 		Range _r;
-
+		
 		WBLength(double v, Range r) {
 			if (r.Start.IsFromEnd || (r.End.IsFromEnd && r.End.Value != 0)) throw new ArgumentException();
 			_v = v; _r = r;
 		}
-
+		
 		///
 		public static implicit operator WBLength(double v) => new WBLength { _v = v, _r = .. };
-
+		
 		///
 		public static implicit operator WBLength(Range v) => new WBLength(double.NaN, v);
-
+		
 		///
 		public static implicit operator WBLength((double length, Range minMax) v) => new WBLength(v.length, v.minMax);
-
+		
 		/// <summary>
 		/// Gets the width or height value. Returns false if not set.
 		/// </summary>
@@ -77,7 +77,7 @@ namespace Au.Types {
 			value = _v;
 			return !double.IsNaN(_v);
 		}
-
+		
 		/// <summary>
 		/// Gets the minimal value. Returns false if not set.
 		/// </summary>
@@ -85,7 +85,7 @@ namespace Au.Types {
 			value = _r.Start.Value;
 			return value > 0;
 		}
-
+		
 		/// <summary>
 		/// Gets the maximal value. Returns false if not set.
 		/// </summary>
@@ -93,7 +93,7 @@ namespace Au.Types {
 			value = _r.End.Value;
 			return !_r.End.IsFromEnd;
 		}
-
+		
 		/// <summary>
 		/// Sets <b>Width</b> or <b>Height</b> or/and <b>MinWidth</b>/<b>MinHeight</b> or/and <b>MaxWidth</b>/<b>MaxHeight</b> of the element.
 		/// </summary>
@@ -105,7 +105,7 @@ namespace Au.Types {
 			if (GetMax(out i)) { if (height) e.MaxHeight = i; else e.MaxWidth = i; }
 		}
 	}
-
+	
 	/// <summary>
 	/// Used with <see cref="wpfBuilder"/> functions to specify width/height of columns and rows. Allows to specify minimal and/or maximal values too.
 	/// Like <see cref="WBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
@@ -114,24 +114,24 @@ namespace Au.Types {
 		double _v;
 		Range _r;
 		DefinitionBase _def;
-
+		
 		WBGridLength(double v, Range r) {
 			if (r.Start.IsFromEnd || (r.End.IsFromEnd && r.End.Value != 0)) throw new ArgumentException();
 			_v = v; _r = r; _def = null;
 		}
-
+		
 		///
 		public static implicit operator WBGridLength(double v) => new WBGridLength { _v = v, _r = .. };
-
+		
 		///
 		public static implicit operator WBGridLength((double length, Range minMax) v) => new WBGridLength(v.length, v.minMax);
-
+		
 		///
 		public static implicit operator WBGridLength(Range v) => new WBGridLength(-1, v);
-
+		
 		///
 		public static implicit operator WBGridLength(DefinitionBase v) => new WBGridLength { _def = v };
-
+		
 		/// <summary>
 		/// Creates column definition object from assigned width or/and min/max width values. Or just returns the assigned or previously created object.
 		/// </summary>
@@ -145,7 +145,7 @@ namespace Au.Types {
 				return d;
 			}
 		}
-
+		
 		/// <summary>
 		/// Creates row definition object from assigned height or/and min/max height values. Or just returns the assigned or previously created object.
 		/// </summary>
@@ -159,14 +159,14 @@ namespace Au.Types {
 				return d;
 			}
 		}
-
+		
 		GridLength _GridLength(double d) {
 			if (d > 0) return new GridLength(d, GridUnitType.Pixel);
 			if (d < 0) return new GridLength(-d, GridUnitType.Star);
 			return new GridLength();
 		}
 	}
-
+	
 	/// <summary>
 	/// Arguments for <see cref="wpfBuilder.AlsoAll"/> callback function.
 	/// </summary>
@@ -175,13 +175,13 @@ namespace Au.Types {
 		/// Gets 0-based column index of last added control, or -1 if not in grid.
 		/// </summary>
 		public int Column { get; internal set; }
-
+		
 		/// <summary>
 		/// Gets 0-based row index of last added control, or -1 if not in grid.
 		/// </summary>
 		public int Row { get; internal set; }
 	}
-
+	
 	/// <summary>
 	/// Arguments for <see cref="wpfBuilder.AddButton"/> callback function.
 	/// </summary>
@@ -190,13 +190,13 @@ namespace Au.Types {
 		/// Gets the button.
 		/// </summary>
 		public Button Button { get; internal set; }
-
+		
 		/// <summary>
 		/// Gets the window.
 		/// </summary>
 		public Window Window { get; internal set; }
 	}
-
+	
 	/// <summary>
 	/// Flags for <see cref="wpfBuilder.AddButton"/>.
 	/// </summary>
@@ -204,15 +204,48 @@ namespace Au.Types {
 	public enum WBBFlags {
 		/// <summary>It is OK button (<see cref="Button.IsDefault"/>, closes window, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
 		OK = 1,
-
+		
 		/// <summary>It is Cancel button (<see cref="Button.IsCancel"/>, closes window).</summary>
 		Cancel = 2,
-
+		
 		/// <summary>It is Apply button (size like OK/Cancel, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
 		Apply = 4,
-
+		
 		/// <summary>Perform validation like OK and Apply buttons.</summary>
 		Validate = 8,
+	}
+	
+	/// <summary>
+	/// Can be used with <see cref="wpfBuilder.Text"/> to add a hyperlink.
+	/// </summary>
+	public class WBLink {
+		///
+		public Hyperlink Hlink { get; }
+		
+		WBLink(string text, bool bold) {
+			Run run = new(text);
+			Hlink = new(bold ? new Bold(run) : run);
+		}
+		
+		/// <summary>
+		/// Sets link text and action.
+		/// </summary>
+		public WBLink(string text, Action action, bool bold = false) : this(text, bold) {
+			Hlink.Click += (o, e) => action();
+		}
+		
+		/// <summary>
+		/// Sets link text and action.
+		/// </summary>
+		public WBLink(string text, Action<Hyperlink> action, bool bold = false) : this(text, bold) {
+			Hlink.Click += (o, e) => action(o as Hyperlink);
+		}
+		
+		/// <summary>
+		/// Sets link text and target URL or file etc.
+		/// On click will call <see cref="run.itSafe"/>.
+		/// </summary>
+		public WBLink(string text, string urlOrPath, string args = null, bool bold = false) : this(text, _ => run.itSafe(urlOrPath, args)) { }
 	}
 }
 
@@ -235,8 +268,8 @@ namespace Au.More {
 	//		/// </summary>
 	//		public static implicit operator bool(CheckBool c) => c.IsChecked.GetValueOrDefault();
 	//	}
-
-
+	
+	
 	/// <summary>
 	/// Grid splitter control. Based on <see cref="GridSplitter"/>, changes its behavior.
 	/// </summary>
@@ -255,32 +288,32 @@ namespace Au.More {
 			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragCompletedEvent, new DragCompletedEventHandler(_OnDragCompleted));
 			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragDeltaEvent, new DragDeltaEventHandler(_OnDragDelta));
 		}
-
+		
 		///
 		public GridSplitter2() {
 			ResizeBehavior = GridResizeBehavior.PreviousAndNext;
 			SnapsToDevicePixels = true;
 			Focusable = false;
 		}
-
+		
 		static void _OnDragStarted(object sender, DragStartedEventArgs e) => (sender as GridSplitter2)._OnDragStarted(e);
-
+		
 		void _OnDragStarted(DragStartedEventArgs e) {
 			if (!ShowsPreview) e.Handled = true;
 			if (!_Init()) base.CancelDrag();
 		}
-
+		
 		static void _OnDragCompleted(object sender, DragCompletedEventArgs e) => (sender as GridSplitter2)._OnDragCompleted(e);
-
+		
 		void _OnDragCompleted(DragCompletedEventArgs e) {
 			if (!ShowsPreview) e.Handled = true; //else somehow GridSplitter does not resize, just removes the adorner
 			if (_a == null) return; //two events if called CancelDrag
 			if (!e.Canceled) _MoveSplitter();
 			_a = null;
 		}
-
+		
 		static void _OnDragDelta(object sender, DragDeltaEventArgs e) => (sender as GridSplitter2)._OnDragDelta(e);
-
+		
 		void _OnDragDelta(DragDeltaEventArgs e) {
 			_delta = _isVertical ? e.HorizontalChange : e.VerticalChange;
 			var di = DragIncrement; _delta = Math.Round(_delta / di) * di;
@@ -291,7 +324,7 @@ namespace Au.More {
 			_MoveSplitter();
 		}
 		bool _working;
-
+		
 		///
 		protected override void OnKeyDown(KeyEventArgs e) {
 			if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right) {
@@ -306,7 +339,7 @@ namespace Au.More {
 				CancelDrag();
 			}
 		}
-
+		
 		bool _Init(Key key = default) {
 			_a = null;
 			_isVertical = _IsVertical();
@@ -338,19 +371,19 @@ namespace Au.More {
 			}
 			return true;
 		}
-
+		
 		Grid _grid;
 		bool _isVertical;
 		//	GridResizeBehavior _resizeBehavior;
 		List<_RowCol> _a; //resizable rows/columns, ie those without splitters and not auto-sized
 		int _index; //index of first _a item after this splitter
 		double _delta;
-
+		
 		void _MoveSplitter() {
 			if (_a == null || _delta == 0) return;
-
+			
 			_Side before = default, after = default;
-
+			
 			//resize multiple star-sized items at that side?
 			if (ResizeNearest || Keyboard.Modifiers == ModifierKeys.Control) {
 				before.single = after.single = true;
@@ -360,19 +393,19 @@ namespace Au.More {
 				before.single = _index == 1 || 0 == (stars & 1) || _a[_index - 1].ActualSize < 4 || (stars == 3 && !_a[_index - 1].IsStar); //without the last || subexpression would be impossible to resize fixed-sized items if there are star-sized items at both sides
 				after.single = _index == _a.Count - 1 || 0 == (stars & 2) || _a[_index].ActualSize < 4 || (stars == 3 && !_a[_index].IsStar);
 			}
-
+			
 			for (int i = 0; i < _a.Count; i++) {
 				if (!_IsResizable(i)) continue;
 				if (i < _index) before.Add(_a[i]); else after.Add(_a[i]);
 			}
-
+			
 			double v1 = Math.Clamp(before.size + _delta, before.min, before.max), v2 = Math.Clamp(after.size - _delta, after.min, after.max);
 			_delta = 0;
 			if (v1 == before.min || v1 == before.max) v2 = before.size + after.size - v1; else if (v2 == after.min || v2 == after.max) v1 = before.size + after.size - v2;
-
+			
 			_ResizeSide(before, true, v1);
 			_ResizeSide(after, false, v2);
-
+			
 			void _ResizeSide(_Side side, bool isBefore, double size) {
 				if (side.single) {
 					_a[_index - (isBefore ? 1 : 0)].SetSize(size);
@@ -385,18 +418,18 @@ namespace Au.More {
 					}
 				}
 			}
-
+			
 			bool _IsResizable(int index) {
 				if (index < _index) return before.single ? index == _index - 1 : _a[index].IsStar;
 				return after.single ? index == _index : _a[index].IsStar;
 			}
 		}
-
+		
 		struct _Side {
 			public double size, min, max;
 			public bool single;
 			public int stars;
-
+			
 			public void Add(_RowCol v) {
 				size += v.ActualSize;
 				min += v.Min;
@@ -405,15 +438,15 @@ namespace Au.More {
 				if (!single && v.IsStar) stars++;
 			}
 		}
-
+		
 		/// <summary>
 		/// Always resize only the nearest resizable row/column at each side.
 		/// If false (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
 		/// </summary>
 		public bool ResizeNearest { get; set; }
-
+		
 		#region util
-
+		
 		bool _IsVertical() { //see code of GridSplitter.GetEffectiveResizeDirection. The algorithm is documented.
 			var dir = this.ResizeDirection;
 			if (dir != GridResizeDirection.Auto) return dir == GridResizeDirection.Columns;
@@ -421,7 +454,7 @@ namespace Au.More {
 			if (this.VerticalAlignment != VerticalAlignment.Stretch) return false;
 			return this.ActualWidth <= this.ActualHeight;
 		}
-
+		
 		GridResizeBehavior _GetResizeBehavior(bool vertical) { //see code of GridSplitter.GetEffectiveResizeBehavior
 			var r = ResizeBehavior;
 			if (r == GridResizeBehavior.BasedOnAlignment) {
@@ -438,13 +471,13 @@ namespace Au.More {
 			}
 			return r;
 		}
-
+		
 		int _IndexInGrid(UIElement e) => _isVertical ? Grid.GetColumn(e) : Grid.GetRow(e);
-
+		
 		class _RowCol {
 			RowDefinition _row;
 			ColumnDefinition _col;
-
+			
 			public _RowCol(DefinitionBase def) {
 				_row = def as RowDefinition;
 				_col = def as ColumnDefinition;
@@ -452,36 +485,36 @@ namespace Au.More {
 				Max = _row?.MaxHeight ?? _col.MaxWidth;
 				Unit = DefSizeGL.GridUnitType;
 			}
-
+			
 			public double ActualSize => _row?.ActualHeight ?? _col.ActualWidth;
-
+			
 			public double DefSize {
 				get => _row?.Height.Value ?? _col.Width.Value;
 				//			set { DefSizeGL = new GridLength(value, Unit); }
 			}
-
+			
 			GridLength DefSizeGL {
 				get => _row?.Height ?? _col.Width;
 				//			set { if(_row!=null) _row.Height=value; else _col.Width=value; }
 			}
-
+			
 			public void SetSize(double size) {
 				var z = new GridLength(size, Unit);
 				if (_row != null) _row.Height = z; else _col.Width = z;
 			}
-
+			
 			public GridUnitType Unit { get; private set; }
-
+			
 			public bool IsStar => Unit == GridUnitType.Star;
-
+			
 			public double Min { get; private set; }
-
+			
 			public double Max { get; private set; }
 		}
-
+		
 		#endregion
 	}
-
+	
 	/// <summary>
 	/// Adorner that draws watermark/hint/cue text over the adorned control (<b>TextBox</b> etc).
 	/// </summary>
@@ -489,7 +522,7 @@ namespace Au.More {
 		string _text;
 		Control _c;
 		TextBox _tCB;
-
+		
 		/// <summary>
 		/// Initializes and adds this adorner to the <b>AdornerLayer</b> of the control.
 		/// </summary>
@@ -503,7 +536,7 @@ namespace Au.More {
 			var layer = AdornerLayer.GetAdornerLayer(c) ?? throw new InvalidOperationException("The control isn't in an AdornerDecorator");
 			layer.Add(this);
 		}
-
+		
 		/// <summary>
 		/// Gets or sets watermark text.
 		/// </summary>
@@ -516,7 +549,7 @@ namespace Au.More {
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Sets events to show/hide the adorner depending on control text.
 		/// The control must be TextBox or editable ComboBox.
@@ -529,13 +562,13 @@ namespace Au.More {
 					if (_c.FindVisualDescendant(o => o is TextBox) is TextBox t2) _Visibility(_tCB = t2);
 				};
 			}
-
+			
 			void _Visibility(TextBox t) {
 				Visibility = t.Text.NE() ? Visibility.Visible : Visibility.Hidden;
 				t.TextChanged += (_, _) => { Visibility = t.Text.NE() ? Visibility.Visible : Visibility.Hidden; };
 			}
 		}
-
+		
 		///
 		protected override void OnRender(DrawingContext dc) {
 			if (_text.NE()) return;
@@ -545,7 +578,7 @@ namespace Au.More {
 			Point p = new(bt.Left + pad.Left + 2, bt.Top + pad.Top);
 			var z = _c.RenderSize;
 			double w = z.Width - bt.Right - pad.Right - 2, h = z.Height - bt.Bottom - pad.Bottom;
-			if (_tCB !=null) w = _tCB.RenderSize.Width;
+			if (_tCB != null) w = _tCB.RenderSize.Width;
 			if (w < 4 || h < 4) return;
 			dc.PushClip(new RectangleGeometry(new(0, 0, w, h)));
 			dc.DrawText(ft, p);

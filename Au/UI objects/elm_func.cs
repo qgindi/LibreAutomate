@@ -502,13 +502,6 @@ namespace Au {
 				}
 			}
 			return false;
-
-			//TODO:
-			/*
-						bool stop = false;
-			using (new WinEventHook(EEvent.IA2_DOCUMENT_LOAD_COMPLETE, 0, k => stop = true, idThread: _w.ThreadId))
-				if (wait.forMessagesAndCondition(-3, () => stop)) return true;
-*/
 		}
 
 #if false

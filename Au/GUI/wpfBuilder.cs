@@ -1294,21 +1294,37 @@ public class wpfBuilder {
 		}
 	}
 	
+	struct _PaddingElem {
+		FrameworkElement _e;
+		PropertyInfo _p;
+		
+		public _PaddingElem(FrameworkElement e, [CallerMemberName] string m_ = null) {
+			_e = e;
+			if (e is not Control) _p = e.GetType().GetProperty("Padding", typeof(Thickness)) ?? throw new InvalidOperationException(m_ + "(): Last added element does not have Padding property");
+		}
+		
+		public Thickness Padding {
+			get => _e is Control c ? c.Padding : (Thickness)_p.GetValue(_e);
+			set { if (_e is Control c) c.Padding = value; else _p.SetValue(_e, value); }
+		}
+	}//TODO: the same for Brush etc
+	
 	/// <summary>
 	/// Sets padding of the last added control.
 	/// </summary>
-	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
+	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
 	public wpfBuilder Padding(Thickness thickness) {
-		_LastAsControlOrThrow().Padding = thickness;
+		var c = new _PaddingElem(Last);
+		c.Padding = thickness;
 		return this;
 	}
 	
 	/// <summary>
 	/// Sets padding of the last added control.
 	/// </summary>
-	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
+	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
 	public wpfBuilder Padding(double? left = null, double? top = null, double? right = null, double? bottom = null) {
-		var c = _LastAsControlOrThrow();
+		var c = new _PaddingElem(Last);
 		var p = c.Padding;
 		left ??= p.Left;
 		top ??= p.Top;
@@ -1325,10 +1341,10 @@ public class wpfBuilder {
 	/// String containing uppercase or lowercase letters for padding sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
-	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
+	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
 	public wpfBuilder Padding(string padding) {
-		var c = _LastAsControlOrThrow();
+		var c = new _PaddingElem(Last);
 		var p = c.Padding;
 		_ThicknessFromString(ref p, padding);
 		c.Padding = p;
@@ -1411,7 +1427,7 @@ public class wpfBuilder {
 			switch (last) {
 			case Control c: c.Foreground = foreground; break;
 			case TextBlock c: c.Foreground = foreground; break;
-			default: throw new NotSupportedException("Color(): Last added must be Control or TextBlock, or foreground null");
+			default: throw new NotSupportedException("Brush(): Last added must be Control or TextBlock, or foreground null");
 			}
 		}
 		if (background != null) {
@@ -1421,11 +1437,18 @@ public class wpfBuilder {
 			case TextBlock c: c.Background = background; break;
 			case Border c: c.Background = background; break;
 			case Panel c: c.Background = background; break;
-			default: throw new NotSupportedException("Color(): Last added must be Control, Panel, Border or TextBlock");
+			default: throw new NotSupportedException("Brush(): Last added must be Control, Panel, Border or TextBlock");
 			}
 		}
 		return this;
 	}
+	
+	/// <summary>
+	/// Sets background and/or foreground color of the last added element.
+	/// </summary>
+	/// <exception cref="NotSupportedException">Last added element must be <b>Control</b>, <b>Panel</b>, <b>Border</b> or <b>TextBlock</b>. With <i>foreground</i> only <b>Control</b> or <b>TextBlock</b>.</exception>
+	public wpfBuilder Brush(ColorInt? background = null, ColorInt? foreground = null)
+		=> Brush(background == null ? null : new SolidColorBrush((Color)background.Value), foreground == null ? null : new SolidColorBrush((Color)foreground.Value));
 	
 	/// <summary>
 	/// Sets border properties of the last added element, which can be <b>Border</b> or a <b>Control</b>-derived class.
@@ -1462,6 +1485,11 @@ public class wpfBuilder {
 		return this;
 	}
 	
+	/// <param name="color">Border color.</param>
+	/// <inheritdoc cref="Border(Brush, double, Thickness?, double?, Thickness?)"/>
+	public wpfBuilder Border(ColorInt color, double thickness = 1d, Thickness? padding = null, double? cornerRadius = null, Thickness? thickness2 = null)
+		=> Border(new SolidColorBrush((Color)color), thickness, padding, cornerRadius, thickness2);
+	
 	/// <summary>
 	/// Sets font properties of the last added element and its descendants.
 	/// </summary>
@@ -1478,7 +1506,7 @@ public class wpfBuilder {
 		return this;
 		//rejected: FontStretch? stretch=null. Rarely used. Most fonts don't support.
 		
-		//not sure is this OK or should set font properties for each supporting class separately.
+		//TODO: not sure is this is OK or should set font properties for each supporting class separately. Test more.
 	}
 	
 	/// <summary>
@@ -1861,21 +1889,25 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="inlines">
 	/// Arguments of type:
+	/// <br/>• <see cref="WBLink"/> adds a hyperlink.
 	/// <br/>• <see cref="Inline"/> of any type, eg <b>Run</b>, <b>Bold</b>, <b>Hyperlink</b>.
-	/// <br/>• string that starts with <c>"&lt;a>"</c>, <c>"&lt;b>"</c>, <c>"&lt;i>"</c>, <c>"&lt;u>"</c>, like <c>"&lt;a>link"</c> - adds inline of type <see cref="Hyperlink"/>, <b>Bold</b>, <b>Italic</b>, <b>Underline</b>.
+	/// <br/>• string like <c>"&lt;b>text"</c>, <c>"&lt;i>text"</c>, <c>"&lt;u>text"</c> or <c>"&lt;a>text"</c> adds inline of type <b>Bold</b>, <b>Italic</b>, <b>Underline</b> or <b>Hyperlink</b>.
 	/// <br/>• other string - plain text.
-	/// <br/>• <b>Action</b> or <b>Action&lt;Hyperlink&gt;</b> - action to run when the last added <b>Hyperlink</b> clicked (see example).
 	/// <br/>• <see cref="UIElement"/>.
 	/// </param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>TextBlock</b>.</exception>
 	/// <exception cref="ArgumentException">Unsupported argument type.</exception>
 	/// <remarks>
 	/// Adds inlines to <see cref="TextBlock.Inlines"/>.
+	///
+	/// Obsolete: <c>"&lt;a>text"</c> adds <see cref="Hyperlink"/>. Next argument of type <b>Action</b> or <b>Action&lt;Hyperlink&gt;</b> sets its action. Use <see cref="WBLink"/> instead.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// b.R.Add<TextBlock>().Text(
-	/// 	"Text ", "<b>bold ", "<a>link", new Action(() => print.it("click")), "\n",
+	/// 	"Text ", "<b>bold ", "\n",
+	/// 	new WBLink("libreautomate", "https://www.libreautomate.com"), ", ",
+	/// 	new WBLink("Action", _ => print.it("click"), bold: true), "\n",
 	/// 	new Run("color") { Foreground = Brushes.Blue, Background = Brushes.Cornsilk, FontSize = 20 }, "\n",
 	/// 	"controls", new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }, new CheckBox() { Content = "Check" }, "\n",
 	/// 	"image", ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")
@@ -1890,16 +1922,19 @@ public class wpfBuilder {
 		foreach (var v in inlines) {
 			Inline n = null; int i;
 			switch (v) {
+			case WBLink x:
+				n = x.Hlink;
+				break;
 			case Hyperlink x:
 				n = link = x;
 				break;
 			case Inline x:
 				n = x;
 				break;
-			case Action x when link != null:
+			case Action x when link != null: //<a> fbc
 				link.Click += (o, e) => x();
 				continue;
-			case Action<Hyperlink> x when link != null:
+			case Action<Hyperlink> x when link != null: //<a> fbc
 				link.Click += (o, e) => x(o as Hyperlink);
 				continue;
 			case UIElement x:
@@ -1919,7 +1954,7 @@ public class wpfBuilder {
 					continue;
 				}
 				break;
-			default: throw new ArgumentException("Text(): Expected string, Inline, UIElement or hyperlink Action"); //not x.ToString(). Reserve other types for the future.
+			default: throw new ArgumentException("Text(): Expected string, WBLink, Inline, UIElement or hyperlink Action"); //not x.ToString(). Reserve other types for the future.
 			}
 			k.Add(n);
 			//FUTURE: support nested. Now it seems rarely used.

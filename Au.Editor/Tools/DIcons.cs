@@ -124,7 +124,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.Tooltip("Append this color, like \"*Pack.Name selectedColor|thisColor\". This color is for high contrast dark theme. Can be #RRGGBB or color name.");
 		darkContrast.c.CheckChanged += (_, _) => App.Settings.dicons_contrastUse = darkContrast.c.IsChecked;
 		darkContrast.t.TextChanged += (_, _) => {
-			var s = darkContrast.t.Text.NullIfEmpty_();
+			var s = darkContrast.t.TextOrNull();
 			if (s != null) for (int i = 0; i < 2; i++) { try { System.Windows.Media.ColorConverter.ConvertFromString(s); } catch { s = i == 0 ? "#" + s : null; } }
 			App.Settings.dicons_contrastColor = s;
 		};

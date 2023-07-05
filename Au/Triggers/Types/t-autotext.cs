@@ -855,6 +855,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// Menu items. Any number of arguments of types:
 	/// <br/>• string - the replacement text and menu item label. Can contain tooltip like <c>"Text\0 Tooltip"</c>.
 	/// <br/>• <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
+	/// <br/>• null - separator.
 	/// </param>
 	/// <remarks>
 	/// Keyboard:
@@ -875,6 +876,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// 	"https://www.example.com",
 	/// 	"<tag>[[|]]</tag>",
 	/// 	new("Label example", "TEXT1"),
+	/// 	null,
 	/// 	new("HTML example", "TEXT2", "<b>TEXT2</b>"),
 	/// 	new(null, "TEXT3")
 	/// 	);
@@ -890,6 +892,10 @@ public class AutotextTriggerArgs : TriggerArgs {
 
 		for (int i = 0; i < items.Length; i++) {
 			var v = items[i];
+			if (v == null) {
+				m.Separator();
+				continue;
+			}
 			string lab = v.Label, text = v.Text ?? v.Html;
 			if (lab == null) {
 				lab = text.Limit(50).RxReplace(@"\R", " ");

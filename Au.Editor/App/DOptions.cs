@@ -8,8 +8,6 @@ using System.Windows.Media;
 using System.Windows.Documents;
 using EStyle = CiStyling.EStyle;
 
-//TODO: Output font. And maybe active line color. User suggestions.
-
 class DOptions : KDialogWindow {
 	public static void AaShow() {
 		ShowSingle(() => new DOptions());
@@ -94,7 +92,7 @@ class DOptions : KDialogWindow {
 			var s = startupScripts.Text;
 			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;
 
-			App.Model.DebuggerScript = debuggerScript.Text.NullIfEmpty_();
+			App.Model.DebuggerScript = debuggerScript.TextOrNull();
 		};
 
 		static string _startupScripts_Validation(FrameworkElement fe) {
@@ -489,7 +487,7 @@ Example:
 			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
 			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 
-			App.Model.WSSett.ci_skipFolders = skipFolders.Text.NullIfEmpty_();
+			App.Model.WSSett.ci_skipFolders = skipFolders.TextOrNull();
 		};
 
 		//CONSIDER: completion list: option to single-click.
@@ -559,10 +557,10 @@ Example:
 
 		_b.OkApply += e => {
 			AppSettings.hotkeys_t v = new() {
-				tool_quick = captureMenu.Text,
-				tool_wnd = captureDwnd.Text,
-				tool_elm = captureDelm.Text,
-				tool_uiimage = captureDuiimage.Text,
+				tool_quick = captureMenu.TextOrNull(),
+				tool_wnd = captureDwnd.TextOrNull(),
+				tool_elm = captureDelm.TextOrNull(),
+				tool_uiimage = captureDuiimage.TextOrNull(),
 			};
 			if (v != App.Settings.hotkeys) {
 				App.Settings.hotkeys = v;

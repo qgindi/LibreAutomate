@@ -41,6 +41,7 @@ public class KDialogWindow : Window {
 	/// <summary>
 	/// Sets <b>Title</b>, <b>Owner</b>, <b>ShowInTaskbar</b>.
 	/// </summary>
+	/// <param name="owner">Window or element or null.</param>
 	protected void InitWinProp(string title, DependencyObject owner, bool showInTaskbar = false) {
 		Title = title;
 		Owner = owner == null ? null : owner as Window ?? GetWindow(owner);
