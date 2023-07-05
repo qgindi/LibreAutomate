@@ -2098,6 +2098,7 @@ namespace Au.Types {
 		/// Sends message <b>DNative.TDM.SET_PROGRESS_BAR_POS</b>.
 		/// </remarks>
 		public int Progress(int percent) {
+			if (percent < 100) Message(DNative.TDM.SET_PROGRESS_BAR_POS, percent + 1); //workaround for the progress bar control lag. https://stackoverflow.com/questions/5332616/disabling-net-progressbar-animation-when-changing-value
 			return Message(DNative.TDM.SET_PROGRESS_BAR_POS, percent);
 		}
 	}

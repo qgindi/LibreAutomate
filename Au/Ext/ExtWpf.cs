@@ -495,6 +495,11 @@ public static class ExtWpf {
 	public static void AddRows(this Grid g, params WBGridLength[] heights) {
 		foreach (var v in heights) g.RowDefinitions.Add(v.Row);
 	}
+
+	/// <summary>
+	/// Gets the <b>Text</b> property. Returns null if it is "".
+	/// </summary>
+	public static string TextOrNull(this TextBox t) => t.Text.NullIfEmpty_();
 	
 	/// <summary>
 	/// Workaround for WPF bug: on DPI change tries to activate window.

@@ -352,7 +352,8 @@ static class Menus {
 		[Command("Find _image", image = "*Material.ImageSearchOutline" + blue)]
 		public static void uiimage() { Duiimage.Dialog(); }
 		
-		[Command("Find _OCR text", image = "*Material.TextSearch" + blue)]
+		//[Command("Find _OCR text", image = "*Material.TextSearch" + blue)]
+		[Command("Find _OCR text", image = "*Material.Ocr" + blue)]
 		public static void ocr() { Docr.Dialog(); }
 		
 		[Command]

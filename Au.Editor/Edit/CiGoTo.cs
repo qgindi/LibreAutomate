@@ -1,6 +1,8 @@
+//#define SG_SYMBOL //sourcegraph type:symbol. Almost unusable (2023-07-04). Does not find many types, cannot search for "member X in class Y", cannot combine with nonsymbol search, incorrect and possibly unstable select:symbol.
+
 extern alias CAW;
 
-using System.Web;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
@@ -12,6 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
+using System.Text.RegularExpressions;
 
 //FUTURE: try source link. Like now VS.
 
@@ -28,7 +31,11 @@ class CiGoTo {
 	//if in source
 	List<_SourceLocation> _sourceLocations;
 	//if in metadata
-	string _assembly, _repo, _type, _member, _namespace, _filename, _alt;
+	string _assembly, _repo, _type, _kind, _prefix, _member, _namespace, _alt;
+	int _flags;
+	//1 with github can use symbol: with member; eg github supports only methods.
+	//2 can use "public ... Member"; eg cannot for interface and enum.
+	//4 with github can use symbol: with type; eg github supports only class and struct.
 	
 	/// <summary>
 	/// true if can go to the symbol source. Then caller eg can add link to HTML.
@@ -62,35 +69,69 @@ class CiGoTo {
 			if (asm.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "AssemblyMetadataAttribute" && "RepositoryUrl" == o.ConstructorArguments[0].Value as string)?.ConstructorArguments[1].Value is string s) {
 				if (s.Starts("git:")) s = s.ReplaceAt(0, 3, "https"); //eg .NET
 				if (s.Starts("https://github.com/")) _repo = s[19..];
+				Debug_.PrintIf(_repo.NE(), s);
 			}
 			
 			//Unfortunately the github search engine is so bad. Gives lots of garbage. Randomly returns not all results.
 			//To remove some garbage, can include namespace, filename, path (can be partial, without filename).
 			//There is no best way for all casses. GoTo() will show UI, and users can try several alternatives.
+			//Also tried github API. Can get search results, but not always can find the match in the garbage.
+			//	The returned code snippets are small and often don't contain the search words. Can download entire file, but it's too slow and dirty.
+			//	The test code is in some script. Tested octokit too, but don't need it, it's just wraps the REST API, which is easy to use.
 			//At first this class used referencesource, not github. Can jump directly to the class or method etc.
 			//	But it seems it is now almost dead. Many API either don't exist or are obsolete (I guess) or only Unix version.
 			//	And it was only for .NET and Roslyn.
+			//2023-07-02: GitHub search improved. Supports regex and partially symbol: (symbol definitions). It seems always shows all results.
+			//	Tested: Supports symbol: for: class, interface, method.
+			//		Not for: property, event, delegate, enum, struct. For namespace only if NS{} but not if NS.NS{} or NS;.
 			
 			if (sym is not INamedTypeSymbol ts) {
 				ts = sym.ContainingType;
 				_member = sym.Name;
 				if (_member.Starts('.')) _member = null; //".ctor"
-				
-				//CONSIDER: for methods etc prepend the return type, like "int Method" instead of Method.
+				else {
+					if (sym is IMethodSymbol ims && ims.MethodKind is MethodKind.Ordinary or MethodKind.ReducedExtension) _flags |= 1;
+					if (ts.TypeKind is TypeKind.Class or TypeKind.Struct) _flags |= 2;
+				}
 			}
 			ts = ts.OriginalDefinition; //eg List<int> -> List<T>
-			string kind = null;
-			switch (ts.TypeKind) {
-			case TypeKind.Class: kind = ts.IsRecord ? "record" : "class"; break;
-			case TypeKind.Struct: kind = "struct"; break; //don't need "record". And currently IsRecord returns false for record struct.
-			case TypeKind.Enum: kind = "enum"; break;
-			case TypeKind.Interface: kind = "interface"; break;
-			case TypeKind.Delegate: kind = "delegate " + ts.DelegateInvokeMethod?.ReturnType.GetShortName(); break; //never mind: can be generic. Rare.
+			
+			_type = ts.Name; //get name like Int32 or List. GetShortName gets eg int, but we need Int32.
+			if (ts.TypeKind is TypeKind.Class or TypeKind.Interface && !ts.IsRecord) _flags |= 4;
+			
+#if SG_SYMBOL
+			if (sym is INamedTypeSymbol) {
+				_kind = ts.TypeKind switch {
+					TypeKind.Class => "class",
+					TypeKind.Struct => "struct",
+					TypeKind.Enum => "enum",
+					TypeKind.Interface => "interface",
+					TypeKind.Delegate => "method",
+					_ => null
+				};
+			} else {
+				_kind = sym.Kind switch {
+					SymbolKind.Event => "event",
+					SymbolKind.Field => "variable",
+					SymbolKind.Method => "method",
+					SymbolKind.Property => "property",
+					_ => null
+				};
+				Debug_.PrintIf(_kind == null, sym.Kind);
 			}
-			if (kind == "record") _type = $"{kind} {ts.GetShortName()}"; //without quotes. Can be 'record Name' or 'record class Name'. Github does not support OR.
-			else _type = $"\"{kind} {ts.GetShortName()}\""; //GetShortName gets name like int or List. Github ignores <T> and fails if eg <TEventArgs>.
-			_namespace = $"\"namespace {ts.ContainingNamespace.QualifiedName()}\"";
-			_filename = ts.Name;
+#endif
+			
+			_prefix = ts.TypeKind switch {
+				TypeKind.Class => ts.IsRecord ? "(record class|record)" : "class",
+				TypeKind.Struct => "struct",
+				TypeKind.Enum => "enum",
+				TypeKind.Interface => "interface",
+				//TypeKind.Delegate => "delegate " + ts.DelegateInvokeMethod?.ReturnType.GetShortName(), //never mind: can be generic or qualified. Rare.
+				TypeKind.Delegate => "delegate .+?",//TODO: test
+				_ => null
+			};
+			
+			_namespace = ts.ContainingNamespace.QualifiedName();
 			_alt = ts.ToString(); //for source.dot.net need exact generic, preferably fully qualified, like Namespace.List<T>, but without in/out like ToNameDisplayString
 		}
 	}
@@ -102,7 +143,7 @@ class CiGoTo {
 			foreach (var v in _sourceLocations) b.AppendFormat("|{0}?{1},{2}", v.file, v.line, v.column);
 			return b.ToString();
 		} else {
-			return $"||{_assembly}|{_repo}|{_type}|{_member}|{_namespace}|{_filename}|{_alt}";
+			return $"|\a{_assembly}\a{_repo}\a{_type}\a{_member}\a{_namespace}\a{_kind}\a{_prefix}\a{_alt}\a{_flags}";
 		}
 	}
 	
@@ -118,10 +159,10 @@ class CiGoTo {
 	/// <param name="linkData">String returned by <see cref="GetLinkData"/>.</param>
 	public static void LinkGoTo(string linkData) {
 		if (linkData == null) return;
-		bool inSource = !linkData.Starts("||");
+		bool inSource = !linkData.Starts("|\a");
 		var g = new CiGoTo(inSource);
-		var a = linkData.Split('|');
 		if (inSource) {
+			var a = linkData.Split('|');
 			g._sourceLocations = new List<_SourceLocation>();
 			for (int i = 1; i < a.Length; i++) {
 				var s = a[i];
@@ -129,13 +170,16 @@ class CiGoTo {
 				g._sourceLocations.Add(new _SourceLocation(s.Remove(line), s.ToInt(line + 1), s.ToInt(column + 1)));
 			}
 		} else {
-			g._assembly = a[2];
-			g._repo = a[3];
-			g._type = a[4];
-			g._member = a[5];
-			g._namespace = a[6];
-			g._filename = a[7];
+			var a = linkData.Split('\a');
+			g._assembly = a[1];
+			g._repo = a[2];
+			g._type = a[3];
+			g._member = a[4];
+			g._namespace = a[5];
+			g._kind = a[6];
+			g._prefix = a[7];
 			g._alt = a[8];
+			g._flags = a[9].ToInt();
 		}
 		g.GoTo();
 	}
@@ -156,73 +200,219 @@ class CiGoTo {
 			
 			static void _GoTo(_SourceLocation v) => App.Model.OpenAndGoTo(v.file, v.line, v.column);
 		} else {
-			AssemblySett se = null;
-			App.Settings.ci_gotoAsm?.TryGetValue(_assembly, out se);
-			
-			var b = new wpfBuilder("GitHub search").WinSize(450).Columns(-1);
-			b.StartGrid<GroupBox>("Query").Columns(70, -1);
-			b.R.Add("Type", out TextBox tType, _type);
-			b.R.Add("Member", out TextBox tMember, _member).Tooltip("A member of the type (method, property, etc), or any word in the file.\r\nCan be multiple, like M1 M2 M3, if all are in same file.");
-			b.R.Add(out KCheckBox cText, "Text", out TextBox tText, _namespace).Tooltip("The file also must contain this text");
-			b.R.Add(out KCheckBox cFile, "File", out TextBox tFile, _filename).Tooltip("The filename must contain this text");
-			b.End();
-			b.StartGrid<GroupBox>("Source (saved for each assembly)").Columns(70, -1);
-			b.R.Add("Assembly", out Label _, _assembly).And(50).Add(out KCheckBox cSharp, "C#").Checked(se?.csharp ?? true);
-			b.R.Add("Repository", out TextBox tRepo, se?.repo ?? _repo)
-				.Tooltip("Repository name, like dotnet/runtime\r\nIf empty, try to find the repository in github and copy its name from its URL.")
-				.Validation(_ => tRepo.Text.NE() ? "Repository cannot be empty" : null);
-			b.R.Add("Path", out TextBox tPath, se?.path).Tooltip("Optional full or partial path without filename.\r\nExample: /src/libraries");
-			b.End();
-			b.StartGrid<GroupBox>("Info");
-			b.Add(out TextBlock info).Text(@"This dialog creates and opens a GitHub search URL.
-Note: GitHub results are random. Reload the page several times.
-Note: GitHub skips large source files.
-See also: ", "<a>source.dot.net", new Action(_Link1));
-			info.TextWrapping = TextWrapping.Wrap;
-			b.End();
-			b.AddOkCancel(apply: "Search");
-			b.End();
-			
-			//b.Window.ShowInTaskbar = false; b.Window.Owner = App.Wmain;
-			b.Window.Show();
-			
-			b.OkApply += _ => {
-				string repo = tRepo.Text.NullIfEmpty_(), path = tPath.Text.NullIfEmpty_(); bool csharp = cSharp.IsChecked;
-				if (repo == _repo && path == null && csharp) {
-					//print.it("remove");
-					App.Settings.ci_gotoAsm?.Remove(_assembly);
-				} else if (repo != (se?.repo ?? _repo) || path != se?.path || csharp != (se?.csharp ?? true)) {
-					//print.it("save");
-					(App.Settings.ci_gotoAsm ??= new())[_assembly] = new() { repo = repo == _repo ? null : repo, path = path, csharp = csharp };
-				}
-				
-				var q = new StringBuilder(tType.Text);
-				if (!tMember.Text.NE()) q.Append(' ').Append(tMember.Text);
-				if (cText.IsChecked && !tText.Text.NE()) q.Append(' ').Append(tText.Text);
-				if (cFile.IsChecked && !tFile.Text.NE()) q.Append(" filename:").Append(tFile.Text);
-				if (path != null) q.Append(" path:").Append(path);
-				//print.it(q);
-				var url = $"https://github.com/{repo}/search?{(csharp ? "l=C%23&" : null)}q={HttpUtility.UrlEncode(q.ToString())}";
-				//print.it(url);
-				//if (!keys.isScrollLock) return;
-				run.itSafe(url);
-			};
-			
-			void _Link1() {
-				var s = "https://source.dot.net/#q=" + _alt;
-				if (_member != null) s = s + "." + _member;
-				run.itSafe(s);
-				b.Window.Close();
-			}
+			_CodeSearchDialog();
 		}
 	}
 	
+	void _CodeSearchDialog() {
+		AssemblySett asm = new(), asmSaved = null;
+		App.Settings.ci_gotoAsm?.TryGetValue(_assembly, out asmSaved);
+		asmSaved ??= new();
+		asmSaved.repo ??= _repo;
+		
+		var bd = new wpfBuilder("Source code search").WinSize(450).Columns(-1);
+		bd.Row(-1).Add(out TabControl tc);
+		
+		wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
+			var tp = new TabItem { Header = name };
+			tc.Items.Add(tp);
+			return new wpfBuilder(tp, panelType).Options(bindLabelVisibility: true);
+		}
+		
+		bd.StartGrid<GroupBox>("Repository info of this assembly").Columns(70, -1);
+		bd.R.Add("Assembly", out Label _, _assembly).And(50).Add(out KCheckBox cSharp, "C#").Checked(asmSaved.csharp);
+		bd.R.Add("Repository", out TextBox tRepo, asmSaved.repo)
+			.Tooltip("Repository name, like owner/repo.\nIt's the part of the github URL.");
+		bd.R.Add("Path", out TextBox tPath, asmSaved.path).Tooltip("File paths must match this regex.\nExample: src/libraries");
+		bd.R.Add("Context", out TextBox tContext, asmSaved.context).Tooltip(@"Let the sourcegraph query string start with this. Not used with github. Default: context:global repo:^github\.com/");
+		bd.End();
+		
+		bd.AddOkCancel(apply: "Search");
+		bd.End();
+		
+		bd.OkApply += _ => {
+			asm.repo = tRepo.TextOrNull();
+			asm.path = tPath.TextOrNull();
+			asm.context = tContext.TextOrNull();
+			asm.csharp = cSharp.IsChecked;
+			if (asm.repo == _repo && asm.path == null && asm.context == null && asm.csharp) {
+				//print.it("remove");
+				App.Settings.ci_gotoAsm?.Remove(_assembly);
+			} else if (asm != asmSaved) {
+				//print.it("save");
+				(App.Settings.ci_gotoAsm ??= new())[_assembly] = new() { repo = asm.repo == _repo ? null : asm.repo, path = asm.path, context = asm.context, csharp = asm.csharp };
+				asmSaved = asm with { };
+			}
+			
+			App.Settings.ci_gotoTab = tc.SelectedIndex;
+		};
+		
+#if SG_SYMBOL
+		const int c_sgSymbol = 0;
+		const int c_sgCode = 1;
+		const int c_github = 2;
+#else
+		const int c_sgCode = 0;
+		const int c_github = 1;
+#endif
+		
+		if (App.Settings.ci_gotoTab is int itab && itab > 0 && itab <= c_github) tc.SelectedIndex = itab;
+		
+#if SG_SYMBOL
+		_SourcegraphSymbol();
+#endif
+		_Sourcegraph();
+		_Github();
+		_Sourcedotnet();
+		
+		bd.Window.Topmost = true;
+		bd.WinSaved(s_wndpos, o => s_wndpos = o);
+		bd.Window.Show();
+		
+#if SG_SYMBOL //note: some parts of this code may be obsolete or little tested
+		void _SourcegraphSymbol() {
+			var b = _Page("soucegraph symbol");
+			
+			_AddInfo(b, "Creates and opens a sourcegraph.com symbol search URL.  [", new WBLink("syntax", "https://docs.sourcegraph.com/code_search/reference/queries"), "]");
+			
+			b.R.Add("Symbol", out TextBox tSymbol, $@"\b{_member.NE() ? _type : _member)}\b");
+			TextBox tType = null; KCheckBox cType = null;
+			if (!_member.NE()) {
+				b.R.Add(out cType, "Type", out tType, $@"\b{_type}\b");
+				cType.IsChecked = true;
+			}
+			b.R.Add(out KCheckBox cKind, "Kind", out TextBox tKind, _kind); cKind.IsChecked = _kind != null;
+			b.R.Add(out KCheckBox cText, "Text", out TextBox tText, $@"\bnamespace {Regex.Escape(_namespace)}\b").Tooltip("The file must also contain this text or match this /regex/"); ;
+			b.R.Add(out KCheckBox cFile, "File", out TextBox tFile, _type).Tooltip("The file name or path must contain this text or match this /regex/");
+			b.R.Add(out KCheckBox cAlso, "Also", out TextBox tAlso, $"NOT file:{_NotPath()}").Tooltip("Append this to the query");
+			cAlso.IsChecked = true;
+			
+			b.End();
+			
+			bd.OkApply += _ => {
+				if (tc.SelectedIndex != c_sgSymbol) return;
+				var q = new StringBuilder(@"patterntype:regexp case:yes context:global repo:^github\.com/");
+				if (!asm.repo.NE()) q.Append(Regex.Escape(asm.repo)).Append('$');
+				if (asm.csharp) q.Append(" lang:C#");
+				q.Append(" type:symbol ").Append(tSymbol.Text);
+				if (cType?.IsChecked == true && !tType.Text.NE()) q.Append(" AND ").Append(tType.Text);
+				if (cText.IsChecked && !tText.Text.NE()) q.Append(" AND ").Append(tText.Text);
+				if (cKind.IsChecked && !tKind.Text.NE()) q.Append(" select:symbol." + tKind.Text);
+				if (cFile.IsChecked && !tFile.Text.NE()) q.Append(" file:").Append(tFile.Text);
+				if (asm.path != null) q.Append(" file:").Append(asm.path);
+				if (cAlso.IsChecked && !tAlso.Text.NE()) q.Append(' ').Append(tAlso.Text);
+				//print.it(q);
+				var url = $"https://sourcegraph.com/search?q={WebUtility.UrlEncode(q.ToString())}";
+				run.itSafe(url);
+			};
+		}
+#endif
+		
+		void _Sourcegraph() {
+			var b = _Page("sourcegraph");
+			
+			_AddInfo(b, "Creates and opens a sourcegraph.com search URL.  [", new WBLink("syntax", "https://docs.sourcegraph.com/code_search/reference/queries"), "]");
+			
+			b.R.Add("Type", out TextBox tType, $@"\b{_prefix}\s+{_type}\b"); //note: don't use unescaped space. Then splits into too: "\b{_prefix}" and "{_type}\b"
+			b.R.Add("Member", out TextBox tMember);
+			if (_member.NE()) b.Hidden(); else tMember.Text = 0 != (_flags & 2) ? $@"\bpublic\s.+?\s{_member}\b" : $@"\b{_member}\b";
+			b.R.Add(out KCheckBox cText, "Text", out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").Tooltip("The code must also match this regex"); ;
+			b.R.Add(out KCheckBox cFile, "File", out TextBox tFile, _type).Tooltip("The file name or path must match this regex");
+			b.R.Add(out KCheckBox cAlso, "Also", out TextBox tAlso, $"NOT file:{_NotPath()}").Tooltip("Append this to the query");
+			cAlso.IsChecked = true;
+			
+			b.End();
+			
+			bd.OkApply += _ => {
+				if (tc.SelectedIndex != c_sgCode) return;
+				var q = new StringBuilder("patterntype:regexp case:yes "); //note: case:yes even if !asm.csharp
+				q.Append(asm.context ?? @"context:global repo:^github\.com/");
+				if (!asm.repo.NE()) q.Append(Regex.Escape(asm.repo)).Append('$');
+				if (asm.csharp) q.Append(" lang:C#");
+				q.Append(' ');
+				if (!tMember.Text.NE()) {
+					q.Append(tMember.Text);
+					if (!tType.Text.NE()) q.Append($" file:has.content({tType.Text})");
+					if (cText.IsChecked && !tText.Text.NE()) q.Append($" file:has.content({tText.Text})");
+				} else {
+					q.Append(tType.Text);
+				}
+				if (cFile.IsChecked && !tFile.Text.NE()) q.Append(" file:").Append(_RxEscapeSpaces(tFile.Text));
+				if (asm.path != null) q.Append(" file:").Append(_RxEscapeSpaces(asm.path));
+				if (cAlso.IsChecked && !tAlso.Text.NE()) q.Append(' ').Append(tAlso.Text);
+				//print.it(q);
+				var url = $"https://sourcegraph.com/search?q={WebUtility.UrlEncode(q.ToString())}";
+				run.itSafe(url);
+				
+				static string _RxEscapeSpaces(string s) => s.RxReplace(@"(?<!\\) ", @"\ ");
+			};
+		}
+		
+		void _Github() {
+			var b = _Page("github");
+			
+			_AddInfo(b, "Creates and opens a github.com search URL."
+				+ "  [", new WBLink("syntax", "https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax"), "]"
+				+ "  [", new WBLink("notes", _ => dialog.show("GitHub code search notes", "Results may be incomplete. Try to reload the page.\nSkips large source files.", owner: bd.Window)), "]");
+			
+			b.R.Add("Type", out TextBox tType, 0 != (_flags & 4) && _member.NE() ? $@"symbol:/(?-i)\b{_type}\b/ /(?-i)\b{_prefix} {_type}\b/" : $@"/(?-i)\b{_prefix} {_type}\b/");
+			b.R.Add("Member", out TextBox tMember).Hidden(_member.NE());
+			if (!_member.NE()) tMember.Text = 0 != (_flags & 1) ? $@"symbol:/(?-i)\b{_member}\b/"
+											: 0 != (_flags & 2) ? $@"/(?-i)\bpublic .+? {_member}\b/" //member of class or struct
+											: $@"/(?-i)\b{_member}\b/"; //member of interface or enum
+			b.R.Add(out KCheckBox cText, "Text", out TextBox tText, $"\"namespace {_namespace}\"").Tooltip("Append this to the query");
+			b.R.Add(out KCheckBox cFile, "File", out TextBox tFile, _type).Tooltip("The file name or path must contain this text or match /regex/");
+			b.R.Add(out KCheckBox cAlso, "Also", out TextBox tAlso, $"NOT path:/{_NotPath()}/").Tooltip("Append this to the query");
+			cAlso.IsChecked = true;
+			
+			b.End();
+			
+			bd.OkApply += _ => {
+				if (tc.SelectedIndex != c_github) return;
+				var q = new StringBuilder();
+				if (!asm.repo.NE()) q.Append($"repo:{asm.repo} ");
+				if (asm.csharp) q.Append("lang:C# ");
+				if (!tMember.Text.NE()) q.Append(tMember.Text).Append(' '); //must be before type for better results
+				q.Append(tType.Text);
+				if (cText.IsChecked && !tText.Text.NE()) q.Append(' ').Append(tText.Text);
+				if (cFile.IsChecked && !tFile.Text.NE()) q.Append($" path:{tFile.Text}");
+				if (asm.path != null) q.Append($" path:/{asm.path.RxReplace(@"(?<!\\)/", @"\/")}/"); //tested: works well when cFile specified too (both use path:)
+				if (cAlso.IsChecked && !tAlso.Text.NE()) q.Append(' ').Append(tAlso.Text);
+				//print.it(q);
+				var url = $"https://github.com/search?q={WebUtility.UrlEncode(q.ToString())}";
+				//print.it(url);
+				run.itSafe(url);
+			};
+		}
+		
+		void _Sourcedotnet() {
+			var tp = new TabItem { Header = "source.dot.net" };
+			tc.Items.Add(tp);
+			tc.SelectionChanged += (_, e) => {
+				if (tc.SelectedIndex == tc.Items.Count - 1) {
+					var s = "https://source.dot.net/#q=" + _alt;
+					if (_member != null) s = s + "." + _member;
+					run.itSafe(s);
+					bd.Window.Close();
+				}
+			};
+		}
+		
+		string _NotPath() => @"\b[Tt]est|\b[Gg]enerat|\b[Uu]nix\b|\/ref\/" + (_repo == "dotnet/wpf" ? @"|\/cycle-breakers\/" : null); //note: sourcegraph does not support (?i) and (?-i)
+		
+		static void _AddInfo(wpfBuilder b, params object[] inlines) {
+			b.Add(out TextBlock _).Brush(0xf0f8e0).Padding(1, 2, 1, 4).Text(inlines);
+		}
+	}
+	static string s_wndpos;
+	
 	internal record AssemblySett {
-		public string repo, path;
+		public string repo, path, context;
 		public bool csharp;
+		public AssemblySett() { csharp = true; }
 	}
 	
-	//This was used with referencesource. Not sure whether need it now too.
+	//This was used with referencesource. It seems don't need it now.
 	///// <summary>
 	///// If _filename or its ancestor type is forwarded to another assembly, replaces _assembly with the name of that assembly.
 	///// For example initially we get that String is in System.Runtime. But actually it is in System.Private.CoreLib, and its name must be passed to https://source.dot.net.
@@ -343,7 +533,3 @@ See also: ", "<a>source.dot.net", new Action(_Link1));
 		if (g.CanGoTo) g.GoTo();
 	}
 }
-
-//Also tried github API. Can get search results, but not always can find the match in the garbage.
-//The returned code snippets are small and often don't contain the search words. Can download entire file, but it's too slow and dirty.
-//The test code is in some script. Tested octokit too, but don't need it, it's just wraps the REST API, which is easy to use.

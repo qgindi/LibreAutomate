@@ -50,17 +50,17 @@ class DSnippets : KDialogWindow {
 		b.StartGrid().Hidden(null);
 		_panelSnippet = b.Panel;
 		b.R.Add("Name", out _tName);
-		_tName.TextChanged += (_, _) => { if (!_ignoreEvents && _ti.Level == 2) _TvSetText(_tName.Text.NullIfEmpty_()); };
+		_tName.TextChanged += (_, _) => { if (!_ignoreEvents && _ti.Level == 2) _TvSetText(_tName.TextOrNull()); };
 		b.R.Add("Info", out _tInfo);
-		_tInfo.TextChanged += (_, _) => { if (!_ignoreEvents) { _ti.info = _tInfo.Text.NullIfEmpty_(); if (_ti.Level == 3) _TvSetText(_ti.info); } };
+		_tInfo.TextChanged += (_, _) => { if (!_ignoreEvents) { _ti.info = _tInfo.TextOrNull(); if (_ti.Level == 3) _TvSetText(_ti.info); } };
 		b.R.Add("Info+", out _tMore).Multiline(40);
-		_tMore.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.more = _tMore.Text.NullIfEmpty_(); };
+		_tMore.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.more = _tMore.TextOrNull(); };
 		b.R.Add("Print", out _tPrint).Multiline(40).Tooltip("Print this text when inserting the snippet.\nCan contain output tags if starts with <>.");
-		_tPrint.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.print_ = _tPrint.Text.NullIfEmpty_(); };
+		_tPrint.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.print_ = _tPrint.TextOrNull(); };
 		b.R.Add("using", out _tUsing).Tooltip("If the snippet code requires using directives, add the namespace names here.\nExample: System.Windows;System.Windows.Controls");
-		_tUsing.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.using_ = _tUsing.Text.NullIfEmpty_(); };
+		_tUsing.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.using_ = _tUsing.TextOrNull(); };
 		b.R.Add("$var$", out _tVar).Tooltip("$var$ variable type and name. Example: Au.toolbar,t");
-		_tVar.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.var_ = _tVar.Text.NullIfEmpty_(); };
+		_tVar.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.var_ = _tVar.TextOrNull(); };
 		foreach (var v in _panelSnippet.Children) if (v is TextBox t1) t1.IsReadOnlyCaretVisible = true;
 		
 		b.R.Add<Label>("Code");

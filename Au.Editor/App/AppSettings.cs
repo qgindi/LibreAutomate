@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 /// <summary>
 /// Program settings.
 /// folders.ThisAppDocuments + @".settings\Settings.json"
@@ -27,10 +25,11 @@ record AppSettings : JSettings {
 	//When need a nested type, use record struct. Everything works well; can add/remove members like in main type.
 	//	If using default field values, need ctor eg `hotkeys_t()` (else error) and `=new()`.
 	//	Note: .NET always creates new object, even if default object created, even if record class. Avoid custom ctors etc.
+	//	Can use record class too, but then usually creates new object 2 times: 1. explicit new(); 2. when deserializing.
 	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
 	
 	//Options -> Hotkeys
-	public record hotkeys_t {
+	public record struct hotkeys_t() {
 		public string
 			tool_quick = "Ctrl+Shift+Q",
 			tool_wnd = "Ctrl+Shift+W",
@@ -68,7 +67,7 @@ record AppSettings : JSettings {
 	public bool files_multiSelect;
 	
 	//file type icons
-	public record icons_t {
+	public record struct icons_t {
 		public string
 			ft_script,
 			ft_class,
@@ -76,7 +75,7 @@ record AppSettings : JSettings {
 			ft_folderOpen
 			;
 	}
-	public icons_t icons = new();
+	public icons_t icons;
 	
 	//panel Output
 	public bool output_wrap, output_white, output_topmost;
@@ -94,14 +93,13 @@ record AppSettings : JSettings {
 	public bool tools_pathUnexpand = true, tools_pathLnk;
 	
 	//saved positions of various windows
-	public record wndpos_t {
+	public record struct wndpos_t {
 		public string main, wnd, elm, uiimage, ocr, recorder, icons, symbol;
 	}
-	public wndpos_t wndpos = new();
+	public wndpos_t wndpos;
 	
 	//Delm
-	public record delm_t {
-		//public delm_t() { print.qm2.write("delm"); } //TODO
+	public record struct delm_t() {
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
 		public string wait, actionn; //named actionn because once was int action
 		public int flags;
@@ -109,7 +107,7 @@ record AppSettings : JSettings {
 	public delm_t delm = new();
 	
 	//DInputRecorder
-	public record recorder_t {
+	public record struct recorder_t() {
 		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
 		public int xyIn;
 		public string speed = "10";
@@ -135,6 +133,7 @@ record AppSettings : JSettings {
 	
 	//CiGoTo
 	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
+	public int ci_gotoTab;
 	
 	//CiFindGo
 	public bool ci_findgoDclick;

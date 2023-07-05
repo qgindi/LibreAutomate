@@ -167,6 +167,24 @@ class RepairWorkspace {
 			App.Model.ImportFiles(new[] { fp }, f, pos, dontPrint: true);
 		}
 		
+		List<(long size, FileNode f)> biggest = new();
+		_Biggest(rootFolder);
+		void _Biggest(FileNode folder) {
+			foreach (var f in folder.Children()) {
+				if (f.IsFolder) {
+					if (!f.IsSymlink) _Biggest(f);
+				} else if (!f.IsLink && filesystem.getProperties(f.FilePath, out var p, FAFlags.UseRawPath | FAFlags.DontThrow) && p.Size >= 50 * 1024) {
+					biggest.Add((p.Size, f));
+				}
+			}
+		}
+		if (biggest.Any()) {
+			b.NL().Marker(c_markerInfo).Text("Biggest files. You may want to delete some files if obsolete, garbage, etc. Size in KB.").NL();
+			foreach (var (size, f) in biggest.OrderByDescending(o => o.size)) {
+				b.NL().Text($"{size / 1024} ").Link(f, f.ItemPath);
+			}
+		}
+		
 		Panels.Found.SetResults(workingState, b);
 	}
 }

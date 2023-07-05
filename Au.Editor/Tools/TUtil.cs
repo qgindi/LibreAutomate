@@ -938,7 +938,7 @@ static class TUtil {
 			b.End();
 			if (b.ShowDialog(Window.GetWindow(sci))) {
 				App.Settings.delm.hk_capture = capture.Text;
-				if (insertToo) App.Settings.delm.hk_insert = insert.Text.NullIfEmpty_();
+				if (insertToo) App.Settings.delm.hk_insert = insert.TextOrNull();
 			}
 		});
 	}
