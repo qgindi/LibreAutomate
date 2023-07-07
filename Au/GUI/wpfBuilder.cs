@@ -685,13 +685,14 @@ public class wpfBuilder {
 	/// </param>
 	/// <param name="text">
 	/// Text, header or other content. Supported element types (or base types):
-	/// <see cref="TextBox"/> - sets <b>Text</b> property.
-	/// <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
-	/// <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="Text"/>).
-	/// <see cref="PasswordBox"/> - sets <b>Password</b> property.
-	/// <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property.
-	/// <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc).
-	/// <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
+	/// <br/>• <see cref="TextBox"/> - sets <b>Text</b> property.
+	/// <br/>• <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
+	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="Text"/>).
+	/// <br/>• <see cref="PasswordBox"/> - sets <b>Password</b> property.
+	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property.
+	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc).
+	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
+	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
 	/// <param name="flags"></param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
@@ -765,7 +766,11 @@ public class wpfBuilder {
 				case ComboBox u: u.Text = text.ToString(); break;
 				case TextBlock u: u.Text = text.ToString(); break;
 				case RichTextBox u: u.AppendText(text.ToString()); break;
-				default: throw new NotSupportedException($"Add() cannot set text/content of {e.GetType().Name}.");
+				//default: throw new NotSupportedException($"Add() cannot set text/content of {e.GetType().Name}.");
+				default:
+					if (!_PropGetSet<string>.TryCreate(e, "Text", out var pgs)) throw new NotSupportedException($"Add() cannot set text/content of {e.GetType().Name}.");
+					pgs.Set(text.ToString());
+					break;
 				}
 			}
 		}
@@ -1294,28 +1299,12 @@ public class wpfBuilder {
 		}
 	}
 	
-	struct _PaddingElem {
-		FrameworkElement _e;
-		PropertyInfo _p;
-		
-		public _PaddingElem(FrameworkElement e, [CallerMemberName] string m_ = null) {
-			_e = e;
-			if (e is not Control) _p = e.GetType().GetProperty("Padding", typeof(Thickness)) ?? throw new InvalidOperationException(m_ + "(): Last added element does not have Padding property");
-		}
-		
-		public Thickness Padding {
-			get => _e is Control c ? c.Padding : (Thickness)_p.GetValue(_e);
-			set { if (_e is Control c) c.Padding = value; else _p.SetValue(_e, value); }
-		}
-	}//TODO: the same for Brush etc
-	
 	/// <summary>
 	/// Sets padding of the last added control.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
 	public wpfBuilder Padding(Thickness thickness) {
-		var c = new _PaddingElem(Last);
-		c.Padding = thickness;
+		new _PropGetSet<Thickness>(Last, "Padding").Set(thickness);
 		return this;
 	}
 	
@@ -1324,13 +1313,13 @@ public class wpfBuilder {
 	/// </summary>
 	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
 	public wpfBuilder Padding(double? left = null, double? top = null, double? right = null, double? bottom = null) {
-		var c = new _PaddingElem(Last);
-		var p = c.Padding;
+		var c = new _PropGetSet<Thickness>(Last, "Padding");
+		var p = c.Get;
 		left ??= p.Left;
 		top ??= p.Top;
 		right ??= p.Right;
 		bottom ??= p.Bottom;
-		c.Padding = new Thickness(left.Value, top.Value, right.Value, bottom.Value);
+		c.Set(new Thickness(left.Value, top.Value, right.Value, bottom.Value));
 		return this;
 	}
 	
@@ -1344,10 +1333,10 @@ public class wpfBuilder {
 	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
 	public wpfBuilder Padding(string padding) {
-		var c = new _PaddingElem(Last);
-		var p = c.Padding;
+		var c = new _PropGetSet<Thickness>(Last, "Padding");
+		var p = c.Get;
 		_ThicknessFromString(ref p, padding);
-		c.Padding = p;
+		c.Set(p);
 		return this;
 	}
 	
@@ -1424,21 +1413,11 @@ public class wpfBuilder {
 	public wpfBuilder Brush(Brush background = null, Brush foreground = null) { //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
 		var last = Last;
 		if (foreground != null) {
-			switch (last) {
-			case Control c: c.Foreground = foreground; break;
-			case TextBlock c: c.Foreground = foreground; break;
-			default: throw new NotSupportedException("Brush(): Last added must be Control or TextBlock, or foreground null");
-			}
+			new _PropGetSet<Brush>(Last, "Foreground").Set(foreground);
 		}
 		if (background != null) {
 			if (last == _p.panel && !_IsNested && _window != null) last = _window;
-			switch (last) {
-			case Control c: c.Background = background; break;
-			case TextBlock c: c.Background = background; break;
-			case Border c: c.Background = background; break;
-			case Panel c: c.Background = background; break;
-			default: throw new NotSupportedException("Brush(): Last added must be Control, Panel, Border or TextBlock");
-			}
+			new _PropGetSet<Brush>(Last, "Background").Set(background);
 		}
 		return this;
 	}
@@ -1483,6 +1462,7 @@ public class wpfBuilder {
 		default: throw new NotSupportedException("Border(): Last added must be Control or Border");
 		}
 		return this;
+		//tested: there are no other useful types that have these properties.
 	}
 	
 	/// <param name="color">Border color.</param>
@@ -1506,7 +1486,7 @@ public class wpfBuilder {
 		return this;
 		//rejected: FontStretch? stretch=null. Rarely used. Most fonts don't support.
 		
-		//TODO: not sure is this is OK or should set font properties for each supporting class separately. Test more.
+		//not sure is this is OK or should set font properties for each supporting class separately.
 	}
 	
 	/// <summary>
@@ -2268,6 +2248,34 @@ public class wpfBuilder {
 		return s_isCustomTheme == true;
 	}
 	static bool? s_isCustomTheme;
+	
+	/// <summary>
+	/// Gets or sets a property of an element of any type that has the property.
+	/// </summary>
+	struct _PropGetSet<T> {
+		FrameworkElement _e;
+		PropertyInfo _p;
+		
+		public _PropGetSet(FrameworkElement e, string prop, [CallerMemberName] string m_ = null) {
+			_e = e;
+			_p = e.GetType().GetProperty(prop, typeof(T)) ?? throw new InvalidOperationException(m_ + $"(): Last added element does not have {prop} property");
+		}
+		
+		/// <summary>
+		/// Like ctor but does not throw.
+		/// </summary>
+		/// <returns>false if failed.</returns>
+		public static bool TryCreate(FrameworkElement e, string prop, out _PropGetSet<T> r) {
+			var p = e.GetType().GetProperty(prop, typeof(T));
+			if (p == null) { r = default; return false; }
+			r = new() { _e = e, _p = p };
+			return true;
+		}
+		
+		public T Get => (T)_p.GetValue(_e);
+		
+		public void Set(T value) { _p.SetValue(_e, value); }
+	}
 	
 	#endregion
 }

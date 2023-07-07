@@ -55,6 +55,7 @@ Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 
 Source: "Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Default\Workspace\.gitignore"; DestDir: "{app}\Default"; Flags: ignoreversion
 Source: "Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 

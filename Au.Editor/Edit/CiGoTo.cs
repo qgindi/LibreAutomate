@@ -211,7 +211,8 @@ class CiGoTo {
 		asmSaved.repo ??= _repo;
 		
 		var bd = new wpfBuilder("Source code search").WinSize(450).Columns(-1);
-		bd.Row(-1).Add(out TabControl tc);
+		bd.Window.UseLayoutRounding = true; //workaround for: text of OK etc buttons not centered vertically
+		bd.Row(0).Add(out TabControl tc);
 		
 		wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 			var tp = new TabItem { Header = name };
@@ -219,7 +220,7 @@ class CiGoTo {
 			return new wpfBuilder(tp, panelType).Options(bindLabelVisibility: true);
 		}
 		
-		bd.StartGrid<GroupBox>("Repository info of this assembly").Columns(70, -1);
+		bd.R.StartGrid<GroupBox>("Repository info of this assembly").Columns(70, -1);
 		bd.R.Add("Assembly", out Label _, _assembly).And(50).Add(out KCheckBox cSharp, "C#").Checked(asmSaved.csharp);
 		bd.R.Add("Repository", out TextBox tRepo, asmSaved.repo)
 			.Tooltip("Repository name, like owner/repo.\nIt's the part of the github URL.");
