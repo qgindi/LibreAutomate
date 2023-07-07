@@ -269,12 +269,13 @@ class MetaReferences {
 	public int DefaultRefCount { get; private set; }
 
 	/// <summary>
-	/// Removes from <b>Refs</b> all matching <i>wildcard</i>. Used for meta noRef.
+	/// Removes from <b>Refs</b> all matching a wildex. Used for meta noRef.
 	/// </summary>
-	internal void RemoveFromRefs(string wildcard) {
+	internal void RemoveFromRefs(string wildx) {
+		wildex x = wildx;
 		for (int i = _refs.Count; --i >= 0;) {
 			var r = _refs[i];
-			if (r.FilePath.Like(wildcard, true)) {
+			if (x.Match(r.FilePath)) {
 				_refs.RemoveAt(i);
 				if (i < DefaultRefCount) {
 					DefaultRefCount--;

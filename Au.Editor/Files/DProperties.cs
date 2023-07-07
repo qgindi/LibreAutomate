@@ -723,6 +723,7 @@ Don't need to add Au.dll and .NET runtime dlls.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
 To remove this meta comment, edit the code.
 If script role is editorExtension, may need to restart editor.
+To remove a default reference (.NET or Au): noRef AssemblyNameOrAuPathWildex;.
 """);
 		info.AaAddElem(addNuget, """
 <b>NuGet<> - use a NuGet package installed by the NuGet tool (menu Tools -> NuGet).

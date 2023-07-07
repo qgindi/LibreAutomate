@@ -30,7 +30,7 @@ New parameters:
 Improved:
 - **internet.http** adds default header `"User-Agent: Au"`.
 - **AutotextTriggerArgs.Menu**: null adds separator.
-- **wpfBuilder**: **Padding** supports more element types.
+- **wpfBuilder.Padding** and **.Brush** support more element types.
 
 ### Bug fixes
 
