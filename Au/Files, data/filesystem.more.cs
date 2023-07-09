@@ -10,18 +10,16 @@ partial class filesystem {
 		/// </summary>
 		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
-		/// <remarks>
-		/// If a path is of a symbolic link, this function uses its target, not the link. For example, returns false if the target doesn't exist.
-		/// </remarks>
+		/// <param name="useSymlink">If a path is of a symbolic link, use the link. If false, uses its target; for example, returns false if the target doesn't exist.</param>
 		/// <seealso cref="comparePaths(string, string, bool, bool)"/>
-		public static bool isSameFile(string path1, string path2) {
-			using var h1 = _OpenFileHandleForFileInfo(path1); if (h1.Is0) return false;
-			using var h2 = _OpenFileHandleForFileInfo(path2); if (h2.Is0) return false;
+		public static bool isSameFile(string path1, string path2, bool useSymlink = false) {
+			using var h1 = _OpenFileHandleForFileInfo(path1, useSymlink); if (h1.Is0) return false;
+			using var h2 = _OpenFileHandleForFileInfo(path2, useSymlink); if (h2.Is0) return false;
 			return Api.GetFileInformationByHandle(h1, out var k1)
 				&& Api.GetFileInformationByHandle(h2, out var k2)
 				&& k1.FileIndex == k2.FileIndex && k1.dwVolumeSerialNumber == k2.dwVolumeSerialNumber;
 		}
-
+		
 		/// <summary>
 		/// Gets <see cref="FileId"/> of a file or directory.
 		/// </summary>
@@ -42,13 +40,13 @@ partial class filesystem {
 			fileId = new((int)k.dwVolumeSerialNumber, k.FileIndex);
 			return true;
 		}
-
+		
 		static Handle_ _OpenFileHandleForFileInfo(string path, bool ofSymlink = false) {
 			path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
 			return Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
 			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
 		}
-
+		
 		/// <summary>
 		/// Gets full normalized path of an existing file or directory or symbolic link target.
 		/// </summary>
@@ -71,11 +69,11 @@ partial class filesystem {
 				s = pathname.unprefixLongPath(s);
 			result = s;
 			return true;
-
+			
 			//never mind: does not change the root if it is like @"\\ThisComputer\share" or @"\\ThisComputer\C$" or @"\\127.0.0.1\c$" or @"\\LOCALHOST\c$" and it is the same as "C:\".
 			//	Tested: getFileId returns the same value for all these.
 		}
-
+		
 		/// <summary>
 		/// Compares final paths of two existing files or directories to determine equality or relationship.
 		/// </summary>
@@ -89,10 +87,10 @@ partial class filesystem {
 		/// Example: <c>@"C:\Test\file.txt"</c> and <c>"file.txt"</c> are equal if the file is in <c>@"C:\Test</c> and <c>@"C:\Test</c> is current directory.
 		/// Example: <c>@"C:\Temp\file.txt"</c> and <c>"%TEMP%\file.txt"</c> are equal if TEMP is an environment variable = <c>@"C:\Temp</c>.
 		/// </remarks>
-		/// <seealso cref="isSameFile(string, string)"/>
+		/// <seealso cref="isSameFile(string, string, bool)"/>
 		public static CPResult comparePaths(string pathA, string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false)
 			=> comparePaths(ref pathA, ref pathB, ofSymlinkA, ofSymlinkB);
-
+		
 		/// <summary>
 		/// Compares final paths of two existing files or directories to determine equality or relationship.
 		/// Also gets final paths (see <see cref="getFinalPath"/>).
@@ -107,7 +105,7 @@ partial class filesystem {
 			if (pathB.Length < pathA.Length && pathA.Starts(pathB, true) && (pathA[pathB.Length] == '\\' || pathB.Ends('\\'))) return CPResult.BContainsA;
 			return CPResult.None;
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="enumerate"/> and returns sum of all file sizes.
 		/// With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
@@ -122,7 +120,7 @@ partial class filesystem {
 		public static long calculateDirectorySize(string path, FEFlags flags = FEFlags.AllDescendants | FEFlags.IgnoreInaccessible) {
 			return enumerate(path, flags).Sum(f => f.Size);
 		}
-
+		
 		/// <summary>
 		/// Empties the Recycle Bin.
 		/// </summary>
@@ -131,7 +129,7 @@ partial class filesystem {
 		public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
 			Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
 		}
-
+		
 		/// <summary>
 		/// Creates a NTFS symbolic link or junction.
 		/// </summary>
@@ -139,11 +137,11 @@ partial class filesystem {
 		/// <param name="targetPath">If <i>type</i> is <b>Junction</b>, must be full path. Else can be either full path or path relative to the parent directory of the link. If starts with an environment variable, the function expands it before creating the link.</param>
 		/// <param name="type"></param>
 		/// <param name="elevate">If fails to create symbolic link because this process does not have admin rights, run <c>cmd.exe mklink</c> as administrator. Will show a dialog and UAC consent. Not used if type is <b>Junction</b>, because don't need admin rights to create junctions.</param>
-		/// <param name="deleteOld">If <i>linkPath</i> already exists as a symbolic link or junction, delete it before creating new.</param>
+		/// <param name="deleteOld">If <i>linkPath</i> already exists as a symbolic link or junction, replace it.</param>
 		/// <remarks>
 		/// Some reasons why this function can fail:
 		/// - The link already exists. Solution: use <c>deleteOld: true</c>.
-		/// - This process is running not as administrator. Solution: use <i>type</i> <b>Junction</b> or <c>elevate: true</c>.
+		/// - This process is running not as administrator. Solution: use <i>type</i> <b>Junction</b> or <c>elevate: true</c>. To create symbolic links without admin rights, in Windows Settings enable developer mode.
 		/// - The file system format is not NTFS. For example FAT32 in USB drive.
 		/// 
 		/// More info: <google>CreateSymbolicLink, mklink, NTFS symbolic links, junctions</google>.
@@ -157,32 +155,42 @@ partial class filesystem {
 			} else { //symlinks support relative path
 				targetPath = targetPath.Replace('/', '\\'); //rumors: the link may not work if with /
 			}
-
-			if (deleteOld && exists(linkPath, useRawPath: true).IsNtfsLink) delete(linkPath);
-			else createDirectoryFor(linkPath);
-
-			if (type is CSLink.Junction or CSLink.JunctionOrSymlink) {
-				var r = run.console(out string s, "cmd.exe", $"""/u /c "mklink /d /j "{linkPath}" "{targetPath}" """, encoding: Encoding.Unicode); //tested: UTF-16 on Win11 and Win7
-				if (r == 0) return;
-				if (!(type == CSLink.JunctionOrSymlink && s.Starts("Local volumes are required"))) throw new AuException("*to create junction. " + s.Trim());
-			}
-
-			if (Api.CreateSymbolicLink(linkPath, targetPath, type == CSLink.File ? 0u : 1u)) return;
-			int ec = lastError.code;
-			if (ec == Api.ERROR_PRIVILEGE_NOT_HELD && elevate && !uacInfo.isAdmin) {
-				if (dialog.showOkCancel("Create symbolic link", "Administrator rights required.", icon: DIcon.Shield)) {
-					using var tf = new TempFile();
-					var d = type == CSLink.File ? null : "/d ";
-					var cl = $"""/u /c "mklink {d}"{linkPath}" "{targetPath}" 2>"{tf}" """; //redirects stderr to temp file
-					var r = run.it(folders.System + "cmd.exe", cl, RFlags.Admin | RFlags.WaitForExit, new() { WindowState = ProcessWindowStyle.Hidden });
-					if (r.ProcessExitCode == 0) return;
-					string s = null; try { s = loadText(tf, encoding: Encoding.Unicode).Trim(); } catch { }
-					throw new AuException("*to create symbolic link. " + s);
+			
+			string trueLinkPath = null;
+			try {
+				if (exists(linkPath, useRawPath: true) is var e && e) {
+					if (!(deleteOld && e.IsNtfsLink)) throw new AuException(Api.ERROR_ALREADY_EXISTS, "*to create symbolic link.");
+					trueLinkPath = linkPath;
+					linkPath = pathname.makeUnique(linkPath, true);
+				} else createDirectoryFor(linkPath);
+				
+				if (type is CSLink.Junction or CSLink.JunctionOrSymlink) {
+					var r = run.console(out string s, "cmd.exe", $"""/u /c "mklink /d /j "{linkPath}" "{targetPath}" """, encoding: Encoding.Unicode); //tested: UTF-16 on Win11 and Win7
+					if (r == 0) return;
+					if (!(type == CSLink.JunctionOrSymlink && s.Starts("Local volumes are required"))) throw new AuException("*to create junction. " + s.Trim());
 				}
+				
+				uint fl = type == CSLink.File ? 0u : 1u; //SYMBOLIC_LINK_FLAG_DIRECTORY
+				if (osVersion.minWin10_1703) fl |= 2u; //SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+				if (Api.CreateSymbolicLink(linkPath, targetPath, fl)) return;
+				
+				int ec = lastError.code;
+				if (ec == Api.ERROR_PRIVILEGE_NOT_HELD && elevate && !uacInfo.isAdmin) {
+					if (dialog.showOkCancel("Create symbolic link", "Administrator rights required.\n\nTo create without admin rights, in Windows Settings enable developer mode.", icon: DIcon.Shield)) {
+						using var tf = new TempFile();
+						var d = type == CSLink.File ? null : "/d ";
+						var cl = $"""/u /c "mklink {d}"{linkPath}" "{targetPath}" 2>"{tf}" """; //redirects stderr to temp file
+						var r = run.it(folders.System + "cmd.exe", cl, RFlags.Admin | RFlags.WaitForExit, new() { WindowState = ProcessWindowStyle.Hidden });
+						if (r.ProcessExitCode == 0) return;
+						string s = null; try { s = loadText(tf, encoding: Encoding.Unicode).Trim(); } catch { }
+						throw new AuException("*to create symbolic link. " + s);
+					}
+				}
+				throw new AuException(ec, "*to create symbolic link.");
 			}
-			throw new AuException(ec, "*to create symbolic link.");
+			finally { if (trueLinkPath != null && filesystem.exists(linkPath)) move(linkPath, trueLinkPath, FIfExists.Delete); }
 		}
-
+		
 		/// <summary>
 		/// Loads unmanaged dll of correct 64/32 bitness.
 		/// </summary>
@@ -200,38 +208,38 @@ partial class filesystem {
 		/// </remarks>
 		internal unsafe static void LoadDll64or32Bit_(string fileName) {
 			//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
-
+			
 			string rel = (sizeof(nint) == 4 ? @"32\" : @"64\") + fileName;
 			//note: don't use osVersion.is32BitProcess here. Its static ctor makes this func slower at startup.
 			//	And folders.ThisAppBS is slow first time, therefore call AppContext.BaseDirectory directly.
-
+			
 			//var s1 = folders.ThisAppBS + rel;
 			var s1 = AppContext.BaseDirectory + rel;
-
+			
 			//app path
 			if (NativeLibrary.TryLoad(s1, out _)) return;
-
+			
 			//like DllImport. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
 			if (NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out _)) return;
-
+			
 			//dll path. Eg in PowerShell. Other scripting environments etc may copy the dll elsewhere; then need the environment variable.
 			var p = pathname.getDirectory(Assembly.GetCallingAssembly().Location, withSeparator: true) + rel;
 			if (NativeLibrary.TryLoad(p, out _)) return;
-
+			
 			//environment variable
 			p = Environment.GetEnvironmentVariable("Au.Path");
 			if (p != null && NativeLibrary.TryLoad(pathname.combine(p, rel), out _)) return;
-
+			
 			//extracted from resources?
 			if (NativeLibrary.TryLoad(folders.ThisAppTemp + rel, out _)) return;
-
+			
 			var bits = sizeof(nint) == 4 ? "32" : "64";
 			throw new DllNotFoundException($@"{fileName} must be in <this program>\{bits} or <this dll>\{bits} or <environment variable Au.Path>\{bits} or <folders.ThisAppTemp>\{bits}.
   This program: {folders.ThisApp}");
 		}
-
+		
 		#region garbage
-
+		
 #if false //currently not used
 		/// <summary>
 		/// Gets HKEY_CLASSES_ROOT registry key of file type or protocol.
@@ -287,7 +295,7 @@ partial class filesystem {
 			return path;
 		}
 #endif
-
+		
 #if false
 	//this is ~300 times slower than filesystem.move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished.
 	public static void renameFileOrDirectory(string path, string newName)
@@ -426,7 +434,7 @@ partial class filesystem {
 
 	}
 #endif
-
+		
 		//rejected: unreliable. Uses registry, where many mimes are incorrect and nonconstant.
 		//	Use System.Web.MimeMapping.GetMimeMapping. It uses a hardcoded list, although too small.
 		///// <summary>
@@ -444,7 +452,7 @@ partial class filesystem {
 		//public static bool getMimeContentType(string file, out string contentType, bool canAnalyseData = false)
 		//{
 		//	if(file.Ends(".cur", true)) { contentType = "image/x-icon"; return true; } //registered without MIME or with text/plain
-
+		
 		//	int hr = Api.FindMimeFromData(default, file, null, 0, null, 0, out contentType, 0);
 		//	if(hr != 0 && canAnalyseData) {
 		//		file = pathname.normalize(file);
@@ -459,7 +467,7 @@ partial class filesystem {
 		//	//	In MSDN it is documented incorrectly: "should be freed with the operator delete function".
 		//	//	To discover it, call HeapSize(GetProcessHeap) before and after CoTaskMemFree. It returns -1 when called after.
 		//}
-
+		
 		#endregion
 	}
 }

@@ -35,7 +35,7 @@ public struct FAttr {
 
 	/// <param name="attributes">Attributes, or 0 if does not exist or can't get attributes.</param>
 	/// <param name="exists">True if exists and can get attributes. False if does not exist. null if exists but can't get attributes.</param>
-	/// <param name="ntfsLink">Is a NTFS link, such as symbolic link or mounted folder.</param>
+	/// <param name="ntfsLink">Is a NTFS link, such as symbolic link or mount point.</param>
 	internal FAttr(FileAttributes attributes, bool? exists, bool ntfsLink) {
 		_a = attributes;
 		_exists = exists == true;
@@ -80,7 +80,7 @@ public struct FAttr {
 	public bool Directory => 0 != (_a & FileAttributes.Directory);
 
 	/// <summary>
-	/// It is a NTFS link, such as symbolic link, junction or mounted folder. Don't confuse with shell links (shortcuts).
+	/// It is a NTFS link, such as symbolic link, junction or mount point. Don't confuse with shell links (shortcuts).
 	/// If <see cref="File"/> true, the target is a file. If <see cref="Directory"/> true, the target is a directory.
 	/// </summary>
 	public bool IsNtfsLink => _ntfsLink;
@@ -142,7 +142,7 @@ public record struct FileProperties {
 	public DateTime LastAccessTimeUtc { get; set; }
 
 	/// <summary>
-	/// It is a NTFS link, such as symbolic link or mounted folder. Don't confuse with shell links (shortcuts).
+	/// It is a NTFS link, such as symbolic link or mount point. Don't confuse with shell links (shortcuts).
 	/// </summary>
 	public bool IsNtfsLink { get; set; }
 }
@@ -158,7 +158,7 @@ public enum FEFlags {
 	AllDescendants = 1,
 
 	/// <summary>
-	/// Also enumerate target directories of NTFS links, such as symbolic links and mounted folders. Use with <b>AllDescendants</b>.
+	/// Also enumerate target directories of NTFS links, such as symbolic links and mount points. Use with <b>AllDescendants</b>.
 	/// </summary>
 	RecurseNtfsLinks = 2,
 
@@ -310,11 +310,10 @@ public class FEFile {
 	/// <summary>
 	/// <msdn>WIN32_FIND_DATA</msdn>.dwReserved0.
 	/// </summary>
-	[EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
 	public uint ReparseTag { get; }
 
 	/// <summary>
-	/// It is a NTFS link, such as symbolic link or mounted folder. Don't confuse with shell links (shortcuts).
+	/// It is a NTFS link, such as symbolic link or mount point. Don't confuse with shell links (shortcuts).
 	/// </summary>
 	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
 
@@ -440,11 +439,13 @@ public enum CSLink {
 	/// <summary>
 	/// Junction to directory.
 	/// 
-	/// Junctions work like symbolic links, but there are differences when creating them:
+	/// Usually junctions work like symbolic links, but there are differences when creating them:
 	/// <br/>• Don't need admin privileges to create.
 	/// <br/>• Target must be full path. Fails if relative path.
 	/// <br/>• Target must be on this computer. Fails if on a network computer.
 	/// <br/>• Target must be directory. Fails if file.
+	///
+	/// Some programs interpret junctions differently. For example git adds the target directory.
 	/// </summary>
 	Junction,
 

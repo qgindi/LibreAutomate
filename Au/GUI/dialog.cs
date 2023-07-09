@@ -184,6 +184,8 @@ namespace Au {
 			/// <exception cref="ArgumentException"><b>screen</b> with <b>Handle</b>. Must be lazy or empty.</exception>
 			/// <example>
 			/// <code><![CDATA[
+			/// dialog.options.defaultScreen = screen.ofActiveWindow;
+			/// dialog.options.defaultScreen = screen.ofMouse;
 			/// dialog.options.defaultScreen = screen.index(1, lazy: true);
 			/// ]]></code>
 			/// </example>

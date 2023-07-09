@@ -127,7 +127,7 @@ class CiGoTo {
 				TypeKind.Enum => "enum",
 				TypeKind.Interface => "interface",
 				//TypeKind.Delegate => "delegate " + ts.DelegateInvokeMethod?.ReturnType.GetShortName(), //never mind: can be generic or qualified. Rare.
-				TypeKind.Delegate => "delegate .+?",//TODO: test
+				TypeKind.Delegate => "delegate .+?",
 				_ => null
 			};
 			

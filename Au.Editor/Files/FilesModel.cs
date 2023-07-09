@@ -1315,7 +1315,8 @@ partial class FilesModel {
 						var newPath = newParentPath + name;
 						if (!TryFileOperation(() => {
 							if (action == 1) {
-								filesystem.more.createSymbolicLink(newPath, path, CSLink.JunctionOrSymlink, elevate: true);
+								filesystem.more.createSymbolicLink(newPath, path, CSLink.Directory, elevate: true);
+								//note: not JunctionOrSymlink. For junctions git adds the target dir. For symlinks just the link.
 							} else if (action == 2) {
 								filesystem.copy(path, newPath, FIfExists.Fail);
 							} else if (newPath != path) {

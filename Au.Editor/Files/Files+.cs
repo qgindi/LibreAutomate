@@ -110,6 +110,8 @@ class RepairWorkspace {
 			k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
 		}
 		
+		//--------------
+		
 		b.Marker(c_markerInfo).Text("These items represent files that already don't exist. You may want to delete them from the Files panel.").NL();
 		_Missing(rootFolder);
 		void _Missing(FileNode folder) {
@@ -134,6 +136,8 @@ class RepairWorkspace {
 			}
 		}
 		//note: don't use folder.Descendants(). It would also print files in missing folders.
+		
+		//--------------
 		
 		b.NL().Marker(c_markerInfo).Text("These files are in the workspace folder but not in the Files panel. You may want to import or delete them.").NL();
 		_clickedLinks.Clear();
@@ -167,6 +171,8 @@ class RepairWorkspace {
 			App.Model.ImportFiles(new[] { fp }, f, pos, dontPrint: true);
 		}
 		
+		//--------------
+		
 		List<(long size, FileNode f)> biggest = new();
 		_Biggest(rootFolder);
 		void _Biggest(FileNode folder) {
@@ -185,6 +191,94 @@ class RepairWorkspace {
 			}
 		}
 		
+		//--------------
+		
+		List<FileNode> folderLinks = null;
+		_FolderLinks(rootFolder);
+		void _FolderLinks(FileNode parent) {
+			foreach (var f in parent.Children()) {
+				if (f.IsFolder) {
+					if (!f.IsSymlink) _FolderLinks(f);
+					else (folderLinks ??= new()).Add(f);
+				}
+			}
+		}
+		if (folderLinks != null) {
+			b.NL().NL().Marker(c_markerInfo).Text(@"Folder links. You may want to change the NTFS link type *junction* to *symbolic link* or vice versa.
+Usually it does not matter, but for example git adds entire target folder if it's a junction (probably you don't want it).").NL();
+			foreach (var f in folderLinks) {
+				var linkPath = f.FilePath;
+				int type = filesystem.IsNtfsLink_(linkPath);
+				var st = type switch { 1 => "symbolic link", 2 => "junction", _ => "?" };
+				string target = null;
+				if (type != 0) {
+					if (!filesystem.more.getFinalPath(f.FilePath, out target)) st = "invalid " + st;
+				} else {
+					if (!filesystem.exists(linkPath)) continue;
+				}
+				b.NL().Link(f, f.ItemPath).Text($" --> {target ?? "?"}\r\n\tType: {st}.  ");
+				b.Link(() => _ChangeLinkType(f, target, type), type == 0 || target.NE() ? "Repair" : "Change").NL();
+			}
+			
+			void _ChangeLinkType(FileNode f, string target, int type) {
+				if (f.IsAlien) return;
+				string linkPath = f.FilePath, tempPath = null;
+				
+				if (type == 0) { //not a reparse point. If eg git-clone'd, probably it's a text file containing the target path.
+					string s = null;
+					switch (filesystem.exists(linkPath, true)) {
+					case 1:
+						s = filesystem.loadText(linkPath);
+						break;
+					}
+					if (s.NE() || s.Length > pathname.maxDirectoryPathLength || s.Any(o => pathname.isInvalidPathChar(o))) { print.it("Cannot convert. The file isn't a NTFS link."); return; }
+					s = s.Replace('/', '\\');
+					if (!dialog.showInput(out s, "Convert to symbolic link?", $"Link path: {linkPath}\n\nThe file isn't a NTFS link. It's a file containing this text. If it's the target path, click OK. Edit if need.", editText: s, owner: App.Wmain)) return;
+					tempPath = pathname.makeUnique(linkPath, true);
+					filesystem.move(linkPath, tempPath);
+					target = s;
+				} else if (target.NE()) { //eg downloaded from git in zip file
+					if (!dialog.showInput(out target, "Link target path", $"Link path: {linkPath}\n\nThe link is invalid. Its target path is unknown. Enter target path and click OK to repair the link.", owner: App.Wmain)) return;
+					type = 0;
+				}
+				
+				try { filesystem.more.createSymbolicLink(linkPath, target, type != 1 ? CSLink.Directory : CSLink.Junction, elevate: true, deleteOld: true); }
+				catch (Exception e1) {
+					print.it(e1.ToStringWithoutStack());
+					if (tempPath != null) { filesystem.move(tempPath, linkPath); tempPath = null; }
+				}
+				finally { if (tempPath != null) filesystem.delete(tempPath); }
+			}
+		}
+		
+		//--------------
+		
 		Panels.Found.SetResults(workingState, b);
 	}
+	
+	//rejected. Anyway git symlinks usually are broken.
+	//public static void FolderLinksNote() {
+	//	if (_DirHasJunctions(App.Model.Root)) {
+	//		Panels.Output.Scintilla.AaTags.AddLinkTag("+symlinkRepair", s => { if (s == "r") Repair(false); else App.Model.WSSett.ok_symlinks = true; });
+	//		print.warning($@"You may want to repair folder links. <fold>
+	//Some folder links in the workspace are NTFS links of type *junction*. You may want to change the type to *symbolic link*.
+	//Folder links are created when importing a folder as a link. Older LibreAutomate used junctions, now symbolic links, because it works better with git.
+	//<+symlinkRepair r>Repair...<>  <+symlinkRepair>Never mind<>
+	//</fold>", -1, "<>Note: ");
+	//	} else App.Model.WSSett.ok_symlinks = true;
+	
+	//	bool _DirHasJunctions(FileNode dir) {
+	//		foreach (var f in dir.Children()) {
+	//			if (f.IsFolder) {
+	//				if (f.IsSymlink) {
+	//					var path = f.FilePath;
+	//					if (filesystem.IsNtfsLink_(path) == 2 && filesystem.more.getFinalPath(path, out var target)) return true;
+	//				} else {
+	//					if (_DirHasJunctions(f)) return true;
+	//				}
+	//			}
+	//		}
+	//		return false;
+	//	}
+	//}
 }
