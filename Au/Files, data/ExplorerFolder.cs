@@ -39,11 +39,11 @@ public class ExplorerFolder {
 			var b = sw.Item(i) as _Api.IWebBrowserApp;
 			try {
 				var s = b.LocationURL;
-                if (s.NE()) {
-                    if (onlyFilesystem) continue;
-                } else {
+				if (s.NE()) {
+					if (onlyFilesystem) continue;
+				} else {
 					if (!s.Starts("file:///")) continue; //skip IE etc
-                }
+				}
 				var w = (wnd)b.HWND;
 				a.Add(new() { _b = b });
 			}
@@ -56,7 +56,7 @@ public class ExplorerFolder {
 	/// Calls <see cref="GetFolderPath"/>.
 	/// </summary>
 	public override string ToString() => GetFolderPath();
-
+	
 	/// <summary>
 	/// Gets folder path.
 	/// For non-filesystem folder gets string like <c>":: ITEMIDLIST"</c>; see <see cref="Pidl"/>.
@@ -90,12 +90,17 @@ public class ExplorerFolder {
 		var d = _b.Document as _Api.IShellFolderView;
 		var items = d?.SelectedItems();
 		if (items == null) return Array.Empty<string>();
-		var a = new string[items.Count];
-		for (int i = 0; i < a.Length; i++) {
-			var s = items.Item(i).Path;
-			a[i] = Pidl.ClsidToItemidlist_(s);
+		int n = items.Count;
+		var a = new List<string>(n);
+		for (int i = 0; i < n; i++) {
+			try {
+				var s = items.Item(i)?.Path;
+				if (!s.NE()) a.Add(Pidl.ClsidToItemidlist_(s));
+			}
+			catch {  }
+			//once: no selection, but items.Count returned 1, and items.Item(i) returned null. Could not reproduce after select-unselect.
 		}
-		return a;
+		return a.ToArray();
 	}
 	
 	class _Api {

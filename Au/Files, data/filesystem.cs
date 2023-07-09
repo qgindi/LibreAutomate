@@ -44,7 +44,7 @@ public static partial class filesystem {
 		properties.LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime);
 		properties.CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
 		properties.LastAccessTimeUtc = DateTime.FromFileTimeUtc(d.ftLastAccessTime);
-		if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsNtfsLink = 0 != _IsNtfsLink(path);
+		if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsNtfsLink = 0 != IsNtfsLink_(path);
 		return true;
 	}
 
@@ -115,7 +115,7 @@ public static partial class filesystem {
 		//note: NormalizeMinimally_ does not remove \ at the end. The API succeeds if "C:\x\dir\" but fails if "C:\x\file\" (it's good).
 
 		attr = Api.GetFileAttributes(path);
-		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != _IsNtfsLink(path);
+		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != IsNtfsLink_(path);
 		else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out ntfsLink)) return false;
 
 		if (!useRawPath && !pathname.isFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
@@ -123,11 +123,11 @@ public static partial class filesystem {
 	}
 
 	/// <summary>
-	/// Calls <b>FindFirstFile</b> to determine whether <i>path</i> is a NTFS link, such as symbolic link or mounted folder.
+	/// Calls API <b>FindFirstFile</b> to determine whether <i>path</i> is a NTFS link, such as symbolic link or mount point.
 	/// </summary>
 	/// <param name="path">Raw path (does not normalize).</param>
 	/// <returns>Returns -1 failed, 0 no, 1 symlink, 2 mount, 3 other.</returns>
-	static int _IsNtfsLink(string path) {
+	internal static int IsNtfsLink_(string path) {
 		var hfind = Api.FindFirstFile(path, out var fd);
 		if (hfind == (IntPtr)(-1)) return -1;
 		int R = fd.IsNtfsLink;
@@ -270,7 +270,7 @@ public static partial class filesystem {
 	/// 
 	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), <c>".."</c>, DOS path etc. Paths longer than <see cref="pathname.maxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
 	/// 
-	/// For NTFS links (symbolic links, mounted folders) gets link info, not target info.
+	/// For NTFS links (symbolic links, mount points) gets link info, not target info.
 	/// 
 	/// These errors are ignored:
 	/// 1. Missing target directory of a NTFS link.
@@ -520,7 +520,7 @@ public static partial class filesystem {
 				case FileIs_.AccessDenied:
 					break;
 				default:
-					if (more.isSameFile(path1, path2)) {
+					if (more.isSameFile(path1, path2, useSymlink: true)) {
 						//eg renaming "file.txt" to "FILE.txt"
 						Debug_.Print("same file");
 						//deleted = true;
@@ -965,7 +965,7 @@ public static partial class filesystem {
 			+ (dir ? ("   Children: " + string.Join(" | ", enumerate(path).Select(f => f.Name))) : null));
 		return ec;
 
-		//never mind: .NET also calls DeleteVolumeMountPoint if it is a mounted folder. Somehow only for recursed dirs.
+		//never mind: .NET also calls DeleteVolumeMountPoint if it is a mount point. Somehow only for recursed dirs.
 		//	But I did not find in MSDN doc that need to do it before calling removedirectory. I think OS should unmount automatically.
 		//	Tested on Win10, works without unmounting explicitly. Even Explorer updates its current folder without notification.
 	}

@@ -10,9 +10,12 @@ New cookbook recipes:
 Improved:
 - Source code search (the "Go to definition" command when the symbol is not in your code).
 - Some fonts.
+- When importing folders as links, now creates symbolic links instead of junctions. Because for a junction git adds entire target folder.
 - And more.
 
 Some new options in "Font, colors".
+
+Menu File -> Workspace -> Repair: displays biggest files. Displays folder links and can change the NTFS link type.
 
 ### Library
 New classes:
@@ -25,12 +28,14 @@ New members:
 - **wpfBuilder**: several new overloads.
 
 New parameters:
-- .
+- **filesystem.more.isSameFile**: *useSymlink**.
 
 Improved:
 - **internet.http** adds default header `"User-Agent: Au"`.
 - **AutotextTriggerArgs.Menu**: null adds separator.
 - **wpfBuilder.Padding** and **.Brush** support more element types.
+- **filesystem.more.createSymbolicLink** with *deleteOld* true now does not delete the old link if fails to create new.
+- **filesystem.more.createSymbolicLink** can create symbolic links without admin rights if in Windows Settings enabled developer mode.
 
 ### Bug fixes
 

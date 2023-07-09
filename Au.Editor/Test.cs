@@ -40,23 +40,21 @@
 #pragma warning disable 169
 
 static unsafe class Test {
+	
 	public static void FromMenubar() {
-		var m = new MemoryStream();
-		m.WriteByte(1);
-		m.Dispose();
-
+		
 		//var d = Panels.Editor.ActiveDoc;
-
+		
 		//for (int i = 16; i < 32; i++) {
 		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");
 		//	//d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_PLAIN);
 		//	d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_COLOUR);
 		//	d.aaaSetString(SCI_SETREPRESENTATIONCOLOUR, $"{(char)i}", 0xC0C0C0);
 		//}
-
+		
 		//Cpp.Cpp_Test();
 	}
-
+	
 	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
@@ -69,12 +67,12 @@ static unsafe class Test {
 		}
 	}
 	static bool s_debug2;
-
+	
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();
-
+		
 		//	//timer.every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;

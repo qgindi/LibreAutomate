@@ -155,4 +155,6 @@ record WorkspaceSettings : JSettings {
 	public FilesModel.UserData[] users;
 	
 	public string ci_skipFolders;
+	
+	//public bool ok_symlinks;
 }
