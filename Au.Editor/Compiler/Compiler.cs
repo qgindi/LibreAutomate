@@ -415,11 +415,10 @@ partial class Compiler {
 				//}}");
 			}
 			
-			if (_meta.Role is MCRole.miniProgram or MCRole.exeProgram) {
-				sb.AppendLine($"[assembly: Au.Types.PathInWorkspace(\"{_meta.MainFile.f.ItemPath.Escape()}\")]");
-				if (_meta.Role == MCRole.exeProgram) {
-					sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(); }}");
-				}
+			var fm = _meta.MainFile.f;
+			sb.AppendLine($"[assembly: Au.Types.PathInWorkspace(@\"{fm.ItemPath}\", @\"{fm.FilePath}\")]");
+			if (_meta.Role == MCRole.exeProgram) {
+				sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(); }}");
 			}
 			
 			string code = sb.ToString(); //print.it(code);

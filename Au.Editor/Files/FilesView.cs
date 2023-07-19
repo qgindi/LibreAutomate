@@ -109,7 +109,7 @@ partial class FilesModel {
 					bool no = false;
 					foreach (FileNode v in nodes) {
 						if (d.intoFolder) {
-							no = v == target;
+							no = v == target || target.IsDescendantOf(v);
 						} else {
 							no = target.IsDescendantOf(v);
 						}

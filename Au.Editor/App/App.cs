@@ -316,8 +316,6 @@ static partial class App {
 				
 				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
 			}
-			
-			//if (!App.Model.WSSett.ok_symlinks) RepairWorkspace.FolderLinksNote();
 		}
 	}
 	

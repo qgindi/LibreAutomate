@@ -2,7 +2,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 
 class SciUndo : IDisposable {
-	public static SciUndo OfWorkspace => (App.Model.UndoContext ??= new SciUndo()) as SciUndo;
+	public static SciUndo OfWorkspace => (App.Model.UndoContext_ ??= new SciUndo()) as SciUndo;
 
 	sqlite _db;
 	SLTransaction _transaction; //of current record

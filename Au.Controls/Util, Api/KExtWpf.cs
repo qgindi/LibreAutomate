@@ -512,6 +512,13 @@ public static class KExtWpf {
 	}
 	
 	/// <summary>
+	/// Adds <b>TextBlock</b> with green background and some padding, and calls <see cref="wpfBuilder.Text"/>.
+	/// </summary>
+	public static void xAddInfoBlock(this wpfBuilder t, params object[] inlines) {
+		t.Add<TextBlock>().Wrap().Brush(0xf0f8e0).Padding(1, 2, 1, 4).Text(inlines);
+	}
+	
+	/// <summary>
 	/// Can be used like <see cref="wpfBuilder.Validation"/> with hotkey <b>TextBox</b> controls.
 	/// </summary>
 	public static wpfBuilder xValidateHotkey(this wpfBuilder b, bool errorIfEmpty = false) {

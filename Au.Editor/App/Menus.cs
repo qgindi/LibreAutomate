@@ -144,7 +144,10 @@ static class Menus {
 			}
 			
 			[Command("...")]
-			public static void Import_files() { App.Model.ImportFiles(); }
+			public static void Import_files() { App.Model.ImportFiles(false); }
+			
+			[Command("...")]
+			public static void Import_folder() { App.Model.ImportFiles(true); }
 		}
 		
 		[Command(target = "")]

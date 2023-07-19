@@ -15,7 +15,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	//Saved in file.
 	[Flags]
 	enum _Flags : byte {
-		Symlink = 1,
+		_obsolete_Symlink = 1,
 	}
 	
 	#endregion
@@ -43,18 +43,14 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	//this ctor is used when importing items from files etc.
 	//name is filename with extension.
-	//filePath is used when !isDir: 1. To detect type. 2. If isLink, to set link target.
+	//filePath is used: 1. To detect type (when !isDir). 2. If isLink, to set link target.
 	public FileNode(FilesModel model, string name, string filePath, bool isDir, bool isLink = false) {
 		_model = model;
 		_type = isDir ? FNType.Folder : _DetectFileType(filePath);
 		_SetName(name);
 		_id = _model.AddGetId(this);
-		if (isDir) {
-			if (isLink) _flags |= _Flags.Symlink;
-		} else {
-			if (isLink) _linkTarget = filePath;
-			//if (isLink) _linkTarget = folders.unexpandPath(filePath); //rejected. Too much trouble with it.
-		}
+		if (isLink) _linkTarget = filePath;
+		//if (isLink) _linkTarget = folders.unexpandPath(filePath); //rejected. Too much trouble with it.
 	}
 	
 	//this ctor is used when copying or importing a workspace.
@@ -86,13 +82,23 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				case "n": _SetName(v); break;
 				case "i": v.ToInt(out id); break;
 				case "f": _flags = (_Flags)v.ToInt(); break;
-				case "path": if (!IsFolder) _linkTarget = v; break;
+				case "path": _linkTarget = v; break;
 				case "icon": _icon = v; break;
 				case "run": v.ToInt(out _testScriptId); break;
 				}
 			}
 			if (_name == null) throw new ArgumentException("no 'n' attribute in XML");
 			_id = _model.AddGetId(this, id);
+			
+			if (_flags.Has(_Flags._obsolete_Symlink)) model.TreeLoaded_ += importing => { //before v0.17 for folder links used symlinks. Bad idea.
+				_flags &= ~_Flags._obsolete_Symlink;
+				var linkPath = FilePath;
+				filesystem.more.getFinalPath(linkPath, out _linkTarget);
+				if (!importing) {
+					Api.RemoveDirectory(linkPath);
+					_model.Save.WorkspaceLater(1);
+				}
+			};
 		}
 	}
 	
@@ -224,8 +230,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public string SciLink(bool path = false) => $"<open \"{IdStringWithWorkspace}\">{(path ? ItemPath : _name)}<>";
 	
 	/// <summary>
-	/// true if is an external file, ie not in this workspace folder.
-	/// But not if is a file in a symlink folder.
+	/// true if is a link to an external file or folder.
+	/// See also IsExternal.
 	/// </summary>
 	public bool IsLink => _linkTarget != null;
 	
@@ -235,21 +241,19 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public string LinkTarget => _linkTarget;
 	
 	/// <summary>
-	/// true if is a symlink to an external directory.
-	/// </summary>
-	public bool IsSymlink => _flags.Has(_Flags.Symlink);
-	
-	/// <summary>
-	/// true if <see cref="IsLink"/> or an ancestor or self is <see cref="IsSymlink"/>.
+	/// true if this or an ancestor is <see cref="IsLink"/>.
 	/// </summary>
 	public bool IsExternal {
 		get {
-			if (IsLink) return true;
-			for (var v = this; v != null; v = v.Parent) if (v.IsSymlink) return true;
+			for (var v = this; v != null; v = v.Parent) if (v.IsLink) return true;
 			return false;
 		}
 	}
-	//public bool IsExternal => IsLink || IsSymlink || Ancestors(noRoot: true).Any(static o => o.IsSymlink); //creates garbage
+	
+	/// <summary>
+	/// Gets the filename extension of the target file, like ".cs". Returns "" if folder.
+	/// </summary>
+	public string FileExt => IsFolder ? "" : pathname.getExtension(IsLink ? LinkTarget : Name);
 	
 	/// <summary>
 	/// Gets or sets custom icon name (like "*Pack.Icon color") or null.
@@ -313,15 +317,39 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	public string ItemPath => _ItemPath();
 	
+	//rejected: cache item path and file path.
+	//	This func compares the cached item path with ancestor names. No garbage when cached, but just 30-40% faster.
+	//	Another way: when an item renamed or moved, reset cached paths of that item and of its descendants.
+	//	But creating paths is fast and not so much garbage. And not so frequently used. Keeping paths in memory isn't good too.
+	//public string ItemPath2() {
+	//	if (_itemPath is string s) {
+	//		var root = Root;
+	//		int end = s.Length;
+	//		for (var f = this; f != root; f = f.Parent) {
+	//			if (f == null) { Debug.Assert(IsDeleted); return null; }
+	//			string name = f._name;
+	//			int len = name.Length, start = end - len;
+	//			//print.it(start, end);
+	//			if (start <= 0 || s[start - 1] != '\\' || !s.Eq(start, name)) break; //the slowest part. Tested: with for loop slower.
+	//			end = start - 1;
+	//			//print.it(end);
+	//		}
+	//		if (end == 0) return s;
+	//		print.it(end);
+	//	}
+	//	return _itemPath = _ItemPath();
+	//}
+	//string _itemPath;
+	
 	/// <summary>
 	/// Returns item path relative to <i>ancestor</i>, like @"Folder\Name.cs" or @"Name.cs".
 	/// Returns null if this item is deleted or not in <i>ancestor</i>.
 	/// If <i>ancestor</i> is null or <b>Root</b>, the result is the same as <b>ItemPath</b>.
 	/// </summary>
-	public string ItemPathIn(FileNode ancestor) => _ItemPath(null, ancestor);
+	public string ItemPathIn(FileNode ancestor) => _ItemPath(null, ancestor, noBS: true);
 	
 	[SkipLocalsInit]
-	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null) {
+	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null, bool noBS = false) {
 		int len = prefix.Lenn();
 		var root = ancestor ?? Root;
 		for (var f = this; f != root; f = f.Parent) {
@@ -335,7 +363,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			*(--e) = '\\';
 		}
 		if (e > p) prefix.CopyTo_(p);
-		if (ancestor != null && ancestor.Parent != null) return new string(p, 1, len - 1);
+		if (noBS && ancestor?.Parent != null) return new string(p, 1, len - 1);
 		return new string(p, 0, len);
 	}
 	
@@ -347,7 +375,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		get {
 			if (this == Root) return _model.FilesDirectory;
 			if (IsDeleted) return null;
+			
 			if (IsLink) return LinkTarget;
+			FileNode link = Parent; while (link != null && !link.IsLink) link = link.Parent;
+			if (link != null) return _ItemPath(link.LinkTarget, link);
+			
 			return _ItemPath(_model.FilesDirectory);
 		}
 	}
@@ -549,7 +581,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public object Image {
 		get {
 			var s = CustomIconName ?? (IsOtherFileType ? FilePath : GetFileTypeImageSource(FileType, _isExpanded));
-			if (IsLink || IsSymlink) return new object[] { s, "link:" };
+			if (IsLink) return new object[] { s, "link:" };
 			return s;
 		}
 	}
@@ -888,7 +920,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public bool FileRename(string name) {
 		name = pathname.correctName(name);
 		if (!IsFolder) {
-			var ext = pathname.getExtension(_name);
+			var ext = FileExt;
 			if (ext.Length > 0) if (name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
 		}
 		if (name == _name) return true;
@@ -901,6 +933,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_SetName(name);
 		_model.Save.WorkspaceLater();
 		FilesModel.Redraw(this, remeasure: true, renamed: true);
+		Compiler.Uncache(this, andDescendants: true);
 		CodeInfo.FilesChanged();
 		return true;
 	}
@@ -953,6 +986,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		//move tree node
 		Remove();
 		Common_MoveCopyNew(target, pos);
+		Compiler.Uncache(this, andDescendants: true);
 		
 		return true;
 	}

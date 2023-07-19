@@ -177,6 +177,7 @@ partial class MainWindow : Window {
 				_appActivatedTimer.After(250);
 			} else {
 				_appActivatedTimer?.Stop();
+				App.Model.Save.AllNowIfNeed();
 			}
 			break;
 		case Api.WM_SYSCOMMAND when (wParam & 0xFFF0) == Api.SC_CLOSE:
