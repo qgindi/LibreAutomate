@@ -248,7 +248,7 @@ ModelManifest.xml
 
 
 # To delete files or folders from git:
-# In Team Explorer pane click Actions link and open VS command prompt.
+# In Git pane click [...] and open command prompt.
 # Execute git rm. Example: git rm -r --cached "folder/subfolder/"
-# The -r means recursively. The --cached meand don't delete local files/folders. It's safer to delete them manually.
+# The -r means recursively. The --cached means don't delete local files/folders. It's safer to delete them manually.
 # Then edit this .gitignore file if need to prevent adding again.

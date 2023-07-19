@@ -243,11 +243,9 @@ Folder sizes (MB):
 		void _Links(StringBuilder b) {
 			int n = 0;
 			foreach (var f in App.Model.Root.Descendants()) {
-				if (f.IsLink || f.IsSymlink) {
+				if (f.IsLink) {
 					if (n++ == 0) b.AppendLine("Links to external files and folders will be invalid on other computers:");
-					string s = f.FilePath, s2 = null;
-					if (f.IsSymlink) { filesystem.more.getFinalPath(s, out s); s2 = "Folder "; }
-					b.Append($"\t{s2}{f.SciLink(path: true)}  ->  <explore>{s}<>\r\n");
+					b.Append($"\t{(f.IsFolder ? "Folder " : null)}{f.SciLink(path: true)}  ->  <explore>{f.FilePath}<>\r\n");
 				}
 			}
 		}
@@ -261,12 +259,11 @@ Folder sizes (MB):
 			bool bad = filesystem.more.comparePaths(_dirPortableApp, _dirWorkspace) is CPResult.AContainsB or CPResult.BContainsA or CPResult.Same;
 			if (!bad) {
 				foreach (var f in App.Model.Root.Descendants()) {
-					if (f.IsLink || f.IsSymlink) {
+					if (f.IsLink) {
 						var s = f.FilePath;
 						if (filesystem.more.comparePaths(_dirPortableApp, s) is CPResult.AContainsB or CPResult.BContainsA or CPResult.Same) {
 							if (!bad) print.it("Links to portable:");
 							bad = true;
-							if (f.IsSymlink) filesystem.more.getFinalPath(s, out s);
 							print.it($"<>{f.SciLink(path: true)}  ->  <explore>{s}<>");
 						}
 					}

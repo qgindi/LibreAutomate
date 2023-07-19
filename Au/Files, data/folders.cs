@@ -477,26 +477,38 @@ namespace Au {
 			if (path.Starts(@"\\")) return DriveType.Network; //GetDriveType does not support it. DriveInfo throws exception.
 			return (DriveType)Api.GetDriveType(path);
 		}
-
+		
+		#if true
 		/// <summary>
-		/// Gets folder path of caller's source code file.
+		/// Gets folder path of the caller source code file.
 		/// </summary>
 		/// <param name="f_">[](xref:caller_info)</param>
-		/// <remarks>
-		/// This is complete code of this function:
-		/// <code><![CDATA[
-		/// public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
-		/// ]]></code>
-		/// 
-		/// In the same way you can get file path and text:
-		/// <code><![CDATA[
-		/// static string _SourceFile([CallerFilePath] string f_ = null) => f_;
-		/// 
-		/// static string _SourceCode([CallerFilePath] string f_ = null) => filesystem.loadText(f_);
-		/// ]]></code>
-		/// </remarks>
 		/// <seealso cref="CallerFilePathAttribute"/>
+		/// <seealso cref="script.sourcePath(string)"/>
 		public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
+
+		/// <summary>
+		/// Gets folder path of the main source code file of this program or of a library.
+		/// </summary>
+		/// <param name="asm">An assembly compiled by LibreAutomate. If null, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+		/// <seealso cref="script.sourcePath(bool, Assembly)"/>
+		public static FolderPath sourceCodeMain(Assembly asm = null) => new(pathname.getDirectory(script.sourcePath(false, asm)));
+		#else
+		/// <summary>
+		/// Gets folder path of the caller source code file.
+		/// </summary>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <seealso cref="CallerFilePathAttribute"/>
+		/// <seealso cref="script.sourcePath(bool, string)"/>
+		public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
+
+		/// <summary>
+		/// Gets folder path of the main source code file of this program or of a library.
+		/// </summary>
+		/// <param name="asm">An assembly compiled by LibreAutomate. If null, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+		/// <seealso cref="script.sourcePath(Assembly, bool, bool)"/>
+		public static FolderPath sourceCodeMain(Assembly asm = null) => new(script.sourcePath(asm, folder: true));
+		#endif
 
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.

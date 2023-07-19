@@ -8,14 +8,12 @@ New cookbook recipes:
 - .
 
 Improved:
+- Does not use NTFS links for folders imported as links.
 - Source code search (the "Go to definition" command when the symbol is not in your code).
 - Some fonts.
-- When importing folders as links, now creates symbolic links instead of junctions. Because for a junction git adds entire target folder.
 - And more.
 
-Some new options in "Font, colors".
-
-Menu File -> Workspace -> Repair: displays biggest files. Displays folder links and can change the NTFS link type.
+Options -> Font, colors: output font, italic.
 
 ### Library
 New classes:
@@ -25,7 +23,9 @@ New classes:
 New members:
 - **elm.uiaCN**. Also **elm** and **elmFinder** functions that support `uiaid` now also support `uiacn`.
 - **HttpResponseMessage** extension methods: **Download**, **DownloadAsync**.
-- **wpfBuilder**: several new overloads.
+- **wpfBuilder**: **Wrap**, and several new overloads of other functions.
+- **folders.sourceCodeMain**.
+- **script.sourcePath**.
 
 New parameters:
 - **filesystem.more.isSameFile**: *useSymlink**.
@@ -36,6 +36,7 @@ Improved:
 - **wpfBuilder.Padding** and **.Brush** support more element types.
 - **filesystem.more.createSymbolicLink** with *deleteOld* true now does not delete the old link if fails to create new.
 - **filesystem.more.createSymbolicLink** can create symbolic links without admin rights if in Windows Settings enabled developer mode.
+- **Hash.MD5Context.Add**: no exception when data is empty.
 
 ### Bug fixes
 

@@ -156,5 +156,9 @@ record WorkspaceSettings : JSettings {
 	
 	public string ci_skipFolders;
 	
-	//public bool ok_symlinks;
+	public record class git_t {
+		public bool use;
+		public string repoUrl, sharedGit;
+	}
+	public git_t git = new();
 }

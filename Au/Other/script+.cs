@@ -40,15 +40,18 @@ public enum UExcept {
 }
 
 /// <summary>
-/// The default compiler adds this attribute to the main assembly if role is miniProgram or exeProgram.
+/// The default compiler adds this attribute to the assembly.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
 public sealed class PathInWorkspaceAttribute : Attribute {
-	/// <summary>Path of main file in workspace.</summary>
+	/// <summary>Path of main source file in workspace, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.</summary>
 	public readonly string Path;
+	
+	/// <summary>Full path of main source file.</summary>
+	public readonly string FilePath;
 
 	///
-	public PathInWorkspaceAttribute(string path) { Path = path; }
+	public PathInWorkspaceAttribute(string path, string filePath) { Path = path; FilePath = filePath; }
 }
 
 /// <summary>

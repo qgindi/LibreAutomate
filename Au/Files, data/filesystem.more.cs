@@ -11,6 +11,7 @@ partial class filesystem {
 		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="useSymlink">If a path is of a symbolic link, use the link. If false, uses its target; for example, returns false if the target doesn't exist.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <seealso cref="comparePaths(string, string, bool, bool)"/>
 		public static bool isSameFile(string path1, string path2, bool useSymlink = false) {
 			using var h1 = _OpenFileHandleForFileInfo(path1, useSymlink); if (h1.Is0) return false;
@@ -27,6 +28,7 @@ partial class filesystem {
 		/// <param name="path">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="fileId"></param>
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <b>FileId</b> of the link, not of its target.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// Calls API <msdn>GetFileInformationByHandle</msdn>.
 		/// 
@@ -55,6 +57,7 @@ partial class filesystem {
 		/// <param name="result">Receives full path, or null if failed.</param>
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
 		/// <param name="format">Result format.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// Calls API <msdn>GetFinalPathNameByHandle</msdn>.
 		/// 
@@ -81,6 +84,7 @@ partial class filesystem {
 		/// <param name="pathB">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="ofSymlinkA">If <i>pathA</i> is of a symbolic link, get final path of the link, not of its target.</param>
 		/// <param name="ofSymlinkB">If <i>pathB</i> is of a symbolic link, get final path of the link, not of its target.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// Before comparing, calls <see cref="getFinalPath"/>, therefore paths can have any format.
 		/// Example: <c>@"C:\Test\"</c> and <c>@"C:\A\..\Test"</c> are equal.
@@ -112,7 +116,7 @@ partial class filesystem {
 		/// </summary>
 		/// <param name="path">Full path.</param>
 		/// <param name="flags"><b>Enumerate</b> flags.</param>
-		/// <exception cref="Exception"><see cref="enumerate"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="enumerate"/>. By default no exceptions if used full path and the directory exists.</exception>
 		/// <remarks>
 		/// This function is slow if the directory is large.
 		/// Don't use this function for files (throws exception) and drives (instead use <see cref="DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).

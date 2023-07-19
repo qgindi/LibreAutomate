@@ -369,7 +369,7 @@ class DProperties : KDialogWindow {
 		}
 		
 		if (sortByType) {
-			a = a.OrderBy(o => _GetFileExt(o.f)).ThenBy(o => o.s).ToList();
+			a = a.OrderBy(o => o.f.FileExt).ThenBy(o => o.s).ToList();
 		} else {
 			a = a.OrderBy(o => o.s).ToList();
 		}
@@ -378,7 +378,7 @@ class DProperties : KDialogWindow {
 		string prevExt = null;
 		foreach (var (f, s) in a) {
 			if (sortByType) {
-				var ext = _GetFileExt(f);
+				var ext = f.FileExt;
 				if (prevExt != null && !ext.Eqi(prevExt)) m.Separator();
 				prevExt = ext;
 			}
@@ -391,15 +391,13 @@ class DProperties : KDialogWindow {
 		if (pm == null) m.Show(owner: this);
 	}
 	
-	static string _GetFileExt(FileNode f) => pathname.getExtension(f.IsLink ? f.LinkTarget : f.Name);
-	
 	void _IconManifestSign_DropDownOpened(object sender, EventArgs e) {
 		var cb = sender as ComboBox;
 		cb.IsDropDownOpen = false;
 		
 		var ext = cb == icon ? ".ico" : cb == manifest ? ".manifest" : ".snk";
 		List<string> r = new();
-		_AddFromWorkspace(f => f.FileType == FNType.Other && _GetFileExt(f).Eqi(ext) ? f : null, r, cb == icon, cb, noInfo: true);
+		_AddFromWorkspace(f => f.FileType == FNType.Other && f.FileExt.Eqi(ext) ? f : null, r, cb == icon, cb, noInfo: true);
 		if (r.Count > 0) cb.Text = r[0];
 	}
 	

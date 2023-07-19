@@ -237,6 +237,9 @@ namespace Au.Types {
 		/// <summary>
 		/// Sets link text and action.
 		/// </summary>
+		/// <param name="text">Link text.</param>
+		/// <param name="action">Action to execute on click.</param>
+		/// <param name="bold">Bold font.</param>
 		public WBLink(string text, Action<Hyperlink> action, bool bold = false) : this(text, bold) {
 			Hlink.Click += (o, e) => action(o as Hyperlink);
 		}
@@ -245,7 +248,11 @@ namespace Au.Types {
 		/// Sets link text and target URL or file etc.
 		/// On click will call <see cref="run.itSafe"/>.
 		/// </summary>
-		public WBLink(string text, string urlOrPath, string args = null, bool bold = false) : this(text, _ => run.itSafe(urlOrPath, args)) { }
+		/// <param name="text">Link text.</param>
+		/// <param name="urlOrPath">URL or path for <see cref="run.itSafe"/>. If null, uses <i>text</i>.</param>
+		/// <param name="args"><i>args</i> for <b>run.itSafe</b>.</param>
+		/// <param name="bold">Bold font.</param>
+		public WBLink(string text, string urlOrPath = null, string args = null, bool bold = false) : this(text, _ => run.itSafe(urlOrPath ?? text, args)) { }
 	}
 }
 

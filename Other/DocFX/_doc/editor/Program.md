@@ -16,7 +16,7 @@ Here you edit automation scripts and other text files.
 
 Multiple files can be open, but only one is visible. The list of open files is in the Open panel.
 
-All changes are saved automatically after some time and also when closing etc. The Save button saves all changes immediately.
+All changes are saved automatically on these events: app deactivated, main window closed, timer. The Save button saves all changes immediately.
 
 ## Panels
 Panels and toolbars can be docked, floating or hidden.

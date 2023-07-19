@@ -1490,6 +1490,26 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
+	/// Sets <b>TextWrapping</b> property of the last added element.
+	/// Supports <b>TextBlock</b>, <b>TextBox</b> and <b>AccessText</b>.
+	/// </summary>
+	public wpfBuilder Wrap(TextWrapping wrapping) {
+		switch (Last) {
+		case TextBlock t: t.TextWrapping = wrapping; break;
+		case TextBox t: t.TextWrapping = wrapping; break;
+		case AccessText t: t.TextWrapping = wrapping; break;
+		default: throw new NotSupportedException("Wrap(): Last added must be TextBlock, TextBox or AccessText");
+		}
+		return this;
+	}
+	
+	/// <summary>
+	/// Sets <b>TextWrapping</b> property of the last added element = <b>TextWrapping.Wrap</b> if true (default), else or <b>TextWrapping.NoWrap</b>.
+	/// Supports <b>TextBlock</b>, <b>TextBox</b> and <b>AccessText</b>.
+	/// </summary>
+	public wpfBuilder Wrap(bool wrap = true) => Wrap(wrap ? TextWrapping.Wrap : TextWrapping.NoWrap);
+	
+	/// <summary>
 	/// Attempts to set focus to the last added element when it'll become visible.
 	/// </summary>
 	public wpfBuilder Focus() {

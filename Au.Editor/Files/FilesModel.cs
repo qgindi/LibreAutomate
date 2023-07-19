@@ -30,8 +30,9 @@ partial class FilesModel {
 	public readonly WorkspaceSettings WSSett;
 	readonly bool _importing;
 	readonly bool _initedFully;
-	internal object CompilerContext;
-	internal IDisposable UndoContext;
+	internal object CompilerContext_;
+	internal IDisposable UndoContext_;
+	internal event Action<bool> TreeLoaded_;
 	
 	/// <param name="file">Path of workspace tree file (files.xml).</param>
 	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
@@ -58,6 +59,7 @@ partial class FilesModel {
 		_nameMap = new(StringComparer.OrdinalIgnoreCase);
 		
 		Root = FileNode.LoadWorkspace(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
+		TreeLoaded_?.Invoke(_importing);
 		
 		if (!_importing) {
 			WSSett = WorkspaceSettings.Load(SettingsFile = WorkspaceDirectory + @"\settings.json");
@@ -89,7 +91,7 @@ partial class FilesModel {
 		}
 		Save?.Dispose();
 		DB?.Dispose();
-		UndoContext?.Dispose();
+		UndoContext_?.Dispose();
 		WSSett?.Dispose();
 		EditGoBack.DisableUI();
 	}
@@ -295,8 +297,17 @@ partial class FilesModel {
 	/// <param name="kind"></param>
 	public FileNode FindByFilePath(string path, FNFind kind = FNFind.Any) {
 		var d = FilesDirectory;
-		if (path.Starts(d, true) && path.Eq(d.Length, '\\')) return Root.FindDescendant(path[d.Length..], kind); //is in workspace folder
-		if (kind != FNFind.Folder) foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return KindFilter_(f, kind); //find link
+		if (path.PathStarts(d)) return Root.FindDescendant(path[d.Length..], kind); //is in workspace folder
+		
+		foreach (var f in Root.Descendants()) {
+			if (f.IsLink) {
+				if (path.Eqi(f.LinkTarget)) return KindFilter_(f, kind);
+				if (f.IsFolder) {
+					d = f.LinkTarget;
+					if (path.PathStarts(d)) return f.FindDescendant(path[d.Length..], kind);
+				}
+			}
+		}
 		return null;
 	}
 	
@@ -564,6 +575,7 @@ partial class FilesModel {
 			var m = new ContextMenu { PlacementTarget = TreeControl };
 			//m.ItemsSource = App.Commands[nameof(Menus.File)].MenuItem.Items; //shows menu but then closes on mouse over
 			App.Commands[nameof(Menus.File)].CopyToMenu(m);
+			var w = TreeControl.Hwnd.Window;
 			m.Closed += (_, _) => s_inContextMenu = false;
 			s_contextMenu = m;
 		}
@@ -669,8 +681,8 @@ partial class FilesModel {
 		
 		//confirmation
 		var text = string.Join("\n", a.Select(f => f.Name));
-		bool hasLinks = a.Any(o => o.Descendants(andSelf: true).Any(u => u.IsLink || u.IsSymlink));
-		bool hasNonlinks = a.Any(o => !(o.IsLink || o.IsSymlink));
+		bool hasLinks = a.Any(o => o.Descendants(andSelf: true).Any(u => u.IsLink));
+		bool hasNonlinks = a.Any(o => !o.IsLink);
 		var expandedText = (hasLinks, hasNonlinks) switch {
 			(true, true) => "Files will be deleted. Will use the Recycle Bin, if possible.\nLink targets will NOT be deleted.",
 			(true, false) => "The link will be deleted. Its target will NOT be deleted.",
@@ -699,12 +711,7 @@ partial class FilesModel {
 			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
 			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		} else {
-			string symlinkTarget = null;
-			if (f.IsSymlink) filesystem.more.getFinalPath(filePath, out symlinkTarget, format: FPFormat.PrefixNever);
-			
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
-			
-			if (symlinkTarget != null) print.it($"<>Info: The deleted item was a link to <explore>{symlinkTarget}<>");
 			
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		}
@@ -790,7 +797,6 @@ partial class FilesModel {
 			if (how is 3 or 4) {
 				var e = filesystem.exists(path, useRawPath: true);
 				if (!e) { print.it(f.IsFolder ? "The folder does not exist" : "The file does not exist"); continue; }
-				if (how == 4 && e.IsNtfsLink && e.Directory && filesystem.more.getFinalPath(path, out var s1, format: FPFormat.PrefixNever)) path = s1;
 			}
 			
 			switch (how) {
@@ -1152,17 +1158,23 @@ partial class FilesModel {
 				}
 				return;
 			}
-			ImportFiles(files, target, pos, copySilently: copy);
+			ImportFiles(files, target, pos, copy: copy);
 		}
 	}
 	
 	/// <summary>
-	/// Imports one or more files into the workspace.
+	/// Imports one or more files or folders into the workspace. Shows dialog to select.
 	/// </summary>
-	/// <param name="a">Files. If null, shows dialog to select files.</param>
-	public void ImportFiles(string[] a = null) {
-		if (a == null) if (!new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = "Import files" }.ShowOpen(out a)) return;
-		
+	public void ImportFiles(bool folder) {
+		var d = new FileOpenSaveDialog("{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDA}") { Title = folder ? "Import folder" : "Import files" };
+		if (d.ShowOpen(out string[] a, owner: TreeControl, selectFolder: folder))
+			ImportFiles(a);
+	}
+	
+	/// <summary>
+	/// Imports one or more files or folders into the workspace.
+	/// </summary>
+	public void ImportFiles(string[] a) {
 		var (target, pos) = _GetInsertPos();
 		ImportFiles(a, target, pos);
 	}
@@ -1175,7 +1187,7 @@ partial class FilesModel {
 	public void ImportWorkspace(string wsDirOrZip = null, (FileNode target, FNInsert pos)? where = null) {
 		try {
 			string wsDir, folderName;
-			bool isZip = wsDirOrZip.Ends(".zip") && filesystem.exists(wsDirOrZip).File, notWorkspace = false;
+			bool isZip = wsDirOrZip.Ends(".zip", true) && filesystem.exists(wsDirOrZip).File, notWorkspace = false;
 			
 			if (isZip) {
 				folderName = pathname.getNameNoExt(wsDirOrZip);
@@ -1193,7 +1205,7 @@ partial class FilesModel {
 			if (folder == null) return;
 			
 			if (notWorkspace) {
-				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNInsert.Inside, copySilently: true);
+				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNInsert.Inside, copy: true);
 			} else {
 				var m = new FilesModel(wsDir + @"\files.xml", importing: true);
 				var a = m.Root.Children().ToArray();
@@ -1241,18 +1253,21 @@ partial class FilesModel {
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 	
-	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copySilently = false, bool dontSelect = false, bool dontPrint = false) {
+	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copy = false, bool dontSelect = false, bool dontPrint = false) {
 		try {
 			a = a.Select(s => filesystem.more.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
 			if (a.Length == 0) return;
 			var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
 			
-			//need to detect files coming from the workspace dir. When copying to a symlink folder - from that folder.
-			var rootDir = newParent.Ancestors(andSelf: true, noRoot: true).FirstOrDefault(o => filesystem.exists(o.FilePath).IsNtfsLink)?.FilePath ?? FilesDirectory;
-			if (!filesystem.more.getFinalPath(rootDir, out rootDir, format: FPFormat.PrefixNever)) return;
-			//CONSIDER: folder symlink: later auto-update files in workspace when files added/removed not through this app.
+			//need to detect files coming from the workspace. Get path of the workspace files dir and target paths of all link folders.
+			var wsDirs = Root.Descendants()
+				.Where(o => o.IsLink && o.IsFolder)
+				.Select(o => filesystem.more.getFinalPath(o.LinkTarget, out var s, format: FPFormat.PrefixNever) ? s : null)
+				.OfType<string>() //where not null
+				.Prepend(FilesDirectory)
+				.ToArray();
 			
-			bool fromWorkspaceDir = false;
+			int fromWorkspaceDir = 0;
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
 				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
@@ -1260,25 +1275,34 @@ partial class FilesModel {
 					dialog.show("Files from Recycle Bin", s1, icon: DIcon.Info, owner: TreeControl, onLinkClick: e => run.itSafe(e.LinkHref));
 					return;
 				}
-				if (s.Eqi(rootDir) || (rootDir.Starts(s, true) && rootDir[s.Length] == '\\')) return; //s is rootDir or ancestor of rootDir
-				if (!fromWorkspaceDir) {
-					if (s.Starts(rootDir, true) && s[rootDir.Length] == '\\') fromWorkspaceDir = true;
-				}
-			}
-			int action;
-			if (copySilently) {
-				if (fromWorkspaceDir) {
-					dialog.showInfo("Files from workspace folder", "Ctrl not supported.", owner: TreeControl); //not implemented
+				if (wsDirs.FirstOrDefault(o => o.PathStarts(s, orEquals: true)) is { } s2) {
+					print.it($"<>Cannot import. The folder {(s2.Eqi(s) ? "already is" : "contains a folder that is")} in the workspace. {FindByFilePath(s2)?.SciLink(true)}");
 					return;
 				}
-				action = 2; //copy
-			} else if (fromWorkspaceDir) {
+				if (wsDirs.Any(o => s.PathStarts(o))) {
+					var f1 = FindByFilePath(s);
+					if (f1 != null) {
+						print.it($"<>Cannot import. The {(filesystem.exists(s, true).Directory ? "folder" : "file")} already is in the workspace. {f1?.SciLink(true)}");
+						return;
+					}
+					if (copy) return; //unlikely
+					
+					//repair workspace: import file that is in a workspace folder but not in the Files panel
+					fromWorkspaceDir++;
+				}
+			}
+			if (fromWorkspaceDir > 0 && fromWorkspaceDir < a.Length) return; //some files from workspace dir and some not. Unlikely.
+			
+			int action;
+			if (copy) {
+				action = 2;
+			} else if (fromWorkspaceDir > 0) {
 				action = 3; //move
 			} else {
 				var ab = new[] {
 					"1 Add as a link",
-					"2 Copy to the workspace folder",
-					"3 Move to the workspace folder",
+					"2 Copy to the workspace",
+					"3 Move to the workspace",
 					"0 Cancel"
 				};
 				action = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
@@ -1296,34 +1320,23 @@ partial class FilesModel {
 					if (!g.Exists || g.IsNtfsLink) continue;
 					bool isDir = g.Directory;
 					
-					if (fromWorkspaceDir) {
-						var relPath = path[FilesDirectory.Length..];
-						var fExists = this.Find(relPath);
-						if (fExists != null) {
-							fExists.FileMove(target, pos);
-							continue;
-						}
-					}
-					
 					FileNode k;
 					var name = pathname.getName(path);
-					if (!fromWorkspaceDir) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
+					if (fromWorkspaceDir == 0) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 					
-					if (action == 1 && !isDir) { //add as file link
-						k = new FileNode(this, name, path, isDir: false, isLink: true);
+					if (action == 1) { //link
+						k = new FileNode(this, name, path, isDir, isLink: true);
+						if (isDir) _AddDir(path, k);
 					} else {
 						var newPath = newParentPath + name;
 						if (!TryFileOperation(() => {
-							if (action == 1) {
-								filesystem.more.createSymbolicLink(newPath, path, CSLink.Directory, elevate: true);
-								//note: not JunctionOrSymlink. For junctions git adds the target dir. For symlinks just the link.
-							} else if (action == 2) {
+							if (action == 2) {
 								filesystem.copy(path, newPath, FIfExists.Fail);
 							} else if (newPath != path) {
 								filesystem.move(path, newPath, FIfExists.Fail);
 							}
 						})) continue;
-						k = new FileNode(this, name, newPath, isDir, isLink: action == 1);
+						k = new FileNode(this, name, newPath, isDir);
 						if (isDir) _AddDir(newPath, k);
 					}
 					target.AddChildOrSibling(k, pos, false);
@@ -1339,14 +1352,14 @@ partial class FilesModel {
 					if (nf + nd > 0) print.it($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
 				}
 			}
-			catch (Exception ex) { print.it(ex.Message); }
+			catch (Exception ex) { print.it(ex); }
 			Save.WorkspaceLater();
 			CodeInfo.FilesChanged();
 			
 			void _AddDir(string path, FileNode parent) {
 				foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 					bool isDir = u.IsDirectory;
-					var k = new FileNode(this, u.Name, u.FullPath, isDir, isLink: isDir && u.IsNtfsLink);
+					var k = new FileNode(this, u.Name, u.FullPath, isDir);
 					parent.AddChild(k);
 					if (isDir) _AddDir(u.FullPath, k);
 				}
@@ -1364,21 +1377,13 @@ partial class FilesModel {
 	/// <summary>
 	/// Adds to workspace 1 file (not folder) that exists in workspace folder in filesystem.
 	/// </summary>
-	public FileNode ImportFromWorkspaceFolder(string path, FileNode target, FNInsert pos) {
+	public FileNode ImportFileFromWorkspaceFolder(string path, FileNode target, FNInsert pos) {
 		FileNode R = null;
 		try {
-			if (!filesystem.exists(path, true).File) return null;
-			
-			var relPath = path[FilesDirectory.Length..];
-			var fExists = this.Find(relPath);
-			if (fExists != null) {
-				if (fExists.IsFolder) return null;
-				R = fExists;
-			} else {
-				var name = pathname.getName(path);
-				R = new FileNode(this, name, path, isDir: false);
-				target.AddChildOrSibling(R, pos, false);
-			}
+			if (!filesystem.exists(path, useRawPath: true).File) return null;
+			if (FindByFilePath(path) is { } f1) return f1.IsFolder ? null : f1;
+			R = new FileNode(this, pathname.getName(path), path, isDir: false);
+			target.AddChildOrSibling(R, pos, false);
 		}
 		catch (Exception ex) { print.it(ex.Message); }
 		Save.WorkspaceLater();
