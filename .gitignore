@@ -246,6 +246,8 @@ ModelManifest.xml
 !/_/Cookbook/files/
 !/_/Cookbook/files.xml
 
+*.bak
+
 
 # To delete files or folders from git:
 # In Git pane click [...] and open command prompt.
