@@ -24,10 +24,8 @@ partial class FilesModel {
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	internal readonly Dictionary<string, object> _nameMap;
-	readonly string _dbFile;
-	public readonly sqlite DB;
-	public readonly string SettingsFile;
 	public readonly WorkspaceSettings WSSett;
+	public readonly WorkspaceState State;
 	readonly bool _importing;
 	readonly bool _initedFully;
 	internal object CompilerContext_;
@@ -62,20 +60,8 @@ partial class FilesModel {
 		TreeLoaded_?.Invoke(_importing);
 		
 		if (!_importing) {
-			WSSett = WorkspaceSettings.Load(SettingsFile = WorkspaceDirectory + @"\settings.json");
-			
-			_dbFile = WorkspaceDirectory + @"\state.db";
-			try {
-				DB = new sqlite(_dbFile, sql:
-					//"PRAGMA journal_mode=WAL;" + //no, it does more bad than good
-					"CREATE TABLE IF NOT EXISTS _misc (key TEXT PRIMARY KEY, data TEXT);" +
-					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, top INTEGER, pos INTEGER, lines BLOB);"
-					);
-			}
-			catch (Exception ex) {
-				print.it($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack()}");
-			}
-			
+			WSSett = WorkspaceSettings.Load(WorkspaceDirectory + @"\settings.json");
+			State = new WorkspaceState(this);
 			folders.Workspace = new FolderPath(WorkspaceDirectory);
 			Environment.SetEnvironmentVariable("dll", DllDirectory);
 		}
@@ -90,7 +76,7 @@ partial class FilesModel {
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}
 		Save?.Dispose();
-		DB?.Dispose();
+		State?.Dispose();
 		UndoContext_?.Dispose();
 		WSSett?.Dispose();
 		EditGoBack.DisableUI();
@@ -421,6 +407,9 @@ partial class FilesModel {
 		Panels.Editor.Close(f);
 		f.IsSelected = false;
 		
+		//_StateCleanup();
+		State.Cleanup();
+		
 		if (isCurrent) {
 			if (activateOther) {
 				if (_openFiles.Count > 0) {
@@ -553,7 +542,7 @@ partial class FilesModel {
 		}
 		
 		fPrev?.UpdateControlRow();
-		_currentFile?.UpdateControlRow();
+		_currentFile.UpdateControlRow();
 		
 		_openFiles.Remove(f);
 		_openFiles.Insert(0, f);
@@ -704,7 +693,7 @@ partial class FilesModel {
 		
 		CloseFiles(e);
 		Uncut();
-		App.Model.EditGoBack.OnFileDeleted(f);
+		App.Model.EditGoBack.OnFileDeleted(f);//TODO: descendants
 		
 		string filePath = f.FilePath;
 		if (dontDeleteFile || f.IsLink) {
@@ -712,12 +701,13 @@ partial class FilesModel {
 			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		} else {
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
+			//TODO: add all paths to List, and delete finally in single call.
 			
-			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
+			//FUTURE: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		}
 		
 		foreach (var k in e) {
-			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { Debug_.Print(ex); }
+			State.EditorDelete(k);
 			Au.Compiler.Compiler.Uncache(k);
 			_idMap[k.Id] = null;
 			_nameMap.MultiRemove_(k.Name, k);
@@ -730,6 +720,7 @@ partial class FilesModel {
 		
 		Save.WorkspaceLater();
 		CodeInfo.FilesChanged();
+		//TODO: why these are not in DeleteSelected? And why this isn't its local function?
 		return true;
 	}
 	
@@ -741,49 +732,6 @@ partial class FilesModel {
 	//		After restarting were deleted files but not tree items. Tried to reopen the file, but failed, and no editor control was created.
 	//	COM wasn't used explicitly. Maybe because of Recycle Bin.
 	//	Then could not reproduce (after recompiling same code).
-	
-	//bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true, bool canDeleteLinkTarget = false) {
-	//	print.qm2.clear();
-	//	var e = f.Descendants(true);
-	
-	//	CloseFiles(e);
-	//	Uncut();
-	
-	//	if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
-	//		print.qm2.write("deleting files");
-	//		if (!TryFileOperation(() => filesystem.delete(f.FilePath, recycleBin), deletion: true)) return false;
-	//		print.qm2.write("ok");
-	//		//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
-	//	} else {
-	//		string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
-	//		print.it($"<>Info: {s1} <explore>{f.FilePath}<>");
-	//	}
-	
-	//	foreach (var k in e) {
-	//		print.qm2.write("deleting from DB", k);
-	//		print.qm2.write(f);
-	//		try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { Debug_.Print(ex); }
-	//		print.qm2.write("ok 1");
-	//		Au.Compiler.Compiler.Uncache(k);
-	//		_idMap[k.Id] = null;
-	//		_nameMap.MultiRemove_(k.Name, k);
-	//		k.IsDeleted = true;
-	//		print.qm2.write("ok 2");
-	//	}
-	//	print.qm2.write("db ok");
-	
-	//	f.Remove();
-	//	print.qm2.write(1);
-	//	UpdateControlItems();
-	//	print.qm2.write(2);
-	//	//FUTURE: call event to update other controls.
-	
-	//	Save.WorkspaceLater();
-	//	print.qm2.write(3);
-	//	CodeInfo.FilesChanged();
-	//	print.qm2.write(4);
-	//	return true;
-	//}
 	
 	/// <summary>
 	/// Opens the selected item(s) in our editor or in default app or selects in Explorer.

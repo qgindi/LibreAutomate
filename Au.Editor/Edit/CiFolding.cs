@@ -327,57 +327,41 @@ partial class SciCode {
 		} else if (os == _EOpenState.NewFileNoTemplate) {
 		} else {
 			//restore saved folding, markers, scroll position and caret position
-			var db = App.Model.DB; if (db == null) return;
-			try {
-				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?").Bind(1, _fn.Id);
-				if (p.Step()) {
-					int cp = aaaCurrentPos8;
-					int top = Math.Max(0, p.GetInt(0));
-					int pos = Math.Clamp(p.GetInt(1), 0, aaaLen8);
-					var a = p.GetList<int>(2);
-					if (a != null) {
-						_savedLinesMD5 = _Hash(a);
-						for (int i = a.Count; --i >= 0;) {
-							int v = a[i];
-							int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-							if (marker == 31) EFoldLine(line);
-							else Call(SCI_MARKERADDSET, line, 1 << marker);
-						}
-						if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, aaaLineFromPos(false, cp));
+			if (App.Model.State.EditorGet(_fn, out _sed)) {
+				int cp = aaaCurrentPos8;
+				if (_sed.fold != null) {
+					for (int i = _sed.fold.Length; --i >= 0;) EFoldLine(_sed.fold[i]);
+					if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, aaaLineFromPos(false, cp));
+				}
+				if (_sed.bookmark != null) {
+					foreach (var v in _sed.bookmark) Call(SCI_MARKERADDSET, v, c_markerBookmark);
+				}
+				if (_sed.breakpoint != null) {
+					foreach (var v in _sed.breakpoint) Call(SCI_MARKERADDSET, v, c_markerBreakpoint);
+				}
+				if (os != _EOpenState.Reopen) {
+					if (_sed.top != 0 || _sed.pos != 0) {
+						_sed.top = _sed.pos = 0;
+						App.Model.State.EditorSave(_fn, _sed, true, false);
 					}
-					if (top + pos > 0) {
-						if (os != _EOpenState.Reopen) {
-							db.Execute("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,0,0,?)", p => p.Bind(1, _fn.Id).Bind(2, a));
-						} else if (cp == 0) {
-							_savedTop = top;
-							_savedPos = pos;
-							
-							//workaround for:
-							//	When reopening a non-first document, scrollbar position remains at the top, although scrolls the view.
-							//	Scintilla calls SetScrollInfo(pos), but it does not work because still didn't call SetScrollInfo(max).
-							//	Another possible workaround would be a timer, but even 50 ms is too small.
-							Call(SCI_SETVSCROLLBAR, false);
-							Call(SCI_SETVSCROLLBAR, true);
-							
-							if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, Call(SCI_VISIBLEFROMDOCLINE, top));
-							if (pos <= aaaLen8) {
-								App.Model.EditGoBack.OnRestoringSavedPos();
-								aaaGoToPos(false, pos);
-							}
-							
-							//workaround for: in wrap mode SCI_SETFIRSTVISIBLELINE sets wrong line because still not wrapped.
-							//	Don't need when saving document line, not visible line.
-							//if (top > 0 && 0 != Call(SCI_GETWRAPMODE)) {
-							//	timer.after(10, _ => {
-							//		if (this == Panels.Editor.ActiveDoc && aaaCurrentPos8 == pos)
-							//			Call(SCI_SETFIRSTVISIBLELINE, top);
-							//	});
-							//}
+				} else {
+					int top = Math.Max(0, _sed.top), pos = Math.Clamp(_sed.pos, 0, aaaLen8);
+					if (top + pos > 0 && cp == 0) {
+						//workaround for:
+						//	When reopening a non-first document, scrollbar position remains at the top, although scrolls the view.
+						//	Scintilla calls SetScrollInfo(pos), but it does not work because still didn't call SetScrollInfo(max).
+						//	Another possible workaround would be a timer, but even 50 ms is too small.
+						Call(SCI_SETVSCROLLBAR, false);
+						Call(SCI_SETVSCROLLBAR, true);
+						
+						if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, Call(SCI_VISIBLEFROMDOCLINE, top));
+						if (pos <= aaaLen8) {
+							App.Model.EditGoBack.OnRestoringSavedPos();
+							aaaGoToPos(false, pos);
 						}
 					}
 				}
 			}
-			catch (SLException ex) { Debug_.Print(ex); }
 		}
 	}
 	
@@ -385,100 +369,45 @@ partial class SciCode {
 	_EOpenState _openState;
 	
 	/// <summary>
-	/// Saves folding, markers etc in database.
+	/// Saves folding, markers, cursor position, etc.
 	/// </summary>
-	internal void ESaveEditorData_() {
-		//CONSIDER: save styling and fold levels of the visible part of current doc. Then at startup can restore everything fast, without waiting for warmup etc.
-		//_TestSaveFolding();
-		//return;
-		
-		//never mind: should update folding if edited and did not fold until end. Too slow. Not important.
-		
+	internal void ESaveEditorData_(bool closingDoc) {
 		if (_openState < _EOpenState.FoldingDone) return; //if did not have time to open editor data, better keep old data than delete. Also if not a code file.
-		var db = App.Model.DB; if (db == null) return;
-		//var p1 = perf.local();
-		var a = new List<int>();
-		_GetLines(c_markerBookmark, a);
-		_GetLines(c_markerBreakpoint, a);
-		//p1.Next();
-		_GetLines(31, a);
-		//p1.Next();
-		var hash = _Hash(a);
-		//p1.Next();
-		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = aaaCurrentPos8;
-		if (top > 0) top = Call(SCI_DOCLINEFROMVISIBLE, top); //save document line, because visible line changes after changing wrap mode or resizing in wrap mode etc. Never mind: the top visible line may be not at the start of the document line.
-		if (top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
-			try {
-				//using var p = db.Statement("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,?,?,?)");
-				//p.Bind(1, _fn.Id).Bind(2, top).Bind(3, pos).Bind(4, a).Step();
-				db.Execute("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,?,?,?)", p => p.Bind(1, _fn.Id).Bind(2, top).Bind(3, pos).Bind(4, a));
-				_savedTop = top;
-				_savedPos = pos;
-				_savedLinesMD5 = hash;
-			}
-			catch (SLException ex) { Debug_.Print(ex); }
-		}
-		//p1.NW('D');
 		
-		// <summary>
-		// Gets indices of lines containing markers or contracted folding points.
-		// </summary>
-		// <param name="marker">If 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).</param>
-		// <param name="saved">Receives line indices | marker in high-order 5 bits.</param>
-		void _GetLines(int marker, List<int> a/*, int skipLineFrom = 0, int skipLineTo = 0*/) {
-			Debug.Assert((uint)marker < 32); //we have 5 bits for marker
+		var a = new List<int>();
+		var x = new WorkspaceState.Editor {
+			fold = _GetLines(31),
+			bookmark = _GetLines(c_markerBookmark),
+			breakpoint = _GetLines(c_markerBreakpoint),
+		};
+		if (!closingDoc) {
+			x.pos = aaaCurrentPos8;
+			x.top = Call(SCI_GETFIRSTVISIBLELINE);
+			if (x.top > 0) x.top = Call(SCI_DOCLINEFROMVISIBLE, x.top); //save document line, because visible line changes after changing wrap mode or resizing in wrap mode etc. Never mind: the top visible line may be not at the start of the document line.
+		}
+		
+		if (x.Equals(_sed, out bool changedState, out bool changedFolding)) return;
+		_sed = x;
+		App.Model.State.EditorSave(_fn, x, changedState, changedFolding);
+		
+		//Gets indices of lines containing markers or contracted folding points.
+		//If marker 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).
+		int[] _GetLines(int marker/*, int skipLineFrom = 0, int skipLineTo = 0*/) {
+			a.Clear();
 			for (int i = 0; ; i++) {
 				if (marker == 31) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
 				else i = Call(SCI_MARKERNEXT, i, 1 << marker);
-				if ((uint)i > 0x7FFFFFF) break; //-1 if no more; ensure we have 5 high-order bits for marker; max 134 M lines.
-				//if(i < skipLineTo && i >= skipLineFrom) continue;
-				a.Add(i | (marker << 27));
+				if (i < 0) break;
+				a.Add(i);
 			}
+			return a.Count > 0 ? a.ToArray() : null;
 		}
 	}
-	
-	//unsafe void _TestSaveFolding()
-	//{
-	//	//int n = aaaLineCount;
-	//	//for(int i = 0; i < n; i++) print.it(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
-	
-	//	var a = new List<POINT>();
-	//	for(int i = 0; ; i++) {
-	//		i = Call(SCI_CONTRACTEDFOLDNEXT, i);
-	//		if(i < 0) break;
-	//		int j = Call(SCI_GETLASTCHILD, i, -1);
-	//		//print.it(i, j);
-	//		a.Add((i, j));
-	//	}
-	
-	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
-	//	Sci_SetFoldLevels(SciPtr, 0, aaaLineCount - 1, 0, null);
-	//	timer.after(1000, _ => _TestRestoreFolding(a));
-	//}
-	
-	//unsafe void _TestRestoreFolding(List<POINT> lines)
-	//{
-	//	var a = new int[lines.Count * 2];
-	//	for(int i = 0; i < lines.Count; i++) {
-	//		var p = lines[i];
-	//		a[i * 2] = aaaLineStart(false, p.x);
-	//		a[i * 2 + 1] = aaaLineStart(false, p.y) | unchecked((int)0x80000000);
-	//	}
-	//	Array.Sort(a, (e1, e2) => (e1 & 0x7fffffff) - (e2 & 0x7fffffff));
-	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, aaaLineCount - 1, a.Length, ip);
-	//}
-	
-	int _savedTop, _savedPos;
-	Hash.MD5Result _savedLinesMD5;
-	
-	static Hash.MD5Result _Hash(List<int> a) {
-		if (a.Count == 0) return default;
-		Hash.MD5Context md5 = default;
-		foreach (var v in a) md5.Add(v);
-		return md5.Hash;
-	}
+	WorkspaceState.Editor _sed;
 	
 	public void EFoldLine(int line, bool unfold = false, bool andDescendants = false) {
+		if (!aaaFoldingLevel(line).isHeader) return;
+		
 		if (unfold) {
 			Call(andDescendants ? SCI_FOLDCHILDREN : SCI_FOLDLINE, line, 1);
 			return;
@@ -531,7 +460,7 @@ partial class SciCode {
 		
 		if (andDescendants) {
 			for (int last = Call(SCI_GETLASTCHILD, line, -1); ++line < last;) {
-				if (aaaFoldingLevel(line).isHeader) EFoldLine(line);
+				EFoldLine(line);
 			}
 		}
 	}
@@ -608,9 +537,9 @@ partial class SciCode {
 				a2.Add(v.line);
 			}
 			
-			//In some cases something changes current pos. Also scrolls and unfolds. May be bad styling.
+			//In some cases something changes current pos. Also scrolls and unfolds. Sometimes then bad styling.
 			//	Difficult to find the reason.
-			//	Workaround: hide in ascending order; show in descending order.
+			//	Workaround: hide/show in this order.
 			if (expand) {
 				for (int i = 0; i < a2.Count; i++) {
 					EFoldLine(a2[i], expand);

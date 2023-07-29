@@ -202,6 +202,7 @@ class CiText {
 		Debug_.PrintIf(tags is not IReadOnlyList<TaggedText>, "not IReadOnlyList");
 		var a = tags as IReadOnlyList<TaggedText> ?? tags.ToArray();
 		//print.it(a.Count);
+		//TODO: \t etc randomly not colored in interpolated strings.
 		bool inParameters = isParameters == true;
 		for (int i = 0; i < a.Count; i++) {
 			var v = a[i];

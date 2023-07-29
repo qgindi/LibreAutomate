@@ -1282,7 +1282,7 @@ public unsafe partial class KScintilla {
 			//print.it(_enc, bom, bomm, e);
 			
 			filesystem.save(file, temp => {
-				using var fs = File.OpenWrite(temp);
+				using var fs = File.Create(temp); //TODO: why was OpenWrite?
 				if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
 				if (e != null) { //rare
 					var bytes = e.GetBytes(k.aaaText); //convert encoding. aaaText likely gets cached text, fast

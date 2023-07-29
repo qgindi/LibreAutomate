@@ -131,7 +131,7 @@ class PanelEdit {
 		SciCode doc;
 		if (f == _activeDoc?.EFile) {
 			_activeDoc.ETempRanges_HidingOrClosingActiveDoc_();
-			App.Model.Save.TextNowIfNeed();
+			App.Model.Save.TextNowIfNeed(closingDoc: true);
 			doc = _activeDoc;
 			_activeDoc = null;
 			ActiveDocChanged?.Invoke();
@@ -154,6 +154,7 @@ class PanelEdit {
 	
 	/// <summary>
 	/// Closes all documents and destroys controls.
+	/// Called by FilesModel.UnloadingWorkspace_.
 	/// </summary>
 	public void CloseAll(bool saveTextIfNeed) {
 		_activeDoc?.ETempRanges_HidingOrClosingActiveDoc_();
@@ -169,8 +170,8 @@ class PanelEdit {
 		return _activeDoc?.ESaveText_(false) ?? true;
 	}
 	
-	public void SaveEditorData() {
-		_activeDoc?.ESaveEditorData_();
+	public void SaveEditorData(bool closingDoc) {
+		_activeDoc?.ESaveEditorData_(closingDoc);
 	}
 	
 	//public bool IsModified => _activeDoc?.IsModified ?? false;

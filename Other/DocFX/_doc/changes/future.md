@@ -9,6 +9,7 @@ New cookbook recipes:
 
 Improved:
 - Does not use NTFS links for folders imported as links.
+- Does not use locked files (state.db) in workspace folder.
 - Source code search (the "Go to definition" command when the symbol is not in your code).
 - Some fonts.
 - And more.
@@ -26,6 +27,7 @@ New members:
 - **wpfBuilder**: **Wrap**, and several new overloads of other functions.
 - **folders.sourceCodeMain**.
 - **script.sourcePath**.
+- **JSettings** properties: **NoAutoSave**, **NoAutoSaveTimer**.
 
 New parameters:
 - **filesystem.more.isSameFile**: *useSymlink**.
@@ -49,3 +51,4 @@ Editor:
 Library:
 - Fixed: **print.it** afraids some COM types.
 - Fixed the _r bug in documentation.
+- Fixed: when **ExtString.ToInt** fails, *numberEndIndex* isn't 0 if used flag **IsHexWithout0x**.

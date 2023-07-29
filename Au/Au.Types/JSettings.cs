@@ -54,9 +54,6 @@ namespace Au.Types {
 		/// <returns>An object of type T. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, prints error info in the output.</returns>
 		/// <param name="file">Full path of .json file. If null, does not load and will not save.</param>
 		/// <param name="useDefault">Use default settings, don't load from <i>file</i>. Delete <i>file</i> if exists.</param>
-		/// <remarks>
-		/// Will auto-save soon after a property changed.
-		/// </remarks>
 		protected static T Load<T>(string file, bool useDefault = false) where T : JSettings
 			=> (T)_Load(file, typeof(T), useDefault);
 		
@@ -72,7 +69,7 @@ namespace Au.Types {
 							var b = filesystem.loadBytes(file);
 							//using var p1 = perf.local(); //first time ~40 ms hot
 							//p1.Next('f');
-							R = JsonSerializer.Deserialize(b, type, s_jsOptions.Value) as JSettings;
+							R = JsonSerializer.Deserialize(b, type, SerializerOptions) as JSettings;
 							//p1.Next('d');
 						}
 					}
@@ -97,7 +94,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 			
 			if (file != null) {
 				R._file = file;
-				R._old = JsonSerializer.SerializeToUtf8Bytes(R, type, s_jsOptions.Value);
+				R._old = JsonSerializer.SerializeToUtf8Bytes(R, type, SerializerOptions);
 				//p1.Next('s');
 				
 				//autosave
@@ -106,20 +103,25 @@ $@"Failed to load settings from {file}. Will use default settings.
 						for (; ; ) {
 							Thread.Sleep(2000);
 							//Debug_.MemorySetAnchor_();
-							_SaveAllIfNeed();
+							_SaveAllIfNeed(true);
 							//Debug_.MemoryPrint_(); //editor ~4 KB
 						}
 					}, sta: false);
 					
-					process.thisProcessExit += _ => _SaveAllIfNeed(); //info: .NET does not call finalizers when process exits
+					process.thisProcessExit += _ => _SaveAllIfNeed(false); //info: .NET does not call finalizers when process exits
 				}
 				lock (s_list) s_list.Add(R);
 			}
 			
 			return R;
 			
-			static void _SaveAllIfNeed() {
-				lock (s_list) foreach (var v in s_list) v.SaveIfNeed();
+			static void _SaveAllIfNeed(bool timer) {
+				lock (s_list)
+					foreach (var v in s_list) {
+						if (v.NoAutoSave) continue;
+						if (timer && v.NoAutoSaveTimer) continue;
+						v.SaveIfNeed();
+					}
 			}
 		}
 		
@@ -132,7 +134,8 @@ $@"Failed to load settings from {file}. Will use default settings.
 		///
 		protected void Dispose(bool disposing) {
 			lock (s_list) if (!s_list.Remove(this)) return;
-			SaveIfNeed();
+			if (!NoAutoSave) SaveIfNeed();
+			_file = null;
 		}
 		
 		//repeated serialization speed with same options ~50 times better, eg 15000 -> 300 mcs cold. It's documented. Can be shared by multiple types.
@@ -148,6 +151,23 @@ $@"Failed to load settings from {file}. Will use default settings.
 		});
 		
 		/// <summary>
+		/// Use but don't modify.
+		/// </summary>
+		internal static JsonSerializerOptions SerializerOptions => s_jsOptions.Value;
+		
+		/// <summary>
+		/// Don't automatically call <see cref="SaveIfNeed"/>.
+		/// If false (default), calls every 2 s (unless <see cref="NoAutoSaveTimer"/> true), when disposing, and when process exits.
+		/// </summary>
+		protected bool NoAutoSave { get; set; }
+		
+		/// <summary>
+		/// Don't call <see cref="SaveIfNeed"/> every 2 s.
+		/// Default false.
+		/// </summary>
+		protected bool NoAutoSaveTimer { get; set; }
+		
+		/// <summary>
 		/// Saves now if need.
 		/// Don't need to call explicitly. Autosaving is every 2 s, also on process exit and <b>Dispose</b>.
 		/// </summary>
@@ -155,7 +175,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 			if (_file == null) return;
 			try {
 				//using var p1 = perf.local();
-				var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), s_jsOptions.Value);
+				var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), SerializerOptions);
 				//p1.Next();
 				bool same = b.AsSpan().SequenceEqual(_old);
 				//p1.Next();

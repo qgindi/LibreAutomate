@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 /// <summary>
 /// Program settings.
 /// folders.ThisAppDocuments + @".settings\Settings.json"
@@ -142,7 +144,7 @@ record AppSettings : JSettings {
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel;
-	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end
+	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end //CONSIDER: save in separate file. Then the size limit can be bigger.
 }
 
 /// <summary>
@@ -155,10 +157,4 @@ record WorkspaceSettings : JSettings {
 	public FilesModel.UserData[] users;
 	
 	public string ci_skipFolders;
-	
-	public record class git_t {
-		public bool use;
-		public string repoUrl, sharedGit;
-	}
-	public git_t git = new();
 }

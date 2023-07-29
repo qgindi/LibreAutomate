@@ -66,7 +66,7 @@ class CiGoTo {
 			_canGoTo = true;
 			_assembly = asm.Name;
 			
-			if (asm.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "AssemblyMetadataAttribute" && "RepositoryUrl" == o.ConstructorArguments[0].Value as string)?.ConstructorArguments[1].Value is string s) {
+			if (asm.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "AssemblyMetadataAttribute" && "RepositoryUrl" == o.ConstructorArguments[0].Value as string)?.ConstructorArguments[1].Value is string s && s.Length > 0) {
 				if (s.Starts("git:")) s = s.ReplaceAt(0, 3, "https"); //eg .NET
 				if (s.Starts("https://github.com/")) _repo = s[19..];
 				Debug_.PrintIf(_repo.NE(), s);
@@ -132,9 +132,16 @@ class CiGoTo {
 			};
 			
 			_namespace = ts.ContainingNamespace.QualifiedName();
-			_alt = ts.ToString(); //for source.dot.net need exact generic, preferably fully qualified, like Namespace.List<T>, but without in/out like ToNameDisplayString
+			
+			//for source.dot.net need exact generic, preferably fully qualified, like Namespace.List<T>
+			_alt = ts.ToDisplayString(s_sdnSymbolFormat);
 		}
 	}
+	
+	static SymbolDisplayFormat s_sdnSymbolFormat = new(
+		   globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+		   typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+		   genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters);
 	
 	string _GetLinkData() {
 		if (!_canGoTo) return null;

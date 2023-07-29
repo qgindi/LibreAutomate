@@ -29,7 +29,7 @@ partial class FilesModel {
 		}
 		
 		/// <summary>
-		/// Sets timer to save state.xml later, if not already set.
+		/// Sets timer to save state later, if not already set.
 		/// </summary>
 		/// <param name="afterS">Timer time, seconds.</param>
 		public void StateLater(int afterS = 30) {
@@ -53,7 +53,7 @@ partial class FilesModel {
 		}
 		
 		/// <summary>
-		/// If state.xml is set to save (StateLater), saves it now.
+		/// If state is set to save (StateLater), saves it now.
 		/// </summary>
 		public void StateNowIfNeed() {
 			if (_stateAfterS > 0) _SaveStateNow();
@@ -63,10 +63,10 @@ partial class FilesModel {
 		/// If editor text is set to save (TextLater), saves it now.
 		/// Also saves markers, folding, etc, unless onlyText is true.
 		/// </summary>
-		public void TextNowIfNeed(bool onlyText = false) {
+		public void TextNowIfNeed(bool onlyText = false, bool closingDoc = false) {
 			if (_textAfterS > 0) _SaveTextNow();
 			if (onlyText) return;
-			Panels.Editor?.SaveEditorData();
+			Panels.Editor?.SaveEditorData(closingDoc);
 		}
 		
 		void _SaveWorkspaceNow() {
@@ -77,8 +77,8 @@ partial class FilesModel {
 		
 		void _SaveStateNow() {
 			_stateAfterS = 0;
-			Debug.Assert(_model != null); if (_model == null) return;
-			if (!_model._SaveStateNow()) _stateAfterS = 300; //if fails, retry later
+			Debug.Assert(_model != null);
+			_model?._SaveStateNow();
 		}
 		
 		void _SaveTextNow() {
@@ -93,8 +93,10 @@ partial class FilesModel {
 		/// </summary>
 		public void AllNowIfNeed() {
 			WorkspaceNowIfNeed();
-			StateNowIfNeed();
+			_model.State.SuspendSave(true);
 			TextNowIfNeed();
+			StateNowIfNeed();
+			_model.State.SuspendSave(false);
 		}
 		
 		void _Program_Timer1s() {
@@ -122,62 +124,28 @@ partial class FilesModel {
 	/// <summary>
 	/// Used only by the Save class.
 	/// </summary>
-	bool _SaveStateNow() {
-		if (DB == null) return true;
-		try {
-			using var trans = DB.Transaction();
-			DB.Execute("REPLACE INTO _misc VALUES ('expanded',?)",
-				string.Join(" ", Root.Descendants().Where(n => n.IsExpanded).Select(n => n.IdString)));
-			
-			using (new StringBuilder_(out var b)) {
-				b.Append(_openFiles.IndexOf(_currentFile));
-				foreach (var v in _openFiles) b.Append(' ').Append(v.IdString); //FUTURE: also save current position and scroll position, eg "id.pos.scroll"
-				DB.Execute("REPLACE INTO _misc VALUES ('open',?)", b.ToString());
-			}
-			
-			trans.Commit();
-			return true;
-		}
-		catch (SLException ex) {
-			Debug_.Print(ex);
-			return false;
-		}
+	void _SaveStateNow() {
+		State.FilesSave(_openFiles, Root.Descendants().Where(n => n.IsExpanded));
 	}
 	
 	/// <summary>
 	/// Called at the end of opening this workspace.
 	/// </summary>
 	public void LoadState(bool expandFolders = false, bool openFiles = false) {
-		if (DB == null) return;
 		try {
 			Save.LoadingState = true;
 			
 			if (expandFolders) {
-				if (DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !s.NE()) {
-					foreach (var v in s.Segments(" ")) {
-						var f = FindById(s[v.Range]);
-						//if (f != null) TreeControl.Expand(f, true);
-						if (f != null) f.SetIsExpanded(true);
-					}
-				}
+				foreach (var id in State.FilesGet(1))
+					if (FindById(id) is { } f)
+						f.SetIsExpanded(true);
 			}
 			
 			if (openFiles) {
-				if (DB.Get(out string s, "SELECT data FROM _misc WHERE key='open'") && !s.NE()) {
-					//format: indexOfActiveDocOrMinusOne id1 id2 ...
-					int i = -2, iActive = s.ToInt();
-					FileNode fnActive = null;
-					//perf.first();
-					foreach (var v in s.Segments(" ")) {
-						i++; if (i < 0) continue;
-						var fn = FindById(s[v.Range]); if (fn == null) continue;
-						_openFiles.Add(fn);
-						if (i == iActive) fnActive = fn;
-					}
-					//perf.next();
-					if (fnActive == null || !SetCurrentFile(fnActive)) _UpdateOpenFiles(null); //disable Previous command
-					//perf.nw();
+				foreach (var id in State.FilesGet(0)) {
+					if (FindById(id) is { } f) _openFiles.Add(f);
 				}
+				if (_openFiles.Count == 0 || !SetCurrentFile(_openFiles[0])) _UpdateOpenFiles(null); //disable Previous command
 			}
 		}
 		catch (Exception ex) { Debug_.Print(ex); }
