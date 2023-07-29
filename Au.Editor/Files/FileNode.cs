@@ -1014,7 +1014,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <param name="pos"></param>
 	/// <param name="newModel">Used when importing workspace.</param>
 	internal FileNode FileCopy(FileNode target, FNInsert pos, FilesModel newModel = null) {
-		_model.Save?.TextNowIfNeed(true);
+		_model.Save?.TextNowIfNeed(onlyText: true);
 		if (target == null) { target = Root; pos = FNInsert.Inside; }
 		
 		//create unique name

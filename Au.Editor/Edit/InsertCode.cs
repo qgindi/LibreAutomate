@@ -196,7 +196,7 @@ static class InsertCode {
 			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
 				var d = Panels.Editor.ActiveDoc; if (d != doc || d.aaaText != text) return;
 				for (int line = d.aaaLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
-					if (d.aaaFoldingLevel(i).isHeader) d.EFoldLine(i);
+					d.EFoldLine(i);
 				}
 			});
 		}
