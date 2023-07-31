@@ -686,6 +686,9 @@ partial class FilesModel {
 			if (f.IsDeleted) continue; //deleted together with the parent folder
 			_Delete(f, dontDeleteFile: con?.IsChecked ?? false); //info: and saves everything, now and/or later
 		}
+		
+		Save.WorkspaceLater();
+		CodeInfo.FilesChanged();
 	}
 	
 	bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true) {
@@ -693,7 +696,6 @@ partial class FilesModel {
 		
 		CloseFiles(e);
 		Uncut();
-		App.Model.EditGoBack.OnFileDeleted(f);//TODO: descendants
 		
 		string filePath = f.FilePath;
 		if (dontDeleteFile || f.IsLink) {
@@ -701,14 +703,15 @@ partial class FilesModel {
 			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		} else {
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
-			//TODO: add all paths to List, and delete finally in single call.
+			//SHOULDDO: add all paths to List, and delete finally in single call.
 			
 			//FUTURE: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		}
 		
+		App.Model.EditGoBack.OnFileDeleted(e);
 		foreach (var k in e) {
-			State.EditorDelete(k);
-			Au.Compiler.Compiler.Uncache(k);
+			if (!k.IsFolder) State.EditorDelete(k);
+			if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);
 			_idMap[k.Id] = null;
 			_nameMap.MultiRemove_(k.Name, k);
 			k.IsDeleted = true;
@@ -717,10 +720,6 @@ partial class FilesModel {
 		f.Remove();
 		UpdateControlItems();
 		//FUTURE: call event to update other controls.
-		
-		Save.WorkspaceLater();
-		CodeInfo.FilesChanged();
-		//TODO: why these are not in DeleteSelected? And why this isn't its local function?
 		return true;
 	}
 	
@@ -1411,16 +1410,11 @@ partial class FilesModel {
 	/// Adds recent workspaces to submenu File -> Workspace.
 	/// </summary>
 	public static void FillMenuRecentWorkspaces(MenuItem sub) {
-		void _Add(string path, int i) {
-			path = pathname.expand(path);
-			var mi = new MenuItem { Header = path.Replace("_", "__") };
-			if (i == 0) mi.FontWeight = FontWeights.Bold;
-			mi.Click += (_, _) => LoadWorkspace(path);
-			sub.Items.Insert(i, mi);
-		}
+		var mi = sub.Items[0] as MenuItem;
+		mi.Header = App.Model.WorkspaceDirectory.Replace("_", "__");
+		mi.FontWeight = FontWeights.Bold;
 		
-		while (sub.Items[0] is not Separator) sub.Items.RemoveAt(0);
-		_Add(App.Settings.workspace, 0);
+		while (sub.Items[1] is not Separator) sub.Items.RemoveAt(1);
 		var ar = App.Settings.recentWS;
 		int j = 0, i = 0, n = ar?.Length ?? 0;
 		for (; i < n; i++) {
@@ -1428,6 +1422,13 @@ partial class FilesModel {
 			else _Add(ar[i], ++j);
 		}
 		if (j < i) App.Settings.recentWS = ar.Where(o => o != null).ToArray();
+		
+		void _Add(string path, int i) {
+			path = pathname.expand(path);
+			var mi = new MenuItem { Header = path.Replace("_", "__") };
+			mi.Click += (_, _) => LoadWorkspace(path);
+			sub.Items.Insert(i, mi);
+		}
 	}
 	
 	/// <summary>

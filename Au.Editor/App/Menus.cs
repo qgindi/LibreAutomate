@@ -152,6 +152,9 @@ static class Menus {
 		
 		[Command(target = "")]
 		public static class Workspace {
+			[Command]
+			public static void Reload_this_workspace() { FilesModel.LoadWorkspace(App.Model.WorkspaceDirectory); }
+			
 			[Command("...", separator = true)]
 			public static void Open_workspace() { FilesModel.OpenWorkspaceUI(); }
 			

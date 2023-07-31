@@ -10,7 +10,7 @@ partial class AuDocs {
 		const string website = "https://www.libreautomate.com";
 		
 		var dirTo = docDir + @"\cookbook\";
-		filesystem.delete(Directory.GetFiles(dirTo));
+		if (filesystem.exists(dirTo)) filesystem.delete(Directory.GetFiles(dirTo));
 		
 		var dirFrom = folders.ThisAppBS + "Cookbook\\files";
 		var xr = XmlUtil.LoadElem(dirFrom + ".xml");

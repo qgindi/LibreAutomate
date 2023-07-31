@@ -1,14 +1,14 @@
 class EditGoBack {
 	record struct _Location(FileNode fn, int pos);
-
+	
 	List<_Location> _a = new();
 	int _i = -1;
 	bool _canGoBack, _canGoForward;
 	long _time;
-
+	
 	internal void OnPosChanged(SciCode doc) {
 		//print.it("pos", aaaCurrentPos8);
-
+		
 		bool add;
 		int pos = doc.aaaCurrentPos8;
 		var prev = _a.Count > 0 ? _a[_i] : default;
@@ -24,7 +24,7 @@ class EditGoBack {
 					&& Math.Abs(doc.aaaLineFromPos(false, pos) - doc.aaaLineFromPos(false, prev.pos)) >= 10;
 			}
 		}
-
+		
 		var now = new _Location(doc.EFile, pos);
 		if (add) {
 			if (++_i < _a.Count) _a.RemoveRange(_i, _a.Count - _i); //after GoBack
@@ -32,16 +32,16 @@ class EditGoBack {
 			_i = _a.Count;
 			_a.Add(now);
 		} else _a[_i] = now;
-
+		
 		_time = Environment.TickCount64;
 		_UpdateUI();
-
+		
 		//timer.after(1000, _ => {
 		//	print.it("----");
 		//	print.it(_a);
 		//});
 	}
-
+	
 	internal void OnTextModified(SciCode doc, bool deleted, int pos, int len) {
 		//print.it("mod", deleted, pos, len);
 		_time = 0;
@@ -64,7 +64,7 @@ class EditGoBack {
 			_UpdateUI();
 		}
 	}
-
+	
 	//when file modified externally. Currently not used.
 	//internal void OnTextReplaced(FileNode fn) {
 	//	//print.it("replaced", fn);
@@ -80,43 +80,51 @@ class EditGoBack {
 	//	}
 	//	_UpdateUI();
 	//}
-
+	
 	internal void OnRestoringSavedPos() {
 		_time = Environment.TickCount64;
 	}
-
-	internal void OnFileDeleted(FileNode fn) {
-		//print.it($"before: count={_a.Count}, _i={_i}");
-		for (int i = _a.Count; --i >= 0;) {
-			if (_a[i].fn == fn) {
-				_a.RemoveAt(i);
-				if (i <= _i) _i--;
-				//print.it(i, _i);
+	
+	internal void OnFileDeleted(IEnumerable<FileNode> e) {
+		bool removed = false;
+		foreach (var f in e) {
+			if (f.IsFolder) continue;
+			//print.it($"before: count={_a.Count}, _i={_i}, file={f}, _a={_a:print}");
+			for (int i = _a.Count; --i >= 0;) {
+				if (_a[i].fn == f) {
+					_a.RemoveAt(i);
+					if (i <= _i) _i--;
+					//print.it(i, _i);
+					removed = true;
+				}
 			}
 		}
-		//print.it($"after:  count={_a.Count}, _i={_i}");
-		_time = 0;
-		_UpdateUI();
+		if (removed) {
+			if (_i > 0 && _a[_i] == _a[_i - 1]) _a.RemoveAt(_i--);
+			//print.it($"after:  count={_a.Count}, _i={_i}, _a={_a:print}");
+			_time = 0;
+			_UpdateUI();
+		}
 	}
-
+	
 	/// <summary>
 	/// Record next position change event, even if it is near in space or time.
 	/// </summary>
 	public void RecordNext() { _recordNext = true; }
 	bool _recordNext;
-
+	
 	public void GoBack() {
 		if (_i < 1) return;
 		_i--;
 		_GoTo();
 	}
-
+	
 	public void GoForward() {
 		if (_i > _a.Count - 2) return;
 		_i++;
 		_GoTo();
 	}
-
+	
 	void _GoTo() {
 		var v = _a[_i];
 		_UpdateUI();
@@ -125,13 +133,13 @@ class EditGoBack {
 		doc.aaaGoToPos(false, v.pos);
 		doc.Focus();
 	}
-
+	
 	void _UpdateUI() {
 		bool canGoBack = _i > 0, canGoForward = _i < _a.Count - 1;
 		if (canGoBack != _canGoBack) App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)].Enabled = _canGoBack = canGoBack;
 		if (canGoForward != _canGoForward) App.Commands[nameof(Menus.File.OpenCloseGo.Go_forward)].Enabled = _canGoForward = canGoForward;
 	}
-
+	
 	internal static void DisableUI() {
 		if (App.Commands == null) return;
 		App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)].Enabled = false;

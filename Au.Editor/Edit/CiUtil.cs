@@ -421,6 +421,30 @@ global using System.Windows.Media;
 	}
 	
 	/// <summary>
+	/// Calls Classifier.GetClassifiedSpansAsync and corrects overlapped items.
+	/// </summary>
+	public static async Task<List<ClassifiedSpan>> GetClassifiedSpansAsync(Document document, int from, int to, CancellationToken cancellationToken = default) {
+		var e = await Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(from, to)).ConfigureAwait(false);
+		var a = e as List<ClassifiedSpan>;
+		//order StringEscapeCharacter correctly. Now in $"string" they are randomly after or before the string. Must be after.
+		for (int k = a.Count; --k > 0;) {
+			if (a[k - 1].ClassificationType == ClassificationTypeNames.StringEscapeCharacter)
+				//if (a[k].ClassificationType == ClassificationTypeNames.StringLiteral || a[k].ClassificationType == ClassificationTypeNames.VerbatimStringLiteral)
+				if (a[k].TextSpan.Contains(a[k - 1].TextSpan))
+					Math2.Swap(ref a.Ref(k), ref a.Ref(k - 1));
+		}
+		//remove StaticSymbol
+		int i = 0, j = 0;
+		for (; i < a.Count; i++) {
+			if (a[i].ClassificationType == ClassificationTypeNames.StaticSymbol) continue;
+			if (j != i) a[j] = a[i];
+			j++;
+		}
+		if ((i -= j) > 0) a.RemoveRange(a.Count - i, i);
+		return a;
+	}
+	
+	/// <summary>
 	/// For C# code gets style bytes that can be used with SCI_SETSTYLINGEX for UTF-8 text.
 	/// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
 	/// Controls that use this should set styles like this example, probably when handle created:
@@ -433,10 +457,9 @@ global using System.Windows.Media;
 		using var ws = new AdhocWorkspace();
 		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
 		var semo = document.GetSemanticModelAsync().Result;
-		var a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, code.Length)).Result;
+		var a = GetClassifiedSpansAsync(document, 0, code.Length).Result;
 		foreach (var v in a) {
-			var ct = v.ClassificationType; if (ct == ClassificationTypeNames.StaticSymbol) continue; /*duplicate*/
-			//print.it(v.TextSpan, ct, code[v.TextSpan.Start..v.TextSpan.End]);
+			//print.it(v.TextSpan, v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
 			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
 			if (style == EStyle.None) continue;
 			int i = v.TextSpan.Start, end = v.TextSpan.End;

@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "0.16.0"
+#define MyAppVersion "0.17.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -53,6 +53,7 @@ Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "32\7za.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 
 Source: "Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "Default\Workspace\.gitignore"; DestDir: "{app}\Default"; Flags: ignoreversion
