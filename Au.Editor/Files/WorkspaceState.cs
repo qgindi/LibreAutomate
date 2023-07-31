@@ -216,8 +216,17 @@ class WorkspaceState : IDisposable {
 					}
 				}
 			}
-			catch (FileNotFoundException) {
-				//convert from old SQLite database
+			catch (Exception e1) {
+				if (!filesystem.exists(_file)) _ConvertOldDb();
+				else print.it(e1);
+			}
+			
+			_editor = editor ??= "";
+			_open = open ??= "";
+			_expanded = expanded ??= "";
+			
+			//convert from old SQLite database
+			void _ConvertOldDb() {
 				var dbFile = model.WorkspaceDirectory + @"\state.db";
 				if (filesystem.exists(dbFile, true)) {
 					try {
@@ -230,11 +239,6 @@ class WorkspaceState : IDisposable {
 					catch (Exception e1) { Debug_.Print(e1); }
 				}
 			}
-			catch (Exception e1) { print.it(e1); }
-			
-			_editor = editor ??= "";
-			_open = open ??= "";
-			_expanded = expanded ??= "";
 		}
 		
 		public void SaveIfNeed() {

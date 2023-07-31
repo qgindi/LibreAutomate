@@ -76,7 +76,7 @@ static class CodeInfo {
 				//p1.Next('s');
 				
 				//let the coloring and folding in editor start working immediately
-				Classifier.GetClassifiedSpansAsync(document, new TextSpan(0, code.Length)).Wait();
+				CiUtil.GetClassifiedSpansAsync(document, 0, code.Length).Wait();
 				//p1.Next('c');
 				
 				App.Dispatcher.InvokeAsync(() => {

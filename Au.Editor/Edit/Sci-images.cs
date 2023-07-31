@@ -35,12 +35,9 @@ partial class SciCode {
 	_Images _im;
 	
 	//Called by CiStyling._StylingAndFolding.
-	internal void EImagesGet_(CodeInfo.Context cd, IEnumerable<ClassifiedSpan> list, in Sci_VisibleRange vr) {
-		if (App.Settings.edit_noImages) return;
+	internal void EImagesGet_(CodeInfo.Context cd, ClassifiedSpan[] a, in Sci_VisibleRange vr) {
+		//if (App.Settings.edit_noImages) return; //caller does it, because it has some more work to do if need images
 		//using var p1 = perf.local(); //fast when bitmaps loaded/cached
-		
-		//remove StaticSymbol. It is added for each static symbol, randomly before or after. Makes code difficult.
-		var a = list.Where(o => o.ClassificationType != CT.StaticSymbol).ToArray();
 		
 		if (a.Length > 0) aaaIndicatorClear(c_indicImages, true, a[0].TextSpan.Start..a[^1].TextSpan.End);
 		

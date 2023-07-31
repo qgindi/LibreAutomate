@@ -35,7 +35,7 @@ global using IEnumerator = System.Collections.IEnumerator;
 [assembly: AssemblyCopyright("Copyright 2020-2023 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.16.0")]
+[assembly: AssemblyVersion("0.17.0")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

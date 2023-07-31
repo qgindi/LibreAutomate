@@ -18,7 +18,7 @@ using Microsoft.CodeAnalysis.CSharp.Formatting;
 //using Microsoft.CodeAnalysis.CSharp.Indentation;
 
 static class ModifyCode {
-	//TODO: if tries to uncomment /// doc comment, remove /// . Now does nothing. VS removes // and leaves /.
+	//SHOULDDO: if tries to uncomment /// doc comment, remove /// . Now does nothing. VS removes // and leaves /.
 
 	/// <summary>
 	/// Comments out (adds // or /**/) or uncomments selected text or current line.

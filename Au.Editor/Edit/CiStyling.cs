@@ -209,7 +209,7 @@ partial class CiStyling {
 				return a;
 			}
 			
-			var ar = new (IEnumerable<ClassifiedSpan> a, StartEnd r)[ar8.Count];
+			var ar = new (List<ClassifiedSpan> a, StartEnd r)[ar8.Count];
 			for (int i = 0; i < ar8.Count; i++) ar[i].r = new StartEnd(doc.aaaPos16(ar8[i].start), doc.aaaPos16(ar8[i].end));
 			SemanticModel semo = null;
 			
@@ -218,7 +218,7 @@ partial class CiStyling {
 				_PN('m'); //BAD: slow when [re]opening a file in a large project
 				for (int i = 0; i < ar8.Count; i++) {
 					var r = ar[i].r;
-					ar[i].a = Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(r.start, r.end), cancelToken).Result;
+					ar[i].a = await CiUtil.GetClassifiedSpansAsync(document, r.start, r.end, cancelToken).ConfigureAwait(false);
 				}
 				//info: GetClassifiedSpansAsync calls GetSemanticModelAsync and GetClassifiedSpans, like here.
 				//GetSemanticModelAsync+GetClassifiedSpans are slow, ~ 90% of total time.
@@ -237,10 +237,7 @@ partial class CiStyling {
 					if (style == EStyle.None) {
 #if DEBUG
 						switch (v.ClassificationType) {
-						case ClassificationTypeNames.Identifier: break;
-						case ClassificationTypeNames.LabelName: break;
-						case ClassificationTypeNames.PreprocessorText: break;
-						case ClassificationTypeNames.StaticSymbol: break;
+						case ClassificationTypeNames.Identifier or ClassificationTypeNames.PreprocessorText: break;
 						default: Debug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<><c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
 						}
 #endif
@@ -267,7 +264,7 @@ partial class CiStyling {
 			_visibleLines = minimal ? default : vr;
 			_PN('S');
 			if (!minimal) {
-				doc.EImagesGet_(cd, ar.SelectMany(o => o.a), vr);
+				if (!App.Settings.edit_noImages) doc.EImagesGet_(cd, ar.SelectMany(o => o.a).ToArray(), vr);
 				_diagCounter = 4; //update diagnostics after 1 s
 			} else {
 				CodeInfo._diag.EraseIndicatorsInLine(doc, doc.aaaCurrentPos8);
