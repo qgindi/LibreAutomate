@@ -82,36 +82,36 @@ namespace Au {
 			x.cbSize = Api.SizeOf(x);
 			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
 			x.nShow = Api.SW_SHOWNORMAL;
-
+			
 			bool curDirFromFile = false;
 			var more = dirEtc;
 			if (more != null) {
 				x.lpVerb = more.Verb;
 				if (x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
-
+				
 				if (more.CurrentDirectory is string cd) {
 					if (cd.Length == 0) curDirFromFile = true; else cd = pathname.expand(cd);
 					x.lpDirectory = cd;
 				}
-
+				
 				if (!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Hwnd.Window;
-
+				
 				switch (more.WindowState) {
 				case ProcessWindowStyle.Hidden: x.nShow = Api.SW_HIDE; break;
 				case ProcessWindowStyle.Minimized: x.nShow = Api.SW_SHOWMINIMIZED; break;
 				case ProcessWindowStyle.Maximized: x.nShow = Api.SW_SHOWMAXIMIZED; break;
 				}
-
+				
 				x.fMask &= ~more.FlagsRemove;
 				x.fMask |= more.FlagsAdd;
 			}
-
+			
 			if (flags.Has(RFlags.Admin)) {
 				if (x.lpVerb == null || x.lpVerb.Eqi("runas")) x.lpVerb = "runas";
 				else if (!uacInfo.isAdmin) throw new ArgumentException("Cannot use Verb with flag Admin, unless this process is admin");
 			}
-
-			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
+			
+			file = NormalizeFile_(false, file, out bool isFullPath, out bool isShellPath);
 			Pidl pidl = null;
 			if (isShellPath) { //":: ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
 				pidl = Pidl.FromString(file); //does not throw
@@ -121,22 +121,22 @@ namespace Au {
 				} else x.lpFile = file;
 			} else {
 				x.lpFile = file;
-
+				
 				if (curDirFromFile && isFullPath) x.lpDirectory = pathname.getDirectory(file);
 			}
 			x.lpDirectory ??= Directory.GetCurrentDirectory();
 			if (!args.NE()) x.lpParameters = pathname.expand(args);
-
+			
 			if (0 == (flags & RFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
 			if (0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
 			if (0 != (flags & RFlags.MostUsed)) x.fMask |= Api.SEE_MASK_FLAG_LOG_USAGE;
 			x.fMask |= Api.SEE_MASK_NOCLOSEPROCESS;
-
+			
 			WndUtil.EnableActivate(-1);
-
+			
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
 			bool needHandle = flags.Has(RFlags.NeedProcessHandle);
-
+			
 			bool ok = false; int pid = 0, errorCode = 0;
 			bool asUser = !flags.HasAny(RFlags.Admin | RFlags.InheritAdmin) && uacInfo.isAdmin; //info: new process does not inherit uiAccess
 			if (asUser) {
@@ -155,26 +155,26 @@ namespace Au {
 			}
 			pidl?.Dispose();
 			if (!ok) throw new AuException(errorCode, $"*run '{file}'");
-
+			
 			var R = new RResult();
 			WaitHandle_ ph = null;
-
+			
 			if (needHandle || waitForExit) {
 				if (pid != 0) x.hProcess = Handle_.OpenProcess(pid, Api.PROCESS_ALL_ACCESS);
 				if (!x.hProcess.Is0) ph = new WaitHandle_(x.hProcess, true);
 			}
-
+			
 			if (!waitForExit) {
 				if (pid != 0) R.ProcessId = pid;
 				else if (!x.hProcess.Is0) R.ProcessId = process.processIdFromHandle(x.hProcess);
 			}
-
+			
 			try {
 				Api.AllowSetForegroundWindow();
-
+				
 				if (x.lpVerb != null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
 					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.
-
+				
 				if (ph != null) {
 					if (waitForExit) {
 						ph.WaitOne();
@@ -189,14 +189,14 @@ namespace Au {
 					else x.hProcess.Dispose();
 				}
 			}
-
+			
 			return R;
-
+			
 			//tested: works well in MTA thread.
 			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use wnd.findOrRun etc like in the examples.
 			//rejected: in QM2, run also has 'autodelay'. Better don't add such hidden things. Let the script decide what to do.
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="it"/> and handles exceptions.
 		/// If <b>it</b> throws exception, writes it to the output as warning and returns null.
@@ -219,8 +219,8 @@ namespace Au {
 				return null;
 			}
 		}
-
-		static string _NormalizeFile(bool runConsole, string file, out bool isFullPath, out bool isShellPath) {
+		
+		internal static string NormalizeFile_(bool runConsole, string file, out bool isFullPath, out bool isShellPath) {
 			isShellPath = isFullPath = false;
 			file = pathname.expand(file);
 			if (file.NE()) throw new ArgumentException();
@@ -228,11 +228,11 @@ namespace Au {
 				if (isFullPath = pathname.isFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
 					file = pathname.Normalize_(file, fl, true);
-
+					
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
 					//Process.Start supports long path prefix, except when the exe is .NET.
 					if (!runConsole) file = pathname.unprefixLongPath(file);
-
+					
 					if (FileSystemRedirection.IsSystem64PathIn32BitProcess(file) && !filesystem.exists(file)) {
 						file = FileSystemRedirection.GetNonRedirectedSystemPath(file);
 					}
@@ -248,9 +248,9 @@ namespace Au {
 			}
 			return file;
 		}
-
+		
 		/// <summary>
-		/// Runs a console program, waits until its process ends, and prints its output text.
+		/// Runs a console program in hidden mode, waits until its process ends, and prints its output text.
 		/// Writes text lines to the output in real time.
 		/// </summary>
 		/// <param name="exe">
@@ -259,9 +259,7 @@ namespace Au {
 		/// <br/>• Filename, like <c>"x.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
 		/// <br/>• Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
 		/// 
-		/// <para>
-		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="pathname.expand"/>.
-		/// </para>
+		/// <br/>Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="pathname.expand"/>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
 		/// <param name="curDir">
@@ -272,7 +270,7 @@ namespace Au {
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
-		/// If null (default), uses <see cref="Console.OutputEncoding"/>, which by default isn't Unicode. Programs that display Unicode text use <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/>.
+		/// If null (default), uses <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/> (auto-detects when the first data received from console). If you get garbage text, try <see cref="Console.OutputEncoding"/> or other <b>Encoding.X</b>.
 		/// </param>
 		/// <returns>The process exit code. Usually a non-0 value means error.</returns>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
@@ -288,34 +286,31 @@ namespace Au {
 		/// ]]></code>
 		/// </example>
 		public static int console(string exe, string args = null, string curDir = null, Encoding encoding = null) {
-			return _RunConsole(print.it, null, exe, args, curDir, encoding, true);
+			return _RunConsole(print.it, out _, exe, args, curDir, encoding, true);
 		}
-
+		
 		/// <summary>
-		/// Runs a console program, waits until its process ends, and gets its output text.
+		/// Runs a console program in hidden mode, waits until its process ends, and gets its output text.
 		/// </summary>
 		/// <param name="output">A variable that receives the output text.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// string v = "example";
-		/// run.console(out var text, @"C:\Test\console.exe", encoding: Encoding.UTF8);
+		/// run.console(out var text, @"C:\Test\console.exe", encoding: Console.OutputEncoding);
 		/// print.it(text);
 		/// ]]></code>
 		/// </example>
 		/// <inheritdoc cref="console(string, string, string, Encoding)"/>
 		public static int console(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
-			var b = new StringBuilder();
-			var r = _RunConsole(null, b, exe, args, curDir, encoding, false);
-			output = b.ToString();
+			var r = _RunConsole(null, out output, exe, args, curDir, encoding, false);
 			return r;
 		}
-
+		
 		/// <summary>
-		/// Runs a console program, waits until its process ends, and gets its output text.
+		/// Runs a console program in hidden mode, waits until its process ends, and gets its output text.
 		/// Uses a callback function that receives text lines in real time.
 		/// </summary>
 		/// <param name="output">
-		/// A callback function that receives the output text.
+		/// Callback function that receives the output text.
 		/// Unless <i>rawText</i> true:
 		/// <br/>• it isn't called until is retrieved full line with line break characters;
 		/// <br/>• it receives single full line at a time, without line break characters.
@@ -323,114 +318,30 @@ namespace Au {
 		/// <param name="rawText">Call the callback function whenever text is retrieved (don't wait for full line). Pass raw text, in chunks of any size.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// string v = "example";
 		/// run.console(s => print.it(s), @"C:\Test\console.exe");
+		///
+		/// run.console(s => { print.it($"<><_>{s}</_><nonl>"); }, @"C:\Test\console.exe", rawText: true);
 		/// ]]></code>
 		/// </example>
+		/// <seealso cref="consoleProcess"/>
 		/// <inheritdoc cref="console(string, string, string, Encoding)"/>
 		public static int console(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null, bool rawText = false) {
-			return _RunConsole(output, null, exe, args, curDir, encoding, !rawText);
+			return _RunConsole(output, out _, exe, args, curDir, encoding, !rawText);
 		}
-
-		//SHOULDDO: add overload that gets stderr separately:
-		//	public static int console(Action<string, string> output, ...
-
-		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding, bool needLines) {
-			exe = _NormalizeFile(true, exe, out _, out _);
-			//args = pathname.expand(args); //rejected
-
-			encoding ??= Console.OutputEncoding; //fast. Default is an internal type System.Text.OSEncoding that wraps API GetConsoleOutputCP.
-			var decoder = encoding.GetDecoder(); //ensures we'll not get partial multibyte chars (UTF8 etc) at buffer end/start
-
-			var ps = new ProcessStarter_(exe, args, curDir, rawExe: true);
-
-			Handle_ hProcess = default;
-			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if (!Api.CreatePipe(out Handle_ hOutRead, out Handle_ hOutWrite, sa, 0)) throw new AuException(0);
-
-			byte* b = null; //buffer before decoding
-			char* c = null; //buffer after decoding
-			StringBuilder sb = null; //holds part of line when buffer does not end with newline
-			try {
-				Api.SetHandleInformation(hOutRead, 1, 0); //remove HANDLE_FLAG_INHERIT
-
-				ps.si.dwFlags |= Api.STARTF_USESTDHANDLES | Api.STARTF_USESHOWWINDOW;
-				ps.si.hStdOutput = hOutWrite;
-				ps.si.hStdError = hOutWrite;
-				ps.flags |= Api.CREATE_NEW_CONSOLE;
-
-				if (!ps.StartL(out var pi, inheritHandles: true)) throw new AuException(0);
-				hOutWrite.Dispose(); //important: must be here
-				pi.hThread.Dispose();
-				hProcess = pi.hProcess;
-
-				//native console API allows any buffer size when writing, but wrappers usually use small buffer, eg .NET 4-5 KB, msvcrt 5 KB, C++ not tested
-				const int bSize = 8000, cSize = bSize + 10;
-				b = MemoryUtil.Alloc(bSize);
-
-				for (bool skipN = false; ;) {
-					if (Api.ReadFile(hOutRead, b, bSize, out int nr)) {
-						if (nr == 0) continue;
-					} else {
-						if (lastError.code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
-						//process ended
-						if (sb != null && sb.Length > 0) {
-							outAction(sb.ToString());
-						}
-						break;
-					}
-
-					if (c == null) c = MemoryUtil.Alloc<char>(cSize);
-					int nc = decoder.GetChars(b, nr, c, cSize, false);
-
-					if (needLines) {
-						var k = new Span<char>(c, nc);
-						if (skipN) {
-							skipN = false;
-							if (c[0] == '\n' && nc > 0) k = k[1..]; //\r\n split in 2 buffers
-						}
-						while (k.Length > 0) {
-							int i = k.IndexOfAny('\n', '\r');
-							if (i < 0) {
-								(sb ??= new()).Append(k);
-								break;
-							}
-							string s;
-							if (sb != null && sb.Length > 0) {
-								sb.Append(k[0..i]);
-								s = sb.ToString();
-								sb.Clear();
-							} else {
-								s = k[0..i].ToString();
-							}
-							outAction(s);
-							if (k[i++] == '\r') {
-								if (i == k.Length) skipN = true;
-								else if (k[i] == '\n') i++;
-							}
-							k = k[i..];
-						}
-					} else if (nc > 0) {
-						if (outAction != null) {
-							outAction(new(c, 0, nc));
-						} else {
-							outStr.Append(c, nc);
-						}
-					}
-				}
-
-				if (!Api.GetExitCodeProcess(hProcess, out int exitCode)) exitCode = int.MinValue;
-				return exitCode;
+		
+		static unsafe int _RunConsole(Action<string> outAction, out string outStr, string exe, string args, string curDir, Encoding encoding, bool needLines) {
+			outStr = null;
+			using var c = new consoleProcess(exe, args, curDir) { Encoding = encoding };
+			if (needLines) {
+				while (c.ReadLine(out var s)) outAction(s);
+			} else if (outAction != null) {
+				c.ReadAllText(outAction);
+			} else {
+				outStr = c.ReadAllText();
 			}
-			finally {
-				hProcess.Dispose();
-				hOutRead.Dispose();
-				hOutWrite.Dispose();
-				MemoryUtil.Free(b);
-				MemoryUtil.Free(c);
-			}
+			return c.ExitCode;
 		}
-
+		
 		/// <summary>
 		/// Opens parent folder in File Explorer (folder window) and selects the file.
 		/// </summary>
@@ -444,7 +355,7 @@ namespace Au {
 			if (pidl == null) return false;
 			return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
 		}
-
+		
 		/// <summary>
 		/// Starts new thread: creates new <see cref="Thread"/> object, sets some properties and calls <see cref="Thread.Start"/>.
 		/// </summary>
@@ -463,7 +374,7 @@ namespace Au {
 			t.Start();
 			return t;
 		}
-
+		
 		/// <summary>
 		/// Starts new thread like <see cref="thread(Action, bool, bool)"/> and gets thread handle and native id.
 		/// </summary>
@@ -487,7 +398,7 @@ namespace Au {
 			Api.WaitForSingleObject(ev, -1);
 			id = i;
 			return h;
-
+			
 			//Almost same speed as other overload when JITed, but first time several times slower, eg 1 -> 2.5 ms.
 			//	With CreateThread faster, but it cannot be used in a public function (then some .NET features work differently).
 		}
@@ -505,17 +416,17 @@ namespace Au.Types {
 		/// Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="run.itSafe"/>.
 		/// </summary>
 		ShowErrorUI = 1,
-
+		
 		/// <summary>
 		/// If started new process, wait until it exits.
 		/// </summary>
 		WaitForExit = 2,
-
+		
 		/// <summary>
 		/// If started new process, get process handle (<see cref="RResult.ProcessHandle"/>).
 		/// </summary>
 		NeedProcessHandle = 4,
-
+		
 		/// <summary>
 		/// Run new process as administrator.
 		/// If this process isn't admin:
@@ -525,7 +436,7 @@ namespace Au.Types {
 		/// <br/>• The new process does not inherit environment variables of this process.
 		/// </summary>
 		Admin = 8,
-
+		
 		/// <summary>
 		/// If this process runs as administrator, run new process as administrator too.
 		/// Without this flag, if this process runs as administrator:
@@ -534,13 +445,13 @@ namespace Au.Types {
 		/// <br/>• The new process does not inherit environment variables of this process.
 		/// </summary>
 		InheritAdmin = 16,
-
+		
 		/// <summary>
 		/// Add the app to the "Most used" list in the Start menu if launched often.
 		/// </summary>
 		MostUsed = 32,
 	}
-
+	
 	/// <summary>
 	/// More parameters for <see cref="run.it"/>.
 	/// </summary>
@@ -552,7 +463,7 @@ namespace Au.Types {
 		/// Sets <see cref="CurrentDirectory"/>.
 		/// </summary>
 		public static implicit operator ROptions(string curDir) => new ROptions { CurrentDirectory = curDir };
-
+		
 		/// <summary>
 		/// Initial current directory for the new process.
 		/// If null (default), the new process will inherit the current directory of this process.
@@ -560,43 +471,43 @@ namespace Au.Types {
 		/// <para>NOTE: Some programs look for their files in current directory and fail to start if it is not the program's directory.</para>
 		/// </summary>
 		public string CurrentDirectory;
-
+		
 		/// <summary>
 		/// File's right-click menu command, also known as verb. For example <c>"edit"</c>, <c>"print"</c>, <c>"properties"</c>. The default verb is bold in the menu.
 		/// Not all menu items will work. Some may have different name than in the menu.
 		/// </summary>
 		public string Verb;
-
+		
 		/// <summary>
 		/// Owner window for error message boxes.
 		/// Also, new window should be opened on the same screen. However many programs ignore it.
 		/// </summary>
 		public AnyWnd OwnerWindow;
-
+		
 		/// <summary>
 		/// Preferred window state.
 		/// Many programs ignore it.
 		/// </summary>
 		public ProcessWindowStyle WindowState;
-
+		
 		/// <summary>
 		/// Flags to add to <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
 		/// Default flags: <b>SEE_MASK_NOZONECHECKS</b>, <b>SEE_MASK_NOASYNC</b>, <b>SEE_MASK_NOCLOSEPROCESS</b>, <b>SEE_MASK_CONNECTNETDRV</b>, <b>SEE_MASK_UNICODE</b>, <b>SEE_MASK_FLAG_NO_UI</b> (if no flag <b>ShowErrorUI</b>), <b>SEE_MASK_NO_CONSOLE</b> (if no flag <b>WaitForExit</b>), <b>SEE_MASK_FLAG_LOG_USAGE</b> (if flag <b>MostUsed</b>); also <b>SEE_MASK_INVOKEIDLIST</b> if need.
 		/// </summary>
 		public uint FlagsAdd;
-
+		
 		/// <summary>
 		/// Flags to remove from <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
 		/// Default flags: see <see cref="FlagsAdd"/>.
 		/// </summary>
 		public uint FlagsRemove;
-
+		
 		//no. If need, caller can get window and call EnsureInScreen etc.
 		//public screen Screen;
 		//this either does not work or I could not find a program that uses default window position (does not save/restore)
 		//if(!more.Screen.IsNull) { x._14.hMonitor = more.Screen.ToDevice().Handle; x.fMask |= Api.SEE_MASK_HMONITOR; }
 	}
-
+	
 	/// <summary>
 	/// Results of <see cref="run.it"/>.
 	/// </summary>
@@ -609,13 +520,13 @@ namespace Au.Types {
 		/// Usually the exit code is 0 or a process-defined error code.
 		/// </remarks>
 		public int ProcessExitCode { get; internal set; }
-
+		
 		/// <summary>
 		/// The process id.
 		/// 0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		public int ProcessId { get; internal set; }
-
+		
 		/// <summary>
 		/// If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="WaitHandle"/> variable must be disposed.
 		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
@@ -628,7 +539,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public WaitHandle ProcessHandle { get; internal set; }
-
+		
 		/// <summary>
 		/// Returns <see cref="ProcessId"/> as string.
 		/// </summary>

@@ -19,6 +19,7 @@ r Roslyn\Microsoft.CodeAnalysis.Features.dll;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll;
 r CAW=Roslyn\Microsoft.CodeAnalysis.Workspaces.dll;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll;
+nuget -\Octokit;
 resource app\app-resources.xaml /path;
 resource resources\ci /path;
 resource resources\Images /path;

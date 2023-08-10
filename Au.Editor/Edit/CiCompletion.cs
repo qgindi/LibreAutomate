@@ -237,7 +237,7 @@ partial class CiCompletion {
 									node = s1.Expression;
 									break;
 								case MemberBindingExpressionSyntax s1: // ?.
-									node = s1;
+									if (s1.Parent.Parent is ConditionalAccessExpressionSyntax caes1) node = caes1.Expression; else node = s1;
 									break;
 								case QualifiedNameSyntax s1: // eg . outside functions
 									node = s1.Left;
@@ -247,8 +247,7 @@ partial class CiCompletion {
 								case QualifiedCrefSyntax: //does not include base members
 									canGroup = false;
 									break;
-								case RangeExpressionSyntax: //noticed once, don't know how, could not reproduce
-									isDot = canGroup = false;
+								case RangeExpressionSyntax: //x..y (user may want to make x.Method().y)
 									break;
 								default:
 									Debug_.Print(node.GetType());
@@ -268,7 +267,6 @@ partial class CiCompletion {
 										//print.it(symL, symL is INamedTypeSymbol);
 										if (symL is INamedTypeSymbol) typenameStart = node.SpanStart;
 										else typeL = ti;
-										
 									}
 #else //need just canGroup
 									if (model.GetSymbolInfo(node).Symbol is INamespaceSymbol) canGroup = false;
@@ -830,7 +828,7 @@ partial class CiCompletion {
 				if (!fi.IsDefaultOrEmpty) {
 					if (fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) {
 						var v = fi[0];
-						if (!v.DisplayTextPrefix.NE() && fi.Length > 1 && fi.FirstOrDefault(o => o.DisplayTextPrefix.NE()) is {  } vv) v = vv; //eg "(nint)" -> "Name"
+						if (!v.DisplayTextPrefix.NE() && fi.Length > 1 && fi.FirstOrDefault(o => o.DisplayTextPrefix.NE()) is { } vv) v = vv; //eg "(nint)" -> "Name"
 						ci = v.Attach as CiComplItem;
 						
 						//rejected. Not sure it's better.
@@ -922,7 +920,7 @@ partial class CiCompletion {
 		} else {
 			var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
-
+			
 			var changes = change.TextChanges;
 			isComplex = change.NewPosition.HasValue;
 			

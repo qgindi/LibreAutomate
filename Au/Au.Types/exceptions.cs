@@ -7,9 +7,7 @@ namespace Au.Types {
 	/// Some constructors support Windows API error code. Then <see cref="Message"/> will contain its error description.
 	/// If the string passed to the constructor starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>. If does not end with <c>"."</c>, appends <c>"."</c>.
 	/// </remarks>
-	//[Serializable] //in .NET Framework would need for marshaling between appdomains. Probably don't need now.
-	public class AuException : Exception//, ISerializable
-	{
+	public class AuException : Exception {
 		/// <summary>
 		/// Sets <b>Message</b> = <i>message</i> (default <c>"Failed."</c>).
 		/// Sets <b>NativeErrorCode</b> = 0.
@@ -82,23 +80,6 @@ namespace Au.Types {
 		public static void ThrowIfHresultNegative(int errorCode, string message = null) {
 			if (errorCode < 0) throw new AuException(errorCode, message);
 		}
-
-		//#region ISerializable
-
-		/////
-		//public override void GetObjectData(SerializationInfo info, StreamingContext context)
-		//{
-		//	info.AddValue("NativeErrorCode", NativeErrorCode);
-		//	base.GetObjectData(info, context);
-		//}
-
-		/////
-		//protected AuException(SerializationInfo info, StreamingContext context) : base(info, context)
-		//{
-		//	NativeErrorCode = info.GetInt32("NativeErrorCode");
-		//}
-
-		//#endregion
 	}
 
 	/// <summary>
@@ -110,9 +91,7 @@ namespace Au.Types {
 	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses <b>ERROR_INVALID_WINDOW_HANDLE</b>.
 	/// If the string passed to the constructor starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>. If ends with <c>"*"</c>, replaces the <c>"*"</c> with <c>" window."</c>. If does not end with <c>"."</c>, appends <c>"."</c>.
 	/// </remarks>
-	//[Serializable]
-	public class AuWndException : AuException//, ISerializable
-	{
+	public class AuWndException : AuException {
 		const string _errStr_0Handle = "The window handle is 0. Usually it means 'window not found'.";
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
 
@@ -151,29 +130,11 @@ namespace Au.Types {
 				return FormattedMessage;
 			}
 		}
-
-		//#region ISerializable
-
-		/////
-		//public override void GetObjectData(SerializationInfo info, StreamingContext context)
-		//{
-		//	info.AddValue("Window", (int)Window);
-		//	base.GetObjectData(info, context);
-		//}
-
-		/////
-		//protected AuWndException(SerializationInfo info, StreamingContext context) : base(info, context)
-		//{
-		//	Window = (wnd)info.GetInt32("Window");
-		//}
-
-		//#endregion
 	}
 
 	/// <summary>
 	/// Functions that search for an object can throw this exception when not found.
 	/// </summary>
-	//[Serializable]
 	public class NotFoundException : Exception {
 		/// <summary>
 		/// Sets <c>Message = "Not found."</c>.
@@ -184,16 +145,22 @@ namespace Au.Types {
 		/// Sets <c>Message = message</c>.
 		/// </summary>
 		public NotFoundException(string message) : base(message) { }
-
-		//#region ISerializable
-
-		/////
-		//protected NotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
-		//{
-		//}
-
-		//#endregion
 	}
+
+	///// <summary>
+	///// Exception thrown when a callback function returns an invalid value.
+	///// </summary>
+	//public class BadCallbackException : Exception {
+	//	/// <summary>
+	//	/// Sets <c>Message = "The callback function returned an invalid value."</c>.
+	//	/// </summary>
+	//	public BadCallbackException() : base("The callback function returned an invalid value.") { }
+
+	//	/// <summary>
+	//	/// Sets <c>Message = message</c>.
+	//	/// </summary>
+	//	public BadCallbackException(string message) : base(message) { }
+	//}
 
 	/// <summary>
 	/// This exception is thrown when current thread is not on the input desktop and therefore cannot use mouse, keyboard, clipboard and window functions. 

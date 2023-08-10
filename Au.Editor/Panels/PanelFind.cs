@@ -250,18 +250,20 @@ This setting also is used by 'Find references' etc.
 	void _FilterMenu(WBButtonClickArgs e) {
 		int f = _filter;
 		var m = new popupMenu();
-		m.AddRadio("Search in entire workspace", f == 0, _ => f = 0);
-		m.AddRadio("Search in current root folder", f == 1, _ => f = 1);
-		m.AddRadio("Search in current @Project", f == 2, _ => f = 2);
+		m.AddRadio("Search in entire workspace", f == 0, _ => f = 0, image: _FilterImage(0));
+		m.AddRadio("Search in current root folder", f == 1, _ => f = 1, image: _FilterImage(1));
+		m.AddRadio("Search in current @Project", f == 2, _ => f = 2, image: _FilterImage(2));
 		m.Show();
 		_SetFilter(f);
 	}
 	int _filter; //0 workspace, 1 root folder, 2 project or root folder
 	
+	static string _FilterImage(int f) => "*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? Menus.orange : Menus.red);
+	
 	void _SetFilter(int f) {
 		if (f != _filter) {
 			_filter = f;
-			_bFilter.Content = ImageUtil.LoadWpfImageElement("*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? Menus.orange : Menus.red));
+			_bFilter.Content = ImageUtil.LoadWpfImageElement(_FilterImage(f));
 			_bFilter.ToolTip = f switch { 0 => "Search in entire workspace", 1 => "Search in current root folder", _ => "Search in current @Project" };
 		}
 	}

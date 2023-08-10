@@ -1,5 +1,4 @@
-namespace Au
-{
+namespace Au {
 	/// <summary>
 	/// Gets, sets or clears the last error code of Windows API. Gets error text.
 	/// </summary>
@@ -22,8 +21,7 @@ namespace Au
 	/// print.it(enabled);
 	/// ]]></code>
 	/// </example>
-	public static class lastError
-	{
+	public static class lastError {
 		/// <summary>
 		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
 		/// </summary>
@@ -32,7 +30,7 @@ namespace Au
 		/// The same as <c>lastError.code = 0;</c>.
 		/// </remarks>
 		public static void clear() => Api.SetLastError(0);
-
+		
 		/// <summary>
 		/// Gets (<see cref="Marshal.GetLastWin32Error"/>) or sets (API <msdn>SetLastError</msdn>) the Windows API last error code of this thread.
 		/// </summary>
@@ -40,7 +38,7 @@ namespace Au
 			get => Marshal.GetLastWin32Error();
 			set => Api.SetLastError(value);
 		}
-
+		
 		/// <summary>
 		/// Gets the text message of the Windows API last error code of this thread.
 		/// </summary>
@@ -49,7 +47,7 @@ namespace Au
 		/// The string always ends with <c>"."</c>.
 		/// </remarks>
 		public static string message => messageFor(code);
-
+		
 		/// <summary>
 		/// Gets the text message of a Windows API error code.
 		/// </summary>
@@ -72,7 +70,7 @@ namespace Au
 				}
 				Api.LocalFree(p);
 			}
-			s = $"{s} (0x{errorCode:X}).";
+			s = (uint)errorCode <= 0xffff ? $"{s} ({errorCode})." : $"{s} (0x{errorCode:X}).";
 			return s;
 		}
 	}

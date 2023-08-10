@@ -75,7 +75,7 @@
     "keepFileLink": false,
     "cleanupCacheHistory": false,
     "disableGitFeatures": false,
-    "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ],
+    "xrefService": [ "https://learn.microsoft.com/api/xref/query?uid={uid}" ],
     "sitemap": {
       "baseUrl": "https://www.libreautomate.com/",
       "changefreq": "weekly"

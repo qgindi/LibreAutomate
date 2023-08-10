@@ -100,7 +100,7 @@ partial class SciCode : KScintilla {
 		Debug.Assert(!AaWnd.Is0);
 		
 		bool editable = _fls.SetText(this, text);
-		if (!EIsBinary) _fn.UpdateFileModTime();
+		if (!EIsBinary) _fn.UpdateFileModTime_();
 		ESetLineNumberMarginWidth_();
 		
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
@@ -148,6 +148,7 @@ partial class SciCode : KScintilla {
 	//}
 	
 	internal void EOpenDocActivated() {
+		_fn.CheckModifiedExternally_(this);
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
 	
@@ -361,13 +362,13 @@ partial class SciCode : KScintilla {
 			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
-			_fn.UpdateFileModTime();
+			_fn.UpdateFileModTime_();
 			if (this != Panels.Editor.ActiveDoc) CodeInfo.FilesChanged();
 		}
 		return true;
 	}
 	
-	//Called by FileNode.OnAppActivatedAndThisIsOpen.
+	//Called by FileNode.CheckModifiedExternally_.
 	internal void EFileModifiedExternally_() {
 		Debug.Assert(!EIsBinary); if (EIsBinary) return; //caller must check it
 		if (!_fn.GetFileText(out var text) || text == this.aaaText) return;

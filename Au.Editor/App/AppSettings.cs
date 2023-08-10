@@ -157,4 +157,10 @@ record WorkspaceSettings : JSettings {
 	public FilesModel.UserData[] users;
 	
 	public string ci_skipFolders;
+	
+	public record class git_t {
+		public bool use;
+		public string repoUrl, pat, script, menu;
+	}
+	public git_t git = new();
 }

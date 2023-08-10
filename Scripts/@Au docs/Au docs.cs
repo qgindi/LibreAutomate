@@ -36,6 +36,12 @@ void _Build() {
 	print.clear();
 	var time0 = perf.ms;
 	
+	print.warning("TODO: may fail to resolve links.");
+	//Maybe it is related to this: the xref URL changed: https://github.com/dotnet/docfx/issues/8958
+	//	I changed xrefService in docfx.json, but the same.
+	//Noticed 2023-08-07. Still worked when releasing LA 0.17, 2023-07-31.
+	//	When the example link clicked in the announcement page, first time it worked, but next time error Access Denied. Probably the server temporarily does not work.
+	
 	bool testSmall = !true;
 	bool preprocess = false, postprocess = false, build = false, serve = false, cookbook = false;
 	//cookbook = true;

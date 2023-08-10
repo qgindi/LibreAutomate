@@ -6,11 +6,11 @@ using System.Windows.Controls;
 static class Menus {
 	public const string
 		black = " #505050|#D0D0D0",
-		blue = " #0080FF|#77C9FF",
+		blue = " #4080FF|#77C9FF",
 		darkBlue = " #4040FF|#8080FF",
 		green = " #99BF00|#A9CE13",
 		brown = " #9F5300|#D0D0D0",
-		purple = " #B340FF|#D595FF",
+		purple = " #A040FF|#D595FF",
 		darkYellow = " #EABB00",
 		orange = " #FFA500",
 		red = " #FF4040|#FF9595"
@@ -169,6 +169,24 @@ static class Menus {
 			
 			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black)]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
+		}
+		
+		[Command(target = "", image = "*Material.Git" + black)]
+		public static class Git {
+			[Command("Commit (create local backup)")]
+			public static void Git_commit() { GitSync.Commit(); }
+			
+			[Command("Commit and push (local and cloud backup)")]
+			public static void Git_push() { GitSync.Push(); }
+			
+			[Command("Pull... (download cloud to workspace)")]
+			public static void Git_pull() { GitSync.Pull(); }
+			
+			[Command("Setup...", separator = true)]
+			public static void Git_setup() { GitSync.DGit.AaShow(); }
+			
+			[Command("Run GitHubDesktop", image = "*Codicons.Github" + purple)]
+			public static void Git_GUI() { run.itSafe(folders.LocalAppData + @"GitHubDesktop\GitHubDesktop.exe"); }
 		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]

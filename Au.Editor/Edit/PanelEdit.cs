@@ -74,9 +74,6 @@ class PanelEdit {
 			UpdateUI_EditEnabled_();
 			ActiveDocChanged?.Invoke();
 		} else {
-			//SHOULDDO: if the same physical file is already open (through another link FileNode), either fail or print warning.
-			//	Currently auto-reloading changed text isn't supported in such case.
-			
 			var path = f.FilePath;
 			byte[] text = null;
 			KScintilla.aaaFileLoaderSaver fls = default;
@@ -178,7 +175,7 @@ class PanelEdit {
 	
 	internal void OnAppActivated_() {
 		foreach (var doc in _docs) {
-			doc.EFile.OnAppActivatedAndThisIsOpen_(doc);
+			doc.EFile.CheckModifiedExternally_(doc);
 		}
 	}
 	
