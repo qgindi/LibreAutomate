@@ -1175,7 +1175,10 @@ partial class FilesModel {
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
 			foreach (var f in (pos == FNInsert.After) ? a.Reverse() : a) {
-				if (!importingWorkspace && !this.IsMyFileNode(f)) continue; //deleted?
+				if (!importingWorkspace) {
+					if (!this.IsMyFileNode(f)) continue; //deleted?
+					if (a.Contains(f.Parent)) continue;
+				}
 				if (copy) {
 					var fCopied = f.FileCopy(target, pos, this);
 					if (fCopied != null) a2.Add(fCopied);
@@ -1214,6 +1217,7 @@ partial class FilesModel {
 				.Prepend(FilesDirectory)
 				.ToArray();
 			
+			int action = 0;
 			int fromWorkspaceDir = 0;
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
@@ -1227,33 +1231,40 @@ partial class FilesModel {
 					return;
 				}
 				if (wsDirs.Any(o => s.PathStarts(o))) {
+					if (copy) return; //unlikely
 					var f1 = FindByFilePath(s);
 					if (f1 != null) {
-						print.it($"<>Cannot import. The {(filesystem.exists(s, true).Directory ? "folder" : "file")} already is in the workspace. {f1?.SciLink(true)}");
-						return;
+						var sff = f1.IsFolder ? "folder" : "file";
+						if (a.Length > 1) {
+							print.it($"<>Cannot import. The {sff} already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
+						} else {
+							action = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Add as a link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
+							if (action == 2) f1.Model.SetCurrentFile(f1);
+						}
+						if (action != 1) return;
+					} else {
+						//repair workspace: import file that is in a workspace folder but not in the Files panel
+						fromWorkspaceDir++;
 					}
-					if (copy) return; //unlikely
-					
-					//repair workspace: import file that is in a workspace folder but not in the Files panel
-					fromWorkspaceDir++;
 				}
 			}
 			if (fromWorkspaceDir > 0 && fromWorkspaceDir < a.Length) return; //some files from workspace dir and some not. Unlikely.
 			
-			int action;
-			if (copy) {
-				action = 2;
-			} else if (fromWorkspaceDir > 0) {
-				action = 3; //move
-			} else {
-				var ab = new[] {
-					"1 Add as a link",
-					"2 Copy to the workspace",
-					"3 Move to the workspace",
-					"0 Cancel"
-				};
-				action = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
-				if (action == 0) return;
+			if (action == 0) {
+				if (copy) {
+					action = 2;
+				} else if (fromWorkspaceDir > 0) {
+					action = 3; //move
+				} else {
+					var ab = new[] {
+						"1 Add as a link",
+						"2 Copy to the workspace",
+						"3 Move to the workspace",
+						"0 Cancel"
+					};
+					action = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+					if (action == 0) return;
+				}
 			}
 			
 			bool select = !dontSelect && (pos != FNInsert.Inside || target.IsExpanded), focus = select;

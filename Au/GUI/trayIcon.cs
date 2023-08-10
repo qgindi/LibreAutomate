@@ -48,7 +48,7 @@ namespace Au {
 		public void Dispose() { Dispose(true); }
 		
 		///
-		protected void Dispose(bool disposing) { _Delete(disposing: true); }
+		protected virtual void Dispose(bool disposing) { _Delete(disposing: true); }
 		
 		void _Delete(bool disposing = false) {
 			lock (this) {

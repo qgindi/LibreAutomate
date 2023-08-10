@@ -155,8 +155,11 @@ static class CiUtil {
 		foreach (var loc in sym.Locations) {
 			if ((metadata = loc.MetadataModule) != null) break;
 		}
+		
+		bool au = metadata?.Name == "Au.dll";
+		if (au && !sym.HasPublicResultantVisibility()) metadata = null; //no online doc for other than public, protected, protected internal. But the google search is useful eg if it's an Api class member visible because of meta testInternal.
+		
 		if (metadata != null) {
-			bool au = metadata.Name == "Au.dll";
 			if (au && sym.IsEnumMember()) sym = sym.ContainingType;
 			//print.it(sym, sym.GetType(), sym.GetType().GetInterfaces());
 			if (sym is INamedTypeSymbol nt && nt.IsGenericType) {
@@ -175,7 +178,7 @@ static class CiUtil {
 			
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
-		} else if (!sym.IsInSource()) { //eg an operator of string etc
+		} else if (!sym.IsInSource() && !au) { //eg an operator of string etc
 			if (!(sym is IMethodSymbol me && me.MethodKind == MethodKind.BuiltinOperator)) return null;
 			//print.it(sym, sym.Kind, sym.QualifiedName());
 			//query = "C# " + sym.ToString(); //eg "string.operator +(string, string)", and Google finds just Equality

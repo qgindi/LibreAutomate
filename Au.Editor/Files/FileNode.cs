@@ -482,11 +482,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	long _fileModTime;
 	
 	//called when SciDoc loaded or saved the file
-	internal void UpdateFileModTime() {
+	internal void UpdateFileModTime_() {
 		_fileModTime = Api.GetFileAttributesEx(FilePath, 0, out var d) ? d.ftLastWriteTime : 0;
 	}
 	
-	internal void OnAppActivatedAndThisIsOpen_(SciCode doc) {
+	internal void CheckModifiedExternally_(SciCode doc) {
 		if (doc.EIsBinary) return;
 		Debug_.PrintIf(_fileModTime == 0);
 		if (!Api.GetFileAttributesEx(FilePath, 0, out var d) || d.ftLastWriteTime == _fileModTime) return;
@@ -539,7 +539,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public void SaveNewTextOfClosedFile(string text) {
 		Debug.Assert(OpenDoc == null);
 		filesystem.saveText(FilePath, text);
-		UpdateFileModTime();
+		UpdateFileModTime_();
 		CodeInfo.FilesChanged();
 	}
 	

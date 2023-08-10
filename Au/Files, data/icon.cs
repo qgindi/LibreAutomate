@@ -40,7 +40,7 @@ namespace Au {
 		}
 		
 		///
-		protected void Dispose(bool disposing) {
+		protected virtual void Dispose(bool disposing) {
 			var h = Detach();
 			if (h != default) Api.DestroyIcon(h);
 		}

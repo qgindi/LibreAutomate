@@ -433,9 +433,9 @@ static unsafe partial class Api {
 	internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-	static extern IntPtr _CreateFile(string lpFileName, Access dwDesiredAccess, CfShare dwShareMode, IntPtr lpSecurityAttributes, CfCreation creationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+	static extern IntPtr _CreateFile(string lpFileName, Access dwDesiredAccess, CfShare dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, CfCreation creationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 	
-	internal static Handle_ CreateFile(string lpFileName, Access dwDesiredAccess, CfShare dwShareMode, CfCreation creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default, IntPtr lpSecurityAttributes = default)
+	internal static Handle_ CreateFile(string lpFileName, Access dwDesiredAccess, CfShare dwShareMode, CfCreation creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default, SECURITY_ATTRIBUTES lpSecurityAttributes = null)
 		=> new Handle_(_CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, creationDisposition, dwFlagsAndAttributes, hTemplateFile));
 	//note: cannot return Handle_ directly from API because returns -1 if failed. The ctor then makes 0.
 	
@@ -906,8 +906,8 @@ static unsafe partial class Api {
 	//[DllImport("kernel32.dll", SetLastError = true)]
 	//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
 	
-	//[DllImport("kernel32.dll", SetLastError = true)]
-	//internal static extern bool PeekNamedPipe(IntPtr hPipe, void* lpBuffer, int nBufferSize, int* lpBytesRead, int* lpTotalBytesAvail, int* lpBytesLeftThisMessage);
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool PeekNamedPipe(IntPtr hNamedPipe, void* lpBuffer, int nBufferSize, out int lpBytesRead, out int lpTotalBytesAvail, IntPtr lpBytesLeftThisMessage = default);
 	
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool AllocConsole();

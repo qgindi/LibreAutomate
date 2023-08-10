@@ -132,7 +132,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 		public void Dispose() { Dispose(true); }
 		
 		///
-		protected void Dispose(bool disposing) {
+		protected virtual void Dispose(bool disposing) {
 			lock (s_list) if (!s_list.Remove(this)) return;
 			if (!NoAutoSave) SaveIfNeed();
 			_file = null;

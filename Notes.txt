@@ -62,7 +62,7 @@ Download and test the setup file.
 Test the setup file at virustotal.com. And separately other files (even data files).
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
 
-Edit version in version.txt. It is in public_html. Can download/upload through FileZilla, or edit in webhost CP, or create script.
+Edit version in _\version.txt. Upload to public_html.
 
 Announce in forum.
 

@@ -529,7 +529,7 @@ A script can use packages from multiple folders if they are compatible.");
 		m.Separator();
 		m.Submenu("NuGet cache", m => {
 			m["Open packages folder"] = o => {
-				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list") && !s.NE())
+				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list", encoding: Console.OutputEncoding) && !s.NE())
 					if (s.RxMatch(@"(?m)^global-packages: (.+)$", 1, out s)) run.it(s);
 					else print.it(s);
 			};
@@ -552,7 +552,7 @@ A script can use packages from multiple folders if they are compatible.");
 					print.it(s);
 				};
 			}
-			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl));
+			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl, encoding: Console.OutputEncoding)); //FUTURE: it seems dotnet of .NET 8 supports UTF-8. Maybe need Environment.SetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE", "utf-8"); or similar.
 		}
 		catch (Exception e1) { dialog.showError("Failed to run dotnet.exe", e1.ToStringWithoutStack(), owner: this); }
 		return false;

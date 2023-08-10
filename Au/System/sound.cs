@@ -202,7 +202,7 @@ namespace Au.More {
 		}
 		
 		///
-		protected void Dispose(bool disposing) {
+		protected virtual void Dispose(bool disposing) {
 			if (_v != null) {
 				if (disposing) Marshal.ReleaseComObject(_v); //stops speaking if async
 				_v = null;
