@@ -223,12 +223,16 @@ ModelManifest.xml
 !/_/Cookbook/
 !/_/Default/
 !/_/Templates/
+!/_/Roslyn/
+/_/Roslyn/*.xml
+!/_/*.db
 !/_/*.yml
 !/_/*.manifest
 !/_/*.txt
 
 #!/_/32/*
 #!/_/64/*
+!/_/32/7za.exe
 
 /_/Default/*
 !/_/Default/Workspace/
