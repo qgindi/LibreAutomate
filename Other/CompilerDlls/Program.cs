@@ -17,41 +17,34 @@ using System.IO;
 //(skip this if can compile) From Microsoft.CodeAnalysis.Features dependencies remove Scripting. Unload Scripting project. Because it does not compile, and not useful.
 //Edit as described in the '#if false' block at the bottom of this file.
 //Run this project. It modifies Roslyn solution project files.
-//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 8 dlls to C:\code\au\Other\CompilerDlls.
-//In editor project do this once:
-//	Add references to the main 6 dlls from folder C:\app\Au\Other\CompilerDlls (listed above).
-//	Add this in editor project for each Roslyn reference: <DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
-//	On build VS will copy the dlls to _\Roslyn.
-//	VS will detect when the dlls modified when building Roslyn.
+//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 8 dlls to _\Roslyn.
+//In Roslyn artifacts folder find 6 xml doc files and copy to _\Roslyn.
 //To get other dlls:
 //	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
-//	Compile. Copy all dlls from the bin folder to _\Roslyn.
+//	Compile. Copy all dlls from the bin folder to _\Roslyn. Except those 6.
 //	In the last Roslyn version also needed:
 //		C:\Users\G\.nuget\packages\microsoft.codeanalysis.elfie\1.0.0-rc14\lib\netstandard2.0\Microsoft.CodeAnalysis.Elfie.dll
 //		But why it wasnt in artifacts or anywhere in roslyn-main? Tried to restore <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>, but it did not help.
-//In Roslyn artifacts folder find xml doc files and copy to CompilerDlls. VS will copy it to _\Roslyn when building editor.
+//In editor project do this once:
+//	Add references to the main 6 dlls from folder _\Roslyn. In dll properties set 'Copy local' false.
 
-namespace CompilerDlls
-{
-	class Program
-	{
-		static void Main(string[] args)
-		{
+namespace CompilerDlls {
+	class Program {
+		static void Main(string[] args) {
 			try {
 				ModRoslyn();
 			}
-			catch(Exception ex) { Console.WriteLine(ex); }
+			catch (Exception ex) { Console.WriteLine(ex); }
 		}
 
-		static void ModRoslyn()
-		{
+		static void ModRoslyn() {
 			bool writeFile = true;
 
 			string roslynDir = @"C:\Downloads\roslyn-main\src\";
 
 			var project = @"</Project>";
 			var copy = @"  <Target Name=""PostBuild"" AfterTargets=""PostBuildEvent"">
-    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;C:\code\au\Other\CompilerDlls\$(TargetFileName)&quot; /y"" />
+    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;C:\code\au\_\Roslyn\$(TargetFileName)&quot; /y"" />
   </Target>
 ";
 			_Mod(@"Features\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Features.csproj", (project, copy, -1));
@@ -64,37 +57,35 @@ namespace CompilerDlls
 			_Mod(@"Scripting\Core\Microsoft.CodeAnalysis.Scripting.csproj", (project, copy, -1));
 
 			//how: 0 replace, 1 insert after, -1 insert before
-			void _Mod(string file, params (string find, string add, int how)[] p)
-			{
+			void _Mod(string file, params (string find, string add, int how)[] p) {
 				file = roslynDir + file;
 				var s = File.ReadAllText(file);
 				int moded = 0;
-				foreach(var v in p) {
-					if(_Mod1(ref s, v.find, v.add, v.how)) moded++;
+				foreach (var v in p) {
+					if (_Mod1(ref s, v.find, v.add, v.how)) moded++;
 				}
 				Console.ForegroundColor = ConsoleColor.Green;
 				Console.WriteLine($"Made {moded} mods in {file}");
 				Console.ForegroundColor = ConsoleColor.White;
-				if(moded == 0) return;
-				if(writeFile) File.WriteAllText(file, s);
+				if (moded == 0) return;
+				if (writeFile) File.WriteAllText(file, s);
 				else Console.WriteLine(s);
 			}
 
-			bool _Mod1(ref string s, string find, string add, int how)
-			{
+			bool _Mod1(ref string s, string find, string add, int how) {
 				//if(s.Contains(add)) return false;
 				var s2 = s.Replace("\r", "");
 				var add2 = add.Replace("\r", "");
-				if(s2.Contains(add2)) return false;
+				if (s2.Contains(add2)) return false;
 
 				int i = 0, len = 0;
-				if(find.Length > 0) {
+				if (find.Length > 0) {
 					var m = Regex.Match(s, "(?m)^[ \t]*" + Regex.Escape(find) + (how < 0 ? "$" : "\r?\n"), RegexOptions.CultureInvariant);
-					if(!m.Success) throw new Exception($"Cannot find '{find}'.");
+					if (!m.Success) throw new Exception($"Cannot find '{find}'.");
 					i = m.Index;
 					len = m.Length;
 				}
-				switch(how) {
+				switch (how) {
 				case 0:
 					s = s.Remove(i, len);
 					break;

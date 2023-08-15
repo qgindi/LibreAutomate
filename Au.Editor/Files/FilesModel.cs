@@ -1508,9 +1508,9 @@ partial class FilesModel {
 	}
 	
 	public UserData CurrentUser(bool set) {
-		var u = WSSett?.users?.FirstOrDefault(o => o.guid == App.UserGuid);
+		var u = WSSett?.users?.FirstOrDefault(o => o.guid == App.Settings.user);
 		if (u == null && set) {
-			u = new UserData { guid = App.UserGuid };
+			u = new UserData { guid = App.Settings.user };
 			var a = WSSett.users ?? Array.Empty<UserData>();
 			a = a.InsertAt(0, u);
 			WSSett.users = a;

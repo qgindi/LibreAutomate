@@ -89,7 +89,7 @@ class DOptions : KDialogWindow {
 			App.Settings.runHidden = startHidden.IsChecked;
 			App.Settings.checkForUpdates = checkForUpdates.IsChecked;
 
-			var s = startupScripts.Text;
+			var s = startupScripts.Text.Trim();
 			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;
 
 			App.Model.DebuggerScript = debuggerScript.TextOrNull();

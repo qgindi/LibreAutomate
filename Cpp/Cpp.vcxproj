@@ -200,6 +200,12 @@
     <ClCompile Include="acc func.cpp" />
     <ClCompile Include="acc web.cpp" />
     <ClCompile Include="acc workaround.cpp" />
+    <ClCompile Include="MemoryPool.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="other.cpp" />
     <ClCompile Include="str.cpp" />
     <ClCompile Include="acc uia.cpp" />
@@ -233,6 +239,7 @@
     <ClInclude Include="acc.h" />
     <ClInclude Include="Cpp.h" />
     <ClInclude Include="JAB.h" />
+    <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="internal.h" />
     <ClInclude Include="stdafx.h" />

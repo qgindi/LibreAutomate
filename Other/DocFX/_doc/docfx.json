@@ -13,7 +13,9 @@
       "shouldSkipMarkup": true,
       "filter": "filter.yml",
       "disableGitFeatures": false,
-      "disableDefaultFilter": false
+      "disableDefaultFilter": false,
+      "memberLayout": "separatePages",
+      "noRestore": true
     }
   ],
   "build": {
@@ -37,21 +39,7 @@
       }
     ],
     "resource": [
-      {
-        "files": [
-          "images/**",
-        ]
-      }
-    ],
-    "overwrite": [
-      {
-        "files": [
-          "apidoc/**.md"
-        ],
-        "exclude": [
-          "obj/**"
-        ]
-      }
+      "images/window.png"
     ],
     "globalMetadata": {
       "_appTitle": "LibreAutomate",
@@ -66,7 +54,6 @@
     "template": [
       "default",
       "template1",
-      "C:/Users/G/.nuget/packages/memberpage/2.59.0/content",
       "template2"
     ],
     "postProcessors": [],
@@ -75,7 +62,6 @@
     "keepFileLink": false,
     "cleanupCacheHistory": false,
     "disableGitFeatures": false,
-    "xrefService": [ "https://learn.microsoft.com/api/xref/query?uid={uid}" ],
     "sitemap": {
       "baseUrl": "https://www.libreautomate.com/",
       "changefreq": "weekly"

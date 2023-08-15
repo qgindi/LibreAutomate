@@ -151,7 +151,8 @@ class PanelOutput {
 		
 		public void AaSetStyles() {
 			var styles = new CiStyling.TStyles(customized: false) { BackgroundColor = 0xF7F7F7 };
-			(styles.FontName, styles.FontSize) = App.Settings.font_output;
+			styles.FontName = App.Settings.font_output.name;
+			styles.FontSize = App.Settings.font_output.size;
 			styles.ToScintilla(this);
 		}
 		

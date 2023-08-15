@@ -1,5 +1,10 @@
 /*/ role exeProgram; testInternal Au; outputPath %folders.ThisApp%\..\Other\Programs; console true; /*/
 
+//.
+script.setup(exception: UExcept.Dialog | UExcept.Print);
+//..
+
+
 if (args is ["cpp"]) return CppPreLink();
 return EditorPostBuild();
 

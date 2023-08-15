@@ -215,17 +215,17 @@ ModelManifest.xml
 # Au
 /Other/Api/
 /Other/Programs/ResourceHacker.*
+!/Other/Programs/ResourceHacker.exe
 /Other/Programs/*2.exe.res
+/Libraries/PCRE/excluded/
 
 /_/*
 !/_/Cookbook/
 !/_/Default/
-!/_/Roslyn/
 !/_/Templates/
-!/*.db
-!/*.yml
-!/*.manifest
-!/*.txt
+!/_/*.yml
+!/_/*.manifest
+!/_/*.txt
 
 #!/_/32/*
 #!/_/64/*
@@ -247,10 +247,3 @@ ModelManifest.xml
 !/_/Cookbook/files.xml
 
 *.bak
-
-
-# To delete files or folders from git:
-# In Git pane click [...] and open command prompt.
-# Execute git rm. Example: git rm -r --cached "folder/subfolder/"
-# The -r means recursively. The --cached means don't delete local files/folders. It's safer to delete them manually.
-# Then edit this .gitignore file if need to prevent adding again.

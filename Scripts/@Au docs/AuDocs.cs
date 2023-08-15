@@ -17,7 +17,6 @@ partial class AuDocs {
 	string _code;
 	int _currentFileIndex;
 	ISymbol _currentSym;
-	string _usings;
 	MarkdownPipeline _pipeline;
 	_Analyze _analyze;
 	
@@ -28,7 +27,7 @@ partial class AuDocs {
 	regexp _rxC = new(@"(?s)<c><!\[CDATA\[(<c.+?</c>)\]\]></c>");
 	regexp _rxLi = new(@"(?m)^(\h*)<br /> *•");
 	regexp _rxLi2 = new(@"(?m)^\h*-");
-	regexp _rxIndentation = new(@"(?>\n) +");
+	regexp _rxIndentation, _rxIndentation2;
 	regexp _rxParams;
 	regexp _rxFixInherited = new(@"(</(summary|param|typeparam|remarks|example|returns|value|exception|seealso|code|note|para|table|div|h\d|ul|ol)>)(<(?2)\b)");
 	regexp _rxFixInheritedBr = new(@"(</[a-z]+>)(?=<br\b)");
@@ -57,12 +56,6 @@ partial class AuDocs {
 		
 		//info: currently there are no excluded .cs files. Would need to parse Au.csproj.
 		
-		if (!testSmall) { //DocFX does not support global using. Get global usings from global2.cs and add to all other files.
-			_usings = File.ReadAllText(sourceDir + @"\resources\global2.cs");
-			_usings = string.Join(' ', _usings.RxFindAll(@"(?m)^global (using .+)", 1)) + "\r\n";
-			_analyze.AddUsings(ref _usings);
-		}
-		
 		var parseOpt = new CSharpParseOptions(LanguageVersion.Preview, DocumentationMode.Parse);
 		var trees = new List<CSharpSyntaxTree>();
 		var files = new List<(string path, string code)>();
@@ -79,6 +72,8 @@ partial class AuDocs {
 			} else if (f.Name.Eqi(@"\Au.csproj")) {
 				var s = filesystem.loadText(path);
 				s = s.RxReplace(@"(?ms)^\h*<COMReference\b.+?</COMReference>", "", 1); //mute docfx warning
+				s = s.Replace("<SignAssembly>true</SignAssembly>", "");
+				s = s.RxReplace("<AssemblyOriginatorKeyFile>.+?</AssemblyOriginatorKeyFile>", "");
 				filesystem.saveText(destDir + f.Name, s);
 			} else {
 				filesystem.copy(path, destDir + f.Name);
@@ -103,7 +98,6 @@ partial class AuDocs {
 			_filePos = 0;
 			var f = files[i];
 			_code = f.code;
-			if (!testSmall && !f.path.Ends(@"\global.cs", true)) _bFile.Append(_usings);
 			_PreprocessFile(tree);
 			_bFile.Append(f.code, _filePos, f.code.Length - _filePos);
 			var s = _bFile.ToString();
@@ -224,12 +218,13 @@ partial class AuDocs {
 		}
 		
 		//remove indentation added by GetDocumentationCommentXml etc
+		_rxIndentation ??= new(@"(?>\n) +");
 		if (!sxml.Starts("<doc>") && _rxIndentation.Match(sxml, 0, out string si)) {
-			switch (si.Length) {
-			case 5: sxml = sxml.Replace(si, "\n"); break; //\n and 4 spaces
-			case 6: sxml = sxml.RxReplace("(?m)^    (?: |$)", ""); break; //\n and 5 spaces. When documentation contains a line without space after /// (usually an empty line).
-			default: throw new InvalidOperationException();
-			}
+			if (si.Length is not (5 or 6)) throw new InvalidOperationException(); //\n and 4-5 spaces
+			_rxIndentation2 ??= new(@"(?m)^     ?(?=[^ ])");
+			sxml = _rxIndentation2.Replace(sxml, "");
+			//print.it("-----");
+			//print.it(sxml);
 		}
 		//print.it(sxml);
 		
@@ -506,7 +501,7 @@ partial class AuDocs {
 			//print.it(s);
 			x.Value = s;
 			if (x.Name.LocalName == "seealso") { //DocFX ignores value. Let's insert it as <seealso href> for postprocessing.
-				_b.AppendLine($"""<seealso href="https://text">{System.Net.WebUtility.HtmlEncode(s)}</seealso>""");
+				_b.AppendLine($"""<seealso href="https://text">{Convert2.HexEncode(Encoding.UTF8.GetBytes(s))}</seealso>""");
 			}
 		}
 	}

@@ -19,6 +19,8 @@ using System.Xml.Linq;
 using Markdig;
 using System.Xml;
 
+#pragma warning disable CS0162, CS8321, CS0169 //unreachable code, unused func/field
+
 class _Analyze {
 	//AuDocs _main;
 	int _currentFileIndex, _currentFileIndexPrev;
@@ -33,13 +35,6 @@ class _Analyze {
 	//public _Analyze(AuDocs main) {
 	//	_main = main;
 	//}
-	
-	public void AddUsings(ref string s) {
-		//s=s+"\nusing System.Drawing;\n";
-		//s=s+"\nusing System.Windows.Forms;\n";
-		//s=s+"\nusing System.Windows;\n";
-		//s=s+"\nusing System.Windows.Controls;\n";
-	}
 	
 	public void StartingFile(CSharpSemanticModel semo, int currentFileIndex) {
 		_semo = semo;

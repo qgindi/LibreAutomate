@@ -8,9 +8,26 @@ record AppSettings : JSettings {
 	//This is loaded at startup and therefore must be fast.
 	//	NOTE: Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
 	//	Speed tested with .NET 5: first time 40-60 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
-	//	CONSIDER: Jit_ something in other thread. But it isn't good when runs at PC startup.
 	
-	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
+	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json")._Loaded();
+	
+	AppSettings _Loaded() {
+		_NE(ref user) ??= Guid.NewGuid().ToString();
+		hotkeys ??= new();
+		(font_output ??= new()).Loaded();
+		delm ??= new();
+		recorder ??= new();
+		return this;
+	}
+	
+	static void _NE(ref string s, string def) {
+		if (s.NE()) s = def;
+	}
+	
+	static ref string _NE(ref string s) {
+		if (s == "") s = null;
+		return ref s;
+	}
 	
 #if IDE_LA
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings_\";
@@ -24,14 +41,20 @@ record AppSettings : JSettings {
 	public bool checkForUpdates;
 	public int checkForUpdatesDay;
 	
-	//When need a nested type, use record struct. Everything works well; can add/remove members like in main type.
-	//	If using default field values, need ctor eg `hotkeys_t()` (else error) and `=new()`.
-	//	Note: .NET always creates new object, even if default object created, even if record class. Avoid custom ctors etc.
-	//	Can use record class too, but then usually creates new object 2 times: 1. explicit new(); 2. when deserializing.
-	//	Tuple does not work well. New members are null. Also item names in file are like "Item1".
+	//When need a nested type, use record class. Everything works well; later can add/remove members like in main type.
+	//Don't use record struct when need to set init values (now or in the future), because:
+	//	1. Older .NET versions don't support it, or have bugs.
+	//		Eg .NET 6.0.3 throws "InvalidCastException, Unable to cast object of type 'System.String' to type 'hotkeys_t'" when `public record hotkeys_t()` (need the `()` when using default field values).
+	//			Works if `public record hotkeys_t(string a, string b)`, but then need 'new("a", "b")'; I don't like it etc.
+	//	2. If `public record hotkeys_t(string a, string b)`, and later added a new member like `, c = "value"`, the value is null/0. The deserializer uses the default ctor.
+	//		Also the same happens if somebody deletes an existing member from JSON.
+	//		Works well with `public record hotkeys_t()`, but cannot use it because of 1.
+	//Note: deserializer always creates new object, even if default object created. Avoid custom ctors etc.
+	//If like `public hotkeys_t hotkeys = new()`, creates new object 2 times: 1. explicit new(); 2. when deserializing. Also in JSON can be `= null`. Move the `new()` to _Loaded.
+	//Tuple does not work well. New members are null/0. Also item names in file are like "Item1".
 	
 	//Options -> Hotkeys
-	public record struct hotkeys_t() {
+	public record hotkeys_t {
 		public string
 			tool_quick = "Ctrl+Shift+Q",
 			tool_wnd = "Ctrl+Shift+W",
@@ -39,11 +62,19 @@ record AppSettings : JSettings {
 			tool_uiimage
 			;
 	}
-	public hotkeys_t hotkeys = new();
+	public hotkeys_t hotkeys;
 	
 	//font of various UI parts
-	public record struct font_t(string name, double size = 9);
-	public font_t font_output = new("Consolas");
+	public record font_t {
+		public string name;
+		public double size = 9;
+		
+		public void Loaded() {
+			_NE(ref name, "Consolas");
+			size = Math.Clamp(size, 6, 30);
+		}
+	}
+	public font_t font_output;
 	
 	//Options -> Templates
 	public int templ_use;
@@ -70,12 +101,7 @@ record AppSettings : JSettings {
 	
 	//file type icons
 	public record struct icons_t {
-		public string
-			ft_script,
-			ft_class,
-			ft_folder,
-			ft_folderOpen
-			;
+		public string ft_script, ft_class, ft_folder, ft_folderOpen;
 	}
 	public icons_t icons;
 	
@@ -101,20 +127,20 @@ record AppSettings : JSettings {
 	public wndpos_t wndpos;
 	
 	//Delm
-	public record struct delm_t() {
+	public record delm_t {
 		public string hk_capture = "F3", hk_insert = "F4"; //for all tools
 		public string wait, actionn; //named actionn because once was int action
 		public int flags;
 	}
-	public delm_t delm = new();
+	public delm_t delm;
 	
 	//DInputRecorder
-	public record struct recorder_t() {
+	public record recorder_t {
 		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
 		public int xyIn;
 		public string speed = "10";
 	}
-	public recorder_t recorder = new();
+	public recorder_t recorder;
 	
 	//DIcons
 	public int dicons_listColor;
@@ -158,9 +184,9 @@ record WorkspaceSettings : JSettings {
 	
 	public string ci_skipFolders;
 	
-	public record class git_t {
+	public record git_t {
 		public bool use;
 		public string repoUrl, pat, script, menu;
 	}
-	public git_t git = new();
+	public git_t git;
 }
