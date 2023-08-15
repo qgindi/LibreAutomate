@@ -11,7 +11,6 @@ static partial class App {
 		AppNameLong = "LibreAutomate C#",
 		AppNameShort = "LibreAutomate"; //must be without spaces etc
 	
-	public static string UserGuid;
 	internal static PrintServer PrintServer;
 	public static AppSettings Settings;
 	public static KMenuCommands Commands;
@@ -72,8 +71,6 @@ static partial class App {
 		Settings = AppSettings.Load();
 		//perf.next('s');
 		//Debug_.PrintLoadedAssemblies(true, !true);
-		
-		UserGuid = Settings.user ??= Guid.NewGuid().ToString();
 		
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
 		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
@@ -174,9 +171,17 @@ static partial class App {
 	public static wnd Hmain { get; internal set; }
 	
 	public static void ShowWindow() {
+		//workaround for WPF bug: Window.Show pumps posted messages.
+		//	And crashes if a message causes to call Show again.
+		//	To reproduce, let the program start hidden, and double-click the tray icon.
+		if (_sw1) return;
+
+		_sw1 = true;
 		Wmain.Show(); //auto-creates MainWindow if never was visible
+		_sw1 = false;
 		Hmain.ActivateL(true);
 	}
+	static bool _sw1;
 	
 	static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
 #if TRACE

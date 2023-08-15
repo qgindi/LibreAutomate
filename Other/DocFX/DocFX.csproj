@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -28,10 +28,6 @@
     <None Include="_doc\**" />
     <None Remove="_doc\_site\**" />
     <None Remove="_doc\_exported_templates\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="memberpage" Version="2.59.0" />
   </ItemGroup>
 
 </Project>

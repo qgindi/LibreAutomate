@@ -141,28 +141,28 @@
 
 	<ItemGroup>
 		<Reference Include="Microsoft.CodeAnalysis">
-			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.dll</HintPath>
-			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp">
-			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
-			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
-			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
-			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
-			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.Features">
-			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Features.dll</HintPath>
-			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Features.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.Workspaces">
-			<HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
-			<DestinationSubDirectory>Roslyn\</DestinationSubDirectory>
+		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+			<Private>False</Private>
 			<Aliases>CAW</Aliases>
 		</Reference>
 	</ItemGroup>

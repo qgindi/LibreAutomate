@@ -1,4 +1,4 @@
-using Octokit;
+using Octokit; //TODO: add Octokit.dll to the Inno setup script
 
 static partial class GitSync {
 	static WorkspaceSettings.git_t _sett;
@@ -8,9 +8,9 @@ static partial class GitSync {
 		_dir = folders.Workspace;
 		_dir = @"C:\Users\G\Documents\LibreAutomate\Main";//TODO
 #if SCRIPT
-		_sett = WorkspaceSettings.Load(_dir + @"\settings2.json").git;
+		_sett = WorkspaceSettings.Load(_dir + @"\settings2.json").git ??= new();
 #else
-		_sett = App.Model.WSSett.git;
+		_sett = App.Model.WSSett.git ??= new();
 #endif
 		if (!_sett.use) return false;
 		if (!_FindGit(out _gitExe, out _)) { print.warning("git.exe not found"); return false; }

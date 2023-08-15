@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "cpp.h"
+#include "MemoryPool.h"
 
 namespace str
 {
@@ -238,36 +239,6 @@ EXPORT int Cpp_RegexDtor(pcre2_code_16* code)
 
 struct _RxMdVec { CHeapPtr<POINT> a; int n; };
 
-extern "C" int pcre2_match_data_create_au(const pcre2_code* code, pcre2_match_data* md);
-//add this in pcre2_match_data.c, and make sure it is still correct after upgrading PCRE library
-/*
-//au: allows the caller to allocate pcre2_match_data in a faster way than the default malloc/free.
-//	At first call pcre2_match_data_create_au with md=null. It returns the memory size needed.
-//	Then allocate memory, call pcre2_match_data, pass the memory as md. It initializes the pcre2_match_data.
-//	Note: do it in C++. In C# slower, tested.
-static void* default_malloc(size_t size, void* data) { (void)data; return malloc(size); }
-static void default_free(void* block, void* data) { (void)data; free(block); }
-int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md)
-{
-	//code from pcre2_match_data_create_from_pattern (below)
-	int oveccount = ((pcre2_real_code *)code)->top_bracket + 1;
-	int memSize = offsetof(pcre2_match_data, ovector) + 2 * oveccount * sizeof(PCRE2_SIZE);
-
-	if(md != NULL) {
-		//code from PRIV(memctl_malloc) in pcre2_context.h
-		md->memctl.malloc = default_malloc;
-		md->memctl.free = default_free;
-		md->memctl.memory_data = NULL;
-
-		//code from pcre2_match_data_create (below)
-		md->oveccount = oveccount;
-		md->flags = 0;
-	}
-
-	return memSize;
-}
-*/
-
 //After upgrading PCRE library, this reminds to check/reapply its modifications. Then edit this line.
 //More info in config.h in PCRE project.
 static_assert(PCRE2_MAJOR == 10 && PCRE2_MINOR == 42);
@@ -291,7 +262,37 @@ struct RegexMatch
 	STR mark;
 };
 
-#define STACK_MD 1
+#define FAST_MD
+
+static void* _mp_malloc(size_t size, void* data) {
+	auto mp = (AppShift::Memory::MemoryPool*)data;
+	return mp->allocate(size);
+}
+
+static void _mp_free(void* block, void* data) {
+	auto mp = (AppShift::Memory::MemoryPool*)data;
+	mp->free(block);
+}
+
+thread_local AppShift::Memory::MemoryPool* t_mp;
+thread_local pcre2_general_context_16* t_gc;
+
+//Gets thread_local pcre2_general_context_16 that uses memory pool.
+static pcre2_general_context_16* _GetGC() {
+	auto gc = t_gc;
+	if (gc == null) {
+		t_mp = new AppShift::Memory::MemoryPool(25000); //#define START_FRAMES_SIZE 20480, and some for small allocations
+		t_gc = gc = pcre2_general_context_create_16(_mp_malloc, _mp_free, t_mp);
+	}
+	return gc;
+}
+
+void thread_detach() {
+	if (t_mp == nullptr) return;
+	delete t_mp;
+	t_mp = nullptr;
+	t_gc = nullptr;
+}
 
 //Calls pcre2_match_16 and returns its return value. If PCRE2_ERROR_PARTIAL, returns 0.
 //Allocates/frees match data in a fast way. Copies results to m, if not null.
@@ -301,13 +302,12 @@ EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start =
 	int(*callout)(pcre2_callout_block*, void*) = null, ref RegexMatch * m = null, bool needM = true, out BSTR * errStr = null)
 {
 	pcre2_match_data_16* md;
-#ifdef STACK_MD
-	char stack[1000]; //ovector[~55]
-	int memSize = pcre2_match_data_create_au(code, null);
-	if(memSize <= 1000) pcre2_match_data_create_au(code, md = (pcre2_match_data_16*)stack);
-	else
+#ifdef FAST_MD
+	md = pcre2_match_data_create_from_pattern_16(code, _GetGC());
+	//tested: startScope/endScope usually makes slightly slower.
+#else
+	md = pcre2_match_data_create_from_pattern_16(code, null);
 #endif
-		md = pcre2_match_data_create_from_pattern_16(code, null);
 
 	int R = pcre2_match_16(code, s, len, start, flags, md, null, callout);
 
@@ -348,10 +348,7 @@ EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start =
 		//FUTURE: if UTF error, in error text include the offset. It seems pcre2_get_startchar_16 returns it.
 	}
 
-#ifdef STACK_MD
-	if((void*)md != stack)
-#endif
-		pcre2_match_data_free_16(md);
+	pcre2_match_data_free_16(md);
 	return R;
 }
 
@@ -361,36 +358,18 @@ EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start =
 bool Match(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags)
 {
 	pcre2_match_data_16* md;
-#ifdef STACK_MD
-	char stack[1000]; //ovector[~55]
-	int memSize = pcre2_match_data_create_au(code, null);
-	if(memSize <= 1000) pcre2_match_data_create_au(code, md = (pcre2_match_data_16*)stack);
-	else
+#ifdef FAST_MD
+	md = pcre2_match_data_create_from_pattern_16(code, _GetGC());
+#else
+	md = pcre2_match_data_create_from_pattern_16(code, null);
 #endif
-		md = pcre2_match_data_create_from_pattern_16(code, null);
 
 	int R = pcre2_match_16(code, s, len, start, flags, md, null, null);
 
-#ifdef STACK_MD
-	if((void*)md != stack)
-#endif
-		pcre2_match_data_free_16(md);
+	pcre2_match_data_free_16(md);
+
 	return R > 0 || R == PCRE2_ERROR_PARTIAL;
 }
-
-//rejected
-////Calls pcre2_substitute_16 and returns its return value.
-////errStr, if not null, receives error text when fails. Caller then must SysFreeString it.
-//EXPORT int Cpp_RegexSubstitute(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags,
-//	STR repl, size_t rlen, LPWSTR outputbuffer, size_t* outlen, out BSTR* errStr = null)
-//{
-//	size_t outlen0 = *outlen;
-//	int r = pcre2_substitute_16(code, s, len, start, flags, null, null, repl, rlen, outputbuffer, outlen);
-//	if(r < 0 && errStr != null && !(r == PCRE2_ERROR_NOMEMORY && *outlen > outlen0)) {
-//		*errStr = GetErrorMessage(r);
-//	}
-//	return r;
-//}
 }
 
 #pragma region Wildex

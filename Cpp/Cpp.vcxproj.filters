@@ -81,6 +81,9 @@
     <ClCompile Include="acc workaround.cpp">
       <Filter>Source Files\other</Filter>
     </ClCompile>
+    <ClCompile Include="MemoryPool.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cpp.h">
@@ -103,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="acc.h">
       <Filter>Source Files\Acc</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>Source Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

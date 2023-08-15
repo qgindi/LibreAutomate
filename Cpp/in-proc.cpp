@@ -71,6 +71,10 @@ void HwndTidCache_OnThreadDetach();
 #endif
 }
 
+namespace str::pcre {
+	void thread_detach();
+}
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
 	switch(ul_reason_for_call) {
@@ -91,6 +95,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 #ifdef AGENTCACHE
 		outproc::HwndTidCache_OnThreadDetach();
 #endif
+		str::pcre::thread_detach();
 		break;
 	}
 	return TRUE;

@@ -16,6 +16,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Au.InternalsVisible.cs" />
+    <Compile Remove="Au.TestInternal.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Au.InternalsVisible.cs" />
+    <None Include="Au.TestInternal.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.2.0" />
   </ItemGroup>
 

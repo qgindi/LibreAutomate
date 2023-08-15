@@ -1,7 +1,6 @@
 Using 3 templates:
 template1 - modified "mathew" template. It is included in the DocFX "Templates" webpage. Downloaded from github. Mostly changes style.
-memberpage - from the DocFX "Templates" webpage. Splits class pages into member pages. Actually it is a pluging + template.
-template2 - styles to change in member pages after running memberpage. Copied from mathew and modified.
+template2 - styles to change in member pages. Copied from mathew and modified.
 
 Currently not using the affix. It is the dynamic links at the right.
 

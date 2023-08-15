@@ -1,3 +1,6 @@
+- uid: Program
+  name: LibreAutomate C#
+  href: editor/Program.html
 - uid: caller_info
   name: Caller info parameter
   href: articles/Caller%20info%20parameter.html
@@ -19,9 +22,6 @@
 - uid: portable
   name: Portable mode
   href: editor/Portable%20app.html
-- uid: Program
-  name: LibreAutomate C#
-  href: editor/Program.html
 - uid: program_settings
   name: Program settings and the Options dialog
   href: editor/Program%20settings.html

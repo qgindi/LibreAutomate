@@ -171,23 +171,23 @@ static class Menus {
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 		
-		[Command(target = "", image = "*Material.Git" + black)]
-		public static class Git {
-			[Command("Commit (create local backup)")]
-			public static void Git_commit() { GitSync.Commit(); }
+		//[Command(target = "", image = "*Material.Git" + black)]
+		//public static class Git {
+		//	[Command("Commit (create local backup)")]
+		//	public static void Git_commit() { GitSync.Commit(); }
 			
-			[Command("Commit and push (local and cloud backup)")]
-			public static void Git_push() { GitSync.Push(); }
+		//	[Command("Commit and push (local and cloud backup)")]
+		//	public static void Git_push() { GitSync.Push(); }
 			
-			[Command("Pull... (download cloud to workspace)")]
-			public static void Git_pull() { GitSync.Pull(); }
+		//	[Command("Pull... (download cloud to workspace)")]
+		//	public static void Git_pull() { GitSync.Pull(); }
 			
-			[Command("Setup...", separator = true)]
-			public static void Git_setup() { GitSync.DGit.AaShow(); }
+		//	[Command("Setup...", separator = true)]
+		//	public static void Git_setup() { GitSync.DGit.AaShow(); }
 			
-			[Command("Run GitHubDesktop", image = "*Codicons.Github" + purple)]
-			public static void Git_GUI() { run.itSafe(folders.LocalAppData + @"GitHubDesktop\GitHubDesktop.exe"); }
-		}
+		//	[Command("Run GitHubDesktop", image = "*Codicons.Github" + purple)]
+		//	public static void Git_GUI() { run.itSafe(folders.LocalAppData + @"GitHubDesktop\GitHubDesktop.exe"); }
+		//}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]
 		public static void Close_window() { if (App.Settings.runHidden) App.Wmain.Hide_(); else App.Wmain.Close(); }

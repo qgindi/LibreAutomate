@@ -31,6 +31,7 @@ May need to delete test code. Or use #if TRACE, like in Tests.cs.
 Change version info (see above).
 
 Build solution in config Release/AnyCPU. Build in config Release/x86.
+	NOTE: when switched Debug/Release, VS does not build/copy dlls if they are already buit. Need to rebuild solution.
 
 Review menu Help -> About. May need to update used libraries, beta.
 

@@ -1,9 +1,7 @@
 /*/
-role editorExtension;
 define SCRIPT;
 noWarnings CS8632;
-testInternal Au.Editor,Au.Controls,Au,Microsoft.CodeAnalysis,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis.Features,Microsoft.CodeAnalysis.CSharp.Features,Microsoft.CodeAnalysis.Workspaces,Microsoft.CodeAnalysis.CSharp.Workspaces;
-r Au.Controls.dll;
+testInternal Au.Editor,Au,Microsoft.CodeAnalysis,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis.Features,Microsoft.CodeAnalysis.CSharp.Features,Microsoft.CodeAnalysis.Workspaces,Microsoft.CodeAnalysis.CSharp.Workspaces;
 r Au.Editor.dll;
 r Roslyn\Microsoft.CodeAnalysis.dll;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.dll;
@@ -18,29 +16,21 @@ nuget -\WeCantSpell.Hunspell;
 //args = new[] { "/upload" };
 var siteDir = @"C:\Temp\Au\DocFX\site";
 
-run.thread(() => {
-	try {
-		if (args.Length == 0) {
-			_Build();
-		} else if (args[0] == "/upload") {
-			AuDocs.CompressAndUpload(siteDir);
-		}
+try {
+	if (args.Length == 0) {
+		_Build();
+	} else if (args[0] == "/upload") {
+		AuDocs.CompressAndUpload(siteDir);
 	}
-	catch (Exception e1) {
-		print.it(e1);
-		_KillDocfxProcesses();
-	}
-});
+}
+catch (Exception e1) {
+	print.it(e1);
+	_KillDocfxProcesses();
+}
 
 void _Build() {
 	print.clear();
 	var time0 = perf.ms;
-	
-	print.warning("TODO: may fail to resolve links.");
-	//Maybe it is related to this: the xref URL changed: https://github.com/dotnet/docfx/issues/8958
-	//	I changed xrefService in docfx.json, but the same.
-	//Noticed 2023-08-07. Still worked when releasing LA 0.17, 2023-07-31.
-	//	When the example link clicked in the announcement page, first time it worked, but next time error Access Denied. Probably the server temporarily does not work.
 	
 	bool testSmall = !true;
 	bool preprocess = false, postprocess = false, build = false, serve = false, cookbook = false;
@@ -56,9 +46,8 @@ void _Build() {
 	var sourceDirPreprocessed = @"C:\Temp\Au\DocFX\source";
 	var docDir = testSmall ? @"C:\code\au\Test Projects\TestDocFX\docfx_project" : @"C:\code\au\Other\DocFX\_doc";
 	var siteDirTemp = siteDir + "-temp";
-	var objDir = siteDir + "-obj";
 	
-	if(cookbook) {
+	if (cookbook) {
 		AuDocs.Cookbook(docDir);
 		print.it("DONE cookbook");
 	}
@@ -78,25 +67,23 @@ void _Build() {
 	
 	if (build) {
 		filesystem.delete(siteDirTemp);
-		//using var sdkwa = new SdkWorkaround();
 		r = run.console(o => { print.it(o); }, docfx, "metadata");
 		if (r != 0) { print.it("docfx metadata", r); return; }
 		if (onlyMetadata) { print.it("metadata ok"); return; }
-		r = run.console(o => { print.it(o); }, docfx, $@"build --intermediateFolder ""{objDir}""");
+		r = run.console(o => { print.it(o); }, docfx, $@"build");
 		if (r != 0) { print.it("docfx build", r); return; }
 		//print.it("build ok");
 		postprocess |= serve;
 		filesystem.delete(Directory.EnumerateFiles(docDir + @"\api", "*.yml")); //garbage for VS search
-		filesystem.delete(objDir);
 	}
 	
 	if (postprocess) {
 		d.Postprocess(siteDirTemp, siteDir);
 		print.it("DONE postprocessing");
-		if(!testSmall) print.it($"<><script Au docs.cs|/upload>Upload Au docs...<>");
+		if (!testSmall) print.it($"<><script Au docs.cs|/upload>Upload Au docs...<>");
 	}
 	
-	if(cookbook) {
+	if (cookbook) {
 		AuDocs.CookbookClear(docDir);
 	}
 	
@@ -111,25 +98,4 @@ void _Build() {
 
 void _KillDocfxProcesses() {
 	foreach (var v in process.getProcessIds("docfx.exe")) process.terminate(v);
-}
-
-/// <summary>
-/// Workaround for: if Au uses .NET 6 and is installed a .NET 7 SDK, cannot resolve cref of .NET types etc. Prints many warnings.
-/// 2023-01-24: don't need the workaround.
-/// </summary>
-class SdkWorkaround : IDisposable {
-	FEFile[] _a;
-	public SdkWorkaround() {
-		process.terminate("dotnet.exe"); //sometimes is running with commandline like exec "C:\Program Files\dotnet\sdk\7.0.100-preview.6.22352.1\Roslyn\bincore\VBCSCompiler.dll" "-pipename:gi5pdacphS_jwvn9NqoQTNKojar9AsTr5onJxJgc+P8"
-		_a = filesystem.enumDirectories(folders.NetRuntimeBS + @"..\..\..\sdk").Where(o => o.Name.ToInt() > 6).ToArray();
-		foreach (var v in _a) {
-			filesystem.rename(v.FullPath, "@" + v.Name);
-		}
-	}
-	
-	public void Dispose() {
-		foreach (var v in _a) {
-			filesystem.rename(v.FullPath.RxReplace(@"\\([^\\]+)$", @"\@$1"), v.Name);
-		}
-	}
 }
