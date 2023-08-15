@@ -28,11 +28,8 @@ Editor window
 ## How to build
 Need Visual Studio 2022 with C#, C++, .NET 6.0 SDK and Windows 10 or 11 SDK. Need Windows 10 or 11 64-bit; not tested on Win7.
 
-1. Download and extract. Or git clone. Open the solution folder.
-2. The repository does not contain some big binary files. To get them:
-    - Install the latest version of [LibreAutomate](https://www.libreautomate.com/).
-    - From `C:\Program Files\LibreAutomate` copy the `Roslyn` folder and all `.db` files to the `_` subfolder of the solution.
-3. Open `Au.sln` in Visual Studio.
-4. Build solution (not just the startup project).
-5. Switch to platform x86, build solution, switch back to AnyCPU.
-6. Run `Au.Editor` project. It should open the editor window.
+1. Download and extract. Or git clone, if your git software supports LFS.
+2. Open `Au.sln` in Visual Studio.
+3. Build solution (not just the startup project).
+4. Switch to platform x86, build solution, switch back to AnyCPU.
+5. Run `Au.Editor` project. It should open the editor window.
