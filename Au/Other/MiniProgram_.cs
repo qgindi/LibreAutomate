@@ -2,10 +2,10 @@
 using System.Runtime.Loader;
 
 //PROBLEM: slow startup.
-//A minimal script starts in 70-100 ms cold, 40 hot.
+//A minimal script starts in 70-100 ms cold, 40 hot (old PC, tested long time ago). On new PC exeProgram starts in 47/37.
 //Workaround for role miniProgram:
 //	Preload task process. Let it wait for next task. While waiting, it also can JIT etc.
-//	Then starts in 12/4 ms (cold/hot). With script.setup 15/5.
+//	Then starts in 12/4 ms (cold/hot). With script.setup 15/5. That was an old test, now should be slower. On new PC 10/7 and 13/9.
 //	Except first time. Also not faster if several scripts are started without a delay. Never mind.
 //	This is implemented in this class and in Au.AppHost (just ~10 code lines added in 1 place).
 
@@ -15,10 +15,9 @@ using System.Runtime.Loader;
 300.ms(); //give time to preload new task process
 for (int i = 0; i < 5; i++) {
 //	perf.cpu();
-//	perf.shared.First(); //slower
-	var t=perf.ms.ToS(); t=perf.ms.ToS();
-	script.run(@"miniProgram.cs", t); //cold 10, hot 3. Without Setup: 6/2. Slower on vmware Win7+Avast.
-//	script.run(@"exeProgram.cs", t); //cold 80, hot 43. Slightly slower on vmware Win7+Avast.
+	var t=perf.ms.ToString();
+	script.run(@"miniProgram.cs", t);
+//	script.run(@"exeProgram.cs", t);
 	600.ms(); //give time for the process to exit
 }
 
@@ -29,15 +28,20 @@ print.it(perf.ms-Int64.Parse(args[0]));
 
 //Smaller problem: .NET creates many threads. No workaround.
 
-//PROBLEM: preloaded task's windows start inactive, behind one or more windows. Unless they activate self, like dialog.
+//PROBLEM: miniProgram windows start inactive, behind one or more windows. Unless they activate self, like dialog.
 //	It does not depend on the foreground lock setting/API. The setting/API just enable SetForegroundWindow, but most windows don't call it.
 //	Workaround: use CBT hook. It receives HCBT_ACTIVATE even when the window does not become the foreground window.
 //		On HCBT_ACTIVATE, async-call SetForegroundWindow. Also, editor calls AllowSetForegroundWindow before starting task.
 
+//PROBLEM: when miniProgram starts a console program, occasionally its window is inactive, although on top of other windows.
+//	To reproduce: run miniProgram script: `run.it("cmd.exe", flags: RFlags.InheritAdmin)`. If starts active, wait at least 30 s and run again.
+//	It seems never noticed it on Windows 10, and maybe even on older Windows 11.
+//	Workaround: after `run.it` wait a while, eg `1.s();`, because it happens only if this process exits immediately.
+
 //PROBLEM: although Main() starts fast, but the process ends slowly, because of .NET.
 //	Eg if starting an empty script every <50 ms, sometimes cannot start.
 
-//FUTURE: option to start without preloading.
+//CONSIDER: reject the preloading. Or make optional an non-default. On fast PC the delay isn't noticeable.
 
 namespace Au.More;
 
@@ -45,9 +49,6 @@ namespace Au.More;
 /// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
 /// </summary>
 static unsafe class MiniProgram_ {
-	//static long s_started;
-	internal static string s_scriptId;
-
 	struct _TaskInit {
 		public IntPtr asmFile;
 		public IntPtr* args;
@@ -129,7 +130,7 @@ static unsafe class MiniProgram_ {
 		}
 		//p1.Next();
 
-		s_scriptId = a[6];
+		script.s_idMainFile = (uint)(int)a[6];
 		script.s_wndMsg = (wnd)(int)a[8];
 		script.s_wrPipeName = a[4];
 

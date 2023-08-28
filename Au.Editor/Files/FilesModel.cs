@@ -1,7 +1,3 @@
-//CONSIDER: tool to merge workspaces.
-//	Eg show window with differences (added, deleted and modified items). Then user can copy each file in whatever direction.
-//	Could be useful to sync portable.
-
 using System.Xml.Linq;
 using System.IO.Compression;
 using System.Windows.Input;
@@ -274,6 +270,7 @@ partial class FilesModel {
 	/// <summary>
 	/// Calls <see cref="Find(string, FNFind, bool)"/>(name, FNFind.CodeFile).
 	/// </summary>
+	/// <inheritdoc cref="Find(string, FNFind, bool)"/>
 	public FileNode FindCodeFile(string name, bool silent = false) => Find(name, FNFind.CodeFile, silent);
 	
 	/// <summary>
@@ -331,8 +328,7 @@ partial class FilesModel {
 			}
 			Save?.WorkspaceLater(); //null when importing this workspace
 		}
-		try { _idMap.Add(id, f); }
-		catch (ArgumentException) {
+		if (!_idMap.TryAdd(id, f)) {
 			print.warning($"Duplicate id of '{f.Name}'. Creating new.");
 			id = 0;
 			goto g1;
@@ -665,6 +661,17 @@ partial class FilesModel {
 		TreeControl.EditLabel(ended: newFile ? ok => { if (ok && Keyboard.IsKeyDown(Key.Enter)) Panels.Editor.ActiveDoc?.Focus(); } : null);
 	}
 	
+	public void RenameNewProject(FileNode folder, FileNode main) {
+		Panels.PanelManager[Panels.Files.P].Visible = true; //exception if not visible
+		folder.SelectSingle();
+		TreeControl.EditLabel(ended: ok => {
+			if (ok && Keyboard.IsKeyDown(Key.Enter)) {
+				main.SelectSingle();
+				RenameSelected(newFile: true);
+			}
+		});
+	}
+	
 	public void DeleteSelected() {
 		var a = TreeControl.SelectedItems; if (a.Length < 1) return;
 		
@@ -914,6 +921,7 @@ partial class FilesModel {
 		
 		var f = NewItemLX(template, where, name, s);
 		if (f == null) return null;
+		var f0 = f;
 		
 		if (beginRenaming && template != null && FileNode.Templates.IsInDefault(template)) beginRenaming = false;
 		
@@ -940,7 +948,10 @@ partial class FilesModel {
 			Panels.Editor.ActiveDoc.aaaSetText(s);
 		}
 		
-		if (beginRenaming && f.IsSelected) RenameSelected(newFile: !f.IsFolder);
+		if (beginRenaming && f.IsSelected) {
+			if (f != f0) RenameNewProject(f0, f);
+			else RenameSelected(newFile: !f.IsFolder);
+		}
 		return f;
 		
 		string _MetaPlusText(string t) => $"/*/ {text.meta} /*/{(t.Starts("//.") ? " " : "\r\n")}{t}";
@@ -1203,6 +1214,8 @@ partial class FilesModel {
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 	
+	//TODO: when copying a file link, copy file, not link. Eg user may want to make a backup of that file...
+	
 	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copy = false, bool dontSelect = false, bool dontPrint = false) {
 		try {
 			a = a.Select(s => filesystem.more.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
@@ -1242,6 +1255,7 @@ partial class FilesModel {
 							if (action == 2) f1.Model.SetCurrentFile(f1);
 						}
 						if (action != 1) return;
+						dontPrint = true;
 					} else {
 						//repair workspace: import file that is in a workspace folder but not in the Files panel
 						fromWorkspaceDir++;
@@ -1425,21 +1439,14 @@ partial class FilesModel {
 		mi.Header = App.Model.WorkspaceDirectory.Replace("_", "__");
 		mi.FontWeight = FontWeights.Bold;
 		
-		while (sub.Items[1] is not Separator) sub.Items.RemoveAt(1);
+		sub.RemoveAllCustom();
 		var ar = App.Settings.recentWS;
 		int j = 0, i = 0, n = ar?.Length ?? 0;
 		for (; i < n; i++) {
 			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).Directory) ar[i] = null;
-			else _Add(ar[i], ++j);
+			else sub.InsertCustom(++j, pathname.expand(ar[i]), LoadWorkspace);
 		}
 		if (j < i) App.Settings.recentWS = ar.Where(o => o != null).ToArray();
-		
-		void _Add(string path, int i) {
-			path = pathname.expand(path);
-			var mi = new MenuItem { Header = path.Replace("_", "__") };
-			mi.Click += (_, _) => LoadWorkspace(path);
-			sub.Items.Insert(i, mi);
-		}
 	}
 	
 	/// <summary>
@@ -1447,11 +1454,9 @@ partial class FilesModel {
 	/// </summary>
 	public static void FillMenuNew(MenuItem sub) {
 		var xroot = FileNode.Templates.LoadXml();
-		if (sub.Items.Count > Menus.File.New.ItemCount) { //not first time
-			if (xroot == sub.Tag) return; //else rebuild menu because Templates\files.xml modified
-			for (int i = sub.Items.Count; --i >= Menus.File.New.ItemCount;) sub.Items.RemoveAt(i);
-		}
+		if (xroot == sub.Tag) return; //else rebuild menu because Templates\files.xml modified
 		sub.Tag = xroot;
+		sub.RemoveAllCustom();
 		
 		var templDir = FileNode.Templates.DefaultDirBS;
 		_CreateMenu(sub, xroot, null, 0);
@@ -1477,7 +1482,7 @@ partial class FilesModel {
 						? new Image { Source = icon.of(templDir + relPath)?.ToWpfImage() }
 						: ImageUtil.LoadWpfImageElement(FileNode.GetFileTypeImageSource(ft));
 				}
-				mParent.Items.Add(item);
+				mParent.InsertCustom(-1, item);
 			}
 		}
 	}

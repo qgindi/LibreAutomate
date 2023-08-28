@@ -7,9 +7,6 @@
 /// <b>Can this program automate games?</b>
 /// No. Some games disable artificial clicks/keystrokes, triggers, etc.
 
-/// <b>Can this program store script files in GitHub, Google Drive, Dropbox, OneDrive? Backup, synchronize, share, version control.</b>
-/// Currently no. This program saves all script files in a <link %folders.Workspace%>workspace folder<>. You can install software of these services and synchronize the folder with the cloud. More about GitHub <link https://www.libreautomate.com/forum/showthread.php?tid=7183>here<>.
-
 /// <b>Can this program execute or convert Quick Macros scripts?</b>
 /// No. <help editor/Compared with QM2>More info<>.
 

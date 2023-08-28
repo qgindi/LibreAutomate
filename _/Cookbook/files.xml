@@ -1,4 +1,4 @@
-﻿<files max-i="383">
+﻿<files max-i="384">
   <d n="-" i="357">
     <s n="How to write the cookbook.cs" i="360" />
     <s n="Test.cs" i="362" />
@@ -163,6 +163,7 @@
     <s n="Dialog - save window placement, control values.cs" i="289" />
     <s n="Dialog - load XAML.cs" i="295" />
     <s n="Dialog - libraries of controls and themes.cs" i="296" />
+    <s n="Dialog - use triggers.cs" i="384" />
     <s n="-Dialog - rejected or future.cs" i="297" />
   </d>
   <d n="Math, convert" i="129">

@@ -169,6 +169,7 @@ public static class script {
 	public static int runWait(Action<string> results, [ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(3, script, args, out _, results);
 	
+	//mode flags: 1 - wait, 3 - wait and get script.writeResult output, 4 restarting
 	static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null) {
 		resultS = null;
 		
@@ -376,6 +377,25 @@ public static class script {
 	static Handle_ s_wrPipe;
 #endif
 	
+	/// <summary>
+	/// Starts this sript again.
+	/// </summary>
+	/// <param name="args">Command line arguments. In the script it will be variable <i>args</i>. Should not contain <c>'\0'</c> characters.</param>
+	/// <returns>
+	/// Native process id of the task process. Returns -1 if failed.
+	/// </returns>
+	/// <exception cref="FileNotFoundException">Script file not found.</exception>
+	/// <exception cref="InvalidOperationException">This script has role editorExtension.</exception>
+	/// <remarks>
+	///	Does not end this script process. The new process runs simultaneously, like with <c>/*/ ifRunning run; /*/</c>. Let this process exit as it wants, for example return from the main script code.
+	/// </remarks>
+	public static int restart(params string[] args) {
+		if (s_idMainFile == 0) throw new InvalidOperationException(); //role editorExtension
+		return _Run(4, $"<{s_idMainFile}>", args, out _);
+	}
+	
+	internal static uint s_idMainFile;
+	
 	#endregion
 	
 	#region end
@@ -518,6 +538,7 @@ public static class script {
 				var p = &SharedMemory_.Ptr->script;
 				pidEditor = p->pidEditor;
 				s_wndMsg = (wnd)p->hwndMsg;
+				s_idMainFile = p->idMainFile;
 				if (0 != (p->flags & 2)) script.testing = true;
 				if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
 				if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
@@ -588,6 +609,7 @@ public static class script {
 		public int flags; //1 not received (let editor wait), 2 testing, 4 isPortable, 8 has pipe
 		public int pidEditor;
 		public int hwndMsg;
+		public uint idMainFile;
 		int _pipeLen;
 		fixed char _pipeData[64];
 		int _workspaceLen;

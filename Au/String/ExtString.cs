@@ -1291,6 +1291,13 @@ public static unsafe partial class ExtString {
 		}
 	}
 	
+	/// <returns>New string if replaced, else this string. Does not replace if the string does not contain escape sequences or if some escape sequences are invalid or unsupported.</returns>
+	/// <inheritdoc cref="Unescape(string, out string)"/>
+	public static string Unescape(this string t) {
+		Unescape(t, out t);
+		return t;
+	}
+	
 	//rejected
 	///// <summary>
 	///// Replaces all <c>"'"</c> with <c>"''"</c>.

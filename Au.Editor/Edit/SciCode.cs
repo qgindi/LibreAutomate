@@ -100,7 +100,11 @@ partial class SciCode : KScintilla {
 		Debug.Assert(!AaWnd.Is0);
 		
 		bool editable = _fls.SetText(this, text);
-		if (!EIsBinary) _fn.UpdateFileModTime_();
+		if (!EIsBinary) {
+			_fn.UpdateFileModTime_();
+			//if (_fn.DontSave) aaaIsReadonly = true; //rejected. Never make editor readonly when opened a text file. Would need too many `if (doc.aaaIsReadonly) return;` etc everywhere.
+			if (_fn.DontSave) print.it($"<>Warning: Don't edit {_fn.SciLink()}. It will not be saved. It will be replaced when updating this app.");
+		}
 		ESetLineNumberMarginWidth_();
 		
 		if (newFile) _openState = noTemplate ? _EOpenState.NewFileNoTemplate : _EOpenState.NewFileFromTemplate;
@@ -156,22 +160,22 @@ partial class SciCode : KScintilla {
 		bool isActive = this == Panels.Editor.ActiveDoc;
 		//if (isActive) {
 		//	//if (test_) {
-		//	//	switch (n.nmhdr.code) {
-		//	//	case NOTIF.SCN_UPDATEUI:
-		//	//	case NOTIF.SCN_NEEDSHOWN:
-		//	//	case NOTIF.SCN_PAINTED:
-		//	//	case NOTIF.SCN_FOCUSIN:
-		//	//	case NOTIF.SCN_FOCUSOUT:
-		//	//	case NOTIF.SCN_DWELLSTART:
-		//	//	case NOTIF.SCN_DWELLEND:
-		//	//		break;
-		//	//	case NOTIF.SCN_MODIFIED:
-		//	//		print.it(n.nmhdr.code, n.modificationType);
-		//	//		break;
-		//	//	default:
-		//	//		print.it(n.nmhdr.code);
-		//	//		break;
-		//	//	}
+		//		switch (n.nmhdr.code) {
+		//		case NOTIF.SCN_UPDATEUI:
+		//		case NOTIF.SCN_NEEDSHOWN:
+		//		case NOTIF.SCN_PAINTED:
+		//		case NOTIF.SCN_FOCUSIN:
+		//		case NOTIF.SCN_FOCUSOUT:
+		//		case NOTIF.SCN_DWELLSTART:
+		//		case NOTIF.SCN_DWELLEND:
+		//			break;
+		//		case NOTIF.SCN_MODIFIED:
+		//			print.it(n.nmhdr.code, n.modificationType);
+		//			break;
+		//		default:
+		//			print.it(n.nmhdr.code);
+		//			break;
+		//		}
 		//	//}
 		//} else {
 		//	//#if DEBUG
@@ -180,7 +184,7 @@ partial class SciCode : KScintilla {
 		//	//				)) Debug_.Print($"AaOnSciNotify in background, {_fn}, {n.nmhdr.code}");
 		//	//#endif
 		//}
-		
+
 		switch (n.code) {
 		case NOTIF.SCN_MODIFIED:
 			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.Text);
@@ -356,6 +360,7 @@ partial class SciCode : KScintilla {
 	//Called by PanelEdit.SaveText.
 	internal bool ESaveText_(bool force) {
 		Debug.Assert(!EIsBinary); if (EIsBinary) return false;
+		if (_fn.DontSave) return true;
 		if (force || EIsUnsaved_) {
 			//print.qm2.write("saving");
 			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsExternal ? null : _fn.Model.TempDirectory))) return false;
@@ -438,7 +443,7 @@ partial class SciCode : KScintilla {
 		
 		var (isFC, text, name, isClass) = EIsForumCode_(s1, false);
 		if (isFC) {
-			string buttons = _fn.FileType != (isClass ? FNType.Class : FNType.Script)
+			string buttons = _fn.FileType != (isClass ? FNType.Class : FNType.Script) || aaaIsReadonly
 				? "1 Create new file|0 Cancel"
 				: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
 			switch (dialog.show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {

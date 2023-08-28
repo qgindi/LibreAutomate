@@ -161,13 +161,13 @@ static class ModifyCode {
 
 		//workarounds for some nasty Roslyn features that can't be changed with options:
 		//	Removes tabs from empty lines.
-		//	Indents //comment after code//comment.
-		//The best way would be to modify Roslyn code. Fastest/cleanest code. Difficult.
+		//	If next line after code//comment1 is //comment2, aligns //comment2 with //comment1.
+		//The best way would be to modify Roslyn code. Too difficult.
 		//Another way - fix formatted code. Not 100% reliable.
-		//Chosen way - before formatting, in empty lines add a marked block comment. Finally remove. The same in lines containing only //comment.
+		//Chosen way - before formatting, in empty lines add a marked doc comment. Finally remove. The same in lines containing only //comment.
 
 		var root = cd.syntaxRoot;
-		const string c_mark1 = "/*\a\b*/";
+		const string c_mark1 = "///\a\b";
 		int fix1 = code.RxReplace(@"(?m)^\h*\K(?=\R|//)", c_mark1, out code, range: from..to);
 		if (fix1 > 0) {
 			to += code.Length - cd.code.Length;

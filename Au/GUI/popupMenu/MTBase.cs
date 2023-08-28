@@ -106,8 +106,7 @@ public abstract partial class MTBase {
 		m.PathInTooltip = PathInTooltip;
 	}
 
-	//private protected int _SourceLine(MTItem x) => x?.sourceLine ?? _sourceLine;
-	private protected string _SourceLink(MTItem x, string text) => _sourceFile == null ? null : $"<open {_sourceFile}|{x.sourceLine}>{text}<>";
+	private protected string _SourceLink(MTItem x, string text) => x.sourceFile == null ? null : $"<open {x.sourceFile}|{x.sourceLine}>{text}<>";
 
 	private protected bool _IsOtherThread => _threadId != Api.GetCurrentThreadId();
 
@@ -225,6 +224,7 @@ public abstract class MTItem {
 	internal bool actionException; //from MTBase.ActionException
 	internal bool pathInTooltip; //from MTBase.PathInTooltip
 	internal int sourceLine;
+	internal string sourceFile;
 	internal string file;
 	internal RECT rect;
 	internal Image image2;
@@ -276,12 +276,12 @@ public abstract class MTItem {
 		else ScriptEditor.Open(file);
 	}
 
-	internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {
-		if (_sourceFile != null) {
+	internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string sourceFile, MTItem item) {
+		if (sourceFile != null) {
 			if (ScriptEditor.Available) {
 				if (item?.file == null) return (true, false, null);
 				return (true, true, item.extractIconPath == 2 ? "Find file" : "Open script");
-			} else if (item != null && item.extractIconPath == 2) {
+			} else if (item?.extractIconPath == 2) {
 				return (false, true, "Find file");
 			}
 		}
@@ -293,7 +293,7 @@ public abstract class MTItem {
 	/// Sets text and tooltip (from text). Sets clicked, image and sourceLine fields.
 	/// Sets extractIconPath, actionThread and actionException fields from mt properties.
 	/// </summary>
-	internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_) {
+	internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_, string f_) {
 		if (!text.NE()) {
 			var mi = this as PMItem;
 			bool rawText = mi?.rawText ?? false;
@@ -331,6 +331,7 @@ public abstract class MTItem {
 
 		clicked = click;
 		sourceLine = l_;
+		sourceFile = f_;
 
 		extractIconPath = (byte)((mt.ExtractIconPathFromCode && clicked is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
 		actionThread = mt.ActionThread;

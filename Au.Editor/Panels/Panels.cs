@@ -21,10 +21,10 @@ static class Panels {
 	public static Menu Menu;
 	//public static ToolBar[] Toolbars;
 	public static ToolBar TFile, TEdit, TRun, TTools, THelp, TCustom1, TCustom2;
-
+	
 	public static void LoadAndCreateToolbars() {
 		var pm = PanelManager = new KPanels();
-
+		
 		//FUTURE: later remove this code. Now may need to delete old custom Layout.xml.
 		var customLayoutPath = AppSettings.DirBS + "Layout.xml";
 		if (filesystem.exists(customLayoutPath).File) {
@@ -40,11 +40,19 @@ static class Panels {
 			}
 			catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
 		}
-
+		
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;
 		//pm.Load(folders.ThisAppBS + @"Default\Layout.xml", null);
 		pm.Load(folders.ThisAppBS + @"Default\Layout.xml", customLayoutPath);
-
+		
+		int saveCounter = 0;
+		App.Timer1sWhenVisible += () => {
+			if (++saveCounter >= 60) {
+				saveCounter = 0;
+				pm.Save();
+			}
+		};
+		
 		pm["Menu"].Content = Menu = new Menu();
 		TFile = _CreateToolbar("File");
 		TEdit = _CreateToolbar("Edit");
@@ -57,12 +65,12 @@ static class Panels {
 		TCustom1 = _CreateToolbar("Custom1");
 		TCustom2 = _CreateToolbar("Custom2");
 	}
-
+	
 	static ToolBar _CreateToolbar(string name, Func<DockPanel, Dock> dockPanel = null) {
-		var c = new ToolBar { Name = name };
+		var c = new ToolBar { Name = name/*, Background = SystemColors.ControlBrush*/ };
 		c.UiaSetName(name);
 		c.HideGripAndOverflow(false);
-		var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
+		var tt = new ToolBarTray { IsLocked = true/*, Background = SystemColors.ControlBrush*/ }; //because ToolBar looks bad if parent is not ToolBarTray
 		tt.ToolBars.Add(c);
 		FrameworkElement content = tt;
 		if (dockPanel != null) {
@@ -72,12 +80,18 @@ static class Panels {
 			content = p;
 		}
 		PanelManager[name].Content = content;
+		
+		c.ContextMenuOpening += DCustomize.ToolbarContextMenuOpening;
+		c.PreviewMouseRightButtonDown += (o, e) => { //prevent closing the overflow panel on right mouse button down
+			if ((e.OriginalSource as UIElement).VisualAncestors(true).Any(o => o is System.Windows.Controls.Primitives.ToolBarOverflowPanel)) e.Handled = true;
+		};
+		
 		return c;
 	}
-
+	
 	public static void CreatePanels() {
 		var pm = PanelManager;
-
+		
 		pm["Files"].Content = (Files = new()).P;
 		_AddDontFocus("Outline", (Outline = new()).P);
 		pm["Cookbook"].Content = (Cookbook = new()).P;
@@ -88,16 +102,16 @@ static class Panels {
 		_AddDontFocus("Mouse", (Mouse = new()).P);
 		_AddDontFocus("Found", (Found = new()).P);
 		_AddDontFocus("Recipe", (Recipe = new()).P);
-
+		
 		void _AddDontFocus(string panel, FrameworkElement content) {
 			var p = pm[panel];
 			p.Content = content;
 			p.DontFocusTab = true;
 		}
-
+		
 		pm["documents"].Content = (Editor = new()).P;
 		//DocPlaceholder_ = pm["documents"];
-
+		
 		var ti1 = PanelManager[Files.P].Parent.TabItem; if (ti1 != null) ti1.MinWidth = 56; //make Files tabitem wider
 	}
 }

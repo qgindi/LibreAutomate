@@ -538,10 +538,21 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <exception cref="Exception"></exception>
 	public void SaveNewTextOfClosedFile(string text) {
 		Debug.Assert(OpenDoc == null);
+		if (DontSave) throw new AuException("This file should not be modified.");
 		filesystem.saveText(FilePath, text);
 		UpdateFileModTime_();
 		CodeInfo.FilesChanged();
 	}
+	
+	/// <summary>
+	/// true if is link to a file in folders.ThisAppBS + "Default" or "Templates".
+	/// #if DEBUG, always returns false.
+	/// </summary>
+	#if DEBUG
+	public bool DontSave => false;
+	#else
+	public bool DontSave => IsLink && FilePath is var s && s.Starts(folders.ThisAppBS) && 0 != s.Eq(folders.ThisAppBS.Length, true, @"Default\", @"Templates\");
+	#endif
 	
 	#endregion
 	

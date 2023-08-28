@@ -1,4 +1,4 @@
-﻿<files max-i="110">
+﻿<files max-i="111">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
   <n n="File.txt" i="67" />
@@ -38,5 +38,6 @@
         <s n="Script example1.cs" i="31" />
       </d>
     </d>
+    <s n="Git script.cs" i="111" />
   </d>
 </files>

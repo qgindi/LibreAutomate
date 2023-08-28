@@ -18,7 +18,7 @@ if (args.Length > 0) { //args is a special variable of type string[]
 
 script.runWait(@"\Folder\Script.cs");
 
-///Pass arguments and get results.
+/// Pass arguments and get results.
 
 script.runWait(out var ret, @"\Folder\Script.cs", "arg");
 
@@ -34,5 +34,10 @@ script.writeResult("result 2");
 /// Also the script can return an int value. Then function <b>script.runWait</b> in the caller script returns it.
 
 return 2;
+
+/// Restart this script.
+
+script.run(script.sourcePath(true), "[[ifRunning=wait]]");
+return;
 
 /// Scripts don't have a "trigger" property, but you can use <b>script.run</b> in hotkey/autotext/mouse/window trigger actions.

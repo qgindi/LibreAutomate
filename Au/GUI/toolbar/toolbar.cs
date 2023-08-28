@@ -14,7 +14,7 @@ namespace Au;
 public partial class toolbar : MTBase {
 	record class _Settings : JSettings {
 		public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
-
+		
 		public TBAnchor anchor = TBAnchor.TopLeft;
 		public TBLayout layout;
 		public TBBorder border = TBBorder.Width2;
@@ -25,16 +25,16 @@ public partial class toolbar : MTBase {
 		public TBOffsets offsets; // = new(150, 5, 7, 7);
 		public int screenx, screeny;
 	}
-
+	
 	readonly _Settings _sett;
 	readonly List<TBItem> _a = new();
 	bool _created;
 	bool _closed;
 	bool _topmost; //no owner, or owner is topmost
 	double _dpiF; //DPI scaling factor, eg 1.5 for 144 dpi
-
+	
 	static int s_treadId;
-
+	
 	/// <param name="name">
 	/// Toolbar name. Must be valid filename.
 	/// Used for: toolbar window name, settings file name, <see cref="find"/>, some other functions.
@@ -57,43 +57,43 @@ public partial class toolbar : MTBase {
 		: base(name, f_, l_, m_) {
 		
 		if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) print.warning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadOfTriggers();</code> or <code>Triggers.Options.ThreadThis();</code>");
-
+		
 		var path = flags.Has(TBCtor.DontSaveSettings) ? null : getSettingsFilePath(_name);
 		_sett = _Settings.Load(path, flags.Has(TBCtor.ResetSettings));
-
+		
 		_offsets = _sett.offsets; //SHOULDDO: don't use saved offsets if this toolbar was free and now is owned or vice versa. Because the position is irrelevent and may be far/offscreen. It usually happens when testing.
-
+		
 		ActionThread = true;
 		ExtractIconPathFromCode = true;
 	}
-
+	
 	/// <summary>
 	/// Gets the toolbar window.
 	/// </summary>
 	public wnd Hwnd => _w;
-
+	
 	/// <summary>
 	/// Returns true if the toolbar is open. False if closed or <see cref="Show"/> still not called.
 	/// </summary>
 	public bool IsOpen => _created && !_closed;
-
+	
 	/// <summary>
 	/// Gets the name of the toolbar.
 	/// </summary>
 	public string Name => _name;
-
+	
 	///
 	public override string ToString() => _IsSatellite ? "    " + Name : Name; //the indentation is for the list in the Active toolbars dialog
-
+	
 	/// <summary>
 	/// True if this toolbar started with default settings. False if loaded saved settings from file.
 	/// </summary>
 	/// <seealso cref="getSettingsFilePath"/>
 	/// <seealso cref="TBCtor"/>
 	public bool FirstTime => !_sett.LoadedFile;
-
+	
 	#region static functions
-
+	
 	/// <summary>
 	/// Gets full path of toolbar's settings file. The file may exist or not.
 	/// </summary>
@@ -106,7 +106,7 @@ public partial class toolbar : MTBase {
 		string s = folders.Workspace.Path ?? folders.ThisAppDocuments;
 		return s + @"\.toolbars\" + toolbarName + ".json";
 	}
-
+	
 	/// <summary>
 	/// Finds an open toolbar by <see cref="Name"/>.
 	/// </summary>
@@ -117,44 +117,45 @@ public partial class toolbar : MTBase {
 	/// Does not find satellite toolbars. Use this code: <c>toolbar.find("owner toolbar").Satellite</c>
 	/// </remarks>
 	public static toolbar find(string name) => _Manager._atb.Find(o => o.Name == name);
-
+	
 	internal static void TriggerActionEndedInToolbarUnfriendlyThread_() {
 		if (_Manager._atb.Count > 0)
 			print.warning("Toolbars in wrong thread. Insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadOfTriggers();</code> or <code>Triggers.Options.ThreadThis();</code>", -1);
 	}
-
+	
 	#endregion
-
+	
 	#region add item
-
-	void _Add(TBItem item, string text, Delegate click, MTImage image, int l) {
+	
+	void _Add(TBItem item, string text, Delegate click, MTImage image, int l_, string f_) {
 		_ThreadTrap();
 		_CreatedTrap(_closed ? null : "cannot add items while the toolbar is open. To add to submenu, use the submenu variable.");
-		item.Set_(this, text, click, image, l);
+		item.Set_(this, text, click, image, l_, _sourceFile == null ? null : f_);
 		_a.Add(item);
 		Last = item;
 	}
-
+	
 	/// <summary>
 	/// Adds button.
-	/// Same as <see cref="this[string, MTImage, int]"/>.
+	/// Same as <see cref="this[string, MTImage, int, string]"/>.
 	/// </summary>
 	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator). To always display text regardless of <see cref="DisplayText"/>, append <c>"\a"</c>, like <c>"Text\a"</c> or <c>"Text\a|Tooltip"</c>.</param>
 	/// <param name="click">Action called when the button clicked.</param>
 	/// <param name="image">Image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// More properties can be specified later (set properties of the returned <see cref="TBItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 	/// </remarks>
-	public TBItem Add(string text, Action<TBItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0) {
+	public TBItem Add(string text, Action<TBItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null) {
 		var item = new TBItem(TBItemType.Button);
-		_Add(item, text, click, image, l_);
+		_Add(item, text, click, image, l_, f_);
 		return item;
 	}
-
+	
 	/// <summary>
 	/// Adds button.
-	/// Same as <see cref="Add(string, Action{TBItem}, MTImage, int)"/>.
+	/// Same as <see cref="Add(string, Action{TBItem}, MTImage, int, string)"/>.
 	/// </summary>
 	/// <value>Action called when the button clicked.</value>
 	/// <remarks>
@@ -174,13 +175,13 @@ public partial class toolbar : MTBase {
 	/// tb["Example"] = o => print.it(o); tb.Last.Tooltip="tt";
 	/// ]]></code>
 	/// </example>
-	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int)"/>
-	public Action<TBItem> this[string text, MTImage image = default, [CallerLineNumber] int l_ = 0] {
-		set { Add(text, value, image, l_); }
+	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int, string)"/>
+	public Action<TBItem> this[string text, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null] {
+		set { Add(text, value, image, l_, f_); }
 	}
-
+	
 	//CONSIDER: AddCheck, AddRadio.
-
+	
 	/// <summary>
 	/// Adds button with drop-down menu.
 	/// </summary>
@@ -196,13 +197,13 @@ public partial class toolbar : MTBase {
 	/// });
 	/// ]]></code>
 	/// </example>
-	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int)"/>
-	public TBItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
+	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int, string)"/>
+	public TBItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null) {
 		var item = new TBItem(TBItemType.Menu);
-		_Add(item, text, menu, image, l_);
+		_Add(item, text, menu, image, l_, f_);
 		return item;
 	}
-
+	
 	/// <summary>
 	/// Adds button with drop-down menu.
 	/// </summary>
@@ -217,13 +218,13 @@ public partial class toolbar : MTBase {
 	/// t.Menu("Menu", () => m);
 	/// ]]></code>
 	/// </example>
-	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int)"/>
-	public TBItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
+	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int, string)"/>
+	public TBItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null) {
 		var item = new TBItem(TBItemType.Menu);
-		_Add(item, text, menu, image, l_);
+		_Add(item, text, menu, image, l_, f_);
 		return item;
 	}
-
+	
 	/// <summary>
 	/// Adds new vertical separator. Horizontal if vertical toolbar.
 	/// </summary>
@@ -231,25 +232,25 @@ public partial class toolbar : MTBase {
 		int i = _a.Count - 1;
 		if (i < 0 || _a[i].IsGroup_) throw new InvalidOperationException("first item is separator");
 		var item = new TBItem(TBItemType.Separator);
-		_Add(item, null, null, default, 0);
+		_Add(item, null, null, default, 0, null);
 		return item;
 	}
-
+	
 	/// <summary>
 	/// Adds new horizontal separator, optionally with text.
 	/// </summary>
 	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator).</param>
 	public TBItem Group(string text = null) {
 		var item = new TBItem(TBItemType.Group);
-		_Add(item, text, null, default, 0);
+		_Add(item, text, null, default, 0, null);
 		return item;
 	}
-
+	
 	/// <summary>
 	/// Gets the last added item.
 	/// </summary>
 	public TBItem Last { get; private set; }
-
+	
 	/// <summary>
 	/// Gets added buttons.
 	/// </summary>
@@ -265,11 +266,11 @@ public partial class toolbar : MTBase {
 			}
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region show, close, owner
-
+	
 	/// <summary>
 	/// Shows the toolbar.
 	/// </summary>
@@ -287,7 +288,7 @@ public partial class toolbar : MTBase {
 		if (!_screenAHSE.IsEmpty) { if (screen.IsEmpty) screen = _screenAHSE; else throw new ArgumentException(); }
 		_Show(false, default, null, screen);
 	}
-
+	
 	/// <summary>
 	/// Shows the toolbar and attaches to a window.
 	/// </summary>
@@ -302,7 +303,7 @@ public partial class toolbar : MTBase {
 		_followClientArea = clientArea;
 		_Show(true, ownerWindow, null, _screenAHSE);
 	}
-
+	
 	/// <summary>
 	/// Shows the toolbar and attaches to an object in a window.
 	/// </summary>
@@ -314,7 +315,7 @@ public partial class toolbar : MTBase {
 	/// The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
 	/// </remarks>
 	public void Show(wnd ownerWindow, ITBOwnerObject oo) => _Show(true, ownerWindow, oo, default);
-
+	
 	/// <summary>
 	/// Shows the toolbar.
 	/// If <i>ta</i> is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
@@ -328,12 +329,12 @@ public partial class toolbar : MTBase {
 			ta?.DisableTriggerUntilClosed(this);
 		}
 	}
-
+	
 	//used for normal toolbars, not for satellite toolbars
 	void _Show(bool owned, wnd owner, ITBOwnerObject oo, screen screen) {
 		_ThreadTrap();
 		_CreatedTrap("this toolbar is already open");
-
+		
 		wnd c = default;
 		if (owned) {
 			if (owner.Is0) throw new ArgumentException();
@@ -341,16 +342,16 @@ public partial class toolbar : MTBase {
 			if (w != owner) { c = owner; owner = w; }
 			if (!_screenAHSE.IsEmpty) _sett.anchor |= TBAnchor.Screen;
 		}
-
+		
 		_CreateWindow(owned, owner, screen);
 		_Manager.Add(this, owner, c, oo);
 	}
-
+	
 	//used for normal and satellite toolbars
 	void _CreateWindow(bool owned, wnd owner, screen screen = default, bool isSatelite = false) {
 		_topmost = !owned || owner.IsTopmost;
 		if (!owned || Anchor.OfScreen()) _os = new _OwnerScreen(this, screen); else screen = screen.of(owner);
-
+		
 		_RegisterWinclass();
 		if (_os != null) _SetDpi(); else _SetDpi(screen.Dpi); //OwnerWindow still not set
 		_Images(false);
@@ -365,7 +366,7 @@ public partial class toolbar : MTBase {
 		WndUtil.CreateWindow(_WndProc, true, "Au.toolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height, isSatelite ? owner : default);
 		_created = true;
 	}
-
+	
 	/// <summary>
 	/// Destroys the toolbar window.
 	/// </summary>
@@ -378,12 +379,12 @@ public partial class toolbar : MTBase {
 		if (_IsOtherThread) _w.Post(Api.WM_CLOSE);
 		else Api.DestroyWindow(_w);
 	}
-
+	
 	/// <summary>
 	/// When the toolbar window destroyed.
 	/// </summary>
 	public event Action Closed;
-
+	
 	private protected override void _WmNcdestroy() {
 		_closed = true;
 		_Manager.Remove(this);
@@ -392,7 +393,7 @@ public partial class toolbar : MTBase {
 		base._WmNcdestroy();
 		Closed?.Invoke();
 	}
-
+	
 	/// <summary>
 	/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <see cref="Close"/>.
 	/// </summary>
@@ -413,7 +414,7 @@ public partial class toolbar : MTBase {
 		if (0 != ((int)reason & 0xffff)) throw new ArgumentOutOfRangeException();
 		_SetVisible(!hide, reason);
 	}
-
+	
 	/// <summary>
 	/// Gets current reasons why the toolbar is hidden. Returns 0 if not hidden.
 	/// </summary>
@@ -421,7 +422,7 @@ public partial class toolbar : MTBase {
 	/// Not used with satellite toolbars.
 	/// </remarks>
 	public TBHide Hidden => _hide;
-
+	
 	void _SetVisible(bool show, TBHide reason) {
 		//print.it(show, reason);
 		if (show) {
@@ -436,34 +437,34 @@ public partial class toolbar : MTBase {
 		_SetVisibleL(show);
 	}
 	TBHide _hide;
-
+	
 	void _SetVisibleL(bool show) => _w.ShowL(show);
-
+	
 	/// <summary>
 	/// Returns true if the toolbar is attached to a window or an object in a window.
 	/// </summary>
 	public bool IsOwned => _ow != null;
-
+	
 	/// <summary>
 	/// Returns the owner top-level window.
 	/// Returns <c>default(wnd)</c> if the toolbar is not owned. See <see cref="IsOwned"/>.
 	/// </summary>
 	public wnd OwnerWindow => _ow?.w ?? default;
-
+	
 	#endregion
-
+	
 	#region wndproc, context menu
-
+	
 	static void _RegisterWinclass() {
 		if (0 == Interlocked.Exchange(ref s_winclassRegistered, 1)) {
 			WndUtil.RegisterWindowClass("Au.toolbar"/*, etc: new() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, mCursor = MCursor.Arrow }*/);
 		}
 	}
 	static int s_winclassRegistered;
-
+	
 	unsafe nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 		//WndUtil.PrintMsg(w, msg, wParam, lParam);
-
+		
 		switch (msg) {
 		case Api.WM_LBUTTONDOWN:
 		case Api.WM_RBUTTONDOWN:
@@ -479,7 +480,7 @@ public partial class toolbar : MTBase {
 			_SatMouse();
 			break;
 		}
-
+		
 		switch (msg) {
 		case Api.WM_NCCREATE:
 			_WmNccreate(w);
@@ -535,7 +536,7 @@ public partial class toolbar : MTBase {
 					using var k2 = new RegisteredHotkey(); k2.Register(101, KKey.Right, _w);
 					using var k3 = new RegisteredHotkey(); k3.Register(102, KKey.Up, _w);
 					using var k4 = new RegisteredHotkey(); k4.Register(103, KKey.Down, _w);
-
+					
 					Api.DefWindowProc(w, msg, wParam, lParam);
 				}
 				return default;
@@ -568,9 +569,9 @@ public partial class toolbar : MTBase {
 			}
 			return default;
 		}
-
+		
 		var R = Api.DefWindowProc(w, msg, wParam, lParam);
-
+		
 		switch (msg) {
 		case Api.WM_WINDOWPOSCHANGED:
 			_WmWindowPosChanged(in *(Api.WINDOWPOS*)lParam);
@@ -587,21 +588,21 @@ public partial class toolbar : MTBase {
 			//	_WmSettingChange(wParam, lParam);
 			//	break;
 		}
-
+		
 		return R;
 	}
-
+	
 	#endregion
-
+	
 	#region input, context menu
-
+	
 	int _HitTest(POINT p) {
 		for (int i = 0; i < _a.Count; i++) {
 			if (_a[i].rect.Contains(p)) return i;
 		}
 		return -1;
 	}
-
+	
 	unsafe void _WmMousemove(nint lParam) {
 		if (_iClick < 0) {
 			var p = Math2.NintToPOINT(lParam);
@@ -619,12 +620,12 @@ public partial class toolbar : MTBase {
 	}
 	int _iHot = -1, _iClick = -1;
 	bool _trackMouseEvent, _noHotClick;
-
+	
 	void _WmMouseleave() {
 		_trackMouseEvent = false;
 		if (_iHot >= 0) { _Invalidate(_iHot); _iHot = -1; }
 	}
-
+	
 	void _WmMouselbuttondown(nint lParam) {
 		var mod = keys.gui.getMod(); if (mod != 0 && mod != KMod.Shift) return;
 		if (mod == 0) { //click button
@@ -644,7 +645,7 @@ public partial class toolbar : MTBase {
 		}
 	}
 	int _menuClosedIndex; long _menuClosedTime;
-
+	
 	void _Click(int i, bool real) {
 		var b = _a[i];
 		if (b.clicked == null) return;
@@ -652,14 +653,14 @@ public partial class toolbar : MTBase {
 			if (i == _menuClosedIndex && perf.ms - _menuClosedTime < 100) return;
 			popupMenu m = null;
 			if (b.clicked is Action<popupMenu> menu) {
-				m = new popupMenu(null, _sourceFile, b.sourceLine);
+				m = new popupMenu(null, NoContextMenu.Has(TBNoMenu.Edit) ? null : b.sourceFile, b.sourceLine);
 				_CopyProps(m);
 				menu(m);
 			} else if (b.clicked is Func<popupMenu> func) {
 				m = func();
 			}
 			if (m == null) return;
-
+			
 			var r = b.rect; _w.MapClientToScreen(ref r);
 			m.Show(PMFlags.AlignRectBottomTop, new(r.left, r.bottom), r, owner: _w);
 			_menuClosedIndex = i; _menuClosedTime = perf.ms;
@@ -694,26 +695,27 @@ public partial class toolbar : MTBase {
 			}
 		}
 	}
-
+	
 	void _WmContextmenu() {
 		var no = NoContextMenu;
 		if (no.Has(TBNoMenu.Menu)) return;
 		if (_a.Count == 0 && _satellite != null) no |= TBNoMenu.Layout | TBNoMenu.AutoSize | TBNoMenu.Text;
-
+		
 		var p = _w.MouseClientXY;
 		int i = _HitTest(p);
 		var item = i < 0 ? null : _a[i];
-
+		
 		var m = new popupMenu();
-
+		
 		if (!no.Has(TBNoMenu.Edit | TBNoMenu.File)) {
-			var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, item);
-			if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => ScriptEditor.Open(_sourceFile, item?.sourceLine ?? _sourceLine);
+			string sf; int sl; if (item != null) { sf = item.sourceFile; sl = item.sourceLine; } else { sf = _sourceFile; sl = _sourceLine; }
+			var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(sf, item);
+			if (!no.Has(TBNoMenu.Edit) && canEdit) m["Edit toolbar"] = o => ScriptEditor.Open(sf, sl);
 			if (!no.Has(TBNoMenu.File) && canGo) m[goText] = o => item.GoToFile_();
 		}
 		if (!no.Has(TBNoMenu.Close)) m.Add("Close", o => _SatPlanetOrThis.Close());
 		if (m.Last != null) m.Separator();
-
+		
 		if (!no.Has(TBNoMenu.Anchor)) {
 			m.Submenu("Anchor", m => {
 				_AddAnchor(TBAnchor.TopLeft);
@@ -729,7 +731,7 @@ public partial class toolbar : MTBase {
 				_AddAnchor(TBAnchor.OppositeEdgeX);
 				_AddAnchor(TBAnchor.OppositeEdgeY);
 				if (IsOwned) _AddAnchor(TBAnchor.Screen);
-
+				
 				void _AddAnchor(TBAnchor an) {
 					var k = an <= TBAnchor.All
 						? m.AddRadio(an.ToString(), Anchor.WithoutFlags() == an, _ => Anchor = (Anchor & ~TBAnchor.All) | an)
@@ -743,7 +745,7 @@ public partial class toolbar : MTBase {
 				_AddLayout(TBLayout.HorizontalWrap);
 				_AddLayout(TBLayout.Vertical);
 				//_AddLayout(TBLayout.Horizontal);
-
+				
 				void _AddLayout(TBLayout tl) {
 					m.AddRadio(tl.ToString(), tl == Layout, _ => Layout = tl);
 				}
@@ -760,7 +762,7 @@ public partial class toolbar : MTBase {
 				_AddBorder(TBBorder.Thick);
 				_AddBorder(TBBorder.Caption);
 				_AddBorder(TBBorder.CaptionX);
-
+				
 				void _AddBorder(TBBorder b) {
 					m.AddRadio(b.ToString(), b == Border, _ => Border = b);
 				}
@@ -774,12 +776,12 @@ public partial class toolbar : MTBase {
 				if (!no.Has(TBNoMenu.MiscFlags)) {
 					_AddFlag(TBFlags.HideWhenFullScreen);
 					if (_SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.ActivateOwnerWindow);
-
+					
 					void _AddFlag(TBFlags f) {
 						var tb = _SatPlanetOrThis;
 						m.AddCheck(_EnumToString(f), tb.MiscFlags.Has(f), _ => tb.MiscFlags ^= f);
 					}
-
+					
 					static string _EnumToString(Enum e) {
 						var s = e.ToString().RxReplace(@"(?<=[^A-Z])[A-Z]", m => " " + m.Value.Lower());
 						//s = s.Replace("Dont", "Don't");
@@ -788,7 +790,7 @@ public partial class toolbar : MTBase {
 				}
 			});
 		}
-
+		
 		if (!no.Has(TBNoMenu.Toolbars | TBNoMenu.Help) && m.Last != null && !m.Last.IsSeparator) m.Separator();
 		if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars", o => toolbarsDialog(true));
 		if (!no.Has(TBNoMenu.Help)) m["How to"] = _ => dialog.showInfo("How to",
@@ -798,10 +800,10 @@ Resize toolbar: drag border. Cannot resize if in context menu is unchecked or un
 
 Move or resize precisely: start to move or resize but don't move the mouse. Instead release Shift and press arrow keys. Finally release the mouse button.
 ");
-
+		
 		if (m.Last != null) m.Show();
 	}
-
+	
 	bool _WmNchittest(nint xy, out int ht) {
 		ht = 0;
 		if (keys.gui.getMod() == KMod.Shift) { //move
@@ -847,11 +849,11 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		}
 		return true;
 	}
-
+	
 	#endregion
-
+	
 	#region properties
-
+	
 	/// <summary>
 	/// Whether to DPI-scale toolbar size and offsets.
 	/// Default: scale size; scale offsets if anchor is not screen.
@@ -860,7 +862,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	/// The unit of measurement of <see cref="Size"/>, <see cref="Offsets"/> and some other properties depends on whether scaling is used for that property. If scaling is used, the unit is logical pixels; it is 1/96 inch regardless of screen DPI. If scaling not used, the unit is physical pixels. Screen DPI can be changed in Windows Settings; when it is 100%, logical and physical pixels are equal.
 	/// </remarks>
 	public TBScaling DpiScaling { get; set; }
-
+	
 	/// <summary>
 	/// Toolbar width and height without non-client area when <see cref="AutoSize"/> false.
 	/// </summary>
@@ -888,7 +890,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			if (!_followedOnce) _preferSize = true;
 		}
 	}
-
+	
 	/// <summary>
 	/// Whether the border can be used to resize the toolbar.
 	/// Default true.
@@ -900,7 +902,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		get => _sett.sizable;
 		set => _sett.sizable = value;
 	}
-
+	
 	/// <summary>
 	/// Automatically resize the toolbar to make all buttons visible.
 	/// Default true.
@@ -918,7 +920,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// When <see cref="AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
 	/// </summary>
@@ -940,7 +942,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Specifies to which owner's edges the toolbar keeps constant distance when moving or resizing the owner.
 	/// </summary>
@@ -970,7 +972,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Specifies distances between edges of the toolbar and edges of its owner, depending on <see cref="Anchor"/>.
 	/// </summary>
@@ -999,13 +1001,13 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		}
 	}
 	TBOffsets _offsets;
-
+	
 	//rejected. Would be rarely used, unless default 0. Avoid default limitations like this. We have a dialog to find lost toolbars.
 	//public int MaxDistanceFromOwner { get; set; } = int.MaxValue;
-
+	
 	//rejected
 	//public bool HideTextIfSmall { get; set; } //like ribbon UI
-
+	
 	/// <summary>
 	/// Miscellaneous options.
 	/// </summary>
@@ -1018,7 +1020,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			_sett.miscFlags = value;
 		}
 	}
-
+	
 	/// <summary>
 	/// Opacity and transparent color.
 	/// </summary>
@@ -1038,11 +1040,11 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		}
 	}
 	(int? opacity, ColorInt? colorKey) _transparency;
-
+	
 	/// <summary>
 	/// Gets or sets flags to hide some context menu items or menu itself.
 	/// </summary>
 	public TBNoMenu NoContextMenu { get; set; }
-
+	
 	#endregion
 }

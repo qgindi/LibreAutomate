@@ -403,28 +403,32 @@ public partial class KMenuCommands {
 						if (hide != default) ToolBar.SetOverflowMode(sep, hide);
 						toolbar.Items.Add(sep);
 					}
-					DependencyObject o;
+					FrameworkElement e;
 					if (IsSubmenu) {
-						var b = new MenuItem();
+						var k = new MenuItem();
 						var image = _mi.Icon;
 						bool onlyImage = image != null && imageAt == null;
-						if (image == null || onlyImage) b.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. SHOULDDO: not good on Win7
-						CopyToMenu(b, text: btext);
-						if (onlyImage) { b.Header = b.Icon; b.Icon = null; } //make narrower
-						if (ButtonTooltip != null) b.ToolTip = ButtonTooltip; else if (onlyImage) b.ToolTip = ButtonText;
-						var m = new Menu { UseLayoutRounding = true };
-						m.Items.Add(b); //parent must be Menu, else wrong Role (must be TopLevelHeader, we can't change) and does not work
-						o = new Border { Child = m }; //workaround for: descendant icon part black when checked, with or without icon
+						if (image == null || onlyImage) k.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. SHOULDDO: not good on Win7
+						CopyToMenu(k, text: btext);
+						if (onlyImage) { k.Header = k.Icon; k.Icon = null; } //make narrower
+						if (ButtonTooltip != null) k.ToolTip = ButtonTooltip; else if (onlyImage) k.ToolTip = ButtonText;
+						var m = new Menu { Background = toolbar.Background, IsMainMenu = false, UseLayoutRounding = true };
+						m.Items.Add(k); //parent must be Menu, else wrong Role (must be TopLevelHeader, we can't change) and does not work
+						
+						//workaround for: 1. Descendant icon part black when checked. 2. Different drop-down menu style.
+						//	Never mind: different hot style.
+						e = new Border { Child = m };
+						k.Padding = osVersion.minWin8 ? new(4, 2, 4, 2) : new(5, 3, 5, 3); //on Win7 smaller
 					} else {
 						var b = _mi.IsCheckable ? (ButtonBase)new CheckBox() : new Button(); //rejected: support RadioButton
 						b.Focusable = false;
-						b.Padding = new Thickness(4, 2, 4, 2);
 						b.UseLayoutRounding = true;
 						CopyToButton(b, imageAt);
-						o = b;
+						b.Padding = new(4, 2, 4, 2);
+						e = b;
 					}
-					if (hide != default) ToolBar.SetOverflowMode(o, hide);
-					toolbar.Items.Add(o);
+					if (hide != default) ToolBar.SetOverflowMode(e, hide);
+					toolbar.Items.Add(e);
 				}
 				catch (Exception ex) { CustomizingError("failed to create button", ex); }
 			}

@@ -170,7 +170,7 @@ record AppSettings : JSettings {
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel;
-	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end //CONSIDER: save in separate file. Then the size limit can be bigger.
+	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end //CONSIDER: save in separate file in .state folder. Then the size limit can be bigger.
 }
 
 /// <summary>
@@ -186,7 +186,7 @@ record WorkspaceSettings : JSettings {
 	
 	public record git_t {
 		public bool use;
-		public string repoUrl, pat, script, menu;
+		public string repoUrl, script, message = "backup";
 	}
 	public git_t git;
 }

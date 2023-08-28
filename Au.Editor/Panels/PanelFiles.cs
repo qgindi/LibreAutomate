@@ -31,6 +31,16 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(_tFind.Text.Length switch { 1 => 1200, 2 => 600, _ => 300 }); };
 		_tFind.GotKeyboardFocus += (_, _) => P.Dispatcher.InvokeAsync(() => _tFind.SelectAll());
 		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
+		_tv.EditLabelStarted += (item, tb) => {
+			var f = item as FileNode;
+			var s = tb.Text;
+			if (f.IsFolder) {
+				if (s[0] == '@') tb.Select(1, s.Length - 1);
+			} else if (f.IsOtherFileType) {
+				int i = pathname.findExtension(s);
+				if (i > 0) tb.Select(0, i);
+			}
+		};
 		
 		EditGoBack.DisableUI();
 	}
