@@ -39,10 +39,6 @@ static class Menus {
 			
 			[Command('f', image = FileNode.c_iconFolder)]
 			public static void New_folder() { _New(null); }
-			
-			//CONSIDER: New_project. A simple dialog to make faster to enter names of the project folder and the main file. Also can display some info.
-			
-			public const int ItemCount = 4;
 		}
 		
 		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete" + black)]
@@ -171,23 +167,14 @@ static class Menus {
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 		
-		//[Command(target = "", image = "*Material.Git" + black)]
-		//public static class Git {
-		//	[Command("Commit (create local backup)")]
-		//	public static void Git_commit() { GitSync.Commit(); }
+		[Command(target = "", image = "*Material.Git" + blue)]
+		public static class Git {
+			[Command("...")]
+			public static void Git_setup() { GitSync.DGit.AaShow(); }
 			
-		//	[Command("Commit and push (local and cloud backup)")]
-		//	public static void Git_push() { GitSync.Push(); }
-			
-		//	[Command("Pull... (download cloud to workspace)")]
-		//	public static void Git_pull() { GitSync.Pull(); }
-			
-		//	[Command("Setup...", separator = true)]
-		//	public static void Git_setup() { GitSync.DGit.AaShow(); }
-			
-		//	[Command("Run GitHubDesktop", image = "*Codicons.Github" + purple)]
-		//	public static void Git_GUI() { run.itSafe(folders.LocalAppData + @"GitHubDesktop\GitHubDesktop.exe"); }
-		//}
+			[Command(hide = true)]
+			public static void Git_test() { GitSync.Test(); }
+		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]
 		public static void Close_window() { if (App.Settings.runHidden) App.Wmain.Hide_(); else App.Wmain.Close(); }

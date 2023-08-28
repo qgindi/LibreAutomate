@@ -96,10 +96,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Octokit" Version="7.1.0" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Resource Include="resources\ci\Class.xaml" />
 		<Resource Include="resources\ci\Constant.xaml" />
 		<Resource Include="resources\ci\Delegate.xaml" />

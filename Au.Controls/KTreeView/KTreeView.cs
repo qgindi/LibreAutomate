@@ -797,7 +797,7 @@ public unsafe partial class KTreeView {
 		_leTB = new TextBox {
 			Height = r.Height * f,
 			MinWidth = r.Width * f + 12,
-			Text = item.DisplayText,
+			Text = _leItem.DisplayText,
 			Padding = osVersion.minWin8 ? new Thickness(1, -1, 0, 0) : new Thickness(0, -2, 0, 0)
 		};
 		_leTB.SelectAll();
@@ -811,6 +811,8 @@ public unsafe partial class KTreeView {
 		_lePopup.Hidden += (_, _) => EndEditLabel();
 		_lePopup.ShowByRect(this, null, r);
 		_leTB.Focus();
+		
+		EditLabelStarted?.Invoke(_leItem, _leTB);
 
 		//		timer.after(1000,_=>Visibility=Visibility.Collapsed);
 		//		timer.after(1000,_=>Window.GetWindow(this).Hide());
@@ -824,6 +826,11 @@ public unsafe partial class KTreeView {
 	TextBox _leTB;
 	ITreeViewItem _leItem;
 	Action<bool> _leEnded;
+	
+	/// <summary>
+	/// When item text editing started.
+	/// </summary>
+	public event Action<ITreeViewItem, TextBox> EditLabelStarted;
 
 	/// <summary>
 	/// Ends item text editing.

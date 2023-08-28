@@ -111,7 +111,7 @@ partial class filesystem {
 		}
 		
 		/// <summary>
-		/// Calls <see cref="enumerate"/> and returns sum of all file sizes.
+		/// Calls <see cref="enumerate"/> and returns the sum of all descendant file sizes.
 		/// With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
 		/// </summary>
 		/// <param name="path">Full path.</param>

@@ -797,7 +797,7 @@ This setting also is used by 'Find references' etc.
 				var f = files[i];
 				if (f.OpenDoc != null) {
 					_ReplaceAllInEditor(ttf, f.OpenDoc, undoInFiles);
-				} else {
+				} else if (!f.DontSave) {
 					_ReplaceAllInClosedFile(ttf, f, undoInFiles);
 				}
 			}
