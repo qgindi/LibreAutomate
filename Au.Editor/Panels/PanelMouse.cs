@@ -51,7 +51,7 @@ class PanelMouse {
 		_prevWndName = wName;
 
 		//p1.Next();
-		using (new StringBuilder_(out var b, 1000)) {
+		using (new StringBuilder_(out var b)) {
 			var cn = w.ClassName;
 			if (cn != null) {
 				var pc = p; w.MapScreenToClient(ref pc);

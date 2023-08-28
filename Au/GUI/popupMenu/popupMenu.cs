@@ -81,10 +81,10 @@ public unsafe partial class popupMenu : MTBase {
 
 	#region add
 
-	PMItem _Add(PMItem mi, string text, MTImage image, int l_, Delegate click = null) {
+	PMItem _Add(PMItem mi, string text, MTImage image, int l_, string f_, Delegate click = null) {
 		_ThreadTrap();
 		_OpenTrap("cannot add items while the menu is open. To add to submenu, use the submenu variable.");
-		if (!mi.IsSeparator) mi.Set_(this, text, click, image, l_);
+		if (!mi.IsSeparator) mi.Set_(this, text, click, image, l_, _sourceFile == null ? null : f_);
 		_a.Add(mi);
 		_addedNewItems = true;
 		Last = mi;
@@ -99,8 +99,9 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
-	public PMItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable) { Id = _lastId = id }, text, image, l_);
+	/// <param name="f_">[](xref:caller_info)</param>
+	public PMItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable) { Id = _lastId = id }, text, image, l_, f_);
 
 	/// <summary>
 	/// Adds menu item with auto-generated id.
@@ -109,11 +110,12 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// Assigns id = the last specified or auto-generated id + 1. If not using explicitly specified ids, auto-generated ids are 1, 2, 3... Submenu-items, separators and items with action don't auto-generate ids.
 	/// </remarks>
-	public PMItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable) { Id = ++_lastId }, text, image, l_);
+	public PMItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable) { Id = ++_lastId }, text, image, l_, f_);
 
 	/// <summary>
 	/// Adds menu item with action (callback function) that is executed on click.
@@ -123,11 +125,12 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// This function is the same as the indexer. The difference is, <b>Add</b> returns <b>PMItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 	/// </remarks>
-	public PMItem Add(string text, Action<PMItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable), text, image, l_, click);
+	public PMItem Add(string text, Action<PMItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable), text, image, l_, f_, click);
 
 	/// <summary>
 	/// Adds menu item with action (callback function) that is executed on click.
@@ -136,12 +139,13 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <value>Action executed on click. Can be null.</value>
 	/// <remarks>
-	/// This function is the same as <see cref="Add(string, Action{PMItem}, MTImage, bool, int)"/>. The difference is, <b>Add</b> returns <b>PMItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+	/// This function is the same as <see cref="Add(string, Action{PMItem}, MTImage, bool, int, string)"/>. The difference is, <b>Add</b> returns <b>PMItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 	/// </remarks>
-	public Action<PMItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0] {
-		set { Add(text, value, image, disable, l_); }
+	public Action<PMItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null] {
+		set { Add(text, value, image, disable, l_, f_); }
 	}
 
 	/// <summary>
@@ -153,11 +157,12 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// When clicked, <see cref="PMItem.IsChecked"/> state is changed.
 	/// </remarks>
-	public PMItem AddCheck(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable, check) { checkType = 1 }, text, image, l_, click);
+	public PMItem AddCheck(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable, check) { checkType = 1 }, text, image, l_, f_, click);
 
 	/// <summary>
 	/// Adds menu item to be used as a radio button in a group of such items.
@@ -168,11 +173,12 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// When clicked an unchecked radio item, its <see cref="PMItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
 	/// </remarks>
-	public PMItem AddRadio(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable, check) { checkType = 2 }, text, image, l_, click);
+	public PMItem AddRadio(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable, check) { checkType = 2 }, text, image, l_, f_, click);
 
 	/// <summary>
 	/// Adds menu item that opens a submenu.
@@ -183,6 +189,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// The submenu is other <b>popupMenu</b> object. It inherits many properties of this menu; see property documentation.
 	/// </remarks>
@@ -212,8 +219,8 @@ public unsafe partial class popupMenu : MTBase {
 	/// }
 	/// ]]></code>
 	/// </example>
-	public PMItem Submenu(string text, Action<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable) { IsSubmenu = true }, text, image, l_, opening);
+	public PMItem Submenu(string text, Action<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable) { IsSubmenu = true }, text, image, l_, f_, opening);
 
 	/// <summary>
 	/// Adds menu item that opens a reusable submenu.
@@ -223,6 +230,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
+	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
 	/// The caller creates the submenu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>popupMenu</b> and reuse same object.
 	/// The submenu does not inherit properties of this menu.
@@ -233,14 +241,14 @@ public unsafe partial class popupMenu : MTBase {
 	/// m.Submenu("Submenu", () => m2);
 	/// ]]></code>
 	/// </example>
-	public PMItem Submenu(string text, Func<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
-		=> _Add(new PMItem(this, disable) { IsSubmenu = true }, text, image, l_, opening);
+	public PMItem Submenu(string text, Func<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
+		=> _Add(new PMItem(this, disable) { IsSubmenu = true }, text, image, l_, f_, opening);
 
 	/// <summary>
 	/// Adds separator.
 	/// </summary>
 	public void Separator()
-		=> _Add(new PMItem(this, isDisabled: true) { IsSeparator = true }, null, default, 0);
+		=> _Add(new PMItem(this, isDisabled: true) { IsSeparator = true }, null, default, 0, null);
 
 	/// <summary>
 	/// Gets the last added menu item.
@@ -496,7 +504,7 @@ public unsafe partial class popupMenu : MTBase {
 		if (!contextMenu) {
 			if (b.clicked == null) return;
 			if (b.clicked is Action<popupMenu> menu) {
-				m = _sourceFile == null ? new() : new popupMenu(null, _sourceFile, b.sourceLine);
+				m = b.sourceFile == null ? new() : new popupMenu(null, b.sourceFile, b.sourceLine);
 				base._CopyProps(m);
 				m.CheckDontClose = CheckDontClose;
 				m.RawText = RawText;
@@ -847,10 +855,10 @@ public unsafe partial class popupMenu : MTBase {
 
 	void _ContextMenu(PMItem b) {
 		if (b.IsSeparator) return;
-		var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, b);
+		var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(b.sourceFile, b);
 		if (canEdit || canGo) {
 			var m = new popupMenu();
-			if (canEdit) m["Edit menu item"] = _ => ScriptEditor.Open(_sourceFile, b.sourceLine);
+			if (canEdit) m["Edit menu item"] = _ => ScriptEditor.Open(b.sourceFile, b.sourceLine);
 			if (canGo) m[goText] = _ => b.GoToFile_();
 			_ShowSubmenu(b, m: m);
 		}

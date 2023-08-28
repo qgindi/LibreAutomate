@@ -1463,9 +1463,8 @@ namespace DiffMatchPatch
 					break;
 				}
 			}
-			if(text.Length != 0) text.Remove(text.Length - 1, 1);
-			string delta = text.ToString();
-			return delta;
+			if(text.Length != 0) text.Length--;
+			return text.ToString();
 		}
 
 		/**

@@ -155,10 +155,17 @@ public static class ExtWpf {
 	/// <summary>
 	/// Gets rectangle of this element in screen coordinates.
 	/// </summary>
+	/// <returns>default if this is an invisible element (but not <b>Window</b>) or if fails.</returns>
 	public static RECT RectInScreen(this FrameworkElement t) {
 		if (t is Window w) return w.Hwnd().Rect; //else would be incorrect: x/y of client area, width/height of window
-		Point p1 = t.PointToScreen(default), p2 = t.PointToScreen(new Point(t.ActualWidth, t.ActualHeight));
-		return RECT.FromLTRB(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt());
+		if (t.IsVisible) {
+			try {
+				Point p1 = t.PointToScreen(default), p2 = t.PointToScreen(new Point(t.ActualWidth, t.ActualHeight));
+				return RECT.FromLTRB(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt());
+			}
+			catch (Exception e1) { Debug_.Print(e1); }
+		}
+		return default;
 	}
 	
 	/// <summary>
@@ -495,7 +502,7 @@ public static class ExtWpf {
 	public static void AddRows(this Grid g, params WBGridLength[] heights) {
 		foreach (var v in heights) g.RowDefinitions.Add(v.Row);
 	}
-
+	
 	/// <summary>
 	/// Gets the <b>Text</b> property. Returns null if it is "".
 	/// </summary>

@@ -1,55 +1,48 @@
-﻿namespace Au.More
-{
+﻿namespace Au.More;
+
+/// <summary>
+/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
+/// Used like <c>using(new StringBuilder_(out var b)) { b.Append("example"); var s = b.ToString(); }</c>.
+/// </summary>
+/// <remarks>
+/// This is a modified copy of the .NET internal StringBuilderCache class.
+/// </remarks>
+internal struct StringBuilder_ : IDisposable {
+	StringBuilder _sb;
+	
 	/// <summary>
-	/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
-	/// Used like <c>using(new StringBuilder_(out var b)) { b.Append("example"); var s = b.ToString(); }</c>.
+	/// The cached <b>StringBuilder</b> has this <b>Capacity</b>. The cache is not used if <i>capacity</i> is bigger.
 	/// </summary>
-	/// <remarks>
-	/// This is a modified copy of the .NET internal StringBuilderCache class.
-	/// The cache uses 2 [ThreadLocal] StringBuilder instances, which allows 1 nesting level. Not error to use deeper nesting level, but then gets new StringBuilder, not from the cache.
-	/// </remarks>
-	internal struct StringBuilder_ : IDisposable
-	{
-		StringBuilder _sb;
-
-		/// <summary>
-		/// 2000. The cache is not used if capacity is bigger.
-		/// </summary>
-		public const int MAX_BUILDER_SIZE = 2000;
-
-		[ThreadStatic] private static StringBuilder t_cachedInstance, t_cachedInstance2;
-
-		/// <summary>
-		/// Gets a new or cached/cleared StringBuilder of the specified capacity, min 200.
-		/// </summary>
-		public StringBuilder_(out StringBuilder sb, int capacity = 200) {
-			if (capacity <= MAX_BUILDER_SIZE) {
-				if (capacity < 200) capacity = 200;
-				StringBuilder b = t_cachedInstance;
-				bool alt = b == null; if (alt) b = t_cachedInstance2;
-				if (b != null) {
-					if (capacity <= b.Capacity) {
-						if (alt) t_cachedInstance2 = null; else t_cachedInstance = null;
-						b.Clear();
-						//Debug_.Print("StringBuilder cached, alt=" + alt);
-						sb = _sb = b;
-						return;
-					}
-				}
+	public const int Capacity = 2000;
+	
+	[ThreadStatic] private static StringBuilder t_cached;
+	
+	/// <summary>
+	/// Gets a new or cached/cleared <b>StringBuilder</b> of the specified or bigger capacity.
+	/// </summary>
+	/// <param name="capacity">
+	/// Min needed <b>StringBuilder.Capacity</b>. If less than <b>Capacity</b> (2000), uses <b>Capacity</b>. If more than <b>Capacity</b>, does not use the cache.
+	/// Use this parameter only when the needed capacity is variable; else either use default if need default or smaller, or don't use <b>StringBuilder_</b> if need bigger.
+	/// </param>
+	public StringBuilder_(out StringBuilder sb, int capacity = Capacity) {
+		if (capacity <= Capacity) {
+			capacity = Capacity;
+			var b = t_cached;
+			if (b != null) {
+				t_cached = null;
+				b.Clear();
+				sb = _sb = b;
+				return;
 			}
-			//Debug_.Print("StringBuilder new");
-			sb = _sb = new StringBuilder(capacity);
 		}
-
-		/// <summary>
-		/// Releases the StringBuilder to the cache.
-		/// </summary>
-		public void Dispose() {
-			if (_sb.Capacity <= MAX_BUILDER_SIZE) {
-				//Debug_.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
-				if (t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
-			}
-			_sb = null;
-		}
+		sb = _sb = new StringBuilder(capacity);
+	}
+	
+	/// <summary>
+	/// Releases the StringBuilder to the cache.
+	/// </summary>
+	public void Dispose() {
+		if (_sb.Capacity == Capacity) t_cached = _sb;
+		_sb = null;
 	}
 }

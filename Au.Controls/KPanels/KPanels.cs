@@ -26,7 +26,7 @@ public partial class KPanels {
 	_Node _rootStack;
 	string _xmlFile;
 	bool _loaded;
-
+	
 	/// <summary>
 	/// Loads layout from XML file.
 	/// </summary>
@@ -39,13 +39,13 @@ public partial class KPanels {
 		if (_loaded) throw new InvalidOperationException();
 		_loaded = true;
 		_xmlFile = xmlFileCustomized;
-
+		
 		//At first try to load xmlFileCustomized. If it does not exist or is invalid, load xmlFileDefault.
 		string xmlFile = xmlFileCustomized; bool useDefaultXML = xmlFileCustomized == null;
 		gRetry:
 		if (useDefaultXML) xmlFile = xmlFileDefault;
 		else if (useDefaultXML = !filesystem.exists(xmlFile).File) goto gRetry;
-
+		
 		try {
 			var x = XmlUtil.LoadElem(xmlFile);
 			if (!useDefaultXML) _AutoUpdateXml(x, xmlFileDefault);
@@ -66,31 +66,38 @@ public partial class KPanels {
 			useDefaultXML = true; goto gRetry;
 		}
 	}
-
+	
 	/// <summary>
 	/// Saves layout to XML file <i>xmlFileCustomized</i> specified when calling <see cref="Load"/>.
 	/// Can be called at any time. When closing window, should be called in OnClosing override after calling base.OnClosing.
+	/// Fast. Saves only if changed. Can be called eg every 30 s.
 	/// Does nothing if <i>xmlFileCustomized</i> was null.
 	/// </summary>
 	public void Save() {
 		if (_xmlFile == null) return;
 		try {
-			filesystem.createDirectoryFor(_xmlFile);
-			var sett = new XmlWriterSettings() {
+			s_xws ??= new XmlWriterSettings() {
 				OmitXmlDeclaration = true,
 				Indent = true,
 				IndentChars = "\t"
 			};
-			filesystem.save(_xmlFile, temp => {
-				using var x = XmlWriter.Create(temp, sett);
+			var b = new StringBuilder(2000);
+			using (var x = XmlWriter.Create(b, s_xws)) { //not `using var...;`
 				x.WriteStartDocument();
 				_rootStack.Save(x);
-			});
-			//run.it("notepad.exe", _xmlFile); timer.after(1000, _ => DeleteSavedFile());
+			}
+			var s1 = b.ToString();
+			try { _savedXML ??= filesystem.loadText(_xmlFile); } catch { }
+			if (s1 != _savedXML) {
+				filesystem.saveText(_xmlFile, s1);
+				_savedXML = s1;
+			}
 		}
 		catch (Exception ex) { print.qm2.write(ex); }
 	}
-
+	static XmlWriterSettings s_xws;
+	string _savedXML;
+	
 	void _AutoUpdateXml(XElement rootStack, string xmlFileDefault) {
 		var defRootStack = XmlUtil.LoadElem(xmlFileDefault);
 		var eOld = rootStack.Descendants("panel").Concat(rootStack.Descendants("toolbar"))/*.Concat(rootStack.Descendants("document"))*/; //same speed as with .Where(cached delegate)
@@ -130,14 +137,14 @@ public partial class KPanels {
 		}
 		//print.it(rootStack);
 	}
-
+	
 	///// <summary>
 	///// Deletes the user's saved layout file. Then next time will use the default file.
 	///// </summary>
 	//public void DeleteSavedFile() {
 	//	filesystem.delete(_xmlFile);
 	//}
-
+	
 	/// <summary>
 	/// Action that adds the root node (Grid) to a container (for example Window), like <c>_panels.Container = g => this.Content = g;</c>.
 	/// The action is called immediately and also may be called later if need to create new root element when moving a panel etc.
@@ -151,9 +158,9 @@ public partial class KPanels {
 		}
 	}
 	Action<Grid> _setContainer;
-
+	
 	//public Grid RootElem => _rootStack.Elem as Grid;
-
+	
 	/// <summary>
 	/// Gets interface of a leaf item (panel, toolbar or document).
 	/// </summary>
@@ -167,7 +174,7 @@ public partial class KPanels {
 			return v;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets interface of container leaf item (panel, toolbar or document).
 	/// </summary>
@@ -182,17 +189,17 @@ public partial class KPanels {
 			throw new NotFoundException();
 		}
 	}
-
+	
 	public ILeaf AddNewExtension(bool toolbar, string name, ILeaf where = null, bool after = false) {
 		if (name.NE()) throw new ArgumentException();
-		if(where == null) {
+		if (where == null) {
 			where = _rootStack.LastChild as ILeaf;
 			after = true;
 			print.it($"Info: added new {(toolbar ? "toolbar" : "panel")} {name}. It is at the bottom of the window. Right-click its caption and move it to a better place.");
 		}
 		return where.AddSibling(after, toolbar ? LeafType.Toolbar : LeafType.Panel, name, canClose: false, isExtension: true);
 	}
-
+	
 	//rejected. Rarely used. Can set in Container action.
 	///// <summary>
 	///// Background brush of the root grid.
@@ -202,40 +209,40 @@ public partial class KPanels {
 	//	get => _gridBackground;
 	//	set => _gridBackground = value;
 	//}
-
+	
 	/// <summary>
 	/// Background brush of panel/document caption and tab strip. Default Brushes.LightSteelBlue.
 	/// Set before <see cref="Load"/>.
 	/// </summary>
 	public Brush CaptionBrush { get; set; } = Brushes.LightSteelBlue;
-
+	
 	//rejected. Looks ugly when different color, unless white.
 	///// <summary>
 	///// Background brush of tab strip. Default Brushes.LightSteelBlue.
 	///// Set before <see cref="Load"/>.
 	///// </summary>
 	//public Brush TabBrush { get; set; } = Brushes.LightSteelBlue;
-
+	
 	/// <summary>
 	/// Background brush of splitters.
 	/// Set before <see cref="Load"/>.
 	/// </summary>
 	public Brush SplitterBrush { get; set; }
-
+	
 	/// <summary>
 	/// Border color of panels and documents.
 	/// Set before <see cref="Load"/>.
 	/// If not set, no borders will be added.
 	/// </summary>
 	public Brush BorderBrush { get; set; }
-
+	
 	/// <summary>
 	/// Gets top-level window, for example to use as owner of menus/dialogs.
 	/// Note: it may not be direct container of the root element.
 	/// </summary>
 	Window _ContainerWindow => _window ??= Window.GetWindow(_rootStack.Elem);
 	Window _window;
-
+	
 	class _XmlNameAttrComparer : IEqualityComparer<XElement> {
 		public bool Equals(XElement x, XElement y) => x.Attr("name") == y.Attr("name");
 		public int GetHashCode(XElement obj) => obj.Attr("name").GetHashCode();

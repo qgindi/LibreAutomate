@@ -448,7 +448,7 @@ namespace Au {
 			Debug.Assert(script.role == SRole.MiniProgram);
 			//if (s == null) s = "\0DNl08ISh30Kbt6ekJV3VvA"; //JIT //now not used
 			//else {
-			if (sourceFile == null) sourceFile = MiniProgram_.s_scriptId; //task started/ended/failed
+			if (sourceFile == null) sourceFile = script.s_idMainFile.ToString(); //task started/ended/failed
 			else sourceFile = sourceFile + "\0" + sourceLine.ToS(); //trigger action started/ended/failed
 			sourceFile = id.ToS() + "\0" + sourceFile;
 			//}

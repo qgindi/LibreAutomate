@@ -345,6 +345,7 @@ static class InsertCode {
 	/// </summary>
 	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ActiveDoc;
+		if (!doc.EFile.IsCodeFile) return;
 		
 		int indent = doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
@@ -378,6 +379,8 @@ static class InsertCode {
 	/// <param name="concise">If text is single line, surround as single line.</param>
 	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ActiveDoc;
+		if (!doc.EFile.IsCodeFile) return;
+
 		int from = doc.aaaSelectionStart16, to = doc.aaaSelectionEnd16;
 		if (from == to) {
 			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
@@ -530,6 +533,7 @@ catch (Exception) {  }
 	
 	public static void AddFileDescription() {
 		var doc = Panels.Editor.ActiveDoc;
+		if (!doc.EFile.IsCodeFile) return;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}

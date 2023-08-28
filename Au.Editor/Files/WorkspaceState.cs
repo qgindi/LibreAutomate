@@ -99,7 +99,7 @@ class WorkspaceState : IDisposable {
 		
 		static string _EditorFormat(FileNode f, in Editor x) {
 			if (x.top == 0 && x.pos == 0 && x.bookmark == null && x.breakpoint == null) return null;
-			using (new StringBuilder_(out var b, StringBuilder_.MAX_BUILDER_SIZE)) {
+			using (new StringBuilder_(out var b)) {
 				b.Append('|').AppendHex(f.Id).Append('=');
 				if (x.top > 0) b.Append('t').AppendHex(x.top);
 				if (x.pos > 0) b.Append('p').AppendHex(x.pos);
@@ -172,7 +172,7 @@ class WorkspaceState : IDisposable {
 	}
 	
 	public void FilesSave(IEnumerable<FileNode> open, IEnumerable<FileNode> expanded) {
-		using (new StringBuilder_(out var b, StringBuilder_.MAX_BUILDER_SIZE)) {
+		using (new StringBuilder_(out var b)) {
 			_s.open = _FormatIds(b, open);
 			_s.expanded = _FormatIds(b, expanded);
 		}

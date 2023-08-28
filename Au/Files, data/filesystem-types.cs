@@ -272,13 +272,19 @@ public class FEFile {
 		ReparseTag = d.dwReserved0;
 	}
 
-	///
+	/// <summary>
+	/// Gets file name. Or relative path if used <see cref="FEFlags.NeedRelativePaths"/>.
+	/// </summary>
 	public string Name { get; }
 
-	///
+	/// <summary>
+	/// Gets full path.
+	/// </summary>
 	public string FullPath { get; }
 
-	///
+	/// <summary>
+	/// Gets filename extension. Returns "" if directory.
+	/// </summary>
 	public string Extension => IsDirectory ? "" : pathname.getExtension(Name); //note: if null for directory, then OrderBy throws exception
 
 	/// <summary>
@@ -304,18 +310,21 @@ public class FEFile {
 	/// Descendant level.
 	/// 0 if direct child of the directory (<i>directoryPath</i>), 1 if child of child, and so on.
 	/// </summary>
-	public int Level => _level;
-	readonly short _level;
-
-	/// <summary>
-	/// <msdn>WIN32_FIND_DATA</msdn>.dwReserved0.
-	/// </summary>
-	public uint ReparseTag { get; }
+	public int Level {
+		get => _level;
+		internal set { _level = (short)value; }
+	}
+	short _level;
 
 	/// <summary>
 	/// It is a NTFS link, such as symbolic link or mount point. Don't confuse with shell links (shortcuts).
 	/// </summary>
 	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
+
+	/// <summary>
+	/// <msdn>WIN32_FIND_DATA</msdn>.dwReserved0.
+	/// </summary>
+	public uint ReparseTag { get; }
 
 	/// <summary>
 	/// Returns <see cref="FullPath"/>.
