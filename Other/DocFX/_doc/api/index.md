@@ -7,10 +7,10 @@
 - Au.More - classes that are rarely used in automation scripts.
 
 ### Files
-##### .NET assembly files
+#### .NET assembly files
 - Au.dll - contains code of the above namespaces.
 
-##### Native code dll files
+#### Native code dll files
 - 64\AuCpp.dll - used by Au.dll in 64-bit processes.
 - 32\AuCpp.dll - used by Au.dll in 32-bit processes.
 - 64\sqlite3.dll - used by the **sqlite** class in 64-bit processes.
@@ -20,4 +20,9 @@ These files are in the editor folder. The .exe compiler copies them to the .exe 
 
 Other dll files in the editor folder are not part of the library. They are undocumented.
 
-If Au.dll is used in a program other than the default editor program or .exe programs created by it and some library functions throw **DllNotFoundException** (missing AuCpp.dll etc), add environment variable *Au.Path* with value = Au.dll folder path.
+### Using in programs other than LibreAutomate and .exe programs created by it
+To get the dlls you can use NuGet package [LibreAutomate](https://www.nuget.org/packages/LibreAutomate). Or copy from the LibreAutomate folder. Or build from source code.
+
+The program should use a manifest like [this](https://github.com/qgindi/LibreAutomate/blob/master/_/default.exe.manifest). It enables common controls 6, all OS versions, full DPI awareness, disableWindowFiltering.
+
+If some library functions throw **DllNotFoundException** (missing AuCpp.dll etc), add environment variable *Au.Path* with value = Au.dll folder path. May need this when the host program copies Au.dll somewhere without the native dll folders, for example in some scripting environments and GUI designers.

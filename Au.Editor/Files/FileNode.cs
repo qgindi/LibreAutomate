@@ -66,21 +66,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_id = _model.AddGetId(this);
 	}
 	
-	//this ctor is used when reading files.xml
+	//this ctor is used when loading workspace (reading files.xml)
 	FileNode(XmlReader x, FileNode parent, FilesModel model) {
 		_model = model;
 		if (parent == null) { //the root node
 			if (x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
-			x["max-i"].ToInt(out uint u);
-			_model.MaxId = u;
 		} else {
 			_type = XmlTagToFileType(x.Name, canThrow: true);
-			uint id = 0;
 			while (x.MoveToNextAttribute()) {
 				var v = x.Value; if (v.NE()) continue;
 				switch (x.Name) {
 				case "n": _SetName(v); break;
-				case "i": v.ToInt(out id); break;
+				case "i": v.ToInt(out _id); break;
 				case "f": _flags = (_Flags)v.ToInt(); break;
 				case "path": _linkTarget = v; break;
 				case "icon": _icon = v; break;
@@ -88,18 +85,21 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				}
 			}
 			if (_name == null) throw new ArgumentException("no 'n' attribute in XML");
-			_id = _model.AddGetId(this, id);
-			
-			if (_flags.Has(_Flags._obsolete_Symlink)) model.TreeLoaded_ += importing => { //before v0.17 for folder links used symlinks. Bad idea.
-				_flags &= ~_Flags._obsolete_Symlink;
-				var linkPath = FilePath;
-				filesystem.more.getFinalPath(linkPath, out _linkTarget);
-				if (!importing) {
-					Api.RemoveDirectory(linkPath);
-					_model.Save.WorkspaceLater(1);
-				}
-			};
 		}
+	}
+	
+	internal void _WorkspaceLoaded(uint id, bool importing) {
+		_id = id; //if id in XML was invalid, the caller generated new id
+		
+		if (_flags.Has(_Flags._obsolete_Symlink)) { //before v0.17 for folder links used symlinks. Bad idea.
+			_flags &= ~_Flags._obsolete_Symlink;
+			var linkPath = FilePath;
+			filesystem.more.getFinalPath(linkPath, out _linkTarget);
+			if (!importing) {
+				Api.RemoveDirectory(linkPath);
+				_model.Save.WorkspaceLater(1);
+			}
+		};
 	}
 	
 	public static FileNode LoadWorkspace(string file, FilesModel model) => XmlLoad(file, (x, p) => new FileNode(x, p, model));
@@ -109,7 +109,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	void _XmlWrite(XmlWriter x, bool exporting) {
 		if (Parent == null) {
 			x.WriteStartElement("files");
-			if (_model != null) x.WriteAttributeString("max-i", _model.MaxId.ToString()); //null when exporting
 		} else {
 			x.WriteStartElement(_type switch { FNType.Folder => "d", FNType.Script => "s", FNType.Class => "c", _ => "n" });
 			x.WriteAttributeString("n", _name);
@@ -466,7 +465,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <param name="filePath">Full path, to pass directly to .NET <b>File</b> function.</param>
 	/// <returns>null if failed or file size more than 100_000_000.</returns>
-	internal static string GetFileTextLL_(string filePath) {
+	public static string GetFileTextLL(string filePath) {
 		//SHOULDDO: option to load only text files. If unknown extension, try to load part and find \0.
 		try {
 			using var sr = filesystem.waitIfLocked(() => new StreamReader(filePath));
@@ -482,11 +481,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	long _fileModTime;
 	
 	//called when SciDoc loaded or saved the file
-	internal void UpdateFileModTime_() {
+	internal void _UpdateFileModTime() {
 		_fileModTime = Api.GetFileAttributesEx(FilePath, 0, out var d) ? d.ftLastWriteTime : 0;
 	}
 	
-	internal void CheckModifiedExternally_(SciCode doc) {
+	internal void _CheckModifiedExternally(SciCode doc) {
 		if (doc.EIsBinary) return;
 		Debug_.PrintIf(_fileModTime == 0);
 		if (!Api.GetFileAttributesEx(FilePath, 0, out var d) || d.ftLastWriteTime == _fileModTime) return;
@@ -540,7 +539,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		Debug.Assert(OpenDoc == null);
 		if (DontSave) throw new AuException("This file should not be modified.");
 		filesystem.saveText(FilePath, text);
-		UpdateFileModTime_();
+		_UpdateFileModTime();
 		CodeInfo.FilesChanged();
 	}
 	
@@ -548,11 +547,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// true if is link to a file in folders.ThisAppBS + "Default" or "Templates".
 	/// #if DEBUG, always returns false.
 	/// </summary>
-	#if DEBUG
+#if DEBUG
 	public bool DontSave => false;
-	#else
+#else
 	public bool DontSave => IsLink && FilePath is var s && s.Starts(folders.ThisAppBS) && 0 != s.Eq(folders.ThisAppBS.Length, true, @"Default\", @"Templates\");
-	#endif
+#endif
 	
 	#endregion
 	
@@ -1024,7 +1023,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
 	/// <param name="newModel">Used when importing workspace.</param>
-	internal FileNode FileCopy(FileNode target, FNInsert pos, FilesModel newModel = null) {
+	internal FileNode _FileCopy(FileNode target, FNInsert pos, FilesModel newModel = null) {
 		_model.Save?.TextNowIfNeed(onlyText: true);
 		if (target == null) { target = Root; pos = FNInsert.Inside; }
 		

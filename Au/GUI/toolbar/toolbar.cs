@@ -2,6 +2,10 @@ using Au.Triggers;
 
 namespace Au;
 
+//rejected: warn if using common controls version 5. Eg tooltips don't work. The same with menus.
+//	Too many problems: 1. How to warn? Message box? 2. Need to also warn if no supported OS, DPI awareness, etc. Load/parse manifest in module initializer? 3. Maybe the app does not want to use these features (eg high DPI). 4. Maybe not possible to use correct manifest, eg when used in a scripting app. 5. Etc.
+//	Never mind. The required manifest is documented.
+
 /// <summary>
 /// Floating toolbar.
 /// Can be attached to windows of other programs.

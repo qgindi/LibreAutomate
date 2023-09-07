@@ -18,7 +18,7 @@ namespace Au;
 /// </remarks>
 public static partial class filesystem {
 	#region exists, attributes, properties
-
+	
 	/// <summary>
 	/// Gets file or directory attributes, size and times.
 	/// Calls API <msdn>GetFileAttributesEx</msdn>.
@@ -47,10 +47,9 @@ public static partial class filesystem {
 		if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsNtfsLink = 0 != IsNtfsLink_(path);
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Gets file or directory attributes.
-	/// Calls API <msdn>GetFileAttributes</msdn>.
 	/// </summary>
 	/// <returns>false if the file/directory does not exist.</returns>
 	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
@@ -59,7 +58,8 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
 	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
-	/// For NTFS links, gets properties of the link, not of its target.
+	/// Calls API <msdn>GetFileAttributes</msdn>.
+	/// For NTFS links, gets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
 		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
@@ -68,7 +68,7 @@ public static partial class filesystem {
 		attributes = a;
 		return true;
 	}
-
+	
 	static unsafe bool _GetAttributesOnError(string path, FAFlags flags, out FileAttributes attr, out bool ntfsLink, Api.WIN32_FILE_ATTRIBUTE_DATA* p = null) {
 		attr = 0; ntfsLink = false;
 		var ec = lastError.code;
@@ -99,13 +99,13 @@ public static partial class filesystem {
 		}
 		if (0 != (flags & FAFlags.DontThrow)) return false;
 		throw new AuException(ec, $"*get file attributes: '{path}'");
-
+		
 		//tested:
 		//	If the file is in a protected directory, ERROR_ACCESS_DENIED.
 		//	If the path is to a non-existing file in a protected directory, ERROR_FILE_NOT_FOUND.
 		//	ERROR_SHARING_VIOLATION for C:\pagefile.sys etc.
 	}
-
+	
 	/// <summary>
 	/// Gets attributes.
 	/// Returns false if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
@@ -113,15 +113,42 @@ public static partial class filesystem {
 	static unsafe bool _GetAttributes(string path, out FileAttributes attr, out bool ntfsLink, bool useRawPath) {
 		if (!useRawPath) path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
 		//note: NormalizeMinimally_ does not remove \ at the end. The API succeeds if "C:\x\dir\" but fails if "C:\x\file\" (it's good).
-
+		
 		attr = Api.GetFileAttributes(path);
 		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != IsNtfsLink_(path);
 		else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out ntfsLink)) return false;
-
+		
 		if (!useRawPath && !pathname.isFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
 		return true;
 	}
-
+	
+	/// <summary>
+	/// Sets file or directory attributes.
+	/// </summary>
+	/// <returns>false if the file/directory does not exist.</returns>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="attributes">Attributes to set, add or remove.</param>
+	/// <param name="add">null (default) - set; true - add; false - remove.</param>
+	/// <param name="flags"></param>
+	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
+	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
+	/// <remarks>
+	/// Calls API <msdn>SetFileAttributes</msdn>.
+	/// For NTFS links, sets attributes of the link, not of its target.
+	/// </remarks>
+	public static unsafe bool setAttributes(string path, FileAttributes attributes, bool? add = null, FAFlags flags = 0) {
+		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
+		var a = attributes;
+		if (add != null) {
+			var v = Api.GetFileAttributes(path);
+			if (add.Value) a = v | attributes; else a = v & ~attributes;
+			if (a == attributes) return true;
+		}
+		if (Api.SetFileAttributes(path, a)) return true;
+		if (0 != (flags & FAFlags.DontThrow)) return false;
+		throw new AuException(0, $"*set file attributes: '{path}'");
+	}
+	
 	/// <summary>
 	/// Calls API <b>FindFirstFile</b> to determine whether <i>path</i> is a NTFS link, such as symbolic link or mount point.
 	/// </summary>
@@ -134,7 +161,7 @@ public static partial class filesystem {
 		Api.FindClose(hfind);
 		return R;
 	}
-
+	
 	/// <summary>
 	/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, readonly, hidden, system, NTFS link. See examples.
 	/// </summary>
@@ -163,7 +190,7 @@ public static partial class filesystem {
 		if (_GetAttributes(path, out var a, out bool ntfsLink, useRawPath)) return new(a, true, ntfsLink);
 		return new(0, (a == (FileAttributes)(-1)) ? null : false, false);
 	}
-
+	
 	/// <summary>
 	/// Gets file system entry type - file, directory, NTFS link, whether it exists and is accessible.
 	/// Returns <b>NotFound</b> (0) if does not exist. Returns <b>AccessDenied</b> (&lt; 0) if exists but this process cannot access it and get attributes.
@@ -183,11 +210,11 @@ public static partial class filesystem {
 		if (ntfsLink) R |= (FileIs_)4;
 		return R;
 	}
-
+	
 	#endregion
-
+	
 	#region enumerate, search
-
+	
 	/// <summary>
 	/// Finds file or directory and returns full path.
 	/// </summary>
@@ -204,13 +231,13 @@ public static partial class filesystem {
 	/// <param name="dirs">0 or more directories where to search.</param>
 	public static unsafe string searchPath(string path, params string[] dirs) {
 		if (path.NE()) return null;
-
+		
 		string s = path;
 		if (pathname.isFullPathExpand(ref s, strict: false)) {
 			if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
 			return null;
 		}
-
+		
 		if (dirs != null) {
 			foreach (var d in dirs) {
 				s = d;
@@ -219,12 +246,12 @@ public static partial class filesystem {
 				if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
 			}
 		}
-
+		
 		s = folders.ThisApp + path;
 		if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
-
+		
 		if (Api.SearchPath(null, path) is string s1) return s1;
-
+		
 		if (path.Ends(".exe", true) && path.FindAny(@"\/") < 0) {
 			try {
 				path = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string
@@ -236,10 +263,10 @@ public static partial class filesystem {
 			}
 			catch (Exception ex) { Debug_.Print(path + "    " + ex.Message); }
 		}
-
+		
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Gets names and other info of files and subdirectories in the specified directory.
 	/// </summary>
@@ -291,11 +318,11 @@ public static partial class filesystem {
 		//rejected: in this func use .NET FileSystemEnumerable.
 		//	Good: faster; familiar types.
 		//	Bad: something we need is missing or difficult to return or need a workaround. Eg easily detect NTFS links, get relative path, prevent recursion to NTFS link target.
-
+		
 		string path = directoryPath;
 		if (0 == (flags & FEFlags.UseRawPath)) path = _PreparePath(path);
 		path = path.RemoveSuffix('\\');
-
+		
 		var d = new Api.WIN32_FIND_DATA();
 		IntPtr hfind = default;
 		var stack = new Stack<_EDStackEntry>();
@@ -303,10 +330,10 @@ public static partial class filesystem {
 		FileAttributes attr = 0;
 		int basePathLength = path.Length;
 		//var redir = new FileSystemRedirection();
-
+		
 		try {
 			//if (0 != (flags & FEFlags.DisableRedirection)) redir.Disable();
-
+			
 			for (; ; ) {
 				if (isFirst) {
 					isFirst = false;
@@ -363,19 +390,19 @@ public static partial class filesystem {
 						hfind = default;
 					}
 				}
-
+				
 				if (hfind == default) {
 					if (stack.Count == 0) break;
 					var t = stack.Pop();
 					hfind = t.hfind; path = t.path;
 					continue;
 				}
-
+				
 				var name = d.Name;
 				if (name == null) continue; //".", ".."
 				attr = d.dwFileAttributes;
 				bool isDir = (attr & FileAttributes.Directory) != 0;
-
+				
 				if ((flags & FEFlags.SkipHidden) != 0 && (attr & FileAttributes.Hidden) != 0) continue;
 				const FileAttributes hidSys = FileAttributes.Hidden | FileAttributes.System;
 				if ((attr & hidSys) == hidSys) {
@@ -387,21 +414,21 @@ public static partial class filesystem {
 						if (name.Eqi("Recovery")) continue;
 					}
 				}
-
+				
 				var fullPath = path + @"\" + name;
 				if (0 != (flags & FEFlags.NeedRelativePaths)) name = fullPath[basePathLength..];
-
+				
 				//prepend @"\\?\" etc if need. Don't change fullPath length, because then would be difficult to get relative path.
 				var fp2 = pathname.prefixLongPathIfNeed(fullPath);
-
+				
 				var r = new FEFile(name, fp2, d, stack.Count); //never mind, don't need for dirs if no dirFilter and is flag OnlyFiles
-
+				
 				if (isDir) {
 					int inc = dirFilter != null ? dirFilter(r) : (flags.Has(FEFlags.OnlyFiles) ? 0 : 1) | (flags.Has(FEFlags.AllDescendants) ? 2 : 0);
 					if (0 != (1 & inc)) yield return r;
 					if (0 == (2 & inc)) continue;
 					if (!flags.Has(FEFlags.RecurseNtfsLinks) && 0 != d.IsNtfsLink) continue;
-
+					
 					stack.Push(new _EDStackEntry() { hfind = hfind, path = path });
 					hfind = default; path = fullPath;
 					isFirst = true;
@@ -413,13 +440,13 @@ public static partial class filesystem {
 		finally {
 			if (hfind != default) Api.FindClose(hfind);
 			while (stack.Count > 0) Api.FindClose(stack.Pop().hfind);
-
+			
 			//redir.Revert();
 		}
 	}
-
+	
 	struct _EDStackEntry { internal IntPtr hfind; internal string path; }
-
+	
 	/// <summary>
 	/// Gets names and other info of matching files in the specified directory.
 	/// </summary>
@@ -446,7 +473,7 @@ public static partial class filesystem {
 		wildex w = pattern;
 		return enumerate(directoryPath, flags, f => w.Match(f.Name));
 	}
-
+	
 	/// <summary>
 	/// Gets names and other info of matching subdirectories in the specified directory.
 	/// </summary>
@@ -467,13 +494,13 @@ public static partial class filesystem {
 		wildex w = pattern;
 		return enumerate(directoryPath, flags, _ => false, d => !w.Match(d.Name) ? 0 : flags.Has(FEFlags.AllDescendants) ? 3 : 1);
 	}
-
+	
 	#endregion
-
+	
 	#region move, copy, rename, delete
-
+	
 	enum _FileOp { Rename, Move, Copy, }
-
+	
 	static unsafe void _FileOperation(_FileOp op, bool into, string path1, string path2, FIfExists ifExists,
 		FCFlags copyFlags = 0, Func<FEFile, bool> copyFileFilter = null, Func<FEFile, int> copyDirFilter = null
 		) {
@@ -481,7 +508,7 @@ public static partial class filesystem {
 		path1 = _PreparePath(path1);
 		var type1 = ExistsAs_(path1, true);
 		if (type1 <= 0) throw new FileNotFoundException($"Failed to {opName}. File not found: '{path1}'");
-
+		
 		if (op == _FileOp.Rename) {
 			op = _FileOp.Move;
 			if (pathname.isInvalidName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
@@ -500,12 +527,12 @@ public static partial class filesystem {
 				catch (Exception ex) { throw new AuException($"*create directory: '{path2Parent}'", ex); }
 			}
 		}
-
+		
 		bool ok = false, copy = op == _FileOp.Copy, deleteSource = false, mergeDirectory = false;
 		var del = new _SafeDeleteExistingDirectory();
 		try {
 			if (ifExists == FIfExists.MergeDirectory && type1 != FileIs_.Directory) ifExists = FIfExists.Fail;
-
+			
 			if (ifExists == FIfExists.Fail) {
 				//API will fail if exists. We don't use use API flags 'replace existing'.
 			} else {
@@ -546,7 +573,7 @@ public static partial class filesystem {
 				}
 				//if(!deleted) throw new AuException(Api.ERROR_FILE_EXISTS, $"*{opName}"); //don't need, later API will fail
 			}
-
+			
 			if (!copy) {
 				//note: don't use MOVEFILE_COPY_ALLOWED, because then moving directory to another drive fails with ERROR_ACCESS_DENIED and we don't know that the reason is different drive
 				if (ok = Api.MoveFileEx(path1, path2, 0)) return;
@@ -555,7 +582,7 @@ public static partial class filesystem {
 					deleteSource = true;
 				}
 			}
-
+			
 			if (copy) {
 				if (type1 == FileIs_.Directory) {
 					try {
@@ -572,9 +599,9 @@ public static partial class filesystem {
 						ok = Api.CopyFileEx(path1, path2, null, default, null, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
 				}
 			}
-
+			
 			if (!ok) throw new AuException(0, $"*{opName} '{path1}' to '{path2}'");
-
+			
 			if (deleteSource) {
 				try {
 					_Delete(path1);
@@ -591,18 +618,18 @@ public static partial class filesystem {
 			del.Finally(ok);
 		}
 	}
-
+	
 	//note: if merge, the destination directory must exist
 	static unsafe void _CopyDirectory(string path1, string path2, bool merge, FCFlags copyFlags,
 		Func<FEFile, bool> fileFilter, Func<FEFile, int> dirFilter
 		) {
 		//FUTURE: add progressInterface parameter. Create a default interface implementation class that supports progress dialog and/or progress in taskbar button. Or instead create a ShellCopy function.
 		//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to Enumerate which calls it when fails to enum.
-
+		
 		//use intermediate array, and get it before creating path2 directory. It requires more memory, but is safer. Without it, eg bad things happen when copying a directory into itself.
 		var edFlags = FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath | (FEFlags)copyFlags;
 		var a = enumerate(path1, edFlags, fileFilter, dirFilter).ToArray();
-
+		
 		if (copyFlags.Has(FCFlags.NoEmptyDirectories)) {
 			for (int i = a.Length; --i >= 0;) {
 				var f = a[i];
@@ -613,7 +640,7 @@ public static partial class filesystem {
 				a[i] = null;
 			}
 		}
-
+		
 		bool ok = false;
 		string s1 = null, s2 = null;
 		if (!merge) {
@@ -621,13 +648,13 @@ public static partial class filesystem {
 			if (!ok) ok = Api.CreateDirectory(path2, default);
 			if (!ok) goto ge;
 		}
-
+		
 		string prevParentDir = null;
 		foreach (var f in a) {
 			if (f == null) continue;
 			s1 = f.FullPath; s2 = pathname.prefixLongPathIfNeed(path2 + f.Name);
 			//print.it(s2);
-
+			
 			//create intermediate dirs if need, eg if dirFilter returned 2 (don't include the dir but include its children)
 			//SHOULDDO: CreateDirectoryEx
 			if (f.Level > 0 && (fileFilter != null || dirFilter != null)) {
@@ -637,13 +664,13 @@ public static partial class filesystem {
 					_CreateDirectory(prevParentDir, pathIsPrepared: true);
 				}
 			}
-
+			
 			if (f.IsDirectory) {
 				if (merge) switch (exists(s2, true)) {
 					case 2: continue; //never mind: check NTFS link mismatch
 					case 1: _DeleteL(s2, false); break;
 					}
-
+				
 				ok = Api.CreateDirectoryEx(s1, s2, default);
 				if (!ok && !f.IsNtfsLink) ok = Api.CreateDirectory(s2, default);
 			} else {
@@ -652,7 +679,7 @@ public static partial class filesystem {
 					if (0 != (attr & FileAttributes.Directory)) _Delete(s2);
 					else if (0 != (attr & badAttr)) Api.SetFileAttributes(s2, attr & ~badAttr);
 				}
-
+				
 				uint fl = Api.COPY_FILE_COPY_SYMLINK; if (!merge) fl |= Api.COPY_FILE_FAIL_IF_EXISTS;
 				ok = Api.CopyFileEx(s1, s2, null, default, null, fl);
 			}
@@ -676,11 +703,11 @@ public static partial class filesystem {
 		throw new AuException(0, se);
 		//never mind: wrong API error code if path1 and path2 is the same directory.
 	}
-
+	
 	struct _SafeDeleteExistingDirectory {
 		string _oldPath, _tempPath;
 		bool _dontDelete;
-
+		
 		/// <summary>
 		/// note: path must be normalized.
 		/// </summary>
@@ -697,7 +724,7 @@ public static partial class filesystem {
 			_oldPath = path; _tempPath = tempPath; _dontDelete = dontDelete;
 			return true;
 		}
-
+		
 		internal bool Finally(bool succeeded) {
 			if (_tempPath == null) return true;
 			if (!succeeded) {
@@ -709,7 +736,7 @@ public static partial class filesystem {
 			return true;
 		}
 	}
-
+	
 	/// <summary>
 	/// Renames file or directory.
 	/// </summary>
@@ -728,7 +755,7 @@ public static partial class filesystem {
 	public static void rename(string path, string newName, FIfExists ifExists = FIfExists.Fail) {
 		_FileOperation(_FileOp.Rename, false, path, newName, ifExists);
 	}
-
+	
 	/// <summary>
 	/// Moves (changes path of) file or directory.
 	/// </summary>
@@ -751,7 +778,7 @@ public static partial class filesystem {
 	public static void move(string path, string newPath, FIfExists ifExists = FIfExists.Fail) {
 		_FileOperation(_FileOp.Move, false, path, newPath, ifExists);
 	}
-
+	
 	/// <summary>
 	/// Moves file or directory into another directory.
 	/// </summary>
@@ -773,7 +800,7 @@ public static partial class filesystem {
 	public static void moveTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail) {
 		_FileOperation(_FileOp.Move, true, path, newDirectory, ifExists);
 	}
-
+	
 	/// <summary>
 	/// Copies file or directory.
 	/// </summary>
@@ -800,7 +827,7 @@ public static partial class filesystem {
 		) {
 		_FileOperation(_FileOp.Copy, false, path, newPath, ifExists, copyFlags, fileFilter, dirFilter);
 	}
-
+	
 	/// <summary>
 	/// Copies file or directory into another directory.
 	/// </summary>
@@ -817,7 +844,7 @@ public static partial class filesystem {
 		) {
 		_FileOperation(_FileOp.Copy, true, path, newDirectory, ifExists, copyFlags, fileFilter, dirFilter);
 	}
-
+	
 	/// <summary>
 	/// Deletes file or directory if exists.
 	/// </summary>
@@ -839,7 +866,7 @@ public static partial class filesystem {
 	/// </remarks>
 	public static bool? delete(string path, FDFlags flags = 0)
 		=> _Delete(_PreparePath(path), flags);
-
+	
 	/// <summary>
 	/// Deletes multiple files or/and directories.
 	/// </summary>
@@ -865,7 +892,7 @@ public static partial class filesystem {
 			//if (flags.Has(FDFlags.CanFail)) return false; //no, the shell API does not try to delete other items if fails to delete some
 			//flags &= ~FDFlags.RecycleBin; //no
 		}
-
+		
 		bool? R = null;
 		if (flags.Has(FDFlags.CanFail)) {
 			foreach (var v in paths) {
@@ -884,23 +911,23 @@ public static partial class filesystem {
 			return ae == null ? R : throw new AggregateException("Failed to delete.", ae);
 		}
 	}
-
+	
 	/// <summary>
 	/// note: path must be normalized.
 	/// </summary>
 	static bool? _Delete(string path, FDFlags flags = 0) {
 		bool canFail = flags.Has(FDFlags.CanFail);
-
+		
 		var type = ExistsAs_(path, true);
 		if (type == FileIs_.NotFound) return null;
 		if (type == FileIs_.AccessDenied) return canFail ? false : throw new AuException(0, $"*delete '{path}'");
-
+		
 		if (flags.Has(FDFlags.RecycleBin)) {
 			if (_DeleteShell(path, true)) return true;
 			if (canFail) return false;
 			Debug_.Print("_DeleteShell failed");
 		}
-
+		
 		int ec = 0;
 		if (type == FileIs_.Directory) {
 			var a = enumerate(path, FEFlags.AllDescendants | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible).ToArray();
@@ -926,9 +953,9 @@ public static partial class filesystem {
 			ec = _DeleteL(path, type == FileIs_.NtfsLinkDirectory, canFail);
 			if (ec == 0) return true;
 		}
-
+		
 		if (exists(path, true)) return canFail ? false : throw new AuException(ec, $"*delete '{path}'");
-
+		
 		//info:
 		//RemoveDirectory fails if not empty.
 		//Directory.Delete fails if a descendant is read-only, etc.
@@ -937,7 +964,7 @@ public static partial class filesystem {
 		//But all fail if it is current directory in any process. If in current process, _DeleteShell succeeds; it makes current directory = its parent.
 		return true;
 	}
-
+	
 	static int _DeleteL(string path, bool dir, bool canFail = false) {
 		//print.it(dir, path);
 		if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
@@ -964,12 +991,12 @@ public static partial class filesystem {
 		Debug_.Print("_DeleteL failed. " + lastError.messageFor(ec) + "  " + path
 			+ (dir ? ("   Children: " + string.Join(" | ", enumerate(path).Select(f => f.Name))) : null));
 		return ec;
-
+		
 		//never mind: .NET also calls DeleteVolumeMountPoint if it is a mount point. Somehow only for recursed dirs.
 		//	But I did not find in MSDN doc that need to do it before calling removedirectory. I think OS should unmount automatically.
 		//	Tested on Win10, works without unmounting explicitly. Even Explorer updates its current folder without notification.
 	}
-
+	
 	static bool _DeleteShell(string path, bool recycle, List<string> a = null) {
 		if (a != null) path = string.Join("\0", a);
 		if (wildex.hasWildcardChars(path)) throw new ArgumentException("*? not supported.");
@@ -989,14 +1016,14 @@ public static partial class filesystem {
 			foreach (var v in a) if (exists(v, true)) return false;
 		}
 		return true;
-
+		
 		//Also tested IFileOperation, but it is even slower. Also it requires STA, which is not a big problem.
-
+		
 		//Unsuccessfully tried to add flag 'if cannot use Recycle Bin, show a Yes|No message box and delete or fail'.
 		//	FOF_WANTNUKEWARNING does not work as it should, eg is ignored when the file is in a flash drive.
 		//	It works only without FOF_NOCONFIRMATION, but then always shows confirmation if not disabled in RB Properties.
 	}
-
+	
 	/// <summary>
 	/// Creates new directory if does not exists.
 	/// If need, creates missing parent/ancestor directories.
@@ -1014,7 +1041,7 @@ public static partial class filesystem {
 	public static bool createDirectory(string path, string templateDirectory = null) {
 		return _CreateDirectory(path, templateDirectory: templateDirectory);
 	}
-
+	
 	/// <summary>
 	/// Creates parent directory for a new file, if does not exist.
 	/// The same as <see cref="createDirectory"/>, just removes filename from <i>filePath</i>.
@@ -1035,7 +1062,7 @@ public static partial class filesystem {
 		var path = _RemoveFilename(filePath);
 		return _CreateDirectory(path, pathIsPrepared: true);
 	}
-
+	
 	/// <summary>
 	/// Same as createDirectoryFor, but filePath must be prepared (_PreparePath or normalize).
 	/// </summary>
@@ -1043,12 +1070,12 @@ public static partial class filesystem {
 		var path = _RemoveFilename(filePath);
 		return _CreateDirectory(path, pathIsPrepared: true);
 	}
-
+	
 	static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null) {
 		if (exists(path, pathIsPrepared).Directory) return false;
 		if (!pathIsPrepared) path = _PreparePath(path);
 		if (templateDirectory != null) templateDirectory = _PreparePath(templateDirectory);
-
+		
 		var stack = new Stack<string>();
 		var s = path;
 		do {
@@ -1056,7 +1083,7 @@ public static partial class filesystem {
 			s = _RemoveFilename(s, true);
 			if (s == null) throw new AuException($@"*create directory '{path}'. Drive not found.");
 		} while (!exists(s, true).Directory);
-
+		
 		while (stack.Count > 0) {
 			s = stack.Pop();
 			int retry = 0;
@@ -1073,13 +1100,13 @@ public static partial class filesystem {
 		}
 		return true;
 	}
-
+	
 	internal static void ShellNotify_(uint @event, string path, string path2 = null) {
 		//ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2)); //no, this process may end soon
 		Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2);
 		//SHOULDDO: test speed. If slow, use threadpool and the process exit event.
 	}
-
+	
 	/// <summary>
 	/// The same as <c>pathname.normalize(path)</c>.
 	/// Expands environment variables, throws ArgumentException if not full path, normalizes, etc.
@@ -1089,7 +1116,7 @@ public static partial class filesystem {
 		if (!pathname.isFullPathExpand(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
 		return pathname.Normalize_(path, noExpandEV: true);
 	}
-
+	
 	/// <summary>
 	/// Finds filename, eg <c>@"b.txt"</c> in <c>@"c:\a\b.txt"</c>.
 	/// </summary>
@@ -1102,7 +1129,7 @@ public static partial class filesystem {
 		}
 		return R + 1;
 	}
-
+	
 	/// <summary>
 	/// Removes filename, eg <c>@"c:\a\b.txt"</c> -> <c>@"c:\a"</c>.
 	/// </summary>
@@ -1111,7 +1138,7 @@ public static partial class filesystem {
 		int i = _FindFilename(path, noException); if (i < 0) return null;
 		return path[..--i];
 	}
-
+	
 	/// <summary>
 	/// Gets filename, eg <c>@"c:\a\b.txt"</c> -> <c>@"b.txt"</c>.
 	/// </summary>
@@ -1121,9 +1148,9 @@ public static partial class filesystem {
 		return path[i..];
 	}
 	#endregion
-
+	
 	#region load, save
-
+	
 	/// <summary>
 	/// This function can be used to safely open a file that may be temporarily locked (used by another process or thread). Waits while the file is locked.
 	/// </summary>
@@ -1156,7 +1183,7 @@ public static partial class filesystem {
 		try { return f(); }
 		catch (IOException e) when (w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 	}
-
+	
 	/// <returns></returns>
 	/// <example>
 	/// <code><![CDATA[
@@ -1172,20 +1199,20 @@ public static partial class filesystem {
 		try { f(); }
 		catch (IOException e) when (w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 	}
-
+	
 	struct _LockedWaiter {
 		int _timeout;
 		long _t0;
-
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public _LockedWaiter(int millisecondsTimeout) {
 			if (millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
 			_timeout = millisecondsTimeout;
 			_t0 = perf.ms;
 		}
-
+		
 		public bool ExceptionFilter(IOException e) => ExceptionFilter(e.HResult & 0xffff);
-
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ExceptionFilter(int ec) {
 			//print.it((uint)ec);
@@ -1198,10 +1225,10 @@ public static partial class filesystem {
 			default: return false;
 			}
 		}
-
+		
 		public void Sleep() => Thread.Sleep(15);
 	}
-
+	
 	/// <summary>
 	/// Loads text file in a safer way.
 	/// Uses <see cref="File.ReadAllText"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
@@ -1218,7 +1245,7 @@ public static partial class filesystem {
 		file = _LoadIntro(file, missingWaitMS);
 		return waitIfLocked(() => encoding == null ? File.ReadAllText(file) : File.ReadAllText(file, encoding), lockedWaitMS);
 	}
-
+	
 	static string _LoadIntro(string file, int ms) {
 		file = pathname.NormalizeMinimally_(file);
 		if (ms != 0) {
@@ -1227,7 +1254,7 @@ public static partial class filesystem {
 		}
 		return file;
 	}
-
+	
 	/// <summary>
 	/// Loads file in a safer way.
 	/// Uses <see cref="File.ReadAllBytes(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
@@ -1243,7 +1270,7 @@ public static partial class filesystem {
 		file = _LoadIntro(file, missingWaitMS);
 		return waitIfLocked(() => File.ReadAllBytes(file), lockedWaitMS);
 	}
-
+	
 	/// <summary>
 	/// Loads file in a safer way.
 	/// Uses <see cref="File.OpenRead(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
@@ -1259,7 +1286,7 @@ public static partial class filesystem {
 		file = _LoadIntro(file, missingWaitMS);
 		return waitIfLocked(() => File.OpenRead(file), lockedWaitMS);
 	}
-
+	
 	/// <summary>
 	/// Writes any data to a file in a safe way, using a callback function.
 	/// </summary>
@@ -1294,7 +1321,7 @@ public static partial class filesystem {
 		Not_.Null(writer);
 		_Save(file, writer, backup, tempDirectory, lockedWaitMS);
 	}
-
+	
 	/// <summary>
 	/// Writes text to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllText"/>.
 	/// </summary>
@@ -1304,7 +1331,7 @@ public static partial class filesystem {
 	public static void saveText(string file, string text, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000, Encoding encoding = null) {
 		_Save(file, text ?? "", backup, tempDirectory, lockedWaitMS, encoding);
 	}
-
+	
 	/// <summary>
 	/// Writes data to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllBytes"/>.
 	/// </summary>
@@ -1314,22 +1341,22 @@ public static partial class filesystem {
 		Not_.Null(bytes);
 		_Save(file, bytes, backup, tempDirectory, lockedWaitMS);
 	}
-
+	
 	static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null) {
 		file = _PreparePath(file);
-
+		
 		string s1 = file;
 		if (!tempDirectory.NE()) {
 			s1 = _PreparePath(tempDirectory);
 			_CreateDirectory(s1, pathIsPrepared: true);
 			s1 = pathname.combine(s1, pathname.getName(file));
 		}
-
+		
 		_createDirectoryForPrepared(file);
-
+		
 		string temp = s1 + "~temp";
 		string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
-
+		
 		var w = new _LockedWaiter(lockedWaitMS);
 		g1:
 		try {
@@ -1348,7 +1375,7 @@ public static partial class filesystem {
 			}
 		}
 		catch (IOException e) when (w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
-
+		
 		w = new _LockedWaiter(lockedWaitMS);
 		g2:
 		string es = null;
@@ -1365,6 +1392,6 @@ public static partial class filesystem {
 			throw new IOException($"Failed to {es} file '{file}'. {lastError.messageFor(ec)}", ec);
 		}
 	}
-
+	
 	#endregion
 }
