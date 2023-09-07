@@ -9,7 +9,7 @@ Some features of the automation library:
 - Custom toolbars that can be attached to windows or screen edges. And menus.
 - Custom dialog windows of any complexity can be created easily in code.
 - All classes/functions are documented.
-- The library can be used in other programs too. Can be installed from [NuGet](https://www.nuget.org/packages/LibreAutomate).
+- The library can be used in other programs too. [More info](https://www.libreautomate.com/api/index.html).
 - Uses .NET 6.
 
 Some features of the script editor program:

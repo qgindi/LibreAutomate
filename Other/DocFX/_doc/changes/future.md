@@ -17,6 +17,7 @@ New classes:
 
 New members:
 - **script.restart**.
+- **filesystem.setAttributes**.
 
 New parameters:
 - .
@@ -30,4 +31,4 @@ Editor:
 - Fixed: can incorrectly format code containing multiline block comments.
 
 Library:
-- .
+- Fixed: **dialog**: default button isn't the first in the list as documented.
