@@ -71,7 +71,7 @@ class CiProjects {
 			
 			void _Meta(int i, bool parallel) {
 				//rejected: optimize: load only n bytes from the start of the file. Tested, similar speed.
-				if (FileNode.GetFileTextLL_(a1[i].path) is not string code || code.Length < 9) return;
+				if (FileNode.GetFileTextLL(a1[i].path) is not string code || code.Length < 9) return;
 				var meta = MetaComments.FindMetaComments(code); if (meta.end == 0) return;
 				bool locked = false;
 				foreach (var v in MetaComments.EnumOptions(code, meta)) {
@@ -230,7 +230,7 @@ class CiProjects {
 			if (g != null) _File(g);
 			void _File(FileNode f) {
 				if (!h.Add(f)) return;
-				if (FileNode.GetFileTextLL_(f.FilePath) is not string code || code.Length == 0) return;
+				if (FileNode.GetFileTextLL(f.FilePath) is not string code || code.Length == 0) return;
 				var meta = MetaComments.FindMetaComments(code); if (meta.end == 0) return;
 				foreach (var v in MetaComments.EnumOptions(code, meta)) {
 					if (v.NameIs("c")) {

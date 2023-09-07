@@ -71,6 +71,7 @@ static partial class GitSync {
 				_sett.script = tScript.TextOrNull();
 				if (_sett.use = cUse.IsChecked) {
 					_GitignoreApply();
+					_GitattributesApply();
 					_ScriptApply();
 					e.Cancel = true;
 					b.Window.IsEnabled = false;
@@ -169,6 +170,15 @@ static partial class GitSync {
 				}
 				print.it($"<><lc #C0E0A0>File <b>.gitignore<> {s1} create it and write this text. The 'Include...' checkbox deletes some lines.<>");
 				print.it(c_defaultGitignore);
+			}
+			
+			void _GitattributesApply() {
+				var file = _dir + "\\.gitattributes";
+				if (!filesystem.exists(file)) filesystem.saveText(file, """
+* -text
+/.state/* binary
+
+""");
 			}
 			
 			void _ScriptApply() {

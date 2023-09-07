@@ -175,7 +175,7 @@ class PanelEdit {
 	
 	internal void OnAppActivated_() {
 		foreach (var doc in _docs) {
-			doc.EFile.CheckModifiedExternally_(doc);
+			doc.EFile._CheckModifiedExternally(doc);
 		}
 	}
 	

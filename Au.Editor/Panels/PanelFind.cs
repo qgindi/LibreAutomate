@@ -640,7 +640,7 @@ This setting also is used by 'Find references' etc.
 						(j, ps, ar) => {
 							ref var v = ref aSearchInFiles.Ref(j);
 							long t1 = perf.mcs;
-							var text = FileNode.GetFileTextLL_(v.s);
+							var text = FileNode.GetFileTextLL(v.s);
 							_File(v.f, text, ar, j);
 							v.time += (int)((perf.mcs - t1) / 100);
 							v.len = text.Lenn();
@@ -651,7 +651,7 @@ This setting also is used by 'Find references' etc.
 						for (int sumLength = 0; i < aSearchInFiles.Count && sumLength < 4_000_000; i++) { //load max 8 MB of text
 							ref var v = ref aSearchInFiles.Ref(i);
 							long t1 = perf.mcs;
-							v.s = FileNode.GetFileTextLL_(v.s);
+							v.s = FileNode.GetFileTextLL(v.s);
 							v.time = (int)((perf.mcs - t1) / 100);
 							sumLength += v.len = v.s.Lenn();
 							ctoken.ThrowIfCancellationRequested();

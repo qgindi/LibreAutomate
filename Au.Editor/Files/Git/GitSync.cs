@@ -8,7 +8,7 @@ static partial class GitSync {
 	//setup: 1 when opening the dialog, 2 on OK.
 	static bool _Start(int setup = 0) {
 		_dir = folders.Workspace;
-		_dir = @"C:\Users\G\Documents\LibreAutomate\Main";//TODO
+		//_dir = @"C:\Users\G\Documents\LibreAutomate\Main";//TODO
 #if SCRIPT
 		_sett = WorkspaceSettings.Load(_dir + @"\settings2.json").git ??= new();
 #else
@@ -102,6 +102,7 @@ static partial class GitSync {
 					if (!_GitSetup("init -b main")) return;
 					if (!_GitSetup("remote add origin " + url)) return;
 					if (!_GitSetup("config push.autoSetupRemote true")) return;
+					_GitSetup("config core.autocrlf false");
 				} else {
 					if (!_GitSetup("remote set-url origin " + url)) return;
 				}

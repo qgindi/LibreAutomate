@@ -26,7 +26,7 @@ partial class FilesModel {
 	readonly bool _initedFully;
 	internal object CompilerContext_;
 	internal IDisposable UndoContext_;
-	internal event Action<bool> TreeLoaded_;
+	//internal event Action<bool> TreeLoaded_;
 	
 	/// <param name="file">Path of workspace tree file (files.xml).</param>
 	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
@@ -53,7 +53,25 @@ partial class FilesModel {
 		_nameMap = new(StringComparer.OrdinalIgnoreCase);
 		
 		Root = FileNode.LoadWorkspace(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
-		TreeLoaded_?.Invoke(_importing);
+		
+		List<FileNode> bad = null;
+		foreach (var f in Root.Descendants()) {
+			uint id = f.Id;
+			if (id == 0 || !_idMap.TryAdd(id, f)) (bad ??= new()).Add(f); //missing or duplicate id in xml file
+			else f._WorkspaceLoaded(id, _importing);
+		}
+		if (bad != null) {
+			foreach (var f in bad) {
+				if (!_importing) print.warning($"Invalid id of {f.SciLink(true)}. Creating new.");
+				f._WorkspaceLoaded(AddGetId(f), _importing);
+			}
+			if (!_importing) {
+				filesystem.delete(WorkspaceDirectory + @"\.compiled", FDFlags.CanFail);
+				Save.WorkspaceLater(1);
+			}
+		}
+		
+		//TreeLoaded_?.Invoke(_importing);
 		
 		if (!_importing) {
 			WSSett = WorkspaceSettings.Load(WorkspaceDirectory + @"\settings.json");
@@ -306,41 +324,15 @@ partial class FilesModel {
 	//}
 	
 	/// <summary>
-	/// Adds id/f to the dictionary that is used by <see cref="FindById"/> etc.
-	/// If id is 0 or duplicate, generates new.
+	/// Generates new id for f, and adds both to the dictionary that is used by <see cref="FindById"/> etc.
 	/// Returns <i>id</i> or the generated id.
 	/// </summary>
-	public uint AddGetId(FileNode f, uint id = 0) {
-		g1:
-		if (id == 0) {
-			//Normally we don't reuse ids of deleted items.
-			//	Would be problems with something that we cannot/fail/forget to delete when deleting items.
-			//	We save MaxId in XML: <files max-i="MaxId">.
-			id = ++MaxId;
-			if (id == 0) { //if new item created every 8 s, we have 1000 years, but anyway
-				for (uint u = 1; u < uint.MaxValue; u++) if (!_idMap.ContainsKey(u)) { MaxId = u - 1; break; } //fast
-				goto g1;
-			} else if (_idMap.ContainsKey(id)) { //damaged XML file, or maybe a bug?
-				Debug_.Print("id already exists:" + id);
-				MaxId = _idMap.Keys.Max();
-				id = 0;
-				goto g1;
-			}
-			Save?.WorkspaceLater(); //null when importing this workspace
-		}
-		if (!_idMap.TryAdd(id, f)) {
-			print.warning($"Duplicate id of '{f.Name}'. Creating new.");
-			id = 0;
-			goto g1;
-		}
+	public uint AddGetId(FileNode f) {
+		uint id = _idMap.Keys.Max() + 1; //normally we don't reuse ids of deleted items
+		if (id != 0) _idMap.Add(id, f);
+		else while (!_idMap.TryAdd(++id, f)) { } //unlikely, but anyway. If new item created every 8 s, we have 1000 years.
 		return id;
 	}
-	
-	/// <summary>
-	/// Current largest id, used to generate new id.
-	/// The root FileNode's ctor reads it from XML attribute 'max-i' and sets this property.
-	/// </summary>
-	public uint MaxId { get; set; }
 	
 	/// <summary>
 	/// Finds file or folder by its <see cref="FileNode.Id"/>.
@@ -1191,7 +1183,7 @@ partial class FilesModel {
 					if (a.Contains(f.Parent)) continue;
 				}
 				if (copy) {
-					var fCopied = f.FileCopy(target, pos, this);
+					var fCopied = f._FileCopy(target, pos, this);
 					if (fCopied != null) a2.Add(fCopied);
 				} else {
 					if (!f.FileMove(target, pos)) continue;

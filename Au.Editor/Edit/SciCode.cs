@@ -101,7 +101,7 @@ partial class SciCode : KScintilla {
 		
 		bool editable = _fls.SetText(this, text);
 		if (!EIsBinary) {
-			_fn.UpdateFileModTime_();
+			_fn._UpdateFileModTime();
 			//if (_fn.DontSave) aaaIsReadonly = true; //rejected. Never make editor readonly when opened a text file. Would need too many `if (doc.aaaIsReadonly) return;` etc everywhere.
 			if (_fn.DontSave) print.it($"<>Warning: Don't edit {_fn.SciLink()}. It will not be saved. It will be replaced when updating this app.");
 		}
@@ -152,7 +152,7 @@ partial class SciCode : KScintilla {
 	//}
 	
 	internal void EOpenDocActivated() {
-		_fn.CheckModifiedExternally_(this);
+		_fn._CheckModifiedExternally(this);
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
 	
@@ -367,7 +367,7 @@ partial class SciCode : KScintilla {
 			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
-			_fn.UpdateFileModTime_();
+			_fn._UpdateFileModTime();
 			if (this != Panels.Editor.ActiveDoc) CodeInfo.FilesChanged();
 		}
 		return true;
