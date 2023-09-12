@@ -20,16 +20,16 @@ static class CiSnippets {
 		public readonly XElement x;
 		public readonly _Context context;
 		public readonly bool custom;
-
+		
 		public _CiComplItemSnippet(string name, XElement x, _Context context, bool custom) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
 			this.x = x;
 			this.context = context;
 			this.custom = custom;
 		}
 	}
-
+	
 	static List<_CiComplItemSnippet> s_items;
-
+	
 	[Flags]
 	enum _Context {
 		None,
@@ -42,40 +42,40 @@ static class CiSnippets {
 		Any = 0xffff,
 		Line = 0x10000, //at start of line
 	}
-
+	
 	static _Context s_context;
-
+	
 	//static int s_test;
 	public static void AddSnippets(List<CiComplItem> items, TextSpan span, CompilationUnitSyntax root, string code, CSharpSyntaxContext syncon) {
 		//CSharpSyntaxContext was discovered later and therefore almost not used here.
 		if (syncon.IsObjectCreationTypeContext) return;
 		//CiUtil.GetContextType(syncon);
-
+		
 		//print.clear(); print.it(++s_test);
-
+		
 		//print.clear();
 		//foreach (var v in root.ChildNodes()) {
 		//	CiUtil.PrintNode(v);
 		//}
 		//print.it("---");
-
+		
 		_Context context = _Context.Unknown;
 		int pos = span.Start;
-
+		
 		//get node from start
 		var token = root.FindToken(pos);
 		var node = token.Parent;
 		//CiUtil.PrintNode(node); //print.it("--");
 		//return;
-
+		
 		//find ancestor/self that contains pos inside
 		while (node != null && !node.Span.ContainsInside(pos)) node = node.Parent;
 		//CiUtil.PrintNode(node);
 		//for(var v = node; v != null; v = v.Parent) print.it(v.GetType().Name, v is ExpressionSyntax, v is ExpressionStatementSyntax);
-
+		
 		//print.it(SyntaxFacts.IsTopLevelStatement);
 		//print.it(SyntaxFacts.IsInNamespaceOrTypeContext); //not tested
-
+		
 		switch (node) {
 		case BlockSyntax:
 		case SwitchSectionSyntax: //between case: and break;
@@ -118,19 +118,19 @@ static class CiSnippets {
 		}
 		//print.it(context);
 		s_context = context;
-
+		
 		if (s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
 			foreach (var f in filesystem.enumFiles(AppSettings.DirBS, "*Snippets.xml")) _LoadFile(f.FullPath, true);
 			_LoadFile(DefaultFile, false);
 			if (a.Count == 0) return;
 			s_items = a;
-
+			
 			void _LoadFile(string file, bool custom) {
 				try {
 					var hidden = DSnippets.GetHiddenSnippets(pathname.getName(file));
 					if (hidden != null && hidden.Contains("")) return;
-
+					
 					var xroot = XmlUtil.LoadElem(file);
 					foreach (var xg in xroot.Elements("group")) {
 						if (!xg.Attr(out string sc, "context")) continue;
@@ -160,9 +160,9 @@ static class CiSnippets {
 				catch (Exception ex) { print.it("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
 			}
 		}
-
+		
 		bool isLineStart = InsertCodeUtil.IsLineStart(code, pos);
-
+		
 		foreach (var v in s_items) {
 			if (!v.context.HasAny(context)) continue;
 			if (v.context.Has(_Context.Line) && !isLineStart) continue;
@@ -171,16 +171,16 @@ static class CiSnippets {
 			items.Add(v);
 		}
 	}
-
+	
 	public static void Reload() => s_items = null;
-
+	
 	public static int Compare(CiComplItem i1, CiComplItem i2) {
 		if (i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
 			if (!s1.custom) return 1; else if (!s2.custom) return -1; //sort custom first
 		}
 		return 0;
 	}
-
+	
 	public static System.Windows.Documents.Section GetDescription(CiComplItem item) {
 		var snippet = item as _CiComplItemSnippet;
 		var m = new CiText();
@@ -204,22 +204,22 @@ static class CiSnippets {
 			m.StartParagraph(); m.Append(more); m.EndParagraph();
 		}
 		return m.Result;
-
+		
 		void _AppendInfo(XElement x) {
 			if (x.Attr(out string info, "info")) m.Append(" " + info);
 			m.EndParagraph();
 		}
-
+		
 		void _AppendCode(XElement x) {
 			m.CodeBlock(x.Value.Replace("$end$", ""));
 		}
 	}
-
-	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff) {
+	
+	public static string Commit(SciCode doc, CiComplItem item, int codeLenDiff) {
 		var snippet = item as _CiComplItemSnippet;
 		var ci = item.ci;
 		int pos = ci.Span.Start, endPos = pos + ci.Span.Length + codeLenDiff;
-
+		
 		//list of snippets?
 		var x = snippet.x;
 		if (x.HasElements) {
@@ -228,14 +228,14 @@ static class CiSnippets {
 			foreach (var v in a) m.Add(v.Attr("item"));
 			m.FocusedItem = m.Items.First();
 			int g = m.Show(PMFlags.ByCaret | PMFlags.Underline);
-			if (g == 0) return;
+			if (g == 0) return null;
 			x = a[g - 1];
 		}
 		string s = x.Value;
-
+		
 		//##directive -> #directive
 		if (s.Starts('#') && doc.aaaText.Eq(pos - 1, '#')) s = s[1..];
-
+		
 		//get variable name from code
 		if (_GetAttr("var", out string attrVar)) {
 			if (attrVar.RxMatch(@"^(.+?), *(.+)$", out var m)) {
@@ -243,13 +243,13 @@ static class CiSnippets {
 				s = s.Replace("$var$", t?.Name ?? m[2].Value);
 			}
 		}
-
+		
 		//replace $guid$ and $random$
 		int j = s.Find("$guid$");
 		if (j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
 		j = s.Find("$random$");
 		if (j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
-
+		
 		//enclose in { } if in =>
 		if (s_context == _Context.Arrow && !s.Starts("throw ")) {
 			if (s.Contains('\n')) {
@@ -259,10 +259,10 @@ static class CiSnippets {
 			}
 			//never mind: should add ; if missing
 		}
-
+		
 		//if multiline, add indentation
 		s = InsertCodeUtil.IndentStringForInsertSimple(s, doc, pos);
-
+		
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
 		int selectLength = 0;
 		bool showSignature = false;
@@ -271,14 +271,14 @@ static class CiSnippets {
 		if (s.RxMatch(@"(?s)\$end\$(?:(.*?)\$end\$)?", out var k)) {
 			i = k.Start;
 			if (k[1].Exists) { s = s.ReplaceAt(i..k.End, k[1].Value); selectLength = k[1].Length; } else s = s.Remove(i, k.Length);
-
+			
 			showSignature = s.RxIsMatch(@"\w[([][^)\]]*""?$", range: ..i);
 			if (selectLength == 0) {
 				if (s.Eq(i - 1, "()") || s.Eq(i - 1, "[]") || s.Eq(i - 1, "\"\"")) tempRange = (i, i);
 				else if (s.Eq(i - 2, "{  }")) tempRange = (i - 1, i + 1);
 			}
 		}
-
+		
 		//rejected: meta. Rare, difficult to implement, can use print.
 		////maybe need meta options
 		//if (_GetAttr("meta", out var attrMeta)) {
@@ -290,7 +290,7 @@ static class CiSnippets {
 		//	//}
 		//	print.it($"<>Note: for {snippet.Text} code also need this at the start of the script: <c green>/*/ {attrPrint} /*/<>");
 		//}
-
+		
 		//maybe need using directives
 		if (_GetAttr("using", out var attrUsing)) {
 			int len1 = doc.aaaLen16;
@@ -300,24 +300,26 @@ static class CiSnippets {
 				endPos += lenDiff;
 			}
 		}
-
+		
 		CodeInfo.Pasting(doc, silent: true);
 		doc.aaaReplaceRange(true, pos, endPos, s, moveCurrentPos: i < 0);
-
+		
 		if (i >= 0) {
 			int newPos = pos + i;
 			doc.aaaSelect(true, newPos, newPos + selectLength, makeVisible: true);
 			if (tempRange != default) CodeInfo._correct.BracketsAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
 			if (showSignature) CodeInfo.ShowSignature();
 		}
-
+		
 		if (_GetAttr("print", out var attrPrint)) {
 			print.it(attrPrint.Insert(attrPrint.Starts("<>") ? 2 : 0, "Snippet " + ci.DisplayText + " says: "));
 		}
-
+		
+		return s;
+		
 		bool _GetAttr(string name, out string value) => x.Attr(out value, name) || snippet.x.Attr(out value, name);
 	}
-
+	
 	public static readonly string DefaultFile = folders.ThisApp + @"Default\Snippets.xml";
 	public static readonly string CustomFile = AppSettings.DirBS + "Snippets.xml";
 }

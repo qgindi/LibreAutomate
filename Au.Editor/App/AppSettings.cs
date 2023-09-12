@@ -180,13 +180,22 @@ record AppSettings : JSettings {
 record WorkspaceSettings : JSettings {
 	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 	
-	public FilesModel.UserData[] users;
+	public record User {
+		public string guid { get; init; }
+		public string startupScripts, debuggerScript, gitScript;
+	}
+	public User[] users;
+	
+	public User CurrentUser {
+		get {
+			var u = users?.FirstOrDefault(o => o.guid == App.Settings.user);
+			if (u == null) {
+				u = new User { guid = App.Settings.user };
+				users = users == null ? new[] { u } : users.InsertAt(0, u);
+			}
+			return u;
+		}
+	}
 	
 	public string ci_skipFolders;
-	
-	public record git_t {
-		public bool use;
-		public string repoUrl, script, message = "backup";
-	}
-	public git_t git;
 }

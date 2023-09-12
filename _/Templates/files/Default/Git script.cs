@@ -10,36 +10,24 @@ if (script.testing) {
 	return;
 }
 
-//print.it(args);
-string command = args[0]; //menu command. One of menu_X from the list above.
+string command = args[0]; //menu command from `case "..."` below
 string gitExe = args[1]; //git.exe path
 string dir = args[2]; //workspace directory
-string url = args[3]; //GitHub repository URL
-string message = args[4]; //default commit message
+
 string go = null; //git() output
-
-const string menu_Status = "Git status"; //*MaterialDesign.InfoOutline #EABB00|#E0E000
-const string menu_Commit = "_Commit (local backup)"; //*RemixIcon.GitCommitLine #464646|#E0E000
-const string menu_Push = "Commit and _push (upload)"; //*Unicons.CloudUpload #3586FF|#E0E000
-const string menu_Pull = "P_ull (download and update)"; //*Unicons.CloudDownload #3586FF|#E0E000
-const string menu_GUI = "GitHubDesktop"; //- *Codicons.Github #771FB1|#E0E000
-const string menu_Cmd = "Cmd"; //*Material.Console #464646|#E0E000
-const string menu_Folder = "Workspace folder"; //*Material.Folder #EABB00|#E0E000
-const string menu_ReloadWS = "Reload workspace"; //*Material.Reload #464646|#E0E000
-const string menu_Maintenance = "Maintenance...";
-
 bool test = false;
+
 switch (command) {
 case "Test": Test(); break;
-case menu_Status: Status(); break;
-case menu_Commit: Commit(); break;
-case menu_Push: Push(); break;
-case menu_Pull: Pull(); break;
-case menu_GUI: RunGui(); break;
-case menu_Cmd: RunCmd(); break;
-case menu_Folder: run.itSafe(dir); break;
-case menu_ReloadWS: ReloadWorkspace(); break;
-case menu_Maintenance: Maintenance(); break;
+case "Git _status": Status(); break; //{"icon": "*MaterialDesign.InfoOutline #EABB00|#E0E000", "tooltip": "Print git status info for this repository"}
+case "_Commit": Commit(); break; //{"icon": "*RemixIcon.GitCommitLine #464646|#E0E000", "tooltip": "Make local backup"}
+case "_Push": Push(); break; //{"icon": "*Unicons.CloudUpload #3586FF|#E0E000", "tooltip": "Make remote backup (upload). And local if need."}
+case "P_ull...": Pull(); break; //{"icon": "*Unicons.CloudDownload #3586FF|#E0E000", "tooltip": "Download from remote and update local"}
+case "GitHub Desktop": RunGui(); break; //{"icon": "*Codicons.Github #771FB1|#E0E000", "separator": 1, "tooltip": "Run GitHub Desktop (if installed)"}
+case "Cmd": RunCmd(); break; //{"icon": "*Material.Console #464646|#E0E000", "tooltip": "Run cmd.exe to execute git commands"}
+case "Workspace folder": run.itSafe(dir); break; //{"icon": "*Material.Folder #EABB00|#E0E000", "tooltip": "Open the workspace folder"}
+case "Reload workspace": ReloadWorkspace(); break; //{"icon": "*Material.Reload #464646|#E0E000"}
+case "Maintenance...": Maintenance(); break; //{"separator": 1}
 }
 
 void Test() {
@@ -50,149 +38,7 @@ void Test() {
 	//Commit();
 	//Push();
 	//Pull();
-	perf.first();
-	Maintenance();
-	
-	//gita("add .");
-	//gita("commit -m backup");
-	//if (!git("commit -m backup", notError: o => o.Like("[1] *\nnothing to commit*"))) return;
-	//print.it("ok");
-	//gita("push origin");
-	//var d = "protocol=https\nhost=github.com\nusername=qgindi\n\n";
-	//git("credential reject", d);
-	//gita("credential fill", d);
-	//gita("fetch");
-	//gita("fetch --dry-run");
-	//gita("remote update");
-	//gita("status");
-	//gita("status -v");
-	//gita("ls-files --modified");
-	//gita("ls-files --deleted");
-	//gita("ls-files --others");
-	//gita("diff --name-status"); //shows modified and deleted, with prefix MM/D
-	//gita("status --short"); //shows modified, deleted and added, with prefix MM/D/A
-	//gita("show");
-	//gita("log");
-	//gita("log -n3");
-	//gita("diff");
-	//gita("blame files/Script1.cs");
-	//gita("""grep --cached --word-regexp "System.IO.Compression" """);
-	//gita("""grep --cached "\bSystem\.IO\.Compression\b" """);
-	//gita("""grep --cached --perl-regexp "\bSystem\.IO\.Compression\b" """);
-	//gita("merge --abort");
-	
-	//gita("merge --ff-only");
-	
-	//git("remote update");
-	//if (!_GetStatus(out var can)) return;
-	//print.it(go);
-	//print.it(can.Add, can.Commit, can.Push);
-	
-	//print.it(gita("branch -r"));
-	
-	//gita("remote -v");
-	
-	//gita(@"check-ignore --verbose .compiled/*");
-	//gita(@"check-ignore .compiled/*");
-	//gita(@"check-ignore .compiled/* .temp/* .nuget/*/*.csproj");
-	//gita(@"status --ignored");
-	//gita(@"ls-files -i");
-	
-	//gita("status --short");
-	//gita("status --porcelain=2");
-	
-	//if (git("merge")) return;
-	//dialog.show("debug");
-	
-	
-	////gita("mergetool --tool-help");
-	////run.it("git.exe", "mergetool --tool=tortoisemerge", RFlags.WaitForExit, dir);
-	//run.it("git.exe", "mergetool --tool=winmerge", RFlags.WaitForExit, dir);
-	////gita("mergetool --tool=winmerge");
-	
-	
-	//if (!git("merge --abort")) return;
-	
-	//if (!git($"branch {DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss")}")) return;
-	
-	//print.it(DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss"));
-	
-	//if (!gita("branch --show-current")) return;
-	
-	//gita("diff --name-status origin/main");
-	//gita("diff --compact-summary origin/main");
-	//gita("diff --stat origin/main"); //same as --compact-summary
-	//gita("diff -R origin/main");
-	//git("diff -R main origin/main");
-	//go = go.RxReplace(@"\Rindex .+", "", 1).RxReplace(@"\R--- .(.+)\R\+\+\+ .\1", "", 1);
-	//_Print(go, false);
-	
-	//gita("add \"README r.md\"");
-	//gita("add files/local.cs");
-	
-	//_PrintStatus();
-	
-	//gita("log -n3 --date=human");
-	//gita("log --date=human");
-	//var m = new popupMenu();
-	//foreach (var v in go.RxFindAll(@"(?m)^commit (\w+)(?:\R.+)+?\RDate:\h+(.+)\R\R\h+(.+)")) {
-	//	//print.it($"{v[2].Value}\t{v[3].Value}");
-	//	m[$"{v[2].Value}\t{v[3].Value}"] = null;
-	//}
-	
-	//m.Show();
-	
-	
-	
-	
-	//filesystem.copy(@"C:\Users\G\Desktop\.git - Copy", @"C:\Users\G\Documents\LibreAutomate\Main\.git", FIfExists.Delete);
-	
-	//if (!git("checkout --orphan j9u447352")) return;
-	////if (!git("checkout --orphan j9u447352 " + hash)) return;
-	//if (!git("add -A")) return;
-	//if (!git("commit -m Test")) return;
-	//if (!git("branch -D main")) return;
-	//if (!git("branch -m main")) return;
-	////if (!git("push -f origin main")) return;
-	
-	
-	////something adds readonly attribute to many dirs in .git/objects. Then git gc fails to delete them.
-	//foreach (var v in filesystem.enumDirectories(dir + @"\.git\objects")) {
-	//	//print.it(v.Attributes, v.Name);
-	//	if (v.Attributes.Has(FileAttributes.ReadOnly)) {
-	//		try { File.SetAttributes(v.FullPath, FileAttributes.Directory); } catch { }
-	//	}
-	//}
-	////if (!git("reflog expire --all --expire=now")) return;
-	//if (!git("gc --aggressive --prune=now")) return;
-	
-	
-	
-	
-	//_Branches();
-	//void _Branches() {
-	//	if (!gits("branch") || !go.Contains('\n')) return;
-	//	var m = new popupMenu();
-	//	foreach (var v in go.Lines()) {
-	//		if (v.Starts('*')) continue;
-	//		//var s=v.TrimStart(" *");
-	//		var s=v.TrimStart();
-	//		m[s]=_DeleteBranch;
-	//	}
-	//	m.Show();
-	
-	//	void _DeleteBranch(PMItem mi) {
-	//		print.it(mi.Text);
-	//	}
-	//}
-	
-	//gita("diff");
-	//gita("ls-files --eol");
-	//gita("config core.autocrlf false");
-	
-	//gita("rev-list --count HEAD");
-	//gita("rev-list --no-merges --count HEAD");
-	//gita("rev-list HEAD");
+	//Maintenance();
 }
 
 void Status() {
@@ -204,8 +50,8 @@ void Status() {
 bool _Commit(out GS can) {
 	if (!_GetStatus(out can)) return false;
 	if (can.Commit) {
-		var m = message;
-		while (m.NE()) if (!dialog.showInput(out m, "Git commit", "Message")) return false;
+		var m = "backup";
+		do { if (!dialog.showInput(out m, "Git commit", "Message", editText: m)) return false; } while (m.NE());
 		m = m.Replace("\"", "''");
 		
 		if (/*can.Add &&*/ !git("add .")) return false;
@@ -234,9 +80,7 @@ void Push() {
 		case 2:
 			Pull();
 			return;
-		default:
-			//print.it("Git push canceled.");
-			return;
+		default: return;
 		}
 	}
 	print.it("==== DONE ====");
@@ -245,9 +89,10 @@ void Push() {
 void Pull() {
 	if (!_EnsureMain()) return;
 	if (!git("fetch")) return;
+	if (!_GetStatus(out var can)) return;
+	if (!go.Contains("(use \"git pull\" ")) { print.it("No new remote commits."); return; }
 	
 	//refuse to pull if there are uncommitted changes
-	if (!_GetStatus(out var can)) return;
 	var status = go;
 	bool stashed = false;
 	if (can.Commit) {
@@ -262,19 +107,18 @@ void Pull() {
 				footer: "Print:    <a href=\"1\">status</a>",
 				onLinkClick: _Link
 				)) return;
+			if (!_Commit(out _)) return;
 		}
 	}
 	
 	bool stashDrop = false, push = false;
 	try {
-		if (!git("merge --ff-only", GP.Blue)) {
-			if (!go.Contains("fatal: Not possible to fast-forward")) { _Print(go, true); return; }
-			
+		if (status.RxMatch(@"\RYour branch and '.+?' have diverged,\Rand have (\d+) and (\d+)", out var m)) {
 			//note: don't merge. It can damage files, eg files.xml.
-			int button = dialog.show("Git pull", "The remote and local repositories both contain new commits. How to resolve it?",
-				"0 Cancel|1 Keep remote changes\nWill replace workspace files with files from the remote repository.\nWill move local changes to a backup branch.|2 Keep local changes\nNext 'push' will upload them to the remote repository.\nRemote changes will be in the commit history.",
+			int button = dialog.show("Git pull", $"Exist {m[2]} remote and {m[1]} local new different commits.                                              ",
+				"0 Cancel|1 Keep remote\n1. Moves the new local commits to a new branch (backup).\n2. Discards new local changes and applies remote changes.\n3. Reloads the workspace.|2 Keep local\nDoes not modify the workspace.\nInserts the new remote commits before the new local commits.",
 				flags: DFlags.CommandLinks | DFlags.ExpandDown, icon: DIcon.Warning,
-				expandedText: "You can click Cancel and use eg GitHubDesktop to pull. It allows to merge remote changes and resolve possible conflicts. Be careful, it can damage some files.\n\nTo avoid this, always pull before making any changes in the workspace.",
+				expandedText: "You can click Cancel and use eg GitHubDesktop to pull. It allows to merge remote changes and resolve possible conflicts. Be careful, it can damage some files.\n\nTo avoid this, always pull before making changes in the workspace.",
 				footer: "Print:    <a href=\"1\">status</a>    <a href=\"2\">diff for 'keep remote'</a>    <a href=\"3\">diff for 'keep local'</a>",
 				onLinkClick: _Link
 				);
@@ -287,6 +131,13 @@ void Pull() {
 				push = true;
 			} else return;
 		} else {
+			if (!test) {
+				DControls dc = new() { Checkbox = "Backup workspace files", IsChecked = !ScriptEditor.IsPortable };
+				if (1 != dialog.show("Git pull", "Will update your local repo and workspace files to match the last remote commit.\nFinally will reload the workspace.",
+					"1 OK|Cancel", controls: dc)) return;
+				if (dc.IsChecked) _BackupWorkspace();
+			}
+			if (!git("merge --ff-only")) return;
 			if (go.Starts("Already up to date.")) { print.it("No new remote commits."); return; }
 		}
 		stashDrop = !push;
@@ -346,15 +197,11 @@ void ReloadWorkspace() {
 }
 
 void Maintenance() {
-	perf.next();
 	var b = new wpfBuilder("Git repository maintenance").WinSize(400);
 	
 	WBLink link1 = new(".git", _ => { var s1 = dir + @"\.git"; filesystem.setAttributes(s1, FileAttributes.Hidden, false); run.selectInExplorer(s1); });
 	var info = new System.Windows.Documents.Run();
-	perf.next();
 	_Info();
-	perf.next('i');
-	b.Loaded += () => { perf.next(); timer.after(1, _ => { perf.nw(); }); };//TODO
 	b.R.Add(out TextBlock tInfo)
 		.Text("The local repository is folder ", link1, " in the workspace folder. It contains all commits (workspace backups).\n", info,
 		"\nUse this tool to make it smaller or delete old commits or branches. This tool modifies only the .git folder, not workspace files.");
@@ -486,10 +333,12 @@ void Maintenance() {
 	}
 }
 
+#region util
+
 //Low level.
 //Prints nothing. Returns exitcode and gets output. Does not set the go variable.
 int gitL(string s, out string so, string stdin = null) {
-	using var c = new consoleProcess(gitExe, s, dir);
+	using var c = new consoleProcess(gitExe, s, dir) { Encoding = Encoding.UTF8 };
 	if (stdin != null) c.Write(stdin);
 	so = c.ReadAllText().Trim("\r\n");
 	return c.ExitCode;
@@ -537,7 +386,6 @@ bool _GetStatus(out GS can) {
 	return true;
 }
 
-//Calls 'git status' and prints go translated to human language.
 void _PrintStatus() {
 	if (git("status")) _Print(_TranslateStatusText(go), false);
 }
@@ -569,15 +417,34 @@ static string _TranslateStatusText(string s) {
 	return s.Trim("\r\n");
 }
 
+bool _BackupWorkspace() {
+	if (!gits("ls-tree -r HEAD --name-only")) goto ge;
+	
+	//var zipFile = dir + @"\.git\backup.7z";
+	var zipFile = dir + @"\.temp\git backup.7z";
+	if (filesystem.exists(zipFile)) filesystem.delete(zipFile); else filesystem.createDirectoryFor(zipFile);
+	using (var tf = new TempFile()) {
+		filesystem.saveText(tf, go);
+		if (0 != run.console(out _, folders.Editor + @"32\7za.exe", $@"a ""{zipFile}"" -iw-@""{tf}""", dir)) goto ge;
+	}
+	
+	print.it($"<>Created <explore {zipFile}>backup<> of workspace files.");
+	return true;
+	ge: print.it("Failed to backup workspace files.");
+	return false;
+}
+
 enum GP {
 	/// <summary>Print blue and error. Default.</summary>
 	Error,
-	/// <summary>Print blue, error and not error.</summary>
+	/// <summary>Print everything.</summary>
 	All,
 	/// <summary>Print blue only.</summary>
 	Blue,
-	/// <summary>Print nothing, even blue.</summary>
+	/// <summary>Print nothing.</summary>
 	Silent
 }
 
 record struct GS(bool Add, bool Commit, bool Push);
+
+#endregion
