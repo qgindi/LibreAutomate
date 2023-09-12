@@ -116,6 +116,7 @@ class CiSignature {
 			});
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; } //never noticed
+		catch (Exception e1) { Debug_.Print(e1); return; } //Roslyn bug: in certain code throws
 		finally {
 			cancelTS.Dispose();
 			if (cancelTS == _cancelTS) _cancelTS = null;

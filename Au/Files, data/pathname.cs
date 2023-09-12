@@ -14,7 +14,7 @@ namespace Au {
 	/// 
 	/// Also you can use .NET class <see cref="Path"/>. In its documentation you'll find more info about paths.
 	/// </remarks>
-	public static unsafe class pathname {
+	public static unsafe class pathname { //BAD: why pathname? Better would be eg filepath.
 		/// <summary>
 		/// If <i>path</i> starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns <i>path</i>.
 		/// Also supports known folder names, like <c>"%folders.Documents%"</c>. More info in Remarks.

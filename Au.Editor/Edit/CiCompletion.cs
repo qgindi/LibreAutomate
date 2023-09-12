@@ -904,9 +904,17 @@ partial class CiCompletion {
 		int codeLenDiff = doc.aaaLen16 - _data.codeLength;
 		
 		if (item.Provider == CiComplProvider.Snippet) {
-			if (ch != default && ch != '(') return CiComplResult.None;
+			#if true
+			if (ch is not ('\0' or '(')) return CiComplResult.None;
 			CiSnippets.Commit(doc, item, codeLenDiff);
 			return CiComplResult.Complex;
+			#else //rejected: support eg identifierSnippet.<new completion list>. Better use type alias.
+			if (ch is not ('\0' or '(' or '.')) return CiComplResult.None;
+			var snippet = CiSnippets.Commit(doc, item, codeLenDiff);
+			return ch != default && snippet != null && snippet.Split('.').All(o => SyntaxFacts.IsValidIdentifier(o)) ? CiComplResult.Simple //support eg identifierSnippet.<new completion list>
+				: CiComplResult.Complex; //eat the char
+			//rejected: if the snippet inserted code like `Type.Method` and completed with space, append `()`. Instead let use snippet `Type.Method($end$)`.
+			#endif
 		}
 		
 		var ci = item.ci;
@@ -1199,6 +1207,9 @@ partial class CiCompletion {
 	static CompletionOptions s_options = CompletionOptions.Default with {
 		TriggerInArgumentLists = false,
 		ShowNameSuggestions = false,
+		//ShowItemsFromUnimportedNamespaces = true, //TODO
+		//TargetTypedCompletionFilter = true, //?
+		//TypeImportCompletion = true, //?
 	};
 }
 

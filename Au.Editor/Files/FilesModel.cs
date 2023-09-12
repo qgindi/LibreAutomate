@@ -1108,7 +1108,7 @@ partial class FilesModel {
 				}
 				return;
 			}
-			ImportFiles(files, target, pos, copy: copy);
+			ImportFiles(files, target, pos, copy ? ImportFlags.Copy : 0);
 		}
 	}
 	
@@ -1124,9 +1124,9 @@ partial class FilesModel {
 	/// <summary>
 	/// Imports one or more files or folders into the workspace.
 	/// </summary>
-	public void ImportFiles(string[] a) {
+	public void ImportFiles(string[] a, ImportFlags flags = 0) {
 		var (target, pos) = _GetInsertPos();
-		ImportFiles(a, target, pos);
+		ImportFiles(a, target, pos, flags);
 	}
 	
 	/// <summary>
@@ -1155,7 +1155,7 @@ partial class FilesModel {
 			if (folder == null) return;
 			
 			if (notWorkspace) {
-				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNInsert.Inside, copy: true);
+				ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNInsert.Inside, ImportFlags.Copy);
 			} else {
 				var m = new FilesModel(wsDir + @"\files.xml", importing: true);
 				var a = m.Root.Children().ToArray();
@@ -1208,7 +1208,7 @@ partial class FilesModel {
 	
 	//TODO: when copying a file link, copy file, not link. Eg user may want to make a backup of that file...
 	
-	public void ImportFiles(string[] a, FileNode target, FNInsert pos, bool copy = false, bool dontSelect = false, bool dontPrint = false) {
+	public void ImportFiles(string[] a, FileNode target, FNInsert pos, ImportFlags flags = 0) {
 		try {
 			a = a.Select(s => filesystem.more.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
 			if (a.Length == 0) return;
@@ -1222,8 +1222,10 @@ partial class FilesModel {
 				.Prepend(FilesDirectory)
 				.ToArray();
 			
-			int action = 0;
+			var action = flags & (ImportFlags.Copy | ImportFlags.Move | ImportFlags.Link);
+			bool dontPrint = flags.Has(ImportFlags.DontPrint);
 			int fromWorkspaceDir = 0;
+			
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
 				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
@@ -1236,17 +1238,20 @@ partial class FilesModel {
 					return;
 				}
 				if (wsDirs.Any(o => s.PathStarts(o))) {
-					if (copy) return; //unlikely
+					if (action != 0) return; //unlikely
 					var f1 = FindByFilePath(s);
 					if (f1 != null) {
 						var sff = f1.IsFolder ? "folder" : "file";
 						if (a.Length > 1) {
 							print.it($"<>Cannot import. The {sff} already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
-						} else {
-							action = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Add as a link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
-							if (action == 2) f1.Model.SetCurrentFile(f1);
+							return;
 						}
-						if (action != 1) return;
+						int dr = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Add as a link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
+						if (dr != 1) {
+							if (dr == 2) f1.Model.SetCurrentFile(f1);
+							return;
+						}
+						action = ImportFlags.Link;
 						dontPrint = true;
 					} else {
 						//repair workspace: import file that is in a workspace folder but not in the Files panel
@@ -1257,23 +1262,17 @@ partial class FilesModel {
 			if (fromWorkspaceDir > 0 && fromWorkspaceDir < a.Length) return; //some files from workspace dir and some not. Unlikely.
 			
 			if (action == 0) {
-				if (copy) {
-					action = 2;
-				} else if (fromWorkspaceDir > 0) {
-					action = 3; //move
+				if (fromWorkspaceDir > 0) {
+					action = ImportFlags.Move;
 				} else {
-					var ab = new[] {
-						"1 Add as a link",
-						"2 Copy to the workspace",
-						"3 Move to the workspace",
-						"0 Cancel"
-					};
-					action = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+					var ab = new[] { "1 Add as a link", "2 Copy to the workspace", "3 Move to the workspace", "0 Cancel" };
+					int dr = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+					action = dr switch { 1 => ImportFlags.Link, 2 => ImportFlags.Copy, 3 => ImportFlags.Move, _ => 0 };
 					if (action == 0) return;
 				}
 			}
 			
-			bool select = !dontSelect && (pos != FNInsert.Inside || target.IsExpanded), focus = select;
+			bool select = !flags.Has(ImportFlags.DontSelect) && (pos != FNInsert.Inside || target.IsExpanded), focus = select;
 			if (select) TreeControl.UnselectAll();
 			try {
 				var newParentPath = newParent.FilePath + "\\";
@@ -1288,13 +1287,13 @@ partial class FilesModel {
 					var name = pathname.getName(path);
 					if (fromWorkspaceDir == 0) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 					
-					if (action == 1) { //link
+					if (action == ImportFlags.Link) {
 						k = new FileNode(this, name, path, isDir, isLink: true);
 						if (isDir) _AddDir(path, k);
 					} else {
 						var newPath = newParentPath + name;
 						if (!TryFileOperation(() => {
-							if (action == 2) {
+							if (action == ImportFlags.Copy) {
 								filesystem.copy(path, newPath, FIfExists.Fail);
 							} else if (newPath != path) {
 								filesystem.move(path, newPath, FIfExists.Fail);
@@ -1499,34 +1498,10 @@ partial class FilesModel {
 		}
 	}
 	
-	public record UserData {
-		public string guid { get; init; }
-		public string startupScripts, debuggerScript;
-	}
-	
-	public UserData CurrentUser(bool set) {
-		var u = WSSett?.users?.FirstOrDefault(o => o.guid == App.Settings.user);
-		if (u == null && set) {
-			u = new UserData { guid = App.Settings.user };
-			var a = WSSett.users ?? Array.Empty<UserData>();
-			a = a.InsertAt(0, u);
-			WSSett.users = a;
-		}
-		return u;
-	}
-	
-	public string StartupScriptsCsv {
-		get => CurrentUser(false)?.startupScripts;
-		set { CurrentUser(true).startupScripts = value; }
-	}
-	
-	public string DebuggerScript {
-		get => CurrentUser(false)?.debuggerScript;
-		set { CurrentUser(true).debuggerScript = value; }
-	}
+	public WorkspaceSettings.User UserSettings => WSSett.CurrentUser;
 	
 	public void RunStartupScripts(bool startAsync) {
-		var csv = StartupScriptsCsv; if (csv == null) return;
+		var csv = UserSettings.startupScripts; if (csv.NE()) return;
 		try {
 			var x = csvTable.parse(csv);
 			foreach (var row in x.Rows) {
@@ -1613,4 +1588,13 @@ partial class FilesModel {
 	}
 	
 	#endregion
+}
+
+[Flags]
+enum ImportFlags {
+	Copy = 1,
+	Move = 2,
+	Link = 4,
+	DontSelect = 8,
+	DontPrint = 16,
 }

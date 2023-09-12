@@ -24,5 +24,4 @@ resource resources\ci /path;
 resource resources\Images /path;
 resource Tools\Keys.txt /path;
 resource Tools\Regex.txt /path;
-file .\Default;
 /*/

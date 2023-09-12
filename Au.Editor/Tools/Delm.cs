@@ -1661,16 +1661,15 @@ new elmFinder || 5
 		/// <summary>
 		/// Calls <see cref="EnableDisableJab"/>. Before it shows dialog "enable/disable". After it shows dialog with results.
 		/// </summary>
-		/// <param name="owner"></param>
 		public static void EnableDisableJabUI(AnyWnd owner) {
 			bool enable;
-			switch (dialog.showList("1 Enable|2 Disable|Cancel", null, "Enable or disable the Java Access Bridge.\nIt affects scripts and programs that automate Java apps.", owner: owner, flags: DFlags.CenterOwner)) {
+			switch (dialog.show(null, "Enable or disable the Java Access Bridge.\nIt affects scripts and programs that automate Java apps.", "1 Enable|2 Disable|Cancel", owner: owner, flags: DFlags.CenterOwner)) {
 			case 1: enable = true; break;
 			case 2: enable = false; break;
 			default: return;
 			}
 			var (ok, results) = EnableDisableJab(enable);
-			if (results != null) dialog.show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.CenterOwner);
+			if (results != null) print.it($"<><c {(ok ? "black" : "red")}>{results}<>");
 		}
 
 		/// <summary>

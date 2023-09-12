@@ -57,8 +57,8 @@ partial class TriggersAndToolbars {
 			//set run at startup
 			const string c_script = @"\@Triggers and toolbars\Triggers and toolbars.cs";
 			bool startupFound = false;
-			var ss = App.Model.StartupScriptsCsv;
-			if (ss == null) {
+			var ss = App.Model.UserSettings.startupScripts;
+			if (ss.NE()) {
 				ss = c_script;
 			} else {
 				try {
@@ -73,7 +73,7 @@ partial class TriggersAndToolbars {
 				catch (FormatException) { }
 			}
 			if (!startupFound) {
-				App.Model.StartupScriptsCsv = ss;
+				App.Model.UserSettings.startupScripts = ss;
 				print.it("Info: script \"Triggers and toolbars\" will run at program startup. If you want to disable it, add prefix // in Options -> Run scripts...");
 			}
 		}

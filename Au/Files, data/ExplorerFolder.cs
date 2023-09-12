@@ -6,6 +6,7 @@ namespace Au.More;
 /// </summary>
 public class ExplorerFolder {
 	_Api.IWebBrowserApp _b;
+	wnd _w;
 	
 	/// <summary>
 	/// Creates <b>ExplorerFolder</b> for a folder window.
@@ -14,7 +15,7 @@ public class ExplorerFolder {
 	/// <param name="w">A folder window.</param>
 	public static ExplorerFolder Of(wnd w) {
 		var b = _GetIWebBrowserApp(w);
-		return b == null ? null : new() { _b = b };
+		return b == null ? null : new() { _b = b, _w = w };
 	}
 	
 	static _Api.IWebBrowserApp _GetIWebBrowserApp(wnd w) {
@@ -45,7 +46,7 @@ public class ExplorerFolder {
 					if (!s.Starts("file:///")) continue; //skip IE etc
 				}
 				var w = (wnd)b.HWND;
-				a.Add(new() { _b = b });
+				a.Add(new() { _b = b, _w = w });
 			}
 			catch (COMException) { /*print.warning(b.LocationURL);*/ } //about:blank
 		}
@@ -56,6 +57,11 @@ public class ExplorerFolder {
 	/// Calls <see cref="GetFolderPath"/>.
 	/// </summary>
 	public override string ToString() => GetFolderPath();
+	
+	/// <summary>
+	/// Gets window handle.
+	/// </summary>
+	public wnd Hwnd => _w;
 	
 	/// <summary>
 	/// Gets folder path.

@@ -40,7 +40,7 @@ partial class MainWindow : Window {
 
 		App.Commands[nameof(Menus.File.New)].SubmenuOpened = (o, _) => FilesModel.FillMenuNew(o as MenuItem);
 		App.Commands[nameof(Menus.File.Workspace)].SubmenuOpened = (o, _) => FilesModel.FillMenuRecentWorkspaces(o as MenuItem);
-		App.Commands[nameof(Menus.File.Git)].SubmenuOpened = (o, _) => GitSync.FillMenuGit(o as MenuItem);
+		App.Commands[nameof(Menus.File.Git)].SubmenuOpened = (o, _) => Git.FillMenuGit(o as MenuItem);
 
 		App.Commands.OnCustomizingError = (c, s, ex) => print.it($"<>Customization error in <+DCustomize>{c.Name}<>: {s}. {ex?.ToStringWithoutStack()}");
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
