@@ -170,10 +170,10 @@ static class Menus {
 		[Command(target = "", image = "*Material.Git" + blue)]
 		public static class Git {
 			[Command("...")]
-			public static void Git_setup() { GitSync.DGit.AaShow(); }
+			public static void Git_setup() { global::Git.DGit.AaShow(); }
 			
 			[Command(hide = true)]
-			public static void Git_test() { GitSync.Test(); }
+			public static void Git_test() { global::Git.Test(); }
 		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]

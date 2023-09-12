@@ -167,7 +167,7 @@ class RepairWorkspace {
 				FilesModel.TreeControl.Expand(folder, true);
 			}
 			//print.it(folder, filePath, pos);
-			App.Model.ImportFiles(new[] { filePath }, folder, pos, dontPrint: true);
+			App.Model.ImportFiles(new[] { filePath }, folder, pos, ImportFlags.DontPrint);
 		}
 		
 		//--------------

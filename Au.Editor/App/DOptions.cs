@@ -57,10 +57,10 @@ class DOptions : KDialogWindow {
 		b.End();
 		//right column
 		b.Skip().StartStack(vertical: true);
-		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts).Multiline(110, TextWrapping.NoWrap)
+		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
 			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
 			.Validation(_startupScripts_Validation);
-		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.DebuggerScript)
+		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.UserSettings.debuggerScript)
 			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.")
 			.Validation(_ => debuggerScript.Text is string s && !s.NE() && null == App.Model.FindCodeFile(s) ? "Debugger script not found" : null);
 		b.End();
@@ -74,9 +74,6 @@ class DOptions : KDialogWindow {
 		startWithWin.IsChecked = init_startWithWin;
 		if (App.IsPortable) startWithWin.Checked += (_, _) => dialog.showWarning("Portable mode warning", "This setting will be saved in the Registry. Portable apps should not do it.", owner: this);
 
-		string init_startupScripts = App.Model.StartupScriptsCsv;
-		startupScripts.Text = init_startupScripts;
-
 		_b.OkApply += e => {
 			if (startWithWin.IsChecked != init_startWithWin) {
 				try {
@@ -89,10 +86,8 @@ class DOptions : KDialogWindow {
 			App.Settings.runHidden = startHidden.IsChecked;
 			App.Settings.checkForUpdates = checkForUpdates.IsChecked;
 
-			var s = startupScripts.Text.Trim();
-			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;
-
-			App.Model.DebuggerScript = debuggerScript.TextOrNull();
+			App.Model.UserSettings.startupScripts = startupScripts.Text.Trim().NullIfEmpty_();
+			App.Model.UserSettings.debuggerScript = debuggerScript.TextOrNull();
 		};
 
 		static string _startupScripts_Validation(FrameworkElement fe) {

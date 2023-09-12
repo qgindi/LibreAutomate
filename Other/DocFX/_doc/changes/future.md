@@ -1,6 +1,8 @@
 ## Version 0.18.0 (2023-)
 
 ### Editor
+Use Git and GitHub to backup or sync workspace files (scripts etc).
+
 New tools:
 - .
 

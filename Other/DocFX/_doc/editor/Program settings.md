@@ -45,17 +45,14 @@ Let [script.debug]() run this script to automate attaching a debugger. Can be sc
 
 This setting is workspace-specific. Security: the script will not run on other computers, unless the user settings file copied there too.
 
-### Templates
-Initial code of new scripts and class files. Can be empty.
-
 ### Code
 Code formatting and intellisense options.
 
 #### Completion list -> Append ()
 When you select a function in the completion list, whether/when to append `()`. Can append always, never or only when selected with the Spacebar key (but not Tab, doubleclick, etc).
 
-#### Insert code -> Unexpand path
-When inserting a file path (drag and drop, etc), whether to replace part of path with a known folder like `folders.System + "file.exe"`.
+### Templates
+Initial code of new scripts and class files. Can be empty.
 
 ### OS
 These are Windows settings, not settings of this program. They are applied to all programs. This program will not restore them when uninstalling.
