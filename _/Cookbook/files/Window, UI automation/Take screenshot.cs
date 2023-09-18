@@ -16,6 +16,6 @@ using (var b = CaptureScreen.Image(r)) {
 /// Take screenshot of a user-selected area and save in a file.
 
 var file2 = folders.Temp + "screenshot2.png";
-if (!CaptureScreen.ImageUI(out var captured)) return;
+if (!CaptureScreen.ImageColorRectUI(out var captured)) return;
 captured.image.Save(file2);
 run.it(file2); //see what we have

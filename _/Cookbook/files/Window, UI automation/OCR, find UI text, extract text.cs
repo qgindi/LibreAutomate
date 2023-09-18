@@ -24,7 +24,7 @@ print.scrollToTop();
 
 /// Extract text from user-selected rectangle.
 
-if (!CaptureScreen.ImageUI(out var captured, ICFlags.Image)) return;
+if (!CaptureScreen.ImageColorRectUI(out var captured, CIUFlags.Image)) return;
 using var b = captured.image;
 var t3 = ocr.recognize(b);
 print.it(t3.Text);
