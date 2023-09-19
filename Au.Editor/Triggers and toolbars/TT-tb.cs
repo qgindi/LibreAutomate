@@ -170,7 +170,7 @@ partial class Program {
 + @"}
 ";
 			var folder = App.Model.Find(@"\@Triggers and toolbars\Toolbars", FNFind.Folder);
-			f = App.Model.NewItem("Class.cs", (folder, FNInsert.Inside), sName + ".cs", text: new(true, text));
+			f = App.Model.NewItem("Class.cs", new(folder, FNInsert.Last), sName + ".cs", text: new(true, text));
 		} else {
 			var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if (programNode == null) return;
 			_OpenSourceFile(f).aaaInsertText(true, programNode.CloseBraceToken.SpanStart, text);

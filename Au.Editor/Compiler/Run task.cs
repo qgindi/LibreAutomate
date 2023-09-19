@@ -100,7 +100,7 @@ static class CompileRun {
 			FileNode f2;
 			if (action == 2) { //create project
 				if (!_NewItem(out f2, @"New project\@Script")) return;
-				f.FileMove(f2, FNInsert.After);
+				f.FileMove(new(f2, FNInsert.After));
 			} else { //create test script
 				if (!_NewItem(out f2, "Script.cs", "test " + f.Name)) return;
 				f.TestScript = f2;
@@ -127,7 +127,7 @@ static class CompileRun {
 					text.text = example ?? $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
 				
-				ni = App.Model.NewItem(template, (target, FNInsert.Before), name, text: text);
+				ni = App.Model.NewItem(template, new(target, FNInsert.Before), name, text: text);
 				return ni != null;
 			}
 		}
@@ -168,14 +168,7 @@ class RunningTask : ITreeViewItem {
 	/// <summary>
 	/// False if task is already ended or still not started.
 	/// </summary>
-	//public bool IsRunning => _process != null;
-	public bool IsRunning {
-		get {
-			var p = _process;
-			if (p == null) return false;
-			return 0 != Api.WaitForSingleObject(p.SafeWaitHandle.DangerousGetHandle(), 0);
-		}
-	}
+	public bool IsRunning => _process is { } p && Api.WaitForSingleObject(p.SafeWaitHandle.DangerousGetHandle(), 0) == Api.WAIT_TIMEOUT;
 	
 	/// <summary>
 	/// Ends this task (kills process), if running.
@@ -183,28 +176,30 @@ class RunningTask : ITreeViewItem {
 	/// </summary>
 	/// <param name="onProgramExit">Called on program exit. Returns true even if fails. Does not wait.</param>
 	public bool End(bool onProgramExit) {
-		var p = _process;
-		if (p != null) {
+		if (_process is { } p) {
 			var h = p.SafeWaitHandle.DangerousGetHandle();
-			
+
 			//let it call Environment.Exit. It removes tray icons etc.
 			int pid = process.processIdFromHandle(h);
 			if (pid != 0) {
 				var w1 = wnd.findFast(pid.ToS(), script.c_auxWndClassName, messageOnly: true);
 				if (!w1.Is0 && w1.Post(Api.WM_CLOSE)) {
-					if (0 == Api.WaitForSingleObject(h, onProgramExit ? 200 : 1000)) return true;
+					if (0 == Api.WaitForSingleObject(h, 1000)) return true;
 				}
 			}
-			
-			bool ok = Api.TerminateProcess(h, -1);
-			if (onProgramExit) return true;
-			if (ok) {
-				if (0 != Api.WaitForSingleObject(h, 2000)) { Debug_.Print("process not terminated"); return false; }
-			} else {
-				var s = lastError.message;
-				if (0 != Api.WaitForSingleObject(h, 0)) { Debug_.Print(s); return false; }
+
+			if (_process != null) {
+				bool ok = Api.TerminateProcess(h, -1);
+				if (onProgramExit) return true;
+				if (ok) {
+					//TerminateProcess is async. Usually the process ends after several ms.
+					if (Api.WaitForSingleObject(h, 500) == Api.WAIT_TIMEOUT) Debug_.Print("process not terminated");
+				} else {
+					//ERROR_ACCESS_DENIED when the process is ending
+					var s = lastError.message;
+					if (Api.WaitForSingleObject(h, 500) == Api.WAIT_TIMEOUT) { Debug_.Print(s); return false; }
+				}
 			}
-			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
 		return true;
 		//SHOULDDO: release pressed keys.

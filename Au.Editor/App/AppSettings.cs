@@ -182,7 +182,7 @@ record WorkspaceSettings : JSettings {
 	
 	public record User {
 		public string guid { get; init; }
-		public string startupScripts, debuggerScript, gitScript;
+		public string startupScripts, debuggerScript, gitScript, gitUrl;
 	}
 	public User[] users;
 	

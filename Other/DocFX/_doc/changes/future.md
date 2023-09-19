@@ -1,21 +1,22 @@
 ## Version 0.18.0 (2023-)
 
 ### Editor
-Use Git and GitHub to backup or sync workspace files (scripts etc).
+You can use Git and GitHub to backup or sync workspace files (scripts etc): menu File -> Git.
 
-New tools:
-- .
+In autocompletion list you can press the [+] button or Ctrl+Space to include all types or extension methods, not only those from 'using' namespaces.
 
 New cookbook recipes:
 - Dialog - use triggers.
 
-Improved:
-- Another way to open the Customize dialog: right click a toolbar button.
-- And more.
+Small improvements.
+
+Fixed bugs:
+- Incorrectly formats code if it contains multiline block comments.
 
 ### Library
 New classes:
 - **FileTree**.
+- **AppSingleInstance**.
 
 New members:
 - **script.restart**.
@@ -27,10 +28,6 @@ New parameters:
 Improved:
 - .
 
-### Bug fixes
-
-Editor:
-- Fixed: can incorrectly format code containing multiline block comments.
-
-Library:
-- Fixed: **dialog**: default button isn't the first in the list as documented.
+Fixed bugs:
+- **dialog**: default button isn't the first in the list as documented.
+- **WaitLoop** and **wait.forCondition**: incorrectly combines *options* with **opt.wait**.

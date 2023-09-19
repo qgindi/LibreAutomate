@@ -53,7 +53,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		//if (isLink) _linkTarget = folders.unexpandPath(filePath); //rejected. Too much trouble with it.
 	}
 	
-	//this ctor is used when copying or importing a workspace.
+	//this ctor is used when copying an item or importing a workspace.
 	//Deep-copies fields from f, except _model, _name, _id (generates new) and _testScriptId.
 	FileNode(FilesModel model, FileNode f, string name) {
 		_model = model;
@@ -102,7 +102,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		};
 	}
 	
-	public static FileNode LoadWorkspace(string file, FilesModel model) => XmlLoad(file, (x, p) => new FileNode(x, p, model));
+	public static FileNode LoadWorkspace(string file, FilesModel model) {
+		var root = XmlLoad(file, (x, p) => new FileNode(x, p, model));
+		root._isExpanded = true;
+		return root;
+	}
 	
 	public void SaveWorkspace(string file) => XmlSave(file, (x, n) => n._XmlWrite(x, false));
 	
@@ -953,20 +957,20 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// For example, cannot move parent into child etc.
 	/// Does not check whether can move the file.
 	/// </summary>
-	public bool CanMove(FileNode target, FNInsert pos) {
+	public bool CanMove(FNInsertPos ipos) {
 		//cannot move into self or descendants
-		if (target == this || target.IsDescendantOf(this)) return false;
+		if (ipos.f == this || ipos.f.IsDescendantOf(this)) return false;
 		
 		//cannot move into a non-folder or before/after self
-		switch (pos) {
-		case FNInsert.Inside:
-			if (!target.IsFolder) return false;
-			break;
+		switch (ipos.pos) {
 		case FNInsert.Before:
-			if (Next == target) return false;
+			if (Next == ipos.f) return false;
 			break;
 		case FNInsert.After:
-			if (Previous == target) return false;
+			if (Previous == ipos.f) return false;
+			break;
+		default: //inside
+			if (!ipos.f.IsFolder) return false;
 			break;
 		}
 		return true;
@@ -976,13 +980,12 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// Moves this into, before or after target.
 	/// Also moves file if need.
 	/// </summary>
-	/// <param name="target"></param>
-	/// <param name="pos"></param>
-	public bool FileMove(FileNode target, FNInsert pos) {
-		if (target == null) { target = Root; pos = FNInsert.Inside; }
-		if (!CanMove(target, pos)) return false;
+	/// <param name="ipos">If f null, uses Root, Last.</param>
+	public bool FileMove(FNInsertPos ipos) {
+		if (ipos.f == null) ipos = new(Root, FNInsert.Last);
+		if (!CanMove(ipos)) return false;
 		
-		var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
+		var newParent = ipos.ParentFolder;
 		if (newParent != Parent) {
 			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder, moving: true);
 			
@@ -995,22 +998,22 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		
 		//move tree node
 		Remove();
-		Common_MoveCopyNew(target, pos);
+		Common_MoveCopyNew(ipos);
 		Compiler.Uncache(this, andDescendants: true);
 		
 		return true;
 	}
 	
-	public void Common_MoveCopyNew(FileNode target, FNInsert pos) {
-		target.AddChildOrSibling(this, pos, true);
+	public void Common_MoveCopyNew(FNInsertPos ipos) {
+		AddToTree(ipos, setSaveWorkspace: true);
 		CodeInfo.FilesChanged();
 	}
 	
 	/// <summary>
-	/// Adds f to the tree, updates control, optionally sets to save workspace.
+	/// Adds this to the tree, updates control, optionally sets to save workspace.
 	/// </summary>
-	public void AddChildOrSibling(FileNode f, FNInsert inBeforeAfter, bool setSaveWorkspace) {
-		if (inBeforeAfter == FNInsert.Inside) AddChild(f); else AddSibling(f, inBeforeAfter == FNInsert.After);
+	public void AddToTree(FNInsertPos ipos, bool setSaveWorkspace) {
+		if (ipos.Inside) ipos.f.AddChild(this, first: ipos.pos == FNInsert.First); else ipos.f.AddSibling(this, after: ipos.pos == FNInsert.After);
 		_model.UpdateControlItems();
 		if (setSaveWorkspace) _model.Save.WorkspaceLater();
 	}
@@ -1020,25 +1023,25 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// Also copies file if need.
 	/// Returns the copy, or null if fails.
 	/// </summary>
-	/// <param name="target"></param>
-	/// <param name="pos"></param>
-	/// <param name="newModel">Used when importing workspace.</param>
-	internal FileNode _FileCopy(FileNode target, FNInsert pos, FilesModel newModel = null) {
+	/// <param name="ipos">If f null, uses Root, Last.</param>
+	/// <param name="model">Copy into this FileModel. It is != _model when importing workspace.</param>
+	/// <param name="copyLinkTarget">For links, copy the link target into the workspace.</param>
+	internal FileNode _FileCopy(FNInsertPos ipos, FilesModel model, bool copyLinkTarget = false) {
 		_model.Save?.TextNowIfNeed(onlyText: true);
-		if (target == null) { target = Root; pos = FNInsert.Inside; }
+		if (ipos.f == null) ipos = new(Root, FNInsert.Last);
 		
 		//create unique name
-		var newParent = (pos == FNInsert.Inside) ? target : target.Parent;
+		var newParent = ipos.ParentFolder;
 		string name = CreateNameUniqueInFolder(newParent, _name, IsFolder);
 		
 		//copy file or directory
-		if (!IsLink) {
+		if (!IsLink || copyLinkTarget) {
 			if (!_model.TryFileOperation(() => filesystem.copy(FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return null;
 		}
 		
 		//create new FileNode with descendants
-		var model = newModel ?? _model;
 		var f = new FileNode(model, this, name);
+		if (copyLinkTarget) f._linkTarget = null;
 		_CopyChildren(this, f);
 		
 		void _CopyChildren(FileNode from, FileNode to) {
@@ -1051,7 +1054,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		
 		//insert at the specified place and set to save
-		f.Common_MoveCopyNew(target, pos);
+		f.Common_MoveCopyNew(ipos);
 		return f;
 	}
 	

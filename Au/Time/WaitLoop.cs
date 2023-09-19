@@ -50,16 +50,11 @@ public struct WaitLoop {
 	/// <param name="secondsTimeout">
 	/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="Sleep"/> throws <see cref="TimeoutException"/>. If &lt;0, then <see cref="Sleep"/> returns false.
 	/// </param>
-	/// <param name="options">Options. If null, uses <see cref="opt.wait"/>, else combines with it.</param>
+	/// <param name="options">Options. If null, uses <see cref="opt.wait"/>.</param>
 	public WaitLoop(double secondsTimeout, OWait options = null) {
-		var to = opt.wait;
-		Period = to.Period;
-		_doEvents = to.DoEvents;
-		if (options != null) {
-			Period = Period * options.Period / 10f;
-			if (options.DoEvents) _doEvents = true;
-		}
-		Period = Math.Max(Period, 1f);
+		options ??= opt.wait;
+		_doEvents = options.DoEvents;
+		Period = Math.Max(options.Period, 1f);
 		MaxPeriod = Period * 50f;
 		_step = Period / 10f;
 

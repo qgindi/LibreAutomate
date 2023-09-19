@@ -30,36 +30,36 @@ To generate TOC with #links, can be used the VS context menu command "Generate T
 SHOULDDO: now the Back button does not scroll to TOC. And the same in all DocFX-generated pages.
 -->
 <!--TOC-->
-- [List of symbols, autocompletion](#list-of-symbols-autocompletion)
-- [Bracket completion](#bracket-completion)
-- [Statement completion](#statement-completion)
-- [Auto indentation](#auto-indentation)
-- [Parameter info](#parameter-info)
-- [Quick info](#quick-info)
-- [Error info](#error-info)
-- [XML documentation comments](#xml-documentation-comments)
-- [Go to symbol documentation](#go-to-symbol-documentation)
-- [Go to symbol definition (source code), base](#go-to-symbol-definition-source-code-base)
-- [Go to script, file, URL](#go-to-script-file-url)
-- [Find and replace text](#find-and-replace-text)
-- [Find symbol references](#find-symbol-references)
-- [Highlight symbol references and matching braces](#highlight-symbol-references-and-matching-braces)
-- [Find symbol](#find-symbol)
-- [Rename symbol](#rename-symbol)
-- [Outline of current file](#outline-of-current-file)
-- [Navigate back/forward](#navigate-backforward)
-- [Code coloring](#code-coloring)
-- [Text folding](#text-folding)
-- [Separators between functions/types](#separators-between-functionstypes)
-- [Snippets](#snippets)
-- [Images in code](#images-in-code)
-- [Format code](#format-code)
-- [Comment/uncomment/indent/unindent lines](#commentuncommentindentunindent-lines)
-- [Capture UI elements, insert regex etc, implement interface](#capture-ui-elements-insert-regex-etc-implement-interface)
-- [Find Windows API and insert declarations](#find-windows-api-and-insert-declarations)
-- [Drag and drop files to insert path](#drag-and-drop-files-to-insert-path)
-- [Focus](#focus)
-- [WPF window preview](#wpf-window-preview)
+    - [List of symbols, autocompletion](#list-of-symbols-autocompletion)
+    - [Bracket completion](#bracket-completion)
+    - [Statement completion](#statement-completion)
+    - [Auto indentation](#auto-indentation)
+    - [Parameter info](#parameter-info)
+    - [Quick info](#quick-info)
+    - [Error info](#error-info)
+    - [XML documentation comments](#xml-documentation-comments)
+    - [Go to symbol documentation](#go-to-symbol-documentation)
+    - [Go to symbol definition (source code), base](#go-to-symbol-definition-source-code-base)
+    - [Go to script, file, URL](#go-to-script-file-url)
+    - [Find and replace text](#find-and-replace-text)
+    - [Find symbol references](#find-symbol-references)
+    - [Highlight symbol references and matching braces](#highlight-symbol-references-and-matching-braces)
+    - [Find symbol](#find-symbol)
+    - [Rename symbol](#rename-symbol)
+    - [Outline of current file](#outline-of-current-file)
+    - [Navigate back/forward](#navigate-backforward)
+    - [Code coloring](#code-coloring)
+    - [Text folding](#text-folding)
+    - [Separators between functions/types](#separators-between-functionstypes)
+    - [Snippets](#snippets)
+    - [Images in code](#images-in-code)
+    - [Format code](#format-code)
+    - [Comment/uncomment/indent/unindent lines](#commentuncommentindentunindent-lines)
+    - [Capture UI elements, insert regex etc, implement interface](#capture-ui-elements-insert-regex-etc-implement-interface)
+    - [Find Windows API and insert declarations](#find-windows-api-and-insert-declarations)
+    - [Drag and drop files to insert path](#drag-and-drop-files-to-insert-path)
+    - [Focus](#focus)
+    - [WPF window preview](#wpf-window-preview)
 <!--/TOC-->
 
 ### List of symbols, autocompletion
@@ -72,6 +72,8 @@ While the list is visible, when you enter a non-word character (space, comma, et
 To select list items you also can click or press arrow or page keys. It does not hide the list. The tooltip-like window next to the list shows more info about the selected item, including links to online documentation and source code if available. Shows all overloads (functions with same name but different parameters), and you can click them to view their info.
 
 To hide the list without inserting item text you can press Esc or click somewhere in code.
+
+While the list is visible, you can press the [+] button or Ctrl+Space to show another list that includes all types or extension methods, not only those from 'using' namespaces.
 
 ### Bracket completion
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or tab just leaves the enclosed area. Also then Backspace erases both characters.

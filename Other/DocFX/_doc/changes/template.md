@@ -10,6 +10,9 @@ New cookbook recipes:
 Improved:
 - .
 
+Fixed bugs:
+- .
+
 ### Library
 New classes:
 - .
@@ -23,10 +26,5 @@ New parameters:
 Improved:
 - .
 
-### Bug fixes
-
-Editor:
-- .
-
-Library:
+Fixed bugs:
 - .

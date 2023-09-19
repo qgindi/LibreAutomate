@@ -176,14 +176,14 @@ static class EdComUtil {
 	
 }
 
-class TempEnvVar : IDisposable {
-	string[] _vars;
-	public TempEnvVar(params (string name, string value)[] vars) {
-		_vars = vars.Select(o => o.name).ToArray();
-		foreach (var v in vars) Environment.SetEnvironmentVariable(v.name, v.value);
-	}
+//class TempEnvVar : IDisposable {
+//	string[] _vars;
+//	public TempEnvVar(params (string name, string value)[] vars) {
+//		_vars = vars.Select(o => o.name).ToArray();
+//		foreach (var v in vars) Environment.SetEnvironmentVariable(v.name, v.value);
+//	}
 	
-	public void Dispose() {
-		foreach (var v in _vars) Environment.SetEnvironmentVariable(v, null);
-	}
-}
+//	public void Dispose() {
+//		foreach (var v in _vars) Environment.SetEnvironmentVariable(v, null);
+//	}
+//}

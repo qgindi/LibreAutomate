@@ -2099,24 +2099,23 @@ namespace Au.Types {
 		/// <summary>
 		/// Messages that your <see cref="dialog"/> event handler can send to the dialog.
 		/// </summary>
-		public enum TDM : uint {
-			NAVIGATE_PAGE = WM_USER + 101,
-			CLICK_BUTTON = WM_USER + 102, // wParam = button id
-			SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
-			SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state (0, 1 or 2)
-			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Math2.MakeLparam(min, max)
-			SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
-			SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
-			SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum DNative.TDE), lParam = new element text (string)
-			CLICK_RADIO_BUTTON = WM_USER + 110, // wParam = radio button id
-			ENABLE_BUTTON = WM_USER + 111, // wParam = button id, lParam = 0 (disable), lParam != 0 (enable)
-			ENABLE_RADIO_BUTTON = WM_USER + 112, // wParam = radio button id, lParam = 0 (disable), lParam != 0 (enable)
-			CLICK_VERIFICATION = WM_USER + 113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
-			UPDATE_ELEMENT_TEXT = WM_USER + 114, // wParam = element (enum DNative.TDE), lParam = new element text (string)
-			SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER + 115, // wParam = button id, lParam = 0 (elevation not required), lParam != 0 (elevation required)
-			UPDATE_ICON = WM_USER + 116  // wParam = icon element (enum DNative.TDIE), lParam = new icon (icon handle or DIcon)
+		public enum TDM {
+			NAVIGATE_PAGE = Api.WM_USER + 101,
+			CLICK_BUTTON = Api.WM_USER + 102, // wParam = button id
+			SET_MARQUEE_PROGRESS_BAR = Api.WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
+			SET_PROGRESS_BAR_STATE = Api.WM_USER + 104, // wParam = new progress state (0, 1 or 2)
+			SET_PROGRESS_BAR_RANGE = Api.WM_USER + 105, // lParam = Math2.MakeLparam(min, max)
+			SET_PROGRESS_BAR_POS = Api.WM_USER + 106, // wParam = new position
+			SET_PROGRESS_BAR_MARQUEE = Api.WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
+			SET_ELEMENT_TEXT = Api.WM_USER + 108, // wParam = element (enum DNative.TDE), lParam = new element text (string)
+			CLICK_RADIO_BUTTON = Api.WM_USER + 110, // wParam = radio button id
+			ENABLE_BUTTON = Api.WM_USER + 111, // wParam = button id, lParam = 0 (disable), lParam != 0 (enable)
+			ENABLE_RADIO_BUTTON = Api.WM_USER + 112, // wParam = radio button id, lParam = 0 (disable), lParam != 0 (enable)
+			CLICK_VERIFICATION = Api.WM_USER + 113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
+			UPDATE_ELEMENT_TEXT = Api.WM_USER + 114, // wParam = element (enum DNative.TDE), lParam = new element text (string)
+			SET_BUTTON_ELEVATION_REQUIRED_STATE = Api.WM_USER + 115, // wParam = button id, lParam = 0 (elevation not required), lParam != 0 (elevation required)
+			UPDATE_ICON = Api.WM_USER + 116  // wParam = icon element (enum DNative.TDIE), lParam = new icon (icon handle or DIcon)
 		}
-		const uint WM_USER = Api.WM_USER;//TODO: why uint?
 		
 		/// <summary>
 		/// Notification messages that your <see cref="dialog"/> event handler receives.
