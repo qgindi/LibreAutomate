@@ -257,17 +257,17 @@ Can be Pack.Icon, like Modern.List.")
 				}
 
 				void _Export(bool ico) {
-					var cf = App.Model.CurrentFile.Parent; if (cf == null) return;
-					var path = $"{cf.FilePath}\\{k._name}{(ico ? ".ico" : ".xaml")}";
+					var folder = App.Model.CurrentFile?.Parent ?? App.Model.Root;
+					var path = $"{folder.FilePath}\\{k._name}{(ico ? ".ico" : ".xaml")}";
 					if (ico) {
 						var sizes = iconSizes.Text.Split_(',').Select(o => o.ToInt()).ToArray();
 						KImageUtil.XamlImageToIconFile(path, xaml, sizes);
 					} else {
 						filesystem.saveText(path, xaml);
 					}
-					var fn = App.Model.ImportFileFromWorkspaceFolder(path, cf, FNInsert.Inside);
+					var fn = App.Model.ImportFileFromWorkspaceFolder(path, new(folder, folder.Parent == null ? FNInsert.First : FNInsert.Last));
 					if (fn == null) print.it("failed");
-					else print.it($"<>Icon exported to <open>{fn.ItemPath}<>");
+					else print.it($"<>Exported to <open>{fn.ItemPath}<>");
 				}
 			}
 

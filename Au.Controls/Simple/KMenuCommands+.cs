@@ -317,12 +317,16 @@ public partial class KMenuCommands {
 		public bool CanExecute(object parameter) => _enabled;
 		
 		public void Execute(object parameter) {
-			switch (_del) {
-			case Action a0: a0(); break;
-			case Action<MenuItem> a1: a1(_mi); break;
-				//case Action<object> a1: a1(parameter); break;
-				//default: throw new InvalidOperationException("Submenu");
+			_mc.ExecutingStartedEnded?.Invoke(true);
+			try {
+				switch (_del) {
+				case Action a0: a0(); break;
+				case Action<MenuItem> a1: a1(_mi); break;
+					//case Action<object> a1: a1(parameter); break;
+					//default: throw new InvalidOperationException("Submenu");
+				}
 			}
+			finally { _mc.ExecutingStartedEnded?.Invoke(false); }
 		}
 		
 		/// <summary>
@@ -438,6 +442,8 @@ public partial class KMenuCommands {
 			_mc.OnCustomizingError?.Invoke(this, s, ex);
 		}
 	}
+	
+	public event Action<bool> ExecutingStartedEnded;
 	
 	class _XElementNameEqualityComparer : IEqualityComparer<XElement> {
 		bool IEqualityComparer<XElement>.Equals(XElement x, XElement y) => x.Name == y.Name;

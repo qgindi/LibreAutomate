@@ -68,7 +68,7 @@ namespace Au {
 		/// Each thread has its own <b>opt.wait</b> instance. There is no <b>opt.init.wait</b>.
 		/// Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
 		/// </remarks>
-		public static OWait wait => t_wait ??= new OWait();
+		public static OWait wait => t_wait ??= new OWait(10, false); //note: specify all ctor parameters, else stack overflow, because for null parameters it calls this property
 		[ThreadStatic] static OWait t_wait;
 
 		/// <summary>
@@ -223,13 +223,12 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static UsingEndAction wait(bool inherit = true) {
-				var old = _WaitFor(inherit);
+				var old = _Wait(inherit);
 				return new UsingEndAction(() => t_wait = old);
 			}
 
-			static OWait _WaitFor(bool inherit) {
+			static OWait _Wait(bool inherit) {
 				var old = t_wait;
-				//t_waitFor = (old != null && inherit) ? new OWait(old.Period, old.DoEvents) : new OptWaitFor();
 				t_wait = (old != null && inherit) ? new OWait(old.Period, old.DoEvents) : null; //lazy
 				return old;
 			}
@@ -280,7 +279,7 @@ namespace Au {
 			public static UsingEndAction all(bool inherit = true/*, int? speed = null*/) {
 				var o1 = _Mouse(inherit);
 				var o2 = _Key(inherit);
-				var o3 = _WaitFor(inherit);
+				var o3 = _Wait(inherit);
 				var o4 = _Warnings(inherit);
 				//rejected
 				///// <param name="speed">If not null, sets <c>opt.mouse.MoveSpeed = speed; opt.key.KeySpeed = speed; opt.key.TextSpeed = speed;</c>. See <see cref="OMouse.MoveSpeed"/>, <see cref="OKey.KeySpeed"/>, <see cref="OKey.TextSpeed"/>.</param>
@@ -1023,10 +1022,12 @@ namespace Au.Types {
 		/// </example>
 		public bool DoEvents { get; set; }
 
-		/// <param name="period">Sets <see cref="Period"/>.</param>
-		/// <param name="doEvents">Sets <see cref="DoEvents"/>.</param>
-		public OWait(int period = 10, bool doEvents = false) {
-			Period = period; DoEvents = doEvents;
+		/// <param name="period">Sets <see cref="Period"/>. If null, uses <c>opt.wait.Period</c> (default 10).</param>
+		/// <param name="doEvents">Sets <see cref="DoEvents"/>. If null, uses <c>opt.wait.DoEvents</c> (default false).</param>
+		public OWait(int? period = null, bool? doEvents = null) {
+			//note: call opt.wait only for null parameters, and let opt.wait specify all parameters, else stack overflow
+			Period = period ?? opt.wait.Period;
+			DoEvents = doEvents ?? opt.wait.DoEvents;
 		}
 
 		//rejected. Use opt.scope.

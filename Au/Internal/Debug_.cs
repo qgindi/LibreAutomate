@@ -7,12 +7,11 @@ namespace Au.More {
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
 	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(opt.warnings.Verbose) print.warning("text");</c>; see <see cref="print.warning"/>, opt.warnings.<see cref="OWarnings.Verbose"/>.
 	/// </remarks>
-	internal static class Debug_ //FUTURE: make public, when will be more tested and if really need.
-	{
+	internal static class Debug_ {
 		static void _Print(object text, string f_, int l_, string m_) {
 			string s = print.util.toString(text);
 			string prefix = null; if (s.Starts("<>")) { prefix = "<>"; s = s[2..]; }
-			s = $"{prefix}Debug: {m_} ({pathname.getName(f_)}:{l_}):  {s}";
+			s = $"{prefix}Debug: {m_} ({pathname.getName(f_)}:{l_}):  {s} <fold>\r\n{new StackTrace(2, true)}</fold>";
 			_Print2(s);
 		}
 		

@@ -117,7 +117,6 @@ partial class CiCompletion {
 	
 	//static bool s_workaround1;
 	
-	//SHOULDDO: delay
 	async void _ShowList(char ch) {
 		//print.clear();
 		
@@ -140,6 +139,9 @@ partial class CiCompletion {
 			return;
 			//never mind: does not hide Regex completions. Same in VS.
 		}
+		
+		bool unimported = isCommand && IsVisibleUI;
+		
 		Cancel();
 		
 		//CodeInfo.HideTextPopupAndTempWindows(); //no
@@ -210,10 +212,18 @@ partial class CiCompletion {
 				completionService = CompletionService.GetService(document);
 				if (cancelToken.IsCancellationRequested) return null;
 				
+				var options = CompletionOptions.Default with {
+					TriggerInArgumentLists = false,
+					ShowNameSuggestions = false,
+					ShowItemsFromUnimportedNamespaces = unimported,
+					ForceExpandedCompletionIndexCreation = unimported,
+					//TargetTypedCompletionFilter = true, //?
+				};
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-				var r1 = await completionService.GetCompletionsAsync(document, position, s_options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
-				//p1.Next('C');
+				
+				CompletionList r1 = await completionService.GetCompletionsAsync(document, position, options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				if (r1 != null && r1.ItemsList.Count == 0) r1 = null;
+				if (unimported) return r1; //don't support grouping etc. The completion items don't have Symbol. It's OK.
 				if (r1 != null) {
 					canGroup = true;
 					//is it member access?
@@ -288,7 +298,7 @@ partial class CiCompletion {
 					}
 				}
 				return r1;
-			});
+			}); //await Task.Run
 			
 			if (cancelToken.IsCancellationRequested) return;
 			
@@ -348,8 +358,19 @@ partial class CiCompletion {
 			uint kinds = 0; bool hasNamespaces = false;
 			foreach (var ci_ in r.ItemsList) {
 				var ci = ci_;
+				if (unimported) {
+					if (ci.Flags.Has(CompletionItemFlags.Expanded)) {
+						d.items.Add(new CiComplItem(provider, ci));
+					}
+					continue;
+				}
+				
 				Debug.Assert(ci.Symbols == null || ci.Symbols.Count > 0); //we may use code ci?.Symbols[0]. Roslyn uses this code in CompletionItem ctor: var firstSymbol = symbols[0];
 				var sym = ci.Symbols?[0];
+				
+				//if (unimported && (ci.DisplayText == "Activator" || ci.DisplayText.Starts("Post"))) {
+				//	print.it(ci.Flags, ci.InlineDescription, ci.Properties, ci.Tags);
+				//}
 				
 				if (sym != null) {
 					if (sym is IAliasSymbol ia) ci.Symbols = ImmutableArray.Create(sym = ia.Target);
@@ -871,7 +892,7 @@ partial class CiCompletion {
 	print / process private/protected
 
 	*/
-
+	
 	public System.Windows.Documents.Section GetDescriptionDoc(CiComplItem ci, int iSelect) {
 		if (_data == null) return null;
 		switch (ci.Provider) {
@@ -885,7 +906,7 @@ partial class CiCompletion {
 		var symbols = ci.Symbols;
 		if (symbols != null) return CiText.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
 		if (ci.kind == CiItemKind.Namespace) return null; //extern alias
-		Debug_.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
+		Debug_.PrintIf(!(ci.kind == CiItemKind.None || ci.ci.Flags.Has(CompletionItemFlags.Expanded)), ci.kind); //None if Regex
 		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
 		return r == null ? null : CiText.FromTaggedParts(r.TaggedParts);
 	}
@@ -904,17 +925,17 @@ partial class CiCompletion {
 		int codeLenDiff = doc.aaaLen16 - _data.codeLength;
 		
 		if (item.Provider == CiComplProvider.Snippet) {
-			#if true
+#if true
 			if (ch is not ('\0' or '(')) return CiComplResult.None;
 			CiSnippets.Commit(doc, item, codeLenDiff);
 			return CiComplResult.Complex;
-			#else //rejected: support eg identifierSnippet.<new completion list>. Better use type alias.
+#else //rejected: support eg identifierSnippet.<new completion list>. Better use type alias.
 			if (ch is not ('\0' or '(' or '.')) return CiComplResult.None;
 			var snippet = CiSnippets.Commit(doc, item, codeLenDiff);
 			return ch != default && snippet != null && snippet.Split('.').All(o => SyntaxFacts.IsValidIdentifier(o)) ? CiComplResult.Simple //support eg identifierSnippet.<new completion list>
 				: CiComplResult.Complex; //eat the char
 			//rejected: if the snippet inserted code like `Type.Method` and completed with space, append `()`. Instead let use snippet `Type.Method($end$)`.
-			#endif
+#endif
 		}
 		
 		var ci = item.ci;
@@ -1203,14 +1224,6 @@ partial class CiCompletion {
 		//if (s.Eq(i, "AttributeNamedParameter")) return CiComplProvider.AttributeNamedParameter; //don't use because can be mixed with other symbols
 		return CiComplProvider.Other;
 	}
-	
-	static CompletionOptions s_options = CompletionOptions.Default with {
-		TriggerInArgumentLists = false,
-		ShowNameSuggestions = false,
-		//ShowItemsFromUnimportedNamespaces = true, //TODO
-		//TargetTypedCompletionFilter = true, //?
-		//TypeImportCompletion = true, //?
-	};
 }
 
 //Debug_.NoGcRegion can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms. Tested with some old Roslyn version.

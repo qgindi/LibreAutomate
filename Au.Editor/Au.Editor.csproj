@@ -69,6 +69,7 @@
 		<Page Remove="resources\ci\Enum.xaml" />
 		<Page Remove="resources\ci\EnumMember.xaml" />
 		<Page Remove="resources\ci\Event.xaml" />
+		<Page Remove="resources\ci\ExpandScope.xaml" />
 		<Page Remove="resources\ci\ExtensionMethod.xaml" />
 		<Page Remove="resources\ci\Field.xaml" />
 		<Page Remove="resources\ci\GroupBy.xaml" />
@@ -102,6 +103,7 @@
 		<Resource Include="resources\ci\Enum.xaml" />
 		<Resource Include="resources\ci\EnumMember.xaml" />
 		<Resource Include="resources\ci\Event.xaml" />
+		<Resource Include="resources\ci\ExpandScope.xaml" />
 		<Resource Include="resources\ci\ExtensionMethod.xaml" />
 		<Resource Include="resources\ci\Field.xaml" />
 		<Resource Include="resources\ci\GroupBy.xaml" />

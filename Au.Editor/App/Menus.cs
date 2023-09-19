@@ -570,6 +570,7 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 	[Command]
 	public static void gc() {
 		GC.Collect();
+		GC.WaitForPendingFinalizers(); //GC.Collect does not free much memory without this
 	}
 #endif
 	

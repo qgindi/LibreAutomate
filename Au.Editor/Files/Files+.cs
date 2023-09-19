@@ -14,8 +14,11 @@ enum FNType : byte {
 	Other,
 }
 
-enum FNInsert {
-	Inside, Before, After
+enum FNInsert { Last, First, Before, After }
+
+record struct FNInsertPos(FileNode f, FNInsert pos) {
+	public bool Inside => pos is FNInsert.First or FNInsert.Last;
+	public FileNode ParentFolder => Inside ? f : f.Parent;
 }
 
 enum FNFind {
@@ -158,16 +161,15 @@ class RepairWorkspace {
 		
 		void _Import(FileNode folder, string filePath) {
 			if (!_clickedLinks.Add(filePath) || folder.IsAlien || !filesystem.exists(filePath)) return;
-			var pos = FNInsert.Inside;
+			var pos = FNInsert.Last;
 			if (folder == App.Model.Root) {
-				folder = folder.FirstChild;
-				if (folder != null) pos = FNInsert.Before; else folder = App.Model.Root;
+				pos = FNInsert.First;
 			} else {
 				folder.SelectSingle();
 				FilesModel.TreeControl.Expand(folder, true);
 			}
 			//print.it(folder, filePath, pos);
-			App.Model.ImportFiles(new[] { filePath }, folder, pos, ImportFlags.DontPrint);
+			App.Model.ImportFiles(new[] { filePath }, new(folder, pos), ImportFlags.DontPrint);
 		}
 		
 		//--------------

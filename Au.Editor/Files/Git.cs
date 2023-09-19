@@ -14,7 +14,6 @@ static class Git {
 	
 	static bool _Start(bool setup = false) {
 		_dir = folders.Workspace;
-		//_dir = @"C:\Users\G\Documents\LibreAutomate\Main";
 #if SCRIPT
 		_sett = WorkspaceSettings.Load(_dir + @"\settings2.json").user;
 #else
@@ -41,10 +40,11 @@ static class Git {
 	}
 	
 	static string _GetURL() {
-		if (_gitExe == null) return null;
-		var s = _Git("config --get remote.origin.url").NullIfEmpty_();
-		if (s?.Ends(".git") == true) s = s[..^4];
-		return s;
+		if (_gitExe != null && _Git("config --get remote.origin.url").NullIfEmpty_() is string s) {
+			if (s.Ends(".git")) s = s[..^4];
+			return s;
+		}
+		return _sett.gitUrl;
 	}
 	
 	static bool _Git(string cl, out string output) {
@@ -62,14 +62,15 @@ static class Git {
 		return r.Json();
 	}
 	
-	static async Task _DGitApply(string url) {
+	static async Task<bool> _DGitApply(wnd wOwner) {
 		_Start(setup: true); //may need to set _gitExe
 		try {
-			await Task.Run(() => {
+			return await Task.Run(() => {
 				bool localExists = filesystem.exists(_dir + @"\.git").Directory;
+				var url = _sett.gitUrl;
 				if (!url.Ends(".git")) url += ".git";
 				
-				if (localExists && _Git("remote get-url origin") == url) return;
+				if (localExists && _Git("remote get-url origin") == url) return true;
 				
 				//repo exists?
 				if (!_Git($"ls-remote {url}", out var ls_remote_result)) {
@@ -77,32 +78,55 @@ static class Git {
 					//	To get token: `git credential fill`.
 					//if (ls_remote_result.Starts("remote: Repository not found")) { }
 					_SetupError(ls_remote_result);
-					return;
+					return false;
 				}
 				
-				if (!localExists) {
+				if (localExists) {
+					if (!_GitSetup("remote set-url origin " + url)) return false;
+				} else {
 					//repo empty?
-					if (!ls_remote_result.Trim().NE()) {
-						_SetupError("The repository is not empty.\nCreate new private repository without readme etc.");
-						return;
-					}//CONSIDER: allow non-empty. Maybe allow public. Or write doc how to clone eg with GitHub Desktop.
-					
-					//repo private?
-					_ParseURL(url, out var owner, out var repo); //info: the dialog validates the URL format
-					var r = _GithubGet($"users/{owner}/repos");
-					if (r.AsArray().Any(v => ((string)v["name"]).Eqi(repo))) {
-						_SetupError("The repository must be private.\nYou can make it public later.");
-						return;
+					if (ls_remote_result.Trim().NE()) { //repo empty
+						//repo private?
+						_ParseURL(url, out var owner, out var repo); //info: the dialog validates the URL format
+						var r = _GithubGet($"users/{owner}/repos");
+						if (r.AsArray().Any(v => ((string)v["name"]).Eqi(repo))) {
+							_SetupError("The repository must be private.\nYou can make it public later.");
+							return false;
+						}
+						
+						if (!_GitSetup("init -b main")) return false;
+						if (!_GitSetup("remote add origin " + url)) return false;
+						if (!_GitSetup("config push.autoSetupRemote true")) return false;
+						_Config();
+					} else { //repo not empty
+						var s1 = "The GitHub repository (remote) is not empty.\nYou can cancel now, and create new private empty repository (without readme etc).\nOr you may want to clone it (download and use).";
+						int dr = dialog.show(null, s1, "10 Cancel|1 Clone remote repository to new workspace\nCreates new workspace folder, downloads the remote repository into it and extracts files. Does not modify current workspace.|2 Clone remote repository to this workspace\nDownloads the remote repository to current workspace. It adds folder .git, but does not modify workspace files. Later you can sync in either direction.", DFlags.CommandLinks, icon: DIcon.Warning, owner: wOwner);
+						if (dr is not (1 or 2)) return false;
+						var tempDir = _dir + @"\.temp";
+						filesystem.createDirectory(tempDir);
+						using var tf = new TempFile(directory: tempDir);
+						if (!_Git($"clone \"{url}\" \"{tf}\"", out var so)) { _SetupError(so); return false; }
+						if (!FilesModel.IsWorkspaceDirectoryOrZip(tf, out _)) { _SetupError("The repository isn't a workspace"); return false; }
+						if (dr == 1) { //full clone to new workspace
+							var dir2 = pathname.makeUnique(_dir, isDirectory: true);
+							filesystem.move(tf, dir2);
+							Panels.Output.Scintilla.AaTags.AddLinkTag("+openWorkspace", s => FilesModel.LoadWorkspace(dir2));
+							print.it($"<>The GitHub repository has been cloned to <link {dir2}>new workspace folder<>. Now you can <+openWorkspace {dir2}>open the new workspace<>.");
+							var dir3 = _dir; _dir = dir2;
+							try { _Config(); }
+							finally { _dir = dir3; }
+						} else { //clone only .git to this workspace
+							filesystem.move(tf + @"\.git", _dir + @"\.git");
+							_Config();
+						}
 					}
 					
-					if (!_GitSetup("init -b main")) return;
-					if (!_GitSetup("remote add origin " + url)) return;
-					if (!_GitSetup("config push.autoSetupRemote true")) return;
-					_GitSetup("config core.autocrlf false");
-					_GitSetup("config core.quotepath off");
-				} else {
-					if (!_GitSetup("remote set-url origin " + url)) return;
+					void _Config() {
+						_GitSetup("config core.autocrlf false");
+						_GitSetup("config core.quotepath off");
+					}
 				}
+				return true;
 				
 				bool _GitSetup(string cl) {
 					if (_Git(cl, out var so)) return true;
@@ -111,7 +135,7 @@ static class Git {
 				}
 			});
 		}
-		catch (Exception e1) { _SetupError(e1.ToString()); }
+		catch (Exception e1) { _SetupError(e1.ToString()); return false; }
 		
 		static void _SetupError(string text) {
 			print.it($"Failed: {text.Trim().Replace("\n", "\n\t")}");
@@ -147,7 +171,7 @@ static class Git {
 		bool useDefaultScript = _sett.gitScript.NE();
 		f = App.Model.FindCodeFile(useDefaultScript ? "Git script.cs" : _sett.gitScript);
 		if (f != null) return true;
-		if (!useDefaultScript) print.warning("Git script not found: " + _sett.gitScript + ". Please edit menu File -> Git -> Git setup -> Script.", -1);
+		if (!useDefaultScript) print.warning("Git script not found: '" + _sett.gitScript + "'. In dialog 'Git setup' please edit or clear 'Script'.", -1);
 		return false;
 	}
 	
@@ -230,14 +254,18 @@ static class Git {
 			b.End();
 			
 			b.OkApply += async e => {
+				_sett.gitUrl = tUrl.Text;
 				_sett.gitScript = tScript.TextOrNull();
 				_GitignoreApply();
 				_GitattributesApply();
-				_ScriptApply();
+#if !SCRIPT
+				if (_sett.gitScript.NE()) App.Model.AddMissingDefaultFiles(git: true);
+#endif
 				e.Cancel = true;
-				b.Window.IsEnabled = false;
-				await _DGitApply(tUrl.Text);
-				b.Window.Close();
+				var w = b.Window.Hwnd();
+				w.Enable(false);
+				if (await _DGitApply(w)) b.Window.Close();
+				else w.Enable(true);
 			};
 			
 			async void _InstallGit(WBButtonClickArgs k) {
@@ -313,17 +341,6 @@ static class Git {
 /.state/* binary
 
 """);
-			}
-			
-			void _ScriptApply() {
-#if !SCRIPT
-				if (_sett.gitScript.NE()) { //else validated
-					var f = App.Model.FindCodeFile("Git script.cs");
-					if (f == null && App.Model.FoundMultiple == null) {
-						App.Model.ImportFiles(new[] { folders.ThisAppBS + @"Templates\files\Default\Git script.cs" }, ImportFlags.Link | ImportFlags.DontPrint | ImportFlags.DontSelect);
-					}
-				}
-#endif
 			}
 			
 			static void _PrintFolderSizes() {

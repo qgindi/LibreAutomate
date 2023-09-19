@@ -19,7 +19,7 @@ namespace Au.More {
 		/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
 		/// 
 		/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string, string)"/>.
-		/// If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+		/// If not null, it must be a static named method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 		/// </param>
 		/// <param name="etc">
 		/// Can be used to specify API <msdn>WNDCLASSEX</msdn> fields.
@@ -37,7 +37,8 @@ namespace Au.More {
 		/// Protects the <i>wndProc</i> delegate from GC.
 		/// </remarks>
 		public static unsafe void RegisterWindowClass(string className, WNDPROC wndProc = null, RWCEtc etc = null) {
-			if (wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null. Use non-static wndProc with CreateWindow.");
+			if (wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null");
+			//never mind: Target of static lambda != null. Could use code `&& !wndProc.Target.GetType().FullName.Ends("+<>c")`, but it's undocumented and may stop working in new .NET version.
 
 			lock (s_classes) {
 				if (s_classes.TryGetValue(className, out var wpPrev)) {

@@ -16,6 +16,7 @@ class CiPopupList {
 	List<CiComplItem> _av;
 	CheckBox[] _kindButtons;
 	CheckBox _groupButton;
+	Button _unimportedButton;
 	bool _groupsEnabled;
 	List<string> _groups;
 	CiPopupText _textPopup;
@@ -48,26 +49,27 @@ class CiPopupList {
 		var kindNames = CiUtil.ItemKindNames;
 		_kindButtons = new CheckBox[kindNames.Length];
 		for (int i = 0; i < kindNames.Length; i++) {
-			_AddButton(_kindButtons[i] = new CheckBox(), kindNames[i], CiComplItem.ImageResource((CiItemKind)i));
-			_kindButtons[i].Click += _KindButton_Click;
+			_AddButton(_kindButtons[i] = new(), kindNames[i], CiComplItem.ImageResource((CiItemKind)i), _KindButton_Click);
 		}
 		
 		_tb.Children.Add(new Separator());
 		
-		_AddButton(_groupButton = new CheckBox(), "Group by namespace or inheritance", "resources/ci/groupby.xaml");
-		_groupButton.Click += _GroupButton_Click;
+		_AddButton(_groupButton = new(), "Group by namespace or inheritance", "resources/ci/groupby.xaml", _GroupButton_Click);
 		if (App.Settings.ci_complGroup) _groupButton.IsChecked = true;
+		
+		_AddButton(_unimportedButton = new(), "Show more types or extension methods (Ctrl+Space)", "resources/ci/expandscope.xaml", _UnimportedButton_Click);
 		
 		//var options = new Button();
 		//options.Click += _Options_Click;
 		//_AddButton(options, "Options", "resources/images/settingsgroup_16x.xaml");
 		
-		void _AddButton(ButtonBase b, string text, string image) {
+		void _AddButton(ButtonBase b, string text, string image, RoutedEventHandler click) {
 			b.Style = (b is CheckBox) ? cstyle : bstyle;
 			b.Content = ResourceUtil.GetWpfImageElement(image);
 			b.ToolTip = text;
 			AutomationProperties.SetName(b, text);
 			b.Focusable = false; //would close popup
+			if (click != null) b.Click += click;
 			_tb.Children.Add(b);
 		}
 		
@@ -109,6 +111,10 @@ class CiPopupList {
 		this.SelectedItem = null;
 		_tv.Redraw(true);
 		App.Settings.ci_complGroup = _groupButton.IsChecked == true;
+	}
+	
+	private void _UnimportedButton_Click(object sender, RoutedEventArgs e) {
+		App.Dispatcher.InvokeAsync(() => _compl.ShowList());
 	}
 	
 	//private void _Options_Click(object sender, RoutedEventArgs e) {
@@ -217,6 +223,7 @@ class CiPopupList {
 		
 		foreach (var v in _kindButtons) v.IsChecked = false;
 		_groupButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
+		_unimportedButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		UpdateVisibleItems();
 		
 		var r = CiUtil.GetCaretRectFromPos(_doc, position, inScreen: true);
