@@ -14,6 +14,7 @@ static class Git {
 	
 	static bool _Start(bool setup = false) {
 		_dir = folders.Workspace;
+		_dir = @"C:\Users\G\Documents\LibreAutomate\Main";//TODO
 #if SCRIPT
 		_sett = WorkspaceSettings.Load(_dir + @"\settings2.json").user;
 #else
@@ -47,14 +48,14 @@ static class Git {
 		return _sett.gitUrl;
 	}
 	
-	static bool _Git(string cl, out string output) {
-		int ec = run.console(out output, _gitExe, cl, _dir);
-		output = output.Trim();
-		//print.it(ec, output);
-		return ec == 0;
+	static bool _Git(string s, out string so, string stdin = null) {
+		using var c = new consoleProcess(_gitExe, s, _dir) { Encoding = Encoding.UTF8 };
+		if (stdin != null) c.Write(stdin);
+		so = c.ReadAllText().Trim("\r\n");
+		return c.ExitCode == 0;
 	}
 	
-	static string _Git(string cl) => _Git(cl, out var s) ? s : null;
+	static string _Git(string s) => _Git(s, out var so) ? so : null;
 	
 	static JsonNode _GithubGet(string endpoint) {
 		var ah = new[] { "Accept: application/vnd.github+json", "X-GitHub-Api-Version: 2022-11-28" };
@@ -62,11 +63,13 @@ static class Git {
 		return r.Json();
 	}
 	
+	static bool _LocalRepoExists => filesystem.exists(_dir + @"\.git").Directory;
+	
 	static async Task<bool> _DGitApply(wnd wOwner) {
 		_Start(setup: true); //may need to set _gitExe
 		try {
 			return await Task.Run(() => {
-				bool localExists = filesystem.exists(_dir + @"\.git").Directory;
+				bool localExists = _LocalRepoExists;
 				var url = _sett.gitUrl;
 				if (!url.Ends(".git")) url += ".git";
 				
@@ -98,27 +101,30 @@ static class Git {
 						if (!_GitSetup("remote add origin " + url)) return false;
 						if (!_GitSetup("config push.autoSetupRemote true")) return false;
 						_Config();
+						print.it("Local Git repository has been created. Now the Git menu contains more items. Click 'Commit' to make a local backup, or 'Push to GitHub' to make a remote backup.");
 					} else { //repo not empty
-						var s1 = "The GitHub repository (remote) is not empty.\nYou can cancel now, and create new private empty repository (without readme etc).\nOr you may want to clone it (download and use).";
-						int dr = dialog.show(null, s1, "10 Cancel|1 Clone remote repository to new workspace\nCreates new workspace folder, downloads the remote repository into it and extracts files. Does not modify current workspace.|2 Clone remote repository to this workspace\nDownloads the remote repository to current workspace. It adds folder .git, but does not modify workspace files. Later you can sync in either direction.", DFlags.CommandLinks, icon: DIcon.Warning, owner: wOwner);
-						if (dr is not (1 or 2)) return false;
-						var tempDir = _dir + @"\.temp";
-						filesystem.createDirectory(tempDir);
-						using var tf = new TempFile(directory: tempDir);
+						var s1 = """
+The GitHub repository is not empty.
+
+Click Clone if you want to use files (scripts etc) that now are in the GitHub repository. It creates new workspace folder, downloads the GitHub repository into it and extracts files. Does not modify current workspace. Then you can open and use the new workspace.
+
+Else click Cancel, go to your GitHub account, create new private repository without readme etc, and in the Git setup dialog paste its URL.
+""";
+						if (1 != dialog.show(null, s1, "10 Cancel|1 Clone", icon: DIcon.Warning, owner: wOwner)) return false;
+						using var tf = new TempFile(directory: _dir + @"\.temp");
 						if (!_Git($"clone \"{url}\" \"{tf}\"", out var so)) { _SetupError(so); return false; }
-						if (!FilesModel.IsWorkspaceDirectoryOrZip(tf, out _)) { _SetupError("The repository isn't a workspace"); return false; }
-						if (dr == 1) { //full clone to new workspace
-							var dir2 = pathname.makeUnique(_dir, isDirectory: true);
-							filesystem.move(tf, dir2);
-							Panels.Output.Scintilla.AaTags.AddLinkTag("+openWorkspace", s => FilesModel.LoadWorkspace(dir2));
-							print.it($"<>The GitHub repository has been cloned to <link {dir2}>new workspace folder<>. Now you can <+openWorkspace {dir2}>open the new workspace<>.");
-							var dir3 = _dir; _dir = dir2;
-							try { _Config(); }
-							finally { _dir = dir3; }
-						} else { //clone only .git to this workspace
-							filesystem.move(tf + @"\.git", _dir + @"\.git");
-							_Config();
-						}
+#if !SCRIPT
+						if (!FilesModel.IsWorkspaceDirectoryOrZip(tf, out _)) { _SetupError("The repository does not contain a workspace."); return false; }
+#endif
+						var dir2 = pathname.makeUnique(_dir, isDirectory: true);
+						filesystem.move(tf, dir2);
+#if !SCRIPT
+						Panels.Output.Scintilla.AaTags.AddLinkTag("+openWorkspace", s => FilesModel.LoadWorkspace(dir2));
+#endif
+						print.it($"<>The GitHub repository has been cloned to <link {dir2}>new workspace folder<>. Now you can <+openWorkspace {dir2}>open the new workspace<>.\r\n\tNote: the new workspace does not contain git-ignored files. If need, you can copy them manually from <link {_dir}>old workspace<>.");
+						var dir3 = _dir; _dir = dir2;
+						try { _Config(); }
+						finally { _dir = dir3; }
 					}
 					
 					void _Config() {
@@ -168,10 +174,9 @@ static class Git {
 	record _MenuItem(string text, string icon, string tooltip, int separator);
 	
 	static bool _FindScript(out FileNode f) {
-		bool useDefaultScript = _sett.gitScript.NE();
-		f = App.Model.FindCodeFile(useDefaultScript ? "Git script.cs" : _sett.gitScript);
+		f = App.Model.FindCodeFile("Git script.cs");
 		if (f != null) return true;
-		if (!useDefaultScript) print.warning("Git script not found: '" + _sett.gitScript + "'. In dialog 'Git setup' please edit or clear 'Script'.", -1);
+		print.warning("File not found: 'Git script.cs'. To import default Git script: open dialog 'Git setup' and click OK.", -1);
 		return false;
 	}
 	
@@ -222,18 +227,17 @@ static class Git {
 			InitWinProp("Git setup", App.Wmain);
 #endif
 			
-			var b = new wpfBuilder(this).WinSize().Columns(0, -1, 0);
+			var b = new wpfBuilder(this).WinSize(400).Columns(0, -1, 0);
 			var panel = b.Panel;
 			
 			var url = _GetURL();
 			TextBox tUrl = new() { Text = url };
 			
-			WBLink lHelp = new("Help", _ => HelpUtil.AuHelp("editor/git")),
+			WBLink lHelp = new("Help", _ => HelpUtil.AuHelp("editor/git, backup, sync")),
 				lFolder = new("Workspace folder", _dir),
-				lIgnore = new("File .gitignore", _ => _GitignoreFile()),
 				lSizes = new("Print folder sizes", _ => Task.Run(_PrintFolderSizes)),
 				lGithub = new("GitHub", _ => run.itSafe(tUrl.TextOrNull() ?? "https://github.com"));
-			b.R.Add<TextBlock>().Text(lHelp, "    ", lFolder, "    ", lIgnore, "    ", lSizes, "    ", lGithub);
+			b.R.Add<TextBlock>().Text(lHelp, "    ", lFolder, "    ", lSizes, "    ", lGithub);
 			
 			b.R.Add<AdornerDecorator>("URL", out _).Add(tUrl, flags: WBAdd.ChildOfLast).Watermark("https://github.com/owner/name")
 				.Validation(o => !_ParseURL(tUrl.Text, out _, out _) ? (tUrl.Text.NE() ? "URL empty" : "URL must be like https://github.com/owner/name") : null);
@@ -245,21 +249,15 @@ static class Git {
 			_SetGitControlText();
 			b.Window.Closed += (_, _) => { cts?.Cancel(); };
 			
-			b.R.Add("Script", out TextBox tScript, _sett.gitScript);
-#if !SCRIPT
-			b.Validation(o => tScript.Text is var s1 && !s1.NE() && null == App.Model.FindCodeFile(s1) ? "Script not found" : null);
-#endif
-			
 			b.R.AddOkCancel();
 			b.End();
 			
 			b.OkApply += async e => {
 				_sett.gitUrl = tUrl.Text;
-				_sett.gitScript = tScript.TextOrNull();
 				_GitignoreApply();
 				_GitattributesApply();
 #if !SCRIPT
-				if (_sett.gitScript.NE()) App.Model.AddMissingDefaultFiles(git: true);
+				App.Model.AddMissingDefaultFiles(git: true);
 #endif
 				e.Cancel = true;
 				var w = b.Window.Hwnd();
@@ -312,21 +310,8 @@ static class Git {
 			
 			void _SetGitControlText() {
 				bool found = _FindGit(out _, out bool isPrivate);
-				tGitStatus.Content = !found ? "Git not installed" : isPrivate ? "Private Git installed and will be used" : "Shared Git found and will be used";
+				tGitStatus.Content = !found ? "Git not installed" : isPrivate ? "Private Git is installed and will be used" : "Shared Git found and will be used";
 				bGitInstall.Content = isPrivate ? "Update private Git" : "Install private Git";
-			}
-			
-			void _GitignoreFile() {
-				var file = _dir + "\\.gitignore";
-				string s1;
-				if (filesystem.exists(file)) {
-					run.selectInExplorer(file);
-					s1 = "exists and you can edit it. Else this dialog would";
-				} else {
-					s1 = "still does not exist. This dialog will";
-				}
-				print.it($"<><lc #C0E0A0>File <b>.gitignore<> {s1} create it and write this text. The 'Include...' checkbox deletes some lines.<>");
-				print.it(c_defaultGitignore);
 			}
 			
 			void _GitignoreApply() {

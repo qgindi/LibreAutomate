@@ -148,7 +148,7 @@ static class Menus {
 		
 		[Command(target = "")]
 		public static class Workspace {
-			[Command]
+			[Command(image = "*Material.Reload" + black)]
 			public static void Reload_this_workspace() { FilesModel.LoadWorkspace(App.Model.WorkspaceDirectory); }
 			
 			[Command("...", separator = true)]

@@ -1,7 +1,7 @@
 ## Version 0.18.0 (2023-)
 
 ### Editor
-You can use Git and GitHub to backup or sync workspace files (scripts etc): menu File -> Git.
+You can use Git and GitHub to backup and sync workspace files (scripts etc): menu File -> Git.
 
 In autocompletion list you can press the [+] button or Ctrl+Space to include all types or extension methods, not only those from 'using' namespaces.
 
