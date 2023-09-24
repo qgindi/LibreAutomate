@@ -22,5 +22,8 @@
 - name: Snippets
   href: Snippets.md
 
+- name: Git, backup, sync
+  href: Git, backup, sync.md
+
 - name: Compared with QM
   href: Compared with QM.md

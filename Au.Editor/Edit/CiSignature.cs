@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
+//TODO: limit the left of the popup to the left of the scintilla control. Now, if scintilla is hscrolled, the popup is far at the left, eg in the left screen.
+
 class CiSignature {
 	CiPopupText _textPopup;
 	_Data _data; //not null while the popup window is visible

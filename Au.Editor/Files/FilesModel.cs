@@ -1084,6 +1084,39 @@ partial class FilesModel {
 	
 	#region import, move, copy
 	
+	void _MultiCopyMove(bool copy, FileNode[] a, FNInsertPos ipos) {
+		bool copyLinkTarget = copy && a.Any(o => o.IsLink) && 2 == popupMenu.showSimple("1 Copy link|2 Copy link target", owner: TreeControl);
+		if (copy) TreeControl.UnselectAll();
+		try {
+			bool movedCurrentFile = false;
+			var a2 = new List<FileNode>(a.Length);
+			foreach (var f in (ipos.pos == FNInsert.After) ? a.Reverse() : a) {
+				if (!this.IsMyFileNode(f)) continue; //deleted?
+				if (a.Contains(f.Parent)) continue;
+				if (copy) {
+					var fCopied = f._FileCopy(ipos, this, copyLinkTarget);
+					if (fCopied != null) a2.Add(fCopied);
+				} else {
+					if (!f.FileMove(ipos)) continue;
+					if (!movedCurrentFile && _currentFile != null) {
+						if (f == _currentFile || (f.IsFolder && _currentFile.IsDescendantOf(f))) movedCurrentFile = true;
+					}
+				}
+			}
+			if (movedCurrentFile) TreeControl.EnsureVisible(_currentFile);
+			if (copy && !(ipos.Inside && !ipos.f.IsExpanded)) {
+				bool focus = true;
+				foreach (var f in a2) {
+					f.IsSelected = true;
+					if (focus) { focus = false; TreeControl.SetFocusedItem(f); }
+				}
+			}
+		}
+		catch (Exception e1) { print.it(e1); }
+		
+		//info: don't need to schedule saving here. FileCopy and FileMove did it.
+	}
+	
 	void _DroppedOrPasted(FileNode[] nodes, string[] files, FNInsertPos ipos, bool copy) {
 		if (nodes != null) {
 			_MultiCopyMove(copy, nodes, ipos);
@@ -1133,6 +1166,7 @@ partial class FilesModel {
 			var action = flags & (ImportFlags.Copy | ImportFlags.Move | ImportFlags.Link);
 			bool dontPrint = flags.Has(ImportFlags.DontPrint);
 			int fromWorkspaceDir = 0;
+			bool isLinkToWsFile = false;
 			
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
@@ -1154,13 +1188,14 @@ partial class FilesModel {
 							print.it($"<>Cannot import. The {sff} already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
 							return;
 						}
-						int dr = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Add as a link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
+						int dr = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Create link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
 						if (dr != 1) {
 							if (dr == 2) f1.Model.SetCurrentFile(f1);
 							return;
 						}
 						action = ImportFlags.Link;
 						dontPrint = true;
+						isLinkToWsFile = true;
 					} else {
 						//repair workspace: import file that is in a workspace folder but not in the Files panel
 						fromWorkspaceDir++;
@@ -1173,7 +1208,7 @@ partial class FilesModel {
 				if (fromWorkspaceDir > 0) {
 					action = ImportFlags.Move;
 				} else {
-					var ab = new[] { "1 Add as a link", "2 Copy to the workspace", "3 Move to the workspace", "0 Cancel" };
+					var ab = new[] { "2 Copy to the workspace", "3 Move to the workspace", "1 Create link", "0 Cancel" };
 					int dr = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
 					action = dr switch { 1 => ImportFlags.Link, 2 => ImportFlags.Copy, 3 => ImportFlags.Move, _ => 0 };
 					if (action == 0) return;
@@ -1182,6 +1217,9 @@ partial class FilesModel {
 			
 			bool select = !flags.Has(ImportFlags.DontSelect) && !(ipos.Inside && !ipos.f.IsExpanded), focus = select;
 			if (select) TreeControl.UnselectAll();
+			
+			_ImportRename iren = new(this);
+			
 			try {
 				var newParentPath = newParent.FilePath + "\\";
 				var (nf1, nd1, nc1) = dontPrint ? default : _CountFilesFolders();
@@ -1193,24 +1231,27 @@ partial class FilesModel {
 					
 					FileNode k;
 					var name = pathname.getName(path);
-					if (fromWorkspaceDir == 0) name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
+					if (fromWorkspaceDir == 0) {
+						if (isLinkToWsFile) name = "Link to " + name; //prevent duplicate name. Never mind: when isDir, we'll have duplicate names inside the dir; cannot rename.
+						name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
+					}
 					
+					string path2;
 					if (action == ImportFlags.Link) {
-						k = new FileNode(this, name, path, isDir, isLink: true);
-						if (isDir) _AddDir(path, k);
+						k = new FileNode(this, name, path2 = path, isDir, isLink: true);
 					} else {
-						var newPath = newParentPath + name;
+						path2 = newParentPath + name;
 						if (!TryFileOperation(() => {
 							if (action == ImportFlags.Copy) {
-								filesystem.copy(path, newPath, FIfExists.Fail);
-							} else if (newPath != path) {
-								filesystem.move(path, newPath, FIfExists.Fail);
+								filesystem.copy(path, path2, FIfExists.Fail);
+							} else if (path2 != path) {
+								filesystem.move(path, path2, FIfExists.Fail);
 							}
 						})) continue;
-						k = new FileNode(this, name, newPath, isDir);
-						if (isDir) _AddDir(newPath, k);
+						k = new FileNode(this, name, path2, isDir);
 					}
 					k.AddToTree(ipos, setSaveWorkspace: false);
+					if (isDir) _AddDir(path2, k); else _UnsafeAdd(k);
 					if (select) {
 						k.IsSelected = true;
 						if (focus) { focus = false; TreeControl.SetFocusedItem(k); }
@@ -1220,7 +1261,7 @@ partial class FilesModel {
 				if (!dontPrint) {
 					var (nf2, nd2, nc2) = _CountFilesFolders();
 					int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
-					if (nf + nd > 0) print.it($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
+					if (nf + nd > 0) print.it($"Info: Imported {nf} files{(nd > 0 ? $" and {nd} folders" : null)}.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
 				}
 			}
 			catch (Exception ex) { print.it(ex); }
@@ -1232,8 +1273,12 @@ partial class FilesModel {
 					bool isDir = u.IsDirectory;
 					var k = new FileNode(this, u.Name, u.FullPath, isDir);
 					parent.AddChild(k);
-					if (isDir) _AddDir(u.FullPath, k);
+					if (isDir) _AddDir(u.FullPath, k); else _UnsafeAdd(k, action == ImportFlags.Link);
 				}
+			}
+			
+			void _UnsafeAdd(FileNode f, bool inDir = false) {
+				if (f.IsCodeFile && fromWorkspaceDir == 0 && !isLinkToWsFile && !flags.Has(ImportFlags.DontPrint)) iren.Imported(f, inDir);
 			}
 			
 			(int nf, int nd, int nc) _CountFilesFolders() {
@@ -1243,6 +1288,36 @@ partial class FilesModel {
 			}
 		}
 		catch (Exception e1) { print.it(e1); }
+	}
+	
+	class _ImportRename {
+		HashSet<string> _unsafeNames;
+		FilesModel _model;
+		
+		public _ImportRename(FilesModel model) {
+			_model = model;
+		}
+		
+		//When importing an unknown file that has a known auto-executed file name or "global.cs", renames it.
+		public void Imported(FileNode f, bool inLinkDir) {
+			if (_unsafeNames == null) {
+				_unsafeNames = new(StringComparer.OrdinalIgnoreCase) { "global.cs", "Git script.cs" }; //TODO
+				if (_model.WSSett.CurrentUser.debuggerScript is string s1 && !s1.NE()) _unsafeNames.Add(s1); //and never mind if \path
+				if (_model._GetStartupScripts() is { } x) foreach (var row in x.Rows) _unsafeNames.Add(row[0]); //and never mind if \path or //comment
+			}
+			var name = f.Name;
+			if (_unsafeNames.Contains(name)) {
+				var oldName = name;
+				name = name.Insert(^3, "-renamed");
+				for (int i = 2, j = name.Length - 3; ; i++) {
+					if (_unsafeNames.Contains(name) || filesystem.exists(f.Parent.FilePath + "\\" + name)) name = name.ReplaceAt(j..^3, i.ToS());
+					else break;
+				}
+				const string s1 = " to prevent unintended execution or duplicate name problems";
+				if (inLinkDir || !f.RenameL_(name)) print.it($"<><c red>Consider to rename or delete {f.SciLink(true)}{s1}.<>");
+				else print.it($"<>File {f.SciLink(false)} has been renamed{s1}. Original name: \"{oldName}\".");
+			}
+		}
 	}
 	
 	/// <summary>
@@ -1291,9 +1366,18 @@ partial class FilesModel {
 				ImportFiles(Directory.GetFileSystemEntries(wsDir), new(folder, FNInsert.Last), ImportFlags.Copy);
 			} else {
 				var m = new FilesModel(wsDir + @"\files.xml", importing: true);
-				var a = m.Root.Children().ToArray();
-				_MultiCopyMove(true, a, new(folder, FNInsert.Last), true);
+				FNInsertPos ipos2 = new(folder, FNInsert.Last);
+				foreach (var f in m.Root.Children()) {
+					f._FileCopy(ipos2, this);
+					//TODO: rename "global.cs" etc like in ImportFiles.
+				}
 				m.Dispose(); //currently does nothing
+				
+				_ImportRename iren = new(this);
+				foreach (var f in folder.Descendants()) {
+					if (f.IsCodeFile) iren.Imported(f, false);
+				}
+				
 				print.it($"Info: Imported '{wsDirOrZip}' to folder '{folder.Name}'.\r\n\t{GetSecurityInfo()}");
 			}
 			
@@ -1303,41 +1387,6 @@ partial class FilesModel {
 		catch (Exception ex) { print.it(ex); }
 		
 		//CONSIDER: rename "global.cs" and maybe "@Triggers and toolbars"
-	}
-	
-	void _MultiCopyMove(bool copy, FileNode[] a, FNInsertPos ipos, bool importingWorkspace = false) {
-		bool copyLinkTarget = copy && !importingWorkspace && a.Any(o => o.IsLink) && 2 == popupMenu.showSimple("1 Copy link|2 Copy link target", owner: TreeControl);
-		if (copy) TreeControl.UnselectAll();
-		try {
-			bool movedCurrentFile = false;
-			var a2 = new List<FileNode>(a.Length);
-			foreach (var f in (ipos.pos == FNInsert.After) ? a.Reverse() : a) {
-				if (!importingWorkspace) {
-					if (!this.IsMyFileNode(f)) continue; //deleted?
-					if (a.Contains(f.Parent)) continue;
-				}
-				if (copy) {
-					var fCopied = f._FileCopy(ipos, this, copyLinkTarget);
-					if (fCopied != null) a2.Add(fCopied);
-				} else {
-					if (!f.FileMove(ipos)) continue;
-					if (!movedCurrentFile && _currentFile != null) {
-						if (f == _currentFile || (f.IsFolder && _currentFile.IsDescendantOf(f))) movedCurrentFile = true;
-					}
-				}
-			}
-			if (movedCurrentFile) TreeControl.EnsureVisible(_currentFile);
-			if (copy && !(ipos.Inside && !ipos.f.IsExpanded)) {
-				bool focus = true;
-				foreach (var f in a2) {
-					f.IsSelected = true;
-					if (focus) { focus = false; TreeControl.SetFocusedItem(f); }
-				}
-			}
-		}
-		catch (Exception e1) { print.it(e1); }
-		
-		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 	
 	#endregion
@@ -1491,9 +1540,7 @@ partial class FilesModel {
 	public WorkspaceSettings.User UserSettings => WSSett.CurrentUser;
 	
 	public void RunStartupScripts(bool startAsync) {
-		var csv = UserSettings.startupScripts; if (csv.NE()) return;
-		try {
-			var x = csvTable.parse(csv);
+		if (_GetStartupScripts() is { } x) {
 			foreach (var row in x.Rows) {
 				string file = row[0];
 				if (file.Starts("//")) continue;
@@ -1515,7 +1562,14 @@ partial class FilesModel {
 				}
 			}
 		}
-		catch (FormatException) { }
+	}
+	
+	csvTable _GetStartupScripts() {
+		if (UserSettings.startupScripts is var csv && !csv.NE()) {
+			try { return csvTable.parse(csv); }
+			catch (FormatException) { }
+		}
+		return null;
 	}
 	
 	//Used mostly by SciCode, but owned by workspace because can go to any file.
