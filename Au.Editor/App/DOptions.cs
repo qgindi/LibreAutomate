@@ -168,7 +168,7 @@ class DOptions : KDialogWindow {
 		//note: not readonly. Eg users may want to paste and see any character in multiple fonts.
 
 		b.StartGrid().Columns(-1).Margin(20);
-		b.R.StartGrid<GroupBox>(out var gFont, "Font");
+		b.R.StartGrid<KGroupBox>(out var gFont, "Font");
 		_FontControls _AddFontControls(string label) {
 			b.R.Add(label, out ComboBox name).Editable().And(40).Add(out TextBox size).Tooltip("Font size.\nUse mouse wheel to select.");
 			return new() { name = name, size = size };
@@ -403,12 +403,12 @@ To apply changes after deleting etc, restart this application.
 		var b = _Page("Code editor").Columns(200, 20, -1);
 		b.R.StartStack(vertical: true); //left
 
-		b.StartGrid<GroupBox>("Completion list");
+		b.StartGrid<KGroupBox>("Completion list");
 		b.R.Add(out CheckBox complParen, "Append ( )").Checked(App.Settings.ci_complParen switch { 1 => true, 2 => false, _ => null }, threeState: true)
 			.Tooltip("Append () when selected a method or a keyword like 'if'.\nChecked - always; unchecked - never; else only when selected with the spacebar key.");
 		b.End();
 
-		b.StartGrid<GroupBox>("Formatting");
+		b.StartGrid<KGroupBox>("Formatting");
 		b.R.Add(out KCheckBox formatCompact, "Compact").Checked(App.Settings.ci_formatCompact)
 			.Tooltip("""
 Brace in same line. Don't indent case in switch.
@@ -438,7 +438,7 @@ void Unchecked()
 			.Tooltip("For indentation use tab character, not spaces");
 		b.End();
 
-		//b.StartGrid<GroupBox>("Insert code");
+		//b.StartGrid<KGroupBox>("Insert code");
 		//b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath)
 		//	.Tooltip("Insert file path like folders.System + \"file.exe\"");
 		//b.End();
@@ -447,7 +447,7 @@ void Unchecked()
 
 		b.Skip().StartStack(vertical: true); //right
 
-		b.StartGrid<GroupBox>("Find references/implemetations, rename");
+		b.StartGrid<KGroupBox>("Find references/implemetations, rename");
 		b.R.Add("Skip folders", out TextBox skipFolders, App.Model.WSSett.ci_skipFolders).Multiline(55, wrap: TextWrapping.NoWrap)
 			.Tooltip(@"Don't search in these folders.
 Example:
@@ -568,7 +568,7 @@ Example:
 	unsafe void _OS() {
 		var b = _Page("OS");
 		b.R.Add<TextBlock>("Some Windows settings for all programs");
-		if (App.IsPortable) b.R.Add<TextBlock>().Text(new Run("Portable mode warning: portable apps should not change Windows settings.") { Foreground = Brushes.Red });
+		if (App.IsPortable) b.R.Add<TextBlock>().FormatText($"{new Run("Portable mode warning: portable apps should not change Windows settings.") { Foreground = Brushes.Red }}");
 		b.R.AddSeparator().Margin("T8B8");
 
 		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Width(70, "L")

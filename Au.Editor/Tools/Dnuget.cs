@@ -41,9 +41,8 @@ class DNuget : KDialogWindow {
 		InitWinProp("NuGet packages", App.Wmain);
 		var b = new wpfBuilder(this).WinSize(550, 500).Columns(-1, 0);
 		
-		b.R.StartGrid<GroupBox>("Install").Columns(0, 76, 0, -1, 0);
-		Action gotoNuget = () => run.it("https://www.nuget.org");
-		b.R.Add(out TextBlock _).Text("<a>NuGet", gotoNuget, " package name or PM text:");
+		b.R.StartGrid<KGroupBox>("Install").Columns(0, 76, 0, -1, 0);
+		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package name or PM text:");
 		b.R.Add<AdornerDecorator>().Add(out _tPackage, flags: WBAdd.ChildOfLast)
 			.Watermark("Package").Tooltip(@"Can be just name, or name with version, or PM string, or dotnet string.
 You can copy the string from the NuGet website.
@@ -53,9 +52,8 @@ To specify source: PackageName --source URL or folder path")
 		
 		b.R.xAddButtonIcon(Menus.iconPaste, _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
 		b.AddButton(out var bInstall, "Install", _ => _Install()).Disabled();
-		b.Add<TextBlock>("into folder");
 		
-		b.Add(out _cbFolder).Tooltip(@"Packages are installed in current workspace and can be used by all its scripts.
+		b.Add("into folder", out _cbFolder).Tooltip(@"Packages are installed in current workspace and can be used by all its scripts.
 Folders can be used to isolate incompatible packages if need (rarely).
 For example, PackageX version 1 in FolderA, and PackageX version 2 in FolderB.
 A script can use packages from multiple folders if they are compatible.");
@@ -79,12 +77,11 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.Add(out _cPrerelease, "Prerelease").Margin("L20").Tooltip("Install prerelease version, if available.\nNot used if package version is specified in the Package field.");
 		
-		b.R.Add(out TextBlock info2).Text("To add a NuGet package reference to a script, click [Add /*/] or Properties -> NuGet.");
-		info2.TextWrapping = TextWrapping.Wrap;
+		b.R.xAddInfoBlockT("To add a NuGet package reference to a script, click [Add /*/] or Properties -> NuGet.");
 		
 		b.End();
 		
-		b.Row(-1).StartGrid<GroupBox>("Installed").Columns(-1, 76);
+		b.Row(-1).StartGrid<KGroupBox>("Installed").Columns(-1, 76);
 		
 		b.Row(-1).Add<Border>().Border().Add(out _tv, flags: WBAdd.ChildOfLast);
 		
@@ -103,9 +100,8 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.End();
 		
-		//Action gotoSDK = () => run.it("https://aka.ms/dotnet/6.0/dotnet-sdk-win-x64.exe");
-		Action gotoSDK = () => run.it("https://dotnet.microsoft.com/en-us/download");
-		b.R.Add(out TextBlock infoSDK).Text("<b>Need to install .NET SDK x64, version 6.0 or later. ", "<a>Download", gotoSDK).Hidden();
+		b.R.xAddInfoBlockF($"<b>Need to install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 6.0 or later.</b>").Hidden();
+		var infoSDK = b.Last as TextBlock;
 		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 		
 		Loaded += async (_, _) => {

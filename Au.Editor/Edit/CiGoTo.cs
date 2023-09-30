@@ -227,7 +227,7 @@ class CiGoTo {
 			return new wpfBuilder(tp, panelType).Options(bindLabelVisibility: true);
 		}
 		
-		bd.R.StartGrid<GroupBox>("Repository info of this assembly").Columns(70, -1);
+		bd.R.StartGrid<KGroupBox>("Repository info of this assembly").Columns(70, -1);
 		bd.R.Add("Assembly", out Label _, _assembly).And(50).Add(out KCheckBox cSharp, "C#").Checked(asmSaved.csharp);
 		bd.R.Add("Repository", out TextBox tRepo, asmSaved.repo)
 			.Tooltip("Repository name, like owner/repo.\nIt's the part of the github URL.");
@@ -319,7 +319,7 @@ class CiGoTo {
 		void _Sourcegraph() {
 			var b = _Page("sourcegraph");
 			
-			_AddInfo(b, "Creates and opens a sourcegraph.com search URL.  [", new WBLink("syntax", "https://docs.sourcegraph.com/code_search/reference/queries"), "]");
+			b.xAddInfoBlockF($"Creates and opens a sourcegraph.com search URL.  [<a href='https://docs.sourcegraph.com/code_search/reference/queries'>syntax</a>]");
 			
 			b.R.Add("Type", out TextBox tType, $@"\b{_prefix}\s+{_type}\b"); //note: don't use unescaped space. Then splits into too: "\b{_prefix}" and "{_type}\b"
 			b.R.Add("Member", out TextBox tMember);
@@ -359,9 +359,8 @@ class CiGoTo {
 		void _Github() {
 			var b = _Page("github");
 			
-			_AddInfo(b, "Creates and opens a github.com search URL."
-				+ "  [", new WBLink("syntax", "https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax"), "]"
-				+ "  [", new WBLink("notes", _ => dialog.show("GitHub code search notes", "Results may be incomplete. Try to reload the page.\nSkips large source files.", owner: bd.Window)), "]");
+			Action notes = () => dialog.show("GitHub code search notes", "Results may be incomplete. Try to reload the page.\nSkips large source files.", owner: bd.Window);
+			b.xAddInfoBlockF($"Creates and opens a github.com search URL.  [<a href='https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax'>syntax</a>]  [<a {notes}>notes</a>]");
 			
 			b.R.Add("Type", out TextBox tType, 0 != (_flags & 4) && _member.NE() ? $@"symbol:/(?-i)\b{_type}\b/ /(?-i)\b{_prefix} {_type}\b/" : $@"/(?-i)\b{_prefix} {_type}\b/");
 			b.R.Add("Member", out TextBox tMember).Hidden(_member.NE());
@@ -407,10 +406,6 @@ class CiGoTo {
 		}
 		
 		string _NotPath() => @"\b[Tt]est|\b[Gg]enerat|\b[Uu]nix\b|\/ref\/" + (_repo == "dotnet/wpf" ? @"|\/cycle-breakers\/" : null); //note: sourcegraph does not support (?i) and (?-i)
-		
-		static void _AddInfo(wpfBuilder b, params object[] inlines) {
-			b.Add(out TextBlock _).Brush(0xf0f8e0).Padding(1, 2, 1, 4).Text(inlines);
-		}
 	}
 	static string s_wndpos;
 	

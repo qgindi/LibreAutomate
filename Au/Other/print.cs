@@ -627,6 +627,14 @@ public static partial class print {
 		public InterpolatedString(int literalLength, int formattedCount) {
 			_f = new(literalLength, formattedCount);
 		}
+		
+		public InterpolatedString(int literalLength, int formattedCount, IFormatProvider provider) {
+			_f = new(literalLength, formattedCount, provider);
+		}
+		
+		public InterpolatedString(int literalLength, int formattedCount, IFormatProvider provider, Span<char> initialBuffer) {
+			_f = new(literalLength, formattedCount, provider, initialBuffer);
+		}
 
 		public void AppendLiteral(string value)
 			 => _f.AppendLiteral(value);

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace Au.Controls;
 
@@ -181,7 +182,7 @@ public class KTextBoxFile : TextBox {
 			var s = a[0];
 			if (s.Ends(".lnk", true) && filesystem.exists(s).File)
 				try { s = shortcutFile.getTarget(s); }
-				catch (Exception) {  }
+				catch (Exception) { }
 			Text = s;
 		}
 		base.OnDrop(e);
@@ -423,6 +424,19 @@ public static class KExtWpf {
 	}
 	
 	/// <summary>
+	/// Adds <b>Grid</b> with two horizontal separators and <b>TextBlock</b>.
+	/// Looks almost like <see cref="KGroupBoxSeparator"/>, but is not inside a GroupBox+Panel.
+	/// </summary>
+	public static wpfBuilder xAddGroupSeparator(this wpfBuilder b, string text, bool center = false) {
+		b.StartGrid().Columns(center ? -1 : 10, 0, -1);
+		b.AddSeparator(vertical: false).Margin(right: 0);
+		b.Add<TextBlock>(text).Margin(left: 3, right: 4).Font(bold: true).Brush(foreground: KGroupBox.TextColor);
+		b.AddSeparator(vertical: false).Margin(left: 0);
+		b.End();
+		return b;
+	}
+	
+	/// <summary>
 	/// Adds a toolbar button with icon and tooltip.
 	/// </summary>
 	public static Button AddButton(this ToolBar t, string icon, string tooltip, Action<Button> click, bool enabled = true) {
@@ -512,10 +526,19 @@ public static class KExtWpf {
 	}
 	
 	/// <summary>
-	/// Adds <b>TextBlock</b> with green background and some padding, and calls <see cref="wpfBuilder.Text"/>.
+	/// Adds <b>TextBlock</b> with green background, wrapping and some padding, and calls <see cref="wpfBuilder.FormatText"/>.
 	/// </summary>
-	public static void xAddInfoBlock(this wpfBuilder t, params object[] inlines) {
-		t.Add<TextBlock>().Wrap().Brush(0xf0f8e0).Padding(1, 2, 1, 4).Text(inlines);
+	public static wpfBuilder xAddInfoBlockF(this wpfBuilder t, wpfBuilder.InterpolatedString text) {
+		var r = t.xAddInfoBlockT(null);
+		t.FormatText(text);
+		return r;
+	}
+	
+	/// <summary>
+	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
+	/// </summary>
+	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, string text) { //not overload. Somehow then it is used with $"string" too.
+		return t.Add(out TextBlock r, text).Wrap().Brush(0xf0f8e0).Padding(1, 2, 1, 4);
 	}
 	
 	/// <summary>

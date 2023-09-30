@@ -62,7 +62,7 @@ class DCustomize : KDialogWindow {
 		_panelProp = b.Panel;
 		
 		b.Add(out _lCommandPath).Padding("4").Brush(Brushes.LightBlue, Brushes.Black);
-		b.StartGrid<GroupBox>("Properties common to menu item and toolbar button").Columns(0, -1, 30, 30);
+		b.StartGrid<KGroupBox>("Properties common to menu item and toolbar button").Columns(0, -1, 30, 30);
 		b.R.Add("Text", out _tText).Tooltip("Text.\nInsert _ before Alt-underlined character.");
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
 			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => _ColorTool(), "Colors"); b.Span(1);
@@ -83,14 +83,14 @@ class DCustomize : KDialogWindow {
 		b.End();
 		b.End();
 		
-		b.StartGrid<GroupBox>("Toolbar button properties").Columns(0, 100, -1);
+		b.StartGrid<KGroupBox>("Toolbar button properties").Columns(0, 100, -1);
 		b.R.Add("Text", out _tBtext).Multiline(wrap: TextWrapping.NoWrap).Tooltip("Button text, if different than menu item text.");
 		b.R.Add("Image at", out _cbImageAt).Items("", "left", "top", "right", "bottom").Span(1).Tooltip("Display image + text and put image at this side.\nFor submenu-items always left.");
 		b.R.Add(out _cSeparator, "Separator before");
 		b.R.Add("Hide", out _cbHide).Items("", "always", "never").Span(1).Tooltip("When to move the button to the overflow dropdown.\nIf empty - when the toolbar is too small.");
 		b.End();
 		
-		b.StartGrid<GroupBox>("Move");
+		b.StartGrid<KGroupBox>("Move");
 		b.R.AddButton("Up", _ => _Move(_ti, true)).Tooltip("Ctrl+Up");
 		b.R.AddButton("Down", _ => _Move(_ti, false)).Tooltip("Ctrl+Down");
 		b.End().Width(90).Align("L");

@@ -169,11 +169,38 @@ static class Menus {
 		
 		[Command(target = "", image = "*Material.Git" + blue)]
 		public static class Git {
-			[Command("...")]
-			public static void Git_setup() { global::Git.DGit.AaShow(); }
+			[Command(image = "*MaterialDesign.InfoOutline" + blue)]
+			public static void Git_status() { global::Git.Status(); }
 			
-			[Command(hide = true)]
-			public static void Git_test() { global::Git.Test(); }
+			[Command("Commit", image = "*RemixIcon.GitCommitLine" + blue)]
+			public static void Git_commit() { global::Git.Commit(); }
+			
+			[Command("Push to GitHub", image = "*Unicons.CloudUpload" + blue)]
+			public static void Git_push() { global::Git.Push(); }
+			
+			[Command("Pull from GitHub", image = "*Unicons.CloudDownload #3586FF|#E0E000" + blue)]
+			public static void Git_pull() { global::Git.Pull(); }
+			
+			[Command("GitHub Desktop", image = "*Codicons.Github" + purple, separator = true)]
+			public static void Git_gui() { global::Git.RunGui(); }
+			
+			[Command("Cmd", image = "*Material.Console" + black)]
+			public static void Git_cmd() { global::Git.RunCmd(); }
+			
+			[Command("Workspace folder", image = "*Material.Folder" + darkYellow)]
+			public static void Git_workspace_folder() { global::Git.WorkspaceFolder(); }
+			
+			[Command("Reload workspace", image = "*Material.Reload" + black)]
+			public static void Git_reload_workspace() { global::Git.ReloadWorkspace(); }
+			
+			[Command("GitHub sign out", separator = true)]
+			public static void Git_sign_out() { global::Git.Signout(); }
+			
+			[Command("Maintenance...")]
+			public static void Git_maintenance() { global::Git.Maintenance(); }
+			
+			[Command("...")]
+			public static void Git_setup() { global::Git.DGitSetup.AaShow(); }
 		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]

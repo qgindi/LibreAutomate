@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
+using static Menus.File;
 
 partial class FilesModel {
 	public readonly FileNode Root;
@@ -1166,7 +1167,7 @@ partial class FilesModel {
 			var action = flags & (ImportFlags.Copy | ImportFlags.Move | ImportFlags.Link);
 			bool dontPrint = flags.Has(ImportFlags.DontPrint);
 			int fromWorkspaceDir = 0;
-			bool isLinkToWsFile = false;
+			bool isLinkToWsFile = false; //TODO: save relative target path, or maybe "*id"
 			
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
@@ -1291,7 +1292,7 @@ partial class FilesModel {
 	}
 	
 	class _ImportRename {
-		HashSet<string> _unsafeNames;
+		HashSet<string> _hs;
 		FilesModel _model;
 		
 		public _ImportRename(FilesModel model) {
@@ -1300,17 +1301,17 @@ partial class FilesModel {
 		
 		//When importing an unknown file that has a known auto-executed file name or "global.cs", renames it.
 		public void Imported(FileNode f, bool inLinkDir) {
-			if (_unsafeNames == null) {
-				_unsafeNames = new(StringComparer.OrdinalIgnoreCase) { "global.cs", "Git script.cs" }; //TODO
-				if (_model.WSSett.CurrentUser.debuggerScript is string s1 && !s1.NE()) _unsafeNames.Add(s1); //and never mind if \path
-				if (_model._GetStartupScripts() is { } x) foreach (var row in x.Rows) _unsafeNames.Add(row[0]); //and never mind if \path or //comment
+			if (_hs == null) {
+				_hs = new(StringComparer.OrdinalIgnoreCase) { "global.cs" };
+				if (_model.WSSett.CurrentUser.debuggerScript is string s1 && !s1.NE()) _hs.Add(s1); //and never mind if \path
+				if (_model._GetStartupScripts() is { } x) foreach (var row in x.Rows) _hs.Add(row[0]); //and never mind if \path or //comment
 			}
 			var name = f.Name;
-			if (_unsafeNames.Contains(name)) {
+			if (_hs.Contains(name)) {
 				var oldName = name;
 				name = name.Insert(^3, "-renamed");
 				for (int i = 2, j = name.Length - 3; ; i++) {
-					if (_unsafeNames.Contains(name) || filesystem.exists(f.Parent.FilePath + "\\" + name)) name = name.ReplaceAt(j..^3, i.ToS());
+					if (_hs.Contains(name) || filesystem.exists(f.Parent.FilePath + "\\" + name)) name = name.ReplaceAt(j..^3, i.ToS());
 					else break;
 				}
 				const string s1 = " to prevent unintended execution or duplicate name problems";
@@ -1369,7 +1370,6 @@ partial class FilesModel {
 				FNInsertPos ipos2 = new(folder, FNInsert.Last);
 				foreach (var f in m.Root.Children()) {
 					f._FileCopy(ipos2, this);
-					//TODO: rename "global.cs" etc like in ImportFiles.
 				}
 				m.Dispose(); //currently does nothing
 				
@@ -1385,8 +1385,6 @@ partial class FilesModel {
 			if (isZip) filesystem.delete(wsDir);
 		}
 		catch (Exception ex) { print.it(ex); }
-		
-		//CONSIDER: rename "global.cs" and maybe "@Triggers and toolbars"
 	}
 	
 	#endregion
@@ -1522,8 +1520,7 @@ partial class FilesModel {
 	/// </summary>
 	/// <param name="scriptForNewWorkspace">If empty workspace, creates new empty script from current template.</param>
 	/// <param name="globalCs">If class file "global.cs" not found, creates it in existing or new folder "Classes".</param>
-	/// <param name="git">If code file "Git script.cs" not found, imports it as link in existing or new folder "Classes".</param>
-	public void AddMissingDefaultFiles(bool scriptForNewWorkspace = false, bool globalCs = false, bool git = false) {
+	public void AddMissingDefaultFiles(bool scriptForNewWorkspace = false, bool globalCs = false) {
 		if (scriptForNewWorkspace && Root.FirstChild == null) {
 			NewItem(@"Script.cs");
 		}
@@ -1531,10 +1528,11 @@ partial class FilesModel {
 			var folder = Find(@"\Classes", FNFind.Folder) ?? NewItemL(null, new(Root, FNInsert.Last), "Classes");
 			NewItemL(@"Default\global.cs", new(folder, FNInsert.Last));
 		}
-		if (git && null == FindCodeFile("Git script.cs") && FoundMultiple == null) {
-			var folder = Find(@"\Classes", FNFind.Folder) ?? NewItemL(null, new(Root, FNInsert.Last), "Classes");
-			ImportFiles(new[] { folders.ThisAppBS + @"Templates\files\Default\Git script.cs" }, new(folder, FNInsert.Last), ImportFlags.Link | ImportFlags.DontPrint | ImportFlags.DontSelect);
-		}
+		//example of importing a default file as a link, as readonly
+		//if (git && null == FindCodeFile("Git script.cs") && FoundMultiple == null) {
+		//	var folder = Find(@"\Classes", FNFind.Folder) ?? NewItemL(null, new(Root, FNInsert.Last), "Classes");
+		//	ImportFiles(new[] { folders.ThisAppBS + @"Templates\files\Default\Git script.cs" }, new(folder, FNInsert.Last), ImportFlags.Link | ImportFlags.DontPrint | ImportFlags.DontSelect);
+		//}
 	}
 	
 	public WorkspaceSettings.User UserSettings => WSSett.CurrentUser;

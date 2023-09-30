@@ -4,6 +4,7 @@ using Au.Controls;
 using Au.Compiler;
 using Microsoft.Win32;
 using System.Drawing;
+using System.Windows.Documents;
 
 class DProperties : KDialogWindow {
 	public static void ShowFor(FileNode f) {
@@ -25,11 +26,12 @@ class DProperties : KDialogWindow {
 	//controls
 	readonly KSciInfoBox info;
 	readonly ComboBox role, ifRunning, uac, warningLevel;
-	readonly TextBox testScript, outputPath, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
-	readonly ComboBox icon, manifest, sign;
+	readonly TextBox testScript, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
+	readonly ComboBox outputPath, icon, manifest, sign;
 	readonly KCheckBox bit32, xmlDoc, console, optimize, cMultiline;
-	readonly GroupBox gRun, gAssembly, gCompile;
-	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bOutputPath, bVersion;
+	readonly KGroupBoxSeparator gAssembly, gCompile;
+	readonly Panel pRun;
+	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bVersion;
 	
 	DProperties(FileNode f) {
 		_f = f;
@@ -38,80 +40,90 @@ class DProperties : KDialogWindow {
 		
 		InitWinProp("Properties of " + _f.Name, App.Wmain);
 		
-		var b = new wpfBuilder(this).WinSize(640).Columns(-1, 0);
+		var b = new wpfBuilder(this).WinSize(800).Columns(-1, 20, -1, 20, 0);
 		b.Options(bindLabelVisibility: true);
-		b.R.Add(out info).Height(80).Margin("B8").Span(-1);
-		b.R.StartStack(vertical: true); //left column
-		b.StartGrid().Columns(0, -1, 20, 0, -1.15);
-		b.R.Add("role", out role).Skip();
-		b.Add("testScript", out testScript)
+		b.R.Add(out info).Height(80).Margin("B8");
+		
+		//. left column
+		b.R.StartGrid();
+		
+		b.R.StartGrid<KGroupBoxSeparator>("Role");
+		b.R.Add("role", out role);
+		b.End();
+		
+		b.R.StartGrid(out gCompile, "Compile");
+		b.R.Add(out optimize, "optimize");
+		b.R.Add("define", out define);
+		b.R.Add("warningLevel", out warningLevel).Editable().Align("L");
+		b.R.Add("noWarnings", out noWarnings);
+		b.R.Add("testInternal", out testInternal);
+		b.R.Add("preBuild", out preBuild);
+		b.R.Add("postBuild", out postBuild);
+		b.End();
+		
+		b.End();
+		//..
+		
+		//. center column
+		b.Skip(1).StartGrid();
+		
+		b.R.StartGrid<KGroupBoxSeparator>("Run");
+		b.StartGrid(); pRun = b.Panel;
+		b.R.Add("ifRunning", out ifRunning);
+		b.R.Add("uac", out uac);
+		b.End();
+		b.R.Add("testScript", out testScript)
 			.Validation(_ => testScript.Text is string s1 && s1.Length > 0 && null == _f.FindRelative(s1, FNFind.CodeFile, orAnywhere: true) ? "testScript not found" : null);
 		b.End();
 		
-		b.StartStack(out gRun, "Run", vertical: true);
-		b.StartGrid().Columns(0, 120, -1, 0, 80)
-			.Add("ifRunning", out ifRunning).Skip()
-			.Add("uac", out uac);
-		b.End();
-		b.End();
-		
-		b.StartGrid(out gCompile, "Compile").Columns(0, 50, 20, 0, -1);
-		b.R.Add(out optimize, "optimize").Skip(2)
-			.Add("define", out define);
-		b.R.Add("warningLevel", out warningLevel).Editable().Skip()
-			.Add("noWarnings", out noWarnings);
-		b.R.Add("testInternal", out testInternal);
-		b.R.StartGrid().Columns(0, -1, 20, 0, -1)
-			.Add("preBuild", out preBuild).Skip()
-			.Add("postBuild", out postBuild);
-		b.End();
-		b.End();
-		
-		b.StartStack(out gAssembly, "Assembly", vertical: true);
-		b.StartGrid().Columns(0, -1, 30)
-			.Add("outputPath", out outputPath)
-			.AddButton(out bOutputPath, "...", _ButtonClick_outputPath)
-			.End();
-		b.StartGrid().Columns(0, -1, 20, 0, -1);
-		b.R.Add("icon", out icon).Editable().Skip()
+		b.R.StartGrid(out gAssembly, "Assembly");
+		b.Add("outputPath", out outputPath).Editable();
+		outputPath.DropDownOpened += _OutputPath_DropDownOpened;
+		b.R.Add("icon", out icon).Editable()
 			.Add("manifest", out manifest).Editable();
-		b.R.Add("sign", out sign).Editable().Skip();
+		b.R.Add("sign", out sign).Editable();
 		icon.DropDownOpened += _IconManifestSign_DropDownOpened;
 		manifest.DropDownOpened += _IconManifestSign_DropDownOpened;
 		sign.DropDownOpened += _IconManifestSign_DropDownOpened;
-		b.StartDock()
-			.Add(out console, "console")
-			.Add(out bit32, "bit32").Margin(15)
-			.Add(out xmlDoc, "xmlDoc").Margin(15)
-			.AddButton(out bVersion, "Version", _ => _VersionInfo()).Align("R")
-			.End();
-		b.End();
+		b.R.Add(out console, "console")
+			.And(0).Add(out xmlDoc, "xmlDoc");
+		b.AddButton(out bVersion, "Version", _ => _VersionInfo()).SpanRows(2).Align("R", "C");
+		b.R.Add(out bit32, "bit32");
 		b.End();
 		
 		b.End();
-		b.StartStack(vertical: true).Margin("L20"); //right column
-		b.StartGrid<GroupBox>("Add reference");
+		//..
+		
+		//. right column
+		b.Skip(1).StartStack(vertical: true);
+		
+		b.StartGrid<KGroupBoxSeparator>("Add reference");
 		b.R.AddButton(out addLibrary, "Library...", _ButtonClick_addLibrary);
 		b.R.AddButton(out addNuget, "NuGet ▾", _ButtonClick_addNuget);
 		b.R.AddButton(out addComRegistry, "COM ▾", _bAddComRegistry_Click)
 			.AddButton(out addComBrowse, "...", _bAddComBrowse_Click).Width(30);
 		b.AddButton(out addProject, "Project ▾", _ButtonClick_addProject);
 		b.End();
-		b.StartStack<GroupBox>("Add file", vertical: true);
+		
+		b.StartStack<KGroupBoxSeparator>("Add file", vertical: true);
 		b.AddButton(out addClassFile, "Class file ▾", _ButtonClick_addClass);
 		b.AddButton(out addResource, "Resource ▾", _ButtonClick_addFile);
 		b.AddButton(out addFile, "Other file ▾", _ButtonClick_addFile);
 		b.End();
-		b.StartStack(vertical: true)
-			.Add("Find in lists", out findInLists).Tooltip("In button drop-down lists show only items containing this text")
-			.End();
+		
+		b.Add<AdornerDecorator>().Add(out findInLists, flags: WBAdd.ChildOfLast).Watermark("Find in lists").Tooltip("In button drop-down lists show only items containing this text");
+		
 		b.End();
+		//..
+		
 		b.R.AddSeparator();
+		
 		b.R.StartGrid().Columns(-1, 0);
 		b.Add(out cMultiline, "/*/ multiple lines /*/").Checked(_meta.Multiline);
 		b.Options(modifyPadding: false); //workaround for: OK/Cancel text incorrectly vcentered. Only on Win11, only in this dialog, only when this dialog is not in the secondary screen with DPI 125%.
 		b.AddOkCancel();
 		b.End();
+		
 		b.End();
 		
 		_role = _meta.role switch {
@@ -130,7 +142,8 @@ class DProperties : KDialogWindow {
 		_InitCombo(uac, "inherit|user|admin", _meta.uac);
 		//Assembly
 		outputPath.Text = _meta.outputPath;
-		void _ButtonClick_outputPath(WBButtonClickArgs e) {
+		void _OutputPath_DropDownOpened(object sender, EventArgs e) {
+			outputPath.IsDropDownOpen = false;
 			var m = new popupMenu();
 			m[_GetOutputPath(getDefault: true)] = o => outputPath.Text = o.ToString();
 			bool isLibrary = _role == MCRole.classLibrary;
@@ -174,9 +187,9 @@ class DProperties : KDialogWindow {
 			_ChangedRole();
 		};
 		void _ChangedRole() {
-			_ShowHide(testScript, _role is MCRole.classLibrary or MCRole.classFile);
-			_ShowCollapse(_role is MCRole.miniProgram or MCRole.exeProgram, gRun, console, icon);
-			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath, bOutputPath, bVersion);
+			_ShowCollapse(testScript, _role is MCRole.classLibrary or MCRole.classFile);
+			_ShowCollapse(_role is MCRole.miniProgram or MCRole.exeProgram, pRun, console, icon);
+			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath, bVersion);
 			_ShowCollapse(_role is MCRole.exeProgram, manifest, bit32);
 			_ShowCollapse(_role == MCRole.classLibrary, xmlDoc);
 			_ShowCollapse(_role != MCRole.classFile, gAssembly, gCompile);
@@ -459,7 +472,7 @@ class DProperties : KDialogWindow {
 	}
 	
 	async void _ConvertTypeLibrary(object tlDef, Button button) {
-		if (await EdComUtil.ConvertTypeLibrary(tlDef, this) is {  } converted) {
+		if (await EdComUtil.ConvertTypeLibrary(tlDef, this) is { } converted) {
 			foreach (var v in converted) if (!_meta.com.Contains(v)) _meta.com.Add(v);
 			_ShowInfo_Added(button, _meta.com);
 		}

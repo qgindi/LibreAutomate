@@ -78,7 +78,7 @@ class DSnippets : KDialogWindow {
 		
 		b.And(0).StartStack(true).Hidden(null);
 		_panelContext = b.Panel;
-		b.StartStack<GroupBox>("Context", true);
+		b.StartStack<KGroupBox>("Context", true);
 		_panelContextEnum = b.Panel as StackPanel;
 		b.End();
 		b.End();
@@ -88,8 +88,7 @@ class DSnippets : KDialogWindow {
 		b.And(0).StartStack(true).Hidden(null);
 		_panelFile = b.Panel;
 		b.Add(out _tbFile);
-		b.Add(out _tbDefaultFileInfo, "Don't edit this file. The setup program replaces it. Only uncheck some snippets if need.");
-		_tbDefaultFileInfo.TextWrapping = TextWrapping.Wrap;
+		b.Add(out _tbDefaultFileInfo, "Don't edit this file. The setup program replaces it. Only uncheck some snippets if need.").Wrap();
 		b.End();
 		
 		b.R.AddSeparator(vertical: false);
