@@ -12,8 +12,7 @@ class DCommandline : KDialogWindow {
 	DCommandline() {
 		InitWinProp("Script command line triggers", App.Wmain);
 		var b = _b = new wpfBuilder(this).WinSize(440);
-		b.R.Add(out TextBlock info).Text("This tool creates a command line string to run current script from other programs and scripts (cmd, PowerShell, Task Scheduler, shortcut, etc).\nMore info in Cookbook folder \"Script\".");
-		info.TextWrapping = TextWrapping.Wrap;
+		b.R.xAddInfoBlockT("This tool creates a command line string to run current script from other programs and scripts (cmd, PowerShell, Task Scheduler, shortcut, etc).\nMore info in Cookbook folder \"Script\".");
 		b.R.AddSeparator();
 		b.R.Add(out _cEditorNoPath, "Editor program name without path");
 		b.R.Add(out _cScriptNoPath, "Script name without path");

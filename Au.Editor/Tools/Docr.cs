@@ -434,7 +434,7 @@ If unchecked, returns false.");
 		void _StartGroupBox(string engine) {
 			var hl = new Hyperlink(new Run(engine));
 			hl.Click += (_, _) => HelpUtil.AuHelp("Au.More." + engine);
-			b.R.StartGrid<GroupBox>(hl).Columns(100, -1);
+			b.R.StartGrid<KGroupBox>(hl).Columns(100, -1);
 		}
 	}
 

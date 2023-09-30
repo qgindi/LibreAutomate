@@ -137,7 +137,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.End();
 
 		b.Row(-1);
-		b.R.Add<TextBlock>().Align("R").Text("Thanks to ", "<a>MahApps.Metro.IconPacks", new Action(() => run.it("https://github.com/MahApps/MahApps.Metro.IconPacks")));
+		b.R.Add<TextBlock>().Align("R").FormatText($"Thanks to <a href='https://github.com/MahApps/MahApps.Metro.IconPacks'>MahApps.Metro.IconPacks</a>");
 		b.End();
 
 		b.End();

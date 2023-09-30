@@ -21,6 +21,7 @@ New classes:
 New members:
 - **script.restart**.
 - **filesystem.setAttributes**.
+- **wpfBuilder.FormatText**, **wpfBuilder.FormattedText**.
 
 New parameters:
 - .

@@ -5,6 +5,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Xml.Linq;
 
 //SHOULDDO: a workaround for WPF bug: sometimes window or part of window is white, until invalidating.
 //	Noticed with all kinds of WPF windows and popups, not only created with wpfBuilder. Noticed in other WPF apps too, usually black parts.
@@ -687,10 +688,10 @@ public class wpfBuilder {
 	/// Text, header or other content. Supported element types (or base types):
 	/// <br/>• <see cref="TextBox"/> - sets <b>Text</b> property.
 	/// <br/>• <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
-	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="Text"/>).
 	/// <br/>• <see cref="PasswordBox"/> - sets <b>Password</b> property.
-	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property.
-	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc).
+	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
+	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
+	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
 	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
 	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
@@ -1712,7 +1713,6 @@ public class wpfBuilder {
 	public wpfBuilder Watermark(string text) => Watermark(out _, text);
 	
 	/// <param name="adorner">Receives the adorner. It can be used to change watermark text later.</param>
-	/// <param name="text"></param>
 	/// <inheritdoc cref="Watermark(string)"/>
 	public wpfBuilder Watermark(out WatermarkAdorner adorner, string text) {
 		var c = Last as Control;
@@ -1885,23 +1885,20 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
+	/// [Obsolete. Use FormatText.]
 	/// Adds inlines to the last added <see cref="TextBlock"/>.
 	/// </summary>
 	/// <param name="inlines">
 	/// Arguments of type:
+	/// <br/>• string like <c>"&lt;b>text"</c>, <c>"&lt;i>text"</c> or <c>"&lt;u>text"</c> adds inline of type <b>Bold</b>, <b>Italic</b> or <b>Underline</b>.
+	/// <br/>• string like <c>"&lt;a>text"</c> adds <see cref="Hyperlink"/>. Next argument of type <b>Action</b> or <b>Action&lt;Hyperlink&gt;</b> sets its action.
+	/// <br/>• other string - plain text.
 	/// <br/>• <see cref="WBLink"/> adds a hyperlink.
 	/// <br/>• <see cref="Inline"/> of any type, eg <b>Run</b>, <b>Bold</b>, <b>Hyperlink</b>.
-	/// <br/>• string like <c>"&lt;b>text"</c>, <c>"&lt;i>text"</c>, <c>"&lt;u>text"</c> or <c>"&lt;a>text"</c> adds inline of type <b>Bold</b>, <b>Italic</b>, <b>Underline</b> or <b>Hyperlink</b>.
-	/// <br/>• other string - plain text.
 	/// <br/>• <see cref="UIElement"/>.
 	/// </param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>TextBlock</b>.</exception>
 	/// <exception cref="ArgumentException">Unsupported argument type.</exception>
-	/// <remarks>
-	/// Adds inlines to <see cref="TextBlock.Inlines"/>.
-	///
-	/// Obsolete: <c>"&lt;a>text"</c> adds <see cref="Hyperlink"/>. Next argument of type <b>Action</b> or <b>Action&lt;Hyperlink&gt;</b> sets its action. Use <see cref="WBLink"/> instead.
-	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// b.R.Add<TextBlock>().Text(
@@ -1914,6 +1911,7 @@ public class wpfBuilder {
 	/// 	);
 	/// ]]></code>
 	/// </example>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
 	public wpfBuilder Text(params object[] inlines) {
 		var c = Last as TextBlock ?? throw new NotSupportedException("Text(): Last added must be TextBlock");
 		var k = c.Inlines;
@@ -1954,14 +1952,281 @@ public class wpfBuilder {
 					continue;
 				}
 				break;
-			default: throw new ArgumentException("Text(): Expected string, WBLink, Inline, UIElement or hyperlink Action"); //not x.ToString(). Reserve other types for the future.
+			default: throw new ArgumentException("Text(): unsupported argument type");
 			}
 			k.Add(n);
-			//FUTURE: support nested. Now it seems rarely used.
-			//FUTURE: add images easier.
 		}
 		return this;
 	}
+	
+	/// <summary>
+	/// Adds inlines (text, formatted text, hyperlinks, images, etc) to the last added <see cref="TextBlock"/> etc.
+	/// </summary>
+	/// <param name="text">
+	/// Interpolated string (like <c>$"string"</c>) with tags etc. The format is XML without root element.
+	/// <para>
+	/// These tags add inlines of these types:
+	/// <br/>• <c>&lt;b>text&lt;/b></c> - <b>Bold</b>.
+	/// <br/>• <c>&lt;i>text&lt;/i></c> - <b>Italic</b>.
+	/// <br/>• <c>&lt;u>text&lt;/u></c> - <b>Underline</b>.
+	/// <br/>• <c>&lt;s {Span}>text&lt;/s></c> - <b>Span</b> or a <b>Span</b>-based type. The function adds <c>text</c> to its <b>Inlines</b> collection.
+	/// <br/>• <c>&lt;a {Action or Action&lt;Hyperlink>}>text&lt;/a></c> - <b>Hyperlink</b> that calls the action.
+	/// <br/>• <c>&lt;a href='URL or path etc'>text&lt;/a></c> - <b>Hyperlink</b> that calls <see cref="run.itSafe"/>.
+	/// </para>
+	/// <para>
+	/// WPF elements of these types can be inserted without tags:
+	/// <br/>• <c>{Inline}</c> - any inline, eg <b>Run</b>. See also <c>&lt;s {Span}>text&lt;/s></c>.
+	/// <br/>• <c>{UIElement}</c> - a WPF element, eg <b>CheckBox</b> or <b>Image</b>.
+	/// <br/>• <c>{ImageSource}</c> - adds <b>Image</b>.
+	/// <br/>• <c>{IEnumerable&lt;Inline>}</c> - adds multiple <b>Inline</b>.
+	/// </para>
+	/// XML special characters must be escaped:
+	/// <br/>• <c>&amp;lt;</c> - <c>&lt;</c>.
+	/// <br/>• <c>&amp;amp;</c> - <c>&amp;</c>.
+	/// <br/>• <c>&amp;apos;</c> and <c>&amp;gt;</c> in attributes - <c>'</c> and <c>></c>.
+	/// <para>
+	/// </para>
+	/// The <c>text</c> in above examples can contain nested tags and elements.
+	/// </param>
+	/// <exception cref="NotSupportedException">Unsupported type of the last added element. Or supported type but non-empty <b>Content</b> and <b>Header</b> (read Remarks).</exception>
+	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
+	/// <exception cref="InvalidOperationException">The <c>{Span}</c> or <c>{Inline}</c> already has parent.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
+	/// <remarks>
+	/// The last added element can be of type:
+	/// <br/>• <see cref="TextBlock"/> - the function adds inlines to its <b>Inlines</b> collection.
+	/// <br/>• <b>ContentControl</b> (eg <b>Label</b> or <b>Button</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Content</b> property if it is null.
+	/// <br/>• <b>HeaderedContentControl</b> (eg <b>GroupBox</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Header</b> property if it is null (else sets <b>Content</b> property if it is null).
+	/// <br/>• <b>Panel</b> whose <b>Parent</b> is <b>HeaderedContentControl</b> (eg <c>b.StartGrid&lt;GroupBox>(null).FormatText($"...")</c>) - uses the <b>HeaderedContentControl</b> like the above.
+	///
+	/// For elements other than the last added use <see cref="FormatText(object, InterpolatedString)"/> or <see cref="FormattedText(InterpolatedString)"/>.
+	///
+	/// To load images can be used <see cref="ImageUtil.LoadWpfImageElement"/> and <see cref="ImageUtil.LoadWpfImage"/>.
+	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// b.R.Add<TextBlock>().FormatText($"""
+	/// Text <b>bold</b> <i>italic <u>underline</u></i>
+	/// <a href='https://www.example.com'>example.com</a> <b><a href='notepad.exe'>Notepad</a></b>
+	/// <a {() => { print.it("click"); }}>click</a> <a {(Hyperlink h) => { print.it("click once"); h.IsEnabled = false; }}>click once</a>
+	/// {ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")}<!-- or ImageUtil.LoadWpfImage(@"C:\Test\image.png") -->
+	/// {new Run("color and font") { Foreground = Brushes.Blue, Background = Brushes.Goldenrod, FontSize = 20 }}
+	/// <s {new Span() { Background = Brushes.YellowGreen }}>span <b>bold</b> span</s>
+	/// {new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }} {new CheckBox() { Content = "Check" }}
+	/// &lt; &gt; &amp; &apos; &quot;
+	/// """);
+	/// ]]></code>
+	/// Build interpolated string at run time.
+	/// <code><![CDATA[
+	/// wpfBuilder.InterpolatedString s = new();
+	/// s.AppendLiteral("Text <b>bold</b> <a ");
+	/// s.AppendFormatted(() => { print.it("click"); });
+	/// s.AppendLiteral(">link</a>.");
+	/// b.R.Add<TextBlock>().FormatText(s);
+	/// ]]></code>
+	/// </example>
+	public wpfBuilder FormatText(InterpolatedString text) {
+		var s = text.GetFormattedText();
+		_FormatText(Last, s, text.a);
+		return this;
+	}
+	
+	//rejected: overload `FormatText(string text)` that supports only tags where don't need {object}.
+	
+	/// <summary>
+	/// Adds inlines (text, formatted text, hyperlinks, images, etc) to the specified <see cref="TextBlock"/> etc.
+	/// </summary>
+	/// <param name="obj">Object of type <see cref="TextBlock"/>, <b>ContentControl</b>, <b>HeaderedContentControl</b> or <b>InlineCollection</b>. More info in <see cref="FormatText(InterpolatedString)"/> remarks.</param>
+	/// <exception cref="NotSupportedException">Unsupported <i>obj</i> type or non-empty <b>Content</b>/<b>Header</b>.</exception>
+	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
+	/// <exception cref="InvalidOperationException">The <c>{Span}</c> or <c>{Inline}</c> already has parent.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
+	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
+	public static void FormatText(object obj, InterpolatedString text) {
+		var s = text.GetFormattedText();
+		_FormatText(obj, s, text.a);
+	}
+	
+	/// <summary>
+	/// Creates new <see cref="TextBlock"/> and adds inlines like <see cref="FormatText(InterpolatedString)"/>.
+	/// </summary>
+	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
+	/// <exception cref="InvalidOperationException">The <c>{Span}</c> or <c>{Inline}</c> already has parent.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
+	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
+	/// <example>
+	/// <code><![CDATA[
+	/// b.R.Add(wpfBuilder.FormattedText($"<b>Label</b>"), out TextBox _);
+	/// b.R.AddButton(_TextWithIcon("Button", "*PixelartIcons.Notes #0060F0"), _ => { print.it("Button clicked"); });
+	/// 
+	/// static TextBlock _TextWithIcon(string text, string icon) {
+	/// 	var e = ImageUtil.LoadWpfImageElement(icon);
+	/// 	e.Margin = new(0, 0, 4, 0);
+	/// 	return wpfBuilder.FormattedText($"{e}{text}");
+	/// }
+	/// ]]></code>
+	/// </example>
+	public static TextBlock FormattedText(InterpolatedString text) {
+		var e = new TextBlock();
+		var s = text.GetFormattedText();
+		_FormatText(e, s, text.a);
+		return e;
+	}
+	
+	static void _FormatText(object obj, string text, List<object> a) {
+		InlineCollection ic;
+		g1:
+		switch (obj) {
+		case TextBlock k: ic = k.Inlines; break;
+		case HeaderedContentControl k when k.Header == null: k.Header = obj = new TextBlock(); goto g1;
+		case ContentControl k when k.Content == null: k.Content = obj = new TextBlock(); goto g1;
+		case Panel k when k.Parent is HeaderedContentControl p1: obj = p1; goto g1; //eg b.StartGrid<GroupBox>(null).FormatText($"...")
+		case InlineCollection k: ic = k; break;
+		default: throw new NotSupportedException("Format(): unsupported element type");
+		}
+		ic.Clear();
+		
+		const string c_mark = InterpolatedString.c_mark;
+		var xr = XElement.Parse("<x>" + text + "</x>", LoadOptions.PreserveWhitespace);
+		_Enum(ic, xr, 0);
+		
+		void _Enum(InlineCollection ic, XElement xp, int level) {
+			foreach (var n in xp.Nodes()) {
+				switch (n) {
+				case XElement x:
+					object _GetObj() => a != null && x.Attr("_a") is string s && s.Starts(c_mark) && s.ToInt(out int i1, c_mark.Length) ? a[i1] : null;
+					
+					Span r = null;
+					var tag = x.Name.LocalName;
+					switch (tag) {
+					case "b": r = new Bold(); break;
+					case "i": r = new Italic(); break;
+					case "u": r = new Underline(); break;
+					//CONSIDER: <c color>, <bc color>
+					case "s": //<s {Span}>...</s>
+						r = _GetObj() as Span ?? throw new ArgumentException("Expected <s {Span}>...</s>");
+						if (r.Parent != null) throw new InvalidOperationException("{object} in multiple places");
+						break;
+					case "a": //<a {Action}>...</a> or <a href='...'>...</a>
+						var h = new Hyperlink();
+						r = h;
+						if (x.Attr("href") is string href) {
+							h.Click += (_, _) => run.itSafe(href);
+						} else {
+							switch (_GetObj()) {
+							case Action g: h.Click += (_, _) => g(); break;
+							case Action<Hyperlink> g: h.Click += (_, _) => g(h); break;
+							default: throw new ArgumentException("Expected <a {Action}>...</a> or <a href='...'>...</a>");
+							}
+						}
+						break;
+					default: throw new ArgumentException($"Unknown tag <{tag}>");
+					}
+					ic.Add(r);
+					if (x.HasElements) _Enum(r.Inlines, x, level + 1);
+					else r.Inlines.Add(x.Value);
+					break;
+				case XText x: //also XCData
+					var s = x.Value;
+					if (a != null) {
+						int from = 0;
+						for (; from < s.Length; from++) {
+							int m = s.Find(c_mark, from);
+							if (m < 0) break;
+							if (m > from) ic.Add(s[from..m]);
+							if (s.ToInt(out int i, m + c_mark.Length, out from)) {
+								var k = a[i];
+								g2:
+								switch (k) {
+								case Inline e:
+									if (e.Parent != null) throw new InvalidOperationException("{object} in multiple places");
+									ic.Add(e);
+									break;
+								case UIElement e:
+									ic.Add(new InlineUIContainer(e) { BaselineAlignment = BaselineAlignment.Center });
+									break;
+								case ImageSource e:
+									k = new Image { Source = e, Stretch = Stretch.None };
+									goto g2;
+								case IEnumerable<Inline> e:
+									ic.AddRange(e);
+									break;
+								default: throw new ArgumentException($"Unexpected element type {a[i]}");
+								}
+							}
+						}
+						if (from < s.Length) ic.Add(s[from..]);
+					} else ic.Add(s);
+					break;
+				}
+			}
+		}
+	}
+	
+#pragma warning disable 1591 //no XML doc
+	[InterpolatedStringHandler, NoDoc]
+	public ref struct InterpolatedString {
+		DefaultInterpolatedStringHandler _f;
+		internal List<object> a;
+		string _lit;
+		internal const string c_mark = "≡∫∫≡";
+		
+		public InterpolatedString(int literalLength, int formattedCount) {
+			_f = new(literalLength, formattedCount);
+		}
+		
+		public InterpolatedString(int literalLength, int formattedCount, IFormatProvider provider) {
+			_f = new(literalLength, formattedCount, provider);
+		}
+		
+		public InterpolatedString(int literalLength, int formattedCount, IFormatProvider provider, Span<char> initialBuffer) {
+			_f = new(literalLength, formattedCount, provider, initialBuffer);
+		}
+		
+		public void AppendLiteral(string value)
+			 => _f.AppendLiteral(_lit = value);
+		
+		public void AppendFormatted(string value)
+			=> _f.AppendFormatted(value);
+		
+		public void AppendFormatted<T>(T value) {
+			if (value is Delegate or DependencyObject or IEnumerable<Inline>) {
+				bool q = _lit != null && _lit.AsSpan().TrimEnd() is [.., '<', 'a' or 's'];
+				if (q) _f.AppendLiteral(" _a='");
+				a ??= new();
+				_f.AppendLiteral(c_mark + a.Count.ToS() + " ");
+				a.Add(value);
+				if (q) _f.AppendLiteral("'");
+			} else _f.AppendFormatted(value);
+			_lit = null;
+		}
+		
+		public void AppendFormatted<T>(T value, int alignment)
+			 => _f.AppendFormatted(value, alignment);
+		
+		public void AppendFormatted<T>(T value, string format) {
+			_f.AppendFormatted(value, format);
+		}
+		
+		public void AppendFormatted<T>(T value, int alignment, string format) {
+			_f.AppendFormatted(value, alignment, format);
+		}
+		
+		public void AppendFormatted(ReadOnlySpan<char> value)
+			=> _f.AppendFormatted(value);
+		
+		public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string format = null)
+			=> _f.AppendFormatted(value, alignment, format);
+		
+		public void AppendFormatted(string value, int alignment = 0, string format = null)
+			=> _f.AppendFormatted(value, alignment, format);
+		
+		public void AppendFormatted(object value, int alignment = 0, string format = null)
+			=> _f.AppendFormatted(value, alignment, format);
+		
+		public string GetFormattedText() => _f.ToStringAndClear();
+	}
+#pragma warning restore 1591
 	
 	/// <summary>
 	/// Loads a web page or RTF text from a file or URL into the last added element.

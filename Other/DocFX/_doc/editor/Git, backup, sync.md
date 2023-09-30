@@ -14,7 +14,7 @@ To backup workspace files can be used LibreAutomate or/and any Git software.
 
 ## How to start
 
-You need a [GitHub](https://github.com/) account, and a private repository there. All it's free.
+You need a [GitHub](https://github.com/) account, and a private repository there. It's free.
 
 1. In your GitHub account [create new repository](https://github.com/new). It must be **private** and **empty** (no readme etc). Copy its URL.
 2. In LibreAutomate click menu File -> Git -> Git setup. Paste the URL.
@@ -25,8 +25,7 @@ You need a [GitHub](https://github.com/) account, and a private repository there
     - If the GitHub repository is not empty, can clone it instead.
     - If the subfolder already exists, just updates the URL.
     - Creates files ".gitignore" and ".gitattributes" if missing.
-    - Imports default Git script if missing.
-5. Now you can see more items added to the Git menu (menu File -> Git). To access the Git menu faster, you can unhide the Git button in the File toolbar.
+5. Now you can use other Git menu commands. To access it faster, you can unhide the Git button in the File toolbar.
 
 ## How to use
 
@@ -44,11 +43,30 @@ Use menu File -> Git. Menu commands:
 - Maintenance - tools to compact the Git repository.
 - Git setup - Git setup dialog.
 
-When you need something more, use a [Git GUI software](https://git-scm.com/downloads/guis) or Git command line. Try [GitHub Desktop](https://desktop.github.com/), it's free and easy to use. In its File menu select "Add local repository" and add the workspace folder.
-
 ## Remarks
 
+LibreAutomate uses Git command line programs to perform most of the work. Therefore Git must be installed. Either private Git (in LibreAutomate folder) or regular Git. Often LibreAutomate prints the used command line (blue text), and sometimes also the output text (red if failed).
+
 Files and folders imported as links usually are not in the workspace folder and therefore are not included in backup.
+
+The current branch must be "main". Else Git menu commands refuse to work.
+
+### Other Git software
+
+Git has many features not included in the Git menu. To name a few:
+- See the commit history.
+- See workspace changes since the last commit, and changes in each commit.
+- Restore files from a backup (ie from a commit).
+- Pull and merge diverged commits.
+- Use branches.
+
+Git can be used via command line. Or you can install a [Git GUI client](https://git-scm.com/downloads/guis). Try [GitHub Desktop](https://desktop.github.com/), it's free and easy to use. In its File menu select "Add local repository" and add the workspace folder. If you need a GUI client with more features, try TortoiseGit.
+
+When using external Git software to manage the current LibreAutomate workspace, you can temporarily exit LibreAutomate. It isn't necessary, however you should know that:
+- If external Git software made changes in the workspace while LibreAutomate is running, click "Reload workspace" in the Git menu.
+- LibreAutomate saves everything when another app becomes active (active window). Still there is a small possibility that it may change some workspace files while you use Git.
+
+Use external Git software carefully. Else it can modify workspace files not as you wanted. Consider making a temporary copy of entire workspace folder. The Git menu is safer; the Pull command can modify workspace files, but the old version isn't lost anyway.
 
 ### Sync
 
@@ -87,11 +105,3 @@ If using the same workspace on multiple computers, you can exclude these small f
 - /.toolbars/ - saved toolbar settings (position, context menu, etc).
 
 If you don't exclude some big files that are unnecessary to backup, after some time the ".git" folder can become very big. Then you can try "Maintenance" in the Git menu. Or install and use git-filter-repo or similar tool. Afterwards you may want to add these files to .gitignore.
-
-### Git script
-
-Read this if you want to modify the Git menu or change its behavior.
-
-Most Git menu commands are implemented in script named "Git script". The editor program implements only "Git setup" and displays the menu. The Git setup dialog imports default script into the workspace if does not find "Git script.cs". The default script supports only basic Git features. You can instead use a custom script file named "Git script". Don't edit the default script. Copy its text, rename or delete it, create new script named "Git script", paste and edit as you want.
-
-When showing the Git menu, LibreAutomate finds C# file named "Git script.cs", extracts menu item texts etc from `case "Menu item text": ... //{JSON}` lines, and adds menu items. When clicked a menu item, it saves everything and runs the script. Passes the menu item text etc in `args`.

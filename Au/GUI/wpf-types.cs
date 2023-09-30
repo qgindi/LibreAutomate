@@ -216,8 +216,10 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
+	/// [Obsolete]
 	/// Can be used with <see cref="wpfBuilder.Text"/> to add a hyperlink.
 	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
 	public class WBLink {
 		///
 		public Hyperlink Hlink { get; }

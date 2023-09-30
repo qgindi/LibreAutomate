@@ -175,7 +175,7 @@ class PanelFind {
 	
 	void _Options() {
 		var b = new wpfBuilder("Find text options").WinSize(350);
-		b.R.StartGrid<GroupBox>("Find in files");
+		b.R.StartGrid<KGroupBox>("Find in files");
 		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn);
 		b.R.Add(
 			new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Skip files where path in workspace matches a wildcard from this list" },

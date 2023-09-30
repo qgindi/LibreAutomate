@@ -42,7 +42,7 @@
 static unsafe class Test {
 	
 	public static void FromMenubar() {
-		
+		//Git.Test();
 		
 		//var d = Panels.Editor.ActiveDoc;
 		

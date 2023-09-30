@@ -78,7 +78,7 @@ class DEnumDir : KDialogWindow {
 		b.Add(out _cFileFilter, "Use file filter").Add(out _cDirFilter, "Use folder filter").Margin("L8");
 		b.End().Hidden();
 		
-		b.R.StartGrid<GroupBox>("Flags");
+		b.R.StartGrid<KGroupBox>("Flags");
 		b.R.Add(out _cRecurse, "Include subfolders");
 		b.R.Add(out _cIgnore, "Ignore inaccessible").Margin("L22").xBindCheckedVisible(_cRecurse);
 		b.R.Add(out _cSymlink, "Follow NTFS links").Margin("L22").xBindCheckedVisible(_cRecurse).Tooltip("Enumerate the target folder of NTFS links (symbolic links, volume mount points, etc)");
@@ -87,7 +87,7 @@ class DEnumDir : KDialogWindow {
 		b.R.Add(out _cSkipHiddenSystem, "Skip hidden system");
 		b.End().Span(3);
 		
-		b.StartGrid<GroupBox>("Results");
+		b.StartGrid<KGroupBox>("Results");
 		b.R.Add(out _cWhere, "Where")
 			.Tooltip($"Add code '{c_Where}' to filter results by size, date, etc.\nThen in the code editor you'll edit it.");
 		b.R.StartStack();

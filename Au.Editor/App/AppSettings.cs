@@ -180,22 +180,24 @@ record AppSettings : JSettings {
 record WorkspaceSettings : JSettings {
 	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 	
-	public record User {
-		public string guid { get; init; }
+	public record User(string guid) {
 		public string startupScripts, debuggerScript, gitUrl;
 	}
 	public User[] users;
 	
 	public User CurrentUser {
 		get {
-			var u = users?.FirstOrDefault(o => o.guid == App.Settings.user);
-			if (u == null) {
-				u = new User { guid = App.Settings.user };
-				users = users == null ? new[] { u } : users.InsertAt(0, u);
+			if (_cu == null) {
+				_cu = users?.FirstOrDefault(o => o.guid == App.Settings.user);
+				if (_cu == null) {
+					_cu = new User(App.Settings.user);
+					users = users == null ? new[] { _cu } : users.InsertAt(0, _cu);
+				}
 			}
-			return u;
+			return _cu;
 		}
 	}
+	User _cu;
 	
 	public string ci_skipFolders;
 }
