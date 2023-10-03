@@ -7,24 +7,22 @@ using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
-//TODO: limit the left of the popup to the left of the scintilla control. Now, if scintilla is hscrolled, the popup is far at the left, eg in the left screen.
-
 class CiSignature {
 	CiPopupText _textPopup;
 	_Data _data; //not null while the popup window is visible
 	CancellationTokenSource _cancelTS;
-
+	
 	class _Data {
 		public SignatureHelpItems r;
 		public _Span span;
 		public int iSelected, iUserSelected, iRoslynSelected;
 		public SciCode sci;
-
+		
 		public bool IsSameSpan(_Span span2) {
 			return span2.start == span.start && span2.fromEnd == span.fromEnd;
 			//never mind: we don't check whether text before and after is still the same. Not that important.
 		}
-
+		
 		public bool IsSameArglist(_Span span2, SignatureHelpItems r2) {
 			if (!IsSameSpan(span2) || r2.Items.Count != r.Items.Count) return false;
 			for (int i = 0; i < r.Items.Count; i++) {
@@ -36,55 +34,55 @@ class CiSignature {
 			return true;
 		}
 	}
-
+	
 	struct _Span {
 		public int start, fromEnd;
 		public _Span(int start, int fromEnd) { this.start = start; this.fromEnd = fromEnd; }
 		public _Span(TextSpan span, string code) { this.start = span.Start; this.fromEnd = code.Length - span.End; }
 	}
-
+	
 	public bool IsVisibleUI => _data != null;
-
+	
 	public void Cancel() {
 		_cancelTS?.Cancel(); _cancelTS = null;
 		_CancelUI();
 	}
-
+	
 	void _CancelUI() {
 		if (_data == null) return;
 		foreach (var r in _data.sci.ETempRanges_Enum(this)) r.Remove();
 		_data = null;
 		_textPopup?.Hide();
 	}
-
+	
 	public void SciPositionChanged(SciCode doc) {
 		if (_afterCharAdded) { _afterCharAdded = false; return; }
 		if (_data == null) return;
 		_ShowSignature(doc, default);
 	}
 	bool _afterCharAdded;
-
+	
 	public void SciCharAdded(SciCode doc, char ch, bool methodCompletion = false) {
 		switch (ch) { case '(' or '[' or '<' or ')' or ']' or '>' or ',': break; default: return; }
 		_ShowSignature(doc, ch, methodCompletion);
 		_afterCharAdded = true;
 	}
-
+	
 	public void ShowSignature(SciCode doc) {
 		_ShowSignature(doc, default);
 	}
-
+	
 	async void _ShowSignature(SciCode doc, char ch, bool methodCompletion = false) {
 		//using var p1 = perf.local();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2) || cd.pos < 2) return; //returns false if position is in meta comments
-
+		
 		_cancelTS?.Cancel();
 		var cancelTS = _cancelTS = new CancellationTokenSource();
 		var cancelToken = cancelTS.Token;
 #if DEBUG
 		if (Debugger.IsAttached) { cancelToken = default; _cancelTS = null; }
 #endif
-
+		
 		SyntaxNode root = null;
 		//ISignatureHelpProvider provider = null;
 		SignatureHelpItems r = null;
@@ -102,7 +100,7 @@ class CiSignature {
 					//print.it(p);
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
 					//never mind: GetItemsAsync may throw exception. Rare.
-
+					
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
@@ -124,7 +122,7 @@ class CiSignature {
 			if (cancelTS == _cancelTS) _cancelTS = null;
 		}
 		//print.it(r, cancelToken.IsCancellationRequested);
-
+		
 		if (cancelToken.IsCancellationRequested) return;
 		if (r == null) {
 			_CancelUI();
@@ -132,10 +130,10 @@ class CiSignature {
 		}
 		Debug.Assert(doc == Panels.Editor.ActiveDoc); //when active doc changed, cancellation must be requested
 		if (cd.pos != doc.aaaCurrentPos16 || (object)cd.code != doc.aaaText) return; //changed while awaiting
-																				   //p1.Next('s');
-
+		//p1.Next('s');
+		
 		//print.it($"<><c orange>pos={cd.pos}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
-
+		
 		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
 		var fullSpan = r.ApplicableSpan;
 		//CiUtil.HiliteRange(fullSpan); wait.doEvents(500);
@@ -154,7 +152,7 @@ class CiSignature {
 		}
 		var argSpan = new TextSpan(start, fullSpan.End - start);
 		//CiUtil.PrintNode(argNode); CiUtil.HiliteRange(argSpan); //print.it(argSpan);
-
+		
 		var span = new _Span(argSpan, cd.code);
 		int iSel = 0, iSel2 = 0;
 		if (r.Items.Count > 1) {
@@ -164,7 +162,7 @@ class CiSignature {
 				if (iSel2 < 0) iSel2 = _data.iRoslynSelected; //on error use last good Roslyn selection in same session, like in VS
 			} else iSel = -1;
 		}
-
+		
 		_data = new _Data {
 			r = r,
 			span = span,
@@ -172,7 +170,7 @@ class CiSignature {
 			iRoslynSelected = iSel2,
 			sci = doc,
 		};
-
+		
 		if (iSel < 0) iSel = iSel2;
 		if (iSel < 0) {
 			//r.SelectedItemIndex is null when cannot resolve overloads, eg when arglist is partially typed. Example: wnd.find(1, );
@@ -185,31 +183,33 @@ class CiSignature {
 				}
 			}
 		}
-
+		
 		doc.ETempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
 			if (doc.ETempRanges_Enum(doc.aaaCurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
 		}, SciCode.TempRangeFlags.NoDuplicate);
-
+		
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos));
+		var rclient = doc.AaWnd.ClientRect;
+		rect.left = Math.Clamp(rect.left, 0, rect.right = Math.Clamp(rect.right, 0, rclient.right));
 		doc.AaWnd.MapClientToScreen(ref rect);
 		rect.Width += Dpi.Scale(200, doc.AaWnd);
 		rect.left -= 6;
-
+		
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
 			OnLinkClick = (ph, e) => ph.Text = _FormatText(e.ToInt(1), userSelected: true)
 		};
 		_textPopup.Text = _FormatText(iSel, userSelected: false);
-
+		
 		if (!_textPopup.IsVisible) {
 			CodeInfo.HideTextPopupAndTempWindows();
 			if (CodeInfo._compl.IsVisibleUI) //without this does not show completions with selected enum when typed Function( when first parameter is enum
 				CodeInfo._compl.Cancel();
 			if (methodCompletion) CodeInfo._compl.ShowList(ch); //when autocompletion added (); may need to show enum list 
 		}
-
+		
 		_textPopup.Show(Panels.Editor.ActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
-
+		
 		//also show Keys/Regex tool?
 		//CiUtil.PrintNode(node);
 		if (argNode is ArgumentListSyntax or BracketedArgumentListSyntax && cd.code.Eq(cd.pos - 1, "\"\"")) {
@@ -223,16 +223,16 @@ class CiSignature {
 			}
 		}
 	}
-
+	
 	System.Windows.Documents.Section _FormatText(int iSel, bool userSelected) {
 		_data.iSelected = iSel;
 		if (userSelected) _data.iUserSelected = iSel;
-
+		
 		var r = _data.r;
 		ISymbol currentItem = null;
 		SignatureHelpParameter currentParameter = null;
 		var x = new CiText();
-
+		
 		//print.clear();
 		for (int i = 0; i < r.Items.Count; i++) {
 			var sh = r.Items[i];
@@ -256,11 +256,11 @@ class CiSignature {
 				//	try { var te = nt.TupleElements; if(!te.IsDefault) print.it(te); } catch(Exception e1) { print.it(e1.ToStringWithoutStack()); }
 				//	print.it("---");
 				//}
-
+				
 				int isTuple = 0; //1 ValueTuple<...>, 2 (...)
 				var nt = sym as INamedTypeSymbol;
 				if (nt != null && nt.IsTupleType) isTuple = nt.IsDefinition ? 1 : 2;
-
+				
 				if (isTuple == 1) x.Append("ValueTuple"); //AppendSymbolWithoutParameters formats incorrectly
 				else if (isTuple == 0) x.AppendSymbolWithoutParameters(sym);
 				string b1 = "(", b2 = ")";
@@ -290,7 +290,7 @@ class CiSignature {
 				Debug_.Print(sh);
 			}
 		}
-
+		
 		if (currentItem != null) {
 			var tt = r.Items[iSel].DocumentationFactory?.Invoke(default);
 			bool haveDoc = tt?.Any() ?? false;
@@ -308,7 +308,7 @@ class CiSignature {
 				x.EndParagraph();
 			}
 		}
-
+		
 		if (currentParameter != null && !currentParameter.Name.NE()) { //if tuple, Name is "" and then would be exception
 			x.StartParagraph("parameter");
 			x.Bold(currentParameter.Name); x.Append(":  ");
@@ -327,10 +327,10 @@ class CiSignature {
 			x.AppendTaggedParts(tt, false);
 			x.EndParagraph();
 		}
-
+		
 		return x.Result;
 	}
-
+	
 	static List<ISignatureHelpProvider> _GetSignatureHelpProviders() {
 		var a = new List<ISignatureHelpProvider>();
 		var types = Assembly.GetAssembly(typeof(InvocationExpressionSignatureHelpProvider)).DefinedTypes;
@@ -348,10 +348,10 @@ class CiSignature {
 		}
 		return a;
 	}
-
+	
 	List<ISignatureHelpProvider> _SignatureHelpProviders => _shp ??= _GetSignatureHelpProviders();
 	List<ISignatureHelpProvider> _shp;
-
+	
 	public bool OnCmdKey(KKey key) {
 		if (_data != null) {
 			switch (key) {

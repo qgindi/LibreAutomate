@@ -566,7 +566,7 @@ public static class clipboard {
 		/// <exception cref="AuException">Failed to open.</exception>
 		public bool Reopen(bool noThrow = false) {
 			Debug.Assert(!_isOpen);
-			var to = new WaitLoop(noThrow ? -1 : -10, new OWait(period: 1));
+			var to = new WaitLoop(noThrow ? -1 : -10, period: 1);
 			while (!Api.OpenClipboard(_w)) {
 				int ec = lastError.code;
 				if (!to.Sleep()) {

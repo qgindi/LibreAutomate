@@ -105,3 +105,7 @@ If using the same workspace on multiple computers, you can exclude these small f
 - /.toolbars/ - saved toolbar settings (position, context menu, etc).
 
 If you don't exclude some big files that are unnecessary to backup, after some time the ".git" folder can become very big. Then you can try "Maintenance" in the Git menu. Or install and use git-filter-repo or similar tool. Afterwards you may want to add these files to .gitignore.
+
+### Restore workspace files from backup
+
+TODO

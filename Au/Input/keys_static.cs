@@ -232,7 +232,7 @@ public partial class keys {
 	/// <seealso cref="mouse.isPressed"/>
 	/// <seealso cref="mouse.waitForNoButtonsPressed"/>
 	public static bool waitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
-		var to = new WaitLoop(secondsTimeout, new OWait(period: 2));
+		var to = new WaitLoop(secondsTimeout, period: 2);
 		for (; ; ) {
 			if (!isMod(mod) && !mouse.isPressed(buttons)) return true;
 			if (!to.Sleep()) return false;

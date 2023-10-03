@@ -50,7 +50,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_SetName(name);
 		_id = _model.AddGetId(this);
 		if (isLink) _linkTarget = filePath;
-		//if (isLink) _linkTarget = folders.unexpandPath(filePath); //rejected. Too much trouble with it.
 	}
 	
 	//this ctor is used when copying an item or importing a workspace.
@@ -79,7 +78,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				case "n": _SetName(v); break;
 				case "i": v.ToInt(out _id); break;
 				case "f": _flags = (_Flags)v.ToInt(); break;
-				case "path": _linkTarget = v; break;
+				case "path": _linkTarget = v.Starts(@".\") ? _model.WorkspaceDirectory + v[1..] : v; break;
 				case "icon": _icon = v; break;
 				case "run": v.ToInt(out _testScriptId); break;
 				}
@@ -118,7 +117,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			x.WriteAttributeString("n", _name);
 			if (!exporting) x.WriteAttributeString("i", _id.ToString());
 			if (_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
-			if (IsLink) x.WriteAttributeString("path", LinkTarget);
+			if (IsLink) x.WriteAttributeString("path", _linkTarget.PathStarts(_model.WorkspaceDirectory) ? @"." + _linkTarget[_model.WorkspaceDirectory.Length..] : _linkTarget);
 			var ico = CustomIconName; if (ico != null) x.WriteAttributeString("icon", ico);
 			if (!exporting && _testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
 		}
@@ -941,7 +940,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (name == _name) return true;
 		name = CreateNameUniqueInFolder(Parent, name, IsFolder, renaming: this);
 		
-		if (!RenameL_(name))  return false;
+		if (!RenameL_(name)) return false;
 		
 		_model.Save.WorkspaceLater();
 		FilesModel.Redraw(this, remeasure: true, renamed: true);

@@ -8,7 +8,7 @@ using System.Windows.Media;
 public class KGroupBox : GroupBox {
 	protected private readonly bool _no;
 	
-	internal static Brush TextColor => s_brush ??= new SolidColorBrush(Color.FromRgb(0x4f, 0x4f, 0x4f));
+	internal static Brush TextColor_ => s_brush ??= new SolidColorBrush(Color.FromRgb(0x40, 0x40, 0x40));
 	static Brush s_brush;
 	
 	public KGroupBox() {
@@ -19,7 +19,7 @@ public class KGroupBox : GroupBox {
 	protected override void OnHeaderChanged(object oldHeader, object newHeader) {
 		if (newHeader is string s && !_no) {
 			if (oldHeader is null) {
-				Header = new TextBlock { Text = s, FontWeight = FontWeights.Bold, Foreground = TextColor };
+				Header = new TextBlock { Text = s, FontWeight = FontWeights.Bold, Foreground = TextColor_ };
 				return;
 			} else if (oldHeader is TextBlock t) {
 				t.Text = s;
