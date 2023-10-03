@@ -379,7 +379,7 @@ public unsafe class elmFinder {
 			if (_also != null) also = _also2 ??= ca => _also(new elm(ca)) ? 1 : 0;
 		}
 		
-		var to = new WaitLoop(waitS ?? -1, inProc ? s_owait10 : s_owait40);
+		var to = new WaitLoop(waitS ?? -1, period: inProc ? 10 : 40);
 		for (bool doneUAC = false, doneThread = false; ;) {
 			var hr = Cpp.Cpp_AccFind(w, pParent, ap, also, out var ca, out string sResult);
 			if (findAll) {
@@ -443,8 +443,6 @@ public unsafe class elmFinder {
 			GC.KeepAlive(eParent);
 		}
 	}
-	
-	static readonly OWait s_owait10 = new(period: 10), s_owait40 = new(period: 40);
 	
 	bool _AlsoNavigNext(ref elm e, bool noAlso = false) {
 		if (!noAlso && _also != null && !_also(e)) return false;

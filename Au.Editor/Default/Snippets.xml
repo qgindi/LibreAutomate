@@ -495,18 +495,19 @@ script.setup(trayIcon: true, sleepExit: true);
 	<group context="Type">
 		<!-- snippets that are valid in types -->
 
-		<snippet name="methodPrivateSnippet" info="Private function.">
+		<snippet name="methodSnippet" info="Function.">
+			<list item="Private method or local function">
 			<![CDATA[void $end$_MyFunction$end$() {
 	
 }
 ]]>
-		</snippet>
-
-		<snippet name="methodPublicSnippet" info="Public function.">
+			</list>
+			<list item="Public method">
 			<![CDATA[public void $end$MyFunction$end$() {
 	
 }
 ]]>
+			</list>
 		</snippet>
 
 		<snippet name="propSnippet" info="Property.">

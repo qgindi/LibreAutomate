@@ -1167,7 +1167,7 @@ partial class FilesModel {
 			var action = flags & (ImportFlags.Copy | ImportFlags.Move | ImportFlags.Link);
 			bool dontPrint = flags.Has(ImportFlags.DontPrint);
 			int fromWorkspaceDir = 0;
-			bool isLinkToWsFile = false; //TODO: save relative target path, or maybe "*id"
+			bool isLinkToWsFile = false;
 			
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];

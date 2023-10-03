@@ -29,47 +29,58 @@ public struct WaitLoop {
 	long _timeRemaining, _timePrev;
 	bool _hasTimeout, _throw, _doEvents, _precisionIsSet;
 	float _step;
-
+	
 	/// <summary>
 	/// Current period (<see cref="Sleep"/> sleep time), milliseconds.
 	/// Initially it is <see cref="OWait.Period"/>, optionally multiplied by constructor's <c>options.Period/10</c>. Default 10 ms. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
 	/// </summary>
 	public float Period { get; set; }
-
+	
 	/// <summary>
 	/// Maximal period (<see cref="Sleep"/> sleep time), milliseconds.
 	/// It is <see cref="Period"/>*50 (default 500).
 	/// </summary>
 	public float MaxPeriod { get; set; }
-
+	
 	/// <summary>
 	/// Gets or sets the remaining time, milliseconds.
 	/// </summary>
 	public long TimeRemaining { get => _timeRemaining; set => _timeRemaining = value; }
-
+	
+	/// <summary>
+	/// This constructor uses options from a <see cref="OWait"/> variable or <see cref="opt.wait"/>.
+	/// </summary>
+	/// <param name="options">Options. If null, uses <see cref="opt.wait"/>.</param>
 	/// <param name="secondsTimeout">
 	/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="Sleep"/> throws <see cref="TimeoutException"/>. If &lt;0, then <see cref="Sleep"/> returns false.
 	/// </param>
-	/// <param name="options">Options. If null, uses <see cref="opt.wait"/>.</param>
 	public WaitLoop(double secondsTimeout, OWait options = null) {
 		options ??= opt.wait;
-		_doEvents = options.DoEvents;
-		Period = Math.Max(options.Period, 1f);
+		_Ctor(secondsTimeout, options.Period, options.DoEvents);
+	}
+	
+	/// <summary>
+	/// This constructor allows to specify period. Gets other options from <see cref="opt.wait"/>.
+	/// </summary>
+	/// <param name="period">The sleep time between checking the wait condition. Milliseconds. See <see cref="OWait.Period"/>.</param>
+	/// <inheritdoc cref="WaitLoop(double, OWait)"/>
+	public WaitLoop(double secondsTimeout, int period) {
+		_Ctor(secondsTimeout, period, opt.wait.DoEvents);
+	}
+	
+	void _Ctor(double secondsTimeout, int period, bool doEvents) {
+		_doEvents = doEvents;
+		Period = Math.Max(period, 1f);
 		MaxPeriod = Period * 50f;
 		_step = Period / 10f;
-
-		if (secondsTimeout == 0d || secondsTimeout > 9223372036854775d || secondsTimeout < -9223372036854775d) { //long.MaxValue/1000 = 292_471_208 years
-			_hasTimeout = _throw = false;
-			_timeRemaining = _timePrev = 0;
-		} else {
-			_hasTimeout = true;
-			if (secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
+		
+		if (_hasTimeout = !(secondsTimeout is 0d or > 9223372036854775d or < -9223372036854775d)) { //long.MaxValue/1000 = 292_471_208 years
+			if (_throw = secondsTimeout <= 0) secondsTimeout = -secondsTimeout;
 			_timeRemaining = (long)(secondsTimeout * 1000d);
 			_timePrev = computer.tickCountWithoutSleep;
 		}
-		_precisionIsSet = false;
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="IsTimeout"/>. If it returns true, returns false.
 	/// Else sleeps for <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns true.
@@ -77,23 +88,23 @@ public struct WaitLoop {
 	/// <exception cref="TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 	public bool Sleep() {
 		if (IsTimeout()) return false;
-
+		
 		if (Period < 9.9f && !_precisionIsSet) { //default Period is 10
 			_precisionIsSet = true;
 			wait.SleepPrecision_.TempSet1();
 		}
-
+		
 		int t = (int)Period;
 		if (_doEvents) {
 			wait.doEvents(t);
 		} else {
 			Thread.Sleep(t);
 		}
-
+		
 		if (Period < MaxPeriod) Period += _step;
 		return true;
 	}
-
+	
 	/// <summary>
 	/// If the <i>secondsTimeout</i> time is not expired, returns false.
 	/// Else if <i>secondsTimeout</i> is negative, returns true.

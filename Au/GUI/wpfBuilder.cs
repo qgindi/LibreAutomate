@@ -1969,9 +1969,17 @@ public class wpfBuilder {
 	/// <br/>• <c>&lt;b>text&lt;/b></c> - <b>Bold</b>.
 	/// <br/>• <c>&lt;i>text&lt;/i></c> - <b>Italic</b>.
 	/// <br/>• <c>&lt;u>text&lt;/u></c> - <b>Underline</b>.
+	/// <br/>• <c>&lt;s>text&lt;/s></c> - <b>Span</b>.
 	/// <br/>• <c>&lt;s {Span}>text&lt;/s></c> - <b>Span</b> or a <b>Span</b>-based type. The function adds <c>text</c> to its <b>Inlines</b> collection.
 	/// <br/>• <c>&lt;a {Action or Action&lt;Hyperlink>}>text&lt;/a></c> - <b>Hyperlink</b> that calls the action.
 	/// <br/>• <c>&lt;a href='URL or path etc'>text&lt;/a></c> - <b>Hyperlink</b> that calls <see cref="run.itSafe"/>.
+	/// </para>
+	/// <para>
+	/// Tags can have these attributes, like <c>&lt;s c='red' FontSize = '20'>text&lt;/s></c>:
+	/// <br/>• <c>c</c> or <c>Foreground</c> - text color, like 'red' or '#AARRGGBB' or '#RRGGBB' or '#ARGB' or '#RGB'.
+	/// <br/>• <c>b</c> or <c>Background</c> - background color.
+	/// <br/>• <c>FontFamily</c> - font name, like 'Consolas'.
+	/// <br/>• <c>FontSize</c> - font size, like '20'.
 	/// </para>
 	/// <para>
 	/// WPF elements of these types can be inserted without tags:
@@ -1981,22 +1989,22 @@ public class wpfBuilder {
 	/// <br/>• <c>{IEnumerable&lt;Inline>}</c> - adds multiple <b>Inline</b>.
 	/// </para>
 	/// XML special characters must be escaped:
-	/// <br/>• <c>&amp;lt;</c> - <c>&lt;</c>.
-	/// <br/>• <c>&amp;amp;</c> - <c>&amp;</c>.
-	/// <br/>• <c>&amp;apos;</c> and <c>&amp;gt;</c> in attributes - <c>'</c> and <c>></c>.
+	/// <br/>• <c>&lt;</c> - <c>&amp;lt;</c>.
+	/// <br/>• <c>&amp;</c> - <c>&amp;amp;</c>.
+	/// <br/>• <c>'</c>, <c>"</c> - <c>&amp;apos;</c> in <c>'attribute'</c> or <c>&amp;quot;</c> in <c>"attribute"</c>.
 	/// <para>
 	/// </para>
 	/// The <c>text</c> in above examples can contain nested tags and elements.
 	/// </param>
 	/// <exception cref="NotSupportedException">Unsupported type of the last added element. Or supported type but non-empty <b>Content</b> and <b>Header</b> (read Remarks).</exception>
 	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
-	/// <exception cref="InvalidOperationException">The <c>{Span}</c> or <c>{Inline}</c> already has parent.</exception>
+	/// <exception cref="InvalidOperationException">The same <c>{Span}</c> or <c>{Inline}</c> object in multiple places.</exception>
+	/// <exception cref="FormatException">Invalid color attribute.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
 	/// <remarks>
 	/// The last added element can be of type:
 	/// <br/>• <see cref="TextBlock"/> - the function adds inlines to its <b>Inlines</b> collection.
-	/// <br/>• <b>ContentControl</b> (eg <b>Label</b> or <b>Button</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Content</b> property if it is null.
-	/// <br/>• <b>HeaderedContentControl</b> (eg <b>GroupBox</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Header</b> property if it is null (else sets <b>Content</b> property if it is null).
+	/// <br/>• <b>ContentControl</b> (eg <b>Label</b> or <b>Button</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Content</b> property if it is null. If <b>HeaderedContentControl</b> (eg <b>GroupBox</b>) and its <b>Header</b> property is null, sets <b>Header</b> instead.
 	/// <br/>• <b>Panel</b> whose <b>Parent</b> is <b>HeaderedContentControl</b> (eg <c>b.StartGrid&lt;GroupBox>(null).FormatText($"...")</c>) - uses the <b>HeaderedContentControl</b> like the above.
 	///
 	/// For elements other than the last added use <see cref="FormatText(object, InterpolatedString)"/> or <see cref="FormattedText(InterpolatedString)"/>.
@@ -2006,13 +2014,14 @@ public class wpfBuilder {
 	/// <example>
 	/// <code><![CDATA[
 	/// b.R.Add<TextBlock>().FormatText($"""
-	/// Text <b>bold</b> <i>italic <u>underline</u></i>
+	/// Text <b>bold</b> <i>italic <u>underline</u>.</i>
+	/// <s c='GreenYellow' b='Black' FontFamily='Consolas' FontSize='20'>attributes</s>
+	/// <s {new Span() { Foreground = Brushes.Red, Background = new LinearGradientBrush(Colors.GreenYellow, Colors.Transparent, 90) }}>Span object, <b>bold</b></s>
 	/// <a href='https://www.example.com'>example.com</a> <b><a href='notepad.exe'>Notepad</a></b>
 	/// <a {() => { print.it("click"); }}>click</a> <a {(Hyperlink h) => { print.it("click once"); h.IsEnabled = false; }}>click once</a>
-	/// {ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")}<!-- or ImageUtil.LoadWpfImage(@"C:\Test\image.png") -->
-	/// {new Run("color and font") { Foreground = Brushes.Blue, Background = Brushes.Goldenrod, FontSize = 20 }}
-	/// <s {new Span() { Background = Brushes.YellowGreen }}>span <b>bold</b> span</s>
-	/// {new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }} {new CheckBox() { Content = "Check" }}
+	/// {new Run("Run object") { Foreground = Brushes.Blue, Background = Brushes.Goldenrod, FontSize = 20 }}
+	/// Image {ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")}<!-- or ImageUtil.LoadWpfImage(@"C:\Test\image.png") -->
+	/// Controls {new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }} {new CheckBox() { Content = "Check" }}
 	/// &lt; &gt; &amp; &apos; &quot;
 	/// """);
 	/// ]]></code>
@@ -2036,10 +2045,11 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds inlines (text, formatted text, hyperlinks, images, etc) to the specified <see cref="TextBlock"/> etc.
 	/// </summary>
-	/// <param name="obj">Object of type <see cref="TextBlock"/>, <b>ContentControl</b>, <b>HeaderedContentControl</b> or <b>InlineCollection</b>. More info in <see cref="FormatText(InterpolatedString)"/> remarks.</param>
+	/// <param name="obj">Object of type <see cref="TextBlock"/>, <b>ContentControl</b> or <b>InlineCollection</b>. More info in <see cref="FormatText(InterpolatedString)"/> remarks.</param>
 	/// <exception cref="NotSupportedException">Unsupported <i>obj</i> type or non-empty <b>Content</b>/<b>Header</b>.</exception>
 	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
-	/// <exception cref="InvalidOperationException">The <c>{Span}</c> or <c>{Inline}</c> already has parent.</exception>
+	/// <exception cref="InvalidOperationException">The same <c>{Span}</c> or <c>{Inline}</c> object in multiple places.</exception>
+	/// <exception cref="FormatException">Invalid color attribute.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
 	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
 	public static void FormatText(object obj, InterpolatedString text) {
@@ -2051,7 +2061,8 @@ public class wpfBuilder {
 	/// Creates new <see cref="TextBlock"/> and adds inlines like <see cref="FormatText(InterpolatedString)"/>.
 	/// </summary>
 	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
-	/// <exception cref="InvalidOperationException">The <c>{Span}</c> or <c>{Inline}</c> already has parent.</exception>
+	/// <exception cref="InvalidOperationException">The same <c>{Span}</c> or <c>{Inline}</c> object in multiple places.</exception>
+	/// <exception cref="FormatException">Invalid color attribute.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
 	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
 	/// <example>
@@ -2088,77 +2099,94 @@ public class wpfBuilder {
 		
 		const string c_mark = InterpolatedString.c_mark;
 		var xr = XElement.Parse("<x>" + text + "</x>", LoadOptions.PreserveWhitespace);
-		_Enum(ic, xr, 0);
+		_Enum(ic, xr);
 		
-		void _Enum(InlineCollection ic, XElement xp, int level) {
+		void _Enum(InlineCollection ic, XElement xp) {
 			foreach (var n in xp.Nodes()) {
-				switch (n) {
-				case XElement x:
-					object _GetObj() => a != null && x.Attr("_a") is string s && s.Starts(c_mark) && s.ToInt(out int i1, c_mark.Length) ? a[i1] : null;
-					
-					Span r = null;
-					var tag = x.Name.LocalName;
-					switch (tag) {
-					case "b": r = new Bold(); break;
-					case "i": r = new Italic(); break;
-					case "u": r = new Underline(); break;
-					//CONSIDER: <c color>, <bc color>
-					case "s": //<s {Span}>...</s>
-						r = _GetObj() as Span ?? throw new ArgumentException("Expected <s {Span}>...</s>");
-						if (r.Parent != null) throw new InvalidOperationException("{object} in multiple places");
-						break;
-					case "a": //<a {Action}>...</a> or <a href='...'>...</a>
-						var h = new Hyperlink();
-						r = h;
-						if (x.Attr("href") is string href) {
-							h.Click += (_, _) => run.itSafe(href);
-						} else {
-							switch (_GetObj()) {
-							case Action g: h.Click += (_, _) => g(); break;
-							case Action<Hyperlink> g: h.Click += (_, _) => g(h); break;
-							default: throw new ArgumentException("Expected <a {Action}>...</a> or <a href='...'>...</a>");
-							}
-						}
-						break;
-					default: throw new ArgumentException($"Unknown tag <{tag}>");
+				if (n is XElement xe) _Element(xe);
+				else if (n is XText xt) _Text(xt); //also XCData
+			}
+			
+			void _Element(XElement x) {
+				Span r = null;
+				var tag = x.Name.LocalName;
+				switch (tag) {
+				case "b": r = new Bold(); break;
+				case "i": r = new Italic(); break;
+				case "u": r = new Underline(); break;
+				case "s":
+					if (_GetObj() is object o) { //<s {Span}>...</s>
+						r = o as Span ?? throw new ArgumentException("Expected <s {Span}>");
+						if (r.Parent != null) throw new InvalidOperationException("Reused {Span} object");
+					} else { //<s attributes}>...</s>
+						r = new();
 					}
-					ic.Add(r);
-					if (x.HasElements) _Enum(r.Inlines, x, level + 1);
-					else r.Inlines.Add(x.Value);
 					break;
-				case XText x: //also XCData
-					var s = x.Value;
-					if (a != null) {
-						int from = 0;
-						for (; from < s.Length; from++) {
-							int m = s.Find(c_mark, from);
-							if (m < 0) break;
-							if (m > from) ic.Add(s[from..m]);
-							if (s.ToInt(out int i, m + c_mark.Length, out from)) {
-								var k = a[i];
-								g2:
-								switch (k) {
-								case Inline e:
-									if (e.Parent != null) throw new InvalidOperationException("{object} in multiple places");
-									ic.Add(e);
-									break;
-								case UIElement e:
-									ic.Add(new InlineUIContainer(e) { BaselineAlignment = BaselineAlignment.Center });
-									break;
-								case ImageSource e:
-									k = new Image { Source = e, Stretch = Stretch.None };
-									goto g2;
-								case IEnumerable<Inline> e:
-									ic.AddRange(e);
-									break;
-								default: throw new ArgumentException($"Unexpected element type {a[i]}");
-								}
+				case "a":
+					var h = new Hyperlink();
+					r = h;
+					if (x.Attr("href") is string href) { //<a href='...'>
+						h.Click += (_, _) => run.itSafe(href);
+					} else { //<a {Action}>
+						switch (_GetObj()) {
+						case Action g: h.Click += (_, _) => g(); break;
+						case Action<Hyperlink> g: h.Click += (_, _) => g(h); break;
+						default: throw new ArgumentException("Expected <a {Action}> or <a href='...'>");
+						}
+					}
+					break;
+				default: throw new ArgumentException($"Unknown tag <{tag}>");
+				}
+				
+				foreach (var at in x.Attributes()) {
+					var v = at.Value;
+					switch (at.Name.LocalName) {
+					case "c" or "Foreground": r.Foreground = _Brush(v); break;
+					case "b" or "Background": r.Background = _Brush(v); break;
+					case "FontFamily": r.FontFamily = new(v); break;
+					case "FontSize": if (v.ToNumber(out double fsize)) r.FontSize = fsize; break;
+					}
+				}
+				static Brush _Brush(string v) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(v));
+				
+				ic.Add(r);
+				if (x.HasElements) _Enum(r.Inlines, x);
+				else r.Inlines.Add(x.Value);
+				
+				object _GetObj() => a != null && x.Attr("_a") is string s && s.Starts(c_mark) && s.ToInt(out int i1, c_mark.Length) ? a[i1] : null;
+			}
+			
+			void _Text(XText x) {
+				var s = x.Value;
+				if (a != null) {
+					int from = 0;
+					for (; from < s.Length; from++) {
+						int m = s.Find(c_mark, from);
+						if (m < 0) break;
+						if (m > from) ic.Add(s[from..m]);
+						if (s.ToInt(out int i, m + c_mark.Length, out from)) {
+							var k = a[i];
+							g2:
+							switch (k) {
+							case Inline e:
+								if (e.Parent != null) throw new InvalidOperationException("Reused {Inline} object");
+								ic.Add(e);
+								break;
+							case UIElement e:
+								ic.Add(new InlineUIContainer(e) { BaselineAlignment = BaselineAlignment.Center });
+								break;
+							case ImageSource e:
+								k = new Image { Source = e, Stretch = Stretch.None };
+								goto g2;
+							case IEnumerable<Inline> e:
+								ic.AddRange(e);
+								break;
+							default: throw new ArgumentException($"Unexpected element type {a[i]}");
 							}
 						}
-						if (from < s.Length) ic.Add(s[from..]);
-					} else ic.Add(s);
-					break;
-				}
+					}
+					if (from < s.Length) ic.Add(s[from..]);
+				} else ic.Add(s);
 			}
 		}
 	}

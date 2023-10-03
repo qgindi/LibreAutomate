@@ -481,7 +481,7 @@ namespace Au {
 			if (action == null) Invoke(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order.
-			var to = new WaitLoop(secondsTimeout, new OWait(period: 25));
+			var to = new WaitLoop(secondsTimeout, period: 25);
 			while (to.Sleep()) {
 				w.ThrowIfInvalid();
 				if (!wndOK) {

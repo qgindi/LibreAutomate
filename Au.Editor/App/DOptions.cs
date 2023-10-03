@@ -568,7 +568,7 @@ Example:
 	unsafe void _OS() {
 		var b = _Page("OS");
 		b.R.Add<TextBlock>("Some Windows settings for all programs");
-		if (App.IsPortable) b.R.Add<TextBlock>().FormatText($"{new Run("Portable mode warning: portable apps should not change Windows settings.") { Foreground = Brushes.Red }}");
+		if (App.IsPortable) b.R.Add<TextBlock>().FormatText($"<s c='red'>Portable mode warning: portable apps should not change Windows settings.</s>");
 		b.R.AddSeparator().Margin("T8B8");
 
 		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Width(70, "L")
