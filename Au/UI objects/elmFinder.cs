@@ -286,11 +286,11 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>waitS</i> negative).</returns>
-	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>wait</i> negative).</returns>
+	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
 	/// <inheritdoc cref="Find()" path="/exception"/>
-	public elm Find(double waitS) => Exists(waitS) ? Result : null;
+	public elm Find(Seconds wait) => Exists(wait) ? Result : null;
 	
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Like <see cref="Find"/>, just different return type.
@@ -300,30 +300,30 @@ public unsafe class elmFinder {
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 	
 	/// <summary>
-	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>. Like <see cref="Find(double)"/>, just different return type.
+	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>. Like <see cref="Find(Seconds)"/>, just different return type.
 	/// </summary>
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
-	/// <inheritdoc cref="Find(double)" path="//param|//exception"/>
-	public bool Exists(double waitS) {
-		if (Find_(_elm != null, _wnd, _elm, waitS == 0d ? null : waitS < 0 ? waitS : -waitS)) return true;
-		return double.IsNegative(waitS) ? false : throw new NotFoundException();
+	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <inheritdoc cref="Find(Seconds)" path="//param|//exception"/>
+	public bool Exists(Seconds wait) {
+		if (Find_(_elm != null, _wnd, _elm, wait.Exists_() ? null : wait)) return true;
+		return wait.ReturnFalseOrThrowNotFound_();
 	}
 	
 	/// <summary>
 	/// Waits for a matching descendant UI element to appear in the window or UI element.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <returns>If found, returns <see cref="Result"/>. On timeout returns null if <i>timeout</i> is negative; else exception.</returns>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="TimeoutException" />
 	/// <remarks>
-	/// Same as <see cref="Find(double)"/>, except:
+	/// Same as <see cref="Find(Seconds)"/>, except:
 	/// - 0 timeout means infinite.
 	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
 	/// </remarks>
 	/// <inheritdoc cref="Find()" path="/exception"/>
-	public elm Wait(double secondsTimeout) => Find_(_elm != null, _wnd, _elm, secondsTimeout) ? Result : null;
+	public elm Wait(Seconds timeout) => Find_(_elm != null, _wnd, _elm, timeout) ? Result : null;
 	
-	internal bool Find_(bool inElm, wnd w, elm eParent, double? waitS = null, bool isNext = false) {
+	internal bool Find_(bool inElm, wnd w, elm eParent, Seconds? waitS = null, bool isNext = false) {
 		if (_flags.Has(_EFFlags_Empty)) throw new InvalidOperationException();
 		if (_flags.Has(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Don't use flags UIA and ClientArea together.");
 		if (_role != null) {
@@ -379,7 +379,9 @@ public unsafe class elmFinder {
 			if (_also != null) also = _also2 ??= ca => _also(new elm(ca)) ? 1 : 0;
 		}
 		
-		var to = new WaitLoop(waitS ?? -1, period: inProc ? 10 : 40);
+		Seconds seconds = waitS ?? new(-1);
+		seconds.Period ??= inProc ? 10 : 40;
+		var loop = new WaitLoop(seconds);
 		for (bool doneUAC = false, doneThread = false; ;) {
 			var hr = Cpp.Cpp_AccFind(w, pParent, ap, also, out var ca, out string sResult);
 			if (findAll) {
@@ -439,7 +441,7 @@ public unsafe class elmFinder {
 				if (!w.Is0 && w.IsOfThisThread) return false;
 			}
 			
-			if (!to.Sleep()) return false;
+			if (!loop.Sleep()) return false;
 			GC.KeepAlive(eParent);
 		}
 	}

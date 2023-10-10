@@ -511,7 +511,7 @@ public partial class KPanels
 
 		public event EventHandler<bool> FloatingChanged;
 
-		public event CancelEventHandler Closing;
+		public event System.ComponentModel.CancelEventHandler Closing;
 
 		//public event EventHandler<popupMenu> ContextMenuOpening;
 

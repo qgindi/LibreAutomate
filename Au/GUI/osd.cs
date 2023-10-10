@@ -690,7 +690,7 @@ namespace Au {
 			} else {
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
 				run.thread(() => _Show(true), ShowMode == OsdMode.WeakThread);
-				Au.wait.forCondition(30, () => IsHandleCreated);
+				Au.wait.until(30, () => IsHandleCreated);
 				
 				//CONSIDER: make smaller timeout when main thread ended if OsdShowMode.Auto
 			}
@@ -701,7 +701,7 @@ namespace Au {
 			
 			base.Show();
 			_SetCloseTimer();
-			if (sync) wait.forMessagesAndCondition(0, () => !IsHandleCreated);
+			if (sync) wait.doEventsUntil(0, () => !IsHandleCreated);
 		}
 		
 		void _SetCloseTimer() {

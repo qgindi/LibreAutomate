@@ -32,7 +32,7 @@ public unsafe partial class KTreeView : HwndHost {
 	protected override void DestroyWindowCore(HandleRef hwnd) {
 		Api.DestroyWindow(_w);
 	}
-
+	
 	WNDPROC _wndProc;
 	nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 		//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
@@ -87,6 +87,9 @@ public unsafe partial class KTreeView : HwndHost {
 			case Api.WM_LBUTTONDBLCLK:
 				_OnMouseDown(System.Windows.Input.MouseButton.Left, wParam, lParam, true);
 				break;
+			case Api.WM_MBUTTONDBLCLK:
+				_OnMouseDown(System.Windows.Input.MouseButton.Middle, wParam, lParam, true);
+				break;
 			case Api.WM_LBUTTONUP:
 				_OnMouseUp(System.Windows.Input.MouseButton.Left);
 				break;
@@ -120,7 +123,7 @@ public unsafe partial class KTreeView : HwndHost {
 		return R;
 	}
 
-	protected override nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
+	protected override nint WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 		if (msg == Api.WM_GETOBJECT) { //not in _WndProc, because WPF steals it if passed to base.WndProc
 			handled = true;
 			return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);

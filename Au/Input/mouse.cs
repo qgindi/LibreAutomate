@@ -1065,13 +1065,13 @@ namespace Au {
 		/// <summary>
 		/// Waits while some mouse buttons are pressed. See <see cref="isPressed"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <seealso cref="keys.waitForNoModifierKeysAndMouseButtons"/>
-		public static bool waitForNoButtonsPressed(double secondsTimeout = 0.0, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
-			return keys.waitForNoModifierKeysAndMouseButtons(secondsTimeout, 0, buttons);
+		public static bool waitForNoButtonsPressed(Seconds timeout = default, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
+			return keys.waitForNoModifierKeysAndMouseButtons(timeout, 0, buttons);
 		}
 
 		/// <summary>
@@ -1092,13 +1092,13 @@ namespace Au {
 		/// <summary>
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
 		/// <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <exception cref="ArgumentException"><i>button</i> is 0.</exception>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Unlike <see cref="waitForNoButtonsPressed"/>, waits for down or up event, not for button state.
 		/// Uses low-level mouse hook.
@@ -1110,28 +1110,28 @@ namespace Au {
 		/// print.it("click");
 		/// ]]></code>
 		/// </example>
-		public static bool waitForClick(double secondsTimeout, MButtons button, bool up = false, bool block = false) {
+		public static bool waitForClick(Seconds timeout, MButtons button, bool up = false, bool block = false) {
 			if (button == 0) throw new ArgumentException();
-			return 0 != _WaitForClick(secondsTimeout, button, up, block);
+			return 0 != _WaitForClick(timeout, button, up, block);
 		}
 
 		/// <summary>
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
-		/// <returns>Returns the button code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns the button code. On timeout returns 0 if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// var button = mouse.waitForClick(0, up: true, block: true);
 		/// print.it(button);
 		/// ]]></code>
 		/// </example>
-		/// <inheritdoc cref="waitForClick(double, MButtons, bool, bool)" path="/param"/>
-		public static MButtons waitForClick(double secondsTimeout, bool up = false, bool block = false) {
-			return _WaitForClick(secondsTimeout, 0, up, block);
+		/// <inheritdoc cref="waitForClick(Seconds, MButtons, bool, bool)" path="/param"/>
+		public static MButtons waitForClick(Seconds timeout, bool up = false, bool block = false) {
+			return _WaitForClick(timeout, 0, up, block);
 		}
 
-		static MButtons _WaitForClick(double secondsTimeout, MButtons button, bool up, bool block) {
+		static MButtons _WaitForClick(Seconds timeout, MButtons button, bool up, bool block) {
 			//info: this and related functions use similar code as keys._WaitForKey.
 
 			MButtons R = 0;
@@ -1155,41 +1155,41 @@ namespace Au {
 				}
 				R = b;
 				if (block) x.BlockEvent();
-			})) wait.forMessagesAndCondition(secondsTimeout, () => R != 0);
+			})) wait.doEventsUntil(timeout, () => R != 0);
 
 			return R;
 		}
 		//FUTURE:
-		//	waitForWheel(double secondsTimeout, bool? forward, bool block = false)
+		//	waitForWheel(Seconds timeout, bool? forward, bool block = false)
 		//	waitForMouseMove, waitForMouseStop.
 		//	In QM2 these functions were created because somebody asked, but I don't use.
 
 		/// <summary>
 		/// Waits for a standard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		public static bool waitForCursor(double secondsTimeout, MCursor cursor, bool not = false) {
+		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		public static bool waitForCursor(Seconds timeout, MCursor cursor, bool not = false) {
 			IntPtr hcur = Api.LoadCursor(default, cursor);
 			if (hcur == default) throw new AuException(0, "*load cursor");
 
-			return wait.forCondition(secondsTimeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && c == hcur) ^ not);
+			return wait.until(timeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && c == hcur) ^ not);
 		}
 
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="MouseCursor.Hash"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		public static bool waitForCursor(double secondsTimeout, long cursorHash, bool not = false) {
+		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		public static bool waitForCursor(Seconds timeout, long cursorHash, bool not = false) {
 			if (cursorHash == 0) throw new ArgumentException();
-			return wait.forCondition(secondsTimeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && MouseCursor.Hash(c) == cursorHash) ^ not);
+			return wait.until(timeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && MouseCursor.Hash(c) == cursorHash) ^ not);
 		}
 
 		/// <summary>
@@ -1460,7 +1460,7 @@ namespace Au.Types {
 
 	/// <summary>
 	/// Standard cursor ids.
-	/// Used with <see cref="mouse.waitForCursor(double, MCursor, bool)"/>.
+	/// Used with <see cref="mouse.waitForCursor(Seconds, MCursor, bool)"/>.
 	/// </summary>
 	public enum MCursor {
 		/// <summary>Standard arrow.</summary>

@@ -21,7 +21,7 @@ All changes are saved automatically on these events: app deactivated, main windo
 ## Panels
 Panels and toolbars can be docked, floating or hidden.
 
-#### Files
+### Files
 All files and folders of current workspace.
 
 Click an item to open in the code editor. Right-click to show context menu. Middle-click to close. Drag and drop to reorder or add new files.
@@ -51,59 +51,59 @@ The collection of files and folders is a *workspace*. It is a folder on disk. In
 - the **state.db** file contains code editor states for files, such as folding, markers and current position.
 - the **.xxx** folders are created and used by the program for various purposes.
 
-#### Open
+### Open
 List of files open in the code editor.
 
 Right-click - context menu. Middle-click - close.
 
-#### Tasks
+### Tasks
 Running scripts.
 
 Right-click - context menu (end process etc). Middle-click - close.
 
-#### Find
+### Find
 Find and replace text in the code editor or in multiple files.
 
 Right-click an edit field - context menu. Middle-click - clear text; if empty - recent.
 
-#### Found
+### Found
 Results of "Find in files" or "Find file".
 
-#### Output
+### Output
 The program writes various info here. For example script compilation errors. Scripts use [print.it]() for it.
 
 Right-click - context menu. Middle-click - clear.
 
-#### Mouse
+### Mouse
 Mouse x y, window name/class/program, control id/class/name, menu item id.
 
-#### Outline
+### Outline
 Helps to find types, functions, fields, namespaces and regions in current C# code file.
 
-#### Cookbook, Recipe
+### Cookbook, Recipe
 Automation code examples and info.
 
 ## Menus
 
-#### File
+### File
 File and workspace management.
 
-#### Edit
+### Edit
 Code editing.
 
-#### Code
+### Code
 Tools that help to create code.
 
-#### TT
+### TT
 Triggers and toolbars.
 
-#### Run
+### Run
 Execute current script.
 
-#### Tools
+### Tools
 Tool windows.
 
-#### Help
+### Help
 Program help and library reference.
 
 ## Tray icon

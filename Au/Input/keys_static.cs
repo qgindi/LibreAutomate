@@ -212,76 +212,69 @@ public partial class keys {
 	/// <summary>
 	/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are pressed. See <see cref="isMod"/>.
 	/// </summary>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="mod">Check only these keys. Default: all.</param>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-	public static bool waitForNoModifierKeys(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win) {
-		return waitForNoModifierKeysAndMouseButtons(secondsTimeout, mod, 0);
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	public static bool waitForNoModifierKeys(Seconds timeout = default, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win) {
+		return waitForNoModifierKeysAndMouseButtons(timeout, mod, 0);
 	}
 
 	/// <summary>
 	/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are pressed.
 	/// </summary>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
 	/// <param name="mod">Check only these keys. Default: all.</param>
 	/// <param name="buttons">Check only these buttons. Default: all.</param>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <seealso cref="isMod"/>
 	/// <seealso cref="mouse.isPressed"/>
 	/// <seealso cref="mouse.waitForNoButtonsPressed"/>
-	public static bool waitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
-		var to = new WaitLoop(secondsTimeout, period: 2);
+	public static bool waitForNoModifierKeysAndMouseButtons(Seconds timeout = default, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
+		var loop = new WaitLoop(timeout);
 		for (; ; ) {
 			if (!isMod(mod) && !mouse.isPressed(buttons)) return true;
-			if (!to.Sleep()) return false;
+			if (!loop.Sleep()) return false;
 		}
 	}
-
-	//public static bool waitForKeyPressed(double secondsTimeout, KKey key)
-	//{
-
-	//	return false;
-	//}
 
 	/// <summary>
 	/// Waits while the specified keys or/and mouse buttons are pressed.
 	/// </summary>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="keys_">One or more keys or/and mouse buttons. Waits until all are released.</param>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-	public static bool waitForReleased(double secondsTimeout, params KKey[] keys_) {
-		return wait.forCondition(secondsTimeout, () => {
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	public static bool waitForReleased(Seconds timeout, params KKey[] keys_) {
+		return wait.until(timeout, () => {
 			foreach (var k in keys_) if (isPressed(k)) return false;
 			return true;
-		}, new OWait(period: 2));
+		});
 	}
-	//SHOULDDO: doc all waitfor functions whether they process messages etc and whether use opt.wait.DoEvents.
 
 	/// <summary>
 	/// Waits while the specified keys are pressed.
 	/// </summary>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="keys_">One or more keys. Waits until all are released. String like with <see cref="send"/>, without operators.</param>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in <i>keys_</i> string.</exception>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-	public static bool waitForReleased(double secondsTimeout, string keys_) {
-		return waitForReleased(secondsTimeout, more.parseKeysString(keys_));
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	public static bool waitForReleased(Seconds timeout, string keys_) {
+		return waitForReleased(timeout, more.parseKeysString(keys_));
 	}
 
 	/// <summary>
 	/// Registers a temporary hotkey and waits for it.
 	/// </summary>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="AuException">Failed to register hotkey.</exception>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <remarks>
 	/// Uses <see cref="RegisteredHotkey"/> (API <msdn>RegisterHotKey</msdn>).
 	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
@@ -298,13 +291,13 @@ public partial class keys {
 	/// if(!keys.waitForHotkey(-5, "Left")) print.it("timeout"); //returns false after 5 s
 	/// ]]></code>
 	/// </example>
-	public static bool waitForHotkey(double secondsTimeout, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, bool waitModReleased = false) {
+	public static bool waitForHotkey(Seconds timeout, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, bool waitModReleased = false) {
 		if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
 		using (RegisteredHotkey rhk = default) {
 			if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
-			if (!wait.forPostedMessage(secondsTimeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
+			if (!wait.forPostedMessage(timeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 		}
-		if (waitModReleased) return waitForNoModifierKeys(secondsTimeout, hotkey.Mod);
+		if (waitModReleased) return waitForNoModifierKeys(timeout, hotkey.Mod);
 		return true;
 	}
 	static ushort s_atomWFH;
@@ -312,13 +305,13 @@ public partial class keys {
 	/// <summary>
 	/// Waits for key-down or key-up event of the specified key.
 	/// </summary>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="key">Wait for this key.</param>
 	/// <param name="up">Wait for key-up event.</param>
 	/// <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
 	/// <exception cref="ArgumentException"><i>key</i> is 0.</exception>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <remarks>
 	/// Waits for key event, not for key state.
 	/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="waitForHotkey"/>.
@@ -330,9 +323,9 @@ public partial class keys {
 	/// print.it("Ctrl");
 	/// ]]></code>
 	/// </example>
-	public static bool waitForKey(double secondsTimeout, KKey key, bool up = false, bool block = false) {
+	public static bool waitForKey(Seconds timeout, KKey key, bool up = false, bool block = false) {
 		if (key == 0) throw new ArgumentException();
-		return 0 != _WaitForKey(secondsTimeout, key, up, block);
+		return 0 != _WaitForKey(timeout, key, up, block);
 	}
 
 	/// <param name="key">Wait for this key. A single-key string like with <see cref="send"/>.</param>
@@ -343,31 +336,31 @@ public partial class keys {
 	/// print.it("Ctrl");
 	/// ]]></code>
 	/// </example>
-	/// <inheritdoc cref="waitForKey(double, KKey, bool, bool)"/>
-	public static bool waitForKey(double secondsTimeout, string key, bool up = false, bool block = false) {
-		return 0 != _WaitForKey(secondsTimeout, more.ParseKeyNameThrow_(key), up, block);
+	/// <inheritdoc cref="waitForKey(Seconds, KKey, bool, bool)"/>
+	public static bool waitForKey(Seconds timeout, string key, bool up = false, bool block = false) {
+		return 0 != _WaitForKey(timeout, more.ParseKeyNameThrow_(key), up, block);
 	}
 
 	/// <summary>
 	/// Waits for key-down or key-up event of any key, and gets the key code.
 	/// </summary>
 	/// <returns>
-	/// Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
+	/// Returns the key code. On timeout returns 0 if <i>timeout</i> is negative; else exception.
 	/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 	/// </returns>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// var key = keys.waitForKey(0, up: true, block: true);
 	/// print.it(key);
 	/// ]]></code>
 	/// </example>
-	/// <inheritdoc cref="waitForKey(double, KKey, bool, bool)" path="/param"/>
-	public static KKey waitForKey(double secondsTimeout, bool up = false, bool block = false) {
-		return _WaitForKey(secondsTimeout, 0, up, block);
+	/// <inheritdoc cref="waitForKey(Seconds, KKey, bool, bool)" path="/param"/>
+	public static KKey waitForKey(Seconds timeout, bool up = false, bool block = false) {
+		return _WaitForKey(timeout, 0, up, block);
 	}
 
-	static KKey _WaitForKey(double secondsTimeout, KKey key, bool up, bool block) {
+	static KKey _WaitForKey(Seconds timeout, KKey key, bool up, bool block) {
 		//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
 		KKey R = 0;
@@ -382,7 +375,7 @@ public partial class keys {
 			}
 			R = x.vkCode; //info: for mod keys returns left/right
 			if (block) x.BlockEvent();
-		})) wait.forMessagesAndCondition(secondsTimeout, () => R != 0);
+		})) wait.doEventsUntil(timeout, () => R != 0);
 
 		return R;
 	}
@@ -391,10 +384,10 @@ public partial class keys {
 	/// Waits for keyboard events using callback function.
 	/// </summary>
 	/// <returns>
-	/// Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
+	/// Returns the key code. On timeout returns 0 if <i>timeout</i> is negative; else exception.
 	/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 	/// </returns>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="f">Callback function that receives key down and up events. Let it return true to stop waiting.</param>
 	/// <param name="block">Make the key down event invisible for other apps (when the callback function returns true).</param>
 	/// <remarks>
@@ -409,13 +402,13 @@ public partial class keys {
 	/// print.it(k);
 	/// ]]></code>
 	/// </example>
-	public static KKey waitForKeys(double secondsTimeout, Func<HookData.Keyboard, bool> f, bool block = false) {
+	public static KKey waitForKeys(Seconds timeout, Func<HookData.Keyboard, bool> f, bool block = false) {
 		KKey R = 0;
 		using (WindowsHook.Keyboard(x => {
 			if (!f(x)) return;
 			R = x.vkCode; //info: for mod keys returns left/right
 			if (block && !x.IsUp) x.BlockEvent();
-		})) wait.forMessagesAndCondition(secondsTimeout, () => R != 0);
+		})) wait.doEventsUntil(timeout, () => R != 0);
 
 		return R;
 	}

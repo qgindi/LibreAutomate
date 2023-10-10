@@ -1250,7 +1250,7 @@ public static partial class filesystem {
 		file = pathname.NormalizeMinimally_(file);
 		if (ms != 0) {
 			double t = ms > 0 ? ms / 1000d : ms == -1 ? 0d : throw new ArgumentOutOfRangeException();
-			wait.forCondition(t, () => exists(file, useRawPath: true));
+			wait.until(t, () => exists(file, useRawPath: true));
 		}
 		return file;
 	}

@@ -5,7 +5,7 @@ namespace Au.More {
 	/// <remarks>
 	/// Hooks are used to receive notifications about various system events. Keyboard and mouse input, window messages, various window events.
 	/// 
-	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="opt.wait"/>).
+	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
 	/// 
 	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with 'using' pattern. Can do it in hook procedure.</note>
 	/// 
@@ -53,7 +53,7 @@ namespace Au.More {
 		/// });
 		/// dialog.show("hook");
 		/// //or
-		/// //wait.forMessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
+		/// //wait.doEventsUntil(-10, () => stop); //wait max 10 s for Esc key
 		/// //print.it("the end");
 		/// ]]></code>
 		/// </example>
@@ -84,7 +84,7 @@ namespace Au.More {
 		/// });
 		/// dialog.show("hook");
 		/// //or
-		/// //wait.forMessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
+		/// //wait.doEventsUntil(-10, () => stop); //wait max 10 s for right-click
 		/// //print.it("the end");
 		/// ]]></code>
 		/// </example>

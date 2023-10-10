@@ -57,8 +57,8 @@ public class ocrFinder {
 	/// <inheritdoc cref="ocr.find(IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	public ocr Find(IFArea area) => Exists(area) ? Result : null;
 
-	/// <inheritdoc cref="ocr.find(double, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
-	public ocr Find(IFArea area, double waitS) => Exists(area, waitS) ? Result : null;
+	/// <inheritdoc cref="ocr.find(Seconds, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
+	public ocr Find(IFArea area, Seconds wait) => Exists(area, wait) ? Result : null;
 
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
 	/// <inheritdoc cref="Find(IFArea)"/>
@@ -67,28 +67,28 @@ public class ocrFinder {
 		return _Find(false);
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
-	/// <inheritdoc cref="Find(IFArea, double)"/>
-	public bool Exists(IFArea area, double waitS) {
-		bool r = waitS == 0 ? Exists(area) : Wait_(Action_.Wait, waitS < 0 ? waitS : -waitS, area);
-		return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
+	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <inheritdoc cref="Find(IFArea, Seconds)"/>
+	public bool Exists(IFArea area, Seconds wait) {
+		bool r = wait.Exists_() ? Exists(area) : Wait_(Action_.Wait, wait, area);
+		return r || wait.ReturnFalseOrThrowNotFound_();
 	}
 
 	/// <inheritdoc cref="ocr.wait"/>
-	public ocr Wait(double secondsTimeout, IFArea area)
-		=> Wait_(Action_.Wait, secondsTimeout, area) ? Result : null;
+	public ocr Wait(Seconds timeout, IFArea area)
+		=> Wait_(Action_.Wait, timeout, area) ? Result : null;
 	//SHOULDDO: suspend waiting while a mouse button is pressed.
 	//	Now, eg if finds while scrolling, although MouseMove waits until buttons released, but moves to the old (wrong) place.
 
 	/// <inheritdoc cref="ocr.waitNot"/>
-	public bool WaitNot(double secondsTimeout, IFArea area)
-		=> Wait_(Action_.WaitNot, secondsTimeout, area);
+	public bool WaitNot(Seconds timeout, IFArea area)
+		=> Wait_(Action_.WaitNot, timeout, area);
 
-	internal bool Wait_(Action_ action, double secondsTimeout, IFArea area) {
+	internal bool Wait_(Action_ action, Seconds timeout, IFArea area) {
 		if (area.Type == IFArea.AreaType.Bitmap) throw new ArgumentException("Bitmap and wait");
 		_Before(area, action);
 		_md5 = default;
-		try { return wait.forCondition(secondsTimeout, () => _Find(true) ^ _waitNot); }
+		try { return wait.until(timeout, () => _Find(true) ^ _waitNot); }
 		finally { _area = null; }
 	}
 

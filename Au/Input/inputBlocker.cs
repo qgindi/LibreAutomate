@@ -138,7 +138,7 @@ namespace Au
 				try { hwe = new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ??= _WinEventProc); }
 				catch (AuException e1) { Debug_.Print(e1); } //failed to hook
 
-				wait.Wait_(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
+				wait.Wait_(-1, WHFlags.DoEvents, new IntPtr[] { _stopEvent, _threadHandle });
 
 				if (_blockedKeys != null) {
 					bool onlyUp = _discardBlockedKeys || Environment.TickCount64 - _startTime > c_maxResendTime;

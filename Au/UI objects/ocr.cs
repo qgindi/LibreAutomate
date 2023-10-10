@@ -161,7 +161,7 @@ public class ocr {
 	///
 	/// The speed depends on engine, area size and amount of text.
 	/// </remarks>
-	public static unsafe ocr find(IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
+	public static ocr find(IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
 		=> new ocrFinder(text, flags, scale, engine, skip).Find(area);
 
 	/// <summary>
@@ -169,34 +169,34 @@ public class ocr {
 	/// </summary>
 	/// <returns>
 	/// Returns an <see cref="ocr"/> object that contains the word index and can click it etc.
-	/// If not found, throws exception or returns null (if <i>waitS</i> negative).
+	/// If not found, throws exception or returns null (if <i>wait</i> negative).
 	/// </returns>
-	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
 	/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 	/// <inheritdoc cref="find(IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
-	public static unsafe ocr find(double waitS, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
-		=> new ocrFinder(text, flags, scale, engine, skip).Find(area, waitS);
+	public static ocr find(Seconds wait, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
+		=> new ocrFinder(text, flags, scale, engine, skip).Find(area, wait);
 
 	/// <summary>
 	/// Performs OCR (text recognition) and finds text in results. Waits until found.
 	/// </summary>
-	/// <returns>Returns an <see cref="ocr"/> object that contains the word index and can click it etc. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+	/// <returns>Returns an <see cref="ocr"/> object that contains the word index and can click it etc. On timeout returns null if <i>timeout</i> is negative; else exception.</returns>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 	/// <inheritdoc cref="find(IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
-	public static unsafe ocr wait(double secondsTimeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
-		=> new ocrFinder(text, flags, scale, engine, skip).Wait(secondsTimeout, area);
+	public static ocr wait(Seconds timeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
+		=> new ocrFinder(text, flags, scale, engine, skip).Wait(timeout, area);
 
 	/// <summary>
 	/// Performs OCR (text recognition) and waits until the specified text does not exist in results.
 	/// </summary>
-	/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <inheritdoc cref="wait(double, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
-	public static unsafe bool waitNot(double secondsTimeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
-		=> new ocrFinder(text, flags, scale, engine, skip).WaitNot(secondsTimeout, area);
+	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <inheritdoc cref="wait(Seconds, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
+	public static bool waitNot(Seconds timeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
+		=> new ocrFinder(text, flags, scale, engine, skip).WaitNot(timeout, area);
 
 	/// <summary>
 	/// Gets the rectangle of the found word.

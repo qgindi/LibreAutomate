@@ -65,7 +65,7 @@ In the main LibreAutomate window you can resize and dock all panels and toolbars
 
 LibreAutomate saves all settings in files, not in the Registry.
 
-#### Some important features missing
+### Some important features missing
 - Dialog editor. Instead use class **wpfBuilder**.
 - Automatic backup.
 - Debugger. To debug a script in step mode need Visual Studio or VS Code.
@@ -73,6 +73,6 @@ LibreAutomate saves all settings in files, not in the Registry.
 
 Some of these will be added in the future.
 
-#### Some features LibreAutomate will never have
+### Some features LibreAutomate will never have
 - Encrypt scripts.
 - Unlock computer.

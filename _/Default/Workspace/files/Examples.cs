@@ -17,13 +17,13 @@ run.it(folders.ProgramFiles + @"Windows NT\Accessories\wordpad.exe");
 //create string variable s
 string s = "text";
 
-//repeat 10 times
-for (int i = 0; i < 10; i++) {
+//repeat 5 times
+for (int i = 0; i < 5; i++) {
 	//send text with variables
 	keys.sendt($"Example {s} {i + 1}");
 	
-	//wait 200 ms
-	200.ms();
+	//wait 500 ms
+	500.ms();
 	
 	//send keys
 	keys.send("Ctrl+Z"); //Undo

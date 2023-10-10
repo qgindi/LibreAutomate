@@ -291,7 +291,8 @@ This tool modifies only the .git folder, not workspace files.
 		b.R.AddButton("Print workspace folder sizes", _ => _PrintFolderSizes()).Tooltip("Print sizes of workspace folders except .git, .compiled and .temp.\nThis info can be useful when editing file .gitignore.");
 		
 		b.End();
-		if (!b.ShowDialog(App.Wmain)) return;
+		w.Owner = App.Wmain;
+		w.Show(); //not ShowDialog
 		
 		void _Info() {
 			int nFiles = 0, nDirs = 0;
@@ -371,12 +372,19 @@ This tool modifies only the .git folder, not workspace files.
 			_Start(setup: true);
 			
 			InitWinProp("Git setup", App.Wmain);
-			var b = new wpfBuilder(this).WinSize(400).Columns(0, -1, 0);
+			var b = new wpfBuilder(this).WinSize(500).Columns(0, -1, 0);
 			var panel = b.Panel;
+			TextBox tUrl = null;
+			
+			b.R.StartGrid();
+			Action lHelp = () => HelpUtil.AuHelp("editor/git, backup, sync"),
+				lGithub = () => run.itSafe(tUrl.TextOrNull() ?? "https://github.com");
+			b.Add<TextBlock>().FormatText($"<a {lHelp}>Help</a>    <a href='{_dir}'>Workspace folder</a>    <a {lGithub}>GitHub</a>").Align(y: VerticalAlignment.Center);
+			b.End();
 			
 			b.R.xAddGroupSeparator("GitHub repository");
 			var url = _GetURL();
-			b.R.Add<AdornerDecorator>("URL", out _).Add(out TextBox tUrl, url, flags: WBAdd.ChildOfLast).Watermark("https://github.com/owner/repo")
+			b.R.Add<AdornerDecorator>("URL", out _).Add(out tUrl, url, flags: WBAdd.ChildOfLast).Watermark("https://github.com/owner/repo")
 				.Validation(o => !_ParseURL(tUrl.Text, out _, out _) ? (tUrl.Text.NE() ? "URL empty" : "URL must be like https://github.com/owner/repo") : null);
 			
 			b.R.xAddGroupSeparator("Git");
@@ -388,12 +396,8 @@ This tool modifies only the .git folder, not workspace files.
 			b.Window.Closed += (_, _) => { cts?.Cancel(); };
 			
 			b.R.AddSeparator();
-			b.R.StartGrid();
-			Action lHelp = () => HelpUtil.AuHelp("editor/git, backup, sync"),
-				lGithub = () => run.itSafe(tUrl.TextOrNull() ?? "https://github.com");
-			b.Add<TextBlock>().FormatText($"<a {lHelp}>Help</a>    <a href='{_dir}'>Workspace folder</a>    <a {lGithub}>GitHub</a>").Align(y: VerticalAlignment.Center);
-			b.AddOkCancel();
-			b.End();
+			b.R.Add("OK", out ComboBox cbOK).Items(filesystem.exists(_dir + @"\.git").Directory ? "Update local settings" : "Create local repository linked with the still empty GitHub repository", "Clone (download) the GitHub repository to new workspace");
+			b.R.AddOkCancel();
 			b.End();
 			
 			b.OkApply += async e => {
@@ -401,15 +405,13 @@ This tool modifies only the .git folder, not workspace files.
 				App.Model.WSSett.CurrentUser.gitUrl = tUrl.Text;
 				_Start(setup: true); //may need to set _gitExe
 				var w = b.Window.Hwnd();
-				w.Enable(false);
-				bool ok = false;
+				b.Window.IsEnabled = false; //disables controls but allows to close the window, unlike b.Window.Hwnd().Enable(false);. Git may hang, eg when auth fails on my vmware Win7.
+				bool ok = false, clone = cbOK.SelectedIndex == 1;
 				try {
-					_GitignoreApply();
-					_GitattributesApply();
-					ok = await Task.Run(() => _ApplyTask(w));
+					ok = await Task.Run(() => _OkTask(clone));
 				}
-				catch (Exception e1) { print.it(e1.ToString()); }
-				if (ok) b.Window.Close(); else w.Enable(true);
+				catch (Exception e1) { print.it(e1); }
+				if (ok) b.Window.Close(); else b.Window.IsEnabled = true;
 			};
 			
 			async void _InstallGit(WBButtonClickArgs k) {
@@ -459,20 +461,6 @@ This tool modifies only the .git folder, not workspace files.
 				tGitStatus.Content = !found ? "Git not installed" : isPrivate ? "Private Git is installed and will be used" : "Shared Git found and will be used";
 				bGitInstall.Content = isPrivate ? "Update private Git" : "Install private Git";
 			}
-			
-			void _GitignoreApply() {
-				var file = _dir + "\\.gitignore";
-				if (!filesystem.exists(file)) filesystem.saveText(file, c_defaultGitignore);
-			}
-			
-			void _GitattributesApply() {
-				var file = _dir + "\\.gitattributes";
-				if (!filesystem.exists(file)) filesystem.saveText(file, """
-* -text
-/.state/* binary
-
-""");
-			}
 		}
 		
 		protected override void OnSourceInitialized(EventArgs e) {
@@ -485,28 +473,55 @@ This tool modifies only the .git folder, not workspace files.
 			base.OnClosed(e);
 		}
 		
-		static bool _ApplyTask(wnd wOwner) {
-			bool localExists = filesystem.exists(_dir + @"\.git").Directory;
+		static bool _OkTask(bool clone) {
 			var url = App.Model.WSSett.CurrentUser.gitUrl;
 			if (!url.Ends(".git")) url += ".git";
 			
-			if (localExists && gits("remote get-url origin") && _go == url) return true;
-			
-			//repo exists?
-			if (!git($"ls-remote {url}")) return false;
-			//rejected: try to create repo now.
-			//	To get token, see the commented out _GithubGet overload.
-			
-			if (localExists) {
-				if (!git("remote set-url origin " + url)) return false;
+			if (clone) {
+				var dir2 = pathname.makeUnique(_dir, isDirectory: true);
+				bool cloned = git($"clone \"{url}\" \"{dir2}\"");
+				if (cloned && !(cloned = FilesModel.IsWorkspaceDirectoryOrZip(dir2, out _))) print.it("Error. The GitHub repository does not contain a workspace.");
+				if (!cloned) { filesystem.delete(dir2); return false; }
+				
+				var dir3 = _dir; _dir = dir2;
+				try { _Config(); }
+				finally { _dir = dir3; }
+				
+				Panels.Output.Scintilla.AaTags.AddLinkTag("+openWorkspace", s => FilesModel.LoadWorkspace(dir2));
+				print.it($"<>The GitHub repository has been cloned to <link {dir2}>new workspace folder<>. Now you can <+openWorkspace {dir2}>open the new workspace<>. Also you may want to copy some files from <link {_dir}>old workspace<>.");
 			} else {
-				//repo empty?
-				if (_go.NE()) { //repo empty
+				var file1 = _dir + "\\.gitignore";
+				if (!filesystem.exists(file1)) filesystem.saveText(file1, c_defaultGitignore);
+			
+				var file2 = _dir + "\\.gitattributes";
+				if (!filesystem.exists(file2)) filesystem.saveText(file2, """
+* -text
+/.state/* binary
+
+""");
+				
+				bool localExists = filesystem.exists(_dir + @"\.git").Directory;
+				if (localExists && gits("remote get-url origin") && _go == url) return true;
+				
+				//repo exists?
+				if (!git($"ls-remote {url}")) return false;
+				//rejected: try to create repo now.
+				//	To get token, see the commented out _GithubGet overload.
+				
+				if (localExists) {
+					if (!git("remote set-url origin " + url)) return false;
+				} else {
+					//repo empty?
+					if (!_go.NE()) {
+						print.it("Error. The GitHub repository must be empty (0 commits, no readme etc). Else it can only be cloned.");
+						return false;
+					}
+					
 					//repo private?
 					_ParseURL(url, out var owner, out var repo); //info: the dialog validates the URL format
 					var r = _GithubGet($"users/{owner}/repos");
 					if (r.AsArray().Any(v => ((string)v["name"]).Eqi(repo))) {
-						print.it("The repository must be private.\nYou can make it public later.");
+						print.it("Error. The GitHub repository must be private. You can make it public later if really need.");
 						return false;
 					}
 					
@@ -514,36 +529,18 @@ This tool modifies only the .git folder, not workspace files.
 					if (!git("remote add origin " + url)) return false;
 					if (!git("config push.autoSetupRemote true")) return false;
 					_Config();
-					print.it("Local Git repository has been created. Now you can use the Git menu. Click 'Commit' to make a local backup, or 'Push to GitHub' to make a remote backup.");
-				} else { //repo not empty
-					var s1 = """
-The GitHub repository is not empty.
-
-Click Clone if it contains a workspace (scripts etc) and you want to download and use it. It creates new workspace folder. Does not modify current workspace.
-
-Else click Cancel, go to your GitHub account, create new private repository without readme etc, and in the Git setup dialog paste its URL.
-""";
-					if (1 != dialog.show(null, s1, "10 Cancel|1 Clone", icon: DIcon.Warning, owner: wOwner)) return false;
-					
-					var dir2 = pathname.makeUnique(_dir, isDirectory: true);
-					bool cloned = git($"clone \"{url}\" \"{dir2}\"");
-					if (cloned && !(cloned = FilesModel.IsWorkspaceDirectoryOrZip(dir2, out _))) print.it("The repository does not contain a workspace.");
-					if (!cloned) { filesystem.delete(dir2); return false; }
-					
-					var dir3 = _dir; _dir = dir2;
-					try { _Config(); }
-					finally { _dir = dir3; }
-					
-					Panels.Output.Scintilla.AaTags.AddLinkTag("+openWorkspace", s => FilesModel.LoadWorkspace(dir2));
-					print.it($"<>The GitHub repository has been cloned to <link {dir2}>new workspace folder<>. Now you can <+openWorkspace {dir2}>open the new workspace<>. Also you may want to copy some files from <link {_dir}>old workspace<>.");
-				}
-				
-				void _Config() {
-					git("config core.autocrlf false");
-					git("config core.quotepath off");
+					print.it("<>Local Git repository has been created. Now you can use the Git menu to make backups etc.  [<help editor/git, backup, sync>Help<>]");
 				}
 			}
 			return true;
+			
+			void _Config() {
+				git("config core.autocrlf false");
+				git("config core.quotepath off");
+			
+				if (!gits("config --get user.name") || _go.NE()) git("config user.name \"unknown\"");
+				if (!gits("config --get user.email") || _go.NE()) git("config user.email \"unknown@unknown.com\"");
+			}
 		}
 		
 		static bool _ParseURL(string url, out string owner, out string repo) {

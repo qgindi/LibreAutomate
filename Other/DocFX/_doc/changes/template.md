@@ -28,3 +28,5 @@ Improved:
 
 Fixed bugs:
 - .
+
+### Breaking changes

@@ -534,14 +534,14 @@ namespace Au {
 		/// <summary>
 		/// Waits until the process ends.
 		/// </summary>
-		/// <returns>true when the process ended. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <returns>true when the process ended. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="processId">Process id. If invalid but not 0, the function returns true and sets <c>exitCode = int.MinValue</c>; probably the process is already ended.</param>
 		/// <param name="exitCode">Receives the exit code.</param>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="ArgumentException"><i>processId</i> is 0.</exception>
-		public static bool waitForExit(double secondsTimeout, int processId, out int exitCode) {
+		public static bool waitForExit(Seconds timeout, int processId, out int exitCode) {
 			if (processId == 0) throw new ArgumentException("processId 0", nameof(processId));
 			using var h = Handle_.OpenProcess(processId, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
 			if (h.Is0) {
@@ -550,7 +550,7 @@ namespace Au {
 				throw new AuException(e);
 			}
 			exitCode = 0;
-			if (0 == wait.forHandle(secondsTimeout, 0, h)) return false;
+			if (0 == wait.forHandle(timeout, 0, h)) return false;
 			Api.GetExitCodeProcess(h, out exitCode);
 			return true;
 		}

@@ -44,8 +44,8 @@ namespace Au;
 ///  <td>
 ///   <ol>
 ///    <li>By default, the <b>Find</b> function is about 50 times slower than it could be, and uses much CPU when waiting. And HTML attributes may be unavailable. See <see cref="EFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable MOZ_FORCE_DISABLE_E10S=1 and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
-///    <li>When Firefox starts, its web page UI elements are unavailable. It creates them only when somebody asks (eg function <b>Find</b>), but does it lazily, and <b>Find</b> at first fails. Workaround: use parameter <i>waitS</i>.</li>
-///    <li>Occasionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>waitS</i>. With other web browsers also it's better to use <i>waitS</i>.</li>
+///    <li>When Firefox starts, its web page UI elements are unavailable. It creates them only when somebody asks (eg function <b>Find</b>), but does it lazily, and <b>Find</b> at first fails. Workaround: use parameter <i>wait</i>.</li>
+///    <li>Occasionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>wait</i>. With other web browsers also it's better to use <i>wait</i>.</li>
 ///    <li>Some new web browser versions add new features or bugs that break something.</li>
 ///   </ol>
 ///  </td>

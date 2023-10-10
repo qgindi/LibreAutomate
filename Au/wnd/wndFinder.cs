@@ -133,13 +133,13 @@ public class wndFinder {
 	/// <summary>
 	/// Finds the specified window, like <see cref="wnd.find"/>. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
-	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
+	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
 	/// <remarks>
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
-	public wnd Find(double waitS) => Exists(waitS) ? Result : default;
+	public wnd Find(Seconds wait) => Exists(wait) ? Result : default;
 
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
 	/// <inheritdoc cref="Find()"/>
@@ -148,28 +148,28 @@ public class wndFinder {
 		return _FindOrMatch(k) >= 0;
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
-	/// <inheritdoc cref="Find(double)"/>
-	public bool Exists(double waitS) {
-		var r = waitS == 0d ? Exists() : !Wait(waitS < 0 ? waitS : -waitS, false).Is0;
-		return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
+	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <inheritdoc cref="Find(Seconds)"/>
+	public bool Exists(Seconds wait) {
+		var r = wait.Exists_() ? Exists() : !Wait(wait, false).Is0;
+		return r || wait.ReturnFalseOrThrowNotFound_();
 	}
 
 	/// <summary>
 	/// Waits until window exists or is active.
 	/// </summary>
-	/// <returns>Returns <see cref="Result"/>. On timeout returns <c>default(wnd)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <returns>Returns <see cref="Result"/>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> is negative; else exception.</returns>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="active">The window must be the active window (<see cref="wnd.active"/>), and not minimized.</param>
-	/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <remarks>
-	/// Same as <see cref="Find(double)"/>, except:
+	/// Same as <see cref="Find(Seconds)"/>, except:
 	/// - 0 timeout means infinite.
 	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
 	/// - has parameter <i>active</i>.
 	/// </remarks>
-	public wnd Wait(double secondsTimeout, bool active) {
-		var to = new WaitLoop(secondsTimeout);
+	public wnd Wait(Seconds timeout, bool active) {
+		var loop = new WaitLoop(timeout);
 		for (; ; ) {
 			if (active) {
 				wnd w = wnd.active;
@@ -178,7 +178,7 @@ public class wndFinder {
 			} else {
 				if (Exists()) return Result;
 			}
-			if (!to.Sleep()) return default;
+			if (!loop.Sleep()) return default;
 		}
 	}
 

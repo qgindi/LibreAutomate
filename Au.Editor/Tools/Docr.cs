@@ -89,7 +89,7 @@ class Docr : KDialogWindow {
 		base.OnSourceInitialized(e);
 
 		_InitInfo();
-		_bWnd_Click();
+		//_bWnd_Click(); //rejected. Confusing.
 	}
 
 	protected override void OnClosed(EventArgs e) {

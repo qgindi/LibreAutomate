@@ -10,7 +10,7 @@ class PanelOpen {
 	public PanelOpen() {
 		//P.UiaSetName("Open panel"); //no UIA element for Panel
 
-		_tv = new KTreeView { Name = "Open_list" };
+		_tv = new() { Name = "Open_list" };
 		P.Children.Add(_tv);
 	}
 

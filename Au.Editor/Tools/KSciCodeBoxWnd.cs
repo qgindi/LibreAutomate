@@ -26,7 +26,7 @@ class KSciCodeBoxWnd : KSciCodeBox {
 				void _Replace(int end, int argsStart, int argsEnd, int nameStart, bool orRun = false, bool orRunReplace = false, int funcNameEnd = 0) {
 					if (orRun && !orRunReplace) return;
 					s = s.ReplaceAt(argsEnd..end, ");"); //remove '.Activate()' etc. If orRun, removes run etc arguments.
-					s = s.ReplaceAt(argsStart..nameStart, nameStart < argsEnd ? "0, " : "0"); //remove 'waitS, ' and add '0, ' (to throw NotFoundException)
+					s = s.ReplaceAt(argsStart..nameStart, nameStart < argsEnd ? "0, " : "0"); //remove 'wait, ' and add '0, ' (to throw NotFoundException)
 					if (orRun) s = s.Remove(funcNameEnd - 5, 5); //findOrRun -> find
 				}
 				if (p.cVar != null) _Replace(p.cEnd, p.cArgsStart, p.cArgsEnd, p.cNameStart);
@@ -174,7 +174,7 @@ class KSciCodeBoxWnd : KSciCodeBox {
 						var a = al.Arguments;
 						if (a.Count > 0) {
 							int iName = 0;
-							//waitS. Never mind: also can be +, ~, (cast), double.Constant, etc.
+							//wait. Never mind: also can be +, ~, (cast), double.Constant, etc.
 							if (!p.orRun && a[0].Expression.Kind() is SyntaxKind.NumericLiteralExpression or SyntaxKind.UnaryMinusExpression) {
 								nameStart = a.Count > 1 ? a[1].SpanStart : argsEnd;
 								iName = a.Count > 1 ? 1 : -1;

@@ -16,19 +16,19 @@ public unsafe partial class KTreeView {
 	int _focusedIndex, _hotIndex;
 	(int indexPlus1, bool scrollTop) _ensureVisible;
 	NativeScrollbar_ _vscroll, _hscroll;
-
+	
 	struct _VisibleItem {
 		public ITreeViewItem item;
 		public ushort level, measured;
 		public bool isSelected;
-
+		
 		public bool Select(bool on) {
 			if (on && !item.IsSelectable) return false;
 			isSelected = on;
 			return true;
 		}
 	}
-
+	
 	///
 	public KTreeView() {
 		//UseLayoutRounding = true;
@@ -37,21 +37,21 @@ public unsafe partial class KTreeView {
 		_focusedIndex = _hotIndex = -1;
 		_ScrollInit();
 	}
-
+	
 	#region size, dpi, set visible items, root/index/count properties
-
+	
 	void _SetDpiAndItemSize(int dpi) {
 		_dpi = dpi;
 		_imageSize = _dpi / 6;
 		_imageMarginX = _DpiScale(4);
 		_marginLeft = _DpiScale(ItemMarginLeft);
 		_marginRight = _DpiScale(ItemMarginRight);
-
+		
 		using var tr = new GdiTextRenderer(dpi);
 		_itemHeight = _itemLineHeight = Math.Max(_imageSize, tr.MeasureText("A").height) + _DpiScale(2);
 		if (CustomItemHeightAddPercent > 0) _itemHeight += Math2.PercentToValue(_itemHeight, CustomItemHeightAddPercent, true);
 	}
-
+	
 	///
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		if (_hasHwnd) {
@@ -60,15 +60,15 @@ public unsafe partial class KTreeView {
 		}
 		base.OnDpiChanged(oldDpi, newDpi);
 	}
-
+	
 	///
 	public int Dpi => _dpi;
-
+	
 	void _SetVisibleItems(bool init) {
 		bool wasEmpty = _avi.NE_();
 		_hotIndex = -1;
 		_ensureVisible = default;
-
+		
 		int n = _itemsSource == null ? 0 : _CountVisible(_itemsSource);
 		static int _CountVisible(IEnumerable<ITreeViewItem> a) {
 			int r = 0;
@@ -78,7 +78,7 @@ public unsafe partial class KTreeView {
 			}
 			return r;
 		} //SHOULDDO: now calls v.Items 2 times (_CountVisible and _AddVisible). It can be expensive.
-
+		
 		if (n == 0) {
 			_avi = Array.Empty<_VisibleItem>();
 			_dvi = null;
@@ -93,7 +93,7 @@ public unsafe partial class KTreeView {
 			}
 			_focusedIndex = -1;
 			_itemsWidth = 0;
-
+			
 			_avi = new _VisibleItem[n];
 			_dvi = new Dictionary<ITreeViewItem, int>(n);
 			_AddVisible(_itemsSource, 0, 0);
@@ -106,7 +106,7 @@ public unsafe partial class KTreeView {
 				}
 				return i;
 			}
-
+			
 			if (selected != null) {
 				foreach (var v in selected) {
 					int i = IndexOf(v); if (i < 0) continue;
@@ -115,15 +115,15 @@ public unsafe partial class KTreeView {
 				}
 			}
 		}
-
+		
 		if (_hasHwnd) {
 			if (init && _vscroll.Pos > 0) _vscroll.Pos = 0;
-
+			
 			_Measure();
 			_Invalidate();
 		}
 	}
-
+	
 	/// <summary>
 	/// Sets (adds, replaces or removes) all items.
 	/// </summary>
@@ -134,12 +134,12 @@ public unsafe partial class KTreeView {
 		_SetVisibleItems(!modified);
 	}
 	IEnumerable<ITreeViewItem> _itemsSource;
-
+	
 	/// <summary>
 	/// Gets the number of visible items.
 	/// </summary>
 	public int CountVisible => _avi.Lenn_();
-
+	
 	/// <summary>
 	/// Gets item index in visible items.
 	/// Returns -1 if not found.
@@ -149,7 +149,7 @@ public unsafe partial class KTreeView {
 		if (_dvi != null && _dvi.TryGetValue(item, out int i)) return i;
 		return -1;
 	}
-
+	
 	/// <summary>
 	/// Gets item index in visible items.
 	/// Returns -1 if not found.
@@ -162,41 +162,41 @@ public unsafe partial class KTreeView {
 		}
 		return -1;
 	}
-
+	
 	/// <summary>
 	/// Gets visible item at index.
 	/// </summary>
 	/// <exception cref="IndexOutOfRangeException"></exception>
 	/// <exception cref="NullReferenceException">Items not added.</exception>
 	public ITreeViewItem this[int index] => _avi[index].item;
-
+	
 	#endregion
-
+	
 	#region scroll, top index, expand folder, ensure visible
-
+	
 	void _ScrollInit() {
 		_vscroll = new(true, i => i * _itemHeight, i => (i + 1) * _itemHeight);
 		_hscroll = new(false, i => i * _imageSize, i => (i + 1) * _imageSize);
-
+		
 		_vscroll.PosChanged += (sb, part) => {
 			_hotIndex = -1;
 			_Measure(true);
 			_Invalidate();
 			if (part <= -2) _OnMouseMoveOrWheel(true); //wheel, not scrollbar or keyboard
 		};
-
+		
 		_hscroll.PosChanged += (sb, part) => {
 			_Invalidate();
 		};
 	}
-
+	
 	///
 	protected override void OnMouseWheel(MouseWheelEventArgs e) {
 		e.Handled = true;
 		if (!_avi.NE_() && _vscroll.Visible) _vscroll.WndProc(_w, Api.WM_MOUSEWHEEL, Math2.MakeLparam(0, e.Delta), 0);
 		base.OnMouseWheel(e);
 	}
-
+	
 	/// <summary>
 	/// Gets or sets index of the first item in the scroll view; it is the value of the vertical scrollbar.
 	/// The 'set' function scrolls if need. Clamps if invalid index.
@@ -205,7 +205,7 @@ public unsafe partial class KTreeView {
 		get => _vscroll.Pos;
 		set { _vscroll.Pos = value; }
 	}
-
+	
 	/// <summary>
 	/// Expands or collapses folder.
 	/// </summary>
@@ -224,7 +224,7 @@ public unsafe partial class KTreeView {
 		item.SetIsExpanded(exp);
 		_SetVisibleItems(init: false);
 	}
-
+	
 	/// <summary>
 	/// Expands or collapses folder.
 	/// </summary>
@@ -236,9 +236,9 @@ public unsafe partial class KTreeView {
 		if (!_IndexOfOrThrowIfImportant(expand != false, item, out int i)) return;
 		Expand(i, expand);
 	}
-
+	
 	//internal bool test;
-
+	
 	/// <summary>
 	/// Scrolls if need to make item actually visible.
 	/// </summary>
@@ -258,7 +258,7 @@ public unsafe partial class KTreeView {
 			if (!retry) if (retry = _vscroll.Max > max) goto g1; //added horz scrollbar and maybe it covers the item
 		}
 	}
-
+	
 	/// <summary>
 	/// Expands descendant folders and scrolls if need to make item actually visible.
 	/// </summary>
@@ -282,11 +282,11 @@ public unsafe partial class KTreeView {
 		}
 		EnsureVisible(i, scrollTop);
 	}
-
+	
 	#endregion
-
+	
 	#region mouse/keyboard input and related events
-
+	
 	void _OnMouseDown(MouseButton button, nint wParam, nint lParam, bool @double = false) {
 		if (button != MouseButton.Middle && Focusable) Focus();
 		var xy = Math2.NintToPOINT(lParam);
@@ -296,7 +296,8 @@ public unsafe partial class KTreeView {
 		} else {
 			var mk = (0 != (wParam & Api.MK_CONTROL) ? ModifierKeys.Control : 0) | (0 != (wParam & Api.MK_SHIFT) ? ModifierKeys.Shift : 0); //never mind Alt, it's never used and may activate menubar
 			bool multiSelect = MultiSelect && button == MouseButton.Left && !@double && (mk is ModifierKeys.Control or ModifierKeys.Shift);
-			bool unselectOnUp = false, checkbox = h.part == TVParts.Checkbox && !multiSelect;
+			bool unselectOnUp = false;
+			bool checkbox = h.part == TVParts.Checkbox && button == MouseButton.Left && !multiSelect;
 			if (button == MouseButton.Left && !multiSelect && !checkbox) {
 				unselectOnUp = MultiSelect && IsSelected(h.index); //unselect other on up, else could not drag multiple
 				Select(h.index, true, unselectOther: !unselectOnUp, focus: true);
@@ -304,12 +305,12 @@ public unsafe partial class KTreeView {
 			bool clickEvent = false, activateEvent = false;
 			if (checkbox) {
 				clickEvent = true;
-			} else if (!@double) {
+			} else if (!@double || button == MouseButton.Middle) {
 				Api.SetCapture(_w);
 				_mouse = (true, button, h, xy, mk, multiSelect, unselectOnUp);
-			} else {
+			} else if (button == MouseButton.Left) {
 				//print.it("double", h.item);
-				if (button == MouseButton.Left && h.part >= TVParts.Text && h.item.IsFolder) Expand(h.index, null);
+				if (h.part >= TVParts.Text && h.item.IsFolder) Expand(h.index, null);
 				clickEvent = true;
 				activateEvent = !SingleClickActivate;
 			}
@@ -317,21 +318,21 @@ public unsafe partial class KTreeView {
 		}
 	}
 	(bool active, MouseButton button, TVHitTest h, POINT xy, ModifierKeys mk, bool multiSelect, bool unselect) _mouse;
-
+	
 	void _MouseEvents(bool click, bool activate, bool drag, MouseButton button, in TVHitTest h, POINT xy, ModifierKeys mk, bool @double = false) {
 		var v = new TVItemEventArgs(h.item, h.index, h.part, button, @double ? 2 : 1, xy, mk);
 		if (click) ItemClick?.Invoke(v);
 		if (activate) ItemActivated?.Invoke(v);
 		if (drag) ItemDragStart?.Invoke(v);
 	}
-
+	
 	void _MouseEnd() {
 		if (_mouse.active) {
 			_mouse.active = false;
 			Api.ReleaseCapture();
 		}
 	}
-
+	
 	void _OnMouseUp(MouseButton button) {
 		if (_mouse.active && button == _mouse.button) {
 			_MouseEnd();
@@ -340,14 +341,13 @@ public unsafe partial class KTreeView {
 				if (_mouse.mk == ModifierKeys.Shift) _ShiftSelect(i); else Select(i, !IsSelected(i), unselectOther: false);
 				_focusedIndex = i;
 			} else {
-				//print.it("click", me.button);
 				if (_mouse.unselect) Select(_mouse.h.index, true, unselectOther: true);
 				bool activateEvent = SingleClickActivate && _mouse.button == MouseButton.Left;
 				_MouseEvents(true, activateEvent, false, _mouse.button, _mouse.h, _mouse.xy, _mouse.mk);
 			}
 		}
 	}
-
+	
 	void _OnMouseMove(nint wParam) {
 		if (_mouse.active) {
 			if (0 != (wParam & (_mouse.button switch { MouseButton.Left => Api.MK_LBUTTON, MouseButton.Right => Api.MK_RBUTTON, _ => Api.MK_MBUTTON }))) {
@@ -365,7 +365,7 @@ public unsafe partial class KTreeView {
 		}
 		_OnMouseMoveOrWheel(false);
 	}
-
+	
 	void _OnMouseMoveOrWheel(bool wheel) {
 		if (HotTrack || ShowLabelTip) {
 			int i = _ItemFromY(_w.MouseClientXY.y);
@@ -380,7 +380,7 @@ public unsafe partial class KTreeView {
 			}
 		}
 	}
-
+	
 	void _OnMouseLeave() {
 		if (_hotIndex >= 0) {
 			if (HotTrack) _Invalidate(_hotIndex);
@@ -388,31 +388,31 @@ public unsafe partial class KTreeView {
 		}
 		_labeltip?.Hide();
 	}
-
+	
 	/// <summary>
 	/// Whether to higlight an item when mouse is over.
 	/// </summary>
 	/// <seealso cref="ItemActivated"/>
 	public bool HotTrack { get; set; }
-
+	
 	/// <summary>
 	/// Whether to show a tooltip with full item text when mouse is over an item with partially visible text. Default true.
 	/// </summary>
 	public bool ShowLabelTip { get; set; } = true;
-
+	
 	/// <summary>
 	/// Whether to activate an item on single click instead of double click.
 	/// </summary>
 	/// <seealso cref="ItemActivated"/>
 	public bool SingleClickActivate { get; set; }
-
+	
 	///
 	protected override void OnKeyDown(KeyEventArgs e) {
 		//print.it(e.Key, _focusedIndex);
 		e.Handled = ProcessKey(e.Key);
 		base.OnKeyDown(e);
 	}
-
+	
 	/// <summary>
 	/// Processes keys such as arrow, page, Enter, Ctrl+A.
 	/// Returns true if handled.
@@ -456,7 +456,7 @@ public unsafe partial class KTreeView {
 				Select(.., true);
 				break;
 			}
-
+			
 			if (selAdd != 0) selIndex = Math.Clamp((isFocus ? _focusedIndex : (selAdd > 0 ? -1 : _avi.Length)) + selAdd, 0, _avi.Length - 1);
 			if (selIndex >= 0 && (mod == 0 || (mod == ModifierKeys.Shift && MultiSelect))) {
 				handled = true;
@@ -468,31 +468,31 @@ public unsafe partial class KTreeView {
 		}
 		return handled;
 	}
-
+	
 	/// <summary>
 	/// When an item double-clicked. Or clicked, if <see cref="SingleClickActivate"/>. Also on Enter key if focused.
 	/// </summary>
 	public event Action<TVItemEventArgs> ItemActivated;
-
+	
 	/// <summary>
 	/// When an item clicked or double-clicked with the left, right or middle mouse button.
 	/// </summary>
 	public event Action<TVItemEventArgs> ItemClick;
-
+	
 	/// <summary>
 	/// When drag start detected.
 	/// </summary>
 	public event Action<TVItemEventArgs> ItemDragStart;
-
+	
 	#endregion
-
+	
 	#region selection, focus, checkboxes
-
+	
 	/// <summary>
 	/// Whether can select multiple items, for example with Ctrl or Shift key.
 	/// </summary>
 	public bool MultiSelect { get; set; } //never mind: if set false, unselect all except focused
-
+	
 	/// <summary>
 	/// Selects or unselects item.
 	/// </summary>
@@ -504,14 +504,14 @@ public unsafe partial class KTreeView {
 	/// <exception cref="IndexOutOfRangeException"></exception>
 	public void Select(int index, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
 		if (!_IsValid(index)) throw new IndexOutOfRangeException();
-
+		
 		if (focus) SetFocusedItem(index, scrollTop ? TVFocus.EnsureVisible | TVFocus.ScrollTop : TVFocus.EnsureVisible);
 		else if (scrollTop) _vscroll.Pos = index;
-
+		
 		Select(index..(index + 1), select, unselectOther);
 		if (select && unselectOther) SelectedSingle?.Invoke(this, index);
 	}
-
+	
 	/// <summary>
 	/// Selects or unselects item.
 	/// </summary>
@@ -525,7 +525,7 @@ public unsafe partial class KTreeView {
 		if (!_IndexOfOrThrowIfImportant(select, item, out int i)) return; //ok if tries to unselect an already unselected item in a collapsed folder
 		Select(i, select, unselectOther, focus, scrollTop);
 	}
-
+	
 	/// <summary>
 	/// Selects or unselects range of items.
 	/// </summary>
@@ -547,40 +547,40 @@ public unsafe partial class KTreeView {
 		}
 		for (; from < to; from++) if (select != IsSelected(from)) invalidate |= _avi[from].Select(select);
 		if (invalidate) _Invalidate();
-
+		
 		SelectionChanged?.Invoke(this, EventArgs.Empty);
 	}
-
+	
 	/// <summary>
 	/// Unselects all.
 	/// </summary>
 	public void UnselectAll() => Select(.., select: false);
-
+	
 	public event EventHandler SelectionChanged;
 	public event EventHandler<int> SelectedSingle;
-
+	
 	/// <summary>
 	/// Selects item, unselects others, optionally makes the focused.
 	/// </summary>
 	public void SelectSingle(int index, bool andFocus, bool scrollTop = false) => Select(index, true, true, andFocus, scrollTop);
-
+	
 	/// <summary>
 	/// Selects item, unselects others, optionally makes the focused.
 	/// </summary>
 	public void SelectSingle(ITreeViewItem item, bool andFocus, bool scrollTop = false) => Select(item, true, true, andFocus, scrollTop);
-
+	
 	void _ShiftSelect(int last) {
 		int from; if (last >= _focusedIndex) from = Math.Max(_focusedIndex, 0); else { from = last; last = _focusedIndex; }
 		Select(from..++last, true, unselectOther: false);
 	}
-
+	
 	/// <summary>
 	/// Returns true if the item is selected.
 	/// </summary>
 	/// <seealso cref="MultiSelect"/>
 	/// <exception cref="IndexOutOfRangeException"></exception>
 	public bool IsSelected(int index) => _avi[index].isSelected;
-
+	
 	/// <summary>
 	/// Returns true if the item is visible and selected.
 	/// </summary>
@@ -589,7 +589,7 @@ public unsafe partial class KTreeView {
 		int i = IndexOf(item); //if not found, probably it is an unselected item in a collapsed folder
 		return i >= 0 && _avi[i].isSelected;
 	}
-
+	
 	/// <summary>
 	/// Gets selected items. Returns empty list if none selected.
 	/// </summary>
@@ -601,7 +601,7 @@ public unsafe partial class KTreeView {
 			return a;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets selected items. Returns empty list if none selected.
 	/// </summary>
@@ -613,7 +613,7 @@ public unsafe partial class KTreeView {
 			return a;
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns index of first selected item, or -1 if no selection.
 	/// </summary>
@@ -623,7 +623,7 @@ public unsafe partial class KTreeView {
 			return -1;
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns first selected item, or null if no selection.
 	/// </summary>
@@ -632,17 +632,17 @@ public unsafe partial class KTreeView {
 			int i = SelectedIndex; return i >= 0 ? _avi[i].item : null;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets index of item that has logical focus within the control. Can be -1.
 	/// </summary>
 	public int FocusedIndex => _focusedIndex;
-
+	
 	/// <summary>
 	/// Gets item that has logical focus within the control. Can be null.
 	/// </summary>
 	public ITreeViewItem FocusedItem => _IndexToItem(_focusedIndex);
-
+	
 	/// <summary>
 	/// Sets item that has logical focus within the control.
 	/// </summary>
@@ -657,7 +657,7 @@ public unsafe partial class KTreeView {
 		_focusedIndex = index;
 		if (flags.HasAny(TVFocus.EnsureVisible | TVFocus.ScrollTop)) if (index >= 0) EnsureVisible(index, flags.Has(TVFocus.ScrollTop));
 	}
-
+	
 	/// <summary>
 	/// Sets item that has logical focus within the control.
 	/// </summary>
@@ -666,20 +666,20 @@ public unsafe partial class KTreeView {
 	/// <exception cref="ArgumentException">The item is not a visible item in this control.</exception>
 	public void SetFocusedItem(ITreeViewItem item, TVFocus flags = TVFocus.EnsureVisible)
 		=> SetFocusedItem(_IndexOfOrThrow(item, canBeNull: true), flags);
-
+	
 	///
 	protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e) {
 		_Invalidate();
 		base.OnGotKeyboardFocus(e);
 	}
-
+	
 	///
 	protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e) {
 		_MouseEnd();
 		_Invalidate();
 		base.OnLostKeyboardFocus(e);
 	}
-
+	
 	/// <summary>
 	/// Has checkboxes.
 	/// </summary>
@@ -714,7 +714,7 @@ public unsafe partial class KTreeView {
 		}
 	}
 	bool _hasCheckboxes;
-
+	
 	/// <summary>
 	/// Gets checked items (<see cref="TVCheck.Checked"/>). Returns empty list if none checked.
 	/// </summary>
@@ -725,7 +725,7 @@ public unsafe partial class KTreeView {
 			return a;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets checked items (<see cref="TVCheck.Checked"/>). Returns empty list if none checked.
 	/// </summary>
@@ -736,7 +736,7 @@ public unsafe partial class KTreeView {
 			return a;
 		}
 	}
-
+	
 	//rejected. Then also need setter, but CheckState is read-only and I don't want to make it read-write.
 	//	/// <summary>
 	//	/// Gets checked items (<see cref="TVCheck.Checked"/>) as flags.
@@ -756,24 +756,24 @@ public unsafe partial class KTreeView {
 	//			return flags;
 	//		}
 	//	}
-
+	
 	#endregion
-
+	
 	#region edit label
-
+	
 	/// <summary>
 	/// Starts focused item text editing.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">Control not created.</exception>
 	public void EditLabel(Action<bool> ended = null) { int i = _focusedIndex; if (i >= 0) EditLabel(i, ended); }
-
+	
 	/// <summary>
 	/// Starts item text editing.
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="InvalidOperationException">Control not created.</exception>
 	public void EditLabel(ITreeViewItem item, Action<bool> ended = null) => _EditLabel(item, _IndexOfOrThrow(item), ended);
-
+	
 	/// <summary>
 	/// Starts item text editing.
 	/// </summary>
@@ -783,12 +783,12 @@ public unsafe partial class KTreeView {
 		if (!_IndexToItem(index, out var item)) throw new IndexOutOfRangeException();
 		_EditLabel(item, index, ended);
 	}
-
+	
 	void _EditLabel(ITreeViewItem item, int index, Action<bool> ended) {
 		EndEditLabel();
 		EnsureVisible(index);
 		if (!IsFocused) Focus();
-
+		
 		_leItem = item;
 		_leEnded = ended;
 		var r = GetRectPhysical(index, TVParts.Text, inScreen: true);
@@ -813,7 +813,7 @@ public unsafe partial class KTreeView {
 		_leTB.Focus();
 		
 		EditLabelStarted?.Invoke(_leItem, _leTB);
-
+		
 		//		timer.after(1000,_=>Visibility=Visibility.Collapsed);
 		//		timer.after(1000,_=>Window.GetWindow(this).Hide());
 		//		timer.after(2000,_=>Window.GetWindow(this).Show());
@@ -821,7 +821,7 @@ public unsafe partial class KTreeView {
 		//		timer.after(1000,_=>Expand(0, false));
 		//		timer.after(1000,_=>ItemsRoot=null);
 	}
-
+	
 	KPopup _lePopup;
 	TextBox _leTB;
 	ITreeViewItem _leItem;
@@ -831,7 +831,7 @@ public unsafe partial class KTreeView {
 	/// When item text editing started.
 	/// </summary>
 	public event Action<ITreeViewItem, TextBox> EditLabelStarted;
-
+	
 	/// <summary>
 	/// Ends item text editing.
 	/// </summary>
@@ -854,25 +854,25 @@ public unsafe partial class KTreeView {
 		}
 		ended?.Invoke(!cancel);
 	}
-
+	
 	#endregion
-
+	
 	#region drag & drop
-
+	
 	///
 	protected override void OnDragLeave(DragEventArgs e) {
 		base.OnDragLeave(e);
 		_dd?.ClearInsertMark();
 		_dd = null;
 	}
-
+	
 	///
 	protected override void OnDrop(DragEventArgs e) {
 		base.OnDrop(e);
 		_dd?.ClearInsertMark();
 		_dd = null;
 	}
-
+	
 	/// <summary>
 	/// Can be called from "drag over" override or event handler to show/hide insertion mark, expand/collapse folder and scroll if need.
 	/// </summary>
@@ -927,7 +927,7 @@ public unsafe partial class KTreeView {
 		}
 		//insertion mark
 		if (!noMark) _dd.SetInsertMark(d.targetIndex, d.insertAfter, d.intoFolder);
-
+		
 		bool _Scroll(int scroll, bool absolute) {
 			if (!absolute) scroll += _vscroll.Pos;
 			int i = Math.Clamp(scroll, 0, _vscroll.Max);
@@ -937,7 +937,7 @@ public unsafe partial class KTreeView {
 			return true;
 		}
 	}
-
+	
 	//fields for drag scrolling and insertion mark
 	class _DragDrop {
 		KTreeView _tv;
@@ -946,12 +946,12 @@ public unsafe partial class KTreeView {
 		public POINT scrollDelayPoint;
 		public int insertIndex;
 		public bool insertAfter, insertFolder;
-
+		
 		public _DragDrop(KTreeView tv) {
 			_tv = tv;
 			insertIndex = -1;
 		}
-
+		
 		public void SetInsertMark(int i, bool after, bool folder) {
 			if (i == insertIndex && after == insertAfter && folder == insertFolder) return;
 			int pi = insertIndex;
@@ -959,11 +959,11 @@ public unsafe partial class KTreeView {
 			if (pi >= 0) _tv._Invalidate(pi);
 			if (i >= 0) _tv._Invalidate(i);
 		}
-
+		
 		public void ClearInsertMark() => SetInsertMark(-1, false, false);
 	}
 	_DragDrop _dd;
-
+	
 	/// <summary>
 	/// Can be called from "drag over" and "drop" overrides or event handlers to get drop info.
 	/// This overload uses mouse position (<see cref="wnd.MouseClientXY"/>).
@@ -971,7 +971,7 @@ public unsafe partial class KTreeView {
 	/// <param name="d"></param>
 	/// <seealso cref="OnDragOver2"/>
 	public void GetDropInfo(out TVDropInfo d) => GetDropInfo(_w.MouseClientXY, out d);
-
+	
 	/// <summary>
 	/// Can be called from "drag over" and "drop" overrides or event handlers to get drop info.
 	/// </summary>
@@ -994,12 +994,12 @@ public unsafe partial class KTreeView {
 				else if (h.index < _avi.Length - 1 && _avi[h.index + 1].level > _avi[h.index].level) d.targetIndex++; //between folder and its first child
 				else d.insertAfter = after;
 			} else d.insertAfter = after;
-
+			
 			d.targetItem = _avi[d.targetIndex].item;
 		} else {
 			d.targetIndex = -1;
 		}
 	}
-
+	
 	#endregion
 }

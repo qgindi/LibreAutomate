@@ -48,7 +48,7 @@ namespace Au.More;
 /// }
 /// ]]></code>
 /// </example>
-/// <seealso cref="keys.waitForHotkey(double, KHotkey, bool)"/>
+/// <seealso cref="keys.waitForHotkey(Seconds, KHotkey, bool)"/>
 public struct RegisteredHotkey : IDisposable {
 	wnd _w;
 	int? _id;

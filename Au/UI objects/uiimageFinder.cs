@@ -116,8 +116,8 @@ public unsafe class uiimageFinder {
 	/// <summary>
 	/// Finds the first image displayed in the specified window or other area. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>waitS</i> negative).</returns>
-	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw <b>NotFoundException</b>.</param>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>wait</i> negative).</returns>
+	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw <b>NotFoundException</b>.</param>
 	/// <exception cref="AuWndException">Invalid window handle.</exception>
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
@@ -126,7 +126,7 @@ public unsafe class uiimageFinder {
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
 	/// <inheritdoc cref="uiimage.find" path="/param"/>
-	public uiimage Find(IFArea area, double waitS) => Exists(area, waitS) ? Result : null;
+	public uiimage Find(IFArea area, Seconds wait) => Exists(area, wait) ? Result : null;
 
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
 	/// <inheritdoc cref="Find(IFArea)"/>
@@ -135,26 +135,26 @@ public unsafe class uiimageFinder {
 		return _Find();
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
-	/// <inheritdoc cref="Find(IFArea, double)"/>
-	public bool Exists(IFArea area, double waitS) {
-		bool r = waitS == 0 ? Exists(area) : Wait_(Action_.Wait, waitS < 0 ? waitS : -waitS, area);
-		return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
+	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <inheritdoc cref="Find(IFArea, Seconds)"/>
+	public bool Exists(IFArea area, Seconds wait) {
+		bool r = wait.Exists_() ? Exists(area) : Wait_(Action_.Wait, wait, area);
+		return r || wait.ReturnFalseOrThrowNotFound_();
 	}
 
 	/// <summary>
 	/// See <see cref="uiimage.wait"/>.
 	/// </summary>
-	/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="Exception">Exceptions of <see cref="uiimage.wait"/>, except those of the constructor.</exception>
 	/// <remarks>
-	/// Same as <see cref="Find(IFArea, double)"/>, except:
+	/// Same as <see cref="Find(IFArea, Seconds)"/>, except:
 	/// - 0 timeout means infinite.
 	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
 	/// </remarks>
-	/// <inheritdoc cref="Find(IFArea, double)" path="/param"/>
-	public uiimage Wait(double secondsTimeout, IFArea area)
-		=> Wait_(Action_.Wait, secondsTimeout, area) ? Result : null;
+	/// <inheritdoc cref="Find(IFArea, Seconds)" path="/param"/>
+	public uiimage Wait(Seconds timeout, IFArea area)
+		=> Wait_(Action_.Wait, timeout, area) ? Result : null;
 	//SHOULDDO: suspend waiting while a mouse button is pressed.
 	//	Now, eg if finds while scrolling, although MouseMove waits until buttons released, but moves to the old (wrong) place.
 
@@ -162,14 +162,14 @@ public unsafe class uiimageFinder {
 	/// See <see cref="uiimage.waitNot"/>.
 	/// </summary>
 	/// <exception cref="Exception">Exceptions of <see cref="uiimage.waitNot"/>, except those of the constructor.</exception>
-	/// <inheritdoc cref="Wait(double, IFArea)" path="/param"/>
-	public bool WaitNot(double secondsTimeout, IFArea area)
-		=> Wait_(Action_.WaitNot, secondsTimeout, area);
+	/// <inheritdoc cref="Wait(Seconds, IFArea)" path="/param"/>
+	public bool WaitNot(Seconds timeout, IFArea area)
+		=> Wait_(Action_.WaitNot, timeout, area);
 
-	internal bool Wait_(Action_ action, double secondsTimeout, IFArea area) {
+	internal bool Wait_(Action_ action, Seconds timeout, IFArea area) {
 		if (area.Type == IFArea.AreaType.Bitmap) throw new ArgumentException("Bitmap and wait");
 		_Before(area, action);
-		try { return wait.forCondition(secondsTimeout, () => _Find() ^ (action > Action_.Wait)); }
+		try { return wait.until(timeout, () => _Find() ^ (action > Action_.Wait)); }
 		finally { _After(); }
 
 		//tested: does not create garbage while waiting.

@@ -429,7 +429,7 @@ static partial class App {
 			r.EnsureSuccessStatusCode();
 			var s = await r.Content.ReadAsStringAsync();
 			s = s.Lines()[0];
-			if (s != Version) {
+			if (s != Version && System.Version.TryParse(Version, out var v1) && System.Version.TryParse(s, out var v2) && v2 > v1) {
 				//Panels.Output.Scintilla.AaTags.AddLinkTag("+appUpdate", _Update);
 				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
 				print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");

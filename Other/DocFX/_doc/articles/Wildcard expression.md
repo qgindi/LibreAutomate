@@ -31,8 +31,7 @@ Can start with `"**options "`:
 
 If the function argument is null or omitted, it usually means 'match any'. Wildcard expression `""` matches only `""`. Exception **ArgumentException** if invalid `"**options "` or regular expression.
 
-#### Examples
-
+Examples:
 ```csharp
 //Find window. Its name ends with "- Notepad" and program is "notepad.exe".
 var w = wnd.find("*- Notepad", program: "notepad.exe");

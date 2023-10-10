@@ -513,8 +513,8 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 			//expand folder "Task Scheduler Library"
 			var tv = w.Child(id: 12785);
 			tv.Focus();
-			var htvi = wait.forCondition(5, () => tv.Send(TVM_GETNEXTITEM, TVGN_CHILD, tv.Send(TVM_GETNEXTITEM)));
-			wait.forCondition(10, () => 0 != tv.Send(TVM_EXPAND, TVE_EXPAND, htvi)); //note: don't wait for TVM_GETITEMSTATE TVIS_EXPANDED
+			var htvi = wait.until(5, () => tv.Send(TVM_GETNEXTITEM, TVGN_CHILD, tv.Send(TVM_GETNEXTITEM)));
+			wait.until(10, () => 0 != tv.Send(TVM_EXPAND, TVE_EXPAND, htvi)); //note: don't wait for TVM_GETITEMSTATE TVIS_EXPANDED
 			
 			//open the specified folder
 			var e = elm.fromWindow(tv, EObjid.CLIENT);

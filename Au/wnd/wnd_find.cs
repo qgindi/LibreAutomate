@@ -89,17 +89,17 @@ namespace Au {
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
-		/// <returns>Window handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
-		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <returns>Window handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
+		/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 		/// <exception cref="NotFoundException" />
 		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
 		public static wnd find(
-			double waitS,
+			Seconds wait,
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
-			) => new wndFinder(name, cn, of, flags, also, contains).Find(waitS);
+			) => new wndFinder(name, cn, of, flags, also, contains).Find(wait);
 
 		//rejected: probably most users will not understand/use it. It's easy and more clear to create and use wndFinder instances.
 		///// <summary>
@@ -209,11 +209,11 @@ namespace Au {
 		/// <summary>
 		/// Finds a top-level window, like <see cref="find"/>. If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="run.it"/>.
 		/// </summary>
-		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>waitS</i> &lt; 0 (else exception).</returns>
+		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>wait</i> &lt; 0 (else exception).</returns>
 		/// <param name="run">Callback function. See example.</param>
-		/// <param name="waitS">How long to wait for the window after calling the callback function. Seconds. Default 60.</param>
+		/// <param name="wait">How long to wait for the window after calling the callback function. Seconds. Default 60.</param>
 		/// <param name="activate">Activate the window. Default: true.</param>
-		/// <exception cref="NotFoundException"><i>waitS</i> time has expired (if &gt;= 0).</exception>
+		/// <exception cref="NotFoundException"><i>wait</i> time has expired (if &gt;= 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -227,7 +227,7 @@ namespace Au {
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default,
-			Action run = null, double waitS = 60d, bool activate = true) {
+			Action run = null, Seconds? wait = default, bool activate = true) {
 			wnd w = default;
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			if (f.Exists()) {
@@ -235,7 +235,7 @@ namespace Au {
 				if (activate) w.Activate();
 			} else {
 				run();
-				if (!f.Exists(waitS)) return default;
+				if (!f.Exists(wait ?? new(60))) return default;
 				w = f.Result;
 				if (activate) w._ActivateAfterRun();
 			}
@@ -263,11 +263,11 @@ namespace Au {
 		/// <summary>
 		/// Opens and finds new window. Ignores old windows. Activates.
 		/// </summary>
-		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>secondsTimeout</i> &lt; 0 (else exception).</returns>
-		/// <param name="secondsTimeout">How long to wait for the window. Seconds. Can be 0 (infinite), &gt;0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> &lt; 0 (else exception).</returns>
+		/// <param name="timeout">How long to wait for the window. Seconds. Can be 0 (infinite), &gt;0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="run">Callback function. Should open the window. See example.</param>
 		/// <param name="activate">Activate the window. Default: true.</param>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <remarks>
 		/// This function isn't the same as just two statements <b>run.it</b> and <b>wnd.find</b>. It never returns a window that already existed before calling it.
@@ -281,7 +281,7 @@ namespace Au {
 		/// ]]></code>
 		/// </example>
 		/// <inheritdoc cref="find(string, string, WOwner, WFlags, Func{wnd, bool}, WContains)" path="//param|//exception"/>
-		public static wnd runAndFind(Action run, double secondsTimeout,
+		public static wnd runAndFind(Action run, Seconds timeout,
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
@@ -292,8 +292,8 @@ namespace Au {
 
 			run();
 
-			var to = new WaitLoop(secondsTimeout);
-			while (to.Sleep()) {
+			var loop = new WaitLoop(timeout);
+			while (loop.Sleep()) {
 				var w = f.Find();
 				if (!w.Is0 && !a.Contains(w)) {
 					if (activate) w._ActivateAfterRun();
