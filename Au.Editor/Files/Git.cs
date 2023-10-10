@@ -377,7 +377,7 @@ This tool modifies only the .git folder, not workspace files.
 			TextBox tUrl = null;
 			
 			b.R.StartGrid();
-			Action lHelp = () => HelpUtil.AuHelp("editor/git, backup, sync"),
+			Action lHelp = () => HelpUtil.AuHelp("editor/Git, backup, sync"),
 				lGithub = () => run.itSafe(tUrl.TextOrNull() ?? "https://github.com");
 			b.Add<TextBlock>().FormatText($"<a {lHelp}>Help</a>    <a href='{_dir}'>Workspace folder</a>    <a {lGithub}>GitHub</a>").Align(y: VerticalAlignment.Center);
 			b.End();

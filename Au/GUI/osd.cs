@@ -714,8 +714,8 @@ namespace Au {
 		
 		/// <summary>
 		/// Close the OSD window after this time, seconds.
+		/// If 0 (default), depends on text length. Can be <see cref="Timeout.Infinite"/> (-1).
 		/// </summary>
-		/// <value>If 0 (default), depends on text length. Can be <see cref="Timeout.Infinite"/> (-1).</value>
 		public int SecondsTimeout {
 			get => _secondsTimeout;
 			set {

@@ -41,8 +41,6 @@ Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 ### Download
 [Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.18.0, 2023-10-10, 25 MB
 
-If Chrome cannot start the downloaded setup program: right-click it and select "Show in folder".
-
 The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 
 ### Links

@@ -28,6 +28,8 @@ May need to undefine TRACE in some projects. Usually not using TRACE in Release 
 May need to delete test code. Or use #if TRACE, like in Tests.cs.
 	Review perf and print.
 
+May need to add new OS version to class osVersion. Usually once/year.
+
 Change version info (see above).
 
 Build solution in config Release/AnyCPU. Build in config Release/x86.
