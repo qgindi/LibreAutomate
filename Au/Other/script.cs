@@ -435,7 +435,7 @@ public static class script {
 		}
 		if (Api.WaitForSingleObject(h, 0) == 0) return null;
 
-		var w = wait.forCondition(-1d, () => wnd.findFast(processId.ToS(), c_auxWndClassName, messageOnly: true));
+		var w = wait.until(-1d, () => wnd.findFast(processId.ToS(), c_auxWndClassName, messageOnly: true));
 		if (w.Is0) return 0 == Api.WaitForSingleObject(h, 1000); //don't terminate, maybe it's not a script process
 		w.Post(Api.WM_CLOSE);
 		if (0 == Api.WaitForSingleObject(h, 1000)) return true;
@@ -486,7 +486,7 @@ public static class script {
 		using var h = Handle_.OpenProcess(processId, Api.SYNCHRONIZE);
 		if (h.Is0 || Api.WaitForSingleObject(h, 0) == 0) return false;
 
-		var w1 = wait.forCondition(-0.5, () => wnd.findFast(processId.ToS(), script.c_auxWndClassName, messageOnly: true));
+		var w1 = wait.until(-0.5, () => wnd.findFast(processId.ToS(), script.c_auxWndClassName, messageOnly: true));
 		return !w1.Is0;
 	}
 
@@ -848,15 +848,15 @@ public static class script {
 				var d = new dialog("Waiting for debugger to attach", $"Process {process.thisExeName}  {process.thisProcessId}.");
 				d.Screen = screen.ofMouse;
 				d.ShowDialogNoWait();
-				wait.forCondition(0, () => Debugger.IsAttached);
+				wait.until(0, () => Debugger.IsAttached);
 				d.Send.Close();
 			} else {
 				var w = ScriptEditor.WndMsg_;
 				if (!w.Is0 && 0 != w.Send(Api.WM_USER, 30, process.thisProcessId)) { //run debugger script specified in Options
-					wait.forCondition(0, () => Debugger.IsAttached);
+					wait.until(0, () => Debugger.IsAttached);
 				} else {
 					print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
-					wait.forCondition(0, () => Debugger.IsAttached);
+					wait.until(0, () => Debugger.IsAttached);
 					print.it("Debugger attached.");
 				}
 			}
@@ -1014,8 +1014,7 @@ public static class script {
 			if (!text.NE()) s += $"\n{text}";
 			using var icon = ImageUtil.LoadGdipBitmapFromXaml("<Viewbox Width='32' Height='32' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><Path Data='M13,16V8H15V16H13M9,16V8H11V16H9M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z' Stretch='Uniform' Fill='#FFD631' UseLayoutRounding='False' SnapsToDevicePixels='False' /></Viewbox>", screen.primary.Dpi);
 			using (osdText.showText(s, -1, new(y: ^10), icon, 0xffffff, 0x444444, showMode: OsdMode.WeakThread)) {
-				OWait ow = new(2, doEvents);
-				wait.forCondition(0, () => !paused, ow);
+				wait.until(new(0) { Period = 2, DoEvents = doEvents }, () => !paused);
 			}
 		}
 	}

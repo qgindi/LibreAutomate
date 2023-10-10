@@ -22,8 +22,6 @@ global using RStr = System.ReadOnlySpan<char>;
 global using Win32Exception = System.ComponentModel.Win32Exception;
 global using EditorBrowsableAttribute = System.ComponentModel.EditorBrowsableAttribute;
 global using EditorBrowsableState = System.ComponentModel.EditorBrowsableState;
-global using InvalidEnumArgumentException = System.ComponentModel.InvalidEnumArgumentException;
-global using CancelEventHandler = System.ComponentModel.CancelEventHandler;
 global using CancelEventArgs = System.ComponentModel.CancelEventArgs;
 global using IEnumerable = System.Collections.IEnumerable;
 global using IEnumerator = System.Collections.IEnumerator;
@@ -35,7 +33,7 @@ global using IEnumerator = System.Collections.IEnumerator;
 [assembly: AssemblyCopyright("Copyright 2020-2023 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.17.2")]
+[assembly: AssemblyVersion("0.18.0")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

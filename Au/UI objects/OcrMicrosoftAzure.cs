@@ -46,10 +46,10 @@ public class OcrMicrosoftAzure : IOcrEngine {
 		url = r.Headers.GetValues("Operation-Location").First();
 		//perf.next();
 		500.ms();
-		var j = wait.forCondition(90, () => {
+		var j = wait.until(new(90) { Period = 300 }, () => {
 			var v = internet.http_.Get(url, headers: headers).Json();
 			return (string)v["status"] == "succeeded" ? v : null;
-		}, new(300));
+		});
 		//perf.nw();
 		return _ParseJson(j["analyzeResult"], scale);
 	}

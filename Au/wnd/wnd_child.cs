@@ -49,17 +49,17 @@ namespace Au {
 		/// <summary>
 		/// Finds a child control and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
-		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
-		/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
+		/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
 		/// <exception cref="NotFoundException" />
 		/// <inheritdoc cref="Child(string, string, WCFlags, int?, Func{wnd, bool}, int)"/>
 		public wnd Child(
-			double waitS,
+			Seconds wait,
 			[ParamString(PSFormat.Wildex)] string name = null,
 			[ParamString(PSFormat.Wildex)] string cn = null,
 			WCFlags flags = 0, int? id = null, Func<wnd, bool> also = null, int skip = 0
-			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this, waitS);
+			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this, wait);
 
 		/// <summary>
 		/// Finds all matching child controls.
@@ -143,7 +143,7 @@ namespace Au {
 		/// </example>
 		public bool HasElm(elmFinder f) => f.Find_(false, this, null);
 
-		//rejected. Use Child. Don't need 2 function for the same. Also the waitS parameter is confusing. Also there is no finder.
+		//rejected. Use Child. Don't need 2 function for the same. Also the wait parameter is confusing. Also there is no finder.
 		//	This is faster and less garbage, but it's not so important. Also there is ChildFast(id) for direct children.
 		///// <summary>
 		///// Finds a child control by its id and returns its handle as <see cref="wnd"/>.
@@ -178,21 +178,21 @@ namespace Au {
 		///// <summary>
 		///// Finds a child control by its id and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
 		///// </summary>
-		///// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
-		///// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+		///// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
+		///// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 		///// <param name="id"></param>
 		///// <param name="flags"></param>
 		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc). Or closed while waiting.</exception>
 		///// <exception cref="NotFoundException" />
-		//public wnd ChildById(double waitS, int id, WCFlags flags = 0) {
+		//public wnd ChildById(Seconds wait, int id, WCFlags flags = 0) {
 		//	wnd r;
-		//	if (waitS == 0) {
+		//	if (wait.Exists_()) {
 		//		r = ChildById(id, flags);
 		//	} else {
-		//		var to = new WaitLoop(waitS < 0 ? waitS : -waitS);
+		//		var to = new WaitLoop(wait);
 		//		do { r = ChildById(id, flags); if (!r.Is0) break; } while (to.Sleep());
 		//	}
-		//	return !r.Is0 || double.IsNegative(waitS) ? r : throw new NotFoundException();
+		//	return !r.Is0 || wait.Time < 0 ? r : throw new NotFoundException();
 		//}
 
 		//struct _KidEnumData

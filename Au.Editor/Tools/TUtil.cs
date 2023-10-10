@@ -237,7 +237,7 @@ static class TUtil {
 				
 				if (orRun) {
 					b.Append(", run: () => { ").Append(orRunW).Append(" }");
-					if (!orThrowW) b.Append(", waitS: -60");
+					if (!orThrowW) b.Append(", wait: -60");
 				}
 				if (orRun || andRun) {
 					if (!activate) b.Append(", activate: !true");

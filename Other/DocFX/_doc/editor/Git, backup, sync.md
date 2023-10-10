@@ -21,9 +21,8 @@ You need a [GitHub](https://github.com/) account, and a private repository there
 3. If Git not installed, click the Install button. It installs MinGit (minimal Git) in the LibreAutomate folder (subfolder "Git"). Or you can download and install Git for Windows (not in LA folder); let it set PATH variable.
 4. Click OK. What it does:
     - Connects to your GitHub account to verify the repository.
-    - Initializes local Git repository (hidden subfolder ".git" in the workspace folder).
-    - If the GitHub repository is not empty, can clone it instead.
-    - If the subfolder already exists, just updates the URL.
+    - Creates/initializes local Git repository (hidden subfolder ".git" in the workspace folder).
+    - If local repository already exists, just updates its settings (URL).
     - Creates files ".gitignore" and ".gitattributes" if missing.
 5. Now you can use other Git menu commands. To access it faster, you can unhide the Git button in the File toolbar.
 
@@ -50,6 +49,8 @@ LibreAutomate uses Git command line programs to perform most of the work. Theref
 Files and folders imported as links usually are not in the workspace folder and therefore are not included in backup.
 
 The current branch must be "main". Else Git menu commands refuse to work.
+
+Default Git credential helper is Git Credential Manager. If it does not work on your computer, use another helper.
 
 ### Other Git software
 
@@ -106,6 +107,17 @@ If using the same workspace on multiple computers, you can exclude these small f
 
 If you don't exclude some big files that are unnecessary to backup, after some time the ".git" folder can become very big. Then you can try "Maintenance" in the Git menu. Or install and use git-filter-repo or similar tool. Afterwards you may want to add these files to .gitignore.
 
-### Restore workspace files from backup
+### Restoring workspace files from backup
 
-TODO
+If you have the workspace folder with Git repository on current computer, you can restore workspace files to the state saved at the time of the last or some older commit. A commit is a backup; you make it with Git menu command "Commit" or "Push to GitHub". To restore, use [Git software](#other-git-software).
+
+In GitHub Desktop:
+- If there are files displayed in the Changes tab and you want to restore them from the last commit:
+    - To restore all files: menu Branch -> Discard all changes.
+    - To restore a file: right click it and select "Discard changes". With Ctrl or Shift you can select multiple files.
+    - Alternative way to restore all files: commit and then revert (read below).
+- Or you can restore the workspace from an older commit. In History right click the top commit and select "Revert". It retains all commits and adds 1 new commit. If need, repeat this for other commits made after the wanted commit, in top-down order.
+
+After restoring, if LibreAutomate is running, in its Git menu select "Reload workspace". Or exit LibreAutomate before restoring.
+
+If you don't have the workspace folder with Git repository on current computer, you can clone (download) it from a GitHub repository. Run LibreAutomate, and it will open the last used or new workspace. In the Git menu click "Git setup", enter repository URL, select Clone, OK. Then you can open and use the cloned workspace. Or you can clone using any Git software.

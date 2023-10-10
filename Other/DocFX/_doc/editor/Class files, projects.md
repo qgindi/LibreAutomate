@@ -5,7 +5,7 @@ uid: class_project
 # Class files, projects
 A [script](xref:script) can contain functions and classes. Also can use those from class files and libraries.
 
-#### Class files
+### Class files
 A class file contains C# code of one or more classes with functions that can be used in other C# files (script, class). By default it cannot run when you click the Run button.
 
 There are several ways to include class files in a C# file X:
@@ -13,7 +13,7 @@ There are several ways to include class files in a C# file X:
 - create a library and in X Properties click Add reference -> Project. Used when the library has multiple class files with classes that can be used anywhere.
 - create a project and add class files to the project folder. Used when the classes are used only in that project.
 
-#### Projects
+### Projects
 A folder named like <i>@Project</i> (starts with @) is a project folder. To create: menu -> File -> New -> New project.
 
 Projects are used to compile multiple C# files together. The compilation creates a single assembly file that can be executed as a script or .exe program or used as a .dll library.
@@ -26,18 +26,18 @@ The folder can contain more scripts, but they are not part of the project. If th
 
 Usually project files are used only in the project folder, therefore they are not included in Properties -> Add file -> Class file of scripts that are not in the folder, unless the folder name starts with @@.
 
-#### Libraries
+### Libraries
 A library is a .dll file. It contains compiled classes with functions that can be used anywhere.
 
 A library can be created from a class file, usually the main file of a library project. In Properties select role classLibrary.
 
-#### Project references
+### Project references
 Any C# file can use libraries. You can add library references in the Properties dialog. If it's a library whose source files are in current workspace, click Add reference -> Project. It is known as *project reference*. It adds a reference to the assembly created by the library, auto-compiles the library when need, and enables [code editor features](xref:code_editor) such as "go to definition".
 
-#### Test scripts
+### Test scripts
 By default a class file cannot be executed directly when you click the Run button. But you'll want to test its functions etc while creating it. For it create a *test script* that is executed instead when you click the Run button. Let the script call functions of the class file. To create a test script for a class file: try to run the class file and then click the link in the error text in the output panel. And below is another way.
 
-#### Run a class file without a test script or project
+### Run a class file without a test script or project
 Specify role miniProgram, exeProgram or editorExtension.
 
 Then at the start add code that uses the class. By default class files containing such code cannot be used in other scripts (error "Only one compilation unit can have top-level statements"). Workaround: define a preprocessor symbol, and use `#if` to disable that code when the class file is compiled as part of another script etc. Example:

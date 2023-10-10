@@ -16,14 +16,13 @@ Attribute can be enclosed in `'` or `"`. If attribute omitted, text is used as a
 
 Tags can be nested, like `<b><c green>text<><>` or `<b>text <c green>text<> text<>`.
 
-##### Examples
-
+Examples:
 ```csharp
 print.it("<>Text <i>italic<>, <c green>color<>, <link http://www.example.com>Link<>.");
 print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 ```
 
-#### Simple formatting tags
+### Simple formatting tags
 | Examples | Comments
 | - | -
 | `<b>text<>` | Bold text.
@@ -36,7 +35,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<size 10>text<>` |  Font height.<br/>Note: it can increase height of all lines.
 | `<mono>text<>` | Monospace font.
 
-#### Links
+### Links
 | Examples | Comments
 | - | -
 | `<link http://www.example.com>text<>`<br/>`<link C:\files\example.exe>text<>`<br/>`<link>http://www.example.com<>`<br/>`<link>C:\files\example.exe<>`<br/>`<link C:\example.exe|args>text<>` | Opens a web page or runs a program, file, folder.<br/>Calls function [run.itSafe]().
@@ -46,7 +45,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<open>Script5.cs<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>`<br/>`<open Script5.cs||100>text<>`<br/>`<open Script5.cs|||word>text<>`<br/>`<open Folder|expand>text<>` | Opens a script or other file of current workspace in the code editor. Optionally moves the text cursor.<br/>Can be file name, relative path in workspace, or full path.<br/>10 is 1-based line index.<br/>15 is 1-based character index in line.<br/>100 is 0-based character index in text.<br/>The word is text to find, whole word(s).<br/>Selects and expands a folder.
 | `<script>Script5.cs<>`<br/>`<script \Folder\Script5.cs>text<>`<br/>`<script Script5.cs|args0|args1>text<>` | Runs a script.
 
-#### Other tags
+### Other tags
 | Examples | Comments
 | - | -
 | `<_>text</_>` or `<\a>text</\a>` | Literal text. Tags in it are ignored.<br/>Here `\a` is escape sequence for character code 7.
@@ -54,7 +53,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<fold>text</fold>` | Folded (hidden) lines. Adds a link to unfold (show).
 | `<nonl>` | No new line. Next time will write in the same line.<br/>Must be at the end of string.
 
-#### Images
+### Images
 Images are displayed below current line. Examples:
 
 `<image "c:\images\example.png">`\

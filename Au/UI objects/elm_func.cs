@@ -17,7 +17,7 @@ namespace Au {
 				return w;
 			}
 		}
-
+		
 		/// <summary>
 		/// Low-level version of <see cref="WndContainer"/>. Does not call ThrowIfDisposed_ and _Hresult (lastError).
 		/// </summary>
@@ -28,7 +28,7 @@ namespace Au {
 			w = (wnd)i;
 			return hr;
 		}
-
+		
 		/// <summary>
 		/// Gets the top-level window that contains this UI element.
 		/// </summary>
@@ -39,7 +39,7 @@ namespace Au {
 		/// </remarks>
 		public wnd WndTopLevel => WndContainer.Window;
 		//note: named not WndWindow, to avoid using accidentally instead of WndContainer.
-
+		
 		/// <summary>
 		/// Gets location of this UI element in screen.
 		/// </summary>
@@ -49,9 +49,9 @@ namespace Au {
 		/// Most but not all UI elements support this property.
 		/// </remarks>
 		public RECT Rect { get { GetRect(out var r); return r; } }
-
+		
 		internal RECT RectRawDpi_ { get { GetRect(out var r, true); return r; } }
-
+		
 		/// <summary>
 		/// Gets location of this UI element in screen.
 		/// </summary>
@@ -76,7 +76,7 @@ namespace Au {
 			}
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets location of this UI element in the client area of window <i>w</i>.
 		/// </summary>
@@ -92,7 +92,7 @@ namespace Au {
 			if (!(GetRect(out r) && w.MapScreenToClient(ref r))) return false;
 			if (intersect) r.Intersect(_GetContainerClientRect(w));
 			return true;
-
+			
 			RECT _GetContainerClientRect(wnd w) {
 				var rc = w.ClientRect;
 				//if w is a classic listview in report view, exclude header
@@ -103,7 +103,7 @@ namespace Au {
 				return rc;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets role as enum <see cref="ERole"/>.
 		/// </summary>
@@ -121,7 +121,7 @@ namespace Au {
 				return role;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets standard or custom role, as string.
 		/// </summary>
@@ -143,9 +143,9 @@ namespace Au {
 				return (u < a.Length) ? a[u] : ((int)role).ToString();
 			}
 		}
-
+		
 		static readonly string[] s_roles = { "0", "TITLEBAR", "MENUBAR", "SCROLLBAR", "GRIP", "SOUND", "CURSOR", "CARET", "ALERT", "WINDOW", "CLIENT", "MENUPOPUP", "MENUITEM", "TOOLTIP", "APPLICATION", "DOCUMENT", "PANE", "CHART", "DIALOG", "BORDER", "GROUPING", "SEPARATOR", "TOOLBAR", "STATUSBAR", "TABLE", "COLUMNHEADER", "ROWHEADER", "COLUMN", "ROW", "CELL", "LINK", "HELPBALLOON", "CHARACTER", "LIST", "LISTITEM", "TREE", "TREEITEM", "PAGETAB", "PROPERTYPAGE", "INDICATOR", "IMAGE", "STATICTEXT", "TEXT", "BUTTON", "CHECKBOX", "RADIOBUTTON", "COMBOBOX", "DROPLIST", "PROGRESSBAR", "DIAL", "HOTKEYFIELD", "SLIDER", "SPINBUTTON", "DIAGRAM", "ANIMATION", "EQUATION", "BUTTONDROPDOWN", "BUTTONMENU", "BUTTONDROPDOWNGRID", "WHITESPACE", "PAGETABLIST", "CLOCK", "SPLITBUTTON", "IPADDRESS", "TREEBUTTON" };
-
+		
 		//Returns HRESULT.
 		int _GetRole(out ERole roleInt, out string roleStr, bool dontNeedStr) {
 			roleStr = null;
@@ -160,14 +160,14 @@ namespace Au {
 			}
 			return hr;
 		}
-
+		
 		int _GetState(out EState state) {
 			int hr = Cpp.Cpp_AccGetInt(this, 's', out int i);
 			GC.KeepAlive(this);
 			state = (EState)i;
 			return hr;
 		}
-
+		
 		/// <summary>
 		/// Gets UI element state (flags).
 		/// </summary>
@@ -185,27 +185,27 @@ namespace Au {
 				return state;
 			}
 		}
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>CHECKED</b>.</summary>
 		public bool IsChecked => State.Has(EState.CHECKED);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>CHECKED</b>, null if has state <b>MIXED</b>, else false. Use this function with 3-state checkboxes.</summary>
 		public bool? IsChecked2 => (State & (EState.CHECKED | EState.MIXED)) switch { EState.CHECKED => true, 0 => false, _ => null };
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>UNAVAILABLE</b>.</summary>
 		/// <remarks>Does not check whether this UI element is in a disabled parent/ancestor UI element.</remarks>
 		public bool IsDisabled => State.Has(EState.DISABLED);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>FOCUSED</b>.</summary>
 		public bool IsFocused => State.Has(EState.FOCUSED);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>INVISIBLE</b> and does not have state <b>OFFSCREEN</b>.</summary>
 		/// <remarks>
 		/// If the UI element has both <b>INVISIBLE</b> and <b>OFFSCREEN</b> states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most UI elements returns false (is visible), but for UI elements that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
 		/// Does not check whether this UI element is in an invisible parent/ancestor UI element.
 		/// </remarks>
 		public bool IsInvisible => IsInvisible_(State);
-
+		
 		internal bool IsInvisible_(EState state) {
 			if (!state.Has(EState.INVISIBLE)) return false;
 			if (!state.Has(EState.OFFSCREEN)) return true;
@@ -221,23 +221,23 @@ namespace Au {
 			}
 			return false;
 		}
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>OFFSCREEN</b>.</summary>
 		public bool IsOffscreen => State.Has(EState.OFFSCREEN);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>PROTECTED</b>.</summary>
 		/// <remarks>This state is used for password fields.</remarks>
 		public bool IsPassword => State.Has(EState.PROTECTED);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>PRESSED</b>.</summary>
 		public bool IsPressed => State.Has(EState.PRESSED);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>READONLY</b>.</summary>
 		public bool IsReadonly => State.Has(EState.READONLY);
-
+		
 		/// <summary>Calls <see cref="State"/> and returns true if has state <b>SELECTED</b>.</summary>
 		public bool IsSelected => State.Has(EState.SELECTED);
-
+		
 		/// <summary>
 		/// Converts BSTR to string and disposes the BSTR.
 		/// If hr is not 0, returns "" (never null).
@@ -246,7 +246,7 @@ namespace Au {
 			if (hr == 0) return b.ToStringAndDispose() ?? "";
 			return "";
 		}
-
+		
 		string _GetStringProp(char prop) {
 			ThrowIfDisposed_();
 			int hr = Cpp.Cpp_AccGetStringProp(this, prop, out var b);
@@ -255,12 +255,12 @@ namespace Au {
 			_Hresult((_FuncId)prop, hr);
 			return s;
 		}
-
+		
 		static string _GetStringPropL(Cpp.Cpp_Acc a, char prop) {
 			int hr = Cpp.Cpp_AccGetStringProp(a, prop, out var b);
 			return _BstrToString(hr, b);
 		}
-
+		
 		/// <summary>
 		/// Gets name.
 		/// </summary>
@@ -270,13 +270,13 @@ namespace Au {
 		/// </remarks>
 		public string Name {
 			get => _GetStringProp('n');
-
+			
 			//note: bug of standard toolbar buttons: fails to get name if all these are true:
 			//	This process is 64-bit and the target process is 32-bit.
 			//	Button Name property comes from its tooltip.
 			//	Found not inproc, eg with flag NotInProc.
 		}
-
+		
 		/// <summary>
 		/// Gets <see cref="Name"/> of window/control <i>w</i>.
 		/// Returns null if <i>w</i> invalid. Returns <c>""</c> if failed to get name.
@@ -285,10 +285,10 @@ namespace Au {
 			if (!w.IsAlive) return null;
 			var hr = Cpp.Cpp_AccFromWindow(1 | 2, w, 0, out _, out var b);
 			return _BstrToString(hr, b);
-
+			
 			//speed: inproc ~10% faster. But first time slower, especially if process of different bitness.
 		}
-
+		
 		/// <summary>
 		/// Gets or sets value.
 		/// </summary>
@@ -305,7 +305,7 @@ namespace Au {
 				AuException.ThrowIfHresultNot0(_InvokeL('v', value));
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets description.
 		/// </summary>
@@ -313,7 +313,7 @@ namespace Au {
 		public string Description {
 			get => _GetStringProp('d');
 		}
-
+		
 		/// <summary>
 		/// Gets help text.
 		/// </summary>
@@ -321,7 +321,7 @@ namespace Au {
 		public string Help {
 			get => _GetStringProp('h');
 		}
-
+		
 		/// <summary>
 		/// Gets the UI Automation <b>AutomationId</b> property.
 		/// </summary>
@@ -332,7 +332,7 @@ namespace Au {
 		public string UiaId {
 			get => _GetStringProp('u');
 		}
-
+		
 		/// <summary>
 		/// Gets the UI Automation <b>ClassName</b> property.
 		/// </summary>
@@ -343,7 +343,7 @@ namespace Au {
 		public string UiaCN {
 			get => _GetStringProp('U');
 		}
-
+		
 		/// <summary>
 		/// Gets keyboard shortcut.
 		/// </summary>
@@ -351,7 +351,7 @@ namespace Au {
 		public string KeyboardShortcut {
 			get => _GetStringProp('k');
 		}
-
+		
 		/// <summary>
 		/// Gets default action of <see cref="Invoke"/>.
 		/// </summary>
@@ -363,7 +363,7 @@ namespace Au {
 		public string DefaultAction {
 			get => _GetStringProp('a');
 		}
-
+		
 		/// <summary>
 		/// Performs the UI element's default action (see <see cref="DefaultAction"/>). Usually it is 'click', 'press' or similar.
 		/// </summary>
@@ -376,7 +376,7 @@ namespace Au {
 			ThrowIfDisposed_();
 			_Invoke();
 		}
-
+		
 		/// <summary>
 		/// Calls <b>_InvokeL</b>, with <b>ButtonPostClickWorkaround_</b> if need. Exception if failed.
 		/// </summary>
@@ -391,7 +391,7 @@ namespace Au {
 			AuException.ThrowIfHresultNot0(hr, errMsg);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
-
+		
 		/// <summary>
 		/// Calls EnableActivate(-1) and Cpp_AccAction.
 		/// </summary>
@@ -401,18 +401,18 @@ namespace Au {
 			//	Eg ExpandCollapse pattern (always) and Invoke/Toggle patterns (buttons/checkboxes, not always).
 			//	Non-UIA servers also could try to activate, although now I don't remember such cases.
 			WndUtil.EnableActivate(-1); //usually quite fast, and often faster than WndContainer
-
+			
 			int hr = Cpp.Cpp_AccAction(this, action, param);
 			GC.KeepAlive(this);
 			return hr;
 		}
-
+		
 		//void _MinimalSleep()
 		//{
 		//	Thread.Sleep(15);
 		//	//if(0 == _iacc.GetWnd(out var w)) w.MinimalSleepIfOtherThread_(); //better don't call getwnd
 		//}
-
+		
 		/// <summary>
 		/// Performs one of actions supported by this Java UI element.
 		/// </summary>
@@ -431,9 +431,9 @@ namespace Au {
 			//	During that time any JAB calls (probably from another thread) are blocked and fail. Tried various combinations.
 			//	Also then releaseJavaObject does not return until the dialog closed. It even does not allow our process to exit. In QM2 the same.
 			//	Previously (with old Java version?) then whole JAB crashed. Now doesn't. Or crashes only in some conditions that I now cannot reproduce.
-
+			
 			ThrowIfDisposed_();
-
+			
 			if (action == null
 				&& 0 == _GetState(out var state)
 				&& (state & (EState.FOCUSABLE | EState.SELECTABLE)) == EState.FOCUSABLE //must be only focusable. If SELECTABLE, probably don't need this workaround.
@@ -448,41 +448,43 @@ namespace Au {
 				w.MinimalSleepNoCheckThread_();
 				return;
 			}
-
+			
 			_Invoke('a', action);
 			//_MinimalSleep(); //don't need. JAB doAccessibleActions is sync, which is bad.
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="Invoke"/> or <i>action</i> and waits until changes the web page (window name and page name).
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="Invoke"/>.</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>timeout</i> &lt; 0; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed. For example, when this UI element is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="AuWndException">The window was closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions thrown by <see cref="Invoke"/> or by the <i>action</i> function.</exception>
 		/// <remarks>
 		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for UI element' function from finding a matching UI element in the old page, which would be bad.
 		/// Does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for UI element' function which waits for a known UI element that must be in the new page.
-		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the invoked action does not open a web page.
+		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>timeout</i> time or forever. The same if the invoked action does not open a web page.
 		/// </remarks>
-		public bool WebInvoke(double secondsTimeout = 60d, Action<elm> action = null) {
+		public bool WebInvoke(Seconds? timeout = null, Action<elm> action = null) {
 			wnd w = WndTopLevel; if (w.Is0) throw new AuException("*get window");
 			elm doc = w.Elm["web:"].Find(-1) ?? throw new AuException("*find web page");
-
+			
 			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!wndName.NE() && !docName.NE());
 			bool wndOK = false, docOK = false;
 			elmFinder f = null;
-
+			
 			if (action == null) Invoke(); else action(this);
-
+			
 			//wait until window name and document name both are changed. They can change in any order.
-			var to = new WaitLoop(secondsTimeout, period: 25);
-			while (to.Sleep()) {
+			var seconds = timeout ?? new(60);
+			seconds.Period ??= 25;
+			var loop = new WaitLoop(seconds);
+			while (loop.Sleep()) {
 				w.ThrowIfInvalid();
 				if (!wndOK) {
 					var s = w.NameTL_;
@@ -503,7 +505,7 @@ namespace Au {
 			}
 			return false;
 		}
-
+		
 #if false
 		//This function is finished and normally works well.
 		//However web browsers not always fire the event. For some pages never, or only when not cached.
@@ -607,7 +609,7 @@ namespace Au {
 			return false;
 		}
 #endif
-
+		
 		/// <summary>
 		/// Selects or deselects.
 		/// </summary>
@@ -620,7 +622,7 @@ namespace Au {
 		/// </remarks>
 		public void Select(ESelect how = ESelect.TAKESELECTION) {
 			ThrowIfDisposed_();
-
+			
 			//Workaround for Windows controls bugs, part 1.
 			wnd w = default, wTL = default; bool focusingControl = false;
 			if (how.Has(ESelect.TAKEFOCUS)) {
@@ -639,7 +641,7 @@ namespace Au {
 				//same as with Invoke
 				WndUtil.EnableActivate(-1);
 			}
-
+			
 			for (int i = 0; i < 2; i++) {
 				var hr = Cpp.Cpp_AccSelect(this, how);
 				GC.KeepAlive(this);
@@ -648,15 +650,15 @@ namespace Au {
 				if (hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This UI element does not support this state");
 				AuException.ThrowIfHresultNegative(hr);
 			}
-
+			
 			if (!w.Is0) w.MinimalSleepIfOtherThread_(); //sleep only when focusing. Assume selection is sync. Also need for the bug, because the control may be activated a millisecond later.
-
+			
 			//Workaround for Windows controls bugs, part 2.
 			if (focusingControl && w.IsActive) {
 				//Debug_.Print("activated control");
 				wTL.ActivateL();
 			}
-
+			
 			//tested: IAccessible.accSelect(TAKEFOCUS):
 			//	Most Windows controls have this bug: activates the control with SetForegroundWindow, which deactivates the top-level window.
 			//		Especially if the control is already focused.
@@ -673,7 +675,7 @@ namespace Au {
 			//	With WPF same as elm.
 			//	Bug: If standard control is disabled, deactivates parent window and draws focus rectangle on the control.
 		}
-
+		
 		/// <summary>
 		/// Makes this UI element focused for keyboard input.
 		/// </summary>
@@ -689,7 +691,7 @@ namespace Au {
 			if (andSelect) how |= ESelect.TAKESELECTION;
 			Select(how);
 		}
-
+		
 		/// <summary>
 		/// Gets selected direct child items.
 		/// </summary>
@@ -708,7 +710,7 @@ namespace Au {
 				return r;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets the number of direct child UI elements.
 		/// </summary>
@@ -721,7 +723,7 @@ namespace Au {
 				return cc;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets multiple properties.
 		/// </summary>
@@ -754,7 +756,7 @@ namespace Au {
 		/// </remarks>
 		public bool GetProperties(string props, out EProperties result) {
 			//CONSIDER: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
-
+			
 			result = null;
 			ThrowIfDisposed_();
 			if (props.Length == 0) return true;
@@ -797,7 +799,7 @@ namespace Au {
 			}
 			return true;
 		}
-
+		
 		internal static Dictionary<string, string> AttributesToDictionary_(char* p, int len) {
 			var d = new Dictionary<string, string>();
 			int ik = 0, iv = 0;
@@ -815,7 +817,7 @@ namespace Au {
 			//print.it(d);
 			return d;
 		}
-
+		
 		/// <summary>
 		/// Gets an adjacent or related UI element - next, child, parent, etc.
 		/// </summary>
@@ -831,7 +833,7 @@ namespace Au {
 		/// <br/>• <c>"#N"</c> - custom. More info in Remarks.
 		/// <br/>• Some elements also support <c>"up"</c>, <c>"down"</c>, <c>"left"</c>, <c>"right"</c>.
 		/// </param>
-		/// <param name="waitS">Wait for the wanted UI element max this number of seconds. If negative, waits forever.</param>
+		/// <param name="waitS">Wait for the wanted UI element max this number of seconds. Default 0 (don't wait). If negative, waits forever.</param>
 		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
 		/// <remarks>
 		/// Can be 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
@@ -854,18 +856,18 @@ namespace Au {
 			if (waitS == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
-				var to = new WaitLoop(waitS > 0 ? -waitS : 0d);
+				var loop = new WaitLoop(waitS > 0 ? -waitS : 0d);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
-				while (hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
+				while (hr != 0 && hr != (int)Cpp.EError.InvalidParameter && loop.Sleep());
 			}
 			GC.KeepAlive(this);
 			if (hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Invalid navig string.");
 			lastError.code = hr;
 			return hr == 0 ? new elm(ca) : null;
-
+			
 			//FUTURE: when fails, possibly this is disconnected etc. Retry find with same elmFinder.
 		}
-
+		
 		/// <summary>
 		/// Gets parent element. Same as <see cref="Navigate"/> with argument <c>"pa"</c>.
 		/// </summary>
@@ -874,7 +876,7 @@ namespace Au {
 		//info: Navigate("pa") is optimized in C++
 		//Chrome bug: the parent element retrieved in this way has some incorrect properties.
 		//	Eg Parent.WndContainer is the legacy control, whereas this.WndContainer is the top-level window.
-
+		
 		/// <summary>
 		/// Gets HTML.
 		/// </summary>
@@ -890,7 +892,7 @@ namespace Au {
 			GC.KeepAlive(this);
 			return _BstrToString(hr, s);
 		}
-
+		
 		/// <summary>
 		/// Gets a HTML attribute.
 		/// </summary>
@@ -907,7 +909,7 @@ namespace Au {
 			GC.KeepAlive(this);
 			return _BstrToString(hr, s);
 		}
-
+		
 		/// <summary>
 		/// Gets all HTML attributes.
 		/// </summary>
@@ -923,7 +925,7 @@ namespace Au {
 			if (hr != 0) return new();
 			using (s) return AttributesToDictionary_(s.Ptr, s.Length);
 		}
-
+		
 		/// <summary>
 		/// Scrolls this UI element into view.
 		/// </summary>
@@ -940,7 +942,7 @@ namespace Au {
 			ThrowIfDisposed_();
 			AuException.ThrowIfHresultNot0(_ScrollTo(), "*scroll");
 		}
-
+		
 		int _ScrollTo() {
 			int hr = 1;
 			if (MiscFlags.Has(EMiscFlags.UIA)) {
@@ -968,28 +970,28 @@ namespace Au {
 			GC.KeepAlive(this);
 			return hr;
 		}
-
+		
 		/// <summary>
 		/// Waits for a user-defined state/condition of this UI element. For example enabled, checked, changed name.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>, for example <c>true</c>.</param>
-		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Failed to get container window (<see cref="WndContainer"/>), or it was closed while waiting.</exception>
-		public T WaitFor<T>(double secondsTimeout, Func<elm, T> condition) {
+		public T WaitFor<T>(Seconds timeout, Func<elm, T> condition) {
 			var w = WndContainer; //calls ThrowIfDisposed_
-			var to = new WaitLoop(secondsTimeout);
+			var loop = new WaitLoop(timeout);
 			for (; ; ) {
 				w.ThrowIfInvalid();
 				T r = condition(this);
 				bool ok = !EqualityComparer<T>.Default.Equals(r, default);
 				w.ThrowIfInvalid(); //eg when waiting for button enabled, if window closed while in callback, the DISABLED state may be removed
 				if (ok) return r;
-				if (!to.Sleep()) return default;
+				if (!loop.Sleep()) return default;
 			}
 		}
-
+		
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to this UI element.
 		/// </summary>
@@ -1003,7 +1005,7 @@ namespace Au {
 		/// </remarks>
 		public void MouseMove(Coord x = default, Coord y = default, int scroll = 0)
 			=> _ElmMouseAction(false, x, y, default, scroll);
-
+		
 		/// <summary>
 		/// Clicks this UI element.
 		/// </summary>
@@ -1020,21 +1022,21 @@ namespace Au {
 			_ElmMouseAction(true, x, y, button, scroll);
 			return button;
 		}
-
+		
 		/// <summary>
 		/// Double-clicks this UI element.
 		/// </summary>
 		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton, int)"/>
 		public void MouseClickD(Coord x = default, Coord y = default, int scroll = 0)
 			=> MouseClick(x, y, MButton.DoubleClick, scroll);
-
+		
 		/// <summary>
 		/// Right-clicks this UI element.
 		/// </summary>
 		/// <inheritdoc cref="MouseClick(Coord, Coord, MButton, int)"/>
 		public void MouseClickR(Coord x = default, Coord y = default, int scroll = 0)
 			=> MouseClick(x, y, MButton.Right, scroll);
-
+		
 		void _ElmMouseAction(bool click, Coord x, Coord y, MButton button, int scroll) {
 			var (w, r) = _GetWndAndRectForClick(scroll);
 			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
@@ -1046,19 +1048,19 @@ namespace Au {
 			//	else mouse.clickEx(button, p);
 			//}
 		}
-
+		
 		(wnd w, RECT r) _GetWndAndRectForClick(int scroll) {
 			if (scroll != 0) {
 				if ((uint)scroll > 5000) throw new ArgumentException("Valid values 0-5000", nameof(scroll));
 				if (0 == _ScrollTo()) wait.ms(scroll);
 			}
-
+			
 			if (!GetRect(out var r)) throw new AuException(0, "*get UI element rectangle");
 			if (r.NoArea) throw new AuException(IsOffscreen ? "The UI element is offscreen. Try scroll." : "The UI element rectangle is empty");
 			//var w = WndContainer; //need window for mouse functions, else could click another window etc
 			var w = WndTopLevel; //direct parent control may be zero-size etc, eg in Win11 Paint when found with UIA
 			bool retry = false; var r0 = r;
-		g1:
+			g1:
 			if (!w.GetRect(out var rw)) throw new AuException(0, "*get container window");
 			if (!r.Intersect(rw)) {
 				if (!retry && scroll != 0) { //workaround for: WndContainer of a popup item may be the popup's owner. Eg WPF combobox.
@@ -1070,7 +1072,7 @@ namespace Au {
 			if (!w.MapScreenToClient(ref r)) throw new AuException(0);
 			return (w, r);
 		}
-
+		
 		//rejected: automatically scroll if need.
 		//	Impossible to reliably detect whether need to scroll.
 		//	This was an attempt, but it does not work well. And can't click non-client elements.
@@ -1090,29 +1092,29 @@ namespace Au {
 		//	if (bad) {
 		//		if (!retry) {
 		//			if (0 == _ScrollTo())
-		//				if (wait.forCondition(-2, () => (r = _GetRect()) != rr)) {
+		//				if (wait.until(-2, () => (r = _GetRect()) != rr)) {
 		//					30.ms(); retry = true; goto gRetry;
 		//				}
 		//		}
 		//		throw new AuException(0, "The UI element rectangle is " + (rr.NoArea ? "empty." : "offscreen."));
 		//	}
 		//	return (w, r);
-
+		
 		//	RECT _GetRect() => GetRect(out var r, w) ? r : throw new AuException(0, "*get UI element rectangle");
-
+		
 		//	//todo: now cannot click in nonclient area.
-
+		
 		//	//never mind: should intersect with all ancestor elements and windows.
 		//	//	Now no OFFSCREEN state if partially clipped by an ancestor rect.
 		//	//	Slow and unreliable, because visible children can be not in parent rect. Eg pagetab or treeitem.
-
+		
 		//	//problem: Firefox never updates Rect after ScrollTo. Need to find again.
 		//	//	Chrome updates after several ms. Chrome does not update OFFSCREEN (or with a delay?).
-
+		
 		//	//problem: some fake container windows may be zero-size etc, and the element is drawn on another window.
 		//	//	shoulddo: test more.
 		//}
-
+		
 		/// <summary>
 		/// Posts mouse-click messages to the container window, using coordinates in this UI element.
 		/// </summary>
@@ -1133,10 +1135,10 @@ namespace Au {
 		/// </remarks>
 		public void PostClick(Coord x = default, Coord y = default, MButton button = MButton.Left, int scroll = 0) {
 			var (w, r) = _GetWndAndRectForClick(scroll);
-
+			
 			mouse.PostClick_(w, r, x, y, button);
 		}
-
+		
 		/// <summary>
 		/// Posts mouse-double-click messages to the container window, using coordinates in this UI element.
 		/// </summary>
@@ -1146,13 +1148,13 @@ namespace Au {
 		/// </exception>
 		/// <inheritdoc cref="PostClick(Coord, Coord, MButton, int)" path="//param|//remarks"/>
 		public void PostClickD(Coord x = default, Coord y = default) => PostClick(x, y, MButton.DoubleClick);
-
+		
 		/// <summary>
 		/// Posts mouse-right-click messages to the container window, using coordinates in this UI element.
 		/// </summary>
 		/// <inheritdoc cref="PostClickD(Coord, Coord)"/>
 		public void PostClickR(Coord x = default, Coord y = default) => PostClick(x, y, MButton.Right);
-
+		
 		/// <summary>
 		/// Makes this UI element focused (<see cref="Focus"/>) and calls <see cref="keys.send"/>.
 		/// </summary>
@@ -1163,7 +1165,7 @@ namespace Au {
 			Focus(andSelect);
 			keys.send(keysEtc);
 		}
-
+		
 		//rejected: too simple and limited. No x y, scroll, button.
 		///// <summary>
 		///// Clicks this UI element and calls <see cref="keys.send"/>.
@@ -1175,14 +1177,14 @@ namespace Au {
 		//	if (doubleClick) MouseClickD(); else MouseClick();
 		//	keys.send(keysEtc);
 		//}
-
+		
 		//rejected. Use SendKeys, it allows to specify keys to replace (Ctrl+A), append (Ctrl+End), etc.
 		//public void SendText(string text, bool replace, [more options?]) {
 		//	Focus();
 		//	...
 		//	keys.sendt(text);
 		//}
-
+		
 		bool _CheckNeedToggle(bool check) {
 			ThrowIfDisposed_();
 			var state = State;
@@ -1191,7 +1193,7 @@ namespace Au {
 			if (!isChecked) isChecked = state.Has(EState.PRESSED) && !MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && RoleInt == ERole.BUTTON /*&& WndContainer.ClassNameIs("Chrome*")*/; //eg the toggle buttons in Chrome settings have state PRESSED instead of CHECKED
 			return isChecked != check;
 		}
-
+		
 		/// <summary>
 		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. Uses <see cref="Invoke"/> or <see cref="SendKeys"/>.
 		/// </summary>
@@ -1211,7 +1213,7 @@ namespace Au {
 				_Invoke(MiscFlags.Has(EMiscFlags.UIA) ? 'c' : 'a');
 			}
 		}
-
+		
 		/// <summary>
 		/// Checks or unchecks this checkbox or toggle-button, or selects this radio button. To check/uncheck calls callback function.
 		/// </summary>
@@ -1222,11 +1224,11 @@ namespace Au {
 			if (!_CheckNeedToggle(check)) return;
 			action(this);
 		}
-
+		
 		//rejected: Check and Expand overloads for mouse.
 		//	Script code like 'e.Check(true, false) looks not good.
 		//	Better 'e.Check(true, e => e.MouseClick())' or 'e.Check(true, e => e.PostClick())'.
-
+		
 		/// <summary>
 		/// Expands or collapse this expandable UI element (tree item, combo box, expander, dropdown button).
 		/// </summary>
@@ -1244,17 +1246,17 @@ namespace Au {
 		public void Expand(bool expand = true, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, keys, null, waitS, ignoreState);
 		}
-
+		
 		/// <param name="action">Callback function that should expand or collapse this UI element. Its parameter is this variable.</param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <inheritdoc cref="Expand(bool, string, double, bool)"/>
 		public void Expand(bool expand, Action<elm> action, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, null, action, waitS, ignoreState);
 		}
-
+		
 		void _Expand(bool expand, string keys, Action<elm> action, double waitS, bool ignoreState) {
 			ThrowIfDisposed_();
-
+			
 			bool _NeedToggle(bool expand) {
 				var state = State;
 				//print.it(RoleInt, Role, state);
@@ -1263,7 +1265,7 @@ namespace Au {
 				return isExpanded != expand;
 			}
 			if (!ignoreState) if (!_NeedToggle(expand)) return;
-
+			
 			int how = action != null ? 2 : keys != null ? 1 : 0;
 			if (how == 0) {
 				how = 1;
@@ -1293,7 +1295,7 @@ namespace Au {
 					}
 				}
 			}
-
+			
 			if (how == 1) {
 				Focus(andSelect: RoleInt is ERole.TREEITEM or ERole.LISTITEM or ERole.Custom); //exception if fails
 				if (keys.NE()) {
@@ -1310,12 +1312,12 @@ namespace Au {
 			} else if (how == 2) {
 				action(this);
 			}
-
+			
 			if (waitS != 0) {
 				//10.ms();
-				wait.forCondition(waitS, () => !_NeedToggle(expand));
+				wait.until(waitS, () => !_NeedToggle(expand));
 			}
-
+			
 			bool _ClassicTreeview() {
 				if (Item == 0 || RoleInt != ERole.TREEITEM) return false;
 				if (0 != _GetWnd(out wnd w) || w.CommonControlType != WControlType.Treeview) return false;
@@ -1325,7 +1327,7 @@ namespace Au {
 				return true;
 			}
 		}
-
+		
 		static void _Expand_ClassicTreeview(wnd w, nint hi, bool expand) {
 #if false //like MSAA Invoke. Bad: no TVN_ITEMEXPANDED etc; eg does not change folder icon open/closed.
 			w.Send(0x1102, expand ? 2 : 1, hi); //TVM_EXPAND(TVE_EXPAND:TVE_COLLAPSE)
@@ -1344,7 +1346,7 @@ namespace Au {
 			//CONSIDER: wnd.PostKey(), wnd.PostText().
 #endif
 		}
-
+		
 		/// <summary>
 		/// Expands multiple treeview control items using a path string.
 		/// </summary>
@@ -1370,7 +1372,7 @@ namespace Au {
 		public elm Expand(Strings path, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 3, bool notLast = false) {
 			return _ExpandPath(path, keys, null, waitS, notLast);
 		}
-
+		
 		/// <param name="action">Callback function that should expand UI elements.</param>
 		/// <exception cref="Exception">Exceptions of the callback function.</exception>
 		/// <remarks></remarks>
@@ -1378,7 +1380,7 @@ namespace Au {
 		public elm Expand(Strings path, Action<elm> action, double waitS = 3, bool notLast = false) {
 			return _ExpandPath(path, null, action, waitS, notLast);
 		}
-
+		
 		elm _ExpandPath(Strings path, string keys, Action<elm> action, double waitS, bool notLast) {
 			ThrowIfDisposed_();
 			var a = path.ToArray();
@@ -1386,21 +1388,21 @@ namespace Au {
 			//for classic treeview controls need special code if not UIA, because the MSAA tree is flat
 			if (!MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java) && 0 == _GetWnd(out wnd w) && w.CommonControlType == WControlType.Treeview) {
 				if (osVersion.is32BitProcessAnd64BitOS && !w.Is32Bit) throw new NotSupportedException("32-bit process."); //cannot get 64-bit HTREEITEM
-
+				
 				nint hi = 0;
 				if (Item > 0) {
 					hi = w.Send(TVM_MAPACCIDTOHTREEITEM, Item); if (hi == 0) throw new AuException();
 					_ExpandIfNeed(this, hi);
 				}
-
+				
 				for (int i = 0; i < a.Length; i++) {
 					var name = a[i];
-					bool ok = waitS == 0 ? _Find(name) : wait.forCondition(-Math.Abs(waitS), () => _Find(name));
+					bool ok = waitS == 0 ? _Find(name) : wait.until(-Math.Abs(waitS), () => _Find(name));
 					if (!ok) throw new NotFoundException("Not found elm expand path part: " + name);
 					if (notLast && i == a.Length - 1) break;
 					_ExpandIfNeed(e, hi);
 				}
-
+				
 				bool _Find(wildex name) {
 					elm temp = null;
 					for (nint h = w.Send(TVM_GETNEXTITEM, hi == 0 ? TVGN_ROOT : TVGN_CHILD, hi); h != 0; h = w.Send(TVM_GETNEXTITEM, TVGN_NEXT, h)) {
@@ -1418,24 +1420,24 @@ namespace Au {
 					}
 					return false;
 				}
-
+				
 				void _ExpandIfNeed(elm e, nint hi) {
 					if (_IsExpanded(w, hi)) return;
-
+					
 					if (keys != null) e.SendKeys(keys.Length > 0 ? keys : "Right");
 					else if (action != null) action(e);
 					else _Expand_ClassicTreeview(w, hi, true);
 					//p1.Next();
-
-					if (waitS != 0) wait.forCondition(waitS, () => _IsExpanded(w, hi));
+					
+					if (waitS != 0) wait.until(waitS, () => _IsExpanded(w, hi));
 					else _IsExpanded(w, hi); //usually waits
 				}
-
+				
 				static bool _IsExpanded(wnd w, nint hi) => 0 != ((int)w.Send(TVM_GETITEMSTATE, hi, TVIS_EXPANDED) & TVIS_EXPANDED);
 			} else {
 				if (State.Has(EState.COLLAPSED))
 					_Expand(true, keys, action, waitS, ignoreState: true);
-
+				
 				foreach (var name in a) {
 					int level = e.Level;
 					e = e.Elm[null, name, "level=0", also: o => o.State.HasAny(EState.EXPANDED | EState.COLLAPSED)].Find(-(Math.Abs(waitS) + .01));
@@ -1446,7 +1448,7 @@ namespace Au {
 			}
 			return e;
 		}
-
+		
 		/// <summary>
 		/// Finds and selects an item in the drop-down list of this combo box or drop-down button.
 		/// </summary>
@@ -1500,14 +1502,14 @@ namespace Au {
 			//	With standard CB MouseClick() does not work, because gives item rect same as CB rect.
 			//	With some CB selects but it does not work like when clicked. Eg does not refresh the page (eg aruodas).
 			//		In FF can't click because of bad rect, but may work together with Select(). Sometimes Enter works.
-
+			
 			ThrowIfDisposed_();
-
+			
 			elm e = null;
 			bool auto = how.NE() || how.FindNot("-1234567890") < 0;
 			int h = how.NE() ? -1 : 0; //index in how
 			bool invoke = false;
-
+			
 			#region detect window type
 			int iw = 0; //1 Chrome, 2 Firefox, 3 ribbon, 4 Qt5, 10 Java, 11 JavaFX
 			wnd w = default;
@@ -1522,7 +1524,7 @@ namespace Au {
 				}
 			}
 			#endregion
-
+			
 			#region activate/focus if need
 			if (!auto) {
 				if (how.Contains('k')) {
@@ -1535,7 +1537,7 @@ namespace Au {
 				Focus();
 			}
 			#endregion
-
+			
 			#region expand
 			bool noExpand = false, noState = false;
 			if (RoleInt == ERole.COMBOBOX) {
@@ -1550,14 +1552,14 @@ namespace Au {
 				if (h == 0) _Sleep(); else 10.ms();
 			}
 			#endregion
-
+			
 			#region find item
 			waitS = -Math.Abs(waitS);
 			var f = Elm[null, item, flags: EFFlags.HiddenToo]; //usually CB item role is LISTITEM, sometimes MENUITEM, Java "label"; let's support any. May need HiddenToo for offscreen items, eg Java.
 			if (iw is 1 or 2 && RoleInt is not ERole.COMBOBOX) {
 				_FindWebNotCOMBOBOX();
 			} else {
-				var to = new WaitLoop(waitS);
+				var loop = new WaitLoop(waitS);
 				for (; ; ) {
 					e = f.Find();
 					if (e == null) {
@@ -1574,12 +1576,12 @@ namespace Au {
 						}
 					}
 					if (e != null) break;
-					if (!to.Sleep()) break;
+					if (!loop.Sleep()) break;
 				}
 			}
 			if (e == null) throw new NotFoundException($"Can't find combo box item \"{item}\".");
 			#endregion
-
+			
 			#region select and collapse
 			if (!auto) {
 				for (; h < how.Length; h++) {
@@ -1622,7 +1624,7 @@ namespace Au {
 			}
 			#endregion
 			return e;
-
+			
 			void _Keys() {
 				var a = e.Parent.Elm[e.Role, prop: "level=0", flags: EFFlags.HiddenToo].FindAll(); //these are slow, but much faster than keys.send
 				wildex wild = item;
@@ -1630,22 +1632,22 @@ namespace Au {
 				if (i < 0) throw new AuException();
 				Au.keys.send($"Home PgUp*{a.Length / 4} Down*{i} Enter"); //Home doesn't work with editable CB; PgUp may not work with some CB
 			}
-
+			
 			void _Sleep() {
 				if (!how[h].IsAsciiDigit()) { if (e == null) return; throw new ArgumentException("Invalid character " + how[h], "how"); }
 				if (!how.ToInt(out int ms, h, out h)) throw new ArgumentException("Invalid number", "how");
 				ms.ms();
 			}
-
+			
 			void _FindWebNotCOMBOBOX() {
 				//Web pages have multiple CB types. Sometimes the dropdown list isn't a descendant of the CB.
 				//	In Google Advanced Search it is LIST with 2 children: MENUITEM and LISTITEM with same name (the selected).
 				//		The list is a MENUPOPUP/MENUITEM near the bottom of the document. It may not contain the selected item.
 				//	In Github profile Stars it is BUTTON with 0 children.
 				//		The list is a MENUPOPUP/MENUITEM in its parent.
-
+				
 				elm pa = null, doc = null;
-				var to = new WaitLoop(waitS);
+				var loop = new WaitLoop(waitS);
 				for (; ; ) {
 					e = f.Find(); //if the item is already selected, the dropdown list may not contain it, and this finds it
 					if (e != null) break;
@@ -1665,11 +1667,11 @@ namespace Au {
 						invoke = true; //selects and closes in FF too; else difficult/unreliable.
 						break;
 					}
-					if (!to.Sleep()) break;
+					if (!loop.Sleep()) break;
 				}
 			}
 		}
-
+		
 		//wnd _GetOwnedPopupWindow(wnd w, RECT? r = null) {
 		//	var p = w.Window.Get.EnabledOwned();
 		//	if (!p.Is0) {
@@ -1681,26 +1683,26 @@ namespace Au {
 		//	}
 		//	return p;
 		//}
-
+		
 		const int TVM_MAPACCIDTOHTREEITEM = 0x112A;
 		const int TVM_GETNEXTITEM = 0x110A;
 		const int TVM_MAPHTREEITEMTOACCID = 0x112B;
 		const int TVM_GETITEMSTATE = 0x1127;
 		const int TVM_ENSUREVISIBLE = 0x1114;
 		const int TVM_SELECTITEM = 0x110B;
-
+		
 		const int TVGN_ROOT = 0x0;
 		const int TVGN_CHILD = 0x4;
 		const int TVGN_NEXT = 0x1;
 		const int TVGN_CARET = 0x9;
 		const int TVSI_NOSINGLEEXPAND = 0x8000;
-
+		
 		const int TVIS_EXPANDED = 0x20;
-
+		
 		const int LVM_ENSUREVISIBLE = 0x1013;
-
+		
 		const int LB_SETTOPINDEX = 0x197;
-
+		
 	}
 }
 

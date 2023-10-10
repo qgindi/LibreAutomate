@@ -76,7 +76,7 @@ public partial class KPanels {
 		/// When user tries to close this leaf item.
 		/// Only if added with <see cref="AddSibling"/> with <i>canClose</i> true.
 		/// </summary>
-		event CancelEventHandler Closing;
+		event System.ComponentModel.CancelEventHandler Closing;
 		
 		///// <summary>
 		///// When opening context menu of this leaf item.

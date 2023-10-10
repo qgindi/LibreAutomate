@@ -90,15 +90,15 @@ public class wndChildFinder {
 	/// <summary>
 	/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>waitS</i> negative).</returns>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
 	/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
-	/// <param name="waitS">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
+	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 	/// <exception cref="NotFoundException" />
 	/// <remarks>
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
-	public wnd Find(wnd wParent, double waitS) => Exists(wParent, waitS) ? Result : default;
+	public wnd Find(wnd wParent, Seconds wait) => Exists(wParent, wait) ? Result : default;
 
 	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
 	/// <inheritdoc cref="Find(wnd)"/>
@@ -107,11 +107,11 @@ public class wndChildFinder {
 		return _FindInList(wParent, k) >= 0;
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>waitS</i> negative).</returns>
-	/// <inheritdoc cref="Find(wnd, double)"/>
-	public bool Exists(wnd wParent, double waitS) {
-		var r = waitS == 0d ? Exists(wParent) : wait.forCondition(waitS < 0 ? waitS : -waitS, () => Exists(wParent));
-		return r || double.IsNegative(waitS) ? r : throw new NotFoundException();
+	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <inheritdoc cref="Find(wnd, Seconds)"/>
+	public bool Exists(wnd wParent, Seconds wait) {
+		var r = wait.Exists_() ? Exists(wParent) : Au.wait.until(wait, () => Exists(wParent));
+		return r || wait.ReturnFalseOrThrowNotFound_();
 	}
 
 	ArrayBuilder_<wnd> _AllChildren(wnd wParent) {

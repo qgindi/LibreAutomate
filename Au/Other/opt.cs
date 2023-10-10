@@ -1,12 +1,3 @@
-//CONSIDER: instead of static options use a settings file. Because now need to set static options for each script, and rare script uses multiple threads.
-
-//SHOULDDO: add options for wnd/elm/uiimage find functions to wait. Now converting find to wait in script is tedious.
-//	opt.wait.WndFind = 2;
-//	or
-//	opt.find.WndWait = 2;
-//	But such options must be applied only in that file.
-//	Or something in the find function. Maybe overload or last parameter. Or findW.
-
 namespace Au {
 	/// <summary>
 	/// Options for some functions of this library.
@@ -45,7 +36,7 @@ namespace Au {
 		/// </example>
 		public static OKey key => t_key ??= new OKey(init.key);
 		[ThreadStatic] static OKey t_key;
-
+		
 		/// <summary>
 		/// Options for mouse functions (class <see cref="Au.mouse"/> and functions that use it).
 		/// </summary>
@@ -60,17 +51,15 @@ namespace Au {
 		/// </example>
 		public static OMouse mouse => t_mouse ??= new OMouse(init.mouse);
 		[ThreadStatic] static OMouse t_mouse;
-
+		
 		/// <summary>
-		/// Options for 'wait for' functions.
+		/// Obsolete. Use <see cref="Seconds"/> instead.
+		/// For backward compatibility, wait functions still use <c>opt.wait.DoEvents</c> if <b>Seconds.DoEvents</b> not specified.
 		/// </summary>
-		/// <remarks>
-		/// Each thread has its own <b>opt.wait</b> instance. There is no <b>opt.init.wait</b>.
-		/// Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
-		/// </remarks>
-		public static OWait wait => t_wait ??= new OWait(10, false); //note: specify all ctor parameters, else stack overflow, because for null parameters it calls this property
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static OWait wait => t_wait ??= new OWait();
 		[ThreadStatic] static OWait t_wait;
-
+		
 		/// <summary>
 		/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
 		/// </summary>
@@ -86,7 +75,7 @@ namespace Au {
 		/// </example>
 		public static OWarnings warnings => t_warnings ??= new OWarnings(init.warnings);
 		[ThreadStatic] static OWarnings t_warnings;
-
+		
 		//rejected. Use opt.scope.
 		///// <summary>
 		///// Resets all options. Copies from <see cref="opt.init"/>.
@@ -98,7 +87,7 @@ namespace Au {
 		//	t_waitFor?.Reset();
 		//	t_warnings?.Reset();
 		//}
-
+		
 		/// <summary>
 		/// Default <see cref="opt"/> properties of a thread.
 		/// </summary>
@@ -126,7 +115,7 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static OKey key { get; } = new OKey();
-
+			
 			/// <summary>
 			/// Default option values for <see cref="opt.mouse"/> of a thread.
 			/// </summary>
@@ -138,7 +127,7 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static OMouse mouse { get; } = new OMouse();
-
+			
 			/// <summary>
 			/// Default option values for <see cref="opt.warnings"/> of a thread.
 			/// </summary>
@@ -148,9 +137,9 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static OWarnings warnings { get; } = new OWarnings();
-
+			
 		}
-
+		
 		/// <summary>
 		/// Creates temporary scopes for options.
 		/// Example: <c>using(opt.scope.key()) { opt.key.KeySpeed=5; ... }</c>.
@@ -174,14 +163,14 @@ namespace Au {
 				var old = _Mouse(inherit);
 				return new UsingEndAction(() => t_mouse = old);
 			}
-
+			
 			static OMouse _Mouse(bool inherit) {
 				var old = t_mouse;
 				//t_mouse = new OMouse((old != null && inherit) ? old : Static.Mouse);
 				t_mouse = (old != null && inherit) ? new OMouse(old) : null; //lazy
 				return old;
 			}
-
+			
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.key"/> options. See example.
 			/// </summary>
@@ -200,39 +189,27 @@ namespace Au {
 				var old = _Key(inherit);
 				return new UsingEndAction(() => t_key = old);
 			}
-
+			
 			static OKey _Key(bool inherit) {
 				var old = t_key;
 				//t_key = new OKey((old != null && inherit) ? old : Static.Key);
 				t_key = (old != null && inherit) ? new OKey(old) : null; //lazy
 				return old;
 			}
-
-			/// <summary>
-			/// Creates temporary scope for <see cref="opt.wait"/> options. See example.
-			/// </summary>
-			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="opt.init"/>).</param>
-			/// <example>
-			/// <code><![CDATA[
-			/// print.it(opt.wait.Period);
-			/// using(opt.scope.wait()) {
-			/// 	opt.wait.Period = 5;
-			/// 	print.it(opt.wait.Period);
-			/// } //here restored automatically
-			/// print.it(opt.wait.Period);
-			/// ]]></code>
-			/// </example>
+			
+			///
+			[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
 			public static UsingEndAction wait(bool inherit = true) {
 				var old = _Wait(inherit);
 				return new UsingEndAction(() => t_wait = old);
 			}
-
+			
 			static OWait _Wait(bool inherit) {
 				var old = t_wait;
-				t_wait = (old != null && inherit) ? new OWait(old.Period, old.DoEvents) : null; //lazy
+				t_wait = (old != null && inherit) ? new OWait() { DoEvents = old.DoEvents, Period = old.Period } : null; //lazy
 				return old;
 			}
-
+			
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.warnings"/> options. See example.
 			/// </summary>
@@ -253,14 +230,14 @@ namespace Au {
 				var old = _Warnings(inherit);
 				return new UsingEndAction(() => t_warnings = old);
 			}
-
+			
 			static OWarnings _Warnings(bool inherit) {
 				var old = t_warnings;
 				//t_warnings = new OWarnings((old != null && inherit) ? old : Static.Warnings);
 				t_warnings = (old != null && inherit) ? new OWarnings(old) : null; //lazy
 				return old;
 			}
-
+			
 			/// <summary>
 			/// Creates temporary scope for all options. See example.
 			/// </summary>
@@ -315,7 +292,7 @@ namespace Au.Types {
 	public class OWarnings {
 		bool? _verbose;
 		List<string> _disabledWarnings;
-
+		
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
@@ -325,18 +302,18 @@ namespace Au.Types {
 				_Copy(cloneOptions);
 			}
 		}
-
+		
 		void _Copy(OWarnings o) {
 			_verbose = o._verbose;
 			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
 		}
-
+		
 		//rejected. Use opt.scope.
 		///// <summary>
 		///// Resets all options. Copies from <see cref="opt.init.warnings"/>.
 		///// </summary>
 		//public void Reset() => _Copy(opt.init.warnings);
-
+		
 		/// <summary>
 		/// If true, some library functions may display more warnings and other info.
 		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="AssemblyUtil_.IsDebug"/>.
@@ -350,7 +327,7 @@ namespace Au.Types {
 			get => (_verbose ??= script.isDebug) == true;
 			set => _verbose = value;
 		}
-
+		
 		/// <summary>
 		/// Disables one or more run-time warnings.
 		/// </summary>
@@ -381,7 +358,7 @@ namespace Au.Types {
 			_disabledWarnings.AddRange(warningsWild);
 			return new UsingEndAction(() => _disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount));
 		}
-
+		
 		/// <summary>
 		/// Returns true if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
 		/// </summary>
@@ -393,7 +370,7 @@ namespace Au.Types {
 			return false;
 		}
 	}
-
+	
 	/// <summary>
 	/// Options for functions of class <see cref="mouse"/>.
 	/// </summary>
@@ -414,7 +391,7 @@ namespace Au.Types {
 			public bool Relaxed;
 		}
 		_Options _o;
-
+		
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
@@ -431,21 +408,21 @@ namespace Au.Types {
 				//_o.Relaxed = false;
 			}
 		}
-
+		
 		//rejected. Use opt.scope.
 		///// <summary>
 		///// Resets all options. Copies from <see cref="opt.init.mouse"/>.
 		///// </summary>
 		//public void Reset() => _o = opt.init.mouse._o;
-
+		
 		bool _IsStatic => this == opt.init.mouse;
-
+		
 		int _SetValue(int value, int max, int maxStatic) {
 			var m = _IsStatic ? maxStatic : max;
 			if ((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
 			return value;
 		}
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
 		/// Default: 20.
@@ -461,7 +438,7 @@ namespace Au.Types {
 			get => _o.ClickSpeed;
 			set => _o.ClickSpeed = _SetValue(value, 1000, 100);
 		}
-
+		
 		/// <summary>
 		/// If not 0, makes mouse movements slower, not instant.
 		/// Default: 0.
@@ -482,7 +459,7 @@ namespace Au.Types {
 			get => _o.MoveSpeed;
 			set => _o.MoveSpeed = _SetValue(value, 10000, 100);
 		}
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
 		/// Default: 10.
@@ -501,7 +478,7 @@ namespace Au.Types {
 			get => _o.ClickSleepFinally;
 			set => _o.ClickSleepFinally = _SetValue(value, 10000, 100);
 		}
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
 		/// Default: 10.
@@ -520,7 +497,7 @@ namespace Au.Types {
 			get => _o.MoveSleepFinally;
 			set => _o.MoveSleepFinally = _SetValue(value, 1000, 100);
 		}
-
+		
 		/// <summary>
 		/// Make some functions less strict (throw less exceptions etc).
 		/// Default: false.
@@ -544,7 +521,7 @@ namespace Au.Types {
 		/// </example>
 		public bool Relaxed { get => _o.Relaxed; set => _o.Relaxed = value; }
 	}
-
+	
 	/// <summary>
 	/// Options for functions of class <see cref="keys"/>.
 	/// Some options also are used with <see cref="clipboard"/> functions that send keys (Ctrl+V etc).
@@ -564,7 +541,7 @@ namespace Au.Types {
 		public OKey(OKey cloneOptions = null) {
 			CopyOrDefault_(cloneOptions);
 		}
-
+		
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
@@ -606,13 +583,13 @@ namespace Au.Types {
 			//			}
 			//#endif
 		}
-
+		
 		//rejected. Use opt.scope.
 		///// <summary>
 		///// Resets all options. Copies from <see cref="opt.init.key"/>.
 		///// </summary>
 		//public void Reset() => CopyOrDefault_(opt.init.key);
-
+		
 		/// <summary>
 		/// Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 		/// </summary>
@@ -624,7 +601,7 @@ namespace Au.Types {
 			call(new OKeyHookData(R, wFocus));
 			return R;
 		}
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="keys.sendt"/>. Also by <see cref="keys.send"/> and similar functions for <c>"!text"</c> arguments.
 		/// Default: 0.
@@ -644,7 +621,7 @@ namespace Au.Types {
 			set => _textSpeed = _SetValue(value, 1000, 100);
 		}
 		int _textSpeed;
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="keys.send"/> and similar functions, except for <c>"!text"</c> arguments.
 		/// Default: 2.
@@ -664,7 +641,7 @@ namespace Au.Types {
 			set => _keySpeed = _SetValue(value, 1000, 100);
 		}
 		int _keySpeed;
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
 		/// Default: 5.
@@ -684,7 +661,7 @@ namespace Au.Types {
 			set => _clipboardKeySpeed = _SetValue(value, 1000, 100);
 		}
 		int _clipboardKeySpeed;
-
+		
 		/// <summary>
 		/// How long to wait (milliseconds) before a 'send keys or text' function returns.
 		/// Default: 10.
@@ -704,9 +681,9 @@ namespace Au.Types {
 			set => _sleepFinally = _SetValue(value, 10000, 100);
 		}
 		int _sleepFinally;
-
+		
 		bool _IsStatic => this == opt.init.key;
-
+		
 		int _SetValue(int value, int max, int maxStatic) {
 			var m = _IsStatic ? maxStatic : max;
 			if ((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
@@ -718,7 +695,7 @@ namespace Au.Types {
 		//	if(value.CompareTo(m) > 0 || value.CompareTo(default) < 0) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
 		//	return value;
 		//}
-
+		
 		/// <summary>
 		/// How to send text to the active window (keys, characters or clipboard).
 		/// Default: <see cref="OKeyText.Characters"/>.
@@ -729,7 +706,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public OKeyText TextHow { get; set; }
-
+		
 		/// <summary>
 		/// To send text use clipboard (like with <see cref="OKeyText.Paste"/>) if text length is &gt;= this value.
 		/// Default: 200.
@@ -745,7 +722,7 @@ namespace Au.Types {
 			set => _pasteLength = _SetValue(value, int.MaxValue, int.MaxValue);
 		}
 		int _pasteLength;
-
+		
 		/// <summary>
 		/// When pasting text that ends with space, tab or/and newline characters, remove them and after pasting send them as keys.
 		/// Default: false.
@@ -759,7 +736,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public bool PasteWorkaround { get; set; }
-
+		
 		//rejected: rarely used. Eg can be useful for Python programmers. Let call clipboard.paste() explicitly or set the Paste option eg in hook.
 		///// <summary>
 		///// To send text use <see cref="OKeyText.Paste"/> if text contains characters '\n' followed by '\t' (tab) or spaces.
@@ -768,7 +745,7 @@ namespace Au.Types {
 		///// Some apps auto-indent. This option is a workaround.
 		///// </remarks>
 		//public bool PasteMultilineIndented { get; set; }
-
+		
 		/// <summary>
 		/// Whether to restore clipboard data when copying or pasting text.
 		/// Default: true.
@@ -785,9 +762,9 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public bool RestoreClipboard { get; set; }
-
+		
 		#region static RestoreClipboard options
-
+		
 		/// <summary>
 		/// When copying or pasting text, restore clipboard data of all formats that are possible to restore.
 		/// Default: false - restore only text.
@@ -805,7 +782,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static bool RestoreClipboardAllFormats { get; set; }
-
+		
 		/// <summary>
 		/// When copying or pasting text, and <see cref="RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
 		/// Default: null.
@@ -829,7 +806,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static string[] RestoreClipboardExceptFormats { get; set; }
-
+		
 		/// <summary>
 		/// Writes to the output some info about current clipboard data.
 		/// </summary>
@@ -844,9 +821,9 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static void PrintClipboard() => clipboard.PrintClipboard_();
-
+		
 		#endregion
-
+		
 		/// <summary>
 		/// When starting to send keys or text, don't release modifier keys.
 		/// Default: false.
@@ -857,7 +834,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public bool NoModOff { get; set; }
-
+		
 		/// <summary>
 		/// When starting to send keys or text, don't turn off CapsLock.
 		/// Default: false.
@@ -868,7 +845,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public bool NoCapsOff { get; set; }
-
+		
 		/// <summary>
 		/// While sending or pasting keys or text, don't block user-pressed keys.
 		/// Default: false.
@@ -882,7 +859,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public bool NoBlockInput { get; set; }
-
+		
 		/// <summary>
 		/// Callback function that can modify options of 'send keys or text' functions depending on active window etc.
 		/// Default: null.
@@ -911,24 +888,24 @@ namespace Au.Types {
 		/// </example>
 		public Action<OKeyHookData> Hook { get; set; }
 	}
-
+	
 	/// <summary>
 	/// Parameter type of the <see cref="OKey.Hook"/> callback function.
 	/// </summary>
 	public struct OKeyHookData {
 		internal OKeyHookData(OKey optk, wnd w) { this.optk = optk; this.w = w; }
-
+		
 		/// <summary>
 		/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
 		/// </summary>
 		public readonly OKey optk;
-
+		
 		/// <summary>
 		/// The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
 		/// </summary>
 		public readonly wnd w;
 	}
-
+	
 	/// <summary>
 	/// How functions send text.
 	/// See <see cref="OKey.TextHow"/>.
@@ -953,21 +930,21 @@ namespace Au.Types {
 		//Does not work with Pidgin (GTK), but works eg with Inkscape (GTK too).
 		//I guess does not work with many games.
 		//In PhraseExpress this is default. Its alternative methods are SendKeys (does not send Unicode chars) and clipboard. It uses clipboard if text is long, default 100. Allows to choose different for specified apps. Does not add any delays between chars; for some apps too fast, eg VirtualBox edit fields when text contains Unicode surrogates.
-
+		
 		/// <summary>
 		/// Send virtual-key codes, with Shift etc where need.
 		/// All apps support it.
 		/// If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <b>Characters</b> option.
 		/// </summary>
 		KeysOrChar,
-
+		
 		/// <summary>
 		/// Send virtual-key codes, with Shift etc where need.
 		/// All apps support it.
 		/// If text contains characters that cannot be simply typed with the keyboard using current keyboard layout, clipboard-pastes whole text.
 		/// </summary>
 		KeysOrPaste,
-
+		
 		/// <summary>
 		/// Paste text using the clipboard and Ctrl+V.
 		/// Few apps don't support it.
@@ -977,77 +954,34 @@ namespace Au.Types {
 		/// When pasting text, previous clipboard data of some formats is lost. Text is restored by default.
 		/// </summary>
 		Paste,
-
+		
 		//rejected: WmPaste. Few windows support it.
 		//rejected: WM_CHAR. It isn't sync with keyboard/mouse input. It has sense only if window specified (send to inactive window). Maybe will add a function in the future.
 	}
-
+	
 	/// <summary>
-	/// Options for 'wait for' functions.
+	/// Obsolete. Use <see cref="Seconds"/> instead. Some wait functions may still use some <b>OWait</b> properties for backward compatibility.
 	/// </summary>
-	/// <seealso cref="opt.wait"/>
-	/// <seealso cref="wait.forCondition"/>
-	/// <seealso cref="WaitLoop"/>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class OWait {
 		/// <summary>
-		/// The sleep time between checking the wait condition. Milliseconds.
-		/// Default: 10.
+		/// Obsolete. Use <see cref="Seconds"/> instead.
 		/// </summary>
-		/// <value>Valid values: 1-1000.</value>
-		/// <remarks>
-		/// Most 'wait for' functions of this library use <see cref="WaitLoop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
-		/// This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
-		/// </remarks>
-		/// <seealso cref="WaitLoop.Period"/>
-		/// <example>
-		/// <code><![CDATA[
-		/// opt.wait.Period = 100;
-		/// ]]></code>
-		/// </example>
-		public int Period { get => _period; set => _period = Math.Clamp(value, 1, 1000); }
-		int _period;
-
-		/// <summary>
-		/// Use <see cref="wait.doEvents(int)"/> instead of <see cref="wait.ms"/>.
-		/// Default: false.
-		/// </summary>
-		/// <remarks>
-		/// Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="wait.doEvents(int)"/>.
-		/// </remarks>
-		/// <seealso cref="wait.forMessagesAndCondition"/>
-		/// <example>
-		/// <code><![CDATA[
-		/// opt.wait.DoEvents = true;
-		/// ]]></code>
-		/// </example>
 		public bool DoEvents { get; set; }
-
-		/// <param name="period">Sets <see cref="Period"/>. If null, uses <c>opt.wait.Period</c> (default 10).</param>
-		/// <param name="doEvents">Sets <see cref="DoEvents"/>. If null, uses <c>opt.wait.DoEvents</c> (default false).</param>
+		
+		/// <summary>
+		/// Obsolete. Used only by obsolete/hidden wait functions. Use <see cref="Seconds"/> instead.
+		/// </summary>
+		public int Period { get; set; }
+		
+		internal OWait() { Period = 10; }
+		
+		/// <summary>
+		/// Obsolete. Use <see cref="Seconds"/> instead.
+		/// </summary>
 		public OWait(int? period = null, bool? doEvents = null) {
-			//note: call opt.wait only for null parameters, and let opt.wait specify all parameters, else stack overflow
-			Period = period ?? opt.wait.Period;
 			DoEvents = doEvents ?? opt.wait.DoEvents;
+			Period = period ?? opt.wait.Period;
 		}
-
-		//rejected. Use opt.scope.
-		///// <summary>
-		///// Resets all options.
-		///// </summary>
-		//public void Reset()
-		//{
-		//	Period = 10; DoEvents = false;
-		//}
-
-		//no
-		///// <summary>
-		///// Implicit conversion from int. Sets <see cref="Period"/>.
-		///// </summary>
-		//public static implicit operator OWait(int period) => new OptWaitFor(period, false);
-
-		///// <summary>
-		///// Implicit conversion from bool. Sets <see cref="DoEvents"/>.
-		///// </summary>
-		//public static implicit operator OWait(bool doEvents) => new OptWaitFor(10, doEvents);
 	}
 }

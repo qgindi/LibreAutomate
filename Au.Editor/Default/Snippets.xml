@@ -162,7 +162,7 @@ default: return;
 			<list item="&amp;Number input">if (!dialog.showInputNumber(out int i, "$end$")) return;</list>
 		</snippet>
 
-		<snippet name="winFindSnippet" info="Find window." more="With non-negative waitS argument (0, ) throws exception if not found.">
+		<snippet name="winFindSnippet" info="Find window.">
 			<![CDATA[var w = wnd.find(0, "$end$*Name$end$");]]>
 		</snippet>
 

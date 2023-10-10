@@ -115,7 +115,7 @@ unsafe struct ProcessStarter_ {
 			g1:
 			var w = Api.GetShellWindow();
 			if (w.Is0) { //if Explorer process killed or crashed, wait until it restarts
-				if (!wait.forCondition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"*start process '{_exe}' as user. There is no shell process.");
+				if (!wait.until(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"*start process '{_exe}' as user. There is no shell process.");
 				500.ms();
 				w = Api.GetShellWindow();
 			}

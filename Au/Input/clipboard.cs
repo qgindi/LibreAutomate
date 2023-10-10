@@ -461,7 +461,7 @@ public static class clipboard {
 			int n = 6, t = 500; //max 3 s (6*500 ms). If hung, max 28 s.
 			if (timeoutMS > 0) { n = (timeoutMS + 500 - 1) / 500; t = timeoutMS / n; }
 			while (!Success) {
-				wait.Wait_(t, WHFlags.DoEvents, null, this);
+				wait.Wait_(t, WHFlags.DoEvents, stopVar: this);
 				if (Success) break;
 				if (--n == 0) throw new AuException(_paste ? "*paste" : "*copy");
 				ctrlKey.Release();
@@ -566,10 +566,10 @@ public static class clipboard {
 		/// <exception cref="AuException">Failed to open.</exception>
 		public bool Reopen(bool noThrow = false) {
 			Debug.Assert(!_isOpen);
-			var to = new WaitLoop(noThrow ? -1 : -10, period: 1);
+			var loop = new WaitLoop(new(noThrow ? -1 : -10) { Period = 1 });
 			while (!Api.OpenClipboard(_w)) {
 				int ec = lastError.code;
-				if (!to.Sleep()) {
+				if (!loop.Sleep()) {
 					Dispose();
 					if (noThrow) return false;
 					throw new AuException(ec, "*open clipboard");

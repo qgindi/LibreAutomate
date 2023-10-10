@@ -39,7 +39,7 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.17.2, 2023-08-14, 25 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.18.0, 2023-10-10, 25 MB
 
 If Chrome cannot start the downloaded setup program: right-click it and select "Show in folder".
 

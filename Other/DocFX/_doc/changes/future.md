@@ -1,7 +1,7 @@
-## Version 0.18.0 (2023-)
+## Version 0.18.0 (2023-10-10)
 
 ### Editor
-You can use Git and GitHub to backup and sync workspace files (scripts etc): menu File -> Git.
+Menu File -> Git. Use Git and GitHub to backup and sync workspace files (scripts etc).
 
 In autocompletion list you can press the [+] button or Ctrl+Space to include all types or extension methods, not only those from 'using' namespaces.
 
@@ -14,21 +14,24 @@ Fixed bugs:
 - Incorrectly formats code if it contains multiline block comments.
 
 ### Library
-New classes:
-- **FileTree**.
+New classes and structs:
+- **Seconds** (wait timeout and options).
 - **AppSingleInstance**.
+- **FileTree**.
 
 New members:
 - **script.restart**.
 - **filesystem.setAttributes**.
-- **wpfBuilder.FormatText**, **wpfBuilder.FormattedText**.
-
-New parameters:
-- .
+- **wpfBuilder.FormatText** and **FormattedText**.
+- **wait.until** (replaces **forCondition**) and **doEventsUntil** (replaces **forMessagesAndCondition**).
 
 Improved:
-- .
+- In most wait functions the timeout parameter now is of type **Seconds** (was **double**). It allows to specify wait options and cancellation token.
 
 Fixed bugs:
 - **dialog**: default button isn't the first in the list as documented.
-- **WaitLoop** and **wait.forCondition**: incorrectly combines *options* with **opt.wait**.
+
+### Breaking changes
+**OWait** and **opt.wait** now are obsolete. The new way to set wait options is like `wnd.wait(new Seconds(3) { Period = 100, DoEvents = true }, ...)`. For backward compatibility, wait functions still use **opt.wait.DoEvents** if **Seconds.DoEvents** not specified.
+
+In wait functions renamed parameter *secondsTimeout* to *timeout*, and *waitS* to *wait*. Because the type now is **Seconds**.

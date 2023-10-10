@@ -1,18 +1,18 @@
 namespace Au;
 
 /// <summary>
-/// Contains functions to wait for a custom condition, handle, etc, or simply wait (sleep).
+/// Contains functions to wait for a custom condition, handle, etc, or simply sleep.
 /// </summary>
 /// <remarks>
 /// Specialized 'wait for' functions are in other classes, for example <see cref="wnd.wait"/>.
 /// 
-/// All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
+/// All 'wait for' functions have a timeout parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If > 0, throws <see cref="TimeoutException"/> when timed out. If &lt; 0, then stops waiting and returns default value of that type (false, etc).
 /// 
-/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a <b>Window</b>/<b>Form</b>/<b>Control</b> event handler, the window would stop responding. Use another thread, for example async/await/<b>Task</b>, like in the example. Or option <see cref="OWait.DoEvents"/>.
+/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a <b>Window</b>/<b>Form</b>/<b>Control</b> event handler, the window would stop responding. Use another thread, for example async/await/<b>Task</b>, like in the example. Or <see cref="Seconds.DoEvents"/>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
-/// wait.forCondition(0, () => keys.isScrollLock);
+/// wait.until(0, () => keys.isScrollLock);
 /// print.it("ScrollLock now is toggled");
 /// ]]></code>
 /// Using in a WPF window with async/await.
@@ -21,7 +21,7 @@ namespace Au;
 /// var b = new wpfBuilder("Window").WinSize(250);
 /// b.R.AddButton("Wait", async _ => {
 /// 	  print.it("waiting for ScrollLock...");
-/// 	  var result = await Task.Run(() => wait.forCondition(-10, () => keys.isScrollLock));
+/// 	  var result = await Task.Run(() => wait.until(-10, () => keys.isScrollLock));
 /// 	  print.it(result);
 /// });
 /// if (!b.ShowDialog()) return;
@@ -99,22 +99,19 @@ public static partial class wait {
 		ms((int)t);
 	}
 	//Maybe this should not be an extension method.
-	//	Code like 0.5.s() looks weird and better should use 500.ms(). Rarely need non-integer time when > 1 s.
-	//	But: 1. Symmetry. 2. Makes easier to convert QM2 code, like 0.5 to 0.5.s(); not 500.ms();.
+	//	Code like 0.5.s() looks weird. Better 500.ms(). Rarely need non-integer time when > 1 s.
+	//	But: 1. Symmetry. 2. Easier to convert QM code, like 0.5 to 0.5.s(); not 500.ms();.
 	
 	/// <summary>
 	/// Waits <i>timeMS</i> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
 	/// </summary>
 	/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <remarks>
-	/// Unlike <see cref="ms"/>, this function retrieves and dispatches Windows messages, calls .NET event handlers, hook procedures, timer functions, COM/RPC, APC, etc.
-	/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/<b>Task</b>. In some places this function does not work as expected, for example in <b>Form</b>/<b>Control</b> mouse event handlers .NET blocks other mouse events.
-	/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="doEvents()"/>.
+	/// Unlike <see cref="ms"/>, this function retrieves and dispatches Windows messages, calls .NET event handlers, hook procedures, timer functions, COM, etc.
+	/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/<b>Task</b>.
 	/// If <i>timeMS</i> is -1, returns when receives <msdn>WM_QUIT</msdn> message.
 	/// </remarks>
 	/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not -1 (<b>Timeout.Infinite</b>).</exception>
-	/// <seealso cref="forMessagesAndCondition"/>
-	/// <seealso cref="forPostedMessage"/>
 	public static unsafe void doEvents(int timeMS) {
 		if (timeMS < -1) throw new ArgumentOutOfRangeException();
 		if (timeMS == 0) {
@@ -175,7 +172,7 @@ public static partial class wait {
 		}
 		
 		/// <summary>
-		/// Like <b>Pump</b>, but can call a callback function. Used by <see cref="Wait_(long, WHFlags, object, WaitVariable_, IntPtr[])"/>.
+		/// Like <b>Pump</b>, but can call a callback function. Used by <see cref="Wait_"/>.
 		/// </summary>
 		/// <param name="msgCallback">
 		/// null or callback function of type:
@@ -183,7 +180,7 @@ public static partial class wait {
 		/// <br/>• Func&lt;bool&gt; - called after dispatching all messages.
 		/// </param>
 		/// <returns>true if <i>msgCallback</i> returned true.</returns>
-		public bool PumpWithCallback(object msgCallback) {
+		public bool PumpWithCallback(Delegate msgCallback) {
 			bool R = false;
 			while (Api.PeekMessage(out var m)) {
 				if (msgCallback is WPMCallback callback1) {
