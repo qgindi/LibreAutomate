@@ -146,7 +146,7 @@ class CiErrors {
 		foreach (var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
 			//print.it(format);
-			if (format == PSFormat.None || format == PSFormat.RegexpReplacement) continue;
+			if (format is PSFormat.None or PSFormat.RegexpReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
 			if (s.Length == 0) continue;
 			string es = null;

@@ -51,7 +51,7 @@ static class CiFind {
 				k.aaaStyleBackColor(c_marginStyleRead, 0xE0E0E0);
 				k.aaaStyleForeColor(c_marginStyleRead, 0x008000);
 			}
-			k.aaaMarginSetWidth(c_marginUsage, implementations ? 0 : 7, chars: true);
+			k.aaaMarginSetWidth(c_marginUsage, implementations ? 0 : -7);
 			
 			//perf.first();
 			Au.Compiler.TestInternal.RefsStart();
@@ -401,16 +401,16 @@ static class CiFind {
 		
 		void _Directive() {
 			if (cd.syntaxRoot.FindToken(pos, findInsideTrivia: true).Parent is not DirectiveTriviaSyntax node) return;
-			DirectiveTriviaSyntax[] a = null;
+			IEnumerable<DirectiveTriviaSyntax> a = null;
 			if (node is IfDirectiveTriviaSyntax or ElseDirectiveTriviaSyntax or ElifDirectiveTriviaSyntax or EndIfDirectiveTriviaSyntax) {
 				var m = node.GetMatchingConditionalDirectives(default);
-				if (m?.Count > 1) a = m.ToArray();
+				if (m.Length > 1) a = m;
 			} else {
 				var node2 = node.GetMatchingDirective(default);
-				if (node2 != null) a = new[] { node, node2 };
+				if (node2 != null) a = [node, node2];
 			}
 			if (a == null) return;
-			foreach (var v in a) cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, v.Span.ToRange());
+			foreach (var v in a) cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, v.HashToken.Span.ToRange());
 		}
 	}
 	

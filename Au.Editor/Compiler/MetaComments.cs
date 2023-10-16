@@ -181,9 +181,11 @@ class MetaComments {
 	public static bool DefaultOptimize { get; set; }
 	
 	/// <summary>
-	/// Meta option 'define'.
+	/// Meta option 'define' + default preprocessor symbols.
 	/// </summary>
-	public List<string> Defines { get; private set; }
+	public string[] Defines { get; private set; }
+	List<string> _defines;
+	static string[] s_defaultDefines = ["NET8_0", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
 	
 	/// <summary>
 	/// Meta option 'warningLevel'.
@@ -198,14 +200,14 @@ class MetaComments {
 	
 	/// <summary>
 	/// Meta option 'noWarnings'.
-	/// Default: <see cref="DefaultNoWarnings"/> (default null).
+	/// Default: <see cref="DefaultNoWarnings"/>.
 	/// </summary>
 	public List<string> NoWarnings { get; private set; }
 	
 	/// <summary>
 	/// Gets or sets default meta option 'noWarnings' value. Initially CS1701,CS1702.
 	/// </summary>
-	public static List<string> DefaultNoWarnings { get; set; } = new() { "CS1701", "CS1702" };
+	public static string[] DefaultNoWarnings { get; set; } = ["CS1701", "CS1702"];
 	//CS1701,CS1702: VS used to add 1701,1702 to default project properties. Now no, but it seems it implicitly disables these warnings. So we too.
 	
 	/// <summary>
@@ -403,17 +405,18 @@ class MetaComments {
 			//print.it(GlobalCount, CodeFiles);
 			
 			//define d:DEBUG_ONLY, r:RELEASE_ONLY
-			for (int i = Defines.Count; --i >= 0;) {
-				var s = Defines[i]; if (s.Length < 3 || s[1] != ':') continue;
+			for (int i = _defines.Count; --i >= 0;) {
+				var s = _defines[i]; if (s.Length < 3 || s[1] != ':') continue;
 				bool? del = s[0] switch { 'r' => !Optimize, 'd' => Optimize, _ => null };
-				if (del == true) Defines.RemoveAt(i); else if (del == false) Defines[i] = s[2..];
+				if (del == true) _defines.RemoveAt(i); else if (del == false) _defines[i] = s[2..];
 			}
 			
 			if (!Optimize) {
-				if (!Defines.Contains("DEBUG")) Defines.Add("DEBUG");
-				if (!Defines.Contains("TRACE")) Defines.Add("TRACE");
+				if (!_defines.Contains("DEBUG")) _defines.Add("DEBUG");
+				if (!_defines.Contains("TRACE")) _defines.Add("TRACE");
 			}
-			//if(Role == MCRole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
+			//if(Role == MCRole.exeProgram && !_defines.Contains("EXE")) _defines.Add("EXE"); //rejected
+			Defines = [..s_defaultDefines, .._defines];
 			
 			if (_flags.Has(MCPFlags.ForFindReferences)) return true;
 			
@@ -452,7 +455,7 @@ class MetaComments {
 			Optimize = DefaultOptimize;
 			WarningLevel = DefaultWarningLevel;
 			NoWarnings = DefaultNoWarnings != null ? new(DefaultNoWarnings) : new();
-			Defines = new();
+			_defines = new();
 			Role = DefaultRole(isScript);
 			
 			CodeFiles = new();
@@ -494,7 +497,7 @@ class MetaComments {
 			if (_flags.Has(MCPFlags.WpfPreview)) {
 				this.Role = MCRole.miniProgram;
 				this.IfRunning = MCIfRunning.run;
-				this.Defines.Add("WPF_PREVIEW");
+				_defines.Add("WPF_PREVIEW");
 				this.Uac = default;
 				this.Bit32 = false;
 				this.Console = false;
@@ -628,7 +631,7 @@ class MetaComments {
 			return;
 		case "define":
 			_Specified(MCSpecified.define);
-			Defines.AddRange(value.Split_(','));
+			_defines.AddRange(value.Split_(','));
 			return;
 		case "testInternal":
 			_Specified(MCSpecified.testInternal);

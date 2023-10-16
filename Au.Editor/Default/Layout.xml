@@ -41,7 +41,10 @@ active - tab.
 			</tab>
 			<panel name="Open" z="50" />
 			<panel name="Tasks" z="50" />
-			<panel name="Find" z="150" captionAt="Top" />
+			<tab z="150" captionAt="Top">
+				<panel name="Find" captionAt="Top" />
+				<panel name="Bookmarks" captionAt="Top" />
+			</tab>
 		</stack>
 		<stack o="v" z="600*">
 			<stack o="h">

@@ -36,7 +36,7 @@ partial class CiCompletion {
 		public int codeLength;
 		public string filterText;
 		public SciCode.ITempRange tempRange;
-		public bool forced, noAutoSelect;
+		public bool forced, noAutoSelect, isDot, unimported;
 		public CiWinapi winapi;
 	}
 	
@@ -215,10 +215,14 @@ partial class CiCompletion {
 				var options = CompletionOptions.Default with {
 					TriggerInArgumentLists = false,
 					ShowNameSuggestions = false,
+					SnippetsBehavior = SnippetsRule.NeverInclude,
+					PerformSort = false,
 					ShowItemsFromUnimportedNamespaces = unimported,
 					ForceExpandedCompletionIndexCreation = unimported,
+					ExpandedCompletionBehavior = unimported ? ExpandedCompletionMode.ExpandedItemsOnly : ExpandedCompletionMode.AllItems,
 					//TargetTypedCompletionFilter = true, //?
 				};
+				//print.it(options);
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				
 				CompletionList r1 = await completionService.GetCompletionsAsync(document, position, options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
@@ -340,6 +344,8 @@ partial class CiCompletion {
 				items = new List<CiComplItem>(r.ItemsList.Count),
 				forced = isCommand,
 				noAutoSelect = r.SuggestionModeItem != null,
+				isDot = isDot,
+				unimported = unimported
 			};
 			
 			//Debug_.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().NE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
@@ -359,9 +365,9 @@ partial class CiCompletion {
 			foreach (var ci_ in r.ItemsList) {
 				var ci = ci_;
 				if (unimported) {
-					if (ci.Flags.Has(CompletionItemFlags.Expanded)) {
-						d.items.Add(new CiComplItem(provider, ci));
-					}
+					//if (ci.Flags.Has(CompletionItemFlags.Expanded)) { //now instead used CompletionOptions.ExpandedCompletionBehavior
+					d.items.Add(new CiComplItem(provider, ci));
+					//}
 					continue;
 				}
 				
@@ -868,6 +874,20 @@ partial class CiCompletion {
 						//}
 						
 						if (_data.noAutoSelect && ci.kind != CiItemKind.Enum) ci = null;
+					}
+				} else if (filterText == "" && !_data.isDot && !_data.unimported) {
+					//Workaround for bug in new Roslyn: does not select enum when the target type is enum.
+					//	The same after keyword 'new'.
+					//	Never mind: does not prefer the target type when typed eg single letter and the list also contains static fields or props of that type like "Type.Member". It never worked.
+					//	VS works well in all cases. Maybe it does not use this Roslyn API, or uses different Roslyn version.
+					//	TODO: after some time update Roslyn and test, maybe fixed.
+					foreach (var v in _data.items) {
+						//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
+						//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
+						if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.ci.Properties.ContainsKey("Symbols")) { //SHOULDDO: unreliable
+							ci = v;
+							break;
+						}
 					}
 				}
 			}

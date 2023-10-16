@@ -24,6 +24,39 @@ static class EdDebug {
 
 #endif
 
+static class EdResources {
+	public const string
+		c_iconScript = "*Material.ScriptOutline #73BF00",
+		c_iconClass = "*Codicons.SymbolClass #008EEE",
+		c_iconFolder = "*Material.Folder #EABB00",
+		c_iconFolderOpen = "*Material.FolderOpen #EABB00"
+	;
+	
+	public static string FolderIcon(bool open) => open ? c_iconFolderOpen : c_iconFolder;
+	
+	public static string FolderArrow(bool open) => open ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml";
+}
+
+/// <summary>
+/// Opens databases ref.db, doc.db (created by project DatabasesEtc) or winapi.db (created by script "SDK create database").
+/// </summary>
+static class EdDatabases {
+	public static sqlite OpenRef() => _Open("ref.db");
+
+	public static sqlite OpenDoc() => _Open("doc.db");
+
+	public static sqlite OpenWinapi() => _Open("winapi.db");
+
+	static sqlite _Open(string name) {
+		var path = folders.ThisAppBS + name;
+		//if (App.IsAuHomePC) { //no. Instead exit editor before running DatabasesEtc project. And it does not lock winapi.db.
+		//	var pathNew = path + ".new";
+		//	if (filesystem.exists(pathNew)) filesystem.move(pathNew, path, FIfExists.Delete);
+		//}
+		return new sqlite(path, SLFlags.SQLITE_OPEN_READONLY);
+	}
+}
+
 /// <summary>
 /// Temporarily disables window redrawing.
 /// Ctor sends WM_SETREDRAW(0) if visible.

@@ -537,8 +537,7 @@ class Dwnd : KDialogWindow {
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
 
-		object ITreeViewItem.Image
-			=> _isExpanded ? @"resources/images/expanddown_16x.xaml" : (_IsFolder ? @"resources/images/expandright_16x.xaml" : null);
+		object ITreeViewItem.Image => _IsFolder ? EdResources.FolderArrow(_isExpanded) : null;
 
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff

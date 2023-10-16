@@ -234,8 +234,8 @@ public class TVDrawInfo {
 	/// Item height without added custom height (<see cref="KTreeView.CustomItemHeightAddPercent"/>).
 	/// </summary>
 	public int lineHeight;
-
-	public bool isSelected, isHot, isFocusedItem, isFocusedControl;
+	
+	public TVColorInfo colorInfo;
 
 	public TVDrawInfo(KTreeView tv, IntPtr dc, System.Drawing.Graphics graphics, int dpi) {
 		control = tv;

@@ -55,9 +55,11 @@ Upload the setup file. For example with FileZilla.
 
 Run script "Au docs". Click the upload link.
 
+Rename "future.md".
+
 Github commit all and push. The message could be like v1.2.3.
 
-Review the web pages. Github too.
+Review web pages. Github too.
 
 Download and test the setup file.
 	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
@@ -79,23 +81,24 @@ Release NuGet package:
 
 UPDATING .NET
 
-Install new .NET version.
+VS must support that .NET version. Install the .NET SDK if need.
 
-Update .NET version in all C# project files.
+Update .NET version in all C# projects except Au.Net4.
 
-Run script "Create dotnet_ref.txt.cs".
+In project DatabasesEtc, in file Program.cs:
+	Enable only the call to RefTxt.Create, and run.
+	Enable only the call to RefAndDoc.Create, and run.
 
-Update .NET version in the C++ AppHost project. Build.
-	Note the .NET 6 bug workaround comment there.
+Update .NET version in the AppHost project (the #define and the download link). Build.
 
 Build solution.
 
-Run script "Create .NET ref and doc databases.cs".
+Run editor.
 
-Build/run the editor.
+Update .NET version in the .iss file (Inno Setup). //TODO
 
-Update .NET version in the .iss file (Inno Setup).
+Update MetaComments.Defines.
 
-Consider: Update .NET version in DNuget.cs in several places. Maybe later.
+Test DNuget with the new and the old SDK. Usually it works with both; don't need to edit.
 
 Maybe more.

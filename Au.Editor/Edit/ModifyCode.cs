@@ -232,9 +232,7 @@ static class ModifyCode {
 				switch(App.Settings.ci_formatCompact, App.Settings.ci_formatTabIndent) {
 				case (true, true): //default in this program
 					_formattingOptions = new() {
-						Common = new SyntaxFormattingOptions.CommonOptions {
-							LineFormatting = new() { UseTabs = true },
-						},
+						LineFormatting = new() { UseTabs = true },
 						Indentation = IndentationPlacement.BlockContents | IndentationPlacement.SwitchCaseContents | IndentationPlacement.SwitchCaseContentsWhenBlock,
 						NewLines = NewLinePlacement.BeforeCatch | NewLinePlacement.BeforeFinally | NewLinePlacement.BetweenQueryExpressionClauses,
 						LabelPositioning = LabelPositionOptions.NoIndent,
@@ -242,9 +240,7 @@ static class ModifyCode {
 					break;
 				case (false, true):
 					_formattingOptions = new() {
-						Common = new SyntaxFormattingOptions.CommonOptions {
-							LineFormatting = new() { UseTabs = true },
-						},
+						LineFormatting = new() { UseTabs = true },
 					};
 					break;
 				case (true, false):

@@ -554,7 +554,7 @@ class DSnippets : KDialogWindow {
 		
 		object ITreeViewItem.Image => Level switch {
 			0 => "*Modern.PageXml" + Menus.black,
-			1 => _isExpanded ? FileNode.c_iconFolderOpen : FileNode.c_iconFolder,
+			1 => EdResources.FolderIcon(_isExpanded),
 			2 => IsFolder ? "*Codicons.SymbolSnippet #00A000|#00E000" : "*Codicons.SymbolSnippet #0060F0|#80C0FF",
 			_ => "*Material.Asterisk #0060F0|#80C0FF",
 		};

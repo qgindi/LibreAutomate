@@ -130,9 +130,28 @@ public partial class KPanels {
 		}
 		if (added.Any()) {
 			foreach (var x in added) {
-				x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
-				rootStack.Add(x);
-				print.it($"Info: {x.Name} {x.Attr("name")} has been added in this app version. It is at the bottom of the window. Right-click its caption and move it to a better place.");
+				//try to add near the default place
+				string sAppend = null;
+				if (x.Parent.Elements(x.Name).LastOrDefault(o => o != x && o.Name == x.Name) is { } byDef && rootStack.Desc(byDef.Name, "name", byDef.Attribute("name").Value) is { } by) {
+					bool inTab = x.Parent.Name.LocalName == "tab";
+					if (inTab && by.Parent.Name.LocalName != "tab") {
+						var tab = new XElement("tab", x);
+						if (by.Attribute("z") is { } a1) { a1.Remove(); tab.SetAttributeValue("z", a1.Value); }
+						if (by.Attribute("captionAt") is { } a2) tab.SetAttributeValue("captionAt", a2.Value);
+						by.AddAfterSelf(tab);
+						by.Remove();
+						tab.AddFirst(by);
+					} else {
+						if (!inTab) x.SetAttributeValue("z", 50); else x.SetAttributeValue("z", null);
+						by.AddAfterSelf(x);
+					}
+					sAppend = $"next to the {by.Attr("name")} {by.Name}. You can move it to a better place (right-click...){(inTab ? "" : " or/and resize")}.";
+				} else {
+					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
+					rootStack.Add(x);
+					sAppend = "at the bottom of the window. Right-click its caption and move it to a better place.";
+				}
+				print.it($"New {x.Name} in this app version: {x.Attr("name")}. It's {sAppend}");
 			}
 		}
 		//print.it(rootStack);

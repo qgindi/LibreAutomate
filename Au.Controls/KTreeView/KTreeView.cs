@@ -499,7 +499,7 @@ public unsafe partial class KTreeView {
 	/// <param name="index"></param>
 	/// <param name="select">true to select, false to unselect.</param>
 	/// <param name="unselectOther">Unselect other items. Used only if <see cref="MultiSelect"/> true, else always unselects other items.</param>
-	/// <param name="focus">Make the item focused.</param>
+	/// <param name="focus">Make the item focused and ensure visible.</param>
 	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 	/// <exception cref="IndexOutOfRangeException"></exception>
 	public void Select(int index, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
@@ -518,7 +518,7 @@ public unsafe partial class KTreeView {
 	/// <param name="item"></param>
 	/// <param name="select">true to select, false to unselect.</param>
 	/// <param name="unselectOther">Unselect other items. Used only if <see cref="MultiSelect"/> true, else always unselects other items.</param>
-	/// <param name="focus">Make the item focused.</param>
+	/// <param name="focus">Make the item focused and ensure visible.</param>
 	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 	/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
 	public void Select(ITreeViewItem item, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
@@ -562,11 +562,15 @@ public unsafe partial class KTreeView {
 	/// <summary>
 	/// Selects item, unselects others, optionally makes the focused.
 	/// </summary>
+	/// <param name="andFocus">Make the item focused and ensure visible.</param>
+	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 	public void SelectSingle(int index, bool andFocus, bool scrollTop = false) => Select(index, true, true, andFocus, scrollTop);
 	
 	/// <summary>
 	/// Selects item, unselects others, optionally makes the focused.
 	/// </summary>
+	/// <param name="andFocus">Make the item focused and ensure visible.</param>
+	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
 	public void SelectSingle(ITreeViewItem item, bool andFocus, bool scrollTop = false) => Select(item, true, true, andFocus, scrollTop);
 	
 	void _ShiftSelect(int last) {
@@ -763,12 +767,14 @@ public unsafe partial class KTreeView {
 	
 	/// <summary>
 	/// Starts focused item text editing.
+	/// The type must implement <see cref="ITreeViewItem.SetNewText"/>.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">Control not created.</exception>
 	public void EditLabel(Action<bool> ended = null) { int i = _focusedIndex; if (i >= 0) EditLabel(i, ended); }
 	
 	/// <summary>
 	/// Starts item text editing.
+	/// The type must implement <see cref="ITreeViewItem.SetNewText"/>.
 	/// </summary>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="InvalidOperationException">Control not created.</exception>
@@ -776,6 +782,7 @@ public unsafe partial class KTreeView {
 	
 	/// <summary>
 	/// Starts item text editing.
+	/// The type must implement <see cref="ITreeViewItem.SetNewText"/>.
 	/// </summary>
 	/// <exception cref="IndexOutOfRangeException"></exception>
 	/// <exception cref="InvalidOperationException">Control not created.</exception>

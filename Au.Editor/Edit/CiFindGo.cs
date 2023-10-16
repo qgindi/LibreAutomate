@@ -200,24 +200,26 @@ Filters: t Type, m Member, n Namespace.
 			int y = d.yText;
 			tr.MoveTo(d.xText, y);
 			
+			bool dark = d.colorInfo.isHighContrastDark && !d.colorInfo.isSelected;
+			int textColor = dark ? 0xFFFFFF : 0;
 			if (!_matches.IsDefault) {
 				int i = 0;
 				foreach (var v in _matches) {
 					foreach (var t in v.MatchedSpans) {
 						int from = _nameStart + t.Start, to = _nameStart + t.End;
 						if (from > i) tr.DrawText(_text, 0, i..from);
-						tr.DrawText(_text, 0, from..to, 0x80F0FF);
+						tr.DrawText(_text, textColor, from..to, dark ? 0x0080A0 : 0x80F0FF);
 						i = to;
 					}
 				}
-				if (i < _text.Length) tr.DrawText(_text, 0, i..);
+				if (i < _text.Length) tr.DrawText(_text, textColor, i..);
 			} else {
-				tr.DrawText(_text, 0);
+				tr.DrawText(_text, textColor);
 			}
 			
 			y = d.rect.top + d.lineHeight;
 			tr.MoveTo(d.xText, y);
-			tr.DrawText(_text2, 0x808080);
+			tr.DrawText(_text2, dark ? textColor : 0x808080);
 		}
 		
 		public void DrawMarginLeft(TVDrawInfo d, GdiTextRenderer tr) {

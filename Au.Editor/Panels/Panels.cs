@@ -17,6 +17,7 @@ static class Panels {
 	public static PanelFound Found;
 	public static PanelMouse Mouse;
 	public static PanelRecipe Recipe;
+	public static PanelBookmarks Bookmarks;
 	//menu and toolbars
 	public static Menu Menu;
 	//public static ToolBar[] Toolbars;
@@ -92,12 +93,16 @@ static class Panels {
 	public static void CreatePanels() {
 		var pm = PanelManager;
 		
+		pm["documents"].Content = (Editor = new()).P;
+		//DocPlaceholder_ = pm["documents"];
+		
 		pm["Files"].Content = (Files = new()).P;
 		_AddDontFocus("Outline", (Outline = new()).P);
 		pm["Cookbook"].Content = (Cookbook = new()).P;
 		_AddDontFocus("Open", (Open = new()).P);
 		_AddDontFocus("Tasks", (Tasks = new()).P);
 		pm["Find"].Content = (Find = new()).P;
+		_AddDontFocus("Bookmarks", (Bookmarks = new()).P);
 		_AddDontFocus("Output", (Output = new()).P);
 		_AddDontFocus("Mouse", (Mouse = new()).P);
 		_AddDontFocus("Found", (Found = new()).P);
@@ -108,9 +113,6 @@ static class Panels {
 			p.Content = content;
 			p.DontFocusTab = true;
 		}
-		
-		pm["documents"].Content = (Editor = new()).P;
-		//DocPlaceholder_ = pm["documents"];
 		
 		var ti1 = PanelManager[Files.P].Parent.TabItem; if (ti1 != null) ti1.MinWidth = 56; //make Files tabitem wider
 	}

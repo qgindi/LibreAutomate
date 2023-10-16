@@ -359,9 +359,8 @@ class PanelCookbook {
 		string ITreeViewItem.DisplayText => name;
 		
 		object ITreeViewItem.Image
-			=> isExpanded ? @"resources/images/expanddown_16x.xaml"
-			: dir ? @"resources/images/expandright_16x.xaml"
-			: ftype == FNType.Class ? FileNode.c_iconClass
+			=> dir ? EdResources.FolderArrow(isExpanded)
+			: ftype == FNType.Class ? EdResources.c_iconClass
 			: "*BoxIcons.RegularCookie" + Menus.darkYellow;
 		
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }

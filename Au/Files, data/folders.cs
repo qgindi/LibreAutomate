@@ -552,8 +552,17 @@ namespace Au {
 		/// <summary>
 		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
 		/// </summary>
-		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RxReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
+		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= _NetRuntimeDesktopBS();
 		static string __netRuntimeDesktopBS;
+
+		static string _NetRuntimeDesktopBS() {
+			var s = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+			int i = s.IndexOf(".WindowsDesktop.App\\", StringComparison.OrdinalIgnoreCase);
+			if (i < 0) return null;
+			return s[(s.LastIndexOf(';', i) + 1)..(s.IndexOf('\\', i + 21) + 1)];
+			//note: cannot get NetRuntimeDesktopBS from NetRuntimeBS.
+			//	Can be different version, eg Microsoft.NETCore.App\8.0.0-rc.1.23419.4 and and Microsoft.WindowsDesktop.App\8.0.0-rc.1.23420.5.
+		}
 
 		/// <summary>
 		/// Gets CD/DVD drive path, like <c>@"D:\"</c>.

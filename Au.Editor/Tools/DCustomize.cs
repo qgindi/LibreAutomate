@@ -250,7 +250,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 	}
 	
 	void _SelectAndOpen(string commandName) {
-		var c = _tree.SelectMany(o => o.Children()).FirstOrDefault(o => o.def.name == commandName);
+		var c = _tree.SelectMany(o => o.Children()).LastOrDefault(o => o.def.name == commandName); //Last to prefer toolbar button and not menu item
 		if (c != null) _SelectAndOpen(c);
 	}
 	
@@ -482,7 +482,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		string ITreeViewItem.DisplayText => displayText;
 		
 		object ITreeViewItem.Image
-			=> Level == 0 ? (_isExpanded ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml") : (image ?? def.attr.image);
+			=> Level == 0 ? EdResources.FolderArrow(_isExpanded) : (image ?? def.attr.image);
 		
 		int ITreeViewItem.Color(TVColorInfo ci)
 			=> Level > 0 ? -1 : isMenu ? 0xF0C080 : 0xC0E0A0;

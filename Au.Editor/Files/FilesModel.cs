@@ -117,7 +117,6 @@ partial class FilesModel {
 	/// <summary>
 	/// Raises <see cref="NeedRedraw"/> event.
 	/// </summary>
-	/// <param name="f"></param>
 	public static void Redraw(FileNode f = null, bool remeasure = false, bool renamed = false) {
 		NeedRedraw?.Invoke(new(f, remeasure, renamed));
 	}
@@ -727,6 +726,7 @@ partial class FilesModel {
 		}
 		
 		EditGoBack.OnFileDeleted(e);
+		Panels.Bookmarks.OnFileDeleted(e);
 		foreach (var k in e) {
 			if (!k.IsFolder) State.EditorDelete(k);
 			if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);

@@ -60,7 +60,11 @@ static partial class App {
 		
 		if (CommandLine.ProgramStarted2(args)) return;
 		
-		PrintServer = new(true) { NoNewline = true };
+		PrintServer = new(
+#if IDE_LA
+			!
+#endif
+			true) { NoNewline = true };
 		PrintServer.Start();
 #if TRACE
 		print.qm2.use = !true;

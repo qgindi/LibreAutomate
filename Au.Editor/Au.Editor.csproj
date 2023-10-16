@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -18,7 +18,8 @@
 		<IsPublishable>True</IsPublishable>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<Deterministic>False</Deterministic>
-		<NoWarn>1701;1702;8002;419</NoWarn>
+		<NoWarn>1701;1702;8002;419,CS8981</NoWarn>
+		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

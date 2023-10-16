@@ -1500,7 +1500,8 @@ public static unsafe partial class ExtString {
 		if (i < 0) return i;
 		return i + range.Start.GetOffset(t.Length);
 	}
-	
+
+#if !NET8_0_OR_GREATER
 	/// <summary>
 	/// Creates read-only span from range of this string.
 	/// </summary>
@@ -1509,6 +1510,7 @@ public static unsafe partial class ExtString {
 		var (i, len) = r.GetOffsetAndLength(t.Length);
 		return t.AsSpan(i, len);
 	}
+#endif
 	
 	internal static void CopyTo_(this string t, char* p)
 		=> t.AsSpan().CopyTo(new Span<char>(p, t.Length));
