@@ -762,7 +762,9 @@ namespace Au {
 			/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
 			/// </summary>
 			static void _EnableActivate_MinRes() {
-				Debug_.Print("EnableActivate: need min/res");
+				//Debug_.Print("EnableActivate: need min/res");
+				Debug_.Print($"EnableActivate: need min/res, {miscInfo.isInputDesktop(false)} {miscInfo.isInputDesktop(true)}, {wnd.active}");
+				//CONSIDER: don't try if !miscInfo.isInputDesktop(true)
 
 				wnd t = WndUtil.CreateWindow(WndUtil.WindowClassDWP_, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WSE.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.

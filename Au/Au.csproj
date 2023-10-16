@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0-windows7.0</TargetFramework>
+	  <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWpf>true</UseWpf>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -11,7 +11,7 @@
     <AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Au.xml</DocumentationFile>
-    <NoWarn>419</NoWarn>
+    <NoWarn>419,CS8981</NoWarn>
 	<LangVersion>preview</LangVersion>
 	<ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
 	<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>

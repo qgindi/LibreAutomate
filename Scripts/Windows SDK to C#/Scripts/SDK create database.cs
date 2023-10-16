@@ -1,6 +1,6 @@
 /*/ testInternal Au,Au.Editor; r Au.Editor.dll; /*/
 
-string dbFile = folders.ThisAppBS + @"winapi.db.new";
+string dbFile = folders.ThisAppBS + @"winapi.db";
 filesystem.delete(dbFile);
 
 string s = File.ReadAllText(@"C:\code\au\Other\Api\Api.cs");

@@ -101,6 +101,8 @@ public static unsafe class Sci {
 	public const int SCI_CANREDO = 2016;
 	public const int SCI_MARKERLINEFROMHANDLE = 2017;
 	public const int SCI_MARKERDELETEHANDLE = 2018;
+	public const int SCI_MARKERHANDLEFROMLINE = 2732;
+	public const int SCI_MARKERNUMBERFROMLINE = 2733;
 	public const int SCI_GETUNDOCOLLECTION = 2019;
 	public const int SCWS_INVISIBLE = 0;
 	public const int SCWS_VISIBLEALWAYS = 1;

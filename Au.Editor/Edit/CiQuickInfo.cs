@@ -9,7 +9,7 @@ class CiQuickInfo {
 		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
 
 		var opt1 = QuickInfoOptions.Default with { IncludeNavigationHintsInQuickInfo = false };
-		var opt2 = new Microsoft.CodeAnalysis.LanguageServices.SymbolDescriptionOptions { QuickInfoOptions = opt1 };
+		var opt2 = new Microsoft.CodeAnalysis.LanguageService.SymbolDescriptionOptions { QuickInfoOptions = opt1 };
 
 		var service = QuickInfoService.GetService(cd.document);
 		var r = await Task.Run(async () => await service.GetQuickInfoAsync(cd.document, pos16, opt2, default));

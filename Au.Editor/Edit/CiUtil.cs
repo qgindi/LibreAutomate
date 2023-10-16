@@ -234,18 +234,6 @@ static class CiUtil {
 				if (alis.Parent is ExpressionSyntax es && es is BaseObjectCreationExpressionSyntax or InvocationExpressionSyntax) {
 					if (semo.GetSymbolInfo(es).Symbol is IMethodSymbol m) {
 						format = _GetFormat(m, alis);
-						if (format == 0) {
-							var ct = m.ContainingType.ToString();
-							if (es is BaseObjectCreationExpressionSyntax) {
-								if (ct is "System.Text.RegularExpressions.Regex" or "System.Text.RegularExpressions.RegexCompilationInfo")
-									format = PSFormat.NetRegex;
-							} else {
-								if (ct is "System.Text.RegularExpressions.Regex" && m.Name is "IsMatch" or "Match" or "Matches" or "Replace" or "Split") {
-									var aa = alis.Arguments;
-									if (aa.Count >= 2 && (object)asy == aa[1]) format = PSFormat.NetRegex;
-								}
-							}
-						}
 					}
 				}
 			} else if (parent.Parent is BracketedArgumentListSyntax balis && balis.Parent is ElementAccessExpressionSyntax eacc) {
@@ -269,8 +257,12 @@ static class CiUtil {
 					if (i < pa.Length) p = pa[i];
 				}
 				if (p != null) {
-					var fa = p.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "ParamStringAttribute");
-					if (fa != null) return fa.GetConstructorArgument<PSFormat>(0, SpecialType.None);
+					foreach (var v in p.GetAttributes()) {
+						switch(v.AttributeClass.Name) {
+						case nameof(ParamStringAttribute): return v.GetConstructorArgument<PSFormat>(0, SpecialType.None);
+						case nameof(System.Diagnostics.CodeAnalysis.StringSyntaxAttribute) when v.GetConstructorArgument<string>(0, SpecialType.System_String) == System.Diagnostics.CodeAnalysis.StringSyntaxAttribute.Regex: return PSFormat.NetRegex; //note: the attribute also can be set on properties and fields. But Regex doesn't have.
+						}
+					}
 				}
 				return PSFormat.None;
 			}
@@ -623,7 +615,7 @@ global using System.Windows.Media;
 		//_Print("IsCatchFilterContext", c.IsCatchFilterContext);
 		_Print("IsConstantExpressionContext", c.IsConstantExpressionContext);
 		_Print("IsCrefContext", c.IsCrefContext);
-		_Print("IsDeclarationExpressionContext", c.IsDeclarationExpressionContext);
+		//_Print("IsDeclarationExpressionContext", c.IsDeclarationExpressionContext); //removed from Roslyn
 		//_Print("IsDefiniteCastTypeContext", c.IsDefiniteCastTypeContext);
 		//_Print("IsEnumBaseListContext", c.IsEnumBaseListContext);
 		//_Print("IsFixedVariableDeclarationContext", c.IsFixedVariableDeclarationContext);

@@ -218,7 +218,6 @@ public unsafe partial class KTreeView {
 					
 					var cd = CustomDraw;
 					var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi) {
-						isFocusedControl = colorInfo.isFocusedControl,
 						marginLeft = _marginLeft,
 						marginRight = _marginRight,
 						checkSize = cSize
@@ -251,9 +250,7 @@ public unsafe partial class KTreeView {
 							cdi.xLeft = xLeft;
 							cdi.xRight = xText + v.measured;
 							cdi.lineHeight = _itemLineHeight;
-							cdi.isFocusedItem = colorInfo.isFocusedItem;
-							cdi.isHot = colorInfo.isHot;
-							cdi.isSelected = colorInfo.isSelected;
+							cdi.colorInfo = colorInfo;
 						}
 						
 						//background

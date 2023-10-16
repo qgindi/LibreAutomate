@@ -575,19 +575,13 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	void ITreeViewItem.SetNewText(string text) { FileRename(text); }
 	
-	public const string
-		c_iconScript = "*Material.ScriptOutline #73BF00",
-		c_iconClass = "*Codicons.SymbolClass #008EEE",
-		c_iconFolder = "*Material.Folder #EABB00",
-		c_iconFolderOpen = "*Material.FolderOpen #EABB00";
-	
 	public static string GetFileTypeImageSource(FNType ft, bool openFolder = false)
 		=> ft switch {
-			FNType.Script => App.Settings.icons.ft_script ?? c_iconScript,
-			FNType.Class => App.Settings.icons.ft_class ?? c_iconClass,
+			FNType.Script => App.Settings.icons.ft_script ?? EdResources.c_iconScript,
+			FNType.Class => App.Settings.icons.ft_class ?? EdResources.c_iconClass,
 			FNType.Folder => openFolder
-				? App.Settings.icons.ft_folderOpen ?? c_iconFolderOpen
-				: App.Settings.icons.ft_folder ?? c_iconFolder,
+				? App.Settings.icons.ft_folderOpen ?? EdResources.c_iconFolderOpen
+				: App.Settings.icons.ft_folder ?? EdResources.c_iconFolder,
 			_ => null
 		};
 	

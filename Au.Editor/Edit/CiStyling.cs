@@ -395,22 +395,11 @@ partial class CiStyling {
 		LineNumber = 33, //STYLE_LINENUMBER
 	}
 	
-	public struct TStyle {
-		public int color;
-		public bool bold, italic, underline;
-		
-		public TStyle(int color, bool bold = false, bool italic = false, bool underline = false) {
-			this.color = color;
-			this.bold = bold;
-			this.italic = italic;
-			this.underline = underline;
-		}
-		
+	public record struct TStyle(int color, bool bold = false, bool italic = false, bool underline = false) {
 		public static implicit operator TStyle(int color) => new(color);
 	}
 	
-	public record TStyles //note: must be record, because uses synthesized ==
-	{
+	public record TStyles { //note: must be record, because uses synthesized ==
 		public string FontName = "Consolas";
 		public double FontSize = 9;
 		public int BackgroundColor = 0xffffff;

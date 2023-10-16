@@ -10,9 +10,10 @@
 #include "coreclrhost.h"
 
 //min supported .NET version. Installed major must be ==, minor >=, patch any (we'll use highest found), preview any (we'll use release or highest preview).
-#define NETVERMAJOR 6
+#define NETVERMAJOR 8
 #define NETVERMINOR 0
-#define NETVERPATCH 2 //see the workaround comment below
+#define NETVERPATCH 0
+//#define NETVERPATCH 2 //see the workaround comment below
 #define NETVER_SUPPORT_PREVIEW 0 //eg fails with 5.0.0 preview, MethodNotFound exception
 
 /*
@@ -387,7 +388,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			AllowSetForegroundWindow(ASFW_ANY);
 			auto ShellExecuteW = (int(__stdcall*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
 			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
-			wsprintfW(w, L"https://aka.ms/dotnet/%i.%i/windowsdesktop-runtime-win-x%i.exe", NETVERMAJOR, NETVERMINOR, bits); //latest patch
+			wsprintfW(w, L"https://aka.ms/dotnet/%i.%i/windowsdesktop-runtime-win-x%i.exe", NETVERMAJOR, NETVERMINOR, bits); //latest patch //TODO: fails with .NET 8 RC; test with final .NET 8 version; if fails too, use the above (tested, works); PROBLEM: the setup script uses this URL too.
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
 		}
 		return -1;

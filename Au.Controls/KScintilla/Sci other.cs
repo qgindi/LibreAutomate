@@ -23,15 +23,17 @@ public partial class KScintilla {
 	/// <summary>
 	/// SCI_MARKERADD.
 	/// </summary>
-	public void aaaMarkerAdd(int marker, int line) {
-		Call(SCI_MARKERADD, line, marker);
+	/// <returns>Marker handle, or -1 if failed.</returns>
+	public int aaaMarkerAdd(int marker, int line) {
+		return Call(SCI_MARKERADD, line, marker);
 	}
 	
 	/// <summary>
 	/// SCI_MARKERADD in line containing <i>pos</i>.
 	/// </summary>
-	public void aaaMarkerAdd(int marker, bool utf16, int pos) {
-		aaaMarkerAdd(marker, aaaLineFromPos(utf16, pos));
+	/// <returns>Marker handle, or -1 if failed.</returns>
+	public int aaaMarkerAdd(int marker, bool utf16, int pos) {
+		return aaaMarkerAdd(marker, aaaLineFromPos(utf16, pos));
 	}
 	
 	/// <summary>
@@ -114,55 +116,50 @@ public partial class KScintilla {
 	#region margins
 	
 	/// <summary>
-	/// SCI_SETMARGINTYPEN.
+	/// SCI_SETMARGINTYPEN. Optionally SCI_SETMARGINSENSITIVEN, SCI_SETMARGINCURSORN, SCI_SETMARGINMASKN.
 	/// </summary>
 	/// <param name="margin"></param>
 	/// <param name="type">SC_MARGIN_.</param>
-	public void aaaMarginSetType(int margin, int type) {
+	/// <param name="sensitive">SCI_SETMARGINSENSITIVEN.</param>
+	/// <param name="cursorArrow">SCI_SETMARGINCURSORN. True SC_CURSORARROW, false SC_CURSORREVERSEARROW.</param>
+	public void aaaMarginSetType(int margin, int type, bool? sensitive = null, bool? cursorArrow = null) {
 		Call(SCI_SETMARGINTYPEN, margin, type);
+		if (sensitive.HasValue) Call(SCI_SETMARGINSENSITIVEN, margin, sensitive.Value);
+		if (cursorArrow.HasValue) Call(SCI_SETMARGINCURSORN, margin, cursorArrow == true ? SC_CURSORARROW : SC_CURSORREVERSEARROW);
 	}
 	
-	internal int[] _marginDpi;
-	
-	public void aaaMarginSetWidth(int margin, int value, bool dpiScale = true, bool chars = false) {
-		if (dpiScale && value > 0) {
-			var a = _marginDpi ??= new int[Call(SCI_GETMARGINS)];
-			if (chars) {
-				value *= aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
-				a[margin] = Dpi.Unscale(value, _dpi).ToInt();
-			} else {
-				a[margin] = value;
-				value = Dpi.Scale(value, _dpi);
-			}
+	/// <summary>
+	/// SCI_SETMARGINWIDTHN(Dpiscale(dpiWidth) + rawWidth).
+	/// </summary>
+	/// <param name="margin"></param>
+	/// <param name="dpiWidth">Positive pixels or negative chars or 0. Will be DPI-scaled.</param>
+	/// <param name="rawWidth">Positive pixels or 0.</param>
+	public void aaaMarginSetWidth(int margin, int dpiWidth, int rawWidth = 0) {
+		if (dpiWidth != 0) {
+			_marginDpi ??= new (int, int)[Call(SCI_GETMARGINS)];
+			_marginDpi[margin] = (dpiWidth, rawWidth);
+			if (dpiWidth != 0) dpiWidth = dpiWidth > 0 ? Dpi.Scale(dpiWidth, _dpi) : -dpiWidth * aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
 		} else {
-			var a = _marginDpi;
-			if (a != null) a[margin] = 0;
+			if (_marginDpi != null) _marginDpi[margin] = default;
 		}
-		Call(SCI_SETMARGINWIDTHN, margin, value);
+		Call(SCI_SETMARGINWIDTHN, margin, dpiWidth + rawWidth);
+	}
+	internal (int dpi, int raw)[] _marginDpi;
+	
+	internal void aaaMarginWidthsDpiChanged_() {
+		var a = _marginDpi; if (a == null) return;
+		for (int i = a.Length; --i >= 0;) {
+			int v = a[i].dpi;
+			if (v == 0) continue;
+			v = v > 0 ? Dpi.Scale(v, _dpi) : -v * aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
+			Call(SCI_SETMARGINWIDTHN, i, v + a[i].raw);
+		}
 	}
 	
 	//public void aaaMarginSetWidth(int margin, string textToMeasureWidth) {
 	//	int n = aaaStyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
 	//	Call(SCI_SETMARGINWIDTHN, margin, n + 4);
 	//}
-	
-	//not used
-	//public int aaaMarginGetWidth(int margin, bool dpiUnscale) {
-	//	int R = Call(SCI_GETMARGINWIDTHN, margin);
-	//	if (dpiUnscale && R > 0) {
-	//		var a = _marginDpi;
-	//		var v = a?[margin] ?? 0;
-	//		if (v > 0) R = v;
-	//	}
-	//	return R;
-	//}
-	
-	internal void aaaMarginWidthsDpiChanged_() {
-		var a = _marginDpi; if (a == null) return;
-		for (int i = a.Length; --i >= 0;) {
-			if (a[i] > 0) Call(SCI_SETMARGINWIDTHN, i, Dpi.Scale(a[i], _dpi));
-		}
-	}
 	
 	/// <returns>Margin index, or -1 if not in a margin.</returns>
 	public int aaaMarginFromPoint(POINT p, bool screenCoord = false) {

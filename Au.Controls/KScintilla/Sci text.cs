@@ -731,6 +731,12 @@ public unsafe partial class KScintilla {
 		=> Call(SCI_LINEFROMPOSITION, _ParamPos(utf16, pos));
 	
 	/// <summary>
+	/// Gets current line index.
+	/// </summary>
+	public int aaaLineFromPos()
+		=> Call(SCI_LINEFROMPOSITION, aaaCurrentPos8);
+	
+	/// <summary>
 	/// Gets line start position from line index.
 	/// </summary>
 	/// <param name="utf16">Return UTF-16.</param>

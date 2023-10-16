@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-//using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.IO;
+//This small program copies Roslyn dll/xml files to _\Roslyn.
+//Also exits editor.
 
-//This small program modifies the Roslyn solution.
-//Setup:
+//How to get Roslyn dlls:
+
 //Download Roslyn solution to C:\Downloads\roslyn-main.
 //Open Roslyn.sln.
 //To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree. It loads projects we need:
@@ -14,92 +10,58 @@ using System.IO;
 //	In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
 //	In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
 //	Several other.
-//(skip this if can compile) From Microsoft.CodeAnalysis.Features dependencies remove Scripting. Unload Scripting project. Because it does not compile, and not useful.
 //Edit as described in the '#if false' block at the bottom of this file.
-//Run this project. It modifies Roslyn solution project files.
-//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles all dependency projects. Copies 8 dlls to _\Roslyn.
-//In Roslyn artifacts folder find 6 xml doc files and copy to _\Roslyn.
-//To get other dlls:
-//	Install or update Microsoft.CodeAnalysis.CSharp.Features from NuGet in this project.
-//	Compile. Copy all dlls from the bin folder to _\Roslyn. Except those 6.
-//	In the last Roslyn version also needed:
-//		C:\Users\G\.nuget\packages\microsoft.codeanalysis.elfie\1.0.0-rc14\lib\netstandard2.0\Microsoft.CodeAnalysis.Elfie.dll
-//		But why it wasnt in artifacts or anywhere in roslyn-main? Tried to restore <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks>, but it did not help.
-//In editor project do this once:
-//	Add references to the main 6 dlls from folder _\Roslyn. In dll properties set 'Copy local' false.
+//Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects.
 
-namespace CompilerDlls {
-	class Program {
-		static void Main(string[] args) {
-			try {
-				ModRoslyn();
-			}
-			catch (Exception ex) { Console.WriteLine(ex); }
-		}
+//In this project add or update Microsoft.CodeAnalysis.CSharp.Features from NuGet.
+//In this file edit c_netVersion if need.
+//Run this project. May need to build explicitly, depending on solution config.
+//	Run it always after modifying Roslyn.
 
-		static void ModRoslyn() {
-			bool writeFile = true;
+//In editor project are added references to the main 6 dlls in _\Roslyn, with 'Copy local' false.
 
-			string roslynDir = @"C:\Downloads\roslyn-main\src\";
 
-			var project = @"</Project>";
-			var copy = @"  <Target Name=""PostBuild"" AfterTargets=""PostBuildEvent"">
-    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;C:\code\au\_\Roslyn\$(TargetFileName)&quot; /y"" />
-  </Target>
-";
-			_Mod(@"Features\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Features.csproj", (project, copy, -1));
-			_Mod(@"Features\Core\Portable\Microsoft.CodeAnalysis.Features.csproj", (project, copy, -1));
-			_Mod(@"Compilers\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.csproj", (project, copy, -1));
-			_Mod(@"Compilers\Core\Portable\Microsoft.CodeAnalysis.csproj", (project, copy, -1));
-			_Mod(@"Workspaces\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Workspaces.csproj", (project, copy, -1));
-			_Mod(@"Workspaces\Core\Portable\Microsoft.CodeAnalysis.Workspaces.csproj", (project, copy, -1));
-			_Mod(@"Tools\Source\CompilerGeneratorTools\Source\CSharpSyntaxGenerator\CSharpSyntaxGenerator.csproj", (project, copy, -1));
-			_Mod(@"Scripting\Core\Microsoft.CodeAnalysis.Scripting.csproj", (project, copy, -1));
+const string c_netVersion = "net8.0"; //edit if need
 
-			//how: 0 replace, 1 insert after, -1 insert before
-			void _Mod(string file, params (string find, string add, int how)[] p) {
-				file = roslynDir + file;
-				var s = File.ReadAllText(file);
-				int moded = 0;
-				foreach (var v in p) {
-					if (_Mod1(ref s, v.find, v.add, v.how)) moded++;
-				}
-				Console.ForegroundColor = ConsoleColor.Green;
-				Console.WriteLine($"Made {moded} mods in {file}");
-				Console.ForegroundColor = ConsoleColor.White;
-				if (moded == 0) return;
-				if (writeFile) File.WriteAllText(file, s);
-				else Console.WriteLine(s);
-			}
+try {
+	CopyFiles();
+}
+catch (Exception ex) { Console.WriteLine(ex); }
 
-			bool _Mod1(ref string s, string find, string add, int how) {
-				//if(s.Contains(add)) return false;
-				var s2 = s.Replace("\r", "");
-				var add2 = add.Replace("\r", "");
-				if (s2.Contains(add2)) return false;
+static void CopyFiles() {
+	var w = wnd.findFast("LibreAutomate");
+	if (!w.Is0) {
+		int id = w.ProcessId;
+		w.Close(noWait: true);
+		process.waitForExit(10, id, out _);
+	}
 
-				int i = 0, len = 0;
-				if (find.Length > 0) {
-					var m = Regex.Match(s, "(?m)^[ \t]*" + Regex.Escape(find) + (how < 0 ? "$" : "\r?\n"), RegexOptions.CultureInvariant);
-					if (!m.Success) throw new Exception($"Cannot find '{find}'.");
-					i = m.Index;
-					len = m.Length;
-				}
-				switch (how) {
-				case 0:
-					s = s.Remove(i, len);
-					break;
-				case 1:
-					i += len;
-					break;
-				}
-				s = s.Insert(i, add);
+	var artifacts = folders.Downloads + @"roslyn-main\artifacts\bin\";
+	var roslyn = @"C:\code\au\_\Roslyn";
 
-				return true;
-			}
+	foreach (var f in Directory.GetFiles(roslyn)) {
+		filesystem.delete(f);
+	}
 
-			Console.WriteLine(@"Roslyn source has heen modified successfully.");
-		}
+	string[] a = {
+		"Microsoft.CodeAnalysis",
+		"Microsoft.CodeAnalysis.CSharp",
+		"Microsoft.CodeAnalysis.Features",
+		"Microsoft.CodeAnalysis.CSharp.Features",
+		"Microsoft.CodeAnalysis.Workspaces",
+		"Microsoft.CodeAnalysis.CSharp.Workspaces",
+		"Microsoft.CodeAnalysis.Scripting",
+	};
+	foreach (var v in a) {
+		var s = artifacts + v + $"\\Release\\{c_netVersion}\\";
+		filesystem.copyTo(s + v + ".dll", roslyn);
+        filesystem.copyTo(s + v + ".xml", roslyn);
+	}
+
+	foreach (var f in Directory.GetFiles(folders.ThisApp, "*.dll")) {
+        if (f.Ends("CompilerDlls.dll")) continue;
+        var f2 = roslyn + "\\" + pathname.getName(f);
+        if (!filesystem.exists(f2)) filesystem.copy(f, f2);
 	}
 }
 
@@ -107,7 +69,7 @@ namespace CompilerDlls {
 //Edit these manually, because either difficult to automate or Roslyn source in new version is likely changed in that place.
 //Add only internal members (where possible). If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
 
-// - In all 6 projects + Scripting .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
+// - In all 6 projects + Scripting.csproj from <TargetFrameworks> remove netstandard2.0 etc. Will compile faster and produce less garbage.
 
 // - Set Release config. Try to build Microsoft.CodeAnalysis.CSharp.Features (it builds all).
 //	May need to download the latest .NET SDK. Its version specified in global.json.
@@ -124,16 +86,15 @@ namespace CompilerDlls {
 //2. Find method private CompletionItem With(...). In it find: return new CompletionItem...{
 //3. In the { } add line: Symbols = Symbols, //au
 //4. Below the method add properties:
-//		internal System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; set; } //au
-//		internal object Attach { get; set; } //au
+//        internal System.Collections.Generic.IReadOnlyList<ISymbol>? Symbols { get; set; } //au
+//        internal object? Attach { get; set; } //au
 //5. Open Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs.
 //6. In method CreateWorker find statement that starts with: var item = CommonCompletionItem.Create(
 //7. Below that statement add: item.Symbols = symbols; //au
 
 // - Add Symbol property to the SymbolKeySignatureHelpItem class:
 //1. Open Features\Core\Portable\SignatureHelp\AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem.cs.
-//2. Add property: internal ISymbol? Symbol { get; } //au
-//3. In ctor add:  Symbol = symbol; //au
+//2. Add property: internal ISymbol? Symbol { get; } = symbol; //au
 
 // - Let it don't try to load VB assemblies, because then exception when debugging:
 //In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VB assemblies.
@@ -147,20 +108,12 @@ static RoslynMod.TestInternal.AppendInternalsVisible(string thisName, System.Col
 RoslynMod.Print
 static RoslynMod.Print.it(object o) -> void
 
-// - In project Microsoft.CodeAnalysis, in MetadataReader\PEAssembly.cs, replace GetInternalsVisibleToPublicKeys with:
-
-        internal IEnumerable<ImmutableArray<byte>> GetInternalsVisibleToPublicKeys(string simpleName)
-        {
-            if (_lazyInternalsVisibleToMap == null)
-                Interlocked.CompareExchange(ref _lazyInternalsVisibleToMap, BuildInternalsVisibleToMap(), null);
-
-            List<ImmutableArray<byte>> result;
-
-            _lazyInternalsVisibleToMap.TryGetValue(simpleName, out result);
-
+// - In project Microsoft.CodeAnalysis, in MetadataReader\PEAssembly.cs, in GetInternalsVisibleToPublicKeys:
+//	replace
+            return result ?? SpecializedCollections.EmptyEnumerable<ImmutableArray<byte>>();
+//	with
             //au
             return result ?? RoslynMod.TestInternal.IsInternalsVisible(this.Identity.Name, simpleName);
-        }
 
 // - In project Microsoft.CodeAnalysis.CSharp, in Symbols\Source\SourceAssemblySymbol.cs, replace GetInternalsVisibleToPublicKeys with:
 
@@ -196,12 +149,16 @@ static RoslynMod.Print.it(object o) -> void
             //au:
             RoslynMod.TestInternal.AppendInternalsVisible(assembly.Name, set);
 
-// - (bug fix) In SignatureHelpUtilities.cs, function GetSignatureHelpState, remove the 'if' block:
+// - (old bug fix; not applied. The code changed completely. Probably now the following new mod fixes that bug.) In SignatureHelpUtilities.cs, function GetSignatureHelpState, remove the 'if' block:
             //au: bug fix. This code replaces correct ArgumentIndex with incorrect. Then another function throws exception. Editor could handle the exception, but then no parameter info.
             //if (result is not null && parameterIndex >= 0)
             //{
             //    result.ArgumentIndex = parameterIndex;
             //}
+
+// - (bug fix) In AbstractSignatureHelpProvider.cs, function CreateSignatureHelpItems:
+            //if (parameterIndexOverride >= 0)
+            if (parameterIndexOverride >= 0 && parameterIndexOverride < state.Value.ArgumentCount) //au: prevent exception in SignatureHelpItems ctor
 
 // - (bug fix) In AbstractCSharpSignatureHelpProvider.LightweightOverloadResolution.cs, function FindParameterIndexIfCompatibleMethod:
                         //Au: bug fix. Would throw invalid index exception in eg dialog.show(x: 5,). Not perfect.

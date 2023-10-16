@@ -98,6 +98,8 @@ namespace Au.Types {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Parameter /*| AttributeTargets.Field | AttributeTargets.Property*/, AllowMultiple = false)]
 	public sealed class ParamStringAttribute : Attribute {
+		//info: now .NET has similar attribute StringSyntaxAttribute. It was added later.
+		
 		///
 		public ParamStringAttribute(PSFormat format) => Format = format;
 		

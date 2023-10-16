@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
+		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
-		<AssemblyName>CompilerDlls</AssemblyName>
+		<Configurations>Debug</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>preview</LangVersion>
@@ -14,29 +14,16 @@
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Remove="Au.InternalsVisible.cs" />
-		<Compile Remove="Au.TestInternal.cs" />
-	</ItemGroup>
-
 	<ItemGroup>
 		<Compile Include="..\..\Au\resources\global2.cs" Link="global2.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="Au.InternalsVisible.cs" />
-		<None Include="Au.TestInternal.cs" />
+		<PackageReference Include="MahApps.Metro.IconPacks" Version="4.8.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Au\Au.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.8.0-2.final" />
 	</ItemGroup>
 
 </Project>

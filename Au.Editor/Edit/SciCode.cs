@@ -19,11 +19,10 @@ partial class SciCode : KScintilla {
 	public const int
 		c_marginFold = 0,
 		c_marginImages = 1,
-		c_marginMarkers = 2, //breakpoints etc
-		c_marginLineNumbers = 3,
-		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
+		c_marginLineNumbers = 2,
+		c_marginChanges = 3; //currently not impl, just adds some space between line numbers and text
 	
-	//markers. We can use 0-20. History 21-24. Folding 25-31.
+	//markers. We can use 0-20. Changes 21-24. Folding 25-31.
 	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
 	//public const int c_markerStepNext = 3;
 	
@@ -49,33 +48,36 @@ partial class SciCode : KScintilla {
 	}
 	
 	protected override void AaOnHandleCreated() {
-		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
+		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT | MOD.SC_MOD_BEFOREDELETE /*| MOD.SC_MOD_INSERTCHECK | MOD.SC_MOD_BEFOREINSERT*/
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
 		
 		aaaMarginSetType(c_marginFold, SC_MARGIN_SYMBOL);
+		
 		aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
-		aaaMarginSetType(c_marginMarkers, SC_MARGIN_SYMBOL);
-		aaaMarginSetType(c_marginLineNumbers, SC_MARGIN_NUMBER);
-		//aaaSetMarginType(c_marginChanges, SC_MARGIN_SYMBOL);
-		Call(SCI_SETMARGINWIDTHN, c_marginChanges, 4);
-		Call(SCI_SETMARGINLEFT, 0, 2);
 		
+		aaaMarginSetType(c_marginLineNumbers, SC_MARGIN_NUMBER);
+		Call(SCI_SETMARGINMASKN, 1, 0);
+		Call(SCI_SETMARGINMASKN, c_marginLineNumbers, ~SC_MASK_FOLDERS);
+		bool dark = WpfUtil_.IsHighContrastDark;
+		aaaMarkerDefine(SciCode.c_markerBookmark, Sci.SC_MARK_VERTICALBOOKMARK, dark ? 0xFFFFFF : 0x404040, 0x8080ff);
+		
+		aaaMarginSetWidth(c_marginChanges, 4);
+		
+		Call(SCI_SETMARGINLEFT, 0, 2);
 		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
 		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 		Call(SCI_ASSIGNCMDKEY, Math2.MakeLparam(SCK_RETURN, SCMOD_CTRL | SCMOD_SHIFT), SCI_NEWLINE);
-		
-		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
-		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
-		
 		Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
+		Call(SCI_SETMOUSEDWELLTIME, 500);
 		
 		Call(SCI_SETCARETLINEFRAME, 1);
 		aaaSetElementColor(SC_ELEMENT_CARET_LINE_BACK, 0xEEEEEE);
 		Call(SCI_SETCARETLINEVISIBLEALWAYS, 1);
 		
-		Call(SCI_SETMOUSEDWELLTIME, 500);
+		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
+		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
 		
 		CiStyling.TStyles.Settings.ToScintilla(this);
 		_InicatorsInit();
@@ -111,7 +113,7 @@ partial class SciCode : KScintilla {
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded();
-		
+		Panels.Bookmarks.DocLoaded(this);
 		App.Model.EditGoBack.OnPosChanged(this);
 		
 		//detect \r without '\n', because it is not well supported. Also NEL, LS, PS.
@@ -184,7 +186,7 @@ partial class SciCode : KScintilla {
 		//	//				)) Debug_.Print($"AaOnSciNotify in background, {_fn}, {n.nmhdr.code}");
 		//	//#endif
 		//}
-
+		
 		switch (n.code) {
 		case NOTIF.SCN_MODIFIED:
 			//print.it("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, aaaCurrentPos8, n.Text);
@@ -196,6 +198,7 @@ partial class SciCode : KScintilla {
 					if (CodeInfo.SciModified(this, n)) _CodeModifiedAndCodeinfoOK(); //WPF preview
 					Panels.Find.UpdateQuickResults();
 				}
+				Panels.Bookmarks.SciModified(this, ref n);
 				App.Model.EditGoBack.OnTextModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
 				if (n.linesAdded != 0) ESetLineNumberMarginWidth_(onModified: true);
 			}
@@ -251,7 +254,12 @@ partial class SciCode : KScintilla {
 		base.AaOnSciNotify(ref n);
 	}
 	bool _modified;
-	
+
+	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
+		if ((markers & 1 << c_markerBookmark) != 0) Panels.Bookmarks.DeletingLineWithMarker(this, line);
+		base.AaOnDeletingLineWithMarkers(line, markers);
+	}
+
 	protected override nint WndProc(wnd w, int msg, nint wp, nint lp) {
 		switch (msg) {
 		case Api.WM_CHAR: {
@@ -275,7 +283,7 @@ partial class SciCode : KScintilla {
 					var (_, start, end) = aaaLineStartEndFromPos(false, aaaPosFromXY(false, p, false));
 					if (selStart >= start && selStart <= end) return 0;
 					//do vice versa if the end of non-empty selection is at the start of the rclicked line, to avoid comment/uncomment wrong lines
-					if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
+					if (margin is c_marginLineNumbers or c_marginImages or c_marginChanges) {
 						if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
 					}
 				}
@@ -286,7 +294,7 @@ partial class SciCode : KScintilla {
 				int margin = aaaMarginFromPoint(p);
 				if (margin >= 0) {
 					switch (margin) {
-					case c_marginLineNumbers or c_marginMarkers or c_marginImages or c_marginChanges:
+					case c_marginLineNumbers or c_marginImages or c_marginChanges:
 						ModifyCode.CommentLines(null, notSlashStar: true);
 						break;
 					case c_marginFold:
@@ -386,9 +394,10 @@ partial class SciCode : KScintilla {
 	
 	//never mind: not called when zoom changes.
 	internal void ESetLineNumberMarginWidth_(bool onModified = false) {
-		int c = 4, lines = aaaLineCount;
+		int c = 5; //3 would be good, but need some space for markers
+		int lines = aaaLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
+		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 4);
 	}
 	int _prevLineNumberMarginWidth;
 	

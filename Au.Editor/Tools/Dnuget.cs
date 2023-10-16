@@ -619,7 +619,7 @@ A script can use packages from multiple folders if they are compatible.");
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		public bool IsFolder { get; }
 		public string DisplayText { get; }
-		object ITreeViewItem.Image => _isExpanded ? FileNode.c_iconFolderOpen : (IsFolder ? FileNode.c_iconFolder : null);
+		object ITreeViewItem.Image => IsFolder ? EdResources.FolderIcon(_isExpanded) : null;
 		//public TVCheck CheckState { get; }
 		
 		#endregion

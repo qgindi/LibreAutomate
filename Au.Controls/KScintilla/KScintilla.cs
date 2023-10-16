@@ -318,6 +318,8 @@ public unsafe partial class KScintilla : HwndHost {
 					_RdOnModified(inserted, n);
 					AaImages?.OnTextChanged_(inserted, n);
 					AaTags?.OnTextChanged_(inserted, n);
+				} else if (n.modificationType.Has(Sci.MOD.SC_MOD_BEFOREDELETE)) {
+					_DeleteMarkers(ref n);
 				}
 				//if(mt.Has(MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 				if (AaDisableModifiedNotifications) return;
@@ -363,6 +365,32 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Occurs when text changed.
 	/// </summary>
 	public event EventHandler AaTextChanged;
+	
+	//workaround for: Scintilla does not delete markers of deleted lines. Instead moves to the next or previous line.
+	void _DeleteMarkers(ref SCNotification n) {
+		int end = n.position + n.length;
+		int line1 = aaaLineFromPos(false, n.position), line2 = aaaLineFromPos(false, end);
+		if (end == aaaLen8) line2++;
+		if (line2 <= line1) return;
+		int start1 = aaaLineStart(false, line1);
+		if (start1 < n.position) line1++;
+		for (int line = line1; line < line2; line++) {
+			uint markers = (uint)Call(Sci.SCI_MARKERGET, line); //never mind: no folding markers
+			if (markers != 0) AaOnDeletingLineWithMarkers(line, markers);
+		}
+	}
+	
+	/// <summary>
+	/// Called before deleting a line that contains markers (except folding markers), unless <b>MOD.SC_MOD_BEFOREDELETE</b> notification removed with <b>SCI_SETMODEVENTMASK</b>.
+	/// Deletes all these markers; an override can prevent it by not calling the base method.
+	/// </summary>
+	/// <param name="line"></param>
+	/// <param name="markers">See SCI_MARKERGET.</param>
+	protected virtual void AaOnDeletingLineWithMarkers(int line, uint markers) {
+		for (uint i = 0, m = markers; m != 0; m >>= 1, i++) {
+			if ((m & 1) != 0) Call(SCI_MARKERDELETE, line, (int)i);
+		}
+	}
 	
 	/// <summary>
 	/// Sends a Scintilla message to the control and returns int.
@@ -453,26 +481,26 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Border style.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool AaInitBorder { get; set; }
+	public bool AaInitBorder { get; set; }
 	
 	/// <summary>
 	/// Use the default Scintilla's context menu.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool AaInitUseDefaultContextMenu { get; set; }
+	public bool AaInitUseDefaultContextMenu { get; set; }
 	
 	/// <summary>
 	/// This control is used just to display text, not to edit.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool AaInitReadOnlyAlways { get; set; }
+	public bool AaInitReadOnlyAlways { get; set; }
 	
 	/// <summary>
 	/// Whether to show images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.
 	/// Must be set before creating control handle.
 	/// If false, <see cref="AaImages"/> property is null.
 	/// </summary>
-	public virtual bool AaInitImages { get; set; }
+	public bool AaInitImages { get; set; }
 	
 	/// <summary>
 	/// See <see cref="AaInitTagsStyle"/>.
@@ -495,18 +523,18 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Whether and when supports tags.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual AaTagsStyle AaInitTagsStyle { get; set; }
+	public AaTagsStyle AaInitTagsStyle { get; set; }
 	
 	/// <summary>
 	/// Whether to show arrows etc to make wrapped lines more visible.
 	/// Must be set before creating control handle.
 	/// </summary>
-	public virtual bool AaInitWrapVisuals { get; set; } = true;
+	public bool AaInitWrapVisuals { get; set; } = true;
 	
 	/// <summary>
 	/// Word-wrap.
 	/// </summary>
-	public virtual bool AaWrapLines {
+	public bool AaWrapLines {
 		get => _wrapLines;
 		set {
 			if (value != _wrapLines) {

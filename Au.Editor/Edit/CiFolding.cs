@@ -326,18 +326,15 @@ partial class SciCode {
 			}
 		} else if (os == _EOpenState.NewFileNoTemplate) {
 		} else {
-			//restore saved folding, markers, scroll position and caret position
+			//restore saved folding, some markers, scroll position and caret position
 			if (App.Model.State.EditorGet(_fn, out _sed)) {
 				int cp = aaaCurrentPos8;
 				if (_sed.fold != null) {
 					for (int i = _sed.fold.Length; --i >= 0;) EFoldLine(_sed.fold[i]);
 					if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, aaaLineFromPos(false, cp));
 				}
-				if (_sed.bookmark != null) {
-					foreach (var v in _sed.bookmark) Call(SCI_MARKERADDSET, v, c_markerBookmark);
-				}
 				if (_sed.breakpoint != null) {
-					foreach (var v in _sed.breakpoint) Call(SCI_MARKERADDSET, v, c_markerBreakpoint);
+					foreach (var v in _sed.breakpoint) Call(SCI_MARKERADD, v, c_markerBreakpoint);
 				}
 				if (os != _EOpenState.Reopen) {
 					if (_sed.top != 0 || _sed.pos != 0) {
@@ -377,7 +374,6 @@ partial class SciCode {
 		var a = new List<int>();
 		var x = new WorkspaceState.Editor {
 			fold = _GetLines(31),
-			bookmark = _GetLines(c_markerBookmark),
 			breakpoint = _GetLines(c_markerBreakpoint),
 		};
 		if (!closingDoc) {

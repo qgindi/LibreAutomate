@@ -28,16 +28,16 @@ static class Menus {
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 			
-			[Command('s', keys = "Ctrl+N", image = FileNode.c_iconScript)]
+			[Command('s', keys = "Ctrl+N", image = EdResources.c_iconScript)]
 			public static void New_script() { _New("Script.cs"); }
 			
-			[Command('c', image = FileNode.c_iconClass)]
+			[Command('c', image = EdResources.c_iconClass)]
 			public static void New_class() { _New("Class.cs"); }
 			
 			[Command('t', image = "*FeatherIcons.FileText" + black)]
 			public static void New_text_file() { _New("File.txt"); }
 			
-			[Command('f', image = FileNode.c_iconFolder)]
+			[Command('f', image = EdResources.c_iconFolder)]
 			public static void New_folder() { _New(null); }
 		}
 		
@@ -178,7 +178,7 @@ static class Menus {
 			[Command("Push to GitHub", image = "*Unicons.CloudUpload" + blue)]
 			public static void Git_push() { global::Git.Push(); }
 			
-			[Command("Pull from GitHub", image = "*Unicons.CloudDownload #3586FF|#E0E000" + blue)]
+			[Command("Pull from GitHub", image = "*Unicons.CloudDownload" + blue)]
 			public static void Git_pull() { global::Git.Pull(); }
 			
 			[Command("GitHub Desktop", image = "*Codicons.Github" + purple, separator = true)]
@@ -288,6 +288,18 @@ static class Menus {
 			
 			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + blue)]
 			public static void Parameter_info() { CodeInfo.ShowSignature(); }
+		}
+		
+		[Command]
+		public static class Bookmarks {
+			[Command(keys = "Ctrl+B", image = "*Material.Bookmark" + blue)]
+			public static void Toggle_bookmark() { Panels.Bookmarks.ToggleBookmark(false); }
+			
+			[Command("Add and/or rename bookmark", keys = "Ctrl+Shift+B", image = "*Material.Bookmark" + blue)]
+			public static void Toggle_bookmark2() { Panels.Bookmarks.ToggleBookmark(true); }
+			
+			[Command(image = "*Material.BookmarkOutline" + blue)]
+			public static void Next_bookmark() { Panels.Bookmarks.NextBookmark(); }
 		}
 		
 		[Command(separator = true)]
