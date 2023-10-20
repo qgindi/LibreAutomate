@@ -143,12 +143,13 @@ internal static unsafe partial class Cpp {
 	}
 #endif
 	
-	// STRING
+	// OTHER
+	
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static extern IntPtr Cpp_ModuleHandle();
 	
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern char* Cpp_LowercaseTable();
-	
-	// OTHER
 	
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern IntPtr Cpp_Clipboard(IntPtr hh);

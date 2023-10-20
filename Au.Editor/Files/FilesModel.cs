@@ -441,7 +441,7 @@ partial class FilesModel {
 	/// </summary>
 	void _UpdateOpenFiles(FileNode current) {
 		Panels.Open.UpdateList();
-		App.Commands[nameof(Menus.File.OpenCloseGo.Previous_document)].Enabled = _openFiles.Count > 1;
+		App.Commands[nameof(Menus.Edit.Navigate.Previous_document)].Enable(_openFiles.Count > 1);
 	}
 	
 	/// <summary>
@@ -726,7 +726,7 @@ partial class FilesModel {
 		}
 		
 		EditGoBack.OnFileDeleted(e);
-		Panels.Bookmarks.OnFileDeleted(e);
+		Panels.Bookmarks.FileDeleted(e);
 		foreach (var k in e) {
 			if (!k.IsFolder) State.EditorDelete(k);
 			if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);

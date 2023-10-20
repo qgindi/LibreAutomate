@@ -31,8 +31,6 @@ All attributes are optional. The Example command contains all.
 		<Git hide="always" />
 		<MultiSelect_files />
 		<Collapse_all_folders hide="always" />
-		<Go_back separator="" />
-		<Go_forward />
 	</File>
 	<Run>
 		<Compile />
@@ -55,6 +53,9 @@ All attributes are optional. The Example command contains all.
 		<Find separator="" />
 		<Find_references />
 		<Find_symbol />
+		<Go_back separator="" />
+		<Go_forward />
+		<Next_bookmark />
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<WPF_preview />

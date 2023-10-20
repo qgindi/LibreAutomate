@@ -55,12 +55,13 @@ static unsafe partial class WinRT {
 		}
 
 		public bool IsNull => _u == default;
-		
-		int _QI(Type type, out IntPtr r) {
-			var g = type.GUID;
-			return Marshal.QueryInterface(_u, ref g, out r);
-		}
-		
+
+#if NET8_0_OR_GREATER
+		int _QI(Type type, out IntPtr r) => Marshal.QueryInterface(_u, type.GUID, out r);
+#else
+		int _QI(Type type, out IntPtr r) { var guid = type.GUID; return Marshal.QueryInterface(_u, ref guid, out r); }
+#endif
+
 		/// <summary>
 		/// Calls <b>QueryInterface</b>. Throws exception if failed.
 		/// </summary>

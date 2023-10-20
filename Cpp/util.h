@@ -98,7 +98,7 @@ public:
 #include "str.h"
 
 
-HMODULE GetCurrentModuleHandle();
+extern HMODULE s_moduleHandle;
 bool IsOS64Bit();
 bool IsProcess64Bit(DWORD pid, out bool& is);
 

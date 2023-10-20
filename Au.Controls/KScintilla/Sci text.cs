@@ -731,10 +731,10 @@ public unsafe partial class KScintilla {
 		=> Call(SCI_LINEFROMPOSITION, _ParamPos(utf16, pos));
 	
 	/// <summary>
-	/// Gets current line index.
+	/// Gets line index at <see cref="aaaSelectionStart8"/>.
 	/// </summary>
 	public int aaaLineFromPos()
-		=> Call(SCI_LINEFROMPOSITION, aaaCurrentPos8);
+		=> Call(SCI_LINEFROMPOSITION, aaaSelectionStart8);
 	
 	/// <summary>
 	/// Gets line start position from line index.
@@ -1436,7 +1436,7 @@ public unsafe partial class KScintilla {
 		/// <param name="sci">Can be null, then does nothing.</param>
 		public aaaUndoAction(KScintilla sci) {
 			_sci = sci;
-			if (_sci != null) _sci.Call(SCI_BEGINUNDOACTION);
+			_sci?.Call(SCI_BEGINUNDOACTION);
 		}
 		
 		/// <summary>

@@ -220,10 +220,10 @@ partial class filesystem {
 			//var s1 = folders.ThisAppBS + rel;
 			var s1 = AppContext.BaseDirectory + rel;
 			
-			//app path
+			//app path. If <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract> - in temp dir.
 			if (NativeLibrary.TryLoad(s1, out _)) return;
 			
-			//like DllImport. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
+			//like DllImport. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json. Also finds when <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract>.
 			if (NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out _)) return;
 			
 			//dll path. Eg in PowerShell. Other scripting environments etc may copy the dll elsewhere; then need the environment variable.

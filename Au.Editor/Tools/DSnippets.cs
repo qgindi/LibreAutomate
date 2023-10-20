@@ -20,7 +20,7 @@ class DSnippets : KDialogWindow {
 	
 	Panel _panelSnippet, _panelContext, _panelFile;
 	StackPanel _panelContextEnum;
-	_KTreeView _tv;
+	KTreeView _tv;
 	KSciCodeBox _code;
 	TextBox _tName, _tInfo, _tMore, _tPrint, _tUsing, _tVar;
 	TextBlock _tbFile, _tbDefaultFileInfo;
@@ -39,7 +39,7 @@ class DSnippets : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(800, 600).Columns(250, 0, -1);
 		b.Row(-1);
 		
-		b.xAddInBorder(_tv = new(this));
+		b.xAddInBorder(_tv = new());
 		b.Add<GridSplitter>().Splitter(vertical: true);
 		
 		b.StartGrid().Columns(-1); //right side
@@ -104,6 +104,7 @@ class DSnippets : KDialogWindow {
 		_tv.SingleClickActivate = true;
 		_tv.ItemActivated += _tv_ItemActivated;
 		_tv.ItemClick += _tv_ItemClick;
+		_tv.KeyDown += _tv_KeyDown;
 		_FillTree();
 		
 		//b.Loaded += () => {
@@ -571,20 +572,7 @@ class DSnippets : KDialogWindow {
 		#endregion
 	}
 	
-	class _KTreeView : KTreeView {
-		DSnippets _d;
-		
-		public _KTreeView(DSnippets d) {
-			_d = d;
-		}
-		
-		protected override void OnKeyDown(KeyEventArgs e) {
-			if (!e.Handled) _d._OnKeyDown(e);
-			base.OnKeyDown(e);
-		}
-	}
-	
-	void _OnKeyDown(KeyEventArgs e) {
+	void _tv_KeyDown(object sender, KeyEventArgs e) {
 		var k = (e.KeyboardDevice.Modifiers, e.Key);
 		switch (k) {
 		case (0, Key.Escape):

@@ -136,13 +136,13 @@ class EditGoBack {
 	
 	void _UpdateUI() {
 		bool canGoBack = _i > 0, canGoForward = _i < _a.Count - 1;
-		if (canGoBack != _canGoBack) App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)].Enabled = _canGoBack = canGoBack;
-		if (canGoForward != _canGoForward) App.Commands[nameof(Menus.File.OpenCloseGo.Go_forward)].Enabled = _canGoForward = canGoForward;
+		if (canGoBack != _canGoBack) App.Commands[nameof(Menus.Edit.Navigate.Go_back)].Enable(_canGoBack = canGoBack);
+		if (canGoForward != _canGoForward) App.Commands[nameof(Menus.Edit.Navigate.Go_forward)].Enable(_canGoForward = canGoForward);
 	}
 	
 	internal static void DisableUI() {
 		if (App.Commands == null) return;
-		App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)].Enabled = false;
-		App.Commands[nameof(Menus.File.OpenCloseGo.Go_forward)].Enabled = false;
+		App.Commands[nameof(Menus.Edit.Navigate.Go_back)].Enable(false);
+		App.Commands[nameof(Menus.Edit.Navigate.Go_forward)].Enable(false);
 	}
 }

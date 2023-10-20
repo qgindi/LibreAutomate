@@ -69,8 +69,8 @@ g1:
 
 EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh) {
 	if (action == 1) {
-		auto hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), tid);
-		if (hh == 0 && tid != 0) hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
+		auto hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, s_moduleHandle, tid);
+		if (hh == 0 && tid != 0) hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, s_moduleHandle, 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
 		return hh;
 	} else if (action == 2) {
 		UnhookWindowsHookEx(hh);

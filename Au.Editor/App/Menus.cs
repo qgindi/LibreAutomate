@@ -74,8 +74,8 @@ static class Menus {
 			public static void Copy_full_path() { App.Model.SelectedCopyPath(true); }
 		}
 		
-		[Command("Open, close, go")]
-		public static class OpenCloseGo {
+		[Command("Open, close")]
+		public static class OpenClose {
 			[Command(keysText = "Enter")]
 			public static void Open() { App.Model.OpenSelected(1); }
 			
@@ -96,15 +96,6 @@ static class Menus {
 			
 			[Command(target = "", image = "*Codicons.CollapseAll" + black)]
 			public static void Collapse_inactive_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseInactiveFolders); }
-			
-			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
-			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
-			
-			[Command(keys = "Alt+Left", target = "", image = iconBack)]
-			public static void Go_back() { App.Model.EditGoBack.GoBack(); }
-			
-			[Command(keys = "Alt+Right", target = "", image = "*EvaIcons.ArrowForward" + black)]
-			public static void Go_forward() { App.Model.EditGoBack.GoForward(); }
 		}
 		
 		//[Command]
@@ -291,15 +282,27 @@ static class Menus {
 		}
 		
 		[Command]
-		public static class Bookmarks {
-			[Command(keys = "Ctrl+B", image = "*Material.Bookmark" + blue)]
+		public static class Navigate {
+			[Command(image = "*BoxIcons.SolidBookmark" + blue)]
 			public static void Toggle_bookmark() { Panels.Bookmarks.ToggleBookmark(false); }
 			
-			[Command("Add and/or rename bookmark", keys = "Ctrl+Shift+B", image = "*Material.Bookmark" + blue)]
+			[Command("Add and/or rename bookmark", image = "*BoxIcons.SolidBookmarkStar" + blue)]
 			public static void Toggle_bookmark2() { Panels.Bookmarks.ToggleBookmark(true); }
 			
-			[Command(image = "*Material.BookmarkOutline" + blue)]
-			public static void Next_bookmark() { Panels.Bookmarks.NextBookmark(); }
+			[Command(image = "*JamIcons.ArrowSquareUp" + black, keys = "Alt+Up", noIndirectDisable = true)]
+			public static void Previous_bookmark() { Panels.Bookmarks.NextBookmark(true); }
+			
+			[Command(image = "*JamIcons.ArrowSquareDown" + black, keys = "Alt+Down", noIndirectDisable = true)]
+			public static void Next_bookmark() { Panels.Bookmarks.NextBookmark(false); }
+			
+			[Command(keys = "Alt+Left", target = "", image = iconBack, separator = true, noIndirectDisable = true)]
+			public static void Go_back() { App.Model.EditGoBack.GoBack(); }
+			
+			[Command(keys = "Alt+Right", target = "", image = "*EvaIcons.ArrowForward" + black, noIndirectDisable = true)]
+			public static void Go_forward() { App.Model.EditGoBack.GoForward(); }
+			
+			[Command(separator = true, target = "", keys = "Ctrl+Tab", noIndirectDisable = true)]
+			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
 		}
 		
 		[Command(separator = true)]

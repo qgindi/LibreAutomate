@@ -1,8 +1,11 @@
 #include "stdafx.h"
 #include "cpp.h"
 
-namespace other
-{
+namespace other {
+	EXPORT HMODULE Cpp_ModuleHandle() {
+		return s_moduleHandle;
+	}
+
 	LRESULT CALLBACK ClipboardHook(int code, WPARAM wParam, LPARAM lParam) {
 		auto m = (MSG*)lParam;
 		if (code < 0) goto g1;
@@ -25,7 +28,7 @@ namespace other
 
 	EXPORT HHOOK Cpp_Clipboard(HHOOK hh) {
 		if (hh == NULL) {
-			auto hh = SetWindowsHookExW(WH_GETMESSAGE, ClipboardHook, GetCurrentModuleHandle(), 0);
+			auto hh = SetWindowsHookExW(WH_GETMESSAGE, ClipboardHook, s_moduleHandle, 0);
 			return hh;
 		} else {
 			UnhookWindowsHookEx(hh);
@@ -103,8 +106,7 @@ namespace other
 namespace {
 	//Used for marshaling Cpp_ShellExec (IPA_ShellExec) parameters when calling the get_accHelpTopic hook function.
 	//A flat variable-size memory structure (strings follow the fixed-size part).
-	struct MarshalParams_ShellExec
-	{
+	struct MarshalParams_ShellExec {
 		MarshalParams_Header hdr;
 	private:
 		int _file, _dir, _verb, _params, _class, _idlist; //offsets
