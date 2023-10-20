@@ -21,6 +21,10 @@ class PanelEdit {
 	
 	public SciCode ActiveDoc => _activeDoc;
 	
+	/// <summary>
+	/// When opened new document, or switched to an open document, or closed current or all documents.
+	/// When closing, <b>ActiveDoc</b> is null when calling event handlers.
+	/// </summary>
 	public event Action ActiveDocChanged;
 	
 	/// <summary>
@@ -142,6 +146,7 @@ class PanelEdit {
 	}
 	
 	void _Close(SciCode doc) {
+		ClosingDoc?.Invoke(doc);
 		if (doc.IsFocused) doc.IsEnabled = false; //prevent focusing the scintilla control after hiding/parking
 		P.Children.Remove(doc);
 		//CodeInfo.FileClosed(doc);
@@ -162,6 +167,12 @@ class PanelEdit {
 		_docs.Clear();
 		_UpdateUI_IsOpen();
 	}
+	
+	/// <summary>
+	/// When closing a document (active or not).
+	/// Called after setting <b>ActiveDoc</b> = null, invoking <b>ActiveDocChanged</b> and saving changes (event handlers must not make new changes).
+	/// </summary>
+	public event Action<SciCode> ClosingDoc;
 	
 	public bool SaveText() {
 		return _activeDoc?.ESaveText_(false) ?? true;
@@ -188,13 +199,14 @@ class PanelEdit {
 		_uiDisabled_IsOpen = !enable;
 		_editDisabled = 0;
 		
-		App.Commands[nameof(Menus.Edit)].Enabled = enable;
-		App.Commands[nameof(Menus.Code)].Enabled = enable;
-		//App.Commands[nameof(Menus.Run)].Enabled = enable; //no, should not disable eg End_task and Recent
-		App.Commands[nameof(Menus.Run.Run_script)].Enabled = enable;
-		App.Commands[nameof(Menus.Run.Compile)].Enabled = enable;
-		App.Commands[nameof(Menus.Run.Debugger)].Enabled = enable;
-		//App.Commands[nameof(Menus.File.Properties)].Enabled = enable; //also Rename, Delete, More //don't disable because can right-click
+		App.Commands[nameof(Menus.Edit)].Enable(enable);
+		App.Commands[nameof(Menus.Code)].Enable(enable);
+		App.Commands[nameof(Menus.TT.Toolbar_trigger)].Enable(enable);
+		App.Commands[nameof(Menus.TT.Script_triggers)].Enable(enable);
+		App.Commands[nameof(Menus.Run.Run_script)].Enable(enable);
+		App.Commands[nameof(Menus.Run.Compile)].Enable(enable);
+		App.Commands[nameof(Menus.Run.Debugger)].Enable(enable);
+		//App.Commands[nameof(Menus.File.Properties)].Enable(enable); //also Rename, Delete, More //don't disable because can right-click
 	}
 	bool _uiDisabled_IsOpen;
 	
@@ -217,11 +229,11 @@ class PanelEdit {
 		if (dif == 0) return;
 		
 		_editDisabled = disable;
-		if (dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.UndoRedo.Undo)].Enabled = !disable.Has(_EUpdateUI.Undo);
-		if (dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.UndoRedo.Redo)].Enabled = !disable.Has(_EUpdateUI.Redo);
-		if (dif.Has(_EUpdateUI.Cut)) App.Commands[nameof(Menus.Edit.Clipboard.Cut)].Enabled = !disable.Has(_EUpdateUI.Cut);
-		if (dif.Has(_EUpdateUI.Copy)) App.Commands[nameof(Menus.Edit.Clipboard.Copy)].Enabled = !disable.Has(_EUpdateUI.Copy);
-		//if(dif.Has(EUpdateUI.Paste)) App.Commands[nameof(Menus.Edit.Paste)].Enabled = !disable.Has(EUpdateUI.Paste);
+		if (dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.UndoRedo.Undo)].Enable(!disable.Has(_EUpdateUI.Undo));
+		if (dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.UndoRedo.Redo)].Enable(!disable.Has(_EUpdateUI.Redo));
+		if (dif.Has(_EUpdateUI.Cut)) App.Commands[nameof(Menus.Edit.Clipboard.Cut)].Enable(!disable.Has(_EUpdateUI.Cut));
+		if (dif.Has(_EUpdateUI.Copy)) App.Commands[nameof(Menus.Edit.Clipboard.Copy)].Enable(!disable.Has(_EUpdateUI.Copy));
+		//if(dif.Has(EUpdateUI.Paste)) App.Commands[nameof(Menus.Edit.Paste)].Enable(!disable.Has(EUpdateUI.Paste));
 		
 	}
 	_EUpdateUI _editDisabled;

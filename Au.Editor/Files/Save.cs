@@ -89,7 +89,7 @@ partial class FilesModel {
 		}
 		
 		/// <summary>
-		/// Calls WorkspaceNowIfNeed, StateNowIfNeed, TextNowIfNeed.
+		/// Calls WorkspaceNowIfNeed, TextNowIfNeed, StateNowIfNeed, Panels.Bookmarks.SaveNowIfNeed.
 		/// </summary>
 		public void AllNowIfNeed() {
 			WorkspaceNowIfNeed();
@@ -97,6 +97,7 @@ partial class FilesModel {
 			TextNowIfNeed();
 			StateNowIfNeed();
 			_model.State.SuspendSave(false);
+			Panels.Bookmarks.SaveNowIfNeed();
 		}
 		
 		void _Program_Timer1s() {

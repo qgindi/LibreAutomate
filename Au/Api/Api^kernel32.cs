@@ -737,8 +737,8 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll")]
 	internal static extern void ReleaseActCtx(IntPtr hActCtx);
 	
-	internal const int ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID = 0x004;
-	internal const int ACTCTX_FLAG_RESOURCE_NAME_VALID = 0x008;
+	internal const int ACTCTX_FLAG_RESOURCE_NAME_VALID = 0x8;
+	internal const int ACTCTX_FLAG_HMODULE_VALID = 0x80;
 	
 	internal struct ACTCTX {
 		public int cbSize;

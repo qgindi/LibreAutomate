@@ -13,18 +13,17 @@ namespace Au;
 /// <br/>• If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: <c>" ab "</c>. Or use parameter <i>trimSpaces</i> false when parsing.
 /// <br/>• Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
 /// </remarks>
-public class csvTable
-{
+public class csvTable {
 	readonly List<string[]> _a;
-
+	
 	/// <summary>
 	/// Initializes new <see cref="csvTable"/> variable that can be used to add rows.
 	/// To create new variables from CSV text, file or dictionary, instead use static functions, for example <see cref="parse"/>.
 	/// </summary>
 	public csvTable() { _a = new(); }
-
+	
 	csvTable(List<string[]> a, int columnCount) { _a = a; _columnCount = columnCount; }
-
+	
 	/// <summary>
 	/// Gets the internal <b>List</b> containing rows as string arrays.
 	/// </summary>
@@ -39,19 +38,19 @@ public class csvTable
 	/// ]]></code>
 	/// </example>
 	public List<string[]> Rows => _a;
-
+	
 	/// <summary>
 	/// Sets or gets the field separator character used when composing CSV text.
 	/// Initially it is <c>','</c>.
 	/// </summary>
 	public char Separator { get; set; } = ',';
-
+	
 	/// <summary>
 	/// Sets or gets the quote character used when composing CSV text.
 	/// Initially it is <c>'"'</c>.
 	/// </summary>
 	public char Quote { get; set; } = '"';
-
+	
 	/// <summary>
 	/// Parses CSV string and creates new <see cref="csvTable"/> variable that contains data in internal <b>List</b> of string arrays.
 	/// </summary>
@@ -66,15 +65,15 @@ public class csvTable
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static unsafe csvTable parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true) {
 		if (csv.NE()) return new csvTable();
-
+		
 		var a = new List<string[]>();
 		var tempRow = new List<string>(8);
 		string sQuote1 = null, sQuote2 = null;
-
+		
 		fixed (char* s0 = csv) {
 			char* s = s0, se = s0 + csv.Length;
 			int nCol = 0;
-
+			
 			for (; s < se; s++) {
 				//Read a field.
 				string field = "";
@@ -115,26 +114,26 @@ public class csvTable
 					field = field.Replace(sQuote2, sQuote1);
 				}
 				g1:
-
+				
 				//print.it(field);
-
+				
 				tempRow.Add(field);
 				if (s >= se || *s == '\n') {
 					//print.it(a.Count);
 					//print.it(tempRow);
-
+					
 					a.Add(tempRow.ToArray());
 					if (tempRow.Count > nCol) nCol = tempRow.Count;
 					tempRow.Clear();
 				}
 			}
-
+			
 			var R = new csvTable(a, 0);
 			R.ColumnCount = nCol; //make all rows of equal length and set _columnCount
 			return R;
 		} //fixed
 	}
-
+	
 	/// <summary>
 	/// Composes CSV text from the internal <b>List</b> of string arrays.
 	/// </summary>
@@ -143,11 +142,11 @@ public class csvTable
 	/// </remarks>
 	public override string ToString() {
 		if (RowCount == 0 || ColumnCount == 0) return "";
-
+		
 		using (new StringBuilder_(out var b)) {
 			char quote = Quote;
 			string sQuote1 = null, sQuote2 = null;
-
+			
 			for (int r = 0; r < _a.Count; r++) {
 				for (int c = 0; c < _columnCount; c++) {
 					var field = _a[r][c];
@@ -168,7 +167,7 @@ public class csvTable
 			return b.ToString();
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets or sets row count.
 	/// The 'get' function returns the <b>Count</b> property of the internal <b>List</b> of string arrays.
@@ -185,7 +184,7 @@ public class csvTable
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets or sets column count.
 	/// The 'get' function returns the length of all string arrays in the internal <b>List</b>.
@@ -208,23 +207,21 @@ public class csvTable
 					_a[r] = t;
 				}
 			}
-
+			
 			_columnCount = value;
 		}
 	}
 	int _columnCount;
-
+	
 	/// <summary>
-	/// Gets or sets a field.
+	/// This overload is obsolete. To add a row use <i>row</i> <c>^0</c> instead of <c>-1</c>.
 	/// </summary>
-	/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
-	/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
-	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public string this[int row, int column] {
 		get {
 			if ((uint)column >= _columnCount) throw new ArgumentOutOfRangeException("column");
 			if ((uint)row >= RowCount) throw new ArgumentOutOfRangeException("row");
-
+			
 			return _a[row][column];
 		}
 		set {
@@ -240,24 +237,30 @@ public class csvTable
 				if (row > RowCount) throw new ArgumentOutOfRangeException("row");
 				_a.Add(new string[_columnCount]);
 			}
-
+			
 			_a[row][column] = value;
 		}
 	}
-
+	
 	/// <summary>
-	/// Gets or sets fields in a row.
+	/// Gets or sets a field.
 	/// </summary>
-	/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
+	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The 'set' function adds new row if <c>^0</c>.</param>
+	/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	/// <remarks>
-	/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
-	/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
-	/// </remarks>
+	public string this[Index row, int column] {
+		get => this[row.GetOffset(_a.Count), column];
+		set { this[row.GetOffset(_a.Count), column] = value; }
+	}
+	
+	/// <summary>
+	/// This overload is obsolete. To add a row use <i>row</i> <c>^0</c> instead of <c>-1</c>.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public string[] this[int row] {
 		get {
 			if ((uint)row >= RowCount) throw new ArgumentOutOfRangeException();
-
+			
 			return _a[row];
 		}
 		set {
@@ -267,28 +270,42 @@ public class csvTable
 				if (row > RowCount) throw new ArgumentOutOfRangeException();
 				_a.Add(null);
 			}
-
+			
 			var t = value;
 			if (value == null || value.Length < _columnCount) {
 				//make row length = _columnCount
 				t = new string[_columnCount];
-				if (value != null) value.CopyTo(t, 0);
+				value?.CopyTo(t, 0);
 			} else if (value.Length > _columnCount) {
 				//auto-add columns
 				ColumnCount = value.Length;
 			}
-
+			
 			_a[row] = t;
 		}
 	}
-
+	
+	/// <summary>
+	/// Gets or sets fields in a row.
+	/// </summary>
+	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The 'set' function adds new row if <c>^0</c>.</param>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	/// <remarks>
+	/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
+	/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+	/// </remarks>
+	public string[] this[Index row] {
+		get => this[row.GetOffset(_a.Count)];
+		set { this[row.GetOffset(_a.Count)] = value; }
+	}
+	
 	/// <summary>
 	/// Adds new row and sets its fields.
 	/// </summary>
 	/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than <b>ColumnCount</b>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public void AddRow(params string[] fields) => InsertRow(-1, fields);
-
+	
 	/// <summary>
 	/// Inserts new row and sets its fields.
 	/// </summary>
@@ -300,7 +317,7 @@ public class csvTable
 		_a.Insert(index, null);
 		this[index] = fields;
 	}
-
+	
 	/// <summary>
 	/// Inserts new empty row.
 	/// </summary>
@@ -309,7 +326,7 @@ public class csvTable
 	public void InsertRow(int index) {
 		InsertRow(index, null);
 	}
-
+	
 	/// <summary>
 	/// Removes one or more rows.
 	/// </summary>
@@ -320,24 +337,24 @@ public class csvTable
 	public void RemoveRow(int index, int count = 1) {
 		_a.RemoveRange(index, count);
 	}
-
+	
 	//FUTURE: implement these. Rarely used. Quite much code.
 	//Don't need to implement many others because users can call our _a (the Data property) methods directly.
 	//public void MoveRow(int from, int to)
 	//{
-
+	
 	//}
-
+	
 	//public void InsertColumn(int index)
 	//{
-
+	
 	//}
-
+	
 	//public void RemoveColumn(int index)
 	//{
-
+	
 	//}
-
+	
 	/// <summary>
 	/// Loads and parses a CSV file.
 	/// </summary>
@@ -355,7 +372,7 @@ public class csvTable
 		var csv = filesystem.loadText(file);
 		return parse(csv, separator, quote, trimSpaces);
 	}
-
+	
 	/// <summary>
 	/// Composes CSV and saves to a file.
 	/// </summary>
@@ -370,7 +387,7 @@ public class csvTable
 		var csv = ToString();
 		filesystem.saveText(file, csv, backup);
 	}
-
+	
 	/// <summary>
 	/// Creates 2-column CSV table from dictionary keys and values of type string.
 	/// </summary>
@@ -382,7 +399,7 @@ public class csvTable
 		foreach (var v in d) a.Add(new string[] { v.Key, v.Value });
 		return new csvTable(a, 2);
 	}
-
+	
 	/// <summary>
 	/// Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to string.
 	/// </summary>
@@ -398,7 +415,7 @@ public class csvTable
 		}
 		return new csvTable(a, 2);
 	}
-
+	
 	/// <summary>
 	/// Creates CSV table of any column count from dictionary keys and values of any type, using a callback function to convert values to cell strings.
 	/// </summary>
@@ -419,7 +436,7 @@ public class csvTable
 		}
 		return new csvTable(a, columnCount);
 	}
-
+	
 	/// <summary>
 	/// Creates dictionary from this 2-column CSV table.
 	/// </summary>
@@ -436,7 +453,7 @@ public class csvTable
 		}
 		return d;
 	}
-
+	
 	/// <summary>
 	/// Creates dictionary from this CSV table of any column count, using a callback function to convert cell strings to dictionary values of any type.
 	/// </summary>
@@ -457,7 +474,7 @@ public class csvTable
 		}
 		return d;
 	}
-
+	
 	//rejected, because: 1. In some cases can fail to resolve overloads. 2. Almost duplicate of the string[] overload.
 	///// <summary>
 	///// Creates dictionary from this 2-column CSV table, using a callback function to convert cell strings to dictionary values of any type.
@@ -475,43 +492,118 @@ public class csvTable
 	//	foreach(var v in _a) d.Add(v[0], stringToValue(v[1]));
 	//	return d;
 	//}
-
+	
 	/// <summary>
-	/// Sets an int number field.
+	/// Obsolete, use <see cref="Set"/>.
 	/// </summary>
-	/// <param name="value">The number.</param>
-	/// <param name="hex">Let the number be in hexadecimal format, like 0x3A.</param>
-	/// <inheritdoc cref="this[int, int]"/>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public void SetInt(int row, int column, int value, bool hex = false) {
 		this[row, column] = hex ? "0x" + value.ToString("X") : value.ToString();
 	}
-
+	
 	/// <summary>
-	/// Gets an int number field.
+	/// Obsolete, use <see cref="Get"/>.
 	/// </summary>
-	/// <param name="row">0-based row index.</param>
-	/// <param name="column">0-based column index.</param>
-	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public int GetInt(int row, int column) {
 		return this[row, column].ToInt();
 	}
-
+	
 	/// <summary>
-	/// Sets a double number field.
+	/// Obsolete, use <see cref="Set"/>.
 	/// </summary>
-	/// <inheritdoc cref="SetInt(int, int, int, bool)"/>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public void SetDouble(int row, int column, double value) {
 		this[row, column] = value.ToS();
 	}
-
+	
 	/// <summary>
-	/// Gets a double number field.
+	/// Obsolete, use <see cref="Get"/>.
 	/// </summary>
-	/// <inheritdoc cref="GetInt(int, int)"/>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public double GetDouble(int row, int column) {
 		this[row, column].ToNumber(out double R);
 		return R;
 	}
-
+	
+	/// <summary>
+	/// Converts a number to string and sets a field.
+	/// </summary>
+	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. Adds new row if <c>^0</c>.</param>
+	/// <param name="column">0-based column index. If &gt;= <see cref="ColumnCount"/> and &lt; 1000, sets <c>ColumnCount = column + 1</c>.</param>
+	/// <param name="value"></param>
+	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>row</i> or <i>column</i>.</exception>
+	public void Set(Index row, int column, int value) { this[row, column] = value.ToS(); }
+	
+	/// <summary>
+	/// Converts a number to hex string and sets a field.
+	/// </summary>
+	/// <inheritdoc cref="Set(Index, int, int)"/>
+	public void Set(Index row, int column, uint value) { this[row, column] = "0x" + value.ToString("X"); }
+	
+	/// <inheritdoc cref="Set(Index, int, int)"/>
+	public void Set(Index row, int column, long value) { this[row, column] = value.ToS(); }
+	
+	/// <inheritdoc cref="Set(Index, int, uint)"/>
+	public void Set(Index row, int column, ulong value) { this[row, column] = "0x" + value.ToString("X"); }
+	
+	/// <inheritdoc cref="Set(Index, int, int)"/>
+	public void Set(Index row, int column, double value) { this[row, column] = value.ToS(); }
+	
+	/// <inheritdoc cref="Set(Index, int, int)"/>
+	public void Set(Index row, int column, float value) { this[row, column] = value.ToS(); }
+	
+	/// <summary>
+	/// Converts a bool to string <c>"true"</c> or <c>"false"</c> and sets a field.
+	/// </summary>
+	/// <inheritdoc cref="Set(Index, int, int)"/>
+	public void Set(Index row, int column, bool value) { this[row, column] = value ? "true" : "false"; }
+	
+	/// <summary>
+	/// Gets a field value converted to int. See <see cref="ExtString.ToInt(string, out int, int, STIFlags)"/>.
+	/// </summary>
+	/// <param name="row">0-based row index.</param>
+	/// <param name="column">0-based column index.</param>
+	/// <param name="value">Receives the result, or 0 if failed.</param>
+	/// <returns>False if failed to convert from string.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>row</i> or <i>column</i>.</exception>
+	public bool Get(Index row, int column, out int value) => this[row, column].ToInt(out value);
+	
+	/// <summary>
+	/// Gets a field value converted to uint. See <see cref="ExtString.ToInt(string, out uint, int, STIFlags)"/>.
+	/// </summary>
+	/// <inheritdoc cref="Get(Index, int, out int)"/>
+	public bool Get(Index row, int column, out uint value) => this[row, column].ToInt(out value);
+	
+	/// <summary>
+	/// Gets a field value converted to long. See <see cref="ExtString.ToInt(string, out long, int, STIFlags)"/>.
+	/// </summary>
+	/// <inheritdoc cref="Get(Index, int, out int)"/>
+	public bool Get(Index row, int column, out long value) => this[row, column].ToInt(out value);
+	
+	/// <summary>
+	/// Gets a field value converted to ulong. See <see cref="ExtString.ToInt(string, out ulong, int, STIFlags)"/>.
+	/// </summary>
+	/// <inheritdoc cref="Get(Index, int, out int)"/>
+	public bool Get(Index row, int column, out ulong value) => this[row, column].ToInt(out value);
+	
+	/// <summary>
+	/// Gets a field value converted to double. See <see cref="ExtString.ToNumber(string, out double, Range?, NumberStyles)"/>.
+	/// </summary>
+	/// <inheritdoc cref="Get(Index, int, out int)"/>
+	public bool Get(Index row, int column, out double value) => this[row, column].ToNumber(out value);
+	
+	/// <summary>
+	/// Gets a field value converted to float. See <see cref="ExtString.ToNumber(string, out float, Range?, NumberStyles)"/>.
+	/// </summary>
+	/// <inheritdoc cref="Get(Index, int, out int)"/>
+	public bool Get(Index row, int column, out float value) => this[row, column].ToNumber(out value);
+	
+	/// <summary>
+	/// Gets a field value like "true" or "false" converted to bool. Case-insensitive.
+	/// </summary>
+	/// <inheritdoc cref="Get(Index, int, out int)"/>
+	public bool Get(Index row, int column, out bool value) => Boolean.TryParse(this[row, column], out value);
+	
 	//rejected: ToXml, ToHtml. Could be pasted in Excel, but need special format, difficult to make fully compatible. OpenOffice supports only HTML.
 }

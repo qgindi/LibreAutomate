@@ -409,8 +409,8 @@ public unsafe partial class KTreeView {
 	///
 	protected override void OnKeyDown(KeyEventArgs e) {
 		//print.it(e.Key, _focusedIndex);
-		e.Handled = ProcessKey(e.Key);
 		base.OnKeyDown(e);
+		if (!e.Handled) e.Handled = ProcessKey(e.Key);
 	}
 	
 	/// <summary>
@@ -701,7 +701,7 @@ public unsafe partial class KTreeView {
 	/// ]]></code>
 	/// Property of your TvItem class that implements ITreeViewItem interface.
 	/// <code><![CDATA[
-	/// public KTreeView.TVCheck CheckState {
+	/// KTreeView.TVCheck CheckState {
 	/// 	get => _checkState;
 	/// 	set { if(value!=_checkState) { _checkState=value; _tv.Redraw(this); } }
 	/// }

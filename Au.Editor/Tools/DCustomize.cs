@@ -32,7 +32,7 @@ class DCustomize : KDialogWindow {
 	ContextMenu _menu;
 	Dictionary<string, _Default> _dict = new();
 	
-	_KTreeView _tv;
+	KTreeView _tv;
 	Panel _panelProp;
 	TextBox _tColor, _tText, _tImage, _tKeys, _tBtext;
 	TextBox _tDefText, _tDefImage, _tDefKeys;
@@ -50,7 +50,7 @@ class DCustomize : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(700, 700).Columns(220, 0, -1);
 		b.Row(-1);
 		
-		b.xAddInBorder(_tv = new(this));
+		b.xAddInBorder(_tv = new());
 		b.Add<GridSplitter>().Splitter(vertical: true);
 		
 		b.StartGrid().Columns(-1); //right side
@@ -91,8 +91,8 @@ class DCustomize : KDialogWindow {
 		b.End();
 		
 		b.StartGrid<KGroupBox>("Move");
-		b.R.AddButton("Up", _ => _Move(_ti, true)).Tooltip("Ctrl+Up");
-		b.R.AddButton("Down", _ => _Move(_ti, false)).Tooltip("Ctrl+Down");
+		b.R.AddButton("Up", _ => _Move(_ti, true)).Tooltip("Shift+Up");
+		b.R.AddButton("Down", _ => _Move(_ti, false)).Tooltip("Shift+Down");
 		b.End().Width(90).Align("L");
 		
 		b.End();
@@ -112,6 +112,7 @@ class DCustomize : KDialogWindow {
 		_tv.SingleClickActivate = true;
 		_tv.ItemActivated += _tv_ItemActivated;
 		_tv.ItemClick += _tv_ItemClick;
+		_tv.KeyDown += _tv_KeyDown;
 		_FillTree();
 		
 		foreach (var v in new Control[] { _tText, _tColor, _tImage, _tKeys, _tBtext, _cbImageAt, _cbHide, _cSeparator }) {
@@ -503,20 +504,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		}
 	}
 	
-	class _KTreeView : KTreeView {
-		DCustomize _d;
-		
-		public _KTreeView(DCustomize d) {
-			_d = d;
-		}
-		
-		protected override void OnKeyDown(KeyEventArgs e) {
-			if (!e.Handled) _d._OnKeyDown(e);
-			base.OnKeyDown(e);
-		}
-	}
-	
-	void _OnKeyDown(KeyEventArgs e) {
+	void _tv_KeyDown(object sender, KeyEventArgs e) {
 		var k = (e.KeyboardDevice.Modifiers, e.Key);
 		switch (k) {
 		case (0, Key.Escape):
@@ -537,10 +525,10 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 			case (ModifierKeys.Control, Key.V):
 				if (_CanPaste(t)) _Paste(t);
 				break;
-			case (ModifierKeys.Control, Key.Up):
+			case (ModifierKeys.Shift, Key.Up):
 				if (t.Level > 0) _Move(t, up: true);
 				break;
-			case (ModifierKeys.Control, Key.Down):
+			case (ModifierKeys.Shift, Key.Down):
 				if (t.Level > 0) _Move(t, up: false);
 				break;
 			default: return;
@@ -567,11 +555,11 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		}
 		if (ic is not KMenuCommands.Command c) return;
 		
-		#if true
+#if true
 		var m = new popupMenu();
 		m["Customize..."] = o => DCustomize.ShowSingle(c.Name);
 		m.Show();
-		#else //rejected: menu item "Hide". The #else code hides/shows the button, but also need to manage its separator, and add menu item "Separator before".
+#else //rejected: menu item "Hide". The #else code hides/shows the button, but also need to manage its separator, and add menu item "Separator before".
 		var a = App.Commands.LoadFiles(); if (a == null) return;
 		if (a.FirstOrDefault(o => o.Name == toolbar.Name)?.Element(c.Name) is not { } x) return;
 		
@@ -603,6 +591,6 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 				//todo: separator
 			}
 		}
-		#endif
+#endif
 	}
 }

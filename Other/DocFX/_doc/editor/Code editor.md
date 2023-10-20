@@ -48,6 +48,7 @@ SHOULDDO: now the Back button does not scroll to TOC. And the same in all DocFX-
     - [Rename symbol](#rename-symbol)
     - [Outline of current file](#outline-of-current-file)
     - [Navigate back/forward](#navigate-backforward)
+    - [Bookmarks](#bookmarks)
     - [Code coloring](#code-coloring)
     - [Text folding](#text-folding)
     - [Separators between functions/types](#separators-between-functionstypes)
@@ -160,6 +161,11 @@ The Outline panel shows functions and fields defined in current file. Also types
 
 ### Navigate back/forward
 The Back and Forward buttons work like the ones in web browsers.
+
+### Bookmarks
+You can mark lines in code, and later go there. Use menu Edit -> Navigate, panel Bookmarks, and the markers margin. Click the margin to add or remove a bookmark; right click to show menu.
+
+Menu commands "Previous bookmark" and "Next bookmark" visit only active bookmarks. If there are no active bookmarks - only bookmarks in current document.
 
 ### Code coloring
 Different kinds of code parts have different colors. Comments, strings, keywords, types, functions, etc.

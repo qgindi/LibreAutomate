@@ -220,8 +220,8 @@ static class InsertCode {
 		//modified Roslyn's GetAllDeclaredSymbols. Would be difficult to use it.
 		static void _GetDeclaredSymbols(SemanticModel semo, SyntaxNode node, List<ISymbol> symbols, HashSet<string> names, /*int pos = -1,*/ bool skipDesc = false) {
 			if (node is not CompilationUnitSyntax && semo.GetDeclaredSymbol(node) is ISymbol sym) {
-				if (symbols != null) symbols.Add(sym);
-				if (names != null) names.Add(sym.Name);
+				symbols?.Add(sym);
+				names?.Add(sym.Name);
 			}
 			if (skipDesc) return;
 			foreach (var n in node.ChildNodes()) {

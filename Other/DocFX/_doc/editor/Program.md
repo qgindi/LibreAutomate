@@ -59,15 +59,15 @@ Right-click - context menu. Middle-click - close.
 ### Tasks
 Running scripts.
 
-Right-click - context menu (end process etc). Middle-click - close.
+Right-click - context menu. Middle-click - close.
 
 ### Find
 Find and replace text in the code editor or in multiple files.
 
-Right-click an edit field - context menu. Middle-click - clear text; if empty - recent.
+Right-click an edit field - context menu. Middle-click - clear text; if empty - show recent.
 
 ### Found
-Results of "Find in files" or "Find file".
+Results of "Find in files", "Find file", "Find references" etc.
 
 ### Output
 The program writes various info here. For example script compilation errors. Scripts use [print.it]() for it.
@@ -82,6 +82,11 @@ Helps to find types, functions, fields, namespaces and regions in current C# cod
 
 ### Cookbook, Recipe
 Automation code examples and info.
+
+### Bookmarks
+List of bookmarks.
+
+Right-click - context menu.
 
 ## Menus
 

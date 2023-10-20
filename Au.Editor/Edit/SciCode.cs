@@ -18,12 +18,13 @@ partial class SciCode : KScintilla {
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	public const int
 		c_marginFold = 0,
-		c_marginImages = 1,
-		c_marginLineNumbers = 2,
-		c_marginChanges = 3; //currently not impl, just adds some space between line numbers and text
+		c_marginMarkers = 1,
+		c_marginImages = 2,
+		c_marginLineNumbers = 3,
+		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
 	
 	//markers. We can use 0-20. Changes 21-24. Folding 25-31.
-	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
+	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBookmarkInactive = 2, c_markerBreakpoint = 3;
 	//public const int c_markerStepNext = 3;
 	
 	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
@@ -54,14 +55,18 @@ partial class SciCode : KScintilla {
 		
 		aaaMarginSetType(c_marginFold, SC_MARGIN_SYMBOL);
 		
-		aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
-		Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
+		//Call(SCI_SETMARGINMASKN, 1, 0);
+		//Call(SCI_SETMARGINMASKN, c_marginMarkers, ~SC_MASK_FOLDERS);
+		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, sensitive: true, cursorArrow: true);
+		Call(SCI_SETMARGINBACKN, c_marginMarkers, 0xFFFFFF);
+		aaaMarginSetWidth(c_marginMarkers, 13);
+		aaaMarkerDefine(SciCode.c_markerBookmark, Sci.SC_MARK_VERTICALBOOKMARK, 0x8080ff, 0x8080ff);
+		aaaMarkerDefine(SciCode.c_markerBookmarkInactive, Sci.SC_MARK_VERTICALBOOKMARK, 0x8080ff, 0xE0E0ff);
+		
+		//aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
+		//Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
 		
 		aaaMarginSetType(c_marginLineNumbers, SC_MARGIN_NUMBER);
-		Call(SCI_SETMARGINMASKN, 1, 0);
-		Call(SCI_SETMARGINMASKN, c_marginLineNumbers, ~SC_MASK_FOLDERS);
-		bool dark = WpfUtil_.IsHighContrastDark;
-		aaaMarkerDefine(SciCode.c_markerBookmark, Sci.SC_MARK_VERTICALBOOKMARK, dark ? 0xFFFFFF : 0x404040, 0x8080ff);
 		
 		aaaMarginSetWidth(c_marginChanges, 4);
 		
@@ -113,7 +118,7 @@ partial class SciCode : KScintilla {
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded();
-		Panels.Bookmarks.DocLoaded(this);
+		Panels.Bookmarks.SciLoaded(this);
 		App.Model.EditGoBack.OnPosChanged(this);
 		
 		//detect \r without '\n', because it is not well supported. Also NEL, LS, PS.
@@ -238,6 +243,9 @@ partial class SciCode : KScintilla {
 					_FoldOnMarginClick(n.position, n.modifiers);
 				}
 			}
+			if (n.margin == c_marginMarkers) {
+				if (n.modifiers is 0 or SCMOD_SHIFT) Panels.Bookmarks.ToggleBookmark(editLabel: n.modifiers == Sci.SCMOD_SHIFT, aaaLineFromPos(false, n.position));
+			}
 			break;
 		//case NOTIF.SCN_MARGINRIGHTCLICK: break; //can't use it because: 1. Need to handle WM_RBUTTONDOWN. 2. Need notification on button up.
 		case NOTIF.SCN_STYLENEEDED:
@@ -254,12 +262,12 @@ partial class SciCode : KScintilla {
 		base.AaOnSciNotify(ref n);
 	}
 	bool _modified;
-
+	
 	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
-		if ((markers & 1 << c_markerBookmark) != 0) Panels.Bookmarks.DeletingLineWithMarker(this, line);
+		if ((markers & 1 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
 		base.AaOnDeletingLineWithMarkers(line, markers);
 	}
-
+	
 	protected override nint WndProc(wnd w, int msg, nint wp, nint lp) {
 		switch (msg) {
 		case Api.WM_CHAR: {
@@ -271,20 +279,24 @@ partial class SciCode : KScintilla {
 				}
 			}
 			break;
-		case Api.WM_RBUTTONDOWN: {
+		case Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN: {
 				POINT p = Math2.NintToPOINT(lp);
 				int margin = aaaMarginFromPoint(p);
 				if (margin >= 0) {
-					//prevent changing the caret/selection when rclicked some margins
-					if (margin == c_marginFold) return 0;
-					
-					//prevent changing the caret/selection if it is in the rclicked line
-					var selStart = aaaSelectionStart8;
-					var (_, start, end) = aaaLineStartEndFromPos(false, aaaPosFromXY(false, p, false));
-					if (selStart >= start && selStart <= end) return 0;
-					//do vice versa if the end of non-empty selection is at the start of the rclicked line, to avoid comment/uncomment wrong lines
-					if (margin is c_marginLineNumbers or c_marginImages or c_marginChanges) {
-						if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
+					if (msg == Api.WM_RBUTTONDOWN) {
+						//prevent changing the caret/selection when rclicked some margins
+						if (margin == c_marginFold) return 0;
+						
+						//prevent changing the caret/selection if it is in the rclicked line
+						var selStart = aaaSelectionStart8;
+						var (_, start, end) = aaaLineStartEndFromPos(false, aaaPosFromXY(false, p, false));
+						if (selStart >= start && selStart <= end) return 0;
+						//do vice versa if the end of non-empty selection is at the start of the rclicked line, to avoid comment/uncomment wrong lines
+						if (margin is c_marginLineNumbers or c_marginImages or c_marginChanges) {
+							if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
+						}
+					} else if (margin == c_marginMarkers) {
+						Panels.Bookmarks.SciMiddleClick(this, wp, lp);
 					}
 				}
 			}
@@ -297,6 +309,9 @@ partial class SciCode : KScintilla {
 					case c_marginLineNumbers or c_marginImages or c_marginChanges:
 						ModifyCode.CommentLines(null, notSlashStar: true);
 						break;
+					case c_marginMarkers:
+						Panels.Bookmarks.SciContextMenu(this);
+						break;
 					case c_marginFold:
 						_FoldContextMenu(aaaPosFromXY(false, p, false));
 						break;
@@ -307,18 +322,10 @@ partial class SciCode : KScintilla {
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lp == -1;
-				int margin = -1;
-				POINT p = default;
-				if (!kbd) {
-					p = Math2.NintToPOINT(lp);
-					margin = aaaMarginFromPoint(p, screenCoord: true);
-				}
-				if (margin < 0) {
 					var m = new KWpfMenu();
 					DCustomizeContextMenu.AddToMenu(m, "Edit");
 					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
 					m.Show(this, byCaret: kbd);
-				}
 				return 0;
 			}
 		}
@@ -394,10 +401,10 @@ partial class SciCode : KScintilla {
 	
 	//never mind: not called when zoom changes.
 	internal void ESetLineNumberMarginWidth_(bool onModified = false) {
-		int c = 5; //3 would be good, but need some space for markers
+		int c = 3;
 		int lines = aaaLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 4);
+		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 6);
 	}
 	int _prevLineNumberMarginWidth;
 	

@@ -288,20 +288,30 @@ public partial class KMenuCommands {
 		}
 		
 		/// <summary>
-		/// Gets or sets enabled/disabled state of this command, menu item and all controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
-		/// If submenu-item, the 'set' function also enables/disables all descendants.
+		/// Gets enabled/disabled state of this command, menu item and all controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
+		/// </summary>
+		public bool Enabled => _enabled;
+		
+		/// <summary>
+		/// Sets enabled/disabled state of this command, menu item and all controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
+		/// If submenu-item, also enables/disables all descendants. Does not actually disable/enable the submenu-item.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-		public bool Enabled {
-			get => _enabled;
-			set {
-				_ = _Mi;
-				if (value == _enabled) return;
-				_enabled = value;
+		public void Enable(bool enable) {
+			_ = _Mi;
+			if (enable == _enabled) return;
+			_enabled = enable;
+			if (IsSubmenu) {
+				foreach (var v in _mi.Items) if (v is MenuItem m && m.Command is Command c && !c.NoIndirectDisable) c.Enable(enable);
+			} else {
 				CanExecuteChanged?.Invoke(this, EventArgs.Empty); //enables/disables this menu item and all buttons etc with Command=this
-				if (IsSubmenu) foreach (var v in _mi.Items) if (v is MenuItem m && m.Command is Command c) c.Enabled = value;
 			}
 		}
+		
+		/// <summary>
+		/// Don't change the enabled state indirectly when changing that of the parent menu.
+		/// </summary>
+		public bool NoIndirectDisable { get; set; }
 		
 		/// <summary>
 		/// Gets or sets checked state of this checkable menu item and all checkable controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
@@ -574,6 +584,11 @@ public class CommandAttribute : Attribute {
 	/// Don't add the <b>MenuItem</b> to menu.
 	/// </summary>
 	public bool hide;
+	
+	/// <summary>
+	/// Don't change the enabled state indirectly when changing that of the parent menu.
+	/// </summary>
+	public bool noIndirectDisable;
 	
 	/// <summary>
 	/// Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".

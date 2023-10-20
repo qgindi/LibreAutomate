@@ -38,8 +38,8 @@ class PanelFind {
 		b.Padding(1, 0, 1, 1);
 		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _Options(), "More options");
 		
-		var cmd1 = App.Commands[nameof(Menus.File.OpenCloseGo.Go_back)];
-		var bBack = b.xAddButtonIcon(Menus.iconBack, _ => Menus.File.OpenCloseGo.Go_back(), "Go back");
+		var cmd1 = App.Commands[nameof(Menus.Edit.Navigate.Go_back)];
+		var bBack = b.xAddButtonIcon(Menus.iconBack, _ => Menus.Edit.Navigate.Go_back(), "Go back");
 		b.Disabled(!cmd1.Enabled);
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
 		

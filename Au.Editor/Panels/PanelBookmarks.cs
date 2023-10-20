@@ -1,16 +1,19 @@
 using System.Windows.Controls;
 using Au.Controls;
-using System.Xml.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
+using System.Windows.Input;
 
 class PanelBookmarks {
 	KTreeView _tv;
 	_Item _root;
+	string _file;
+	
 	bool _initOnce;
+	int _save;
 	
 	public PanelBookmarks() {
-		_tv = new KTreeView { Name = "Bookmarks_list", SingleClickActivate = true };
+		_tv = new() { Name = "Bookmarks_list", SingleClickActivate = true };
 		P.Children.Add(_tv);
 		
 		FilesModel.AnyWorkspaceLoadedAndDocumentsOpened += _LoadIfNeed;
@@ -21,17 +24,21 @@ class PanelBookmarks {
 	void _LoadIfNeed() {
 		if (_root != null) return;
 		_root = new(null, true);
-		var s = App.Model.WorkspaceDirectory + @"\bookmarks.csv";
-		if (filesystem.exists(s).File) {
+		
+		_file = App.Model.WorkspaceDirectory + @"\bookmarks.csv";
+		if (filesystem.exists(_file).File) {
 			try {
-				var csv = csvTable.load(s);
+				var csv = csvTable.load(_file);
 				_Item folder = null;
 				foreach (var a in csv.Rows) {
 					if (a[0][0] == '#') {
 						if (a[0].ToInt(out uint u, 1) && App.Model.FindById(u) is { } f) {
 							int flags = a[1].ToInt();
 							_root.AddChild(folder = new(f, 0 != (flags & 1)));
-						} else folder = null;
+						} else {
+							folder = null;
+							_SaveLater(1);
+						}
 					} else if (folder != null) {
 						folder.AddChild(new(a[0].ToInt(), 0, a[1]));
 					}
@@ -45,6 +52,8 @@ class PanelBookmarks {
 			_initOnce = true;
 			
 			FilesModel.UnloadingAnyWorkspace += () => {
+				if (_root == null) return;
+				SaveNowIfNeed();
 				_root = null;
 				_tv.SetItems(null);
 			};
@@ -58,28 +67,83 @@ class PanelBookmarks {
 			_tv.ItemActivated += e => {
 				if (e.Mod != 0) return;
 				if (e.Item is _Item b && !b.IsFolder) {
+					_SetActive(b, true);
 					App.Model.OpenAndGoTo(b.Parent.file, b.line);
 				}
 			};
 			
 			_tv.ItemClick += e => {
+				var b = e.Item as _Item;
 				switch (e.Button) {
 				case System.Windows.Input.MouseButton.Left:
-					var b = e.Item as _Item;
 					switch (e.Mod) {
 					case System.Windows.Input.ModifierKeys.Control: _DeleteItem(b); break;
 					case System.Windows.Input.ModifierKeys.Shift when !b.IsFolder: _tv.EditLabel(b); break;
 					}
 					break;
+				case System.Windows.Input.MouseButton.Right when e.Mod == 0:
+					_ContextMenu(b);
+					break;
+				case System.Windows.Input.MouseButton.Middle when e.Mod == 0:
+					_SetActive(b, !b.IsActiveOrHasActiveChildren);
+					break;
 				}
-				if (e.Button == System.Windows.Input.MouseButton.Right && e.Mod == 0) _ContextMenu(e.Item as _Item);
 			};
 			
-			//Panels.Editor.ActiveDocChanged += _ActiveDocChanged;
+			_tv.PreviewKeyDown += (_, e) => {
+				if (e.Key is Key.Up or Key.Down && e.KeyboardDevice.Modifiers == ModifierKeys.Shift && _tv.FocusedItem is _Item { IsFolder: true } f) {
+					e.Handled = true;
+					_MoveFolder(f, e.Key is Key.Up);
+				}
+			};
+			
+			_tv.EditLabelStarted += (item, tb) => {
+				tb.Text = (item as _Item).name; //edit without line number
+				tb.SelectAll();
+			};
+			
+			Panels.Editor.ClosingDoc += doc => {
+				if (_FindItemOfFile(doc) is { } f) {
+					foreach (var b in f.Children()) _SetActive(b, false);
+				}
+			};
+			
+			App.Timer1sWhenVisible += () => { if (_save != 0 && --_save <= 0) _SaveNow(); };
 		}
 	}
 	
-	internal void DocLoaded(SciCode doc) {
+	public void SaveNowIfNeed() {
+		if (_save != 0) _SaveNow();
+	}
+	
+	void _SaveNow() {
+		try {
+			if (_root.HasChildren) {
+				var csv = new csvTable { ColumnCount = 2 };
+				for (var f = _root.FirstChild; f != null; f = f.Next) {
+					csv[^0, 0] = "#" + f.file.IdString;
+					if (f.IsExpanded) csv[^1, 1] = "1";
+					for (var b = f.FirstChild; b != null; b = b.Next) {
+						csv.Set(^0, 0, b.line);
+						csv[^1, 1] = b.name;
+					}
+				}
+				csv.Save(_file);
+			} else {
+				filesystem.saveText(_file, "");
+			}
+			_save = 0;
+			//print.it("saved");
+		}
+		catch (Exception e1) { print.it(e1); }
+	}
+	
+	void _SaveLater(int afterS = 30) {
+		//print.it(new StackTrace(true));
+		_save = _save == 0 ? afterS : Math.Min(_save, afterS);
+	}
+	
+	internal void SciLoaded(SciCode doc) {
 		_LoadIfNeed();
 		var f = _FindItemOfFile(doc); if (f == null) return;
 		bool removed = false;
@@ -89,9 +153,11 @@ class PanelBookmarks {
 				var bb = b; b = b.Next;
 				bb.Remove();
 				removed = true;
+				_SaveLater(1);
 				continue;
 			}
 			b.markerHandle = h;
+			if (!b.isActive) doc.aaaMarkerAdd(SciCode.c_markerBookmarkInactive, b.line);
 			b = b.Next;
 		}
 		if (removed) _tv.SetItems(_root.Children(), true);
@@ -99,37 +165,43 @@ class PanelBookmarks {
 	
 	//_Item _FindItemOfFile(FileNode fn) => _root.Children().FirstOrDefault(o => o.file == fn); //slow, garbage
 	_Item _FindItemOfFile(FileNode fn) {
-		for (var f = _root.FirstChild; f != null; f = f.Next) if (f.file == fn) return f;
+		if (fn != null)
+			for (var f = _root.FirstChild; f != null; f = f.Next)
+				if (f.file == fn) return f;
 		return null;
 	}
-	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc.EFile);
+	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc?.EFile);
 	
-	public void ToggleBookmark(bool editLabel) {
+	public void ToggleBookmark(bool editLabel, int line = -1) {
 		var doc = Panels.Editor.ActiveDoc;
 		if (doc == null) return;
-		int line = doc.aaaLineFromPos();
+		bool useSelStart = line < 0;
+		if (line < 0) line = doc.aaaLineFromPos();
 		if (_IsBookmark(doc, line)) {
 			if (!editLabel) _DeleteBookmark(doc, line);
 			else if (_BookmarkFromLine(doc, line) is { } b) _tv.EditLabel(b);
 		} else {
+			if (!useSelStart) if (doc.aaaLineFromPos() == line) useSelStart = true; else doc.aaaGoToLine(line);
+			
 			int h = doc.aaaMarkerAdd(SciCode.c_markerBookmark, line); if (h < 0) return;
 			var folder = _FindItemOfFile(doc);
 			if (folder == null) {
-				_root.AddChild(folder = new(doc.EFile, true));
+				_root.AddChild(folder = new(doc.EFile, true), true);
 			} else folder.SetIsExpanded(true);
 			
 			var name = _GetName();
-			_Item b = new(line, h, name);
+			_Item b = new(line, h, name) { isActive = true };
 			if (folder.Children().FirstOrDefault(o => o.line > line) is { } b2) b2.AddSibling(b, false);
 			else folder.AddChild(b);
 			
 			_tv.SetItems(_root.Children(), true);
-			_tv.SelectSingle(b, true);
+			_TvSelect(b);
 			if (editLabel) _tv.EditLabel(b);
+			_SaveLater();
 		}
 		
 		string _GetName() {
-			if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) {
+			if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node, useSelStart ? -2 : doc.aaaLineStart(true, line))) {
 				var code = cd.code;
 				if (_Node(node) is string s1) return s1 + "  " + _Line();
 				return _Line();
@@ -172,29 +244,91 @@ class PanelBookmarks {
 		}
 	}
 	
-	public void NextBookmark() {
+	public void NextBookmark(bool up) {
+		//If there are no active bookmarks, go to next/prev bookmark in this file.
+		//Else if there is an active bookmark below or above (depending on *up*) current line in this file, go to it.
+		//Else go to next/prev active bookmark in any file. Start searching from (not including):
+		//	If this file contains bookmarks - from next/prev file in _root.Children.
+		//	Else from the focused bookmark in _tv.
+		
+		if (!_root.HasChildren) return;
+		
+		_Item go = null;
 		var doc = Panels.Editor.ActiveDoc;
-		if (doc == null) return;
-		int line = doc.aaaLineFromPos();
-		line = doc.Call(Sci.SCI_MARKERNEXT, line + 1, 1 << SciCode.c_markerBookmark);
-		if (line < 0) {
-			line = doc.Call(Sci.SCI_MARKERNEXT, 0, 1 << SciCode.c_markerBookmark);
-			if (line < 0) return;
+		var file = _FindItemOfFile(doc);
+		
+		if (_root.Descendants().Any(static o => o.isActive)) {
+			if (file != null) {
+				var (prev, next) = _GetPrevNextInDoc(true);
+				go = up ? prev : next;
+			}
+			if (go == null) {
+				var a = _root.Descendants().ToArray();
+				var from = file != null ? (up ? file.FirstChild : file.LastChild) : _tv.FocusedItem as _Item;
+				from ??= up ? a[^1] : a[0];
+				int i = Array.IndexOf(a, from);
+				for (; ; ) {
+					if (up) i = (i > 0 ? i : a.Length) - 1; else i = ++i < a.Length ? i : 0;
+					if (a[i].isActive) { go = a[i]; break; }
+				}
+			}
+		} else if (file != null) {
+			var (prev, next) = _GetPrevNextInDoc(false);
+			if (prev == null && next == null) return;
+			go = up ? prev ?? file.LastChild : next ?? file.FirstChild;
 		}
-		doc.aaaGoToLine(line);
+		
+		if (go != null) {
+			App.Model.OpenAndGoTo(go.Parent.file, go.line);
+			_TvSelect(go);
+		}
+		
+		(_Item prev, _Item next) _GetPrevNextInDoc(bool active) {
+			int line = doc.aaaLineFromPos();
+			_Item prev = null;
+			for (var v = file.FirstChild; v != null; v = v.Next) {
+				if (active && !v.isActive) continue;
+				if (v.line < line) prev = v; else if (v.line > line) return (prev, v);
+			}
+			return (prev, null);
+		}
+	}
+	
+	void _SetActive(_Item b, bool active) {
+		if (b.IsFolder) {
+			foreach (var v in b.Children()) _SetActive(v, active);
+		} else if (b.isActive != active) {
+			b.isActive = active;
+			_tv.Redraw(b);
+			
+			if (b.Parent.file.OpenDoc is {  } doc) {
+				doc.Call(active ? Sci.SCI_MARKERDELETE : Sci.SCI_MARKERADD, b.line, SciCode.c_markerBookmarkInactive);
+			}
+		}
+	}
+	
+	void _TvSelect(_Item b) {
+		if (!b.IsFolder && !b.Parent.IsExpanded) _tv.Expand(b.Parent, true);
+		_tv.SelectSingle(b, true);
 	}
 	
 	void _ContextMenu(_Item b) {
-		_tv.SelectSingle(b, true);
+		_TvSelect(b);
 		var m = new popupMenu();
 		
 		if (b.IsFolder) {
-			m["Delete bookmarks in this file\tCtrl+click"] = o => _DeleteItem(b);
+			m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);
+			m["Move down\tShift+Down", disable: b.Next == null] = o => _MoveFolder(b, false);
+			m.Separator();
+			m["Delete these bookmarks\tCtrl+click"] = o => _DeleteItem(b);
+			m.AddCheck("Active bookmarks\tM-click", b.IsActiveOrHasActiveChildren, o => _SetActive(b, o.IsChecked));
 		} else {
 			m["Rename\tShift+click"] = o => _tv.EditLabel(b);
 			m["Delete\tCtrl+click"] = o => _DeleteItem(b);
+			m.AddCheck("Active\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
 		}
 		m.Separator();
+		m["Deactivate all"] = o => { foreach (var v in _root.Children()) _SetActive(v, false); };
 		m["Collapse all"] = o => { foreach (var v in _root.Children()) _tv.Expand(v, false); };
 		m.Submenu("More", m => {
 			m["Delete all bookmarks..."] = o => {
@@ -231,6 +365,7 @@ class PanelBookmarks {
 		b.Remove();
 		if (!folder.HasChildren) folder.Remove();
 		_tv.SetItems(_root.Children(), true);
+		_SaveLater();
 	}
 	
 	void _DeleteItem(_Item b) {
@@ -245,7 +380,17 @@ class PanelBookmarks {
 		}
 	}
 	
-	internal void DeletingLineWithMarker(SciCode doc, int line) {
+	void _MoveFolder(_Item f, bool up) {
+		if (up && f == _root.FirstChild) return;
+		var ff = up ? f.Previous : f.Next;
+		if (ff == null) return;
+		f.Remove();
+		ff.AddSibling(f, after: !up);
+		_tv.SetItems(_root.Children(), true);
+		_SaveLater();
+	}
+	
+	internal void SciDeletingLineWithMarker(SciCode doc, int line) {
 		_DeleteBookmark(doc, line, false);
 	}
 	
@@ -260,6 +405,7 @@ class PanelBookmarks {
 				if (line != b.line) {
 					b.line = line;
 					redraw = true;
+					_SaveLater(2 * 60);
 				}
 			}
 			if (redraw && folder.IsExpanded) _tv.Redraw();
@@ -267,11 +413,31 @@ class PanelBookmarks {
 		}
 	}
 	
-	internal void OnFileDeleted(IEnumerable<FileNode> e) {
+	internal void SciContextMenu(SciCode doc) {
+		var m = new popupMenu();
+		m["Previous bookmark"] = o => NextBookmark(true);
+		m["Next bookmark"] = o => NextBookmark(false);
+		m.Separator();
+		m["Add and/or rename bookmark\tShift+click"] = o => ToggleBookmark(true);
+		if (this._BookmarkFromLine(doc, doc.aaaLineFromPos()) is { } b) m.AddCheck("Active bookmark\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
+		m.Show(owner: doc);
+	}
+	
+	internal void SciMiddleClick(SciCode doc, nint wParam, nint lParam) {
+		if (wParam != Api.MK_MBUTTON) return;
+		int pos = doc.aaaPosFromXY(false, Math2.NintToPOINT(lParam), false); if (pos < 0) return;
+		int line = doc.aaaLineFromPos(false, pos);
+		if (_BookmarkFromLine(doc, line) is {  } b) {
+			_SetActive(b, !b.isActive);
+		}
+	}
+	
+	internal void FileDeleted(IEnumerable<FileNode> e) {
 		foreach (var v in e) {
 			if (_FindItemOfFile(v) is { } folder) {
 				folder.Remove();
 				_tv.SetItems(_root.Children(), true);
+				_SaveLater();
 			}
 		}
 	}
@@ -279,8 +445,10 @@ class PanelBookmarks {
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		public readonly FileNode file; //if folder
 		public int line, markerHandle; //if bookmark
-		string _name;
-		bool _isFolder, _isExpanded;
+		public string name;
+		readonly bool _isFolder;
+		bool _isExpanded;
+		public bool isActive;
 		
 		public _Item(FileNode file, bool isExpanded) {
 			this.file = file;
@@ -291,8 +459,12 @@ class PanelBookmarks {
 		public _Item(int line, int markerHandle, string name) {
 			this.line = line;
 			this.markerHandle = markerHandle;
-			_name = name;
+			this.name = name;
 		}
+		
+#if DEBUG
+		public override string ToString() => ((ITreeViewItem)this).DisplayText;
+#endif
 		
 		#region ITreeViewItem
 		
@@ -300,47 +472,19 @@ class PanelBookmarks {
 		
 		public bool IsExpanded => _isExpanded;
 		
-		public void SetIsExpanded(bool yes) { _isExpanded = yes; }
+		public void SetIsExpanded(bool yes) { _isExpanded = yes; Panels.Bookmarks._SaveLater(5 * 60); }
 		
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		
-		string ITreeViewItem.DisplayText => _isFolder ? (file.Parent.HasParent ? $"{file.Name}  [{file.Parent.ItemPath}]" : file.Name) : $"{(line + 1).ToS()}  {_name}";
+		string ITreeViewItem.DisplayText => _isFolder ? (file.Parent.HasParent ? $"{file.Name}  [{file.Parent.ItemPath}]" : file.Name) : $"{(line + 1).ToS()}  {name}";
 		//never mind: after moving the file should display the new path (just redraw).
 		
-		object ITreeViewItem.Image => _isFolder ? EdResources.FolderArrow(_isExpanded) : "*Ionicons.BookmarkiOS" + Menus.darkBlue;
+		void ITreeViewItem.SetNewText(string text) { name = text; Panels.Bookmarks._SaveLater(); }
 		
-		void ITreeViewItem.SetNewText(string text) { _name = text; }
-		
-		//has default implementation
-		//int ITreeViewItem.Color(TVColorInfo ci) {
-		
-		//	return default;
-		//}
-		
-		////has default implementation
-		//int ITreeViewItem.SelectedColor(TVColorInfo ci) {
-		
-		//	return default;
-		//}
-		
-		////has default implementation
-		//int ITreeViewItem.TextColor(TVColorInfo ci) {
-		
-		//	return default;
-		//}
-		
-		////has default implementation
-		//int ITreeViewItem.BorderColor(TVColorInfo ci) {
-		
-		//	return default;
-		//}
-		
-		////has default implementation
-		//int ITreeViewItem.MesureTextWidth(GdiTextRenderer tr) {
-		
-		//	return default;
-		//}
+		object ITreeViewItem.Image => _isFolder ? EdResources.FolderArrow(_isExpanded) : isActive ? "*BoxIcons.SolidBookmark" + Menus.blue : "*BoxIcons.SolidBookmark" + Menus.black;
 		
 		#endregion
+		
+		public bool IsActiveOrHasActiveChildren => IsFolder ? Children().Any(static o => o.isActive) : isActive;
 	}
 }

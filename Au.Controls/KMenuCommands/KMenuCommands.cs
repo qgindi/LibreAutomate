@@ -75,7 +75,7 @@ namespace Au.Controls;
 public partial class KMenuCommands {
 	readonly Dictionary<string, Command> _d = new(200);
 	Menu _menubar;
-
+	
 	/// <summary>
 	/// Builds a WPF window menu with submenus and items that execute static methods defined in a class and nested classes.
 	/// See example in class help.
@@ -89,29 +89,29 @@ public partial class KMenuCommands {
 		_menubar = menu;
 		_CreateMenu(commands, menu, autoUnderline, itemFactory);
 	}
-
+	
 	void _CreateMenu(Type type, ItemsControl parentMenu, bool autoUnderline, Action<FactoryParams> itemFactory, List<string> added = null, string namePrefix_ = null, string inheritTarget_ = null) {
 		var am = type.GetMembers(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
-
+		
 		if (am.Length == 0) { //dynamic submenu
 			parentMenu.Items.Add(new Separator());
 			return;
 		}
-
+		
 		var list = new List<(MemberInfo mi, CommandAttribute a)>(am.Length);
 		foreach (var mi in am) {
 			var ca = mi.GetCustomAttribute<CommandAttribute>(false);
 			//var ca = mi.GetCustomAttributes().OfType<CommandAttribute>().FirstOrDefault(); //CommandAttribute and inherited. Similar speed. Don't need because factory action receives MemberInfo an can get other attributes from it.
 			if (ca != null) list.Add((mi, ca));
 		}
-
+		
 		var au = new List<char>();
-
+		
 		foreach (var (mi, ca) in list.OrderBy(o => o.a.order_)) {
 			if (ca.separator && !ca.hide) parentMenu.Items.Add(new Separator());
-
+			
 			ca.target ??= inheritTarget_;
-
+			
 			string text = ca.text, buttonText, dots = null; //menu item text, possibly with _ for Alt-underline
 			if (text == "...") { dots = text; text = null; }
 			if (text != null) {
@@ -124,16 +124,16 @@ public partial class KMenuCommands {
 					if (i >= 0) text = text.Insert(i, "_"); else print.it($"Alt-underline character '{u}' not found in \"{text}\"");
 				}
 			}
-
+			
 			var namePrefix = ca.namePrefix ?? namePrefix_;
 			string name = namePrefix + (ca.name ?? mi.Name);
 			var c = new Command(this, name, text, mi, ca);
 			_d.Add(name, c);
 			added?.Add(name);
-
+			
 			c.ButtonText = buttonText;
 			c.ButtonTooltip = ca.tooltip;
-
+			
 			FactoryParams f = null;
 			if (itemFactory != null) {
 				f = new FactoryParams(c, mi) { text = text, image = ca.image, param = ca.param };
@@ -145,11 +145,12 @@ public partial class KMenuCommands {
 			if (!ca.keysText.NE()) c.MenuItem.InputGestureText = ca.keysText;
 			if (autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
 			if (ca.checkable) c.MenuItem.IsCheckable = true;
-
+			if (ca.noIndirectDisable) c.NoIndirectDisable = true;
+			
 			if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
 			if (mi is TypeInfo ti) _CreateMenu(ti, c.MenuItem, autoUnderline, itemFactory, added, namePrefix, ca.target);
 		}
-
+		
 		if (autoUnderline) {
 			foreach (var v in parentMenu.Items) {
 				if (v is MenuItem m && m.Header is string s && s.Length > 0 && !_FindUnderlined(s, out _)) {
@@ -164,7 +165,7 @@ public partial class KMenuCommands {
 				}
 			}
 		}
-
+		
 		static bool _FindUnderlined(string s, out char u) {
 			u = default;
 			int i = 0;
@@ -175,14 +176,14 @@ public partial class KMenuCommands {
 			return true;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets a <b>Command</b> by name.
 	/// </summary>
 	/// <param name="command">Method name, for example "Select_all". Or nested type name if it's a submenu-item.</param>
 	/// <exception cref="KeyNotFoundException"></exception>
 	public Command this[string command] => _d[command];
-
+	
 	/// <summary>
 	/// Tries to find a <b>Command</b> by name. Returns false if not found.
 	/// Same as the indexer, but does not throw exception when not found.
@@ -190,7 +191,7 @@ public partial class KMenuCommands {
 	/// <param name="command">Method name, for example "Select_all". Or nested type name if it's a submenu-item.</param>
 	/// <param name="c"></param>
 	public bool TryFind(string command, out Command c) => _d.TryGetValue(command, out c);
-
+	
 	/// <summary>
 	/// Adds to <i>target</i>'s <b>InputBindings</b> all keys etc where <b>CommandAttribute.target</b> == <i>name</i>.
 	/// </summary>
@@ -213,7 +214,7 @@ public partial class KMenuCommands {
 					if (key != default) target.InputBindings.Add(new KeyBinding(c, key, mod));
 					else if (target is System.Windows.Interop.HwndHost) c.CustomizingError(s + ": mouse shortcuts don't work in the target control");
 					else target.InputBindings.Add(new MouseBinding(c, new MouseGesture(mouse, mod)));
-
+					
 					//FUTURE: support mouse shortcuts in HwndHost
 					//if (target is System.Windows.Interop.HwndHost hh) {
 					//	hh.MessageHook += _Hh_MessageHook;
@@ -228,14 +229,14 @@ public partial class KMenuCommands {
 				mi.InputGestureText = s;
 			}
 		}
-
+		
 		//let global key bindings work in any window of this thread, not only when target (main window) is active. Never mind mouse bindings.
 		if (name == "") {
 			var a = target.InputBindings.OfType<KeyBinding>().ToArray();
 			if (a.Length > 0) {
 				EventManager.RegisterClassHandler(typeof(Window), UIElement.KeyDownEvent, new KeyEventHandler(_KeyDown));
 				//InputManager.Current.PreProcessInput += _App_PreProcessInput; //works too, but more events
-
+				
 				void _KeyDown(object source, KeyEventArgs e) {
 					if (Environment.CurrentManagedThreadId != 1) return;
 					//perf.first();
@@ -257,7 +258,7 @@ public partial class KMenuCommands {
 					}
 					//perf.nw(); //fast
 				}
-
+				
 				//void _PreProcessInput(object sender, PreProcessInputEventArgs e) {
 				//	if (e.Canceled) return;
 				//	var re = e.StagingItem.Input.RoutedEvent;
@@ -272,12 +273,13 @@ public partial class KMenuCommands {
 			}
 		}
 	}
-
+	
 	public string DefaultFile { get; private set; }
 	public string UserFile { get; private set; }
-
+	
 	/// <summary>
-	/// Adds toolbar buttons specified in <i>xmlFileCustomized</i> and <i>xmlFileDefault</i>. Applies customizations specified there.
+	/// Adds toolbar buttons specified in <i>xmlFileCustomized</i> and <i>xmlFileDefault</i>.
+	/// Applies customizations specified there.
 	/// </summary>
 	/// <param name="xmlFileDefault">XML file containing default toolbar buttons. See Default\Commands.xml in editor project.</param>
 	/// <param name="xmlFileCustomized">XML file containing user-modified commands and toolbar buttons. Can be null. The file can exist or not.</param>
@@ -285,9 +287,9 @@ public partial class KMenuCommands {
 	public void InitToolbarsAndCustomize(string xmlFileDefault, string xmlFileCustomized, ToolBar[] toolbars) {
 		DefaultFile = xmlFileDefault;
 		UserFile = xmlFileCustomized;
-
+		
 		var a = LoadFiles(); if (a == null) return;
-
+		
 		foreach (var x in a) {
 			ToolBar tb = null;
 			var tbname = x.Name.LocalName;
@@ -295,44 +297,50 @@ public partial class KMenuCommands {
 				tb = toolbars.FirstOrDefault(o => o.Name == tbname);
 				if (tb == null) { Debug_.Print("Unknown toolbar " + tbname); continue; }
 			}
-
+			
 			foreach (var v in x.Elements()) {
 				if (_d.TryGetValue(v.Name.LocalName, out var c)) c.Customize_(v, tb);
 			}
 		}
-
+		
 	}
-
+	
 	/// <summary>
 	/// Loads and merges default and customized commands files.
 	/// </summary>
 	public XElement[] LoadFiles() {
-		XElement[] _LoadFile(string file) {
+		static XElement[] _LoadFile(string file) {
 			try { return XmlUtil.LoadElem(file).Elements().ToArray(); }
 			catch (Exception ex) { print.it($"<>Failed to load file <explore>{file}<>. <_>{ex.ToStringWithoutStack()}</_>"); return null; }
 		}
-
+		
 		var a = _LoadFile(DefaultFile); if (a == null) return null;
 		var ac = UserFile != null && filesystem.exists(UserFile, true).File ? _LoadFile(UserFile) : null;
-
+		
 		if (ac != null) { //replace a elements with elements that exist in ac. If some toolbar does not exist there, use default.
 			for (int i = 0; i < a.Length; i++) {
 				var name = a[i].Name;
 				foreach (var x in ac) if (x.Name == name && x.HasElements) { _AddMissingButtons(a[i], x); a[i] = x; break; }
 			}
-
-			static void _AddMissingButtons(XElement xDef, XElement xUser) {
+			
+			void _AddMissingButtons(XElement xDef, XElement xUser) {
 				if (xUser.Name.LocalName == "menu") return;
 				foreach (var v in xDef.Elements().Except(xUser.Elements(), s_xmlNameComparer)) {
+					//rejected: hide new buttons to avoid pushing some old buttons to the overflow if the toolbar size cannot grow.
+					//	Then new and probably important features would be used rarely and/or inconveniently.
+					//	Instead hide just duplicates, eg when the new button actually is an old button moved to this toolbar.
 					//v.SetAttributeValue("hide", "always");
-					xUser.Add(v);
+					foreach (var tb in ac) if (tb != xUser && tb.Elements(v.Name).Any()) { v.SetAttributeValue("hide", "always"); break; }
+					
+					if (v.PreviousNode is XElement xdPrev && xUser.Element(xdPrev.Name) is { } xuPrev) xuPrev.AddAfterSelf(v); //insert in default place
+					else xUser.Add(v); //add to the end
 				}
 			}
 		}
-
+		
 		return a;
 	}
-
+	
 	//currently not used.
 	//public void AddExtensionMenus(Type commands, MenuItem parentMenu = null, bool autoUnderline = true) {
 	//	ItemsControl pa = parentMenu ?? _menubar as ItemsControl;

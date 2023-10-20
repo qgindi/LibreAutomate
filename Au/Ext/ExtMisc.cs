@@ -67,7 +67,7 @@ public static unsafe partial class ExtMisc {
 	}
 
 	/// <summary>
-	/// Converts double to string.
+	/// Converts float to string.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -76,7 +76,7 @@ public static unsafe partial class ExtMisc {
 	}
 
 	/// <summary>
-	/// Converts double to string.
+	/// Converts decimal to string.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
 	/// </summary>

@@ -73,29 +73,29 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>AuCpp</TargetName>
-    <GenerateManifest>false</GenerateManifest>
     <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>AuCpp</TargetName>
-    <GenerateManifest>false</GenerateManifest>
     <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>AuCpp</TargetName>
-    <GenerateManifest>false</GenerateManifest>
     <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>AuCpp</TargetName>
-    <GenerateManifest>false</GenerateManifest>
     <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -240,6 +240,7 @@
     <ClInclude Include="Cpp.h" />
     <ClInclude Include="JAB.h" />
     <ClInclude Include="MemoryPool.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="internal.h" />
     <ClInclude Include="stdafx.h" />
@@ -249,6 +250,12 @@
     <ProjectReference Include="..\Libraries\PCRE\PCRE.vcxproj">
       <Project>{190bc611-ee00-4b10-87f2-a7e73b639e59}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Cpp.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Cpp.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
