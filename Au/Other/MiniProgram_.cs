@@ -67,7 +67,7 @@ static unsafe class MiniProgram_ {
 
 		process.ThisThreadSetComApartment_(ApartmentState.STA); //1.5 ms
 
-		script.AppModuleInit_(); //3 ms
+		script.AppModuleInit_(auCompiler: true); //3 ms
 
 		//rejected. Now this is implemented in editor. To detect when failed uses process exit code. Never mind exception text, it is not very useful.
 		//process.thisProcessExit += e => { //0.9 ms
@@ -227,7 +227,7 @@ static unsafe class MiniProgram_ {
 		int verPC = osVersion.minWin10 ? 100 : osVersion.minWin8_1 ? 81 : osVersion.minWin8 ? 80 : 70; //don't need Win11
 
 		var flags = FEFlags.AllDescendants | FEFlags.IgnoreInaccessible | FEFlags.NeedRelativePaths | FEFlags.UseRawPath;
-		List<(FEFile f, int ver)> aNet = new(), aNative = new();
+		List<(FEFile f, int ver)> aNet = [], aNative = [];
 		foreach (var f in filesystem.enumFiles(runtimesDir, "*.dll", flags)) {
 			var s = f.Name;
 			if (!s.Starts(@"\win", true) || s.Length < 10) continue;

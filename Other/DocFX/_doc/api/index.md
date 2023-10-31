@@ -25,4 +25,12 @@ To get the dlls you can use NuGet package [LibreAutomate](https://www.nuget.org/
 
 The program should use a manifest like [this](https://github.com/qgindi/LibreAutomate/blob/master/_/default.exe.manifest). It enables common controls 6, all OS versions, full DPI awareness, disableWindowFiltering.
 
+In project properties check "Use WPF" and "Use winforms". Or in project file add `<UseWPF>True</UseWPF>` and `<UseWindowsForms>True</UseWindowsForms>`.
+
+If not using NuGet, add unmanaged dlls to the project. Add them as links, and in dll Properties set "Content" and "Copy if newer".
+
 If some library functions throw **DllNotFoundException** (missing AuCpp.dll etc), add environment variable *Au.Path* with value = Au.dll folder path. May need this when the host program copies Au.dll somewhere without the native dll folders, for example in some scripting environments and GUI designers.
+
+TODO: link to https://www.libreautomate.com/forum/showthread.php?tid=7557
+    Also in the post add the Pascal code for Inno Setup.
+    Also test and write about renaming the old file whan want to replace.

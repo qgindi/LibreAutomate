@@ -4,7 +4,7 @@ namespace Au.Controls;
 
 public class XamlResources {
 #if IDE_LA
-	public static ResourceDictionary Dictionary = System.Windows.Markup.XamlReader.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream("Generic.xaml")) as ResourceDictionary;
+	public static ResourceDictionary Dictionary = System.Windows.Markup.XamlReader.Load(typeof(XamlResources).Assembly.GetManifestResourceStream("Generic.xaml")) as ResourceDictionary;
 #else
 	public static ResourceDictionary Dictionary = Application.LoadComponent(new("/Au.Controls;component/themes/generic.xaml", UriKind.Relative)) as ResourceDictionary;
 	//build action = default (Page).

@@ -418,7 +418,7 @@ static partial class App {
 	
 	public static bool IsPortable { get; private set; }
 	
-	public static string Version => s_version ??= Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+	public static string Version => s_version ??= typeof(App).Assembly.GetName().Version.ToString(3);
 	static string s_version;
 	
 	public static async void CheckForUpdates(System.Windows.Controls.Button b = null) {

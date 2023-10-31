@@ -796,7 +796,7 @@ public partial class toolbar : MTBase {
 		}
 		
 		if (!no.Has(TBNoMenu.Toolbars | TBNoMenu.Help) && m.Last != null && !m.Last.IsSeparator) m.Separator();
-		if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars", o => toolbarsDialog(true));
+		if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars", o => toolbarsDialog());
 		if (!no.Has(TBNoMenu.Help)) m["How to"] = _ => dialog.showInfo("How to",
 @"Move toolbar: Shift+drag.
 

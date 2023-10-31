@@ -3,66 +3,58 @@
 
 //How to get Roslyn dlls:
 
+//Build this project. Don't run; it will run automatically when building Roslyn project Microsoft.CodeAnalysis.CSharp.Features.
 //Download Roslyn solution to C:\Downloads\roslyn-main.
 //Open Roslyn.sln.
-//To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree. It loads projects we need:
+//To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree.
+//  It loads projects we need:
 //	In folder Compilers: Core\Microsoft.CodeAnalysis, CSharp\Microsoft.CodeAnalysis.CSharp.
 //	In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
 //	In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
 //	Several other.
 //Edit as described in the '#if false' block at the bottom of this file.
-//Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects.
+//Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects. It runs this exe.
 
-//In this project add or update Microsoft.CodeAnalysis.CSharp.Features from NuGet.
-//In this file edit c_netVersion if need.
-//Run this project. May need to build explicitly, depending on solution config.
-//	Run it always after modifying Roslyn.
+//In editor project are added references to the main 6 dlls in _\Roslyn, with 'Copy local' false (default).
+//  For Microsoft.CodeAnalysis.Workspaces set aliases CAW.
 
-//In editor project are added references to the main 6 dlls in _\Roslyn, with 'Copy local' false.
+//Rejected: to make editor startup faster, publish Microsoft.CodeAnalysis.CSharp.Features with <PublishReadyToRun>.
+//  Tested, works, but: adds ~14 MB to the setup file; makes just ~350 ms faster, barely noticeable.
 
+script.setup(exception: UExcept.Dialog | UExcept.Print);
 
-const string c_netVersion = "net8.0"; //edit if need
+//print.ignoreConsole = true;
+//print.qm2.use = true;
+//print.it(args);
+//print.it(process.getCommandLine(process.thisProcessId));
 
-try {
-	CopyFiles();
-}
-catch (Exception ex) { Console.WriteLine(ex); }
+if (args is ["preBuild"]) return PreBuild();
+return PostBuild();
 
-static void CopyFiles() {
-	var w = wnd.findFast("LibreAutomate");
+//Exits editor.
+int PreBuild() {
+	var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
 	if (!w.Is0) {
-		int id = w.ProcessId;
 		w.Close(noWait: true);
-		process.waitForExit(10, id, out _);
+		w.WaitForClosed(-2, waitUntilProcessEnds: true);
 	}
+	return 0;
+}
 
-	var artifacts = folders.Downloads + @"roslyn-main\artifacts\bin\";
-	var roslyn = @"C:\code\au\_\Roslyn";
-
-	foreach (var f in Directory.GetFiles(roslyn)) {
-		filesystem.delete(f);
+//Copies dlls etc.
+int PostBuild() {
+	var from = args[0].Trim();
+	var to = @"C:\code\au\_\Roslyn";
+	
+	foreach (var f in filesystem.enumerate(to)) {
+		if (f.Name[0] != '.') filesystem.delete(f.FullPath, FDFlags.CanFail);
 	}
-
-	string[] a = {
-		"Microsoft.CodeAnalysis",
-		"Microsoft.CodeAnalysis.CSharp",
-		"Microsoft.CodeAnalysis.Features",
-		"Microsoft.CodeAnalysis.CSharp.Features",
-		"Microsoft.CodeAnalysis.Workspaces",
-		"Microsoft.CodeAnalysis.CSharp.Workspaces",
-		"Microsoft.CodeAnalysis.Scripting",
-	};
-	foreach (var v in a) {
-		var s = artifacts + v + $"\\Release\\{c_netVersion}\\";
-		filesystem.copyTo(s + v + ".dll", roslyn);
-        filesystem.copyTo(s + v + ".xml", roslyn);
+	foreach (var f in filesystem.enumFiles(from)) {
+		if (0 == f.Name.Ends(true, ".dll", ".xml")) continue;
+		if (0 != f.Name.Starts(true, "System.Configuration.", "System.Security.")) continue;
+		filesystem.copyTo(f.FullPath, to);
 	}
-
-	foreach (var f in Directory.GetFiles(folders.ThisApp, "*.dll")) {
-        if (f.Ends("CompilerDlls.dll")) continue;
-        var f2 = roslyn + "\\" + pathname.getName(f);
-        if (!filesystem.exists(f2)) filesystem.copy(f, f2);
-	}
+	return 0;
 }
 
 #if false
@@ -74,12 +66,48 @@ static void CopyFiles() {
 // - Set Release config. Try to build Microsoft.CodeAnalysis.CSharp.Features (it builds all).
 //	May need to download the latest .NET SDK. Its version specified in global.json.
 
-//(skip this if can compile) - Remove code that uses Scripting project:
-//1. In Features\Core\Portable\Completion\Providers\Scripting\AbstractDirectivePathCompletionProvider.cs remove 2 Scripting usings and 1 code block that uses it.
-//2. In Features\Core\Portable\Completion\Providers\Scripting\AbstractReferenceDirectiveCompletionProvider.cs remove 1 Scripting using and remove entire body of ProvideCompletionsAsync.
-//3. Remove entire Features\Core\Portable\Completion\Providers\Scripting\GlobalAssemblyCacheCompletionHelper.cs.
-
 // - In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
+    <Compile Include="..\..\..\..\..\..\code\au\Other\CompilerDlls\Au.InternalsVisible.cs" Link="Au.InternalsVisible.cs" />
+
+// - In project Microsoft.CodeAnalysis add link to Au.TestInternal.cs. It is in this project.
+    <Compile Include="..\..\..\..\..\..\code\au\Other\CompilerDlls\Au.TestInternal.cs" Link="Au.TestInternal.cs" />
+
+// - In Microsoft.CodeAnalysis.CSharp.Features.csproj:
+// -- In <PropertyGroup> add:
+    <OutputPath>$(SolutionDir)au\output</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+// -- In project references add <Private>True</Private>. Also add the Scripting project (just to copy the dll).
+  <ItemGroup Label="Project References">
+    <ProjectReference Include="..\..\..\Compilers\Core\Portable\Microsoft.CodeAnalysis.csproj">
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Compilers\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.csproj">
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Workspaces\Core\Portable\Microsoft.CodeAnalysis.Workspaces.csproj">
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Workspaces\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Workspaces.csproj">
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Core\Portable\Microsoft.CodeAnalysis.Features.csproj">
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Scripting\Core\Microsoft.CodeAnalysis.Scripting.csproj">
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+// -- Add prebuild and postbuild. The exe is built from script "RoslynBuildEvents.cs".
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="C:\code\au\Other\CompilerDlls\bin\Release\CompilerDlls.exe preBuild" />
+  </Target>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="C:\code\au\Other\CompilerDlls\bin\Release\CompilerDlls.exe $(OutDir)" />
+  </Target>
 
 // - Add Symbols property to the CompletionItem class:
 //1. Open CompletionItem.cs in project Microsoft.CodeAnalysis.Features.
@@ -98,8 +126,6 @@ static void CopyFiles() {
 
 // - Let it don't try to load VB assemblies, because then exception when debugging:
 //In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VB assemblies.
-
-// - In project Microsoft.CodeAnalysis add link to Au.TestInternal.cs. It is in this project.
 
 // - In project Microsoft.CodeAnalysis, in file PublicAPI.Shipped.txt, append:
 RoslynMod.TestInternal

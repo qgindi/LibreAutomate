@@ -7,7 +7,8 @@ static class Menus {
 	public const string
 		black = " #505050|#D0D0D0",
 		blue = " #4080FF|#77C9FF",
-		darkBlue = " #4040FF|#8080FF",
+		//darkBlue = " #5060FF|#7080FF",
+		//lightBlue = " #B0C0FF|#D0E0FF",
 		green = " #99BF00|#A9CE13",
 		brown = " #9F5300|#D0D0D0",
 		purple = " #A040FF|#D595FF",
@@ -286,7 +287,7 @@ static class Menus {
 			[Command(image = "*BoxIcons.SolidBookmark" + blue)]
 			public static void Toggle_bookmark() { Panels.Bookmarks.ToggleBookmark(false); }
 			
-			[Command("Add and/or rename bookmark", image = "*BoxIcons.SolidBookmarkStar" + blue)]
+			[Command("Add and/or rename bookmark", image = "*BoxIcons.SolidBookmark" + blue)]
 			public static void Toggle_bookmark2() { Panels.Bookmarks.ToggleBookmark(true); }
 			
 			[Command(image = "*JamIcons.ArrowSquareUp" + black, keys = "Alt+Up", noIndirectDisable = true)]
@@ -505,6 +506,9 @@ static class Menus {
 		[Command("...", image = "*BoxIcons.RegularHistory" + blue)]
 		public static void Recent() { RecentTT.Show(); }
 		
+		[Command("...", image = "*Entypo.Publish" + blue)]
+		public static void Publish() { MSBuild.Publish(); }
+		
 		[Command(separator = true)]
 		public static class Debugger {
 			[Command("Insert script.debug (wait for debugger to attach)")]
@@ -597,9 +601,9 @@ static class Menus {
 Version: {App.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
-Uses C# 11, <link https://dotnet.microsoft.com/download>.NET 6<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite 3.42.0<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>.
+Uses C# 12, <link https://dotnet.microsoft.com/download>.NET 8<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite 3.42.0<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
-{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
+{typeof(App).Assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 -----------------------");
 		}
 	}

@@ -1,7 +1,7 @@
 namespace Au.Compiler;
 
 partial class Compiler {
-	unsafe class _Resources {
+	unsafe class _NativeResources {
 		class _Res {
 			public byte[] data;
 			public ushort resType, resId;

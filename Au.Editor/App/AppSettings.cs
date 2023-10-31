@@ -166,6 +166,9 @@ record AppSettings : JSettings {
 	//CiFindGo
 	public bool ci_findgoDclick;
 	
+	//misc
+	public int publish;
+	
 	//panel Find
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;

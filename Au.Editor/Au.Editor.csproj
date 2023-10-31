@@ -14,12 +14,11 @@
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-		<NoWin32Manifest>true</NoWin32Manifest>
 		<IsPublishable>True</IsPublishable>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<Deterministic>False</Deterministic>
 		<NoWarn>1701;1702;8002;419,CS8981</NoWarn>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,11 +34,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="_prePostBuild.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="_prePostBuild.cs" />
+		<Compile Remove="_prePostBuild.cs" />
+		<Compile Remove="Au.Editor.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -140,38 +136,33 @@
 
 	<ItemGroup>
 		<Reference Include="Microsoft.CodeAnalysis">
-		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
-			<Private>False</Private>
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
+			<Aliases></Aliases>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp">
-		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-			<Private>False</Private>
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
-		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
-			<Private>False</Private>
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
-		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
-			<Private>False</Private>
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.Features">
-		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Features.dll</HintPath>
-			<Private>False</Private>
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Features.dll</HintPath>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.Workspaces">
-		  <HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
-			<Private>False</Private>
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
 			<Aliases>CAW</Aliases>
 		</Reference>
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
+		<Exec Command="$(SolutionDir)Other\Programs\BuildEvents.exe preBuild $(Configuration)" />
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="&quot;$(SolutionDir)Other\Programs\BuildEvents.exe&quot;" />
+		<Exec Command="$(SolutionDir)Other\Programs\BuildEvents.exe postBuild $(Configuration)" />
 	</Target>
 
 </Project>

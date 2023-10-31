@@ -1,30 +1,42 @@
-using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Forms;
 
 namespace Au;
 
 public partial class toolbar {
+	[ThreadStatic] static Form s_listWindow;
+	
 	/// <summary>
-	/// Creates dialog with a list of toolbars of this thread. Just creates, does not show. Can be used to find lost toolbars.
+	/// Creates a window with a list of toolbars of this thread. Can be used to find lost toolbars.
 	/// </summary>
-	/// <param name="show">Show the dialog now, non-modal. If a dialog shown by this function already exists in this thread - activate.</param>
-	public static Window toolbarsDialog(bool show = false) {
-		if (show && s_dialog != null) {
-			s_dialog.Hwnd().ActivateL(true);
-			return s_dialog;
+	/// <param name="show">Show the window now, non-modal. If a window shown by this function already exists in this thread - activate it.</param>
+	public static Form toolbarsDialog(bool show = true) {
+		if (show && s_listWindow != null) {
+			s_listWindow.Hwnd().ActivateL(true);
+			return s_listWindow;
 		}
-
-		var b = new wpfBuilder("Active toolbars").WinSize(330, 300).Columns(-1, 0);
-		b.Row(-1).Add(out ListBox lb).Focus();
-		//b.StartStack(vertical: true);
-		//b.AddButton(out var bMove, "X", e => _Click(2));
-		//b.End();
-		b.End();
-
-		var window = b.Window;
-
+		
+		var f = new Form {
+			Text = "Active toolbars",
+			Size = new(330, 330),
+			AutoScaleMode = AutoScaleMode.Dpi,
+			StartPosition = FormStartPosition.CenterScreen,
+			Icon = icon.ofThisApp()?.ToGdipIcon()
+		};
+		f.Load += (_, _) => { f.Hwnd().ActivateL(); };
+		
+		var lv = new ListView {
+			Dock = DockStyle.Fill,
+			View = View.List,
+			BorderStyle = BorderStyle.None,
+			MultiSelect = false,
+			ContextMenuStrip = new()
+		};
+		f.Controls.Add(lv);
+		
 		var osdr = new osdRect { Color = 0xff0000, Thickness = 12 };
 		osdText osdt = null;
+		ListViewItem _osdItem = null;
+		
 		var atb = _Manager._atb;
 		(toolbar tb, bool sat)[] patb = atb.Select(o => (o, o.Satellite?.IsOpen ?? false)).ToArray();
 		var timer1 = timer.every(250, _ => {
@@ -35,32 +47,38 @@ public partial class toolbar {
 				}
 			}
 			if (changed) {
+				_HideRect();
 				patb = atb.Select(o => (o, o.Satellite?.IsOpen ?? false)).ToArray();
-				_FillLB();
+				_FillList();
 			}
 		});
-
-		window.Closed += (_, _) => {
+		
+		f.FormClosed += (_, _) => {
+			if (show) s_listWindow = null;
 			osdr.Dispose();
 			timer1.Stop();
 		};
-		//lb.SelectionChanged += (_, _) => _EnableButtons(lb.SelectedIndex >= 0);
-
-		_FillLB();
-
-		void _FillLB() {
-			lb.Items.Clear();
+		
+		_FillList();
+		
+		void _FillList() {
+			lv.Items.Clear();
 			foreach (var tb in _Manager._atb) {
-				_AddLbItem(tb);
-				var sat = tb.Satellite; if (sat?.IsOpen ?? false) _AddLbItem(sat);
+				_Add(tb);
+				if (tb.Satellite is { } sat && sat.IsOpen) _Add(sat);
 			}
-			//_EnableButtons(false);
+			void _Add(toolbar tb) {
+				lv.Items.Add(tb.ToString()).Tag = tb;
+			}
 		}
-
-		void _AddLbItem(toolbar tb) {
-			var li = new ListBoxItem { Content = tb };
-			lb.Items.Add(li);
-			li.MouseEnter += (_, _) => {
+		
+		lv.MouseMove += (_, _) => { //note: MouseHover not always works
+			var p = mouse.xy;
+			lv.Hwnd().MapScreenToClient(ref p);
+			var v = lv.HitTest(p).Item;
+			if (v == _osdItem) return;
+			if (v != null) {
+				var tb = v.Tag as toolbar;
 				if (tb.IsOpen) {
 					var w = tb._w;
 					var r = w.Rect;
@@ -71,56 +89,55 @@ public partial class toolbar {
 					} else {
 						osdt = osdText.showText("The toolbar is offscreen. Right-click to move.\nRectangle: " + r.ToString(), xy: PopupXY.Mouse);
 					}
+					v.Selected = true;
+					v.Focused = true;
+					_osdItem = v;
 				} else {
-					_FillLB();
+					_HideRect();
+					_FillList();
 				}
-			};
-			li.MouseLeave += (_, _) => {
+			} else {
+				_HideRect();
+			}
+		};
+		lv.MouseLeave += (_, _) => _HideRect();
+		
+		void _HideRect() {
+			if (_osdItem != null) {
+				_osdItem = null;
 				osdr.Hide();
 				osdt?.Dispose(); osdt = null;
-			};
-			li.ContextMenuOpening += (_, _) => {
-				var dlg = window.Hwnd();
-				var m = new popupMenu();
-				m["Edit\tD-click"] = o => _Edit();
-				m["Move here"] = o => {
-					if (!tb.IsOpen) return;
-					var w = tb._w;
-					if (!w.IsVisible && !dialog.showOkCancel("Hidden", "Move this hidden toolbar?", owner: dlg)) return;
-					w.MoveL_(mouse.xy);
-					if (!w.ZorderIsAbove(dlg)) w.ZorderAbove(dlg);
-				};
-				m.Show(owner: dlg);
-			};
-			li.MouseDoubleClick += (_, e) => {
-				if (e.ChangedButton == System.Windows.Input.MouseButton.Left) _Edit();
-			};
-			void _Edit() {
-				//window.Close();
-				ScriptEditor.Open(tb._sourceFile, tb._sourceLine);
-				timer.after(100, _ => window.Hwnd().ZorderTop());
 			}
 		}
-
-		//void _EnableButtons(bool enable) {
-		//	//bX.IsEnabled = enable;
-		//}
-
-		//void _Click(int action) {
-		//	if ((lb.SelectedItem as ListBoxItem)?.Content is not toolbar tb) return;
-		//}
-
-		b.Loaded += () => {
-			window.Hwnd().ActivateL();
+		
+		lv.ItemActivate += (_, _) => {
+			_Edit(lv.FocusedItem.Tag as toolbar);
 		};
-
-		if (show) {
-			window.Show();
-			window.Closed += (_, _) => { s_dialog = null; };
-			s_dialog = window;
+		
+		void _Edit(toolbar tb) {
+			ScriptEditor.Open(tb._sourceFile, tb._sourceLine);
+			timer.after(100, _ => f.Hwnd().ZorderTop());
 		}
-
-		return window;
+		
+		lv.ContextMenuStrip.Opening += (_, e) => {
+			e.Cancel = true;
+			if (lv.SelectedItems.Count == 0) return;
+			_HideRect();
+			var tb = lv.FocusedItem.Tag as toolbar;
+			var w = f.Hwnd();
+			var m = new popupMenu();
+			m["Edit\tD-click"] = o => _Edit(tb);
+			m["Move here"] = o => {
+				if (!tb.IsOpen) return;
+				var w = tb._w;
+				if (!w.IsVisible && !dialog.showOkCancel("Hidden", "Move this hidden toolbar?", owner: w)) return;
+				w.MoveL_(mouse.xy);
+				if (!w.ZorderIsAbove(w)) w.ZorderAbove(w);
+			};
+			m.Show(owner: w);
+		};
+		
+		if (show) f.Show();
+		return s_listWindow = f;
 	}
-	[ThreadStatic] static Window s_dialog;
 }

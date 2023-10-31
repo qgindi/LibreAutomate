@@ -171,21 +171,16 @@ class MetaComments {
 	
 	/// <summary>
 	/// Meta option 'optimize'.
-	/// Default: <see cref="DefaultOptimize"/> (default false).
+	/// Default: false.
 	/// </summary>
 	public bool Optimize { get; private set; }
-	
-	/// <summary>
-	/// Gets or sets default meta option 'optimize' value. Initially false.
-	/// </summary>
-	public static bool DefaultOptimize { get; set; }
 	
 	/// <summary>
 	/// Meta option 'define' + default preprocessor symbols.
 	/// </summary>
 	public string[] Defines { get; private set; }
 	List<string> _defines;
-	static string[] s_defaultDefines = ["NET8_0", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
+	static readonly string[] s_defaultDefines = ["NET8_0", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
 	
 	/// <summary>
 	/// Meta option 'warningLevel'.
@@ -193,10 +188,7 @@ class MetaComments {
 	/// </summary>
 	public int WarningLevel { get; private set; }
 	
-	/// <summary>
-	/// Gets or sets default meta option 'warningLevel' value. Initially 6.
-	/// </summary>
-	public static int DefaultWarningLevel { get; set; } = 6;
+	public const int DefaultWarningLevel = 6; //wave 7 adds 1 warning ("The type name only contains lower-cased ascii characters"), not useful
 	
 	/// <summary>
 	/// Meta option 'noWarnings'.
@@ -208,7 +200,7 @@ class MetaComments {
 	/// Gets or sets default meta option 'noWarnings' value. Initially CS1701,CS1702.
 	/// </summary>
 	public static string[] DefaultNoWarnings { get; set; } = ["CS1701", "CS1702"];
-	//CS1701,CS1702: VS used to add 1701,1702 to default project properties. Now no, but it seems it implicitly disables these warnings. So we too.
+	//CS1701,CS1702: from default VS project properties.
 	
 	/// <summary>
 	/// Meta 'testInternal'.
@@ -255,7 +247,7 @@ class MetaComments {
 	/// <summary>
 	/// Meta nuget, like @"-\PackageName".
 	/// </summary>
-	public List<string> NugetPackages { get; private set; }
+	public List<(string package, string alias)> NugetPackages { get; private set; }
 	
 	/// <summary>
 	/// If there are meta nuget, returns the root element of the auto-loaded XML file that contains a list of installed NuGet packages and their files. Else null.
@@ -359,6 +351,8 @@ class MetaComments {
 	/// </summary>
 	public bool XmlDoc { get; private set; }
 	
+	public NullableContextOptions Nullable { get; private set; }
+	
 	/// <summary>
 	/// Which options are specified.
 	/// </summary>
@@ -396,6 +390,7 @@ class MetaComments {
 	/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
 	public bool Parse(FileNode f, FileNode projFolder) {
 		if (!_flags.Has(MCPFlags.ForCodeInfo)) Errors = new ErrBuilder();
+		if (_flags.Has(MCPFlags.MSBuild)) Optimize = true;
 		
 		if (_ParseFile(f, true, false)) {
 			if (projFolder != null) {
@@ -416,7 +411,7 @@ class MetaComments {
 				if (!_defines.Contains("TRACE")) _defines.Add("TRACE");
 			}
 			//if(Role == MCRole.exeProgram && !_defines.Contains("EXE")) _defines.Add("EXE"); //rejected
-			Defines = [..s_defaultDefines, .._defines];
+			Defines = [.. s_defaultDefines, .. _defines];
 			
 			if (_flags.Has(MCPFlags.ForFindReferences)) return true;
 			
@@ -452,7 +447,6 @@ class MetaComments {
 			
 			Name = pathname.getNameNoExt(f.Name);
 			
-			Optimize = DefaultOptimize;
 			WarningLevel = DefaultWarningLevel;
 			NoWarnings = DefaultNoWarnings != null ? new(DefaultNoWarnings) : new();
 			_defines = new();
@@ -506,6 +500,7 @@ class MetaComments {
 				this.PreBuild = default;
 				this.PostBuild = default;
 				this.XmlDoc = false;
+				this.Nullable = default;
 			}
 		}
 		
@@ -532,30 +527,37 @@ class MetaComments {
 		_valueFrom = iValue; _valueTo = iValue + value.Length;
 		
 		if (value.Length == 0) { _ErrorV("value cannot be empty"); return; }
-		bool forCodeInfo = _flags.Has(MCPFlags.ForCodeInfo), forPR = _flags.Has(MCPFlags.ForFindReferences);
+		bool forCodeInfo = _flags.Has(MCPFlags.ForCodeInfo),
+			forFindRef = _flags.Has(MCPFlags.ForFindReferences),
+			forMsbuild = _flags.Has(MCPFlags.MSBuild);
 		
 		switch (name) {
 		case "r":
 		case "com":
 		case "pr":
-			if (name[0] == 'p') {
-				//Specified |= EMSpecified.pr;
-				if (!_PR(ref value) || forCodeInfo) return;
-			}
-			
-			try {
-				//var p1 = perf.local();
-				if (!References.Resolve(value, name[0] == 'c')) {
-					_ErrorV("reference assembly not found: " + value); //FUTURE: need more info, or link to Help
-				}
-				//p1.NW('r');
-			}
-			catch (Exception e) {
-				_ErrorV("exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
-			}
-			return;
 		case "nuget":
-			_NuGet(value);
+			if (!MetaReferences.ParseAlias_(value, out var s1, out var alias, supportOldSyntax: true)) {
+				_ErrorV("invalid string");
+			} else if (name[0] == 'n') {
+				_NuGet(s1, alias);
+			} else {
+				if (name[0] == 'p') {
+					if (alias != null) { _ErrorV("pr alias not supported"); return; } //could support, but who will use it
+					//Specified |= EMSpecified.pr;
+					if (!_PR(ref s1) || forCodeInfo) return;
+				}
+				
+				try {
+					//var p1 = perf.local();
+					if (!References.Resolve(s1, alias, name[0] == 'c', false)) {
+						_ErrorV("reference assembly not found: " + s1); //FUTURE: need more info, or link to Help
+					}
+					//p1.NW('r');
+				}
+				catch (Exception e) {
+					_ErrorV("exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
+				}
+			}
 			return;
 		case "c":
 			if (_GetFile(value, FNFind.Any) is FileNode ff) {
@@ -568,7 +570,7 @@ class MetaComments {
 			}
 			return;
 		case "file":
-			if (!forPR) {
+			if (!forFindRef) {
 				var fs1 = _GetFileAndString(value, FNFind.Any);
 				if (!forCodeInfo && fs1.f != null) {
 					OtherFiles ??= new();
@@ -579,14 +581,14 @@ class MetaComments {
 		case "miscFlags":
 			if (!forCodeInfo) MiscFlags = value.ToInt();
 			return;
-		case "noRef" when _f.isMain: //undocumented
+		case "noRef" when _f.isMain:
 			References.RemoveFromRefs(value);
 			return;
 		}
 		if (_flags.Has(MCPFlags.OnlyRef)) return;
 		
 		if (name is "resource") {
-			if (!forPR) {
+			if (!forFindRef) {
 				//if (value.Ends(" /resources")) { //add following resources in value.resources instead of in AssemblyName.g.resources. //rejected. Rarely used. Would need more code, because meta resource can be in multiple files.
 				//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
 				//	return;
@@ -601,7 +603,7 @@ class MetaComments {
 		}
 		
 		if (!_f.isMain) {
-			if (!forPR) {
+			if (!forFindRef) {
 				//In class files compiled as not main silently ignore all options if the first option is role other than class.
 				//	It allows to test a class file without a test script etc.
 				//	How: In meta define symbol X. Then #if X, enable executable code that uses the class.
@@ -642,7 +644,7 @@ class MetaComments {
 			SignFile = _GetFile(value, FNFind.File);
 			return;
 		}
-		if (forPR) return;
+		if (forFindRef) return;
 		
 		switch (name) {
 		case "warningLevel":
@@ -698,6 +700,10 @@ class MetaComments {
 		case "xmlDoc":
 			_Specified(MCSpecified.xmlDoc);
 			if (_TrueFalse(out bool xmlDOc, value)) XmlDoc = xmlDOc;
+			break;
+		case "nullable":
+			_Specified(MCSpecified.nullable);
+			if (_Enum(out NullableContextOptions nco, value)) Nullable = nco;
 			break;
 		default:
 			_ErrorN("unknown meta comment option");
@@ -756,7 +762,10 @@ class MetaComments {
 			r = new (string, int)[n];
 			for (int i = 0, j = 0; i < a.Length; i++) {
 				var sn = a[i].Name;
-				if (!sn.Starts('_')) r[j++] = (sn, (int)a[i].GetRawConstantValue());
+				if (!sn.Starts('_')) {
+					if (char.IsUpper(sn[0])) sn = char.ToLowerInvariant(sn[0]) + sn[1..];
+					r[j++] = (sn, (int)a[i].GetRawConstantValue());
+				}
 			}
 			s_enumCache[t] = r;
 		}
@@ -788,12 +797,7 @@ class MetaComments {
 	}
 	
 	MCFileAndString _GetFileAndString(string s, FNFind kind) {
-		string s2 = null;
-		int i = s.Find(" /");
-		if (i > 0) {
-			s2 = s[(i + 2)..];
-			s = s[..i];
-		}
+		s = SplitArgs_(s, out var s2);
 		
 		//rejected
 		//if (orFullPathAnywhere && pathname.isFullPathExpand(ref s)) {
@@ -803,6 +807,15 @@ class MetaComments {
 		//}
 		
 		return new(_GetFile(s, kind), s2);
+	}
+	
+	internal static string SplitArgs_(string s, out string s2) {
+		int i = s.Find(" /");
+		if (i > 0) {
+			s2 = s[(i + 2)..].NullIfEmpty_();
+			s = s[..i];
+		} else s2 = null;
+		return s;
 	}
 	
 	string _GetOutPath(string s) {
@@ -842,9 +855,10 @@ class MetaComments {
 		return true;
 	}
 	
-	void _NuGet(string value) {
-		if (NugetPackages.Contains(value, StringComparer.OrdinalIgnoreCase)) return;
-		NugetPackages.Add(value);
+	void _NuGet(string value, string alias) {
+		foreach (var v in NugetPackages) if(v.package.Eqi(value)) return;
+		NugetPackages.Add((value, alias));
+		if (_flags.Has(MCPFlags.MSBuild)) return;
 		try {
 			_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
 			var xx = _xnuget?.Elem("package", "path", value, true);
@@ -878,7 +892,7 @@ class MetaComments {
 			foreach (var x in xx.Elements()) {
 				if (x.Name.LocalName is not ("r" or "ro")) continue;
 				var r = dir + x.Value;
-				if (!References.Resolve(r, false)) {
+				if (!References.Resolve(r, alias, false, true)) {
 					_ErrorV("NuGet file not found: " + r);
 				}
 			}
@@ -925,7 +939,7 @@ class MetaComments {
 	}
 	
 	public static string GetDefaultOutputPath(FileNode f, MCRole role, bool withEnvVar) {
-		Debug.Assert(role == MCRole.exeProgram || role == MCRole.classLibrary);
+		Debug.Assert(role is MCRole.exeProgram or MCRole.classLibrary or MCRole.miniProgram);
 		string r;
 		if (role == MCRole.classLibrary) r = withEnvVar ? @"%folders.Workspace%\dll" : App.Model.DllDirectory;
 		else r = (withEnvVar ? @"%folders.Workspace%\exe\" : App.Model.WorkspaceDirectory + @"\exe\") + f.DisplayName;
@@ -938,16 +952,17 @@ class MetaComments {
 		else if (Console) oKind = OutputKind.ConsoleApplication;
 		
 		var r = new CSharpCompilationOptions(
-		   oKind,
-		   optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
-		   allowUnsafe: true,
-		   platform: Bit32 ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
-		   warningLevel: WarningLevel,
-		   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(wa[0].IsAsciiDigit() ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
-		   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
-		   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider()
-		   //,metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
-		   );
+			oKind,
+			optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
+			allowUnsafe: true,
+			platform: Bit32 ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
+			warningLevel: WarningLevel,
+			specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(wa[0].IsAsciiDigit() ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
+			cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
+			strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider(),
+			nullableContextOptions: Nullable
+		//,metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
+		);
 		
 		//Allow to use internal/protected of assemblies specified using IgnoresAccessChecksToAttribute.
 		//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
@@ -1089,6 +1104,11 @@ enum MCPFlags {
 	/// Defines WPF_PREVIEW and resets some meta.
 	/// </summary>
 	WpfPreview = 32,
+	
+	/// <summary>
+	/// Creating csproj file for MSBuild.
+	/// </summary>
+	MSBuild = 64,
 }
 
 [Flags]
@@ -1110,4 +1130,5 @@ enum MCSpecified {
 	sign = 1 << 14,
 	xmlDoc = 1 << 15,
 	console = 1 << 16,
+	nullable = 1 << 17,
 }

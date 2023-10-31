@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
+using System.Text.Json.Nodes;
 
 namespace Au.Compiler;
 
@@ -137,23 +138,7 @@ partial class Compiler {
 		
 		if (_meta.PreBuild.f != null && !_RunPrePostBuildScript(false, outFile)) return false;
 		
-		var pOpt = _meta.CreateParseOptions();
-		var trees = new CSharpSyntaxTree[_meta.CodeFiles.Count];
-		for (int i = 0; i < trees.Length; i++) {
-			var f1 = _meta.CodeFiles[i];
-			
-			//never mind: should use Encoding.UTF8 etc if the file is with BOM. Encoding.Default is UTF-8 without BOM.
-			//	Else, when debugging with VS or VS Code, they say "source code changed" and can't set breakpoints by default.
-			//	But they have an option to debug modified files anyway.
-			//	This program saves new files without BOM. It seems VS Code too. VS saves with BOM (maybe depends on its settings).
-			//	CONSIDER: use ParseText overload with SourceText, for which use StreamReader that detects BOM. Not tested.
-			var encoding = Encoding.Default;
-			
-			trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, encoding) as CSharpSyntaxTree;
-			
-			//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), debuggers, etc.
-			//	Our PrintServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
-		}
+		var trees = CompilerUtil.CreateSyntaxTrees(_meta);
 		//p1.Next('t');
 		
 		string asmName = _meta.Name;
@@ -252,7 +237,6 @@ partial class Compiler {
 			//create assembly file
 			//p1.Next();
 			gSave:
-#if true
 			var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, Api.CREATE_ALWAYS);
 			if (hf.Is0) {
 				var ec = lastError.code;
@@ -261,22 +245,7 @@ partial class Compiler {
 			}
 			var b = asmStream.GetBuffer();
 			
-			//prevent AV full dll scan when loading using LoadFromStream (now not used). Will load bytes, unxor and load assembly from stream. Will fully scan once, when loading assembly.
-			//if (_meta.Role == MCRole.editorExtension) for (int i = 0, n = (int)asmStream.Length; i < n; i++) b[i] ^= 1;
-			
 			using (hf) if (!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
-#else //same speed, but I like code without exceptions
-				try {
-						using var fileStream = File.Create(outFile, (int)asmStream.Length);
-						asmStream.Position = 0;
-						asmStream.CopyTo(fileStream);
-					}
-					catch(IOException e1) when((e1.HResult & 0xffff) == Api.ERROR_SHARING_VIOLATION) {
-						if(!_RenameLockedFile(outFile)) throw;
-						goto gSave;
-					}
-				}
-#endif
 			//saving would be fast, but with AV can take half of time.
 			//	With WD now fast, but used to be slow. Now on save WD scans async, and on load scans only if still not scanned, eg if loading soon after saving.
 			//	With Avast now the same as with WD.
@@ -360,13 +329,14 @@ partial class Compiler {
 		//	if (v.AttributeClass.Name == "DefaultCharSetAttribute") { needDefaultCharset = false; break; }
 		//}
 		bool needTargetFramework = false, needAssemblyTitle = false;
-		if (_meta.Role is MCRole.exeProgram or MCRole.classLibrary) {
-			needTargetFramework = needAssemblyTitle = true;
+		if (_meta.Role is MCRole.exeProgram or MCRole.classLibrary or MCRole.miniProgram) {
+			needTargetFramework = true; //for AppContext.TargetFrameworkName, else it will return null
+			needAssemblyTitle = _meta.Role is MCRole.exeProgram or MCRole.classLibrary; //displayed in various system UI as program description (else empty)
 			foreach (var v in _compilation.Assembly.GetAttributes()) {
 				//print.it(v.AttributeClass.Name);
 				switch (v.AttributeClass.Name) {
-				case "TargetFrameworkAttribute": needTargetFramework = false; break; //need for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
-				case "AssemblyTitleAttribute": needAssemblyTitle = false; break; //displayed in various system UI as program description (else empty)
+				case "TargetFrameworkAttribute": needTargetFramework = false; break;
+				case "AssemblyTitleAttribute": needAssemblyTitle = false; break;
 				}
 			}
 		}
@@ -418,7 +388,7 @@ partial class Compiler {
 			var fm = _meta.MainFile.f;
 			sb.AppendLine($"[assembly: Au.Types.PathInWorkspace(@\"{fm.ItemPath}\", @\"{fm.FilePath}\")]");
 			if (_meta.Role == MCRole.exeProgram) {
-				sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(); }}");
+				sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(auCompiler: true); }}");
 			}
 			
 			string code = sb.ToString(); //print.it(code);
@@ -446,15 +416,12 @@ partial class Compiler {
 		void _Project(MetaComments m) {
 			if (m != _meta) if (!(noDup ??= new()).Add(m.MainFile.f)) return; //skip duplicates
 			
-			var ndir = App.Model.NugetDirectoryBS;
-			
-			//managed dlls, except nuget
+			//managed dlls, except com and nuget
 			{
 				var refs = m.References.Refs;
 				for (int k = m.References.DefaultRefCount; k < refs.Count; k++) {
-					if (refs[k].Properties.EmbedInteropTypes) continue;
+					if (refs[k].Properties.EmbedInteropTypes || MetaReferences.IsNuget(refs[k])) continue; //com or nuget
 					var path = refs[k].FilePath;
-					if (path.Starts(ndir, true)) continue;
 					_Add(ref dr, pathname.getName(path), path);
 					
 					//add managed dlls used by that dll but not specified in meta
@@ -480,10 +447,10 @@ partial class Compiler {
 			
 			//managed and native dlls from nuget. If exeProgram, also non-dll files.
 			if (m.NugetXmlRoot is XElement xn) {
-				foreach (var package in m.NugetPackages) {
+				foreach (var (package, _) in m.NugetPackages) {
 					var xp = xn.Elem("package", "path", package, true);
 					if (xp != null) {
-						var dir = ndir + pathname.getDirectory(package);
+						var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(package);
 						if (xp.Attr(out int format, "format")) {
 							
 							foreach (var f in xp.Elements()) {
@@ -647,7 +614,7 @@ partial class Compiler {
 	
 	static string _GetDefaultTPA() {
 		if (s_sDefTPA == null) {
-			var s = _Resources.LoadNativeResourceUtf8String_(220, 1);
+			var s = _NativeResources.LoadNativeResourceUtf8String_(220, 1);
 			int i = s.LastIndexOf("|Au|") + 3; //remove Au.Controls etc
 			s_sDefTPA = s[..i];
 		}
@@ -657,128 +624,7 @@ partial class Compiler {
 	
 	List<ResourceDescription> _CreateManagedResources(string asmName, CSharpSyntaxTree[] trees) {
 		List<ResourceDescription> R = null;
-		ResourceWriter rw = null;
-		MemoryStream stream = null;
-		FileNode curFile = null;
-		
-		try {
-			var a = _meta.Resources;
-			if (!a.NE_()) {
-				R = new();
-				foreach (var v in a) {
-					//if (v.f == null) { // /resources //rejected
-					//	_End();
-					//	resourcesName = v.s + ".resources";
-					//} else
-					
-					//if has suffix /path, make resource name = path relative to pathRoot, like "subfolder/filename.ext". Else "filename.ext".
-					bool usePath = false;
-					FileNode pathRoot = null;
-					string resType = v.s;
-					if (resType != null) {
-						if (usePath = resType == "path") resType = null;
-						else if (usePath = resType.Ends(" /path")) resType = resType[..^6];
-						if (usePath) {
-							curFile = v.f;
-							pathRoot = _meta.MainFile.f.Parent;
-							if (!v.f.IsDescendantOf(pathRoot)) throw new ArgumentException("/path cannot be used if the file isn't in this folder");
-							if (resType == "strings") throw new ArgumentException("/path cannot be used with /strings");
-						}
-					}
-					
-					if (v.f.IsFolder) {
-						foreach (var des in v.f.Descendants()) if (!des.IsFolder) _Add(des, resType, pathRoot ?? v.f);
-					} else {
-						_Add(v.f, resType, pathRoot);
-					}
-				}
-				curFile = null;
-				
-				void _Add(FileNode f, string resType, FileNode folder = null) {
-					curFile = f;
-					string name = f.Name, path = f.FilePath;
-					if (folder != null) for (var pa = f.Parent; pa != folder; pa = pa.Parent) name = pa.Name + "/" + name;
-					//print.it(f, resType, folder, name, path);
-					if (resType == "embedded") {
-						R.Add(new ResourceDescription(name, () => filesystem.loadStream(path), true));
-					} else {
-						name = name.Lower(); //else pack URI fails; ResourceUtil can find any.
-						rw ??= new(stream = new());
-						switch (resType) {
-						case null:
-							//rw.AddResource(name, File.OpenRead(path), closeAfterWrite: true); //no, would not close on error
-							rw.AddResource(name, new MemoryStream(filesystem.loadBytes(path)));
-							break;
-						case "byte[]":
-							rw.AddResource(name, filesystem.loadBytes(path));
-							break;
-						case "string":
-							rw.AddResource(name, filesystem.loadText(path));
-							break;
-						case "strings":
-							var csv = csvTable.load(path);
-							if (csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
-							foreach (var row in csv.Rows) rw.AddResource(row[0], row[1]);
-							break;
-						default: throw new ArgumentException("error in meta: Incorrect /suffix");
-						}
-					}
-					//documented in DProperties: This program does not URL-encode resource names.
-					//	VS encodes space -> %20, UTF8 -> %xx, ^ -> %5e, etc. But not like .NET URL-encoding functions do.
-					//	I did not find documentation about it.
-					//	If not encoded, pack URI will not work.
-					//	But if encoded, ResourceUtil would not work. Or should it URL-encode the parameter?
-				}
-			}
-			
-			//add XAML icons from strings like "*name #color"
-			if (_meta.Role != MCRole.editorExtension && 0 == (_meta.MiscFlags & 1)) {
-				HashSet<string> hs = null;
-				for (int i = 0; i < trees.Length; i++) {
-					List<LiteralExpressionSyntax> ai = null;
-					var tree = trees[i];
-					var root = tree.GetCompilationUnitRoot();
-					foreach (var v in root.DescendantNodes()) {
-						if (v is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression)
-							&& les.Token.Value is string s && s.Length >= 10 && s[0] == '*') {
-							int j = s.IndexOf(' '); if (j > 0) s = s[..j]; //remove color
-							if (DIcons.TryGetIconFromBigDB(s, out var xaml)) {
-								s = s.Lower();
-								if (!(hs ??= new()).Add(s)) continue;
-								R ??= new();
-								rw ??= new(stream = new());
-								rw.AddResource(s, xaml);
-								if (_meta.Role == MCRole.classLibrary) (ai ??= new()).Add(les);
-							}
-						}
-					}
-					if (ai != null) { //in library need "*<asmName>*name #color"
-						var r2 = root.ReplaceNodes(ai, (n, _) => {
-							var s = n.Token.Value as string;
-							var tok = SyntaxFactory.Literal($"*<{asmName}>{s.Lower()}");
-							return SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, tok);
-						});
-						trees[i] = tree.WithRootAndOptions(r2, tree.Options) as CSharpSyntaxTree;
-					}
-				}
-			}
-			
-			if (rw != null) {
-				rw.Generate();
-				var st = stream; stream = null; //to create new lambda delegate
-				st.Position = 0;
-				R.Add(new ResourceDescription(asmName + ".g.resources", () => st, true));
-				rw = null;
-			}
-			
-			if (!R.NE_()) return R;
-		}
-		catch (Exception e) {
-			rw?.Dispose();
-			_ResourceException(e, curFile);
-		}
-		//note: don't Close/Dispose rw. It closes stream. Compiler will close it. There is no other disposable data in rw.
-		
+		if (CompilerUtil.CreateManagedResources(_meta, asmName, trees, _ResourceException, o => { (R ??= new()).Add(new ResourceDescription(o.name, () => o.stream, true)); })) return R;
 		return null;
 	}
 	
@@ -862,9 +708,9 @@ partial class Compiler {
 			i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 			b[i] = 0;
 			
-			var res = new _Resources();
+			var res = new _NativeResources();
 			if (_meta.IconFile != null) {
-				_Resources.ICONCONTEXT ic = default;
+				_NativeResources.ICONCONTEXT ic = default;
 				if (_meta.IconFile.IsFolder) {
 					foreach (var des in _meta.IconFile.Descendants()) {
 						if (des.IsFolder) continue;
@@ -879,7 +725,7 @@ partial class Compiler {
 					res.AddIcon(_meta.IconFile.FilePath, ref ic);
 				}
 			} else if (_GetMainFileIcon(out var stream)) {
-				_Resources.ICONCONTEXT ic = default;
+				_NativeResources.ICONCONTEXT ic = default;
 				res.AddIcon(stream.ToArray(), ref ic);
 			}
 			res.AddVersion(outFile);
@@ -923,9 +769,10 @@ partial class Compiler {
 		asmStream.Position = 0;
 		
 		//note: need Au.dll and AuCpp.dll even if not used in code. It contains script.AppModuleInit_.
-		_CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", _meta.OutputPath + @"\Au.dll");
-		if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
-		if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", _meta.OutputPath + @"\Au.dll");
+		//note: always need both 64-bit and 32-bit AuCpp.dll, because maybe elm will have to load them into other processes.
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
 		
 		bool usesSqlite = _UsesSqlite(asmStream);
 		
@@ -949,7 +796,7 @@ partial class Compiler {
 		//copy managed dlls, including from nuget
 		if (_dr != null) {
 			foreach (var v in _dr) {
-				_CopyFileIfNeed(v.Value, _meta.OutputPath + "\\" + v.Key);
+				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath + "\\" + v.Key);
 				
 				if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) {
 					using var fs = filesystem.loadStream(v.Value);
@@ -961,89 +808,24 @@ partial class Compiler {
 		//copy other files from nuget
 		if (_dn != null) {
 			foreach (var v in _dn) {
-				_CopyFileIfNeed(v.Value, _meta.OutputPath + v.Key);
+				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath + v.Key);
 			}
-		}
-		
-		//copy files specified in meta file
-		HashSet<FileNode> noDup = null;
-		_OtherFilesOfProject(_meta);
-		
-		void _OtherFilesOfProject(MetaComments m) {
-			if (m != _meta) if (!(noDup ??= new()).Add(m.MainFile.f)) return; //skip duplicates
-			
-			if (m.OtherFiles != null) {
-				foreach (var v in m.OtherFiles) {
-					var dest = _meta.OutputPath;
-					if (!v.s.NE()) dest = pathname.combine(dest, v.s, s2CanBeFullPath: true);
-					
-					_CopyOther(v.f, dest);
-					
-					static void _CopyOther(FileNode f, string dest) {
-						if (f.IsFolder) {
-							if (!f.Name.Ends('-')) dest = dest + "\\" + f.Name;
-							foreach (var c in f.Children()) _CopyOther(c, dest);
-						} else {
-							var path = f.FilePath;
-							_CopyFileIfNeed(path, dest + "\\" + pathname.getName(path));
-						}
-					}
-				}
-			}
-			
-			if (m.ProjectReferences is { } pr)
-				foreach (var v in pr) _OtherFilesOfProject(v.m);
 		}
 		
 		//print.it(usesSqlite);
 		if (usesSqlite) {
-			if (need64) _CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", _meta.OutputPath + @"\64\sqlite3.dll");
-			if (need32) _CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", _meta.OutputPath + @"\32\sqlite3.dll");
+			if (need64) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", _meta.OutputPath + @"\64\sqlite3.dll");
+			if (need32) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", _meta.OutputPath + @"\32\sqlite3.dll");
 		}
-	}
-	
-	static void _CopyFileIfNeed(string sFrom, string sTo) {
-		//print.it(sFrom);
-		if (filesystem.getProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
-			&& filesystem.getProperties(sFrom, out var p1, FAFlags.UseRawPath)
-			&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
-			&& p2.Size == p1.Size) return;
-		filesystem.copy(sFrom, sTo, FIfExists.Delete);
+		
+		//copy meta 'file' files
+		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _meta.OutputPath);
 	}
 	
 	bool _RunPrePostBuildScript(bool post, string outFile) {
-		var x = post ? _meta.PostBuild : _meta.PreBuild;
-		string[] args;
-		if (x.s == null) {
-			args = new string[] { _OutputFile() };
-		} else {
-			args = StringUtil.CommandLineToArray(x.s);
-			
-			//replace variables like $(variable)
-			var f = _meta.MainFile.f;
-			s_rx1 ??= new regexp(@"\$\((\w+)\)");
-			for (int i = 0; i < args.Length; i++)
-				args[i] = s_rx1.Replace(args[i], k => k[1].Value switch {
-					"outputFile" => _OutputFile(),
-					"outputPath" => _meta.OutputPath,
-					"source" => f.ItemPath,
-					"role" => _meta.Role.ToString(),
-					"optimize" => _meta.Optimize ? "true" : "false",
-					"bit32" => _meta.Bit32 ? "true" : "false",
-					_ => throw new ArgumentException("error in meta: unknown variable " + k.Value)
-				});
-		}
-		
-		string _OutputFile() => _meta.Role == MCRole.exeProgram ? DllNameToAppHostExeName(outFile, _meta.Bit32) : outFile;
-		
-		bool ok = Compile(CCReason.Run, out var r, x.f);
-		if (r.role != MCRole.editorExtension) throw new ArgumentException($"'{x.f.Name}' role must be editorExtension");
-		if (!ok) return false;
-		
-		EditorExtension.Run_(r.file, args, handleExceptions: false);
-		return true;
+		if (_meta.Role == MCRole.exeProgram) outFile = DllNameToAppHostExeName(outFile, _meta.Bit32);
+		return CompilerUtil.RunPrePostBuildScript(_meta, post, outFile, false);
 	}
-	static regexp s_rx1;
 	
 	/// <summary>
 	/// Replaces ".dll" with "-32.exe" if bit32, else with ".exe".

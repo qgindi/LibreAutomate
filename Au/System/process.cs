@@ -29,16 +29,16 @@ namespace Au {
 		public static string getName(int processId, bool fullPath = false, bool noSlowAPI = false) {
 			if (processId == 0) return null;
 			string R = null;
-
+			
 			//var t = perf.mcs;
 			//if(s_time != 0) print.it(t - s_time);
 			//s_time = t;
-
+			
 			using var ph = Handle_.OpenProcess(processId);
 			if (!ph.Is0) {
 				//In non-admin process fails if the process is of another user session.
 				//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
-
+				
 				//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
 				if (_QueryFullProcessImageName(ph, !fullPath, out var s)) {
 					R = s;
@@ -60,14 +60,14 @@ namespace Au {
 				}
 				//TEST: NtQueryInformationProcess, like in getCommandLine.
 			}
-
+			
 			return R;
-
+			
 			//Would be good to cache process names here. But process id can be reused quickly. Use GetNameCached_ instead.
 			//	tested: a process id is reused after creating ~100 processes (and waiting until exits). It takes ~2 s.
 			//	The window finder is optimized to call this once for each process and not for each window.
 		}
-
+		
 		/// <summary>
 		/// Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
 		/// </summary>
@@ -82,22 +82,22 @@ namespace Au {
 			}
 			return R;
 		}
-
+		
 		class _LastWndProps {
 			wnd _w;
 			long _time;
 			internal string ProgramName, ProgramPath;
-
+			
 			internal void Begin(wnd w) {
 				var t = Api.GetTickCount64();
 				if (w != _w || t - _time > 300) { _w = w; ProgramName = ProgramPath = null; }
 				_time = t;
 			}
-
+			
 			[ThreadStatic] static _LastWndProps _ofThread;
 			internal static _LastWndProps OfThread => _ofThread ??= new _LastWndProps();
 		}
-
+		
 		[SkipLocalsInit]
 		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s) {
 			s = null;
@@ -111,7 +111,7 @@ namespace Au {
 				if (lastError.code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
 			}
 		}
-
+		
 #if USE_WTS //simple, safe, but ~2 times slower
 		struct _AllProcesses :IDisposable
 		{
@@ -138,7 +138,7 @@ namespace Au {
 			readonly _ProcessInfo* _p;
 			readonly int _count;
 			static int s_bufferSize = 500_000;
-
+			
 			public AllProcesses_(bool ofThisSession) {
 				int sessionId = ofThisSession ? thisProcessSessionId : 0;
 				Api.SYSTEM_PROCESS_INFORMATION* b = null;
@@ -150,7 +150,7 @@ namespace Au {
 						if (status == 0) { s_bufferSize = na + 100_000; break; }
 						if (status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
 					}
-
+					
 					int nProcesses = 0, nbNames = 0;
 					for (var p = b; ; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
 						if (!ofThisSession || p->SessionId == sessionId) {
@@ -182,28 +182,28 @@ namespace Au {
 				}
 				finally { MemoryUtil.Free(b); }
 			}
-
+			
 			public void Dispose() {
 				MemoryUtil.Free(_p);
 			}
-
+			
 			public int Count => _count;
-
+			
 			//public ProcessInfo this[int i] => new(ProcessName(i), _p[i].processID, _p[i].sessionID); //rejected, could be used where shouldn't, making code slower etc
 			public ProcessInfo Info(int i) => new(Name(i), _p[i].processID, _p[i].sessionID);
-
+			
 			public int Id(int i) => (uint)i < _count ? _p[i].processID : throw new IndexOutOfRangeException();
-
+			
 			public int SessionId(int i) => (uint)i < _count ? _p[i].sessionID : throw new IndexOutOfRangeException();
-
+			
 			public string Name(int i, bool cannotOpen = false) => (uint)i < _count ? _p[i].GetName(_p, cannotOpen) : throw new IndexOutOfRangeException();
-
+			
 			struct _ProcessInfo {
 				public int sessionID;
 				public int processID;
 				public int nameOffset;
 				public int nameLen;
-
+				
 				public string GetName(void* p, bool cannotOpen) {
 					if (nameOffset == 0) {
 						if (processID == 0) return "Idle";
@@ -221,7 +221,7 @@ namespace Au {
 			}
 		}
 #endif
-
+		
 		/// <summary>
 		/// Gets basic info of all processes: name, id, session id.
 		/// </summary>
@@ -234,7 +234,7 @@ namespace Au {
 				return a;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets process ids of all processes of the specified program.
 		/// </summary>
@@ -245,6 +245,7 @@ namespace Au {
 		/// </param>
 		/// <param name="fullPath">
 		/// <i>processName</i> is full path.
+		/// If null, calls <see cref="pathname.isFullPathExpand"/>.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
 		/// <param name="ofThisSession">Get processes only of this user session.</param>
@@ -252,31 +253,40 @@ namespace Au {
 		/// - <i>processName</i> is <c>""</c> or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
-		public static int[] getProcessIds([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
-			if (processName.NE()) throw new ArgumentException();
+		public static int[] getProcessIds([ParamString(PSFormat.Wildex)] string processName, bool? fullPath = false, bool ofThisSession = false) {
 			List<int> a = null;
-			GetProcessesByName_(ref a, processName, fullPath, ofThisSession);
+			bool fp = _NameOrPath(ref processName, fullPath);
+			GetProcessesByName_(ref a, processName, fp, ofThisSession);
 			return a?.ToArray() ?? Array.Empty<int>();
 		}
-
+		
+		static bool _NameOrPath(ref string processName, bool? fullPath) {
+			if (processName.NE()) throw new ArgumentException();
+			return fullPath switch {
+				false => false,
+				true => pathname.isFullPathExpand(ref processName, strict: false) | true,
+				_ => pathname.isFullPathExpand(ref processName, strict: false)
+			};
+		}
+		
 		/// <summary>
 		/// Gets process id of the first found process of the specified program.
 		/// </summary>
 		/// <returns>0 if not found.</returns>
 		/// <inheritdoc cref="getProcessIds"/>
-		public static int getProcessId([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
-			if (processName.NE()) throw new ArgumentException();
+		public static int getProcessId([ParamString(PSFormat.Wildex)] string processName, bool? fullPath = false, bool ofThisSession = false) {
 			List<int> a = null;
-			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);
+			bool fp = _NameOrPath(ref processName, fullPath);
+			return GetProcessesByName_(ref a, processName, fp, ofThisSession, true);
 		}
-
+		
 		/// <summary>
 		/// Returns true if a process of the specified program is running.
 		/// </summary>
 		/// <inheritdoc cref="getProcessIds"/>
-		public static bool exists([ParamString(PSFormat.Wildex)] string processName, bool fullPath = false, bool ofThisSession = false)
+		public static bool exists([ParamString(PSFormat.Wildex)] string processName, bool? fullPath = false, bool ofThisSession = false)
 			=> 0 != getProcessId(processName, fullPath, ofThisSession);
-
+		
 		internal static int GetProcessesByName_(ref List<int> a, wildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false) {
 			a?.Clear();
 			using (var p = new AllProcesses_(ofThisSession)) {
@@ -290,21 +300,20 @@ namespace Au {
 					}
 				}
 			}
-
 			return 0;
 		}
-
+		
 		static string _GetFileName(char* s, int len) {
 			if (s == null) return null;
 			char* ss = s + len;
 			for (; ss > s; ss--) if (ss[-1] == '\\' || ss[-1] == '/') break;
 			return new string(ss, 0, len - (int)(ss - s));
 		}
-
+		
 		static string _GetFileName(string s) {
 			fixed (char* p = s) return _GetFileName(p, s.Length);
 		}
-
+		
 		/// <summary>
 		/// Gets version info of process executable file.
 		/// </summary>
@@ -317,7 +326,7 @@ namespace Au {
 			}
 			return null;
 		}
-
+		
 		/// <summary>
 		/// Gets description of process executable file.
 		/// </summary>
@@ -327,21 +336,21 @@ namespace Au {
 		/// Calls <see cref="getVersionInfo"/> and <see cref="FileVersionInfo.FileDescription"/>.
 		/// </remarks>
 		public static string getDescription(int processId) => getVersionInfo(processId)?.FileDescription;
-
+		
 		/// <summary>
 		/// Gets process id from handle (API <msdn>GetProcessId</msdn>).
 		/// </summary>
 		/// <returns>0 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processHandle">Process handle.</param>
 		public static int processIdFromHandle(IntPtr processHandle) => Api.GetProcessId(processHandle); //fast
-
+		
 		//public static Process processObjectFromHandle(IntPtr processHandle)
 		//{
 		//	int pid = GetProcessId(processHandle);
 		//	if(pid == 0) return null;
 		//	return Process.GetProcessById(pid); //slow, makes much garbage, at first gets all processes just to throw exception if pid not found...
 		//}
-
+		
 		/// <summary>
 		/// Gets user session id of a process (API <msdn>ProcessIdToSessionId</msdn>).
 		/// </summary>
@@ -351,7 +360,7 @@ namespace Au {
 			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
 			return R;
 		}
-
+		
 		/// <summary>
 		/// Gets process creation and execution times (API <msdn>GetProcessTimes</msdn>).
 		/// </summary>
@@ -366,7 +375,7 @@ namespace Au {
 			executed = tk + tu;
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Returns true if the process is 32-bit, false if 64-bit.
 		/// Also returns false if failed. Supports <see cref="lastError"/>.
@@ -382,10 +391,10 @@ namespace Au {
 			}
 			lastError.clear();
 			return is32bit;
-
+			
 			//info: don't use Process.GetProcessById, it does not have a desiredAccess parameter and fails with higher IL processes.
 		}
-
+		
 		/// <summary>
 		/// Returns true if the process is 32-bit, false if 64-bit.
 		/// Also returns false if failed. Supports <see cref="lastError"/>.
@@ -398,7 +407,7 @@ namespace Au {
 			lastError.clear();
 			return is32bit;
 		}
-
+		
 		/// <summary>
 		/// Gets the command line string used to start the specified process.
 		/// </summary>
@@ -426,10 +435,10 @@ namespace Au {
 				}
 			}
 			return null;
-
+			
 			//speed: ~25 mcs cold. WMI Win32_Process ~50 ms (2000 times slower).
 		}
-
+		
 		/// <summary>
 		/// Terminates (ends) the specified process.
 		/// </summary>
@@ -464,13 +473,13 @@ namespace Au {
 			return false;
 			//note: TerminateProcess and WTSTerminateProcess are async. Tested programs ended after 3 - 150 ms, depending on program.
 		}
-
+		
 		/// <summary>
 		/// Terminates (ends) all processes of the specified program or programs.
 		/// </summary>
 		/// <returns>The number of successfully terminated processes.</returns>
 		/// <param name="processName">
-		/// Process executable file name, like <c>"notepad.exe"</c>.
+		/// Process executable file name (like <c>"notepad.exe"</c>) or full path.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
@@ -481,12 +490,12 @@ namespace Au {
 		/// </exception>
 		public static int terminate(string processName, bool allSessions = false, int exitCode = 0) {
 			int n = 0;
-			foreach (int pid in getProcessIds(processName, ofThisSession: !allSessions)) {
+			foreach (int pid in getProcessIds(processName, fullPath: null, ofThisSession: !allSessions)) {
 				if (terminate(pid, exitCode)) n++;
 			}
 			return n;
 		}
-
+		
 		/// <summary>
 		/// Suspends or resumes the specified process.
 		/// </summary>
@@ -505,14 +514,14 @@ namespace Au {
 			}
 			return false;
 		}
-
+		
 		/// <summary>
 		/// Suspends or resumes all processes of the specified program or programs.
 		/// </summary>
 		/// <returns>The number of successfully suspended/resumed processes.</returns>
 		/// <param name="suspend">true suspend, false resume.</param>
 		/// <param name="processName">
-		/// Process executable file name, like <c>"notepad.exe"</c>.
+		/// Process executable file name (like <c>"notepad.exe"</c>) or full path.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
@@ -525,12 +534,12 @@ namespace Au {
 		/// </remarks>
 		public static int suspend(bool suspend, string processName, bool allSessions = false) {
 			int n = 0;
-			foreach (int pid in getProcessIds(processName, ofThisSession: !allSessions)) {
+			foreach (int pid in getProcessIds(processName, fullPath: null, ofThisSession: !allSessions)) {
 				if (process.suspend(suspend, pid)) n++;
 			}
 			return n;
 		}
-
+		
 		/// <summary>
 		/// Waits until the process ends.
 		/// </summary>
@@ -554,7 +563,7 @@ namespace Au {
 			Api.GetExitCodeProcess(h, out exitCode);
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Provides process started/ended triggers in foreach loop. See examples.
 		/// </summary>
@@ -628,66 +637,51 @@ namespace Au {
 				//Debug_.MemoryPrint_();
 			}
 		}
-
+		
 		class _PiComparer : IEqualityComparer<ProcessInfo> {
 			//public bool Equals(ProcessInfo x, ProcessInfo y) => x.Id == y.Id;
 			public bool Equals(ProcessInfo x, ProcessInfo y) => x.Id == y.Id && x.Name == y.Name;
 			public int GetHashCode(ProcessInfo obj) => obj.Id;
 		}
-
+		
 		#region this process
-
+		
 		/// <summary>
 		/// Gets current process id.
 		/// See API <msdn>GetCurrentProcessId</msdn>.
 		/// </summary>
 		public static int thisProcessId => Api.GetCurrentProcessId();
-
+		
 		/// <summary>
 		/// Returns current process handle.
 		/// See API <msdn>GetCurrentProcess</msdn>.
 		/// Don't need to close the handle.
 		/// </summary>
 		public static IntPtr thisProcessHandle => Api.GetCurrentProcess();
-
+		
 		//rejected. Too simple and rare.
 		///// <summary>
 		///// Gets native module handle of the program file of this process.
 		///// </summary>
 		//public static IntPtr thisExeModuleHandle => Api.GetModuleHandle(null);
-
+		
 		/// <summary>
-		/// Gets full path of the program file of this process (API <msdn>GetModuleFileName</msdn>).
+		/// Gets full path of the program file of this process.
 		/// </summary>
 		[SkipLocalsInit]
-		public static unsafe string thisExePath {
-			get {
-				if (s_exePath == null) {
-					var a = stackalloc char[500];
-					int n = Api.GetModuleFileName(default, a, 500);
-					s_exePath = new string(a, 0, n);
-					//documented and tested: can be C:\SHORT~1\NAME~1.exe or \\?\C:\long path\name.exe.
-					//tested: AppContext.BaseDirectory gets raw path, like above examples. Used by folders.ThisApp.
-					//tested: CreateProcessW supports long paths in lpApplicationName, but my tested apps then crash.
-					//tested: ShellExecuteW does not support long paths.
-					//tested: Windows Explorer cannot launch exe if long path.
-					//tested: When launched with path containing .\, ..\ or /, here we get normalized path.
-				}
-				return s_exePath;
-			}
-		}
-		static string s_exePath, s_exeName;
-
+		public static unsafe string thisExePath => Environment.ProcessPath;
+		
 		/// <summary>
 		/// Gets file name of the program file of this process, like <c>"name.exe"</c>.
 		/// </summary>
 		public static string thisExeName => s_exeName ??= pathname.getName(thisExePath);
-
+		static string s_exeName;
+		
 		/// <summary>
 		/// Gets user session id of this process.
 		/// </summary>
 		public static int thisProcessSessionId => getSessionId(Api.GetCurrentProcessId());
-
+		
 		/// <summary>
 		/// Gets or sets whether <see cref="CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="CultureInfo.InvariantCulture"/>.
 		/// </summary>
@@ -713,7 +707,7 @@ namespace Au {
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
 		/// </summary>
@@ -724,14 +718,14 @@ namespace Au {
 				Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
 			});
 		}
-
+		
 		//internal static (long WorkingSet, long PageFile) ThisProcessGetMemoryInfo_()
 		//{
 		//	Api.PROCESS_MEMORY_COUNTERS m = default; m.cb = sizeof(Api.PROCESS_MEMORY_COUNTERS);
 		//	Api.GetProcessMemoryInfo(ProcessHandle, ref m, m.cb);
 		//	return ((long)m.WorkingSetSize, (long)m.PagefileUsage);
 		//}
-
+		
 		/// <summary>
 		/// Before this process exits, either normally or on unhandled exception.
 		/// </summary>
@@ -758,7 +752,7 @@ namespace Au {
 		}
 		static Action<Exception> _eventExit;
 		static bool _haveEventExit;
-
+		
 		static void _ThisProcessExit(object sender, EventArgs ea) //sender: AppDomain on process exit, null on unhandled exception
 		{
 			Exception e;
@@ -771,7 +765,7 @@ namespace Au {
 			var k = _eventExit;
 			if (k != null) try { k(e); } catch { }
 		}
-
+		
 		/// <summary>
 		/// Calls and removes all <see cref="thisProcessExit"/> event handlers.
 		/// </summary>
@@ -782,11 +776,11 @@ namespace Au {
 			var k = _eventExit;
 			if (k != null) try { _eventExit = null; k(null); } catch { }
 		}
-
+		
 		#endregion
-
+		
 		#region this thread
-
+		
 		/// <summary>
 		/// Gets native thread id of this thread (API <msdn>GetCurrentThreadId</msdn>).
 		/// </summary>
@@ -796,12 +790,12 @@ namespace Au {
 		/// <seealso cref="wnd.ThreadId"/>
 		public static int thisThreadId => Api.GetCurrentThreadId();
 		//speed: fast, but several times slower than Environment.CurrentManagedThreadId. Caching in a ThreadStatic variable makes even slower.
-
+		
 		/// <summary>
 		/// Returns native thread handle of this thread (API <msdn>GetCurrentThread</msdn>).
 		/// </summary>
 		public static IntPtr thisThreadHandle => Api.GetCurrentThread();
-
+		
 		/// <summary>
 		/// Returns true if this thread has a .NET message loop (winforms or WPF).
 		/// </summary>
@@ -809,20 +803,20 @@ namespace Au {
 		/// <seealso cref="wnd.getwnd.threadWindows"/>
 		public static bool thisThreadHasMessageLoop(out bool isWPF) {
 			//info: we don't call .NET functions directly to avoid loading assemblies.
-
+			
 			isWPF = false;
 			int f = AssemblyUtil_.IsLoadedWinformsWpf();
 			if (0 != (f & 1) && _HML_Forms()) return true;
 			if (0 != (f & 2) && _HML_Wpf()) return isWPF = true;
 			return false;
 		}
-
+		
 		///
 		public static bool thisThreadHasMessageLoop() => thisThreadHasMessageLoop(out _);
-
+		
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static bool _HML_Forms() => System.Windows.Forms.Application.MessageLoop;
-
+		
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static bool _HML_Wpf() {
 			if (SynchronizationContext.Current is System.Windows.Threading.DispatcherSynchronizationContext) {
@@ -837,7 +831,7 @@ namespace Au {
 		}
 		//static bool _HML_Wpf() => System.Windows.Threading.Dispatcher.FromThread(Thread.CurrentThread) != null; //no. Not null after a loop ends or even after XamlReader.Parse.
 		//static bool _HML_Wpf() => SynchronizationContext.Current is System.Windows.Threading.DispatcherSynchronizationContext; //no. True eg in Dispatcher.Invoke callback.
-
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void ThisThreadSetComApartment_(ApartmentState state) {
 			var t = Thread.CurrentThread;
@@ -846,13 +840,13 @@ namespace Au {
 			//CONSIDER: use OleInitialize instead of t.TrySetApartmentState(state).
 			//	Somehow RegisterDragDrop in UacDragDrop fails if ThisThreadSetComApartment_.
 			//	But RDD in SciCode works with this.
-
+			
 			//This is undocumented, but works if we set ApartmentState.Unknown at first.
 			//With [STAThread] slower, and the process initially used to have +2 threads.
 			//Speed when called to set STA at startup: 1.7 ms. If apphost calls OleInitialize, 1.5 ms.
 			//tested: OleUninitialize in apphost does not make GetApartmentState return MTA.
 		}
-
+		
 		#endregion
 	}
 }
@@ -863,7 +857,7 @@ namespace Au.Types {
 	/// </summary>
 	public record struct ProcessInfo(string Name, int Id, int SessionId);
 	//use record to auto-implement ==, eg for code like var a=process.allProcesses(); 5.s(); print.it(process.allProcesses().Except(a));
-
+	
 	/// <summary>
 	/// Contains process trigger info retrieved by <see cref="process.triggers"/>.
 	/// </summary>

@@ -231,6 +231,7 @@ partial class CiCompletion {
 				if (r1 != null) {
 					canGroup = true;
 					//is it member access?
+					if (node is not InitializerExpressionSyntax && position <= tok.SpanStart && tok.GetPreviousToken() is var t1 && t1.Kind() is SyntaxKind.CommaToken or SyntaxKind.OpenBraceToken && t1.Parent is InitializerExpressionSyntax ies1) node = ies1;
 					if (node is InitializerExpressionSyntax) {
 						//if only properties and/or fields, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
 						isDot = !r1.ItemsList.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));

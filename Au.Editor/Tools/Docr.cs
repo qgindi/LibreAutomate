@@ -346,12 +346,12 @@ More info: <help>ocr.find<>.");
 
 Normally you specify OCR engine once in script. If unchecked, will use the previously specified engine, or OcrWin10 if unspecified.");
 		_info.Info(textC, "Find text", @"Text to find in OCR results. Can have prefix:
-• <mono>**r<> - PCRE regular expression. Example: <mono>**r \bwhole words\b<>
+• <mono>**r<> - PCRE regular expression. Example: <mono>@""**r \bwhole words\b""<>
 • <mono>**R<> - .NET regular expression.
 • <mono>**i<> - case-insensitive.
 • <mono>**t<> - case-sensitive (default).
 
-Seperate words with single space.");
+Separate words with single space.");
 		_info.InfoCT(skipC,
 @"0-based index of matching text.
 For example, if 1, finds the second matching text.");
