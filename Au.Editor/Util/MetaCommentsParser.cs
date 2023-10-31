@@ -7,7 +7,7 @@ using Au.Compiler;
 class MetaCommentsParser {
 	FileNode _fn;
 	public string role, ifRunning, uac, bit32,
-		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,
+		optimize, warningLevel, noWarnings, nullable, testInternal, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, sign, xmlDoc, miscFlags, noRef;
 	List<string> _pr, _r, _com, _nuget, _c, _resource, _file;
 
@@ -41,6 +41,7 @@ class MetaCommentsParser {
 		case "optimize": optimize = value; break;
 		case "warningLevel": warningLevel = value; break;
 		case "noWarnings": noWarnings = value; break;
+		case "nullable": nullable = value; break;
 		case "testInternal": testInternal = value; break;
 		case "define": define = value; break;
 		case "preBuild": preBuild = value; break;
@@ -86,6 +87,7 @@ class MetaCommentsParser {
 		_Append("define", define);
 		_Append("warningLevel", warningLevel);
 		_Append("noWarnings", noWarnings);
+		_Append("nullable", nullable);
 		_Append("testInternal", testInternal);
 		_Append("preBuild", preBuild, true);
 		_Append("postBuild", postBuild, true);

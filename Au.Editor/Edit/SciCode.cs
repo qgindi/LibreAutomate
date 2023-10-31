@@ -60,8 +60,8 @@ partial class SciCode : KScintilla {
 		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, sensitive: true, cursorArrow: true);
 		Call(SCI_SETMARGINBACKN, c_marginMarkers, 0xFFFFFF);
 		aaaMarginSetWidth(c_marginMarkers, 13);
-		aaaMarkerDefine(SciCode.c_markerBookmark, Sci.SC_MARK_VERTICALBOOKMARK, 0x8080ff, 0x8080ff);
-		aaaMarkerDefine(SciCode.c_markerBookmarkInactive, Sci.SC_MARK_VERTICALBOOKMARK, 0x8080ff, 0xE0E0ff);
+		aaaMarkerDefine(SciCode.c_markerBookmark, Sci.SC_MARK_VERTICALBOOKMARK, 0x6080ff, 0x6080ff);
+		aaaMarkerDefine(SciCode.c_markerBookmarkInactive, Sci.SC_MARK_VERTICALBOOKMARK, 0x6080ff, 0xD0E0ff);
 		
 		//aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
 		//Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
@@ -264,7 +264,7 @@ partial class SciCode : KScintilla {
 	bool _modified;
 	
 	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
-		if ((markers & 1 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
+		if ((markers & 3 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
 		base.AaOnDeletingLineWithMarkers(line, markers);
 	}
 	

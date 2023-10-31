@@ -74,7 +74,7 @@ unsafe struct ProcessStarter_ {
 	/// <param name="need">Which field to set in <b>Result</b>.</param>
 	/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 	/// <exception cref="AuException">Failed.</exception>
-	internal Result Start(Result.Need need = 0, bool inheritUiaccess = false) {
+	public Result Start(Result.Need need = 0, bool inheritUiaccess = false) {
 		bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
 		if (suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
 		bool ok = StartL(out var pi, inheritUiaccess);
@@ -93,7 +93,7 @@ unsafe struct ProcessStarter_ {
 	/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
 	/// Asserts and fails if this is not admin/system process. Caller should at first call <see cref="uacInfo.isAdmin"/> or <see cref="uacInfo.IntegrityLevel"/>.
 	/// </remarks>
-	internal Result StartUserIL(Result.Need need = 0) {
+	public Result StartUserIL(Result.Need need = 0) {
 		if (s_userToken == null) {
 			Debug.Assert(uacInfo.isAdmin); //else cannot set privilege
 			if (!SecurityUtil.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;

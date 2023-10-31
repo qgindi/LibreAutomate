@@ -112,11 +112,8 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+      <Command>$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
     </PostBuildEvent>
-    <PreLinkEvent>
-      <Command>"$(SolutionDir)Other\Programs\BuildEvents.exe" cpp</Command>
-    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -133,11 +130,8 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+      <Command>$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
     </PostBuildEvent>
-    <PreLinkEvent>
-      <Command>"$(SolutionDir)Other\Programs\BuildEvents.exe" cpp</Command>
-    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -160,7 +154,7 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+      <Command>$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>"$(SolutionDir)Other\Programs\BuildEvents.exe" cpp</Command>
@@ -187,10 +181,11 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+      <Command>$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>"$(SolutionDir)Other\Programs\BuildEvents.exe" cpp</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

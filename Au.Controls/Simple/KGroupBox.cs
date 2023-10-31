@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
+namespace Au.Controls;
+
 /// <summary>
 /// Makes the GroupBox more vivid.
 /// </summary>

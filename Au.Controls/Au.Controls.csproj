@@ -30,6 +30,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Remove="Au.Controls.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\Au\Au.csproj" />
 	</ItemGroup>
 

@@ -1,32 +1,61 @@
+/// Build event script for Au.Editor and Cpp projects.
+
+/*/ role exeProgram; testInternal Au; outputPath C:\code\au\Other\Programs; console true; /*/
 /*/ role exeProgram; testInternal Au; outputPath %folders.ThisApp%\..\Other\Programs; console true; /*/
 
 //.
 script.setup(exception: UExcept.Dialog | UExcept.Print);
 //..
 
+//print.qm2.use = true;
+//print.it(args);
 
-if (args is ["cpp"]) return CppPreLink();
-return EditorPostBuild();
+return args[0] switch {
+	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
+	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\Programs\BuildEvents.exe preBuild $(Configuration)
+	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\Programs\BuildEvents.exe postBuild $(Configuration)
+	_ => 1
+};
 
-/// Pre-link event script of Cpp project.
-/// Exits editor and unloads AuCpp.dll from processes.
-int CppPreLink() {
-	//print.qm2.use = true;
-	//perf.first();
-	var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
-	if (!w.Is0) {
-		w.Close(noWait: true);
-		//perf.next();
-		w.WaitForClosed(-2, waitUntilProcessEnds: true);
-		//perf.next();
-	}
-	Cpp.Cpp_Unload(1);
-	//perf.nw();
+/// Exits editor. Copies AuCpp.dll and unloads the old dll from processes.
+int CppPostBuild() {
+	_ExitEditor();
+	_CopyAuCppDllIfNeed(args[2] != "x64");
 	return 0;
 }
 
-/// Post-build event script of Au.Editor project.
-/// Post-build event in project Properties: "$(SolutionDir)Other\Programs\PostBuild.exe"
+/// Exits editor. If need, copies AuCpp.dll and unloads the old dll from processes.
+int EditorPreBuild() {
+	_ExitEditor();
+	_CopyAuCppDllIfNeed(false);
+	_CopyAuCppDllIfNeed(true);
+	return 0;
+}
+
+void _ExitEditor() {
+	var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
+	if (!w.Is0) {
+		w.Close(noWait: true);
+		w.WaitForClosed(-2, waitUntilProcessEnds: true);
+	}
+}
+
+int _CopyAuCppDllIfNeed(bool bit32) {
+	string src = $@"C:\code\au\Cpp\bin\{args[1]}\{(bit32 ? "Win32" : "x64")}\AuCpp.dll";
+	string dest = $@"C:\code\au\_\{(bit32 ? "32" : "64")}\AuCpp.dll";
+	if (!filesystem.getProperties(src, out var p1)) { print.it("Failed `filesystem.getProperties(src)`"); return 1; }
+	filesystem.getProperties(dest, out var p2);
+	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
+		print.it($"Updating {dest}");
+		if (p2.Size != 0 && !Api.DeleteFile(dest)) {
+			Cpp.Cpp_Unload(1);
+			wait.until(-3, () => filesystem.delete(dest, FDFlags.CanFail) != false);
+		}
+		filesystem.copy(src, dest);
+	}
+	return 0;
+}
+
 /// Creates Au.Editor.exe and Au.Task.exe.
 /// Uses 64\Au.AppHost.exe as template. Adds resources.
 /// Deletes Au.Editor.*.json files.

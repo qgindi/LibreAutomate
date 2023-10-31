@@ -7,33 +7,21 @@ C# 12.
 
 Bookmarks.
 
+Menu Run -> Publish. Can create single-file programs.
 
-New tools:
-- .
+Properties -> nullable.
 
-New cookbook recipes:
-- .
-
-Improved:
-- .
-
-Fixed bugs:
-- .
+Several improvements.
 
 ### Library
 New classes:
-- .
+- **PrePostBuild**.
 
 New members:
 - Several new **csvTable** functions replace now obsolete functions.
 
-New parameters:
-- .
-
-Improved:
-- .
-
-Fixed bugs:
-- .
+Several bug fixes and improvements.
 
 ### Breaking changes
+
+Now using .NET 8. Previously .NET 6.

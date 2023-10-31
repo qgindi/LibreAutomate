@@ -8,6 +8,7 @@ partial class PanelFiles {
 	FilesModel.FilesView _tv;
 	TextBox _tFind;
 	timer _timerFind;
+	FileNode _firstFoundFile;
 	
 	public PanelFiles() {
 		P.UiaSetName("Files panel");
@@ -31,6 +32,8 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(_tFind.Text.Length switch { 1 => 1200, 2 => 600, _ => 300 }); };
 		_tFind.GotKeyboardFocus += (_, _) => P.Dispatcher.InvokeAsync(() => _tFind.SelectAll());
 		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
+		_tFind.KeyDown += (_, e) => { if (e.Key is Key.Enter && _firstFoundFile != null) App.Model.OpenAndGoTo(_firstFoundFile); };
+		
 		_tv.EditLabelStarted += (item, tb) => {
 			var f = item as FileNode;
 			var s = tb.Text;
@@ -50,6 +53,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 	public FilesModel.FilesView TreeControl => _tv;
 	
 	private void _Find() {
+		_firstFoundFile = null;
 		var s = _tFind.Text;
 		if (s.NE()) {
 			Panels.Found.ClearResults(PanelFound.Found.Files);
@@ -80,6 +84,7 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 			b.Link_();
 			if (f.IsFolder) b.Green("    //folder");
 			b.NL();
+			_firstFoundFile ??= f;
 		}
 		
 		if (b.Length == 0) return;

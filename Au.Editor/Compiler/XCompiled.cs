@@ -109,7 +109,6 @@ partial class Compiler {
 					case 'k':
 					case 'm':
 					case 's':
-						//case 'o':
 						value.ToInt(out uint u1, offs);
 						var f2 = App.Model.FindById(u1);
 						if (f2 == null) return false;
@@ -121,11 +120,6 @@ partial class Compiler {
 							//print.it("library is compiled");
 						} else {
 							if (_IsFileModified(f2)) return false;
-							//switch(ch) {
-							//case 'o': //f2 is the source config file
-							//	r.hasConfig = true;
-							//	break;
-							//}
 						}
 						break;
 					default: return false;
@@ -176,7 +170,6 @@ y - file
 k - icon
 m - manifest
 s - sign
-o - config (now removed)
 * - r
 			*/
 			

@@ -204,42 +204,33 @@ partial class filesystem {
 		/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. If not using deps.json, let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
 		/// 
 		/// Looks in:
-		/// - subfolder "64" or "32" of the app folder.
+		/// - subfolder "64" or "32" of the Au.dll folder.
 		/// - calls NativeLibrary.TryLoad, which works like [DllImport], eg may use info from deps.json.
-		/// - subfolder "64" or "32" of folder of the caller dll.
 		/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
-		/// - subfolder "64" or "32" of <see cref="folders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
 		/// </remarks>
 		internal unsafe static void LoadDll64or32Bit_(string fileName) {
 			//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
-			
+
 			string rel = (sizeof(nint) == 4 ? @"32\" : @"64\") + fileName;
 			//note: don't use osVersion.is32BitProcess here. Its static ctor makes this func slower at startup.
 			//	And folders.ThisAppBS is slow first time, therefore call AppContext.BaseDirectory directly.
-			
-			//var s1 = folders.ThisAppBS + rel;
-			var s1 = AppContext.BaseDirectory + rel;
-			
-			//app path. If <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract> - in temp dir.
-			if (NativeLibrary.TryLoad(s1, out _)) return;
-			
-			//like DllImport. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json. Also finds when <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract>.
-			if (NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out _)) return;
-			
-			//dll path. Eg in PowerShell. Other scripting environments etc may copy the dll elsewhere; then need the environment variable.
-			var p = pathname.getDirectory(Assembly.GetCallingAssembly().Location, withSeparator: true) + rel;
-			if (NativeLibrary.TryLoad(p, out _)) return;
-			
-			//environment variable
-			p = Environment.GetEnvironmentVariable("Au.Path");
-			if (p != null && NativeLibrary.TryLoad(pathname.combine(p, rel), out _)) return;
-			
-			//extracted from resources?
-			if (NativeLibrary.TryLoad(folders.ThisAppTemp + rel, out _)) return;
-			
-			var bits = sizeof(nint) == 4 ? "32" : "64";
-			throw new DllNotFoundException($@"{fileName} must be in <this program>\{bits} or <this dll>\{bits} or <environment variable Au.Path>\{bits} or <folders.ThisAppTemp>\{bits}.
-  This program: {folders.ThisApp}");
+
+			//Au.dll dir + 64/32
+			var asm = typeof(more).Assembly;
+			if (asm.Location is [_, ..] s1) {
+				s1 = s1[..(s1.LastIndexOf('\\') + 1)] + rel;
+				if (NativeLibrary.TryLoad(s1, out _)) return;
+			}
+
+			//like [DllImport]. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
+			//	Also finds in temp dir when <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract>.
+			if (NativeLibrary.TryLoad(fileName, asm, null, out _)) return;
+
+			//environment variable + 64/32
+			if (Environment.GetEnvironmentVariable("Au.Path") is string s2)
+				if (NativeLibrary.TryLoad(pathname.combine(s2, rel), out _)) return;
+
+			throw new DllNotFoundException(fileName + " not found");
 		}
 		
 		#region garbage

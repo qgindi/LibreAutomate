@@ -112,7 +112,7 @@ namespace Au {
 		/// Any string. Can be null.
 		/// If starts with <c>'%'</c> character, calls <see cref="isFullPath"/> with expanded environment variables (<see cref="expand"/>). If it returns true, replaces the passed variable with the expanded path string.
 		/// </param>
-		/// <param name="strict">See <see cref="expand"/>. Shortly: null (default) - warning; true - exception; false - ignore.</param>
+		/// <param name="strict"><inheritdoc cref="expand(string, bool?)" path="/param[@name='strict']/node()"/></param>
 		/// <remarks>
 		/// Returns true if <i>path</i> matches one of these wildcard patterns:
 		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.

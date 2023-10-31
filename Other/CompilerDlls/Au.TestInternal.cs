@@ -1,4 +1,4 @@
-﻿using Roslyn.Utilities;
+using Roslyn.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -34,7 +34,7 @@ public static class TestInternal
 
 public static class Print
 {
-    internal static Action<object> PrintItCallback;
+    internal static Action<object>? PrintItCallback;
 
     public static void it(object o)
     {

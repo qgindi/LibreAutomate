@@ -25,7 +25,7 @@ class DProperties : KDialogWindow {
 	
 	//controls
 	readonly KSciInfoBox info;
-	readonly ComboBox role, ifRunning, uac, warningLevel;
+	readonly ComboBox role, ifRunning, uac, warningLevel, nullable;
 	readonly TextBox testScript, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
 	readonly ComboBox outputPath, icon, manifest, sign;
 	readonly KCheckBox bit32, xmlDoc, console, optimize, cMultiline;
@@ -51,10 +51,11 @@ class DProperties : KDialogWindow {
 		b.R.Add("role", out role);
 		b.End();
 		
-		b.R.StartGrid(out gCompile, "Compile");
+		b.R.StartGrid(out gCompile, "Compile").Columns(0, -1, 20, 0, -2);
 		b.R.Add(out optimize, "optimize");
 		b.R.Add("define", out define);
-		b.R.Add("warningLevel", out warningLevel).Editable().Align("L");
+		b.R.Add("warningLevel", out warningLevel).Editable();
+		b.Skip().Add("nullable", out nullable);
 		b.R.Add("noWarnings", out noWarnings);
 		b.R.Add("testInternal", out testInternal);
 		b.R.Add("preBuild", out preBuild);
@@ -168,13 +169,14 @@ class DProperties : KDialogWindow {
 		//Compile
 		if (_meta.optimize == "true") optimize.IsChecked = true;
 		define.Text = _meta.define;
-		_InitCombo(warningLevel, "6|5|4|3|2|1|0", _meta.warningLevel);
+		_InitCombo(warningLevel, "7|6|5|4|3|2|1|0", _meta.warningLevel, 1);
 		noWarnings.Text = _meta.noWarnings;
+		_InitCombo(nullable, "disable|enable|warnings|annotations", _meta.nullable);
 		testInternal.Text = _meta.testInternal;
 		preBuild.Text = _meta.preBuild;
 		postBuild.Text = _meta.postBuild;
 		
-		static void _InitCombo(ComboBox c, string items, string meta, int index = -1) {
+		static void _InitCombo(ComboBox c, string items, string meta, int index = 0) {
 			var a = items.Split('|');
 			if (meta != null) index = Array.IndexOf(a, meta);
 			foreach (var v in a) c.Items.Add(v);
@@ -218,8 +220,8 @@ class DProperties : KDialogWindow {
 		
 		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, FNFind.CodeFile, orAnywhere: true) : null; //validated
 		
-		_meta.ifRunning = _Get(ifRunning, nullIfDefault: true);
-		_meta.uac = _Get(uac, nullIfDefault: true);
+		_meta.ifRunning = _Get(ifRunning, defaultIndex: 0);
+		_meta.uac = _Get(uac, defaultIndex: 0);
 		_meta.bit32 = _Get(bit32);
 		
 		_meta.console = _Get(console);
@@ -231,8 +233,9 @@ class DProperties : KDialogWindow {
 		
 		_meta.optimize = _Get(optimize);
 		_meta.define = _Get(define);
-		_meta.warningLevel = _Get(warningLevel, nullIfDefault: true);
+		_meta.warningLevel = _Get(warningLevel, defaultIndex: 1);
 		_meta.noWarnings = _Get(noWarnings);
+		_meta.nullable = _Get(nullable, defaultIndex: 0);
 		_meta.testInternal = _Get(testInternal);
 		_meta.preBuild = _Get(preBuild);
 		_meta.postBuild = _Get(postBuild);
@@ -508,8 +511,8 @@ class DProperties : KDialogWindow {
 		return r == "" ? null : r;
 	}
 	
-	static string _Get(ComboBox t, bool nullIfHidden = true, bool nullIfDefault = false) {
-		if (nullIfDefault && t.SelectedIndex == 0) return null;
+	static string _Get(ComboBox t, bool nullIfHidden = true, int? defaultIndex = null) {
+		if (defaultIndex.HasValue && t.SelectedIndex == defaultIndex.Value) return null;
 		if (nullIfHidden && _IsHidden(t)) return null;
 		return t.IsEditable ? t.Text : t.SelectedItem as string; //note: t.Text changes after t.SelectionChanged event
 	}
@@ -699,6 +702,15 @@ Example: 151,3001,120
 This option is also applied to class files compiled together, eg as part of project.
 See also <google C# #pragma warning>#pragma warning<>.
 """);
+		info.AaAddElem(nullable, """
+<b>nullable</b> - <google C# Nullable reference types>nullable context<>.
+disable - no warnings; code does not use nullable syntax (Type? variable).
+enable - print warnings; code uses nullable syntax.
+warnings - print warnings; code does not use nullable syntax.
+annotations - no warnings; code uses nullable syntax.
+
+This option is also applied to class files compiled together, eg as part of project. Alternatively use #nullable directive.
+""");
 		info.AaAddElem(testInternal, """
 <b>testInternal</b> - access internal symbols of these assemblies, like with InternalsVisibleToAttribute.
 Example: Assembly1,Assembly2
@@ -708,14 +720,11 @@ This option is also applied to class files compiled together, eg as part of proj
 		info.AaAddElem(preBuild, """
 <b>preBuild</b> - a script to run before compiling this code file.
 
-The script must have role editorExtension. It runs synchronously in the compiler's thread. To stop compilation, let it throw an exception.
-By default it receives full path of the output exe or dll file in args[0]. If need more info, specify command line arguments, like in this example: Script5.cs /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. Variables:
- • $(outputFile) - full path of the output exe or dll file.
- • $(outputPath) - meta comment 'outputPath'.
- • $(source) - path of this C# code file in the workspace.
- • $(role) - meta comment 'role'.
- • $(optimize) - meta comment 'optimize'.
- • $(bit32) - meta comment 'bit32'.
+The script must have role editorExtension. It runs in the editor's main thread.
+To get compilation info: var c = PrePostBuild.Info;
+To specify command line arguments: <c green>preBuild Script5.cs /arguments<>
+To stop the compilation, let the script throw an exception.
+To create new preBuild/postBuild script: menu File -> New -> More.
 
 Can be:
  • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
@@ -724,15 +733,15 @@ Can be:
 """);
 		info.AaAddElem(postBuild, """
 <b>postBuild</b> - a script to run after compiling this code file successfully.
-Everything else is like with preBuild.
+Everything is like with preBuild.
 """);
 		info.AaAddElem(addLibrary, """
 <b>Library<> - add a .NET assembly reference.
 Adds meta comment <c green>r DllFile<>.
 
 Don't need to add Au.dll and .NET runtime dlls.
-To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
-To remove this meta comment, edit the code.
+To remove this meta comment, edit the code in the code editor.
+To use 'extern alias Abc;', edit the code: <c green>r DllFile /alias=Abc<>
 If script role is editorExtension, may need to restart editor.
 To remove a default reference (.NET or Au): noRef AssemblyNameOrAuPathWildex;.
 """);
@@ -740,7 +749,8 @@ To remove a default reference (.NET or Au): noRef AssemblyNameOrAuPathWildex;.
 <b>NuGet<> - use a NuGet package installed by the NuGet tool (menu Tools -> NuGet).
 Adds meta comment <c green>nuget folder\package<>.
 
-To remove this meta comment, edit the code.
+To remove this meta comment, edit the code in the code editor.
+To use 'extern alias Abc;', edit the code: <c green>nuget folder\package /alias=Abc<>
 """);
 		
 		const string c_com = """
@@ -750,6 +760,7 @@ Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>
 An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered unmanaged dll or exe file). If 64-bit dll unavailable, can be used only in a 32-bit program (role exeProgram, bit32 checked).
 
 To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
+To use 'extern alias Abc;', edit the code: <c green>com FileName.dll /alias=Abc<>
 """;
 		info.AaAddElem(addComRegistry, "<b>COM<> - convert a registered" + c_com);
 		info.AaAddElem(addComBrowse, "<b>...<> - convert a" + c_com);

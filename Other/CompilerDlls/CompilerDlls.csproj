@@ -8,6 +8,8 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -18,25 +20,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="Au.InternalsVisible.cs" />
+		<None Include="Au.TestInternal.cs" />
 		<Compile Remove="Au.InternalsVisible.cs" />
 		<Compile Remove="Au.TestInternal.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Compile Include="..\..\Au\resources\global2.cs" Link="global2.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="Au.InternalsVisible.cs" />
-		<None Include="Au.TestInternal.cs" />
+		<Content Include="..\..\_\64\AuCpp.dll" Link="AuCpp.dll">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Au\Au.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.8.0-2.final" />
 	</ItemGroup>
 
 </Project>

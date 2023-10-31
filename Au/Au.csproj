@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0-windows;net6.0-windows7.0</TargetFrameworks>
+		<TargetFrameworks>net8.0-windows</TargetFrameworks>
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWpf>true</UseWpf>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -23,10 +23,21 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants></DefineConstants>
+	</PropertyGroup>
+
+	<!-- NuGet package. -->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<Version>0.18.0</Version>
+		<!--<TargetFrameworks>net8.0-windows;net6.0-windows</TargetFrameworks>-->
+		<!--
+		For the NuGet package need multiple target frameworks. But it makes compilation slow.
+		Workaround - temporarily use different TargetFrameworks when creating NuGet package.
+		Possible problem: error when building after changing TargetFrameworks. Missing target framework in the assets json file.
+			Workaround: delete obj folder (or just assets file, not tested). Could do it in a conditional prebuild event (not tested).
+		-->
+		
 		<PackageId>LibreAutomate</PackageId>
 		<Title>LibreAutomate</Title>
-		<Version>0.18.0</Version>
 		<Authors>didgeridoo</Authors>
 		<Product>LibreAutomate</Product>
 		<Description>LibreAutomate is an automation library for Windows. Mostly desktop and web UI automation. To get the most of it, install the LibreAutomate C# app.</Description>
@@ -41,10 +52,6 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	</PropertyGroup>
 
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
-	</Target>
-
 	<ItemGroup>
 		<None Remove="resources\red_cross_cursor.cur" />
 	</ItemGroup>
@@ -57,5 +64,13 @@
 		<None Include="x\Icon-128.png" Pack="true" PackagePath="\" />
 		<None Include="x\NuGet.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Au.cs" />
+	</ItemGroup>
+
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
+	</Target>
 
 </Project>

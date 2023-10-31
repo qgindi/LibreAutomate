@@ -290,7 +290,7 @@ public unsafe partial class KScintilla : HwndHost {
 	
 	//Without this, user cannot type eg character 'a' in HwndHost'ed control if there is button with text like "_Apply".
 	protected override bool TranslateCharCore(ref System.Windows.Interop.MSG msg, ModifierKeys modifiers) {
-		if (msg.message is not Api.WM_CHAR or Api.WM_DEADCHAR) return false; //WM_SYSCHAR etc if with Alt
+		if (msg.message is not (Api.WM_CHAR or Api.WM_DEADCHAR)) return false; //WM_SYSCHAR etc if with Alt
 		if (msg.hwnd != _w.Handle) return false; //WPF bug. Eg when on key down the app makes this control focused.
 		if ((int)msg.wParam <= 32) return false; //eg control chars on Ctrl+key
 		_w.Send(msg.message, msg.wParam, msg.lParam); //not Call or WndProc

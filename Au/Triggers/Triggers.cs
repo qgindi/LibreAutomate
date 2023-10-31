@@ -379,7 +379,7 @@ public class ActionTriggers {
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	void _ShowToolbarsDialog() {
-		toolbar.toolbarsDialog(true);
+		toolbar.toolbarsDialog();
 	}
 
 	unsafe void _KeyMouseEvent(int messageId, HooksThread.UsedEvents eventType) {

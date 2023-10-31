@@ -17,7 +17,7 @@ r Roslyn\Microsoft.CodeAnalysis.dll;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.dll;
 r Roslyn\Microsoft.CodeAnalysis.Features.dll;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll;
-r CAW=Roslyn\Microsoft.CodeAnalysis.Workspaces.dll;
+r Roslyn\Microsoft.CodeAnalysis.Workspaces.dll /alias=CAW;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll;
 resource app\app-resources.xaml /path;
 resource resources\ci /path;

@@ -35,7 +35,7 @@ Change version info (see above).
 Build solution in config Release/AnyCPU. Build in config Release/x86.
 	NOTE: when switched Debug/Release, VS does not build/copy dlls if they are already buit. Need to rebuild solution.
 
-Review menu Help -> About. May need to update used libraries, beta.
+Review menu Help -> About. May need to update beta, C# version, .NET version, used libraries.
 
 Run script "Au docs" just to catch XML documentation errors and test how it works with current C#/.NET/DocFX versions etc.
 	Don't upload. Fix errors if need. More info in AuDocs.txt.
@@ -74,7 +74,10 @@ Announce in forum.
 If not beta, occasionally may want to review/update in some download websites.
 
 Release NuGet package:
-	In Au project edit version and maybe year. Can edit directly in .csproj. Save.
+	In Au project edit version and maybe year.
+		Can edit directly in .csproj.
+		Make sure that <TargetFrameworks> contains all supported frameworks.
+		Build the project.
 	Run script "Create NuGet package.cs". It executes dotnet pack and adds native dlls.
 	Upload to NuGet. The script prints links.
 
