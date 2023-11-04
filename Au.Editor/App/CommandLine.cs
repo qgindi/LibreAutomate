@@ -210,7 +210,7 @@ static class CommandLine {
 					if (App.Model.FindCodeFile(s) is FileNode f && f.IsScript) {
 						return CompileRun.CompileAndRun(true, f, new[] { lparam.ToS() });
 					}
-					print.warning($"Debugger script not found. See Options -> General -> Debugger script.", -1);
+					print.warning($"Debugger script not found. See Options -> Workspace -> Debugger script.", -1);
 				}
 				break;
 			}

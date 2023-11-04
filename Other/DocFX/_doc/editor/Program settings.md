@@ -14,7 +14,7 @@ If you want to copy settings and workspaces to another computer, copy folder `Do
 
 ## Options dialog
 
-### General
+### Program
 
 #### Start with Windows
 Run this program at Windows startup. This setting is saved in the Registry.
@@ -24,10 +24,15 @@ Don't show the window when the program started. To show the window, you can clic
 
 If unchecked, shows the window at startup. The program exits when you close the window.
 
-#### Run scripts when this workspace loaded
-List of scripts to run when this program started and/or loaded this workspace. Example:
+#### Check for updates
+Every day connect to libreautomate.com to get program version info. If a new version available, print this info in the output panel.
 
-The format is CSV. A delay can be specified in second column.
+### Workspace
+These settings are workspace-specific. Security: the scripts will not run on other computers, unless the user settings file copied there too.
+
+#### Run scripts when this workspace loaded
+List of scripts to run when this program started and/or loaded this workspace. 
+The format is CSV. A delay can be specified in second column. Example:
 
 ```
 Script1.cs
@@ -38,12 +43,11 @@ Script with delay.cs, 3s
 Another script with delay.cs, 300ms
 ```
 
-This setting is workspace-specific. Security: the scripts will not run on other computers, unless the user settings file copied there too.
-
 #### Debugger script for script.debug
 Let [script.debug]() run this script to automate attaching a debugger. Can be script name or path like `\Folder\Attach debugger.cs`.
 
-This setting is workspace-specific. Security: the script will not run on other computers, unless the user settings file copied there too.
+#### Auto backup (Git commit)
+Silently run [Git](xref:git) commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup. It creates a local backup of workspace files (scripts etc). To upload etc, you can use menu File -> Git.
 
 ### Code
 Code formatting and intellisense options.

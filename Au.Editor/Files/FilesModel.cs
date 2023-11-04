@@ -1560,6 +1560,7 @@ partial class FilesModel {
 				}
 			}
 		}
+		Git.AutoBackup(true);
 	}
 	
 	csvTable _GetStartupScripts() {

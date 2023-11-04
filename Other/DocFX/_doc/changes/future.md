@@ -1,4 +1,4 @@
-## Version 0.19.0 (2023-)
+## Version 0.19.0 (2023-11-)
 
 ### Editor
 .NET 8.
@@ -9,19 +9,15 @@ Bookmarks.
 
 Menu Run -> Publish. Can create single-file programs.
 
+Options -> General -> Auto-backup (Git commit).
+
 Properties -> nullable.
 
 Several improvements.
 
 ### Library
-New classes:
-- **PrePostBuild**.
-
-New members:
-- Several new **csvTable** functions replace now obsolete functions.
-
-Several bug fixes and improvements.
+Several improvements.
 
 ### Breaking changes
 
-Now using .NET 8. Previously .NET 6.
+Now uses .NET 8. Previously .NET 6.

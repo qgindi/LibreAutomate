@@ -66,46 +66,46 @@ public record struct Coord {
 	//This version is good in 32-bit, very good in 64-bit. Even better than packing in single int (30 bits value and 2 bits type).
 	//Don't use struct or union with both int and float fields. It creates slow and huge calling code.
 	readonly long _v;
-
+	
 	/// <summary>
 	/// Value type.
 	/// </summary>
 	public CoordType Type => (CoordType)(_v >> 32);
-
+	
 	/// <summary>
 	/// Non-fraction value.
 	/// </summary>
 	public int Value => (int)_v;
-
+	
 	/// <summary>
 	/// Fraction value.
 	/// </summary>
 	public unsafe float FractionValue => BitConverter.Int32BitsToSingle((int)_v);
-
+	
 	/// <summary>
 	/// Returns true if <c>Type == CoordType.None</c> (no value assigned).
 	/// </summary>
 	public bool IsEmpty => Type == CoordType.None;
-
+	
 	Coord(CoordType type, int value) { _v = ((long)type << 32) | (uint)value; }
 	//info: if type and value are constants, compiler knows the final value and does not use the << and | operators in the compiled code.
-
+	
 	/// <summary>
 	/// Creates <b>Coord</b> of <b>Normal</b> type.
 	/// </summary>
 	//[MethodImpl(MethodImplOptions.NoInlining)] //makes bigger/slower
 	public static implicit operator Coord(int v) => new(CoordType.Normal, v);
-
+	
 	/// <summary>
 	/// Creates <b>Coord</b> of <b>Normal</b> or <b>Reverse</b> type. Reverse if the index is from end, like <c>^1</c>.
 	/// </summary>
 	public static implicit operator Coord(Index v) => new(v.IsFromEnd ? CoordType.Reverse : CoordType.Normal, v.Value);
-
+	
 	/// <summary>
 	/// Creates <b>Coord</b> of <b>Fraction</b> type.
 	/// </summary>
 	public static implicit operator Coord(float v) => new(CoordType.Fraction, BitConverter.SingleToInt32Bits(v));
-
+	
 	//these would create Fraction
 	///
 	[Obsolete("The value must be of type int or float.", error: true), NoDoc]
@@ -117,48 +117,48 @@ public record struct Coord {
 	[Obsolete("The value must be of type int or float.", error: true), NoDoc]
 	public static implicit operator Coord(ulong f) => default;
 	//tested: compiler does not allow to assign nint.
-
+	
 	/// <summary>
 	/// Creates <b>Coord</b> of <b>Reverse</b> type.
 	/// Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
 	/// Instead can be use "from end" index, for example argument <c>Coord.Reverse(1)</c> can be replaced with <c>^1</c>.
 	/// </summary>
 	public static Coord Reverse(int v) => new(CoordType.Reverse, v);
-
+	
 	/// <summary>
 	/// Creates <b>Coord</b> of <b>Fraction</b> type.
 	/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and &gt;=1.0 are outside of the rectangle.
 	/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
 	/// </summary>
 	public static unsafe Coord Fraction(double v) => (float)v;
-
+	
 	/// <summary>
 	/// Returns <c>Fraction(0.5)</c>.
 	/// </summary>
 	/// <seealso cref="Fraction"/>
 	public static Coord Center => .5f;
-
+	
 	/// <summary>
 	/// Returns <c>Reverse(0)</c>. Same as <c>^0</c>.
 	/// This point will be outside of the rectangle. See also <see cref="MaxInside"/>.
 	/// </summary>
 	/// <seealso cref="Reverse"/>
 	public static Coord Max => Reverse(0);
-
+	
 	/// <summary>
 	/// Returns <c>Reverse(1)</c>. Same as <c>^1</c>.
 	/// This point will be inside of the rectangle, at the very right or bottom, assuming the rectangle is not empty.
 	/// </summary>
 	/// <seealso cref="Reverse"/>
 	public static Coord MaxInside => Reverse(1);
-
+	
 	//rejected: this could be used like Coord.Max + 1. Too limited usage.
 	//public static Coord operator +(Coord c, int i) { return ...; }
-
+	
 	static bool _NeedRect(Coord x, Coord y) {
 		return (x.Type > CoordType.Normal) || (y.Type > CoordType.Normal);
 	}
-
+	
 	/// <summary>
 	/// Converts fractional/reverse coordinate to normal coordinate in a range.
 	/// </summary>
@@ -172,7 +172,7 @@ public record struct Coord {
 			_ => 0,
 		};
 	}
-
+	
 	/// <summary>
 	/// Converts fractional/reverse coordinates to normal coordinates in a rectangle.
 	/// </summary>
@@ -189,7 +189,7 @@ public record struct Coord {
 		}
 		return (x.NormalizeInRange(r.left, r.right), y.NormalizeInRange(r.top, r.bottom));
 	}
-
+	
 	/// <summary>
 	/// Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
 	/// </summary>
@@ -200,7 +200,7 @@ public record struct Coord {
 	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>.</param>
 	public static POINT NormalizeInWindow(Coord x, Coord y, wnd w, bool nonClient = false, bool centerIfEmpty = false) {
 		//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
-
+		
 		if (centerIfEmpty) {
 			if (x.IsEmpty) x = Center;
 			if (y.IsEmpty) y = Center;
@@ -218,7 +218,7 @@ public record struct Coord {
 		}
 		return p;
 	}
-
+	
 	/// <summary>
 	/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
 	/// </summary>
@@ -245,7 +245,7 @@ public record struct Coord {
 		}
 		return p;
 	}
-
+	
 	///
 	public override string ToString() {
 		switch (Type) {
@@ -265,17 +265,17 @@ public enum CoordType {
 	/// No value. The variable is <c>default(Coord)</c>.
 	/// </summary>
 	None,
-
+	
 	/// <summary>
 	/// <see cref="Coord.Value"/> is pixel offset from left or top of a rectangle.
 	/// </summary>
 	Normal,
-
+	
 	/// <summary>
 	/// <see cref="Coord.Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
 	/// </summary>
 	Reverse,
-
+	
 	/// <summary>
 	/// <see cref="Coord.FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
 	/// </summary>
@@ -293,7 +293,7 @@ public class PopupXY {
 	public bool inRect;
 	public RECT rect;
 #pragma warning restore 1591 //XML doc
-
+	
 	/// <summary>
 	/// Sets position and/or screen.
 	/// </summary>
@@ -307,7 +307,7 @@ public class PopupXY {
 	public PopupXY(Coord x = default, Coord y = default, bool workArea = true, screen screen = default) {
 		this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 	}
-
+	
 	/// <summary>
 	/// Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window.
 	/// </summary>
@@ -315,35 +315,35 @@ public class PopupXY {
 	/// <param name="x">X relative to the rectangle. Default - center.</param>
 	/// <param name="y">Y relative to the rectangle. Default - center.</param>
 	public static PopupXY In(RECT r, Coord x = default, Coord y = default) => new(x, y) { inRect = true, rect = r };
-
+	
 	/// <summary>
 	/// Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
 	/// </summary>
 	public static implicit operator PopupXY((Coord x, Coord y) p) => new(p.x, p.y, true);
-
+	
 	/// <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
 	public static implicit operator PopupXY(POINT p) => new(p.x, p.y, false);
 	//info: this conversion can be used with PopupXY.Mouse.
-
+	
 	//public bool IsRawXY => !inRect && screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
-
+	
 	/// <summary>
 	/// Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
 	/// </summary>
 	public static POINT Mouse {
 		get {
 			var p = mouse.xy;
-
+			
 			var scr = screen.of(p);
 			var rs = scr.Rect;
 			int dy = Dpi.Scale(100, scr.Dpi);
 			if (rs.bottom - p.y < dy) return (p.x, p.y - dy);
-
+			
 			int cy = Dpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
 			if (MouseCursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
 				if (u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 				Api.DeleteObject(u.hbmMask);
-
+				
 				//print.it(u.xHotspot, u.yHotspot);
 				p.y += cy - u.yHotspot - 1; //not perfect, but better than just to add SM_CYCURSOR or some constant value.
 				return p;
@@ -351,7 +351,7 @@ public class PopupXY {
 			return (p.x, p.y + cy - 5);
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets <see cref="screen.Now"/> if not empty, else screen that contains the specified point.
 	/// </summary>
@@ -369,25 +369,25 @@ public class PopupXY {
 public struct AnyWnd {
 	readonly object _o;
 	AnyWnd(object o) { _o = o; }
-
+	
 	/// <summary>Assignment of a value of type <b>wnd</b>.</summary>
 	public static implicit operator AnyWnd(wnd w) => new(w);
-
+	
 	/// <summary>Assignment of a window handle as <b>IntPtr</b>.</summary>
 	public static implicit operator AnyWnd(IntPtr hwnd) => new((wnd)hwnd);
-
+	
 	/// <summary>Assignment of a value of type <b>System.Windows.Forms.Control</b> (<b>Form</b> or any control class).</summary>
 	public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new(c);
-
+	
 	/// <summary>Assignment of a value of type <b>System.Windows.DependencyObject</b> (WPF window or control).</summary>
 	public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
-
+	
 	/// <summary>
 	/// Gets the window or control handle as <b>wnd</b>.
 	/// </summary>
 	/// <value><c>default(wnd)</c> if not assigned.</value>
 	public wnd Hwnd => wnd.Internal_.FromObject(_o);
-
+	
 	/// <summary>
 	/// true if this is <c>default(AnyWnd)</c>.
 	/// </summary>
@@ -396,41 +396,30 @@ public struct AnyWnd {
 
 /// <summary>
 /// Used for function parameters to specify multiple strings.
-/// Contains a string like <c>"One|Two|Three"</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>. Has implicit conversions from these types. Also constructor with params <b>string[]</b>.
+/// Contains a string like <c>"One|Two|Three"</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>. Has implicit conversions from these types. Can be assigned collection initializer like <c>["a", "b"]</c>.
 /// </summary>
-public struct Strings {
+[CollectionBuilder(typeof(Strings), "Create")]
+public struct Strings : IEnumerable<string> {
 	readonly object _o;
 	Strings(object o) { _o = o; }
-
+	
 	///
 	public Strings(params string[] a) { _o = a; }
-
+	
 	///
 	public static implicit operator Strings(string s) => new((object)s);
-
+	
 	///
 	public static implicit operator Strings(string[] e) => new(e);
-
+	
 	///
 	public static implicit operator Strings(List<string> e) => new(e);
-
-	//rejected. Shorter just by 'new'. Can make difficult to read code. No intellisense.
-	/////
-	//public static implicit operator Strings((string s1, string s2) t) => new(t.s1, t.s2);
-
-	/////
-	//public static implicit operator Strings((string s1, string s2, string s3) t) => new(t.s1, t.s2, t.s3);
-
-	/////
-	//public static implicit operator Strings((string s1, string s2, string s3, string s4) t) => new(t.s1, t.s2, t.s3, t.s4);
-
-	//note: C# does not allow Strings(IEnumerable<string> e), because it is interface. Callers can use .ToArray().
-
+	
 	/// <summary>
 	/// The raw value.
 	/// </summary>
 	public object Value => _o;
-
+	
 	/// <summary>
 	/// Converts the value to string[].
 	/// Note: don't modify array elements. If the caller passed an array, this function returns it, not a copy.
@@ -443,6 +432,23 @@ public struct Strings {
 			_ => Array.Empty<string>(), //null
 		};
 	}
+	
+#region support collection expression
+	
+	//IEnumerable<string>
+	
+	IEnumerator<string> IEnumerable<string>.GetEnumerator() => ToArray().AsEnumerable().GetEnumerator();
+	
+	//IEnumerable
+	
+	IEnumerator IEnumerable.GetEnumerator() => ToArray().GetEnumerator();
+	
+	/// <summary>
+	/// Returns <c>new(span.ToArray())</c>.
+	/// </summary>
+	public static Strings Create(ReadOnlySpan<string> span) => new(span.ToArray());
+	
+#endregion
 }
 
 /// <summary>

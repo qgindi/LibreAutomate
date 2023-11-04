@@ -802,7 +802,7 @@ namespace Au.Types {
 		/// <seealso cref="PrintClipboard"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// OKey.RestoreClipboardExceptFormats = new[] { "CF_UNICODETEXT", "HTML Format" };
+		/// OKey.RestoreClipboardExceptFormats = ["CF_UNICODETEXT", "HTML Format"];
 		/// ]]></code>
 		/// </example>
 		public static string[] RestoreClipboardExceptFormats { get; set; }

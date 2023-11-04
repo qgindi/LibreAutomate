@@ -40,19 +40,23 @@ static partial class Git {
 	#region commands
 	
 	static bool _InitCommand() {
-		bool ok = _Start() && _EnsureMain();
+		bool ok = _Start();
 		if (ok) {
+			if (!_EnsureMain()) return false;
 			App.Model.Save.AllNowIfNeed();
 			_CheckIgnored();
+		} else if (t_autoBackup) {
+			print.it("Auto-backup error. To fix it use menu File -> Git -> Git setup.");
 		} else {
-			DGitSetup.AaShow();
+			Setup();
 		}
 		return ok;
 		
 		static bool _EnsureMain() {
 			if (!gits("branch --show-current")) return false;
 			if (_go != "main") {
-				if (!dialog.showOkCancel("Switch to main branch?", $"Can work only with the main branch.\nCurrent branch is '{_go}'.", owner: App.Hmain)) return false;
+				if (t_autoBackup) { print.it("Auto-backup error: not main branch."); return false; }
+				if (!dialog.showOkCancel("Switch to main branch?", $"The Git command can work only with the main branch.\nCurrent branch is '{_go}'.", owner: App.Hmain)) return false;
 				if (!git("switch main")) return false;
 			}
 			return true;
@@ -100,13 +104,15 @@ static partial class Git {
 		print.it(_GetStatus(true));
 	}
 	
-	static bool _Commit() {
-		var m = "backup";
-		do {
-			if (!dialog.showInput(out m, "Git commit", "Message", editText: m, owner: App.Hmain,
-				footer: "Print:    <a href=\"status\">status</a>", onLinkClick: _Link
-				)) return false;
-		} while (m.NE());
+	static bool _Commit(string m = null) {
+		if (m == null) {
+			m = "backup";
+			do {
+				if (!dialog.showInput(out m, "Git commit", "Message", editText: m, owner: App.Hmain,
+					footer: "Print:    <a href=\"status\">status</a>", onLinkClick: _Link
+					)) return false;
+			} while (m.NE());
+		}
 		m = m.Replace("\"", "''");
 		
 		if (!git("add .")) return false;
@@ -114,13 +120,25 @@ static partial class Git {
 		return true;
 	}
 	
-	public static void Commit() {
-		if (_NotThread) { _Thread(Commit); return; }
+	public static void Commit(bool autoBackup = false, int autoBackupWorkspaceSN = 0) {
+		if (_NotThread) { _Thread(() => Commit(autoBackup)); return; }
 		
-		var gs = _GetStatus();
-		if (!gs.CanCommit) print.it("Nothing to commit.");
-		else if (_Commit()) print.it("==== DONE ====");
+		if (autoBackup && App.Model.WorkspaceSN != autoBackupWorkspaceSN) return; //this code runs async with a delay and in new thread. During that time can be loaded another workspace.
+		t_autoBackup = autoBackup;
+		try {
+			var gs = _GetStatus();
+			if (!gs.CanCommit) _Print("Nothing to commit.");
+			else if (_Commit(autoBackup ? "auto-backup" : null)) _Print("==== DONE ====");
+			else if (autoBackup) print.it("Auto-backup failed. Try menu File -> Git -> Commit."); //else git() prints errors
+		}
+		catch (Exception e1) { print.it((autoBackup ? "Auto-backup: " : null) + "Git commit failed", e1); }
+		finally { t_autoBackup = false; }
+		
+		static void _Print(string s) {
+			if (!t_autoBackup) print.it(s);
+		}
 	}
+	[ThreadStatic] static bool t_autoBackup;
 	
 	public static void Push() {
 		if (_NotThread) { _Thread(Push); return; }
@@ -263,8 +281,8 @@ static partial class Git {
 	public static void Maintenance() {
 		if (!_InitCommand()) return;
 		
-		var b = new wpfBuilder("Git repository maintenance").WinSize(400).WinProperties(showInTaskbar: false);
-		var w = b.Window;
+		var w = new KDialogWindow() { Title = "Git repository maintenance", ShowInTaskbar = false, Owner = App.Wmain };
+		var b = new wpfBuilder(w).WinSize(400);
 		
 		var info = new System.Windows.Documents.Run();
 		_Info();
@@ -291,7 +309,6 @@ This tool modifies only the .git folder, not workspace files.
 		b.R.AddButton("Print workspace folder sizes", _ => _PrintFolderSizes()).Tooltip("Print sizes of workspace folders except .git, .compiled and .temp.\nThis info can be useful when editing file .gitignore.");
 		
 		b.End();
-		w.Owner = App.Wmain;
 		w.Show(); //not ShowDialog
 		
 		void _Info() {
@@ -358,17 +375,31 @@ This tool modifies only the .git folder, not workspace files.
 		}
 	}
 	
+	public static void AutoBackup(bool now) {
+		if (!App.Model.UserSettings.gitBackup) return;
+		if (!CodeInfo.IsReadyForEditing) return;
+		if (!now && _autoBackupTime != 0 && Environment.TickCount64 - _autoBackupTime < 1000 * 60 * 60 * 4) return; //4 hours
+		_autoBackupTime = Environment.TickCount64;
+		var wsSN = App.Model.WorkspaceSN;
+		timer.after(500, _ => {
+			print.it("auto-backup", DateTime.Now);//TODO
+			Commit(autoBackup: true, autoBackupWorkspaceSN: wsSN);
+		});
+	}
+	static long _autoBackupTime;
+	
 	#endregion
 	
 	#region setup
 	
-	public class DGitSetup : KDialogWindow {
-		public static void AaShow() {
-			//ShowSingle(() => new DGitSetup());
-			new DGitSetup { Owner = App.Wmain }.ShowDialog();
-		}
-		
-		DGitSetup() {
+	public static bool IsReady => _Start();
+	
+	public static void Setup() {
+		new _DSetup().ShowDialog();
+	}
+	
+	class _DSetup : KDialogWindow {
+		public _DSetup() {
 			_Start(setup: true);
 			
 			InitWinProp("Git setup", App.Wmain);
@@ -492,7 +523,7 @@ This tool modifies only the .git folder, not workspace files.
 			} else {
 				var file1 = _dir + "\\.gitignore";
 				if (!filesystem.exists(file1)) filesystem.saveText(file1, c_defaultGitignore);
-			
+				
 				var file2 = _dir + "\\.gitattributes";
 				if (!filesystem.exists(file2)) filesystem.saveText(file2, """
 * -text
@@ -537,7 +568,7 @@ This tool modifies only the .git folder, not workspace files.
 			void _Config() {
 				git("config core.autocrlf false");
 				git("config core.quotepath off");
-			
+				
 				if (!gits("config --get user.name") || _go.NE()) git("config user.name \"unknown\"");
 				if (!gits("config --get user.email") || _go.NE()) git("config user.email \"unknown@unknown.com\"");
 			}
@@ -591,6 +622,7 @@ This tool modifies only the .git folder, not workspace files.
 	}
 	
 	static bool git(string s, _GP gp = _GP.Error, string stdin = null) {
+		if (t_autoBackup) gp = _GP.Silent;
 		bool silent = gp == _GP.Silent;
 		if (!silent) print.it($"<><c #4040FF>git {s}<>");
 		using var c = new consoleProcess(_gitExe, s, _dir) { Encoding = Encoding.UTF8 };
@@ -642,9 +674,9 @@ This tool modifies only the .git folder, not workspace files.
 				for (int i = 0; i < a.Length; i++) {
 					var s2 = a[i][..2];
 					string s = s2 switch {
-						[_, 'D'] or ['D', ' '] => "  deleted:  ",
-						[_, '?'] or ['A', _] => "  added:    ",
-						[_, 'M'] or ['M', ' '] => "  modified: ",
+					[_, 'D'] or ['D', ' '] => "  deleted:  ",
+					[_, '?'] or ['A', _] => "  added:    ",
+					[_, 'M'] or ['M', ' '] => "  modified: ",
 						_ => "  " + s2 + ":       "
 					};
 					a[i] = s + a[i][2..];

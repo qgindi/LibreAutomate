@@ -192,7 +192,7 @@ static class Menus {
 			public static void Git_maintenance() { global::Git.Maintenance(); }
 			
 			[Command("...")]
-			public static void Git_setup() { global::Git.DGitSetup.AaShow(); }
+			public static void Git_setup() { global::Git.Setup(); }
 		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]

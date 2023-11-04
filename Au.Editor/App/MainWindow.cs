@@ -173,6 +173,7 @@ partial class MainWindow : Window {
 				_appActivatedTimer ??= new(_ => {
 					Panels.Editor.OnAppActivated_();
 					if (App.Settings.checkForUpdates) App.CheckForUpdates();
+					Git.AutoBackup(false);
 				});
 				_appActivatedTimer.After(250);
 			} else {

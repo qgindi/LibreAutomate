@@ -255,7 +255,7 @@ namespace Au.Types {
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <param name="headers">
-		/// null or request headers like <c>new[] { "name1: value1", "name2: value2" }</c>.
+		/// null or request headers like <c>["name1: value1", "name2: value2"]</c>.
 		/// Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.
 		/// </param>
 		/// <param name="auth">String like "username:password" for basic authentication. Adds Authorization header.</param>
