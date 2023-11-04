@@ -845,7 +845,7 @@ public static class script {
 	/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
 	/// - JetBrains Rider: menu Run -> Attach to Process. Then select the process.
 	/// 
-	/// This function can launch a script to automate attaching a debugger. See Options -> General -> Debugger script. More info in <see href="/cookbook/Script testing and debugging.html">Cookbook</see>.
+	/// This function can launch a script to automate attaching a debugger. See Options -> Workspace -> Debugger script. More info in <see href="/cookbook/Script testing and debugging.html">Cookbook</see>.
 	/// 
 	/// <note>If the script process is running as administrator, the debugger process must run as administrator too.</note>
 	/// 

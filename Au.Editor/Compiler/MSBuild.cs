@@ -3,6 +3,9 @@ using Au.Controls;
 using System.Xml.Linq;
 using System.Windows;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+
+//TODO: compile pr as Release too.
 
 static class MSBuild {
 	public static async void Publish() {
@@ -38,9 +41,7 @@ static class MSBuild {
 				}
 				
 				var cl = $"publish \"{csprojFile}\" -c Release";
-				if (!meta.NugetPackages.Any()) cl += " --no-restore"; //somehow dotnet restore always connects to nuget, and fails or hangs if interrnet connection broken
 				print.it($"<><c blue>dotnet {cl}<>");
-				
 				if (0 != run.console(_Print, "dotnet.exe", cl)) { print.it("Failed"); return false; }
 				return true;
 			});
@@ -87,8 +88,8 @@ static class MSBuild {
 		_Add(xpg, "DebugType", "embedded");
 		_Add(xpg, "CopyDebugSymbolFilesFromPackages", "false");
 		_Add(xpg, "AppendTargetFrameworkToOutputPath", "false");
-		//_Add(xpg, "EnablePreviewFeatures", "true");
-		
+		_Add(xpg, "NuGetAudit", "false"); //don't connect to nuget.org unless using nuget references. If no internet connection, waits several s and prints: warning NU1900: Error occurred while getting package vulnerability data: No such host is known. (api.nuget.org:443). But sometimes hangs. Error if command line contains --no-restore. 
+				
 		_Add(xpg, "AssemblyName", m.Name);
 		_Add(xpg, "OutputType", m.Console ? "Exe" : "WinExe");
 		
@@ -128,19 +129,19 @@ static class MSBuild {
 		_AddAttr(xig, "Page", "Remove", "**");
 		_AddAttr(xig, "ApplicationDefinition", "Remove", "**");
 		
-		bool needSqlite = false;
 		foreach (var v in m.CodeFiles) {
 			_AddAttr(xig, "Compile", "Include", _Path(v.f));
-			if (!needSqlite) needSqlite = v.code.FindWord("sqlite", otherWordChars: "_") >= 0;
 		}
 		_AddAttr(xig, "Compile", "Include", _ModuleInit());
 		
+		var trees = CompilerUtil.CreateSyntaxTrees(m);
+		
 		_AddAuNativeDll("AuCpp.dll", both64and32: true);
-		if (needSqlite) _AddAuNativeDll("sqlite3.dll");
+		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll");
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(m, outDir, (from, to) => _AddContentFile(from, to));
 		
 		if (m.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //FUTURE: try <DisableImplicitFrameworkReferences>
-		foreach (var v in m.References.Refs.Skip(m.References.DefaultRefCount - 1)) {
+		foreach (var v in m.References.Refs.Skip(m.References.DefaultRefCount - 1)) { //Au, r, pr, com
 			var x = _AddAttr(xig, "Reference", "Include", v.FilePath);
 			if (v.Properties.EmbedInteropTypes) _Add(x, "EmbedInteropTypes", "true");
 			if (!v.Properties.Aliases.IsDefaultOrEmpty) _Add(x, "Aliases", v.Properties.Aliases[0]);
@@ -212,7 +213,6 @@ static class MSBuild {
 		}
 		
 		bool _ManagedResources() {
-			var trees = CompilerUtil.CreateSyntaxTrees(m);
 			var resourcesFile = outDir + @"\g.resources";
 			return CompilerUtil.CreateManagedResources(m, m.Name, trees, _ResourceException, o => {
 				var x = _AddAttr(xig, "EmbeddedResource", "Include", o.file);
@@ -238,6 +238,22 @@ static class MSBuild {
 				foreach (var pr in m.ProjectReferences) if (!_Nuget(pr.m)) return false;
 			}
 			return true;
+		}
+		
+		bool _NeedSqlite() {
+			var cOpt = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true, warningLevel: 0);
+			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, cOpt);
+			var asmStream = new MemoryStream(16000);
+			var emitResult = compilation.Emit(asmStream);
+			asmStream.Position = 0;
+			if (emitResult.Success && CompilerUtil.UsesSqlite(asmStream)) return true;
+			
+			foreach (var v in m.References.Refs.Skip(m.References.DefaultRefCount)) {
+				if (v.Properties.EmbedInteropTypes) continue; //com; and no nuget refs when publishing
+				if (CompilerUtil.UsesSqlite(v.FilePath, recursive: true)) return true;
+			}
+			
+			return false;
 		}
 	}
 }

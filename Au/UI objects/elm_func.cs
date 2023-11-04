@@ -1351,7 +1351,7 @@ namespace Au {
 		/// Expands multiple treeview control items using a path string.
 		/// </summary>
 		/// <param name="path">
-		/// String or array consisting of names (<see cref="Name"/>) of treeitem elements, like <c>"One|Two|Three"</c> or <c>new string[] { "One", "Two", "Three" }</c>.
+		/// String or array consisting of names (<see cref="Name"/>) of treeitem elements, like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c>.
 		/// Name string format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="keys">null or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double, bool)"/>.</param>

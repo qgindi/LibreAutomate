@@ -120,6 +120,7 @@ static class CodeInfo {
 				try { ReadyForEditing(); } catch (Exception e1) { print.it(e1); } //used in editorExtension scripts
 				ReadyForEditing = null; //GC
 			}
+			Git.AutoBackup(true);
 
 #if DEBUG
 			RoslynMod.Print.PrintItCallback = o => print.it(o);

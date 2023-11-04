@@ -246,6 +246,49 @@ static partial class CompilerUtil {
 		}
 	}
 	
+	public static bool UsesSqlite(Stream asmStream, bool recursive = false) {
+		using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
+		var mr = pr.GetMetadataReader();
+		
+		//var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
+		//print.it(usedRefs);
+		
+		foreach (var handle in mr.TypeReferences) {
+			var tr = mr.GetTypeReference(handle);
+			//print.it(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
+			string type = mr.GetString(tr.Name);
+			if ((type.Starts("sqlite") && mr.GetString(tr.Namespace) == "Au")
+				|| (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) return true;
+		}
+		
+		if (recursive) {
+			var fs = asmStream as FileStream; Debug.Assert(fs != null);
+			var dir = pathname.getDirectory(fs.Name, withSeparator: true);
+			var hs = new HashSet<string>();
+			foreach (var arh in mr.AssemblyReferences) {
+				var ar = mr.GetAssemblyReference(arh);
+				var an = mr.GetString(ar.Name);
+				if (MetaReferences.IsDefaultRef(an)) continue;
+				if (hs.Contains(an)) continue;
+				var path2 = dir + an + ".dll";
+				if (!filesystem.exists(path2, useRawPath: true).File) continue;
+				if (UsesSqlite(path2, true)) return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/// <summary>
+	/// Returns true if the .NET assembly uses sqlite types and therefore sqlite3.dll.
+	/// </summary>
+	/// <param name="dll">Assembly path.</param>
+	/// <param name="recursive">Include descendant reference assemblies.</param>
+	public static bool UsesSqlite(string dll, bool recursive = false) {
+		using var fs = filesystem.loadStream(dll);
+		return UsesSqlite(fs, recursive);
+	}
+	
 	public static bool RunPrePostBuildScript(MetaComments m, bool post, string outFile, bool publish) {
 		var x = post ? m.PostBuild : m.PreBuild;
 		var f = m.MainFile.f;

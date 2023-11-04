@@ -774,34 +774,14 @@ partial class Compiler {
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
 		
-		bool usesSqlite = _UsesSqlite(asmStream);
-		
-		static bool _UsesSqlite(Stream asmStream) {
-			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
-			var mr = pr.GetMetadataReader();
-			
-			//var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToArray();
-			//print.it(usedRefs);
-			
-			foreach (var handle in mr.TypeReferences) {
-				var tr = mr.GetTypeReference(handle);
-				//print.it(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
-				string type = mr.GetString(tr.Name);
-				if ((type.Starts("sqlite") && mr.GetString(tr.Namespace) == "Au")
-					|| (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) return true;
-			}
-			return false;
-		}
+		bool usesSqlite = CompilerUtil.UsesSqlite(asmStream);
 		
 		//copy managed dlls, including from nuget
 		if (_dr != null) {
 			foreach (var v in _dr) {
 				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath + "\\" + v.Key);
 				
-				if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) {
-					using var fs = filesystem.loadStream(v.Value);
-					usesSqlite = _UsesSqlite(fs);
-				}
+				if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) usesSqlite = CompilerUtil.UsesSqlite(v.Value);
 			}
 		}
 		

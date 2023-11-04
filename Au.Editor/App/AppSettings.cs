@@ -173,7 +173,6 @@ record AppSettings : JSettings {
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel;
-	public FRRecentItem[] find_recent, find_recentReplace; //big arrays should be at the end //CONSIDER: save in separate file in .state folder. Then the size limit can be bigger.
 }
 
 /// <summary>
@@ -185,6 +184,7 @@ record WorkspaceSettings : JSettings {
 	
 	public record User(string guid) {
 		public string startupScripts, debuggerScript, gitUrl;
+		public bool gitBackup;
 	}
 	public User[] users;
 	

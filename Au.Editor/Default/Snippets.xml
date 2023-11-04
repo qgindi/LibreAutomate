@@ -149,7 +149,7 @@ default: return;
 }]]>
 			</list>
 			<list item="&amp;List of buttons">
-				<![CDATA[//int button = dialog.showList(new("one", "two", "three"));
+				<![CDATA[//int button = dialog.showList(["one", "two", "three"]);
 int button = dialog.showList("$end$one|two|three$end$");
 switch (button) {
 case 1:  break;

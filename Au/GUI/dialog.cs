@@ -2,10 +2,9 @@ using System.Drawing;
 
 #pragma warning disable 649 //unused fields in API structs
 
-//TODO: showCheckboxes. See also EnumUI.
-
 //rejected: by default show dialog in screen of mouse, like with <c>dialog.options.defaultScreen = screen.ofMouse;</c>.
 //	Some Windows etc dialogs do it, and for me it's probably better. Eg Explorer's Properties even is at mouse position (top-left corner).
+//rejected: dialog.showCheckboxes. See Cookbook -> Dialog - enum check-list, select.
 
 namespace Au {
 	/// <summary>
@@ -1421,7 +1420,7 @@ namespace Au {
 		/// ]]></code>
 		/// 
 		/// <code><![CDATA[
-		/// var con = new DControls { Checkbox = "Check", RadioButtons = "1 One|2 Two|3 Three", EditType = DEdit.Combo, EditText = "zero", ComboItems = new string[] { "one", "two" } };
+		/// var con = new DControls { Checkbox = "Check", RadioButtons = "1 One|2 Two|3 Three", EditType = DEdit.Combo, EditText = "zero", ComboItems = ["one", "two"] };
 		/// var r = dialog.show("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", controls: con, secondsTimeout: 30);
 		/// print.it(r, con.IsChecked, con.RadioId, con.EditText);
 		/// switch(r) {
@@ -2095,7 +2094,7 @@ namespace Au.Types {
 	/// <remarks>
 	/// Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <b>TDM_CLICK_BUTTON</b> use <c>DNative.TDM.CLICK_BUTTON</c>.
 	/// </remarks>
-	public static partial class DNative {
+	public static class DNative {
 		/// <summary>
 		/// Messages that your <see cref="dialog"/> event handler can send to the dialog.
 		/// </summary>

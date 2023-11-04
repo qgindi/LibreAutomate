@@ -1,17 +1,3 @@
-//TODO: sometimes a topmost non-attached toolbar window is behind nontopmost windows.
-//	Noticed several times in the last year (2022-2023). It seems only on Windows 11. Impossible to reproduce.
-//	Possible workaround: every second: if (!w.ZorderIsAbove(wnd.active)) ...
-//		Tested: ZorderTop does not work. ZorderAbove(second window in Z order) works.
-//	Once it happened during drag-drop files between 2 folder windows.
-//		The activated folder window became on top of all windows, including taskbars.
-//		Then at first only that window was supertopmost, but afterwards activating other normal windows made them supertompmost too.
-//	Next time when activated (clicked) a folder window.
-//	It seems it's a Windows bug.
-//	But one concern: maybe our toolbars are involved. Maybe it happens when a toolbar zorders itself above the owner window in a wrong time.
-//		That folder window (all folder windows) had 1 attached toolbar. The toolbar was already loaded.
-//		But toolbars only zorder self, not the owner window.
-//	Try: #if DEBUG: let wnd.SetWindowPos validate the Z order before and after calling the API. If becomes invalid after calling, print. Maybe after eg 100 ms (timer).
-
 namespace Au;
 
 public partial class toolbar {
@@ -23,25 +9,25 @@ public partial class toolbar {
 		RECT _rect, _clientRect;
 		SIZE _prevSize, _prevClientSize;
 		//public readonly int thread;
-
+		
 		public _OwnerWindow(wnd w) {
 			this.w = w;
 			//thread = w.ThreadId;
 			a = new List<toolbar>();
 		}
-
+		
 		public void AddTB(toolbar tb) {
 			a.Add(tb);
 			tb._ow = this;
 		}
-
+		
 		public (bool visible, bool dead) IsVisible() {
 			lastError.clear();
 			if (!w.IsVisible) return (false, lastError.code != 0);
 			return (!w.IsMinimized && !w.IsCloaked, false);
 			//speed: IsCloaked now on Win10 quite fast, faster than GetRect
 		}
-
+		
 		public bool UpdateRect(out bool changed) {
 			changed = false;
 			int have = 0;
@@ -71,24 +57,24 @@ public partial class toolbar {
 			if (!_updatedOnce) _updatedOnce = changed = true;
 			return true;
 		}
-
+		
 		public RECT GetCachedRect(toolbar tb) => tb._followClientArea ? _clientRect : _rect;
-
+		
 		public SIZE GetPrevSize(toolbar tb) => tb._followClientArea ? _prevClientSize : _prevSize;
 	}
-
+	
 	class _OwnerControl {
 		public readonly wnd c;
 		public readonly ITBOwnerObject oo;
 		public RECT cachedRect;
 		public SIZE prevSize;
 		bool _updatedOnce;
-
+		
 		public _OwnerControl(wnd control, ITBOwnerObject ioo) {
 			c = control;
 			oo = ioo;
 		}
-
+		
 		public (bool visible, bool dead) IsVisible(bool parentVisible = true) {
 			if (!c.Is0) {
 				lastError.clear();
@@ -101,7 +87,7 @@ public partial class toolbar {
 			}
 			return (true, false);
 		}
-
+		
 		public bool UpdateRect(out bool changed) {
 			bool ok = oo != null ? oo.GetRect(out RECT r) : c.GetRect(out r);
 			if (changed = ok && r != cachedRect) {
@@ -112,20 +98,20 @@ public partial class toolbar {
 			return ok;
 		}
 	}
-
+	
 	class _OwnerScreen {
 		public _OwnerScreen(toolbar tb, screen scrn) {
 			_tb = tb;
 			_scrn = (_isAuto = scrn.IsEmpty) ? screen.of(_tb._sett.screenx, _tb._sett.screeny) : scrn.Now;
 			UpdateRect(out _);
 		}
-
+		
 		toolbar _tb;
 		screen _scrn;
 		bool _isAuto;
 		public RECT cachedRect;
 		public SIZE prevSize;
-
+		
 #if DEBUG
 		public screen Screen {
 			get {
@@ -136,9 +122,9 @@ public partial class toolbar {
 #else
 		public screen Screen => _scrn;
 #endif
-
+		
 		//public bool IsAuto => _isAuto;
-
+		
 		public bool UpdateRect(out bool changed) {
 			RECT r = _scrn.Rect;
 			if (changed = r != cachedRect && !r.Is0) {
@@ -147,7 +133,7 @@ public partial class toolbar {
 			}
 			return true;
 		}
-
+		
 		//called from _WmWindowPosChanged
 		public void UpdateIfAutoScreen() {
 			if (!_isAuto) return;
@@ -158,27 +144,27 @@ public partial class toolbar {
 				UpdateRect(out _);
 			}
 		}
-
+		
 		//Called on WM_DISPLAYCHANGE. If screen detached, sets _scrn = 0. When reattached, sets _scrn = new screen handle.
 		public bool IsScreenInvalid() {
 			if (!_scrn.IsAlive) {
 				//Debug_.Print($"CloseIfScreenInvalid, {_tb.Name}, {screen.of(_tb._w, SODefault.Zero)}");
-
+				
 				_scrn = screen.of(new POINT(cachedRect.CenterX, cachedRect.CenterY), SODefault.Zero);
 				return _scrn.Handle == default;
 			}
 			return false;
 		}
 	}
-
+	
 	_OwnerWindow _ow; //not null if owned
 	_OwnerControl _oc; //not null if owned by a control or other object (ITBOwnerObject)
 	_OwnerScreen _os; //not null if not owned or if anchor has flag Screen
 	bool _followClientArea;
-
+	
 	[ThreadStatic] static _TBManager t_man;
 	static _TBManager _Manager => t_man ??= new();
-
+	
 	class _TBManager {
 		internal readonly List<toolbar> _atb = new();
 		readonly List<_OwnerWindow> _aow = new();
@@ -187,7 +173,7 @@ public partial class toolbar {
 		WinEventHook _hook;
 		int _tempHook;
 		bool _inHook;
-
+		
 		public void Add(toolbar tb, wnd w, wnd c, ITBOwnerObject ioo) {
 			bool isOwned = !w.Is0;
 			if (isOwned) {
@@ -195,22 +181,21 @@ public partial class toolbar {
 				ow.AddTB(tb);
 				if (!c.Is0 || ioo != null) tb._oc = new _OwnerControl(c, ioo);
 			}
-
+			
 			_atb.Add(tb);
-
+			
 			if (_hook == null) {
-				_hook = new WinEventHook(
-					new EEvent[] {
+				_hook = new WinEventHook([
 					0, EEvent.OBJECT_REORDER,
 					EEvent.OBJECT_CLOAKED, EEvent.OBJECT_UNCLOAKED,
 					EEvent.SYSTEM_MOVESIZESTART, EEvent.SYSTEM_MOVESIZEEND,
 					EEvent.SYSTEM_MINIMIZESTART, EEvent.SYSTEM_MINIMIZEEND,
-					},
+					],
 					_Hook,
 					flags: EHookFlags.SKIPOWNTHREAD);
 				_timer = new timer(_Timer);
 			}
-
+			
 			tb._hide = TBHide.Owner;
 			if (isOwned) {
 				_SetTimer(250);
@@ -221,7 +206,7 @@ public partial class toolbar {
 				tb._SetVisible(true, TBHide.Owner);
 			}
 		}
-
+		
 		public void Remove(toolbar tb) {
 			_atb.Remove(tb);
 			var ow = tb._ow;
@@ -230,20 +215,20 @@ public partial class toolbar {
 				if (ow.a.Count == 0) _aow.Remove(ow);
 			}
 		}
-
+		
 		void _SetTimer(int period) {
 			_timer.Every(_timerPeriod = period);
 		}
-
+		
 		void _Timer(timer t) {
 			if (_timerPeriod != 250) _SetTimer(250);
-
+			
 			//remove closed toolbars and their owners if need. Now don't need because toolbars call Remove when closing.
 			//for(int i = _atb.Count; --i >= 0;) {
 			//	var tb = _atb[i];
 			//	if(tb._closed) Remove(tb);
 			//}
-
+			
 			//move/close/hide/show owned toolbars together with their owners
 			for (int i = _aow.Count; --i >= 0;) {
 				var ow = _aow[i];
@@ -257,33 +242,25 @@ public partial class toolbar {
 					//actually don't need these two Remove, because tb.Close calls Remove. Just don't use RemoveAt and foreach.
 				}
 			}
-
+			
 			//occasionally may fail to zorder a toolbar. Retry several times.
 			for (int i = _atb.Count; --i >= 0;) {
 				var v = _atb[i];
-				if (v._zorderRetry > 0) v._Zorder();
+				if (v._zorderRetry > 0) v._ZorderOwned();
 			}
-
+			
+			_ZorderTimer();
+			
 			_ManageFullScreen();
 		}
-
+		
+		//long _reorderTime;
 		void _Hook(HookData.WinEvent d) {
 			//print.it(d.event_, d.idObject, d.idChild, d.thread, d.w);
 			if (d.w.Is0 || d.idObject != (d.event_ == EEvent.OBJECT_REORDER ? EObjid.CLIENT : EObjid.WINDOW) || d.idChild != 0) return;
 			switch (d.event_) {
 			case EEvent.OBJECT_REORDER when d.w == wnd.getwnd.root: //the hook does not give the window, only its thread id
-#if true
-				for (int i = _atb.Count; --i >= 0;) _atb[i]._Zorder();
-#else
-					//This version is faster but unreliable.
-					//	1. For console windows getwindowthreadprocessid gives wrong thread id. Hook receives the correct id.
-					//	2. When clicked client area of a Store app, hook receives thread id of the child control. It is different than that of the main host window.
-					//	3. All unknown and future things like those.
-					foreach(var v in _ao) {
-						if(v.thread != d.idThread) continue;
-						foreach(var tb in v.a) tb._Zorder();
-					}
-#endif
+				_Zorder();
 				break;
 			case EEvent.SYSTEM_MOVESIZESTART when _tempHook == 0:
 				if (_FindOW(d.w, out _)) _tempHook = _hook.Add(EEvent.OBJECT_LOCATIONCHANGE, flags: EHookFlags.SKIPOWNTHREAD);
@@ -310,39 +287,39 @@ public partial class toolbar {
 				if (_FindOW(d.w, out _)) _SetTimer(150);
 				break;
 			}
-
+			
 			//SYSTEM_MOVESIZESTART and SYSTEM_MOVESIZEEND temporarily add/remove OBJECT_LOCATIONCHANGE to move toolbars with the owner window.
 			//	Cannot make OBJECT_LOCATIONCHANGE always active, because it is called frequently, on each cursor position change etc.
 			//	There are no other not-in-process hooks to detect moved windows. For CBT hook need 2 processes - 64bit and 32bit.
-
+			
 			//OBJECT_REORDER keeps toolbars above their owner windows in the Z order.
 			//	Easier would be to make the owner natively owner. But then problems:
 			//	1. If this process is admin, the owner's process cannot receive drag&drop from other non-admin processes. Don't know why, probably it is a Windows bug.
 			//	2. Fails if owner's process is a Store app. Also probaby if higher UAC IL.
 			//	3. In some cases possible various anomalies, for example wrong Z order of windows after closing the owner window.
 			//	4. All unknown and future things like those.
-			//	In QM2 some of these problems were solved by adding a child window to the owner window and making in the native owner of the toolbar. But then other problems, eg DPI-scaling.
-
+			//	In QM some of these problems were solved by adding a child window to the owner window and making it the native owner of the toolbar. But then other problems, eg DPI-scaling.
+			
 			//PROBLEM: OBJECT_REORDER makes creating windows slower.
 			//	For example, combobox controls send OBJECT_REORDER when adding items. Two for each item that would be visible in the drop-down list.
 			//	Tested: standard dialog box with 12 comboboxes, each with 30 such items. We receive ~720 OBJECT_REORDER.
 			//		If there are 4 processes with 1 OBJECT_REORDER hook, dialog startup time increases 50%, from 360 to 540 ms.
 			//Other used hooks aren't called frequently. Except OBJECT_LOCATIONCHANGE, but it is temporary.
 		}
-
+		
 		bool _FindOW(wnd owner, out _OwnerWindow ow) {
 			foreach (var v in _aow) if (v.w == owner) { ow = v; return true; }
 			ow = null; return false;
 		}
-
+		
 		bool _FollowOwner(_OwnerWindow ow) {
 			var (visibleW, dead) = ow.IsVisible();
 			if (dead) return false;
-
+			
 			bool changedRectW = false;
 			if (visibleW) visibleW = ow.UpdateRect(out changedRectW);
 			ow.visible = visibleW;
-
+			
 			for (int i = ow.a.Count; --i >= 0;) {
 				bool visible, changedRect;
 				var tb = ow.a[i];
@@ -365,13 +342,13 @@ public partial class toolbar {
 				}
 				if (changedVisible) {
 					tb._SetVisible(visible, TBHide.Owner);
-					if (visible) tb._Zorder();
+					if (visible) tb._ZorderOwned();
 				}
 			}
-
+			
 			return true;
 		}
-
+		
 		void _ManageFullScreen(toolbar tb = null) {
 			if (tb?.MiscFlags.Has(TBFlags.HideWhenFullScreen) ?? _atb.Any(o => o.MiscFlags.Has(TBFlags.HideWhenFullScreen))) {
 				var w = wnd.active;
@@ -380,30 +357,57 @@ public partial class toolbar {
 				else foreach (var v in _atb) if (v.MiscFlags.Has(TBFlags.HideWhenFullScreen)) v._ManageFullScreen(isFS, w, scrn);
 			}
 		}
-	}
-
-	void _ManageFullScreen(bool isFS, wnd wFore, screen scrn) {
-		if (_inMoveSize) return;
-		bool hide;
-		if (!isFS) hide = false;
-		else if (IsOwned) hide = OwnerWindow == wFore;
-		else hide = screen.of(_w, SODefault.Zero) == scrn;
-
-		_SetVisible(!hide, TBHide.FullScreen);
-	}
-
-	void _Zorder() {
-		if (!IsOwned) {
-			//Ensure the toolbar is on top of taskbar.
-			//	It means usually will be on top of most topmost windows.
+		
+		//EEvent.OBJECT_REORDER
+		void _Zorder() {
+			for (int i = _atb.Count; --i >= 0;) {
+				var tb = _atb[i];
+				if (tb.IsOwned) tb._ZorderOwned();
+				else if (_zorderDelay < 1) _zorderDelay = 2;
+			}
+#if false
+			//This version of zordering owned toolbars is faster but unreliable.
+			//	1. For console windows getwindowthreadprocessid gives wrong thread id. Hook receives the correct id.
+			//	2. When clicked client area of a Store app, hook receives thread id of the child control. It is different than that of the main host window.
+			//	3. All unknown and future things like those.
+			foreach(var v in _aow) {
+				if(v.thread != d.idThread) continue;
+				foreach(var tb in v.a) tb._ZorderOwned();
+			}
+#endif
+		}
+		int _zorderDelay;
+		
+		void _ZorderTimer() {
+			//250-500 ms after EEvent.OBJECT_REORDER
+			if (_zorderDelay < 1 || --_zorderDelay > 0) return;
+			
+			//Ensure the toolbar is on top of the primary taskbar. Or ontop of the active window if the primary taskbar is behind it.
 			//	Not on top of all topmost windows. Would cover tooltips etc, fight with sibling toolbars, etc.
-			var wo = s_taskbar.FindFast(null, "Shell_TrayWnd", false);
-			if (!wo.IsTopmost) return;
-			if (_w.ZorderIsAbove(wo)) return;
-			_w.ZorderAbove(wo);
-		} else if (_ow.visible) {
+			var taskbar = s_taskbar.FindFast(null, "Shell_TrayWnd", false); //of the primary screen
+			var active = wnd.active;
+			var w = !active.Is0 && active != taskbar && (taskbar.Is0 || !taskbar.ZorderIsAbove(active)) ? active : taskbar;
+			if (w.Is0) return;
+			for (int i = _atb.Count; --i >= 0;) {
+				var tb = _atb[i];
+				if (tb.IsOwned) continue;
+				if (tb.Hwnd.ZorderIsAbove(w)) continue;
+				bool ok = tb.Hwnd.ZorderAbove(w);
+				
+				//Windows 11 bug: sometimes, when activated a non-topmost window, it becomes on top of topmost windows, eg taskbars and unowned toolbars.
+				//	Afterwards activating other normal windows makes them on top of topmost windows too.
+				//	Impossible to reproduce, it happens randomly, once in several days or weeks.
+				Debug_.PrintIf(w == active && !w.IsTopmost, $"toolbar behind the active non-topmost window. ZorderAbove: {ok}");
+			}
+		}
+		static wnd.Cached_ s_taskbar;
+	}
+	
+	void _ZorderOwned() {
+		Debug.Assert(IsOwned);
+		if (IsOwned && _ow.visible) {
 			wnd wt = _w, wo = _ow.w;
-
+			
 			//Some windows, eg UiPath, have an owned "shadow frame" window that may cover toolbar parts that aren't entirely inside the owner window's rect.
 			//	Toolbars should detect such windows and zorder above them. Can't just blindly zorder above the topmost owned.
 			//	But detecting can be difficult/slow/unreliable. Need to get all owned windows or all thread windows, etc.
@@ -414,7 +418,7 @@ public partial class toolbar {
 			//	if (!w2.Is0 && w2.Rect.Contains(wo.Rect)) wo = w2;
 			//}
 			//print.it(wo);
-
+			
 			if (!_zordered || !wt.ZorderIsAbove(wo)) {
 				_zordered = wt.ZorderAbove(wo) || !wo.IsAlive;
 				if (!_zordered) {
@@ -433,9 +437,9 @@ public partial class toolbar {
 					}
 				}
 			}
-
+			
 			if (_zordered) _zorderRetry = 0; else if (_zorderRetry == 0) _zorderRetry = 5; else _zorderRetry--;
-
+			
 			//never mind: when clicked owner's caption, we receive 2 hook events and need to ZorderAbove 2 times. Speed is OK, but flickers more often.
 			//	When we ZorderAbove on mouse down, Windows also zorders the window on mouse up, and then we receive second event.
 			//	Possible workarounds:
@@ -445,23 +449,32 @@ public partial class toolbar {
 	}
 	bool _zordered;
 	byte _zorderRetry;
-	static wnd.Cached_ s_taskbar;
-
+	
+	void _ManageFullScreen(bool isFS, wnd wFore, screen scrn) {
+		if (_inMoveSize) return;
+		bool hide;
+		if (!isFS) hide = false;
+		else if (IsOwned) hide = OwnerWindow == wFore;
+		else hide = screen.of(_w, SODefault.Zero) == scrn;
+		
+		_SetVisible(!hide, TBHide.FullScreen);
+	}
+	
 	void _FollowRect(bool onFollowOwner = false) {
 		if (_inMoveSize) return;
 		if (onFollowOwner && Anchor.OfScreen() && _followedOnce) return;
 		if (!onFollowOwner && _hide.Has(TBHide.Owner) && IsOwned && OwnerWindow.IsMinimized) return;
-
+		
 		bool dpiChanged = _os == null && _SetDpi();
 		//print.it(dpiChanged, OwnerWindow);
-
+		
 		var (r, prevSize) = _GetCachedOwnerRect();
 		//print.it(r, Anchor, _xy, Size);
-
+		
 		var swp = SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER | SWPFlags.NOACTIVATE;
 		var bounds = _w.Rect;
 		int x, y, cx = bounds.Width, cy = bounds.Height;
-
+		
 		if (Anchor.HasLeft()) {
 			x = (Anchor.OppositeX() ? r.right : r.left) + _Scale(_offsets.Left, true);
 			if (Anchor.HasRight() && (!_followedOnce || r.Width != prevSize.width)) {
@@ -482,12 +495,12 @@ public partial class toolbar {
 			Debug.Assert(Anchor.HasBottom());
 			y = (Anchor.OppositeY() ? r.top : r.bottom) - _Scale(_offsets.Bottom, true) - cy;
 		}
-
+		
 		if (_preferSize) {
 			_preferSize = false;
 			_sett.offsets = _offsets;
 		}
-
+		
 		if (x == bounds.left && y == bounds.top) swp |= SWPFlags.NOMOVE;
 		if (cx == bounds.Width && cy == bounds.Height) swp |= SWPFlags.NOSIZE;
 		if (!swp.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE)) {
@@ -495,15 +508,15 @@ public partial class toolbar {
 			_w.SetWindowPos(swp, x, y, cx, cy);
 			_ignorePosChanged = 0;
 		}
-
+		
 		bool followedOnce = _followedOnce;
 		_followedOnce = true;
-
+		
 		if (dpiChanged) {
 			_MeasureText();
 			_AutoSizeNow();
 		}
-
+		
 		if (!followedOnce && _os != null) {
 			var sc = screen.of(_w, SODefault.Zero);
 			if (sc != _os.Screen) {
@@ -514,13 +527,13 @@ public partial class toolbar {
 	bool _followedOnce;
 	byte _ignorePosChanged;
 	bool _preferSize;
-
+	
 	void _WmWindowPosChanging(ref Api.WINDOWPOS wp) {
 		//uncomment if using properties MinimumSize and MaximumSize.
-
+		
 		if (!_created) return;
 		////print.it(this, wp.flags);
-
+		
 		//if(!wp.flags.Has(SWPFlags.NOSIZE)) {
 		//	SIZE min = _GetMinSize();
 		//	if(wp.cx < min.width) wp.cx = min.width;
@@ -537,7 +550,7 @@ public partial class toolbar {
 		//	var ms = _Scale(MinimumSize);
 		//	return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
 		//}
-
+		
 		//don't allow to move the satellite away from the planet.
 		//	Only when _inMoveSize. In other cases can create problems, eg when DPI changes.
 		if (!wp.flags.Has(SWPFlags.NOMOVE) && _IsSatellite && _inMoveSize) {
@@ -548,7 +561,7 @@ public partial class toolbar {
 			}
 		}
 	}
-
+	
 	void _WmWindowPosChanged(in Api.WINDOWPOS wp) {
 		if (!_created) return;
 		if (!wp.flags.Has(SWPFlags.NOMOVE | SWPFlags.NOSIZE) && _ignorePosChanged < 2) {
@@ -565,7 +578,7 @@ public partial class toolbar {
 			if (resized) {
 				/*SIZE z=*/
 				_Measure(_w.ClientRect.Width); //rewrap buttons etc
-
+				
 				//if(AutoSize && _ignorePosChanged && z.height!=wp.cy && Anchor is TBAnchor.TopLR or TBAnchor.BottomLR && Layout==TBLayout.HorizontalWrap) _Resize(z);//rejected
 			}
 			_SatFollow();
@@ -574,7 +587,7 @@ public partial class toolbar {
 			_SatHide();
 		}
 	}
-
+	
 	void _UpdateOffsets(int x, int y, int cx, int cy) {
 		var (r, _) = _GetCachedOwnerRect();
 		//print.it(x, y, cx, cy, r);
@@ -587,7 +600,7 @@ public partial class toolbar {
 			_sett.size = _Unscale(_w.ClientRect.Size);
 		}
 	}
-
+	
 	void _SetInMoveSize(bool start) {
 		_inMoveSize = start;
 		if (!start) {
@@ -601,7 +614,7 @@ public partial class toolbar {
 		}
 	}
 	bool _inMoveSize;
-
+	
 	/// <summary>
 	/// Gets the cached rectangle of the owner window, screen, control, etc.
 	/// If is owned and anchor has flag Screen, the rectangle is of toolbar's screen.
@@ -613,7 +626,7 @@ public partial class toolbar {
 		if (_oc != null) return (_oc.cachedRect, _oc.prevSize);
 		return (_ow.GetCachedRect(this), _ow.GetPrevSize(this));
 	}
-
+	
 	unsafe nint _WmGetDpiScaledSize(nint wParam, nint lParam) {
 		//a quick and not perfect workaround for: on DPI change sometimes incorrect wrap/autosize
 		if (_os != null && AutoSize && Layout == TBLayout.HorizontalWrap && _inMoveSize) {
@@ -626,7 +639,7 @@ public partial class toolbar {
 		}
 		return 0;
 	}
-
+	
 	unsafe void _WmDpiChanged(nint wParam, nint lParam) {
 		if (_os != null) {
 			//print.it(caller(), _w.Rect, *(RECT*)lParam);
@@ -641,11 +654,11 @@ public partial class toolbar {
 			}
 		}
 	}
-
+	
 	void _WmDisplayChange() {
 		if (_os != null) {
 			if (_os.IsScreenInvalid()) return;
-
+			
 			timer.after(200, _ => {
 				if (_os == null || _closed) return;
 				_os.UpdateRect(out bool changed);
@@ -653,11 +666,11 @@ public partial class toolbar {
 			});
 		} else if (osVersion.minWin8_1) {
 			//If owner's screen DPI changed, update toolbar's DPI/size/offsets. Need it for pm-dpi-aware windows that don't change rect when DPI changed.
-
+			
 			//WM_DISPLAYCHANGE doc: "when the display resolution has changed". Also when changed DPI, although undocumented. Tested on Win8.1 too.
 			//	wm_dpichanged isn't good for it. We need DPI of owner, not of toolbar.
 			//	Also we receive wm_settingchanged(SPI_SETLOGICALDPIOVERRIDE), but can't trust it. SPI_SETLOGICALDPIOVERRIDE's documentation is "Do not use.". No on Win8.1.
-
+			
 			//Wait until owner's DPI updated. If owner is pm-dpi-aware, its DPI is updated at random times, maybe after several s.
 			int i = 15, oldDpi = _dpi;
 			timer.every(1000, t => {

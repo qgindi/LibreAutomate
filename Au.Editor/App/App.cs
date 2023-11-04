@@ -438,7 +438,7 @@ static partial class App {
 				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
 				print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
 			} else if (forceNow) {
-				dialog.showInfo($"{AppNameShort} is up to date. Version {Version}.", owner: Hmain);
+				dialog.showInfo(null, $"{AppNameShort} is up to date. Version {Version}.", owner: Hmain);
 			}
 		}
 		catch (Exception e1) { if (forceNow) print.warning(e1); }

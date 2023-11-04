@@ -6,7 +6,7 @@ namespace Au.More;
 /// <example>
 /// <code><![CDATA[
 /// /*/ role exeProgram; ifRunning run; /*/
-/// if (script.testing) args = new[] { "test", "args" };
+/// if (script.testing) args = ["test", "args"];
 /// 
 /// if (AppSingleInstance.AlreadyRunning("unique-mutex-name", args)) {
 /// 	print.it("already running");

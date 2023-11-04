@@ -65,7 +65,7 @@ public class OcrGoogleCloud : IOcrEngine {
 """;
 		
 		//perf.first();
-		if (!internet.http_.TryPost(out var r, url, internet.jsonContent(requestJson), new[] { "Accept-Encoding: br, gzip, deflate" }, dontWait: true))
+		if (!internet.http_.TryPost(out var r, url, internet.jsonContent(requestJson), ["Accept-Encoding: br, gzip, deflate"], dontWait: true))
 			throw new AuException(r.Text(true));
 		//perf.next();
 #if true //can be faster > 10 times. Also we use compression. Together it makes this part 100 times faster than the TryPost.

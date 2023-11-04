@@ -10,14 +10,15 @@ Options:
 - Add .NET Runtime - add .NET Runtime files too. Then the program can run on computers without installed .NET. If unchecked, on computers without .NET the program just prompts to install .NET. Single-file .exe is compressed, ~70 MB.
 - ReadyToRun - compile to native code. Try this if your program starts too slowly.
 
-The Publish command converts script options to a temporary .csproj file and executes [dotnet publish](https://www.google.com/search?q=dotnet+publish). It compiles the script slightly differently than LibreAutomate. It uses .NET SDK; prompts to install it if need.
+The Publish command converts script options to a temporary .csproj file and executes [dotnet publish](https://www.google.com/search?q=dotnet+publish). It compiles the script slightly differently than LibreAutomate. Uses .NET SDK (prompts to install it if need).
 
 By default the program can run only on 64-bit Windows. It's not a problem, because 32-bit Windows is already extinct. With option "bit32" the program is 32-bit and can run on 32-bit Windows too.
+
+Role can be exeProgram or miniProgram.
+
+Always creates optimized code (aka "Release"), regardless of the "optimize" option.
 
 Unsupported features:
 - `/*/ icon folder /*/` (multiple native icons).
 - `/*/ testInternal, noRef /*/`.
-
-Also `/*/ ifRunning /*/` and  `/*/ uac /*/` are ignored. The program will run like any other program.
-
-Role can be exeProgram or miniProgram.
+- `/*/ ifRunning /*/` and  `/*/ uac /*/` are ignored. The program will run like any other program.
