@@ -16,7 +16,7 @@ By default the program can run only on 64-bit Windows. It's not a problem, becau
 
 Role can be exeProgram or miniProgram.
 
-Always creates optimized code (aka "Release"), regardless of the "optimize" option.
+Always compiles the program and its `/*/ pr /*/` libraries like with `/*/ optimize true; /*/` (aka "Release").
 
 Unsupported features:
 - `/*/ icon folder /*/` (multiple native icons).

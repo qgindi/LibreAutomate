@@ -15,7 +15,7 @@
 //Edit as described in the '#if false' block at the bottom of this file.
 //Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects. It runs this exe.
 
-//In editor project are added references to the main 6 dlls in _\Roslyn, with 'Copy local' false (default).
+//In editor project are added references to the main 6 dlls in _\Roslyn, with 'Copy local' false.
 //  For Microsoft.CodeAnalysis.Workspaces set aliases CAW.
 
 //Rejected: to make editor startup faster, publish Microsoft.CodeAnalysis.CSharp.Features with <PublishReadyToRun>.

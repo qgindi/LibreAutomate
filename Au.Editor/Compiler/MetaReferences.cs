@@ -349,6 +349,7 @@ class MetaReferences {
 			if (px.Size >= 10_000) {
 				var md5 = new Hash.MD5Context(); md5.Add(xmlPath.Lower());
 				var dbPath = folders.ThisAppTemp + md5.Hash.ToString() + ".db";
+				//CONSIDER: later delete oldest temp files.
 				try {
 					if (!filesystem.getProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
 						//Debug_.Print($"creating db: {asmPath}  ->  {dbPath}");

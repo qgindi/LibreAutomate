@@ -137,22 +137,27 @@
 	<ItemGroup>
 		<Reference Include="Microsoft.CodeAnalysis">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
-			<Aliases></Aliases>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.Features">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Features.dll</HintPath>
+			<Private>False</Private>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis.Workspaces">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+			<Private>False</Private>
 			<Aliases>CAW</Aliases>
 		</Reference>
 	</ItemGroup>

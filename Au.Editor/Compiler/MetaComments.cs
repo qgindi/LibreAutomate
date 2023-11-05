@@ -369,14 +369,14 @@ class MetaComments {
 	/// </summary>
 	public int MiscFlags { get; private set; }
 	
-	readonly MCPFlags _flags;
+	readonly MCFlags _flags;
 	readonly Dictionary<FileNode, string> _fileTextCache;
 	
 	/// <param name="fileTextCache">
 	/// If not null, tries to get file text from it; if not found, loads and adds to it.
 	/// Use to avoid loading text of same file many times when processing multiple files. Eg for each file need global.cs and its meta c.
 	/// </param>
-	public MetaComments(MCPFlags flags, Dictionary<FileNode, string> fileTextCache = null) {
+	public MetaComments(MCFlags flags, Dictionary<FileNode, string> fileTextCache = null) {
 		_flags = flags;
 		_fileTextCache = fileTextCache;
 	}
@@ -389,8 +389,8 @@ class MetaComments {
 	/// <param name="f">Main C# file. If projFolder not null, must be the main file of the project.</param>
 	/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
 	public bool Parse(FileNode f, FileNode projFolder) {
-		if (!_flags.Has(MCPFlags.ForCodeInfo)) Errors = new ErrBuilder();
-		if (_flags.Has(MCPFlags.MSBuild)) Optimize = true;
+		if (!_flags.Has(MCFlags.ForCodeInfo)) Errors = new ErrBuilder();
+		if (_flags.Has(MCFlags.Publish)) Optimize = true;
 		
 		if (_ParseFile(f, true, false)) {
 			if (projFolder != null) {
@@ -413,7 +413,7 @@ class MetaComments {
 			//if(Role == MCRole.exeProgram && !_defines.Contains("EXE")) _defines.Add("EXE"); //rejected
 			Defines = [.. s_defaultDefines, .. _defines];
 			
-			if (_flags.Has(MCPFlags.ForFindReferences)) return true;
+			if (_flags.Has(MCFlags.ForFindReferences)) return true;
 			
 			_f = MainFile;
 			_metaRange = MetaRange;
@@ -421,9 +421,14 @@ class MetaComments {
 		}
 		
 		if (Errors?.ErrorCount > 0) {
-			if (_flags.Has(MCPFlags.PrintErrors)) Errors.PrintAll();
+			if (_flags.Has(MCFlags.PrintErrors)) Errors.PrintAll();
 			return false;
 		}
+		
+		if (_flags.Has(MCFlags.Publish) && Role == MCRole.classLibrary) {
+			OutputPath = folders.ThisAppTemp + @"publish\pr\" + Name;
+		}
+		
 		return true;
 	}
 	
@@ -488,7 +493,7 @@ class MetaComments {
 		
 		if (isMain) {
 			this.UnchangedRole = this.Role;
-			if (_flags.Has(MCPFlags.WpfPreview)) {
+			if (_flags.Has(MCFlags.WpfPreview)) {
 				this.Role = MCRole.miniProgram;
 				this.IfRunning = MCIfRunning.run;
 				_defines.Add("WPF_PREVIEW");
@@ -527,9 +532,8 @@ class MetaComments {
 		_valueFrom = iValue; _valueTo = iValue + value.Length;
 		
 		if (value.Length == 0) { _ErrorV("value cannot be empty"); return; }
-		bool forCodeInfo = _flags.Has(MCPFlags.ForCodeInfo),
-			forFindRef = _flags.Has(MCPFlags.ForFindReferences),
-			forMsbuild = _flags.Has(MCPFlags.MSBuild);
+		bool forCodeInfo = _flags.Has(MCFlags.ForCodeInfo),
+			forFindRef = _flags.Has(MCFlags.ForFindReferences);
 		
 		switch (name) {
 		case "r":
@@ -585,7 +589,7 @@ class MetaComments {
 			References.RemoveFromRefs(value);
 			return;
 		}
-		if (_flags.Has(MCPFlags.OnlyRef)) return;
+		if (_flags.Has(MCFlags.OnlyRef)) return;
 		
 		if (name is "resource") {
 			if (!forFindRef) {
@@ -629,7 +633,7 @@ class MetaComments {
 			return;
 		case "optimize":
 			_Specified(MCSpecified.optimize);
-			if (_TrueFalse(out bool optim, value)) Optimize = optim;
+			if (_TrueFalse(out bool optim, value) && !_flags.Has(MCFlags.Publish)) Optimize = optim;
 			return;
 		case "define":
 			_Specified(MCSpecified.define);
@@ -718,7 +722,7 @@ class MetaComments {
 	bool _Error(string s, int from, int to) {
 		if (Errors != null) {
 			Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
-		} else if (_flags.Has(MCPFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ActiveDoc.EFile) {
+		} else if (_flags.Has(MCFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ActiveDoc.EFile) {
 			CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 		}
 		return false;
@@ -841,10 +845,10 @@ class MetaComments {
 		if (_GetFile(value, FNFind.Class) is not FileNode f) return false;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (f == MainFile.f) return _ErrorV("circular reference");
-		if (ProjectReferences != null) foreach (var v in ProjectReferences) if (v.f == f) return false;
+		if (ProjectReferences is {  } pr) foreach (var v in pr) if (v.f == f) return false;
 		MetaComments m = null;
-		if (!_flags.Has(MCPFlags.ForCodeInfo)) {
-			if (!Compiler.Compile(CCReason.CompileIfNeed, out var r, f, projFolder, needMeta: true))
+		if (!_flags.Has(MCFlags.ForCodeInfo)) {
+			if (!Compiler.Compile(CCReason.CompileIfNeed, out var r, f, projFolder, needMeta: true, addMetaFlags: (_flags & MCFlags.Publish) | MCFlags.IsPR))
 				return _ErrorV("failed to compile library");
 			//print.it(r.role, r.file);
 			if (r.role != MCRole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
@@ -858,12 +862,12 @@ class MetaComments {
 	void _NuGet(string value, string alias) {
 		foreach (var v in NugetPackages) if(v.package.Eqi(value)) return;
 		NugetPackages.Add((value, alias));
-		if (_flags.Has(MCPFlags.MSBuild)) return;
+		if (_flags.Has(MCFlags.Publish) && !_flags.Has(MCFlags.IsPR)) return;
 		try {
 			_xnuget ??= XmlUtil.LoadElemIfExists(App.Model.NugetDirectoryBS + "nuget.xml");
 			var xx = _xnuget?.Elem("package", "path", value, true);
 			if (xx == null) {
-				bool forCiErrors = _flags.Has(MCPFlags.ForCodeInfoInEditor);
+				bool forCiErrors = _flags.Has(MCFlags.ForCodeInfoInEditor);
 				var b = new StringBuilder(forCiErrors ? "<>" : null);
 				b.Append("NuGet package not installed: ").Append(value);
 				//append "install" link etc
@@ -926,7 +930,7 @@ class MetaComments {
 			if (Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, com, nuget, r, resource, file");
 			break;
 		}
-		if (needOP && !_flags.Has(MCPFlags.WpfPreview)) OutputPath ??= GetDefaultOutputPath(_f.f, role, withEnvVar: false);
+		if (needOP && !_flags.Has(MCFlags.WpfPreview)) OutputPath ??= GetDefaultOutputPath(_f.f, role, withEnvVar: false);
 		
 		if (IconFile?.IsFolder ?? false) if (role != MCRole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
 		
@@ -980,8 +984,8 @@ class MetaComments {
 	
 	public CSharpParseOptions CreateParseOptions() {
 		var docMode = DocumentationMode.None;
-		if (_flags.Has(MCPFlags.ForFindReferences)) docMode = DocumentationMode.Parse;
-		else if (_flags.Has(MCPFlags.ForCodeInfoInEditor) || XmlDoc) docMode = DocumentationMode.Diagnose;
+		if (_flags.Has(MCFlags.ForFindReferences)) docMode = DocumentationMode.Parse;
+		else if (_flags.Has(MCFlags.ForCodeInfoInEditor) || XmlDoc) docMode = DocumentationMode.Diagnose;
 		
 		return new(LanguageVersion.Preview, docMode, SourceCodeKind.Regular, Defines);
 	}
@@ -1068,7 +1072,7 @@ enum MCIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wai
 /// Flags for <see cref="MetaComments"/>
 /// </summary>
 [Flags]
-enum MCPFlags {
+enum MCFlags {
 	/// <summary>
 	/// Used for code info, not when compiling.
 	/// Ignores meta such as run options (ifRunning etc) and non-code/reference files (resource etc).
@@ -1106,9 +1110,14 @@ enum MCPFlags {
 	WpfPreview = 32,
 	
 	/// <summary>
-	/// Creating csproj file for MSBuild.
+	/// Used via meta pr of another project.
 	/// </summary>
-	MSBuild = 64,
+	IsPR = 64,
+	
+	/// <summary>
+	/// Used for Publish.
+	/// </summary>
+	Publish = 128,
 }
 
 [Flags]

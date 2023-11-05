@@ -121,3 +121,7 @@ In GitHub Desktop:
 After restoring, if LibreAutomate is running, in its Git menu select "Reload workspace". Or exit LibreAutomate before restoring.
 
 If you don't have the workspace folder with Git repository on current computer, you can clone (download) it from a GitHub repository. Run LibreAutomate, and it will open the last used or new workspace. In the Git menu click "Git setup", enter repository URL, select Clone, OK. Then you can open and use the cloned workspace. Or you can clone using any Git software.
+
+### Auto-backup
+
+Options -> Workspace -> Auto-backup (Git commit).
