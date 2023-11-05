@@ -121,7 +121,7 @@ static class CodeInfo {
 				ReadyForEditing = null; //GC
 			}
 			Git.AutoBackup(true);
-
+			
 #if DEBUG
 			RoslynMod.Print.PrintItCallback = o => print.it(o);
 #endif
@@ -663,7 +663,7 @@ for (int i = 0; i < count; i++) { }
 			var fCurrentDoc = f;
 			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 			
-			var m = new MetaComments(MCPFlags.ForCodeInfoInEditor | (isWpfPreview ? MCPFlags.WpfPreview : 0));
+			var m = new MetaComments(MCFlags.ForCodeInfoInEditor | (isWpfPreview ? MCFlags.WpfPreview : 0));
 			m.Parse(f, projFolder);
 			//if (isMain) _meta = m;
 			
@@ -684,9 +684,9 @@ for (int i = 0; i < count; i++) { }
 			//SHOULDDO: reuse document+syntaxtree of global.cs and its meta c files if their text not changed.
 			
 			List<ProjectReference> aPR = null;
-			if (m.ProjectReferences != null) {
+			if (m.ProjectReferences is { } a1) {
 				dPR ??= new();
-				foreach (var v in m.ProjectReferences) {
+				foreach (var v in a1) {
 					if (!dPR.TryGetValue(v.f, out var pr)) {
 						pr = new ProjectReference(_AddProject(v.f, false));
 						dPR.Add(v.f, pr);

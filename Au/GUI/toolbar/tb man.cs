@@ -392,12 +392,16 @@ public partial class toolbar {
 				var tb = _atb[i];
 				if (tb.IsOwned) continue;
 				if (tb.Hwnd.ZorderIsAbove(w)) continue;
-				bool ok = tb.Hwnd.ZorderAbove(w);
+				bool tm1 = tb.Hwnd.IsTopmost; //TODO: remove
+				//bool ok = w.IsTopmost ? tb.Hwnd.ZorderAbove(w) : tb.Hwnd.IsTopmost ? tb.Hwnd.ZorderTop() : tb.Hwnd.ZorderTopmost(); //SHOULDDO: don't use ZorderX functions. Too heavy here.
+				bool ok = tb.Hwnd.SetWindowPos(SWPFlags.NOACTIVATE | SWPFlags.NOMOVE | SWPFlags.NOSIZE, zorderAfter: w.IsTopmost ? w.Get.Previous() : tb.Hwnd.IsTopmost ? SpecHWND.TOP : SpecHWND.TOPMOST);
 				
 				//Windows 11 bug: sometimes, when activated a non-topmost window, it becomes on top of topmost windows, eg taskbars and unowned toolbars.
 				//	Afterwards activating other normal windows makes them on top of topmost windows too.
 				//	Impossible to reproduce, it happens randomly, once in several days or weeks.
-				Debug_.PrintIf(w == active && !w.IsTopmost, $"toolbar behind the active non-topmost window. ZorderAbove: {ok}");
+				Debug_.PrintIf(w == active && !w.IsTopmost, $"toolbar behind the active non-topmost window. Zorder: {ok}. Was: tb.IsTopmost = {tm1}. Now: tb.IsTopmost = {tb.Hwnd.IsTopmost}");
+				
+				//TODO: the last time it happened after "Debug: _ZorderAB (wnd.cs:2078):  DeferWindowPos failed". 
 			}
 		}
 		static wnd.Cached_ s_taskbar;

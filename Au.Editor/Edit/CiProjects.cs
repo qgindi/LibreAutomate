@@ -271,8 +271,7 @@ class CiProjects {
 				if (prNew.Count > 0) {
 					List<ProjectReference> aPr = new();
 					foreach (ref var p in ap.AsSpan()) {
-						var a1 = p.meta.ProjectReferences;
-						if (a1 != null) {
+						if (p.meta.ProjectReferences is { } a1) {
 							aPr.Clear();
 							foreach (var v in a1) if (prNew.TryGetValue(v.f, out var p1)) aPr.Add(new ProjectReference(p1));
 							if (aPr.Count > 0) p.pri = p.pri.WithProjectReferences(p.pri.ProjectReferences.Concat(aPr));
@@ -292,7 +291,7 @@ class CiProjects {
 	
 	static (ProjectInfo pri, MetaComments meta) _CreateProject(_FRContext x, FileNode f, Dictionary<FileNode, ProjectId> projects, Dictionary<FileNode, string> dTexts) {
 		if (!f.FindProject(out var projFolder, out var fmain)) fmain = f;
-		var m = new MetaComments(MCPFlags.ForFindReferences, dTexts);
+		var m = new MetaComments(MCFlags.ForFindReferences, dTexts);
 		m.Parse(fmain, projFolder);
 		
 		if (m.TestInternal is string[] testInternal) TestInternal.RefsAdd(m.Name, testInternal);
@@ -311,8 +310,7 @@ class CiProjects {
 		
 		//add project references that are in m.ProjectReferences and in current solution (intersection)
 		List<ProjectReference> pr = null;
-		var a1 = m.ProjectReferences;
-		if (a1 != null) {
+		if (m.ProjectReferences is { } a1) {
 			for (int i = 0; i < a1.Count; i++) {
 				if (projects.TryGetValue(a1[i].f, out var p1)) {
 					(pr ??= new()).Add(new ProjectReference(p1));

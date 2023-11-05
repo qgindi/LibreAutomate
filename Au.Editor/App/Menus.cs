@@ -507,7 +507,7 @@ static class Menus {
 		public static void Recent() { RecentTT.Show(); }
 		
 		[Command("...", image = "*Entypo.Publish" + blue)]
-		public static void Publish() { MSBuild.Publish(); }
+		public static void Publish() { new MSBuild().Publish(); }
 		
 		[Command(separator = true)]
 		public static class Debugger {

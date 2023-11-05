@@ -354,7 +354,8 @@ partial class SciCode {
 						if (top > 0) Call(SCI_SETFIRSTVISIBLELINE, Call(SCI_VISIBLEFROMDOCLINE, top));
 						if (pos <= aaaLen8) {
 							App.Model.EditGoBack.OnRestoringSavedPos();
-							aaaGoToPos(false, pos);
+							//aaaGoToPos(false, pos); //sometimes does not work well here (it also calls SCI_ENSUREVISIBLEENFORCEPOLICY)
+							Call(SCI_GOTOPOS, pos);
 						}
 					}
 				}

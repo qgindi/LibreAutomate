@@ -369,7 +369,7 @@ global using System.Windows.Media;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return null;
 		
-		var m = new MetaComments(MCPFlags.ForCodeInfo);
+		var m = new MetaComments(MCFlags.ForCodeInfo);
 		if (!m.Parse(f, projFolder)) return null; //with this flag never returns false, but anyway
 		
 		var pOpt = m.CreateParseOptions();
@@ -394,7 +394,7 @@ global using System.Windows.Media;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return default;
 		
-		var m = new MetaComments(MCPFlags.ForCodeInfo);
+		var m = new MetaComments(MCFlags.ForCodeInfo);
 		if (!m.Parse(f, projFolder)) return default; //with this flag never returns false, but anyway
 		
 		var projectId = ProjectId.CreateNewId();

@@ -5,10 +5,11 @@ using System.Windows;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-//TODO: compile pr as Release too.
-
-static class MSBuild {
-	public static async void Publish() {
+class MSBuild {
+	MetaComments _meta;
+	string _csprojFile;
+	
+	public async void Publish() {
 		var cmd = App.Commands[nameof(Menus.Run.Publish)];
 		if (!cmd.Enabled) return;
 		cmd.Enable(false);
@@ -23,11 +24,11 @@ static class MSBuild {
 			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0);
 			//FUTURE: maybe support publish profiles like in VS: <PublishProfileFullPath>
 			
-			if (!CreateCsproj(out string csprojFile, out var meta, singleFile: cSingle.IsChecked, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked)) return;
+			if (!CreateCsproj(singleFile: cSingle.IsChecked, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked)) return;
 			
-			var outFile = $@"{meta.OutputPath}\csproj\bin\Release\win-x{(meta.Bit32 ? "86" : "64")}\publish\{meta.Name}.exe";
+			var outFile = $@"{_meta.OutputPath}\csproj\bin\Release\win-x{(_meta.Bit32 ? "86" : "64")}\publish\{_meta.Name}.exe";
 			CompilerUtil.DeleteExeFile(outFile);
-			if (meta.PreBuild.f != null && !CompilerUtil.RunPrePostBuildScript(meta, false, outFile, true)) return;
+			if (_meta.PreBuild.f != null && !CompilerUtil.RunPrePostBuildScript(_meta, false, outFile, true)) return;
 			bool ok = await Task.Run(() => {
 				static void _Print(string s) {
 					if (s.RxMatch(@"^(.+? -> )(.+)$", out var m) && filesystem.exists(m[2].Value).Directory) {
@@ -40,22 +41,23 @@ static class MSBuild {
 					print.it(s);
 				}
 				
-				var cl = $"publish \"{csprojFile}\" -c Release";
+				var cl = $"publish \"{_csprojFile}\" -c Release";
 				print.it($"<><c blue>dotnet {cl}<>");
 				if (0 != run.console(_Print, "dotnet.exe", cl)) { print.it("Failed"); return false; }
 				return true;
 			});
 			if (!ok) return;
-			if (meta.PostBuild.f != null && !CompilerUtil.RunPrePostBuildScript(meta, true, outFile, true)) return;
+			if (_meta.PostBuild.f != null && !CompilerUtil.RunPrePostBuildScript(_meta, true, outFile, true)) return;
 			print.it("==== DONE ====");
 		}
 		catch (Exception e1) { print.it(e1); }
-		finally { cmd.Enable(true); }
+		finally {
+			filesystem.delete(folders.ThisAppTemp + "publish", FDFlags.CanFail);
+			cmd.Enable(true);
+		}
 	}
 	
-	public static bool CreateCsproj(out string csprojFile, out MetaComments meta, bool singleFile = false, bool selfContained = false, bool readyToRun = false) {
-		csprojFile = null;
-		meta = null;
+	public bool CreateCsproj(bool singleFile = false, bool selfContained = false, bool readyToRun = false) {
 		App.Model.Save.TextNowIfNeed(onlyText: true);
 		
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return false;
@@ -63,12 +65,12 @@ static class MSBuild {
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return false;
 		
-		var m = new MetaComments(MCPFlags.MSBuild | MCPFlags.PrintErrors);
-		if (!m.Parse(f, projFolder)) return false;
-		if (m.Role is not (MCRole.miniProgram or MCRole.exeProgram)) return _Err("expected role exeProgram or miniProgram");
-		if (m.TestInternal != null) return _Err("testInternal not supported");
+		_meta = new MetaComments(MCFlags.Publish | MCFlags.PrintErrors);
+		if (!_meta.Parse(f, projFolder)) return false;
+		if (_meta.Role is not (MCRole.miniProgram or MCRole.exeProgram)) return _Err("expected role exeProgram or miniProgram");
+		if (_meta.TestInternal != null) return _Err("testInternal not supported");
 		
-		var outDir = $@"{m.OutputPath ?? MetaComments.GetDefaultOutputPath(f, m.Role, withEnvVar: false)}\csproj";
+		var outDir = $@"{_meta.OutputPath ?? MetaComments.GetDefaultOutputPath(f, _meta.Role, withEnvVar: false)}\csproj";
 		
 		var xroot = new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"));
 		var xpg = new XElement("PropertyGroup");
@@ -82,6 +84,7 @@ static class MSBuild {
 		_Add(xpg, "AllowUnsafeBlocks", "true");
 		_Add(xpg, "UseWindowsForms", "true");
 		_Add(xpg, "UseWPF", "true");
+		_Add(xpg, "EnableDefaultItems", "false"); //https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props-desktop#wpf-default-includes-and-excludes
 		_Add(xpg, "CopyLocalLockFileAssemblies", "true");
 		_Add(xpg, "ProduceReferenceAssembly", "false");
 		_Add(xpg, "PublishReferencesDocumentationFiles", "false");
@@ -89,29 +92,29 @@ static class MSBuild {
 		_Add(xpg, "CopyDebugSymbolFilesFromPackages", "false");
 		_Add(xpg, "AppendTargetFrameworkToOutputPath", "false");
 		_Add(xpg, "NuGetAudit", "false"); //don't connect to nuget.org unless using nuget references. If no internet connection, waits several s and prints: warning NU1900: Error occurred while getting package vulnerability data: No such host is known. (api.nuget.org:443). But sometimes hangs. Error if command line contains --no-restore. 
-				
-		_Add(xpg, "AssemblyName", m.Name);
-		_Add(xpg, "OutputType", m.Console ? "Exe" : "WinExe");
+		
+		_Add(xpg, "AssemblyName", _meta.Name);
+		_Add(xpg, "OutputType", _meta.Console ? "Exe" : "WinExe");
 		
 		_Add(xpg, "DisableImplicitFrameworkDefines", "true");
-		_Add(xpg, "DefineConstants", string.Join(';', m.Defines));
+		_Add(xpg, "DefineConstants", string.Join(';', _meta.Defines));
 		
-		_Add(xpg, "WarningLevel", m.WarningLevel);
-		_Add(xpg, "NoWarn", string.Join(';', m.NoWarnings) + ";WFAC010");
-		if (m.Nullable != 0) _Add(xpg, "Nullable", m.Nullable);
+		_Add(xpg, "WarningLevel", _meta.WarningLevel);
+		_Add(xpg, "NoWarn", string.Join(';', _meta.NoWarnings) + ";WFAC010");
+		if (_meta.Nullable != 0) _Add(xpg, "Nullable", _meta.Nullable);
 		
-		if (m.Bit32) _Add(xpg, "PlatformTarget", "x86");
+		if (_meta.Bit32) _Add(xpg, "PlatformTarget", "x86");
 		if (!_Icon()) return false;
-		_Add(xpg, "ApplicationManifest", _Path(m.ManifestFile) ?? folders.ThisAppBS + "default.exe.manifest");
-		if (m.CodeFiles.Any(o => o.f.Name.Eqi("AssemblyInfo.cs"))) _Add(xpg, "GenerateAssemblyInfo", "false");
+		_Add(xpg, "ApplicationManifest", _Path(_meta.ManifestFile) ?? folders.ThisAppBS + "default.exe.manifest");
+		if (_meta.CodeFiles.Any(o => o.f.Name.Eqi("AssemblyInfo.cs"))) _Add(xpg, "GenerateAssemblyInfo", "false");
 		
-		if (m.SignFile != null) {
+		if (_meta.SignFile != null) {
 			_Add(xpg, "SignAssembly", "true");
-			_Add(xpg, "AssemblyOriginatorKeyFile", _Path(m.SignFile));
+			_Add(xpg, "AssemblyOriginatorKeyFile", _Path(_meta.SignFile));
 		}
 		
 		//if (singleFile || readyToRun) //no, we always add only 64 or 32 bit dlls
-		_Add(xpg, "RuntimeIdentifier", m.Bit32 ? "win-x86" : "win-x64");
+		_Add(xpg, "RuntimeIdentifier", _meta.Bit32 ? "win-x86" : "win-x64");
 		if (singleFile) {
 			_Add(xpg, "PublishSingleFile", "true");
 			if (selfContained) _Add(xpg, "EnableCompressionInSingleFile", "true"); //else compression not supported
@@ -123,39 +126,25 @@ static class MSBuild {
 		var xig = new XElement("ItemGroup");
 		xroot.Add(xig);
 		
-		//https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props-desktop#wpf-default-includes-and-excludes
-		_AddAttr(xig, "Compile", "Remove", "**");
-		_AddAttr(xig, "EmbeddedResource", "Remove", "**");
-		_AddAttr(xig, "Page", "Remove", "**");
-		_AddAttr(xig, "ApplicationDefinition", "Remove", "**");
-		
-		foreach (var v in m.CodeFiles) {
-			_AddAttr(xig, "Compile", "Include", _Path(v.f));
-		}
 		_AddAttr(xig, "Compile", "Include", _ModuleInit());
+		foreach (var v in _meta.CodeFiles) _AddAttr(xig, "Compile", "Include", _Path(v.f));
 		
-		var trees = CompilerUtil.CreateSyntaxTrees(m);
+		var trees = CompilerUtil.CreateSyntaxTrees(_meta);
 		
 		_AddAuNativeDll("AuCpp.dll", both64and32: true);
 		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll");
-		CompilerUtil.CopyMetaFileFilesOfAllProjects(m, outDir, (from, to) => _AddContentFile(from, to));
+		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, outDir, (from, to) => _AddContentFile(from, to));
 		
-		if (m.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //FUTURE: try <DisableImplicitFrameworkReferences>
-		foreach (var v in m.References.Refs.Skip(m.References.DefaultRefCount - 1)) { //Au, r, pr, com
-			var x = _AddAttr(xig, "Reference", "Include", v.FilePath);
-			if (v.Properties.EmbedInteropTypes) _Add(x, "EmbedInteropTypes", "true");
-			if (!v.Properties.Aliases.IsDefaultOrEmpty) _Add(x, "Aliases", v.Properties.Aliases[0]);
-			
-			//tested: if an r or pr library itself has r or pr, MSBuild adds both dlls. MetaComments compiles pr libraries if changed code etc.
-		}
+		if (_meta.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //FUTURE: try <DisableImplicitFrameworkReferences>
+		_AddAttr(xig, "Reference", "Include", _meta.References.Refs[_meta.References.DefaultRefCount - 1].FilePath); //Au
+		_References();
 		
-		if (!_Nuget(m)) return false;
+		if (!_Nuget()) return false;
 		
 		if (!_ManagedResources()) return false;
 		
 		//print.it(xroot);
-		xroot.SaveElem(csprojFile = $@"{outDir}\{m.Name}.csproj");
-		meta = m;
+		xroot.SaveElem(_csprojFile = $@"{outDir}\{_meta.Name}.csproj");
 		return true;
 		
 		static bool _Err(string s) { print.it("Error: " + s); return false; }
@@ -182,11 +171,11 @@ static class MSBuild {
 		}
 		
 		void _AddAuNativeDll(string filename, bool both64and32 = false) {
-			var s = (m.Bit32 ? @"32\" : @"64\") + filename;
+			var s = (_meta.Bit32 ? @"32\" : @"64\") + filename;
 			//_AddContentFile(folders.ThisAppBS + s, s); //no, NativeLibrary.TryLoad fails if single-file
 			_AddContentFile(folders.ThisAppBS + s, filename);
 			if (both64and32) { //also need AuCpp.dll of different bitness. For elm to load into processes of different bitness. See func RunDll in in-proc.cpp.
-				s = (!m.Bit32 ? @"32\" : @"64\") + filename;
+				s = (!_meta.Bit32 ? @"32\" : @"64\") + filename;
 				_AddContentFile(folders.ThisAppBS + s, s);
 			}
 		}
@@ -198,7 +187,7 @@ static class MSBuild {
 		}
 		
 		bool _Icon() {
-			if (m.IconFile is { } fIco) {
+			if (_meta.IconFile is { } fIco) {
 				if (fIco.IsFolder) return _Err("icons folder not supported");
 				_Add(xpg, "ApplicationIcon", _Path(fIco));
 			} else if (DIcons.TryGetIconFromBigDB(f.CustomIconName, out string xaml)) {
@@ -214,7 +203,7 @@ static class MSBuild {
 		
 		bool _ManagedResources() {
 			var resourcesFile = outDir + @"\g.resources";
-			return CompilerUtil.CreateManagedResources(m, m.Name, trees, _ResourceException, o => {
+			return CompilerUtil.CreateManagedResources(_meta, _meta.Name, trees, _ResourceException, o => {
 				var x = _AddAttr(xig, "EmbeddedResource", "Include", o.file);
 				_Add(x, "LogicalName", o.name);
 			}, resourcesFile);
@@ -226,29 +215,51 @@ static class MSBuild {
 			}
 		}
 		
-		bool _Nuget(MetaComments m) {
-			foreach (var (p, alias) in m.NugetPackages) {
-				var dir = pathname.getDirectory(p);
-				var path = $@"{App.Model.NugetDirectoryBS}{dir}\{dir}.csproj";
-				if (XmlUtil.LoadElemIfExists(path) is not { } xproj || xproj.Desc("PackageReference", "Include", pathname.getName(p), true) is not { } x) return _Err("NuGet package not installed: " + p);
-				if (alias != null) _Add(x, "Aliases", alias);
-				xig.Add(x);
+		void _References() {
+			var noDup = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			_Ref2(_meta);
+			void _Ref2(MetaComments m) {
+				foreach (var v in m.References.Refs.Skip(_meta.References.DefaultRefCount)) { //r, pr, com
+					if (MetaReferences.IsNuget(v)) continue;
+					var x = _AddAttr(xig, "Reference", "Include", v.FilePath);
+					if (v.Properties.EmbedInteropTypes) _Add(x, "EmbedInteropTypes", "true");
+					if (!v.Properties.Aliases.IsDefaultOrEmpty) _Add(x, "Aliases", v.Properties.Aliases[0]);
+					if (!noDup.Add(x.ToString())) x.Remove();
+				}
+				if (m.ProjectReferences is { } pr) {
+					foreach (var v in pr) _Ref2(v.m);
+				}
 			}
-			if (m.ProjectReferences != null) {
-				foreach (var pr in m.ProjectReferences) if (!_Nuget(pr.m)) return false;
+		}
+		
+		bool _Nuget() {
+			var noDup = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			return _Nuget2(_meta);
+			bool _Nuget2(MetaComments m) {
+				foreach (var (p, alias) in m.NugetPackages) {
+					var dir = pathname.getDirectory(p);
+					var path = $@"{App.Model.NugetDirectoryBS}{dir}\{dir}.csproj";
+					if (XmlUtil.LoadElemIfExists(path) is not { } xproj || xproj.Desc("PackageReference", "Include", pathname.getName(p), true) is not { } x) return _Err("NuGet package not installed: " + p);
+					if (alias != null) _Add(x, "Aliases", alias);
+					if (!noDup.Add(x.ToString())) continue;
+					xig.Add(x);
+				}
+				if (m.ProjectReferences is { } pr) {
+					foreach (var v in pr) if (!_Nuget2(v.m)) return false;
+				}
+				return true;
 			}
-			return true;
 		}
 		
 		bool _NeedSqlite() {
 			var cOpt = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true, warningLevel: 0);
-			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, cOpt);
+			var compilation = CSharpCompilation.Create(_meta.Name, trees, _meta.References.Refs, cOpt);
 			var asmStream = new MemoryStream(16000);
 			var emitResult = compilation.Emit(asmStream);
 			asmStream.Position = 0;
 			if (emitResult.Success && CompilerUtil.UsesSqlite(asmStream)) return true;
 			
-			foreach (var v in m.References.Refs.Skip(m.References.DefaultRefCount)) {
+			foreach (var v in _meta.References.Refs.Skip(_meta.References.DefaultRefCount)) {
 				if (v.Properties.EmbedInteropTypes) continue; //com; and no nuget refs when publishing
 				if (CompilerUtil.UsesSqlite(v.FilePath, recursive: true)) return true;
 			}

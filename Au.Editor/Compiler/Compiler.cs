@@ -27,6 +27,7 @@ partial class Compiler {
 	/// <param name="projFolder">null or project folder.</param>
 	/// <param name="needMeta">Parse metacomments and set r.meta even if don't need to compile.</param>
 	/// <param name="canCompile">Called after parsing meta, creating trees and compilation, but before emit. Return false to cancel.</param>
+	/// <param name="addMetaFlags">Add these flags to the usual flags of MetaComments. Used by MetaComments._PR.</param>
 	/// <remarks>
 	/// Must be always called in the main UI thread (Environment.CurrentManagedThreadId == 1).
 	/// 
@@ -36,14 +37,14 @@ partial class Compiler {
 	/// 	If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
 	/// 	Else compiles but does not create output files.
 	/// </remarks>
-	public static bool Compile(CCReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false, Func<CanCompileArgs, bool> canCompile = null) {
+	public static bool Compile(CCReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false, Func<CanCompileArgs, bool> canCompile = null, MCFlags addMetaFlags = 0) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		r = null;
 		var cache = XCompiled.OfWorkspace;
-		if (reason is not (CCReason.CompileAlways or CCReason.WpfPreview) && cache.IsCompiled(f, out r, projFolder)) {
+		if (reason is not (CCReason.CompileAlways or CCReason.WpfPreview) && !addMetaFlags.Has(MCFlags.Publish) && cache.IsCompiled(f, out r, projFolder)) {
 			//print.it("cached");
 			if (needMeta) {
-				var m = new MetaComments(MCPFlags.PrintErrors | MCPFlags.OnlyRef);
+				var m = new MetaComments(MCFlags.PrintErrors | MCFlags.OnlyRef);
 				if (!m.Parse(f, projFolder)) return false;
 				r.meta = m;
 				//FUTURE: save used dll etc paths in xcompiled, to avoid parsing meta of all pr.
@@ -54,7 +55,7 @@ partial class Compiler {
 			Action aFinally = null;
 			try {
 				var c = new Compiler();
-				if (c._Compile(reason, f, out r, projFolder, out aFinally, canCompile)) return true;
+				if (c._Compile(reason, f, out r, projFolder, out aFinally, canCompile, addMetaFlags)) return true;
 			}
 			catch (Exception ex) {
 				if (reason != CCReason.WpfPreview) print.it($"Failed to compile '{f.Name}'. {ex}");
@@ -98,14 +99,14 @@ partial class Compiler {
 		
 	}
 	
-	bool _Compile(CCReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile) {
+	bool _Compile(CCReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile, MCFlags addMetaFlags) {
 		//print.it("COMPILE");
 		
 		//var p1 = perf.local();
 		r = new CompResults();
 		aFinally = null;
 		
-		_meta = new(reason == CCReason.WpfPreview ? MCPFlags.WpfPreview : MCPFlags.PrintErrors);
+		_meta = new((reason == CCReason.WpfPreview ? MCFlags.WpfPreview : MCFlags.PrintErrors) | addMetaFlags);
 		if (!_meta.Parse(f, projFolder)) return false;
 		var err = _meta.Errors;
 		r.meta = _meta;
@@ -291,7 +292,7 @@ partial class Compiler {
 		
 		if (_meta.PostBuild.f != null && !_RunPrePostBuildScript(true, outFile)) return false;
 		
-		if (needOutputFiles && reason != CCReason.WpfPreview) {
+		if (needOutputFiles && reason != CCReason.WpfPreview && !addMetaFlags.Has(MCFlags.Publish)) {
 			cache.AddCompiled(f, outFile, _meta, r.flags);
 			
 			if (_meta.Role == MCRole.classLibrary) {
