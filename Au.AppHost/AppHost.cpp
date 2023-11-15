@@ -388,12 +388,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			AllowSetForegroundWindow(ASFW_ANY);
 			auto ShellExecuteW = (int(__stdcall*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
 			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
-			//TODO: the below line fails with .NET 8 RC.
-			//  Test with final .NET 8 version. If fails too, use the above (tested, works).
-			//  PROBLEM: the setup script uses this URL too.
-			//	The default SDK AppHost now opens this page: https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.0-rc.2-windows-x64-installer?cid=getdotnetcore
-			//		It starts to download. Also it contains a direct download link that could be used in setup script.
-			//			Bad: it is for that version, not for the newest version.
+			//note: the below URL did not exist when tested with .NET 8 RC (before the final .NET 8 was released).
+			//  The setup script uses this URL too.
+			//	The default SDK AppHost then opened this page: https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.0-rc.2-windows-x64-installer?cid=getdotnetcore
+			//		It starts to download. Also it contains a direct download link, but it is for that version, not for the newest version.
 			wsprintfW(w, L"https://aka.ms/dotnet/%i.%i/windowsdesktop-runtime-win-x%i.exe", NETVERMAJOR, NETVERMINOR, bits); //latest patch
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
 		}

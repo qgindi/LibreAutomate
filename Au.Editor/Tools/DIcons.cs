@@ -4,9 +4,8 @@ using System.Windows.Input;
 using Au.Controls;
 
 class DIcons : KDialogWindow {
-	/// <param name="fileIcon">Called from file Properties dialog. <i>find</i> is null or full icon name.</param>
-	public static void ShowSingle(bool fileIcon = false, string find = null, bool expandMenuIcon = false) {
-		var d = ShowSingle(() => new DIcons(expandFileIcon: fileIcon, randomizeColors: find == null, expandMenuIcon: expandMenuIcon));
+	public static void ShowSingle(string find = null) {
+		var d = ShowSingle(() => new DIcons(randomizeColors: find == null));
 		if (find != null) d._tName.Text = find;
 	}
 
@@ -28,7 +27,7 @@ class DIcons : KDialogWindow {
 	//bool _withCollection;
 	TextBox _tName;
 
-	DIcons(bool expandFileIcon, bool randomizeColors, bool expandMenuIcon) {
+	DIcons(bool randomizeColors) {
 		InitWinProp("Icons", App.Wmain);
 
 		var b = new wpfBuilder(this).WinSize(600, 600);
@@ -74,7 +73,8 @@ Can be Pack.Icon, like Modern.List.")
 		//b.AddButton("Random", null); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.AddButton("Show current", _ => _ShowCurrent()).Margin("L20");
 		b.End();
-		if (expandFileIcon) exp1.IsExpanded = true;
+		//if (expandFileIcon) exp1.IsExpanded = true;
+		exp1.IsExpanded = true;
 
 		b.StartGrid<Expander>(out var exp2, "Menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
@@ -95,7 +95,8 @@ Can be Pack.Icon, like Modern.List.")
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
 		b.End();
-		if (expandMenuIcon) exp2.IsExpanded = true;
+		//if (expandMenuIcon) exp2.IsExpanded = true;
+		exp2.IsExpanded = true;
 
 		b.StartStack<Expander>("Export to current workspace folder");
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, _Action.ExportXaml)).Width(70).Disabled();
@@ -103,9 +104,9 @@ Can be Pack.Icon, like Modern.List.")
 		b.Add("sizes", out iconSizes, "16,24,32,48,64").Width(100);
 		b.End();
 
-		b.StartStack<Expander>("Other actions");
-		b.AddButton("Clear program's icon cache", _ => IconImageCache.Common.Clear(redrawWindows: true));
-		b.End();
+		//b.StartStack<Expander>("Other actions");
+		//b.AddButton("Update cached icons", _ => IconImageCache.ClearAll());
+		//b.End();
 
 		b.StartGrid<Expander>("Options");
 		b.Add("List background", out ComboBox cBackground)

@@ -307,7 +307,7 @@ partial class SciCode : KScintilla {
 				if (margin >= 0) {
 					switch (margin) {
 					case c_marginLineNumbers or c_marginImages or c_marginChanges:
-						ModifyCode.CommentLines(null, notSlashStar: true);
+						ModifyCode.Comment(null, notSlashStar: true);
 						break;
 					case c_marginMarkers:
 						Panels.Bookmarks.SciContextMenu(this);

@@ -291,13 +291,14 @@ public unsafe partial class KTreeView {
 		if (button != MouseButton.Middle && Focusable) Focus();
 		var xy = Math2.NintToPOINT(lParam);
 		if (!HitTest(xy, out var h) || !Api.GetCapture().Is0) return;
+		
 		if (button == MouseButton.Left && h.part == TVParts.Image && h.item.IsFolder) {
 			Expand(h.index, null);
 		} else {
 			var mk = (0 != (wParam & Api.MK_CONTROL) ? ModifierKeys.Control : 0) | (0 != (wParam & Api.MK_SHIFT) ? ModifierKeys.Shift : 0); //never mind Alt, it's never used and may activate menubar
 			bool multiSelect = MultiSelect && button == MouseButton.Left && !@double && (mk is ModifierKeys.Control or ModifierKeys.Shift);
-			bool unselectOnUp = false;
 			bool checkbox = h.part == TVParts.Checkbox && button == MouseButton.Left && !multiSelect;
+			bool unselectOnUp = false;
 			if (button == MouseButton.Left && !multiSelect && !checkbox) {
 				unselectOnUp = MultiSelect && IsSelected(h.index); //unselect other on up, else could not drag multiple
 				Select(h.index, true, unselectOther: !unselectOnUp, focus: true);
@@ -310,7 +311,7 @@ public unsafe partial class KTreeView {
 				_mouse = (true, button, h, xy, mk, multiSelect, unselectOnUp);
 			} else if (button == MouseButton.Left) {
 				//print.it("double", h.item);
-				if (h.part >= TVParts.Text && h.item.IsFolder) Expand(h.index, null);
+				if (!(FullRowExpand && !MultiSelect) && h.part != TVParts.Image && h.item.IsFolder) Expand(h.index, null);
 				clickEvent = true;
 				activateEvent = !SingleClickActivate;
 			}
@@ -342,6 +343,9 @@ public unsafe partial class KTreeView {
 				_focusedIndex = i;
 			} else {
 				if (_mouse.unselect) Select(_mouse.h.index, true, unselectOther: true);
+				if (FullRowExpand && !MultiSelect && button == MouseButton.Left && _mouse.mk == 0 && _mouse.h.item.IsFolder) {
+					Expand(_mouse.h.index, null);
+				}
 				bool activateEvent = SingleClickActivate && _mouse.button == MouseButton.Left;
 				_MouseEvents(true, activateEvent, false, _mouse.button, _mouse.h, _mouse.xy, _mouse.mk);
 			}
@@ -405,6 +409,12 @@ public unsafe partial class KTreeView {
 	/// </summary>
 	/// <seealso cref="ItemActivated"/>
 	public bool SingleClickActivate { get; set; }
+	
+	/// <summary>
+	/// To expand/collapse folders can click not only icon.
+	/// Ignored if <see cref="MultiSelect"/>.
+	/// </summary>
+	public bool FullRowExpand { get; set; }
 	
 	///
 	protected override void OnKeyDown(KeyEventArgs e) {

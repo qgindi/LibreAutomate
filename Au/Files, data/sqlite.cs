@@ -75,6 +75,8 @@ namespace Au {
 		/// <note>If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
 		/// </remarks>
 		public sqlite(string file, SLFlags flags = SLFlags.ReadWriteCreate, string sql = null) {
+			Debug.Assert(Assembly.GetCallingAssembly() != typeof(sqlite).Assembly); //don't use sqlite in Au. Then all programs that use Au also would need sqlite3.dll.
+			
 			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if (!isSpec) {
 				file = pathname.normalize(file);

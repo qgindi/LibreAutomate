@@ -978,16 +978,15 @@ public static partial class filesystem {
 			}
 		}
 		if (!canFail) {
-			for (int i = 1; (ec == Api.ERROR_SHARING_VIOLATION || ec == Api.ERROR_LOCK_VIOLATION || ec == Api.ERROR_DIR_NOT_EMPTY) && i <= 50; i++) {
+			for (int i = 1; (ec is Api.ERROR_SHARING_VIOLATION or Api.ERROR_LOCK_VIOLATION or Api.ERROR_DIR_NOT_EMPTY) && i <= 50; i++) {
 				//ERROR_DIR_NOT_EMPTY: see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
-				string es = ec == Api.ERROR_DIR_NOT_EMPTY ? "ERROR_DIR_NOT_EMPTY when empty. Retry " : "ERROR_SHARING_VIOLATION. Retry ";
-				Debug_.PrintIf(i > 1, es + i.ToString());
+				Debug_.PrintIf(i > 1, (ec == Api.ERROR_DIR_NOT_EMPTY ? "ERROR_DIR_NOT_EMPTY when empty. Retry " : "ERROR_SHARING_VIOLATION. Retry ") + i.ToString());
 				Thread.Sleep(15);
 				if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 				ec = lastError.code;
 			}
 		}
-		if (ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
+		if (ec is Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND) return 0;
 		Debug_.Print("_DeleteL failed. " + lastError.messageFor(ec) + "  " + path
 			+ (dir ? ("   Children: " + string.Join(" | ", enumerate(path).Select(f => f.Name))) : null));
 		return ec;

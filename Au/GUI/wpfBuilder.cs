@@ -695,9 +695,10 @@ public class wpfBuilder {
 	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
 	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
-	/// <param name="flags"></param>
+	/// <param name="flags">Flags. Alternatively flags can be the second argument (<i>text</i>).</param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
+		if (text is WBAdd f1 && flags == 0) { flags = f1; text = null; } //it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
 		_p.BeforeAdd(flags);
 		variable = new T();
 		_Add(variable, text, flags, true);
@@ -811,7 +812,7 @@ public class wpfBuilder {
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
-	/// <param name="flags"></param>
+	/// <param name="flags">Flags. Alternatively flags can be the first argument (<i>text</i>).</param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
 	

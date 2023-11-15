@@ -214,9 +214,11 @@ public class csvTable {
 	int _columnCount;
 	
 	/// <summary>
-	/// This overload is obsolete. To add a row use <i>row</i> <c>^0</c> instead of <c>-1</c>.
+	/// Gets or sets a field.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
+	/// <param name="row">0-based row index. The 'set' function adds new row if negative or equal to <see cref="RowCount"/>.</param>
+	/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public string this[int row, int column] {
 		get {
 			if ((uint)column >= _columnCount) throw new ArgumentOutOfRangeException("column");
@@ -254,9 +256,14 @@ public class csvTable {
 	}
 	
 	/// <summary>
-	/// This overload is obsolete. To add a row use <i>row</i> <c>^0</c> instead of <c>-1</c>.
+	/// Gets or sets fields in a row.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
+	/// <param name="row">0-based row index. The 'set' function adds new row if negative or equal to <see cref="RowCount"/>.</param>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	/// <remarks>
+	/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
+	/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+	/// </remarks>
 	public string[] this[int row] {
 		get {
 			if ((uint)row >= RowCount) throw new ArgumentOutOfRangeException();

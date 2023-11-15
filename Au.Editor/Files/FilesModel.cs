@@ -1332,7 +1332,7 @@ partial class FilesModel {
 			R = new FileNode(this, pathname.getName(path), path, isDir: false);
 			R.AddToTree(ipos, setSaveWorkspace: false);
 		}
-		catch (Exception ex) { print.it(ex.Message); }
+		catch (Exception ex) { print.warning(ex); }
 		Save.WorkspaceLater();
 		CodeInfo.FilesChanged();
 		return R;

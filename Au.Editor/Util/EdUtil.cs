@@ -26,8 +26,8 @@ static class EdDebug {
 
 static class EdResources {
 	public const string
-		c_iconScript = "*Material.ScriptOutline #73BF00",
-		c_iconClass = "*Codicons.SymbolClass #4080FF",
+		c_iconScript = "*Material.ScriptOutline #73BF00|#87E100",
+		c_iconClass = "*Codicons.SymbolClass #4080FF|#84ACFF",
 		c_iconFolder = "*Material.Folder #EABB00",
 		c_iconFolderOpen = "*Material.FolderOpen #EABB00"
 	;

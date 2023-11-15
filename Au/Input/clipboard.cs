@@ -6,7 +6,7 @@ namespace Au;
 /// <remarks>
 /// This class is similar to the .NET <see cref="System.Windows.Forms.Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
 /// 
-/// To set/get clipboard data of non-text formats, use class <see cref="clipboardData"/>; to paste, use it with <see cref="pasteData"/>; to copy (get from the active app), use it with <see cref="copyData"/>.
+/// To set/get clipboard data of non-text formats, use class <see cref="clipboardData"/>; to paste, use it with <see cref="pasteData"/>; to copy (get from the active app), use it with <see cref="copyData{T}(Func{T}, bool, OKey, KHotkey, int)"/>.
 /// 
 /// Don't copy/paste in windows of own thread. Call it from another thread. Example in <see cref="keys.send"/>.
 /// </remarks>
@@ -106,7 +106,7 @@ public static class clipboard {
 			return true;
 		}
 		catch (Exception e1) {
-			if (warning) print.warning(e1.Message, 1);
+			if (warning) print.warning(e1);
 			if (osd) osdText.showTransparentText("Failed to copy text");
 			text = null;
 			return false;
@@ -260,7 +260,7 @@ public static class clipboard {
 			return true;
 		}
 		catch (Exception e1) {
-			if (warning) print.warning(e1.Message, 1);
+			if (warning) print.warning(e1);
 			if (osd) osdText.showTransparentText("Failed to paste text");
 			return false;
 		}

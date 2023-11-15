@@ -156,9 +156,6 @@
     <PostBuildEvent>
       <Command>$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
     </PostBuildEvent>
-    <PreLinkEvent>
-      <Command>"$(SolutionDir)Other\Programs\BuildEvents.exe" cpp</Command>
-    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -183,10 +180,6 @@
     <PostBuildEvent>
       <Command>$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
     </PostBuildEvent>
-    <PreLinkEvent>
-      <Command>
-      </Command>
-    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="acc bridge.cpp" />

@@ -9,11 +9,11 @@ namespace Au.More;
 public static class ScriptEditor {
 	/// <summary>
 	/// Finds editor's message-only window used with WM_COPYDATA etc.
-	/// Uses <see cref="script.s_wndMsg"/> or <see cref="wnd.Cached_"/>.
+	/// Uses <see cref="script.s_wndEditorMsg"/> or <see cref="wnd.Cached_"/>.
 	/// </summary>
 	internal static wnd WndMsg_ {
 		get {
-			var w = script.s_wndMsg; if (!w.Is0) return w;
+			var w = script.s_wndEditorMsg; if (!w.Is0) return w;
 			return s_wndMsg.FindFast(null, c_msgWndClassName, true);
 		}
 	}

@@ -131,7 +131,7 @@ static unsafe class MiniProgram_ {
 		//p1.Next();
 
 		script.s_idMainFile = (uint)(int)a[6];
-		script.s_wndMsg = (wnd)(int)a[8];
+		script.s_wndEditorMsg = (wnd)(int)a[8];
 		script.s_wrPipeName = a[4];
 
 		if (0 != (flags & MPFlags.FromEditor)) script.testing = true;

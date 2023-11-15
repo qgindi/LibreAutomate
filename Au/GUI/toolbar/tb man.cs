@@ -386,22 +386,40 @@ public partial class toolbar {
 			//	Not on top of all topmost windows. Would cover tooltips etc, fight with sibling toolbars, etc.
 			var taskbar = s_taskbar.FindFast(null, "Shell_TrayWnd", false); //of the primary screen
 			var active = wnd.active;
-			var w = !active.Is0 && active != taskbar && (taskbar.Is0 || !taskbar.ZorderIsAbove(active)) ? active : taskbar;
+			var w = !active.Is0 && active != taskbar && (taskbar.Is0 || !taskbar.ZorderIsAbove(active) && !active.IsOfThisProcess) ? active : taskbar;
 			if (w.Is0) return;
 			for (int i = _atb.Count; --i >= 0;) {
-				var tb = _atb[i];
-				if (tb.IsOwned) continue;
-				if (tb.Hwnd.ZorderIsAbove(w)) continue;
-				bool tm1 = tb.Hwnd.IsTopmost; //TODO: remove
-				//bool ok = w.IsTopmost ? tb.Hwnd.ZorderAbove(w) : tb.Hwnd.IsTopmost ? tb.Hwnd.ZorderTop() : tb.Hwnd.ZorderTopmost(); //SHOULDDO: don't use ZorderX functions. Too heavy here.
-				bool ok = tb.Hwnd.SetWindowPos(SWPFlags.NOACTIVATE | SWPFlags.NOMOVE | SWPFlags.NOSIZE, zorderAfter: w.IsTopmost ? w.Get.Previous() : tb.Hwnd.IsTopmost ? SpecHWND.TOP : SpecHWND.TOPMOST);
-				
-				//Windows 11 bug: sometimes, when activated a non-topmost window, it becomes on top of topmost windows, eg taskbars and unowned toolbars.
-				//	Afterwards activating other normal windows makes them on top of topmost windows too.
-				//	Impossible to reproduce, it happens randomly, once in several days or weeks.
-				Debug_.PrintIf(w == active && !w.IsTopmost, $"toolbar behind the active non-topmost window. Zorder: {ok}. Was: tb.IsTopmost = {tm1}. Now: tb.IsTopmost = {tb.Hwnd.IsTopmost}");
-				
-				//TODO: the last time it happened after "Debug: _ZorderAB (wnd.cs:2078):  DeferWindowPos failed". 
+				var v = _atb[i];
+				if (v.IsOwned) continue;
+				var tb = v.Hwnd;
+				if (!tb.ZorderIsAbove(w)) {
+					if (w.IsTopmost) {
+						tb.ZorderL_(w, before: true);
+					} else if (!tb.IsTopmost) {
+						tb.ZorderL_(SpecHWND.TOPMOST);
+					} else {
+						//Windows 11 bug: sometimes, when activated a non-topmost window, it becomes on top of topmost windows, eg of taskbars and unowned toolbars.
+						//	Afterwards activating other normal windows makes them on top of topmost windows too.
+						//	Impossible to reproduce, it happens randomly, once in several days or weeks.
+						Debug_.Print($"toolbar behind the active non-topmost window: {w}");
+						
+						//workaround 1. Not tested.
+						tb.ZorderL_(SpecHWND.NOTOPMOST);
+						tb.ZorderL_(SpecHWND.TOPMOST);
+						if (!tb.ZorderIsAbove(w)) {
+							Debug_.Print($"Workaround 1 failed.");
+							
+							//workaround 2. Not tested here, but `w1.ZorderL_(w2); w2.ZorderL_(w1);` works elsewhere.
+							tb.ZorderL_(w, before: true); //may not work, although returns true. ZorderL_ gets previous window, and it may be HWND_TOP (0). SWP(HWND_TOP) does nothing if tb is behind the active non-topmost window (w).
+							if (!tb.ZorderIsAbove(w)) { //workaround
+								tb.ZorderL_(w);
+								w.ZorderL_(tb);
+								Debug_.PrintIf(!tb.ZorderIsAbove(w), $"Workaround 2 failed.");
+							}
+							tb.ZorderL_(SpecHWND.TOPMOST);
+						}
+					}
+				}
 			}
 		}
 		static wnd.Cached_ s_taskbar;

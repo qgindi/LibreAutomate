@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "0.18.0"
+#define MyAppVersion "0.19.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -48,15 +48,16 @@ Source: "Au.Net4.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\7za.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 
-Source: "Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "Default\Workspace\.gitignore"; DestDir: "{app}\Default"; Flags: ignoreversion
+Source: "Default\*"; DestDir: "{app}\Default"; Flags: ignoreversion
+Source: "Default\Workspace\files\*"; DestDir: "{app}\Default\Workspace\files"; Flags: ignoreversion recursesubdirs
+Source: "Default\Workspace\files.xml"; DestDir: "{app}\Default\Workspace"; Flags: ignoreversion
 Source: "Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 
@@ -83,10 +84,6 @@ Type: filesandordirs; Name: "{app}\64"
 Type: filesandordirs; Name: "{app}\32"
 Type: filesandordirs; Name: "{app}\Default"
 Type: filesandordirs; Name: "{app}\Templates"
-
-;FUTURE: remove this code
-Type: files; Name: "{app}\Setup32.dll"
-Type: filesandordirs; Name: "{app}\Cookbook"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -177,7 +174,7 @@ begin
   args := '/C dotnet --list-runtimes > "' + fileName + '" 2>&1';
   if Exec(ExpandConstant('{cmd}'), args, '', SW_HIDE, ewWaitUntilTerminated, resultCode) and (resultCode = 0) then
   begin
-    if LoadStringFromFile(fileName, output) then Result := Pos('Microsoft.WindowsDesktop.App 6.', output) > 0;
+    if LoadStringFromFile(fileName, output) then Result := Pos('Microsoft.WindowsDesktop.App 8.', output) > 0;
   end;
   DeleteFile(fileName);
 end;
@@ -191,14 +188,14 @@ var
 begin
   Result := true;
 //   if sdk then begin //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet, and the SDK would stay there unused.
-//     info1 := 'Installing .NET 6 SDK x64';
-//     info2 := 'Optional. Adds some advanced features (NuGet). If stopped or failed now, you can download and install it later. Size ~200 MB.';
-//     url := 'https://aka.ms/dotnet/6.0/dotnet-sdk-win-x64.exe';
+//     info1 := 'Installing .NET 8 SDK x64';
+//     info2 := 'Optional. Adds some advanced features (NuGet). If stopped or failed now, you can download and install it later. Size ~220 MB.';
+//     url := 'https://aka.ms/dotnet/8.0/dotnet-sdk-win-x64.exe';
 //   end else begin
-    info1 := 'Installing .NET 6 Desktop Runtime x64';
+    info1 := 'Installing .NET 8 Desktop Runtime x64';
     info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
-    url := 'https://aka.ms/dotnet/6.0/windowsdesktop-runtime-win-x64.exe';
-    //Unofficial URL of the latest .NET 6 version. Found in answers only. The official URL (in the runtime download page) is only for that version, eg 6.0.13.
+    url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
+    //Unofficial URL of the latest .NET 8 version. Found in answers only. The official URL (in the runtime download page) is only for that patch version (8.0.x).
 //  end;
   setupFile := ExtractFileName(url);
   

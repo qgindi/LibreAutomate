@@ -542,7 +542,7 @@ public static class script {
 					
 					var p = &SharedMemory_.Ptr->script;
 					pidEditor = p->pidEditor;
-					s_wndMsg = (wnd)p->hwndMsg;
+					s_wndEditorMsg = (wnd)p->hwndMsg;
 					s_idMainFile = p->idMainFile;
 					if (0 != (p->flags & 2)) script.testing = true;
 					if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
@@ -562,7 +562,7 @@ public static class script {
 	static bool s_appModuleInit;
 	static UExcept s_setupException = UExcept.Print;
 	internal static Exception s_unhandledException; //for process.thisProcessExit
-	internal static wnd s_wndMsg;
+	internal static wnd s_wndEditorMsg;
 	
 	internal static bool Exiting_ { get; private set; }
 	
@@ -692,7 +692,7 @@ public static class script {
 			s_sleepExit = sleepExit;
 			s_lockExit = lockExit;
 			s_exitKey = exitKey;
-			_AuxQueueAPC(static _ => {
+			s_auxThread.QueueAPC(static () => {
 				if (s_sleepExit) {
 					if (osVersion.minWin8) {
 						//if Modern Standby, need RegisterSuspendResumeNotification to receive WM_POWERBROADCAST.
@@ -755,9 +755,8 @@ public static class script {
 		var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single"); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
 		if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
 		var r = Api.WaitForSingleObject(s_singleMutex, wait);
-		//print.it(r);
 		if (r is not (0 or Api.WAIT_ABANDONED)) {
-			if (!silent) print.it($"<>Note: script task <open {path}|||script.single>{name}<> cannot run because a task is running.");
+			if (!silent) print.it($"<>Note: script task <open {sourcePath(true)}|||script.single>{name}<> cannot run because a task is running.");
 			Environment.Exit(3);
 		}
 		//never mind: should release mutex.
@@ -800,7 +799,7 @@ public static class script {
 	}
 	
 	internal static void TrayIcon_(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
-		_AuxQueueAPC(_ => timer.after(delay, _Delayed));
+		s_auxThread.QueueAPC(() => timer.after(delay, _Delayed));
 		
 		void _Delayed(timer t_) {
 			var ti = new trayIcon { Tooltip = script.name };
@@ -851,7 +850,7 @@ public static class script {
 	/// 
 	/// Visual Studio Code debugger setup:
 	/// - Install extension "C#".
-	/// - Open a folder where you want to save debugger settings.
+	/// - In VSCode open a folder where you want to save debugger settings.
 	/// - Click menu Run -> Add configuration. Select ".NET 5+ and .NET Core".
 	/// - Click "Add configuration" again and select ".NET attach to local...".
 	/// - Save.
@@ -883,10 +882,22 @@ public static class script {
 	
 	internal static unsafe void Starting_(string name, int pidEditor) {
 		s_name = name;
-		s_auxHthread = Api.CreateThread(default, 0, &_AuxThread, pidEditor, 0, out _);
+		s_auxThread = new(() => _AuxThread(pidEditor));
 		//using CreateThread because need thread handle ASAP
 	}
-	static IntPtr s_auxHthread;
+	static NativeThread_ s_auxThread;
+	
+	/// <summary>
+	/// Gets the aux thread object. Auto-creates if need (starts thread and does not wait).
+	/// Thread-safe.
+	/// </summary>
+	internal static NativeThread_ GetAuxThread_() {
+		if (s_auxThread != null) return s_auxThread;
+		Debug.Assert(role != SRole.MiniProgram);
+		lock ("s_auxThread") {
+			return s_auxThread ??= new(() => _AuxThread(0));
+		}
+	}
 	
 	//Auxiliary thread for various tasks:
 	//	Exit when editor process terminated or crashed.
@@ -896,26 +907,24 @@ public static class script {
 	//	Cpp_InactiveWindowWorkaround for miniProgram.
 	//	Can be used for various triggers.
 	//	Etc.
-	[UnmanagedCallersOnly]
-	static unsafe void _AuxThread(nint param) {
-		//CONSIDER: for miniProgram create thread earlier.
-		
-		Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
-		WndUtil.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE);
+	static unsafe void _AuxThread(int pidEditor) {
+		WndUtil.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE, c_msg_IconImageCache_ClearAll);
 		WndUtil.RegisterWindowClass(c_auxWndClassName, _AuxWndProc);
 		s_auxWnd = WndUtil.CreateMessageOnlyWindow(c_auxWndClassName, Api.GetCurrentProcessId().ToS());
 		
-		_MessageLoop((int)param);
+		_MessageLoop(pidEditor);
 		
 		[MethodImpl(MethodImplOptions.NoInlining)] //need fast JIT of the main func, to make s_auxWnd available ASAP
 		static void _MessageLoop(int pidEditor) {
 			//pidEditor 0 if exeProgram started not from editor
+			var hp = pidEditor == 0 ? default : (IntPtr)Handle_.OpenProcess(pidEditor, Api.SYNCHRONIZE);
 			
 			//Cpp.Cpp_UEF(true); //moved to AppModuleInit_
 			
 			if (role == SRole.MiniProgram) Cpp.Cpp_InactiveWindowWorkaround(true);
 			
-			var hp = pidEditor == 0 ? default : (IntPtr)Handle_.OpenProcess(pidEditor, Api.SYNCHRONIZE);
+			s_auxThread.ThreadInited();
+			
 			int nh = hp == default ? 0 : 1;
 			for (; ; ) {
 				var k = Api.MsgWaitForMultipleObjectsEx(nh, &hp, -1, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
@@ -952,6 +961,9 @@ public static class script {
 				Environment.Exit(2);
 			}
 			break;
+		case c_msg_IconImageCache_ClearAll:
+			IconImageCache.ClearAll_();
+			break;
 		}
 		
 		var R = Api.DefWindowProc(w, message, wp, lp);
@@ -961,6 +973,8 @@ public static class script {
 		return R;
 	}
 	
+	internal const int c_msg_IconImageCache_ClearAll = Api.WM_USER + 5;
+	
 	static void _AuxExit() {
 		Environment.Exit(1);
 		
@@ -969,23 +983,22 @@ public static class script {
 		//Api.ExitProcess(1);
 	}
 	
-	//CONSIDER: make public, maybe hidden. Or internal, to use with testInternal.
-	static void _AuxQueueAPC(Api.PAPCFUNC apc, nint param = 0) {
-		Api.QueueUserAPC(apc, s_auxHthread, param);
-		(s_apcGC ??= new()).Add(apc);
+	/// <summary>
+	/// Gets the message-only window of the aux thread.
+	/// Waits if still not created.
+	/// </summary>
+	internal static wnd AuxWnd_ {
+		get {
+			if (s_auxWnd.Is0) {
+				GetAuxThread_();
+				while (s_auxWnd.Is0) {
+					Debug_.Print("waiting for s_auxWnd");
+					Thread.Sleep(12);
+				}
+			}
+			return s_auxWnd;
+		}
 	}
-	static List<Delegate> s_apcGC;
-	
-	//currently unused
-	//static wnd _AuxWnd {
-	//	get {
-	//		while (s_auxWnd.Is0) {
-	//			Debug_.Print("waiting for s_auxWnd");
-	//			Thread.Sleep(5);
-	//		}
-	//		return s_auxWnd;
-	//	}
-	//}
 	static wnd s_auxWnd;
 	
 	#endregion
@@ -1072,7 +1085,7 @@ public static class script {
 	#region util
 	
 	static void _SleepLockExit(bool sleep) {
-		print.it($"<>Info: task <open {path}|||script.setup>{name}<> ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}.");
+		print.it($"<>Info: task <open {sourcePath(true)}|||script.setup>{name}<> ended because of {(sleep ? "PC sleep" : "switched desktop")} at {DateTime.Now.ToShortTimeString()}.");
 		Task.Run(() => Environment.Exit(2));
 		//why Task.Run: with RegisterSuspendResumeNotification does not work well in same thread.
 	}

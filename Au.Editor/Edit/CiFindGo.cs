@@ -144,7 +144,7 @@ Filters: t Type, m Member, n Namespace.
 			if (nameStart >= 0) {
 				if (matcher.AddMatches(name, ref ta.AsRef())) {
 					matches = ta.ToImmutableAndClear();
-				}
+				} else ta.Clear();
 			}
 			
 			string type = sym is INamespaceOrTypeSymbol ? null : sym.ContainingType?.ToDisplayString(s_symbolFormat);
@@ -229,7 +229,9 @@ Filters: t Type, m Member, n Namespace.
 			d.graphics.DrawImage(IconImageCache.Common.Get(_accessImage, d.dpi, isImage: true), ri);
 		}
 		
-		#region IComparable<_TvItem>
+		public void Clicked() {
+			App.Model.OpenAndGoTo(_f, columnOrPos: _pos);
+		}
 		
 		public int CompareTo(_TvItem other) {
 			var x = _matches;
@@ -238,16 +240,13 @@ Filters: t Type, m Member, n Namespace.
 			if (x.IsDefault) return y.IsDefault ? 0 : 1;
 			if (y.IsDefault) return -1;
 			
-			Debug.Assert(x.Length == y.Length);
+			//Debug.Assert(x.Length == y.Length); //Once. After restarting could not reproduce. The text was "MD5" or "MD5R", while editing an Au file. Then added `else ta.Clear();` in _Update().
+			Debug_.PrintIf(x.Length != y.Length, $"x.Length={x.Length}, y.Length={y.Length}");
+			if (x.Length != y.Length) return 0;
+			
 			int r = 0;
 			for (int i = 0; i < x.Length; i++) r += x[i].CompareTo(y[i]);
 			return r;
-		}
-		
-		#endregion
-		
-		public void Clicked() {
-			App.Model.OpenAndGoTo(_f, columnOrPos: _pos);
 		}
 	}
 	

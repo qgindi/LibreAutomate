@@ -2,6 +2,7 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
+using Microsoft.Win32;
 
 namespace Au.Types;
 
@@ -10,35 +11,35 @@ namespace Au.Types;
 /// </summary>
 public static unsafe partial class ExtMisc {
 	#region value types
-
+	
 	/// <summary>
 	/// Converts to int with rounding.
 	/// Calls <see cref="Convert.ToInt32(double)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this double t) => Convert.ToInt32(t);
-
+	
 	/// <summary>
 	/// Converts to int with rounding.
 	/// Calls <see cref="Convert.ToInt32(float)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this float t) => Convert.ToInt32(t);
-
+	
 	/// <summary>
 	/// Converts to int with rounding.
 	/// Calls <see cref="Convert.ToInt32(decimal)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this decimal t) => Convert.ToInt32(t);
-
+	
 	//rejected. Too simple, and nobody would find and use.
 	///// <summary>
 	///// Converts to int.
 	///// Can be used like <c>0xff123456.ToInt()</c> instead of <c>unchecked((int)0xff123456)</c>.
 	///// </summary>
 	//public static int ToInt(this uint t) => unchecked((int)t);
-
+	
 	///// <summary>
 	///// Converts to Color.
 	///// Can be used like <c>0xff123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
@@ -47,7 +48,7 @@ public static unsafe partial class ExtMisc {
 	///// <param name="makeOpaque">Add 0xff000000.</param>
 	//internal static Color ToColor_(this uint t, bool makeOpaque = true)
 	//	=> Color.FromArgb(unchecked((int)(t | (makeOpaque ? 0xff000000 : 0))));
-
+	
 	/// <summary>
 	/// Converts to Color. Makes opaque (alpha 0xff).
 	/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
@@ -56,7 +57,7 @@ public static unsafe partial class ExtMisc {
 		if (bgr) t = ColorInt.SwapRB(t);
 		return Color.FromArgb(unchecked(0xff << 24 | t));
 	}
-
+	
 	/// <summary>
 	/// Converts double to string.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
@@ -65,7 +66,7 @@ public static unsafe partial class ExtMisc {
 	public static string ToS(this double t, string format = null) {
 		return t.ToString(format, NumberFormatInfo.InvariantInfo);
 	}
-
+	
 	/// <summary>
 	/// Converts float to string.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
@@ -74,7 +75,7 @@ public static unsafe partial class ExtMisc {
 	public static string ToS(this float t, string format = null) {
 		return t.ToString(format, NumberFormatInfo.InvariantInfo);
 	}
-
+	
 	/// <summary>
 	/// Converts decimal to string.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
@@ -83,7 +84,7 @@ public static unsafe partial class ExtMisc {
 	public static string ToS(this decimal t, string format = null) {
 		return t.ToString(format, NumberFormatInfo.InvariantInfo);
 	}
-
+	
 	/// <summary>
 	/// Converts int to string.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-',</c> not <c>'−'</c> etc.
@@ -92,7 +93,7 @@ public static unsafe partial class ExtMisc {
 	public static string ToS(this int t, string format = null) {
 		return t.ToString(format, NumberFormatInfo.InvariantInfo);
 	}
-
+	
 	/// <summary>
 	/// Converts long to string.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
@@ -101,7 +102,7 @@ public static unsafe partial class ExtMisc {
 	public static string ToS(this long t, string format = null) {
 		return t.ToString(format, NumberFormatInfo.InvariantInfo);
 	}
-
+	
 	/// <summary>
 	/// Converts nint to string.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
@@ -111,7 +112,7 @@ public static unsafe partial class ExtMisc {
 		return t.ToString(format, NumberFormatInfo.InvariantInfo);
 	}
 	//cref not nint.ToString because DocFX does not support it.
-
+	
 	//rare
 	///// <summary>
 	///// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
@@ -121,7 +122,7 @@ public static unsafe partial class ExtMisc {
 	//public static bool NoArea(this Rectangle t) {
 	//	return t.Width <= 0 || t.Height <= 0;
 	//}
-
+	
 	/// <summary>
 	/// Calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.
 	/// </summary>
@@ -133,7 +134,7 @@ public static unsafe partial class ExtMisc {
 		var v = t.GetOffsetAndLength(length);
 		return (v.Offset, v.Offset + v.Length);
 	}
-
+	
 	/// <summary>
 	/// If this is null, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.
 	/// </summary>
@@ -143,7 +144,7 @@ public static unsafe partial class ExtMisc {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static (int start, int end) GetStartEnd(this Range? t, int length)
 		=> t?.GetStartEnd(length) ?? (0, length);
-
+	
 	/// <summary>
 	/// If this is null, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/>.
 	/// </summary>
@@ -153,13 +154,13 @@ public static unsafe partial class ExtMisc {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static (int Offset, int Length) GetOffsetAndLength(this Range? t, int length)
 		=> t?.GetOffsetAndLength(length) ?? (0, length);
-
+	
 	//currently not used. Creates shorter string than ToString.
 	///// <summary>
 	///// Converts this <b>Guid</b> to Base64 string.
 	///// </summary>
 	//public static string ToBase64(this Guid t) => Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&t, sizeof(Guid)));
-
+	
 	//rejected: too simple. We have print.it(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 	///// <summary>
 	///// Converts int to hexadecimal string like "0x3A".
@@ -168,11 +169,11 @@ public static unsafe partial class ExtMisc {
 	//{
 	//	return "0x" + t.ToString("X");
 	//}
-
+	
 	#endregion
-
+	
 	#region enum
-
+	
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static long _ToLong<T>(T v) where T : unmanaged, Enum {
 		if (sizeof(T) == 4) return *(int*)&v;
@@ -182,7 +183,7 @@ public static unsafe partial class ExtMisc {
 		//Compiler removes the if(sizeof(T) == n) and code that is unused with that size, because sizeof(T) is const.
 		//Faster than with switch(sizeof(T)). It seems the switch code is considered too big to be inlined.
 	}
-
+	
 	//same. Was faster when tested in the past.
 	//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	//static long _ToLong2<T>(T v) where T : unmanaged, Enum
@@ -192,7 +193,7 @@ public static unsafe partial class ExtMisc {
 	//	if(sizeof(T) == 2) return Unsafe.As<T, short>(ref v);
 	//	return Unsafe.As<T, byte>(ref v);
 	//}
-
+	
 	/// <summary>
 	/// Returns true if this enum variable has all flag bits specified in <i>flag</i>.
 	/// </summary>
@@ -239,7 +240,7 @@ public static unsafe partial class ExtMisc {
 			//compiler removes the switch/case, because sizeof(T) is const
 #endif
 	}
-
+	
 	/// <summary>
 	/// Returns true if this enum variable has one or more flag bits specified in <i>flags</i>.
 	/// </summary>
@@ -249,7 +250,7 @@ public static unsafe partial class ExtMisc {
 	public static bool HasAny<T>(this T t, T flags) where T : unmanaged, Enum {
 		return (_ToLong(t) & _ToLong(flags)) != 0;
 	}
-
+	
 	//slower
 	//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	//public static bool HasAny5<T>(this T t, T flags) where T : unmanaged, Enum
@@ -259,7 +260,7 @@ public static unsafe partial class ExtMisc {
 	//	if(sizeof(T) == 2) return (*(short*)&t & *(short*)&flags) != 0;
 	//	return (*(byte*)&t & *(byte*)&flags) != 0;
 	//}
-
+	
 	/// <summary>
 	/// Adds or removes a flag.
 	/// </summary>
@@ -272,7 +273,7 @@ public static unsafe partial class ExtMisc {
 		if (add) a |= b; else a &= ~b;
 		t = *(T*)&a;
 	}
-
+	
 	//rejected. Rarely used. Adds many garbage in compiled documentation for enums. Maybe C# 10 will have a list pattern for it.
 	//	Can istead write: if(e is EnumX.Val1 or EnumX.Val2 ...). But currently problems with intellisense; works better with (): if(e is (EnumX.Val1 or EnumX.Val2 ...)).
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
@@ -282,14 +283,14 @@ public static unsafe partial class ExtMisc {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3) where T : unmanaged, Enum {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4) where T : unmanaged, Enum {
@@ -297,35 +298,35 @@ public static unsafe partial class ExtMisc {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5) where T : unmanaged, Enum {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6) where T : unmanaged, Enum {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7) where T : unmanaged, Enum {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7, T v8) where T : unmanaged, Enum {
 	//			var a = _ToLong(t);
 	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7) || a == _ToLong(v8);
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn<T>(this T t, params T[] values) where T : unmanaged, Enum {
@@ -339,51 +340,51 @@ public static unsafe partial class ExtMisc {
 	//        return values.Contains(t);
 	//#endif
 	//		}
-
+	
 	//		//same for int
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2) {
 	//			return t == v1 || t == v2;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2, int v3) {
 	//			return t == v1 || t == v2 || t == v3;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4) {
 	//			return t == v1 || t == v2 || t == v3 || t == v4;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5) {
 	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6) {
 	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7) {
 	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8) {
 	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7 || t == v8;
 	//		}
-
+	
 	//		/// <summary>Returns true if this is equal to a value in list.</summary>
 	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	//		public static bool IsIn(int t, params int[] values) {
@@ -392,30 +393,30 @@ public static unsafe partial class ExtMisc {
 	//			}
 	//			return false;
 	//		}
-
+	
 	#endregion
-
+	
 	#region char
-
+	
 	/// <summary>
 	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
-
+	
 	/// <summary>
 	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
 	/// </summary>
 	public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-
+	
 	/// <summary>
 	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
-
+	
 	#endregion
-
+	
 	#region array
-
+	
 	/// <summary>
 	/// Creates a copy of this array with one or more removed elements.
 	/// </summary>
@@ -433,7 +434,7 @@ public static unsafe partial class ExtMisc {
 		for (int i = index; i < n; i++) r[i] = t[i + count];
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Creates a copy of this array with one inserted element.
 	/// </summary>
@@ -451,7 +452,7 @@ public static unsafe partial class ExtMisc {
 		r[index] = value;
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Creates a copy of this array with several inserted elements.
 	/// </summary>
@@ -463,28 +464,28 @@ public static unsafe partial class ExtMisc {
 	public static T[] InsertAt<T>(this T[] t, int index, params T[] values) {
 		if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
 		int n = values?.Length ?? 0; if (n == 0) return t;
-
+		
 		var r = new T[t.Length + n];
 		for (int i = 0; i < index; i++) r[i] = t[i];
 		for (int i = index; i < t.Length; i++) r[i + n] = t[i];
 		for (int i = 0; i < n; i++) r[i + index] = values[i];
 		return r;
 	}
-
+	
 	internal static void WriteInt(this byte[] t, int x, int index) {
 		if (index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
 		fixed (byte* p = t) *(int*)(p + index) = x;
 	}
-
+	
 	internal static int ReadInt(this byte[] t, int index) {
 		if (index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
 		fixed (byte* p = t) return *(int*)(p + index);
 	}
-
+	
 	#endregion
-
+	
 	#region IEnumerable
-
+	
 	/// <summary>
 	/// Removes items based on a predicate. For example, all items that have certain value.
 	/// </summary>
@@ -495,7 +496,7 @@ public static unsafe partial class ExtMisc {
 	public static void RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate) {
 		foreach (var k in t.Where(predicate).Select(kv => kv.Key).ToArray()) { t.Remove(k); }
 	}
-
+	
 	/// <summary>
 	/// Gets a reference to a <b>TValue</b> in this dictionary, adding a new entry with a default value if the key does not exist.
 	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrAddDefault"/>.
@@ -516,7 +517,7 @@ public static unsafe partial class ExtMisc {
 #pragma warning disable 9088 //weird and undocumented: "This returns a parameter by reference 'exists' but it is scoped to the current method"
 		return ref CollectionsMarshal.GetValueRefOrAddDefault(t, key, out exists);
 	}
-
+	
 	/// <summary>
 	/// Gets a reference to a <b>TValue</b> in this dictionary. If the key does not exist, sets <i>exists</i> = false and returns a reference null.
 	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrNullRef"/> and <see cref="Unsafe.IsNullRef"/>.
@@ -528,11 +529,11 @@ public static unsafe partial class ExtMisc {
 		exists = !Unsafe.IsNullRef(ref r);
 		return ref r;
 	}
-
+	
 	/// <inheritdoc cref="CollectionsMarshal.AsSpan"/>
 	public static Span<T> AsSpan<T>(this List<T> t) where T : struct
 		=> CollectionsMarshal.AsSpan(t);
-
+	
 	/// <summary>
 	/// Gets a reference to an item.
 	/// List items must not be added or removed while it is in use.
@@ -541,7 +542,7 @@ public static unsafe partial class ExtMisc {
 	/// <param name="i">Item index.</param>
 	public static ref T Ref<T>(this List<T> t, int i) where T : struct
 		=> ref CollectionsMarshal.AsSpan(t)[i];
-
+	
 	/// <summary>
 	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.
 	/// </summary>
@@ -558,7 +559,7 @@ public static unsafe partial class ExtMisc {
 		}
 		throw new ArgumentException("key/value already exists");
 	}
-
+	
 	/// <summary>
 	/// If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <b>List</b>), removes the value (and key if it was single value) and returns true.
 	/// </summary>
@@ -575,7 +576,7 @@ public static unsafe partial class ExtMisc {
 		}
 		return true;
 	}
-
+	
 	/// <summary>
 	/// If dictionary contains key <i>k</i>, gets its value (<i>v</i>) or list of values (<i>a</i>) and returns true.
 	/// </summary>
@@ -590,28 +591,28 @@ public static unsafe partial class ExtMisc {
 		if (v == null && a == null && o != null) throw new ArgumentException("bad type");
 		return r;
 	}
-
+	
 	/// <summary>
 	/// Returns <b>Length</b>, or 0 if null.
 	/// </summary>
 	internal static int Lenn_<T>(this T[] t) => t?.Length ?? 0;
 	//internal static int Lenn_(this System.Collections.ICollection t) => t?.Count ?? 0; //slower, as well as Array
-
+	
 	/// <summary>
 	/// Returns <b>Count</b>, or 0 if null.
 	/// </summary>
 	internal static int Lenn_<T>(this List<T> t) => t?.Count ?? 0;
-
+	
 	/// <summary>
 	/// Returns true if null or <b>Length</b> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this T[] t) => (t?.Length ?? 0) == 0;
-
+	
 	/// <summary>
 	/// Returns true if null or <b>Count</b> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
-
+	
 	/// <summary>
 	/// Efficiently recursively gets descendants of this tree.
 	/// <see href="https://stackoverflow.com/a/30441479/2547338"/>
@@ -622,13 +623,13 @@ public static unsafe partial class ExtMisc {
 	internal static IEnumerable<T> Descendants_<T>(this IEnumerable<T> t, Func<T, IEnumerable<T>> childSelector) {
 		var stack = new Stack<IEnumerator<T>>();
 		var enumerator = t.GetEnumerator();
-
+		
 		try {
 			while (true) {
 				if (enumerator.MoveNext()) {
 					T element = enumerator.Current;
 					yield return element;
-
+					
 					var e = childSelector(element)?.GetEnumerator();
 					if (e != null) {
 						stack.Push(enumerator);
@@ -644,7 +645,7 @@ public static unsafe partial class ExtMisc {
 		}
 		finally {
 			enumerator.Dispose();
-
+			
 			while (stack.Count > 0) // Clean up in case of an exception.
 			{
 				enumerator = stack.Pop();
@@ -652,7 +653,7 @@ public static unsafe partial class ExtMisc {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Efficiently recursively gets descendants of this tree.
 	/// <see href="https://stackoverflow.com/a/30441479/2547338"/>
@@ -662,12 +663,12 @@ public static unsafe partial class ExtMisc {
 	internal static System.Collections.IEnumerable Descendants_(this System.Collections.IEnumerable t, Func<object, System.Collections.IEnumerable> childSelector) {
 		var stack = new Stack<System.Collections.IEnumerator>();
 		var enumerator = t.GetEnumerator();
-
+		
 		while (true) {
 			if (enumerator.MoveNext()) {
 				object element = enumerator.Current;
 				yield return element;
-
+				
 				var e = childSelector(element)?.GetEnumerator();
 				if (e != null) {
 					stack.Push(enumerator);
@@ -680,11 +681,11 @@ public static unsafe partial class ExtMisc {
 			}
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region StringBuilder
-
+	
 	/// <summary>
 	/// Appends string as new correctly formatted sentence.
 	/// </summary>
@@ -713,11 +714,11 @@ public static unsafe partial class ExtMisc {
 		}
 		return t;
 	}
-
+	
 	#endregion
-
+	
 	#region winforms
-
+	
 	/// <summary>
 	/// Gets window handle as <see cref="wnd"/>.
 	/// </summary>
@@ -731,11 +732,11 @@ public static unsafe partial class ExtMisc {
 	/// </remarks>
 	public static wnd Hwnd(this System.Windows.Forms.Control t, bool create = false)
 		=> create || t.IsHandleCreated ? new wnd(t.Handle) : default;
-
+	
 	#endregion
-
+	
 	#region System.Drawing
-
+	
 	/// <summary>
 	/// Draws inset or outset rectangle.
 	/// </summary>
@@ -761,7 +762,7 @@ public static unsafe partial class ExtMisc {
 			t.FillRectangle(pen.Brush, r0); //never mind dash style etc
 		}
 	}
-
+	
 	/// <summary>
 	/// Draws inset rectangle of specified pen color and width.
 	/// </summary>
@@ -772,7 +773,7 @@ public static unsafe partial class ExtMisc {
 		using var pen = new Pen(penColor, penWidth);
 		DrawRectangleInset(t, pen, r, outset);
 	}
-
+	
 	/// <summary>
 	/// Creates solid brush and calls <see cref="Graphics.FillRectangle"/>.
 	/// </summary>
@@ -780,50 +781,75 @@ public static unsafe partial class ExtMisc {
 		using var brush = new SolidBrush(color);
 		t.FillRectangle(brush, r);
 	}
-
+	
 	/// <summary>
 	/// Calls b.LockBits in ctor and b.UnlockBits in Dispose.
 	/// </summary>
 	internal struct BitmapData_ : IDisposable {
 		Bitmap _b;
 		BitmapData _d;
-
+		
 		public BitmapData_(Bitmap b, ImageLockMode mode, PixelFormat? pf = null) {
 			_b = b;
 			_d = _b.LockBits(new(default, b.Size), mode, pf ?? _b.PixelFormat);
 		}
-
+		
 		public BitmapData_(Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null) {
 			_b = b;
 			_d = _b.LockBits(r, mode, pf ?? _b.PixelFormat);
 		}
-
+		
 		public void Dispose() {
 			_b?.UnlockBits(_d);
 			_b = null;
 			_d = null;
 		}
-
+		
 		public int Width => _d.Width;
 		public int Height => _d.Height;
 		public int Stride => _d.Stride;
 		public PixelFormat PixelFormat => _d.PixelFormat;
 		public IntPtr Scan0 => _d.Scan0;
 	}
-
+	
 	/// <summary>
 	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
 	/// </summary>
 	/// <param name="pf">If null, uses b.PixelFormat.</param>
 	internal static BitmapData_ Data(this Bitmap b, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, mode, pf);
-
+	
 	/// <summary>
 	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
 	/// </summary>
 	/// <param name="pf">If null, uses b.PixelFormat.</param>
 	internal static BitmapData_ Data(this Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, r, mode, pf);
-
+	
+	#endregion
+	
+	#region other
+	
+	/// <summary>
+	/// Gets a value from a subkey of this registry key.
+	/// </summary>
+	/// <param name="t"></param>
+	/// <param name="subkey">The name or relative path of the subkey.</param>
+	/// <param name="name">The name of the value to retrieve.</param>
+	/// <param name="defaultValue">The value to return if <i>subkey</i> or <i>name</i> does not exist.</param>
+	/// <param name="options"></param>
+	/// <returns>The value associated with <i>name</i>, or <i>defaultValue</i> if <i>subkey</i> or <i>name</i> not found.</returns>
+	/// <exception cref="Exception">Exceptions of <see cref="RegistryKey.OpenSubKey(string)"/> and <see cref="RegistryKey.GetValue(string?, object?, RegistryValueOptions)"/>.</exception>
+	/// <remarks>
+	/// Calls <see cref="RegistryKey.OpenSubKey(string)"/> and <see cref="RegistryKey.GetValue(string?, object?, RegistryValueOptions)"/>.
+	/// </remarks>
+	public static object GetValue2(this RegistryKey t, string subkey, string name, object defaultValue = null, RegistryValueOptions options = default) {
+		using var k = t.OpenSubKey(subkey);
+		if (k == null) return defaultValue;
+		return k.GetValue(name, defaultValue, options);
+		
+		//tested: RegGetValue same speed.
+	}
+	
 	#endregion
 }

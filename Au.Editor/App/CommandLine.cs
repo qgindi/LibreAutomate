@@ -139,7 +139,7 @@ static class CommandLine {
 		
 		WndUtil.RegisterWindowClass(ScriptEditor.c_msgWndClassName, _WndProc);
 		_msgWnd = WndUtil.CreateMessageOnlyWindow(ScriptEditor.c_msgWndClassName);
-		script.s_wndMsg = _msgWnd;
+		script.s_wndEditorMsg = _msgWnd;
 	}
 	
 	/// <summary>
@@ -152,7 +152,7 @@ static class CommandLine {
 					if (_importWorkspace != null) App.Model.ImportWorkspace(_importWorkspace);
 					else App.Model.ImportFiles(_importFiles);
 				}
-				catch (Exception ex) { print.it(ex.Message); }
+				catch (Exception ex) { print.warning(ex); }
 			}, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 		}
 	}
@@ -178,7 +178,7 @@ static class CommandLine {
 		case Api.WM_COPYDATA:
 			if (App.Loaded >= AppState.Unloading) return default;
 			try { return _WmCopyData(wparam, lparam); }
-			catch (Exception ex) { print.it(ex.Message); }
+			catch (Exception ex) { print.warning(ex); }
 			return default;
 		case Api.WM_USER:
 			if (App.Loaded >= AppState.Unloading) return default;

@@ -151,6 +151,11 @@ public static unsafe class osVersion {
 	public static bool minWin11_22H2 => _win10build >= 22621;
 
 	/// <summary>
+	/// true if Windows 11 version 23H2 or later.
+	/// </summary>
+	public static bool minWin11_23H2 => _win10build >= 22631;
+
+	/// <summary>
 	/// true if this process is 32-bit, false if 64-bit.
 	/// The same as <c>sizeof(nint) == 4</c>.
 	/// </summary>

@@ -178,7 +178,7 @@ public static unsafe class Hash {
 		/// <summary>Adds string converted to UTF8.</summary>
 		/// <exception cref="ArgumentNullException"><i>data</i> is null.</exception>
 		public void Add(string data) => Add(Encoding.UTF8.GetBytes(data));
-	
+		
 		//CONSIDER: alloc on stack to avoid garbage. This func works, but not faster.
 		//[SkipLocalsInit]
 		//public void Add2(string data) {
@@ -227,14 +227,16 @@ public static unsafe class Hash {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		public readonly long r1, r2;
 		
-		//rejected. Not much shorter than hex.
-		//public string ToBase64() => Convert.ToBase64String(ToArray());
+		public MD5Result(long r1, long r2) { this.r1 = r1; this.r2 = r2; }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 		
 		/// <summary>
 		/// Converts this to hex string.
 		/// </summary>
 		public override string ToString() => Convert2.HexEncode(this);
+		
+		//rejected. Not much shorter than hex.
+		//public string ToBase64() => Convert.ToBase64String(ToArray());
 		
 		/// <summary>
 		/// Converts this to byte[16].

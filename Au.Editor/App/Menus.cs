@@ -5,12 +5,12 @@ using System.Windows.Controls;
 
 static class Menus {
 	public const string
-		black = " #505050|#D0D0D0",
-		blue = " #4080FF|#77C9FF",
+		black = " #505050|#EEEEEE",
+		blue = " #4080FF|#99CCFF",
 		//darkBlue = " #5060FF|#7080FF",
 		//lightBlue = " #B0C0FF|#D0E0FF",
-		green = " #99BF00|#A9CE13",
-		brown = " #9F5300|#D0D0D0",
+		green = " #99BF00|#A7D000",
+		brown = " #9F5300|#EEEEEE",
 		purple = " #A040FF|#D595FF",
 		darkYellow = " #EABB00",
 		orange = " #FFA500",
@@ -21,7 +21,10 @@ static class Menus {
 		iconTrigger = "*Codicons.SymbolEvent" + blue,
 		iconIcons = "*FontAwesome.IconsSolid" + green,
 		iconUndo = "*Ionicons.UndoiOS" + brown,
-		iconPaste = "*Material.ContentPaste" + brown;
+		iconPaste = "*Material.ContentPaste" + brown,
+		//iconReferences = "*Codicons.References"
+		iconReferences = "*Material.MapMarkerMultiple" + blue //or MapMarkerMultipleOutline
+		;
 	
 	[Command(target = "Files")]
 	public static class File {
@@ -257,7 +260,7 @@ static class Menus {
 			[Command("...", keys = "Ctrl+T", image = "*FontAwesome.SearchLocationSolid" + blue)]
 			public static void Find_symbol() { CiFindGo.ShowSingle(); }
 			
-			[Command(keys = "Shift+F12", image = "*Codicons.References" + blue, separator = true)]
+			[Command(keys = "Shift+F12", image = iconReferences, separator = true)]
 			public static void Find_references() { CiFind.FindReferencesOrImplementations(false); }
 			
 			[Command(image = "*Material.InformationVariant" + blue)]
@@ -323,16 +326,16 @@ static class Menus {
 		[Command]
 		public static class Selection {
 			[Command(keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
-			public static void Comment() { ModifyCode.CommentLines(true); }
+			public static void Comment_selection() { ModifyCode.Comment(true); }
 			
 			[Command(keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus" + brown)]
-			public static void Uncomment() { ModifyCode.CommentLines(false); }
+			public static void Uncomment_selection() { ModifyCode.Comment(false); }
 			
-			[Command(keys = "Ctrl+Shift+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
-			public static void Toggle_comment() { ModifyCode.CommentLines(null); }
+			[Command(keys = "Ctrl+Shift+/", image = "*BoxIcons.RegularComment" + brown)]
+			public static void Toggle_comment() { ModifyCode.Comment(null); }
 			
-			[Command(keysText = "R-click margin", keys = "Ctrl+Alt+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
-			public static void Toggle_line_comment() { ModifyCode.CommentLines(null, notSlashStar: true); }
+			[Command(keysText = "R-click margin", keys = "Ctrl+Alt+/", image = "*BoxIcons.RegularComment" + brown)]
+			public static void Toggle_line_comment() { ModifyCode.Comment(null, notSlashStar: true); }
 			
 			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown)]
 			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
@@ -507,7 +510,7 @@ static class Menus {
 		public static void Recent() { RecentTT.Show(); }
 		
 		[Command("...", image = "*Entypo.Publish" + blue)]
-		public static void Publish() { new MSBuild().Publish(); }
+		public static void Publish() { new XPublish().Publish(); }
 		
 		[Command(separator = true)]
 		public static class Debugger {
@@ -529,6 +532,9 @@ static class Menus {
 		
 		[Command(image = iconIcons)]
 		public static void Icons() { DIcons.ShowSingle(); }
+		
+		[Command]
+		public static void Update_icons() { IconImageCache.ClearAll(); }
 		
 		[Command(image = "*SimpleIcons.NuGet" + green)]
 		public static void NuGet() { DNuget.ShowSingle(); }

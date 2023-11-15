@@ -5,7 +5,7 @@ using System.Windows;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-class MSBuild {
+class XPublish {
 	MetaComments _meta;
 	string _csprojFile;
 	

@@ -61,8 +61,7 @@ class PanelFound {
 					Found.Files => "*FeatherIcons.File" + Menus.black,
 					//Found.Text => "*Material.Text" + Menus.black,
 					Found.Text => "*Material.FindReplace" + Menus.black,
-					Found.SymbolFind => "*FontAwesome.SearchDollarSolid" + Menus.black,
-					Found.SymbolReferences => "*Codicons.References" + Menus.black,
+					Found.SymbolReferences => Menus.iconReferences,
 					Found.SymbolRename => "*PicolIcons.Edit" + Menus.red,
 					Found.Repair => "*RPGAwesome.Repair" + Menus.black,
 					_ => null
@@ -338,7 +337,6 @@ class PanelFound {
 	public enum Found {
 		Files,
 		Text,
-		SymbolFind,
 		SymbolReferences,
 		SymbolRename,
 		Repair

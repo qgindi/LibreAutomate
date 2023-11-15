@@ -22,7 +22,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. The calling period depends on <i>options</i>.</param>
-		/// <param name="options">Options. If null, uses <see cref="opt.wait"/>.</param>
+		/// <param name="options">Options. If null, uses <b>opt.wait</b>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 #if DEBUG
 		[Obsolete]
