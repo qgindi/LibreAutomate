@@ -129,22 +129,23 @@ static class CiUtil {
 			};
 			s = $"C# {s} \"{keyword}\"";
 			//print.it(s); return;
-			url = _GoogleURL(s);
+			url = GoogleURL(s);
 		} else if (helpKind == HelpKind.String) {
-			int i = popupMenu.showSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", PMFlags.ByCaret);
+			int i = popupMenu.showSimple("1 C# strings|2 String formatting|3 Wildcard expression|4 Output tags|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", PMFlags.ByCaret);
 			switch (i) {
 			case 1: url = "C# strings"; break;
 			case 2: url = "C# string formatting"; break;
 			case 3: HelpUtil.AuHelp("articles/Wildcard expression"); break;
+			case 4: HelpUtil.AuHelp("articles/Output tags"); break;
 			case 11: CiTools.CmdShowRegexWindow(); break;
 			case 12: CiTools.CmdShowKeysWindow(); break;
 			}
-			if (url != null) url = _GoogleURL(url);
+			if (url != null) url = GoogleURL(url);
 		}
 		if (url != null) run.itSafe(url);
 	}
 	
-	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(query);
+	public static string GoogleURL(string query) => "https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(query);
 	
 	public static string GetSymbolHelpUrl(ISymbol sym) {
 		//print.it(sym);
@@ -203,7 +204,7 @@ static class CiUtil {
 			=> t?.TypeKind is TypeKind.Class or TypeKind.Struct
 			&& (t.BaseType?.Name == "NativeApi" || t.Name.Contains("Native") || t.Name.Ends("Api"));
 		
-		return _GoogleURL(query);
+		return GoogleURL(query);
 	}
 	
 	/// <summary>

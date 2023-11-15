@@ -17,7 +17,7 @@ internal struct Handle_ : IDisposable {
 	/// If handle == -1, sets 0.
 	/// </summary>
 	/// <param name="handle"></param>
-	public Handle_(IntPtr handle) { _h = handle.ToInt64() == -1 ? default : handle; }
+	public Handle_(IntPtr handle) { _h = handle == -1 ? default : handle; }
 
 	//public static explicit operator Handle_(IntPtr p) => new Handle_(p); //no
 

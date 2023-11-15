@@ -7,6 +7,7 @@ partial class FilesModel {
 	public class FilesView : KTreeView {
 		public FilesView() {
 			SetMultiSelect(toggle: false);
+			FullRowExpand = true;
 			AllowDrop = true;
 
 			ItemActivated += _ItemActivated;

@@ -19,9 +19,11 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //PROBLEM: Roslyn bug: no popup list if first parameter of indexer setter is enum. Same in VS.
 //	Even on Ctrl+Space does not select the enum in list. And does not add enum members like "Enum.Member".
 
-//SHOULDDO: don't complete on ':' if it could be label. VS completes too.
-
 //CONSIDER: completion in keys string. But probably really useful only for keys like MediaNextTrack.
+
+//CONSIDER: if string starts with <>, on < show list of output tags. User suggestion. And useful for me. Maybe even show a list of standard colors and the color control.
+//	Also need a tool for wildcard expression.
+//	Now users can in "string" press F1 or Ctrl+Space to open the help page.
 
 partial class CiCompletion {
 	CiPopupList _popupList;
@@ -309,10 +311,18 @@ partial class CiCompletion {
 			
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
-					int i = popupMenu.showSimple("Regex|Keys", PMFlags.ByCaret);
-					stringFormat = i switch { 1 => PSFormat.Regexp, 2 => PSFormat.Keys, _ => default };
+					var m = new popupMenu();
+					m["Regex"] = o => CodeInfo._tools.ShowForStringParameter(PSFormat.Regexp, cd, stringInfo);
+					m["Keys"] = o => CodeInfo._tools.ShowForStringParameter(PSFormat.Keys, cd, stringInfo);
+					m.Separator();
+					m.Submenu("Help\tF1", m => {
+						m["C# strings"] = o => run.itSafe(CiUtil.GoogleURL("C# strings"));
+						m["String formatting"] = o => run.itSafe(CiUtil.GoogleURL("C# string formatting"));
+						m["Wildcard expression"] = o => HelpUtil.AuHelp("articles/Wildcard expression");
+						m["Output tags"] = o => HelpUtil.AuHelp("articles/Output tags");
+					});
+					m.Show(PMFlags.ByCaret, owner: doc.AaWnd);
 				}
-				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo);
 				return;
 			}
 			
@@ -940,6 +950,13 @@ partial class CiCompletion {
 	CiComplResult _Commit(SciCode doc, CiComplItem item, char ch, KKey key) {
 		if (item.Provider == CiComplProvider.EmbeddedLanguage) { //can complete only on click or Tab
 			if (ch != default || !(key == default || key == KKey.Tab)) return CiComplResult.None;
+		} else if (ch == ':') { //don't complete if `label:`
+			if (_data.model.SyntaxTree.FindTokenOrEndToken(_data.tempRange.CurrentFrom, default).Parent is IdentifierNameSyntax node) {
+				if ((node.Parent is ExpressionStatementSyntax ess && ess.Parent is BlockSyntax) || (node.Parent is VariableDeclarationSyntax vds && vds.Parent is LocalDeclarationStatementSyntax)) {
+					if (!(item.Text == "global" || (item.FirstSymbol is INamespaceSymbol ns && ns.IsGlobalNamespace))) //eg `global::`
+						return CiComplResult.None;
+				}
+			}
 		}
 		
 		bool isSpace; if (isSpace = ch == ' ') ch = default;

@@ -331,6 +331,10 @@ class PanelBookmarks {
 		m["Deactivate all"] = o => { foreach (var v in _root.Children()) _SetActive(v, false); };
 		m["Collapse all"] = o => { foreach (var v in _root.Children()) _tv.Expand(v, false); };
 		m.Submenu("More", m => {
+			m["Delete all inactive bookmarks..."] = o => {
+				if (1 != dialog.show("Delete all inactive bookmarks", "Are you sure?", "2 No|1 Yes", icon: DIcon.Warning, owner: _tv)) return;
+				foreach (var v in _root.Descendants().ToArray()) if (!v.IsFolder && !v.isActive) _DeleteItem(v);
+			};
 			m["Delete all bookmarks..."] = o => {
 				if (1 != dialog.show("Delete all bookmarks", "Are you sure?", "2 No|1 Yes", icon: DIcon.Warning, owner: _tv)) return;
 				foreach (var v in _root.Children().ToArray()) _DeleteItem(v);

@@ -382,7 +382,7 @@ This tool modifies only the .git folder, not workspace files.
 		_autoBackupTime = Environment.TickCount64;
 		var wsSN = App.Model.WorkspaceSN;
 		timer.after(500, _ => {
-			print.it("auto-backup", DateTime.Now);//TODO
+			//print.it("auto-backup", DateTime.Now);
 			Commit(autoBackup: true, autoBackupWorkspaceSN: wsSN);
 		});
 	}
@@ -480,7 +480,7 @@ This tool modifies only the .git folder, not workspace files.
 					}
 				}
 				catch (Exception e1) {
-					print.it(e1.Message);
+					print.warning(e1);
 					if (e1 is UnauthorizedAccessException && !uacInfo.isAdmin) print.it("\tRestart this program as administrator.");
 					return false;
 				}

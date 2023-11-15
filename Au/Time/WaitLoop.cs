@@ -48,7 +48,7 @@ namespace Au.More {
 		}
 		
 		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns false instead.</param>
-		/// <param name="options">Options. If null, uses <see cref="opt.wait"/>.</param>
+		/// <param name="options">Options. If null, uses <b>opt.wait</b>.</param>
 		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
 		public WaitLoop(double secondsTimeout, OWait options) : this(new(secondsTimeout) { Period = (options ?? opt.wait).Period, DoEvents = (options ?? opt.wait).DoEvents }) { }
 		

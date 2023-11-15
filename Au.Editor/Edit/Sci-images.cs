@@ -408,7 +408,16 @@ partial class SciCode {
 	static bool s_imageDeleteAlways;
 	
 	static string _ImageRemoveScreenshots(string s) {
-		return s.RxReplace(@"/\*image:[A-Za-z0-9/+]{40,}=*\*/", "");
+		//s = s.RxReplace(@"/\*image:[A-Za-z0-9/+]{40,}=*\*/", "");
+		//var s2 = s.RxReplace(@"""image:[A-Za-z0-9/+]{40,}=*""", @"""image:""");
+		//if (s2 != s)
+		//	if (dialog.showYesNo("Remove all images?", "This will replace strings \"image:<hidden image data>\" with \"image:\" in the copied text.")) s = s2;
+		
+		int n = s.RxReplace(@"/\*image:[A-Za-z0-9/+]{40,}=*\*/", "", out s);
+		if (n > 0) print.it($"Info: in the copied forum code have been removed {n} images embedded in hidden comments. The script can run without them.");
+		n = s.RxReplace(@"""image:[A-Za-z0-9/+]{40,}=*""", @"""image:""", out s);
+		if (n > 0) print.it($"Info: in the copied forum code have been removed {n} images embedded in strings \"image:<hidden image data>\". You can copy-paste the strings separately if necessary.");
+		return s;
 	}
 	
 	public void EImageRemoveScreenshots() {

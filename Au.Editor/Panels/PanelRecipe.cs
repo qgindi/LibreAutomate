@@ -23,47 +23,15 @@ class PanelRecipe {
 	public PanelRecipe() {
 		//P.UiaSetName("Recipe panel"); //no UIA element for Panel
 		
-		_c = new _KScintilla {
+		_c = new _KScintilla(this) {
 			Name = "Recipe_text",
 			AaInitReadOnlyAlways = true,
 			AaInitTagsStyle = KScintilla.AaTagsStyle.User
 		};
-		_c.AaHandleCreated += _c_aaHandleCreated;
-		
 		P.Children.Add(_c);
 	}
 	
 	public DockPanel P { get; } = new();
-	
-	private void _c_aaHandleCreated() {
-		_c.Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
-		
-		_c.aaaMarginSetWidth(1, 14);
-		_c.Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
-		_c.Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
-		
-		//_c.aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
-		//_c.aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
-		//_c.aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
-		//_c.aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
-		_c.aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
-		var styles = new CiStyling.TStyles(customized: false) { FontSize = 9 };
-		styles.ToScintilla(_c, multiFont: true);
-		_c.Call(SCI_SETZOOM, App.Settings.recipe_zoom);
-		
-		_c.AaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
-		_c.AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _usings); if (s != null) run.itSafe(s); });
-		//_c.aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
-		_c.AaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
-		//_c.aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
-		_c.AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-		_c.AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
-		_c.AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0x0000FF, bold = true }); //keyword
-		
-#if DEBUG
-		_AutoRenderCurrentRecipeScript();
-#endif
-	}
 	
 	public void Display(string name, string code) {
 		Panels.PanelManager[P].Visible = true;
@@ -179,17 +147,44 @@ class PanelRecipe {
 		return null;
 	}
 	
-	void _ContextMenu() {
-		var m = new popupMenu();
-		m["Copy\tCtrl+C", disable: !_c.aaaHasSelection] = o => { _c.Call(Sci.SCI_COPY); };
-		//m["Copy this code"] = o => {  }; //rejected
-		m.Separator();
-		m["Open in web browser"] = o => { Panels.Cookbook.OpenRecipeInWebBrowser(_currentRecipeName); };
-		m.Show();
-	}
-	
 	class _KScintilla : KScintilla {
+		PanelRecipe _panel;
 		bool _zoomMenu;
+		
+		public _KScintilla(PanelRecipe panel) {
+			_panel = panel;
+		}
+		
+		protected override void AaOnHandleCreated() {
+			Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
+			
+			aaaMarginSetWidth(1, 14);
+			Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
+			Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
+			
+			//aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
+			//aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
+			//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
+			//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
+			aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
+			var styles = new CiStyling.TStyles(customized: false) { FontSize = 9 };
+			styles.ToScintilla(this, multiFont: true);
+			Call(SCI_SETZOOM, App.Settings.recipe_zoom);
+			
+			AaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
+			AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _panel._usings); if (s != null) run.itSafe(s); });
+			//aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
+			AaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
+			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
+			AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
+			AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
+			AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0x0000FF, bold = true }); //keyword
+			
+#if DEBUG
+			_panel._AutoRenderCurrentRecipeScript();
+#endif
+			base.AaOnHandleCreated();
+		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 			switch (msg) {
@@ -207,7 +202,7 @@ class PanelRecipe {
 				}
 				break;
 			case Api.WM_CONTEXTMENU:
-				Panels.Recipe._ContextMenu();
+				_ContextMenu();
 				break;
 			}
 			
@@ -215,6 +210,26 @@ class PanelRecipe {
 			
 			return R;
 		}
+		
+		void _ContextMenu() {
+			var m = new popupMenu();
+			m["Copy\tCtrl+C", disable: !aaaHasSelection] = o => { Call(Sci.SCI_COPY); };
+			m["Copy this code", disable: !_CanGetCode] = o => { if (_GetCode() is string s) clipboard.text = s; };
+			m["New script", disable: !_CanGetCode] = o => { if (_GetCode() is string s) App.Model.NewItem("Script.cs", null, _panel._currentRecipeName + ".cs", true, new(true, s)); };
+			m.Separator();
+			m["Open in web browser"] = o => { Panels.Cookbook.OpenRecipeInWebBrowser(_panel._currentRecipeName); };
+			m.Show(owner: Handle);
+		}
+		
+		string _GetCode() {
+			if (!_CanGetCode) return null;
+			int line = aaaLineFromPos(), firstLine = line, lastLine = line, nLines = aaaLineCount;
+			while (firstLine > 0 && 0 != (1 & Call(SCI_MARKERGET, firstLine - 1))) firstLine--;
+			while (lastLine < nLines - 1 && 0 != (1 & Call(SCI_MARKERGET, lastLine + 1))) lastLine++;
+			return aaaRangeText(false, aaaLineStart(false, firstLine), aaaLineEnd(false, lastLine, withRN: true));
+		}
+		
+		bool _CanGetCode => !aaaHasSelection && 0 != (1 & Call(SCI_MARKERGET, aaaLineFromPos()));
 	}
 	
 #if DEBUG

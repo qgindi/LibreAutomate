@@ -507,7 +507,6 @@ partial class AuDocs {
 	}
 	
 	SymbolDisplayFormat _formatCref = new SymbolDisplayFormat(
-		compilerInternalOptions: SymbolDisplayCompilerInternalOptions.UseValueTuple,
 		globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
 		typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
 		genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
@@ -516,7 +515,7 @@ partial class AuDocs {
 		delegateStyle: SymbolDisplayDelegateStyle.NameAndSignature,
 		extensionMethodStyle: SymbolDisplayExtensionMethodStyle.Default,
 		propertyStyle: SymbolDisplayPropertyStyle.NameOnly,
-		miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+		miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.ExpandValueTuple | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
 		);
 	
 	void _SkipSource(int from, int to) {

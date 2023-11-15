@@ -226,6 +226,9 @@ public static partial class print {
 	public static void directly(string value) {
 		value ??= "";
 		//qm2.write($"'{value}'");
+#if DEBUG
+		if (value.Contains("Attempted to read or write protected memory.")) qm2.write(value, new StackTrace(true)); //TODO
+#endif
 		
 		if (logFile != null) _WriteToLogFile(value);
 		else if (isWritingToConsole) _ConsoleWriteLine(value);

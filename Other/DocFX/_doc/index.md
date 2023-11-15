@@ -36,10 +36,10 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 </pre>
 
 ### Where can run
-Windows 7, 8, 8.1, 10, 11. Editor is 64-bit only.
+Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.18.0, 2023-10-10, 25 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v0.19.0, 2023-11-15, 26 MB
 
 The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 
@@ -59,8 +59,8 @@ Gintaras Didžgalvis, an independent software developer from Lithuania.
 This software replaces [Quick Macros](xref:qm2). The same developer.
 
 The goal is to provide automation software for Windows with these features:
-- Powerful library that includes UI automation, triggers, toolbars, etc.
+- Powerful library that includes UI automation, triggers, toolbars.
 - Script editor/manager program with tools for automation.
 - In scripts use the C# language and .NET libraries.
-- Free and open-source.
+- Free and open-source forever.
 

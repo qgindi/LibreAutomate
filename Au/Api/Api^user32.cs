@@ -15,7 +15,7 @@ static unsafe partial class Api {
 	[DllImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
 	internal static extern bool PostMessage(wnd hWnd, int Msg, nint wParam, nint lParam);
 	
-	[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
+	[DllImport("user32.dll", EntryPoint = "PostThreadMessageW", SetLastError = true)]
 	internal static extern bool PostThreadMessage(int idThread, int Msg, nint wParam, nint lParam);
 	
 	[DllImport("user32.dll", SetLastError = true)]

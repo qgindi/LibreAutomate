@@ -808,7 +808,9 @@ namespace Au {
 		/// <returns><b>Bitmap</b> object, or null if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
 		public static Bitmap winStoreAppImage(Pidl pidl, int size = 16) {
 			var path = _GetWinStoreAppImagePath(pidl, size); if (path == null) return null;
-			var r = Image.FromFile(path) as Bitmap;
+			//var r = Image.FromFile(path) as Bitmap; //no, locks file
+			using var stream = File.OpenRead(path);
+			var r = Image.FromStream(stream) as Bitmap;
 			r?.SetResolution(96, 96);
 			return r;
 		}

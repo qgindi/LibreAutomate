@@ -57,10 +57,10 @@ static unsafe partial class Api {
 	//internal static extern bool QueryProcessCycleTime(IntPtr ProcessHandle, out long CycleTime);
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateEventW", SetLastError = true)]
-	internal static extern Handle_ CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
-	
+	internal static extern IntPtr CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
+
 	internal static Handle_ CreateEvent(bool bManualReset)
-		=> CreateEvent2(default, bManualReset, false, null);
+		=> new(CreateEvent2(default, bManualReset, false, null));
 	
 	[DllImport("kernel32.dll", EntryPoint = "OpenEventW", SetLastError = true)]
 	internal static extern IntPtr OpenEvent(uint dwDesiredAccess, bool bInheritHandle, string lpName);
@@ -101,7 +101,7 @@ static unsafe partial class Api {
 	/// </summary>
 	/// <param name="lpStartAddress">[UnmanagedCallersOnly]</param>
 	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern IntPtr CreateThread(IntPtr lpThreadAttributes, nint dwStackSize, delegate* unmanaged<nint, void> lpStartAddress, nint lpParameter, uint dwCreationFlags, out int lpThreadId);
+	internal static extern IntPtr CreateThread(nint lpThreadAttributes, nint dwStackSize, delegate* unmanaged<GCHandle, uint> lpStartAddress, GCHandle lpParameter, uint dwCreationFlags, out int lpThreadId);
 	
 	[DllImport("kernel32.dll")]
 	internal static extern IntPtr GetCurrentThread();
@@ -953,7 +953,7 @@ static unsafe partial class Api {
 	internal static extern nint SetUnhandledExceptionFilter(nint _);
 	
 	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, nint dwData);
+	internal static extern uint QueueUserAPC(delegate* unmanaged<GCHandle, void> pfnAPC, IntPtr hThread, GCHandle dwData);
 	
 	internal delegate void PAPCFUNC(nint Parameter);
 	

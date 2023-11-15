@@ -215,7 +215,7 @@ namespace Au {
 				return it(file, args, flags, dirEtc);
 			}
 			catch (AuException e) {
-				print.warning(e.Message, 1);
+				print.warning(e);
 				return null;
 			}
 		}

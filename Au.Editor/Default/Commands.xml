@@ -45,8 +45,7 @@ All attributes are optional. The Example command contains all.
 		<Copy hide="always" />
 		<Paste hide="always" />
 		<Format_document separator="" />
-		<Comment />
-		<Uncomment />
+		<Toggle_comment />
 		<Surround_for />
 		<Surround_try_catch />
 		<Create_delegate />
