@@ -289,4 +289,84 @@ public class KColorPicker : UserControl {
 	}
 	
 	public event Action<int> ColorChanged;
+	
+	public static bool ColorTool(out string color, Window owner, bool disableOwner, bool add0xRgbButton, bool addBgrButton) {
+		color = null;
+		
+		var w = new KDialogWindow { Title = "Color", ShowInTaskbar = owner == null };
+		var b = new wpfBuilder(w);
+		w.ResizeMode = ResizeMode.NoResize;
+		b.R.Add(out KColorPicker palette);
+		b.R.StartGrid().Columns(-1, -1, -1);
+		b.R.AddButton("#RRGGBB", 1).Span(1);
+		if (add0xRgbButton) b.AddButton("0xRRGGBB", 2).Span(1);
+		if (addBgrButton) b.AddButton("0xBBGGRR", 3);
+		b.End();
+		b.R.Add("Color name", out _ComboBox cbNamed).Brush(Brushes.White);
+		b.End();
+		
+		List<(string name, ColorInt c, int H)> aNamed = new();
+		//cbNamed.MaxDropDownHeight = 1000;
+		cbNamed.DropDownOpened += _cbNet_DropDownOpened;
+		void _cbNet_DropDownOpened(object sender, EventArgs e) {
+			cbNamed.DropDownOpened -= _cbNet_DropDownOpened;
+			
+			foreach (var mi in typeof(Colors).GetProperties()) {
+				if (mi.GetValue(0) is Color co) {
+					var name = mi.Name;
+					if (name == "Transparent") continue;
+					var ci = (ColorInt)co;
+					var (H, L, S) = ColorInt.ToHLS(ci.argb, false);
+					if (S < 50) H = L - 1000;
+					else H = (H + 240 - 43) % 240;
+					aNamed.Add((name, ci, H));
+				}
+			}
+			aNamed.Sort((x, y) => x.H - y.H);
+			var darkBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(64, 64, 64));
+			for (int i = 0; i < aNamed.Count; i++) {
+				var name = aNamed[i].name;
+				var ci = aNamed[i].c;
+				var brush = new SolidColorBrush((Color)ci);
+				var k = new StackPanel { Orientation = Orientation.Horizontal };
+				k.Children.Add(new Rectangle { Fill = brush, Stroke = Brushes.White, Width = 14, StrokeThickness = 3 });
+				k.Children.Add(new TextBlock { Text = "Text", Foreground = brush, Background = Brushes.White, Padding = new(0, 0, 3, 0) });
+				k.Children.Add(new TextBlock { Text = "Text", Foreground = brush, Background = darkBrush, Padding = new(3, 0, 3, 0) });
+				k.Children.Add(new TextBlock { Text = name, Padding = new(3, 0, 3, 0) });
+				cbNamed.Items.Add(k);
+			}
+			cbNamed.SelectionChanged += (_, e) => { w.DialogResult = true; };
+		}
+		
+		if (!w.ShowAndWait(owner, disableOwner: disableOwner)) return false;
+		
+		if (b.ResultButton > 0) {
+			var v = palette.Color;
+			color = b.ResultButton switch {
+				1 => $"#{v:X6}",
+				2 => $"0x{v:X6}",
+				_ => $"0x{ColorInt.SwapRB(v):X6}"
+			};
+		} else {
+			int si = cbNamed.SelectedIndex;
+			if (si < 0) return false;
+			color = aNamed[si].name;
+		}
+		
+		return true;
+	}
+	
+	class _ComboBox : ComboBox {
+		public _ComboBox() {
+			//workaround for the ComboBox slowness
+			ItemsPanel = new ItemsPanelTemplate();
+			var stackPanelTemplate = new FrameworkElementFactory(typeof(VirtualizingStackPanel));
+			ItemsPanel.VisualTree = stackPanelTemplate;
+		}
+		
+		//public override void OnApplyTemplate() {
+		//	base.OnApplyTemplate();
+		//	if (Template.FindName("PART_Popup", this) is Popup p) p.PopupAnimation = PopupAnimation.None;
+		//}
+	}
 }

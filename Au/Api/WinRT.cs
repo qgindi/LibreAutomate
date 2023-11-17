@@ -55,7 +55,7 @@ static unsafe partial class WinRT {
 		}
 
 		public bool IsNull => _u == default;
-
+		
 		int _QI(Type type, out IntPtr r) { var guid = type.GUID; return Marshal.QueryInterface(_u, ref guid, out r); }
 
 		/// <summary>

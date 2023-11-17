@@ -5,6 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Windows.Data;
+using System.Windows.Automation;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 
 namespace Au.Types;
 
@@ -567,6 +570,15 @@ public static class ExtWpf {
 			t.SizeChanged += h;
 			//note: in Loaded event handler randomly does not work. Somehow t still does not have the overflow button.
 		}
+	}
+	
+	/// <summary>
+	/// Clicks the button.
+	/// Uses <see cref="IInvokeProvider.Invoke"/>.
+	/// </summary>
+	/// <exception cref="ElementNotEnabledException"></exception>
+	public static void UiaClick(this Button t) { //tested: does not work with CheckBox
+		if (UIElementAutomationPeer.CreatePeerForElement(t)?.GetPattern(PatternInterface.Invoke) is IInvokeProvider ip) ip.Invoke();
 	}
 	
 	/// <summary>

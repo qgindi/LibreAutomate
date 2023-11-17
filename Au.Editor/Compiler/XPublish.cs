@@ -18,7 +18,7 @@ class XPublish {
 			b.R.Add(out KCheckBox cSingle, "Single file").Checked(0 == (1 & App.Settings.publish));
 			b.R.Add(out KCheckBox cNet, "Add .NET Runtime").Checked(0 != (2 & App.Settings.publish));
 			b.R.Add(out KCheckBox cR2R, "ReadyToRun").Checked(0 != (4 & App.Settings.publish));
-			b.R.AddOkCancel();
+			b.R.StartOkCancel().AddOkCancel().AddButton("Help", _ => HelpUtil.AuHelp("editor/Publish")).Width(70).End(); 
 			b.End();
 			if (!b.ShowDialog(App.Wmain)) return;
 			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0);

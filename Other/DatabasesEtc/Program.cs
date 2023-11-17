@@ -3,6 +3,7 @@ static class Program {
 
 	[STAThread]
 	static void Main(string[] args) {
+		script.setup();
 		print.qm2.use = true;
 		print.clear();
 

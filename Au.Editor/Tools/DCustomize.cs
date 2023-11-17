@@ -65,7 +65,7 @@ class DCustomize : KDialogWindow {
 		b.StartGrid<KGroupBox>("Properties common to menu item and toolbar button").Columns(0, -1, 30, 30);
 		b.R.Add("Text", out _tText).Tooltip("Text.\nInsert _ before Alt-underlined character.");
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
-			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => _ColorTool(), "Colors"); b.Span(1);
+			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => { if (KColorPicker.ColorTool(out var color, b.Window, disableOwner: true, add0xRgbButton: false, addBgrButton: false)) _tColor.Text = color; }, "Colors"); b.Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
 			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
@@ -174,20 +174,6 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 				if (v.Value != v.Key.attr.keys) u.TextColor = Colors.Blue; //customized
 			}
 			m.Show(owner: this);
-		}
-		
-		void _ColorTool() {
-			var m = new popupMenu();
-			var a = typeof(Colors).GetProperties();
-			for (int i = 0; i < a.Length; i++) {
-				if (a[i].GetValue(0) is Color c) {
-					var k = m.Add(i + 1, a[i].Name);
-					k.TextColor = c;
-					if (ColorInt.GetPerceivedBrightness(k.TextColor.argb, false) > .8) k.BackgroundColor = 0x696969;
-				}
-			}
-			int j = m.Show() - 1; if (j < 0) return;
-			_tColor.Text = a[j].Name;
 		}
 	}
 	
