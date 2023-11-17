@@ -67,11 +67,7 @@ LibreAutomate saves all settings in files, not in the Registry.
 
 ### Some important features missing
 - Dialog editor. Instead use class **wpfBuilder**.
-- Automatic backup.
 - Debugger. To debug a script in step mode need Visual Studio or VS Code.
-- Multiple code editor controls.
-
-Some of these will be added in the future.
 
 ### Some features LibreAutomate will never have
 - Encrypt scripts.

@@ -13,6 +13,20 @@ namespace Au;
 /// <br/>• If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: <c>" ab "</c>. Or use parameter <i>trimSpaces</i> false when parsing.
 /// <br/>• Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
 /// </remarks>
+/// <example>
+/// <code><![CDATA[
+/// var c = new csvTable();
+/// c.AddRow("A", "B");
+/// c.AddRow("C", "D");
+/// var csv = c.ToString();
+/// print.it(csv);
+/// 
+/// var k = csvTable.parse(csv);
+/// for (int row = 0; row < k.RowCount; row++) {
+/// 	print.it(k[row, 0], k[row, 1]);
+/// }
+/// ]]></code>
+/// </example>
 public class csvTable {
 	readonly List<string[]> _a;
 	
@@ -219,6 +233,18 @@ public class csvTable {
 	/// <param name="row">0-based row index. The 'set' function adds new row if negative or equal to <see cref="RowCount"/>.</param>
 	/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	/// <example>
+	/// <code><![CDATA[
+	/// var c = new csvTable { ColumnCount = 2 };
+	/// c[0, 0] = "A1";
+	/// c[0, 1] = "A2";
+	/// c[1, 0] = "B1";
+	/// c[1, 1] = "B2";
+	/// print.it(c);
+	/// string s = c[0, 0];
+	/// print.it(s);
+	/// ]]></code>
+	/// </example>
 	public string this[int row, int column] {
 		get {
 			if ((uint)column >= _columnCount) throw new ArgumentOutOfRangeException("column");
@@ -264,6 +290,17 @@ public class csvTable {
 	/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
 	/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
 	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// var c = new csvTable();
+	/// c[-1] = ["A", "B"];
+	/// c[-1] = ["C", "D"];
+	/// print.it(c);
+	/// for (int row = 0; row < c.RowCount; row++) {
+	/// 	print.it(c[row, 0], c[row, 1]);
+	/// }
+	/// ]]></code>
+	/// </example>
 	public string[] this[int row] {
 		get {
 			if ((uint)row >= RowCount) throw new ArgumentOutOfRangeException();

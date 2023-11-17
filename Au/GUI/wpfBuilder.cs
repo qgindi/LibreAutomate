@@ -2509,7 +2509,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).End();
+	/// b.StartOkCancel().AddOkCancel().AddButton("Help", _ => {  }).Width(70).End();
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder StartOkCancel() {

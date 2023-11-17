@@ -16,7 +16,7 @@ static class Icons {
 		using var d = new sqlite(dbFile);
 		//using var d = new sqlite(dbFile, sql: "PRAGMA journal_mode=WAL"); //no. Does not make select faster.
 		using var trans = d.Transaction();
-		d.Execute("CREATE TABLE _tables (name TEXT, template TEXT)");
+		d.Execute("CREATE TABLE _tables (name TEXT COLLATE NOCASE, template TEXT)");
 
 		var alc = AssemblyLoadContext.Default;
 
@@ -34,8 +34,10 @@ static class Icons {
 				nTables++;
 
 				d.Execute("INSERT INTO _tables VALUES (?, ?)", table, templ);
-				d.Execute($"CREATE TABLE {table} (name TEXT PRIMARY KEY, data TEXT)");
+				d.Execute($"CREATE TABLE {table} (name TEXT PRIMARY KEY COLLATE NOCASE, data TEXT)");
 				using var statInsert = d.Statement($"INSERT INTO {table} VALUES (?, ?)");
+
+				bool bug1 = table == "RemixIcon", bug2 = table == "Unicons";
 
 				foreach (DictionaryEntry k in ty.GetMethod("Create").Invoke(null, null) as IDictionary) {
 					string name = k.Key.ToString(), data = k.Value.ToString();
@@ -46,11 +48,16 @@ static class Icons {
 						continue; //nothing very useful
 					}
 					//if (!dupl.TryAdd(data, table + "." + name)) { nDupl++; print.it("DUPL", dupl[data], table + "." + name); /*continue;*/ } //1.2%. All from same assemblies. Often similar name, but often different. Makes DB smaller by 100 KB (from 18 MB).
-					nIcons++;
+
 					//print.it(name, data);
+					//print.it(name);
+					if (bug1 && name is "BookMarkFill" or "BookMarkLine") continue; //uppercase duplicate of BookmarkFill etc
+					if (bug2 && name is "SnowFlake") continue; //uppercase duplicate of Snowflake etc
+
 					statInsert.Bind(1, name).Bind(2, data);
 					statInsert.Step();
 					statInsert.Reset();
+					nIcons++;
 				}
 			}
 		}

@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0-windows</TargetFrameworks>
+		<!--<TargetFrameworks>net8.0-windows;net6.0-windows</TargetFrameworks>-->
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWpf>true</UseWpf>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -27,13 +28,14 @@
 
 	<!-- NuGet package. -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<Version>0.18.0</Version>
-		<!--<TargetFrameworks>net8.0-windows;net6.0-windows</TargetFrameworks>-->
+		<Version>0.19.0</Version>
 		<!--
-		For the NuGet package need multiple target frameworks. But it makes compilation slow.
+		For the NuGet package need multiple target frameworks (currently 6 and 8). But it makes compilation slow.
 		Workaround - temporarily use different TargetFrameworks when creating NuGet package.
 		Possible problem: error when building after changing TargetFrameworks. Missing target framework in the assets json file.
 			Workaround: delete obj folder (or just assets file, not tested). Could do it in a conditional prebuild event (not tested).
+		Possible problem: VS may not build for multiple frameworks soon after editing this file.
+			Make sure the output files have correct date. Build again if need.
 		-->
 		
 		<PackageId>LibreAutomate</PackageId>
@@ -61,6 +63,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="..\_\64\AuCpp.dll" Link="AuCpp.dll">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\_\64\sqlite3.dll" Link="sqlite3.dll">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Include="x\Icon-128.png" Pack="true" PackagePath="\" />
 		<None Include="x\NuGet.md" Pack="true" PackagePath="\" />
 	</ItemGroup>

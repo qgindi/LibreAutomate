@@ -67,11 +67,7 @@ Download and test the setup file.
 Test the setup file at virustotal.com. And separately other files (even data files).
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
 
-Edit version in _\version.txt. Upload to public_html.
-
 Announce in forum.
-
-If not beta, occasionally may want to review/update in some download websites.
 
 Release NuGet package:
 	In Au project edit version and maybe year.
@@ -80,6 +76,10 @@ Release NuGet package:
 		Build the project.
 	Run script "Create NuGet package.cs". It executes dotnet pack and adds native dlls.
 	Upload to NuGet. The script prints links.
+
+Edit version in _\version.txt. Upload to public_html.
+
+If not beta, occasionally may want to review/update in some download websites. Edit and upload the PAD file.
 
 
 UPDATING .NET
@@ -91,6 +91,8 @@ Update .NET version in all C# projects except Au.Net4.
 In project DatabasesEtc, in file Program.cs:
 	Enable only the call to RefTxt.Create, and run.
 	Enable only the call to RefAndDoc.Create, and run.
+	Also now it's a good time to update icons: update the NuGet package, enable only Icons.CreateDB, and run.
+	NOTE: also need this when upgraded SDK RC -> final. Eg in .NET 8 SDK final some API changed.
 
 Update .NET version in the AppHost project (the #define and the download link). Build.
 
@@ -98,10 +100,13 @@ Build solution.
 
 Run editor.
 
-Update .NET version in the .iss file (Inno Setup).
-
 Update MetaComments.Defines.
 
 Test DNuget with the new and the old SDK. Usually it works with both; don't need to edit.
+
+Find-replace ".NET 6" everywhere, including:
+- LibreAutomate.iss (Inno Setup).
+- Menus.cs (Help -> About).
+- README.md (GitHub).
 
 Maybe more.

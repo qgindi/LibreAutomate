@@ -25,7 +25,7 @@ unsafe class NativeThread_ {
 	public NativeThread_(Action proc, bool sta = true, bool waitInited = false) {
 		_proc = proc;
 		_sta = sta;
-		if (waitInited) _initEvent = Api.CreateEvent2(0, true, false, null);
+		if (waitInited) _initEvent = Api.CreateEvent2(default, true, false, null);
 		_handle = Api.CreateThread(default, 0, &_Thread, GCHandle.Alloc(this), 0, out _tid);
 		if (waitInited) {
 			Api.WaitForSingleObject(_initEvent, -1);
