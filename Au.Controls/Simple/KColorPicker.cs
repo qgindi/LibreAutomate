@@ -329,7 +329,7 @@ public class KColorPicker : UserControl {
 				var ci = aNamed[i].c;
 				var brush = new SolidColorBrush((Color)ci);
 				var k = new StackPanel { Orientation = Orientation.Horizontal };
-				k.Children.Add(new Rectangle { Fill = brush, Stroke = Brushes.White, Width = 14, StrokeThickness = 3 });
+				k.Children.Add(new Rectangle { Fill = brush, Stroke = Brushes.White, Width = 16, StrokeThickness = 3 });
 				k.Children.Add(new TextBlock { Text = "Text", Foreground = brush, Background = Brushes.White, Padding = new(0, 0, 3, 0) });
 				k.Children.Add(new TextBlock { Text = "Text", Foreground = brush, Background = darkBrush, Padding = new(3, 0, 3, 0) });
 				k.Children.Add(new TextBlock { Text = name, Padding = new(3, 0, 3, 0) });
