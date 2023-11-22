@@ -527,7 +527,22 @@ static unsafe partial class Api {
 	//internal static extern nint SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 	
 	[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-	internal static extern nint SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+	static extern nint _SHGetFileInfo(nint pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+	
+	internal static nint SHGetFileInfo(nint pidl, out SHFILEINFO psfi, uint uFlags, uint dwFileAttributes = 0) {
+		return _SHGetFileInfo(pidl, dwFileAttributes, out psfi, Api.SizeOf<Api.SHFILEINFO>(), uFlags);
+	}
+	
+	internal static nint SHGetFileInfo(string path, out SHFILEINFO psfi, uint uFlags, uint dwFileAttributes = 0) {
+		//if (0 != (uFlags & SHGFI_PIDL)) { //not tested
+		//	var pidl = Pidl.FromString_(path);
+		//	if (pidl == 0) { psfi = default; return 0; }
+		//	try { return _SHGetFileInfo(pidl, dwFileAttributes, out psfi, Api.SizeOf<Api.SHFILEINFO>(), uFlags); }
+		//	finally { Marshal.FreeCoTaskMem(pidl); }
+		//} else {
+		fixed (char* p = path) return _SHGetFileInfo((nint)p, dwFileAttributes, out psfi, Api.SizeOf<Api.SHFILEINFO>(), uFlags);
+		//}
+	}
 	
 	//[DllImport("shell32.dll", PreserveSig = true)]
 	//internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);

@@ -35,7 +35,7 @@ print.it(perf.ms-Int64.Parse(args[0]));
 
 //PROBLEM: when miniProgram starts a console program, occasionally its window is inactive, although on top of other windows.
 //	To reproduce: run miniProgram script: `run.it("cmd.exe", flags: RFlags.InheritAdmin)`. If starts active, wait at least 30 s and run again.
-//	It seems never noticed it on Windows 10, and maybe even on older Windows 11.
+//	Never noticed it on Windows 10, only on Windows 11.
 //	Workaround: after `run.it` wait a while, eg `1.s();`, because it happens only if this process exits immediately.
 
 //PROBLEM: although Main() starts fast, but the process ends slowly, because of .NET.

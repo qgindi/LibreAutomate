@@ -29,7 +29,7 @@
   name: Program settings and the Options dialog
   href: editor/Program%20settings.html
 - uid: publish
-  name: Publish
+  name: Creating .exe programs
   href: editor/Publish.html
 - uid: qm2
   name: Compared with Quick Macros

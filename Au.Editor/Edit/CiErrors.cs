@@ -149,10 +149,14 @@ class CiErrors {
 		var code = cd.code;
 		ArgumentListSyntax keysArgs = null;
 		foreach (var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
-			var format = CiUtil.GetParameterStringFormat(node, semo, false);
-			//print.it(format);
+			var format = CiUtil.GetParameterStringFormat(node, semo, false, ignoreInterpolatedString: true);
 			if (format is PSFormat.None or PSFormat.RegexpReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
+			
+			//print.it(format);
+			//CiUtil.PrintNode(node);
+			//print.it(s);
+			
 			if (s.Length == 0) continue;
 			string es = null;
 			try {
@@ -165,7 +169,7 @@ class CiErrors {
 					break;
 				case PSFormat.Wildex:
 					if (s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg wnd.Child("***elmName ...")
-					new wildex(s);
+					if (s.Starts("**")) new wildex(s);
 					break;
 				case PSFormat.Keys:
 					if (s[0] is '!' or '%') break;

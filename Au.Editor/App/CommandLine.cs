@@ -206,7 +206,7 @@ static class CommandLine {
 				TriggersAndToolbars.OnDisableTriggers();
 				break;
 			case 30: //script.debug()
-				if (App.Model.UserSettings.debuggerScript is string s && s.Length > 0) {
+				if (App.Model.UserSettings.debuggerScript is string s && s.Length > 0 && !s.Starts("//")) {
 					if (App.Model.FindCodeFile(s) is FileNode f && f.IsScript) {
 						return CompileRun.CompileAndRun(true, f, new[] { lparam.ToS() });
 					}

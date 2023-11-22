@@ -216,7 +216,8 @@ ModelManifest.xml
 /Other/Api/
 /Other/Programs/ResourceHacker.*
 !/Other/Programs/ResourceHacker.exe
-/Other/Programs/*2.exe.res
+/Other/Programs/*.res
+/Other/Programs/32/
 /Libraries/PCRE/excluded/
 
 /_/*

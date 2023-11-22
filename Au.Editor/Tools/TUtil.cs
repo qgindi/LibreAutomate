@@ -666,6 +666,12 @@ static class TUtil {
 			}
 			
 			return R;
+			
+			//rejected
+			//static bool _IsConsole(string path) {
+			//	if (!path.Ends(".exe", true)) return path.Ends(".bat", true);
+			//	return 0x4550 == Api.SHGetFileInfo(path, out _, Api.SHGFI_EXETYPE);
+			//}
 		}
 		
 		/// <summary>
