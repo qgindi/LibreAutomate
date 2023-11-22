@@ -60,9 +60,9 @@ static class ModifyCode {
 			bool allLinesComments = true;
 			for (int i = replStart; i < replEnd; i++) {
 				var trivia = root.FindTrivia(i);
-				if (trivia.IsWhitespace()) trivia = root.FindTrivia(trivia.Span.End);
-				if (!trivia.IsSingleLineComment()) { allLinesComments = false; break; }
-				i = code.IndexOf('\n', i, replEnd - i); if(i<0) break;
+				if (trivia.IsWhitespace()) trivia = root.FindTrivia(i = trivia.Span.End);
+				if (trivia.Kind() is not (SyntaxKind.SingleLineCommentTrivia or SyntaxKind.EndOfLineTrivia)) { allLinesComments = false; break; }
+				i = code.IndexOf('\n', i, replEnd - i); if (i < 0) break;
 			}
 			if (allLinesComments) {
 				com = comment ?? false;

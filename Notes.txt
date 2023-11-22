@@ -46,12 +46,13 @@ Build solution if needed to edit in above steps.
 May need to update some info in README.md for github. Eg the screenshot and "how to build".
 	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version.
 
-Open the .iss file in Inno Script Studio. Review, compile.
+Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
 	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.
 	May need to update the setup file size in the download webpage (index.md).
 
 Upload the setup file. For example with FileZilla.
 	Backup the old setup file at first: in FileZilla move the old file to the "download" folder and rename (add version).
+	Don't backup if changed only patch version. Simply replace.
 
 Run script "Au docs". Click the upload link.
 
@@ -81,6 +82,8 @@ Edit version in _\version.txt. Upload to public_html.
 
 If not beta, occasionally may want to review/update in some download websites. Edit and upload the PAD file.
 
+
+---------------------------------------------------------
 
 UPDATING .NET
 

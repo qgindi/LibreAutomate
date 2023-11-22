@@ -95,7 +95,8 @@ partial class AuDocs {
 	void _PostprocessFile(FEFile f, string file2, string siteDirTemp) {
 		//print.it($"<><lc green>{f.Name}<>");
 		string name = f.Name, s = filesystem.loadText(f.FullPath);
-		bool isApi = name.Starts(@"\api");
+		bool isApi = name.Starts(@"\api") && name != @"\api\index.html";
+		//print.it(name, isApi);
 		
 		int nr;
 		if (isApi) {
@@ -189,10 +190,11 @@ partial class AuDocs {
 			
 			//<google>...</google> -> <a href="google search">
 			nr = s.RxReplace(@"<google>(.+?)</google>", @"<a href=""https://www.google.com/search?q=$1"">$1</a>", out s);
+			if (nr > 0) print.warning("SHOULDDO: if using <_><google> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
 			
 			//<msdn>...</msdn> -> <a href="google search in microsoft.com">
-			nr += s.RxReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:microsoft.com+$1"">$1</a>", out s);
-			if (nr > 0) print.warning("SHOULDDO: if using <google> or <msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.");
+			nr = s.RxReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:microsoft.com+$1"">$1</a>", out s);
+			if (nr > 0) print.warning("SHOULDDO: if using <_><msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
 		}
 		
 		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.

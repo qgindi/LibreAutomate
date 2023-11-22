@@ -96,7 +96,7 @@ class DOptions : KDialogWindow {
 			.Validation(_startupScripts_Validation);
 		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.UserSettings.debuggerScript)
 			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.")
-			.Validation(_ => debuggerScript.Text is string s && !s.NE() && null == App.Model.FindCodeFile(s) ? "Debugger script not found" : null);
+			.Validation(_ => debuggerScript.Text is string s && !s.NE() && !s.Starts("//") && null == App.Model.FindCodeFile(s) ? "Debugger script not found" : null);
 		b.End();
 		
 		//right column

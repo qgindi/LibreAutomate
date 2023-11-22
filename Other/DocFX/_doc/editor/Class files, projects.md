@@ -16,7 +16,7 @@ There are several ways to include class files in a C# file X:
 ### Projects
 A folder named like <i>@Project</i> (starts with @) is a project folder. To create: menu -> File -> New -> New project.
 
-Projects are used to compile multiple C# files together. The compilation creates a single assembly file that can be executed as a script or .exe program or used as a .dll library.
+Projects are used to compile multiple C# files together. The compilation creates an assembly file that can be executed as a script or .exe program or used as a .dll library.
 
 The first code file in the project folder is the project's main file. All class files are compiled together with it when you try to compile or run any file of the project.
 

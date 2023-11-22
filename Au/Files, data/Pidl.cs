@@ -103,7 +103,7 @@ namespace Au.Types {
 		/// Later need to free it with Marshal.FreeCoTaskMem.
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="throwIfFailed"></param>
+		/// <param name="throwIfFailed">If failed: true - throw AuException; false - return 0.</param>
 		internal static IntPtr FromString_(string s, bool throwIfFailed = false) {
 			IntPtr R;
 			s = _Normalize(s);

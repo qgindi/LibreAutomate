@@ -219,12 +219,12 @@ static class CiUtil {
 		return r;
 	}
 	
-	public static PSFormat GetParameterStringFormat(SyntaxNode node, SemanticModel semo, bool isString) {
+	public static PSFormat GetParameterStringFormat(SyntaxNode node, SemanticModel semo, bool isString, bool ignoreInterpolatedString = false) {
 		var kind = node.Kind();
 		//print.it(kind);
 		SyntaxNode parent;
 		if (isString || kind == SyntaxKind.StringLiteralExpression) parent = node.Parent;
-		else if (kind == SyntaxKind.InterpolatedStringText) parent = node.Parent.Parent;
+		else if (kind == SyntaxKind.InterpolatedStringText && !ignoreInterpolatedString) parent = node.Parent.Parent;
 		else return PSFormat.None;
 		
 		while (parent is BinaryExpressionSyntax && parent.IsKind(SyntaxKind.AddExpression)) parent = parent.Parent; //"string"+"string"+...

@@ -16,7 +16,7 @@
 - name: Program settings
   href: Program settings.md
 
-- name: Publish
+- name: Creating .exe programs
   href: Publish.md
 
 - name: Snippets
