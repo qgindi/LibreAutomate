@@ -13,7 +13,7 @@ o - stack orientation: v vertical, h horizontal.
 z - node size (width in horizontal stack or height in vertical). Star-sized if like "100*". Default for toolbar and stack: auto-sized. For others must be specified, cannot be auto.
 s - splitter size. Default 4. Min 1. Every node in stack except the first has a splitter before it.
 captionAt - Left, Top, Right, Bottom. Default Left.
-state - flags: 1 floating, 2 hidden.
+state - flags: 1 hidden, 2 floating.
 flags - misc flags: 1 - splitter resizes the nearest node at each side instead of all star-sized nodes.
 active - 0-based index of active node in tab. Default 0.
 Attributes valid in:
@@ -39,11 +39,12 @@ active - tab.
 				<panel name="Outline" captionAt="Top" />
 				<panel name="Cookbook" captionAt="Top" />
 			</tab>
-			<panel name="Open" z="50" />
+			<panel name="Open" z="80" />
 			<panel name="Tasks" z="50" />
 			<tab z="150" captionAt="Top">
 				<panel name="Find" captionAt="Top" />
 				<panel name="Bookmarks" captionAt="Top" />
+				<panel name="Breakpoints" captionAt="Top" state="1" />
 			</tab>
 		</stack>
 		<stack o="v" z="600*">
@@ -52,7 +53,10 @@ active - tab.
 				<toolbar name="Edit" />
 				<toolbar name="Custom2" z="100*" />
 			</stack>
-			<document name="documents" z="400*" s="1" captionAt="Right" />
+			<stack o="h" z="400*" s="1">
+				<document name="documents" z="500*" captionAt="Right" />
+				<panel name="Debug" z="250" captionAt="Top" state="1" />
+			</stack>
 			<!--<tab z="400*" s="1" captionAt="Top">
 				<document name="documents" />
 			</tab>-->

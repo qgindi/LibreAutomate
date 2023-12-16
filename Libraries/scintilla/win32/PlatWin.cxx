@@ -3835,7 +3835,7 @@ void Platform::DebugDisplay(const char *s) noexcept {
 	SendMessageA(FindWindowA("QM_Editor", nullptr), WM_SETTEXT, (WPARAM)(-1), (LPARAM)s);
 }
 
-//#define TRACE
+//#define TRACE //Au
 
 #ifdef TRACE
 void Platform::DebugPrintf(const char *format, ...) noexcept {

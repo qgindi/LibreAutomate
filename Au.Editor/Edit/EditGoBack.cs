@@ -1,3 +1,6 @@
+//TODO: don't record a step when opening a document if then immediately goes to another place in the document. Maybe don't record places where was stayed <1 s.
+//TODO: don't record when stepping in debug mode.
+
 class EditGoBack {
 	record struct _Location(FileNode fn, int pos);
 	

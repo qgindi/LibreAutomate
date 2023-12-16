@@ -13,7 +13,7 @@ public partial class KPanels {
 			s_styleTabItem = XamlResources.Dictionary["AuPanelsTabItemStyle"] as Style,
 			s_styleTabLeft = XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
 			s_tyleTabRight = XamlResources.Dictionary["TabItemVerticalRight"] as Style;
-
+		
 		void _InitTabControl() {
 			var tc = _tab.tc;
 			tc.Style = s_styleTabControl;
@@ -37,40 +37,46 @@ public partial class KPanels {
 				var v = (e.AddedItems[0] as TabItem).Tag as _Node;
 				v.TabSelected?.Invoke(v, EventArgs.Empty);
 			};
-
+			
 			//implement DontFocusTab (prevent changing focus when clicking a tabitem)
 			tc.PreviewMouseLeftButtonDown += (_, e) => {
-				if (e.Source is TabItem ti && ti.Tag is _Node n && n.DontFocusTab) {
+				if (e.Source is TabItem ti && ti.Tag is _Node n && n.DontFocusTab != null) {
+					bool focusWithin;
 					if (Keyboard.FocusedElement != null) {
-						if (tc.IsKeyboardFocusWithin) return;
+						focusWithin = tc.IsKeyboardFocusWithin;
 					} else {
 						wnd w = Api.GetFocus();
 						if (!w.IsChildOf(ti.Hwnd())) return;
-						if (null != tc.FindVisualDescendant(o => o is HwndHost hh && hh.Handle == w.Handle)) return;
+						focusWithin = null != tc.FindVisualDescendant(o => o is HwndHost hh && hh.Handle == w.Handle);
 					}
-
+					if (focusWithin && ti.IsSelected) return;
+					
 					ti.PreviewGotKeyboardFocus += _PreviewGotKeyboardFocus;
 					ti.Dispatcher.InvokeAsync(() => { ti.PreviewGotKeyboardFocus -= _PreviewGotKeyboardFocus; });
+					void _PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
+						e.Handled = true;
+						if (focusWithin) ti.Dispatcher.InvokeAsync(n.DontFocusTab);
+					}
 					//note: cannot implement it in _AddToTab, because then we don't know whether the tab header clicked or some descendant.
 				}
 			};
-			static void _PreviewGotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) { e.Handled = true; }
 		}
-
+		
 		void _VerticalTabHeader(double height = -1, bool onMove = false) {
 			var tc = _tab.tc;
-			switch (tc.TabStripPlacement) { case Dock.Top: case Dock.Bottom: return; }
-
+			if (tc.TabStripPlacement is Dock.Top or Dock.Bottom) return;
+			
 			if (height < 0) height = tc.ActualHeight;
-			var tabs = tc.Items.Cast<TabItem>();
-
+			
 			var d = _CalcHeight(); //not too slow
-			bool vert2 = d < height - 10;
-			if (vert2 == _tab.isVerticalHeader && !onMove) return;
-			_tab.isVerticalHeader = vert2;
+			bool vertHeader = d < height - 10;
+			if (vertHeader == _tab.isVerticalHeader && !onMove) return;
+			_tab.isVerticalHeader = vertHeader;
 			var dock = tc.TabStripPlacement;
-			foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleTabLeft : s_tyleTabRight) : s_styleTabItem;
-
+			foreach (TabItem v in tc.Items) {
+				v.Style = vertHeader ? (dock == Dock.Left ? s_styleTabLeft : s_tyleTabRight) : s_styleTabItem;
+			}
+			
 			double _CalcHeight() {
 				var cult = CultureInfo.InvariantCulture;
 				var fdir = tc.FlowDirection;
@@ -79,27 +85,31 @@ public partial class KPanels {
 				var brush = SystemColors.ControlTextBrush;
 				//var ppd = VisualTreeHelper.GetDpi(tc).PixelsPerDip; print.it(ppd); //ignored, and we don't need it
 				double r = 4;
-				foreach (var v in tabs) {
+				foreach (TabItem v in tc.Items) {
 					var f = new FormattedText(v.Header.ToString(), cult, fdir, font, fsize, brush, 1);
 					r += f.Width + 11;
 				}
 				return r;
 			}
 		}
-
+		
 		/// <summary>
 		/// Adds this to parent tab at startup or when moving.
 		/// Caller before must call AddChild (or AddSibling) and set _index.
 		/// </summary>
 		void _AddToTab(bool moving) {
 			var ti = new TabItem { Style = s_styleTabItem, Header = _leaf.name, Content = _elem, Tag = this };
-			Parent._tab.tc.Items.Insert(_index, ti);
+			var tc = Parent._tab.tc;
+			if (tc.TabStripPlacement is Dock.Top or Dock.Bottom) ti.MinWidth = c_tabHeaderMinWidth;
+			tc.Items.Insert(_index, ti);
 			if (moving) {
 				_ShiftSiblingIndices(1);
 				Parent._VerticalTabHeader(onMove: true);
 			}
 		}
-
+		
+		const int c_tabHeaderMinWidth = 46;
+		
 		void _ShowHideInTab(bool show) {
 			var tc = Parent._tab.tc;
 			var ti = tc.Items[_index] as TabItem;
@@ -122,13 +132,13 @@ public partial class KPanels {
 					if (Parent._state.Has(_DockState.Float)) Parent._SetDockState(_DockState.Float);
 					else Parent._ShowHideInStack(show);
 				}
-
+				
 				ti.Content = _elem;
 				ti.Visibility = Visibility.Visible;
 				tc.SelectedItem = ti;
 			}
 		}
-
+		
 		void _ReorderInTab(_Node target, bool after) {
 			if (target == this || (after && target.Next == this) || (!after && target.Previous == this)) return;
 			Remove(); target.AddSibling(this, after);
@@ -141,10 +151,10 @@ public partial class KPanels {
 			Array.Sort(a, (x, y) => (x.Tag as _Node)._index - (y.Tag as _Node)._index);
 			for (int i = 0; i < a.Length; i++) if (a[i] != sel) tc.Items.Insert(i, a[i]);
 		}
-
+		
 		static _Node _NodeFromTabItem(TabItem ti) => ti.Tag as _Node;
 	}
-
+	
 	class _TabControl : TabControl {
 		protected override void OnKeyDown(KeyEventArgs e) {
 			//Apps often use Ctrl+Tab and Ctrl+Shift+Tab eg to switch documents, but TabControl would steal them for switching tabs.

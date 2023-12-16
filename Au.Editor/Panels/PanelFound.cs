@@ -22,7 +22,7 @@ class PanelFound {
 		var cKeep = tb.AddCheckbox("*RemixIcon.Lock2Line" + Menus.black, "Keep results", enabled: false);
 		cKeep.CheckChanged += (_, _) => { if (_sci != null) _sci.isLocked = cKeep.IsChecked; };
 		
-		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + Menus.black, "Close opened files", _ => _sci?.CloseOpenedFiles(), enabled: false);
+		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + Menus.black, _ => _sci?.CloseOpenedFiles(), "Close opened files", enabled: false);
 		
 		b.Add<Border>().Border(thickness2: new(1, 0, 0, 0)).SpanRows(2);
 		b.Add(out _grid, flags: WBAdd.ChildOfLast);
@@ -45,6 +45,8 @@ class PanelFound {
 		b.End();
 		
 		FilesModel.UnloadingAnyWorkspace += _CloseAll;
+		
+		Panels.PanelManager["Found"].DontActivateFloating = e => true;
 	}
 	
 	public UserControl P { get; } = new();

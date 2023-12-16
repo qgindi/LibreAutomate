@@ -10,6 +10,7 @@ static class Menus {
 		//darkBlue = " #5060FF|#7080FF",
 		//lightBlue = " #B0C0FF|#D0E0FF",
 		green = " #99BF00|#A7D000",
+		green2 = " #40B000|#4FD200",
 		brown = " #9F5300|#EEEEEE",
 		purple = " #A040FF|#D595FF",
 		darkYellow = " #EABB00",
@@ -45,10 +46,10 @@ static class Menus {
 			public static void New_folder() { _New(null); }
 		}
 		
-		[Command("Delete...", separator = true, keysText = "Delete", image = "*Typicons.DocumentDelete" + black)]
+		[Command("Delete...", separator = true, keysText = "Delete", image = "*Modern.Delete" + black)]
 		public static void Delete() { App.Model.DeleteSelected(); }
 		
-		[Command(keys = "F2", image = "*BoxIcons.RegularRename" + blue)]
+		[Command(keys = "F2", image = "*BoxIcons.RegularRename @15" + black)]
 		public static void Rename() { App.Model.RenameSelected(); }
 		
 		[Command(image = "*RemixIcon.ChatSettingsLine" + green)]
@@ -287,11 +288,8 @@ static class Menus {
 		
 		[Command]
 		public static class Navigate {
-			[Command(image = "*BoxIcons.SolidBookmark" + blue)]
-			public static void Toggle_bookmark() { Panels.Bookmarks.ToggleBookmark(false); }
-			
-			[Command("Add and/or rename bookmark", image = "*BoxIcons.SolidBookmark" + blue)]
-			public static void Toggle_bookmark2() { Panels.Bookmarks.ToggleBookmark(true); }
+			[Command(image = "*Material.Bookmark @16" + darkYellow)]
+			public static void Toggle_bookmark() { Panels.Bookmarks.ToggleBookmark(); }
 			
 			[Command(image = "*JamIcons.ArrowSquareUp" + black, keys = "Alt+Up", noIndirectDisable = true)]
 			public static void Previous_bookmark() { Panels.Bookmarks.NextBookmark(true); }
@@ -403,7 +401,7 @@ static class Menus {
 		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt" + blue)]
 		public static void wnd() { Dwnd.Dialog(); }
 		
-		[Command("Find UI _element", image = "*Material.CheckBoxOutline" + blue)]
+		[Command("Find UI _element", image = "*Material.CheckBoxOutline @15" + blue)]
 		public static void elm() { Delm.Dialog(); }
 		
 		[Command("Find _image", image = "*Material.ImageSearchOutline" + blue)]
@@ -483,49 +481,50 @@ static class Menus {
 	
 	[Command(target = "Edit")]
 	public static class Run {
-		[Command("Run", keys = "F5", image = "*Codicons.DebugStart #40B000|#4FD200")]
+		[Command(image = "*VaadinIcons.Compile" + blue)]
+		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
+		
+		[Command("Run", image = "*Codicons.DebugStart" + green2)]
 		public static void Run_script() { CompileRun.CompileAndRun(true, App.Model.CurrentFile, runFromEditor: true); }
 		
-		[Command(image = "*FontAwesome.StopCircleRegular" + black)]
+		[Command(image = "*Material.SquareOutline @14" + black)]
 		public static void End_task() {
 			var f = App.Model.CurrentFile;
 			if (f != null) {
 				f = f.GetProjectMainOrThis();
 				if (App.Tasks.EndTasksOf(f)) return;
 			}
+			
 			var a = App.Tasks.Items;
 			if (a.Count > 0) {
 				var m = new popupMenu { RawText = true };
 				m.Submenu("End task", m => {
 					foreach (var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
 				});
-				m.Show();
+				m.Show(owner: App.Hmain);
 			}
 		}
-		
-		//[Command(image = "")]
-		//public static void Pause() { }
-		
-		[Command(image = "*VaadinIcons.Compile" + blue)]
-		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 		
 		[Command("...", image = "*BoxIcons.RegularHistory" + blue)]
 		public static void Recent() { RecentTT.Show(); }
 		
-		[Command("...", image = "*Entypo.Publish" + blue)]
-		public static void Publish() { new XPublish().Publish(); }
+		[Command(image = "*Material.Bug" + green2/*, separator = true*/)]
+		public static void Debug_run() { Panels.Debug.Start(); }
 		
-		[Command(separator = true)]
-		public static class Debugger {
-			[Command("Insert script.debug (wait for debugger to attach)")]
-			public static void Debug_attach() { InsertCode.Statements("script.debug();\r\nDebugger.Break();"); }
+		//[Command] //todo: if used, also enable `nameof(Menus.Run.Debugger),` in PanelEdit._UpdateUI_IsOpen
+		//public static class Debugger {
+		//	[Command("Insert script.debug (wait for debugger to attach)")]
+		//	public static void Debug_attach() { InsertCode.Statements("script.debug();\r\nDebugger.Break();"); }
 			
-			[Command("Insert Debugger.Break (debugger step mode)")]
-			public static void Debug_break() { InsertCode.Statements("Debugger.Break();"); }
+		//	[Command("Insert Debugger.Break (debugger step mode)")]
+		//	public static void Debug_break() { InsertCode.Statements("Debugger.Break();"); }
 			
-			[Command("Insert Debugger.Launch (launch VS debugger)")]
-			public static void Debug_launch() { InsertCode.Statements("Debugger.Launch();"); }
-		}
+		//	[Command("Insert Debugger.Launch (launch VS debugger)")]
+		//	public static void Debug_launch() { InsertCode.Statements("Debugger.Launch();"); }
+		//}
+		
+		[Command("...", image = "*Entypo.Publish" + blue, separator = true)]
+		public static void Publish() { new XPublish().Publish(); }
 	}
 	
 	[Command(target = "")]

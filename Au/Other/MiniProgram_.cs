@@ -160,7 +160,7 @@ static unsafe class MiniProgram_ {
 		}
 
 		//p1.Next();
-		script.Starting_(a[0], a[7]);
+		script.Starting_(a[0], a[7], 0 != (flags & MPFlags.Debugger));
 
 		//Api.QueryPerformanceCounter(out s_started);
 		//print.TaskEvent_("TS", s_started);
@@ -309,6 +309,9 @@ static unsafe class MiniProgram_ {
 
 		/// <summary>Started from portable editor.</summary>
 		IsPortable = 64,
+
+		/// <summary>Will attach the debugger.</summary>
+		Debugger = 128,
 
 		//Config = 256, //meta hasConfig
 	}

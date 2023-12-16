@@ -6,10 +6,6 @@ namespace Au.Controls;
 /// Interface for <see cref="KTreeView"/> items. Provides text and other properties.
 /// </summary>
 public interface ITreeViewItem {
-	//	bool HasItems { get; }
-	//	int ItemsCount { get; }
-	//	ITreeViewItem Parent { get; }
-
 	/// <summary>
 	/// Folder's child items. Return null if not folder.
 	/// </summary>
@@ -109,6 +105,12 @@ public interface ITreeViewItem {
 	/// If not implemented or returns -1, will measure <see cref="DisplayText"/>.
 	/// </summary>
 	int MesureTextWidth(GdiTextRenderer tr) => -1;
+	
+	/// <summary>
+	/// Don't measure/draw these parts.
+	/// Valid flags: <b>Checkbox</b>, <b>MarginLeft</b>, <b>Image</b>, <b>MarginRight</b>, <b>Left</b> (minus 1 indent).
+	/// </summary>
+	TVParts NoParts => 0;
 }
 
 /// <summary>
@@ -120,23 +122,23 @@ public enum TVCheck : byte { Unchecked, Checked, Mixed, Excluded, RadioUnchecked
 /// <see cref="KTreeView"/> item parts.
 /// </summary>
 [Flags]
-public enum TVParts {
+public enum TVParts : byte {
 	/// <summary>Empty area at the left (indentation).</summary>
 	Left = 1,
 
-	/// <summary>Get checkbox rectangle.</summary>
+	/// <summary>Checkbox rectangle.</summary>
 	Checkbox = 2,
 
-	/// <summary>Get left margin rectangle.</summary>
+	/// <summary>Left margin rectangle.</summary>
 	MarginLeft = 4,
 
-	/// <summary>Get image rectangle.</summary>
+	/// <summary>Image rectangle.</summary>
 	Image = 8,
 
-	/// <summary>Get text rectangle.</summary>
+	/// <summary>Text rectangle.</summary>
 	Text = 16,
 
-	/// <summary>Get right margin rectangle.</summary>
+	/// <summary>Right margin rectangle.</summary>
 	MarginRight = 32,
 
 	/// <summary>Empty area at the right.</summary>

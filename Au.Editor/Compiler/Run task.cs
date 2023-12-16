@@ -19,12 +19,13 @@ static class CompileRun {
 	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	/// <param name="ifRunning">If not null, overrides meta ifRunning.</param>
+	/// <param name="debugger">Will attach the debugger.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
 	/// Must be always called in the main UI thread (Environment.CurrentManagedThreadId == 1), because calls its file model functions.
 	/// </remarks>
-	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false, MCIfRunning? ifRunning = null) {
+	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false, MCIfRunning? ifRunning = null, bool debugger = false) {
 #if TEST_STARTUP_SPEED
 		args = new string[] { perf.ms.ToString() }; //and in script use this code: print.it(perf.ms-Convert.ToInt64(args[0]));
 #endif
@@ -50,7 +51,7 @@ static class CompileRun {
 		
 		bool ok = Compiler.Compile(run ? CCReason.Run : CCReason.CompileAlways, out var r, f, projFolder);
 		
-		if (run && (r.role == Au.Compiler.MCRole.classFile || r.role == Au.Compiler.MCRole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
+		if (run && r.role is MCRole.classFile or MCRole.classLibrary) { //info: if classFile, compiler sets r.role and returns false (does not compile)
 			_OnRunClassFile(f, projFolder);
 			return 0;
 		}
@@ -58,14 +59,16 @@ static class CompileRun {
 		if (!ok) return 0;
 		if (!run) return 1;
 		
-		if (r.role == Au.Compiler.MCRole.editorExtension) {
+		if (r.role == MCRole.editorExtension) {
+			if (debugger) { print.it("Cannot debug scripts with role editorExtension."); return 0; }
+			
 			EditorExtension.Run_(r.file, args, handleExceptions: true);
 			return (int)script.RunResult_.editorThread;
 		}
 		
 		if (ifRunning != null) r.ifRunning = ifRunning.Value;
 		
-		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor);
+		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor, debugger: debugger);
 	}
 	
 	public static void RunWpfPreview(FileNode f, Func<CanCompileArgs, bool> canCompile) {
@@ -143,15 +146,15 @@ class RunningTask : ITreeViewItem {
 	volatile WaitHandle _process;
 	public readonly FileNode f;
 	public readonly int taskId;
-	//public readonly int processId;
+	public readonly int processId;
 	
 	static int s_taskId;
 	
-	public RunningTask(FileNode f, WaitHandle hProcess) {
+	public RunningTask(FileNode f, WaitHandle hProcess, int processId) {
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
-		//processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
+		this.processId = processId;
 		
 		RecentTT.TaskEvent(true, this);
 		
@@ -178,16 +181,18 @@ class RunningTask : ITreeViewItem {
 	public bool End(bool onProgramExit) {
 		if (_process is { } p) {
 			var h = p.SafeWaitHandle.DangerousGetHandle();
-
-			//let it call Environment.Exit. It removes tray icons etc.
+			
 			int pid = process.processIdFromHandle(h);
 			if (pid != 0) {
+				if (Panels.Debug.EndIfDebugging(pid)) return true;
+				
+				//let it call Environment.Exit. It removes tray icons etc.
 				var w1 = wnd.findFast(pid.ToS(), script.c_auxWndClassName, messageOnly: true);
 				if (!w1.Is0 && w1.Post(Api.WM_CLOSE)) {
 					if (0 == Api.WaitForSingleObject(h, 1000)) return true;
 				}
 			}
-
+			
 			if (_process != null) {
 				bool ok = Api.TerminateProcess(h, -1);
 				if (onProgramExit) return true;
@@ -365,6 +370,11 @@ class RunningTasks {
 	//	return a;
 	//}
 	
+	public FileNode FileFromProcessId(int processId) {
+		foreach (var v in _a) if (v.processId == processId) return v.f;
+		return null;
+	}
+	
 	/// <summary>
 	/// Ends all tasks of file f.
 	/// Returns true if was running.
@@ -413,8 +423,9 @@ class RunningTasks {
 	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
+	/// <param name="debugger">Will attach the debugger.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
-		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false) {
+		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false, bool debugger = false) {
 		
 		g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
@@ -492,6 +503,7 @@ class RunningTasks {
 			
 			var f1 = r.flags;
 			if (runFromEditor) f1 |= MiniProgram_.MPFlags.FromEditor;
+			if (debugger) f1 |= MiniProgram_.MPFlags.Debugger;
 			if (App.IsPortable) f1 |= MiniProgram_.MPFlags.IsPortable;
 			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, (int)f.Id, process.thisProcessId, (int)CommandLine.MsgWnd);
 			wrPipeName = null;
@@ -509,7 +521,7 @@ class RunningTasks {
 				pre.hProcess = null; pre.pid = 0;
 			} else {
 				if (pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
-				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, f.Id);
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, debugger, f.Id);
 			}
 			Api.AllowSetForegroundWindow(pid);
 			
@@ -532,7 +544,7 @@ class RunningTasks {
 				
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if (uac != _SpUac.admin) { //we don't want second UAC consent
-					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, 0); }
+					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, false, 0); }
 					catch (Exception ex) { Debug_.Print(ex); }
 				}
 			}
@@ -544,7 +556,7 @@ class RunningTasks {
 			return 0;
 		}
 		
-		var rt = new RunningTask(f, hProcess);
+		var rt = new RunningTask(f, hProcess, pid);
 		_Add(rt);
 		return pid;
 	}
@@ -588,7 +600,7 @@ class RunningTasks {
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
-	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain) {
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, bool debugger, uint idMain) {
 		(int pid, WaitHandle hProcess) r;
 		string cwd;
 		
@@ -616,6 +628,7 @@ class RunningTasks {
 			if (runFromEditor) flags |= 2;
 			if (App.IsPortable) flags |= 4;
 			if (wrPipeName != null) { flags |= 8; p->pipe = wrPipeName; }
+			if (debugger) flags |= 16;
 			p->flags = flags;
 			p->workspace = folders.Workspace;
 		} else cwd = folders.ThisApp;

@@ -36,7 +36,7 @@ unsafe partial class Converter {
 				
 			}
 			
-			if (_TokIsChar(iFrom, '\"')) {
+			if (_TokIsChar(iFrom, '"')) {
 				return new _ExpressionResult(_TokToString(iFrom), "string", false);
 			}
 			if (_TokIsChar(iFrom, '\'')) {

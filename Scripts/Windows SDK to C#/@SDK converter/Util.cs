@@ -397,7 +397,7 @@ unsafe partial class Converter {
 		_ctt['!'] = _ctt['%'] = _ctt['&'] /*= _ctt['('] = _ctt[')']*/ = _ctt['*'] = _ctt['+'] /*= _ctt[',']*/ = _ctt['-'] = _ctt['.'] = _ctt['/']
 			= _ctt[':'] = _ctt['<'] = _ctt['='] = _ctt['>'] = _ctt['?'] /*= _ctt['['] = _ctt[']']*/ = _ctt['^'] = _ctt['|'] = _ctt['~']
 			/*= _ctt['{'] = _ctt['}']*/ = 16;
-		//_ctt['('] = _ctt[')'] = _ctt['{'] = _ctt['}'] = _ctt['['] = _ctt[']'] = _ctt[';'] = _ctt['\''] = _ctt[':'] = _ctt['\"'] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = 32;
+		//_ctt['('] = _ctt[')'] = _ctt['{'] = _ctt['}'] = _ctt['['] = _ctt[']'] = _ctt[';'] = _ctt['\''] = _ctt[':'] = _ctt['"'] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = 32;
 		for (int i = 'a'; i <= 'f'; i++) _ctt[i] |= 64;
 		for (int i = 'A'; i <= 'F'; i++) _ctt[i] |= 64;
 		_ctt[0] = 128;

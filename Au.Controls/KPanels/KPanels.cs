@@ -132,9 +132,12 @@ public partial class KPanels {
 			foreach (var x in added) {
 				//try to add near the default place
 				string sAppend = null;
-				if (x.Parent.Elements(x.Name).LastOrDefault(o => o != x && o.Name == x.Name) is { } byDef && rootStack.Desc(byDef.Name, "name", byDef.Attribute("name").Value) is { } by) {
-					bool inTab = x.Parent.Name.LocalName == "tab";
-					if (inTab && by.Parent.Name.LocalName != "tab") {
+				//print.qm2.use=true;
+				//print.clear();
+				var byDef = x.Parent.Elements().LastOrDefault(o => o != x && o.Name.LocalName is not ("stack" or "tab"));
+				if (byDef != null && rootStack.Desc(byDef.Name, "name", byDef.Attribute("name").Value) is { } by) {
+					bool inTab = x.Parent.Name == "tab";
+					if (inTab && by.Parent.Name != "tab") {
 						var tab = new XElement("tab", x);
 						if (by.Attribute("z") is { } a1) { a1.Remove(); tab.SetAttributeValue("z", a1.Value); }
 						if (by.Attribute("captionAt") is { } a2) tab.SetAttributeValue("captionAt", a2.Value);
@@ -142,16 +145,23 @@ public partial class KPanels {
 						by.Remove();
 						tab.AddFirst(by);
 					} else {
-						if (!inTab) x.SetAttributeValue("z", 50); else x.SetAttributeValue("z", null);
-						by.AddAfterSelf(x);
+						if (x.Parent.Name == "stack" && byDef.Parent.Name == "stack" && x.Parent.Attr("o") != by.Parent.Attr("o") && x.Parent.Elements().Count() == 2) {
+							by.AddAfterSelf(x.Parent);
+							by.Remove();
+						} else {
+							if (!inTab) x.SetAttributeValue("z", 50); else x.SetAttributeValue("z", null);
+							by.AddAfterSelf(x);
+						}
 					}
-					sAppend = $"next to the {by.Attr("name")} {by.Name}. You can move it to a better place (right-click...){(inTab ? "" : " or/and resize")}.";
+					string s1 = by.Name.LocalName; if (s1 == "document") s1 = "panel";
+					sAppend = $"next to the {by.Attr("name")} {s1}. You can move it to a better place (right-click...){(inTab ? "" : " or/and resize")}.";
 				} else {
 					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
 					rootStack.Add(x);
 					sAppend = "at the bottom of the window. Right-click its caption and move it to a better place.";
 				}
-				print.it($"New {x.Name} in this app version: {x.Attr("name")}. It's {sAppend}");
+				string sAppend2 = x.Attr(out int state, "state") && 0 != (state & 1) ? "\r\n\tNow it's hidden. To show, right-click any panel caption." : null;
+				print.it($"<>New {x.Name} in this app version: <b>{x.Attr("name")}<>.\r\n\tIt's {sAppend}{sAppend2}");
 			}
 		}
 		//print.it(rootStack);

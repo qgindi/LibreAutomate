@@ -50,19 +50,20 @@ class CiComplItem : ITreeViewItem {
 		_ci.Span = span;
 	}
 	
-	internal void AddOverload(ISymbol sym) {
-		switch (_symbols) {
-		case ISymbol s:
-			_symbols = new List<ISymbol> { s, sym };
-			break;
-		case List<ISymbol> a:
-			a.Add(sym);
-			break;
-		default:
-			Debug.Assert(false);
-			break;
-		}
-	}
+	//not used
+	//internal void AddOverload(ISymbol sym) {
+	//	switch (_symbols) {
+	//	case ISymbol s:
+	//		_symbols = new List<ISymbol> { s, sym };
+	//		break;
+	//	case List<ISymbol> a:
+	//		a.Add(sym);
+	//		break;
+	//	default:
+	//		Debug.Assert(false);
+	//		break;
+	//	}
+	//}
 	
 	public IEnumerable<ISymbol> Symbols {
 		get {

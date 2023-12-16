@@ -213,7 +213,7 @@ public unsafe partial class KScintilla : HwndHost {
 		if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {
 			_dpi = newDpi.PixelsPerInchY.ToInt();
 			Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
-			aaaMarginWidthsDpiChanged_();
+			_MarginWidthsDpiChanged();
 		}
 		base.OnDpiChanged(oldDpi, newDpi);
 	}

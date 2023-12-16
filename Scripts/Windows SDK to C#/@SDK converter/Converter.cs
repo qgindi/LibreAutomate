@@ -290,7 +290,7 @@ static unsafe class API
 				_SkipStatement();
 				return;
 			} else if (_TokIs(_i, "extern")) {
-				if (_TokIsChar(_i + 1, '\"')) { //extern "C"
+				if (_TokIsChar(_i + 1, '"')) { //extern "C"
 					_i++;
 					if (_TokIsChar(_i + 1, '{')) _i++;
 					return;

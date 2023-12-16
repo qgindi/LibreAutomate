@@ -107,7 +107,7 @@ partial class TriggersAndToolbars {
 			s = """Triggers.Mouse[TM%]""";
 		} else if (iType == 4) {
 			var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-			if (!d.ShowAndWait(null)) return;
+			if (!d.ShowAndWait()) return;
 			s = $"Triggers.Window[TWEvent.%ActiveNew, {d.AaResultCode}]";
 		}
 		s = $"{s} = {sAction};";

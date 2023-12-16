@@ -44,6 +44,8 @@ class PanelCookbook {
 		b.Row(-1).Add(_tv);
 		b.End();
 		
+		Panels.PanelManager["Cookbook"].DontActivateFloating = e => e == _tv;
+		
 #if DEBUG
 		_tv.ItemClick += e => {
 			if (e.Button == MouseButton.Right) {

@@ -8,7 +8,7 @@ class DIcons : KDialogWindow {
 		var d = ShowSingle(() => new DIcons(randomizeColors: find == null));
 		if (find != null) d._tName.Text = find;
 	}
-
+	
 	enum _Action {
 		FileIcon = 1,
 		MenuIcon,
@@ -19,20 +19,20 @@ class DIcons : KDialogWindow {
 		ExportXaml,
 		ExportIcon,
 	}
-
+	
 	List<_Item> _a;
 	string _color = "#000000";
 	Random _random;
 	int _dpi;
 	//bool _withCollection;
 	TextBox _tName;
-
+	
 	DIcons(bool randomizeColors) {
 		InitWinProp("Icons", App.Wmain);
-
+		
 		var b = new wpfBuilder(this).WinSize(600, 600);
 		b.Columns(-1, 0);
-
+		
 		//left - edit control and tree view
 		b.Row(-1).StartDock();
 		b.Add(out _tName).Tooltip(@"Search.
@@ -45,7 +45,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.xAddInBorder(out KTreeView tv); //tv.SingleClickActivate = true;
 		tv.ImageBrush = System.Drawing.Brushes.White;
 		b.End();
-
+		
 		//right - color picker, buttons, etc
 		b.StartGrid().Columns(-1);
 		b.Add(out KColorPicker colors);
@@ -55,16 +55,16 @@ Can be Pack.Icon, like Modern.List.")
 			tv.Redraw();
 		};
 		b.StartStack();
-
+		
 		TextBox randFromTo = null, iconSizes = null;
-
+		
 		b.AddButton("Randomize colors", _ => _RandomizeColors());
 		b.Add("L %", out randFromTo, "30-70").Width(50);
 		b.End();
 		b.AddSeparator().Margin("B20");
-
+		
 		//rejected: double-clicking an icon clicks the last clicked button. Unclear and not so useful.
-
+		
 		b.StartGrid<Expander>(out var exp1, "Set file icon").Columns(0, 76, 76, -1);
 		b.R.Add("File", out ComboBox cbIconOf).Items("Selected file(s)", "Script files", "Class files", "Folders", "Open folders").Span(2);
 		b.R.Add<Label>("Icon");
@@ -75,7 +75,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.End();
 		//if (expandFileIcon) exp1.IsExpanded = true;
 		exp1.IsExpanded = true;
-
+		
 		b.StartGrid<Expander>(out var exp2, "Menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
 		b.StartStack();
@@ -97,17 +97,17 @@ Can be Pack.Icon, like Modern.List.")
 		b.End();
 		//if (expandMenuIcon) exp2.IsExpanded = true;
 		exp2.IsExpanded = true;
-
+		
 		b.StartStack<Expander>("Export to current workspace folder");
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, _Action.ExportXaml)).Width(70).Disabled();
 		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(tv, _Action.ExportIcon)).Width(70).Disabled();
 		b.Add("sizes", out iconSizes, "16,24,32,48,64").Width(100);
 		b.End();
-
+		
 		//b.StartStack<Expander>("Other actions");
 		//b.AddButton("Update cached icons", _ => IconImageCache.ClearAll());
 		//b.End();
-
+		
 		b.StartGrid<Expander>("Options");
 		b.Add("List background", out ComboBox cBackground)
 			.Items("White|Black|Dark|Control")
@@ -129,24 +129,24 @@ Can be Pack.Icon, like Modern.List.")
 			if (s != null) for (int i = 0; i < 2; i++) { try { System.Windows.Media.ColorConverter.ConvertFromString(s); } catch { s = i == 0 ? "#" + s : null; } }
 			App.Settings.dicons_contrastColor = s;
 		};
-
+		
 		//b.Add(out KCheckBox cCollection, "Collection");
 		//cCollection.CheckChanged += (_, _) => {
 		//	_withCollection = cCollection.IsChecked == true;
 		//	tv.Redraw();
 		//};
 		b.End();
-
+		
 		b.Row(-1);
 		b.R.Add<TextBlock>().Align("R").FormatText($"Thanks to <a href='https://github.com/MahApps/MahApps.Metro.IconPacks'>MahApps.Metro.IconPacks</a>");
 		b.End();
-
+		
 		b.End();
-
+		
 		b.Loaded += () => {
 			_dpi = Dpi.OfWindow(this);
 			_OpenDB();
-
+			
 			_a = new(30000);
 			foreach (var (table, _) in s_tables) {
 				using var stat = s_db.Statement("SELECT name FROM " + table);
@@ -160,7 +160,7 @@ Can be Pack.Icon, like Modern.List.")
 			if (randomizeColors) _RandomizeColors();
 			tv.SetItems(_a);
 		};
-
+		
 		_tName.TextChanged += (_, _) => {
 			string name = _tName.Text, table = null;
 			Func<_Item, bool> f = null;
@@ -180,7 +180,7 @@ Can be Pack.Icon, like Modern.List.")
 						try { wild = new wildex(name, matchCase && !name.Starts("**")); }
 						catch { name = null; }
 					} else if (matchCase) comp = StringComparison.Ordinal;
-
+					
 					if (name != null) f = o => (table == null || o._table.Eqi(table)) && (wild?.Match(o._name) ?? o._name.Contains(name, comp));
 				}
 			}
@@ -189,7 +189,7 @@ Can be Pack.Icon, like Modern.List.")
 			if (select && (select = e.Count() == 1)) tv.Select(0);
 			_EnableControls(select);
 		};
-
+		
 		tv.SelectedSingle += (o, i) => {
 			_EnableControls(true);
 			//var k = _a[i];
@@ -197,9 +197,9 @@ Can be Pack.Icon, like Modern.List.")
 			//	print.it(xaml);
 			//}
 		};
-
+		
 		b.WinSaved(App.Settings.wndpos.icons, o => App.Settings.wndpos.icons = o);
-
+		
 		void _EnableControls(bool enable) {
 			bThis.IsEnabled = enable;
 			bMenuItem.IsEnabled = enable;
@@ -210,7 +210,7 @@ Can be Pack.Icon, like Modern.List.")
 			bExportXaml.IsEnabled = enable;
 			bExportIco.IsEnabled = enable;
 		}
-
+		
 		void _SetIcon(KTreeView tv) {
 			string icon = tv?.SelectedItem is _Item k ? _ColorName(k) : null;
 			int si = cbIconOf.SelectedIndex;
@@ -226,7 +226,7 @@ Can be Pack.Icon, like Modern.List.")
 				FilesModel.Redraw();
 			}
 		}
-
+		
 		void _ShowCurrent() {
 			_tName.Text = cbIconOf.SelectedIndex switch {
 				1 => App.Settings.icons.ft_script,
@@ -236,7 +236,7 @@ Can be Pack.Icon, like Modern.List.")
 				_ => FilesModel.TreeControl.SelectedItems.FirstOrDefault()?.CustomIconName
 			};
 		}
-
+		
 		void _InsertCodeOrExport(KTreeView tv, _Action what) {
 			//lastAction = what;
 			if (tv.SelectedItem is not _Item k) return;
@@ -248,7 +248,7 @@ Can be Pack.Icon, like Modern.List.")
 			} else if (what == _Action.CopyName) {
 				clipboard.text = _ColorName(k);
 			} else if (GetIconFromBigDB(k._table, k._name, _ItemColor(k), out var xaml)) {
-				xaml = xaml.Replace('\"', '\'').RxReplace(@"\R\s*", "");
+				xaml = xaml.Replace('"', '\'').RxReplace(@"\R\s*", "");
 				switch (what) {
 				//case _Action.InsertXamlVar: code = $"string icon{k._name} = \"{xaml}\";"; break;
 				//case _Action.InsertXamlField: code = $"public const string {k._name} = \"{xaml}\";"; break;
@@ -256,7 +256,7 @@ Can be Pack.Icon, like Modern.List.")
 				case _Action.ExportXaml: _Export(false); break;
 				case _Action.ExportIcon: _Export(true); break;
 				}
-
+				
 				void _Export(bool ico) {
 					var folder = App.Model.CurrentFile?.Parent ?? App.Model.Root;
 					var path = $"{folder.FilePath}\\{k._name}{(ico ? ".ico" : ".xaml")}";
@@ -271,14 +271,14 @@ Can be Pack.Icon, like Modern.List.")
 					else print.it($"<>Exported to <open>{fn.ItemPath}<>");
 				}
 			}
-
+			
 			//if (code != null) {
 			//	if (what is _Action.CopyName or _Action.CopyXaml) clipboard.text = code;
 			//	else if (what is _Action.InsertXamlVar or _Action.InsertXamlField) InsertCode.Statements(code);
 			//	else InsertCode.TextSimply(code);
 			//}
 		}
-
+		
 		void _RandomizeColors() {
 			_random = new();
 			//perf.first();
@@ -306,36 +306,36 @@ Can be Pack.Icon, like Modern.List.")
 			tv.Redraw();
 		}
 	}
-
+	
 	static string _ColorToString(int c) => "#" + c.ToS("X6");
-
+	
 	string _ItemColor(_Item k) => _random == null ? _color : _ColorToString(k._color);
-
+	
 	//string _ColorName(_Item k) => "*" + k._table + "." + k._name + " " + _ItemColor(k);
 	string _ColorName(_Item k) {
 		var s = "*" + k._table + "." + k._name + " " + _ItemColor(k);
 		if (App.Settings.dicons_contrastUse && !App.Settings.dicons_contrastColor.NE()) s = s + "|" + App.Settings.dicons_contrastColor;
 		return s;
 	}
-
+	
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		_dpi = newDpi.PixelsPerInchX.ToInt();
 		base.OnDpiChanged(oldDpi, newDpi);
 	}
-
+	
 	class _Item : ITreeViewItem {
 		DIcons _dialog;
 		public string _table, _name;
 		public int _color;
-
+		
 		public _Item(DIcons dialog, string table, string name) {
 			_dialog = dialog;
 			_table = table; _name = name;
 		}
-
+		
 		//string ITreeViewItem.DisplayText => s_dialog._withCollection ? (_name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")") : _name;
 		string ITreeViewItem.DisplayText => _name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")";
-
+		
 		object ITreeViewItem.Image {
 			//note: don't store UIElement or Bitmap. They can use hundreds MB of memory and it does not make faster/better. Let GC dispose unused objects asap.
 			get {
@@ -351,55 +351,73 @@ Can be Pack.Icon, like Modern.List.")
 			}
 		}
 	}
-
+	
 	static sqlite s_db;
-	static List<(string table, string templ)> s_tables; //~30
-
+	static Dictionary<string, string> s_tables; //table->template, ~30 tables
+	
+	/// <summary>
+	/// Returns true if <i>s</i> starts with "*pack.name" (possibly with library) and the pack exists.
+	/// Fast, does not use the database (may use only the first time).
+	/// </summary>
+	public static bool PossiblyIconName(RStr s) {
+		if (!WpfUtil_.DetectIconString(s, out var d)) return false;
+		_OpenDB();
+		return s_tables.ContainsKey(s[d.pack..d.endPack].ToString());
+	}
+	
 	static void _OpenDB() {
 		if (s_db == null) {
 			var db = s_db = new sqlite(folders.ThisAppBS + "icons.db", SLFlags.SQLITE_OPEN_READONLY);
 			process.thisProcessExit += _ => db.Dispose();
-			s_tables = new();
+			s_tables = new(StringComparer.OrdinalIgnoreCase);
 			using var st = s_db.Statement("SELECT * FROM _tables");
 			while (st.Step()) {
-				s_tables.Add((st.GetText(0), st.GetText(1)));
+				s_tables.Add(st.GetText(0), st.GetText(1));
 			}
 		}
 	}
-
+	
 	/// <exception cref="Exception"></exception>
-	public static bool GetIconFromBigDB(string table, string name, string color, out string xaml) {
+	public static bool GetIconFromBigDB(string table, string name, string color, out string xaml, int size = 0) {
 		xaml = null;
-		string templ = null; foreach (var v in s_tables) if (v.table == table) { templ = v.templ; break; }
-		if (templ == null) return false;
+		_OpenDB();
+		if (!s_tables.TryGetValue(table, out var templ)) return false;
 		if (!s_db.Get(out string data, $"SELECT data FROM {table} WHERE name='{name}'")) return false;
 		//the SELECT is the slowest part. With prepared statement just slightly faster.
-
-		int i = templ.Find(" Data=\"{x:Null}\""); if (i < 0) return false;
-		templ = templ.ReplaceAt(i + 7, 8, data);
-
+		
 		if (!WpfUtil_.SetColorInXaml(ref templ, color)) return false;
-
+		
+		int i = templ.Find(" Data=\"{x:Null}\""); if (i < 0) return false;
+		
+		if (size is > 0 and <= 16) {
+			if (templ.Contains(" Width=\"")) { //size specified in XAML is required to properly render the icon
+				print.warning($"@size not supported for this icon: *{table}.{name}", -1);
+			} else {
+				int margin = 16 - size;
+				string dot5 = 0 != (margin & 1) ? ".5" : null;
+				templ = templ.Insert(i + 16, $" Width=\"{size}\" Height=\"{size}\" Margin=\"{margin / 2}{dot5}\"");
+				templ = templ.Replace(" SnapsToDevicePixels=\"False\"", " SnapsToDevicePixels=\"True\""); //less blurry
+				
+				//FUTURE:
+				// @12[D1][U1][L1][R1] (shift down etc)
+			}
+		}
+		
+		templ = templ.ReplaceAt(i + 7, 8, data);
 		if (templ.Contains("\"{")) return false;
-		//print.it(templ);
-		//xaml = templ;
+		
 		xaml = $@"<Viewbox Width='16' Height='16' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>{templ}</Viewbox>";
 		return true;
 	}
-
+	
 	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. If just "*Pack.Icon", sets "black". Can be null.</param>
 	/// <exception cref="Exception"></exception>
 	public static bool GetIconFromBigDB(string icon, out string xaml) {
 		xaml = null;
-		if (icon == null || !icon.Starts('*')) return false;
-		int i = icon.IndexOf('.'); if (i < 0) return false;
-		int j = icon.IndexOf(' ', i + 1);
-		string color = null;
-		if (j > 0) color = icon[(j + 1)..]; else j = icon.Length;
-		_OpenDB();
-		return GetIconFromBigDB(icon[1..i], icon[++i..j], color, out xaml);
+		if (!WpfUtil_.ParseIconString(icon, out var r)) return false;
+		return GetIconFromBigDB(r.pack, r.name, r.color, out xaml, r.size);
 	}
-
+	
 #if true
 	/// <param name="icon">Icon name, like "*Pack.Icon color", where color is like #RRGGBB or color name. If just "*Pack.Icon", sets "black". Can be null.</param>
 	public static bool TryGetIconFromBigDB(string icon, out string xaml) {
@@ -439,7 +457,7 @@ Can be Pack.Icon, like Modern.List.")
 	}
 	static sqlite s_iconsDB;
 #endif
-
+	
 	public static string GetIconString(string s, EGetIcon what) {
 		if (what != EGetIcon.IconNameToXaml) {
 			s = App.Model.Find(s, silent: true)?.Image switch {

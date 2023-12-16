@@ -19,7 +19,9 @@ public unsafe partial class KTreeView {
 	
 	struct _VisibleItem {
 		public ITreeViewItem item;
-		public ushort level, measured;
+		public int measured;
+		public ushort level;
+		public TVParts noParts;
 		public bool isSelected;
 		
 		public bool Select(bool on) {
@@ -176,7 +178,7 @@ public unsafe partial class KTreeView {
 	
 	void _ScrollInit() {
 		_vscroll = new(true, i => i * _itemHeight, i => (i + 1) * _itemHeight);
-		_hscroll = new(false, i => i * _imageSize, i => (i + 1) * _imageSize);
+		_hscroll = new(false, i => i, i => i + 1);
 		
 		_vscroll.PosChanged += (sb, part) => {
 			_hotIndex = -1;
@@ -323,7 +325,7 @@ public unsafe partial class KTreeView {
 	void _MouseEvents(bool click, bool activate, bool drag, MouseButton button, in TVHitTest h, POINT xy, ModifierKeys mk, bool @double = false) {
 		var v = new TVItemEventArgs(h.item, h.index, h.part, button, @double ? 2 : 1, xy, mk);
 		if (click) ItemClick?.Invoke(v);
-		if (activate) ItemActivated?.Invoke(v);
+		if (activate && !h.item.IsDisabled) ItemActivated?.Invoke(v);
 		if (drag) ItemDragStart?.Invoke(v);
 	}
 	
@@ -396,7 +398,6 @@ public unsafe partial class KTreeView {
 	/// <summary>
 	/// Whether to higlight an item when mouse is over.
 	/// </summary>
-	/// <seealso cref="ItemActivated"/>
 	public bool HotTrack { get; set; }
 	
 	/// <summary>
@@ -437,7 +438,10 @@ public unsafe partial class KTreeView {
 			switch (k) {
 			case Key.Enter:
 				handled = true;
-				if (isFocus) ItemActivated?.Invoke(new(_IndexToItem(_focusedIndex), _focusedIndex, Mod: mod));
+				if (isFocus) {
+					var v = _IndexToItem(_focusedIndex);
+					if (!v.IsDisabled) ItemActivated?.Invoke(new(v, _focusedIndex, Mod: mod));
+				}
 				break;
 			case Key.Home or Key.End or Key.Down or Key.Up or Key.PageDown or Key.PageUp:
 				selIndex = _vscroll.KeyNavigate(_focusedIndex, keys.more.KKeyFromWpf(k));
@@ -481,6 +485,7 @@ public unsafe partial class KTreeView {
 	
 	/// <summary>
 	/// When an item double-clicked. Or clicked, if <see cref="SingleClickActivate"/>. Also on Enter key if focused.
+	/// Not sent if disabled.
 	/// </summary>
 	public event Action<TVItemEventArgs> ItemActivated;
 	
@@ -812,11 +817,12 @@ public unsafe partial class KTreeView {
 		r.left -= _imageMarginX;
 		double f = 96d / _dpi;
 		_leTB = new TextBox {
-			Height = r.Height * f,
+			//Height = r.Height * f,
 			MinWidth = r.Width * f + 12,
 			Text = _leItem.DisplayText,
 			Padding = osVersion.minWin8 ? new Thickness(1, -1, 0, 0) : new Thickness(0, -2, 0, 0)
 		};
+		if (!SystemParameters.HighContrast) _leTB.Height = r.Height * f;
 		_leTB.SelectAll();
 		_leTB.KeyDown += (_, e) => {
 			switch (e.Key) {
@@ -827,6 +833,7 @@ public unsafe partial class KTreeView {
 		_lePopup = new(WS.POPUP) { Content = _leTB, ClickClose = KPopup.CC.Outside, WpfSizeToContent = true };
 		_lePopup.Hidden += (_, _) => EndEditLabel();
 		_lePopup.ShowByRect(this, null, r);
+		Debug_.PrintIf(_leTB == null); if (_leTB == null) return; //once was NullReferenceException in `_leTB.Focus();`. Could not reproduce.
 		_leTB.Focus();
 		
 		EditLabelStarted?.Invoke(_leItem, _leTB);

@@ -572,7 +572,7 @@ static class TUtil {
 					} else if (path.Ends(@"\mmc.exe", true)
 						&& path[..^8].Eqi(folders.System)
 						&& s.RxMatch($@"^("".+?\.msc""|\S+\.msc)(?: (.+))?$", out RXMatch m)) {
-						s = m[1].Value.Trim('\"');
+						s = m[1].Value.Trim('"');
 						if (!pathname.isFullPath(s)) s = filesystem.searchPath(s);
 						else if (!filesystem.exists(s)) s = null;
 						if (s != null) { path = s; args = m[2].Value; name = w.Name; };

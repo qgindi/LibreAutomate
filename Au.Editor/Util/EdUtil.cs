@@ -201,7 +201,7 @@ static class EdComUtil {
 			for (int i = 0; i < 2; i++) {
 				var bits = osVersion.is32BitProcess == (i == 1) ? "32" : "64";
 				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
-				if (hk?.GetValue("") is string path) return path.Trim('\"');
+				if (hk?.GetValue("") is string path) return path.Trim('"');
 			}
 			return null;
 		}

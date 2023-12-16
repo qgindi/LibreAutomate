@@ -160,14 +160,21 @@ static partial class CompilerUtil {
 					var root = tree.GetCompilationUnitRoot();
 					foreach (var v in root.DescendantNodes()) {
 						if (v is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression)
-							&& les.Token.Value is string s && s.Length >= 10 && s[0] == '*') {
-							int j = s.IndexOf(' '); if (j > 0) s = s[..j]; //remove color
+							&& les.Token.Value is string s && s.Length >= 8 && s[0] == '*') {
+							bool hasLibraryPrefix = s[1] == '<';
+							if (hasLibraryPrefix) {
+								int j = s.IndexOf('>');
+								if (j < 0 || !s.Eq(2..j, asmName, true)) continue;
+								s = s[++j..];
+							}
 							if (DIcons.TryGetIconFromBigDB(s, out var xaml)) {
+								s = WpfUtil_.RemoveColorFromIconString(s);
 								s = s.Lower();
-								if (!(hs ??= new()).Add(s)) continue;
-								_RW();
-								rw.AddResource(s, xaml);
-								if (meta.Role == MCRole.classLibrary) (ai ??= new()).Add(les);
+								if ((hs ??= new()).Add(s)) {
+									_RW();
+									rw.AddResource(s, xaml);
+								}
+								if (!hasLibraryPrefix && meta.Role == MCRole.classLibrary) (ai ??= new()).Add(les);
 							}
 						}
 					}

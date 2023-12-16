@@ -485,7 +485,7 @@ var s=k switch {
 };
 //	print.it(k, s);
 b.Append("\r\n\t");
-if(s==null) b.Append("null"); else b.Append('\"').Append(s).Append('\"');
+if(s==null) b.Append("null"); else b.Append('"').Append(s).Append('"');
 b.Append(',');
 }
 b.Append("\r\n};");

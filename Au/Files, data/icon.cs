@@ -204,7 +204,7 @@ namespace Au {
 					else ParseIconLocation(ref si, out index);
 				} else if(ARegistry.GetString(out si, "", @"shell\open\command", rk) && si.Length > 0) {
 					//print.it(@"registry: shell\open\command", file, si);
-					var a = si.SegSplit((si[0] == '\"') ? "\"" : " ", StringSplitOptions.RemoveEmptyEntries);
+					var a = si.SegSplit((si[0] == '"') ? "\"" : " ", StringSplitOptions.RemoveEmptyEntries);
 					si = (a.Length == 0) ? null : a[0];
 					if(si.Ends("rundll32.exe", true)) si = null;
 				} else {
@@ -651,7 +651,7 @@ namespace Au {
 		public static bool parsePathIndex(string s, out string path, out int index) {
 			path = s; index = 0;
 			if (s.NE()) return false;
-			if (s[0] == '\"') path = s = s.Replace("\"", ""); //can be eg "path",index
+			if (s[0] == '"') path = s = s.Replace("\"", ""); //can be eg "path",index
 			if (s.Length < 3) return false;
 			if (!s[^1].IsAsciiDigit()) return false;
 			int i = s.LastIndexOf(','); if (i < 1) return false;

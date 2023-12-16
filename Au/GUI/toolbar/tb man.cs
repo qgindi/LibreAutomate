@@ -392,7 +392,7 @@ public partial class toolbar {
 				var v = _atb[i];
 				if (v.IsOwned) continue;
 				var tb = v.Hwnd;
-				if (!tb.ZorderIsAbove(w)) {
+				if (!tb.ZorderIsAbove(w) && w.IsVisible) {
 					if (w.IsTopmost) {
 						tb.ZorderL_(w, before: true);
 					} else if (!tb.IsTopmost) {
@@ -403,13 +403,13 @@ public partial class toolbar {
 						//	Impossible to reproduce, it happens randomly, once in several days or weeks.
 						Debug_.Print($"toolbar behind the active non-topmost window: {w}");
 						
-						//workaround 1. Not tested.
+						//workaround 1. Sometimes works. Fails if w is "Caret Listener Shim Window"; then 2 fails too.
 						tb.ZorderL_(SpecHWND.NOTOPMOST);
 						tb.ZorderL_(SpecHWND.TOPMOST);
 						if (!tb.ZorderIsAbove(w)) {
 							Debug_.Print($"Workaround 1 failed.");
 							
-							//workaround 2. Not tested here, but `w1.ZorderL_(w2); w2.ZorderL_(w1);` works elsewhere.
+							//workaround 2. Not much tested here, but `w1.ZorderL_(w2); w2.ZorderL_(w1);` works elsewhere.
 							tb.ZorderL_(w, before: true); //may not work, although returns true. ZorderL_ gets previous window, and it may be HWND_TOP (0). SWP(HWND_TOP) does nothing if tb is behind the active non-topmost window (w).
 							if (!tb.ZorderIsAbove(w)) { //workaround
 								tb.ZorderL_(w);

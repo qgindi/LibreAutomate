@@ -56,7 +56,7 @@ static class CiUtilExt {
 				if (isVerbatim = code[start++] == '@') if (position == start++) return null; //inside @"
 				if (!isU8) {
 					if (position < end) { end--; goto gTrue; }
-					if (code[end - 1] != '\"' || end == start || node.NoClosingQuote()) goto gTrue; //no closing "
+					if (code[end - 1] != '"' || end == start || node.NoClosingQuote()) goto gTrue; //no closing "
 				} else if (position < end) {
 					end -= 3;
 					if (position > end) return null;
@@ -64,7 +64,7 @@ static class CiUtilExt {
 				}
 				return false;
 			} else {
-				while (start < end && code[start] == '\"') start++; //skip """
+				while (start < end && code[start] == '"') start++; //skip """
 				int nq = start - span.Start;
 				bool ml = k is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.Utf8MultiLineRawStringLiteralToken;
 				if (position < start) { //inside """
@@ -84,7 +84,7 @@ static class CiUtilExt {
 				}
 				
 				if (isU8) end -= 2;
-				while (nq > 0 && end > start && code[--end] == '\"') nq--;
+				while (nq > 0 && end > start && code[--end] == '"') nq--;
 				if (nq > 0) goto gTrue; //unterminated
 				if (position > end) return null; //inside """, or """ not in its own line (error)
 				if (ml) {
@@ -111,7 +111,7 @@ static class CiUtilExt {
 		
 		if (k is SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
 			int iq = start, nq = 0; while (code[iq] == '$') iq++;
-			while (code.Eq(iq + nq, '\"')) nq++;
+			while (code.Eq(iq + nq, '"')) nq++;
 			if (_IsRawPrefixCenter(iq, nq)) goto gTrue;
 		}
 		
@@ -157,7 +157,7 @@ static class CiUtilExt {
 		if (x.isInterpolated = isInterpolated) {
 			var ns = x.stringNode.SpanStart;
 			if (code[ns] == '@' || code[ns + 1] == '@') isVerbatim = true;
-			else if (code[ns + 1] != '\"' || code.Eq(ns + 1, "\"\"\"")) isRaw = true;
+			else if (code[ns + 1] != '"' || code.Eq(ns + 1, "\"\"\"")) isRaw = true;
 		}
 		x.isVerbatim = isVerbatim;
 		x.isRaw = isRaw;

@@ -300,7 +300,7 @@ partial class Program {
 
 	void _AddTriggerWindow(_Toolbar t, int pos = -1) {
 		var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-		if (!d.ShowAndWait(null)) return;
+		if (!d.ShowAndWait()) return;
 		string sTrigger = d.AaResultCode, sAction = t.Name, sSep = " ";
 		if (!t.method.ReturnsVoid) {
 			sTrigger += ", later: TWLater.Name";

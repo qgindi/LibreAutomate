@@ -112,22 +112,27 @@ public unsafe class GdiTextRenderer : IDisposable {
 		_DrawText(s, r, color, from, len, backColor);
 	}
 	
+	//[Ext]TextOut fails if >= 1024 * 64.
+	//	On Win7 and 8.1 depends on text width (ushort.MaxValue?). Eg fails if > ~2900 'W'.
+	//	ExtTextOut doc: "This value may not exceed 8192.".
+	static int _LimitLength(int len) => Math.Min(len, osVersion.minWin10 ? 1024 * 64 - 1 : 4000);
+	
 	unsafe void _DrawText(string s, int x, int y, int color, int from, int len, int? backColor) {
 		if (color != _color) Api.SetTextColor(_dc, _color = color);
 		using var bc = new _BackColor(_dc, backColor);
-		fixed (char* p = s) Api.TextOut(_dc, x, y, p + from, len);
+		fixed (char* p = s) Api.TextOut(_dc, x, y, p + from, _LimitLength(len));
 	}
 	
 	unsafe void _DrawText(string s, in RECT r, int color, int from, int len, int? backColor) {
 		if (color != _color) Api.SetTextColor(_dc, _color = color);
 		using var bc = new _BackColor(_dc, backColor);
-		fixed (char* p = s) Api.ExtTextOut(_dc, r.left, r.top, Api.ETO_CLIPPED, r, p + from, len);
+		fixed (char* p = s) Api.ExtTextOut(_dc, r.left, r.top, Api.ETO_CLIPPED, r, p + from, _LimitLength(len));
 	}
 	
 	public SIZE MeasureText(string s, Range? range = null) {
 		var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return default;
 		fixed (char* p = s) {
-			Api.GetTextExtentPoint32(_dc, p + from, len, out var z);
+			Api.GetTextExtentPoint32(_dc, p + from, _LimitLength(len), out var z);
 			return z;
 		}
 	}

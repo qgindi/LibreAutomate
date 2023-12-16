@@ -43,9 +43,9 @@ public class KDialogWindow : Window {
 	/// Sets <b>Title</b>, <b>Owner</b>, <b>ShowInTaskbar</b>.
 	/// </summary>
 	/// <param name="owner">Window or element or null.</param>
-	protected void InitWinProp(string title, DependencyObject owner, bool showInTaskbar = false) {
+	public void InitWinProp(string title, DependencyObject owner, bool showInTaskbar = false) {
 		Title = title;
-		Owner = owner == null ? null : owner as Window ?? GetWindow(owner);
+		if (owner != null) Owner = owner as Window ?? GetWindow(owner);
 		ShowInTaskbar = showInTaskbar;
 	}
 	
@@ -60,12 +60,12 @@ public class KDialogWindow : Window {
 	/// Sets <b>Owner</b> and calls <b>ShowDialog</b> without disabling thread windows.
 	/// </summary>
 	/// <returns>True if clicked OK (<b>DialogResult</b> true).</returns>
-	/// <param name="owner"></param>
+	/// <param name="owner">If not null, sets <b>Owner</b>.</param>
 	/// <param name="hideOwner">Temporarily hide owner.</param>
 	/// <param name="disableOwner">Temporarily disable owner.</param>
-	public bool ShowAndWait(Window owner, bool hideOwner = false, bool disableOwner = false) {
-		Owner = owner;
-		wnd ow = hideOwner || disableOwner ? owner.Hwnd() : default;
+	public bool ShowAndWait(Window owner = null, bool hideOwner = false, bool disableOwner = false) {
+		if (owner != null) Owner = owner;
+		wnd ow = hideOwner || disableOwner ? Owner.Hwnd() : default;
 		if (hideOwner) ow.ShowL(false); //not owner.Hide(), it closes owner if it is modal
 		if (disableOwner) {
 			ow.Enable(false);

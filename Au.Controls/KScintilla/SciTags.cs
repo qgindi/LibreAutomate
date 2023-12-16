@@ -380,7 +380,7 @@ public unsafe class SciTags {
 			byte* attr = null; int attrLen = 0;
 			if (*s == 32) {
 				var quot = *(++s);
-				if ((char)quot is '\'' or '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
+				if ((char)quot is '\'' or '"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
 				attr = s;
 				while (*s != quot && *s != 0) s++;
 				if (*s == 0) goto ge; //either the end of string or a multi-message separator

@@ -1,6 +1,7 @@
 using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Input;
 
 static class Panels {
 	public static KPanels PanelManager;
@@ -18,6 +19,8 @@ static class Panels {
 	public static PanelMouse Mouse;
 	public static PanelRecipe Recipe;
 	public static PanelBookmarks Bookmarks;
+	public static PanelBreakpoints Breakpoints;
+	public static PanelDebug Debug;
 	//menu and toolbars
 	public static Menu Menu;
 	//public static ToolBar[] Toolbars;
@@ -99,10 +102,12 @@ static class Panels {
 		pm["Files"].Content = (Files = new()).P;
 		_AddDontFocus("Outline", (Outline = new()).P);
 		pm["Cookbook"].Content = (Cookbook = new()).P;
+		_AddDontFocus("Debug", (Debug = new()).P);
 		_AddDontFocus("Open", (Open = new()).P);
 		_AddDontFocus("Tasks", (Tasks = new()).P);
 		pm["Find"].Content = (Find = new()).P;
 		_AddDontFocus("Bookmarks", (Bookmarks = new()).P);
+		_AddDontFocus("Breakpoints", (Breakpoints = new()).P);
 		_AddDontFocus("Output", (Output = new()).P);
 		_AddDontFocus("Mouse", (Mouse = new()).P);
 		_AddDontFocus("Found", (Found = new()).P);
@@ -111,9 +116,10 @@ static class Panels {
 		void _AddDontFocus(string panel, FrameworkElement content) {
 			var p = pm[panel];
 			p.Content = content;
-			p.DontFocusTab = true;
+			p.DontFocusTab = () => {
+				var doc = Panels.Editor.ActiveDoc;
+				if (doc != null) doc.Focus(); else Keyboard.ClearFocus();
+			};
 		}
-		
-		var ti1 = PanelManager[Files.P].Parent.TabItem; if (ti1 != null) ti1.MinWidth = 56; //make Files tabitem wider
 	}
 }

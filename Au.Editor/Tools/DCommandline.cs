@@ -50,10 +50,10 @@ class DCommandline : KDialogWindow {
 
 		void _AppendQ(string s, bool wait = false) {
 			bool q = s.Contains(' ');
-			if (q) sb.Append('\"');
+			if (q) sb.Append('"');
 			if (wait) sb.Append('*');
 			sb.Append(s);
-			if (q) sb.Append('\"');
+			if (q) sb.Append('"');
 		}
 	}
 

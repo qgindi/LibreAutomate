@@ -333,9 +333,9 @@ partial class SciCode {
 					for (int i = _sed.fold.Length; --i >= 0;) EFoldLine(_sed.fold[i]);
 					if (cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, aaaLineFromPos(false, cp));
 				}
-				if (_sed.breakpoint != null) {
-					foreach (var v in _sed.breakpoint) Call(SCI_MARKERADD, v, c_markerBreakpoint);
-				}
+				//if (_sed.someMarker != null) {
+				//	foreach (var v in _sed.someMarker) Call(SCI_MARKERADD, v, c_markerX);
+				//}
 				if (os != _EOpenState.Reopen) {
 					if (_sed.top != 0 || _sed.pos != 0) {
 						_sed.top = _sed.pos = 0;
@@ -375,7 +375,7 @@ partial class SciCode {
 		var a = new List<int>();
 		var x = new WorkspaceState.Editor {
 			fold = _GetLines(31),
-			breakpoint = _GetLines(c_markerBreakpoint),
+			//someMarker = _GetLines(c_markerBreakpoint),
 		};
 		if (!closingDoc) {
 			x.pos = aaaCurrentPos8;

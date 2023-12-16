@@ -120,7 +120,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 	
 	/// <summary>
 	/// Console's text encoding.
-	/// Default is <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/> (auto-detects when the first data received from console).
+	/// Default is <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/> (auto-detects when the first data received from console if this property wasn't used).
 	/// </summary>
 	/// <remarks>
 	/// If wrong encoding, the received text may contain garbage. Try <b>Encoding.X</b>, <b>Console.OutputEncoding</b>.
@@ -171,6 +171,16 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// </remarks>
 	/// <inheritdoc cref="consoleProcess" path="/example"/>
 	public bool Read(out string s) => _Read(out s, false);
+	
+	/// <summary>
+	/// Returns:
+	/// <br/>• 1 - there is data available to read.
+	/// <br/>• 0 - no data.
+	/// <br/>• -1 - error, eg process ended. Supports <see cref="lastError"/>.
+	/// </summary>
+	internal int CanReadNow_ => _i < _n ? 1 : !Api.PeekNamedPipe(_hOutRead, null, 0, out _, out int n) ? -1 : n > 0 ? 1 : 0;
+	
+	internal IntPtr OutputHandle_ => _hOutRead;
 	
 	bool _ReadPipe() {
 		//native console API allows any buffer size when writing, but wrappers usually use small buffer, eg .NET 4-5 KB, msvcrt 5 KB, C++ not tested
@@ -274,6 +284,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// </summary>
 	/// <param name="timeout">Timeout, ms. The function returns false if did not receive more text during that time. If -1, returns true without waiting (next <see cref="Read"/> will wait).</param>
 	/// <returns>true if received more text or if <i>timeout</i> is -1.</returns>
+	/// <exception cref="InvalidOperationException">IsLine true. Or multiple <b>Wait</b> without <b>Read</b>.</exception>
 	/// <remarks>
 	/// If returns true, next <see cref="Read"/> will get the old text + new text. If the console process ends while waiting, next <b>Read</b> will get the old text, and <see cref="IsLine"/> will be true.
 	/// </remarks>
@@ -338,7 +349,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// <exception cref="AuException">Failed.</exception>
 	public void Write(string text, bool noNL = false) {
 		bool ok = true;
-		if (!text.NE()) ok = Api.WriteFile2(_hInWrite, (InputEncoding ?? Encoding).GetBytes(text), out _);
+		if (!text.NE()) ok = Api.WriteFile2(_hInWrite, (InputEncoding ?? _encoding ?? Encoding.UTF8).GetBytes(text), out _);
 		if (!noNL && ok && text is not [.., '\n']) ok = Api.WriteFile2(_hInWrite, "\n"u8, out _);
 		if (!ok) throw new AuException(0);
 	}

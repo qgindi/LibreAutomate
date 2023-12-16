@@ -12,6 +12,8 @@ class PanelOpen {
 
 		_tv = new() { Name = "Open_list" };
 		P.Children.Add(_tv);
+		
+		Panels.PanelManager["Open"].DontActivateFloating = e => true;
 	}
 
 	public DockPanel P { get; } = new();

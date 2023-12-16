@@ -1,22 +1,23 @@
 using System.Windows.Controls;
+using System.Windows.Input;
 using Au.Controls;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
-using System.Windows.Input;
 
 class PanelBookmarks {
 	KTreeView _tv;
 	_Item _root;
 	string _file;
-	
 	bool _initOnce;
 	int _save;
 	
 	public PanelBookmarks() {
-		_tv = new() { Name = "Bookmarks_list", SingleClickActivate = true };
+		_tv = new() { Name = "Bookmarks_list", SingleClickActivate = true, SmallIndent = true };
 		P.Children.Add(_tv);
 		
 		FilesModel.AnyWorkspaceLoadedAndDocumentsOpened += _LoadIfNeed;
+		
+		Panels.PanelManager["Bookmarks"].DontActivateFloating = e => e == _tv;
 	}
 	
 	public DockPanel P { get; } = new();
@@ -75,16 +76,16 @@ class PanelBookmarks {
 			_tv.ItemClick += e => {
 				var b = e.Item as _Item;
 				switch (e.Button) {
-				case System.Windows.Input.MouseButton.Left:
+				case MouseButton.Left:
 					switch (e.Mod) {
-					case System.Windows.Input.ModifierKeys.Control: _DeleteItem(b); break;
-					case System.Windows.Input.ModifierKeys.Shift when !b.IsFolder: _Rename(b); break;
+					case ModifierKeys.Control: _DeleteItem(b); break;
+					case ModifierKeys.Shift when !b.IsFolder: _Rename(b); break;
 					}
 					break;
-				case System.Windows.Input.MouseButton.Right when e.Mod == 0:
+				case MouseButton.Right when e.Mod == 0:
 					_ContextMenu(b);
 					break;
-				case System.Windows.Input.MouseButton.Middle when e.Mod == 0:
+				case MouseButton.Middle when e.Mod == 0:
 					_SetActive(b, !b.IsActiveOrHasActiveChildren);
 					break;
 				}
@@ -171,14 +172,13 @@ class PanelBookmarks {
 	}
 	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc?.EFile);
 	
-	public void ToggleBookmark(bool editLabel, int line = -1) {
+	public void ToggleBookmark(int pos8 = -1) {
 		var doc = Panels.Editor.ActiveDoc;
 		if (doc == null) return;
-		bool useSelStart = line < 0;
-		if (line < 0) line = doc.aaaLineFromPos();
+		bool useSelStart = pos8 < 0;
+		int line = useSelStart ? doc.aaaLineFromPos() : doc.aaaLineFromPos(false, pos8);
 		if (_IsBookmark(doc, line)) {
-			if (!editLabel) _DeleteBookmark(doc, line);
-			else if (_BookmarkFromLine(doc, line) is { } b) _Rename(b);
+			_DeleteBookmark(doc, line);
 		} else {
 			if (!useSelStart) if (doc.aaaLineFromPos() == line) useSelStart = true; else doc.aaaGoToLine(line);
 			
@@ -188,59 +188,58 @@ class PanelBookmarks {
 				_root.AddChild(folder = new(doc.EFile, true), true);
 			} else folder.SetIsExpanded(true);
 			
-			var name = _GetName();
+			var name = GetMarkerName_(doc, line, useSelStart) ?? "Bookmark";
 			_Item b = new(line, h, name) { isActive = true };
 			if (folder.Children().FirstOrDefault(o => o.line > line) is { } b2) b2.AddSibling(b, false);
 			else folder.AddChild(b);
 			
 			_tv.SetItems(_root.Children(), true);
 			_TvSelect(b);
-			if (editLabel) _Rename(b);
 			_SaveLater();
 		}
-		
-		string _GetName() {
-			if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node, useSelStart ? -2 : doc.aaaLineStart(true, line))) {
-				var code = cd.code;
-				if (_Node(node) is string s1) return s1 + "  " + _Line();
-				return _Line();
-				
-				string _Line() => "● " + doc.aaaLineText(line).Trim().Limit(50);
-				
-				string _Node(SyntaxNode node) {
-					for (; node != null; node = node.Parent) {
-						if (node is LocalFunctionStatementSyntax or BaseMethodDeclarationSyntax or BasePropertyDeclarationSyntax or EventFieldDeclarationSyntax) {
-							switch (node) {
-							case LocalFunctionStatementSyntax k:
-								string s1 = k.Identifier.Text + "()", s2 = _Node(k.Parent);
-								return s2 == null ? s1 : $"{s1} in {s2}";
-							case MethodDeclarationSyntax k:
-								return k.Identifier.Text + "()";
-							case ConstructorDeclarationSyntax k:
-								return k.Identifier.Text + "()";
-							case DestructorDeclarationSyntax k:
-								return "~" + k.Identifier.Text + "()";
-							case OperatorDeclarationSyntax k:
-								return "operator " + k.OperatorToken.Text;
-							case ConversionOperatorDeclarationSyntax k:
-								return "operator " + k.Type;
-							case PropertyDeclarationSyntax k:
-								return k.Identifier.Text;
-							case IndexerDeclarationSyntax k:
-								return "this[]";
-							case EventDeclarationSyntax k:
-								return "event " + k.Identifier.Text;
-							case EventFieldDeclarationSyntax k:
-								return "event " + k.Declaration.Variables;
-							}
-							break;
+	}
+	
+	internal static string GetMarkerName_(SciCode doc, int line, bool useSelStart) {
+		if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node, useSelStart ? -2 : doc.aaaLineStart(true, line))) {
+			var code = cd.code;
+			if (_Node(node) is string s1) return s1 + "  " + _Line();
+			return _Line();
+			
+			string _Line() => "● " + doc.aaaLineText(line).Trim().Limit(50);
+			
+			string _Node(SyntaxNode node) {
+				for (; node != null; node = node.Parent) {
+					if (node is LocalFunctionStatementSyntax or BaseMethodDeclarationSyntax or BasePropertyDeclarationSyntax or EventFieldDeclarationSyntax) {
+						switch (node) {
+						case LocalFunctionStatementSyntax k:
+							string s1 = k.Identifier.Text + "()", s2 = _Node(k.Parent);
+							return s2 == null ? s1 : $"{s1} in {s2}";
+						case MethodDeclarationSyntax k:
+							return k.Identifier.Text + "()";
+						case ConstructorDeclarationSyntax k:
+							return k.Identifier.Text + "()";
+						case DestructorDeclarationSyntax k:
+							return "~" + k.Identifier.Text + "()";
+						case OperatorDeclarationSyntax k:
+							return "operator " + k.OperatorToken.Text;
+						case ConversionOperatorDeclarationSyntax k:
+							return "operator " + k.Type;
+						case PropertyDeclarationSyntax k:
+							return k.Identifier.Text;
+						case IndexerDeclarationSyntax k:
+							return "this[]";
+						case EventDeclarationSyntax k:
+							return "event " + k.Identifier.Text;
+						case EventFieldDeclarationSyntax k:
+							return "event " + k.Declaration.Variables;
 						}
+						break;
 					}
-					return null;
 				}
+				return null;
 			}
-			return "Bookmark";
 		}
+		return null;
 	}
 	
 	public void NextBookmark(bool up) {
@@ -300,8 +299,8 @@ class PanelBookmarks {
 			b.isActive = active;
 			_tv.Redraw(b);
 			
-			if (b.Parent.file.OpenDoc is {  } doc) {
-				doc.Call(Sci.SCI_MARKERDELETEHANDLE, b.markerHandle);
+			if (b.Parent.file.OpenDoc is { } doc) {
+				doc.aaaMarkerDeleteHandle(b.markerHandle);
 				b.markerHandle = doc.aaaMarkerAdd(b.isActive ? SciCode.c_markerBookmark : SciCode.c_markerBookmarkInactive, b.line);
 			}
 		}
@@ -359,7 +358,7 @@ class PanelBookmarks {
 	
 	void _DeleteBookmark(SciCode doc, int line, bool sciDelete = true) {
 		if (_BookmarkFromLine(doc, line) is { } b) {
-			if (sciDelete) doc.Call(Sci.SCI_MARKERDELETEHANDLE, b.markerHandle);
+			if (sciDelete) doc.aaaMarkerDeleteHandle(b.markerHandle);
 			_DeleteBookmarkL(b);
 		}
 	}
@@ -378,7 +377,7 @@ class PanelBookmarks {
 		} else {
 			var folder = b.Parent;
 			if (b.markerHandle != 0 && folder.file.OpenDoc is { } doc) {
-				doc.Call(Sci.SCI_MARKERDELETEHANDLE, b.markerHandle);
+				doc.aaaMarkerDeleteHandle(b.markerHandle);
 			}
 			_DeleteBookmarkL(b);
 		}
@@ -422,21 +421,21 @@ class PanelBookmarks {
 		}
 	}
 	
-	internal void SciContextMenu(SciCode doc) {
-		var m = new popupMenu();
-		m["Previous bookmark"] = o => NextBookmark(true);
-		m["Next bookmark"] = o => NextBookmark(false);
+	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int pos) {
+		if (_BookmarkFromLine(doc, doc.aaaLineFromPos(false, pos)) is { } b) {
+			m["Delete bookmark", "*Material.BookmarkMinus @16" + Menus.darkYellow] = o => ToggleBookmark(pos);
+			m["Rename bookmark", "*Modern.Edit @14" + Menus.darkYellow] = o => _Rename(b);
+			m.AddCheck("Active bookmark\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
+		} else {
+			m["Add bookmark", "*Material.Bookmark @16" + Menus.darkYellow] = o => ToggleBookmark(pos);
+		}
 		m.Separator();
-		m["Add and/or rename bookmark\tShift+click"] = o => ToggleBookmark(true);
-		if (this._BookmarkFromLine(doc, doc.aaaLineFromPos()) is { } b) m.AddCheck("Active bookmark\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
-		m.Show(owner: doc);
+		m["Previous bookmark", "*JamIcons.ArrowSquareUp" + Menus.black] = o => NextBookmark(true);
+		m["Next bookmark", "*JamIcons.ArrowSquareDown" + Menus.black] = o => NextBookmark(false);
 	}
 	
-	internal void SciMiddleClick(SciCode doc, nint wParam, nint lParam) {
-		if (wParam != Api.MK_MBUTTON) return;
-		int pos = doc.aaaPosFromXY(false, Math2.NintToPOINT(lParam), false); if (pos < 0) return;
-		int line = doc.aaaLineFromPos(false, pos);
-		if (_BookmarkFromLine(doc, line) is {  } b) {
+	internal void SciMiddleClick_(SciCode doc, int line) {
+		if (_BookmarkFromLine(doc, line) is { } b) {
 			_SetActive(b, !b.isActive);
 		}
 	}
@@ -490,7 +489,9 @@ class PanelBookmarks {
 		
 		void ITreeViewItem.SetNewText(string text) { name = text; Panels.Bookmarks._SaveLater(); }
 		
-		object ITreeViewItem.Image => _isFolder ? EdResources.FolderArrow(_isExpanded) : isActive ? "*BoxIcons.SolidBookmark" + Menus.blue : "*Unicons.BookmarkFull" + Menus.blue;
+		object ITreeViewItem.Image => _isFolder ? EdResources.FolderArrow(_isExpanded)
+			: isActive ? "*Material.Bookmark @14" + Menus.darkYellow
+			: "*Material.BookmarkOutline @14" + Menus.darkYellow;
 		
 		#endregion
 		

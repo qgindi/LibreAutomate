@@ -18,14 +18,14 @@ partial class MainWindow : Window {
 		base.OnPropertyChanged(e);
 	}
 	bool _inited;
-
+	
 	void _Init() {
 		//_StartProfileOptimization();
-
+		
 		Application.Current.Resources = Application.LoadComponent(new("/Au.Editor;component/app/app-resources.xaml", UriKind.Relative)) as ResourceDictionary;
-
+		
 		Title = App.AppNameShort; //don't append document name etc
-
+		
 		if (App.Settings.wndpos.main == null) {
 			Width = 1000;
 			Height = 700;
@@ -33,34 +33,35 @@ partial class MainWindow : Window {
 			//and will EnsureInScreen
 		}
 		WndSavedRect.Restore(this, App.Settings.wndpos.main, o => App.Settings.wndpos.main = o);
-
+		
 		Panels.LoadAndCreateToolbars();
-
+		
 		App.Commands = new KMenuCommands(typeof(Menus), Panels.Menu);
-
+		
 		App.Commands[nameof(Menus.File.New)].SubmenuOpened = (o, _) => FilesModel.FillMenuNew(o as MenuItem);
 		App.Commands[nameof(Menus.File.Workspace)].SubmenuOpened = (o, _) => FilesModel.FillMenuRecentWorkspaces(o as MenuItem);
-
+		
 		App.Commands.OnCustomizingError = (c, s, ex) => print.it($"<>Customization error in <+DCustomize>{c.Name}<>: {s}. {ex?.ToStringWithoutStack()}");
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
 		App.Commands.InitToolbarsAndCustomize(folders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
-
-		var bRun = App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun);
-		if (bRun != null) { bRun.Width = 50; bRun.Margin = new(10, 0, 10, 0); } //make Run button bigger //SHOULDDO: bad if vertical toolbar
-
-		var bNew = App.Commands[nameof(Menus.File.New)].FindMenuButtonInToolbar(Panels.TFile);
-		if (bNew != null) bNew.MouseDoubleClick += (_, e) => { e.Handled = true; Menus.File.New.New_script(); };
-
+		
+		if (App.Commands[nameof(Menus.File.New)].FindMenuButtonInToolbar(Panels.TFile) is { } bNew)
+			bNew.MouseDoubleClick += (_, e) => { e.Handled = true; Menus.File.New.New_script(); };
+		if (App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun) is { } bRun) { //make Run button bigger //SHOULDDO: bad if vertical toolbar
+			bRun.Width = 40;
+			bRun.Margin = new(8, 0, 8, 0);
+		}
+		
 		if (Au.Triggers.ActionTriggers.DisabledEverywhere) App.Commands[nameof(Menus.TT.Disable_triggers)].Checked = true;
-
+		
 		Panels.CreatePanels();
-
+		
 		App.Commands.BindKeysTarget(this, "");
-
+		
 		Panels.PanelManager.Container = g => { this.Content = g; };
-
+		
 		_NormalizeMouseWheel();
-
+		
 		//timer.after(100, _ => DOptions.aaShow());
 		//timer.after(100, _ => App.Model.Properties());
 		//timer.after(100, _ => Menus.File.Workspace.New_workspace());
@@ -72,7 +73,7 @@ partial class MainWindow : Window {
 		//timer.after(400, _ => Au.Tools.Duiimage.Dialog());
 		//timer2.every(200, _ => { GC.Collect(); });
 		//timer.after(100, _ => Menus.Tools.NuGet());
-
+		
 #if DEBUG
 		App.Timer1s += () => {
 			var e = Keyboard.FocusedElement as FrameworkElement;
@@ -81,67 +82,67 @@ partial class MainWindow : Window {
 		};
 #endif
 	}
-
+	
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		App.Hmain = (wnd)hs.Handle;
-
+		
 		if (App.Settings.wndpos.main == null) App.Hmain.EnsureInScreen();
-
+		
 		//workaround for: sometimes OS does not set foreground window. Then we have a fake active/focused state (blinking caret, called OnActivated, etc).
 		//	1. When started hidden, and now clicked tray icon first time. Is it because of the "lock foreground window"? Or WPF shows window somehow incorrectly?
 		//	2. When starting visible, if VMWare Player is active. Same with some other programs too (WPF, appstore, some other).
 		//this.Activate(); //does not work with VMWare, also if user clicks a window after starting this process
 		App.Hmain.ActivateL(); //works always, possibly with workarounds
-
+		
 		Panels.PanelManager["Output"].Visible = true;
-
+		
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
-
+		
 		App.Loaded = AppState.LoadedUI;
-
+		
 		CodeInfo.UiLoaded();
-
+		
 		UacDragDrop.AdminProcess.Enable(true); //rejected: disable when hiding main window. Some other window may be visible.
-
+		
 		hs.AddHook(_WndProc);
-
+		
 		Au.Tools.QuickCapture.RegisterHotkeys();
-
+		
 		App.OnMainWindowLoaded_();
-
+		
 		//Created?.Invoke();
-
+		
 		Loaded += (_, _) => {
 			EditorExtension.WindowLoaded_();
 			CommandLine.UILoaded();
 		};
 	}
-
+	
 	///// <summary>
 	///// When window handle created.
 	///// Documents are open, etc.
 	///// </summary>
 	//public event Action Created;
-
+	
 	protected override void OnClosing(CancelEventArgs e) {
 		//note: called by Window.Close (sync) and Application.Shutdown (async) even if the window never was loaded.
-
+		
 		if (App.Loaded == AppState.LoadedUI) {
 			App.Model.Save.AllNowIfNeed();
 			Panels.PanelManager.Save();
 			Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc
 		}
-
+		
 		EditorExtension.ClosingWorkspace_(onExit: true); //must be called before closing documents
-
+		
 		base.OnClosing(e);
 	}
-
+	
 	protected override void OnClosed(EventArgs e) {
 		//note: called by Window.Close (sync) and Application.Shutdown (async) even if the window never was loaded.
-
+		
 		bool loaded = App.Loaded == AppState.LoadedUI;
 		App.Loaded = AppState.Unloading;
 		base.OnClosed(e);
@@ -151,10 +152,10 @@ partial class MainWindow : Window {
 			App.Model.Save.AllNowIfNeed();
 		}
 	}
-
+	
 	unsafe nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
 		var w = (wnd)hwnd;
-
+		
 		switch (msg) {
 		case Api.WM_DPICHANGED:
 			this.DpiChangedWorkaround();
@@ -185,11 +186,11 @@ partial class MainWindow : Window {
 			if (handled = App.Settings.runHidden) Hide_();
 			break;
 		}
-
+		
 		return default;
 	}
 	timer _appActivatedTimer;
-
+	
 	internal void Hide_() {
 		if (IsVisible) {
 			App.Model.Save.AllNowIfNeed();
@@ -198,7 +199,7 @@ partial class MainWindow : Window {
 			process.ThisProcessMinimizePhysicalMemory_(1000);
 		}
 	}
-
+	
 	//this could be a workaround for the inactive window at startup, but probably don't need when we call Activete() in OnSourceInitialized
 	//protected override void OnActivated(EventArgs e) {
 	//	var w = this.Hwnd();
@@ -214,11 +215,11 @@ partial class MainWindow : Window {
 	//			}
 	//		});
 	//	}
-
+	
 	//	base.OnActivated(e);
 	//}
 	//long _activationWorkaroundTime;
-
+	
 	//this was for testing document tabs. Now we don't use document tabs. All documents now are in single panel.
 	//void _OpenDocuments() {
 	//	var docLeaf = _AddDoc("Document 1");
@@ -228,7 +229,7 @@ partial class MainWindow : Window {
 	//	docLeaf.Visible = true;
 	//	//Panels.DocPlaceholder_.Visible = false;
 	//	docLeaf.Content.Focus();
-
+	
 	//	KPanels.ILeaf _AddDoc(string name) {
 	//		//var docPlaceholder = App.Panels["Open"]; //in stack
 	//		var docPlaceholder = Panels.DocPlaceholder_; //in tab
@@ -240,16 +241,16 @@ partial class MainWindow : Window {
 	//			m["Close 2"] = o => k.Delete();
 	//		};
 	//		v.TabSelected += (_, _) => _OpenDoc(v);
-
+	
 	//		return v;
 	//	}
-
+	
 	//	static void _OpenDoc(KPanels.ILeaf leaf) {
 	//		if (leaf.Content != null) return;
 	//		leaf.Content = new KScintilla();
 	//	}
 	//}
-
+	
 	//Used to make faster, but now with tiered JIS makes faster only by ~100 ms.
 	static void _StartProfileOptimization() {
 #if !DEBUG
@@ -259,14 +260,14 @@ partial class MainWindow : Window {
 		System.Runtime.ProfileOptimization.StartProfile("Au.Editor.startup");
 #endif
 	}
-
+	
 	public void AaShowAndActivate() {
 		Show();
 		var w = App.Hmain;
 		w.ShowNotMinimized();
 		w.ActivateL();
 	}
-
+	
 	//If winver < 10 or disabled normal mouse scrolling, sets a mouse hook to scroll the mouse control.
 	//	Without it can't scroll any KTreeView even if focused.
 	static unsafe void _NormalizeMouseWheel() {

@@ -532,6 +532,7 @@ public static class script {
 			}
 			
 			int pidEditor = 0;
+			bool debugger = false;
 			if (auCompiler) {
 				MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
 				
@@ -547,6 +548,7 @@ public static class script {
 					if (0 != (p->flags & 2)) script.testing = true;
 					if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
 					if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
+					if (0 != (p->flags & 16)) debugger = true;
 					folders.Editor = new(cd[..^c_ep.Length]);
 					folders.Workspace = new(p->workspace);
 					
@@ -556,7 +558,7 @@ public static class script {
 				}
 			}
 			
-			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
+			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor, debugger);
 		}
 	}
 	static bool s_appModuleInit;
@@ -824,22 +826,26 @@ public static class script {
 	}
 	
 	/// <summary>
-	/// Waits for a .NET debugger attached to this process.
+	/// Waits for a debugger attached to this process. Also can attach a debugger.
 	/// Does nothing if already attached.
 	/// </summary>
-	/// <param name="showDialog">Show dialog with process name and id. If false, prints that info in the output pane.</param>
+	/// <param name="showDialog">Show dialog with process name and id. If false, prints that info in the output pane (unless attached a debugger).</param>
 	/// <remarks>
 	/// When debugger is attached, this function returns and the script continues to run. The step mode begins when the script encounters one of:
 	/// - <see cref="Debugger.Break"/> in code.
-	/// - breakpoint (set in debugger).
+	/// - breakpoint (set in the debugger's IDE).
 	/// - exception (if debugger is configured to break on exception).
 	/// 
-	/// Some best free programs that have a .NET debugger:
-	/// - Visual Studio (Community edition). It's the best, but huge (~10 GB).
-	/// - Visual Studio Code. It's much smaller.
-	/// - (possibly free) JetBrains Rider.
+	/// If <i>showDialog</i> is false and LibreAutomate is running:
+	/// - If a debugger script is specified in Options -> Workspace, runs that script, which should automate attaching a debugger.
+	/// - Else attaches the LA debugger. Cannot attach if it's busy (debugging).
 	/// 
-	/// Unlike <see cref="Debugger.Launch"/>, this function does not launch the Visual Studio debugger. It waits until you attach a debugger to this process. To attach:
+	/// Some other programs that have a .NET debugger:
+	/// - Visual Studio (Community edition). It's the best, but huge (~10 GB). Free.
+	/// - Visual Studio Code. It's much smaller. Free.
+	/// - JetBrains Rider. Possibly free.
+	/// 
+	/// To attach a debugger other than LA:
 	/// - Visual Studio: menu Debug -> Attach to process. Then select the process (this function displays its name and id).
 	/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
 	/// - JetBrains Rider: menu Run -> Attach to Process. Then select the process.
@@ -866,13 +872,13 @@ public static class script {
 				d.Send.Close();
 			} else {
 				var w = ScriptEditor.WndMsg_;
-				if (!w.Is0 && 0 != w.Send(Api.WM_USER, 30, process.thisProcessId)) { //run debugger script specified in Options
-					wait.until(0, () => Debugger.IsAttached);
-				} else {
-					print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
-					wait.until(0, () => Debugger.IsAttached);
-					print.it("Debugger attached.");
+				if (!w.Is0 && 0 != w.Send(Api.WM_USER, 30, process.thisProcessId)) { //run a debugger script or attach the LA debugger
+					if (wait.until(-5, () => Debugger.IsAttached)) return;
 				}
+				
+				print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
+				wait.until(0, () => Debugger.IsAttached);
+				print.it("Debugger attached.");
 			}
 		}
 		//note: don't add Debugger.Break(); here. It creates problems.
@@ -880,10 +886,14 @@ public static class script {
 	
 	#region aux thread
 	
-	internal static unsafe void Starting_(string name, int pidEditor) {
+	internal static unsafe void Starting_(string name, int pidEditor, bool debugger) {
 		s_name = name;
 		s_auxThread = new(() => _AuxThread(pidEditor));
 		//using CreateThread because need thread handle ASAP
+		
+		if (debugger) {
+			while (!Debugger.IsAttached) Thread.Sleep(15);
+		}
 	}
 	static NativeThread_ s_auxThread;
 	
@@ -908,6 +918,7 @@ public static class script {
 	//	Can be used for various triggers.
 	//	Etc.
 	static unsafe void _AuxThread(int pidEditor) {
+		Thread.CurrentThread.Name = "Au.Aux";
 		WndUtil.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE, c_msg_IconImageCache_ClearAll);
 		WndUtil.RegisterWindowClass(c_auxWndClassName, _AuxWndProc);
 		s_auxWnd = WndUtil.CreateMessageOnlyWindow(c_auxWndClassName, Api.GetCurrentProcessId().ToS());

@@ -199,14 +199,19 @@ class PanelEdit {
 		_uiDisabled_IsOpen = !enable;
 		_editDisabled = 0;
 		
-		App.Commands[nameof(Menus.Edit)].Enable(enable);
-		App.Commands[nameof(Menus.Code)].Enable(enable);
-		App.Commands[nameof(Menus.TT.Toolbar_trigger)].Enable(enable);
-		App.Commands[nameof(Menus.TT.Script_triggers)].Enable(enable);
-		App.Commands[nameof(Menus.Run.Run_script)].Enable(enable);
-		App.Commands[nameof(Menus.Run.Compile)].Enable(enable);
-		App.Commands[nameof(Menus.Run.Debugger)].Enable(enable);
-		//App.Commands[nameof(Menus.File.Properties)].Enable(enable); //also Rename, Delete, More //don't disable because can right-click
+		string[] a1 = [
+			nameof(Menus.Edit),
+			nameof(Menus.Code),
+			nameof(Menus.TT.Toolbar_trigger),
+			nameof(Menus.TT.Script_triggers),
+			nameof(Menus.Run.Run_script),
+			nameof(Menus.Run.Compile),
+			nameof(Menus.Run.Debug_run),
+			nameof(Menus.Run.Publish),
+			//nameof(Menus.Run.Debugger),
+			//and not Properties, Rename, Delete, More, because users can right-click in the Files panel
+			];
+		foreach (string v in a1) App.Commands[v].Enable(enable);
 	}
 	bool _uiDisabled_IsOpen;
 	

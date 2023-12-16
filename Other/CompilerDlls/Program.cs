@@ -47,7 +47,7 @@ int PostBuild() {
 	var to = @"C:\code\au\_\Roslyn";
 	
 	foreach (var f in filesystem.enumerate(to)) {
-		if (f.Name[0] != '.') filesystem.delete(f.FullPath, FDFlags.CanFail);
+		if (f.Name[0] != '.' && f.Name is not ("netcoredbg.exe" or "ManagedPart.dll" or "dbgshim.dll")) filesystem.delete(f.FullPath, FDFlags.CanFail);
 	}
 	foreach (var f in filesystem.enumFiles(from)) {
 		if (0 == f.Name.Ends(true, ".dll", ".xml")) continue;

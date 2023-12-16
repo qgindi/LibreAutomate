@@ -125,7 +125,7 @@ unsafe partial class Converter {
 		t = new _PARAMDATA();
 		
 		int iSAL = 0;
-		if (_TokIsChar(_i, '^') && _TokIsChar(_i + 1, '\"')) {
+		if (_TokIsChar(_i, '^') && _TokIsChar(_i + 1, '"')) {
 			_i++;
 			if (!isMember) {
 				iSAL = _i;

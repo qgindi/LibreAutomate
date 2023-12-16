@@ -123,7 +123,7 @@ class _Analyze {
 #if STRING_NOT_IN_C
 		//if text contains " or ', in most cases it is code and should be in <c>
 		foreach (var s in _DescendantTexts()) {
-			//if (s.Contains('\"')) {
+			//if (s.Contains('"')) {
 			//	_Print(s);
 			//}
 			if (s.RxIsMatch(@"'.'")) {

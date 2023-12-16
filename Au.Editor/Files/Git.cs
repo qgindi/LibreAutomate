@@ -245,7 +245,7 @@ static partial class Git {
 		
 		var s = Microsoft.Win32.Registry.GetValue(@"HKEY_CLASSES_ROOT\x-github-client\shell\open\command", "", null) as string;
 		if (s != null) {
-			s = s.Split(' ')[0].Trim('\"');
+			s = s.Split(' ')[0].Trim('"');
 			if (!filesystem.exists(s)) s = null;
 		}
 		s ??= folders.LocalAppData + @"GitHubDesktop\GitHubDesktop.exe";

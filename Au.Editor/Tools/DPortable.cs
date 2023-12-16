@@ -46,6 +46,7 @@ class DPortable : KDialogWindow {
 		b.R.Add("Install in folder", out TextBox tDir).Focus().Validation(_ => _ValidateFolder());
 
 		b.R.StartStack(out KGroupBox gExists, "The folder already exists", vertical: true);
+		gExists.Visibility = Visibility.Collapsed;
 		b.Add(out KCheckBox cReplacePF, "Replace program files (LA, .NET)").Tooltip("Replace everything in the portable program folder except the data folder");
 		b.Add(out KCheckBox cReplaceData, "Replace data (scripts, settings, etc)").Tooltip("Replace the data folder")
 			.Validation(_ => _exists && !cReplacePF.IsChecked && !cReplaceData.IsChecked ? "Please check one or both 'Replace'" : null);

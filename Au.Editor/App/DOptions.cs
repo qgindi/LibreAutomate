@@ -67,7 +67,7 @@ class DOptions : KDialogWindow {
 		
 		//};
 		const string c_rkRun = @"Software\Microsoft\Windows\CurrentVersion\Run";
-		bool init_startWithWin = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string s1 && filesystem.more.isSameFile(s1.Trim('\"'), process.thisExePath);
+		bool init_startWithWin = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string s1 && filesystem.more.isSameFile(s1.Trim('"'), process.thisExePath);
 		startWithWin.IsChecked = init_startWithWin;
 		if (App.IsPortable) startWithWin.Checked += (_, _) => dialog.showWarning("Portable mode warning", "This setting will be saved in the Registry. Portable apps should not do it.", owner: this);
 		
@@ -95,7 +95,7 @@ class DOptions : KDialogWindow {
 			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
 			.Validation(_startupScripts_Validation);
 		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.UserSettings.debuggerScript)
-			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.")
+			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.\nIf blank or starts with //, will be used the LA debugger.")
 			.Validation(_ => debuggerScript.Text is string s && !s.NE() && !s.Starts("//") && null == App.Model.FindCodeFile(s) ? "Debugger script not found" : null);
 		b.End();
 		
@@ -200,7 +200,7 @@ class DOptions : KDialogWindow {
 		b.Add(out KCheckBox cItalic, "Italic");
 		b.Add(out KCheckBox cUnderline, "Underline");
 		b.End();
-		b.R.Add(out Label lAlpha, "Opacity 0-255", out TextBox tAlpha).Width(50, "L");
+		b.R.Add("Opacity 0-255", out TextBox tAlpha).Width(50, "L");
 		b.End();
 		b.Row(-1);
 		b.R.AddSeparator();
