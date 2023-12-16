@@ -81,19 +81,19 @@ public static class StringUtil {
 		StringBuilder b = null;
 		foreach (var v in a) {
 			int esc = 0;
-			if (v.NE()) esc = 1; else if (v.Contains('\"')) esc = 2; else foreach (var c in v) if (c <= ' ') { esc = 1; break; }
+			if (v.NE()) esc = 1; else if (v.Contains('"')) esc = 2; else foreach (var c in v) if (c <= ' ') { esc = 1; break; }
 			if (esc == 0 && a.Length == 1) return a[0];
 			if (b == null) b = new StringBuilder(); else b.Append(' ');
 			if (esc == 0) b.Append(v);
 			else {
-				b.Append('\"');
+				b.Append('"');
 				var s = v;
 				if (esc == 2) {
 					if (s.Find(@"\""") < 0) s = s.Replace(@"""", @"\""");
 					else s = s.RxReplace(@"(\\*)""", @"$1$1\""");
 				}
 				if (s.Ends('\\')) s = s.RxReplace(@"(\\+)$", "$1$1");
-				b.Append(s).Append('\"');
+				b.Append(s).Append('"');
 			}
 		}
 		return b.ToString();

@@ -424,7 +424,7 @@ public static class clipboard {
 		public bool IsBadWindow;
 
 		/// <summary>
-		/// Exception thrown/catched when failed to set clipboard data.
+		/// Exception thrown/caught when failed to set clipboard data.
 		/// </summary>
 		public Exception FailedToSetData;
 

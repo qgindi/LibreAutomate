@@ -38,7 +38,7 @@ unsafe partial class Converter {
 					////is prefix"string" or prefix'char'?
 					//bool isPrefix = false;
 					//switch(s[len]) {
-					//case '\"':
+					//case '"':
 					//	if(len == 1) isPrefix = (c == 'L' || c == 'u' || c == 'U');
 					//	else if(len == 2) isPrefix = (c == 'u' && s[1] == '8');
 					//	//info: raw strings replaced to escaped strings when preprocessing
@@ -54,7 +54,7 @@ unsafe partial class Converter {
 					//}
 					
 				} else if (_IsCharDigit(c)) len = _LenNumber(s);
-				else if (c == '\"') len = _SkipString(s);
+				else if (c == '"') len = _SkipString(s);
 				else if (c == '\'') len = _SkipApos(s);
 				else len = 1;
 				_tok.Add(new _Token(s, len));
@@ -78,7 +78,7 @@ unsafe partial class Converter {
 	/// </summary>
 	//#if NEWSTRING
 	int _SkipString(char* s) {
-		Debug.Assert(*s == '\"');
+		Debug.Assert(*s == '"');
 		
 		//is prefix?
 		bool isPrefix = false;
@@ -99,7 +99,7 @@ unsafe partial class Converter {
 		g0:
 		for (; ; s++) {
 			*d++ = *s; //folding
-			if (*s == '\"') {
+			if (*s == '"') {
 				if (s[-1] == '\\') {
 					//is \" or \\"?
 					int k = -1; while (s[k - 1] == '\\') k--;
@@ -116,9 +116,9 @@ unsafe partial class Converter {
 		char* f = ++s; //skip "
 		while (_IsCharSpaceOrRN(*f)) f++;
 		if (isPrefix) {
-			if (*f == *pt.s && (pt.len == 1 || f[1] == pt.s[1]) && f[pt.len] == '\"') { s = f + pt.len + 1; d--; goto g0; }
+			if (*f == *pt.s && (pt.len == 1 || f[1] == pt.s[1]) && f[pt.len] == '"') { s = f + pt.len + 1; d--; goto g0; }
 		} else {
-			if (*f == '\"') { s = f + 1; d--; goto g0; }
+			if (*f == '"') { s = f + 1; d--; goto g0; }
 		}
 		
 		for (f = d; f < s; f++) *f = ' '; //erase what is moved to the left
@@ -127,7 +127,7 @@ unsafe partial class Converter {
 		if (!isPrefix && _nTokUntilDefUndef != 0 && _TokIsChar(iPrevTok - 1, '`')) {
 			//print.it(new string(s0, 0, (int)(d - s0)));
 			//_Err(iPrevTok, "ANSI string");
-			*s0 = '\x2'; //later will restore '\"' and add to "FAILED TO CONVERT"
+			*s0 = '\x2'; //later will restore '"' and add to "FAILED TO CONVERT"
 		}
 		
 		return (int)(d - s0);

@@ -24,7 +24,10 @@ partial class SciCode : KScintilla {
 		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
 	
 	//markers. We can use 0-20. Changes 21-24. Folding 25-31.
-	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBookmarkInactive = 2, c_markerBreakpoint = 3;
+	public const int c_markerUnderline = 0,
+		c_markerBookmark = 1, c_markerBookmarkInactive = 2,
+		c_markerBreakpoint = 3, c_markerBreakpointDisabled = 4,
+		c_markerDebugLine = 5, c_markerDebugLine2 = 6;
 	//public const int c_markerStepNext = 3;
 	
 	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
@@ -59,9 +62,8 @@ partial class SciCode : KScintilla {
 		//Call(SCI_SETMARGINMASKN, c_marginMarkers, ~SC_MASK_FOLDERS);
 		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, sensitive: true, cursorArrow: true);
 		Call(SCI_SETMARGINBACKN, c_marginMarkers, 0xFFFFFF);
-		aaaMarginSetWidth(c_marginMarkers, 13);
-		aaaMarkerDefine(SciCode.c_markerBookmark, Sci.SC_MARK_VERTICALBOOKMARK, 0x6080ff, 0x6080ff);
-		aaaMarkerDefine(SciCode.c_markerBookmarkInactive, Sci.SC_MARK_VERTICALBOOKMARK, 0x6080ff, 0xD0E0ff);
+		aaaMarginSetWidth(c_marginMarkers, 16);
+		_DefineIconMarkers();
 		
 		//aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
 		//Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
@@ -85,7 +87,7 @@ partial class SciCode : KScintilla {
 		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
 		
 		CiStyling.TStyles.Settings.ToScintilla(this);
-		_InicatorsInit();
+		_IndicatorsInit();
 		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
 		_InitDragDrop();
 		
@@ -119,6 +121,7 @@ partial class SciCode : KScintilla {
 		
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded();
 		Panels.Bookmarks.SciLoaded(this);
+		Panels.Breakpoints.SciLoaded(this);
 		App.Model.EditGoBack.OnPosChanged(this);
 		
 		//detect \r without '\n', because it is not well supported. Also NEL, LS, PS.
@@ -204,6 +207,7 @@ partial class SciCode : KScintilla {
 					Panels.Find.UpdateQuickResults();
 				}
 				Panels.Bookmarks.SciModified(this, ref n);
+				Panels.Breakpoints.SciModified(this, ref n);
 				App.Model.EditGoBack.OnTextModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
 				if (n.linesAdded != 0) ESetLineNumberMarginWidth_(onModified: true);
 			}
@@ -234,8 +238,12 @@ partial class SciCode : KScintilla {
 			}
 			break;
 		case NOTIF.SCN_DWELLSTART when isActive:
+			//print.it("dwell start", n.position);
 			CodeInfo.SciMouseDwellStarted(this, n.position);
 			break;
+		//case NOTIF.SCN_DWELLEND when isActive:
+		//	print.it("dwell end", n.position);
+		//	break;
 		case NOTIF.SCN_MARGINCLICK when isActive:
 			if (_fn.IsCodeFile) {
 				CodeInfo.Cancel();
@@ -244,7 +252,19 @@ partial class SciCode : KScintilla {
 				}
 			}
 			if (n.margin == c_marginMarkers) {
-				if (n.modifiers is 0 or SCMOD_SHIFT) Panels.Bookmarks.ToggleBookmark(editLabel: n.modifiers == Sci.SCMOD_SHIFT, aaaLineFromPos(false, n.position));
+				if (n.modifiers is 0) {
+					int pos = n.position;
+					int line = aaaLineFromPos(false, pos);
+					var m = new popupMenu();
+					if (EFile.IsCodeFile) {
+						Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos);
+						Panels.Debug.AddMarginMenuItems_(this, m, line);
+						m.Separator();
+					}
+					Panels.Bookmarks.AddMarginMenuItems_(this, m, pos);
+					var xy = mouse.xy; xy.Offset(-_dpi / 2, -_dpi / 8);
+					m.Show(xy: xy, owner: AaWnd);
+				}
 			}
 			break;
 		//case NOTIF.SCN_MARGINRIGHTCLICK: break; //can't use it because: 1. Need to handle WM_RBUTTONDOWN. 2. Need notification on button up.
@@ -265,6 +285,7 @@ partial class SciCode : KScintilla {
 	
 	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
 		if ((markers & 3 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
+		if ((markers & 3 << c_markerBreakpoint) != 0) Panels.Breakpoints.SciDeletingLineWithMarker(this, line);
 		base.AaOnDeletingLineWithMarkers(line, markers);
 	}
 	
@@ -296,7 +317,11 @@ partial class SciCode : KScintilla {
 							if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
 						}
 					} else if (margin == c_marginMarkers) {
-						Panels.Bookmarks.SciMiddleClick(this, wp, lp);
+						int pos = aaaPosFromXY(false, p, false);
+						if (pos >= 0) {
+							int line = aaaLineFromPos(false, pos);
+							if (!Panels.Breakpoints.SciMiddleClick_(this, line)) Panels.Bookmarks.SciMiddleClick_(this, line);
+						}
 					}
 				}
 			}
@@ -309,9 +334,9 @@ partial class SciCode : KScintilla {
 					case c_marginLineNumbers or c_marginImages or c_marginChanges:
 						ModifyCode.Comment(null, notSlashStar: true);
 						break;
-					case c_marginMarkers:
-						Panels.Bookmarks.SciContextMenu(this);
-						break;
+					//case c_marginMarkers:
+					//	Panels.Bookmarks.SciContextMenu(this);
+					//	break;
 					case c_marginFold:
 						_FoldContextMenu(aaaPosFromXY(false, p, false));
 						break;
@@ -322,10 +347,10 @@ partial class SciCode : KScintilla {
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lp == -1;
-					var m = new KWpfMenu();
-					DCustomizeContextMenu.AddToMenu(m, "Edit");
-					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
-					m.Show(this, byCaret: kbd);
+				var m = new KWpfMenu();
+				DCustomizeContextMenu.AddToMenu(m, "Edit");
+				App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
+				m.Show(this, byCaret: kbd);
 				return 0;
 			}
 		}
@@ -462,7 +487,7 @@ partial class SciCode : KScintilla {
 			string buttons = _fn.FileType != (isClass ? FNType.Class : FNType.Script) || aaaIsReadonly
 				? "1 Create new file|0 Cancel"
 				: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
-			switch (dialog.show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
+			switch (dialog.show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: AaWnd)) {
 			case 1: //Create new file
 				_NewFileFromForumCode(text, name, isClass);
 				break;
@@ -501,7 +526,7 @@ partial class SciCode : KScintilla {
 	
 	#region indicators
 	
-	void _InicatorsInit() {
+	void _IndicatorsInit() {
 		if (!_fn.IsCodeFile) return;
 		
 		//workaround for: indicators too small if high DPI
@@ -517,7 +542,10 @@ partial class SciCode : KScintilla {
 	
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		base.OnDpiChanged(oldDpi, newDpi);
-		if (!AaWnd.Is0) _InicatorsInit();
+		if (!AaWnd.Is0) {
+			_IndicatorsInit();
+			_DefineIconMarkers();
+		}
 	}
 	
 	bool _indicHaveFound, _indicHaveDiag;
@@ -651,6 +679,54 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	protected override string AaAccessibleName => "document - " + _fn.DisplayName;
 	
 	protected override string AaAccessibleDescription => _fn.FilePath;
+	
+	#endregion
+	
+	#region util
+	
+	void _DefineIconMarkers() {
+		if (s_markerBitmaps.dpi != _dpi) {
+			s_markerBitmaps.dpi = _dpi;
+			_Bitmap(ref s_markerBitmaps.bookmark, "*Material.Bookmark #EABB00 @16", 14);
+			_Bitmap(ref s_markerBitmaps.bookmark2, "*Material.BookmarkOutline #EABB00 @16", 14);
+			_Bitmap(ref s_markerBitmaps.breakpoint, "*Material.Circle #EE3000", 8);
+			_Bitmap(ref s_markerBitmaps.breakpoint2, "*Material.Circle #A0A0A0", 8);
+			_Bitmap(ref s_markerBitmaps.debugLine, "*Codicons.DebugStackframe #40B000 @16", 14);
+			_Bitmap(ref s_markerBitmaps.debugLine2, "*Codicons.DebugStackframe #808080 @16", 14);
+			//_Bitmap(ref s_markerBitmaps.debugLine, "*Codicons.DebugStackframe #4000FF @16", 14);
+			//_Bitmap(ref s_markerBitmaps.debugLine2, "*Codicons.DebugStackframe #40B000 @16", 14);
+		}
+		_Marker(c_markerBookmark, s_markerBitmaps.bookmark);
+		_Marker(c_markerBookmarkInactive, s_markerBitmaps.bookmark2);
+		_Marker(c_markerBreakpoint, s_markerBitmaps.breakpoint);
+		_Marker(c_markerBreakpointDisabled, s_markerBitmaps.breakpoint2);
+		_Marker(c_markerDebugLine, s_markerBitmaps.debugLine);
+		_Marker(c_markerDebugLine2, s_markerBitmaps.debugLine2);
+		
+		unsafe void _Bitmap(ref (int size, nint data) mb, string icon, int size) {
+			if (mb.data != 0) { MemoryUtil.Free((uint*)mb.data); mb.data = 0; }
+			using var b = ImageUtil.LoadGdipBitmapFromXaml(icon, _dpi, new(size, size));
+			using var v = b.Data(System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			size = v.Width;
+			var m = MemoryUtil.Alloc<uint>(size * size);
+			MemoryUtil.Copy((uint*)v.Scan0, m, size * size * 4);
+			for (uint* p = m, pe = p + size * size; p < pe; p++) *p = ColorInt.SwapRB(*p);
+			mb = new(size, (nint)m);
+		}
+		
+		unsafe void _Marker(int marker, (int size, nint data) b) {
+			aaaMarkerDefine(marker, Sci.SC_MARK_RGBAIMAGE);
+			Call(SCI_RGBAIMAGESETWIDTH, b.size);
+			Call(SCI_RGBAIMAGESETHEIGHT, b.size);
+			Call(SCI_MARKERDEFINERGBAIMAGE, marker, b.data);
+		}
+	}
+	
+	struct _MarkerBitmaps {
+		public int dpi;
+		public (int size, nint data) bookmark, bookmark2, breakpoint, breakpoint2, debugLine, debugLine2;
+	}
+	static _MarkerBitmaps s_markerBitmaps;
 	
 	#endregion
 }

@@ -12,15 +12,17 @@ public unsafe partial class KTreeView {
 		_labeltip?.Hide();
 		
 		int sbV = More.Dpi.ScrollbarV_(_dpi), sbH = More.Dpi.ScrollbarH_(_dpi);
-		var rw = _w.Rect; //never mind: minus border. Currently we don't use border. OK even if used, if just 1-pixel border and no caption.
+		var rw = _w.Rect; //never mind: minus border. We don't use border. OK even if used, if just 1-pixel border and no caption.
 		int width = rw.Width, height = rw.Height;
 		if (width <= sbV || height <= sbH || _avi.NE_()) {
 			NativeScrollbar_.ShowVH(_vscroll, false, _hscroll, false);
 			return;
 		}
-		var range = _GetViewRange(onScroll ? _height : height);
 		
-		//print.it("_Measure", range.from, range.to);
+		int oldScrollPos = _vscroll.Pos;
+		g1:
+		var range = _GetViewRange();
+		
 		int maxWidth = _itemsWidth;
 		GdiTextRenderer tr = null;
 		for (int i = range.from; i < range.to; i++) {
@@ -31,10 +33,10 @@ public unsafe partial class KTreeView {
 			int textWidth = item.MesureTextWidth(tr);
 			if (textWidth < 0) textWidth = tr.MeasureText(item.DisplayText).width;
 			if (bold) tr.FontNormal();
-			int wid = ++textWidth + _imageSize * (_avi[i].level + 1) + _imageMarginX * 2 + _marginLeft + _marginRight;
-			if (HasCheckboxes) wid += _itemLineHeight;
-			if (wid > maxWidth) maxWidth = wid;
-			_avi[i].measured = (ushort)Math.Clamp(textWidth, 1, ushort.MaxValue);
+			_avi[i].measured = textWidth + 2;
+			_avi[i].noParts = item.NoParts;
+			_GetPartOffsets(i, out var p, true); //parts left-to-right: indent, checkbox, left margin, image, text, right margin
+			maxWidth = Math.Max(maxWidth, p.right);
 		}
 		tr?.Dispose();
 		if (maxWidth > _itemsWidth) _itemsWidth = maxWidth; else if (onScroll) return;
@@ -44,13 +46,17 @@ public unsafe partial class KTreeView {
 		bool needH = _itemsWidth > width && height >= _imageSize + sbH; if (needH) height -= sbH;
 		bool needV = itemsHeight > height && _avi.Length > 1;
 		if (needV) { width -= sbV; if (!needH) needH = _itemsWidth > width && height >= _imageSize + sbH; }
-		//print.it(needH, needV);
 		if (_scrollCorrection = (needH && onScroll && _inScrollbarScroll && !_hscroll.Visible)) needH = false;
 		_dontMeasure = true;
 		NativeScrollbar_.ShowVH(_vscroll, needV, _hscroll, needH);
 		_dontMeasure = false;
 		if (needV) _vscroll.SetRange(_avi.Length); else _vscroll.NItems = _avi.Length;
-		if (needH) _hscroll.SetRange(_itemsWidth / _imageSize); else _hscroll.NItems = 0;
+		if (needH) _hscroll.SetRange(_itemsWidth); else _hscroll.NItems = 0;
+		
+		if (!onScroll && _vscroll.Pos != oldScrollPos && oldScrollPos >= 0) { //may scroll up after collapsing a folder
+			oldScrollPos = -1;
+			goto g1;
+		}
 	}
 	bool _inScrollbarScroll;
 	bool _scrollCorrection;
@@ -63,7 +69,7 @@ public unsafe partial class KTreeView {
 			_scrollCorrection = false;
 			int max = _vscroll.Max, pos = _vscroll.Pos;
 			_hscroll.Visible = true;
-			_hscroll.SetRange(_itemsWidth / _imageSize);
+			_hscroll.SetRange(_itemsWidth);
 			if (_vscroll.Max > max && pos == max) EnsureVisible(_avi.Length - 1);
 		}
 	}
@@ -78,13 +84,11 @@ public unsafe partial class KTreeView {
 		}
 	}
 	
-	(int from, int to) _GetViewRange(int height) {
+	(int from, int to) _GetViewRange() {
 		int len = _avi.Lenn_(); if (len == 0) return default;
-		int i = _vscroll.Pos + (height + _itemHeight - 1) / _itemHeight;
+		int i = _vscroll.Pos + (_height + _itemHeight - 1) / _itemHeight;
 		return (_vscroll.Pos, Math.Min(i, len));
 	}
-	
-	(int from, int to) _GetViewRange() => _GetViewRange(_height);
 	
 	void _Invalidate(RECT* r = null) {
 		if (_hasHwnd) Api.InvalidateRect(_w, r, false);
@@ -176,6 +180,11 @@ public unsafe partial class KTreeView {
 	
 	public const int ColorHotItem = 0xe8f0ff;
 	
+	/// <summary>
+	/// Smaller indentation.
+	/// </summary>
+	public bool SmallIndent { get; set; }
+	
 	void _Render(IntPtr dc, RECT rUpdate) {
 		Graphics graphics = null;
 		try {
@@ -200,9 +209,6 @@ public unsafe partial class KTreeView {
 				if (colorInfo.isHighContrast) colorInfo.isHighContrastDark = WpfUtil_.IsHighContrastDark;
 				colorInfo.isFocusedControl = this.IsKeyboardFocused;
 				
-				int xLefts = -_hscroll.Offset;
-				if (HasCheckboxes) xLefts += _itemLineHeight;
-				int xImages = xLefts + _imageMarginX + _marginLeft;
 				int yyImages = (_itemLineHeight + 1 - _imageSize) / 2;
 				int yyText = _itemLineHeight <= 22 ? 1 : _itemLineHeight <= 28 ? 0 : -1;
 				
@@ -217,11 +223,7 @@ public unsafe partial class KTreeView {
 							cSize.width = cSize.height = More.Dpi.Scale(13, _dpi);
 					
 					var cd = CustomDraw;
-					var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi) {
-						marginLeft = _marginLeft,
-						marginRight = _marginRight,
-						checkSize = cSize
-					};
+					var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi);
 					cd?.Begin(cdi, tr);
 					
 					for (int i = 0; i < nDraw; i++) {
@@ -232,9 +234,10 @@ public unsafe partial class KTreeView {
 						int index = i + range.from;
 						var v = _avi[index];
 						var item = v.item;
-						int indent = _imageSize * v.level, xLeft = indent + xLefts;
-						int xImage = indent + xImages, yImage = y + yyImages;
-						int xText = xImage + _imageSize + _imageMarginX, yText = y + yyText;
+						var noParts = v.noParts;
+						_GetPartOffsets(index, out var p); //parts left-to-right: indent, checkbox, left margin, image, text, right margin
+						int xImage = p.image + _imageMarginX, yImage = y + yyImages;
+						int yText = y + yyText;
 						
 						colorInfo.isSelected = v.isSelected;
 						colorInfo.isHot = index == _hotIndex;
@@ -244,13 +247,16 @@ public unsafe partial class KTreeView {
 							cdi.index = index;
 							cdi.item = item;
 							cdi.rect = r;
-							cdi.imageRect = new RECT(xImage, yImage, _imageSize, _imageSize);
-							cdi.xText = xText;
+							cdi.imageRect = new RECT(xImage, yImage, noParts.Has(TVParts.Image) ? 0 : _imageSize, _imageSize);
+							cdi.xText = p.text;
 							cdi.yText = yText;
-							cdi.xLeft = xLeft;
-							cdi.xRight = xText + v.measured;
+							cdi.xLeft = p.marginLeft;
+							cdi.xRight = p.marginRight;
 							cdi.lineHeight = _itemLineHeight;
 							cdi.colorInfo = colorInfo;
+							cdi.marginLeft = noParts.Has(TVParts.MarginLeft) ? 0 : _marginLeft;
+							cdi.marginRight = noParts.Has(TVParts.MarginRight) ? 0 : _marginRight;
+							cdi.checkSize = p.hasCheckbox ? cSize : default;
 						}
 						
 						//background
@@ -272,7 +278,7 @@ public unsafe partial class KTreeView {
 										if (0 != (alpha & 2)) color = ColorHotItem;
 									}
 									if (color != -1) {
-										var r2 = r; r2.left = xText - _imageMarginX / 2; //don't draw selection background under icon and checkbox
+										var r2 = r; r2.left = p.text - _imageMarginX / 2; //don't draw selection background under icon and checkbox
 										using (var b2 = GdiObject_.ColorBrush(color)) b2.BrushFill(dc, r2);
 									}
 								}
@@ -283,16 +289,16 @@ public unsafe partial class KTreeView {
 							color = item.BorderColor(colorInfo);
 							if (color != -1) {
 								int alpha = color >>> 24;
-								var r2 = r; if (alpha == 1) r2.left = xText - _imageMarginX / 2 - 1;
+								var r2 = r; if (alpha == 1) r2.left = p.text - _imageMarginX / 2 - 1;
 								using (var b3 = GdiObject_.ColorBrush(color)) b3.BrushRect(dc, r2);
 							}
 						}
 						
-						//checkboxes
-						if (HasCheckboxes && item.CheckState != TVCheck.None) {
+						//checkbox
+						if (p.hasCheckbox && item.CheckState != TVCheck.None) {
 							if (cd == null || !cd.DrawCheckbox()) {
 								//if(1==(i&3)) item.CheckState=TVCheck.Checked; if(2==(i&3)) item.CheckState=TVCheck.Mixed; if(3==(i&3)) item.CheckState=TVCheck.Excluded; if(0!=(i&4)) v.IsDisabled=true; //test
-								var rr = new RECT(xLeft - cSize.height, y + (_itemLineHeight - cSize.height) / 2, cSize.width, cSize.height);
+								var rr = new RECT(p.marginLeft - cSize.width - (p.marginLeft - p.checkbox - cSize.width) * 2 / 5, y + (_itemLineHeight - cSize.height) / 2, cSize.width, cSize.height);
 								var ch = item.CheckState;
 								if (checkTheme != default) {
 									int state = ch switch { TVCheck.Checked => 5, TVCheck.RadioChecked => 5, TVCheck.Mixed => 9, TVCheck.Excluded => 17, _ => 1 }; //CBS_x,RBS_x
@@ -307,33 +313,35 @@ public unsafe partial class KTreeView {
 							}
 						}
 						
-						//image background
-						if (ImageBrush != null) {
-							int imm = (_imageMarginX + 1) / 2;
-							graphics.FillRectangle(ImageBrush, xImage - imm, y, _imageSize + imm * 2, _itemLineHeight);
-						}
-						
-						//image
-						_DrawImage(item.Image);
-						
-						void _DrawImage(object imo) {
-							Bitmap b = null;
-							switch (imo) {
-							case Bitmap v:
-								b = v;
-								break;
-							case string v:
-								if (v == "link:") { v = s_stockLinkIcon.Value; if (v == null) break; }
-								b = ImageCache.Get(v, _dpi, ImageUtil.HasImageOrResourcePrefix(v));
-								break;
-							case IEnumerable<object> v:
-								foreach (var o in v) _DrawImage(o);
-								break;
+						if (!noParts.Has(TVParts.Image)) {
+							//image background
+							if (ImageBrush != null) {
+								int imm = (_imageMarginX + 1) / 2;
+								graphics.FillRectangle(ImageBrush, xImage - imm, y, _imageSize + imm * 2, _itemLineHeight);
 							}
 							
-							if (b != null) {
-								if (cd == null || !cd.DrawImage(b)) {
-									graphics.DrawImage(b, new Rectangle(xImage, yImage, _imageSize, _imageSize));
+							//image
+							_DrawImage(item.Image);
+							
+							void _DrawImage(object imo) {
+								Bitmap b = null;
+								switch (imo) {
+								case Bitmap v:
+									b = v;
+									break;
+								case string v:
+									if (v == "link:") { v = s_stockLinkIcon.Value; if (v == null) break; }
+									b = ImageCache.Get(v, _dpi, ImageUtil.HasImageOrResourcePrefix(v));
+									break;
+								case IEnumerable<object> v:
+									foreach (var o in v) _DrawImage(o);
+									break;
+								}
+								
+								if (b != null) {
+									if (cd == null || !cd.DrawImage(b)) {
+										graphics.DrawImage(b, new Rectangle(xImage, yImage, _imageSize, _imageSize));
+									}
 								}
 							}
 						}
@@ -344,13 +352,17 @@ public unsafe partial class KTreeView {
 							int color = item.TextColor(colorInfo);
 							if (color == -1) color = item.IsDisabled ? Api.GetSysColor(Api.COLOR_GRAYTEXT) : hiliteSysColor ? Api.GetSysColor(Api.COLOR_HIGHLIGHTTEXT) : textColor;
 							else color = ColorInt.SwapRB(color);
-							tr.DrawText(item.DisplayText, (xText, yText), color);
+							
+							//tr.DrawText(item.DisplayText, (p.text, yText), color);
+							RECT rt = new(p.text, yText, v.measured, r.bottom - yText);
+							tr.DrawText(item.DisplayText, rt, color);
+							
 							if (bold) tr.FontNormal();
 						}
 						
 						if (cd != null) {
-							cd.DrawMarginLeft();
-							cd.DrawMarginRight();
+							if (!noParts.Has(TVParts.MarginLeft)) cd.DrawMarginLeft();
+							if (!noParts.Has(TVParts.MarginRight)) cd.DrawMarginRight();
 						}
 						
 						//drag & drop insertion mark
@@ -362,7 +374,7 @@ public unsafe partial class KTreeView {
 								graphics.DrawRectangle(pen, xImage, y, _imageSize, h1);
 							} else {
 								if (_dd.insertAfter) y += h1;
-								graphics.DrawLine(pen, indent, y, _width, y);
+								graphics.DrawLine(pen, p.checkbox, y, _width, y);
 							}
 						}
 					}

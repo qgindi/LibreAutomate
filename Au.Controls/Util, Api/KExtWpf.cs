@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace Au.Controls;
 
@@ -124,8 +125,8 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds Border with standard thickness/color and an element in it.
 	/// </summary>
-	public static Border xAddInBorder<T>(this wpfBuilder b, out T var, string margin = null) where T : FrameworkElement, new() {
-		b.Add(out Border c).Border();
+	public static Border xAddInBorder<T>(this wpfBuilder b, out T var, string margin = null, Thickness? thickness = null) where T : FrameworkElement, new() {
+		b.Add(out Border c).Border(thickness2: thickness);
 		if (margin != null) b.Margin(margin);
 		b.Add(out var, flags: WBAdd.ChildOfLast);
 		return c;
@@ -134,8 +135,8 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds Border with standard thickness/color and an element in it.
 	/// </summary>
-	public static Border xAddInBorder(this wpfBuilder b, FrameworkElement e, string margin = null) {
-		b.Add(out Border c).Border();
+	public static Border xAddInBorder(this wpfBuilder b, FrameworkElement e, string margin = null, Thickness? thickness = null) {
+		b.Add(out Border c).Border(thickness2: thickness);
 		if (margin != null) b.Margin(margin);
 		b.Add(e, flags: WBAdd.ChildOfLast);
 		return c;
@@ -171,32 +172,10 @@ public static class KExtWpf {
 	public static wpfBuilder xAddGroupSeparator(this wpfBuilder b, string text, bool center = false) {
 		b.StartGrid().Columns(center ? -1 : 10, 0, -1);
 		b.AddSeparator(vertical: false).Margin(right: 0);
-		b.Add<TextBlock>(text).Margin(left: 3, right: 4).Font(bold: true).Brush(foreground: KGroupBox.TextColor_);
+		b.Add<TextBlock>(text).Margin(left: 3, right: 4).Font(bold: true);
 		b.AddSeparator(vertical: false).Margin(left: 0);
 		b.End();
 		return b;
-	}
-	
-	/// <summary>
-	/// Adds a toolbar button with icon and tooltip.
-	/// </summary>
-	public static Button AddButton(this ToolBar t, string icon, string tooltip, Action<Button> click, bool enabled = true) {
-		var c = new Button { Content = ImageUtil.LoadWpfImageElement(icon), ToolTip = tooltip };
-		if (click != null) c.Click += (_, _) => click(c);
-		if (!enabled) c.IsEnabled = false;
-		t.Items.Add(c);
-		return c;
-	}
-	
-	/// <summary>
-	/// Adds a toolbar checkbox with icon and tooltip.
-	/// </summary>
-	public static KCheckBox AddCheckbox(this ToolBar t, string icon, string tooltip, bool enabled = true) {
-		var c = new KCheckBox { Content = ImageUtil.LoadWpfImageElement(icon), ToolTip = tooltip };
-		c.Style = t.FindResource(ToolBar.CheckBoxStyleKey) as Style; //need because this is KCheckBox, not CheckBox
-		if (!enabled) c.IsEnabled = false;
-		t.Items.Add(c);
-		return c;
 	}
 	
 	public static ToolBar xAddToolBar(this wpfBuilder t, bool vertical = false, bool hideOverflow = false, bool controlBrush = false) {
@@ -207,10 +186,67 @@ public static class KExtWpf {
 			tt.Background = SystemColors.ControlBrush;
 			tb.Background = SystemColors.ControlBrush;
 		}
+		KeyboardNavigation.SetTabNavigation(tb, KeyboardNavigationMode.Once);
 		tt.ToolBars.Add(tb);
 		if (hideOverflow) tb.HideGripAndOverflow(false);
 		t.Add(tt);
 		return tb;
+	}
+	
+	/// <summary>
+	/// Adds a toolbar button with icon and tooltip.
+	/// </summary>
+	/// <param name="click">Can be null.</param>
+	/// <param name="padding">Set <c>Padding = new(4, 2, 4, 2)</c>.</param>
+	public static Button AddButton(this ToolBar t, string icon, Action<Button> click, string tooltip, bool enabled = true, bool padding = true) {
+		var c = new Button { Content = ImageUtil.LoadWpfImageElement(icon), ToolTip = tooltip };
+		if (click != null) c.Click += (_, _) => click(c);
+		if (padding) c.Padding = new(4, 2, 4, 2);
+		if (!enabled) c.IsEnabled = false;
+		t.Items.Add(c);
+		return c;
+	}
+	
+	/// <summary>
+	/// Adds a toolbar checkbox with icon and tooltip.
+	/// </summary>
+	/// <param name="padding">Set <c>Padding = new(4, 2, 4, 2)</c>.</param>
+	public static KCheckBox AddCheckbox(this ToolBar t, string icon, string tooltip, bool enabled = true, bool padding = true) {
+		var c = new KCheckBox { Content = ImageUtil.LoadWpfImageElement(icon), ToolTip = tooltip };
+		c.Style = t.FindResource(ToolBar.CheckBoxStyleKey) as Style; //need because this is KCheckBox, not CheckBox
+		if (padding) c.Padding = new(4, 2, 4, 2);
+		if (!enabled) c.IsEnabled = false;
+		t.Items.Add(c);
+		return c;
+	}
+	
+	/// <summary>
+	/// Adds <b>MouseRightButtonDown</b> event handler which shows a context menu.
+	/// </summary>
+	/// <param name="t"></param>
+	/// <param name="fill">Let it fill the menu.</param>
+	public static void xContextMenu(this ButtonBase t, Action<popupMenu> fill) {
+		t.MouseRightButtonDown += (_, _) => {
+			var m = new popupMenu();
+			fill(m);
+			m.Show(owner: t);
+			//var r = t.RectInScreen();
+			//m.Show(xy: new(r.left, r.bottom), excludeRect: r, owner: t);
+		};
+	}
+	
+	/// <summary>
+	/// Adds <b>Click</b> event handler which shows a drop-down menu.
+	/// </summary>
+	/// <param name="t"></param>
+	/// <param name="fill">Let it fill the menu.</param>
+	public static void xDropdownMenu(this ButtonBase t, Action<popupMenu> fill) {
+		t.Click += (_, _) => {
+			var m = new popupMenu();
+			fill(m);
+			var r = t.RectInScreen();
+			m.Show(xy: new(r.left, r.bottom), excludeRect: r, owner: t);
+		};
 	}
 	
 	/// <summary>

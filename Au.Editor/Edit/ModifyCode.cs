@@ -47,6 +47,8 @@ static class ModifyCode {
 			}
 		}
 		
+		//TODO: if comment false, uncomment even if selection contains non-comment lines
+		
 		if (!slashStar) {
 			//get the start and end of lines containing selection
 			while (replStart > 0 && code[replStart - 1] != '\n') replStart--;

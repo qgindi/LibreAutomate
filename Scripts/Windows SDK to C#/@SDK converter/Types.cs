@@ -381,7 +381,7 @@ unsafe partial class Converter {
 		//uuid (was '__declspec(uuid', replaced in script)
 		string uuid = null;
 		if (_TokIs(_i, "uuid")) {
-			if (!_TokIsChar(++_i, '(') || !_TokIsChar(++_i, '\"') || !_TokIsChar(_i + 1, ')')) _Err(_i, "unexpected");
+			if (!_TokIsChar(++_i, '(') || !_TokIsChar(++_i, '"') || !_TokIsChar(_i + 1, ')')) _Err(_i, "unexpected");
 			uuid = _TokToString(_i);
 			_i += 2;
 		}

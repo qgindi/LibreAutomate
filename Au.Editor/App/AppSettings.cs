@@ -15,6 +15,7 @@ record AppSettings : JSettings {
 		_NE(ref user) ??= Guid.NewGuid().ToString();
 		hotkeys ??= new();
 		(font_output ??= new()).Loaded();
+		debug ??= new();
 		delm ??= new();
 		recorder ??= new();
 		return this;
@@ -116,6 +117,15 @@ record AppSettings : JSettings {
 	
 	//panel Recipe
 	public sbyte recipe_zoom;
+	
+	//panel Debug
+	public record debug_t {
+		public bool stepIntoAll, noFuncEval;
+		public byte breakT = 2, breakU = 3; //flags: 1 enabled, 2 only exceptions in the list (if not empty), 4 (not impl) not exceptions in the list
+		public string breakListT, breakListU;
+		public byte printEvents;
+	}
+	public debug_t debug;
 	
 	//settings common to various tools
 	public bool tools_pathUnexpand = true, tools_pathLnk;

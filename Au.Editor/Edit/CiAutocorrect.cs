@@ -92,7 +92,7 @@ class CiAutocorrect {
 	/// Called on WM_CHAR, before passing it to Scintilla. Won't pass if returns true, unless ch is ';'. Not called if ch less than ' '.
 	/// If ch is ')' etc, and at current position is ')' etc previously added on '(' etc, clears the temp range, sets the out vars and returns true.
 	/// If ch is ';' inside '(...)' and the terminating ';' is missing, sets newPosUtf8 = where ';' should be and returns true.
-	/// If ch is '\"' after two '\"', may close raw string (add """) and return true.
+	/// If ch is '"' after two '"', may close raw string (add """) and return true.
 	/// Also called by SciBeforeKey on Backspace and Tab.
 	/// </summary>
 	public bool SciBeforeCharAdded(SciCode doc, char ch, out BeforeCharContext c) {
@@ -106,15 +106,15 @@ class CiAutocorrect {
 		
 		switch (ch) {
 		case ';': return _OnEnterOrSemicolon(anywhere: false, onSemicolon: true, out c);
-		case '\"': case '\'': case ')': case ']': case '}': case '>': case (char)KKey.Tab: break; //skip auto-added char
+		case '"': case '\'': case ')': case ']': case '}': case '>': case (char)KKey.Tab: break; //skip auto-added char
 		case (char)KKey.Back: isBackspace = true; break; //delete auto-added char too
 		case '[': case '{': case '(': case '<': isOpenBrac = true; break; //replace auto-added '()' when completing 'new Type' with '[]' or '{}'. Also ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion.
 		default: return false;
 		}
 		
-		var r = doc.ETempRanges_Enum(pos8, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
+		var r = doc.ETempRanges_Enum(pos8, this, endPosition: (ch == '"' || ch == '\''), utf8: true).FirstOrDefault();
 		if (r == null) {
-			if (ch == '\"') return _RawString();
+			if (ch == '"') return _RawString();
 			return false;
 		}
 		if (isOpenBrac && (object)r.OwnerData is not ("ac" or "new")) return false;
@@ -124,7 +124,7 @@ class CiAutocorrect {
 			if (pos8 != from) return false;
 		} else {
 			if (ch != (char)KKey.Tab && ch != doc.aaaCharAt8(to)) { //info: '\0' if posUtf8 invalid
-				if (ch == '\"') return _RawString();
+				if (ch == '"') return _RawString();
 				return false;
 			}
 			if (ch == (char)KKey.Tab && doc.aaaCharAt8(pos8 - 1) < 32) return false; //don't exit temp range if pos8 is after tab or newline
@@ -151,7 +151,7 @@ class CiAutocorrect {
 		return true;
 		
 		bool _RawString() { //close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
-			if (pos8 > 3 && doc.aaaCharAt8(pos8 - 1) == '\"' && doc.aaaCharAt8(pos8 - 2) == '\"' && doc.aaaCharAt8(pos8 - 3) != '@') {
+			if (pos8 > 3 && doc.aaaCharAt8(pos8 - 1) == '"' && doc.aaaCharAt8(pos8 - 2) == '"' && doc.aaaCharAt8(pos8 - 3) != '@') {
 				if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 				var pos16 = cd.pos;
 				var token = cd.syntaxRoot.FindToken(pos16 - 1);
@@ -172,8 +172,8 @@ class CiAutocorrect {
 				} else if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) {
 					//if pos it at """|""", make """"|""""
 					int q1 = 0, q2 = 0;
-					for (int i = pos8; doc.aaaCharAt8(--i) == '\"';) q1++;
-					for (int i = pos8; doc.aaaCharAt8(i++) == '\"';) q2++;
+					for (int i = pos8; doc.aaaCharAt8(--i) == '"';) q1++;
+					for (int i = pos8; doc.aaaCharAt8(i++) == '"';) q2++;
 					if (q1 == q2 && q1 >= 3) {
 						if (tkind is SyntaxKind.SingleLineRawStringLiteralToken or SyntaxKind.MultiLineRawStringLiteralToken && token.SpanStart != pos8 - q1) return false;
 						doc.aaaInsertText(false, pos8, "\"");
@@ -197,7 +197,7 @@ class CiAutocorrect {
 	/// </summary>
 	public void SciCharAdded(CodeInfo.CharContext c) {
 		char ch = c.ch;
-		string replaceText = ch switch { '\"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' or '/' => "", _ => null };
+		string replaceText = ch switch { '"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' or '/' => "", _ => null };
 		if (replaceText == null) return;
 		
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -306,7 +306,7 @@ class CiAutocorrect {
 			tempRangeFrom = tempRangeTo = cd.pos;
 			if (ch == '\'') {
 				if (kind != SyntaxKind.CharacterLiteralExpression || span.Start != pos) return;
-			} else if (ch == '\"') {
+			} else if (ch == '"') {
 				bool isVerbatim, isInterpolated = false;
 				switch (kind) {
 				case SyntaxKind.StringLiteralExpression:

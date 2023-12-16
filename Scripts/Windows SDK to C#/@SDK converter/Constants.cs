@@ -40,8 +40,8 @@ unsafe partial class Converter {
 		} else if (iValue < iNext) { //preprocessor removes some #define values, it's ok
 			if (isFunc) { //info: for func-style get parameters as part of value
 				__DefineAddToOther(iName, name, _TokToString(iParamOrValue, iNext));
-			} else if (*s2 == '\x2') { //ANSI string constant, when tokenizing replaced the first '\"' to '\x2'
-				*s2 = '\"';
+			} else if (*s2 == '\x2') { //ANSI string constant, when tokenizing replaced the first '"' to '\x2'
+				*s2 = '"';
 				__DefineAddToOther(iName, name, " " + _TokToString(iParamOrValue, iNext) + " //ANSI string");
 			} else {
 				_ExpressionResult r = _Expression(iParamOrValue, iNext, name);

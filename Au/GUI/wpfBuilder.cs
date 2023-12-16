@@ -660,7 +660,7 @@ public class wpfBuilder {
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default margin is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
 	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If true, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
-	/// <param name="bindLabelVisibility">Let <b>Add</b> overloads that add 2 elements (usually the first is <b>Label</b>) bind the <b>Visibility</b> property of the first element to that of the second element, to automatically hide the first element when the second element is hidden.</param>
+	/// <param name="bindLabelVisibility">Let <b>Add</b> overloads that add 2 elements (usually the first is <b>Label</b>) bind the <b>Visibility</b> property of the first element to that of the second element, to automatically hide the first element when the second element is hidden. This option also is applied when used <i>labeledBy</i> with other <b>Add</b> overloads.</param>
 	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null, bool? bindLabelVisibility = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 		if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
@@ -677,35 +677,7 @@ public class wpfBuilder {
 	bool _opt_showToolTipOnKeyboardFocus;
 	bool _opt_bindLabelVisibility;
 	
-	/// <summary>
-	/// Creates and adds element of type <i>T</i> (control etc of any type).
-	/// </summary>
-	/// <param name="variable">
-	/// Receives element's variable. The function creates element of variable's type. You can use the variable to set element's properties before showing window or/and to get value after.
-	/// Examples: <c>.Add(out CheckBox c1, "Text")</c>, <c>.Add(out _textBox1)</c>. If don't need a variable: <c>.Add(out Label _, "Text")</c> or <c>.Add&lt;Label>("Text")</c>.
-	/// </param>
-	/// <param name="text">
-	/// Text, header or other content. Supported element types (or base types):
-	/// <br/>• <see cref="TextBox"/> - sets <b>Text</b> property.
-	/// <br/>• <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
-	/// <br/>• <see cref="PasswordBox"/> - sets <b>Password</b> property.
-	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
-	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
-	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
-	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
-	/// <br/>• Other element types that have <b>Text</b> property.
-	/// </param>
-	/// <param name="flags">Flags. Alternatively flags can be the second argument (<i>text</i>).</param>
-	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
-		if (text is WBAdd f1 && flags == 0) { flags = f1; text = null; } //it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
-		_p.BeforeAdd(flags);
-		variable = new T();
-		_Add(variable, text, flags, true);
-		return this;
-	}
-	
-	void _Add(FrameworkElement e, object text, WBAdd flags, bool add) {
+	void _Add(FrameworkElement e, object text, WBAdd flags, bool add, FrameworkElement labeledBy) {
 		bool childOfLast = flags.Has(WBAdd.ChildOfLast);
 		if (!flags.Has(WBAdd.DontSetProperties)) {
 			if (e is Control c) {
@@ -792,6 +764,12 @@ public class wpfBuilder {
 				_alsoAll(this, _alsoAllArgs);
 			}
 		}
+		
+		if (labeledBy != null) {
+			if (labeledBy is Label la) la.Target = e;
+			System.Windows.Automation.AutomationProperties.SetLabeledBy(e, labeledBy);
+			if (_opt_bindLabelVisibility) labeledBy.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = e, Mode = BindingMode.OneWay });
+		}
 	}
 	
 	void _AddToParent(FrameworkElement e, bool childOfLast) {
@@ -809,13 +787,79 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
+	/// Adds an existing element (control etc of any type).
+	/// </summary>
+	/// <param name="element"></param>
+	/// <param name="flags"></param>
+	/// <param name="labeledBy">A <b>Label</b>, <b>TextBlock</b> or other element used as the label of this element. If not null, the function sets <see cref="Label.Target"/> if it's <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).</param>
+	/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
+	public wpfBuilder Add(FrameworkElement element, WBAdd flags = 0, FrameworkElement labeledBy = null) {
+		_p.BeforeAdd(flags);
+		_Add(element, null, flags, true, labeledBy);
+		return this;
+	}
+	//TODO: I don't like the labeledBy parameter. Find a better way.
+	
+	/// <summary>
+	/// Creates and adds element of type <i>T</i> (control etc of any type).
+	/// </summary>
+	/// <param name="variable">
+	/// Receives element's variable. The function creates element of variable's type. You can use the variable to set element's properties before showing window or/and to get value after.
+	/// Examples: <c>.Add(out CheckBox c1, "Text")</c>, <c>.Add(out _textBox1)</c>. If don't need a variable: <c>.Add(out Label _, "Text")</c> or <c>.Add&lt;Label>("Text")</c>.
+	/// </param>
+	/// <param name="text">
+	/// Text, header or other content. Supported element types (or base types):
+	/// <br/>• <see cref="TextBox"/> - sets <b>Text</b> property.
+	/// <br/>• <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
+	/// <br/>• <see cref="PasswordBox"/> - sets <b>Password</b> property.
+	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
+	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
+	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
+	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
+	/// <br/>• Other element types that have <b>Text</b> property.
+	/// </param>
+	/// <param name="flags"></param>
+	/// <param name="labeledBy">A <b>Label</b>, <b>TextBlock</b> or other element used as the label of this element. If not null, the function sets <see cref="Label.Target"/> if it's <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).</param>
+	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
+	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0, FrameworkElement labeledBy = null) where T : FrameworkElement, new() {
+		if (text is WBAdd f1 && flags == 0) { flags = f1; text = null; } //it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
+		_p.BeforeAdd(flags);
+		variable = new T();
+		_Add(variable, text, flags, true, labeledBy);
+		return this;
+	}
+	
+	/// <summary>
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
-	/// <param name="flags">Flags. Alternatively flags can be the first argument (<i>text</i>).</param>
+	/// <param name="flags"></param>
+	/// <param name="labeledBy">A <b>Label</b>, <b>TextBlock</b> or other element used as the label of this element. If not null, the function sets <see cref="Label.Target"/> if it's <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).</param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
+	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0, FrameworkElement labeledBy = null) where T : FrameworkElement, new() => Add(out T _, text, flags, labeledBy);
 	
+	/// <summary>
+	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
+	/// </summary>
+	/// <param name="label">Label text. Usually string or <see cref="TextBlock"/>. Example: <c>new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "long text" }</c>.</param>
+	/// <param name="variable">Variable of second element. More info - see other overload.</param>
+	/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
+	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
+	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for this element type.</exception>
+	/// <remarks>
+	/// Sets <see cref="Label.Target"/> if the first element is <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
+	/// </remarks>
+	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
+		=> _Add2(out Label _, label, out variable, text, row2);
+	
+	wpfBuilder _Add2<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
+		Add(out var1, text1);
+		if (row2 != null) Row(row2.Value);
+		Add(out var2, text2, labeledBy: var1); //note: no flags
+		return this;
+	}
+	
+#if !DEBUG
 	/// <summary>
 	/// Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
 	/// </summary>
@@ -828,43 +872,12 @@ public class wpfBuilder {
 	/// <remarks>
 	/// If <b>T1</b> is <b>Label</b>, sets <see cref="Label.Target"/>. If <b>T1</b> is <b>Label</b> or <b>TextBlock</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
 	/// </remarks>
+	[EditorBrowsableAttribute(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use another overload, maybe with parameter labeledBy.
+	[Obsolete]
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
-		Add(out var1, text1);
-		if (row2 != null) Row(row2.Value);
-		Add(out var2, text2); //note: no flags
-		if (var1 is UIElement k && k is Label or TextBlock) {
-			if (k is Label la) la.Target = var2;
-			System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, k);
-		}
-		if (_opt_bindLabelVisibility) var1.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = var2, Mode = BindingMode.OneWay });
-		return this;
+		return _Add2(out var1, text1, out var2, text2, row2);
 	}
-	
-	/// <summary>
-	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
-	/// </summary>
-	/// <param name="label">Label text. Usually string or <see cref="TextBlock"/>. Example: <c>new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "long text" }</c>.</param>
-	/// <param name="variable">Variable of second element. More info - see other overload.</param>
-	/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
-	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
-	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for this element type.</exception>
-	/// <remarks>
-	/// Sets <see cref="Label.Target"/> and calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
-	/// </remarks>
-	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
-		=> Add(out Label _, label, out variable, text, row2);
-	
-	/// <summary>
-	/// Adds an existing element (control etc of any type).
-	/// </summary>
-	/// <param name="element"></param>
-	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add(FrameworkElement element, WBAdd flags = 0) {
-		_p.BeforeAdd(flags);
-		_Add(element, null, flags, true);
-		return this;
-	}
+#endif
 	
 	/// <summary>
 	/// Adds button with <see cref="ButtonBase.Click"/> event handler.
@@ -1699,9 +1712,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="text">Watermark text.</param>
 	/// <remarks>
-	/// The control must be a child/descendant of an <b>AdornerDecorator</b>.
-	/// 
-	/// Example in Cookbook.
+	/// The control must be a child/descendant of an <b>AdornerDecorator</b>. See example.
 	/// </remarks>
 	/// <exception cref="NotSupportedException">The last added element isn't <b>TextBox</b> or editable <b>ComboBox</b> control.</exception>
 	/// <exception cref="InvalidOperationException">The control isn't in an <b>AdornerDecorator</b>.</exception>
@@ -2299,7 +2310,7 @@ public class wpfBuilder {
 	/// <param name="stretchDirection">Sets <see cref="Image.StretchDirection"/>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 	/// <remarks>
-	/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
+	/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd, FrameworkElement)"/>.
 	/// </remarks>
 	/// <seealso cref="icon.ToWpfImage"/>
 	/// <seealso cref="ImageUtil"/>
@@ -2337,7 +2348,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="vertical">If true, resizes columns, else rows.</param>
 	/// <param name="span">How many rows spans vertical splitter, or how many columns spans horizontall splitter. Can be more than row/column count.</param>
-	/// <param name="thickness">Width of vertical splitter or height of horizontal.</param>
+	/// <param name="thickness">Width of vertical splitter or height of horizontal. If <b>double.NaN</b>, sets alignment "stretch", else "center".</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>GridSplitter</b>.</exception>
 	/// <example>
 	/// Vertical splitter.
@@ -2367,14 +2378,14 @@ public class wpfBuilder {
 		var g = _ParentOfLastAsOrThrow<_Grid>();
 		var c = Last as GridSplitter ?? throw new NotSupportedException("Splitter(): Last added must be GridSplitter");
 		if (vertical) {
-			c.HorizontalAlignment = HorizontalAlignment.Center;
+			c.HorizontalAlignment = double.IsNaN(thickness) ? HorizontalAlignment.Stretch : HorizontalAlignment.Center;
 			c.VerticalAlignment = VerticalAlignment.Stretch;
 			c.ResizeDirection = GridResizeDirection.Columns;
 			c.Width = thickness;
 			if (span != 1) Grid.SetRowSpan(c, span);
 		} else {
 			c.HorizontalAlignment = HorizontalAlignment.Stretch;
-			c.VerticalAlignment = VerticalAlignment.Center;
+			c.VerticalAlignment = double.IsNaN(thickness) ? VerticalAlignment.Stretch : VerticalAlignment.Center;
 			c.ResizeDirection = GridResizeDirection.Rows;
 			c.Height = thickness;
 			if (span != 1) g.Span(span);

@@ -11,7 +11,7 @@ class DWinapi : KDialogWindow {
 
 	public DWinapi(string name = null) {
 		var doc = Panels.Editor.ActiveDoc;
-		InitWinProp("Find Windows API", doc);
+		InitWinProp("Find Windows API", App.Wmain);
 
 		if (name == null) {
 			name = doc.aaaSelectedText();

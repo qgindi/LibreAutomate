@@ -295,6 +295,8 @@ partial class CiCompletion {
 					}
 					//p1.Next('M');
 				} else if (isCommand) {
+					//TODO: Ctrl+Space does not work (broken).
+					
 					if (tok.IsInString(position, code, out stringInfo) == true) {
 						var tspan = stringInfo.textSpan;
 						stringFormat = CiUtil.GetParameterStringFormat(stringInfo.stringNode, model, true);

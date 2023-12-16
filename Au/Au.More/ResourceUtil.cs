@@ -10,15 +10,20 @@ namespace Au.More {
 	/// </summary>
 	/// <remarks>
 	/// Internally uses <see cref="ResourceManager"/>. Uses <see cref="CultureInfo.InvariantCulture"/>.
-	/// Loads resources from manifest resource "AssemblyName.g.resources". To add such resource files in Visual Studio, set file build action = Resource. Don't use .resx files and the Resources page in Project Properties.
-	/// By default loads resources from the app entry assembly. In script with role miniProgram - from the script's assembly. To specify other loaded assembly, use name like <c>"&lt;AssemblyName&gt;file.txt"</c>.
+	///
+	/// Loads resources from managed resource "AssemblyName.g.resources". To add such resource files in Visual Studio, set file build action = Resource. Don't use .resx files and the Resources page in Project Properties.
+	///
+	/// By default loads resources from the app entry assembly. In script with role miniProgram - from the script's assembly. To specify another loaded assembly, use prefix like <c>"&lt;AssemblyName&gt;"</c> or <c>"*&lt;AssemblyName&gt;"</c>.
+	///
+	/// The resource name argument can optionally start with <c>"resource:"</c>.
+	///
 	/// Does not use caching. Creates new object even when loading the resource not the first time.
 	/// </remarks>
 	public static class ResourceUtil {
 		/// <summary>
 		/// Gets resource of any type.
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"file.txt"</c> or <c>"sub/file.txt"</c> or <c>"&lt;LoadedAssemblyName&gt;file.txt"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.txt"</c> or <c>"sub/file.txt"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource is of different type. This function does not convert.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -27,11 +32,11 @@ namespace Au.More {
 			if (o is T r) return r;
 			throw new InvalidOperationException($"Resource '{name}' is not {typeof(T).Name}; it is {o.GetType().Name}.");
 		}
-
+		
 		/// <summary>
 		/// Gets stream.
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"file.png"</c> or <c>"sub/file.png"</c> or <c>"&lt;LoadedAssemblyName&gt;file.png"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.png"</c> or <c>"sub/file.png"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -42,11 +47,11 @@ namespace Au.More {
 			//if (name.Starts("pack:")) return _Pack(name); //rejected
 			return Get<UnmanagedMemoryStream>(name);
 		}
-
+		
 		/// <summary>
 		/// Gets string.
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"myString"</c> or <c>"file.txt"</c> or <c>"sub/file.txt"</c> or <c>"&lt;LoadedAssemblyName&gt;file.txt"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"myString"</c> or <c>"file.txt"</c> or <c>"sub/file.txt"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -62,13 +67,13 @@ namespace Au.More {
 			}
 			throw new InvalidOperationException($"Resource '{name}' is not string, byte[] or stream; it is {o.GetType().Name}.");
 		}
-
+		
 		internal static string TryGetString_(string name) => _TryGetObject(ref name) as string;
-
+		
 		/// <summary>
 		/// Gets byte[].
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"file.txt"</c> or <c>"sub/file.txt"</c> or <c>"&lt;LoadedAssemblyName&gt;file.txt"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.txt"</c> or <c>"sub/file.txt"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -87,57 +92,57 @@ namespace Au.More {
 			}
 			throw new InvalidOperationException($"Resource '{name}' is not byte[], string or stream; it is {o.GetType().Name}.");
 		}
-
+		
 		/// <summary>
 		/// Gets GDI+ image.
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"file.png"</c> or <c>"sub/file.png"</c> or <c>"&lt;LoadedAssemblyName&gt;file.png"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.png"</c> or <c>"sub/file.png"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		public static System.Drawing.Bitmap GetGdipBitmap(string name) {
 			return new System.Drawing.Bitmap(GetStream(name));
 		}
-
+		
 		//rejected. Too simple and rare.
 		///// <summary>
 		///// Gets GDI+ icon.
 		///// </summary>
-		///// <param name="name">Can be resource name like <c>"file.ico"</c> or <c>"sub/file.ico"</c> or <c>"&lt;LoadedAssemblyName&gt;file.ico"</c>. Can have prefix <c>"resource:"</c>.</param>
+		///// <param name="name">Resource name, like <c>"file.ico"</c> or <c>"sub/file.ico"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		///// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		///// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		///// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		//public static System.Drawing.Icon GetGdipIcon(string name) {
 		//	return new System.Drawing.Icon(GetStream(name));
 		//}
-
+		
 		/// <summary>
 		/// Gets WPF image or icon that can be used as <b>ImageSource</b>.
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"file.png"</c> or <c>"sub/file.png"</c> or <c>"&lt;LoadedAssemblyName&gt;file.png"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.png"</c> or <c>"sub/file.png"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		public static BitmapFrame GetWpfImage(string name) {
 			return BitmapFrame.Create(GetStream(name));
 		}
-
+		
 		/// <summary>
 		/// Gets WPF object from XAML resource, for example image.
 		/// </summary>
 		/// <returns>An object of type of the XAML root object, for example <b>Viewbox</b> if <b>Image</b>.</returns>
-		/// <param name="name">Can be resource name like <c>"file.xaml"</c> or <c>"sub/file.xaml"</c> or <c>"&lt;LoadedAssemblyName&gt;file.xaml"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.xaml"</c> or <c>"sub/file.xaml"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		public static object GetXamlObject(string name) {
 			return XamlReader.Load(GetStream(name));
 		}
-
+		
 		/// <summary>
 		/// Gets WPF image element from xaml or other image resource.
 		/// </summary>
-		/// <param name="name">Can be resource name like <c>"file.png"</c> or <c>"sub/file.xaml"</c> or <c>"&lt;LoadedAssemblyName&gt;file.png"</c>. Can have prefix <c>"resource:"</c>.</param>
+		/// <param name="name">Resource name, like <c>"file.png"</c> or <c>"sub/file.xaml"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -148,12 +153,12 @@ namespace Au.More {
 			if (name.Ends(".xaml", true)) return (FrameworkElement)GetXamlObject(name);
 			return new Image { Source = GetWpfImage(name) };
 		}
-
+		
 		//probably not useful
 		///// <summary>
 		///// Gets WPF image as <b>BitmapImage</b>.
 		///// </summary>
-		///// <param name="name">Can be resource name like <c>"file.png"</c> or <c>"sub/file.png"</c> or <c>"&lt;LoadedAssemblyName&gt;file.png"</c>. Can have prefix <c>"resource:"</c>.</param>
+		///// <param name="name">Resource name, like <c>"file.png"</c> or <c>"sub/file.png"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		///// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		///// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		///// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -166,24 +171,24 @@ namespace Au.More {
 		//	bi.EndInit();
 		//	return bi;
 		//}
-
+		
 		/// <summary>
 		/// Returns true if string starts with <c>"resource:"</c> or <c>"resources/"</c>.
 		/// </summary>
 		public static bool HasResourcePrefix(string s) {
 			return s.Starts("resource:") || s.Starts("resources/")/* || s.Starts("pack:")*/;
 		}
-
+		
 		//[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading WPF dlls if no "pack:"
 		//static UnmanagedMemoryStream _Pack(string name) {
 		//	if (script.role == SRole.MiniProgram && !name.Contains(";component/") && name.Starts("pack://application:,,,/")) name = name.Insert(23, script.name + ";component/");
 		//	if (Application.Current == null) new Application();
 		//	return Application.GetResourceStream(new Uri(name)).Stream as UnmanagedMemoryStream;
 		//}
-
+		
 		static object _GetObject(ref string name)
 			=> _TryGetObject(ref name) ?? throw new FileNotFoundException($"Cannot find resource '{name}'.");
-
+		
 		static object _TryGetObject(ref string name) {
 			var rs = _RS(ref name, true);
 			if (rs == null) return null;
@@ -191,15 +196,19 @@ namespace Au.More {
 			if (r == null) r = rs.GetObject(name.Lower());
 			return r;
 		}
-
+		
 		static ResourceSet _RS(ref string name, bool noThrow = false) {
 			if (name.Starts("resource:")) name = name[9..];
-			string asmName = ""; int i;
-			if (name.Starts('<') && (i = name.IndexOf('>')) > 1) {
-				asmName = name[1..i];
-				name = name[++i..];
+			string asmName = "";
+			if (name is ['<', ..] or ['*', '<', ..]) {
+				int i = name[0] == '*' ? 2 : 1;
+				int j = name.IndexOf('>', i);
+				if (j >= i) {
+					asmName = name[i..j];
+					name = name[++j..];
+				}
 			}
-
+			
 			lock (s_dict) {
 				if (!s_dict.TryGetValue(asmName, out var rs)) {
 					var asm = asmName.Length == 0 ? AssemblyUtil_.GetEntryAssembly() : _FindAssembly(asmName);
@@ -212,9 +221,9 @@ namespace Au.More {
 				return rs;
 			}
 		}
-
+		
 		static readonly Dictionary<string, ResourceSet> s_dict = new(StringComparer.OrdinalIgnoreCase);
-
+		
 		static Assembly _FindAssembly(string name) {
 			foreach (var v in AppDomain.CurrentDomain.GetAssemblies()) if (v.GetName().Name.Eqi(name)) return v;
 			return null;

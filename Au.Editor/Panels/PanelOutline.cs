@@ -20,6 +20,8 @@ class PanelOutline {
 		_tv.ItemClick += e => { if (e.Button == System.Windows.Input.MouseButton.Right) _ContextMenu(); };
 		_tv.ContextMenuOpening += (_, _) => _ContextMenu(); //right-click in empty space
 		P.Children.Add(_tv);
+		
+		Panels.PanelManager["Outline"].DontActivateFloating = e => e == _tv;
 	}
 
 	public DockPanel P { get; } = new();

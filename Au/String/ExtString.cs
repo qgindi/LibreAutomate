@@ -1187,7 +1187,7 @@ public static unsafe partial class ExtString {
 	/// <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended <c>'…'</c> character. The enclosing <c>""</c> are not counted.</param>
 	/// <param name="quote">Enclose in <c>""</c>.</param>
 	/// <remarks>
-	/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
+	/// Replaces these characters: <c>'\\'</c>, <c>'"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
 	/// </remarks>
 	public static string Escape(this string t, int limit = 0, bool quote = false) {
 		int i, len = t.Length;
@@ -1199,7 +1199,7 @@ public static unsafe partial class ExtString {
 		
 		for (i = 0; i < len; i++) {
 			var c = t[i];
-			if (c < ' ' || c == '\\' || c == '\"') goto g1;
+			if (c < ' ' || c == '\\' || c == '"') goto g1;
 			//tested: Unicode line-break chars in most controls don't break lines, therefore don't need to escape
 		}
 		if (limit > 0) t = Limit(t, limit);
@@ -1207,7 +1207,7 @@ public static unsafe partial class ExtString {
 		return t;
 		g1:
 		using (new StringBuilder_(out var b, len + len / 16 + 100)) {
-			if (quote) b.Append('\"');
+			if (quote) b.Append('"');
 			for (i = 0; i < len; i++) {
 				var c = t[i];
 				if (c < ' ') {
@@ -1219,14 +1219,14 @@ public static unsafe partial class ExtString {
 					default: b.Append("\\u").Append(((ushort)c).ToString("x4")); break;
 					}
 				} else if (c == '\\') b.Append("\\\\");
-				else if (c == '\"') b.Append("\\\"");
+				else if (c == '"') b.Append("\\\"");
 				else b.Append(c);
 				
 				if (limit > 0 && b.Length - (quote ? 1 : 0) >= len) break;
 			}
 			
 			if (limit > 0) b.Append('…');
-			if (quote) b.Append('\"');
+			if (quote) b.Append('"');
 			return b.ToString();
 		}
 	}
@@ -1254,7 +1254,7 @@ public static unsafe partial class ExtString {
 				if (c == '\\') {
 					if (++i == t.Length) return false;
 					switch (c = t[i]) {
-					case '\\': case '\"': break;
+					case '\\': case '"': break;
 					case 't': c = '\t'; break;
 					case 'n': c = '\n'; break;
 					case 'r': c = '\r'; break;

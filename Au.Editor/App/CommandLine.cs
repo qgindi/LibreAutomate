@@ -211,6 +211,8 @@ static class CommandLine {
 						return CompileRun.CompileAndRun(true, f, new[] { lparam.ToS() });
 					}
 					print.warning($"Debugger script not found. See Options -> Workspace -> Debugger script.", -1);
+				} else {
+					return Panels.Debug.Attach((int)lparam/*, ensureAttached: true*/) ? 1 : 0;
 				}
 				break;
 			}
@@ -262,7 +264,7 @@ static class CommandLine {
 		case 110: //received from our non-admin drop-target process on OnDragEnter
 			return UacDragDrop.AdminProcess.DragEvent((int)wparam, b);
 		default:
-			Debug.Assert(false);
+			Debug_.Print("bad action");
 			return 0;
 		}
 		return 1;

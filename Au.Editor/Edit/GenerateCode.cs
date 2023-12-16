@@ -187,18 +187,41 @@ static class GenerateCode {
 		var baseClass = thisType.BaseType.IsAbstract ? thisType.BaseType : null;
 		if (baseClass == null && thisType.Interfaces.IsDefaultOrEmpty) return;
 		
-		ImmutableArray<(INamedTypeSymbol type, ImmutableArray<ISymbol> members)> types = new();
 		var baseFromPos = position < 0 && node.GetAncestorOrThis<BaseTypeSyntax>() is BaseTypeSyntax bts ? semo.GetTypeInfo(bts.Type).Type as INamedTypeSymbol : null;
-		if (baseFromPos != null) types = thisType.GetAllUnimplementedMembersInThis(new INamedTypeSymbol[] { baseFromPos }, default);
-		else if (baseClass == null) types = thisType.GetAllUnimplementedMembersInThis(thisType.Interfaces, default);
-		else types = thisType.GetAllUnimplementedMembersInThis(new INamedTypeSymbol[] { baseClass }, default).AddRange(thisType.GetAllUnimplementedMembersInThis(thisType.Interfaces, default));
-		if (types.IsDefaultOrEmpty) {
+		
+		List<(INamedTypeSymbol type, List<ISymbol> members)> types = new();
+		bool hasInterfaces = false;
+		if (baseFromPos != null) _GetOfType(baseFromPos);
+		else {
+			if (baseClass != null) _GetOfType(baseClass);
+			foreach (var t in thisType.Interfaces) _GetOfType(t);
+		}
+		
+		//note: GetAllUnimplementedMembersInThis gets not all members. Eg for ITreeViewItem skips properties that have default impl (but includes such methods). Or gets some garbage.
+		void _GetOfType(INamedTypeSymbol t) {
+			List<ISymbol> members = null;
+			bool isInterface = t.TypeKind == TypeKind.Interface;
+			hasInterfaces |= isInterface;
+			foreach (var m in t.GetMembers()) {
+				if (!m.IsAbstract) if (!isInterface || m.IsStatic || m.DeclaredAccessibility == acc.Private) continue;
+				if (m is not (IMethodSymbol { MethodKind: MethodKind.Ordinary or MethodKind.UserDefinedOperator or MethodKind.Conversion } or IPropertySymbol or IEventSymbol)) continue;
+				ISymbol k = isInterface ? thisType.FindImplementationForInterfaceMember(m) : thisType.FindImplementationForAbstractMember(m);
+				if (k != null && k.ContainingType != thisType) k = null;
+				if (k == null) {
+					if (members == null) types.Add((t, members = new()));
+					members.Add(m);
+				}
+			}
+			members?.Sort((x, y) => (y.IsAbstract ? 1 : 0) - (x.IsAbstract ? 1 : 0));
+		}
+		
+		if (types.Count == 0) {
 			dialog.show("Found 0 unimplemented members", owner: App.Hmain);
 			return;
 		}
 		
 		bool explicitly;
-		string buttons = types.Any(o => o.type.TypeKind == TypeKind.Interface)
+		string buttons = hasInterfaces
 			? "1 Implement\nLike 'public Type Member'|2 Implement explicitly\nLike 'Type Interface.Member'|0 Cancel"
 			: "1 Implement|0 Cancel";
 		switch (dialog.show("Implement", "This will add members that were not implemented.", buttons, flags: DFlags.CommandLinks, owner: App.Hmain)) {
@@ -226,13 +249,15 @@ static class GenerateCode {
 				
 				string append = null;
 				switch (v) {
-				case IMethodSymbol ims when ims.MethodKind == MethodKind.Ordinary:
-					append = ims.ReturnsVoid ? @" {
+				case IMethodSymbol ims:
+					if (ims.MethodKind == MethodKind.Ordinary) {
+						append = ims.ReturnsVoid ? @" {
 
 }" : @" {
 
 	return default;
 }";
+					} else append = " => default;";
 					break;
 				case IPropertySymbol ips:
 					if (!expl && isInterface) {
@@ -254,6 +279,7 @@ static class GenerateCode {
 				if (isInterface) {
 					if (!v.IsAbstract) b.AppendLine("//has default implementation");
 					if (!expl) b.Append("public ");
+					if (v.IsStatic) b.Append("static ");
 				} else {
 					b.Append(v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" });
 					b.Append(" override ");

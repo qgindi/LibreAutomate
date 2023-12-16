@@ -519,7 +519,7 @@ class Dwnd : KDialogWindow {
 					else {
 						using (new StringBuilder_(out var b)) {
 							name = name.Escape(limit: 250);
-							b.Append(cn).Append("  \"").Append(name).Append('\"');
+							b.Append(cn).Append("  \"").Append(name).Append('"');
 							_displayText = b.ToString();
 						}
 					}

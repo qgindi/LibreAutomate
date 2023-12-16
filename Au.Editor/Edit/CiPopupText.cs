@@ -49,8 +49,7 @@ class CiPopupText {
 				WindowName = _usedBy switch { UsedBy.PopupList => "Au completion item info", UsedBy.Signature => "Au parameters info", _ => "Au quick info" },
 				CloseHides = true
 			};
-			bool ubList = _usedBy == UsedBy.PopupList;
-			_w.Size = (ubList ? 450 : 600, ubList ? 360 : 300);
+			_w.Size = (_usedBy == UsedBy.Signature ? 800 : 600, _usedBy == UsedBy.PopupList ? 360 : 300);
 			//rejected: save size in app settings (if not info). Popup list too.
 
 			_c = CiText.CreateControl();

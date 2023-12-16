@@ -26,9 +26,13 @@ public partial class KPanels {
 		bool Floating { get; set; }
 		
 		/// <summary>
-		/// Don't change focus when this is in a tab and the tab header clicked.
+		/// If not null, clicking on the parent tab header does not change the current focus (if possible).
+		/// The action is called if the currently focused element is in the tab control; it must set focus to some visible element or call <b>Keyboard.ClearFocus</b>.
 		/// </summary>
-		bool DontFocusTab { get; set; }
+		Action DontFocusTab { get; set; }
+		
+		
+		Func<UIElement, bool> DontActivateFloating { get; set; }
 		
 		/// <summary>
 		/// Adds new leaf item (panel, toolbar or document) before or after this.

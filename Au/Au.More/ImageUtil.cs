@@ -123,16 +123,19 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <param name="image">
 	/// Can be:
-	/// <br/>• file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="pathname.expand"/>; can have prefix <c>"imagefile:"</c>.
-	/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>; uses <see cref="ResourceUtil.GetXamlObject"/> if ends with <c>".xaml"</c>, else <see cref="ResourceUtil.GetWpfImage"/>.
-	/// <br/>• Base64 encoded image string with prefix <c>"image:"</c>; uses<see cref="LoadImageStreamFromString"/>.
-	/// <br/>• XAML string that starts with <c>"&lt;"</c>.
-	/// <br/>• XAML icon name, like <c>"*Pack.Icon color"</c> (you can get it from the Icons dialog). If literal string and using default compiler, the compiler adds XAML to the assembly as a string resource, else this function tries to get XAML from database and fails if editor isn't running. If 2 colors like <c>"*Pack.Icon #008000|#00FF00"</c>, the second color is for high contrast dark theme. If like <c>"*Pack.Icon"</c> (without color), will use the system color of control text.
+	/// <br/>• file path. Can be .xaml, .png etc. Supports environment variables etc, see <see cref="pathname.expand"/>. Can have prefix <c>"imagefile:"</c>.
+	/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>. This function calls <see cref="ResourceUtil.GetXamlObject"/> if ends with <c>".xaml"</c>, else <see cref="ResourceUtil.GetWpfImage"/>.
+	/// <br/>• Base64 encoded image with prefix <c>"image:"</c>. See <see cref="LoadImageStreamFromString"/>.
+	/// <br/>• XAML string that starts with <c>"&lt;"</c>. For example from the Icons dialog of LibreAutomate.
+	/// <br/>• XAML icon name like <c>"*Pack.Icon color"</c> or <c>"*Pack.Icon"</c> or <c>"*Pack.Icon color @size"</c> or <c>"*Pack.Icon @size"</c>. More info in Remarks.
 	/// </param>
-	/// <exception cref="Exception"></exception>
+	/// <returns>
+	/// If <i>image</i> is XAML icon name or starts with <c>"&lt;"</c> or ends with <c>".xaml"</c> (case-insensitive), returns new WPF element of type specified by the XAML root element (uses <see cref="XamlReader"/>). Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b> (uses <see cref="LoadWpfImage"/>).
+	/// </returns>
 	/// <remarks>
-	/// If <i>image</i> is XAML icon name or starts with <c>"&lt;"</c> or ends with <c>".xaml"</c> (case-insensitive), returns object created from XAML root element. Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
+	/// <i>image</i> can be an XAML icon name from the Icons dialog of LibreAutomate (LA), like <c>"*Pack.Icon color"</c>. If 2 colors like <c>"*Pack.Icon #008000|#00FF00"</c>, the second color is for high contrast dark theme. If like <c>"*Pack.Icon"</c> (without color), will use the system color of control text. To make the displayed icon smaller or in some cases less blurry, can be specified a logical size &lt;= 16, like <c>"*Pack.Icon color @12"</c> or <c>"*Pack.Icon @12"</c>; it is the logical width and height of the icon rendered at the center of a box of logical size 16x16. The LA compiler finds such strings anywhere in code, gets their XAML from the database, and adds the XAML to the assembly as a string resource (see Properties -> Resource -> Options). This function gets the XAML from resources (<see cref="ResourceUtil.GetString"/>). If fails, then tries to get XAML from database, and fails if LA isn't running. Uses <see cref="ScriptEditor.GetIcon"/>.
 	/// </remarks>
+	/// <exception cref="Exception"></exception>
 	public static FrameworkElement LoadWpfImageElement(string image) {
 		if (image.Starts('*')) {
 			image = ScriptEditor.GetIcon(image, EGetIcon.IconNameToXaml) ?? throw new AuException("*get icon " + image);
@@ -157,6 +160,7 @@ public static partial class ImageUtil {
 	/// <param name="image">XAML file, resource or string. See <see cref="LoadWpfImageElement"/>.</param>
 	/// <param name="dpi">DPI of window that will display the image.</param>
 	/// <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
+	/// <returns>New <b>Bitmap</b>. Note: its pixel format is <b>Format32bppPArgb</b> (premultiplied ARGB).</returns>
 	/// <exception cref="Exception"></exception>
 	/// <remarks>
 	/// Calls <see cref="LoadWpfImageElement"/> and <see cref="ConvertWpfImageElementToGdipBitmap"/>.
@@ -248,6 +252,7 @@ public static partial class ImageUtil {
 	/// If null, uses element's <b>DesiredSize</b> property, max 1024x1024.
 	/// If not null, sets element's <b>Width</b> and <b>Height</b>; the element should not be used in UI.
 	/// </param>
+	/// <returns>New <b>Bitmap</b>. Note: its pixel format is <b>Format32bppPArgb</b> (premultiplied ARGB).</returns>
 	public static unsafe System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(FrameworkElement e, int dpi, SIZE? size = null) {
 		bool measured = e.IsMeasureValid;
 		if (size != null) {

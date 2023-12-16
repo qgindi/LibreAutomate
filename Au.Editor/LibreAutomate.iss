@@ -46,6 +46,7 @@ Source: "Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Net4.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
+Source: "Roslyn\*.exe"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion

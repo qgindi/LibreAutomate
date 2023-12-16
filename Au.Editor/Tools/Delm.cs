@@ -483,7 +483,7 @@ class Delm : KDialogWindow {
 					b.Append("new(");
 				} else b.Append(", ");
 				int j = b.Length;
-				b.Append('\"').Append(k.c.Content as string).Append('=');
+				b.Append('"').Append(k.c.Content as string).Append('=');
 				if (!va.NE()) {
 					if (nProp == 1 && va.Contains('|')) nProp++;
 					if (TUtil.IsVerbatim(va, out int prefixLen)) {
@@ -495,7 +495,7 @@ class Delm : KDialogWindow {
 						b.Append(va);
 					}
 				}
-				b.Append('\"');
+				b.Append('"');
 			}
 
 			_AppendProp(page.uiaidA, true);
@@ -1178,7 +1178,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 						if (isWINDOW) {
 							using (new StringBuilder_(out var b)) {
 								b.Append(p.Role).Append("  (").Append(p.WndContainer.ClassName).Append(')');
-								if (p.Name.Length > 0) b.Append("  \"").Append(p.Name).Append('\"');
+								if (p.Name.Length > 0) b.Append("  \"").Append(p.Name).Append('"');
 								s = b.ToString();
 							}
 						} else if (p.Name.Length == 0) s = p.Role;

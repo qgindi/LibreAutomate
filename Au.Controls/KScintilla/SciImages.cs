@@ -286,10 +286,10 @@ public unsafe class SciImages {
 		if (!isMulti) //else i is at image2 in "image1|image2"
 		{
 			i = _FindQuoteInLine(s, i, iTo);
-			if (i == iTo || s[i++] != '\"') { iFrom = i; isMulti = false; return null; }
+			if (i == iTo || s[i++] != '"') { iFrom = i; isMulti = false; return null; }
 		}
 		iFrom = _FindQuoteInLine(s, i, iTo);
-		if (iFrom == iTo || s[iFrom++] != '\"') { isMulti = false; return null; }
+		if (iFrom == iTo || s[iFrom++] != '"') { isMulti = false; return null; }
 		int i2 = iFrom - 1;
 
 		//skip if not <image "..."
@@ -353,9 +353,9 @@ public unsafe class SciImages {
 	const int IMAGE_MARGIN_TOP = 2; //frame + 1
 	const int IMAGE_MARGIN_BOTTOM = 1; //just for frame. It is minimal margin, in most cases will be more.
 
-	//Searches for '\"' or '\n' until iTo.
+	//Searches for '"' or '\n' until iTo.
 	int _FindQuoteInLine(byte* s, int i, int iTo) {
-		for (; i < iTo && s[i] != '\n'; i++) if (s[i] == '\"') break;
+		for (; i < iTo && s[i] != '\n'; i++) if (s[i] == '"') break;
 		return i;
 	}
 

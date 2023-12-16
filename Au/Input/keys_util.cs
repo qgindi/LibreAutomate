@@ -25,7 +25,7 @@ public partial class keys {
 				']' or '}' => KKey.OemCloseBrackets,
 				'\\' or '|' => KKey.OemPipe,
 				';' or ':' => KKey.OemSemicolon,
-				'\'' or '\"' => KKey.OemQuotes,
+				'\'' or '"' => KKey.OemQuotes,
 				',' or '<' => KKey.OemComma,
 				'.' or '>' => KKey.OemPeriod,
 				'/' or '?' => KKey.OemQuestion,

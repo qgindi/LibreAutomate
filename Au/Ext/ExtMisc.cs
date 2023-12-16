@@ -262,7 +262,7 @@ public static unsafe partial class ExtMisc {
 	//}
 	
 	/// <summary>
-	/// Adds or removes a flag.
+	/// Adds or removes a flag or flags.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="flag">One or more flags to add or remove.</param>
@@ -274,125 +274,29 @@ public static unsafe partial class ExtMisc {
 		t = *(T*)&a;
 	}
 	
-	//rejected. Rarely used. Adds many garbage in compiled documentation for enums. Maybe C# 10 will have a list pattern for it.
-	//	Can istead write: if(e is EnumX.Val1 or EnumX.Val2 ...). But currently problems with intellisense; works better with (): if(e is (EnumX.Val1 or EnumX.Val2 ...)).
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2) where T : unmanaged, Enum //could be IConvertible, it includes int etc, but also double, float, bool, DateTime and any IConvertible struct of any size. Types other than enum and int actually are not useful.
-	//		{
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2);
-	//		}
+	/// <summary>
+	/// Adds or removes a flag or flags.
+	/// </summary>
+	/// <param name="flag">Flag(s) to add or remove.</param>
+	/// <param name="add">If true, adds the flag(s) (<c>t |= flag</c>), else removes (<c>t &amp;= ~flag</c>).</param>
+	internal static void SetFlag_(this ref int t, int flag, bool add) {
+		if (add) t |= flag; else t &= ~flag;
+	}
 	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3) where T : unmanaged, Enum {
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3);
-	//		}
+	/// <inheritdoc cref="SetFlag_(ref int, int, bool)"/>
+	internal static void SetFlag_(this ref uint t, uint flag, bool set) {
+		if (set) t |= flag; else t &= ~flag;
+	}
 	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4) where T : unmanaged, Enum {
-	//			//return t.Equals(v1) || t.Equals(v2) || t.Equals(v3) || t.Equals(v4); //very slow, slower than with params
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4);
-	//		}
+	/// <inheritdoc cref="SetFlag_(ref int, int, bool)"/>
+	internal static void SetFlag_(this ref ushort t, ushort flag, bool set) {
+		if (set) t |= flag; else t = (ushort)(t & ~flag);
+	}
 	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5) where T : unmanaged, Enum {
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5);
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6) where T : unmanaged, Enum {
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6);
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7) where T : unmanaged, Enum {
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7);
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7, T v8) where T : unmanaged, Enum {
-	//			var a = _ToLong(t);
-	//			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7) || a == _ToLong(v8);
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn<T>(this T t, params T[] values) where T : unmanaged, Enum {
-	//#if true //slightly faster, especially with multitiered JIT. The slow part is creating the params array.
-	//			var a = _ToLong(t);
-	//			for (int i = 0; i < values.Length; i++) {
-	//				if (a == _ToLong(values[i])) return true;
-	//			}
-	//			return false;
-	//#else
-	//        return values.Contains(t);
-	//#endif
-	//		}
-	
-	//		//same for int
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2) {
-	//			return t == v1 || t == v2;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2, int v3) {
-	//			return t == v1 || t == v2 || t == v3;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4) {
-	//			return t == v1 || t == v2 || t == v3 || t == v4;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5) {
-	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6) {
-	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7) {
-	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8) {
-	//			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7 || t == v8;
-	//		}
-	
-	//		/// <summary>Returns true if this is equal to a value in list.</summary>
-	//		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	//		public static bool IsIn(int t, params int[] values) {
-	//			for (int i = 0; i < values.Length; i++) {
-	//				if (t == values[i]) return true;
-	//			}
-	//			return false;
-	//		}
+	/// <inheritdoc cref="SetFlag_(ref int, int, bool)"/>
+	internal static void SetFlag_(this ref byte t, byte flag, bool set) {
+		if (set) t |= flag; else t = (byte)(t & ~flag);
+	}
 	
 	#endregion
 	

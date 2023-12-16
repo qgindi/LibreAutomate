@@ -101,7 +101,7 @@ unsafe partial class Converter {
 		sb.Clear();
 		sb.Append("\r\n[DllImport(\"");
 		sb.Append(dll);
-		sb.Append('\"');
+		sb.Append('"');
 		if (nameInDll != null) sb.AppendFormat(", EntryPoint=\"{0}\"", nameInDll);
 		if (callConv != null) sb.AppendFormat(", CallingConvention=CallingConvention.{0}", callConv);
 		if (isHRESULT) sb.Append(", PreserveSig=true"); //default, but makes clear that it returns HRESULT and easier to change to 'false'

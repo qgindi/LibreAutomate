@@ -135,7 +135,7 @@ public class KTextBoxFile : TextBox {
 	/// </summary>
 	public string GetCode() {
 		var s = Text;
-		if (s.Contains('\"') || s.Starts("folders.")) return s;
+		if (s.Contains('"') || s.Starts("folders.")) return s;
 		if (Unexpand && folders.unexpandPath(s, out var s1, out var s2)) return s2.NE() ? s1 : $"{s1} + @\"{s2}\"";
 		return $"@\"{s}\"";
 	}

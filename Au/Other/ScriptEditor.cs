@@ -18,29 +18,29 @@ public static class ScriptEditor {
 		}
 	}
 	static wnd.Cached_ s_wndMsg, s_wndMain;
-
+	
 	/// <summary>
 	/// Class name of <see cref="WndMsg_"/> window.
 	/// </summary>
 	internal const string c_msgWndClassName = "Au.Editor.m3gVxcTJN02pDrHiQ00aSQ";
-
+	
 	internal static wnd WndMain_(bool show = false) {
 		var w = WndMsg_;
 		return w.Is0 ? default : s_wndMain.Get(() => (wnd)w.Send(Api.WM_USER, 0, show ? 1 : 0));
 	}
-
+	
 	/// <summary>
 	/// Returns true if editor is running.
 	/// </summary>
 	public static bool Available => !WndMsg_.Is0;
-
+	
 	/// <summary>
 	/// The main editor window.
 	/// </summary>
 	/// <param name="show">Show the window (if the editor program is running).</param>
 	/// <returns><c>default(wnd)</c> if the editor program isn't running or its main window still wasn't visible.</returns>
 	public static wnd MainWindow(bool show = false) => WndMain_(show);
-
+	
 	/// <summary>
 	/// Shows or hides the main editor window.
 	/// </summary>
@@ -53,7 +53,7 @@ public static class ScriptEditor {
 		var w = WndMsg_;
 		if (!w.Is0) w.Send(Api.WM_USER, 1, show switch { true => 1, false => 2, _ => 0 });
 	}
-
+	
 	/// <summary>
 	/// Invokes an editor's menu command.
 	/// </summary>
@@ -74,11 +74,11 @@ public static class ScriptEditor {
 		nint r = WndCopyData.Send<char>(w, 11, command, flags);
 		if (r == -1) { _WaitWhileEditorDisabled(); goto g1; }
 	}
-
+	
 	static int _EditorExtensionFlag => script.role == SRole.EditorExtension && Environment.CurrentManagedThreadId == 1 ? 16 : 0;
-
+	
 	static void _WaitWhileEditorDisabled() { MainWindow().WaitFor(0, o => o.IsEnabled()); }
-
+	
 	/// <summary>
 	/// Gets the state of an editor's menu command (checked, disabled).
 	/// </summary>
@@ -93,7 +93,7 @@ public static class ScriptEditor {
 		if (r == -1) { _WaitWhileEditorDisabled(); goto g1; }
 		return (ECommandState)r;
 	}
-
+	
 	/// <summary>
 	/// Opens a script or other file. Also can move the text cursor.
 	/// Does nothing if editor isn't running.
@@ -106,37 +106,35 @@ public static class ScriptEditor {
 		Api.AllowSetForegroundWindow(w.ProcessId);
 		WndCopyData.Send<char>(w, 4, $"{file}|{line}|{offset}");
 	}
-
+	
 	///
 	[Obsolete("use Open"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static void OpenAndGoToLine([ParamString(PSFormat.FileInWorkspace)] string file, int line) => Open(file, line);
-
+	
 	/// <summary>
 	/// Gets icon string in specified format.
 	/// </summary>
 	/// <returns>Returns null if editor isn't running or if the file does not exist. Read more in Remarks.</returns>
-	/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>.</param>
+	/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>, <see cref="ImageUtil.LoadWpfImageElement"/>.</param>
 	/// <param name="what">The format of input and output strings.</param>
 	/// <remarks>
-	/// If <i>what</i> is <b>IconNameToXaml</b> and <i>file</i> is literal string and using default compiler, the compiler adds XAML to assembly resources and this function gets it from there, not from editor, and this function works everywhere.
+	/// If <i>what</i> is <see cref="EGetIcon.IconNameToXaml"/>, this function tries to get icon XAML from assembly resources (passes <i>file</i> to <see cref="ResourceUtil.GetString"/>, with color removed); if not found - from editor. By default the LibreAutomate compiler finds literal icon-like strings in code and adds icon XAML to assembly resources; see Properties -> Resource -> Options.
 	/// </remarks>
-	public static string GetIcon(string file, EGetIcon what) {
+	public static string GetIcon(string file, EGetIcon what) => GetIcon_(file, what, false);
+	
+	internal static string GetIcon_(string file, EGetIcon what, bool skipResources) {
 		var del = IconNameToXaml_;
 		if (del != null) return del(file, what);
-
-		if (what == EGetIcon.IconNameToXaml && script.role != SRole.EditorExtension) {
-			if (file.Starts("*<")) file = file[1..]; //"*<library>*icon", else "*icon"
-			int i = file.IndexOf(' ');
-			if (i > 0) { //color
-				var rr = ResourceUtil.TryGetString_(file[..i]);
-				if (rr != null) { WpfUtil_.SetColorInXaml(ref rr, file[++i..]); return rr; }
-			} else { //black
-				var rr = ResourceUtil.TryGetString_(file);
-				if (rr != null) { WpfUtil_.SetColorInXaml(ref rr, null); return rr; }
-			}
+		
+		if (what == EGetIcon.IconNameToXaml && script.role != SRole.EditorExtension && !skipResources) {
+			//print.it(file);
+			if (!WpfUtil_.ParseIconString(file, out var p)) return null;
+			var rr = ResourceUtil.TryGetString_(WpfUtil_.RemoveColorFromIconString(file));
+			Debug_.PrintIf(rr == null, file);
+			if (rr != null) { WpfUtil_.SetColorInXaml(ref rr, p.color); return rr; }
 			//our compiler (_CreateManagedResources) adds XAML of icons to resources, but only from literal strings
 		}
-
+		
 		var w = WndMsg_; if (w.Is0) return null;
 		WndCopyData.SendReceive<char>(w, (int)Math2.MakeLparam(10, (int)what), file, out string r);
 		return r;
@@ -144,12 +142,12 @@ public static class ScriptEditor {
 		//	Nothing good if the toolbar etc also uses XAML icons directly, eg for non-script items. And serializing is slow.
 		//	Now not actual because of cache.
 	}
-
+	
 	/// <summary>
 	/// Editor sets this. Library uses it to avoid sendmessage when role editorExtension.
 	/// </summary>
 	internal static Func<string, EGetIcon, string> IconNameToXaml_;
-
+	
 	/// <summary>
 	/// Returns true if the editor program is installed as [portable](xref:portable).
 	/// </summary>
@@ -164,7 +162,7 @@ public static class ScriptEditor {
 	/// - <see cref="folders.Workspace"/>
 	/// </remarks>
 	public static bool IsPortable { get; internal set; }
-
+	
 	//rejected. Use folders.Editor.
 	///// <summary>
 	///// Gets some special folders of editor process.
@@ -190,32 +188,32 @@ public static class ScriptEditor {
 	//		}
 	//		return a[i];
 	//	}
-
+	
 	//	static string[] a;
-
+	
 	//	/// <summary>
 	//	/// Gets <see cref="folders.ThisAppDocuments"/> of editor process.
 	//	/// </summary>
 	//	/// <value>null if failed.</value>
 	//	public static FolderPath ThisAppDocuments => new(_Get(0));
-
+	
 	//	/// <summary>
 	//	/// Gets <see cref="folders.ThisAppDataLocal"/> of editor process.
 	//	/// </summary>
 	//	/// <value>null if failed.</value>
 	//	public static FolderPath ThisAppDataLocal => new(_Get(1));
-
+	
 	//	/// <summary>
 	//	/// Gets <see cref="folders.ThisAppTemp"/> of editor process.
 	//	/// </summary>
 	//	/// <value>null if failed.</value>
 	//	public static FolderPath ThisAppTemp => new(_Get(2));
 	//}
-
+	
 	//[StructLayout(LayoutKind.Sequential, Size = 64)] //note: this struct is in shared memory. Size must be same in all library versions.
 	//internal struct SharedMemoryData_ {
 	//	int _wndEditorMsg, _wndEditorMain;
-
+	
 	//	internal wnd wndEditorMsg {
 	//		get {
 	//			if (_wndEditorMsg != 0) {
@@ -231,6 +229,6 @@ public static class ScriptEditor {
 	//		get => wndEditorMsg.Is0 ? default : (wnd)_wndEditorMain;
 	//		set { _wndEditorMain = (int)value; }
 	//	}
-
+	
 	//}
 }

@@ -136,7 +136,7 @@ partial class SciCode {
 			//skip short strings and $"string" parts
 			int start = v.TextSpan.Start, end = v.TextSpan.End - 1;
 			if (verbatim && code[start++] != '@') return false;
-			if (end - start < 3 || code[end] != '\"' || code[start++] != '\"') return false;
+			if (end - start < 3 || code[end] != '"' || code[start++] != '"') return false;
 			r = new(code, start, end, verbatim);
 			return true;
 		}
@@ -196,10 +196,7 @@ partial class SciCode {
 				}
 				return default;
 			case '*':
-				if (s.Length is > 10 and < 80) {
-					int i = s.IndexOf('.') + 1;
-					if (i > 3 && s[i..].Contains(' ')) return ImageType.XamlIconName;
-				}
+				if (DIcons.PossiblyIconName(s)) return ImageType.XamlIconName;
 				return default;
 			case '.':
 				return pathname.IsExtension_(s) ? ImageType.ShellIcon : default;
@@ -353,15 +350,15 @@ partial class SciCode {
 			j = i + 6;
 			
 			char c1 = r[i - 1], c2 = r[i - 2];
-			if (!((c1 == '*' && c2 == '/') || (c1 == '\"' && c2 == '@'))) continue;
+			if (!((c1 == '*' && c2 == '/') || (c1 == '"' && c2 == '@'))) continue;
 			
-			int j2 = to8 - (c1 == '\"' ? 1 : 2);
+			int j2 = to8 - (c1 == '"' ? 1 : 2);
 			while (j < j2 && r[j] is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z') or (>= '0' and <= '9') or '+' or '/') j++;
 			if (j - i < 46) continue; //match regex image:[A-Za-z0-9/+]{40,}
 			while (j < j2 && r[j] == '=') j++;
 			
 			if (r[j] != c1 || (c1 == '*' && '/' != r[j + 1])) continue;
-			if (c1 == '\"') i += 6; else { i -= 2; j += 2; }
+			if (c1 == '"') i += 6; else { i -= 2; j += 2; }
 			
 			if (styles != null) {
 				styles.AsSpan(i - from8, j - i).Fill(STYLE_HIDDEN);

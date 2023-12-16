@@ -223,7 +223,7 @@ class DInputRecorder : KDialogWindow {
 		public void FormatCodeSimple(StringBuilder b) {
 			if (s != null) b.Append(s.Escape());
 			else {
-				if (c is '\"' or '\\') b.Append('\\');
+				if (c is '"' or '\\') b.Append('\\');
 				b.Append(c);
 				if (count > 1) b.Append('*').Append(count);
 			}

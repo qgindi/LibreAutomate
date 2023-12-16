@@ -411,7 +411,7 @@ This setting also is used by 'Find references' etc.
 				i = _text.Find("image:", i);
 				if (i < 0) break;
 				if (s_rx.Match(_text, 0, out RXGroup g, (i - 2)..)) {
-					bool isString = _text[i - 1] == '\"';
+					bool isString = _text[i - 1] == '"';
 					_imageStart = i + (isString ? 6 : -2);
 					_imageEnd = g.End - (isString ? 1 : 0);
 					return;

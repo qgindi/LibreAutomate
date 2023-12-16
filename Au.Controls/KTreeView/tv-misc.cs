@@ -66,17 +66,26 @@ public unsafe partial class KTreeView {
 	
 	struct _PartOffsets {
 		public int left, checkbox, marginLeft, image, text, marginRight, right;
+		public bool hasCheckbox;
 	}
 	
-	void _GetPartOffsets(int i, out _PartOffsets p) {
-		p.left = -_hscroll.Offset;
-		p.checkbox = p.left + _avi[i].level * _imageSize;
-		p.marginLeft = p.checkbox; if (HasCheckboxes) p.marginLeft += _itemLineHeight;
-		p.image = p.marginLeft + _marginLeft;
-		p.text = p.image + _imageSize + _imageMarginX * 2;
+	void _GetPartOffsets(int i, out _PartOffsets p, bool measuring = false) {
+		var no = _avi[i].noParts;
+		p.left = measuring ? 0 : -_hscroll.Offset;
+		p.checkbox = p.left + _Indent(_avi[i]);
+		p.hasCheckbox = HasCheckboxes && !no.Has(TVParts.Checkbox);
+		p.marginLeft = p.checkbox + (p.hasCheckbox ? _itemLineHeight : 0);
+		p.image = p.marginLeft + (no.Has(TVParts.MarginLeft) ? 0 : _marginLeft);
+		p.text = p.image + (no.Has(TVParts.Image) ? 0 : _imageSize + _imageMarginX) + _imageMarginX;
 		p.marginRight = p.text + _avi[i].measured;
-		p.right = p.marginRight + _marginRight;
+		p.right = p.marginRight + (no.Has(TVParts.MarginRight) ? 0 : _marginRight);
 		//print.it(p.checkbox, p.marginLeft, p.image, p.text, p.marginRight, p.right);
+		
+		int _Indent(in _VisibleItem v) {
+			int r = v.level; if (r > 0 && v.noParts.Has(TVParts.Left)) r--;
+			int j = _imageSize; if (SmallIndent) j /= 2;
+			return r * j;
+		}
 	}
 	
 	/// <summary>

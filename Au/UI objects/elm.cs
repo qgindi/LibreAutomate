@@ -547,14 +547,14 @@ public unsafe sealed partial class elm : IDisposable {
 			if (!k.Rect.Is0) _Add('r', k.Rect.ToString(), '\0', '\0');
 			if (Item != 0) b.Append(",  e=").Append(Item);
 			foreach (var kv in k.HtmlAttributes) {
-				b.Append(",  @").Append(kv.Key).Append('=').Append('\"');
-				b.Append(kv.Value.Escape(limit: 250)).Append('\"');
+				b.Append(",  @").Append(kv.Key).Append('=').Append('"');
+				b.Append(kv.Value.Escape(limit: 250)).Append('"');
 			}
 			_Add('w', k.WndContainer.ClassName ?? "");
 			
-			void _Add(char name, string value, char q1 = '\"', char q2 = '\"') {
+			void _Add(char name, string value, char q1 = '"', char q2 = '"') {
 				if (value.Length == 0) return;
-				var t = value; if (q1 == '\"') t = t.Escape(limit: 250);
+				var t = value; if (q1 == '"') t = t.Escape(limit: 250);
 				b.Append(",  ").Append(name).Append('=');
 				if (q1 != '\0') b.Append(q1);
 				b.Append(t);

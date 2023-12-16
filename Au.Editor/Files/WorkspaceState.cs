@@ -1,5 +1,5 @@
 //We save workspace state data in folder "%folders.Workspace%\.state", in files:
-//	state - top/pos of open files, breakpoints, open files, expanded folders.
+//	state - top/pos of open files, open files, expanded folders, maybe some markers.
 //		It's a text file containing 3 compact lines like:
 //			editor|id1=t1p2|id2=p2h1,2,3
 //			open|id1|id2
@@ -8,7 +8,7 @@
 //		It's a binary file, as compact as possible. Managed by struct WorkspaceState._Folding.
 
 /// <summary>
-/// Workspace state, such as open files, expanded folders, editor caret position, breakpoints, folded lines.
+/// Workspace state, such as open files, expanded folders, editor caret position, folded lines.
 /// WorkspaceDirectory + @"\.state\state.json"
 /// </summary>
 class WorkspaceState : IDisposable {
@@ -43,10 +43,10 @@ class WorkspaceState : IDisposable {
 	//Contains parsed editor state.
 	public record struct Editor {
 		public int top, pos;
-		public int[] fold, breakpoint;
+		public int[] fold/*, someMarker*/;
 		
 		public bool Equals(in Editor e, out bool changedState, out bool changedFolding) {
-			changedState = !(top == e.top && pos == e.pos && breakpoint.AsSpan().SequenceEqual(e.breakpoint));
+			changedState = !(top == e.top && pos == e.pos /*&& someMarker.AsSpan().SequenceEqual(e.someMarker)*/);
 			changedFolding = !fold.AsSpan().SequenceEqual(e.fold);
 			return !(changedState || changedFolding);
 		}
@@ -64,13 +64,13 @@ class WorkspaceState : IDisposable {
 					var k = s.ToInt(start, STIFlags.IsHexWithout0x);
 					if (what == 't') x.top = k; else x.pos = k;
 					break;
-				case 'h': //int[]
-					int n = 1; for (int j = start; j < end; j++) if (s[j] == ',') n++;
-					var a = new int[n];
-					a[0] = start; for (int i = 0, j = start; j < end; j++) if (s[j] == ',') a[++i] = j + 1;
-					for (int i = 0, j = 0; i < n; i++) a[i] = j += s.ToInt(a[i], STIFlags.IsHexWithout0x); //deltas
-					if (what == 'h') x.breakpoint = a;
-					break;
+				//case 'h': //int[]
+				//	int n = 1; for (int j = start; j < end; j++) if (s[j] == ',') n++;
+				//	var a = new int[n];
+				//	a[0] = start; for (int i = 0, j = start; j < end; j++) if (s[j] == ',') a[++i] = j + 1;
+				//	for (int i = 0, j = 0; i < n; i++) a[i] = j += s.ToInt(a[i], STIFlags.IsHexWithout0x); //deltas
+				//	if (what == 'h') x.someMarker = a;
+				//	break;
 				}
 			}
 		}
@@ -97,22 +97,22 @@ class WorkspaceState : IDisposable {
 		}
 		
 		static string _EditorFormat(FileNode f, in Editor x) {
-			if (x.top == 0 && x.pos == 0 && x.breakpoint == null) return null;
+			if (x.top == 0 && x.pos == 0 /*&& x.someMarker == null*/) return null;
 			using (new StringBuilder_(out var b)) {
 				b.Append('|').AppendHex(f.Id).Append('=');
 				if (x.top > 0) b.Append('t').AppendHex(x.top);
 				if (x.pos > 0) b.Append('p').AppendHex(x.pos);
-				_AppendLines(x.breakpoint, 'h');
-				
-				void _AppendLines(int[] a, char c) {
-					if (a == null) return;
-					b.Append(c);
-					for (int i = 0, j = 0; i < a.Length; j = a[i++]) {
-						if (i > 0) b.Append(',');
-						b.AppendHex(a[i] - j); //delta
-					}
-				}
+				//_AppendLines(x.someMarker, 'h');
 				return b.ToString();
+				
+				//void _AppendLines(int[] a, char c) {
+				//	if (a == null) return;
+				//	b.Append(c);
+				//	for (int i = 0, j = 0; i < a.Length; j = a[i++]) {
+				//		if (i > 0) b.Append(',');
+				//		b.AppendHex(a[i] - j); //delta
+				//	}
+				//}
 			}
 		}
 	}

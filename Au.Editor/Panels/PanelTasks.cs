@@ -11,6 +11,8 @@ class PanelTasks {
 
 		_tv = new KTreeView { Name = "Tasks_list" };
 		P.Children.Add(_tv);
+		
+		Panels.PanelManager["Tasks"].DontActivateFloating = e => true;
 	}
 
 	public DockPanel P { get; } = new();

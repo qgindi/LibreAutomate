@@ -727,6 +727,7 @@ partial class FilesModel {
 		
 		EditGoBack.OnFileDeleted(e);
 		Panels.Bookmarks.FileDeleted(e);
+		Panels.Breakpoints.FileDeleted(e);
 		foreach (var k in e) {
 			if (!k.IsFolder) State.EditorDelete(k);
 			if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);

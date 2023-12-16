@@ -10,9 +10,6 @@ namespace Au.Controls;
 public class KGroupBox : GroupBox {
 	protected private readonly bool _no;
 	
-	internal static Brush TextColor_ => s_brush ??= new SolidColorBrush(Color.FromRgb(0x40, 0x40, 0x40));
-	static Brush s_brush;
-	
 	public KGroupBox() {
 		if (_no = SystemParameters.HighContrast) return;
 		BorderBrush = SystemColors.ActiveBorderBrush; //default is almost invisible
@@ -21,7 +18,7 @@ public class KGroupBox : GroupBox {
 	protected override void OnHeaderChanged(object oldHeader, object newHeader) {
 		if (newHeader is string s && !_no) {
 			if (oldHeader is null) {
-				Header = new TextBlock { Text = s, FontWeight = FontWeights.Bold, Foreground = TextColor_ };
+				Header = new TextBlock { Text = s, FontWeight = FontWeights.Bold };
 				return;
 			} else if (oldHeader is TextBlock t) {
 				t.Text = s;

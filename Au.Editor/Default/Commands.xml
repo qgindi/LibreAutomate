@@ -37,6 +37,7 @@ All attributes are optional. The Example command contains all.
 		<Run_script />
 		<End_task />
 		<Recent />
+		<Debug_run />
 	</Run>
 	<Edit>
 		<Undo />

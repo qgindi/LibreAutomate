@@ -7,10 +7,8 @@ using System.Windows.Shapes;
 
 namespace Au.Controls;
 
-public partial class KPanels
-{
-	partial class _Node : TreeBase<_Node>, ILeaf
-	{
+public partial class KPanels {
+	partial class _Node : TreeBase<_Node>, ILeaf {
 		readonly KPanels _pm;
 		readonly _StackFields _stack;
 		readonly _TabFields _tab;
@@ -26,25 +24,22 @@ public partial class KPanels
 		string _floatSavedRect;
 		//_Flags _flags;
 		bool _dontSave;
-
+		
 		static readonly Brush s_toolbarCaptionBrush = SystemColors.ControlBrush;
 		const int c_minSize = 4;
-		const int c_defaultSplitterSize = 4;
-
-		class _StackFields
-		{
+		const int c_defaultSplitterSize = 5;
+		
+		class _StackFields {
 			public Grid grid;
 			public bool isVertical; //vertical stack with horizontal splitters
 		}
-
-		class _TabFields
-		{
+		
+		class _TabFields {
 			public _TabControl tc;
 			public bool isVerticalHeader; //vertical buttons at left/right
 		}
-
-		class _LeafFields
-		{
+		
+		class _LeafFields {
 			public _DockPanelWithBorder panel;
 			public FrameworkElement content; //app sets it = any element
 			public FrameworkElement caption; //TextBlock if panel/userdocument, Rectangle if toolbar/documentplaceholder. null if in tab.
@@ -53,31 +48,31 @@ public partial class KPanels
 			public bool canClose; //AddSibling(canClose). Adds context menu item "Close".
 			public bool isExtension; //AddSibling(isExtension). Saves.
 		}
-
+		
 		[Flags]
 		enum _Flags { Splitter_ResizeNearest = 1 }
-
+		
 		/// <summary>
 		/// Used to create root node when loading from XML.
 		/// </summary>
 		public _Node(KPanels pm, XElement x) : this(pm, x, null, 0) { }
-
+		
 		/// <summary>
 		/// Used to create nodes when loading from XML.
 		/// </summary>
 		_Node(KPanels pm, XElement x, _Node parent, int index) {
 			_pm = pm;
 			_index = index;
-
+			
 			string tag = x.Name.LocalName;
-
+			
 			if (parent == null) { //the root XML element
 				if (tag != "stack") throw new ArgumentException("XML root element must be 'stack'");
 				_pm._rootStack = this;
 			} else {
 				parent.AddChild(this);
 			}
-
+			
 			switch (tag) {
 			case "stack":
 				_stack = new _StackFields { isVertical = x.Attr("o") == "v" };
@@ -97,31 +92,31 @@ public partial class KPanels
 				_leaf.isExtension = x.HasAttr("ext");
 				_Dictionary.Add(_leaf.name, this);
 				break;
-			default: throw new ArgumentException("unknown XML tag");
+			default: throw new ArgumentException("unknown XML tag: " + tag);
 			}
 			_elem.UseLayoutRounding = true;
 			_elem.Tag = this;
-
+			
 			if (parent != null) {
 				if (!_IsDocument) {
 					_savedDockState = (_DockState)(x.Attr("state", 0) & 3);
 					_floatSavedRect = x.Attr("floatRect");
 				}
 				if (!_IsStack) x.Attr(out _captionAt, "captionAt");
-
+				
 				if (_ParentIsStack) {
 					_dockedSize = _GridLengthFromString(x.Attr("z")); //height in vertical stack or width in horizontal stack
 					_AddToStack(moving: false, _index == 0 ? 0 : x.Attr("s", c_defaultSplitterSize));
-
+					
 					var flags = (_Flags)x.Attr("flags", 0);
 					if (flags.Has(_Flags.Splitter_ResizeNearest) && _splitter != null) _splitter.ResizeNearest = true;
-
+					
 					if (_IsTab) _InitTabControl();
 				} else {
 					_AddToTab(moving: false);
 				}
 			}
-
+			
 			if (!_IsLeaf) { //stack or tab
 				if (_ParentIsTab) throw new ArgumentException(tag + " in 'tab'");
 				int i = 0;
@@ -129,14 +124,14 @@ public partial class KPanels
 					new _Node(_pm, e, this, i++);
 				}
 				Debug.Assert(i > 0);
-
+				
 				if (_IsTab && i > 0) {
 					_tab.tc.SelectedIndex = Math.Clamp(x.Attr("active", 0), 0, i - 1);
 				}
 			}
-
+			
 			//print.it(new string('\t', parent?.Level ?? 0) + _ntype, _ptype, Name, _indexInParent);
-
+			
 			if (parent == null) { //the root XML element
 				int nVisible = 0; _Node firstHidden = null;
 				List<_Node> aFloat = null;
@@ -159,7 +154,7 @@ public partial class KPanels
 					};
 					_stack.grid.IsVisibleChanged += eh;
 				}
-
+				
 				//timer.after(1000, _ => _Test(5));
 				////timer.after(5000, _ => _Test(0));
 				//void _Test(int margin) {
@@ -169,18 +164,18 @@ public partial class KPanels
 				//		if (v._splitter != null) v._splitter.Visibility = Visibility.Collapsed;
 				//	}
 				//}
-
+				
 				////_stack.grid.PreviewMouseMove += _RootGrid_PreviewMouseMove;
 			}
 		}
-
+		
 		/// <summary>
 		/// Used when moving a node, to create new parent (this) stack or tab for it and target.
 		/// Also when moving a node, to create new parent (this) tab for it (target).
 		/// </summary>
 		_Node(_Node target, bool isTab, bool verticalStack = false) {
 			_pm = target._pm;
-
+			
 			bool targetIsRoot = !isTab && target.Parent == null;
 			if (targetIsRoot) {
 				_pm._rootStack = this;
@@ -191,7 +186,7 @@ public partial class KPanels
 				target._index = 0;
 			}
 			AddChild(target);
-
+			
 			if (isTab) {
 				_tab = new();
 				_elem = _tab.tc = new _TabControl();
@@ -200,7 +195,7 @@ public partial class KPanels
 				_elem = _stack.grid = new Grid();
 			}
 			_elem.Tag = this;
-
+			
 			if (targetIsRoot) {
 				//target._dockedSize = ...; //_AddToParentWhenMovingOrAddingLater will set it for target and this
 				_pm._setContainer(_stack.grid);
@@ -212,7 +207,7 @@ public partial class KPanels
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Used when creating new leaf node later (after loading).
 		/// </summary>
@@ -225,7 +220,7 @@ public partial class KPanels
 			_Dictionary.Add(name, this);
 			_AddToParentWhenMovingOrAddingLater(target, after);
 		}
-
+		
 		public void Save(XmlWriter x) {
 			if (Parent == null) { //mark to not save stack/tab nodes without savable leaf descendants
 				_Children(this);
@@ -240,34 +235,34 @@ public partial class KPanels
 			} else {
 				if (_dontSave) return;
 			}
-
+			
 			x.WriteStartElement(_IsStack ? "stack" : (_IsTab ? "tab" : (_IsToolbar ? "toolbar" : (_IsDocument ? "document" : "panel"))));
-
+			
 			if (_IsStack) x.WriteAttributeString("o", _stack.isVertical ? "v" : "h");
-
+			
 			if (Parent != null) {
 				if (_IsLeaf) {
 					x.WriteAttributeString("name", _leaf.name);
 					if (_leaf.isExtension) x.WriteAttributeString("ext", "");
 				}
-
+				
 				if (_ParentIsStack) {
 					if (!_dockedSize.IsAuto) {
 						if (_IsDockedInStack) _dockedSize = _SizeDef; //update _dockedSize
 						x.WriteAttributeString("z", _GridLengthToString(_dockedSize));
 					}
-
+					
 					var z = _SplitterSize;
 					if (z > 0 && z != c_defaultSplitterSize) x.WriteAttributeString("s", z.ToString());
-
+					
 					if (_splitter != null && _splitter.ResizeNearest) x.WriteAttributeString("flags", ((int)_Flags.Splitter_ResizeNearest).ToString());
 				}
-
+				
 				if (_IsTab) {
 					int i = _tab.tc.SelectedIndex;
 					if (i > 0) x.WriteAttributeString("active", i.ToString());
 				}
-
+				
 				if (_captionAt != 0) x.WriteAttributeString("captionAt", _captionAt.ToString());
 				if (!_IsDocument) {
 					if (_state != 0) x.WriteAttributeString("state", ((int)_state).ToString());
@@ -275,12 +270,12 @@ public partial class KPanels
 					if (_floatSavedRect != null) x.WriteAttributeString("floatRect", _floatSavedRect);
 				}
 			}
-
+			
 			if (!_IsLeaf) foreach (var v in Children()) v.Save(x);
-
+			
 			x.WriteEndElement();
 		}
-
+		
 		bool _IsStack => _stack != null;
 		bool _IsTab => _tab != null;
 		bool _IsLeaf => _leaf != null;
@@ -290,29 +285,29 @@ public partial class KPanels
 		bool _ParentIsStack => Parent?._IsStack ?? false;
 		bool _ParentIsTab => Parent?._IsTab ?? false;
 		bool _ParentIsTabAndNotFloating => _ParentIsTab && _state != _DockState.Float;
-
+		
 		/// <summary>
 		/// true if this is toolbar or this is stack/tab containing only toolbars.
 		/// </summary>
 		bool _IsToolbarsNode => _IsToolbar || (!_IsLeaf && Descendants().All(o => o._IsToolbar));
-
+		
 		/// <summary>
 		/// true if this is document or this is tab containing documents (or tab with 0 children, which normally is not possible).
 		/// </summary>
 		bool _IsDocumentsNode => _IsDocument || (_IsTab && (FirstChild?._IsDocument ?? true));
-
+		
 		Dictionary<string, _Node> _Dictionary => (_leaf.addedLater && _IsDocument) ? _pm._dictUserDoc : _pm._dictLeaf;
-
+		
 		/// <summary>
 		/// Gets name of panel/toolbar/document. Exception if not leaf.
 		/// </summary>
 		public string Name => _leaf.name;
-
+		
 		/// <summary>
 		/// Gets the UI element of this node. It is Grid if this is stack, or TabControl if tab, else DockPanel.
 		/// </summary>
 		public FrameworkElement Elem => _elem;
-
+		
 		public override string ToString() {
 			string s;
 			if (_IsLeaf) {
@@ -330,18 +325,18 @@ public partial class KPanels
 			};
 			return (_IsTab ? "Tabs {" : "Stack {") + s + "}";
 		}
-
+		
 		//string _ToStringWithoutTB() {
 		//	var s = ToString();
 		//	if (_IsToolbar) s = s[3..];
 		//	return s;
 		//}
-
+		
 		/// <summary>
 		/// true if _IsPanel or (_IsDocument and _leaf.addedLater).
 		/// </summary>
 		bool _CanHaveCaptionWithText => _IsPanel || (_IsDocument && _leaf.addedLater);
-
+		
 		void _SetCaptionAt(Dock ca, bool firstTime = false) {
 			//if (_ParentIsTab) {
 			//	Parent._SetCaptionAt(ca, firstTime);
@@ -354,9 +349,10 @@ public partial class KPanels
 				if (ca == tc.TabStripPlacement) return;
 				if (_tab.isVerticalHeader) {
 					_tab.isVerticalHeader = false;
-					foreach (var v in tc.Items.Cast<TabItem>()) v.Style = null;
+					foreach (TabItem v in tc.Items) v.Style = null;
 				}
 				tc.TabStripPlacement = ca;
+				foreach (TabItem v in tc.Items) v.MinWidth = tc.TabStripPlacement is Dock.Top or Dock.Bottom ? c_tabHeaderMinWidth : 0;
 				_VerticalTabHeader();
 			} else if (_leaf.caption != null) {
 				DockPanel.SetDock(_leaf.caption, ca);
@@ -369,14 +365,14 @@ public partial class KPanels
 				}
 			}
 		}
-
+		
 		void _AddRemoveCaptionAndBorder() {
 			if (!_IsLeaf) return;
 			if (_ParentIsTab && !_state.Has(_DockState.Float)) {
 				if (_leaf.caption != null) {
 					_leaf.panel.Children.Remove(_leaf.caption);
 					_leaf.caption = null;
-
+					
 					_leaf.panel.BorderThickness = default;
 				}
 			} else {
@@ -407,7 +403,7 @@ public partial class KPanels
 							Fill = _pm.CaptionBrush,
 						};
 						_leaf.caption = c;
-
+						
 						_leaf.panel.LastChildFill = false;
 						bool hasDoc = false;
 						c.SizeChanged += (_, e) => {
@@ -419,7 +415,7 @@ public partial class KPanels
 					_SetCaptionAt(_captionAt, true);
 					_leaf.caption.ContextMenuOpening += _CaptionContextMenu;
 					_leaf.caption.MouseDown += _OnMouseDown;
-
+					
 					if (_pm.BorderBrush != null && !_IsToolbar) {
 						_leaf.panel.BorderBrush = _pm.BorderBrush;
 						_leaf.panel.BorderThickness = new Thickness(1);
@@ -427,16 +423,16 @@ public partial class KPanels
 				}
 			}
 		}
-
+		
 		void _SetToolbarOrientation() {
 			if (_IsToolbar && _leaf.content is ToolBarTray t) {
 				var ori = _captionAt == Dock.Top || _captionAt == Dock.Bottom ? Orientation.Vertical : Orientation.Horizontal;
 				if (t.Orientation != ori) t.Orientation = ori;
 			}
 		}
-
+		
 		#region ILeaf
-
+		
 		FrameworkElement ILeaf.Content {
 			get => _leaf.content;
 			set {
@@ -445,7 +441,7 @@ public partial class KPanels
 				_SetToolbarOrientation();
 			}
 		}
-
+		
 		bool ILeaf.Visible {
 			get => _IsVisibleReally();
 			set {
@@ -453,11 +449,11 @@ public partial class KPanels
 				if (value) _Unhide(); else _Hide();
 				if (value && _ParentIsTabAndNotFloating) {
 					Parent._tab.tc.SelectedIndex = _index;
-					if(value && !_elem.IsLoaded) _elem.UpdateLayout(); //workaround: WPF creates HwndHost control handle async. Let's create now.
+					if (value && !_elem.IsLoaded) _elem.UpdateLayout(); //workaround: WPF creates HwndHost control handle async. Let's create now.
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Returns true if this node does not have hidden state and is not docked in hidden tab.
 		/// </summary>
@@ -467,7 +463,7 @@ public partial class KPanels
 			if (state == 0 && _ParentIsTab) return Parent._IsVisibleReally(useSavedState);
 			return true;
 		}
-
+		
 		bool ILeaf.Floating {
 			get => _state == _DockState.Float;
 			set {
@@ -475,16 +471,16 @@ public partial class KPanels
 				_SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
 			}
 		}
-
-		public bool DontFocusTab { get; set; }
-
+		
+		public Action DontFocusTab { get; set; }
+		
 		ParentInfo ILeaf.Parent => new ParentInfo(_leaf.panel.Panel, Parent._elem, _index);
-
+		
 		ILeaf ILeaf.AddSibling(bool after, LeafType type, string name, bool canClose, bool isExtension) {
 			if (name == null || (type is not (LeafType.Panel or LeafType.Toolbar or LeafType.Document))) throw new ArgumentException();
 			return new _Node(this, after, type, name, canClose, isExtension);
 		}
-
+		
 		public void Delete() {
 			if (!_leaf.addedLater && !_leaf.isExtension) throw new InvalidOperationException();
 			if (_state == _DockState.Float) _SetDockState(0);
@@ -493,7 +489,7 @@ public partial class KPanels
 			_RemoveParentIfNeedAfterMovingOrDeleting(oldParent);
 			_Dictionary.Remove(_leaf.name);
 		}
-
+		
 		void ILeaf.Rename(string name) {
 			//if (!_IsLeaf) throw new InvalidOperationException(); //impossible, unless called from this class
 			if (name == null) throw new ArgumentException();
@@ -506,35 +502,34 @@ public partial class KPanels
 			}
 			if (_floatWindow != null) _floatWindow.Title = name;
 		}
-
+		
 		public event EventHandler<bool> VisibleChanged;
-
+		
 		public event EventHandler<bool> FloatingChanged;
-
+		
 		public event System.ComponentModel.CancelEventHandler Closing;
-
+		
 		//public event EventHandler<popupMenu> ContextMenuOpening;
-
+		
 		public event EventHandler TabSelected;
-
+		
 		public event EventHandler ParentChanged;
-
+		
 		#endregion
 	}
-
-	class _DockPanelWithBorder : Border
-	{
+	
+	class _DockPanelWithBorder : Border {
 		public readonly DockPanel Panel;
-
+		
 		public _DockPanelWithBorder() {
 			Child = Panel = new();
 			SnapsToDevicePixels = true;
 		}
-
+		
 		public UIElementCollection Children => Panel.Children;
-
+		
 		public bool LastChildFill { get => Panel.LastChildFill; set => Panel.LastChildFill = value; }
-
+		
 		public new object Tag {
 			get => base.Tag;
 			set { base.Tag = value; Panel.Tag = value; }

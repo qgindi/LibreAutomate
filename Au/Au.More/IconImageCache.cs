@@ -134,10 +134,11 @@ public sealed class IconImageCache : IDisposable {
 		if (_disposed) throw new ObjectDisposedException(nameof(IconImageCache));
 		bool isXaml = isImage && (imageSource.Starts('<') || imageSource.Ends(".xaml", true));
 		bool isStore = !isImage && imageSource.Starts(@"shell:AppsFolder\"); //compare case-sensitive. Then users can pass eg "shell:appsFolder..." to display white icons in blue background.
+		bool ofWorkspaceFile = false;
 		if (!isImage && !isStore && imageSource.Ends(".cs", true) && !pathname.isFullPath(imageSource, orEnvVar: true)) { //eg `script.run(@"x.cs");`
 			imageSource = ScriptEditor.GetIcon(imageSource, EGetIcon.PathToIconName);
 			if (imageSource == null) return null;
-			isImage = true;
+			isImage = ofWorkspaceFile = true;
 			//rejected: use Dictionary<imageSource, iconName> to avoid frequent GetIcon for same imageSource. In LA process fast, elsewhere not too slow.
 			//rejected: Move this code to the caller that needs it (MTBase).
 		}
@@ -167,7 +168,16 @@ public sealed class IconImageCache : IDisposable {
 			//using var p1 = perf.local();
 			
 			//bool useHash = !isImage && !isIco;
-			bool useHash = isImage ? isIconName : !isIco; //use file cache for *icon too, because loads XAML icon slowly first time (~100 ms), even in LA, and even later loads slower than from the cache file
+			bool useHash = isImage ? isIconName : !isIco; //use file cache for *icon too
+			
+			//use file cache for *icon too.
+			//	Because:
+			//		Loads XAML icon slowly first time (~100 ms; not measured after reboot), even in LA, and even later loads slower than from the cache file.
+			//		Non-WPF process uses much more memory (because loads WPF), eg 14 -> 28 MB.
+			//	Bad: when trying to find icons, users try many icons, colors, sizes. Then the cache is full of garbage.
+			//		SHOULDDO: remove from cache if not using anymore. Or add only if frequently using.
+			//FUTURE: to make loading XAML icons faster etc, try Windows.UI.Xaml.Markup.XamlReader.Load. Use Microsoft.Windows.SDK.NET.dll, or directly COM if possible. When the library will not support Win7/8.
+			
 			bool useFile = _dir != null && useHash;
 			if (useFile) {
 				try {
@@ -214,7 +224,7 @@ public sealed class IconImageCache : IDisposable {
 					b ??= icon.of(imageSource, _imageSize)?.ToGdipBitmap();
 				} else {
 					if (isIconName) {
-						imageSource = ScriptEditor.GetIcon(imageSource, EGetIcon.IconNameToXaml);
+						imageSource = ScriptEditor.GetIcon_(imageSource, EGetIcon.IconNameToXaml, skipResources: ofWorkspaceFile);
 						//p1.Next('X');
 						if (imageSource == null) return null;
 					}

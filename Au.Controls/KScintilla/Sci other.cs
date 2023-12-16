@@ -54,8 +54,15 @@ public partial class KScintilla {
 	/// SCI_MARKERDELETEALL.
 	/// </summary>
 	/// <param name="marker">If -1, delete all markers from all lines.</param>
-	public void aaaMarkerDelete(int marker) {
+	public void aaaMarkerDeleteAll(int marker) {
 		Call(SCI_MARKERDELETEALL, marker);
+	}
+	
+	/// <summary>
+	/// SCI_MARKERDELETEHANDLE.
+	/// </summary>
+	public void aaaMarkerDeleteHandle(int handle) {
+		Call(SCI_MARKERDELETEHANDLE, handle);
 	}
 	
 	#endregion
@@ -146,7 +153,7 @@ public partial class KScintilla {
 	}
 	internal (int dpi, int raw)[] _marginDpi;
 	
-	internal void aaaMarginWidthsDpiChanged_() {
+	void _MarginWidthsDpiChanged() {
 		var a = _marginDpi; if (a == null) return;
 		for (int i = a.Length; --i >= 0;) {
 			int v = a[i].dpi;

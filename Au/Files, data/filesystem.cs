@@ -257,7 +257,7 @@ public static partial class filesystem {
 				path = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string
 					?? Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string;
 				if (path != null) {
-					path = _PreparePath(path.Trim('\"'));
+					path = _PreparePath(path.Trim('"'));
 					if (exists(path, true)) return path;
 				}
 			}

@@ -80,7 +80,7 @@ Release NuGet package:
 
 Edit version in _\version.txt. Upload to public_html.
 
-If not beta, occasionally may want to review/update in some download websites. Edit and upload the PAD file.
+If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
 
 
 ---------------------------------------------------------

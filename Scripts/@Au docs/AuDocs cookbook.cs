@@ -119,7 +119,7 @@ This is an online copy of the LibreAutomate C# Cookbook.
 				var attr = m[2].Value;
 				if (attr == null) attr = s;
 				else {
-					if (attr is ['\'', .., '\''] or ['\"', .., '\"']) attr = attr[1..^1];
+					if (attr is ['\'', .., '\''] or ['"', .., '"']) attr = attr[1..^1];
 					Debug_.PrintIf(attr.Contains('|'));
 				}
 				

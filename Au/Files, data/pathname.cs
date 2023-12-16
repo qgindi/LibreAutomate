@@ -42,7 +42,7 @@ namespace Au {
 			var s = path;
 			if (s.Lenn() < 3) return s;
 			if (s[0] != '%') {
-				if (s[0] == '\"' && s[1] == '%') return "\"" + expand(s[1..], strict);
+				if (s[0] == '"' && s[1] == '%') return "\"" + expand(s[1..], strict);
 				return s;
 			}
 			int i = s.IndexOf('%', 2); if (i < 0) return s;
@@ -525,13 +525,13 @@ namespace Au {
 		/// Returns true if character <i>c</i> is invalid in file names (the filename part).
 		/// </summary>
 		public static bool isInvalidNameChar(char c)
-			=> c is < ' ' or '\"' or '<' or '>' or '|' or '*' or '?' or ':' or '\\' or '/';
+			=> c is < ' ' or '"' or '<' or '>' or '|' or '*' or '?' or ':' or '\\' or '/';
 
 		/// <summary>
 		/// Returns true if character <i>c</i> is invalid in file paths.
 		/// </summary>
 		public static bool isInvalidPathChar(char c)
-			=> c is < ' ' or '\"' or '<' or '>' or '|' or '*' or '?';
+			=> c is < ' ' or '"' or '<' or '>' or '|' or '*' or '?';
 
 		/// <summary>
 		/// Gets filename from <i>path</i>. Does not remove extension.

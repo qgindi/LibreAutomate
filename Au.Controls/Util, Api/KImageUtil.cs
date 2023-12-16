@@ -3,33 +3,28 @@ using System.Drawing.Imaging;
 
 #pragma warning disable 649
 
-namespace Au.Controls
-{
-	public static unsafe class KImageUtil
-	{
+namespace Au.Controls {
+	public static unsafe class KImageUtil {
 		#region API
-
+		
 		[StructLayout(LayoutKind.Sequential, Pack = 2)]
-		internal struct BITMAPFILEHEADER
-		{
+		internal struct BITMAPFILEHEADER {
 			public ushort bfType;
 			public int bfSize;
 			public ushort bfReserved1;
 			public ushort bfReserved2;
 			public int bfOffBits;
 		}
-
-		internal struct BITMAPCOREHEADER
-		{
+		
+		internal struct BITMAPCOREHEADER {
 			public int bcSize;
 			public ushort bcWidth;
 			public ushort bcHeight;
 			public ushort bcPlanes;
 			public ushort bcBitCount;
 		}
-
-		internal struct BITMAPV5HEADER
-		{
+		
+		internal struct BITMAPV5HEADER {
 			public int bV5Size;
 			public int bV5Width;
 			public int bV5Height;
@@ -55,25 +50,22 @@ namespace Au.Controls
 			public uint bV5ProfileSize;
 			public uint bV5Reserved;
 		}
-
-		internal struct CIEXYZTRIPLE
-		{
+		
+		internal struct CIEXYZTRIPLE {
 			public CIEXYZ ciexyzRed;
 			public CIEXYZ ciexyzGreen;
 			public CIEXYZ ciexyzBlue;
 		}
-
-		internal struct CIEXYZ
-		{
+		
+		internal struct CIEXYZ {
 			public int ciexyzX;
 			public int ciexyzY;
 			public int ciexyzZ;
 		}
-
+		
 		#endregion
-
-		internal struct BitmapFileInfo_
-		{
+		
+		internal struct BitmapFileInfo_ {
 			/// <summary>
 			/// Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
 			/// </summary>
@@ -81,7 +73,7 @@ namespace Au.Controls
 			public int width, height, bitCount;
 			public bool isCompressed;
 		}
-
+		
 		/// <summary>
 		/// Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
 		/// Checks if it is valid bitmap file header. Returns false if invalid.
@@ -93,7 +85,7 @@ namespace Au.Controls
 				int minHS = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPCOREHEADER);
 				if (mem.Length <= minHS || f->bfType != (((byte)'M' << 8) | (byte)'B') || f->bfOffBits >= mem.Length || f->bfOffBits < minHS)
 					return false;
-
+				
 				Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
 				int siz = h->biSize;
 				if (siz >= sizeof(Api.BITMAPINFOHEADER) && siz <= sizeof(BITMAPV5HEADER) * 2) {
@@ -107,56 +99,55 @@ namespace Au.Controls
 					x.height = ch->bcHeight;
 					x.bitCount = ch->bcBitCount;
 				} else return false;
-
+				
 				//x.height = Math.Abs(x.height); //no, then draws incorrectly if top-down
 				if (x.height <= 0) return false; //rare
-
+				
 				x.biHeader = h;
 				return true;
 				//note: don't check f->bfSize. Sometimes it is incorrect (> or < memSize). All programs open such files. Instead check other data later.
 			}
 		}
-
+		
 		/// <summary>
 		/// Image type detected by <see cref="ImageTypeFromString(out int, string)"/>.
 		/// </summary>
-		public enum ImageType
-		{
+		public enum ImageType {
 			/// <summary>The string isn't image.</summary>
 			None,
-
+			
 			/// <summary>Base64 encoded image file data with prefix "image:" (.png/gif/jpg) or "image:WkJN" (compressed .bmp). See <see cref="ImageToString(string)"/>.</summary>
 			Base64Image,
-
+			
 			/// <summary>.bmp file path.</summary>
 			Bmp,
-
+			
 			/// <summary>.png, .gif or .jpg file path.</summary>
 			PngGifJpg,
-
+			
 			/// <summary>.ico file path.</summary>
 			Ico,
-
+			
 			/// <summary>.cur or .ani file path.</summary>
 			Cur,
-
+			
 			/// <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
 			IconLib,
-
+			
 			/// <summary>None of other image types.</summary>
 			ShellIcon,
-
+			
 			/// <summary>XAML image data.</summary>
 			Xaml,
-
+			
 			/// <summary>XAML icon name "*Pack.Icon color".</summary>
 			XamlIconName,
-
+			
 			//rejected. Where it used, we cannot know the assembly; maybe it is script's assembly and in editor we cannot get its resources or it is difficult (need to use meta).
 			///// <summary>"resource:name". An image resource name from managed resources of the entry assembly. In Visual Studio use build action "Resource".</summary>
 			//Resource,
 		}
-
+		
 		/// <summary>
 		/// Gets image type from string.
 		/// </summary>
@@ -168,9 +159,9 @@ namespace Au.Controls
 			if (length < 0) length = BytePtr_.Length(s);
 			if (length < 2) return default; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
-
+			
 			//FUTURE: rewrite this old code. Use Span etc. See SciCode.GetImages_.
-
+			
 			//special strings
 			switch (c1) {
 			case 'i':
@@ -194,16 +185,10 @@ namespace Au.Controls
 				}
 				return default;
 			case '*':
-				if (length > 10 && length < 80) {
-					int i = BytePtr_.AsciiFindChar(s, length, (byte)'.') + 1;
-					if (i > 3) {
-						int j = BytePtr_.AsciiFindChar(s + i, length - i, (byte)' ');
-						if (j > 0) return ImageType.XamlIconName;
-					}
-				}
+				if (_DetectIconString(new(s, length))) return ImageType.XamlIconName;
 				return default;
 			}
-
+			
 			//file path
 			if (length >= 8 && (c1 == '%' || (c2 == ':' && c1.IsAsciiAlpha()) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
@@ -222,10 +207,24 @@ namespace Au.Controls
 					if (*k == ',' && k[-4] == '.' && ((char)k[-1]).IsAsciiAlpha()) return ImageType.IconLib;
 				}
 			}
-
+			
 			return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
+			
+			//copied from WpfUtil_.DetectIconString(ReadOnlySpan<char>)
+			static bool _DetectIconString(ReadOnlySpan<byte> s) {
+				if (s.Length < 8 || s[0] != '*') return false;
+				int pack = 1;
+				if (s[1] == '<') { // *<library>*icon
+					pack = s.IndexOf((byte)'>');
+					if (pack++ < 0 || s.Length - pack < 8 || s[pack] != '*') return false;
+					pack++;
+				}
+				int name = pack; while (name < s.Length && s[name] != '.') name++; if (name < pack + 4) return false;
+				int end = ++name; while (end < s.Length && s[end] != ' ') end++;
+				return end > name;
+			}
 		}
-
+		
 		/// <summary>
 		/// Gets image type from string.
 		/// </summary>
@@ -235,7 +234,7 @@ namespace Au.Controls
 			var b = Convert2.Utf8Encode(s);
 			fixed (byte* p = b) return ImageTypeFromString(out prefixLength, p, b.Length - 1);
 		}
-
+		
 		/// <summary>
 		/// Loads image and returns its data in .bmp file format.
 		/// Returns null if fails, for example file not found or invalid Base64 string.
@@ -287,7 +286,7 @@ namespace Au.Controls
 			catch (Exception ex) { Debug_.PrintIf(t != ImageType.Xaml, ex.Message + "    " + s); }
 			return null;
 		}
-
+		
 		static byte[] _ImageToBytes(Bitmap im) {
 			if (im == null) return null;
 			try {
@@ -296,27 +295,27 @@ namespace Au.Controls
 				if (0 != (flags & ImageFlags.HasAlpha)) { //most png have it
 					var t = new Bitmap(im.Width, im.Height);
 					t.SetResolution(im.HorizontalResolution, im.VerticalResolution);
-
+					
 					using (var g = Graphics.FromImage(t)) {
 						g.Clear(Color.White);
 						g.DrawImageUnscaled(im, 0, 0);
 					}
-
+					
 					var old = im; im = t; old.Dispose();
 				}
-
+				
 				var m = new MemoryStream();
 				im.Save(m, ImageFormat.Bmp);
 				return m.ToArray();
 			}
 			finally { im.Dispose(); }
 		}
-
+		
 		static byte[] _IconToBytes(string s, bool isCursor, bool searchPath) {
 			//info: would be much easier with Icon.ToBitmap(), but it creates bitmap that is displayed incorrectly when we draw it in Scintilla.
 			//	Mask or alpha areas then are black.
 			//	Another way - draw it like in the png case. Not tested. Maybe would not work with cursors. Probably slower.
-
+			
 			IntPtr hi; int siz;
 			if (isCursor) {
 				hi = Api.LoadImage(default, s, Api.IMAGE_CURSOR, 0, 0, Api.LR_LOADFROMFILE | Api.LR_DEFAULTSIZE);
@@ -329,10 +328,10 @@ namespace Au.Controls
 			if (hi == default) return null;
 			try {
 				using var m = new MemoryBitmap(siz, siz);
-				RECT r = new (0, 0, siz, siz);
+				RECT r = new(0, 0, siz, siz);
 				Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
 				if (!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
-
+				
 				int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
 				var a = new byte[headersSize + siz * siz * 3];
 				fixed (byte* p = a) {
@@ -348,7 +347,7 @@ namespace Au.Controls
 				Api.DestroyIcon(hi);
 			}
 		}
-
+		
 #if false //currently not used. If using, move to icon class.
 
 	/// <summary>
@@ -371,7 +370,7 @@ namespace Au.Controls
 		}
 	}
 #endif
-
+		
 		/// <summary>
 		/// Compresses .bmp file data (<see cref="Convert2.BrotliCompress"/>) and Base64-encodes.
 		/// Returns string with "image:" prefix.
@@ -381,7 +380,7 @@ namespace Au.Controls
 			return "image:WkJN" + Convert.ToBase64String(Convert2.BrotliCompress(bmpFileData));
 			//WkJN is Base64 of "ZBM"
 		}
-
+		
 		/// <summary>
 		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="uiimage.find"/>.
 		/// Supports all <see cref="ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
@@ -402,7 +401,7 @@ namespace Au.Controls
 			}
 			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}
-
+		
 		//currently not used.
 		//	When tried to display the WPF image in Image control, was blurry when high DPI, although size is correct (because bitmap's DPI is correct).
 		//	UseLayoutRounding did not help. It seems WPF scales/unscales the image don't know how many times.
@@ -425,7 +424,7 @@ namespace Au.Controls
 		//		if (dispose) bmp.Dispose();
 		//	}
 		//}
-
+		
 		///// <summary>
 		///// If <i>dpi</i> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
 		///// </summary>
@@ -438,7 +437,7 @@ namespace Au.Controls
 		//	}
 		//	return z;
 		//}
-
+		
 		///// <summary>
 		///// If <i>dpi</i> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
 		///// </summary>
@@ -461,27 +460,27 @@ namespace Au.Controls
 		//	}
 		//	return image;
 		//}
-
+		
 		////From .NET DpiHelper.ScaleBitmapToSize, which is used by Control.ScaleBitmapLogicalToDevice.
 		//private static Bitmap _ScaleBitmap(Image oldImage, int width, int height, Size oldSize) {
 		//	//note: could simply return new Bitmap(oldImage, width, height). It uses similar code, but lower quality.
-
+		
 		//	var r = new Bitmap(width, height, oldImage.PixelFormat);
-
+		
 		//	using var graphics = Graphics.FromImage(r);
 		//	var mode = InterpolationMode.HighQualityBicubic;
 		//	//if(width % oldSize.Width == 0 && height % oldSize.Height == 0) mode = InterpolationMode.NearestNeighbor; //DpiHelper does it, but maybe it isn't a good idea
 		//	graphics.InterpolationMode = mode;
 		//	graphics.CompositingQuality = CompositingQuality.HighQuality;
-
+		
 		//	var sourceRect = new RectangleF(-0.5f, -0.5f, oldSize.Width, oldSize.Height);
 		//	var destRect = new RectangleF(0, 0, width, height);
-
+		
 		//	graphics.DrawImage(oldImage, destRect, sourceRect, GraphicsUnit.Pixel);
-
+		
 		//	return r;
 		//}
-
+		
 		/// <summary>
 		/// Converts XAML image to native icon file data.
 		/// </summary>
@@ -510,14 +509,14 @@ namespace Au.Controls
 			stream.Write(new(a, sizeof(Api.ICONDIRENTRY) * sizes.Length));
 			stream.Position = posEnd;
 		}
-
+		
 		///
 		public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
 			file = pathname.NormalizeMinimally_(file);
 			using var stream = File.OpenWrite(file);
 			XamlImageToIconFile(stream, image, sizes);
 		}
-
+		
 		//currently not used.
 		///// <summary>
 		///// Creates GDI+ <b>Bitmap</b> from a GDI bitmap.
@@ -537,7 +536,7 @@ namespace Au.Controls
 		//		int wid = bh.biWidth, hei = bh.biHeight;
 		//		if (hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
 		//		bh.biBitCount = 32;
-
+		
 		//		var R = new System.Drawing.Bitmap(wid, hei, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
 		//		var d = R.LockBits(new System.Drawing.Rectangle(0, 0, wid, hei), System.Drawing.Imaging.ImageLockMode.ReadWrite, R.PixelFormat);
 		//		bool ok = hei == Api.GetDIBits(dcs, hbitmap, 0, hei, (void*)d.Scan0, &bh, 0);

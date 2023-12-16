@@ -186,7 +186,7 @@ public class KPopup {
 			//	But then no select/copy, not so easy scrolling, etc.
 			_border.UpdateLayout();
 			var ds = _border.DesiredSize;
-			ds.Width = Math.Ceiling(ds.Width); ds.Height = Math.Ceiling(ds.Height); //avoid scrollbars
+			ds.Width = Math.Ceiling(ds.Width + .5); ds.Height = Math.Ceiling(ds.Height + .5); //avoid scrollbars
 			size = Dpi.Scale(ds, dpi);
 			size.width += nc.Width; size.height += nc.Height;
 		}
@@ -302,6 +302,8 @@ public class KPopup {
 				} else {
 					if (wm == _w) return;
 					if (wm.IsOfThisThread && wm.ZorderIsAbove(_w)) return;
+					//SHOULDDO: not always closes when need.
+					// Example: in a KTreeView edit label, then activate a floating panel (eg Cookbook).
 				}
 			}
 			Close();
