@@ -7,6 +7,7 @@
 script.setup(exception: UExcept.Dialog | UExcept.Print);
 //..
 
+//print.ignoreConsole = true;
 //print.qm2.use = true;
 //print.it(args);
 
@@ -20,15 +21,15 @@ return args[0] switch {
 /// Exits editor. Copies AuCpp.dll and unloads the old dll from processes.
 int CppPostBuild() {
 	_ExitEditor();
-	_CopyAuCppDllIfNeed(args[2] != "x64");
+	if (!_CopyAuCppDllIfNeed(args[2] != "x64")) return 1;
 	return 0;
 }
 
 /// Exits editor. If need, copies AuCpp.dll and unloads the old dll from processes.
 int EditorPreBuild() {
 	_ExitEditor();
-	_CopyAuCppDllIfNeed(false);
-	_CopyAuCppDllIfNeed(true);
+	if (!_CopyAuCppDllIfNeed(false)) return 1;
+	if (!_CopyAuCppDllIfNeed(true)) return 1;
 	return 0;
 }
 
@@ -40,10 +41,11 @@ void _ExitEditor() {
 	}
 }
 
-int _CopyAuCppDllIfNeed(bool bit32) {
-	string src = $@"C:\code\au\Cpp\bin\{args[1]}\{(bit32 ? "Win32" : "x64")}\AuCpp.dll";
-	string dest = $@"C:\code\au\_\{(bit32 ? "32" : "64")}\AuCpp.dll";
-	if (!filesystem.getProperties(src, out var p1)) { print.it("Failed `filesystem.getProperties(src)`"); return 1; }
+bool _CopyAuCppDllIfNeed(bool bit32) {
+	var cd = Environment.CurrentDirectory;
+	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{(bit32 ? "Win32" : "x64")}\AuCpp.dll");
+	string dest = pathname.normalize($@"{cd}\..\_\{(bit32 ? "32" : "64")}\AuCpp.dll");
+	if (!filesystem.getProperties(src, out var p1)) { print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
 		print.it($"Updating {dest}");
@@ -53,7 +55,7 @@ int _CopyAuCppDllIfNeed(bool bit32) {
 		}
 		filesystem.copy(src, dest);
 	}
-	return 0;
+	return true;
 }
 
 /// Creates Au.Editor.exe and Au.Task.exe.
