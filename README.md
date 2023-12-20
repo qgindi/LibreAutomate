@@ -28,7 +28,7 @@ Editor window
 ## How to build
 Need Visual Studio 2022 with C#, C++, .NET 8 SDK and Windows 10 or 11 SDK. Need 64-bit Windows 10 or 11.
 
-1. Download and extract. Or git clone, if your git software supports LFS.
+1. Download and extract. Or git clone.
 2. Open `Au.sln` in Visual Studio.
 3. Build solution (not just the startup project).
 4. Switch to platform x86, build solution, switch back to AnyCPU.
