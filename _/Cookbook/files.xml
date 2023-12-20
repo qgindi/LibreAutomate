@@ -1,0 +1,218 @@
+﻿<files>
+  <d n="-" i="357">
+    <s n="How to write the cookbook.cs" i="360" />
+    <s n="Test.cs" i="362" />
+    <s n="TODO.cs" i="363" />
+    <s n="init.cs" i="361" />
+    <c n="global.cs" i="359" />
+  </d>
+  <s n="Introduction, finding info.cs" i="3" />
+  <d n="C# language" i="4">
+    <s n="C# introduction.cs" i="25" />
+    <s n="Comments, disabled code.cs" i="35" />
+    <s n="Strings (text), numbers, characters, bool, null, default.cs" i="57" />
+    <s n="Variables, fields, built-in types.cs" i="36" />
+    <s n="Constants, enum.cs" i="60" />
+    <s n="Types (class, struct, generic, nullable, tuple).cs" i="37" />
+    <s n="Functions (methods, properties).cs" i="38" />
+    <s n="Operators, expressions.cs" i="39" />
+    <s n="Namespaces, using.cs" i="64" />
+    <s n="if-else, switch.cs" i="65" />
+    <s n="for, foreach (repeat, loop, iterate).cs" i="66" />
+    <s n="return, goto (exit, end, stop, jump).cs" i="67" />
+    <s n="Errors, exceptions, try-catch-finally, throw.cs" i="62" />
+    <s n="Callback functions, lambda, delegate, event.cs" i="63" />
+    <s n="Collections - array, List, Stack, Queue.cs" i="300" />
+    <s n="Collections - Dictionary, HashSet.cs" i="301" />
+    <s n="Collections - LINQ functions.cs" i="150" />
+  </d>
+  <d n="Input, output" i="5">
+    <s n="Display text and variables.cs" i="6" />
+    <s n="Message box dialog, list.cs" i="7" />
+    <s n="Input box dialog.cs" i="8" />
+    <s n="File and folder dialogs, color dialog.cs" i="74" />
+    <s n="Popup menu, check list.cs" i="10" />
+    <s n="Play sound, speak.cs" i="100" />
+  </d>
+  <d n="Keys, mouse, clipboard" i="12">
+    <s n="Send keys, text.cs" i="26" />
+    <s n="Select-click menu, control (keyboard shortcuts).cs" i="85" />
+    <s n="If key pressed, toggled.cs" i="75" />
+    <s n="Wait for key, hotkey.cs" i="76" />
+    <s n="Mouse click, move, drag, restore.cs" i="77" />
+    <s n="Mouse get position, wait, cursor, etc.cs" i="79" />
+    <s n="Clipboard copy, paste, set-get text etc.cs" i="80" />
+  </d>
+  <d n="Window, UI automation" i="13">
+    <s n="Find window, controls, activate.cs" i="27" />
+    <s n="Window actions (close, move, resize, properties, etc).cs" i="81" />
+    <s n="Screens (display monitors).cs" i="82" />
+    <s n="UI elements (find, click, check, focus, select, expand, check menu item, wait for state, etc).cs" i="83" />
+    <s n="Web automation, navigate, HTML attributes.cs" i="89" />
+    <s n="Extract table data using UI elements.cs" i="373" />
+    <s n="Web browser automation with Selenium.cs" i="141" />
+    <s n="Find UI image or color.cs" i="90" />
+    <s n="Take screenshot.cs" i="101" />
+    <s n="OCR, find UI text, extract text.cs" i="168" />
+    <s n="-Computer vision.cs" i="257" />
+  </d>
+  <d n="Wait, time" i="78">
+    <s n="Simple wait (sleep, delay).cs" i="86" />
+    <s n="Wait for something.cs" i="87" />
+    <s n="Date and time.cs" i="96" />
+    <s n="Computer time, code speed.cs" i="105" />
+    <s n="Timers.cs" i="111" />
+  </d>
+  <d n="System" i="15">
+    <s n="Run program, open document, folder, URL.cs" i="33" />
+    <s n="Run console program and get its output text.cs" i="92" />
+    <s n="Processes.cs" i="93" />
+    <s n="Services.cs" i="88" />
+    <s n="Shutdown, restart, logoff, sleep, hibernate, lock computer, battery power.cs" i="94" />
+    <s n="Windows OS version, computer and user name.cs" i="109" />
+    <s n="Desktop (show etc).cs" i="97" />
+    <s n="Registry.cs" i="99" />
+    <s n="Environment variables.cs" i="106" />
+    <s n="Threads.cs" i="112" />
+  </d>
+  <d n="Filesystem" i="14">
+    <s n="File paths, special folders.cs" i="28" />
+    <s n="File exists, size, time, attributes.cs" i="123" />
+    <s n="Enumerate files, folders.cs" i="122" />
+    <s n="Enumerate drives, get drive properties.cs" i="127" />
+    <s n="File move, rename.cs" i="118" />
+    <s n="File copy.cs" i="126" />
+    <s n="File delete, Recycle Bin.cs" i="125" />
+    <s n="File shortcuts, symbolic links.cs" i="124" />
+    <s n="Create folder.cs" i="120" />
+    <s n="File read (load), write (save).cs" i="119" />
+    <s n="Zip files (compress, extract).cs" i="136" />
+    <s n="-Backup files.cs" i="247" />
+    <s n="Wait for file.cs" i="250" />
+  </d>
+  <d n="Internet" i="16">
+    <s n="Check internet connection, ping.cs" i="152" />
+    <s n="Http get web page, download file.cs" i="137" />
+    <s n="Http post web form, JSON.cs" i="139" />
+    <s n="Parse HTML.cs" i="135" />
+    <s n="SFTP (upload, download, etc).cs" i="142" />
+    <s n="SSH (manage website).cs" i="191" />
+    <s n="Send email message (SMTP).cs" i="143" />
+    <s n="Send and receive email (SMTP, POP3, IMAP).cs" i="144" />
+  </d>
+  <d n="Script" i="186">
+    <s n="Run script from script.cs" i="185" />
+    <s n="Run script command line, shortcut, schedule.cs" i="165" />
+    <s n="Run script at startup, output link.cs" i="187" />
+    <s n="Run script on another computer; HTTP server.cs" i="371" />
+    <s n="Script run-time settings.cs" i="110" />
+    <s n="End script task, pause, exit.cs" i="370" />
+    <s n="Tray icon and notifications.cs" i="115" />
+    <s n="Script testing and debugging.cs" i="173" />
+    <s n="Saving variables, settings.cs" i="140" />
+    <s n="Script class with Main().cs" i="261" />
+    <s n="Multi-file scripts, projects.cs" i="259" />
+    <s n="Shared classes and functions, libraries.cs" i="258" />
+    <s n="Create .exe program.cs" i="188" />
+  </d>
+  <d n="Triggers, toolbars" i="17">
+    <s n="Keyboard triggers (hotkeys).cs" i="160" />
+    <s n="Autotext triggers, expand text.cs" i="162" />
+    <s n="Mouse triggers.cs" i="161" />
+    <s n="Window triggers, auto-close popup windows.cs" i="163" />
+    <d n="Using action triggers" i="368">
+      <s n="Trigger scopes (window, program).cs" i="367" />
+      <s n="-Trigger options.cs" i="369" />
+      <s n="Remap keys.cs" i="365" />
+      <s n="Show triggers.cs" i="366" />
+      <s n="Script 'Triggers and toolbars'.cs" i="342" />
+    </d>
+    <s n="Floating toolbars.cs" i="164" />
+    <s n="Process triggers (start, end).cs" i="252" />
+    <s n="File change triggers (events).cs" i="251" />
+    <s n="Other triggers.cs" i="171" />
+    <s n="-Hooks.cs" i="172" />
+    <s n="Run code when script ends.cs" i="170" />
+  </d>
+  <d n="Custom dialog windows" i="264">
+    <s n="Dialog - add elements, show, get values.cs" i="265" />
+    <s n="Dialog - set element properties and values.cs" i="291" />
+    <s n="Dialog - columns, rows.cs" i="266" />
+    <s n="Dialog - panels, group box.cs" i="268" />
+    <s n="Dialog - element size, position, margin.cs" i="281" />
+    <s n="Dialog - validation.cs" i="267" />
+    <s n="Dialog - events.cs" i="270" />
+    <s n="Dialog - splitters.cs" i="278" />
+    <s n="Dialog - links, formatted text.cs" i="273" />
+    <s n="Dialog - element color, font, border.cs" i="282" />
+    <s n="Dialog - button icon, toolbar.cs" i="285" />
+    <s n="Dialog - textbox watermark, adorner.cs" i="283" />
+    <s n="Dialog - icons, images, shapes.cs" i="288" />
+    <s n="Dialog - context menu, dropdown list.cs" i="294" />
+    <s n="Dialog - enum check-list, select.cs" i="298" />
+    <s n="Dialog - select date.cs" i="269" />
+    <s n="Dialog - ListView.cs" i="349" />
+    <s n="Dialog - DataGrid.cs" i="350" />
+    <s n="Dialog - WebView2 control.cs" i="345" />
+    <s n="Dialog - IE web browser control.cs" i="293" />
+    <s n="Dialog - menu bar.cs" i="271" />
+    <s n="Dialog - multiple tabs.cs" i="272" />
+    <s n="Dialog - Window-based class.cs" i="276" />
+    <s n="Dialog - owned, non-modal (don't wait).cs" i="286" />
+    <s n="Dialog - window size, position, other properties.cs" i="290" />
+    <s n="Dialog - save window placement, control values.cs" i="289" />
+    <s n="Dialog - load XAML.cs" i="295" />
+    <s n="Dialog - libraries of controls and themes.cs" i="296" />
+    <s n="Dialog - use triggers.cs" i="384" />
+    <s n="-Dialog - rejected or future.cs" i="297" />
+  </d>
+  <d n="Math, convert" i="129">
+    <s n="Math functions.cs" i="145" />
+    <s n="Convert to-from string.cs" i="148" />
+    <s n="Convert Base64, hex, UTF-8, encoding, urlencode, htmlencode.cs" i="147" />
+    <s n="Other conversions.cs" i="146" />
+    <s n="Random numbers and strings, GUID.cs" i="149" />
+    <s n="Encrypt, hash.cs" i="157" />
+    <s n="Compress data.cs" i="130" />
+    <s n="-Color.cs" i="169" />
+  </d>
+  <d n="Text" i="18">
+    <s n="Strings and characters.cs" i="174" />
+    <s n="Simple string functions.cs" i="154" />
+    <s n="String formatting with variables.cs" i="158" />
+    <s n="Wildcard expressions (compare text).cs" i="159" />
+    <s n="Regular expressions (parse text, find-replace).cs" i="155" />
+    <s n="Fuzzy string matching, word stemming.cs" i="302" />
+  </d>
+  <d n="Data, document" i="19">
+    <s n="CSV table.cs" i="128" />
+    <s n="XML.cs" i="131" />
+    <s n="JSON.cs" i="132" />
+    <s n="Markdown.cs" i="348" />
+    <s n="SQLite database.cs" i="133" />
+    <s n="Databases.cs" i="134" />
+    <d n="Excel files" i="379">
+      <s n="Read Excel files with ExcelDataReader.cs" i="245" />
+      <s n="Read-write Excel files with EPPlus.cs" i="246" />
+      <s n="Read-write Excel files with ClosedXML.cs" i="380" />
+    </d>
+    <d n="-Excel automation" i="374">
+      <s n="Excel automation script.cs" i="375" />
+      <c n="ExcelExt.cs" i="381" />
+      <s n="Excel types, get Range etc, use object and dynamic.cs" i="376" />
+      <s n="Excel - get and set cell values.cs" i="377" />
+      <s n="Excel - TODO.cs" i="383" />
+    </d>
+  </d>
+  <d n="More" i="20">
+    <s n=".NET, NuGet, other libraries.cs" i="21" />
+    <s n="Windows API, native libraries.cs" i="22" />
+    <s n="COM components and type libraries.cs" i="249" />
+    <s n="Command line programs.cs" i="167" />
+    <s n="WMI.cs" i="102" />
+    <s n="PowerShell, VBScript, Python.cs" i="103" />
+    <s n="Use C# compiler at run time.cs" i="346" />
+    <s n="Editor extension - modify UI.cs" i="351" />
+  </d>
+  <s n="Frequently asked questions.cs" i="91" />
+</files>

@@ -1,0 +1,45 @@
+﻿<files>
+  <s n="Script.cs" i="1" />
+  <c n="Class.cs" i="2" />
+  <n n="File.txt" i="67" />
+  <d n="New project" i="6">
+    <d n="@Script" i="7">
+      <s n="Script.cs" i="8" />
+    </d>
+    <d n="@Library" i="9">
+      <c n="Library.cs" i="10" />
+    </d>
+  </d>
+  <d n="Dialogs" i="68">
+    <s n="Dialog.cs" i="77" />
+    <s n="Dialog with tabs.cs" i="78" />
+    <c n="Dialog class.cs" i="73" />
+    <c n="Dialog with tabs class.cs" i="74" />
+  </d>
+  <d n="More" i="112">
+    <s n="preBuild postBuild script.cs" i="113" />
+  </d>
+  <d n="Default" i="71">
+    <c n="global.cs" i="72" />
+    <d n="@Triggers and toolbars" i="15">
+      <s n="Triggers and toolbars.cs" i="17" icon="*Material.ScriptOutline #008EEE" />
+      <d n="Triggers" i="18">
+        <c n="Hotkey triggers.cs" i="19" />
+        <c n="Autotext triggers.cs" i="20" />
+        <c n="Mouse triggers.cs" i="21" />
+        <c n="Window triggers.cs" i="22" />
+        <c n="Other triggers.cs" i="110" />
+      </d>
+      <d n="Toolbars" i="23">
+        <c n="Toolbar examples.cs" i="24" />
+      </d>
+      <d n="Functions" i="27">
+        <c n="Partial1.cs" i="28" />
+        <c n="Class1.cs" i="29" />
+      </d>
+      <d n="Scripts" i="30">
+        <s n="Script example1.cs" i="31" />
+      </d>
+    </d>
+  </d>
+</files>
