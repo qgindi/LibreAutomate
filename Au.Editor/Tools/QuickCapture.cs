@@ -3,7 +3,6 @@
 namespace Au.Tools;
 
 static class QuickCapture {
-	static RegisteredHotkey _rk1, _rk2, _rk3, _rk4;
 	static popupMenu _m;
 
 	public static void Info() {
@@ -13,35 +12,6 @@ static class QuickCapture {
 	{App.Settings.hotkeys.tool_elm} - capture UI element from mouse and show tool 'Find UI element'.
 	{App.Settings.hotkeys.tool_uiimage} - capture image in window from mouse and show tool 'Find image'.
 ");
-	}
-
-	public static void RegisterHotkeys() {
-#if !IDE_LA //avoid warnings
-		_Register(ref _rk1, AppHotkeyId.QuickCaptureMenu, App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing));
-		_Register(ref _rk2, AppHotkeyId.QuickCaptureDwnd, App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd));
-		_Register(ref _rk3, AppHotkeyId.QuickCaptureDelm, App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm));
-		_Register(ref _rk4, AppHotkeyId.QuickCaptureDuiimage, App.Settings.hotkeys.tool_uiimage, nameof(Menus.Code.uiimage));
-
-		static void _Register(ref RegisteredHotkey rk, AppHotkeyId id, string keys, string menu) { //ref, not in!
-			if (!keys.NE()) {
-				try {
-					if (!rk.Register((int)id, keys, App.Hmain, noRepeat: true)) {
-						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
-						keys = null;
-					}
-				}
-				catch (Exception ex) { print.it(ex); keys = null; }
-			}
-			App.Commands[menu].MenuItem.InputGestureText = keys;
-		}
-#endif
-	}
-
-	public static void UnregisterHotkeys() {
-		_rk1.Unregister();
-		_rk2.Unregister();
-		_rk3.Unregister();
-		_rk4.Unregister();
 	}
 
 	//CONSIDER: while showing menu, show on-screen rectangles of the window, control and elm.

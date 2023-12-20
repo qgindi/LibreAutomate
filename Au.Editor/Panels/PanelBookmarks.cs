@@ -180,7 +180,7 @@ class PanelBookmarks {
 		if (_IsBookmark(doc, line)) {
 			_DeleteBookmark(doc, line);
 		} else {
-			if (!useSelStart) if (doc.aaaLineFromPos() == line) useSelStart = true; else doc.aaaGoToLine(line);
+			if (!useSelStart) if (doc.aaaLineFromPos() == line) useSelStart = true;
 			
 			int h = doc.aaaMarkerAdd(SciCode.c_markerBookmark, line); if (h < 0) return;
 			var folder = _FindItemOfFile(doc);
@@ -205,7 +205,7 @@ class PanelBookmarks {
 			if (_Node(node) is string s1) return s1 + "  " + _Line();
 			return _Line();
 			
-			string _Line() => "● " + doc.aaaLineText(line).Trim().Limit(50);
+			string _Line() => "● " + doc.aaaLineText(line).Trim().Limit(50);//TODO: ● isn't good
 			
 			string _Node(SyntaxNode node) {
 				for (; node != null; node = node.Parent) {
@@ -421,13 +421,13 @@ class PanelBookmarks {
 		}
 	}
 	
-	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int pos) {
-		if (_BookmarkFromLine(doc, doc.aaaLineFromPos(false, pos)) is { } b) {
-			m["Delete bookmark", "*Material.BookmarkMinus @16" + Menus.darkYellow] = o => ToggleBookmark(pos);
-			m["Rename bookmark", "*Modern.Edit @14" + Menus.darkYellow] = o => _Rename(b);
+	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int pos8) {
+		if (_BookmarkFromLine(doc, doc.aaaLineFromPos(false, pos8)) is { } b) {
+			m["Delete bookmark", "*Material.BookmarkMinus @16" + Menus.darkYellow] = o => ToggleBookmark(pos8);
+			m["Rename bookmark"/*, "*Modern.Edit @14" + Menus.darkYellow*/] = o => _Rename(b);
 			m.AddCheck("Active bookmark\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
 		} else {
-			m["Add bookmark", "*Material.Bookmark @16" + Menus.darkYellow] = o => ToggleBookmark(pos);
+			m["Add bookmark", "*Material.Bookmark @16" + Menus.darkYellow] = o => ToggleBookmark(pos8);
 		}
 		m.Separator();
 		m["Previous bookmark", "*JamIcons.ArrowSquareUp" + Menus.black] = o => NextBookmark(true);

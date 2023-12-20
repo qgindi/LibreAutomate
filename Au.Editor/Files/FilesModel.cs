@@ -233,9 +233,9 @@ partial class FilesModel {
 	/// Name, like "name.cs" or just "name".
 	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
 	/// Full path in this workspace or of a linked external file.
-	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithWorkspace"/>.
+	/// :id - <see cref="FileNode.IdString"/> with prefix ":", or <see cref="FileNode.IdStringWithWorkspace"/>; can be followed by any text.
 	/// 
-	/// Case-insensitive. If enclosed in &lt;&gt;, can be followed by any text.
+	/// Case-insensitive.
 	/// If just "name" and not found and name does not end with ".cs", tries to find name + ".cs".
 	/// </param>
 	/// <param name="kind">Ignored if <i>name</i> is id.</param>
@@ -243,7 +243,7 @@ partial class FilesModel {
 	public FileNode Find(string name, FNFind kind = FNFind.Any, bool silent = false) {
 		FoundMultiple = null;
 		if (name.NE()) return null;
-		if (name[0] == '<') {
+		if (name[0] == ':') {
 			name.ToInt(out long id, 1);
 			return FindById(id);
 		}
@@ -352,11 +352,10 @@ partial class FilesModel {
 	}
 	
 	/// <summary>
-	/// Finds file or folder by its <see cref="FileNode.IdString"/>.
-	/// Note: it must not be as returned by <see cref="FileNode.IdStringWithWorkspace"/>.
+	/// Finds file or folder by its <see cref="FileNode.IdString"/> or <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// </summary>
 	public FileNode FindById(string id) {
-		id.ToInt(out long n);
+		id.ToInt(out long n, id.Starts(':') ? 1 : 0);
 		return FindById(n);
 	}
 	

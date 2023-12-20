@@ -574,8 +574,8 @@ Example:
 			};
 			if (v != App.Settings.hotkeys) {
 				App.Settings.hotkeys = v;
-				QuickCapture.UnregisterHotkeys();
-				QuickCapture.RegisterHotkeys();
+				RegHotkeys.UnregisterPermanent();
+				RegHotkeys.RegisterPermanent();
 			}
 		};
 	}

@@ -108,7 +108,7 @@ partial class MainWindow : Window {
 		
 		hs.AddHook(_WndProc);
 		
-		Au.Tools.QuickCapture.RegisterHotkeys();
+		RegHotkeys.RegisterPermanent();
 		
 		App.OnMainWindowLoaded_();
 		
@@ -162,12 +162,7 @@ partial class MainWindow : Window {
 			break;
 		case Api.WM_HOTKEY:
 			handled = true;
-			switch ((AppHotkeyId)(int)wParam) {
-			case AppHotkeyId.QuickCaptureMenu: Au.Tools.QuickCapture.Menu(); break;
-			case AppHotkeyId.QuickCaptureDwnd: Au.Tools.QuickCapture.AoolDwnd(); break;
-			case AppHotkeyId.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
-			case AppHotkeyId.QuickCaptureDuiimage: Au.Tools.QuickCapture.ToolDuiimage(); break;
-			}
+			RegHotkeys.WmHotkey_(wParam);
 			break;
 		case Api.WM_ACTIVATEAPP:
 			if (wParam != 0) {

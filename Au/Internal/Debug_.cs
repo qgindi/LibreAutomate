@@ -159,6 +159,12 @@ namespace Au.More {
 			}
 		}
 		
+		//Called as a netcoredbg breakpoint condition when specified Message.
+		static bool _Logpoint(bool condition, string s, string link) {
+			if (condition) print.it($"<><lc #f8f8d0><open {link}><c #40B000>♦<><> {s}<>");
+			return false;
+		}
+		
 		//CONSIDER: move the MemoryX functions to perf as public.
 		
 #if TRACE

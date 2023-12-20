@@ -319,9 +319,12 @@ class CiErrors {
 					}
 				}
 			} else if (d.Severity == DiagnosticSeverity.Warning) {
+				x.Append("\nCopy: ");
+				x.Hyperlink($"^wi {d.Id}", d.Id, ", ");
+				x.Hyperlink($"^wp {d.Id} {d.Descriptor.Title}", $"#pragma warning disable");
 				switch (ec) {
 				case ErrorCode.WRN_MissingXMLComment:
-					_XmlComment(x/*, v*/);
+					x.Append("\nTo add XML comment, type /// above.");
 					break;
 				}
 			}
@@ -471,7 +474,7 @@ class CiErrors {
 			}
 		} else {
 			x.Hyperlink("^r", "\nAdd assembly reference or class file...");
-			if (!(mu.isEM | mu.isGeneric | mu.isAttribute)) x.Hyperlink("^w" + mu.name, "\nFind Windows API...");
+			if (!(mu.isEM | mu.isGeneric | mu.isAttribute)) x.Hyperlink("^A" + mu.name, "\nFind Windows API...");
 		}
 	}
 	
@@ -488,7 +491,7 @@ class CiErrors {
 			} else {
 				InsertCode.UsingDirective(s, true);
 			}
-		} else if (action == 'w') { //Windows API
+		} else if (action == 'A') { //Windows API
 			new Au.Tools.DWinapi(s[2..]).Show();
 		} else if (action == 'r') { //Add reference
 			Menus.File.Properties();
@@ -497,15 +500,10 @@ class CiErrors {
 		} else if (action == '<') { //output tag
 			int i = s.IndexOf(' ');
 			Panels.Output.Scintilla.AaTags.OnLinkClick(s[2..i], s[++i..]);
+		} else if (action == 'w') { //copy warning
+			if (s[2] == 'i') s = s[4..]; else if (s.Split(' ', 3) is var a) s = $"#pragma warning disable {a[1]} //{a[2]}\r\n#pragma warning restore {a[1]} //{a[2]}\r\n";
+			clipboard.text = s;
 		}
-	}
-	
-	static void _XmlComment(CiText x/*, in (Diagnostic d, int start, int end) v*/) {
-		//x.Hyperlink("^xa+v.start, "\nAdd XML comment");
-		//x.Hyperlink("^xd+v.start, "\nDisable warning");
-		
-		x.Append("\nTo add XML comment, type /// above.");
-		x.Append("\nTo disable warning, add just /// or disable warning 1591 (use warningDisableSnippet).");
 	}
 	
 	static bool _IsAttributeNameWithoutSuffix(string name, int pos, SemanticModel semo) {

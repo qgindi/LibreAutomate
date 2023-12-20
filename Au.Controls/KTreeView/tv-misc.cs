@@ -209,12 +209,53 @@ public unsafe partial class KTreeView {
 					HorizontalOffset = 4,
 					HasDropShadow = false //why no shadow on Win10?
 				};
-				if (osVersion.minWin8) _tt.Padding = new Thickness(2, -1, 2, 1); //on Win7 makes too small
+				if (osVersion.minWin8) _tt.Padding = new(2, -1, 2, 1); //on Win7 makes too small
 			}
 			var r = _tv.GetRectLogical(_i, clampX: true);
 			r.X -= 4; r.Width += 4;
 			_tt.PlacementRectangle = r;
 			_tt.Content = _avi[_i].item.DisplayText;
+			_tt.IsOpen = true;
+		}
+		
+		public void Hide() {
+			_avi = null;
+			_timer?.Stop();
+			if (_tt != null && _tt.IsOpen) _tt.IsOpen = false;
+		}
+	}
+	
+	_Tooltip _tooltip;
+	
+	class _Tooltip {
+		readonly KTreeView _tv;
+		ToolTip _tt;
+		timer _timer;
+		_VisibleItem[] _avi;
+		int _i, _td;
+		
+		public _Tooltip(KTreeView tv) { _tv = tv; }
+		
+		public void HotChanged(int i) {
+			Hide();
+			if (i >= 0 && _tv._IndexToItem(i, out var item) && item.TooltipDelay is int td && td > 0) {
+				_timer ??= new timer(_Timer);
+				_avi = _tv._avi; _i = i;
+				_td = td;
+				_timer.Every(50);
+			}
+		}
+		
+		void _Timer(timer t) {
+			if (_avi != _tv._avi || _i != _tv._hotIndex) { t.Stop(); return; }
+			if (Environment.TickCount - Api.GetLastInputTime() < _td) return;
+			t.Stop();
+			_tt ??= new ToolTip() {
+				PlacementTarget = _tv, //need for correct DPI in non-primary screen
+				Placement = PlacementMode.Mouse,
+				HorizontalOffset = 20,
+			};
+			_avi[_i].item.TooltipSetContent(_tt);
 			_tt.IsOpen = true;
 		}
 		

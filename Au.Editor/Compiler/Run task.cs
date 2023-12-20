@@ -89,8 +89,8 @@ static class CompileRun {
 	static void _OnRunClassFile(FileNode f, FileNode projFolder) {
 		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
-		var s2 = projFolder != null || f.Name.Eqi("global.cs") ? "" : $" or project (<+runClass \"2|{ids}\">create<>). Or <+runClass \"1|{ids}\">change<> role";
-		print.it($"<>Cannot run '{f.Name}'. It is a class file. Need a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+		var s2 = projFolder != null || f.Name.Eqi("global.cs") ? "" : $" or project (<+runClass 2|{ids}>create<>). Or <+runClass 1|{ids}>change<> role";
+		print.it($"<>Cannot run '{f.Name}'. It is a class file. Need a test script (<+runClass 3|{ids}>create<>){s2}.");
 	}
 	
 	static void _SciLink_RunClassFile(string s) {
@@ -448,7 +448,7 @@ class RunningTasks {
 				_EndTask(running);
 				break;
 			default: //warn
-				print.it($"<>Cannot start {f.SciLink()} because it is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>.");
+				print.it($"<>Cannot start {f.SciLink()} because it is running. You may want to <+properties {f.IdStringWithWorkspace}>change<> <c green>ifRunning<>.");
 				break;
 			}
 			return 0;

@@ -111,6 +111,17 @@ public interface ITreeViewItem {
 	/// Valid flags: <b>Checkbox</b>, <b>MarginLeft</b>, <b>Image</b>, <b>MarginRight</b>, <b>Left</b> (minus 1 indent).
 	/// </summary>
 	TVParts NoParts => 0;
+	
+	/// <summary>
+	/// Called when mouse enters this item. If returns &gt; 0, after this hover time (ms) will call <see cref="TooltipSetContent"/>
+	/// </summary>
+	int TooltipDelay => 0;
+	
+	/// <summary>
+	/// Called before showing tooltip, to set tooltip content and maybe change tooltip properties.
+	/// The controls calls this and shows the tooltip only if <see cref="TooltipDelay"/> &gt; 0.
+	/// </summary>
+	void TooltipSetContent(System.Windows.Controls.ToolTip tt) {  }
 }
 
 /// <summary>

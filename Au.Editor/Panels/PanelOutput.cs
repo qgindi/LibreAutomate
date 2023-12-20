@@ -189,7 +189,7 @@ class PanelOutput {
 					m.Text = s_rx1.Replace(s, x => {
 						var f = App.Model?.FindByFilePath(x[1].Value);
 						if (f == null) return x[0].Value;
-						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
+						return $"<open {f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: ";
 					});
 				} else if ((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
 					var b = _sb ??= new StringBuilder(s.Length + 2000);
@@ -216,7 +216,7 @@ class PanelOutput {
 							var f = App.Model?.FindByFilePath(g.Value); if (f == null) continue;
 							int i1 = g.End + 6, len1 = k.end - i1;
 							b.Append("   at ")
-							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
+							.Append("<open ").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append('>')
 							.Append("line ").Append(s, i1, len1).Append("<> in <bc #FAFAD2>").Append(f.Name).Append("<>");
 							
 							isMain
@@ -261,7 +261,6 @@ class PanelOutput {
 		static regexp s_rx1, s_rx2;
 		
 		static void _OpenLink(string s) {
-			//print.it(s);
 			var a = s.Split('|');
 			if (a.Length > 3) App.Model.OpenAndGoTo3(a[0], a[3]);
 			else App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);

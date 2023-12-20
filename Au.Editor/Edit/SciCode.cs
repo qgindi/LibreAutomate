@@ -26,8 +26,8 @@ partial class SciCode : KScintilla {
 	//markers. We can use 0-20. Changes 21-24. Folding 25-31.
 	public const int c_markerUnderline = 0,
 		c_markerBookmark = 1, c_markerBookmarkInactive = 2,
-		c_markerBreakpoint = 3, c_markerBreakpointDisabled = 4,
-		c_markerDebugLine = 5, c_markerDebugLine2 = 6;
+		c_markerBreakpoint = 3, c_markerBreakpointD = 4, c_markerBreakpointC = 5, c_markerBreakpointCD = 6, c_markerBreakpointL = 7, c_markerBreakpointLD = 8,
+		c_markerDebugLine = 19, c_markerDebugLine2 = 20;
 	//public const int c_markerStepNext = 3;
 	
 	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
@@ -238,12 +238,12 @@ partial class SciCode : KScintilla {
 			}
 			break;
 		case NOTIF.SCN_DWELLSTART when isActive:
-			//print.it("dwell start", n.position);
 			CodeInfo.SciMouseDwellStarted(this, n.position);
+			Panels.Breakpoints.SciMouseDwell_(true, this, n);
 			break;
-		//case NOTIF.SCN_DWELLEND when isActive:
-		//	print.it("dwell end", n.position);
-		//	break;
+		case NOTIF.SCN_DWELLEND when isActive:
+			Panels.Breakpoints.SciMouseDwell_(false, this, n);
+			break;
 		case NOTIF.SCN_MARGINCLICK when isActive:
 			if (_fn.IsCodeFile) {
 				CodeInfo.Cancel();
@@ -252,19 +252,7 @@ partial class SciCode : KScintilla {
 				}
 			}
 			if (n.margin == c_marginMarkers) {
-				if (n.modifiers is 0) {
-					int pos = n.position;
-					int line = aaaLineFromPos(false, pos);
-					var m = new popupMenu();
-					if (EFile.IsCodeFile) {
-						Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos);
-						Panels.Debug.AddMarginMenuItems_(this, m, line);
-						m.Separator();
-					}
-					Panels.Bookmarks.AddMarginMenuItems_(this, m, pos);
-					var xy = mouse.xy; xy.Offset(-_dpi / 2, -_dpi / 8);
-					m.Show(xy: xy, owner: AaWnd);
-				}
+				if (n.modifiers is 0) _MarkersMarginClicked(false, n.position);
 			}
 			break;
 		//case NOTIF.SCN_MARGINRIGHTCLICK: break; //can't use it because: 1. Need to handle WM_RBUTTONDOWN. 2. Need notification on button up.
@@ -283,12 +271,6 @@ partial class SciCode : KScintilla {
 	}
 	bool _modified;
 	
-	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
-		if ((markers & 3 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
-		if ((markers & 3 << c_markerBreakpoint) != 0) Panels.Breakpoints.SciDeletingLineWithMarker(this, line);
-		base.AaOnDeletingLineWithMarkers(line, markers);
-	}
-	
 	protected override nint WndProc(wnd w, int msg, nint wp, nint lp) {
 		switch (msg) {
 		case Api.WM_CHAR: {
@@ -306,7 +288,7 @@ partial class SciCode : KScintilla {
 				if (margin >= 0) {
 					if (msg == Api.WM_RBUTTONDOWN) {
 						//prevent changing the caret/selection when rclicked some margins
-						if (margin == c_marginFold) return 0;
+						if (margin is c_marginFold or c_marginMarkers) return 0;
 						
 						//prevent changing the caret/selection if it is in the rclicked line
 						var selStart = aaaSelectionStart8;
@@ -334,9 +316,9 @@ partial class SciCode : KScintilla {
 					case c_marginLineNumbers or c_marginImages or c_marginChanges:
 						ModifyCode.Comment(null, notSlashStar: true);
 						break;
-					//case c_marginMarkers:
-					//	Panels.Bookmarks.SciContextMenu(this);
-					//	break;
+					case c_marginMarkers:
+						_MarkersMarginClicked(true, base.aaaPosFromXY(false, p, false));
+						break;
 					case c_marginFold:
 						_FoldContextMenu(aaaPosFromXY(false, p, false));
 						break;
@@ -364,6 +346,19 @@ partial class SciCode : KScintilla {
 		}
 		
 		return R;
+	}
+	
+	void _MarkersMarginClicked(bool rclick, int pos8) {
+		int line = aaaLineFromPos(false, pos8);
+		var m = new popupMenu();
+		if (EFile.IsCodeFile) {
+			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
+			Panels.Debug.AddMarginMenuItems_(this, m, line);
+			m.Separator();
+		}
+		Panels.Bookmarks.AddMarginMenuItems_(this, m, pos8);
+		var xy = mouse.xy; xy.Offset(-_dpi / 2, -_dpi / 8);
+		m.Show(xy: xy, owner: AaWnd);
 	}
 	
 	protected override bool TranslateAcceleratorCore(ref System.Windows.Interop.MSG msg, ModifierKeys mod) {
@@ -432,6 +427,12 @@ partial class SciCode : KScintilla {
 		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 6);
 	}
 	int _prevLineNumberMarginWidth;
+	
+	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
+		if ((markers & 3 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
+		if ((markers & 63 << c_markerBreakpoint) != 0) Panels.Breakpoints.SciDeletingLineWithMarker(this, line);
+		base.AaOnDeletingLineWithMarkers(line, markers);
+	}
 	
 	#region copy paste
 	
@@ -690,16 +691,22 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 			_Bitmap(ref s_markerBitmaps.bookmark, "*Material.Bookmark #EABB00 @16", 14);
 			_Bitmap(ref s_markerBitmaps.bookmark2, "*Material.BookmarkOutline #EABB00 @16", 14);
 			_Bitmap(ref s_markerBitmaps.breakpoint, "*Material.Circle #EE3000", 8);
-			_Bitmap(ref s_markerBitmaps.breakpoint2, "*Material.Circle #A0A0A0", 8);
+			_Bitmap(ref s_markerBitmaps.breakpointD, "*Material.Circle #A0A0A0", 8);
+			_Bitmap(ref s_markerBitmaps.breakpointC, "*Codicons.DebugBreakpointConditional #EE3000", 8);
+			_Bitmap(ref s_markerBitmaps.breakpointCD, "*Codicons.DebugBreakpointConditional #A0A0A0", 8);
+			_Bitmap(ref s_markerBitmaps.breakpointL, "*BootstrapIcons.DiamondFill #40B000", 10);
+			_Bitmap(ref s_markerBitmaps.breakpointLD, "*BootstrapIcons.DiamondFill #A0A0A0", 10);
 			_Bitmap(ref s_markerBitmaps.debugLine, "*Codicons.DebugStackframe #40B000 @16", 14);
 			_Bitmap(ref s_markerBitmaps.debugLine2, "*Codicons.DebugStackframe #808080 @16", 14);
-			//_Bitmap(ref s_markerBitmaps.debugLine, "*Codicons.DebugStackframe #4000FF @16", 14);
-			//_Bitmap(ref s_markerBitmaps.debugLine2, "*Codicons.DebugStackframe #40B000 @16", 14);
 		}
 		_Marker(c_markerBookmark, s_markerBitmaps.bookmark);
 		_Marker(c_markerBookmarkInactive, s_markerBitmaps.bookmark2);
 		_Marker(c_markerBreakpoint, s_markerBitmaps.breakpoint);
-		_Marker(c_markerBreakpointDisabled, s_markerBitmaps.breakpoint2);
+		_Marker(c_markerBreakpointD, s_markerBitmaps.breakpointD);
+		_Marker(c_markerBreakpointC, s_markerBitmaps.breakpointC);
+		_Marker(c_markerBreakpointCD, s_markerBitmaps.breakpointCD);
+		_Marker(c_markerBreakpointL, s_markerBitmaps.breakpointL);
+		_Marker(c_markerBreakpointLD, s_markerBitmaps.breakpointLD);
 		_Marker(c_markerDebugLine, s_markerBitmaps.debugLine);
 		_Marker(c_markerDebugLine2, s_markerBitmaps.debugLine2);
 		
@@ -724,7 +731,7 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 	
 	struct _MarkerBitmaps {
 		public int dpi;
-		public (int size, nint data) bookmark, bookmark2, breakpoint, breakpoint2, debugLine, debugLine2;
+		public (int size, nint data) bookmark, bookmark2, breakpoint, breakpointD, breakpointC, breakpointCD, breakpointL, breakpointLD, debugLine, debugLine2;
 	}
 	static _MarkerBitmaps s_markerBitmaps;
 	

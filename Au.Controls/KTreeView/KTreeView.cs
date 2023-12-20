@@ -184,7 +184,7 @@ public unsafe partial class KTreeView {
 			_hotIndex = -1;
 			_Measure(true);
 			_Invalidate();
-			if (part <= -2) _OnMouseMoveOrWheel(true); //wheel, not scrollbar or keyboard
+			if (part <= -2) _OnMouseMoveOrScroll(true); //wheel, not scrollbar or keyboard
 		};
 		
 		_hscroll.PosChanged += (sb, part) => {
@@ -369,21 +369,23 @@ public unsafe partial class KTreeView {
 				_MouseEnd();
 			}
 		}
-		_OnMouseMoveOrWheel(false);
+		_OnMouseMoveOrScroll(false);
 	}
 	
-	void _OnMouseMoveOrWheel(bool wheel) {
-		if (HotTrack || ShowLabelTip) {
-			int i = _ItemFromY(_w.MouseClientXY.y);
-			if (i != _hotIndex) {
-				if (HotTrack) {
-					if (_hotIndex >= 0) _Invalidate(_hotIndex);
-					if (i >= 0) _Invalidate(i);
-				}
-				if (_hotIndex < 0 != i < 0) Api.TrackMouseLeave(_w, i >= 0);
-				_hotIndex = i;
-				if (ShowLabelTip) (_labeltip ??= new _LabelTip(this)).HotChanged(i);
+	void _OnMouseMoveOrScroll(bool wheel) {
+		int i = _ItemFromY(_w.MouseClientXY.y);
+		if (i != _hotIndex) {
+			if (HotTrack) {
+				if (_hotIndex >= 0) _Invalidate(_hotIndex);
+				if (i >= 0) _Invalidate(i);
 			}
+			
+			if (_hotIndex < 0 != i < 0) Api.TrackMouseLeave(_w, i >= 0);
+			_hotIndex = i;
+			
+			if (ShowLabelTip) (_labeltip ??= new(this)).HotChanged(i);
+			
+			(_tooltip ??= new(this)).HotChanged(i);
 		}
 	}
 	
@@ -393,6 +395,7 @@ public unsafe partial class KTreeView {
 			_hotIndex = -1;
 		}
 		_labeltip?.Hide();
+		_tooltip?.Hide();
 	}
 	
 	/// <summary>
