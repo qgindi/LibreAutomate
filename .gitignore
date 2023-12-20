@@ -231,8 +231,8 @@ ModelManifest.xml
 !/_/*.manifest
 !/_/*.txt
 
-#!/_/32/*
-#!/_/64/*
+!/_/32/
+/_/32/*
 !/_/32/7za.exe
 
 /_/Default/*

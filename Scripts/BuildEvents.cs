@@ -21,15 +21,15 @@ return args[0] switch {
 /// Exits editor. Copies AuCpp.dll and unloads the old dll from processes.
 int CppPostBuild() {
 	_ExitEditor();
-	if (!_CopyAuCppDllIfNeed(args[2] != "x64")) return 1;
+	if (!_CopyAuCppDllIfNeed(args[2] != "x64", false)) return 1;
 	return 0;
 }
 
 /// Exits editor. If need, copies AuCpp.dll and unloads the old dll from processes.
 int EditorPreBuild() {
 	_ExitEditor();
-	if (!_CopyAuCppDllIfNeed(false)) return 1;
-	if (!_CopyAuCppDllIfNeed(true)) return 1;
+	_CopyAuCppDllIfNeed(false, true);
+	_CopyAuCppDllIfNeed(true, true);
 	return 0;
 }
 
@@ -41,11 +41,11 @@ void _ExitEditor() {
 	}
 }
 
-bool _CopyAuCppDllIfNeed(bool bit32) {
+bool _CopyAuCppDllIfNeed(bool bit32, bool editor) {
 	var cd = Environment.CurrentDirectory;
 	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{(bit32 ? "Win32" : "x64")}\AuCpp.dll");
 	string dest = pathname.normalize($@"{cd}\..\_\{(bit32 ? "32" : "64")}\AuCpp.dll");
-	if (!filesystem.getProperties(src, out var p1)) { print.it("Failed `filesystem.getProperties(src)`"); return false; }
+	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
 		print.it($"Updating {dest}");
