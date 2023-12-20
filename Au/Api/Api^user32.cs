@@ -231,11 +231,11 @@ static unsafe partial class Api {
 	internal static extern bool SetForegroundWindow(wnd hWnd);
 	
 	internal const int ASFW_ANY = -1;
-
+	
 #if true
 	[DllImport("user32.dll", EntryPoint = "AllowSetForegroundWindow", SetLastError = true)]
 	static extern bool _AllowSetForegroundWindow(int dwProcessId);
-
+	
 	internal static bool AllowSetForegroundWindow(int dwProcessId = ASFW_ANY) {
 		return _AllowSetForegroundWindow(ASFW_ANY);
 		//Ignore dwProcessId, because AllowSetForegroundWindow doc says:
@@ -1637,5 +1637,18 @@ static unsafe partial class Api {
 	
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool ClipCursor(RECT* lpRect);
+	
+	[DllImport("user32.dll")]
+	static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+	
+	struct LASTINPUTINFO {
+		public int cbSize;
+		public int dwTime;
+	}
+	
+	internal static int GetLastInputTime() {
+		var r = new LASTINPUTINFO { cbSize = 8 };
+		return GetLastInputInfo(ref r) ? r.dwTime : 0;
+	}
 }
 

@@ -220,16 +220,20 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public string IdString => _id.ToString();
 	
 	/// <summary>
-	/// Formats string like "&lt;0x10000000A&gt;", with <see cref="Id"/> in low-order int and <see cref="FilesModel.WorkspaceSN"/> in high-order int.
+	/// Formats string like ":0x10000000A", with <see cref="Id"/> in low-order uint and <see cref="FilesModel.WorkspaceSN"/> in high-order int.
 	/// Such string can be passed to <see cref="FilesModel.Find"/>.
 	/// </summary>
-	public string IdStringWithWorkspace => "<0x" + (_id | ((long)_model.WorkspaceSN << 32)).ToString("X") + ">";
+	public string IdStringWithWorkspace => ":0x" + (_id | ((long)_model.WorkspaceSN << 32)).ToString("X");
 	
 	/// <summary>
 	/// Formats SciTags &lt;open&gt; link tag to open this file.
 	/// </summary>
 	/// <param name="path">In link name use <see cref="ItemPath"/> instead of name.</param>
-	public string SciLink(bool path = false) => $"<open \"{IdStringWithWorkspace}\">{(path ? ItemPath : _name)}<>";
+	/// <param name="line">If not null, appends |line. It is 1-based.</param>
+	public string SciLink(bool path = false, int? line = null)
+		=> line == null
+		? $"<open {IdStringWithWorkspace}>{(path ? ItemPath : _name)}<>"
+		: $"<open {IdStringWithWorkspace}|{line.Value}>{(path ? ItemPath : _name)}<>";
 	
 	/// <summary>
 	/// true if is a link to an external file or folder.

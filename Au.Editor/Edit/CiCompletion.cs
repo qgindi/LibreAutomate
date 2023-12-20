@@ -295,8 +295,6 @@ partial class CiCompletion {
 					}
 					//p1.Next('M');
 				} else if (isCommand) {
-					//TODO: Ctrl+Space does not work (broken).
-					
 					if (tok.IsInString(position, code, out stringInfo) == true) {
 						var tspan = stringInfo.textSpan;
 						stringFormat = CiUtil.GetParameterStringFormat(stringInfo.stringNode, model, true);
@@ -324,6 +322,8 @@ partial class CiCompletion {
 						m["Output tags"] = o => HelpUtil.AuHelp("articles/Output tags");
 					});
 					m.Show(PMFlags.ByCaret, owner: doc.AaWnd);
+				} else if (stringFormat != 0) {
+					CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringInfo);
 				}
 				return;
 			}
