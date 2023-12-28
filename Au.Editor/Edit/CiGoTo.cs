@@ -324,10 +324,10 @@ class CiGoTo {
 			b.R.Add("Type", out TextBox tType, $@"\b{_prefix}\s+{_type}\b"); //note: don't use unescaped space. Then splits into too: "\b{_prefix}" and "{_type}\b"
 			b.R.Add("Member", out TextBox tMember);
 			if (_member.NE()) b.Hidden(); else tMember.Text = 0 != (_flags & 2) ? $@"\bpublic\s.+?\s{_member}\b" : $@"\b{_member}\b";
-			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b", labeledBy: b.Last).Tooltip("The code must also match this regex"); ;
+			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").LabeledBy().Tooltip("The code must also match this regex"); ;
 			//b.R.Add(out KCheckBox cText, "Text", out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").Tooltip("The code must also match this regex"); ;
-			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type, labeledBy: b.Last).Tooltip("The file name or path must match this regex");
-			b.R.Add(out KCheckBox cAlso, "Also").Add(out TextBox tAlso, $"NOT file:{_NotPath()}", labeledBy: b.Last).Tooltip("Append this to the query");
+			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type).LabeledBy().Tooltip("The file name or path must match this regex");
+			b.R.Add(out KCheckBox cAlso, "Also").Add(out TextBox tAlso, $"NOT file:{_NotPath()}").LabeledBy().Tooltip("Append this to the query");
 			cAlso.IsChecked = true;
 			
 			b.End();
@@ -368,9 +368,9 @@ class CiGoTo {
 			if (!_member.NE()) tMember.Text = 0 != (_flags & 1) ? $@"symbol:/(?-i)\b{_member}\b/"
 											: 0 != (_flags & 2) ? $@"/(?-i)\bpublic .+? {_member}\b/" //member of class or struct
 											: $@"/(?-i)\b{_member}\b/"; //member of interface or enum
-			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $"\"namespace {_namespace}\"", labeledBy: b.Last).Tooltip("Append this to the query");
-			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type, labeledBy: b.Last).Tooltip("The file name or path must contain this text or match /regex/");
-			b.R.Add(out KCheckBox cAlso, "Also").Add(out TextBox tAlso, $"NOT path:/{_NotPath()}/", labeledBy: b.Last).Tooltip("Append this to the query");
+			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $"\"namespace {_namespace}\"").LabeledBy().Tooltip("Append this to the query");
+			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type).LabeledBy().Tooltip("The file name or path must contain this text or match /regex/");
+			b.R.Add(out KCheckBox cAlso, "Also").Add(out TextBox tAlso, $"NOT path:/{_NotPath()}/").LabeledBy().Tooltip("Append this to the query");
 			cAlso.IsChecked = true;
 			
 			b.End();

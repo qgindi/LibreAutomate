@@ -198,7 +198,7 @@ partial class Compiler {
 		}
 		
 		//p1.Next();
-		var asmStream = new MemoryStream(16000);
+		var asmStream = new MemoryStream(20_000);
 		var emitResult = _compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 		
 		if (needOutputFiles) {

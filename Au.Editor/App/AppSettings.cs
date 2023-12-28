@@ -120,10 +120,12 @@ record AppSettings : JSettings {
 	
 	//panel Debug
 	public record debug_t {
-		public bool stepIntoAll, noFuncEval;
-		public byte breakT = 2, breakU = 3; //flags: 1 enabled, 2 only exceptions in the list (if not empty), 4 (not impl) not exceptions in the list
+		public bool stepIntoAll, printVarCompact;
+		public byte breakT = 2 | 8; //flags: 1 enabled, 2 the exceptions list is active, 4 not exceptions in the list, 8 when caught
+		public byte breakU = 1; //flags: 1 enabled
 		public string breakListT, breakListU;
 		public byte printEvents;
+		public double hVar = 150, hStack = 100;
 	}
 	public debug_t debug;
 	

@@ -28,7 +28,7 @@ partial class PanelDebug {
 		var v = e.Item as _StackViewItem;
 		_s.frame = v.f;
 		_GoToLine(v.f, keepMarkers: true);
-		_VariablesViewChangedFrameOrThread();
+		//_VariablesViewChangedFrameOrThread();
 		_ListVariables();
 	}
 	

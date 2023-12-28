@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Au.Controls;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
+using System.Windows;
 
 class PanelBookmarks {
 	KTreeView _tv;
@@ -47,7 +48,7 @@ class PanelBookmarks {
 			}
 			catch (Exception e1) { print.it(e1); }
 		}
-		_tv.SetItems(_root.Children());
+		_TvSetItems();
 		
 		if (!_initOnce) {
 			_initOnce = true;
@@ -56,7 +57,7 @@ class PanelBookmarks {
 				if (_root == null) return;
 				SaveNowIfNeed();
 				_root = null;
-				_tv.SetItems(null);
+				_TvSetItems();
 			};
 			
 			FilesModel.NeedRedraw += v => {
@@ -82,10 +83,10 @@ class PanelBookmarks {
 					case ModifierKeys.Shift when !b.IsFolder: _Rename(b); break;
 					}
 					break;
-				case MouseButton.Right when e.Mod == 0:
+				case MouseButton.Right:
 					_ContextMenu(b);
 					break;
-				case MouseButton.Middle when e.Mod == 0:
+				case MouseButton.Middle:
 					_SetActive(b, !b.IsActiveOrHasActiveChildren);
 					break;
 				}
@@ -102,6 +103,8 @@ class PanelBookmarks {
 				tb.Text = (item as _Item).name; //edit without line number
 				tb.SelectAll();
 			};
+			
+			_tv.RightClickInEmptySpace += () => _ContextMenu(null);
 			
 			Panels.Editor.ClosingDoc += doc => {
 				if (_FindItemOfFile(doc) is { } f) {
@@ -160,7 +163,7 @@ class PanelBookmarks {
 			b.markerHandle = h;
 			b = b.Next;
 		}
-		if (removed) _tv.SetItems(_root.Children(), true);
+		if (removed) _TvSetItems(true);
 	}
 	
 	//_Item _FindItemOfFile(FileNode fn) => _root.Children().FirstOrDefault(o => o.file == fn); //slow, garbage
@@ -193,7 +196,7 @@ class PanelBookmarks {
 			if (folder.Children().FirstOrDefault(o => o.line > line) is { } b2) b2.AddSibling(b, false);
 			else folder.AddChild(b);
 			
-			_tv.SetItems(_root.Children(), true);
+			_TvSetItems(true);
 			_TvSelect(b);
 			_SaveLater();
 		}
@@ -205,7 +208,7 @@ class PanelBookmarks {
 			if (_Node(node) is string s1) return s1 + "  " + _Line();
 			return _Line();
 			
-			string _Line() => "● " + doc.aaaLineText(line).Trim().Limit(50);//TODO: ● isn't good
+			string _Line() => "¦  " + doc.aaaLineText(line).Trim().Limit(50);
 			
 			string _Node(SyntaxNode node) {
 				for (; node != null; node = node.Parent) {
@@ -306,27 +309,42 @@ class PanelBookmarks {
 		}
 	}
 	
+	void _TvSetItems(bool modified = false) {
+		if (_root?.Count > 0) {
+			_tv.SetItems(_root.Children(), modified);
+		} else {
+			_tv.SetItems(null);
+		}
+	}
+	
 	void _TvSelect(_Item b) {
 		if (!b.IsFolder && !b.Parent.IsExpanded) _tv.Expand(b.Parent, true);
 		_tv.SelectSingle(b, true);
 	}
 	
 	void _ContextMenu(_Item b) {
-		_TvSelect(b);
 		var m = new popupMenu();
 		
-		if (b.IsFolder) {
-			m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);
-			m["Move down\tShift+Down", disable: b.Next == null] = o => _MoveFolder(b, false);
+		if (b != null) {
+			_TvSelect(b);
+			
+			if (b.IsFolder) {
+				m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);
+				m["Move down\tShift+Down", disable: b.Next == null] = o => _MoveFolder(b, false);
+				m.Separator();
+				m["Delete these bookmarks\tCtrl+click"] = o => _DeleteItem(b);
+				m.AddCheck("Active bookmarks\tM-click", b.IsActiveOrHasActiveChildren, o => _SetActive(b, o.IsChecked));
+			} else {
+				m["Rename\tShift+click"] = o => _Rename(b);
+				m["Delete\tCtrl+click"] = o => _DeleteItem(b);
+				m.AddCheck("Active\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
+			}
 			m.Separator();
-			m["Delete these bookmarks\tCtrl+click"] = o => _DeleteItem(b);
-			m.AddCheck("Active bookmarks\tM-click", b.IsActiveOrHasActiveChildren, o => _SetActive(b, o.IsChecked));
-		} else {
-			m["Rename\tShift+click"] = o => _Rename(b);
-			m["Delete\tCtrl+click"] = o => _DeleteItem(b);
-			m.AddCheck("Active\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
+		} else if (!(_root?.Count > 0)) {
+			print.it("To add a bookmark, right-click the white margin in the code editor.");
+			return;
 		}
-		m.Separator();
+		
 		m["Deactivate all"] = o => { foreach (var v in _root.Children()) _SetActive(v, false); };
 		m["Collapse all"] = o => { foreach (var v in _root.Children()) _tv.Expand(v, false); };
 		m.Submenu("More", m => {
@@ -367,7 +385,7 @@ class PanelBookmarks {
 		var folder = b.Parent;
 		b.Remove();
 		if (!folder.HasChildren) folder.Remove();
-		_tv.SetItems(_root.Children(), true);
+		_TvSetItems(true);
 		_SaveLater();
 	}
 	
@@ -394,7 +412,7 @@ class PanelBookmarks {
 		if (ff == null) return;
 		f.Remove();
 		ff.AddSibling(f, after: !up);
-		_tv.SetItems(_root.Children(), true);
+		_TvSetItems(true);
 		_SaveLater();
 	}
 	
@@ -444,7 +462,7 @@ class PanelBookmarks {
 		foreach (var v in e) {
 			if (_FindItemOfFile(v) is { } folder) {
 				folder.Remove();
-				_tv.SetItems(_root.Children(), true);
+				_TvSetItems(true);
 				_SaveLater();
 			}
 		}

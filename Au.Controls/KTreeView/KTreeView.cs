@@ -289,6 +289,7 @@ public unsafe partial class KTreeView {
 	
 	#region mouse/keyboard input and related events
 	
+	//Returns false if not on item.
 	void _OnMouseDown(MouseButton button, nint wParam, nint lParam, bool @double = false) {
 		if (button != MouseButton.Middle && Focusable) Focus();
 		var xy = Math2.NintToPOINT(lParam);
@@ -336,7 +337,7 @@ public unsafe partial class KTreeView {
 		}
 	}
 	
-	void _OnMouseUp(MouseButton button) {
+	bool _OnMouseUp(MouseButton button) {
 		if (_mouse.active && button == _mouse.button) {
 			_MouseEnd();
 			if (_mouse.multiSelect) { //extend selection on up. If on down, interferes with drag.
@@ -351,7 +352,9 @@ public unsafe partial class KTreeView {
 				bool activateEvent = SingleClickActivate && _mouse.button == MouseButton.Left;
 				_MouseEvents(true, activateEvent, false, _mouse.button, _mouse.h, _mouse.xy, _mouse.mk);
 			}
+			return true;
 		}
+		return false;
 	}
 	
 	void _OnMouseMove(nint wParam) {
@@ -501,6 +504,11 @@ public unsafe partial class KTreeView {
 	/// When drag start detected.
 	/// </summary>
 	public event Action<TVItemEventArgs> ItemDragStart;
+	
+	/// <summary>
+	/// Right-click non on an item.
+	/// </summary>
+	public event Action RightClickInEmptySpace;
 	
 	#endregion
 	

@@ -47,7 +47,7 @@ public class DebugTraceListener : DefaultTraceListener {
 			if (r == 4) Debugger.Launch();
 			else {
 				script.debug();
-				Debugger.Break(); //TODO: netcoredbg ignores it when Au is optimized. Also does not pause at Debug.Assert(false).
+				Debugger.Break();
 			}
 		}
 	}

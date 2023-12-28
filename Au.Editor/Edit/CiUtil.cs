@@ -233,8 +233,13 @@ static class CiUtil {
 		if (parent is ArgumentSyntax asy) {
 			if (parent.Parent is ArgumentListSyntax alis) {
 				if (alis.Parent is ExpressionSyntax es && es is BaseObjectCreationExpressionSyntax or InvocationExpressionSyntax) {
-					if (semo.GetSymbolInfo(es).Symbol is IMethodSymbol m) {
+					var si = semo.GetSymbolInfo(es);
+					if (si.Symbol is IMethodSymbol m) {
 						format = _GetFormat(m, alis);
+					} else if (!si.CandidateSymbols.IsDefaultOrEmpty) {
+						foreach (var v in si.CandidateSymbols.OfType<IMethodSymbol>()) {
+							if ((format = _GetFormat(v, alis)) != 0) break;
+						}
 					}
 				}
 			} else if (parent.Parent is BracketedArgumentListSyntax balis && balis.Parent is ElementAccessExpressionSyntax eacc) {
@@ -259,7 +264,7 @@ static class CiUtil {
 				}
 				if (p != null) {
 					foreach (var v in p.GetAttributes()) {
-						switch(v.AttributeClass.Name) {
+						switch (v.AttributeClass.Name) {
 						case nameof(ParamStringAttribute): return v.GetConstructorArgument<PSFormat>(0, SpecialType.None);
 						case nameof(System.Diagnostics.CodeAnalysis.StringSyntaxAttribute) when v.GetConstructorArgument<string>(0, SpecialType.System_String) == System.Diagnostics.CodeAnalysis.StringSyntaxAttribute.Regex: return PSFormat.NetRegex; //note: the attribute also can be set on properties and fields. But Regex doesn't have.
 						}
@@ -270,32 +275,6 @@ static class CiUtil {
 		}
 		return format;
 	}
-	
-	//rejected. Was useful when we did not have global usings. May cause confusion. May remove directives needed in the future.
-	//public static string GetTextWithoutUnusedUsingDirectives() {
-	//	if (!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
-	//	var code = cd.code;
-	//	var semo = cd.semanticModel;
-	//	var a = semo.GetDiagnostics(null)
-	//		.Where(d => d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019)
-	//		.Select(d => d.Location.SourceSpan)
-	//		.OrderBy(span => span.Start);
-	//	if (!a.Any()) return code;
-	//	var b = new StringBuilder();
-	//	int i = 0;
-	//	foreach (var span in a) {
-	//		int start = span.Start;
-	//		if (start > i && code[start - 1] == ' ') start--;
-	//		if (start > i) b.Append(code, i, start - i);
-	//		i = span.End;
-	//		if (b.Length == 0 || b[^1] == '\n') {
-	//			if (code.Eq(i, "\r\n")) i += 2;
-	//			else if (code.Eq(i, ' ')) i++;
-	//		}
-	//	}
-	//	b.Append(code, i, code.Length - i);
-	//	return b.ToString();
-	//}
 	
 	/// <summary>
 	/// Gets "global using Namespace;" directives from all files of compilation. Skips aliases and statics.
@@ -466,10 +445,17 @@ global using System.Windows.Media;
 	}
 	
 	/// <summary>
+	/// Calls <b>CSharpSyntaxTree.ParseText</b> and returns <b>CompilationUnitSyntax</b>.
+	/// </summary>
+	public static CompilationUnitSyntax GetSyntaxTree(string code) {
+		return CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
+	}
+	
+	/// <summary>
 	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
 	/// </summary>
 	public static bool IsScript(string code) {
-		var cu = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
+		var cu = GetSyntaxTree(code);
 		var f = cu.Members.FirstOrDefault();
 		if (f != null) {
 			if (f is GlobalStatementSyntax) return true;

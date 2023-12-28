@@ -338,4 +338,20 @@ public static class KExtWpf {
 		return t;
 	}
 	static BooleanToVisibilityConverter s_bvc;
+	
+	/// <summary>
+	/// Sets binding to enable/disable the last added element when the specified <b>CheckBox</b> checked/unchecked.
+	/// </summary>
+	public static wpfBuilder xBindCheckedEnabled(this wpfBuilder t, CheckBox c) {
+		t.Bind(FrameworkElement.IsEnabledProperty, new Binding("IsChecked") { Source = c });
+		return t;
+	}
+	
+	/// <summary>
+	/// Calls <b>DockPanel.SetDock</b> and <c>t.Children.Add</c>.
+	/// </summary>
+	public static void xAddDocked(this DockPanel t, UIElement e, Dock dock) {
+		DockPanel.SetDock(e, dock);
+		t.Children.Add(e);
+	}
 }

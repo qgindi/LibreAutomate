@@ -60,34 +60,44 @@ public class wpfBuilder {
 	abstract class _PanelBase {
 		protected readonly wpfBuilder _b;
 		public readonly _PanelBase parent;
-		public Panel panel; //or Grid etc
-		public FrameworkElement lastAdded;
+		public readonly Panel panel;
+		FrameworkElement _lastAdded, _lastAdded2;
 		public bool ended;
 		
 		protected _PanelBase(wpfBuilder b, Panel p) {
 			_b = b;
 			parent = b._p;
-			lastAdded = panel = p;
+			_lastAdded = panel = p;
 		}
 		
 		public virtual void BeforeAdd(WBAdd flags = 0) {
 			if (ended) throw new InvalidOperationException("Cannot add after End()");
-			if (flags.Has(WBAdd.ChildOfLast) && lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
+			if (flags.Has(WBAdd.ChildOfLast) && _lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
 		}
 		
 		public virtual void Add(FrameworkElement c) {
-			panel.Children.Add(lastAdded = c);
+			SetLastAdded(c);
+			panel.Children.Add(c);
 		}
 		
 		public virtual void End() { ended = true; }
 		
+		public FrameworkElement LastAdded => _lastAdded;
+		
+		public FrameworkElement LastAdded2 => _lastAdded2;
+		
+		public void SetLastAdded(FrameworkElement e) {
+			if (_lastAdded != panel) _lastAdded2 = _lastAdded;
+			_lastAdded = e;
+		}
+		
 		public FrameworkElement LastDirect {
 			get {
-				if (lastAdded == panel) {
+				if (_lastAdded == panel) {
 					Debug_.Print("lastAdded == panel");
 					return null;
 				}
-				for (var c = lastAdded; ;) {
+				for (var c = _lastAdded; ;) {
 					var pa = c.Parent as FrameworkElement;
 					if (pa == panel) return c;
 					c = pa;
@@ -168,7 +178,7 @@ public class wpfBuilder {
 		}
 		
 		public void And(double width) {
-			if (_col == 0 || _andWidth != null || lastAdded == panel) throw new InvalidOperationException("And()");
+			if (_col == 0 || _andWidth != null || LastAdded == panel) throw new InvalidOperationException("And()");
 			var c = LastDirect;
 			if (width < 0) {
 				c.Width = -width;
@@ -565,7 +575,15 @@ public class wpfBuilder {
 	/// <remarks>
 	/// The "set properties of last element" functions set properties of this element.
 	/// </remarks>
-	public FrameworkElement Last => _p.lastAdded;
+	public FrameworkElement Last => _p.LastAdded;
+	
+	/// <summary>
+	/// Gets the child or descendant element added in current panel before adding <see cref="Last"/>. Can be null.
+	/// </summary>
+	/// <remarks>
+	/// For example, after calling the <b>Add</b> overload that adds 2 elements (the first is <b>Label</b>), this property returns the <b>Label</b>.
+	/// </remarks>
+	public FrameworkElement Last2 => _p.LastAdded2;
 	
 	//	not useful
 	//	/// <summary>
@@ -660,7 +678,7 @@ public class wpfBuilder {
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default margin is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
 	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If true, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
-	/// <param name="bindLabelVisibility">Let <b>Add</b> overloads that add 2 elements (usually the first is <b>Label</b>) bind the <b>Visibility</b> property of the first element to that of the second element, to automatically hide the first element when the second element is hidden. This option also is applied when used <i>labeledBy</i> with other <b>Add</b> overloads.</param>
+	/// <param name="bindLabelVisibility">Let <see cref="LabeledBy"/> and the <b>Add</b> overload that adds 2 elements (the first is <b>Label</b>) bind the <b>Visibility</b> property of the label to that of the last added element, to automatically hide/show the label together with the element.</param>
 	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null, bool? bindLabelVisibility = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 		if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
@@ -677,7 +695,7 @@ public class wpfBuilder {
 	bool _opt_showToolTipOnKeyboardFocus;
 	bool _opt_bindLabelVisibility;
 	
-	void _Add(FrameworkElement e, object text, WBAdd flags, bool add, FrameworkElement labeledBy) {
+	void _Add(FrameworkElement e, object text, WBAdd flags, bool add) {
 		bool childOfLast = flags.Has(WBAdd.ChildOfLast);
 		if (!flags.Has(WBAdd.DontSetProperties)) {
 			if (e is Control c) {
@@ -764,12 +782,6 @@ public class wpfBuilder {
 				_alsoAll(this, _alsoAllArgs);
 			}
 		}
-		
-		if (labeledBy != null) {
-			if (labeledBy is Label la) la.Target = e;
-			System.Windows.Automation.AutomationProperties.SetLabeledBy(e, labeledBy);
-			if (_opt_bindLabelVisibility) labeledBy.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = e, Mode = BindingMode.OneWay });
-		}
 	}
 	
 	void _AddToParent(FrameworkElement e, bool childOfLast) {
@@ -780,7 +792,7 @@ public class wpfBuilder {
 			//case Panel d: d.Children.Add(e); break; //no, cannot add multiple items because Last becomes the added child
 			default: throw new NotSupportedException($"Cannot add child to {Last.GetType().Name}.");
 			}
-			_p.lastAdded = e;
+			_p.SetLastAdded(e);
 		} else {
 			_p.Add(e);
 		}
@@ -791,14 +803,12 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="element"></param>
 	/// <param name="flags"></param>
-	/// <param name="labeledBy">A <b>Label</b>, <b>TextBlock</b> or other element used as the label of this element. If not null, the function sets <see cref="Label.Target"/> if it's <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).</param>
 	/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add(FrameworkElement element, WBAdd flags = 0, FrameworkElement labeledBy = null) {
+	public wpfBuilder Add(FrameworkElement element, WBAdd flags = 0) {
 		_p.BeforeAdd(flags);
-		_Add(element, null, flags, true, labeledBy);
+		_Add(element, null, flags, true);
 		return this;
 	}
-	//TODO: I don't like the labeledBy parameter. Find a better way.
 	
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (control etc of any type).
@@ -819,13 +829,12 @@ public class wpfBuilder {
 	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
 	/// <param name="flags"></param>
-	/// <param name="labeledBy">A <b>Label</b>, <b>TextBlock</b> or other element used as the label of this element. If not null, the function sets <see cref="Label.Target"/> if it's <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).</param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0, FrameworkElement labeledBy = null) where T : FrameworkElement, new() {
+	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
 		if (text is WBAdd f1 && flags == 0) { flags = f1; text = null; } //it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
 		_p.BeforeAdd(flags);
 		variable = new T();
-		_Add(variable, text, flags, true, labeledBy);
+		_Add(variable, text, flags, true);
 		return this;
 	}
 	
@@ -834,9 +843,8 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
 	/// <param name="flags"></param>
-	/// <param name="labeledBy">A <b>Label</b>, <b>TextBlock</b> or other element used as the label of this element. If not null, the function sets <see cref="Label.Target"/> if it's <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).</param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0, FrameworkElement labeledBy = null) where T : FrameworkElement, new() => Add(out T _, text, flags, labeledBy);
+	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
 	
 	/// <summary>
 	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
@@ -855,8 +863,8 @@ public class wpfBuilder {
 	wpfBuilder _Add2<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 		Add(out var1, text1);
 		if (row2 != null) Row(row2.Value);
-		Add(out var2, text2, labeledBy: var1); //note: no flags
-		return this;
+		Add(out var2, text2); //note: no flags
+		return this.LabeledBy(var1);
 	}
 	
 #if !DEBUG
@@ -872,7 +880,7 @@ public class wpfBuilder {
 	/// <remarks>
 	/// If <b>T1</b> is <b>Label</b>, sets <see cref="Label.Target"/>. If <b>T1</b> is <b>Label</b> or <b>TextBlock</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
 	/// </remarks>
-	[EditorBrowsableAttribute(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use another overload, maybe with parameter labeledBy.
+	[EditorBrowsableAttribute(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use <b>LabeledBy</b>.
 	[Obsolete]
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 		return _Add2(out var1, text1, out var2, text2, row2);
@@ -1705,6 +1713,26 @@ public class wpfBuilder {
 		if (andUia) UiaName(name);
 		return this;
 	}
+	
+	/// <summary>
+	/// Makes an element behave as a label of the last added element (<see cref="Last"/>).
+	/// </summary>
+	/// <param name="label">The label element. Usually <b>Label</b> or <b>TextBlock</b>, but can be any element.</param>
+	/// <remarks>
+	/// Sets <i>label</i>'s <see cref="Label.Target"/> if it's <b>Label</b>. Calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>. Applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
+	/// </remarks>
+	public wpfBuilder LabeledBy(FrameworkElement label) {
+		var e = Last;
+		if (label is Label la) la.Target = e;
+		System.Windows.Automation.AutomationProperties.SetLabeledBy(e, label);
+		if (_opt_bindLabelVisibility) label?.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = e, Mode = BindingMode.OneWay });
+		return this;
+	}
+	
+	/// <summary>
+	/// Makes <see cref="Last2"/> behave as a label of <see cref="Last"/>.
+	/// </summary>
+	public wpfBuilder LabeledBy() => LabeledBy(Last2);
 	
 	/// <summary>
 	/// Sets watermark/hint/cue text of the last added <b>TextBox</b> or editable <b>ComboBox</b> control.

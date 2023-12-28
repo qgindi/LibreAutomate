@@ -1,12 +1,18 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Au.Controls;
 using System.Windows.Interop;
 
-//CONSIDER: instead of the menu, show popup on mouse dwell over the margin.
-//	Normally the first button (under the cursor) is "Toggle breakpoint". In debug mode it is "Run to here".
-//	Or show "Run to here" on click in code, like in Rider.
+//CONSIDER: don't record the 'Go back/forward' history while debugging.
+//	But sometimes useful. Maybe record partially.
+//	Other debuggers record it.
+
+//CONSIDER: show "Run to here" on click in code, like in Rider.
 
 partial class PanelDebug {
 	_Debugger _d;
@@ -20,20 +26,16 @@ partial class PanelDebug {
 		public FileNode file;
 		public int threadId;
 		public _FRAME frame;
-		public bool attached;
-		public string[] exceptionsT, exceptionsU;
-		public bool resuming;
-		public bool pausing;
+		public bool attached, resuming, inStopped;
 		public int runToHere;
-		public bool workaround1;
-		public bool inStopped;
-		public List<int> startedThreads;
+		public Process process;
+		public string[] exceptionsT, exceptionsU;
 		public _STOPPED thrownException;
+		public List<int> startedThreads;
 		public Dictionary<string, string> modules = new();
 	}
 	
 	public PanelDebug() {
-		//try {
 		P.UiaSetName("Debug panel");
 		
 		var b = new wpfBuilder(P).Columns(-1).Brush(SystemColors.ControlBrush);
@@ -60,17 +62,17 @@ partial class PanelDebug {
 			m.Add("Disconnect", o => _Disconnect(), "*Codicons.DebugDisconnect", disable: !IsDebugging).Tooltip = "Continue without debugger";
 		});
 		tb.Items.Add(new Separator());
+		_buttons.@continue = _TbButton("*Codicons.DebugContinue @14" + c_color, _ => _Continue(), "Continue  (F5)");
+		_buttons.pause = _TbButton("*Codicons.DebugPause @14" + c_color, _ => _Pause(), "Pause  (F6)");
 		_buttons.next = _TbButton("*Codicons.DebugStepOver @14" + c_color, _ => _Next(), "Step over  (F10)");
 		_buttons.step = _TbButton("*Codicons.DebugStepInto" + c_color, _ => _Step(), "Step into  (F11)");
 		_buttons.stepOut = _TbButton("*Codicons.DebugStepOut" + c_color, _ => _StepOut(), "Step out  (Shift+F11)");
-		_buttons.@continue = _TbButton("*Codicons.DebugContinue @14" + c_color, _ => _Continue(), "Continue  (F5)");
-		_buttons.pause = _TbButton("*Codicons.DebugPause @14" + c_color, _ => _Pause(), "Pause  (F6)");
 		tb.Items.Add(new Separator());
-		//_TbButton("*BoxIcons.RegularMenu" + c_color3, null,  "Options and more commands").xDropdownMenu(_OptionsMenu);
+		//_TbButton("*BoxIcons.RegularMenu" + c_color3, null,  "More commands").xDropdownMenu(_CommandsMenu);
 		_TbButton("*EvaIcons.Options2" + Menus.green, null, "Options").xDropdownMenu(_OptionsMenu);
-#if DEBUG
-		//_TbButton("*WeatherIcons.SnowWind #FF3300", _ => { _Test(); }, "Test");
-#endif
+//#if DEBUG
+//		_TbButton("*WeatherIcons.SnowWind #FF3300", _ => { _Test(); }, "Test");
+//#endif
 		
 		Button _TbButton(string icon, Action<Button> click, string tooltip/*, bool overflow = false*/) {
 			var v = tb.AddButton(icon, click, tooltip);
@@ -84,14 +86,14 @@ partial class PanelDebug {
 			
 		}
 		_VariablesViewInit();
-		b.Row(-1.5).xAddInBorder(_tvVariables, thickness: new(0, 0, 0, 1));
+		b.Row((-Math.Max(1, App.Settings.debug.hVar), 1..)).xAddInBorder(_tvVariables, thickness: new(0, 0, 0, 1));
 		
 		using (_Header("Call stack", true, 0, 16, -1)) {
 			b.Skip().Add(out _cbThreads).Tooltip("Threads.\nThe text is thread id and name (Thread.Name).");
 			_cbThreads.SelectionChanged += (_, _) => { if (_cbThreads.SelectedItem is ComboBoxItem k && k.Tag is _THREAD t) _SelectedThread(t); };
 		}
 		_StackViewInit();
-		b.Row(-1).Add(_tvStack);
+		b.Row((-Math.Max(1, App.Settings.debug.hStack), 1..)).Add(_tvStack);
 		
 		b.End();
 		_UpdateUI(_UU.Init);
@@ -100,14 +102,15 @@ partial class PanelDebug {
 		
 		UsingEndAction _Header(string text, bool splitter, params WBGridLength[] cols) {
 			b.Row(0);
-			if (splitter) b.Add<GridSplitter>().Splitter(vertical: false, thickness: double.NaN).And(0);
+			if (splitter) {
+				b.Add(out GridSplitter k).Splitter(vertical: false, thickness: double.NaN).And(0);
+				k.DragCompleted += (_, e) => { App.Settings.debug.hVar = _tvVariables.ActualHeight; App.Settings.debug.hStack = _tvStack.ActualHeight; };
+			}
 			b.StartGrid().Columns(cols);
 			b.Add(out TextBlock t).FormatText($"<b>{text}</b>").Margin("2").Align(y: VerticalAlignment.Bottom);
 			t.IsHitTestVisible = false;
 			return new UsingEndAction(() => b.End());
 		}
-		//}
-		//catch (Exception e) { print.it(e); }
 	}
 	
 	public UserControl P { get; } = new();
@@ -128,6 +131,11 @@ partial class PanelDebug {
 		}
 		
 		int processId = CompileRun.CompileAndRun(true, file, noDefer: true, runFromEditor: true, debugger: true);
+		if (processId <= 0) {
+			if (restart != null) _UpdateUI(_UU.Ended);
+			return;
+		}
+		
 		_Attach(processId, false, file);
 	}
 	
@@ -136,8 +144,6 @@ partial class PanelDebug {
 	}
 	
 	void _Attach(int processId, bool attachMode, FileNode file) {
-		if (processId <= 0) return;
-		
 		_restart = false;
 		_s = new(processId, attachMode) { file = file };
 		_d = new _Debugger(_Events);
@@ -148,14 +154,9 @@ partial class PanelDebug {
 		_SetExceptions(0);
 		_SetBreakpoints();
 		
-		_d.Send($"1-target-attach {processId}");
+		_d.Send($"1000-target-attach {processId}");
 		
-		//CONSIDER:
-		//if (attachMode) {
-		//	_Pause();
-		//}
-		
-		//all buttons are disabled until event "1^done" or error
+		//all buttons are disabled until event "1000^done" or "1000^error"
 		_buttons.debug.IsEnabled = false;
 		_buttons.restart.IsEnabled = false;
 	}
@@ -168,7 +169,9 @@ partial class PanelDebug {
 	
 	public bool Attach(int processId/*, bool ensureAttached*/) {
 		if (IsDebugging) return false;
-		_Attach(processId, true, App.Tasks.FileFromProcessId(processId));
+		var f = App.Tasks.FileFromProcessId(processId);
+		if (f == null) return false;
+		_Attach(processId, true, f);
 		//if (ensureAttached) return wait.until(new Seconds(-10) { DoEvents = true }, () => _s?.attached != false) && _s != null;
 		return true;
 	}
@@ -199,65 +202,79 @@ partial class PanelDebug {
 			App.Settings.debug.stepIntoAll = o.IsChecked;
 			if (IsDebugging) _d.Send("-gdb-set enable-step-filtering " + (o.IsChecked ? "0" : "1"));
 		});
-		m.AddCheck("Don't call functions to get values", App.Settings.debug.noFuncEval, o => { App.Settings.debug.noFuncEval = o.IsChecked; });
+		//m.Separator();
+		//m.AddCheck($"Break when exception {((App.Settings.debug.breakT & 8) != 0 ? "caught in user code" : "thrown anywhere")}", (App.Settings.debug.breakT & 1) != 0, o => { App.Settings.debug.breakT ^= 1; _SetExceptions(1); });
+		//m["Exception settings..."] = _DExceptionTypes;
+		m[(App.Settings.debug.breakT & 9) switch { 1 => "Exceptions...  (break when thrown)", 9 => "Exceptions...  (break when caught)", _ => "Exceptions..." }] = _DExceptionTypes;
 		m.Separator();
-		m.Add("Break on exception:", disable: true);
-		m.AddCheck("    When thrown (even if handled)", (App.Settings.debug.breakT & 1) != 0, o => { App.Settings.debug.breakT ^= 1; _SetExceptions(1); });
-		m.AddCheck("    If unhandled in user code but handled elsewhere", (App.Settings.debug.breakU & 1) != 0, o => { App.Settings.debug.breakU ^= 1; _SetExceptions(2); });
-		m["    Exception types..."] = _DExceptionTypes;
+		m.AddCheck("Print 'module loaded/unloaded'", (App.Settings.debug.printEvents & 1) != 0, o => { App.Settings.debug.printEvents ^= 1; });
+		m.AddCheck("Print 'thread started/ended'", (App.Settings.debug.printEvents & 2) != 0, o => { App.Settings.debug.printEvents ^= 2; });
 		m.Separator();
-		m.Add("Print events:", disable: true);
-		m.AddCheck("    Module loaded/unloaded", (App.Settings.debug.printEvents & 1) != 0, o => { App.Settings.debug.printEvents ^= 1; });
-		m.AddCheck("    Thread started/ended", (App.Settings.debug.printEvents & 2) != 0, o => { App.Settings.debug.printEvents ^= 2; });
+		m.AddCheck("Print clicked variable in 1 line", App.Settings.debug.printVarCompact, o => { App.Settings.debug.printVarCompact = o.IsChecked; });
+		
 		//CONSIDER: "Topmost when floating"
 		//CONSIDER: "Activate LA when paused". Now activates.
 		
 		void _DExceptionTypes(PMItem mi) {
 			var w = new KDialogWindow();
-			w.InitWinProp("Exception types", App.Wmain);
-			var b = new wpfBuilder(w).WinSize(700, 500).Columns(-1, 8, -1);
+			w.InitWinProp("Exception settings", App.Wmain);
+			var b = new wpfBuilder(w).WinSize(450, 400).Columns(-1);
 			
-			b.R.Add(out KSciInfoBox info).Height(90);
-			info.aaaText = """
-Exception types for 'Break on exception' options.
-If the list is empty or inactive, will break on all exceptions.
+			b.StartStack();
+			b.Add(out KCheckBox cThrown, "Break when exception thrown anywhere").Checked((App.Settings.debug.breakT & 1) != 0)
+				.Add(out KCheckBox cCaught, "is caught in user code").Checked((App.Settings.debug.breakT & 8) != 0).xBindCheckedEnabled(cThrown);
+			b.End();
+			b.StartStack().Margin("TBL16");
+			b.Add(out KCheckBox cUseListT, "If exception is").Checked((App.Settings.debug.breakT & 2) != 0)
+				.Add(out KCheckBox cNotT, "not").Checked((App.Settings.debug.breakT & 4) != 0).xBindCheckedEnabled(cUseListT);
+			b.End();
+			b.Row(-1).Add(out TextBox eListT, App.Settings.debug.breakListT).LabeledBy(cUseListT).Multiline(wrap: TextWrapping.NoWrap).Margin("B10")
+				.Tooltip("""
+Exception types.
+If the list is empty or 'if exception is' unchecked, will break on all exceptions.
 Example:
 System.DivideByZeroException
 System.IO.FileNotFoundException
 //comment
-""";
+""");
 			
-			b.Row(-1).StartGrid().Columns(-1);
-			b.Add<Label>("When thrown").Margin("B0").Row(-1).Add(out TextBox eListT, App.Settings.debug.breakListT, labeledBy: b.Last).Multiline(wrap: TextWrapping.NoWrap);
-			b.Add(out KCheckBox cOnlyT, "The list is active").Checked((App.Settings.debug.breakT & 2) != 0);
-			b.End();
+			b.Add(out KCheckBox cUU, "Break when exception unhandled in user code is caught elsewhere").Checked((App.Settings.debug.breakU & 1) != 0);
+			b.Add<Label>("If exception is not").Margin("TBL16");
+			b.Row(60).Add(out TextBox eListU, App.Settings.debug.breakListU).LabeledBy().Multiline(wrap: TextWrapping.NoWrap)
+				.Tooltip("""
+Exception types.
+Example:
+System.OperationCanceledException
+System.Threading.Tasks.TaskCanceledException
+//comment
+""");
 			
-			b.Skip().StartGrid().Columns(-1);
-			b.Add<Label>("If unhandled in user code").Margin("B0").Row(-1).Add(out TextBox eListU, App.Settings.debug.breakListU, labeledBy: b.Last).Multiline(wrap: TextWrapping.NoWrap);
-			b.Add(out KCheckBox cOnlyU, "The list is active").Checked((App.Settings.debug.breakU & 2) != 0);
-			b.End();
-			
-			b.R.Skip(2).AddOkCancel();
+			b.R.AddOkCancel();
 			if (!w.ShowAndWait()) return;
 			
 			App.Settings.debug.breakListT = eListT.TextOrNull();
 			App.Settings.debug.breakListU = eListU.TextOrNull();
-			App.Settings.debug.breakT.SetFlag_(2, cOnlyT.IsChecked);
-			App.Settings.debug.breakU.SetFlag_(2, cOnlyU.IsChecked);
+			App.Settings.debug.breakT.SetFlag_(1, cThrown.IsChecked);
+			App.Settings.debug.breakT.SetFlag_(2, cUseListT.IsChecked);
+			App.Settings.debug.breakT.SetFlag_(4, cNotT.IsChecked);
+			App.Settings.debug.breakT.SetFlag_(8, cCaught.IsChecked);
+			App.Settings.debug.breakU.SetFlag_(1, cUU.IsChecked);
 			_SetExceptions(3);
+			
+			//CONSIDER: allow to specify stack patterns where 'thrown' exceptions are ignored
 		}
 	}
 	
 	void _SetOptions() {
 		if (App.Settings.debug.stepIntoAll) _d.Send("-gdb-set enable-step-filtering 0");
-		//if (App.Settings.debug.stepIntoExternal) _d.Send("-gdb-set just-my-code 0");
+		//if (App.Settings.debug.stepIntoExternal) _d.Send("-gdb-set just-my-code 0"); //rejected. Or should use 'launch', not 'attach'.
 	}
 	
 	/// <param name="action">0 init, 1 change 'throw', 2 change 'user-unhandled', 3 change both.</param>
 	void _SetExceptions(int action) {
 		if (!IsDebugging) return;
 		if (action is 0 or 1 or 3) _Apply("throw", App.Settings.debug.breakT, App.Settings.debug.breakListT, ref _s.exceptionsT);
-		if (action is 0 or 2 or 3) _Apply("user-unhandled", App.Settings.debug.breakU, App.Settings.debug.breakListU, ref _s.exceptionsU);
+		if (action is 0 or 2 or 3) _Apply("user-unhandled", App.Settings.debug.breakU | 6, App.Settings.debug.breakListU, ref _s.exceptionsU);
 		
 		void _Apply(string tuu, int flags, string types, ref string[] ids) {
 			if (action != 0 && ids != null) _d.SendSync(3, $"-break-exception-delete {string.Join(' ', ids)}");
@@ -266,11 +283,13 @@ System.IO.FileNotFoundException
 				string etypes = "*";
 				if ((flags & 2) != 0 && !types.NE()) {
 					using (new StringBuilder_(out var sb)) {
+						bool appendNot = (flags & 4) != 0;
 						foreach (var v in types.Split_('\n')) {
-							if (!v.Starts("//")) sb.Append(' ').Append(v);
+							if (v.Starts("//")) continue;
+							if (appendNot) { appendNot = false; sb.Append("--not"); }
+							sb.Append(' ').Append(v);
 						}
-						if (sb.Length == 0) return;
-						etypes = sb.ToString();
+						if (sb.Length > 0) etypes = sb.ToString();
 					}
 				}
 				var s = _d.SendSync(2, $"-break-exception-insert {tuu} {etypes}");
@@ -331,9 +350,10 @@ System.IO.FileNotFoundException
 			if (log.NE()) s = cond;
 			else {
 				log = log.RxReplace(@"[\r\n]+", " ");
-				if (log[0] != '"') log = log.Escape(quote: true);
+				if (!b.LogExpression) log = log.Escape(quote: true);
+				else log = $"({log}).ToString()";
 				if (cond.NE()) cond = "true";
-				s = $"Au.More.Debug_._Logpoint({cond}, {log}, \"{b.File.IdStringWithWorkspace}|{b.Line + 1}\")";
+				s = $"Au.More.LaDebugger_.Logpoint({cond}, {log}, \"{b.File.IdStringWithWorkspace}|{b.Line + 1}\")";
 			}
 		} else s = "false";
 		_d.Send($"-break-condition {b.Id} {s}");
@@ -347,9 +367,14 @@ System.IO.FileNotFoundException
 		return _s.resuming = true;
 	}
 	
+	void _Continue() {
+		if (!_CanResume()) return;
+		_d.Send("1001-exec-continue");
+	}
+	
 	void _Step(string s) {
 		if (!_CanResume()) return;
-		_d.Send(_s.threadId != 0 ? $"-exec-{s} --thread {_s.threadId}" : $"-exec-{s}");
+		_d.Send(_s.threadId != 0 ? $"1001-exec-{s} --thread {_s.threadId}" : $"1001-exec-{s}");
 	}
 	void _Next() {
 		_Step("next");
@@ -363,8 +388,9 @@ System.IO.FileNotFoundException
 		_Step("finish");
 	}
 	
-	void _Continue() {
-		if (_CanResume()) _d.Send($"-exec-continue");
+	void _ResumeL(string command) {
+		_s.resuming = true;
+		_d.Send(command);
 	}
 	
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line) {
@@ -379,8 +405,15 @@ System.IO.FileNotFoundException
 	
 	void _Pause() {
 		if (!IsDebugging || IsStopped) return;
-		_s.pausing = true;
-		_d.Send($"-exec-interrupt");
+		int tid = _s.threadId;
+		if (tid == 0) { //pause main thread
+			try {
+				if (_s.process == null) _s.process = Process.GetProcessById(_s.processId); else _s.process.Refresh();
+				tid = _s.process.Threads[0].Id;
+			}
+			catch (Exception e1) { Debug_.Print(e1); }
+		}
+		_d.Send($"-exec-interrupt --thread {tid}"); //note: netcoredbg code is modified to support --thread parameter. If --thread 0, works like without --thread.
 	}
 	
 	void _End() {
@@ -392,9 +425,9 @@ System.IO.FileNotFoundException
 	}
 	
 	void _Events(string s) {
-#if DEBUG
-		if (0 == s.Starts(true, "^done", "=library-", "=thread-", "=message,")) print.it("EVENT", s);
-#endif
+//#if DEBUG
+//		if (0 == s.Starts(true, "^done", "=library-", "=thread-", "=message,")) print.it("EVENT", s);
+//#endif
 		
 		if (_s == null) {
 			Debug_.Print("_s==null");
@@ -419,43 +452,41 @@ System.IO.FileNotFoundException
 			
 			_s = null;
 			print.it("<><lc #C0C0FF><>");
-		} else if (s == "1^done") { //attached
+		} else if (s == "1000^done") { //attached
 			_s.attached = true;
 			_UpdateUI(_UU.Started);
 			_PrintThread(null, true);
 			RegHotkeys.RegisterDebug();
-		} else if (s.Starts("1^error,msg=")) { //failed to attach. Eg when the process is admin but editor isn't.
+		} else if (s.Starts("1000^error,msg=")) { //failed to attach. Eg when the process is admin but editor isn't.
 			_Print("Failed to attach debugger. " + s[12..]);
 			_d.Send($"-gdb-exit");
-		} else if (s == "^running") {
+		} else if (s is "^running" or "1001^running") {
 			IsStopped = _s.resuming = false;
 			_s.frame = null;
 			_UpdateUI(_UU.Resumed);
-		} else if (s.Starts("*stopped,")) {
+		} else if (s.Starts("1001^error")) { //failed -exec-x. Eg when paused in [Native Frames].
+			_s.resuming = false;
+			_Print("Can't step here.");
+			_UpdateUI(_UU.Paused);
+		} else if (s.Starts("*stopped")) {
 			if (s.Eq(17, "exited")) {
 				IsDebugging = IsStopped = _s.resuming = false;
 				_d.Send($"-gdb-exit");
 				_UpdateUI(_UU.Ended);
 				if (s.RxMatch(@"\bexit-code=""(.+?)""", 1, out string ec)) _Print($"Process ended. Exit code: {ec}.");
 			} else {
-				//part 2 of the netcoredbg crash workaround
-				if (_s.workaround1) {
-					_s.workaround1 = false;
-					if (s.Starts("""*stopped,reason="signal""")) return;
-				}
-				
 				IsStopped = true;
-				//_s.stopCount++;
 				
 				_s.inStopped = true;
 				try { _Stopped(s); }
 				finally { _s.inStopped = false; }
 				
-				_UpdateUI(_UU.Paused);
+				if (!_s.resuming) _UpdateUI(_UU.Paused);
 			}
 		} else if (s.Starts("^done,stack=")) {
 			if (!IsStopped) return;
 			_FRAME[] a = new _MiRecord(s).Data<_DONE_STACK>().stack;
+			if (a.Length == 0) return;
 			_StackViewSetItems(a);
 			_s.frame = a[0];
 			_ListVariables();
@@ -484,18 +515,7 @@ System.IO.FileNotFoundException
 				_PrintThread(s, true);
 			} else if (s.Starts("=thread-exited,id=")) {
 				_PrintThread(s, false);
-				int tid = s.ToInt(19);
-				if (tid == _s.threadId) {
-					_s.threadId = 0;
-					
-					//workaround for debugger bug: netcoredbg crashes later when pausing, ~1/5 times
-					//	FUTURE: remove the workaround when the debugger will fix it.
-					if (!IsStopped) {
-						_s.workaround1 = true;
-						_d.Send($"-exec-interrupt");
-						_d.Send("1000-exec-continue");
-					}
-				}
+				if (s.ToInt(19) == _s.threadId) _s.threadId = 0;
 			} else if (s.Starts("=message,")) { //Debug.Print etc, like =message,text="TEXT\r\n",send-to="output-window",source="Debugger.Log"
 				var r = new _MiRecord(s);
 				var text = ((string)r.data["text"]).TrimEnd();
@@ -531,36 +551,29 @@ System.IO.FileNotFoundException
 	
 	void _Stopped(string s) {
 		var x = new _MiRecord(s).Data<_STOPPED>();
-		int pauseWorkaround = -1;
+		_s.threadId = x.thread_id;
+		var thrownException = _s.thrownException; _s.thrownException = null;
 		
 		switch (x.reason) {
-		case "end-stepping-range":
-			
-			break;
 		case "breakpoint-hit":
 			if (_s.runToHere != 0 && x.bkptno == _s.runToHere) {
 				if (!Panels.Breakpoints.GetBreakpoints().Any(o => o.Id == x.bkptno)) _d.Send($"-break-delete {_s.runToHere}");
 				_s.runToHere = 0;
-			} //never mind: does not delete the _runToHere breakpoint if stops there on exception
+				//never mind: does not delete the _runToHere breakpoint if stops there on exception
+			} else {
+				if (!x.exception.NE()) _Print($"<c red>{x.exception}<>");
+			}
 			break;
 		case "exception-received":
 			if (_StoppedOnException(x)) return;
 			break;
-		case "signal-received":
-			//part 1 of workaround for: random x.thread_id if never stopped or the last stopped thread ended. Switch to the main thread.
-			//	FUTURE: change the code if netcoredbg will fulfill this feature request: https://github.com/Samsung/netcoredbg/issues/150
-			if (_s.pausing && x.thread_id != _s.threadId) pauseWorkaround = _s.threadId;
-			
-			//if (x.frame.func == "Au.More.DebugTraceListener.Fail()") {
-			//	print.it("step out");
-			//	_StepOut();
-			//	return;
-			//}
+		case "end-stepping-range":
+			if (thrownException != null) if (!_DetectCatch(x, thrownException)) return;
 			break;
+			//case "signal-received": //Pause or Debugger.Break
+			
+			//	break;
 		}
-		
-		_s.pausing = false;
-		_s.threadId = x.thread_id;
 		
 		if (_GetThreads() is _THREAD[] a) { //fast
 			a = a.Where(t => t.id == _s.threadId || !_IsHiddenThreadName(t.name)).ToArray();
@@ -571,16 +584,9 @@ System.IO.FileNotFoundException
 				foreach (var t in a) _cbThreads.Items.Add(new ComboBoxItem { Content = $"{t.id}  {t.name}", Tag = t });
 			}
 			
+			_GoToLine(x.frame);
+			
 			int iSel = Array.FindIndex(a, t => t.id == _s.threadId);
-			
-			if (pauseWorkaround != -1 && !(iSel == 0 && pauseWorkaround == 0)) { //part 2 of the workaround
-				iSel = pauseWorkaround == 0 ? 0 : Array.FindIndex(a, t => t.id == pauseWorkaround);
-				if (iSel < 0) iSel = 0;
-				_s.threadId = a[iSel].id;
-			} else {
-				_GoToLine(x.frame);
-			}
-			
 			if (iSel >= 0) {
 				if (iSel != _cbThreads.SelectedIndex) _cbThreads.SelectedIndex = iSel; //_cbThreads.SelectionChanged -> _SelectedThread
 				else _SelectedThread(a[iSel]);
@@ -590,7 +596,11 @@ System.IO.FileNotFoundException
 		_THREAD[] _GetThreads() {
 			if (_d.SendSync(5, "-thread-info") is string s && s.Starts("^done,threads=")) {
 				_THREAD[] a = new _MiRecord(s).Data<_DONE_THREADS>().threads;
-				foreach (var t in a) _GetThreadNameAndTime(t.id, out t.name, out t.time);
+				foreach (var t in a) {
+					var s1 = t.name;
+					_GetThreadNameAndTime(t.id, out t.name, out t.time);
+					if (t.name == null && s1 != "<No name>") t.name = s1;
+				}
 				a = a.OrderBy(o => o.time).ToArray();
 				a[0].name ??= "Main Thread";
 				return a;
@@ -600,35 +610,64 @@ System.IO.FileNotFoundException
 		
 		bool _StoppedOnException(_STOPPED x) {
 			var stage = x.exception_stage switch { "throw" => "thrown", "user-unhandled" => "unhandled in user code", _ => x.exception_stage };
-			if ((App.Settings.debug.breakT & 1) != 0) { //continue if this is a duplicate stop when using option 'break when thrown'
-				if (x.exception_stage == "throw") _s.thrownException = x;
-				else if (_s.thrownException is { } xx) {
-					_s.thrownException = null;
-					if (x == xx with { exception_stage = x.exception_stage }) {
-						_Print($"<c red>Exception {stage}.<>");
-						_Continue();
-						return true;
+			
+			if ((App.Settings.debug.breakT & 9) == 9 && x.exception_stage == "throw") {
+				_s.thrownException = x;
+				_ResumeL("-exec-next");
+				return true;
+			}
+			
+			_PrintException(x, stage, false);
+			return false;
+		}
+		
+		//Returns: true - stop, false - continue.
+		bool _DetectCatch(_STOPPED x, _STOPPED thrownException) {
+			var f = x.frame;
+			if (!f.fullname.NE()) {
+				try {
+					var s = filesystem.loadText(f.fullname);
+					for (int i = 0, line = 0; i < s.Length; i++) {
+						if (++line == f.line) {
+							int pos = i + f.col - 1;
+							if (s.Eq(pos, "catch") || s.Eq(pos, "when") || s.Eq(pos, '{')) {
+								var tok = CiUtil.GetSyntaxTree(s).FindToken(pos);
+								if ((tok.IsKind(SyntaxKind.CatchKeyword) && tok.Parent is CatchClauseSyntax) //`catch` without `when`
+									|| (tok.IsKind(SyntaxKind.WhenKeyword) && tok.Parent is CatchFilterClauseSyntax)) { //`catch` with `when`
+									_s.thrownException = thrownException;
+									_ResumeL("-exec-next"); //run until `{ }` or next `when`
+									return false;
+								} else if (tok.Parent is BlockSyntax && tok.Parent.Parent is CatchClauseSyntax) { //`{ }` after `catch` or `when`
+									_PrintException(thrownException, "caught", true);
+									break;
+								}
+							}
+							_Continue();
+							return false;
+						}
+						i = s.IndexOf('\n', i);
+						if (i < 0) break;
 					}
 				}
-			}
-			var b = new StringBuilder($"<c red>{x.exception_name} {stage}.\r\n\tMessage: <\a>{x.exception}</\a>\r\n\tCall stack: <><fold>\r\n");
-			if (_d.SendSync(6, $"-stack-list-frames --thread {x.thread_id}") is string s && s.Starts("^done,stack=")) {
-				_FRAME[] a = new _MiRecord(s).Data<_DONE_STACK>().stack;
-				foreach (var f in a) {
-					b.Append("\t\t").AppendLine(_FormatFrameString(f, true));
+				catch (Exception e1) { Debug_.Print(e1); }
+			} else Debug_.Print("_StepOut on thrown exception stopped in non-user code");
+			return true;
+		}
+		
+		void _PrintException(_STOPPED x, string stage, bool caught) {
+			if (_VarCreateL("$exception.ToString()") is { } v) {
+				string s = v.value.Trim('"').Unescape(), color = caught ? "#CC00FF" : "red", append = null;
+				if (_VarCreateL("$exception.InnerException") is { } vi && vi.value.Starts('{')) {
+					append = " See also: Debug panel -> Variables -> $exception -> InnerException.";
 				}
+				_Print($"<c {color}>{stage.Upper(SUpper.FirstChar)}: {s}\r\n{append}<>");
 			}
-			b.Append("</fold>");
-			_Print(b.ToString());
-			return false;
-			//FUTURE: show exception UI.
 		}
 	}
 	
 	void _SelectedThread(_THREAD t) {
-		//print.it(t.id);
 		if (!IsStopped) return;
-		if (!_s.inStopped) _VariablesViewChangedFrameOrThread();
+		//if (!_s.inStopped) _VariablesViewChangedFrameOrThread();
 		if (t.id != _s.threadId) {
 			_s.threadId = t.id;
 			_ClearTreeviewsAndMarkers();
@@ -709,8 +748,7 @@ System.IO.FileNotFoundException
 	static unsafe bool _GetThreadNameAndTime(int id, out string name, out long time) {
 		name = null;
 		using var th = Api.OpenThread(Api.THREAD_QUERY_LIMITED_INFORMATION, false, id);
-		Api.GetThreadTimes(th, out time, out _, out _, out _);
-		if (time == 0) {
+		if (!Api.GetThreadTimes(th, out time, out _, out _, out _)) {
 			time = long.MaxValue; //for sorting
 			return false;
 		}
@@ -723,17 +761,18 @@ System.IO.FileNotFoundException
 		return true;
 	}
 	
-	static bool _IsHiddenThreadName(string s) => s is "Au.Aux" or ".NET TP Gate" or ".NET Tiered Compilation Worker" or ".NET Counter Poller";
+	static bool _IsHiddenThreadName(string s) => s is "Au.Aux" or ".NET TP Gate" or ".NET Tiered Compilation Worker" or ".NET Counter Poller" or ".NET Finalizer";
 	
 	string _GetModuleName(_FRAME f) {
+		if (f.clr_addr.module_id.NE()) return ""; //f.func "[Native Frames]"
 		if (_s.modules.TryGetValue(f.clr_addr.module_id, out var r)) r = pathname.getName(r);
 		return r;
 	}
 	
-	string _FormatFrameString(_FRAME f, bool forPrint = false) {
+	string _FormatFrameString(_FRAME f/*, bool forPrint = false*/) {
 		if (f.file.NE()) return $"{_GetModuleName(f)}!{f.func}";
-		if (forPrint) return $"<open {f.file}|{f.line}><\a>{f.func}  ●  {f.file}:{f.line}</\a><>";
-		return $"{f.func}  ●  {f.file}:{f.line}";
+		//if (forPrint) return $"<open {f.file}|{f.line}><\a>{f.func}  ::  {f.file} {f.line}</\a><>";
+		return $"{f.func}  ::  {f.file} {f.line}";
 	}
 	
 	#endregion
@@ -792,59 +831,16 @@ System.IO.FileNotFoundException
 }
 
 //CONSIDER: later report these small bugs and suggestions, maybe consolidated into one github issue.
-//1. Debugger steps into cast operators. Code to reproduce:
+//1. Debugger steps into cast operators.
+//2. If stopped in a property (breakpoint etc), next step will behave like step-out.
+//3. Debugger crashes when evaluating expression like `c[0]` with evalFlags EVAL_NOFUNCEVAL.
+//	Command string: $"-var-create - \"c[0]\" --frame 0 --evalFlags 128"
+//	Here c is a variable of a class with an indexer, eg List.
+//4. The used Roslyn dlls are very old. They don't support newer C# features.
+//5. The Roslyn scripting dlls are not used. Instead use <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />.
+//6. Both protocols (MI and VSCode) should support everything supported by the debugger. Examples:
 /*
-var c = new C();
-_ = c.Prop;
-_ = c[0];
-c[0] = 0;
-_ = c - c;
-string s = c; //steps into
-int k = (int)c; //steps into
-;
-
-class C {
-	public int Prop {
-		get {
-			return 4;
-		}
-	}
-	
-	public int this[int i] {
-		get {
-			return 9;
-		}
-		set {
-			;
-		}
-	}
-	
-	public static int operator -(C c, C d) {
-		return 7;
-	}
-	
-	public static implicit operator string(C c) {
-		return "aa";
-	}
-	
-	public static explicit operator int(C c) {
-		return 4;
-	}
-}
-*/
-//2. Debugger crashes when evaluating expression like `c[0]` with evalFlags EVAL_NOFUNCEVAL.
-//Command string: $"-var-create - \"c[0]\" --frame 0 --evalFlags 128"
-//Here c is a variable of a class with an indexer.
-//Can use the same code to reproduce as in 1. Or can use:
-/*
-var c = new List<int>() { 1, 2 };
-Debugger.Break();
-*/
-//3. The used Roslyn dlls are very old. They don't support newer C# features.
-//4. The Roslyn scripting dlls are not used. Instead use <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />.
-//5. Both protocols (MI and VSCode) should support everything supported by the debugger. Examples:
-/*
-Now MI protocol supports setting options at any time (-gdb-set), but VSCode protocol only in the launch request (bot not in the attach request). Also it seems MI supports an additional option 'hot reload' (I didn't test so far).
-Now MI protocol does not support --thread in -exec-continue and -exec-interrupt, although VSCode supports it.
+Now MI protocol supports setting options at any time (-gdb-set), but VSCode protocol only in the launch request (bot not in the attach request). Also it seems MI supports an additional option 'hot reload' (I didn't test).
+Now MI protocol does not support --thread in -exec-interrupt, although VSCode supports it.
 Now MI protocol does not support ExceptionBreakpoint.negativeCondition (prefix '!' in VSCode protocol).
 */

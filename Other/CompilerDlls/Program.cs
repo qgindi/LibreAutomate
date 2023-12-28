@@ -4,7 +4,7 @@
 //How to get Roslyn dlls:
 
 //Build this project. Don't run; it will run automatically when building Roslyn project Microsoft.CodeAnalysis.CSharp.Features.
-//Download Roslyn solution to C:\Downloads\roslyn-main.
+//Download Roslyn solution to C:\code-lib\roslyn-main.
 //Open Roslyn.sln.
 //To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree.
 //  It loads projects we need:

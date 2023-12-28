@@ -44,7 +44,7 @@ class PanelBreakpoints {
 			}
 			catch (Exception e1) { print.it(e1); }
 		}
-		_tv.SetItems(_root.Children());
+		_TvSetItems();
 		
 		if (!_initOnce) {
 			_initOnce = true;
@@ -53,7 +53,7 @@ class PanelBreakpoints {
 				if (_root == null) return;
 				SaveNowIfNeed();
 				_root = null;
-				_tv.SetItems(null);
+				_TvSetItems();
 			};
 			
 			FilesModel.NeedRedraw += v => {
@@ -72,22 +72,21 @@ class PanelBreakpoints {
 			
 			_tv.ItemClick += e => {
 				var b = e.Item as _Item;
-				if (e.Part is TVParts.Checkbox) {
+				switch (e.Button) {
+				case MouseButton.Left when e.Part is TVParts.Checkbox:
 					_SetEnabled(b, !b.IsEnabledOrHasEnabledChildren);
-				} else {
-					switch (e.Button) {
-					case MouseButton.Left:
-						switch (e.Mod) {
-						case ModifierKeys.Control: _DeleteItem(b); break;
-						}
-						break;
-					case MouseButton.Right when e.Mod == 0:
-						_ContextMenu(b);
-						break;
-					case MouseButton.Middle when e.Mod == 0:
-						_SetEnabled(b, !b.IsEnabledOrHasEnabledChildren);
-						break;
+					break;
+				case MouseButton.Left:
+					switch (e.Mod) {
+					case ModifierKeys.Control: _DeleteItem(b); break;
 					}
+					break;
+				case MouseButton.Right:
+					_ContextMenu(b);
+					break;
+				case MouseButton.Middle:
+					_SetEnabled(b, !b.IsEnabledOrHasEnabledChildren);
+					break;
 				}
 			};
 			
@@ -97,6 +96,8 @@ class PanelBreakpoints {
 					_MoveFolder(f, e.Key is Key.Up);
 				}
 			};
+			
+			_tv.RightClickInEmptySpace += () => _ContextMenu(null);
 			
 			App.Timer1sWhenVisible += () => { if (_save != 0 && --_save <= 0) _SaveNow(); };
 		}
@@ -121,6 +122,7 @@ class PanelBreakpoints {
 					if (b.IsEnabled) xb.SetAttributeValue("en", "");
 					if (!b.condition.NE()) xb.SetAttributeValue("condition", b.condition);
 					if (!b.log.NE()) xb.SetAttributeValue("log", b.log);
+					if (b.LogExpression) xb.SetAttributeValue("flags", "1");
 					xf.Add(xb);
 				}
 			}
@@ -149,7 +151,7 @@ class PanelBreakpoints {
 				_SaveLater(1);
 			}
 		}
-		if (removed) _tv.SetItems(_root.Children(), true);
+		if (removed) _TvSetItems(true);
 	}
 	
 	_Item _FindItemOfFile(FileNode fn) {
@@ -181,11 +183,11 @@ class PanelBreakpoints {
 			if (folder.Children().FirstOrDefault(o => o.line > line) is { } b2) b2.AddSibling(b, false);
 			else folder.AddChild(b);
 			
-			_tv.SetItems(_root.Children(), true);
+			_TvSetItems(true);
 			_TvSelect(b);
 			_SaveLater();
 			
-			if (logpoint) _BreakpointProperties(b, doc, true);
+			if (logpoint) _BreakpointProperties(b, doc);
 		}
 	}
 	
@@ -217,7 +219,7 @@ class PanelBreakpoints {
 		}
 	}
 	
-	void _BreakpointProperties(_Item x, DependencyObject owner, bool logpoint = false) {
+	void _BreakpointProperties(_Item x, DependencyObject owner) {
 		var w = new KDialogWindow();
 		w.InitWinProp("Breakpoint properties", owner);
 		var b = new wpfBuilder(w).Width(300..800);
@@ -226,30 +228,42 @@ class PanelBreakpoints {
 Break when this expression evaluates to true.
 Example: i==5
 Not all kinds of expressions are supported.
+Conditional breakpoints have different marker and Breakpoints panel text color.
 """);
 		//b.R.Add("Hit count", out TextBox eHit).Width(50, "L");
 		b.R.Add("Message", out TextBox eLog, x.log)
 			.Tooltip("""
 Print this text or expression instead of pausing.
-If starts with ", it's an expression, else simple text.
-Not all kinds of expressions are supported.
-Examples:
+Such breakpoints are known as logpoints, tracepoints.
+Green marker and Breakpoints panel text color.
+Simple text examples:
   Simple text
   Text with <b>output tags<>
+Expression examples:
   "Multiline\nstring"
-  "variable1=" + variable1
+  variable
+  "variable=" + variable
   "<c red>x.y=" + x.y + "<>"
+  Au.clipboard.text
+""");
+		b.R.Skip().Add(out KCheckBox cLE, "Message is expression").Checked(x.LogExpression)
+			.Tooltip("""
+Message is a C# expression. See examples in Message tooltip.
+Not all kinds of expressions are supported.
 """);
 		b.R.AddOkCancel();
 		b.End();
-		if (logpoint) { eLog.SelectAll(); eLog.Focus(); } else eCondition.Focus();
+		var e1 = !x.log.NE() ? eLog : eCondition; e1.SelectAll(); e1.Focus();
 		if (!w.ShowAndWait()) return;
 		
 		string cond = eCondition.TextOrNull(), log = eLog.TextOrNull();
-		if (cond != x.condition || log != x.log) {
+		bool isLE = cLE.IsChecked;
+		if (cond != x.condition || log != x.log || isLE != x.LogExpression) {
 			x.condition = cond;
 			x.log = log;
+			x.LogExpression = isLE;
 			_SaveLater();
+			_tv.Redraw(x);
 			x.SetMarkerInDoc();
 			Panels.Debug.BreakpointPropertiesChanged_(x);
 		}
@@ -273,39 +287,49 @@ Examples:
 	}
 	ToolTip _marginTooltip;
 	
+	void _TvSetItems(bool modified = false) {
+		if (_root?.Count > 0) {
+			_tv.SetItems(_root.Children(), modified);
+		} else {
+			_tv.SetItems(null);
+		}
+	}
+	
 	void _TvSelect(_Item b) {
 		if (!b.IsFolder && !b.Parent.IsExpanded) _tv.Expand(b.Parent, true);
 		_tv.SelectSingle(b, true);
 	}
 	
 	void _ContextMenu(_Item b) {
-		_TvSelect(b);
 		var m = new popupMenu();
 		
-		if (b.IsFolder) {
-			m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);
-			m["Move down\tShift+Down", disable: b.Next == null] = o => _MoveFolder(b, false);
+		if (b != null) {
+			_TvSelect(b);
+			
+			if (b.IsFolder) {
+				m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);
+				m["Move down\tShift+Down", disable: b.Next == null] = o => _MoveFolder(b, false);
+				m.Separator();
+				bool haveEnabled1 = b.IsEnabledOrHasEnabledChildren;
+				m[haveEnabled1 ? "Disable these breakpoints\tM-click" : "Enable these breakpoints\tM-click"] = o => _SetEnabled(b, !haveEnabled1);
+				m["Delete these breakpoints\tCtrl+click"] = o => _DeleteItem(b);
+			} else {
+				m["Delete\tCtrl+click"] = o => _DeleteItem(b);
+				m["Properties..."] = o => _BreakpointProperties(b, P);
+				m.AddCheck("Enabled\tM-click", b.IsEnabled, o => _SetEnabled(b, o.IsChecked));
+			}
 			m.Separator();
-			m["Delete these breakpoints\tCtrl+click"] = o => _DeleteItem(b);
-			m.AddCheck("Enabled breakpoints\tM-click", b.IsEnabledOrHasEnabledChildren, o => _SetEnabled(b, o.IsChecked));
-		} else {
-			m["Delete\tCtrl+click"] = o => _DeleteItem(b);
-			m["Properties..."] = o => _BreakpointProperties(b, P);
-			m.AddCheck("Enabled\tM-click", b.IsEnabled, o => _SetEnabled(b, o.IsChecked));
+		} else if (!(_root?.Count > 0)) {
+			print.it("To add a breakpoint, click the white margin in the code editor.");
+			return;
 		}
-		m.Separator();
-		m["Disable all"] = o => { foreach (var v in _root.Children()) _SetEnabled(v, false); };
-		m["Collapse all"] = o => { foreach (var v in _root.Children()) _tv.Expand(v, false); };
+		
+		bool haveEnabled = _root.IsEnabledOrHasEnabledChildren;
+		m[haveEnabled ? "Disable all breakpoints" : "Enable all breakpoints"] = o => { foreach (var v in _root.Children()) _SetEnabled(v, !haveEnabled); };
 		m.Submenu("More", m => {
-			m["Delete all disabled breakpoints..."] = o => {
-				if (1 != dialog.show("Delete all disabled breakpoints", "Are you sure?", "2 No|1 Yes", icon: DIcon.Warning, owner: _tv)) return;
-				foreach (var v in _root.Descendants().ToArray()) if (!v.IsFolder && !v.IsEnabled) _DeleteItem(v);
-			};
-			m["Delete all breakpoints..."] = o => {
-				if (1 != dialog.show("Delete all breakpoints", "Are you sure?", "2 No|1 Yes", icon: DIcon.Warning, owner: _tv)) return;
+			m["Delete all breakpoints"] = o => {
 				foreach (var v in _root.Children().ToArray()) _DeleteItem(v);
 			};
-			//TODO: don't delete those with properties.
 		});
 		
 		m.Show(owner: _tv);
@@ -336,7 +360,7 @@ Examples:
 		var folder = b.Parent;
 		b.Remove();
 		if (!folder.HasChildren) folder.Remove();
-		_tv.SetItems(_root.Children(), true);
+		_TvSetItems(true);
 		_SaveLater();
 	}
 	
@@ -357,7 +381,7 @@ Examples:
 			if (_FindItemOfFile(file) is { } folder) {
 				foreach (var b in folder.Children()) if (b.IsEnabled) Panels.Debug.BreakpointAddedDeleted_(b, false);
 				folder.Remove();
-				_tv.SetItems(_root.Children(), true);
+				_TvSetItems(true);
 				_SaveLater();
 			}
 		}
@@ -369,7 +393,7 @@ Examples:
 		if (ff == null) return;
 		f.Remove();
 		ff.AddSibling(f, after: !up);
-		_tv.SetItems(_root.Children(), true);
+		_TvSetItems(true);
 		_SaveLater();
 	}
 	
@@ -437,13 +461,16 @@ Examples:
 			_isEnabled = x.HasAttr("en");
 			condition = x.Attr("condition");
 			log = x.Attr("log");
+			if (x.Attr(out int flags, "flags")) {
+				if ((flags & 1) != 0) LogExpression = true;
+			}
 		}
 		
 #if DEBUG
 		public override string ToString() => ((ITreeViewItem)this).DisplayText;
 #endif
 		
-		public bool IsEnabledOrHasEnabledChildren => IsFolder ? Children().Any(static o => o._isEnabled) : _isEnabled;
+		public bool IsEnabledOrHasEnabledChildren => IsFolder ? Children().Any(static o => o.IsEnabledOrHasEnabledChildren) : _isEnabled;
 		
 		public bool SetMarkerInDoc() {
 			if (Parent.file.OpenDoc is { } doc) {
@@ -475,7 +502,7 @@ Examples:
 		
 		TVCheck ITreeViewItem.CheckState => _isEnabled ? TVCheck.Checked : TVCheck.Unchecked;
 		
-		int ITreeViewItem.TextColor(TVColorInfo ci) => !log.NE() ? 0x00A000 : -1;
+		int ITreeViewItem.TextColor(TVColorInfo ci) => !log.NE() ? 0x00A000 : !condition.NE() ? (ci.isHighContrastDark ? 0x8080FF : 0x0000FF) : -1;
 		
 		int ITreeViewItem.TooltipDelay => HasProperties ? 500 : 0;
 		
@@ -494,6 +521,8 @@ Examples:
 		string IBreakpoint.Condition => condition;
 		
 		string IBreakpoint.Log => log;
+		
+		public bool LogExpression { get; set; }
 		
 		public bool HasProperties => !(condition.NE() && log.NE());
 		
@@ -515,6 +544,7 @@ interface IBreakpoint {
 	int Line { get; }
 	string Condition { get; }
 	string Log { get; }
+	bool LogExpression { get; set; }
 	bool HasProperties { get; }
 	bool IsEnabled { get; }
 	int Id { get; set; }

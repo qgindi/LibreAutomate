@@ -305,17 +305,18 @@ public static unsafe partial class ExtMisc {
 	/// <summary>
 	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
-	public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
+	public static bool IsAsciiDigit(this char c) => char.IsAsciiDigit(c);
 	
 	/// <summary>
 	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
 	/// </summary>
-	public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+	//public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+	public static bool IsAsciiAlpha(this char c) => char.IsAsciiLetter(c);
 	
 	/// <summary>
 	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
-	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
+	public static bool IsAsciiAlphaDigit(this char c) => char.IsAsciiLetterOrDigit(c);
 	
 	#endregion
 	
