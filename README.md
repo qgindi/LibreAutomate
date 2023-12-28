@@ -14,7 +14,7 @@ Some features of the automation library:
 
 Some features of the script editor program:
 - The scripting language is C#. The program is a good way to learn it.
-- C# code editor with intellisense. Script manager, cookbook.
+- C# code editor with intellisense. Script manager, cookbook, debugger.
 - Tools for recording keyboard/mouse and selecting UI objects such as buttons, links and images.
 - Also you can use .NET and other libraries. Tools and databases for NuGet, Windows API, icons.
 - Can create independent .exe programs and .NET libraries.

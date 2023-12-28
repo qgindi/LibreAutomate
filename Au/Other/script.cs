@@ -574,6 +574,7 @@ public static class script {
 		Cpp.Cpp_UEF(false);
 		var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
 		s_unhandledException = e;
+		if (Debugger.IsAttached) return;
 		if (s_setupException.Has(UExcept.Print)) print.it(e);
 		if (s_setupException.Has(UExcept.Dialog)) {
 			var text = e.ToStringWithoutStack();
@@ -651,7 +652,7 @@ public static class script {
 	/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 	/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
 	/// </param>
-	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> true.</param>
+	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> true. It makes <see cref="Debug.Assert"/> etc useful when not debugging.</param>
 	/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
 	/// <param name="exitKey">
 	/// If not 0, the script task will end when this key pressed. Will call <see cref="Environment.Exit"/>.

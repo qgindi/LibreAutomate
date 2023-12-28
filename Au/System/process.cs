@@ -753,8 +753,7 @@ namespace Au {
 		static Action<Exception> _eventExit;
 		static bool _haveEventExit;
 		
-		static void _ThisProcessExit(object sender, EventArgs ea) //sender: AppDomain on process exit, null on unhandled exception
-		{
+		static void _ThisProcessExit(object sender, EventArgs ea) { //sender: AppDomain on process exit, null on unhandled exception
 			Exception e;
 			if (ea is UnhandledExceptionEventArgs u) {
 				if (!u.IsTerminating) return; //never seen, but anyway

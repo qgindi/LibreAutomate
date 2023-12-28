@@ -1,6 +1,8 @@
 ## Version 0.20.0 (2023-)
 
 ### Editor
+Debugger.
+
 In icon names can be specified size, like `"*Pack.Icon color @12"`. See [ImageUtil.LoadWpfImageElement]().
 
 
@@ -22,7 +24,7 @@ New classes:
 - .
 
 New members:
-- .
+- **wpfBuilder**: **Last2**, **LabeledBy**.
 
 New parameters:
 - .

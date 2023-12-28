@@ -292,9 +292,7 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 		}
 	}
 
-	IEnumerator IEnumerable.GetEnumerator() {
-		throw new NotImplementedException();
-	}
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 /// <summary>

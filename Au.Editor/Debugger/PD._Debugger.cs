@@ -10,6 +10,8 @@ partial class PanelDebug {
 		public _Debugger(Action<string> events) {
 			_events = events;
 			_p = new(folders.ThisAppBS + @"Roslyn\netcoredbg.exe", $"--interpreter=mi");
+			//_p = new(@"C:\Downloads\netcoredbg\netcoredbg.exe", $"--interpreter=mi"); //test unmodified netcoredbg
+			
 			//info: From netcoredbg we need only netcoredbg.exe, dbgshim.dll, ManagedPart.dll, Microsoft.CodeAnalysis.dll and Microsoft.CodeAnalysis.CSharp.dll.
 			//	The default netcoredbg contains 2 unused Roslyn scripting dlls (why?).
 			//	Also these Roslyn dlls are very old.
@@ -75,8 +77,9 @@ partial class PanelDebug {
 		}
 		
 		/// <summary>
-		/// Writes s. Does not read.
+		/// Writes <i>s</i>. Does not read.
 		/// </summary>
+		/// <param name="s">Command, optionally with a token &gt;=1000, like "1020-command".</param>
 		public void Send(string s) {
 			_Write(s);
 		}
@@ -85,7 +88,7 @@ partial class PanelDebug {
 		/// Writes token+s, like "5-command".
 		/// Then synchronously reads until received a line that starts with the token followed by '^'. For other received lines calls the events callback.
 		/// </summary>
-		/// <param name="token">A positive number. 0 is used by this class.</param>
+		/// <param name="token">A number 1-999. Token 0 is used by this class.</param>
 		/// <param name="noEvent">Called on events. Return true to no call the events callback.</param>
 		/// <returns>The received line without token. Returns null if the debugger process ended.</returns>
 		public string SendSync(int token, string s, Func<string, bool> noEvent = null) {

@@ -652,9 +652,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 		}
 	}
 
-	IEnumerator IEnumerable.GetEnumerator() {
-		throw new NotImplementedException();
-	}
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 /// <summary>

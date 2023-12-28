@@ -163,7 +163,7 @@ The Outline panel shows functions and fields defined in current file. Also types
 The Back and Forward buttons work like the ones in web browsers.
 
 ### Bookmarks
-You can mark lines in code, and later go there. Use menu Edit -> Navigate, panel Bookmarks, and the markers margin. Click the margin to add or remove a bookmark; right click to show menu.
+You can mark lines in code, and later go there. Use menu Edit -> Navigate, panel Bookmarks, and the markers margin (right-click).
 
 Menu commands "Previous bookmark" and "Next bookmark" visit only active bookmarks. If there are no active bookmarks - only bookmarks in current document.
 

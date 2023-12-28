@@ -599,9 +599,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		}
 	}
 
-	IEnumerator IEnumerable.GetEnumerator() {
-		throw new NotImplementedException();
-	}
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 /// <summary>
