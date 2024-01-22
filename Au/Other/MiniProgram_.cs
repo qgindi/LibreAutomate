@@ -160,7 +160,7 @@ static unsafe class MiniProgram_ {
 		}
 
 		//p1.Next();
-		script.Starting_(a[0], a[7], 0 != (flags & MPFlags.Debugger));
+		script.Starting_(a[0], a[7]);
 
 		//Api.QueryPerformanceCounter(out s_started);
 		//print.TaskEvent_("TS", s_started);
@@ -188,7 +188,7 @@ static unsafe class MiniProgram_ {
 		try { return t.LoadFromAssemblyPath(path); }
 		catch { }
 		//catch (FileLoadException e1) {
-		//	Debug_.Print("alc.LoadFromAssemblyPath failed. Will retry with s_alc. " + e1.ToStringWithoutStack());
+		//	Debug_.Print("alc.LoadFromAssemblyPath failed. Will retry with s_alc. " + e1);
 		//}
 		//If the assembly has the same name as one of TPA assemblies (probably it's a newer version),
 		//	the above LoadFromAssemblyPath ignores the path and tries to load the TPA assembly, and fails.
@@ -309,9 +309,6 @@ static unsafe class MiniProgram_ {
 
 		/// <summary>Started from portable editor.</summary>
 		IsPortable = 64,
-
-		/// <summary>Will attach the debugger.</summary>
-		Debugger = 128,
 
 		//Config = 256, //meta hasConfig
 	}

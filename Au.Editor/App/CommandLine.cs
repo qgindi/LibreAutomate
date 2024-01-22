@@ -206,15 +206,7 @@ static class CommandLine {
 				TriggersAndToolbars.OnDisableTriggers();
 				break;
 			case 30: //script.debug()
-				if (App.Model.UserSettings.debuggerScript is string s && s.Length > 0 && !s.Starts("//")) {
-					if (App.Model.FindCodeFile(s) is FileNode f && f.IsScript) {
-						return CompileRun.CompileAndRun(true, f, new[] { lparam.ToS() });
-					}
-					print.warning($"Debugger script not found. See Options -> Workspace -> Debugger script.", -1);
-				} else {
-					return Panels.Debug.Attach((int)lparam/*, ensureAttached: true*/) ? 1 : 0;
-				}
-				break;
+				return Panels.Debug.Attach((int)lparam) ? 1 : 0;
 			}
 			return 0;
 		case RunningTasks.WM_TASK_ENDED: //WM_USER+900

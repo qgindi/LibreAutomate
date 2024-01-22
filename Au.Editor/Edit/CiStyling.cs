@@ -238,7 +238,7 @@ partial class CiStyling {
 #if DEBUG
 						switch (v.ClassificationType) {
 						case ClassificationTypeNames.Identifier or ClassificationTypeNames.PreprocessorText: break;
-						default: Debug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<><c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
+						default: Debug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
 						}
 #endif
 						continue;
@@ -403,16 +403,14 @@ partial class CiStyling {
 		public string FontName = "Consolas";
 		public double FontSize = 9;
 		public int BackgroundColor = 0xffffff;
-		//public int IndicFoundColor = 0xf6b94d; //orange, like in VS
-		public int IndicFoundColor = 0xffff00; //yellow, like in Chrome
 		public int IndicRefsColor = 0x80C000;
 		public int IndicBracesColor = 0x80C000;
-		public int IndicFoundAlpha = 255;
+		public int IndicDebugColor = 0xFFF181;
+		public int IndicFoundColor = 0xffff00;
 		public int IndicRefsAlpha = 40;
 		public int IndicBracesAlpha = 255;
-		//public bool IndicFoundGradient;
-		//public bool IndicRefsGradient;
-		//public bool IndicBracesGradient;
+		public int IndicDebugAlpha = 255;
+		public int IndicFoundAlpha = 255;
 		
 		public int SelColor = unchecked((int)0xA0A0A0A0);
 		public int SelNofocusColor = 0x60A0A0A0;
@@ -482,9 +480,10 @@ partial class CiStyling {
 				case nameof(XmlDocText): _Style(ref XmlDocText); break;
 				case nameof(XmlDocTag): _Style(ref XmlDocTag); break;
 				case nameof(LineNumber): _Style(ref LineNumber); break;
-				case nameof(IndicFoundColor): _Int(ref IndicFoundColor); _Alpha(ref IndicFoundAlpha); break;
 				case nameof(IndicRefsColor): _Int(ref IndicRefsColor); _Alpha(ref IndicRefsAlpha); break;
 				case nameof(IndicBracesColor): _Int(ref IndicBracesColor); _Alpha(ref IndicBracesAlpha); break;
+				case nameof(IndicDebugColor): _Int(ref IndicDebugColor); _Alpha(ref IndicDebugAlpha); break;
+				case nameof(IndicFoundColor): _Int(ref IndicFoundColor); _Alpha(ref IndicFoundAlpha); break;
 				case nameof(SelColor): _Int(ref SelColor); break;
 				case nameof(SelNofocusColor): _Int(ref SelNofocusColor); break;
 				}
@@ -531,9 +530,10 @@ partial class CiStyling {
 			_Style(nameof(XmlDocText), XmlDocText);
 			_Style(nameof(XmlDocTag), XmlDocTag);
 			_Style(nameof(LineNumber), LineNumber);
-			_Indic(nameof(IndicFoundColor), IndicFoundColor, IndicFoundAlpha);
 			_Indic(nameof(IndicRefsColor), IndicRefsColor, IndicRefsAlpha);
 			_Indic(nameof(IndicBracesColor), IndicBracesColor, IndicBracesAlpha);
+			_Indic(nameof(IndicDebugColor), IndicDebugColor, IndicDebugAlpha);
+			_Indic(nameof(IndicFoundColor), IndicFoundColor, IndicFoundAlpha);
 			_Int(nameof(SelColor), SelColor);
 			_Int(nameof(SelNofocusColor), SelNofocusColor);
 			
@@ -586,12 +586,14 @@ partial class CiStyling {
 			
 			LineNumber = _Style(EStyle.LineNumber);
 			
-			IndicFoundColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFound));
 			IndicRefsColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicRefs));
 			IndicBracesColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicBraces));
-			IndicFoundAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicFound);
+			IndicDebugColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicDebug));
+			IndicFoundColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFound));
 			IndicRefsAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicRefs);
 			IndicBracesAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicBraces);
+			IndicDebugAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicDebug);
+			IndicFoundAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicFound);
 			
 			SelColor = sci.aaaGetElementColor(SC_ELEMENT_SELECTION_BACK).argb;
 			SelNofocusColor = sci.aaaGetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK).argb;
@@ -635,9 +637,11 @@ partial class CiStyling {
 			
 			sci.aaaStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
 			
-			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_GRADIENT);
+			_Indic(SciCode.c_indicDebug, IndicDebugColor, IndicDebugAlpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicDebug2, IndicDebugColor, 128 + IndicDebugAlpha / 2, INDIC_GRADIENTCENTRE);
+			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
 			
 			void _Indic(int indic, int color, int alpha, int style) {
 				sci.aaaIndicatorDefine(indic, style, color, alpha, 255, underText: true);

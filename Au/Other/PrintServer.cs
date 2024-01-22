@@ -116,7 +116,7 @@ namespace Au.More {
 		//info:
 		//Although global and local servers are implemented quite differently, the interface is almost the same. For this and other reasons I decided to use single class.
 		//For local server, the thread and kernel timer would be not necessary. Instead could use just a user timer. But it has some limitations etc.
-
+		
 		readonly ConcurrentQueue<PrintServerMessage> _messages = new(); //all received and still not removed messages that were sent by clients when they call print.it etc
 		Handle_ _mailslot; //used if global
 		WaitableTimer _timer; //used always
@@ -125,12 +125,12 @@ namespace Au.More {
 		bool _isStarted;
 		readonly bool _isGlobal;
 		bool _isLocalTimer;
-
+		
 		/// <param name="isGlobal">
 		/// If true, will receive output from all processes that don't have local server.
 		/// </param>
 		public PrintServer(bool isGlobal) => _isGlobal = isGlobal;
-
+		
 		/// <summary>
 		/// Starts server.
 		/// </summary>
@@ -146,26 +146,26 @@ namespace Au.More {
 						if (e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process
 						throw new AuException(e, "*create mailslot");
 					}
-
+					
 					_mailslot = m;
 					_CreateTimerAndThread();
 					SM_->isServer = 1;
 				} else {
 					_CreateTimerAndThread();
 				}
-
+				
 				print.s_localServer = this; //if global server, will work as local when writes same process
 				_isStarted = true;
 			}
 			return true;
 		}
-
+		
 		void _CreateTimerAndThread() {
 			try {
 				if (_isGlobal) _timer = WaitableTimer.Create(false, TimerName_);
 				else _timer = WaitableTimer.Create();
-
-				run.thread(_Thread, sta: false);
+				
+				run.thread(_Thread, sta: false).Name = "Au.PrintServer";
 			}
 			catch {
 				if (_isGlobal) _mailslot.Dispose();
@@ -173,7 +173,7 @@ namespace Au.More {
 				throw;
 			}
 		}
-
+		
 		/// <summary>
 		/// Stops server.
 		/// </summary>
@@ -189,12 +189,12 @@ namespace Au.More {
 				_timer?.Set(0); //break thread loop; use minimal time. //info: the thread will dispose _timer and set=null
 			}
 		}
-
+		
 		/// <summary>
 		/// Calls Stop.
 		/// </summary>
 		~PrintServer() => Stop();
-
+		
 		/// <summary>
 		/// Sets window/message to be notified about server events.
 		/// </summary>
@@ -205,7 +205,7 @@ namespace Au.More {
 			_notifWnd = w;
 			if (!w.Is0) _timer?.Set(30);
 		}
-
+		
 		void _Thread() {
 			try {
 				for (int period = 1000; ;) {
@@ -214,13 +214,13 @@ namespace Au.More {
 						if (_isGlobal) SM_->isTimer = 0;
 						_isLocalTimer = false;
 					}
-
+					
 					lock (this) {
 						if (!_isStarted) {
 							_timer.Dispose(); _timer = null;
 							break;
 						}
-
+						
 						if (_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
 							while (Api.GetMailslotInfo(_mailslot, null, out int nextSize, out var msgCount) && msgCount > 0) {
 								//note: GetMailslotInfo makes Process Hacker show constant 24 B/s I/O total rate. Does not depend on period.
@@ -229,18 +229,18 @@ namespace Au.More {
 							}
 						}
 					}
-
+					
 					if (!_notifWnd.Is0 && !_messages.IsEmpty) {
-
+						
 						//print.qm2.write($"{_messages.Count}, {_ToMB(_memSize)}, {_ToMB(GC.GetTotalMemory(false))}");
-
+						
 						if (!_notifWnd.IsAlive) break;
 						_notifWnd.Send(_notifMsg);
 					}
-
+					
 					if (isTimerEvent) period = 50; //check after 50 ms, to avoid 1000 ms delay in case a client did not set timer because SM_->isTimer was still 1 although the timer was already signaled
 					else period = 1000; //check every 1000 ms, for full reliability
-
+					
 					//Console.WriteLine($"{period}");
 				}
 			}
@@ -248,7 +248,7 @@ namespace Au.More {
 				Debug_.Dialog(ex);
 			}
 		}
-
+		
 		[SkipLocalsInit]
 		void _ReadMailslotMessage(int size) {
 			using FastBuffer<byte> b = new(size + 4); //+4 for "\r\n"
@@ -285,9 +285,9 @@ namespace Au.More {
 				if (ok) _AddMessage(new PrintServerMessage(mtype, s, time, caller));
 			}
 		}
-
+		
 		//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToS();
-
+		
 		/// <summary>
 		/// Adds s directly to _messages and sets timer.
 		/// If s is null, it is 'Clear' command.
@@ -300,7 +300,7 @@ namespace Au.More {
 			var m = new PrintServerMessage(s == null ? PrintServerMessageType.Clear : PrintServerMessageType.Write, s, time, caller);
 			_AddMessage(m, true);
 		}
-
+		
 		/// <summary>
 		/// Adds action directly to _messages and sets timer.
 		/// Used with local server; also with global server when writes the server's process.
@@ -309,16 +309,16 @@ namespace Au.More {
 			//Debug.Assert(!_isGlobal);
 			_AddMessage(new(action), true);
 		}
-
+		
 		void _AddMessage(PrintServerMessage m, bool setTimer = false) {
 			//_memSize += _GetMessageMemorySize(m);
 			_messages.Enqueue(m);
 			if (setTimer && !_isLocalTimer) { _timer?.Set(10); _isLocalTimer = true; }
 		}
-
+		
 		//static int _GetMessageMemorySize(PrintServerMessage m) => 50 + m.Text.Lenn() * 2;
 		//int _memSize;
-
+		
 		/// <summary>
 		/// Gets next message and removes from the queue.
 		/// </summary>
@@ -331,12 +331,12 @@ namespace Au.More {
 			//_memSize -= _GetMessageMemorySize(m);
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets the count of messages in the queue.
 		/// </summary>
 		public int MessageCount => _messages.Count;
-
+		
 		/// <summary>
 		/// Let messages don't end with <c>"\r\n"</c>.
 		/// </summary>
@@ -344,7 +344,7 @@ namespace Au.More {
 		/// This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
 		/// </remarks>
 		public bool NoNewline { get; set; }
-
+		
 #if NEED_CALLER
 			/// <summary>
 			/// Let clients provide the caller method of Write.
@@ -363,7 +363,7 @@ namespace Au.More {
 				get { var t = s_localServer; return (t != null) ? t.NeedCallerMethod : SM_->needCaller != 0; }
 			}
 #endif
-
+		
 		/// <summary>
 		/// Gets mailslot name like <c>@"\\.\mailslot\Au.print\" + sessionId</c>.
 		/// </summary>
@@ -376,12 +376,12 @@ namespace Au.More {
 			}
 		}
 		static string _mailslotName;
-
+		
 		/// <summary>
 		/// Gets waitable timer name like "timer.Au.print".
 		/// </summary>
 		internal static string TimerName_ => "timer.Au.print";
-
+		
 		/// <summary>
 		/// Shared memory variables. Used with global server only.
 		/// </summary>
@@ -398,13 +398,13 @@ namespace Au.More {
 
 namespace Au {
 	public static partial class print {
-
+		
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace
 		static void _ServerWrite(string s) {
 			Debug.Assert(s != null);
-
+			
 			Api.GetSystemTimeAsFileTime(out var time);
-
+			
 			string caller = script.name;
 #if NEED_CALLER
 			if(PrintServer.NeedCallerMethod_) {
@@ -423,22 +423,22 @@ namespace Au {
 				//info: here we don't optimize caller strings like PrintServer does, because StackTrace creates much more garbage.
 			}
 #endif
-
+			
 			var loc = s_localServer;
 			if (loc != null) loc.LocalWrite_(s, time, caller);
 			else s_client.WriteLine(s, PrintServerMessageType.Write, caller, time);
 		}
-
+		
 		static void _ServerAction(PrintServerMessageType action) {
 			var loc = s_localServer;
 			if (loc == null) s_client.AddAction(action);
 			else if (action == PrintServerMessageType.Clear) loc.LocalWrite_(null);
 			else loc.LocalAction_(action);
 		}
-
+		
 		static readonly _ClientOfGlobalServer s_client = new();
 		internal static PrintServer s_localServer; //null if we don't have a local server
-
+		
 		/// <summary>
 		/// Logs start/end/fail events of miniProgram trigger actions.
 		/// Editor displays it in the "Recent tasks" window, not in the output panel.
@@ -454,21 +454,21 @@ namespace Au {
 			//}
 			s_client.WriteLine(s, PrintServerMessageType.TaskEvent, sourceFile);
 		}
-
+		
 		unsafe class _ClientOfGlobalServer {
 			//info: the mailslot/timer are implicitly disposed when process ends.
-
+			
 			Handle_ _mailslot;
 			WaitableTimer _timer;
 			long _sizeWritten;
-
+			
 			[SkipLocalsInit]
 			public void WriteLine(string s, PrintServerMessageType mtype, string caller = null, long time = 0) {
 				if (time == 0) Api.GetSystemTimeAsFileTime(out time);
-
+				
 				lock (_lockObj1) {
 					if (!_Connect()) return;
-
+					
 					int lenS = s.Length, lenCaller = (caller != null) ? Math.Min(caller.Length, 255) : 0;
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
 					using FastBuffer<byte> b = new(lenAll);
@@ -485,21 +485,21 @@ namespace Au {
 					}
 					//s
 					if (lenS != 0) fixed (char* k = s) MemoryUtil.Copy(k, p, lenS * 2); //s
-
+					
 					//if (s == "\0DNl08ISh30Kbt6ekJV3VvA") { //JIT //now not used
 					//									   //_SetTimer();
 					//	Jit_.Compile(typeof(WaitableTimer), nameof(WaitableTimer.Set));
 					//	Jit_.Compile(typeof(Api), nameof(Api.WriteFile), nameof(Api.SetWaitableTimer)); //slow JIT SetWaitableTimer
 					//	return;
 					//}
-
+					
 					g1:
 					bool ok = Api.WriteFile(_mailslot, b.p, lenAll, out _);
 					if (!ok && _ReopenMailslot()) goto g1;
-
+					
 					if (ok) {
 						_SetTimer();
-
+						
 						//prevent overflow of mailslot and _messages
 						_sizeWritten += lenAll;
 						if (_sizeWritten > 1_000_000) {
@@ -509,21 +509,21 @@ namespace Au {
 					}
 				}
 			}
-
+			
 			public void AddAction(PrintServerMessageType action) {
 				lock (_lockObj1) {
 					if (!_Connect()) return;
-
+					
 					g1:
 					byte b = (byte)action;
 					bool ok = Api.WriteFile(_mailslot, &b, 1, out _);
 					if (!ok && _ReopenMailslot()) goto g1;
 					Debug.Assert(ok);
-
+					
 					if (ok) _SetTimer();
 				}
 			}
-
+			
 			//If last error says that server's mailslot closed, closes client's mailsot/timer and tries to reopen. If reopened, returns true.
 			bool _ReopenMailslot() {
 				if (lastError.code == Api.ERROR_HANDLE_EOF) { //server's mailslot closed
@@ -534,42 +534,42 @@ namespace Au {
 				}
 				return false;
 			}
-
+			
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			void _SetTimer() {
 				if (PrintServer.SM_->isTimer == 0) {
 					if (_timer.Set(10)) PrintServer.SM_->isTimer = 1;
 				}
 			}
-
+			
 			void _Close() {
 				if (!_mailslot.Is0) {
 					_mailslot.Dispose();
 					_timer.Close(); _timer = null;
 				}
 			}
-
+			
 			bool _Connect() {
 				if (PrintServer.SM_->isServer == 0) {
 					_Close();
 					return false;
 				}
-
+				
 				if (_mailslot.Is0) {
 					_mailslot = CreateFile_(PrintServer.MailslotName_, true);
 					if (_mailslot.Is0) return false;
-
+					
 					_timer = WaitableTimer.Open(PrintServer.TimerName_, noException: true);
 					if (_timer == null) {
 						_mailslot.Dispose();
 						return false;
 					}
 				}
-
+				
 				return true;
 			}
 		}
-
+		
 #if NEED_CALLER
 		static readonly List<Type> _writerTypes = new List<Type>() { typeof(print), typeof(_OutputWriter) };
 
@@ -600,25 +600,25 @@ namespace Au.Types {
 		/// All <see cref="PrintServerMessage"/> members can be used.
 		/// </summary>
 		Write,
-
+		
 		/// <summary>
 		/// Clear the output window.
 		/// Only <see cref="PrintServerMessage.Type"/> is used.
 		/// </summary>
 		Clear,
-
+		
 		/// <summary>
 		/// Used internally to log events such as start/end of trigger actions.
 		/// </summary>
 		TaskEvent,
-
+		
 		/// <summary>
 		/// Scroll the output window to the top.
 		/// Only <see cref="PrintServerMessage.Type"/> is used.
 		/// </summary>
 		ScrollToTop,
 	}
-
+	
 	/// <summary>
 	/// Contains message text and/or related info.
 	/// More info: <see cref="PrintServer"/>, <see cref="PrintServer.GetMessage"/>.
@@ -629,20 +629,20 @@ namespace Au.Types {
 		/// Currently there are 2 types - Write and Clear.
 		/// </summary>
 		public PrintServerMessageType Type { get; }
-
+		
 		/// <summary>
 		/// Message text.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
 		/// </summary>
 		public string Text { get; set; }
-
+		
 		/// <summary>
 		/// Message time in <b>FILETIME</b> format, UTC.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
 		/// To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
 		/// </summary>
 		public long TimeUtc { get; }
-
+		
 #if NEED_CALLER
 		/// <summary>
 		/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
@@ -664,7 +664,7 @@ namespace Au.Types {
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
 		/// </summary>
 		public string Caller { get; }
-
+		
 		internal PrintServerMessage(PrintServerMessageType type, string text = null, long time = 0, string caller = null) {
 			Type = type;
 			Text = text;
@@ -672,11 +672,11 @@ namespace Au.Types {
 			Caller = caller;
 		}
 #endif
-
+		
 		///
 		public override string ToString() {
 			//in editor used for output history
-
+			
 			if (Type != PrintServerMessageType.Write) return "";
 			var k = DateTime.FromFileTimeUtc(TimeUtc).ToLocalTime();
 			return $"{k.ToString()}  |  {Caller}\r\n{Text}";

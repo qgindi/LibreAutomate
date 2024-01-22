@@ -27,7 +27,7 @@ public partial class KPanels {
 		
 		static readonly Brush s_toolbarCaptionBrush = SystemColors.ControlBrush;
 		const int c_minSize = 4;
-		const int c_defaultSplitterSize = 5;
+		const int c_defaultSplitterSize = 4;
 		
 		class _StackFields {
 			public Grid grid;

@@ -407,7 +407,7 @@ public partial class toolbar {
 						tb.ZorderL_(SpecHWND.NOTOPMOST);
 						tb.ZorderL_(SpecHWND.TOPMOST);
 						if (!tb.ZorderIsAbove(w)) {
-							Debug_.Print($"Workaround 1 failed.");
+							Debug_.Print("Workaround 1 failed.");
 							
 							//workaround 2. Not much tested here, but `w1.ZorderL_(w2); w2.ZorderL_(w1);` works elsewhere.
 							tb.ZorderL_(w, before: true); //may not work, although returns true. ZorderL_ gets previous window, and it may be HWND_TOP (0). SWP(HWND_TOP) does nothing if tb is behind the active non-topmost window (w).

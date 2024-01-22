@@ -21,7 +21,7 @@ static class InsertCodeUtil {
 		//startOfLine = j;
 		return i == 0 || s[i - 1] == '\n';
 	}
-
+	
 	/// <summary>
 	/// Returns true if i is at a line start + any number of spaces and tabs.
 	/// </summary>
@@ -31,7 +31,7 @@ static class InsertCodeUtil {
 		startOfLine = i;
 		return i == 0 || s[i - 1] == '\n';
 	}
-
+	
 	/// <summary>
 	/// Creates string containing n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatTabIndent</b>.
 	/// See also <see cref="CiUtilExt.AppendIndent"/>.
@@ -41,7 +41,7 @@ static class InsertCodeUtil {
 		if (App.Settings.ci_formatTabIndent) return new('\t', n);
 		return new(' ', n * 4);
 	}
-
+	
 	/// <summary>
 	/// Returns string with same indentation as of the document line from pos.
 	/// The string must not contain multiline raw/verbatim strings; this func ignores it.
@@ -54,7 +54,7 @@ static class InsertCodeUtil {
 		}
 		return s;
 	}
-
+	
 	/// <summary>
 	/// Appends C# code <i>s</i> to <i>b</i>.
 	/// For each line adds <i>indent</i> tabs, except in multiline @"string" or """string""" (same for u8).
@@ -80,44 +80,44 @@ static class InsertCodeUtil {
 			if (!s.Ends('\n')) b.AppendLine();
 		}
 	}
-
+	
 	/// <summary>
 	/// From position in code gets ArgumentSyntax and its IParameterSymbol.
 	/// </summary>
-	/// <returns>If successful, ps is not null; then arg is not null if the argument list isn't empty.</returns>
-	public static (ArgumentSyntax arg, IParameterSymbol ps) GetArgumentParameterFromPos(BaseArgumentListSyntax als, int pos, SemanticModel semo) {
+	/// <param name="arg">Not null if returns true and the argument list isn't empty.</param>
+	/// <param name="ps">If returns true, the array contains 1 or more elements. Multiple if cannot resolve overload.</param>
+	public static bool GetArgumentParameterFromPos(BaseArgumentListSyntax als, int pos, SemanticModel semo, out ArgumentSyntax arg, out IParameterSymbol[] ps) {
+		arg = null; ps = null;
 		var args = als.Arguments;
 		var index = args.Count == 0 ? 0 : als.Arguments.IndexOf(o => pos <= o.FullSpan.End); //print.it(index);
 		if (index < 0) return default;
 		if (!GetFunctionSymbolInfoFromArgumentList(als, semo, out var si)) return default;
-		ArgumentSyntax arg = null;
 		string name = null;
 		if (args.Count > 0) {
 			arg = args[index];
 			var nc = arg.NameColon;
 			if (nc != null) name = nc.Name.Identifier.Text;
 		}
-		return (arg, GetParameterSymbol(si, index, name, als.Arguments.Count, o => o.Type.TypeKind == TypeKind.Delegate));
+		ps = GetParameterSymbol(si, index, name, als.Arguments.Count, o => o.Type.TypeKind == TypeKind.Delegate)
+			.DistinctBy(o => o.Type.ToString()) //tested with Task.Run. 8 overloads, 4 distinct parameter types.
+			.ToArray();
+		return ps.Length > 0;
 	}
-
+	
 	/// <summary>
 	/// Gets IParameterSymbol of siFunction's parameter matching argument index or name.
+	/// Can return multiple if cannot resolve overload.
 	/// </summary>
 	/// <param name="siFunction">SymbolInfo of the method, ctor or indexer.</param>
 	/// <param name="index">Argument index. Not used if used name.</param>
 	/// <param name="name">Parameter name, if specified in the argument, else null.</param>
 	/// <param name="argCount">Count of arguments.</param>
 	/// <param name="filter"></param>
-	public static IParameterSymbol GetParameterSymbol(in SymbolInfo siFunction, int index, string name, int argCount, Func<IParameterSymbol, bool> filter = null) {
-		var sym = siFunction.Symbol;
-		if (sym == null && siFunction.CandidateSymbols.Length == 1) sym = siFunction.CandidateSymbols[0];
-		if (sym != null) return _Get(sym);
-		foreach (var sym2 in siFunction.CandidateSymbols) {
-			var v = _Get(sym2);
-			if (v != null) return v;
+	public static IEnumerable<IParameterSymbol> GetParameterSymbol(SymbolInfo siFunction, int index, string name, int argCount, Func<IParameterSymbol, bool> filter = null) {
+		foreach (var v in siFunction.GetAllSymbols()) {
+			if (_Get(v) is { } r) yield return r;
 		}
-		return null;
-
+		
 		IParameterSymbol _Get(ISymbol fsym) {
 			var parms = fsym switch { IMethodSymbol ms => ms.Parameters, IPropertySymbol ps => ps.Parameters, _ => default };
 			if (!parms.IsDefaultOrEmpty && parms.Length >= argCount) {
@@ -127,7 +127,7 @@ static class InsertCodeUtil {
 			return null;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets SymbolInfo of invoked method, ctor or indexer from its argument list.
 	/// </summary>
@@ -141,7 +141,7 @@ static class InsertCodeUtil {
 		} else return false;
 		return !si.IsEmpty;
 	}
-
+	
 	/// <summary>
 	/// Gets <b>ILocalSymbol</b> or <b>IParameterSymbol</b> of the nearest declared/accessible local variable or parameter of one of specified types.
 	/// Uses current document and caret position.
@@ -156,7 +156,7 @@ static class InsertCodeUtil {
 		var a = GetLocalVariablesAt(semo, cd.pos, o => ats.Contains(o));
 		return a.Count > 0 ? a[^1] : null;
 	}
-
+	
 	/// <summary>
 	/// Gets <b>ILocalSymbol</b> or <b>IParameterSymbol</b> of local variables and parameters that can be used at position <i>pos</i>. The order is the same as declared in code.
 	/// Not perfect.
@@ -188,7 +188,7 @@ static class InsertCodeUtil {
 		}
 		return a;
 	}
-
+	
 	/// <summary>
 	/// Gets ancestor scopes of local variables and parameters.
 	/// For { block } gets its parent if there may be declared variables/parameters that are visible only in that block; eg function declaration or foreach statement.
@@ -217,7 +217,7 @@ static class InsertCodeUtil {
 		}
 		return a;
 	}
-
+	
 	/// <summary>
 	/// Returns true if local/parameter variabled declared inside n aren't visible outside.
 	/// </summary>
@@ -225,7 +225,7 @@ static class InsertCodeUtil {
 	static bool _IsLocalScope(SyntaxNode n) {
 		if (n is BlockSyntax) return !_Is2(n.Parent);
 		return _Is2(n) || n is SwitchSectionSyntax or CompilationUnitSyntax;
-
+		
 		static bool _Is2(SyntaxNode n) => n is BaseMethodDeclarationSyntax
 			or LocalFunctionStatementSyntax
 			or AnonymousFunctionExpressionSyntax
@@ -237,6 +237,6 @@ static class InsertCodeUtil {
 			or SwitchExpressionArmSyntax
 		;
 	}
-
+	
 	static SyntaxNode _GetLocalScope(SyntaxNode node) => node.FirstAncestorOrSelf<SyntaxNode>(o => _IsLocalScope(o));
 }

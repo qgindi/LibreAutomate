@@ -100,7 +100,7 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.End();
 		
-		b.R.xAddInfoBlockF($"<b>Need to install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 6.0 or later.</b>").Hidden();
+		b.R.xAddInfoBlockF($"<b>Need to install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 8.0 or later.</b>").Hidden();
 		var infoSDK = b.Last as TextBlock;
 		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 		
@@ -152,11 +152,13 @@ A script can use packages from multiple folders if they are compatible.");
 	async Task _Install(string package, string folder) {
 		var proj = _ProjPath(folder);
 		
+		string writeProjText = null;
+		const string c_targetFramework = "<TargetFramework>net8.0-windows</TargetFramework>";
 		if (!File.Exists(proj)) {
-			var s = """
+			writeProjText = $"""
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		{c_targetFramework}
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
@@ -173,7 +175,12 @@ A script can use packages from multiple folders if they are compatible.");
 
 </Project>
 """;
-			try { File.WriteAllText(proj, s); }
+		} else { //may need to update <TargetFramework>
+			var s = filesystem.loadText(proj);
+			if (!s.Contains(c_targetFramework)) writeProjText = s.RxReplace(@"<TargetFramework>.+?</TargetFramework>", c_targetFramework, 1);
+		}
+		if (writeProjText != null) {
+			try { File.WriteAllText(proj, writeProjText); }
 			catch (Exception e1) { dialog.showError("Failed", e1.ToStringWithoutStack(), owner: this); }
 		}
 		
@@ -234,7 +241,8 @@ A script can use packages from multiple folders if they are compatible.");
 				if (!await _RunDotnet(sBuild, s => { }) //try silent, but print errors if fails (unlikely)
 					&& !await _RunDotnet(sBuild)) return false;
 				//#if DEBUG
-				//				if (keys.isScrollLock) dialog.show("Debug", "single build done"); //to inspect files before deleting
+				//run.it(dirBin2);
+				//dialog.show("Debug", "single build done"); //to inspect files before deleting
 				//#endif
 				
 				//delete runtimes of unsupported OS or CPU. It seems cannot specify it in project file.
@@ -245,7 +253,7 @@ A script can use packages from multiple folders if they are compatible.");
 					if (filesystem.exists(dir)) {
 						foreach (var v in filesystem.enumDirectories(dir)) {
 							var n = v.Name;
-							if (!n.Starts("win", true) || (n.Contains('-') && 0 == n.Ends(true, "-x64", "-x86"))) {
+							if (!n.Starts("win", true) || (n.Contains('-') && 0 == n.Ends(true, "-x64", "-x86"/*, "-arm", "-arm64"*/))) {
 								filesystem.delete(v.FullPath);
 							}
 						}
@@ -254,7 +262,7 @@ A script can use packages from multiple folders if they are compatible.");
 				
 				//save relative paths etc of output files in file "nuget.xml"
 				//	Don't use ~.deps.json. It contains only used dlls, but may also need other files, eg exe.
-				//	For testing can be used NuGet package Microsoft.PowerShell.SDK. It has dlls for testing all cases.
+				//	For testing can be used NuGet package Microsoft.PowerShell.SDK. It has dlls for testing almost all cases.
 				
 				var npath = _nugetDir + @"\nuget.xml";
 				var xn = XmlUtil.LoadElemIfExists(npath, "nuget");
@@ -265,10 +273,8 @@ A script can use packages from multiple folders if they are compatible.");
 				
 				var dCompile = _GetCompileAssembliesFromAssetsJson(dirProj2 + @"\obj\project.assets.json", folderPath);
 				
-				#region copied from script "Create NuGet xml.cs"
-				
 				//get lists of .NET dlls, native dlls and other files
-				List<(FEFile f, bool ro)> aDllNet = new();
+				List<(FEFile f, int r)> aDllNet = new(); //r: 0 r (ref and run time), 1 ro (ref only), 2 rt (run time only)
 				List<FEFile> aDllNative = new(), aOther = new();
 				var feFlags = FEFlags.AllDescendants | FEFlags.OnlyFiles | FEFlags.UseRawPath | FEFlags.NeedRelativePaths;
 				foreach (var f in filesystem.enumFiles(dirBin2, flags: feFlags).OrderBy(o => o.Level)) {
@@ -278,11 +284,11 @@ A script can use packages from multiple folders if they are compatible.");
 						if (s.Starts(@"\~.")) continue;
 					} else {
 						runtimes = s.Starts(@"\runtimes\win", true);
-						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || (s.Starts(@"\ref\") && package == "Microsoft.PowerShell.SDK")), s);
+						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || s.Starts(@"\ref\")), s); //ref is used by Microsoft.PowerShell.SDK as data files
 					}
 					if (s.Ends(".dll", true) && (f.Level == 0 || runtimes)) {
 						if (CompilerUtil.IsNetAssembly(f.FullPath, out bool refOnly)) {
-							aDllNet.Add((f, refOnly));
+							aDllNet.Add((f, refOnly ? 1 : runtimes ? 2 : 0));
 						} else {
 							aDllNative.Add(f);
 						}
@@ -297,21 +303,21 @@ A script can use packages from multiple folders if they are compatible.");
 					//print.it($"<><lc #BBE3FF>{group.Key}<>");
 					var filename = group.Key;
 					int count = group.Count();
-					bool haveRO = dCompile.ContainsKey(filename);
+					bool haveRO = dCompile.Remove(filename);
 					if (haveRO) xx.Add(new XElement("ro", @"\_ref\" + filename));
 					XElement xGroup = null;
-					foreach (var (f, ro) in group) {
+					foreach (var (f, r) in group) {
 						var s = f.Name; //like @"\file" or @"\dir\file"
 						hsLib.Add(s);
-						bool refOnly = ro || f.Level == 0 && count > 1;
+						bool refOnly = r == 1 || (r == 0 && f.Level == 0 && count > 1); //if count>1, this is X.dll from [X.dll, sub\X.dll, ...]
 						if (refOnly) {
-							if (haveRO || f.Level > 0) continue;
+							if (haveRO) continue;
 							xx.Add(new XElement("ro", s));
 						} else {
-							if (f.Level > 0 && s[13] != '\\') { //\runtimes\win... but not \runtimes\win\...
+							if (r == 2 && s[13] != '\\') { //\runtimes\win... but not \runtimes\win\...
 								if (xGroup == null) xx.Add(xGroup = new("group"));
 								xGroup.Add(new XElement("rt", s));
-							} else if (!haveRO && f.Level == 0) {
+							} else if (!haveRO && r == 0) {
 								xx.Add(new XElement("r", s));
 							} else {
 								xx.Add(new XElement("rt", s));
@@ -329,6 +335,13 @@ A script can use packages from multiple folders if they are compatible.");
 					//	"group" - group of "rt" dlls. Same dll for different OS versions/platforms.
 					//	"natives" - group of "native" dlls. Same dll for different OS versions/platforms.
 					//native dlls usually are in \runtimes\win-x64\native\x.dll etc, but also can be in \runtimes\win10-x64\native\x.dll etc.
+				}
+				
+				if (dCompile.Any()) { //ref-only dlls that were not copied to dirBin2
+					foreach (var (k, v) in dCompile) {
+						xx.Add(new XElement("ro", @"\_ref\" + k));
+						hsLib.Add(k);
+					}
 				}
 				
 				//native dlls
@@ -356,8 +369,6 @@ A script can use packages from multiple folders if they are compatible.");
 					
 					xx.Add(new XElement("other", s));
 				}
-				
-				#endregion
 				
 				xn.SaveElem(npath, backup: true);
 				
@@ -402,14 +413,14 @@ A script can use packages from multiple folders if they are compatible.");
 					if (hsDotnet.Contains(name)) continue;
 					var path = (packages + nameVersion + "\\" + s).Replace('/', '\\');
 					if (!filesystem.exists(path)) {
-						Debug_.Print($"<><c red>{path}<>");
+						Debug_.Print($"<c red>{path}<>");
 						continue;
 					}
 					if (d.TryGetValue(name, out var ppath)) {
 #if DEBUG
 						filesystem.getProperties(ppath, out var u1);
 						filesystem.getProperties(path, out var u2);
-						if (u2.Size != u1.Size) Debug_.Print($"<><c orange>\t{name}<>\n\t\t{u1.Size}  {ppath}\n\t\t{u2.Size}  {path}");
+						if (u2.Size != u1.Size) Debug_.Print($"<c orange>\t{name}<>\n\t\t{u1.Size}  {ppath}\n\t\t{u2.Size}  {path}");
 						bool e1 = filesystem.exists(ppath.ReplaceAt(^3..^1, "xm")), e2 = filesystem.exists(path.ReplaceAt(^3..^1, "xm"));
 						Debug_.PrintIf(e2 != e1, "no xml");
 #endif

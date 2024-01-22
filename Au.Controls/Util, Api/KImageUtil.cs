@@ -397,7 +397,7 @@ namespace Au.Controls {
 			case ImageType.PngGifJpg:
 				path = filesystem.searchPath(path, folders.ThisAppImages); if (path == null) return null;
 				try { return "image:" + Convert.ToBase64String(filesystem.loadBytes(path)); }
-				catch (Exception ex) { Debug_.Print(ex.Message); return null; }
+				catch (Exception ex) { Debug_.Print(ex); return null; }
 			}
 			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}

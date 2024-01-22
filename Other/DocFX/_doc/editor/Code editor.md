@@ -163,7 +163,7 @@ The Outline panel shows functions and fields defined in current file. Also types
 The Back and Forward buttons work like the ones in web browsers.
 
 ### Bookmarks
-You can mark lines in code, and later go there. Use menu Edit -> Navigate, panel Bookmarks, and the markers margin (right-click).
+You can mark lines in code, and later go there. Use menu Edit -> Navigate, panel Bookmarks and the markers margin.
 
 Menu commands "Previous bookmark" and "Next bookmark" visit only active bookmarks. If there are no active bookmarks - only bookmarks in current document.
 
@@ -185,10 +185,10 @@ The autocompletion list also contains snippets. For example the outSnippet inser
 Whenever code contains a string or comment that looks like an image file path or image embedded in code (`image:...`, usually hidden text), editor draws the image at the left. This feature can be enabled/disabled with the toolbar button.
 
 ### Format code
-The "Format document/selection" commands insert/remove spaces, indentation and newlines to make code uniformly formatted.
+The "Format document/selection" commands insert/remove spaces, indentation and newlines to make code uniformly formatted. See also Options -> Code editor -> Formatting.
 
 ### Comment/uncomment/indent/unindent lines
-Often you'll want to disable or enable one or more lines of code by converting them to/from comments. The easiest way - right click the selection margin. If multiple lines are selected, it converst all.
+To disable or enable a line of code by converting it to/from comments, you can use the toolbar button or Edit menu or right-click the selection margin. If multiple lines are selected, it converts all. If not full line(s) selected, the button uses a `/*block comment*/`.
 
 Press Tab or Shift+Tab to indent or unindent all selected lines. It adds or removes one tab character before each line.
 

@@ -232,7 +232,7 @@ public static partial class ImageUtil {
 	//			e.Height = size.height;
 	//			return e;
 	//		}
-	//		catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
+	//		catch (Exception e1) { Debug_.Print(e1); }
 	//		return null;
 	//	}
 	//}

@@ -226,8 +226,9 @@ public static partial class print {
 	public static void directly(string value) {
 		value ??= "";
 		//qm2.write($"'{value}'");
-#if DEBUG
-		if (value.Contains("Attempted to read or write protected memory.")) qm2.write(value, new StackTrace(true)); //TODO
+		
+#if DEBUG //FUTURE: remove when fixed. Once found this printed, but don't know the source.
+		if (value.Contains("Attempted to read or write protected memory.")) qm2.write(value, new StackTrace(true));
 #endif
 		
 		if (logFile != null) _WriteToLogFile(value);

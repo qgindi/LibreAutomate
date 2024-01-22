@@ -532,7 +532,6 @@ public static class script {
 			}
 			
 			int pidEditor = 0;
-			bool debugger = false;
 			if (auCompiler) {
 				MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
 				
@@ -548,7 +547,6 @@ public static class script {
 					if (0 != (p->flags & 2)) script.testing = true;
 					if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
 					if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
-					if (0 != (p->flags & 16)) debugger = true;
 					folders.Editor = new(cd[..^c_ep.Length]);
 					folders.Workspace = new(p->workspace);
 					
@@ -558,7 +556,7 @@ public static class script {
 				}
 			}
 			
-			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor, debugger);
+			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
 		}
 	}
 	static bool s_appModuleInit;
@@ -568,6 +566,7 @@ public static class script {
 	
 	internal static bool Exiting_ { get; private set; }
 	
+	[DebuggerNonUserCode]
 	static void _UnhandledException(object sender, UnhandledExceptionEventArgs u) {
 		if (!u.IsTerminating) return; //never seen, but anyway
 		Exiting_ = true;
@@ -827,74 +826,54 @@ public static class script {
 	}
 	
 	/// <summary>
-	/// Waits for a debugger attached to this process. Also can attach a debugger.
-	/// Does nothing if already attached.
+	/// Attaches the LibreAutomate's debugger to this process, or waits for a debugger attached to this process.
+	/// Does nothing if a debugger is already attached.
 	/// </summary>
-	/// <param name="showDialog">Show dialog with process name and id. If false, prints that info in the output pane (unless attached a debugger).</param>
+	/// <param name="showDialog">Show dialog with process name and id. If false, attaches the LA debugger.</param>
 	/// <remarks>
 	/// When debugger is attached, this function returns and the script continues to run. The step mode begins when the script encounters one of:
-	/// - <see cref="Debugger.Break"/> in code.
 	/// - breakpoint (set in the debugger's IDE).
-	/// - exception (if debugger is configured to break on exception).
+	/// - exception.
+	/// - clicked Pause button in IDE.
+	/// - <see cref="Debugger.Break"/>, <see cref="Debug.Assert(bool)"/> etc.
 	/// 
-	/// If <i>showDialog</i> is false and LibreAutomate is running:
-	/// - If a debugger script is specified in Options -> Workspace, runs that script, which should automate attaching a debugger.
-	/// - Else attaches the LA debugger. Cannot attach if it's busy (debugging).
+	/// If <i>showDialog</i> is false and LibreAutomate is running, attaches the LA debugger. Cannot attach if it's busy (debugging).
 	/// 
 	/// Some other programs that have a .NET debugger:
-	/// - Visual Studio (Community edition). It's the best, but huge (~10 GB). Free.
+	/// - Visual Studio. It's the best, but huge (~10 GB). The community edition is free. Use menu Debug -> Attach to process.
 	/// - Visual Studio Code. It's much smaller. Free.
-	/// - JetBrains Rider. Possibly free.
-	/// 
-	/// To attach a debugger other than LA:
-	/// - Visual Studio: menu Debug -> Attach to process. Then select the process (this function displays its name and id).
-	/// - Visual Studio Code: in the Run view select combo box item ".NET Core Attach" and click button "Start debugging". Then select the process.
-	/// - JetBrains Rider: menu Run -> Attach to Process. Then select the process.
-	/// 
-	/// This function can launch a script to automate attaching a debugger. See Options -> Workspace -> Debugger script. More info in <see href="/cookbook/Script testing and debugging.html">Cookbook</see>.
+	/// - JetBrains Rider.
 	/// 
 	/// <note>If the script process is running as administrator, the debugger process must run as administrator too.</note>
 	/// 
-	/// Visual Studio Code debugger setup:
-	/// - Install extension "C#".
-	/// - In VSCode open a folder where you want to save debugger settings.
-	/// - Click menu Run -> Add configuration. Select ".NET 5+ and .NET Core".
-	/// - Click "Add configuration" again and select ".NET attach to local...".
-	/// - Save.
+	/// <note>When attaching an external debugger (Visual Studio etc), make sure it debugs .NET code, not native code etc.</note>
+	/// 
+	/// See also <see href="/editor/Debugger.html">debugger</see>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	public static void debug(bool showDialog = false) {
-		if (!Debugger.IsAttached) {
-			if (showDialog) {
-				var d = new dialog("Waiting for debugger to attach", $"Process {process.thisExeName}  {process.thisProcessId}.");
-				d.Screen = screen.ofMouse;
-				d.ShowDialogNoWait();
-				wait.until(0, () => Debugger.IsAttached);
-				d.Send.Close();
-			} else {
-				var w = ScriptEditor.WndMsg_;
-				if (!w.Is0 && 0 != w.Send(Api.WM_USER, 30, process.thisProcessId)) { //run a debugger script or attach the LA debugger
-					if (wait.until(-5, () => Debugger.IsAttached)) return;
-				}
-				
-				print.it($"Process {process.thisExeName} {process.thisProcessId}. Waiting for debugger to attach...");
-				wait.until(0, () => Debugger.IsAttached);
-				print.it("Debugger attached.");
+		if (Debugger.IsAttached) return;
+		if (!showDialog && ScriptEditor.WndMsg_ is var w && !w.Is0) {
+			if (0 != w.Send(Api.WM_USER, 30, process.thisProcessId)) {
+				if (wait.until(-30, () => Debugger.IsAttached)) return;
 			}
+			end();
 		}
-		//note: don't add Debugger.Break(); here. It creates problems.
+		var d = new dialog("Waiting for debugger to attach", $"{script.name}\nProcess: {process.thisExeName}  {process.thisProcessId}", title: "Attach debugger");
+		d.Screen = screen.ofMouse;
+		d.ShowDialogNoWait();
+		wait.until(0, () => Debugger.IsAttached);
+		d.Send.Close();
+		
+		//note: don't add Debugger.Break(); in this func. It creates problems.
 	}
 	
 	#region aux thread
 	
-	internal static unsafe void Starting_(string name, int pidEditor, bool debugger) {
+	internal static unsafe void Starting_(string name, int pidEditor) {
 		s_name = name;
 		s_auxThread = new(() => _AuxThread(pidEditor));
 		//using CreateThread because need thread handle ASAP
-		
-		if (debugger) {
-			while (!Debugger.IsAttached) Thread.Sleep(15);
-		}
 	}
 	static NativeThread_ s_auxThread;
 	

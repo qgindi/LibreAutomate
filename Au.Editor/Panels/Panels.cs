@@ -42,7 +42,7 @@ static class Panels {
 					//rejected: show Yes/No dialog. Let users at first see the new default layout, then they can undo.
 				}
 			}
-			catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
+			catch (Exception e1) { Debug_.Print(e1); }
 		}
 		
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;

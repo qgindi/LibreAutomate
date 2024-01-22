@@ -373,7 +373,7 @@ static class TUtil {
 			run.thread(() => {
 				_Show(true);
 				wait.doEvents();
-			}).Name = "tool"; //info: thread name used for debugging
+			}).Name = "Au.Tool";
 		}
 		
 		bool _Show(bool dialog) {

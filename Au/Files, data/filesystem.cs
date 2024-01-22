@@ -261,7 +261,7 @@ public static partial class filesystem {
 					if (exists(path, true)) return path;
 				}
 			}
-			catch (Exception ex) { Debug_.Print(path + "    " + ex.Message); }
+			catch (Exception ex) { Debug_.Print(path + "    " + ex); }
 		}
 		
 		return null;

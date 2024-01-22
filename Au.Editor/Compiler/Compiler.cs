@@ -95,10 +95,6 @@ partial class Compiler {
 	Dictionary<string, string> _dr, _dn;
 	string _tpa;
 	
-	Compiler() {
-		
-	}
-	
 	bool _Compile(CCReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile, MCFlags addMetaFlags) {
 		//print.it("COMPILE");
 		
@@ -186,6 +182,9 @@ partial class Compiler {
 			//Create debug info always. It is used for run-time error links.
 			//Embed it in assembly. It adds < 1 KB. Almost the same compiling speed. Same loading speed.
 			//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error with .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
+#if DEBUG //temp test debugger with non-user-code dll
+			if (!(_meta.Role == MCRole.classLibrary && (_meta.Optimize || _meta.Name == "Au"))) //TODO: delete
+#endif
 			eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 			
 			if (_meta.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
@@ -256,7 +255,7 @@ partial class Compiler {
 			if (_meta.Role == MCRole.exeProgram) {
 				_GetDllPaths();
 				
-				bool need64 = !_meta.Bit32 || _meta.Optimize;
+				bool need64 = !_meta.Bit32 /*|| _meta.Optimize*/;
 				bool need32 = _meta.Bit32 || _meta.Optimize;
 				
 				//copy app host template exe, add native resources, set assembly name, set console flag if need

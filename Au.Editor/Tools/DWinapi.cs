@@ -89,7 +89,7 @@ https://www.pinvoke.net
 				while (stat.Step()) a.Add((stat.GetText(0), stat.GetText(1)));
 				//perf.nw(); //30 ms cold, 10 ms warm. Without index.
 			}
-			catch (SLException ex) { Debug_.Print(ex.Message); }
+			catch (SLException ex) { Debug_.Print(ex); }
 		}
 
 		string s = "";

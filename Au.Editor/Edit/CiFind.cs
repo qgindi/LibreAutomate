@@ -532,7 +532,7 @@ static class CiFind {
 					}
 				}
 			}
-			catch (Exception e1) { Debug_.PrintIf(sym.Kind != SymbolKind.Field, e1.ToStringWithoutStack()); }
+			catch (Exception e1) { Debug_.PrintIf(sym.Kind != SymbolKind.Field, e1); }
 			
 			_a = df.Values.OrderBy(o => o.f.Name).ToList();
 			foreach (var v in _a) v.a.Sort((x, y) => x.end - y.end);

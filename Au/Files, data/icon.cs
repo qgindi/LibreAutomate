@@ -340,7 +340,7 @@ namespace Au {
 					}
 				}
 			}
-			catch (Exception e) { Debug_.Print(e.Message); }
+			catch (Exception e) { Debug_.Print(e); }
 			//finally { if(il != default) Marshal.Release(il); }
 			return null;
 			

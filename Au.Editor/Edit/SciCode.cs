@@ -33,13 +33,15 @@ partial class SciCode : KScintilla {
 	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
 	public const int
 		c_indicImages = 8,
-		c_indicFound = 9,
-		c_indicRefs = 10,
-		c_indicBraces = 11,
-		c_indicDiagHidden = 17,
-		c_indicInfo = 18,
-		c_indicWarning = 19,
-		c_indicError = 20;
+		c_indicRefs = 9,
+		c_indicBraces = 10,
+		c_indicDebug = 11,
+		c_indicDebug2 = 12,
+		c_indicFound = 13,
+		c_indicDiagHidden = 20,
+		c_indicInfo = 21,
+		c_indicWarning = 22,
+		c_indicError = 23;
 	
 	internal SciCode(FileNode file, aaaFileLoaderSaver fls) {
 		_fn = file;
@@ -63,7 +65,6 @@ partial class SciCode : KScintilla {
 		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, sensitive: true, cursorArrow: true);
 		Call(SCI_SETMARGINBACKN, c_marginMarkers, 0xFFFFFF);
 		aaaMarginSetWidth(c_marginMarkers, 16);
-		_DefineIconMarkers();
 		
 		//aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
 		//Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
@@ -83,11 +84,10 @@ partial class SciCode : KScintilla {
 		aaaSetElementColor(SC_ELEMENT_CARET_LINE_BACK, 0xEEEEEE);
 		Call(SCI_SETCARETLINEVISIBLEALWAYS, 1);
 		
-		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
 		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
 		
 		CiStyling.TStyles.Settings.ToScintilla(this);
-		_IndicatorsInit();
+		_OnHandleCreatedOrDpiChanged();
 		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
 		_InitDragDrop();
 		
@@ -97,6 +97,17 @@ partial class SciCode : KScintilla {
 		//	Scintilla supports it (SCI_SETLINEENDTYPESALLOWED) only if using C++ lexer.
 		//		Modified: now supports by default.
 		//	Ascii VT and FF are not interpreted as newlines by C# and Scintilla.
+	}
+	
+	void _OnHandleCreatedOrDpiChanged() {
+		_IndicatorsInit();
+		_DefineIconMarkers();
+		Call(SCI_SETXCARETPOLICY, CARET_STRICT | CARET_EVEN | CARET_SLOP, _dpi / 2);
+	}
+	
+	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
+		base.OnDpiChanged(oldDpi, newDpi);
+		if (!AaWnd.Is0) _OnHandleCreatedOrDpiChanged();
 	}
 	
 	protected override void DestroyWindowCore(HandleRef hwnd) {
@@ -351,21 +362,21 @@ partial class SciCode : KScintilla {
 	void _MarkersMarginClicked(bool rclick, int pos8) {
 		int line = aaaLineFromPos(false, pos8);
 		var m = new popupMenu();
-		#if true //breakpoints if left click, bookmarks if right click
+#if !true //breakpoints if left click, bookmarks if right click
 		if (rclick) {
 			Panels.Bookmarks.AddMarginMenuItems_(this, m, pos8);
 		} else if (EFile.IsCodeFile) {
 			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 		}
-		#else //breakpoints and bookmarks in single menu
+#else //breakpoints and bookmarks in single menu
 		if (EFile.IsCodeFile) {
 			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 			m.Separator();
 		}
 		Panels.Bookmarks.AddMarginMenuItems_(this, m, pos8);
-		#endif
+#endif
 		var xy = mouse.xy; xy.Offset(-_dpi / 2, -_dpi / 8);
 		m.Show(xy: xy, owner: AaWnd);
 	}
@@ -548,14 +559,6 @@ partial class SciCode : KScintilla {
 		aaaIndicatorDefine(c_indicWarning, style, 0x008000, strokeWidth: strokeWidth); //dark green
 		aaaIndicatorDefine(c_indicInfo, INDIC_DIAGONAL, 0xc0c0c0, strokeWidth: strokeWidth);
 		aaaIndicatorDefine(c_indicDiagHidden, INDIC_DOTS, 0xc0c0c0, strokeWidth: strokeWidth);
-	}
-	
-	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
-		base.OnDpiChanged(oldDpi, newDpi);
-		if (!AaWnd.Is0) {
-			_IndicatorsInit();
-			_DefineIconMarkers();
-		}
 	}
 	
 	bool _indicHaveFound, _indicHaveDiag;

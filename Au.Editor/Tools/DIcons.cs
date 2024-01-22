@@ -346,7 +346,7 @@ Can be Pack.Icon, like Modern.List.")
 						return ImageUtil.LoadGdipBitmapFromXaml(xaml, _dialog._dpi, (16, 16));
 					}
 				}
-				catch (Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { Debug_.Print(ex); }
 				return null;
 			}
 		}
@@ -423,7 +423,7 @@ Can be Pack.Icon, like Modern.List.")
 	public static bool TryGetIconFromBigDB(string icon, out string xaml) {
 		//using var p1 = perf.local();
 		try { return GetIconFromBigDB(icon, out xaml); }
-		catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
+		catch (Exception e1) { Debug_.Print(e1); }
 		xaml = null;
 		return false;
 	}
@@ -452,7 +452,7 @@ Can be Pack.Icon, like Modern.List.")
 			xaml = $@"<Viewbox Width='16' Height='16' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>{xaml}</Viewbox>";
 			return true;
 		}
-		catch (Exception e1) { Debug_.Print(e1.ToStringWithoutStack()); }
+		catch (Exception e1) { Debug_.Print(e1); }
 		return false;
 	}
 	static sqlite s_iconsDB;

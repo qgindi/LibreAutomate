@@ -6,7 +6,7 @@ uid: snippets
 
 Code snippets are ready-made snippets of code you can quickly insert into your code. For example, the piPrintItSnippet inserts code `print.it();` and moves the text cursor into the `()`. Snippets appear in the completion list, together with types, functions, etc. To show the list, in the code editor start typing a snippet name or press Ctrl+Space.
 
-In the Snippets window (menu -> Options -> Snippets) you can add/delete/edit/hide/unhide your snippets and hide/unhide default snippets. Right-click to add/delete. Uncheck to hide (don't show in the completion list).
+In the Snippets window (menu -> Tools -> Snippets) you can add/delete/edit/hide/unhide your snippets and hide/unhide default snippets. Right-click to add/delete. Uncheck to hide (don't show in the completion list).
 
 A snippet can show a menu of sub-snippets. Use it to group similar snippets together, to reduce the number of snippets in the completion list. To create a menu of sub-snippets, at first create a snippet (without code or with code of the first menu item), then right-click it and add more menu items.
 

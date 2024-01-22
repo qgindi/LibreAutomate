@@ -48,7 +48,7 @@ partial class FilesModel {
 				Dispatcher.InvokeAsync(() => App.Model._ItemRightClicked(f));
 				break;
 			case MouseButton.Middle:
-				if (!f.IsFolder) App.Model.CloseFile(f);
+				App.Model.CloseFiles(f);
 				break;
 			}
 		}
