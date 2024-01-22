@@ -187,7 +187,11 @@ public partial class KMenuCommands {
 			to ??= new();
 			
 			to.Icon = image ?? _CopyImage(from);
-			if (text != null) to.Header = text; else if (from.Header is string s) to.Header = s;
+			if (text != null) to.Header = text;
+			else if (from.Header is string s) {
+				if (to.Role is MenuItemRole.TopLevelItem) s = StringUtil.RemoveUnderlineChar(s, '_'); //eg _Find would disable normal operation of _File
+				to.Header = s;
+			}
 			to.InputGestureText = from.InputGestureText;
 			to.ToolTip = from.ToolTip;
 			to.Foreground = from.Foreground;

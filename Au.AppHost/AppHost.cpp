@@ -467,6 +467,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		//QueryPerformanceCounter(&t3); //22 ms cold, 16 hot
 	} //free temp strings eg tpaList 30000
 
+	//attaching debugger? Note, this must be after coreclr_initialize, else fails to attach.
+	STARTUPINFOW si = {};
+	GetStartupInfoW(&si);
+	if (si.dwXCountChars == 1703529821) {
+		auto he = OpenEventW(SYNCHRONIZE, false, L"Au.event.Debugger");
+		if (!he || 0 != WaitForSingleObject(he, 30000)) return -1;
+		CloseHandle(he);
+	}
+
 	unsigned int ec = 0;
 	if (0 == wcsncmp(pCmdLine, LR"(\\.\pipe\Au.Task-)", 17)) { //preloaded task process for a script with role miniProgram
 		auto coreclr_create_delegate = (coreclr_create_delegate_ptr)GetProcAddress(hm, "coreclr_create_delegate");

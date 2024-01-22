@@ -341,7 +341,7 @@ class PanelBookmarks {
 			}
 			m.Separator();
 		} else if (!(_root?.Count > 0)) {
-			print.it("To add a bookmark, right-click the white margin in the code editor.");
+			print.it("To add a bookmark, click the white margin in the code editor.");
 			return;
 		}
 		

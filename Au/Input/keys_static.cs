@@ -501,12 +501,12 @@ public partial class keys {
 	/// <tr>
 	/// <td>Special characters</td>
 	/// <td>
-	/// <b>Operator:</b> + * ( ) _
+	/// <b>Operator:</b> + * ( ) _ ^
 	/// <br/><b>Numpad key prefix:</b> #
 	/// <br/><b>Text/HTML argument prefix:</b> ! %
-	/// <br/><b>Reserved:</b> @ $ ^ &amp;
+	/// <br/><b>Reserved:</b> @ $ &amp;
 	/// </td>
-	/// <td>These characters cannot be used as keys. Instead use = 8 9 0 - 3 1 5 2 4 6 7.</td>
+	/// <td>These characters cannot be used as keys. Instead use = 8 9 0 - 6 3 1 5 2 4 7.</td>
 	/// </tr>
 	/// </table>
 	/// 
@@ -519,7 +519,7 @@ public partial class keys {
 	/// </tr>
 	/// <tr>
 	/// <td><c>*n</c></td>
-	/// <td><c>"Left*3"</c></td>
+	/// <td><c>"Left*3"</c><br/><c>$"Left*{i}"</c></td>
 	/// <td>Press key n times, like <c>"Left Left Left"</c>.
 	/// <br/>See <see cref="AddRepeat"/>.
 	/// </td>

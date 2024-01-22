@@ -51,8 +51,9 @@ class CiFolding {
 			_AddFoldPoint(what, end, false, true, separator);
 		}
 		
-		var nodes = root.DescendantNodes(o => {
+		var nodes = root.DescendantNodes(static o => {
 			//don't descend into functions etc. Much faster.
+			//CONSIDER: fold local functions and anonymous methods. But then much slower.
 			if (o is MemberDeclarationSyntax) return o is BaseNamespaceDeclarationSyntax or TypeDeclarationSyntax;
 			return o is CompilationUnitSyntax;
 		});
@@ -78,15 +79,15 @@ class CiFolding {
 				foldStart = d.Type.FullSpan.End; //not perfect, but the best common property
 				separatorBefore = prevNode is BaseFieldDeclarationSyntax;
 				break;
-			
 			case LocalFunctionStatementSyntax d:
 				foldStart = d.Identifier.SpanStart;
 				separatorBefore = prevNode is not (LocalFunctionStatementSyntax or null);
 				break;
-				//rejected. 1. Then would need to more code for the "hide all" command, to exclude namespaces. 2. Namespaces can be without { } (C# 10).
+				//rejected. 1. Then would need more code for the "hide all" command, to exclude namespaces. 2. Namespaces can be without { } (C# 10).
 				//case NamespaceDeclarationSyntax d:
 				//	foldStart = d.Name.SpanStart;
-				//	break;				//rejected. Would make DescendantNodes slow.
+				//	break;
+				//rejected. Would make DescendantNodes slow.
 				//case AnonymousFunctionExpressionSyntax d when d.ExpressionBody == null && v.Parent is ArgumentSyntax: //lambda, delegate(){}
 				//	foldStart = v.SpanStart;
 				//	noSeparator = true;

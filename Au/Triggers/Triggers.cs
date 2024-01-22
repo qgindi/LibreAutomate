@@ -372,7 +372,7 @@ public class ActionTriggers {
 				return 0;
 			}
 		}
-		catch (Exception ex) { Debug_.Print(ex.Message); return default; }
+		catch (Exception ex) { Debug_.Print(ex); return default; }
 
 		return Api.DefWindowProc(w, message, wParam, lParam);
 	}

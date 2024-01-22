@@ -41,6 +41,8 @@ class PanelTasks {
 			m["End task  '" + name + "'"] = _ => App.Tasks.EndTask(t);
 			m["End all  '" + name + "'"] = _ => App.Tasks.EndTasksOf(f);
 			m.Separator();
+			m["Attach debugger"] = _ => Panels.Debug.Attach(t.processId);
+			m.Separator();
 			m["Close\tM-click", disable: f.OpenDoc == null] = _ => App.Model.CloseFile(f, selectOther: true);
 			//m.Separator();
 			//m["Recent tasks and triggers..."] = _ => RecentTT.Show(); //rejected. It is in menu Run. Or would also need to show context menu when rclicked in empty space.

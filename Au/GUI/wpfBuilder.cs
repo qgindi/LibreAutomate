@@ -2338,7 +2338,7 @@ public class wpfBuilder {
 	/// <param name="stretchDirection">Sets <see cref="Image.StretchDirection"/>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 	/// <remarks>
-	/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd, FrameworkElement)"/>.
+	/// To load vector images from XAML, don't use <b>Image</b> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
 	/// </remarks>
 	/// <seealso cref="icon.ToWpfImage"/>
 	/// <seealso cref="ImageUtil"/>

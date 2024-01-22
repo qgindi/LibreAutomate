@@ -106,7 +106,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 							_SaveAllIfNeed(true);
 							//Debug_.MemoryPrint_(); //editor ~4 KB
 						}
-					}, sta: false);
+					}, sta: false).Name = "Au.JSettings";
 					
 					process.thisProcessExit += _ => _SaveAllIfNeed(false); //info: .NET does not call finalizers when process exits
 				}

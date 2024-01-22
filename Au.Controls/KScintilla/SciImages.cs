@@ -451,7 +451,7 @@ public unsafe class SciImages {
 				x += u.width + 30;
 			}
 		}
-		catch (Exception ex) { Debug_.Print(ex.Message); }
+		catch (Exception ex) { Debug_.Print(ex); }
 		finally { if (pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 		//perf.nw();
 

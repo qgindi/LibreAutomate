@@ -556,7 +556,7 @@ public unsafe class elmFinder {
 	//				return true;
 	//			}
 	//		}
-	//		catch (AuException ex) when (!c.IsAlive) { Debug_.Print(ex.Message); } //don't throw AuWndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
+	//		catch (AuException ex) when (!c.IsAlive) { Debug_.Print(ex); } //don't throw AuWndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
 	//	}
 	//	return false;
 	//}

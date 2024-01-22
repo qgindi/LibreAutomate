@@ -37,28 +37,42 @@
 
 #if TRACE
 
-#pragma warning disable 169
-
 static unsafe class Test {
-	
+
 	public static void FromMenubar() {
 		print.clear();
 		
-		//Git.Test();
-		
-		var d = Panels.Editor.ActiveDoc;
+		//GenerateCode.CreateEventHandlers();
+		//GenerateCode.CreateOverrides();
+
+		//var d = Panels.Editor.ActiveDoc;
 		//print.it(d.aaaCurrentPos16);
-		
+
 		//for (int i = 16; i < 32; i++) {
 		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");
 		//	//d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_PLAIN);
 		//	d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_COLOUR);
 		//	d.aaaSetString(SCI_SETREPRESENTATIONCOLOUR, $"{(char)i}", 0xC0C0C0);
 		//}
-		
+
 		//Cpp.Cpp_Test();
 	}
-	
+
+	public static void MonitorGC() {
+		//if(!s_debug2) {
+		//	s_debug2 = true;
+		//	new TestGC();
+
+		//	//timer.every(50, _ => {
+		//	//	if(!s_debug) {
+		//	//		s_debug = true;
+		//	//		timer.after(100, _ => new TestGC());
+		//	//	}
+		//	//});
+		//}
+	}
+	//static bool s_debug2;
+
 	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;
@@ -69,21 +83,6 @@ static unsafe class Test {
 			//f.BeginInvoke(new Action(() => new TestGC()));
 			new TestGC();
 		}
-	}
-	static bool s_debug2;
-	
-	public static void MonitorGC() {
-		//if(!s_debug2) {
-		//	s_debug2 = true;
-		//	new TestGC();
-		
-		//	//timer.every(50, _ => {
-		//	//	if(!s_debug) {
-		//	//		s_debug = true;
-		//	//		timer.after(100, _ => new TestGC());
-		//	//	}
-		//	//});
-		//}
 	}
 }
 #endif

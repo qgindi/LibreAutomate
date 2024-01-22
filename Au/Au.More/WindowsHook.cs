@@ -488,8 +488,8 @@ namespace Au.More {
 					//		1. Does not wait more. Passes the message to the next hook etc, and we cannot return 1 to block it.
 					//		2. Kills the hook after several such cases. Usually 6 keys or 11 mouse events.
 					//		3. Makes the hook useless: next times does not wait for it, and we cannot return 1 to block the event.
-					//	Somehow does not apply 2 and 3 to some apps, eg C# apps (Core too) created by Visual Studio, although applies to those created not by VS. I did not find why.
-					if (t1 != 0 && (t1 = perf.ms - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
+					//	Somehow does not apply 2 and 3 to some apps, eg C# apps created by Visual Studio, although applies to those created not by VS. I did not find why.
+					if (t1 != 0 && (t1 = perf.ms - t1) > 200 && !Debugger.IsAttached) {
 						if (t1 > LowLevelHooksTimeout - 50) {
 							var s1 = _hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
 							var s2 = eat ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;

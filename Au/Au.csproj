@@ -43,7 +43,7 @@
 		<Authors>didgeridoo</Authors>
 		<Product>LibreAutomate</Product>
 		<Description>LibreAutomate is an automation library for Windows. Mostly desktop and web UI automation. To get the most of it, install the LibreAutomate C# app.</Description>
-		<Copyright>Copyright (c) Gintaras Didžgalvis 2023</Copyright>
+		<Copyright>Copyright (c) Gintaras Didžgalvis 2024</Copyright>
 		<PackageProjectUrl>https://www.libreautomate.com</PackageProjectUrl>
 		<PackageIcon>Icon-128.png</PackageIcon>
 		<PackageReadmeFile>NuGet.md</PackageReadmeFile>

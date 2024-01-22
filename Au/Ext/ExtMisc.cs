@@ -9,6 +9,7 @@ namespace Au.Types;
 /// <summary>
 /// Adds extension methods for some .NET types.
 /// </summary>
+[DebuggerStepThrough]
 public static unsafe partial class ExtMisc {
 	#region value types
 	

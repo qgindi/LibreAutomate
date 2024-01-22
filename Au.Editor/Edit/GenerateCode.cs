@@ -87,6 +87,9 @@ static class GenerateCode {
 	}
 	
 	static bool _CreateDelegate() {
+		//FUTURE: show tool to insert code, not just print.
+		//	With name edit field. Options to insert as method or local func. Option to use `#region events`. Option to add `print.it("EventName");`.
+		
 		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return false;
 		int pos = cd.pos;
 		var semo = cd.semanticModel;
@@ -103,8 +106,11 @@ static class GenerateCode {
 					return _GetTypeAndFormat(aes.Left, aes);
 			} else if (node is BaseArgumentListSyntax als) {
 				if (!node.Span.ContainsInside(pos)) continue;
-				var (arg, ps) = InsertCodeUtil.GetArgumentParameterFromPos(als, pos, semo);
-				if (ps != null) return _Format(ps.Type);
+				if (InsertCodeUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var ps)) {
+					bool ok = false;
+					foreach (var v in ps) ok |= _Format(v.Type);
+					return ok;
+				}
 			} else if (node is ReturnStatementSyntax rss) {
 				//if (pos >= rss.ReturnKeyword.Span.End)
 				return _GetTypeAndFormat(rss.GetAncestor<MethodDeclarationSyntax>()?.ReturnType);
@@ -128,19 +134,6 @@ static class GenerateCode {
 		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
 			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol || t.TypeKind != TypeKind.Delegate) return false;
 			var b = new StringBuilder("<><lc #A0C0A0>Delegate method and lambda<>\r\n<code>");
-			var m = t.DelegateInvokeMethod;
-			
-			//method
-			
-			var format = new SymbolDisplayFormat(
-				genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-				memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef,
-				miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers,
-				parameterOptions: SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeDefaultValue
-				);
-			
-			b.Append(m.ToMinimalDisplayString(semo, pos, format));
-			
 			string methodName = "_RenameMe";
 			if (aes != null) {
 				if (aes.Left is IdentifierNameSyntax ins) {
@@ -152,30 +145,175 @@ static class GenerateCode {
 						methodName = $"_{maes.Name.Identifier.Text}";
 					}
 				}
+				if (methodName.Starts("__")) methodName = methodName[1..];
 			}
+			_FormatDelegete(b, null, t, methodName, semo, pos);
+			b.AppendLine("</code>");
+			print.it(b);
+			return true;
+		}
+	}
+	
+	static void _FormatDelegete(StringBuilder b, bool? lambda, INamedTypeSymbol t, string methodName, SemanticModel semo, int pos, string printEvent = null) {
+		_sdf1 ??= new SymbolDisplayFormat(
+			genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+			memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef,
+			miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers,
+			parameterOptions: SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeDefaultValue
+			);
+		
+		var m = t.DelegateInvokeMethod;
+		
+		if (lambda != true) {
+			b.Append(m.ToMinimalDisplayString(semo, pos, _sdf1));
 			b.Replace(" Invoke(", $" {methodName}(");
-			
-			b.Append(" {\r\n\t");
-			if (!m.ReturnsVoid) b.Append("return default;"); //never mind ref return
-			b.Append("\r\n}\r\n");
-			
-			//lambda
-			
+			_AppendBody(false);
+		}
+		
+		if (lambda != false) {
 			var s = "()";
 			if (m.Parameters.Any()) {
-				format = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeParameters);
+				var format = _sdf1.WithMemberOptions(SymbolDisplayMemberOptions.IncludeParameters);
 				bool withTypes = m.Parameters.Any(o => o.RefKind != 0 || o.IsParams);
 				if (withTypes) format = format.RemoveParameterOptions(SymbolDisplayParameterOptions.IncludeDefaultValue);
 				else format = format.WithParameterOptions(SymbolDisplayParameterOptions.IncludeName);
 				s = m.ToMinimalDisplayString(semo, pos, format);
 				if (m.Parameters.Length == 1 && !withTypes) s = s[7..^1]; else s = s[6..]; //remove 'Invoke' and maybe '()'
 			}
-			b.Append(s).AppendLine(" => </code>");
-			
-			print.it(b);
-			return true;
+			b.Append(s).Append(" =>");
+			if (lambda == true) _AppendBody(true); else b.AppendLine(" ");
+		}
+		
+		void _AppendBody(bool oneLine) {
+			b.Append(oneLine ? " { " : " {\r\n\t");
+			if (printEvent != null) b.AppendFormat("_PrintEvent(\"{0}\");", printEvent).Append(oneLine ? " " : "\r\n\t");
+			if (!m.ReturnsVoid) b.Append("return default;"); //never mind ref return
+			b.AppendLine(oneLine ? " };" : "\r\n}");
 		}
 	}
+	static SymbolDisplayFormat _sdf1;
+	
+	public static void CreateEventHandlers() {
+		INamedTypeSymbol type = null;
+		string varName = null;
+		bool staticEvents = false;
+		var (sym, cd) = CiUtil.GetSymbolFromPos(preferVar: true);
+		if (sym != null) {
+			if (sym is INamedTypeSymbol nts) {
+				type = nts;
+				varName = type.Name;
+				staticEvents = true;
+			} else if (sym is ILocalSymbol or IParameterSymbol or IFieldSymbol or IPropertySymbol) {
+				type = sym.GetSymbolType() as INamedTypeSymbol;
+				varName = sym.Name;
+			}
+		}
+		if (type == null) {
+			dialog.showInfo("Create event handlers", "Please click or right-click a variable or type name in code.\nThen retry.\nIf type name, prints static events, else non-static.");
+			return;
+		}
+		
+		string typeString = type.ToString(); //X or X<T>
+		bool lambda = false;
+		int button = dialog.show("Create event handlers", $"Type: {typeString}", "1 Methods|2 Lambdas|0 Cancel", flags: DFlags.CommandLinks, owner: App.Hmain);
+		switch (button) { case 1: break; case 2: lambda = true; break; default: return; }
+		
+		bool found = false, found2 = false;
+		StringBuilder b1 = new("<><lc #A0C0A0>Event handlers. The text is in the clipboard.<>\r\n<code>"), b2 = new();
+		string prefix = (varName[0] != '_' ? "_" : null) + varName + "_";
+		foreach (var type2 in type.TypeKind is TypeKind.Interface ? type.GetAllInterfacesIncludingThis() : type.GetBaseTypesAndThis().SkipLast(1)) {
+			bool once = false;
+			foreach (var v in type2.GetMembers()) {
+				if (v is IEventSymbol es) {
+					if (es.IsStatic == staticEvents) {
+						var funcName = prefix + es.Name;
+						if (!once) {
+							var s1 = $"//{type2} events";
+							if (found) b1.AppendLine();
+							b1.AppendLine(s1);
+							if (!lambda) b2.AppendLine().AppendLine(s1);
+							once = found = true;
+						}
+						b1.Append($"{(staticEvents ? typeString : varName)}.{es.Name} += ");
+						if (!lambda) {
+							b1.AppendLine($"{funcName};");
+							b2.AppendLine();
+						}
+						_FormatDelegete(lambda ? b1 : b2, lambda, es.Type as INamedTypeSymbol, funcName, cd.semanticModel, cd.pos, es.Name);
+					} else found2 = true;
+				}
+			}
+		}
+		if (!found) {
+			print.it(found2
+				? $"Type {typeString} does not have {(staticEvents ? "static" : "non-static")} events."
+				: $"Type {typeString} does not have events.");
+			return;
+		}
+		
+		b1.Append(b2).Append("\r\n[Conditional(\"DEBUG\")]\r\nstatic void _PrintEvent(string s) { print.it($\"<><c green>event <_>{s}</_><>\"); }\r\n</code>");
+		var text = b1.ToString();
+		print.it(text);
+		clipboard.text = text[(text.Find("<code>") + 6)..^7];
+	}
+	
+	public static void CreateOverrides() {
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		var semo = cd.semanticModel;
+		var type = semo.GetEnclosingNamedType2(cd.pos, out _, out var declNode);
+		if (type == null || type.TypeKind != TypeKind.Class) return;
+		int pos2 = declNode.CloseBraceToken.Span.Start;
+		var b = new StringBuilder("<><lc #A0C0A0>Overrides. The text is in the clipboard.<>\r\n<code>");
+		var format = CiText.s_symbolFullFormat.WithParameterOptions(CiText.s_symbolFullFormat.ParameterOptions & ~SymbolDisplayParameterOptions.IncludeOptionalBrackets);
+		bool found = false;
+		for (var type2 = type.BaseType; type2?.BaseType != null; type2 = type2.BaseType) { //base types except object
+			//print.it(type2);
+			bool once = false;
+			foreach (var v in type2.GetMembers()) {
+				if ((v.IsVirtual || v.IsAbstract) && (v is IMethodSymbol { MethodKind: MethodKind.Ordinary } || v is IPropertySymbol)) {
+					if (!once) {
+						if (found) b.AppendLine();
+						b.AppendLine($"//{type2} overrides");
+						once = found = true;
+					}
+					b.AppendLine().Append(_AccToString(v)).Append(" override ");
+					var s = v.ToMinimalDisplayString(semo, pos2, format);
+					if (v is IMethodSymbol ims) {
+						b.Append(s);
+						b.AppendLine(" {\r\n\t_PrintFunc();\r\n\t");
+						if (v.IsAbstract) {
+							if (!ims.ReturnsVoid) b.AppendLine("\treturn default;");
+						} else {
+							b.AppendLine($"\t{(ims.ReturnsVoid ? "" : "return ")}base.{v.Name}({string.Join(", ", ims.Parameters.Select(o => o.Name))});");
+						}
+						b.AppendLine("}");
+					} else if (v is IPropertySymbol ips) {
+						if (v.IsAbstract) {
+							if (!ips.IsWriteOnly) s = s.Replace(" get;", $"\r\n\tget {{ _PrintFunc($\"get {v.Name}\");  return default; }}\r\n");
+							if (!ips.IsReadOnly) s = s.Replace(" set;", $"\r\n\tset {{ _PrintFunc($\"set {v.Name}\");  }}\r\n");
+						} else {
+							if (!ips.IsWriteOnly) s = s.Replace(" get;", $"\r\n\tget {{ _PrintFunc($\"get {v.Name}\");  return base.{v.Name}; }}\r\n");
+							if (!ips.IsReadOnly) s = s.Replace(" set;", $"\r\n\tset {{ _PrintFunc($\"set {v.Name}\");  base.{v.Name} = value; }}\r\n");
+							if (ips.IsIndexer) s = s.Replace(" base.this[]", $" base[{string.Join(", ", ips.Parameters.Select(o => o.Name))}]");
+						}
+						s = s.Replace("\n }", "\n}");
+						b.AppendLine(s);
+					}
+				}
+			}
+		}
+		if (!found) {
+			print.it($"Class {type} does not have a base class containing virtual or abstract functions.");
+			return;
+		}
+		
+		b.Append("\r\n[Conditional(\"DEBUG\")]\r\nstatic void _PrintFunc([CallerMemberName] string m_ = null) { print.it($\"<><c green>override <_>{m_}</_><>\"); }\r\n</code>");
+		var text = b.ToString();
+		print.it(text);
+		clipboard.text = text[(text.Find("<code>") + 6)..^7];
+	}
+	
+	static string _AccToString(ISymbol v) => v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" };
 	
 	public static void ImplementInterfaceOrAbstractClass(int position = -1) {
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
@@ -281,7 +419,7 @@ static class GenerateCode {
 					if (!expl) b.Append("public ");
 					if (v.IsStatic) b.Append("static ");
 				} else {
-					b.Append(v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" });
+					b.Append(_AccToString(v));
 					b.Append(" override ");
 				}
 				b.Append(v.ToMinimalDisplayString(semo, position, expl ? formatExp : format))

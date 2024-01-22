@@ -95,11 +95,11 @@ partial class PanelDebug {
 						} else {
 							exp = tok.Text;
 						}
-					} else if (sym.Kind is SymbolKind.Method && node.GetAncestor<InvocationExpressionSyntax>() is { } ies) { //for testing only
-						var span = ies.Span;
-						int i = span.Start;
-						if (cd.code[i] == '.') i = _FindStartOfMemberAccessOrElementAccess(ies);
-						exp = cd.code[i..span.End];
+					//} else if (sym.Kind is SymbolKind.Method && node.GetAncestor<InvocationExpressionSyntax>() is { } ies) { //for testing only
+					//	var span = ies.Span;
+					//	int i = span.Start;
+					//	if (cd.code[i] == '.') i = _FindStartOfMemberAccessOrElementAccess(ies);
+					//	exp = cd.code[i..span.End];
 					}
 				}
 			}
@@ -174,7 +174,7 @@ partial class PanelDebug {
 		if (_d.SendSync(100, $"-var-create - {exp} --thread {_s.threadId} --frame {frame} --evalFlags {evalFlags}") is string s) {
 			//print.it("VAR", s);
 			if (s.Starts("^done,name=")) return new _MiRecord(s).Data<_VAR>();
-			Debug_.Print($"<><c orange>{s}<>");
+			Debug_.Print($"<c orange>{s}<>");
 		}
 		return null;
 		//tested: debugger has a 5-10 s timeout for expression evaluation.
@@ -183,7 +183,7 @@ partial class PanelDebug {
 	_VAR _VarCreateL(string exp) {
 		if (_d.SendSync(100, $"-var-create - {exp}") is string s) {
 			if (s.Starts("^done,name=")) return new _MiRecord(s).Data<_VAR>();
-			Debug_.Print($"<><c orange>{s}<>");
+			Debug_.Print($"<c orange>{s}<>");
 		}
 		return null;
 	}
@@ -245,7 +245,7 @@ partial class PanelDebug {
 		void _SetTextAndIsFolder(string value) {
 			if (value != null) {
 				_text = $"{_exp}={value.Limit(8000)}";
-				_isFolder = _v != null ? _v.numchild > 0 : value.Starts('{') && !value.Ends("[0]}");
+				_isFolder = value.Starts('{') && (_v != null ? _v.numchild > 0 : !value.Ends("[0]}"));
 			} else _text = _exp;
 		}
 		
@@ -428,7 +428,7 @@ partial class PanelDebug {
 								//	Eg if the executed code contains code `12.s();`, waits 5 s, and that value is "<error>".
 								//	But if contains code `dialog.show("");`, waits 10 s and returns error.
 								//	Debugger respects [DebuggerBrowsable(DebuggerBrowsableState.Never)] but ignores other [DebuggerX].
-								Debug_.Print($"<><c orange>{s}<>");
+								Debug_.Print($"<c orange>{s}<>");
 							}
 						}
 					}

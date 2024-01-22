@@ -436,6 +436,17 @@ partial class FilesModel {
 	}
 	
 	/// <summary>
+	/// Closes the file. If folder, closes/collapses its descendants.
+	/// </summary>
+	public void CloseFiles(FileNode f) {
+		if (f.IsFolder) {
+			CloseFiles(f.Descendants());
+			CollapseAll(folder: f);
+			//note: does not collapse the folder. Let the user see what happened.
+		} else CloseFile(f);
+	}
+	
+	/// <summary>
 	/// Updates PanelOpen, enables/disables Previous command.
 	/// </summary>
 	void _UpdateOpenFiles(FileNode current) {
@@ -593,8 +604,9 @@ partial class FilesModel {
 	/// <param name="line">If not negative, goes to this 0-based line.</param>
 	/// <param name="columnOrPos">If not negative, goes to this 0-based position in text (if line negative) or to this 0-based column in line.</param>
 	/// <param name="findText">If not null, finds this text (<b>FindWord</b>), and goes there if found. Then <i>line</i> and <i>columnPos</i> not used.</param>
-	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1, string findText = null) {
-		App.Wmain.AaShowAndActivate();
+	/// <param name="activateLA">Always activate the LA window. If false - only if wasn't visible.</param>
+	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1, string findText = null, bool activateLA = true) {
+		if (activateLA || !App.Wmain.IsLoaded || !App.Wmain.IsVisible) App.Wmain.AaShowAndActivate();
 		bool wasOpen = _currentFile == f;
 		if (!SetCurrentFile(f)) return false;
 		var doc = Panels.Editor.ActiveDoc;
@@ -618,11 +630,11 @@ partial class FilesModel {
 	}
 	
 	/// <summary>
-	/// Finds code file and calls <see cref="OpenAndGoTo(FileNode, int, int, string)"/>. Does nothing if not found.
+	/// Finds code file and calls <see cref="OpenAndGoTo(FileNode, int, int, string, bool)"/>. Does nothing if not found.
 	/// </summary>
-	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1, string findText = null) {
+	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1, string findText = null, bool activateLA = true) {
 		var f = FindCodeFile(file); if (f == null) return false;
-		return OpenAndGoTo(f, line, columnOrPos, findText);
+		return OpenAndGoTo(f, line, columnOrPos, findText, activateLA);
 	}
 	
 	/// <summary>
@@ -632,10 +644,11 @@ partial class FilesModel {
 	/// <param name="fileOrFolder">See <see cref="Find"/>.</param>
 	/// <param name="line1Based">If not empty, goes to this 1-based line. Or can be "expand" to find and expand a folder.</param>
 	/// <param name="column1BasedOrPos">If not empty, goes to this 0-based position in text (if line empty) or to this 1-based column in line.</param>
+	/// <param name="activateLA"></param>
 	/// <remarks>
 	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
 	/// </remarks>
-	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null) {
+	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null, bool activateLA = true) {
 		bool expand = line1Based == "expand"; if (expand) line1Based = "";
 		var f = Find(fileOrFolder, expand ? FNFind.Folder : line1Based.NE() && column1BasedOrPos.NE() ? FNFind.Any : FNFind.CodeFile);
 		if (f == null) return false;
@@ -646,7 +659,7 @@ partial class FilesModel {
 		}
 		int line = line1Based.NE() ? -1 : line1Based.ToInt() - 1;
 		int columnOrPos = -1; if (!column1BasedOrPos.NE()) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
-		return OpenAndGoTo(f, line, columnOrPos);
+		return OpenAndGoTo(f, line, columnOrPos, activateLA: activateLA);
 	}
 	
 	/// <summary>
@@ -655,10 +668,11 @@ partial class FilesModel {
 	/// </summary>
 	/// <param name="fileOrFolder">See <see cref="Find"/>.</param>
 	/// <param name="findText"></param>
-	public bool OpenAndGoTo3(string fileOrFolder, string findText) {
+	/// <param name="activateLA"></param>
+	public bool OpenAndGoTo3(string fileOrFolder, string findText, bool activateLA = true) {
 		var f = FindCodeFile(fileOrFolder);
 		if (f == null) return false;
-		return OpenAndGoTo(f, findText: findText);
+		return OpenAndGoTo(f, findText: findText, activateLA: activateLA);
 	}
 	
 	#endregion
@@ -791,8 +805,9 @@ partial class FilesModel {
 		switch (how) {
 		case ECloseCmd.CloseSelectedOrCurrent:
 			var a = TreeControl.SelectedItems;
-			if (a.Length > 0) CloseFiles(a);
-			else CloseFile(_currentFile);
+			if (a.Length == 0) CloseFile(_currentFile);
+			else if (a.Length == 1) CloseFiles(a[0]);
+			else CloseFiles(a);
 			break;
 		case ECloseCmd.CloseAll:
 			CloseFiles(_openFiles, dontClose);
@@ -808,9 +823,10 @@ partial class FilesModel {
 		}
 	}
 	
-	public void CollapseAll(bool exceptWithOpenFiles = false) {
+	public void CollapseAll(bool exceptWithOpenFiles = false, FileNode folder = null) {
 		bool update = false;
-		foreach (var v in Root.Descendants()) {
+		folder ??= Root;
+		foreach (var v in folder.Descendants()) {
 			if (v.IsExpanded) {
 				if (exceptWithOpenFiles && v.Descendants().Any(o => _openFiles.Contains(o))) continue;
 				update = true;
@@ -1303,7 +1319,6 @@ partial class FilesModel {
 		public void Imported(FileNode f, bool inLinkDir) {
 			if (_hs == null) {
 				_hs = new(StringComparer.OrdinalIgnoreCase) { "global.cs" };
-				if (_model.WSSett.CurrentUser.debuggerScript is string s1 && !s1.NE()) _hs.Add(s1); //and never mind if \path
 				if (_model._GetStartupScripts() is { } x) foreach (var row in x.Rows) _hs.Add(row[0]); //and never mind if \path or //comment
 			}
 			var name = f.Name;
@@ -1543,7 +1558,7 @@ partial class FilesModel {
 				string file = row[0];
 				if (file.Starts("//")) continue;
 				var f = FindCodeFile(file);
-				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options -> Run scripts..."); continue; }
+				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options -> Workspace -> Run scripts..."); continue; }
 				int delay = 0;
 				if (x.ColumnCount > 1) {
 					var sd = row[1];

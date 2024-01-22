@@ -72,7 +72,7 @@ namespace Au.More {
 					run.thread(() => {
 						new TSession()._Run(client);
 						Interlocked.Decrement(ref s_nThreads);
-					});
+					}).Name = "Au.HttpServerSession";
 					Interlocked.Increment(ref s_nThreads);
 					while (s_nThreads >= (osVersion.is32BitProcess ? 200 : 2000)) 200.ms();
 				}

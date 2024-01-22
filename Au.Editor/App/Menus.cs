@@ -372,8 +372,14 @@ static class Menus {
 			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda" + brown)]
 			public static void Create_delegate() { GenerateCode.CreateDelegate(); }
 			
-			[Command(tooltip = "Implement members of interface or abstract base class")]
+			[Command("Implement interface/abstract", tooltip = "Implement members of interface or abstract base class")]
 			public static void Implement_interface() { GenerateCode.ImplementInterfaceOrAbstractClass(); }
+			
+			[Command]
+			public static void Create_event_handlers() { GenerateCode.CreateEventHandlers(); }
+			
+			[Command]
+			public static void Create_overrides() { GenerateCode.CreateOverrides(); }
 		}
 		
 		[Command(separator = true)]
@@ -577,8 +583,8 @@ static class Menus {
 	
 	[Command(target = "")]
 	public static class Help {
-		[Command(image = "*FontAwesome.QuestionCircleRegular" + darkYellow)]
-		public static void Program_help() { HelpUtil.AuHelp(""); }
+		[Command(image = "*Modern.Home" + blue)]
+		public static void Website() { HelpUtil.AuHelp(""); }
 		
 		[Command(image = "*BoxIcons.RegularLibrary" + darkYellow)]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
@@ -586,7 +592,7 @@ static class Menus {
 		[Command(text = "C# help", image = "*Modern.LanguageCsharp" + darkYellow)]
 		public static void CSharp_help() { run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/"); }
 		
-		[Command(keys = "F1", image = "*Unicons.MapMarkerQuestion" + purple)]
+		[Command(keys = "F1", image = "*Unicons.MapMarkerQuestion" + darkYellow)]
 		public static void Context_help() {
 			var w = Api.GetFocus();
 			if (w.ClassNameIs("HwndWrapper*")) {
@@ -604,12 +610,15 @@ static class Menus {
 		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {App.Version}"); }
 		
 		[Command]
+		public static void Donate() { run.itSafe("https://github.com/sponsors/qgindi"); }
+		
+		[Command]
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
 Version: {App.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
-Uses C# 12, <link https://dotnet.microsoft.com/download>.NET 8<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite 3.42.0<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 4.11<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>.
+Uses C# 12, <link https://dotnet.microsoft.com/download>.NET 8<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite 3.42.0<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 4.11<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {typeof(App).Assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 -----------------------");

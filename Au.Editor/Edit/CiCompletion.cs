@@ -893,7 +893,7 @@ partial class CiCompletion {
 					//	The same after keyword 'new'.
 					//	Never mind: does not prefer the target type when typed eg single letter and the list also contains static fields or props of that type like "Type.Member". It never worked.
 					//	VS works well in all cases. Maybe it does not use this Roslyn API, or uses different Roslyn version.
-					//	TODO: after some time update Roslyn and test, maybe fixed.
+					//	FUTURE: test after updating Roslyn, maybe fixed.
 					foreach (var v in _data.items) {
 						//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
 						//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());

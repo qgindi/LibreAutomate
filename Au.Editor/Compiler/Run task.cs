@@ -19,13 +19,13 @@ static class CompileRun {
 	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	/// <param name="ifRunning">If not null, overrides meta ifRunning.</param>
-	/// <param name="debugger">Will attach the debugger.</param>
+	/// <param name="debugAttach">Will attach the debugger.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
 	/// Must be always called in the main UI thread (Environment.CurrentManagedThreadId == 1), because calls its file model functions.
 	/// </remarks>
-	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false, MCIfRunning? ifRunning = null, bool debugger = false) {
+	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false, MCIfRunning? ifRunning = null, Func<int, bool> debugAttach = null) {
 #if TEST_STARTUP_SPEED
 		args = new string[] { perf.ms.ToString() }; //and in script use this code: print.it(perf.ms-Convert.ToInt64(args[0]));
 #endif
@@ -60,7 +60,7 @@ static class CompileRun {
 		if (!run) return 1;
 		
 		if (r.role == MCRole.editorExtension) {
-			if (debugger) { print.it("Cannot debug scripts with role editorExtension."); return 0; }
+			if (debugAttach != null) { print.it("Cannot debug scripts with role editorExtension."); return 0; }
 			
 			EditorExtension.Run_(r.file, args, handleExceptions: true);
 			return (int)script.RunResult_.editorThread;
@@ -68,7 +68,7 @@ static class CompileRun {
 		
 		if (ifRunning != null) r.ifRunning = ifRunning.Value;
 		
-		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor, debugger: debugger);
+		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor, debugAttach: debugAttach);
 	}
 	
 	public static void RunWpfPreview(FileNode f, Func<CanCompileArgs, bool> canCompile) {
@@ -423,9 +423,9 @@ class RunningTasks {
 	/// <param name="wrPipeName">Pipe name for script.writeResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
-	/// <param name="debugger">Will attach the debugger.</param>
+	/// <param name="debugAttach">Will attach the debugger.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
-		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false, bool debugger = false) {
+		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false, Func<int, bool> debugAttach = null) {
 		
 		g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
@@ -489,6 +489,7 @@ class RunningTasks {
 		
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
+		bool debugger = debugAttach != null;
 		
 		//rejected: 32-bit miniProgram. The task exe has been removed because of AV false positives. And rarely used. Can use exeProgram instead.
 		//	osVersion.is32BitOS - editor does not run on 32-bit OS. And never will.
@@ -498,19 +499,25 @@ class RunningTasks {
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, r.bit32);
 			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
+			if (debugger) {
+				if (uac == _SpUac.admin) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
+				pre = new _Preloaded(100);
+				//Don't use preloaded. It would load some assemblies before 'attach debugger' and then debugger cannot disable JIT optimizations.
+				//This temporary _Preloaded is used just to create pipe with unique name and reuse regular launch code.
+			} else {
+				//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
+				pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
+			}
+			
 			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
+			argsString = pre.pipeName;
 			
 			var f1 = r.flags;
 			if (runFromEditor) f1 |= MiniProgram_.MPFlags.FromEditor;
-			if (debugger) f1 |= MiniProgram_.MPFlags.Debugger;
 			if (App.IsPortable) f1 |= MiniProgram_.MPFlags.IsPortable;
 			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, (int)f.Id, process.thisProcessId, (int)CommandLine.MsgWnd);
 			wrPipeName = null;
-			
-			//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
-			pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
-			argsString = pre.pipeName;
 		}
 		
 		int pid; WaitHandle hProcess = null; bool disconnectPipe = false;
@@ -521,7 +528,8 @@ class RunningTasks {
 				pre.hProcess = null; pre.pid = 0;
 			} else {
 				if (pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
-				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, debugger, f.Id);
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, f.Id, debugAttach);
+				if (pid == 0) return 0; //failed to start debugging
 			}
 			Api.AllowSetForegroundWindow(pid);
 			
@@ -543,8 +551,8 @@ class RunningTasks {
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
 				
 				//start preloaded process for next task. Let it wait for pipe connection.
-				if (uac != _SpUac.admin) { //we don't want second UAC consent
-					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, false, 0); }
+				if (!debugger && uac != _SpUac.admin) { //we don't want second UAC consent
+					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, 0, null); }
 					catch (Exception ex) { Debug_.Print(ex); }
 				}
 			}
@@ -554,6 +562,9 @@ class RunningTasks {
 			if (disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
 			hProcess?.Dispose();
 			return 0;
+		}
+		finally {
+			if (debugger) pre?.Dispose();
 		}
 		
 		var rt = new RunningTask(f, hProcess, pid);
@@ -577,13 +588,13 @@ class RunningTasks {
 			overlappedEvent = Api.CreateEvent(false);
 		}
 		
-		~_Preloaded() {
+		public void Dispose() {
 			hPipe.Dispose();
 			overlappedEvent.Dispose();
 		}
 	}
-	//_Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
-	_Preloaded[] s_preloaded = new _Preloaded[3]; //user, admin, uiAccess
+	//static _Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
+	static _Preloaded[] s_preloaded = new _Preloaded[3]; //user, admin, uiAccess
 	
 	/// <summary>
 	/// How _StartProcess must start process.
@@ -600,7 +611,7 @@ class RunningTasks {
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
-	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, bool debugger, uint idMain) {
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach) {
 		(int pid, WaitHandle hProcess) r;
 		string cwd;
 		
@@ -628,7 +639,6 @@ class RunningTasks {
 			if (runFromEditor) flags |= 2;
 			if (App.IsPortable) flags |= 4;
 			if (wrPipeName != null) { flags |= 8; p->pipe = wrPipeName; }
-			if (debugger) flags |= 16;
 			p->flags = flags;
 			p->workspace = folders.Workspace;
 		} else cwd = folders.ThisApp;
@@ -640,11 +650,22 @@ class RunningTasks {
 			//	Normally editor runs as admin in admin user account, and don't need to go through this.
 		} else {
 			var ps = new ProcessStarter_(exeFile, args, cwd, rawExe: true);
+			
+			if (debugAttach != null) ps.si.dwXCountChars = 1703529821; //let the process wait for "debugger attached" event
+			
 			var need = ProcessStarter_.Result.Need.WaitHandle;
 			var psr = uac == _SpUac.userFromAdmin
 				? ps.StartUserIL(need)
 				: ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 			r = (psr.pid, psr.waitHandle);
+			
+			if (debugAttach != null) {
+				if (!debugAttach(psr.pid)) {
+					Api.TerminateProcess(psr.waitHandle.SafeWaitHandle.DangerousGetHandle(), 0);
+					psr.waitHandle.Dispose();
+					return default;
+				}
+			}
 		}
 		
 		if (exeProgram) {

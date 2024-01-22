@@ -9,9 +9,10 @@ namespace Au.More {
 	/// </remarks>
 	internal static class Debug_ {
 		static void _Print(object text, string f_, int l_, string m_) {
-			string s = print.util.toString(text);
-			string prefix = null; if (s.Starts("<>")) { prefix = "<>"; s = s[2..]; }
-			s = $"{prefix}Debug: {m_} ({pathname.getName(f_)}:{l_}):  {s} <fold>\r\n{new StackTrace(2, true)}</fold>";
+			string s = print.util.toString(text), fname = pathname.getName(f_), st;
+			int i = s.Find("\r\n   at ");
+			if (i >= 0) { st = s[(i + 2)..]; s = s[..i]; } else st = new StackTrace(2, true).ToString();
+			s = $"<>Debug: {m_} ({fname}:{l_}):  {s} <fold>\r\n{st}</fold>";
 			_Print2(s);
 		}
 		
@@ -26,7 +27,7 @@ namespace Au.More {
 		/// Calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
-		/// If text starts with "&lt;&gt;", it can contain output tags.
+		/// Text can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void Print(object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
@@ -217,7 +218,7 @@ namespace Au.More {
 				if (_print) Debug_.MemorySetAnchor_();
 				//print.it(System.Runtime.GCSettings.LatencyMode);
 				try { _restore = GC.TryStartNoGCRegion(memSize); }
-				catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
+				catch (InvalidOperationException ex) { Debug_.Print(ex); }
 			}
 			
 			/// <summary>
@@ -229,7 +230,7 @@ namespace Au.More {
 					//print.it(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion);
 					//if(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
 					try { GC.EndNoGCRegion(); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
-					catch (InvalidOperationException ex) { Debug_.Print(ex.Message); }
+					catch (InvalidOperationException ex) { Debug_.Print(ex); }
 					if (_print) Debug_.MemoryPrint_();
 					ThreadPool.QueueUserWorkItem(_ => GC.Collect());
 				}

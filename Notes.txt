@@ -89,7 +89,7 @@ UPDATING .NET
 
 VS must support that .NET version. Install the .NET SDK if need.
 
-Update .NET version in all C# projects except Au.Net4.
+Update .NET version in all C# projects (.csproj) except Au.Net4.
 
 In project DatabasesEtc, in file Program.cs:
 	Enable only the call to RefTxt.Create, and run.
@@ -99,13 +99,16 @@ In project DatabasesEtc, in file Program.cs:
 
 Update .NET version in the AppHost project (the #define and the download link). Build.
 
+Update .NET version in DNuget.cs where need.
+
 Build solution.
 
 Run editor.
 
 Update MetaComments.Defines.
 
-Test DNuget with the new and the old SDK. Usually it works with both; don't need to edit.
+Test DNuget with the new and the old SDK.
+	Test package Microsoft.PowerShell.SDK. Test how it works in miniProgram and exeProgram.
 
 Find-replace ".NET 6" everywhere, including:
 - LibreAutomate.iss (Inno Setup).

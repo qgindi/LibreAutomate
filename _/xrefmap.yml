@@ -13,6 +13,9 @@
 - uid: command_line
   name: Command line of Au.Editor.exe
   href: editor/Command%20line.html
+- uid: debugger
+  name: Debugging C# scripts
+  href: editor/Debugger.html
 - uid: git
   name: Git, backup, sync
   href: editor/Git%2C%20backup%2C%20sync.html

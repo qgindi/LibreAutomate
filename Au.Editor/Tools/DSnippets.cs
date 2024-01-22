@@ -524,6 +524,15 @@ class DSnippets : KDialogWindow {
 		}
 		CiSnippets.Reload();
 	}
+
+	protected override void OnPreviewKeyDown(KeyEventArgs e) {
+		if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
+			HelpUtil.AuHelp("editor/Snippets");
+			e.Handled = true;
+			return;
+		}
+		base.OnPreviewKeyDown(e);
+	}
 	
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		DSnippets _d;

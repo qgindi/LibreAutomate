@@ -34,15 +34,25 @@ static class CiUtil {
 		return n;
 	}
 	
-	public static (ISymbol symbol, CodeInfo.Context cd) GetSymbolFromPos(bool andZeroLength = false) {
+	public static (ISymbol symbol, CodeInfo.Context cd) GetSymbolFromPos(bool andZeroLength = false, bool preferVar = false) {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return default;
-		return (GetSymbolFromPos(cd, andZeroLength), cd);
+		return (GetSymbolFromPos(cd, andZeroLength, preferVar), cd);
 	}
 	
-	public static ISymbol GetSymbolFromPos(CodeInfo.Context cd, bool andZeroLength = false) {
+	public static ISymbol GetSymbolFromPos(CodeInfo.Context cd, bool andZeroLength = false, bool preferVar = false) {
 		if (andZeroLength && _TryGetAltSymbolFromPos(cd) is ISymbol s1) return s1;
 		var sym = SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
 		if (sym is IMethodSymbol ims) sym = ims.PartialImplementationPart ?? sym;
+		else if (preferVar && sym is INamedTypeSymbol) { //for 'this' and 'base' SymbolFinder gets INamedTypeSymbol
+			int i1 = cd.pos, i2 = i1;
+			while (i1 > 0 && SyntaxFacts.IsIdentifierPartCharacter(cd.code[i1 - 1])) i1--;
+			while (i2 < cd.code.Length && SyntaxFacts.IsIdentifierPartCharacter(cd.code[i2])) i2++;
+			if (cd.code.Eq(i1..i2, "this") || cd.code.Eq(i1..i2, "base")) {
+				var node = cd.syntaxRoot.FindToken(cd.pos).Parent;
+				var semo = cd.semanticModel;
+				return semo.GetSymbolInfo(node).GetAnySymbol() ?? semo.GetDeclaredSymbolForNode(node);
+			}
+		}
 		return sym;
 	}
 	
@@ -252,21 +262,23 @@ static class CiUtil {
 			PSFormat _GetFormat(IMethodSymbol ims, BaseArgumentListSyntax alis) {
 				IParameterSymbol p = null;
 				var pa = ims.Parameters;
-				var nc = asy.NameColon;
-				if (nc != null) {
-					var name = nc.Name.Identifier.Text;
-					foreach (var v in pa) if (v.Name == name) { p = v; break; }
-				} else {
-					int i; var aa = alis.Arguments;
-					for (i = 0; i < aa.Count; i++) if ((object)aa[i] == asy) break;
-					if (i >= pa.Length && pa[^1].IsParams) i = pa.Length - 1;
-					if (i < pa.Length) p = pa[i];
-				}
-				if (p != null) {
-					foreach (var v in p.GetAttributes()) {
-						switch (v.AttributeClass.Name) {
-						case nameof(ParamStringAttribute): return v.GetConstructorArgument<PSFormat>(0, SpecialType.None);
-						case nameof(System.Diagnostics.CodeAnalysis.StringSyntaxAttribute) when v.GetConstructorArgument<string>(0, SpecialType.System_String) == System.Diagnostics.CodeAnalysis.StringSyntaxAttribute.Regex: return PSFormat.NetRegex; //note: the attribute also can be set on properties and fields. But Regex doesn't have.
+				if (pa.Length > 0) {
+					var nc = asy.NameColon;
+					if (nc != null) {
+						var name = nc.Name.Identifier.Text;
+						foreach (var v in pa) if (v.Name == name) { p = v; break; }
+					} else {
+						int i; var aa = alis.Arguments;
+						for (i = 0; i < aa.Count; i++) if ((object)aa[i] == asy) break;
+						if (i >= pa.Length && pa[^1].IsParams) i = pa.Length - 1;
+						if (i < pa.Length) p = pa[i];
+					}
+					if (p != null) {
+						foreach (var v in p.GetAttributes()) {
+							switch (v.AttributeClass.Name) {
+							case nameof(ParamStringAttribute): return v.GetConstructorArgument<PSFormat>(0, SpecialType.None);
+							case nameof(System.Diagnostics.CodeAnalysis.StringSyntaxAttribute) when v.GetConstructorArgument<string>(0, SpecialType.System_String) == System.Diagnostics.CodeAnalysis.StringSyntaxAttribute.Regex: return PSFormat.NetRegex; //note: the attribute also can be set on properties and fields. But Regex doesn't have.
+							}
 						}
 					}
 				}

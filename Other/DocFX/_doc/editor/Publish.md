@@ -14,7 +14,7 @@ The program consists of several files. To add them to a single file you can use 
 
 The program uses .NET Runtime of version displayed in menu Help -> About. On computers without .NET it can't run; it prompts to download .NET.
 
-If in Properties is checked "optimize", the program is created with optimized code (fast and small), aka "Release". Also the compiler adds all 64-bit and 32-bit files. Else adds only 64-bit or 32-bit files, depending on "bit32".
+If in Properties is checked "optimize", the program is created with optimized code (fast and small), aka "Release". Also the compiler creates 64-bit and 32-bit program files. Else creates only 64-bit files. If checked "bit32", always creates only 32-bit files.
 
 ## Menu Run -> Publish
 The Publish tool can create single-file programs and programs that can run on computers without installed .NET.

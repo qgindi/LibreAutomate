@@ -689,7 +689,7 @@ namespace Au {
 				_Show(wait);
 			} else {
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
-				run.thread(() => _Show(true), ShowMode == OsdMode.WeakThread);
+				run.thread(() => _Show(true), ShowMode == OsdMode.WeakThread).Name = "Au.osdText";
 				Au.wait.until(30, () => IsHandleCreated);
 				
 				//CONSIDER: make smaller timeout when main thread ended if OsdShowMode.Auto

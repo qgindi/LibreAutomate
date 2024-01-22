@@ -1,3 +1,9 @@
+//From netcoredbg we need only netcoredbg.exe, dbgshim.dll, ManagedPart.dll, Microsoft.CodeAnalysis.dll and Microsoft.CodeAnalysis.CSharp.dll.
+//	The default netcoredbg also contains 2 unused Roslyn scripting dlls.
+//	Also these Roslyn dlls are very old.
+//	Now debugger files are in the Roslyn folder. Need just netcoredbg.exe, dbgshim.dll and ManagedPart.dll. They use the new Roslyn dlls.
+//	Using modified netcoredbg and ManagedPart.
+//	Using newer dbgshim.dll: https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim.win-x64
 
 partial class PanelDebug {
 	class _Debugger {
@@ -9,24 +15,23 @@ partial class PanelDebug {
 		
 		public _Debugger(Action<string> events) {
 			_events = events;
+			_readEvents = _ReadEvents;
+		}
+		
+		public bool Init() {
+			//var log = @"C:\Test\debugger-log.txt"; filesystem.delete(log); Environment.SetEnvironmentVariable("LOG_OUTPUT", log);
 			_p = new(folders.ThisAppBS + @"Roslyn\netcoredbg.exe", $"--interpreter=mi");
-			//_p = new(@"C:\Downloads\netcoredbg\netcoredbg.exe", $"--interpreter=mi"); //test unmodified netcoredbg
-			
-			//info: From netcoredbg we need only netcoredbg.exe, dbgshim.dll, ManagedPart.dll, Microsoft.CodeAnalysis.dll and Microsoft.CodeAnalysis.CSharp.dll.
-			//	The default netcoredbg contains 2 unused Roslyn scripting dlls (why?).
-			//	Also these Roslyn dlls are very old.
-			//	I moved just netcoredbg.exe, dbgshim.dll and ManagedPart.dll to the Roslyn folder. Now it uses the new Roslyn dlls.
-			//	Also I modified the ManagedPart csproj. The ManagedPart.dll is the output of the modified project.
-			//	Although netcoredbg has dbgshim.dll, I'm using newer: https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim.win-x64
+			//_p = new(@"C:\Test\netcoredbg\netcoredbg.exe", $"--interpreter=mi"); //test unmodified netcoredbg
 			
 			if (SendSync(0, $"-handshake") != "^done") { //waits until the debugger is ready to process commands. Then we can measure the speed of other sync commands at startup.
 				_Print("Failed to start debugger.");
-				return;
+				return false;
 			}
 			
 			_fs = new(new Microsoft.Win32.SafeHandles.SafeFileHandle(_p.OutputHandle_, ownsHandle: false), FileAccess.Read);
-			_readEvents = _ReadEvents;
 			timer.after(200, _ => _readEvents());
+			
+			return true;
 		}
 		
 		void _ReadEvents() {
@@ -61,7 +66,7 @@ partial class PanelDebug {
 			if (_p == null) return;
 			_p.Dispose();
 			_p = null;
-			_fs.Dispose();
+			_fs?.Dispose();
 		}
 		
 		bool _Write(string s) {
@@ -89,7 +94,7 @@ partial class PanelDebug {
 		/// Then synchronously reads until received a line that starts with the token followed by '^'. For other received lines calls the events callback.
 		/// </summary>
 		/// <param name="token">A number 1-999. Token 0 is used by this class.</param>
-		/// <param name="noEvent">Called on events. Return true to no call the events callback.</param>
+		/// <param name="noEvent">Called on events. Return true to not call the events callback.</param>
 		/// <returns>The received line without token. Returns null if the debugger process ended.</returns>
 		public string SendSync(int token, string s, Func<string, bool> noEvent = null) {
 			var st = token.ToS();

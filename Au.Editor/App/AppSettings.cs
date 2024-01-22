@@ -120,12 +120,17 @@ record AppSettings : JSettings {
 	
 	//panel Debug
 	public record debug_t {
-		public bool stepIntoAll, printVarCompact;
-		public byte breakT = 2 | 8; //flags: 1 enabled, 2 the exceptions list is active, 4 not exceptions in the list, 8 when caught
-		public byte breakU = 1; //flags: 1 enabled
-		public string breakListT, breakListU;
-		public byte printEvents;
+		public bool stepIntoAll, noJMC, printVarCompact, activateLA;
 		public double hVar = 150, hStack = 100;
+		public byte breakT = 15; //flags: 1 enabled, 2 the exceptions list is active, 4 not exceptions in the list, 8 when caught
+		public byte breakU = 1; //flags: 1 enabled
+		const string c_defNotExc = """
+System.OperationCanceledException
+System.Threading.Tasks.TaskCanceledException
+
+""";
+		public string breakListT = c_defNotExc, breakListU = c_defNotExc;
+		public byte printEvents;
 	}
 	public debug_t debug;
 	
@@ -195,7 +200,7 @@ record WorkspaceSettings : JSettings {
 	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 	
 	public record User(string guid) {
-		public string startupScripts, debuggerScript, gitUrl;
+		public string startupScripts, gitUrl;
 		public bool gitBackup;
 	}
 	public User[] users;

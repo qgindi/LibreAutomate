@@ -7,6 +7,7 @@ using Au.Tools;
 using System.Windows.Media;
 using System.Windows.Documents;
 using EStyle = CiStyling.EStyle;
+using System.Windows.Input;
 
 class DOptions : KDialogWindow {
 	public static void AaShow() {
@@ -87,16 +88,13 @@ class DOptions : KDialogWindow {
 	
 	void _Workspace() {
 		var b = _Page("Workspace").Columns(-1, 20, -1);
-		b.R.xAddInfoBlockT("Workspace-specific settings");
+		b.R.xAddInfoBlockT("Settings of current workspace");
 		
 		//left column
 		b.R.StartStack(vertical: true);
-		b.Add("Run scripts when this workspace loaded", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
+		b.Add("Run scripts when workspace loaded", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
 			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
 			.Validation(_startupScripts_Validation);
-		b.Add("Debugger script for script.debug", out TextBox debuggerScript, App.Model.UserSettings.debuggerScript)
-			.Tooltip("The script can automate attaching a debugger to the script process. args[0] is process id. Example in Cookbook.\nIf blank or starts with //, will be used the LA debugger.")
-			.Validation(_ => debuggerScript.Text is string s && !s.NE() && !s.Starts("//") && null == App.Model.FindCodeFile(s) ? "Debugger script not found" : null);
 		b.End();
 		
 		//right column
@@ -114,7 +112,6 @@ class DOptions : KDialogWindow {
 		
 		_b.OkApply += e => {
 			App.Model.UserSettings.startupScripts = startupScripts.Text.Trim().NullIfEmpty_();
-			App.Model.UserSettings.debuggerScript = debuggerScript.TextOrNull();
 			App.Model.UserSettings.gitBackup = cBackup.IsChecked;
 		};
 		
@@ -282,6 +279,7 @@ class DOptions : KDialogWindow {
 				new("Text highlight", _StyleKind.Indicator, SciCode.c_indicFound),
 				new("Symbol highlight", _StyleKind.Indicator, SciCode.c_indicRefs),
 				new("Brace highlight", _StyleKind.Indicator, SciCode.c_indicBraces),
+				new("Debug highlight", _StyleKind.Indicator, SciCode.c_indicDebug),
 
 				new("Selection", _StyleKind.Element, Sci.SC_ELEMENT_SELECTION_BACK),
 				new("Sel. no focus", _StyleKind.Element, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
@@ -606,7 +604,16 @@ Example:
 				Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
 		};
 	}
-	
+
+	protected override void OnPreviewKeyDown(KeyEventArgs e) {
+		if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
+			HelpUtil.AuHelp("editor/Program settings");
+			e.Handled = true;
+			return;
+		}
+		base.OnPreviewKeyDown(e);
+	}
+
 	static class _Api {
 		[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
 		internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, nint lParam, uint dwFlags);

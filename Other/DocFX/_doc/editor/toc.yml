@@ -22,6 +22,9 @@
 - name: Snippets
   href: Snippets.md
 
+- name: Debugger
+  href: Debugger.md
+
 - name: Portable app
   href: Portable app.md
 

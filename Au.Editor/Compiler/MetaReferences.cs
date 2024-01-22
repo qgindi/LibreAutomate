@@ -402,7 +402,7 @@ class MetaReferences {
 					s_d[asmPath] = dp = new _DocumentationProvider { _db = db };
 					return dp;
 				}
-				catch (Exception ex) { Debug_.Print(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { Debug_.Print(ex); }
 			}
 			//return XmlDocumentationProvider.CreateFromFile(xmlPath); //no, need XML with root element.
 			return new _XmlFileDocumentationProvider(xmlPath);
@@ -422,7 +422,7 @@ class MetaReferences {
 						//	But eg XmlDocumentationProvider.CreateFromFile provider returns fragment.
 						//Debug_.Print(documentationMemberID);
 					}
-					catch (SLException ex) { Debug_.Print(ex.Message); }
+					catch (SLException ex) { Debug_.Print(ex); }
 					finally { _stat?.Reset(); }
 				}
 			}
@@ -453,7 +453,7 @@ class MetaReferences {
 				_db = EdDatabases.OpenDoc(); //never mind: we don't dispose it on process exit
 				if (_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.Split('\n'));
 			}
-			catch (SLException ex) { Debug_.Print(ex.Message); }
+			catch (SLException ex) { Debug_.Print(ex); }
 		}
 		
 		/// <summary>
