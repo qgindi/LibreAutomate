@@ -111,7 +111,7 @@ static unsafe class MiniProgram_ {
 
 		//using var p1 = perf.local();
 		using var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, Api.OPEN_EXISTING, 0);
-		if (pipe.Is0) { Debug_.PrintNativeError_(); return; }
+		if (pipe.Is0) { Debug_.PrintNativeError(); return; }
 		//p1.Next();
 		int size; if (!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
 		if (!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;

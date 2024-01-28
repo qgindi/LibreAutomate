@@ -19,13 +19,6 @@
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	</PropertyGroup>
-
 	<!-- NuGet package. -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<Version>1.0.0</Version>

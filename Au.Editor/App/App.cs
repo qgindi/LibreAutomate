@@ -19,7 +19,7 @@ static partial class App {
 	
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
-#if TRACE //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
+#if DEBUG //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
 		//perf.first();
 		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
@@ -66,7 +66,7 @@ static partial class App {
 #endif
 			true) { NoNewline = true };
 		PrintServer.Start();
-#if TRACE
+#if DEBUG
 		print.qm2.use = !true;
 		//timer.after(1, _ => perf.nw());
 #endif
@@ -188,7 +188,7 @@ static partial class App {
 	static bool _sw1;
 	
 	static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
-#if TRACE
+#if DEBUG
 		print.qm2.write(e.ExceptionObject);
 #else
 		dialog.showError("Exception", e.ExceptionObject.ToString(), flags: DFlags.Wider);

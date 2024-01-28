@@ -12,13 +12,6 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	</PropertyGroup>
-
 	<ItemGroup>
 		<None Include="Au.InternalsVisible.cs" />
 		<None Include="Au.TestInternal.cs" />

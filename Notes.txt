@@ -23,7 +23,9 @@ Review all TODO. Occasionally review SHOULDDO and FUTURE.
 May need to test something. Eg some changes could break some main features.
 	Also test new and some main features on other OS.
 
-May need to undefine TRACE in some projects. Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
+May need to undefine TRACE in some C++ projects.
+	Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
+	Don't use TRACE in C# projects; it's defined by default in Debug and Release config.
 
 May need to delete test code. Or use #if TRACE, like in Tests.cs.
 	Review perf and print.
