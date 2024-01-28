@@ -294,11 +294,11 @@ partial class CiStyling {
 			}
 			return false;
 		}
-#if TRACE
+#if DEBUG
 		//if(!s_debugPerf) { s_debugPerf = true; perf.nw('s'); }
 #endif
 	}
-#if TRACE
+#if DEBUG
 	//static bool s_debugPerf;
 #endif
 	

@@ -21,14 +21,6 @@
 		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants></DefineConstants>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
 	</ItemGroup>

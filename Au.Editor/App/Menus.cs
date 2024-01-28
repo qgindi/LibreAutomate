@@ -625,7 +625,7 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 		}
 	}
 	
-#if TRACE
+#if DEBUG
 	//[Command(target = "", keys = "F11")] //no, dangerous, eg can accidentally press instead of F12
 	[Command]
 	public static void TEST() { Test.FromMenubar(); }

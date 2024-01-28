@@ -10,10 +10,6 @@
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<Compile Include="..\..\Au\resources\global2.cs" Link="global2.cs" />
 	</ItemGroup>

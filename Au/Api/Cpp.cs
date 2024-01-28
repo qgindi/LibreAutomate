@@ -5,7 +5,7 @@ internal static unsafe partial class Cpp {
 	static Cpp() {
 		filesystem.more.LoadDll64or32Bit_("AuCpp.dll");
 		
-#if TRACE //remind to rebuild the 32-bit dll when the 64-bit dll updated
+#if DEBUG //remind to rebuild the 32-bit dll when the 64-bit dll updated
 		if (script.role == SRole.EditorExtension)
 			if (filesystem.getProperties(folders.ThisAppBS + @"64\AuCpp.dll", out var p64)
 				&& filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32)) {

@@ -1,4 +1,4 @@
-//#if TRACE
+//#if DEBUG
 //#define PRINT
 //#endif
 

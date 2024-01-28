@@ -35,7 +35,7 @@
 //using System.Windows.Threading;
 ////using System.Net.Http;
 
-#if TRACE
+#if DEBUG
 
 static unsafe class Test {
 

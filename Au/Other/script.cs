@@ -346,7 +346,7 @@ public static class script {
 				fixed (char* p = s) if (Api.WriteFile(pipe, p, s.Length * 2, out _)) return true; //17 mcs
 			}
 		}
-		Debug_.PrintNativeError_();
+		Debug_.PrintNativeError();
 		return false;
 		//SHOULDDO: optimize. Eg the app may override TextWriter.Write(char) and call this on each char in a string etc.
 		//	Now 40 mcs. Console.Write(char) 20 mcs.

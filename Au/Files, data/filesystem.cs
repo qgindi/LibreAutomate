@@ -1381,7 +1381,7 @@ public static partial class filesystem {
 		if (exists(file, true).File) {
 			if (!Api.ReplaceFile(file, temp, back, 6)) es = "save"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
 			else if (backup) ShellNotify_(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
-			else if (!Api.DeleteFile(back)) Debug_.PrintNativeError_(); //maybe should wait/retry if failed, but never noticed
+			else if (!Api.DeleteFile(back)) Debug_.PrintNativeError(); //maybe should wait/retry if failed, but never noticed
 		} else {
 			if (!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "create";
 		}

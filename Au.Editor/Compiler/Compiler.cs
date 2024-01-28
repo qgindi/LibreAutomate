@@ -309,7 +309,7 @@ partial class Compiler {
 		r.bit32 = _meta.Bit32;
 		r.notInCache = notInCache;
 		
-		//#if TRACE
+		//#if DEBUG
 		//p1.NW('C');
 		//#endif
 		//print.it($"<><c red>compiled<> {f}");
