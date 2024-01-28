@@ -18,16 +18,16 @@ To attach the debugger to an already running script, use the Tasks panel or [scr
 ### Features
 - Standard stepping features.
 - Breakpoints, logpoints.
-- Run to here.
 - Break on exception.
 - Call stack.
 - List of variables. Click a variable to print it.
 - Hover the mouse on a variable in code to display its value.
 - Supports **Debugger.Break**, **Debug.Assert**, **Debug.Print** etc.
+- Run to here.
+- Jump to here.
 
 ### Some missing features
 - "Hot reload" or "Edit and continue".
-- Change the next statement to execute.
 - Evaluate any C# expression.
 - Set variable's value.
 - Open and debug source files that don't exist in the workspace.
@@ -39,6 +39,8 @@ Thanks to [Samsung/netcoredbg](https://github.com/Samsung/netcoredbg).
 Antivirus software may quarantine **netcoredbg.exe** (debugger). Add it to the exclusions list of the antivirus.
 
 To debug optimized code (`/*/ optimize true; /*/`), temporarily check "Debug optimized code" in the options menu. Normally you don't debug optimized code, it may not work well.
+
+Cannot debug 32-bit processes.
 
 ## Other debuggers
 You may have Visual Studio or other IDE with a better .NET debugger. You can attach that debugger to a running script. Let the script call one of these functions:

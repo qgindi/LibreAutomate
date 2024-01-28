@@ -10,7 +10,7 @@ static class EdExt {
 	/// Case-insensitive.
 	/// </summary>
 	/// <param name="orEquals">Also return true if this equals <i>s</i>.</param>
-	public static bool PathStarts(this string t, ReadOnlySpan<char> s, bool orEquals = false) {
+	public static bool PathStarts(this string t, RStr s, bool orEquals = false) {
 		if (!t.Starts(s, true)) return false;
 		if (t.Length > s.Length) return t[s.Length] is '\\' or '/';
 		return orEquals;

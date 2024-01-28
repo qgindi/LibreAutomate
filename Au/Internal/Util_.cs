@@ -80,16 +80,13 @@ static class WpfUtil_ {
 		if (!DetectIconString(s, out var d)) return false;
 		r.pack = s[d.pack..d.endPack];
 		r.name = s[d.name..d.endName];
-		if (d.endName < s.Length) {
-			Span<Range> a = stackalloc Range[3];
-			var span = s.AsSpan(d.endName + 1);
-			int n = span.Split(a, ' ', StringSplitOptions.RemoveEmptyEntries);
-			for (int k = 0; k < n; k++) {
-				int start = a[k].Start.Value, end = a[k].End.Value;
-				char c = span[start];
-				if (c == '@') r.size = span[++start..end].ToInt_(STIFlags.DontSkipSpaces);
-				else if (c == '#' || char.IsAsciiLetter(c)) r.color ??= span[a[k]].ToString();
-			}
+		for (int end = d.endName; end < s.Length;) {
+			while (++end < s.Length && s[end] == ' ') { }
+			int start = end; if (start == s.Length) break;
+			while (++end < s.Length && s[end] != ' ') { }
+			char c = s[start];
+			if (c == '@') r.size = s.ToInt(++start, STIFlags.DontSkipSpaces);
+			else if (c == '#' || c.IsAsciiAlpha()) r.color ??= s[start..end];
 		}
 		return true;
 	}

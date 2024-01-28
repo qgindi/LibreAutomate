@@ -646,7 +646,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		return _FindIn(Descendants(), name, kind, true);
 	}
 	
-	static FileNode _FindIn(IEnumerable<FileNode> e, ReadOnlySpan<char> name, FNFind kind, bool preferFile) {
+	static FileNode _FindIn(IEnumerable<FileNode> e, RStr name, FNFind kind, bool preferFile) {
 		FileNode folder = null;
 		foreach (var f in e) {
 			if (!name.Eqi(f._name)) continue;

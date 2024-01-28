@@ -132,7 +132,7 @@ public class ocrFinder {
 
 		static unsafe Hash.MD5Result _BitmapHash(Bitmap b) {
 			using var d = b.Data(ImageLockMode.ReadOnly);
-			return Hash.MD5(new ReadOnlySpan<byte>((void*)d.Scan0, d.Height * d.Stride));
+			return Hash.MD5(new RByte((void*)d.Scan0, d.Height * d.Stride));
 		}
 	}
 

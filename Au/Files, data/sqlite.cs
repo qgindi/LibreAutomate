@@ -523,7 +523,7 @@ namespace Au {
 		public sqliteStatement Bind(SLIndexOrName sqlParam, void* blob, long nBytes)
 			=> _Err(SLApi.sqlite3_bind_blob64(_st, _B(sqlParam), blob, nBytes), "sqlite3_bind_blob64");
 
-		sqliteStatement _Bind(SLIndexOrName sqlParam, ReadOnlySpan<byte> blob) {
+		sqliteStatement _Bind(SLIndexOrName sqlParam, RByte blob) {
 			fixed (byte* p = blob) return Bind(sqlParam, p, blob.Length);
 		}
 
@@ -781,7 +781,7 @@ namespace Au {
 		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards.</returns>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>
-		public ReadOnlySpan<byte> GetBlob(SLIndexOrName column) {
+		public RByte GetBlob(SLIndexOrName column) {
 			var p = GetBlob(column, out int n);
 			return new(p, n);
 		}

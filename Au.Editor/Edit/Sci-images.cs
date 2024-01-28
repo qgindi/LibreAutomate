@@ -176,7 +176,7 @@ partial class SciCode {
 			}
 		}
 		
-		static ImageType _ImageTypeFromString(bool folders, ReadOnlySpan<char> s/*, out int prefixLength*/) {
+		static ImageType _ImageTypeFromString(bool folders, RStr s/*, out int prefixLength*/) {
 			//prefixLength = 0;
 			if (s.Length < 2) return default;
 			

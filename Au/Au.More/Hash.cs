@@ -12,7 +12,7 @@ public static unsafe class Hash {
 	/// 32-bit FNV-1 hash.
 	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
 	/// </summary>
-	public static int Fnv1(ReadOnlySpan<char> data) {
+	public static int Fnv1(RStr data) {
 		fixed (char* p = data) return Fnv1(p, data.Length);
 	}
 	
@@ -30,7 +30,7 @@ public static unsafe class Hash {
 	
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
-	public static int Fnv1(ReadOnlySpan<byte> data) {
+	public static int Fnv1(RByte data) {
 		fixed (byte* p = data) return Fnv1(p, data.Length);
 	}
 	
@@ -53,7 +53,7 @@ public static unsafe class Hash {
 	/// <summary>
 	/// 64-bit FNV-1 hash.
 	/// </summary>
-	public static long Fnv1Long(ReadOnlySpan<char> data) {
+	public static long Fnv1Long(RStr data) {
 		fixed (char* p = data) return Fnv1Long(p, data.Length);
 	}
 	
@@ -75,7 +75,7 @@ public static unsafe class Hash {
 	/// 64-bit FNV-1 hash.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	public static long Fnv1Long(ReadOnlySpan<byte> data) {
+	public static long Fnv1Long(RByte data) {
 		fixed (byte* p = data) return Fnv1Long(p, data.Length);
 	}
 	
@@ -132,7 +132,7 @@ public static unsafe class Hash {
 	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
 	/// </summary>
 	/// <param name="s">The string to hash. Can be null.</param>
-	public static int Fast(ReadOnlySpan<char> s) {
+	public static int Fast(RStr s) {
 		fixed (char* p = s) return Fast(p, s.Length);
 	}
 	
@@ -171,7 +171,7 @@ public static unsafe class Hash {
 		
 		/// <summary>Adds data.</summary>
 		/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-		public void Add(ReadOnlySpan<byte> data) {
+		public void Add(RByte data) {
 			fixed (byte* p = data) Add(p, data.Length); //note: p null if data empty
 		}
 		
@@ -262,7 +262,7 @@ public static unsafe class Hash {
 	/// Uses <see cref="MD5Context"/>.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	public static MD5Result MD5(ReadOnlySpan<byte> data) {
+	public static MD5Result MD5(RByte data) {
 		MD5Context md = default;
 		md.Add(data);
 		return md.Hash;
@@ -292,9 +292,9 @@ public static unsafe class Hash {
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="base64"></param>
-	public static string MD5(ReadOnlySpan<byte> data, bool base64) {
+	public static string MD5(RByte data, bool base64) {
 		var h = MD5(data);
-		return base64 ? Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&h, 16)) : h.ToString();
+		return base64 ? Convert.ToBase64String(new RByte((byte*)&h, 16)) : h.ToString();
 	}
 	
 	///// <summary>
@@ -310,7 +310,7 @@ public static unsafe class Hash {
 	/// </summary>
 	public static string MD5(string data, bool base64) {
 		var h = MD5(data);
-		return base64 ? Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&h, 16)) : h.ToString();
+		return base64 ? Convert.ToBase64String(new RByte((byte*)&h, 16)) : h.ToString();
 	}
 	
 	#endregion
@@ -322,7 +322,7 @@ public static unsafe class Hash {
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
-	public static byte[] Crypto(ReadOnlySpan<byte> data, string algorithm) {
+	public static byte[] Crypto(RByte data, string algorithm) {
 		using var x = (HashAlgorithm)CryptoConfig.CreateFromName(algorithm);
 		var r = new byte[x.HashSize / 8];
 		x.TryComputeHash(data, r, out _);
@@ -343,7 +343,7 @@ public static unsafe class Hash {
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
 	/// <param name="base64"></param>
-	public static string Crypto(ReadOnlySpan<byte> data, string algorithm, bool base64) {
+	public static string Crypto(RByte data, string algorithm, bool base64) {
 		var b = Crypto(data, algorithm);
 		return base64 ? Convert.ToBase64String(b) : Convert2.HexEncode(b);
 	}

@@ -48,7 +48,7 @@ partial class Compiler {
 				var pi = (Api.ICONDIRENTRY*)(ph + 1);
 				int n = ph->wResCount;
 				if (iconBytes.Length <= sizeof(Api.NEWHEADER) + n * sizeof(Api.ICONDIRENTRY)) _Throw();
-				m.Write(new ReadOnlySpan<byte>(ph, sizeof(Api.NEWHEADER)));
+				m.Write(new RByte(ph, sizeof(Api.NEWHEADER)));
 
 				for (int i = 0; i < n; i++) {
 					Api.ICONDIRENTRY* ide = pi + i;
@@ -56,9 +56,9 @@ partial class Compiler {
 					if (offset + size > iconBytes.Length) _Throw();
 					ushort id = (ushort)(++ic.iconId);
 					ide->dwImageOffset = id; //RESDIR.wIconCursorId
-					m.Write(new ReadOnlySpan<byte>(ide, sizeof(Api.ICONDIRENTRY) - 2)); //ICONDIRENTRY to RESDIR
+					m.Write(new RByte(ide, sizeof(Api.ICONDIRENTRY) - 2)); //ICONDIRENTRY to RESDIR
 
-					_a.Add(new _Res(3, id, new ReadOnlySpan<byte>(mem + offset, size).ToArray())); //RT_ICON
+					_a.Add(new _Res(3, id, new RByte(mem + offset, size).ToArray())); //RT_ICON
 				}
 			}
 
@@ -93,12 +93,12 @@ partial class Compiler {
 
 		static byte[] _LoadNativeResource(IntPtr hModule, ushort resType, ushort resId) {
 			if (!_LoadNativeResource(hModule, resType, resId, out var data, out var size)) _Throw();
-			return new ReadOnlySpan<byte>(data, size).ToArray();
+			return new RByte(data, size).ToArray();
 		}
 
 		internal static string LoadNativeResourceUtf8String_(ushort resType, ushort resId) {
 			if (!_LoadNativeResource(default, resType, resId, out var data, out var size)) _Throw();
-			return Encoding.UTF8.GetString(new ReadOnlySpan<byte>(data, size));
+			return Encoding.UTF8.GetString(new RByte(data, size));
 		}
 
 		public void WriteAll(string exeFile, byte[] exeData, bool bit32, bool console) {

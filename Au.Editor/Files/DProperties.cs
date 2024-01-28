@@ -553,6 +553,8 @@ class DProperties : KDialogWindow {
 	
 	#region info
 	
+	//SHOULDDO: make a web copy of these and maybe some other infos and tooltips. Maybe not for humans, but for search engines and AI.
+	
 	void _InitInfo() {
 		info.AaTags.AddLinkTag("+changeFileType", _ => {
 			if (!dialog.showOkCancel($"Change file type to: {(_f.IsScript ? "class" : "script")}", "This also will close the Properties dialog as if clicked Cancel.", owner: this)) return;

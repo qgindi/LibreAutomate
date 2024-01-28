@@ -221,7 +221,7 @@ class CiFolding {
 						_AddFoldPoints(isDocComment ? FoldKind.Doc : FoldKind.Comment, rangeStart + i0, rangeStart + i);
 					}
 					
-					static bool _IsDotComment(ReadOnlySpan<char> s, int j, out bool closing) {
+					static bool _IsDotComment(RStr s, int j, out bool closing) {
 						if (s.Eq(j, '.')) {
 							if (closing = ++j < s.Length && s[j] == '.') j++;
 							if (j == s.Length || s[j] <= ' ') return true; //must be at the end of line or followed by space (like //. comment). Else could be like //.Member

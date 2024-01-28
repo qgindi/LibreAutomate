@@ -1549,7 +1549,7 @@ static unsafe partial class Api {
 	[DllImport("user32.dll", SetLastError = true)]
 	static extern int DrawTextExW(IntPtr hdc, char* lpchText, int cchText, ref RECT lprc, TFFlags format, void* lpdtp);
 	
-	internal static int DrawText(IntPtr hdc, ReadOnlySpan<char> s, ref RECT lprc, TFFlags format) {
+	internal static int DrawText(IntPtr hdc, RStr s, ref RECT lprc, TFFlags format) {
 		if (format.Has(TFFlags.MODIFYSTRING)) throw new NotSupportedException("MODIFYSTRING");
 		fixed (char* p = s) return DrawTextExW(hdc, p, s.Length, ref lprc, format, null);
 		

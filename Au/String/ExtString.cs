@@ -662,7 +662,7 @@ public static unsafe partial class ExtString {
 		return a;
 	}
 	//FUTURE: add option to recognize all newline chars as documented in string.ReplaceLineEndings.
-	//	For it can use ReadOnlySpan<Char>.EnumerateLines.
+	//	For it can use ReadOnlySpan<char>.EnumerateLines.
 	
 	/// <summary>
 	/// Returns the number of lines.
@@ -1370,7 +1370,7 @@ public static unsafe partial class ExtString {
 	///// <summary>
 	///// Returns true if does not contain non-ASCII characters.
 	///// </summary>
-	//public static bool IsAscii(this ReadOnlySpan<byte> t) {
+	//public static bool IsAscii(this RByte t) {
 	//	foreach (char c in t) if (c > 0x7f) return false;
 	//	return true;
 	//}
@@ -1544,7 +1544,7 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Converts UTF-8 string to string.
 	/// </summary>
-	public static string ToStringUTF8(this ReadOnlySpan<byte> t)
+	public static string ToStringUTF8(this RByte t)
 		=> Encoding.UTF8.GetString(t);
 	
 	/// <summary>

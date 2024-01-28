@@ -127,15 +127,15 @@ public unsafe partial class KScintilla {
 			int len2 = Encoding.UTF8.GetCharCount(p2, n2);
 			nint k1 = (nint)p1, k2 = (nint)p2;
 			return string.Create(len1 + len2, (k1, k2, n1, n2), static (span, a) => {
-				int len1 = Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k1, a.n1), span);
-				Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k2, a.n2), span.Slice(len1));
+				int len1 = Encoding.UTF8.GetChars(new RByte((byte*)a.k1, a.n1), span);
+				Encoding.UTF8.GetChars(new RByte((byte*)a.k2, a.n2), span.Slice(len1));
 			});
 		} else {
 			int n1 = end8 - start8;
 			int len1 = Encoding.UTF8.GetCharCount(p1, n1);
 			nint k1 = (nint)p1;
 			return string.Create(len1, (k1, n1), static (span, a) => {
-				Encoding.UTF8.GetChars(new ReadOnlySpan<byte>((byte*)a.k1, a.n1), span);
+				Encoding.UTF8.GetChars(new RByte((byte*)a.k1, a.n1), span);
 			});
 		}
 	}
@@ -293,7 +293,7 @@ public unsafe partial class KScintilla {
 	///// Replaces all text.
 	///// Does not parse tags.
 	///// </summary>
-	//public void aaaSetTextUtf8(ReadOnlySpan<byte> s, SciSetTextFlags flags = 0) {
+	//public void aaaSetTextUtf8(RByte s, SciSetTextFlags flags = 0) {
 	//	using(new _NoUndoNotif(this, flags)) {
 	//		aaaSetText_(s);
 	//	}
@@ -306,7 +306,7 @@ public unsafe partial class KScintilla {
 	/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 	/// s must end with 0. Asserts.
 	/// </remarks>
-	internal void aaaSetText_(ReadOnlySpan<byte> s) {
+	internal void aaaSetText_(RByte s) {
 		Debug.Assert(s.Length > 0 && s[^1] == 0);
 		using (new _NoReadonly(this))
 			fixed (byte* p = s) Call(SCI_SETTEXT, 0, p);
@@ -339,7 +339,7 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	/// <param name="s"></param>
 	/// <param name="scroll">Move current position and scroll to the end.</param>
-	public void aaaAppendText8(ReadOnlySpan<byte> s, bool scroll) {
+	public void aaaAppendText8(RByte s, bool scroll) {
 		using (new _NoReadonly(this)) {
 			fixed (byte* p = s) Call(SCI_APPENDTEXT, s.Length, p);
 		}
@@ -1250,7 +1250,7 @@ public unsafe partial class KScintilla {
 		/// Uses <see cref="SciSetTextFlags"/> NoUndo and NoNotify.
 		/// </summary>
 		/// <param name="text">Returned by <b>Load</b>.</param>
-		public unsafe bool SetText(KScintilla k, ReadOnlySpan<byte> text) {
+		public unsafe bool SetText(KScintilla k, RByte text) {
 			using (new _NoUndoNotif(k, SciSetTextFlags.NoUndoNoNotify)) {
 				if (_enc == _Encoding.Utf8BOM) text = text.Slice(3);
 				k.aaaSetText_(text);
@@ -1289,14 +1289,14 @@ public unsafe partial class KScintilla {
 			
 			filesystem.save(file, temp => {
 				using var fs = File.Create(temp);
-				if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
+				if (bomm != 0) { uint u = bomm; fs.Write(new RByte((byte*)&u, bom)); } //rare
 				if (e != null) { //rare
 					var bytes = e.GetBytes(k.aaaText); //convert encoding. aaaText likely gets cached text, fast
 					fs.Write(bytes);
 				} else {
 					int len = k.aaaLen8;
 					var bytes = (byte*)k.CallRetPtr(SCI_GETCHARACTERPOINTER);
-					fs.Write(new ReadOnlySpan<byte>(bytes, len));
+					fs.Write(new RByte(bytes, len));
 				}
 			}, tempDirectory: tempDirectory);
 			
@@ -1337,7 +1337,7 @@ public unsafe partial class KScintilla {
 
 			filesystem.save(file, temp => {
 				using var fs = File.OpenWrite(temp);
-				if (bomm != 0) { uint u = bomm; fs.Write(new ReadOnlySpan<byte>((byte*)&u, bom)); } //rare
+				if (bomm != 0) { uint u = bomm; fs.Write(new RByte((byte*)&u, bom)); } //rare
 				fs.Write(e.GetBytes(text));
 			}, tempDirectory: tempDirectory);
 

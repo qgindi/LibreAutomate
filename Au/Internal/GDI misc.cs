@@ -114,7 +114,7 @@ sealed class FontDC_ : MemoryDC_ {
 	/// Measures text with API <msdn>DrawTextEx</msdn>.
 	/// Can be multiline. For drawing with API <msdn>DrawTextEx</msdn>.
 	/// </summary>
-	public SIZE MeasureDT(ReadOnlySpan<char> s, TFFlags format, int wrapWidth = 0) {
+	public SIZE MeasureDT(RStr s, TFFlags format, int wrapWidth = 0) {
 		if (s.Length == 0) return default;
 		RECT r = new(0, 0, wrapWidth, 0);
 		Api.DrawText(_dc, s, ref r, format | TFFlags.CALCRECT);

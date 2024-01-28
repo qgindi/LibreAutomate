@@ -18,7 +18,7 @@ public static unsafe class Convert2 {
 	/// The result string length is 2 * data length.
 	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character <c>'/'</c>. Both functions are fast.
 	/// </remarks>
-	public static string HexEncode(ReadOnlySpan<byte> data, bool upperCase = false) {
+	public static string HexEncode(RByte data, bool upperCase = false) {
 		fixed (byte* p = data) {
 			return HexEncode(p, data.Length, upperCase);
 		}
@@ -125,7 +125,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
-	public static byte[] DeflateCompress(ReadOnlySpan<byte> data) {
+	public static byte[] DeflateCompress(RByte data) {
 		using var m = new MemoryStream();
 		using (var x = new DeflateStream(m, CompressionLevel.Optimal)) x.Write(data); //note: must dispose before ToArray
 		return m.ToArray();
@@ -139,7 +139,7 @@ public static unsafe class Convert2 {
 	/// <returns>Decompressed data.</returns>
 	/// <param name="compressed">Compressed data.</param>
 	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
-	public static byte[] DeflateDecompress(ReadOnlySpan<byte> compressed) {
+	public static byte[] DeflateDecompress(RByte compressed) {
 		using var m = new MemoryStream();
 		DeflateDecompress(compressed, m);
 		return m.ToArray();
@@ -151,7 +151,7 @@ public static unsafe class Convert2 {
 	/// <param name="compressed">Compressed data.</param>
 	/// <param name="decompressed">Stream for decompressed data.</param>
 	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
-	public static void DeflateDecompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
+	public static void DeflateDecompress(RByte compressed, Stream decompressed) {
 		fixed (byte* p = compressed) {
 			using var m = new UnmanagedMemoryStream(p, compressed.Length);
 			using var x = new DeflateStream(m, CompressionMode.Decompress);
@@ -167,7 +167,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
-	public static byte[] GzipCompress(ReadOnlySpan<byte> data) {
+	public static byte[] GzipCompress(RByte data) {
 		using var m = new MemoryStream();
 		using (var x = new GZipStream(m, CompressionLevel.Optimal)) x.Write(data);
 		return m.ToArray();
@@ -179,7 +179,7 @@ public static unsafe class Convert2 {
 	/// <returns>Decompressed data.</returns>
 	/// <param name="compressed">Compressed data.</param>
 	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
-	public static byte[] GzipDecompress(ReadOnlySpan<byte> compressed) {
+	public static byte[] GzipDecompress(RByte compressed) {
 		using var m = new MemoryStream();
 		GzipDecompress(compressed, m);
 		return m.ToArray();
@@ -191,7 +191,7 @@ public static unsafe class Convert2 {
 	/// <param name="compressed">Compressed data.</param>
 	/// <param name="decompressed">Stream for decompressed data.</param>
 	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
-	public static void GzipDecompress(ReadOnlySpan<byte> compressed, Stream decompressed) {
+	public static void GzipDecompress(RByte compressed, Stream decompressed) {
 		fixed (byte* p = compressed) {
 			using var m = new UnmanagedMemoryStream(p, compressed.Length);
 			using var x = new GZipStream(m, CompressionMode.Decompress);
@@ -207,7 +207,7 @@ public static unsafe class Convert2 {
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>level</i>.</exception>
 	/// <exception cref="OutOfMemoryException"></exception>
 	/// <exception cref="AuException"><see cref="BrotliEncoder.TryCompress"/> failed.</exception>
-	public static unsafe byte[] BrotliCompress(ReadOnlySpan<byte> data, int level = 6) {
+	public static unsafe byte[] BrotliCompress(RByte data, int level = 6) {
 		int n = BrotliEncoder.GetMaxCompressedLength(data.Length)
 			+ data.Length / 1000 + 1000; //GetMaxCompressedLength returns too small value, and TryCompress fails when data is already compressed
 		var b = MemoryUtil.Alloc(n);
@@ -225,7 +225,7 @@ public static unsafe class Convert2 {
 	/// <param name="compressed">Compressed data.</param>
 	/// <exception cref="ArgumentException">Invalid data.</exception>
 	/// <exception cref="OutOfMemoryException"></exception>
-	public static unsafe byte[] BrotliDecompress(ReadOnlySpan<byte> compressed) {
+	public static unsafe byte[] BrotliDecompress(RByte compressed) {
 		int n = checked(compressed.Length * 4 + 8000);
 		for (int i = 0; i < 3; i++) if (n < 512_000) n *= 2;
 		//print.it(compressed.Length, n, n/compressed.Length); //usually ~ 80 KB
@@ -473,7 +473,7 @@ public static unsafe class Convert2 {
 	///// </summary>
 	///// <param name="data">Data to encode.</param>
 	///// <remarks>Like <see cref="Convert.ToBase64String(byte[])"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
-	//public static string Base64UrlEncode(ReadOnlySpan<byte> data) {
+	//public static string Base64UrlEncode(RByte data) {
 	//	fixed (byte* p = data) return Base64UrlEncode(p, data.Length);
 
 	//	//speed: same as Convert.ToBase64String
@@ -488,7 +488,7 @@ public static unsafe class Convert2 {
 	//public static string Base64UrlEncode(void* data, int length) {
 	//	var ip = (IntPtr)data;
 	//	return string.Create(Base64EncodeLength(length), (ip, length), static (span, tu) => {
-	//		Convert.TryToBase64Chars(new ReadOnlySpan<byte>((byte*)tu.ip, tu.length), span, out _);
+	//		Convert.TryToBase64Chars(new RByte((byte*)tu.ip, tu.length), span, out _);
 	//		for (int i = 0; i < span.Length; i++) {
 	//			switch (span[i]) { case '/': span[i] = '_'; break; case '+': span[i] = '-'; break; }
 	//		}
