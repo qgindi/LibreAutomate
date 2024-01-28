@@ -546,7 +546,7 @@ namespace Au.Types {
 		}
 		Dictionary<string, string> _contentUrlParameters;
 		
-		internal static Dictionary<string, string> ParseUrlParameters_(ReadOnlySpan<char> s) {
+		internal static Dictionary<string, string> ParseUrlParameters_(RStr s) {
 			Dictionary<string, string> d = null;
 			for (int i = 0, j; i < s.Length; i = j + 1) {
 				int q = -1;
@@ -575,7 +575,7 @@ namespace Au.Types {
 			//print.it($"'{Content.ToStringUTF8()}'");
 			Dictionary<string, HSContentPart> a = null;
 			//need to parse bytes, not string, because part bodies can be binary or use various encodings
-			ReadOnlySpan<byte> k = Content, b = Encoding.Latin1.GetBytes("--" + sb), b0 = b.Slice(2);
+			RByte k = Content, b = Encoding.Latin1.GetBytes("--" + sb), b0 = b.Slice(2);
 			if (!_FindBound(k, b, 0, out int startBound, out int endBound, out bool last)) return null;
 			for (int index = 0; !last;) {
 				int startPart = endBound;
@@ -598,7 +598,7 @@ namespace Au.Types {
 			}
 			return a;
 			
-			static bool _FindBound(ReadOnlySpan<byte> k, ReadOnlySpan<byte> b, int i, out int start, out int end, out bool last) {
+			static bool _FindBound(RByte k, RByte b, int i, out int start, out int end, out bool last) {
 				start = end = 0; last = false;
 				for (; i < k.Length; i = end) {
 					int j = k.Slice(i).IndexOf(b);

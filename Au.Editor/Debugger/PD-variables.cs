@@ -475,7 +475,9 @@ partial class PanelDebug {
 		//	print.it(r.value);
 		//}
 		
-		
+		if (_d.SendSync(7, "-test") is string s1) {
+			print.it(s1);
+		}
 	}
 #endif
 }

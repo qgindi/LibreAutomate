@@ -658,10 +658,10 @@ public static partial class print {
 			else _f.AppendFormatted(value, alignment, format);
 		}
 		
-		public void AppendFormatted(ReadOnlySpan<char> value)
+		public void AppendFormatted(RStr value)
 			=> _f.AppendFormatted(value);
 		
-		public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string format = null)
+		public void AppendFormatted(RStr value, int alignment = 0, string format = null)
 			=> _f.AppendFormatted(value, alignment, format);
 		
 		public void AppendFormatted(string value)

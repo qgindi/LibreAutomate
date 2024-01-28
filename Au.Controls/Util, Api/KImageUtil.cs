@@ -210,8 +210,8 @@ namespace Au.Controls {
 			
 			return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
 			
-			//copied from WpfUtil_.DetectIconString(ReadOnlySpan<char>)
-			static bool _DetectIconString(ReadOnlySpan<byte> s) {
+			//copied from WpfUtil_.DetectIconString(RStr)
+			static bool _DetectIconString(RByte s) {
 				if (s.Length < 8 || s[0] != '*') return false;
 				int pack = 1;
 				if (s[1] == '<') { // *<library>*icon

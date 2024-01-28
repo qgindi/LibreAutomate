@@ -8,7 +8,7 @@ partial class PanelDebug {
 		public readonly string name;
 		public readonly JsonObject data;
 		
-		public _MiRecord(ReadOnlySpan<char> s) {
+		public _MiRecord(RStr s) {
 			if (char.IsAsciiDigit(s[0])) {
 				if (!s.ToInt_(out token, out int e)) throw new ArgumentException();
 				s = s[e..];
@@ -26,7 +26,7 @@ partial class PanelDebug {
 			}
 		}
 		
-		static JsonObject _ReadObject(ref ReadOnlySpan<char> s, bool root, string fieldName) {
+		static JsonObject _ReadObject(ref RStr s, bool root, string fieldName) {
 			if (!root) s = s[1..];
 			var r = new JsonObject();
 			for (bool once = false; ;) {
@@ -44,7 +44,7 @@ partial class PanelDebug {
 			return r;
 		}
 		
-		static JsonArray _ReadList(ref ReadOnlySpan<char> s, string fieldName) {
+		static JsonArray _ReadList(ref RStr s, string fieldName) {
 #if DEBUG
 			fieldName = fieldName?.TrimEnd('s'); //eg threads -> thread
 #endif
@@ -69,7 +69,7 @@ partial class PanelDebug {
 			return r;
 		}
 		
-		static JsonNode _ReadValue(ref ReadOnlySpan<char> s, string fieldName) {
+		static JsonNode _ReadValue(ref RStr s, string fieldName) {
 			return s[0] switch {
 				'"' => _ReadString(ref s),
 				'{' => _ReadObject(ref s, false, fieldName),
@@ -78,7 +78,7 @@ partial class PanelDebug {
 			};
 		}
 		
-		static string _ReadString(ref ReadOnlySpan<char> s) {
+		static string _ReadString(ref RStr s) {
 			for (int i = 1; ; i++) {
 				i = s.IndexOf(i, '"');
 				bool esc = false; for (int j = i; s[--j] == '\\';) esc ^= true;
@@ -91,7 +91,7 @@ partial class PanelDebug {
 		}
 		
 #if DEBUG
-		static void prt(ReadOnlySpan<char> s) { print.it(s.ToString()); }
+		static void prt(RStr s) { print.it(s.ToString()); }
 #endif
 		
 		public T Data<T>() {

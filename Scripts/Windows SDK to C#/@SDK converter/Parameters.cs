@@ -603,7 +603,7 @@ internal struct Example {
 	
 	static string _ToString(Span<char> p) => new(p[..p.IndexOf('\0')]);
 	
-	static void _ToSpan(Span<char> p, ReadOnlySpan<char> s) {
+	static void _ToSpan(Span<char> p, RStr s) {
 		if (s.Length >= p.Length) throw new ArgumentException($"Destination is too short. Max string length = {p.Length - 1}.");
 		p[s.Length] = '\0';
 		s.CopyTo(p);

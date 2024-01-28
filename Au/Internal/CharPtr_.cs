@@ -27,7 +27,7 @@ internal static unsafe class CharPtr_ {
 		return max;
 	}
 
-	//not used. Now could be replaced with ReadOnlySpan<char>.Equals.
+	//not used. Now could be replaced with RStr.Equals.
 	///// <summary>
 	///// Case-sensitive compares string with managed string and returns true if they are equal.
 	///// </summary>
@@ -102,7 +102,7 @@ static unsafe class BytePtr_ {
 	///// <summary>
 	///// Returns true if <i>span</i> starts with ASCII string <i>s</i>.
 	///// </summary>
-	//public static bool AsciiStarts(ReadOnlySpan<byte> span, string s) {
+	//public static bool AsciiStarts(RByte span, string s) {
 	//	if (s.Length > span.Length) return false;
 	//	for (int i = 0; i < s.Length; i++) {
 	//		if (span[i] != s[i]) return false;
@@ -165,7 +165,7 @@ static unsafe class BytePtr_ {
 		return -1;
 
 		//speed: with long strings slightly slower than strstr.
-		//	With ReadOnlySpan<byte> slower.
+		//	With RByte slower.
 	}
 
 	/// <summary>
@@ -173,7 +173,7 @@ static unsafe class BytePtr_ {
 	/// Returns -1 if not found.
 	/// </summary>
 	/// <param name="s">Substring to find. Must contain only ASCII characters.</param>
-	public static int AsciiFindString(ReadOnlySpan<byte> span, string s) {
+	public static int AsciiFindString(RByte span, string s) {
 		fixed (byte* p = span) return AsciiFindString(p, span.Length, s);
 	}
 

@@ -105,7 +105,7 @@ public class OcrGoogleCloud : IOcrEngine {
 			}
 		}
 		rm.Dispose();
-		return JsonNode.Parse(new ReadOnlySpan<byte>(ab.Ptr, have));
+		return JsonNode.Parse(new RByte(ab.Ptr, have));
 	}
 	
 	static OcrWord[] _ParseJson(JsonNode j, double scale) {

@@ -396,7 +396,7 @@ public unsafe class SciTags {
 			bool linkTag = false;
 			int i2;
 			ch = *tag;
-			var span = new ReadOnlySpan<byte>(tag, tagLen);
+			var span = new RByte(tag, tagLen);
 			switch (tagLen << 16 | ch) {
 			case 1 << 16 | 'b':
 				style.Bold = true;

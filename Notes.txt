@@ -76,6 +76,7 @@ Release NuGet package:
 		Make sure that <TargetFrameworks> contains all supported frameworks.
 		Build the project.
 	Run script "Create NuGet package.cs". It executes dotnet pack and adds native dlls.
+	In .csproj restore <TargetFrameworks> if need.
 	Upload to NuGet. The script prints links.
 
 Edit version in _\version.txt. Upload to public_html.

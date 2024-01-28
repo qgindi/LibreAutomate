@@ -214,8 +214,8 @@ class PanelBreakpoints {
 			m["Breakpoint properties..."] = o => _BreakpointProperties(b, doc);
 			m.AddCheck("Enabled breakpoint\tM-click", b.IsEnabled, o => _SetEnabled(b, o.IsChecked));
 		} else {
-			m["Add breakpoint", "*Material.Circle #EE3000 @12"] = o => ToggleBreakpoint(pos8);
-			m["Add logpoint", "*BootstrapIcons.DiamondFill #40B000 @14"] = o => ToggleBreakpoint(pos8, true);
+			m["Add breakpoint", "*Material.Circle @12 #EE3000"] = o => ToggleBreakpoint(pos8);
+			m["Add logpoint", "*BootstrapIcons.DiamondFill @14" + Menus.green2] = o => ToggleBreakpoint(pos8, true);
 		}
 	}
 	

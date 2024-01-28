@@ -470,11 +470,11 @@ static unsafe partial class Api {
 	//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
 	//note: don't use overloads, because we Jit_.Compile("WriteFile").
-	internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten) {
+	internal static bool WriteFile2(IntPtr hFile, RByte a, out int nBytesWritten) {
 		fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten);
 	}
 
-	//internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten, void* lpOverlapped)
+	//internal static bool WriteFile2(IntPtr hFile, RByte a, out int nBytesWritten, void* lpOverlapped)
 	//{
 	//	fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);
 	//}

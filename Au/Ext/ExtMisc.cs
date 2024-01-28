@@ -160,7 +160,7 @@ public static unsafe partial class ExtMisc {
 	///// <summary>
 	///// Converts this <b>Guid</b> to Base64 string.
 	///// </summary>
-	//public static string ToBase64(this Guid t) => Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&t, sizeof(Guid)));
+	//public static string ToBase64(this Guid t) => Convert.ToBase64String(new RByte((byte*)&t, sizeof(Guid)));
 	
 	//rejected: too simple. We have print.it(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 	///// <summary>
@@ -298,11 +298,12 @@ public static unsafe partial class ExtMisc {
 	internal static void SetFlag_(this ref byte t, byte flag, bool set) {
 		if (set) t |= flag; else t = (byte)(t & ~flag);
 	}
-	
+
 	#endregion
-	
+
 	#region char
-	
+
+#if NET8_0_OR_GREATER
 	/// <summary>
 	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
@@ -318,11 +319,27 @@ public static unsafe partial class ExtMisc {
 	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => char.IsAsciiLetterOrDigit(c);
+#else
+	/// <summary>
+	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
+	/// </summary>
+	public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
 	
-	#endregion
+	/// <summary>
+	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
+	/// </summary>
+	public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	
+	/// <summary>
+	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
+	/// </summary>
+	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
+#endif
+
+#endregion
+
 	#region array
-	
+
 	/// <summary>
 	/// Creates a copy of this array with one or more removed elements.
 	/// </summary>

@@ -9,8 +9,6 @@ using System.Windows.Input;
 using Au.Controls;
 using System.Windows.Interop;
 
-//CONSIDER: show "Run to here" on click in code, like in Rider.
-
 partial class PanelDebug {
 	_Debugger _d;
 	(Button debug, Button restart, Button next, Button step, Button stepOut, Button @continue, Button pause, Button end) _buttons;
@@ -24,8 +22,8 @@ partial class PanelDebug {
 		public FileNode file;
 		public int threadId;
 		public _FRAME frame;
-		public bool attached, stepping, inStoppedEvent, stoppedOnException, nonstop;
-		public int runToHere;
+		public bool attached, stepping, inStoppedEvent, stoppedOnException;
+		public (int breakpointId, bool nonstop) runToHere;
 		public _RthData restartToHere;
 		public Process process;
 		public string[] exceptionsT, exceptionsU;
@@ -71,9 +69,9 @@ partial class PanelDebug {
 		tb.Items.Add(new Separator());
 		//_TbButton("*BoxIcons.RegularMenu" + c_color3, null,  "More debugger commands").xDropdownMenu(_CommandsMenu);
 		_TbButton("*EvaIcons.Options2" + Menus.green, null, "Debugger options").xDropdownMenu(_OptionsMenu);
-		//#if DEBUG
-		//		_TbButton("*WeatherIcons.SnowWind #FF3300", _ => { _Test(); }, "Test");
-		//#endif
+#if DEBUG
+		_TbButton("*WeatherIcons.SnowWind #FF3300", _ => { _Test(); }, "Test");
+#endif
 		
 		Button _TbButton(string icon, Action<Button> click, string tooltip/*, bool overflow = false*/) {
 			var v = tb.AddButton(icon, click, tooltip);
@@ -163,7 +161,7 @@ partial class PanelDebug {
 		if (runToHere != null) _RunToHere(runToHere.file, runToHere.line, runToHere.nonstop);
 		
 		if (_d.SendSync(1, $"-target-attach {processId}") != "^done") {
-			_Print("Failed to attach debugger.");
+			_Print("Failed to attach debugger."); //never mind: fails to attach to 32-bit process, error "parameter incorrect"
 			IsDebugging = false;
 			_d.Send($"-gdb-exit");
 			return _Failed();
@@ -334,7 +332,7 @@ System.Threading.Tasks.TaskCanceledException
 	
 	void _SetBreakpoint(IBreakpoint b) {
 		b.Id = _SetBreakpoint(b.File, b.Line);
-		if (_s.nonstop && b.Id != _s.runToHere) _d.Send($"-break-activate false {b.Id}"); 
+		if (_s.runToHere.nonstop && b.Id != _s.runToHere.breakpointId) _d.Send($"-break-activate false {b.Id}");
 		if (b.HasProperties) _SetBreakpointCondition(b);
 	}
 	
@@ -353,7 +351,7 @@ System.Threading.Tasks.TaskCanceledException
 			int n = b.Id;
 			b.Id = 0;
 			Debug_.PrintIf(n == 0);
-			if (n != 0 && n != _s.runToHere) _d.Send($"-break-delete {n}");
+			if (n != 0 && n != _s.runToHere.breakpointId) _d.Send($"-break-delete {n}");
 		}
 	}
 	
@@ -382,9 +380,10 @@ System.Threading.Tasks.TaskCanceledException
 	#endregion
 	
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line) {
-		m["Run to here", "*JamIcons.ArrowCircleDownRight #EE3000 @14"] = o => _RunToHere(doc.EFile, line, false);
-		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight #EE3000 @14"] = o => _RunToHere(doc.EFile, line, true);
+		m["Run to here", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, false);
+		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, true);
 		if (IsDebugging) m["Restart and run to here non-stop", "*Codicons.DebugRestart @14" + Menus.green2] = o => _RunToHere(doc.EFile, line, true, true);
+		if (IsStopped) m["Jump to here", "*Codicons.DebugStackframe @14" + Menus.green2] = o => _JumpToHere(doc.EFile, line);
 	}
 	
 	void _Step(string s) {
@@ -426,18 +425,38 @@ System.Threading.Tasks.TaskCanceledException
 		} else if (restart) {
 			_Restart(runToHere: new(f, line, nonstop));
 		} else {
-			if (_s.runToHere != 0) _RthEnd();
-			if (_s.nonstop = nonstop) _d.Send("-break-activate false");
-			_s.runToHere = _SetBreakpoint(f, line);
-			if (nonstop && _IsEnabledBreakpoint(_s.runToHere)) _d.Send($"-break-activate true {_s.runToHere}");
+			if (_s.runToHere.breakpointId != 0) _RthEnd();
+			if (_s.runToHere.nonstop = nonstop) _d.Send("-break-activate false");
+			_s.runToHere.breakpointId = _SetBreakpoint(f, line);
+			if (nonstop && _IsEnabledBreakpoint(_s.runToHere.breakpointId)) _d.Send($"-break-activate true {_s.runToHere.breakpointId}");
 			if (IsStopped) _Continue();
 		}
 	}
 	
 	void _RthEnd() {
-		if (!_IsEnabledBreakpoint(_s.runToHere)) _d.Send($"-break-delete {_s.runToHere}");
-		_s.runToHere = 0;
-		if (_s.nonstop) { _s.nonstop = false; _d.Send("-break-activate true"); }
+		if (!_IsEnabledBreakpoint(_s.runToHere.breakpointId)) _d.Send($"-break-delete {_s.runToHere.breakpointId}");
+		_s.runToHere.breakpointId = 0;
+		if (_s.runToHere.nonstop) { _s.runToHere.nonstop = false; _d.Send("-break-activate true"); }
+	}
+	
+	void _JumpToHere(FileNode f, int line) {
+		_s.stoppedOnException = false;
+		var s = _d.SendSync(7, $"-jump \"{f.FilePath.Replace(@"\", @"\\")}:{line + 1}\"");
+		if (s?.Starts("^done,sp=") == true) {
+			int i = 9;
+			line = s.ToInt(i, out i) - 1;
+			int endLine = s.ToInt(++i, out i) - 1;
+			int col = s.ToInt(++i, out i) - 1;
+			int endCol = s.ToInt(++i, out i) - 1;
+			App.Model.OpenAndGoTo(f, line, col, activateLA: App.Settings.debug.activateLA);
+			_marker2.Delete();
+			_marker.Add(line, col, endLine, endCol);
+			_d.Send($"-stack-list-frames --thread {_s.threadId}");
+		} else {
+			if (s.Like("^error,msg=\"*\"")) s = s[12..^1];
+			if (s == "SetIP cannot be done on any frame except the leaf frame.") _Print("Cannot jump to another function.");
+			else _Print("Cannot jump to here. " + s);
+		}
 	}
 	
 	bool _IsEnabledBreakpoint(int id) => Panels.Breakpoints.GetBreakpoints().Any(o => o.Id == id);
@@ -475,7 +494,7 @@ System.Threading.Tasks.TaskCanceledException
 		
 #if DEBUG
 		if (s.Starts("^error")) print.it($"<><c red>{s}<>");
-		//else if (0 == s.Starts(true, "^done", "=library-", "=thread-", "=message,")) print.it("EVENT", s);
+		//else if (0 == s.Starts(true, "^done", "=message,", "=library-", "=thread-")) print.it("EVENT", s);
 #endif
 		
 		if (s == "^exit") {
@@ -561,7 +580,7 @@ System.Threading.Tasks.TaskCanceledException
 		
 		switch (x.reason) {
 		case "breakpoint-hit":
-			if (_s.runToHere != 0 && x.bkptno == _s.runToHere) {
+			if (_s.runToHere.breakpointId != 0 && x.bkptno == _s.runToHere.breakpointId) {
 				_RthEnd();
 				//never mind: does not delete the _runToHere breakpoint if stops there on exception
 			} else {
@@ -616,7 +635,7 @@ System.Threading.Tasks.TaskCanceledException
 		}
 		
 		bool _StoppedOnException(_STOPPED x) {
-			if (_s.nonstop && x.exception_stage != "unhandled") {
+			if (_s.runToHere.nonstop && x.exception_stage != "unhandled") {
 				_Continue();
 				return true;
 			}
@@ -877,7 +896,7 @@ System.Threading.Tasks.TaskCanceledException
 		
 		public bool Exists => _doc != null;
 		
-		//public SciCode Doc => _doc;
+		public SciCode Doc => _doc;
 		//public int Line => _line;
 		//public int Column => _column;
 	}

@@ -19,6 +19,7 @@ global using System.Globalization;
 
 global using SystemInformation = System.Windows.Forms.SystemInformation;
 global using RStr = System.ReadOnlySpan<char>;
+global using RByte = System.ReadOnlySpan<byte>;
 global using Win32Exception = System.ComponentModel.Win32Exception;
 global using EditorBrowsableAttribute = System.ComponentModel.EditorBrowsableAttribute;
 global using EditorBrowsableState = System.ComponentModel.EditorBrowsableState;
@@ -33,7 +34,7 @@ global using IEnumerator = System.Collections.IEnumerator;
 [assembly: AssemblyCopyright("Copyright 2020-2024 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("1.0.0")]
+[assembly: AssemblyVersion("1.0.1")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
