@@ -11,7 +11,9 @@ int r2 = run.console(s => print.it(s), @"C:\Test\console2.exe");
 
 /// Get the output text when it exits.
 
-int r3 = run.console(out var text, @"C:\Test\console3.exe", encoding: Encoding.UTF8);
+int r3 = run.console(out var text, @"C:\Test\console3.exe", encoding: Console.OutputEncoding);
 print.it(text);
 
-/// If the output contains garbage text, need to specify an encoding, like in the above example. Many console programs use Encoding.UTF8 or Encoding.Unicode.
+/// If the output contains garbage text, need to specify encoding, like in the above example. Most console programs use <b>Encoding.UTF8<>, <b>Encoding.Unicode<> or <b>Console.OutputEncoding<>. If not specified, <b>run.console<> uses <b>Encoding.UTF8<>.
+
+/// See also: <see cref="consoleProcess"/>.

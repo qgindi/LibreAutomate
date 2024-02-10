@@ -293,21 +293,21 @@ static unsafe partial class Api
 	#region control styles, messages etc
 
 	//ES_, EM_, EN_
-	internal const int ES_MULTILINE = 0x4;
-	internal const int ES_PASSWORD = 0x20;
-	internal const int ES_AUTOVSCROLL = 0x40;
-	internal const int ES_AUTOHSCROLL = 0x80;
-	internal const int ES_WANTRETURN = 0x1000;
-	internal const int ES_NUMBER = 0x2000;
+	internal const WS ES_MULTILINE = (WS)0x4;
+	internal const WS ES_PASSWORD = (WS)0x20;
+	internal const WS ES_AUTOVSCROLL = (WS)0x40;
+	internal const WS ES_AUTOHSCROLL = (WS)0x80;
+	internal const WS ES_WANTRETURN = (WS)0x1000;
+	internal const WS ES_NUMBER = (WS)0x2000;
 
 	internal const int EM_SETSEL = 0xB1;
 	internal const int EM_SETCUEBANNER = 0x1501;
 
 	//CBS_, CB_, CBN_
-	internal const uint CBS_SIMPLE = 1;
-	internal const uint CBS_DROPDOWN = 2;
-	internal const uint CBS_DROPDOWNLIST = 3;
-	internal const uint CBS_AUTOHSCROLL = 0x40;
+	internal const WS CBS_SIMPLE = (WS)1;
+	internal const WS CBS_DROPDOWN = (WS)2;
+	internal const WS CBS_DROPDOWNLIST = (WS)3;
+	internal const WS CBS_AUTOHSCROLL = (WS)0x40;
 
 	internal const int CB_INSERTSTRING = 330;
 	internal const int CB_SETCUEBANNER = 0x1703;

@@ -1,4 +1,4 @@
-/// <link https://github.com/ClosedXML/ClosedXML>ClosedXML<> is a library for reading/writing Excel files (.xlsx). NuGet: <+nuget>ClosedXML<>.
+/// <link https://github.com/ClosedXML/ClosedXML>ClosedXML<> is a library for reading/writing Excel files (<_>.xlsx</_>). NuGet: <+nuget>ClosedXML<>.
 
 /*/ nuget -\ClosedXML; /*/
 using ClosedXML.Excel;

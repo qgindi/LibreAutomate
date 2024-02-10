@@ -1,4 +1,4 @@
-/// To start creating a dialog with multiple tab pages, use menu File -> New -> Dialogs. Or copy-paste or drag-drop this code.
+/// To start creating a dialog with multiple tab pages, use menu <b>File > New > Dialogs<>. Or copy-paste or drag-drop this code.
 
 using System.Windows;
 using System.Windows.Controls;

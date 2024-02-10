@@ -8,7 +8,7 @@ class MetaCommentsParser {
 	FileNode _fn;
 	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, nullable, testInternal, define, preBuild, postBuild,
-		outputPath, console, icon, manifest, sign, xmlDoc, miscFlags, noRef;
+		outputPath, console, icon, manifest, sign, xmlDoc, miscFlags, noRef, startFaster;
 	List<string> _pr, _r, _com, _nuget, _c, _resource, _file;
 
 	public List<string> pr => _pr ??= new();
@@ -53,6 +53,7 @@ class MetaCommentsParser {
 		case "xmlDoc": xmlDoc = value; break;
 		case "miscFlags": miscFlags = value; break;
 		case "noRef": noRef = value; break;
+		case "startFaster": startFaster = value; break;
 		case "pr": pr.Add(value); break;
 		case "r": r.Add(value); break;
 		case "com": com.Add(value); break;
@@ -101,6 +102,7 @@ class MetaCommentsParser {
 		_Append("xmlDoc", xmlDoc);
 		_Append("miscFlags", miscFlags);
 		_Append("noRef", noRef);
+		_Append("startFaster", startFaster);
 
 		_AppendList("pr", _pr);
 		_AppendList("r", _r);

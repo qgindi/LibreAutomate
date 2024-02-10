@@ -1,4 +1,4 @@
-/// Can be used <google>Windows keyboard shortcuts</google>.
+/// Can be used <google>Windows keyboard shortcuts<>.
 
 keys.send("Win+D"); //show desktop; or undo it if possible
 keys.send("Win+M"); //minimize all windows
@@ -7,6 +7,6 @@ keys.send("Win+Tab"); //task view
 keys.send("Win+Left"); //dock the active window at the left side of the screen
 keys.send("Win+Right"); //dock the active window at the right side of the screen
 
-/// Switch the active window like with Alt+Tab.
+/// Switch the active window like with <mono>Alt+Tab<>.
 
 wnd.switchActiveWindow();

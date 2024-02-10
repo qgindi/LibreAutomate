@@ -48,6 +48,7 @@ public partial class toolbar : MTBase {
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="m_">[](xref:caller_info)</param>
+	/// <param name="settingsFile">null or full path of the settings file of this toolbar.</param>
 	/// <exception cref="ArgumentException">Invalid <i>name</i>.</exception>
 	/// <remarks>
 	/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="getSettingsFilePath"/>. If fails, prints a warning and uses default settings.
@@ -57,13 +58,13 @@ public partial class toolbar : MTBase {
 	/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 	/// </remarks>
 	public toolbar(string name = null, TBCtor flags = 0,
-		[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
+		[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null, string settingsFile = null)
 		: base(name, f_, l_, m_) {
 		
 		if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) print.warning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadOfTriggers();</code> or <code>Triggers.Options.ThreadThis();</code>");
 		
-		var path = flags.Has(TBCtor.DontSaveSettings) ? null : getSettingsFilePath(_name);
-		_sett = _Settings.Load(path, flags.Has(TBCtor.ResetSettings));
+		settingsFile = flags.Has(TBCtor.DontSaveSettings) ? null : (settingsFile ?? getSettingsFilePath(_name));
+		_sett = _Settings.Load(settingsFile, flags.Has(TBCtor.ResetSettings));
 		
 		_offsets = _sett.offsets; //SHOULDDO: don't use saved offsets if this toolbar was free and now is owned or vice versa. Because the position is irrelevent and may be far/offscreen. It usually happens when testing.
 		
@@ -101,12 +102,13 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Gets full path of toolbar's settings file. The file may exist or not.
 	/// </summary>
-	/// <param name="toolbarName">Toolbar name.</param>
+	/// <param name="toolbarName">Toolbar name. If this string is a full path, returns this string.</param>
 	/// <remarks>
 	/// Path: <c>folders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="folders.Workspace"/> is null, uses <see cref="folders.ThisAppDocuments"/>.
 	/// </remarks>
 	public static string getSettingsFilePath(string toolbarName) {
 		if (toolbarName.NE()) throw new ArgumentException("Empty name");
+		if (pathname.isFullPath(toolbarName)) return toolbarName;
 		string s = folders.Workspace.Path ?? folders.ThisAppDocuments;
 		return s + @"\.toolbars\" + toolbarName + ".json";
 	}

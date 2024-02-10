@@ -1,29 +1,29 @@
-/// <google>LINQ</google> adds many extension methods to arrays, lists, strings and other <+recipe>collections<>. This recipe shows how to use some of them.
+/// <google>LINQ<> adds many extension methods to arrays, lists, strings and other <+recipe>collections<>. This recipe shows how to use some of them.
 
 //create a collection (array) to use with other examples
 var a = new string[] { "One", "Two", "Three", "Four", "Five" };
 
-/// Get the first matching item. The <+recipe>callback function<> decides what items match; it can compare any property/condition/etc. This example looks for a string that starts with "F".
+/// Get the first matching item. The <+recipe>callback function<> decides what items match; it can compare any property/condition/etc. This example looks for a string that starts with <.c>"F"<>.
 
 string s1 = a.FirstOrDefault(o => o.Starts("F"));
 print.it(s1);
 
-/// How it works: function <b>FirstOrDefault</b> calls the callback function (lambda) for each item until it returns true. Then <b>FirstOrDefault</b> returns that item.
+/// How it works: function <b>FirstOrDefault<> calls the callback function (lambda) for each item until it returns true. Then <b>FirstOrDefault<> returns that item.
 
-/// Function <b>FirstOrDefault</b> returns null if not found. Function <b>First</b> throws exception instead. Function <b>Any</b> returns true/false. Function <b>Count</b> tells how many.
+/// Function <b>FirstOrDefault<> returns null if not found. Function <b>First<> throws exception instead. Function <b>Any<> returns true/false. Function <b>Count<> tells how many.
 
 if (a.Any(o => o.Eqi("three"))) print.it("found"); else print.it("not found");
 if (!a.Any()) print.it("the collection is empty");
 int n1 = a.Count(), n2 = a.Count(o => o.Starts("F"));
 print.it(n1, n2);
 
-/// Function <b>Where</b> returns all matching items.
+/// Function <b>Where<> returns all matching items.
 
 foreach (var v in a.Where(o => o.Starts("F"))) {
 	print.it(v);
 }
 
-/// Many functions return a lazy <b>IEnumerable</b> object that may retrieve items later. Convert it to array or <b>List</b> if need.
+/// Many functions return a lazy <b>IEnumerable<> object that may retrieve items later. Convert it to array or <b>List<> if need.
 
 string[] a2 = a
 	.Where(o => o.Starts("F"))

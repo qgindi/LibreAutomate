@@ -47,9 +47,9 @@ try {
 finally { print.it("finally"); }
 print.it(3);
 
-/// Note: The <.k>finally<> code does not run if <google C# Environment.Exit>Environment.Exit<> or some other function terminates the process.
+/// Note: The <.k>finally<> code does not run if <see cref="Environment.Exit"/> or some other function terminates the process.
 
-/// With disposable objects instead of try-finally-Dispose can be used the <b><+lang using statement>using<><> statement.
+/// With disposable objects instead of <_>try-finally-Dispose</_> can be used the <b><+lang using statement>using<><> statement.
 
 /// To throw exceptions use the <b><+lang throw statement>throw<><> statement.
 
@@ -63,5 +63,5 @@ void Func1(int i) {
 }
 
 /// Two ways to insert <.k>try<> code quickly:
-/// - Type tryc and select tryCatchFinallySnippet.
-/// - Click or select code, and use menu Edit -> Surround.
+/// - Type <.c>tryc<> and select <b>tryCatchFinallySnippet<>.
+/// - Click or select code, and use menu <b>Edit > Surround<>.

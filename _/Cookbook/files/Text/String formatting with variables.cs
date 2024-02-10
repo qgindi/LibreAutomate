@@ -36,7 +36,7 @@ string[] a = { "one", "two", "three" };
 s = string.Join("; ", a);
 print.it(s);
 
-/// Function <b>ToString</b> of various variable types.
+/// Function <b>ToString<> of various variable types.
 
 print.it("0x" + n.ToS("X8")); //hexadecimal number format with 8 digits
 
@@ -53,7 +53,7 @@ There are {{n}} ways
 to {{c}} strings.
 """;
 
-/// <google C# string interpolation>Interpolations<> can be <google C# composite formatting>formatted</google> in various ways.
+/// <google C# string interpolation>Interpolations<> can be <google C# composite formatting>formatted<> in various ways.
 
 for (int i = 8; i < 15; i++) {
 	print.it($"{i,-5} 0x{i:X8} {Random.Shared.NextDouble(),8:F3}");

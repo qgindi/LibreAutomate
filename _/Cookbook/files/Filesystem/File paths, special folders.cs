@@ -1,4 +1,4 @@
-/// Examples of file and directory (folder) <google File path formats on Windows>paths</google>.
+/// Examples of file and directory (folder) <google File path formats on Windows>paths<>.
 
 string file = @"C:\Windows\System32\Notepad.exe";
 string folder = @"C:\Windows\System32";
@@ -6,7 +6,7 @@ string drive = @"C:\"; //some functions also support C: without \
 string networkFile = @"\\computer\folder\folder2\file.txt";
 string networkDrive = @"\\computer\folder\";
 
-/// Without @ would need to escape \ characters.
+/// Without <.c>@<> would need to escape <.c>\<> characters.
 
 file = "C:\\Windows\\System32\\Notepad.exe";
 

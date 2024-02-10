@@ -1280,11 +1280,11 @@ namespace Au {
 			string cn = "Edit";
 			var style = WS.CHILD | WS.VISIBLE; //don't need WS_TABSTOP
 			switch (_controls.EditType) {
-			case DEdit.Text: style |= (WS)Api.ES_AUTOHSCROLL; break;
-			case DEdit.Password: style |= (WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
-			case DEdit.Number: style |= (WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
-			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
-			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
+			case DEdit.Text: style |= Api.ES_AUTOHSCROLL; break;
+			case DEdit.Password: style |= Api.ES_PASSWORD | Api.ES_AUTOHSCROLL; break;
+			case DEdit.Number: style |= Api.ES_NUMBER | Api.ES_AUTOHSCROLL; break;
+			case DEdit.Multiline: style |= Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN | WS.VSCROLL; break;
+			case DEdit.Combo: style |= Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL | WS.VSCROLL; cn = "ComboBox"; break;
 			}
 			_editWnd = WndUtil.CreateWindow(cn, null, style, WSE.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
 			WndUtil.SetFont(_editWnd, _editFont);

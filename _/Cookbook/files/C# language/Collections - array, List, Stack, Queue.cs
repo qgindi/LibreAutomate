@@ -1,4 +1,4 @@
-/// An array is a variable that holds multiple elements of the same type. Elements can be accesed by index and can be modified. <google C# arrays>More info<>.
+/// An array is a variable that holds multiple elements of the same type. Elements can be accessed by index and can be modified. <google C# arrays>More info<>.
 
 int[] a1 = { 1, 3, 5, 7, 9 }; //array variable a1 has 5 elements of type int
 var a2 = new int[10]; //array variable a2 has 10 elements of type int, all 0 (default value of that type)
@@ -54,9 +54,9 @@ lock (k1) {
 }
 
 /// If need a variable that holds multiple values of different types, use one of:
-/// - Array/List/etc with elements of type <.k>object<>.
+/// - <b>Array<>/<b>List<>/etc with elements of type <.k>object<>.
 /// - <+lang value tuple types>Tuple<>.
-/// - Create a <google C# class>class</google> or <google C# struct>struct</google> with public fields.
+/// - Create a <google C# class>class<> or <google C# struct>struct<> with public fields.
 
 object[] a20 = [5, "text"];
 print.it(a20[0], a20[1]);

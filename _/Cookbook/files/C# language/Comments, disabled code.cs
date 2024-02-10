@@ -14,9 +14,9 @@ print.it(1 /*another comment*/);
 
 /// Two quick ways to convert code to comments and back:
 /// 1. Right-click the gray margin at the left. Select several lines if need.
-/// 2. Select or click the code, and click toolbar button Comment or Uncomment.
+/// 2. Select or click the code, and click toolbar button <b>Toggle comment<>.
 
-/// <google C# XML documentation comments>XML documentation comments<> start with ///.
+/// <google C# XML documentation comments>XML documentation comments<> start with <.c>///<>.
 
 /// Comments specific to this program:
 
@@ -27,7 +27,7 @@ print.it("folded code");
 print.it("like #region/#endregion");
 //..
 
-/// Another way to disable code - <+lang directive #if #else>#if, #endif, #else, #elif and #define<>.
+/// Another way to disable code - <+lang directive #if #else><_>#if, #endif, #else, #elif and #define</_><>.
 
 #if true
 print.it(1);

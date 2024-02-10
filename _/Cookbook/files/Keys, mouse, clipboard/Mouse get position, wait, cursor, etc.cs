@@ -16,7 +16,7 @@ mouse.waitForClick(0, MButtons.Left);
 mouse.waitForCursor(0, MCursor.Hand); //standard
 mouse.waitForCursor(0, -3191259760238497114); //custom
 
-/// Get cursor hash for <b>waitForCursor</b>.
+/// Get cursor hash for <b>waitForCursor<>.
 
 if(MouseCursor.GetCurrentVisibleCursor(out var c)) print.it(MouseCursor.Hash(c));
 

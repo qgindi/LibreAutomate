@@ -34,14 +34,14 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
 		_tFind.KeyDown += (_, e) => { if (e.Key is Key.Enter && _firstFoundFile != null) App.Model.OpenAndGoTo(_firstFoundFile); };
 		
-		_tv.EditLabelStarted += (item, tb) => {
-			var f = item as FileNode;
-			var s = tb.Text;
+		_tv.EditLabelStarted += e => {
+			var f = e.item as FileNode;
+			var s = e.Text;
 			if (f.IsFolder) {
-				if (s[0] == '@') tb.Select(1, s.Length - 1);
+				if (s[0] == '@') e.SelectText(1, s.Length);
 			} else if (f.IsOtherFileType) {
 				int i = pathname.findExtension(s);
-				if (i > 0) tb.Select(0, i);
+				if (i > 0) e.SelectText(0, i);
 			}
 		};
 		

@@ -4,7 +4,7 @@ namespace Au.Types;
 /// Wraps some UI Automation API.
 /// </summary>
 static class UiaUtil {
-	internal static UiaApi.IUIAutomation Uia => _uia ??= new UiaApi.CUIAutomation() as UiaApi.IUIAutomation;
+	public static UiaApi.IUIAutomation Uia => _uia ??= new UiaApi.CUIAutomation() as UiaApi.IUIAutomation;
 	[ThreadStatic] static UiaApi.IUIAutomation _uia;
 	
 	/// <summary>
@@ -12,7 +12,7 @@ static class UiaUtil {
 	/// </summary>
 	/// <param name="xy">Screen coordinates.</param>
 	/// <returns>null if failed.</returns>
-	internal static UiaApi.IUIAutomationElement ElementFromPoint(POINT xy) {
+	public static UiaApi.IUIAutomationElement ElementFromPoint(POINT xy) {
 		return 0 == Uia.ElementFromPoint(xy, out var e) ? e : null;
 	}
 	
@@ -20,39 +20,109 @@ static class UiaUtil {
 	/// Gets the focused element.
 	/// </summary>
 	/// <returns>null if failed.</returns>
-	internal static UiaApi.IUIAutomationElement ElementFocused() {
+	public static UiaApi.IUIAutomationElement ElementFocused() {
 		return 0 == Uia.GetFocusedElement(out var e) ? e : null;
 	}
 	
 	///// <summary>
-	///// Gets text of TextPattern paragraph from point.
+	///// Gets the container control of this or nearest ancestor element that can retrieve it.
 	///// </summary>
-	///// <param name="t"></param>
-	///// <param name="xy">Screen coordinates.</param>
-	///// <returns>null if the element does not support TextPattern or if failed.</returns>
-	//internal static string PatternTextFromPoint(this UiaApi.IUIAutomationElement t, POINT xy) {
-	//	if (0 == t.GetCurrentPattern(UiaApi.UIA_TextPatternId, out var o) && o is UiaApi.IUIAutomationTextPattern p) {
-	//		if (0 == p.RangeFromPoint(xy, out var tr) && 0 == tr.ExpandToEnclosingUnit(UiaApi.TextUnit.TextUnit_Paragraph)) {
-	//			if (0 == tr.GetText(5000, out var s)) return s;
+	//public static wnd Hwnd(this UiaApi.IUIAutomationElement t) {
+	//	if (0 == t.get_CurrentNativeWindowHandle(out var w) && !w.Is0) return w;
+		
+	//	if (0 == Uia.get_RawViewWalker(out var walker)) {
+	//		while (0 == walker.GetParentElement(t, out var p) && p != null && p != t) {
+	//			t = p;
+	//			if (0 == t.get_CurrentNativeWindowHandle(out w) && !w.Is0) return w;
 	//		}
 	//	}
-	//	return null;
+		
+	//	return default;
 	//}
 	
-	///// <summary>
-	///// Gets text of ValuePattern.
-	///// </summary>
-	///// <param name="t"></param>
-	///// <returns>null if the element does not support ValuePattern or if failed.</returns>
-	//internal static string ValueText(this UiaApi.IUIAutomationElement t) {
-	//	if (0 == t.GetCurrentPattern(UiaApi.UIA_ValuePatternId, out var o) && o is UiaApi.IUIAutomationValuePattern p) {
-	//		if (0 == p.get_CurrentValue(out var s)) return s;
-	//	}
-	//	return null;
-	//}
+	/// <summary>
+	/// Gets caret rectangle in screen from this focused element.
+	/// </summary>
+	public static bool GetCaretRect(this UiaApi.IUIAutomationElement t, out RECT r) {
+		if (0 == t.GetCurrentPattern(UiaApi.UIA_TextPattern2Id, out var o) && o is UiaApi.IUIAutomationTextPattern2 p2) {
+			if (0 == p2.GetCaretRange(out bool isActive, out var tr) && tr != null /*&& isActive*/) {
+				return tr.GetRect(out r, t);
+			}
+		}
+		if (0 == t.GetCurrentPattern(UiaApi.UIA_TextPatternId, out o) && o is UiaApi.IUIAutomationTextPattern p) {
+			if (0 == p.GetSelection(out var ranges) && 0 == ranges.GetElement(0, out var tr)) {
+				return tr.GetRect(out r, t, selectionToCaret: true);
+			}
+		}
+		r = default;
+		return false;
+	}
 	
-	///
-	internal static bool GetCaretRectInPowerShell(out RECT r) {
+	/// <summary>
+	/// Gets rectangle in screen.
+	/// </summary>
+	public static unsafe bool GetRect(this UiaApi.IUIAutomationTextRange t, out RECT r, UiaApi.IUIAutomationElement e, bool selectionToCaret = false) {
+		if (_GetRect(t, out r)) {
+			if (selectionToCaret) r.left = r.right - 1;
+			return true;
+		}
+		
+		//probably no selection
+		
+		if (0 == t.ExpandToEnclosingUnit(UiaApi.TextUnit.TextUnit_Character) && _GetRect(t, out r)) {
+			r.right = r.left + 1;
+			return true;
+		}
+		
+		//probably caret at the end
+		
+		if (0 == t.MoveEndpointByUnit(UiaApi.TextPatternRangeEndpoint.TextPatternRangeEndpoint_Start, UiaApi.TextUnit.TextUnit_Character, -1, out int m) && m < 0 && _GetRect(t, out r)) {
+			//moved to previous line?
+			if (0 == t.GetText(2, out var s) && !s.NE() && s[0] is '\r' or '\n' && 0 == t.ExpandToEnclosingUnit(UiaApi.TextUnit.TextUnit_Line) && _GetRect(t, out var r2)) {
+				r.Offset(0, r2.Height);
+				r.right = (r.left = r2.left) + 1;
+			} else {
+				r.right = (r.left = r.right) + 1;
+			}
+			return true;
+		}
+		
+		//probably no text
+		
+		//get the left edge of e rect
+		if (0 == e.get_CurrentBoundingRectangle(out r)) {
+			int dpi = Dpi.OfWindow(wnd.active);
+			int h = (int)Dpi.Unscale(r.Height, dpi);
+			if (h < 111) { //assume it's a single-line edit control
+				if (h > 32) r.top = r.bottom - Dpi.Scale(32, dpi); //get the bottom max 32 logical pixels
+				r.right = r.left + 1;
+				return true;
+			}
+		}
+		
+		return false;
+		
+		static unsafe bool _GetRect(UiaApi.IUIAutomationTextRange t, out RECT r) {
+			r = default;
+			if (0 != t.GetBoundingRectangles(out var sap) || sap == null) return false;
+			uint n = sap->rgsabound.cElements / 4;
+			if (n > 0) {
+				var p = (double*)sap->pvData + sap->rgsabound.cElements - 4;
+				r = new(p[0].ToInt(), p[1].ToInt(), p[2].ToInt(), p[3].ToInt());
+			}
+			UiaApi.SafeArrayDestroy(sap);
+			return n > 0;
+		}
+	}
+	
+	public static bool GetCaretRectInPowerShell(out RECT r) {
+		//GetGUIThreadInfo and MSAA don't work with PowerShell.
+		//	Does not support IUIAutomationTextPattern2.
+		//	IUIAutomationTextPattern.GetSelection -> IUIAutomationTextRange.GetBoundingRectangles returns client coord, which may be fixed in the future.
+		//	Win+; doesn't work too. But PhraseExpress works. And IME (interesting: temporarily replaces the caret).
+		//	I would't care, but this was a user request.
+		//Now instead using an undocumented PS feature.
+		
 		var t = ElementFocused();
 		if (t != null && 0 == t.get_CurrentControlType(out var ct) && ct == UiaApi.TypeId.Edit) {
 			if (0 == Uia.get_RawViewWalker(out var walker)) {
@@ -73,6 +143,33 @@ static class UiaUtil {
 		r = default;
 		return false;
 	}
+	
+	///// <summary>
+	///// Gets text of TextPattern paragraph from point.
+	///// </summary>
+	///// <param name="t"></param>
+	///// <param name="xy">Screen coordinates.</param>
+	///// <returns>null if the element does not support TextPattern or if failed.</returns>
+	//public static string PatternTextFromPoint(this UiaApi.IUIAutomationElement t, POINT xy) {
+	//	if (0 == t.GetCurrentPattern(UiaApi.UIA_TextPatternId, out var o) && o is UiaApi.IUIAutomationTextPattern p) {
+	//		if (0 == p.RangeFromPoint(xy, out var tr) && 0 == tr.ExpandToEnclosingUnit(UiaApi.TextUnit.TextUnit_Paragraph)) {
+	//			if (0 == tr.GetText(5000, out var s)) return s;
+	//		}
+	//	}
+	//	return null;
+	//}
+	
+	///// <summary>
+	///// Gets text of ValuePattern.
+	///// </summary>
+	///// <param name="t"></param>
+	///// <returns>null if the element does not support ValuePattern or if failed.</returns>
+	//public static string ValueText(this UiaApi.IUIAutomationElement t) {
+	//	if (0 == t.GetCurrentPattern(UiaApi.UIA_ValuePatternId, out var o) && o is UiaApi.IUIAutomationValuePattern p) {
+	//		if (0 == p.get_CurrentValue(out var s)) return s;
+	//	}
+	//	return null;
+	//}
 }
 
 #pragma warning disable 1591, 649, 169
@@ -223,7 +320,7 @@ unsafe class UiaApi : NativeApi {
 		[PreserveSig] int get_CurrentIsControlElement([MarshalAs(UnmanagedType.Bool)] out bool retVal);
 		[PreserveSig] int get_CurrentIsContentElement([MarshalAs(UnmanagedType.Bool)] out bool retVal);
 		[PreserveSig] int get_CurrentIsPassword([MarshalAs(UnmanagedType.Bool)] out bool retVal);
-		[PreserveSig] int get_CurrentNativeWindowHandle(void** retVal);
+		[PreserveSig] int get_CurrentNativeWindowHandle(out wnd retVal);
 		[PreserveSig] int get_CurrentItemType(out string retVal);
 		[PreserveSig] int get_CurrentIsOffscreen([MarshalAs(UnmanagedType.Bool)] out bool retVal);
 		[PreserveSig] int get_CurrentOrientation(out OrientationType retVal);
@@ -389,5 +486,84 @@ unsafe class UiaApi : NativeApi {
 		MainLandmark = 80002,
 		NavigationLandmark = 80003,
 		SearchLandmark = 80004,
+	}
+	
+	[DllImport("oleaut32.dll", EntryPoint = "#16", PreserveSig = true)]
+	internal static extern int SafeArrayDestroy(SAFEARRAY* psa);
+	
+	public const int UIA_TextPatternId = 10014;
+	internal const int UIA_TextPattern2Id = 10024;
+	
+	[ComImport, Guid("32eba289-3583-42c9-9c59-3b6d9a1e9b6a"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	public interface IUIAutomationTextPattern {
+		[PreserveSig] int RangeFromPoint(POINT pt, out IUIAutomationTextRange range);
+		[PreserveSig] int RangeFromChild(IUIAutomationElement child, out IUIAutomationTextRange range);
+		[PreserveSig] int GetSelection(out IUIAutomationTextRangeArray ranges);
+		[PreserveSig] int GetVisibleRanges(out IUIAutomationTextRangeArray ranges);
+		[PreserveSig] int get_DocumentRange(out IUIAutomationTextRange range);
+		[PreserveSig] int get_SupportedTextSelection(out SupportedTextSelection supportedTextSelection);
+	}
+	
+	public enum SupportedTextSelection {
+		SupportedTextSelection_None,
+		SupportedTextSelection_Single,
+		SupportedTextSelection_Multiple
+	}
+	
+	[ComImport, Guid("ce4ae76a-e717-4c98-81ea-47371d028eb6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	public interface IUIAutomationTextRangeArray {
+		[PreserveSig] int get_Length(out int length);
+		[PreserveSig] int GetElement(int index, out IUIAutomationTextRange element);
+	}
+	
+	[ComImport, Guid("a543cc6a-f4ae-494b-8239-c814481187a8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	public interface IUIAutomationTextRange {
+		[PreserveSig] int Clone(out IUIAutomationTextRange clonedRange);
+		[PreserveSig] int Compare(IUIAutomationTextRange range, [MarshalAs(UnmanagedType.Bool)] out bool areSame);
+		[PreserveSig] int CompareEndpoints(TextPatternRangeEndpoint srcEndPoint, IUIAutomationTextRange range, TextPatternRangeEndpoint targetEndPoint, out int compValue);
+		[PreserveSig] int ExpandToEnclosingUnit(TextUnit textUnit);
+		[PreserveSig] int FindAttribute(int attr, object val, [MarshalAs(UnmanagedType.Bool)] bool backward, out IUIAutomationTextRange found);
+		[PreserveSig] int FindText(string text, [MarshalAs(UnmanagedType.Bool)] bool backward, [MarshalAs(UnmanagedType.Bool)] bool ignoreCase, out IUIAutomationTextRange found);
+		[PreserveSig] int GetAttributeValue(int attr, out object value);
+		[PreserveSig] int GetBoundingRectangles(out SAFEARRAY* boundingRects);
+		[PreserveSig] int GetEnclosingElement(out IUIAutomationElement enclosingElement);
+		[PreserveSig] int GetText(int maxLength, out string text);
+		[PreserveSig] int Move(TextUnit unit, int count, out int moved);
+		[PreserveSig] int MoveEndpointByUnit(TextPatternRangeEndpoint endpoint, TextUnit unit, int count, out int moved);
+		[PreserveSig] int MoveEndpointByRange(TextPatternRangeEndpoint srcEndPoint, IUIAutomationTextRange range, TextPatternRangeEndpoint targetEndPoint);
+		[PreserveSig] int Select();
+		[PreserveSig] int AddToSelection();
+		[PreserveSig] int RemoveFromSelection();
+		[PreserveSig] int ScrollIntoView([MarshalAs(UnmanagedType.Bool)] bool alignToTop);
+		[PreserveSig] int GetChildren(out IUIAutomationElementArray children);
+	}
+	
+	[ComImport, Guid("506a921a-fcc9-409f-b23b-37eb74106872"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	internal interface IUIAutomationTextPattern2 : IUIAutomationTextPattern {
+		// IUIAutomationTextPattern
+		[PreserveSig] new int RangeFromPoint(POINT pt, out IUIAutomationTextRange range);
+		[PreserveSig] new int RangeFromChild(IUIAutomationElement child, out IUIAutomationTextRange range);
+		[PreserveSig] new int GetSelection(out IUIAutomationTextRangeArray ranges);
+		[PreserveSig] new int GetVisibleRanges(out IUIAutomationTextRangeArray ranges);
+		[PreserveSig] new int get_DocumentRange(out IUIAutomationTextRange range);
+		[PreserveSig] new int get_SupportedTextSelection(out SupportedTextSelection supportedTextSelection);
+		// IUIAutomationTextPattern2
+		[PreserveSig] int RangeFromAnnotation(IUIAutomationElement annotation, out IUIAutomationTextRange range);
+		[PreserveSig] int GetCaretRange([MarshalAs(UnmanagedType.Bool)] out bool isActive, out IUIAutomationTextRange range);
+	}
+	
+	public enum TextUnit {
+		TextUnit_Character,
+		TextUnit_Format,
+		TextUnit_Word,
+		TextUnit_Line,
+		TextUnit_Paragraph,
+		TextUnit_Page,
+		TextUnit_Document
+	}
+	
+	public enum TextPatternRangeEndpoint {
+		TextPatternRangeEndpoint_Start,
+		TextPatternRangeEndpoint_End
 	}
 }

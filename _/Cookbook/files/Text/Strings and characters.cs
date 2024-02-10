@@ -1,6 +1,6 @@
-/// <google Strings (C# Programming Guide)>Strings</google> contain text. In code the text is enclosed in "". It is a sequence of characters.
+/// <google Strings (C# Programming Guide)>Strings<> contain text. In code the text is enclosed in "". It is a sequence of characters.
 ///
-/// Create variable <i>s</i> of type <.k>string<>, and assign a string. Then get the third character.
+/// Create variable <i>s<> of type <.k>string<>, and assign a string. Then get the third character.
 
 string s = "Abc, 12";
 char c1 = s[2]; //character c

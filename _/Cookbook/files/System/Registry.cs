@@ -1,4 +1,4 @@
-/// Use class <google C# class Registry>Registry</google>.
+/// Use class <google C# class Registry>Registry<>.
 /// See also <+recipe>saving variables<>.
 /// 
 /// Set a string value.
@@ -11,12 +11,12 @@ if (Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au\Test", "A", null) is strin
 	print.it(s1);
 }
 
-/// Set an int (DWORD) value.
+/// Set a <_>DWORD</_> value.
 
 int i1 = 100;
 Registry.SetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au\Test", "B", i1);
 
-/// Get an int (DWORD) value if exists.
+/// Get a <_>DWORD</_> value if exists.
 
 if (Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au\Test", "B", null) is int i2) {
 	print.it(i2);

@@ -442,7 +442,7 @@ class CiGoTo {
 		if (sym != null) {
 			if (sym is IParameterSymbol or ITypeParameterSymbol && !sym.IsInSource()) return;
 			if (_GetFoldersPath(token, out var fp, false)) {
-				run.it(fp);
+				run.itSafe(fp);
 			} else {
 				var g = new CiGoTo(sym);
 				if (g.CanGoTo) g.GoTo();

@@ -21,7 +21,7 @@ int Add(int a, int b) {
 
 if(keys.isShift) return;
 
-/// To exit the script from anywhere, can be used <google C# Environment.Exit>Environment.Exit<> or <see cref="script.end"/>. However it isn't a normal exit; for example <.k>finally<> blocks will not be executed. Consider to throw an exception instead.
+/// To exit the script from anywhere, can be used <see cref="Environment.Exit"/> or <see cref="script.end"/>. However it isn't a normal exit; for example <.k>finally<> blocks will not be executed. Consider to throw an exception instead.
 
 Func2();
 

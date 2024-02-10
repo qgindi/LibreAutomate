@@ -1,6 +1,6 @@
 /// There are two ways to automate pages in web browser (click links, fill web forms, extract data, etc):
 /// - UI element functions (<see cref="elm"/>). See recipe <+recipe>Web automation<>.
-/// - <google>Selenium WebDriver</google>. It has more features, for example wait for web page loaded, extract text, execute JavaScript. It can be faster and more reliable. But not so easy to use.
+/// - <google>Selenium WebDriver<>. It has more features, for example wait for web page loaded, extract text, execute JavaScript. It can be faster and more reliable. But not so easy to use.
 /// 
 /// At first install NuGet packages <+nuget>Selenium.Support<> and <+nuget>Selenium.WebDriver.ChromeDriver<>. Update them for each new Chrome version.
 

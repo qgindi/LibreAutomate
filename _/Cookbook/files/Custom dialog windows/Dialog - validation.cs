@@ -1,4 +1,4 @@
-/// Use <see cref="wpfBuilder.Validation"/> to prevent closing the dialog with the OK button if some control values are invalid.
+/// Use <see cref="wpfBuilder.Validation"/> to prevent closing the dialog with the <b>OK<> button if some control values are invalid.
 
 using System.Windows;
 using System.Windows.Controls;

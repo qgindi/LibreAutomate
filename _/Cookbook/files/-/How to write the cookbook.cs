@@ -11,7 +11,7 @@ Other code is rendered as code examples. Including //comments.
 Below is an example script.
 */
 
-/// A quick brown <b>fox</b> jumped over the lazy <google>dog<>.
+/// A quick brown <b>fox<> jumped over the lazy <google>dog<>.
 /// See also <see cref="print.it"/> and <see cref="Console.Write"/>.
 print.it("text");
 

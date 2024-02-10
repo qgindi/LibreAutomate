@@ -1,6 +1,6 @@
 /// Note: callback functions and events are widely used. Without this knowledge you can't write or read many scripts and other codes.
 /// 
-/// The second argument in the first example is a callback function, also known as <google C# lambda>lambda<>. It is passed to <b>Func1</b>, and then <b>Func1</b> calls it.
+/// The second argument in the first example is a callback function, also known as <google C# lambda>lambda<>. It is passed to <b>Func1<>, and then <b>Func1<> calls it.
 
 Func1(5, i => { print.it(i); });
 Func1(5, i => print.it(i)); //the same. Don't need { } if there is single statement.
@@ -43,9 +43,9 @@ void Func5(Func<int, bool> a) {
 
 /// The above examples use generic function types <see cref="Action{T}"/> and <see cref="Func{T, TResult}"/>. Function types can be defined with the <.k>delegate<> keyword.
 ///
-/// In the above examples we pass lambdas etc as function parameters. Actually we pass <i>delegates</i> - auto-created objects that can call the function.
+/// In the above examples we pass lambdas etc as function parameters. Actually we pass <i>delegates<> - auto-created objects that can call the function.
 ///
-/// Another way is <i>events</i>. An event can have multiple subscribed functions. When raised, it calls all them. Subscribe with operator +=. Unsubscribe (if need) with operator -=. <google C# event>More info<>.
+/// Another way is <i>events<>. An event can have multiple subscribed functions. When raised, it calls all them. Subscribe with operator +=. Unsubscribe (if need) with operator -=. <google C# event>More info<>.
 
 var c = new Class1();
 c.Event1 += i => print.it("event handler lambda", i);

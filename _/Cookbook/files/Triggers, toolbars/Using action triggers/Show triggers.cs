@@ -1,4 +1,4 @@
-/// You can paste this code in file "Hotkey triggers". It contains several triggers and function <b>_ShowTriggers</b> that shows them in a dialog box when you press Alt+?.
+/// You can paste this code in file <.c>Hotkey triggers<>. It contains several triggers and function <b>_ShowTriggers<> that shows them in a dialog box when you press <mono>Alt+?<>.
 
 #region Alt
 		hk["Alt+<"] = o => { keys.sendt("&lt;"); };

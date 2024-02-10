@@ -1,7 +1,7 @@
-/// To create code to OCR-extract window text and find/click a word, use tool "Find OCR text"; it's in the Code menu.
+/// To create code to OCR-extract window text and find/click a word, use this tool: menu <b>Code > Find OCR text<>.
 /// Usually OCR is the slowest way to find and click an UI element. And OCR results often are not accurate. Use it only if other ways don't work (keyboard, mouse, window controls, UI elements, UI image).
 
-/// Find and click word "Downloads" in the left side of a folder window.
+/// Find and click word <i>Downloads<> in the left side of a folder window.
 
 var w = wnd.find(1, null, "CabinetWClass");
 var c = w.Child(1, cn: "SysTreeView32"); // "Navigation Pane"

@@ -12,7 +12,7 @@ class Class1 {
 	}
 }
 
-/// Also in a script project you can split the <+recipe>script class<> into multiple files: one script and several <google C# partial class>partial class</google> files. To add a partial class file: menu File -> New -> More -> Partial.cs.
+/// Also in a script project you can split the <+recipe>script class<> into multiple files: one script and several <google C# partial class>partial class<> files.
 
 /// Script example (note the <.k>partial<>):
 

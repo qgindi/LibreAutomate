@@ -88,6 +88,7 @@ class XPublish {
 		_Add(xpg, "EnableDefaultItems", "false"); //https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props-desktop#wpf-default-includes-and-excludes
 		_Add(xpg, "CopyLocalLockFileAssemblies", "true");
 		_Add(xpg, "ProduceReferenceAssembly", "false");
+		_Add(xpg, "GenerateAssemblyInfo", "false");
 		_Add(xpg, "PublishReferencesDocumentationFiles", "false");
 		_Add(xpg, "DebugType", "embedded");
 		_Add(xpg, "CopyDebugSymbolFilesFromPackages", "false");

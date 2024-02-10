@@ -9,9 +9,9 @@ b.Capacity = 10000; //call function (property-set) Capacity which is defined in 
 int x = 5; //this statement does not call functions
 
 /// There are several kinds of functions.
-/// - method. Can have parameters and return a value. Always called with (), even if does not have parameters.
-/// - property. Called without (), like accessing a field variable. Actually a property consists of 1 or 2 functions: get and/or set.
-/// - indexer. Called with [], like accessing an array element. Does not have a name. Actually an indexer consists of 1 or 2 functions: get and/or set.
+/// - method. Can have parameters and return a value. Always called with <.c>()<>, even if does not have parameters.
+/// - property. Called without <.c>()<>, like a field. Actually a property consists of 1 or 2 functions: get and/or set.
+/// - indexer. Called with <.c>[]<>, like accessing an array element. Does not have a name. Actually an indexer consists of 1 or 2 functions: get and/or set.
 /// - constructor. Called with operator <.k>new<> to initialize new object. Its name is the type name.
 /// - finalizer. Can't be called directly.
 /// - local function. Like method, but defined inside a function or directly in script (most others are defined in classes and structs) and can use local variables of that function/script.
@@ -151,4 +151,4 @@ public static class ExtensionMethods {
 	}
 }
 
-/// Generic methods have names like <b><_>Name<T></_></b>. When using the method, replace <b>T</b> with a type name, like <mono>Name<string></mono>.
+/// Generic methods have names like <b><_>Name<T></_><>. When using the method, replace <b>T<> with a type name, like <b><_>Name<string></_><>.

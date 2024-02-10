@@ -21,4 +21,4 @@ using (var fw = new FileSystemWatcher(dir)) {
 	print.it(text);
 }
 
-/// Note: calling <b>WaitForChanged</b> in a loop to detect multiple changes is unreliable. Instead use events. See <+recipe>File change triggers<>.
+/// Note: calling <b>WaitForChanged<> in a loop to detect multiple changes is unreliable. Instead use events. See <+recipe>File change triggers<>.

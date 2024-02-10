@@ -1,4 +1,4 @@
-/// Examples of expressions with <google C# operators>operators</google>. An expression is anything that produces a value.
+/// Examples of expressions with <google C# operators>operators<>. An expression is anything that produces a value.
 
 int x = 10;
 x = x + 1; //11

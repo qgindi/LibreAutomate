@@ -1,4 +1,4 @@
-/// A process is a running program. It can have visible windows or not. Also known as <i>task</i>. Use class <see cref="process"/>.
+/// A process is a running program. It can have visible windows or not. Also known as <i>task<>. Use class <see cref="process"/>.
 
 /// Print names of all processes of this user session.
 
@@ -8,7 +8,7 @@ foreach (var v in a) {
 	print.it(v.Name);
 }
 
-/// Terminate, suspend and resume all "notepad.exe" processes (end tasks).
+/// Terminate, suspend and resume all <_>Notepad</_> processes (end tasks).
 
 process.terminate("notepad.exe");
 process.suspend(true, "notepad.exe");
@@ -20,11 +20,11 @@ if (!process.exists("notepad.exe")) {
 	print.it("does not exist");
 }
 
-/// Wait for a "notepad.exe" process. See also <+recipe>Process triggers<>.
+/// Wait for a <_>Notepad</_> process. See also <+recipe>Process triggers<>.
 
 wait.forCondition(0, () => process.exists("notepad.exe"));
 
-/// Wait until there are no "notepad.exe" processes.
+/// Wait until there are no <_>Notepad</_> processes.
 
 wait.forCondition(0, () => !process.exists("notepad.exe"));
 
@@ -47,4 +47,4 @@ print.it(process.thisExeName, process.thisExePath);
 
 print.it(script.name);
 
-/// When need to get more process properties, use class <google C# class Process>Process</google> or <+recipe>WMI<>.
+/// When need to get more process properties, use <see cref="Process"/> or <+recipe>WMI<>.

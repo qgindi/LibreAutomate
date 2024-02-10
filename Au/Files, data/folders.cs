@@ -327,7 +327,7 @@ namespace Au {
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
+		/// Default path depends on script role (<see cref="script.role"/>) and portable mode (<see cref="ScriptEditor.IsPortable"/>):
 		/// - miniProgram and exeProgram - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
 		/// - editorExtension - <c>folders.Documents + "LibreAutomate"</c>. Cannot be changed.
 		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: exeProgram launched not from editor isn't portable.

@@ -77,7 +77,11 @@ class PanelRecipe {
 			}
 			var s = code[start..end];
 			if (!ml) s = s.RxReplace(@"(?m)^/// ?", "");
-			s = s.RxReplace(@"<see cref=['""](.+?)['""]/>", static m => { var v = m[1].Value; return $"<+see '{v}'>{v.Replace('{', '<').Replace('}', '>')}<>"; });
+			s = s.RxReplace(@"<see cref=['""](.+?)['""]/>", static m => {
+				var v = m[1].Value;
+				var t = v; if (t.Contains('{')) t = "<_>" + t.Replace('{', '<').Replace('}', '>') + "</_>";
+				return $"<+see '{v}'>{t}<>";
+			});
 			//print.it("TEXT"); print.it(s);
 			r.Add((true, s));
 		}
@@ -95,22 +99,57 @@ class PanelRecipe {
 		}
 	}
 	
+	public class OpeningRecipeArgs {
+		/// <summary>
+		/// Recipe name.
+		/// </summary>
+		public string name;
+		
+		/// <summary>
+		/// Recipe text, split into text and code parts.
+		/// Text parts contain output tags. Standard tags are documented in LA help. Custom tag examples: <see href="https://github.com/qgindi/LibreAutomate/tree/master/_/Cookbook/files"/>
+		/// When translating text, don't change tags. For example, at first find and save tags, replace them with unique indexed untranslatable strings, and finally replace these strings with the saved tags.
+		/// </summary>
+		public List<(bool isText, string s)> parts;
+	}
+	
+	/// <summary>
+	/// Editor extensions can use this to modify cookbook recipe text, for example translate to another language.
+	/// The callback function is called when opening a recipe in this panel. It receives recipe name and text, and can change them.
+	/// </summary>
+	public Action<OpeningRecipeArgs> OpeningRecipe { get; set; }
+	
 	void _SetText(string name, string code) {
 		_currentRecipeName = name;
 		_c.aaaClearText();
+		
+		var parts = ParseRecipe(code, out _usings);
+		
+		if (OpeningRecipe != null) {
+			var k = new OpeningRecipeArgs() { name = name, parts = parts };
+			try {
+				OpeningRecipe(k);
+				name = k.name;
+				parts = k.parts;
+			}
+			catch (Exception e1) { print.it(e1); }
+		}
+		
 		if (!name.NE() && !code.Starts("/// <lc")) _c.AaTags.AddText($"<lc YellowGreen><b>{name}</b><>\r\n\r\n", false, false, false);
 		
 		var ac = new List<(string code, int offset8, int len8)>();
-		foreach (var (isText, s) in ParseRecipe(code, out _usings)) {
+		int ipart = -1;
+		foreach (var (isText, s) in parts) {
+			ipart++;
 			if (isText) {
-				_c.AaTags.AddText(s, true, false, false);
+				_c.AaTags.AddText((ipart == 0 ? null : "\r\n") + s, true, false, false);
 			} else {
 				int n1 = _c.aaaLineCount, offset8 = _c.aaaLen8 + 2;
-				var s8 = Encoding.UTF8.GetBytes("\r\n" + s + "\r\n\r\n");
+				var s8 = Encoding.UTF8.GetBytes("\r\n" + s + "\r\n");
 				_c.aaaAppendText8(s8, scroll: false);
-				int n2 = _c.aaaLineCount - 2;
+				int n2 = _c.aaaLineCount - 1;
 				for (int i = n1; i < n2; i++) _c.Call(SCI_MARKERADD, i, 0);
-				ac.Add((s, offset8, s8.Length - 6));
+				ac.Add((s, offset8, s8.Length - 4));
 			}
 		}
 		
@@ -178,7 +217,8 @@ class PanelRecipe {
 			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 			AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
 			AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
-			AaTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0x0000FF, bold = true }); //keyword
+			AaTags.AddStyleTag(".k", new() { textColor = 0x0000FF, bold = true }); //keyword
+			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
 			
 #if DEBUG
 			_panel._AutoRenderCurrentRecipeScript();

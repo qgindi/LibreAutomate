@@ -32,4 +32,4 @@ print.it(Guid.NewGuid().ToString());
 
 print.it(Convert.ToBase64String(Guid.NewGuid().ToByteArray()));
 
-/// If need random strings of other formats (eg certain set of characters), look on the internet, for example in <google>NuGet</google>.
+/// If need random strings of other formats (eg certain set of characters), look on the internet, for example in <google>NuGet<>.

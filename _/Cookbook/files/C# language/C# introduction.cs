@@ -1,8 +1,8 @@
-/// The <link https://learn.microsoft.com/en-us/dotnet/csharp/>C# programming language<> is used to create scripts in this program. It is one of the <google programming language popularity>most popular<> languages.
+/// <link https://learn.microsoft.com/en-us/dotnet/csharp/>C#<> is used to create script code in this program. It is one of the <google programming language popularity>most popular<> programming languages.
 /// 
-/// Don't need to learn C# to start creating automation scripts. Use the input recorder and other tools in the Code menu. But with some C# knowledge you can do much more.
+/// You don't need to learn C# to start creating automation scripts. Use the input recorder and other tools in the <b>Code<> menu. But with some C# knowledge you can do much more.
 /// 
-/// This script displays string "example" in the program's Output panel. It calls function <b>it</b> of class <b>print</b>.
+/// This script displays string <.c>"example"<> in the program's <b>Output<> panel. It calls function <b>it<> of class <b>print<>.
 
 print.it("example");
 
@@ -37,12 +37,12 @@ void Example(string s, int i) {
 }
 
 /// In the above examples you also can see:
-/// - The blue words are <google>C# keywords</google>.
-/// - Other words are <google C# identifiers>identifiers</google> (names of types, functions, variables, etc).
+/// - The blue words are <google>C# keywords<>.
+/// - Other words are <google C# identifiers>identifiers<> (names of types, functions, variables, etc).
 /// - Keywords and identifiers are case-sensitive.
-/// - Every statement ends with a semicolon (;). Unless it starts a block of code enclosed in { }.
-/// - Function arguments are enclosed in ( ) and separated with comma (,).
-/// - Blocks of related code are enclosed in {  }.
+/// - Every statement ends with <.c>;<> (semicolon). Unless it starts a block of code enclosed in <.c>{ }<>.
+/// - Function arguments are enclosed in <.c>( )<> and separated with <.c>,<> (comma).
+/// - Blocks of code are enclosed in <.c>{ }<>.
 /// 
 /// C# does not care about the type and amount of whitespace (spaces, tabs, newlines) between statements, arguments, etc. Example:
 

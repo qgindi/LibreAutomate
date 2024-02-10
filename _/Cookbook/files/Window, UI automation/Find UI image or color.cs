@@ -1,4 +1,4 @@
-/// To create code to find and click an image or color in a window, use tool "Find image"; it's in the Code menu.
+/// To create code to find and click an image or color in a window, use this tool: menu <b>Code > Find image<>.
 
 var w1 = wnd.find(1, "Character Map", "#32770");
 var c1 = w1.Child(1, id: 108); // CharGridWClass

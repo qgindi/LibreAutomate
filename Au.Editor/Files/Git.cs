@@ -625,7 +625,7 @@ This tool modifies only the .git folder, not workspace files.
 		if (t_autoBackup) gp = _GP.Silent;
 		bool silent = gp == _GP.Silent;
 		if (!silent) print.it($"<><c #4040FF>git {s}<>");
-		using var c = new consoleProcess(_gitExe, s, _dir) { Encoding = Encoding.UTF8 };
+		using var c = new consoleProcess(_gitExe, s, _dir);
 		if (stdin != null) c.Write(stdin);
 		
 		bool slow = !silent && 0 != s.Starts(false, "clone", "add", "commit", "push", "fetch", "gc", "ls-remote");

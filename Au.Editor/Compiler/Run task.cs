@@ -468,7 +468,7 @@ class RunningTasks {
 				switch (IL) {
 				case UacIL.Medium:
 				case UacIL.UIAccess:
-					if (r.uac == MCUac.admin) uac = _SpUac.admin;
+					if (r.uac == MCUac.admin) uac = _SpUac.elevate;
 					break;
 				case UacIL.High:
 					if (r.uac == MCUac.user) uac = _SpUac.userFromAdmin;
@@ -487,53 +487,59 @@ class RunningTasks {
 			}
 		}
 		
+		bool exeProgram = r.notInCache, usePreloaded = false, debugger = debugAttach != null;
+		_Preloaded pre = null;
 		string exeFile, argsString;
-		_Preloaded pre = null; byte[] taskParams = null;
-		bool debugger = debugAttach != null;
 		
 		//rejected: 32-bit miniProgram. The task exe has been removed because of AV false positives. And rarely used. Can use exeProgram instead.
 		//	osVersion.is32BitOS - editor does not run on 32-bit OS. And never will.
 		//bool bit32 = r.bit32 || osVersion.is32BitOS;
 		
-		if (r.notInCache) { //meta role exeProgram
+		if (exeProgram) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, r.bit32);
 			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
 			if (debugger) {
-				if (uac == _SpUac.admin) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
-				pre = new _Preloaded(100);
+				if (uac == _SpUac.elevate) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
 				//Don't use preloaded. It would load some assemblies before 'attach debugger' and then debugger cannot disable JIT optimizations.
-				//This temporary _Preloaded is used just to create pipe with unique name and reuse regular launch code.
-			} else {
+			} else if (usePreloaded = r.flags.Has(MiniProgram_.MPFlags.Preloaded) && uac != _SpUac.elevate) {
 				//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
 				pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
 			}
+			pre ??= new _Preloaded(100); //temporary, just to create pipe with unique name and reuse preloaded launch code
 			
 			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
 			argsString = pre.pipeName;
-			
-			var f1 = r.flags;
-			if (runFromEditor) f1 |= MiniProgram_.MPFlags.FromEditor;
-			if (App.IsPortable) f1 |= MiniProgram_.MPFlags.IsPortable;
-			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, (int)f.Id, process.thisProcessId, (int)CommandLine.MsgWnd);
-			wrPipeName = null;
 		}
 		
-		int pid; WaitHandle hProcess = null; bool disconnectPipe = false;
+		int pid = 0; WaitHandle hProcess = null; bool disconnectPipe = false;
 		try {
-			var pp = pre?.hProcess;
-			if (pp != null && Api.WAIT_TIMEOUT == Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
-				hProcess = pp; pid = pre.pid;
-				pre.hProcess = null; pre.pid = 0;
-			} else {
-				if (pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
+			bool preloadedProcessExists = false;
+			if (usePreloaded) {
+				var pp = pre.hProcess;
+				preloadedProcessExists = pp != null && Api.WAIT_TIMEOUT == Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0);
+				if (preloadedProcessExists) {
+					hProcess = pp; pid = pre.pid;
+					pre.hProcess = null; pre.pid = 0;
+				} else if (pp != null) { //preloaded process existed but somehow ended
+					pp.Dispose();
+					pre.hProcess = null; pre.pid = 0;
+				}
+			}
+			if (!preloadedProcessExists) {
 				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, f.Id, debugAttach);
 				if (pid == 0) return 0; //failed to start debugging
 			}
 			Api.AllowSetForegroundWindow(pid);
 			
-			if (pre != null) {
+			if (!exeProgram) {
+				var f1 = r.flags;
+				if (runFromEditor) f1 |= MiniProgram_.MPFlags.FromEditor;
+				if (App.IsPortable) f1 |= MiniProgram_.MPFlags.IsPortable;
+				if (!preloadedProcessExists) f1 &= ~MiniProgram_.MPFlags.Preloaded;
+				byte[] taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, (int)f.Id, process.thisProcessId, (int)CommandLine.MsgWnd);
+				
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if (!Api.ConnectNamedPipe(pre.hPipe, &o)) {
 					int e = lastError.code;
@@ -547,11 +553,12 @@ class RunningTasks {
 						if (!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
 					}
 				}
+				
 				if (!Api.WriteFile2(pre.hPipe, taskParams, out _)) throw new AuException(0);
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
 				
 				//start preloaded process for next task. Let it wait for pipe connection.
-				if (!debugger && uac != _SpUac.admin) { //we don't want second UAC consent
+				if (usePreloaded) {
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, 0, null); }
 					catch (Exception ex) { Debug_.Print(ex); }
 				}
@@ -564,7 +571,7 @@ class RunningTasks {
 			return 0;
 		}
 		finally {
-			if (debugger) pre?.Dispose();
+			if (!usePreloaded) pre?.Dispose();
 		}
 		
 		var rt = new RunningTask(f, hProcess, pid);
@@ -602,7 +609,7 @@ class RunningTasks {
 	/// </summary>
 	enum _SpUac {
 		normal, //start process of same IL as this process, but without uiAccess. It is how CreateProcess API works.
-		admin, //start admin process from this user or uiAccess process
+		elevate, //start admin process from this user or uiAccess process
 		userFromAdmin, //start user process from this admin process
 		uiAccess, //start uiAccess process from this uiAccess process
 	}
@@ -643,7 +650,7 @@ class RunningTasks {
 			p->workspace = folders.Workspace;
 		} else cwd = folders.ThisApp;
 		
-		if (uac == _SpUac.admin) {
+		if (uac == _SpUac.elevate) {
 			var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
 			r = (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.

@@ -40,7 +40,7 @@ enum MyFlags {
 
 enum Small : byte { One, Two, Three } //byte-sized enum
 
-/// Examples of how to use enums.
+/// Examples of how to use enum types.
 
 MyColors colors = MyColors.Green;
 if (colors == MyColors.Green) print.it("Green");

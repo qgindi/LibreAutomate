@@ -36,4 +36,4 @@ void _CheckedUnchecked(object o, RoutedEventArgs e) {
 
 if (!b.ShowDialog()) return;
 
-/// Another way - use a <+recipe Dialog - *class>dialog class<> and override <b>OnX</b> functions.
+/// Another way - use a <+recipe Dialog - *class>dialog class<> and override <b>OnX<> functions.

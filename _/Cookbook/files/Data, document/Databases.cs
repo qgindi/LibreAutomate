@@ -1,4 +1,4 @@
-/// For SQL Server databases use NuGet package <+nuget>Microsoft.Data.SqlClient<>. For other databases look for other <google>NuGet</google> packages. Look for more info+examples on the internet.
+/// For SQL Server databases use NuGet package <+nuget>Microsoft.Data.SqlClient<>. For other databases look for other <google>NuGet<> packages. Look for more info+examples on the internet.
 
 /*/ nuget -\Microsoft.Data.SqlClient; /*/
 using Microsoft.Data.SqlClient;

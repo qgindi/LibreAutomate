@@ -1,4 +1,4 @@
-/// If need to compress/decompress data without creating files, use class <see cref="Convert2"/>. The <b>DeflateX</b> functions use zip compression; the <b>BrotliX</b> functions compress better.
+/// If need to compress/decompress data without creating files, use class <see cref="Convert2"/>. The <b>DeflateX<> functions use zip compression; the <b>BrotliX<> functions compress better.
 
 byte[] b = new byte[10000]; for (int i = 0; i < b.Length; i++) b[i] = (byte)i;
 byte[] b2 = Convert2.DeflateCompress(b);

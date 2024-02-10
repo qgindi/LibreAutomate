@@ -19,7 +19,7 @@ for (int i = 0; i < 1000; i++) { var v = Environment.GetEnvironmentVariable("TEM
 perf.next();
 perf.write();
 
-/// Or use a local <b>perf</b> variable.
+/// Or use a local <b>perf<> variable.
 
 MyFunction();
 void MyFunction() {

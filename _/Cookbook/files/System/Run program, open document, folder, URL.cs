@@ -1,4 +1,4 @@
-/// The most universal function is <see cref="run.it"/>. To quickly insert code can be used riRunItSnippet. Or drag and drom from File Explorer. Or hotkey Ctrl+Shift+Q.
+/// The most universal function is <see cref="run.it"/>. To quickly insert code can be used <b>riRunItSnippet<>. Or drag and drop from File Explorer. Or hotkey <mono>Ctrl+Shift+Q<>.
 
 run.it(@"C:\folder\program.exe"); //run program
 run.it(@"C:\folder\file.txt"); //open file in default program
@@ -59,13 +59,13 @@ int ec = run.it("notepad.exe", flags: RFlags.WaitForExit).ProcessExitCode;
 
 run.itSafe(@"C:\folder\program.exe");
 
-/// Run Notepad and wait for an active Notepad window.
+/// Run <_>Notepad</_> and wait for an active <_>Notepad</_> window.
 
 run.it("notepad.exe");
 wnd w1 = wnd.wait(10, true, "*- Notepad", "Notepad");
 print.it(w1);
 
-/// Run Notepad or activate a Notepad window.
+/// Run <_>Notepad</_> or activate a <_>Notepad</_> window.
 
 wnd w2 = wnd.findOrRun("*- Notepad", run: () => run.it("notepad.exe"));
 print.it(w2);
