@@ -1,5 +1,5 @@
-/// Use <see cref="filesystem"/> functions <help filesystem.enumerate>enumerate<>, <help filesystem.enumerate>enumFiles<>, <help filesystem.enumerate>enumDirectories<>.
-/// Tool: menu Code -> Get files in folder.
+/// Use <see cref="filesystem"/> functions <see cref="filesystem.enumerate"/>, <see cref="filesystem.enumFiles"/>, <see cref="filesystem.enumDirectories"/>.
+/// Tool: menu <b>Code > Get files in folder<>.
 
 var dirPath = @"C:\Test";
 

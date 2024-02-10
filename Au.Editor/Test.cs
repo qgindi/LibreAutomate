@@ -56,6 +56,13 @@ static unsafe class Test {
 		//}
 
 		//Cpp.Cpp_Test();
+		
+		//print.it("");
+		//int i=9;
+		//print.it($"{i}");
+		//print.it((object)"");
+		//print.it("", "");
+		//print.it([1,2]);
 	}
 
 	public static void MonitorGC() {

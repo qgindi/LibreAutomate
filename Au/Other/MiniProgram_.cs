@@ -1,13 +1,33 @@
-
-using System.Runtime.Loader;
-
 //PROBLEM: slow startup.
-//A minimal script starts in 70-100 ms cold, 40 hot (old PC, tested long time ago). On new PC exeProgram starts in 47/37.
+//A minimal script starts in 70-100 ms cold, 40 hot (old PC, tested long time ago). Now on new PC starts in 37 ms.
 //Workaround for role miniProgram:
 //	Preload task process. Let it wait for next task. While waiting, it also can JIT etc.
-//	Then starts in 12/4 ms (cold/hot). With script.setup 15/5. That was an old test, now should be slower. On new PC 10/7 and 13/9.
+//	Then starts in 12/4 ms (cold/hot). With script.setup 15/5. That was an old test, now should be slower. Now on new PC 10/6 and 12/8.
 //	Except first time. Also not faster if several scripts are started without a delay. Never mind.
 //	This is implemented in this class and in Au.AppHost (just ~10 code lines added in 1 place).
+//Not using this workaround since v1.1, unless meta startFaster true (undocumented). Because:
+//	Sometimes something does not work well (see problems below).
+//	Since this was invented, .NET process startup became faster (faster JIT etc). Also computers faster. The delay now is barely noticeable.
+//FUTURE: if this workaround is sometimes useful, make meta startFaster public. Else remove the preloading code.
+
+//PROBLEM when preloaded: miniProgram windows start inactive, behind one or more windows. Unless they activate self, like dialog.
+//	It does not depend on the foreground lock setting/API. The setting/API just enable SetForegroundWindow, but most windows don't call it.
+//	Workaround: use CBT hook. It receives HCBT_ACTIVATE even when the window does not become the foreground window.
+//		On HCBT_ACTIVATE, async-call SetForegroundWindow. Also, editor calls AllowSetForegroundWindow before starting task.
+
+//PROBLEM when preloaded: when miniProgram starts a console program, occasionally its window is inactive, although on top of other windows.
+//	To reproduce: run miniProgram script: `run.it("cmd.exe", flags: RFlags.InheritAdmin)`. If starts active, wait at least 30 s and run again.
+//	Never noticed it on Windows 10, only on Windows 11.
+//	Workaround: after `run.it` wait a while, eg `1.s();`, because it happens only if this process exits immediately.
+
+//PROBLEM when preloaded: inherits old environment variables.
+
+//PROBLEM when preloaded: the preloaded processes may be confusing, even for me sometimes.
+
+//PROBLEM: although Main() starts fast, but the process ends slowly, because of .NET.
+//	Eg if starting an empty script every <50 ms, sometimes cannot start.
+
+//Smaller problem: .NET creates many threads. No workaround.
 
 /*
 //To test task startup speed, use script "task startup speed.cs":
@@ -26,27 +46,12 @@ for (int i = 0; i < 5; i++) {
 print.it(perf.ms-Int64.Parse(args[0]));
 */
 
-//Smaller problem: .NET creates many threads. No workaround.
-
-//PROBLEM: miniProgram windows start inactive, behind one or more windows. Unless they activate self, like dialog.
-//	It does not depend on the foreground lock setting/API. The setting/API just enable SetForegroundWindow, but most windows don't call it.
-//	Workaround: use CBT hook. It receives HCBT_ACTIVATE even when the window does not become the foreground window.
-//		On HCBT_ACTIVATE, async-call SetForegroundWindow. Also, editor calls AllowSetForegroundWindow before starting task.
-
-//PROBLEM: when miniProgram starts a console program, occasionally its window is inactive, although on top of other windows.
-//	To reproduce: run miniProgram script: `run.it("cmd.exe", flags: RFlags.InheritAdmin)`. If starts active, wait at least 30 s and run again.
-//	Never noticed it on Windows 10, only on Windows 11.
-//	Workaround: after `run.it` wait a while, eg `1.s();`, because it happens only if this process exits immediately.
-
-//PROBLEM: although Main() starts fast, but the process ends slowly, because of .NET.
-//	Eg if starting an empty script every <50 ms, sometimes cannot start.
-
-//CONSIDER: reject the preloading. Or make optional an non-default. On fast PC the delay isn't noticeable.
+using System.Runtime.Loader;
 
 namespace Au.More;
 
 /// <summary>
-/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
+/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process. Or starts/executes in this non-preloaded process.
 /// </summary>
 static unsafe class MiniProgram_ {
 	struct _TaskInit {
@@ -160,7 +165,7 @@ static unsafe class MiniProgram_ {
 		}
 
 		//p1.Next();
-		script.Starting_(a[0], a[7]);
+		script.Starting_(a[0], a[7], preloaded: 0 != (flags & MPFlags.Preloaded));
 
 		//Api.QueryPerformanceCounter(out s_started);
 		//print.TaskEvent_("TS", s_started);
@@ -309,6 +314,9 @@ static unsafe class MiniProgram_ {
 
 		/// <summary>Started from portable editor.</summary>
 		IsPortable = 64,
+		
+		/// <summary>Using a preloaded process.</summary>
+		Preloaded = 128,
 
 		//Config = 256, //meta hasConfig
 	}

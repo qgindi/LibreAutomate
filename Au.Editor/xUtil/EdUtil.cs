@@ -1,12 +1,14 @@
 using Microsoft.Win32;
 using System.Windows.Controls;
 using System.Windows;
+using System.Collections;
 
 /// <summary>
 /// Misc util functions.
 /// </summary>
 static class EdUtil {
 	
+	//public static object oTest;
 }
 
 /// <summary>
@@ -42,11 +44,11 @@ static class EdResources {
 /// </summary>
 static class EdDatabases {
 	public static sqlite OpenRef() => _Open("ref.db");
-
+	
 	public static sqlite OpenDoc() => _Open("doc.db");
-
+	
 	public static sqlite OpenWinapi() => _Open("winapi.db");
-
+	
 	static sqlite _Open(string name) {
 		var path = folders.ThisAppBS + name;
 		//if (App.IsAuHomePC) { //no. Instead exit editor before running DatabasesEtc project. And it does not lock winapi.db.
@@ -183,7 +185,7 @@ static class EdComUtil {
 						converted.Add(s);
 					}
 				}
-				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net4.exe", $"/typelib \"{dir}|{comDll}\"", encoding: Encoding.UTF8);
+				rr = run.console(_Callback, folders.ThisAppBS + "Au.Net4.exe", $"/typelib \"{dir}|{comDll}\"");
 			});
 		}
 		catch (Exception ex) { print.it("Failed to convert type library", ex.ToStringWithoutStack()); }
@@ -215,7 +217,7 @@ static class EdComUtil {
 //		_vars = vars.Select(o => o.name).ToArray();
 //		foreach (var v in vars) Environment.SetEnvironmentVariable(v.name, v.value);
 //	}
-	
+
 //	public void Dispose() {
 //		foreach (var v in _vars) Environment.SetEnvironmentVariable(v, null);
 //	}

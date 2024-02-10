@@ -1,4 +1,4 @@
-/// Class <see cref="EnumUI{T}"/> can be used to easily display enum members in a popup menu or WPF dialog as checkboxes or combo box. Classes <b>popupMenu</b> and <b>wpfBuilder</b> have function <b>AddEnum</b> that makes it even easier.
+/// Class <see cref="EnumUI{T}"/> can be used to easily display enum members in a popup menu or WPF dialog as checkboxes or combo box. Classes <b>popupMenu<> and <b>wpfBuilder<> have function <b>AddEnum<> that makes it even easier.
 
 using System.Windows;
 using System.Windows.Controls;

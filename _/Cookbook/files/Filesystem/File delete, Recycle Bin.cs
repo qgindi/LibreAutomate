@@ -5,13 +5,13 @@
 filesystem.delete(@"C:\Temp\file.txt"); //delete permanantly
 filesystem.delete(@"C:\Temp\file.txt", FDFlags.RecycleBin); //move to the Recycle Bin if possible, else delete permanently
 
-/// Delete everything from Temp folder, except locked files/folders.
+/// Delete everything from the Temp folder, except locked files/folders.
 
 foreach (var f in filesystem.enumerate(folders.Temp)) {
 	filesystem.delete(f.FullPath, FDFlags.CanFail);
 }
 
-/// Delete all .txt files from folder. Not from subfolders.
+/// Delete all <_>.txt</_> files from folder. Not from subfolders.
 
 foreach (var f in filesystem.enumFiles(@"C:\Temp", "*.txt"))
 	filesystem.delete(f.FullPath);

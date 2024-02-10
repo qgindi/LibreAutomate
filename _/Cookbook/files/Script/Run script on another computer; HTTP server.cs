@@ -1,4 +1,4 @@
-/// Assume you want to run some codes or scripts on computer named "SERVER" from computer named "CLIENT". The computers can be on local network or internet or it can be the same computer. CLIENT can be any device that can use the internet (PC, smartphone, etc).
+/// Assume you want to run some codes or scripts on computer named <_>SERVER</_> from computer named <_>CLIENT</_>. The computers can be on local network or internet or it can be the same computer. CLIENT can be any device that can use the internet (PC, smartphone, etc).
 /// 
 /// On SERVER computer run code like this. It can be a script or independent program.
 

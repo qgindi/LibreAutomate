@@ -87,8 +87,8 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.StartStack(vertical: true).Disabled();
 		b.AddButton("Add /*/", _ => _AddMeta()).Margin("B20").Tooltip(@"Use the package in current C# file. Adds /*/ nuget Package; /*/.");
-		b.AddButton("→ NuGet", _ => run.it("https://www.nuget.org/packages/" + _Selected.Name)).Tooltip("Open the package's NuGet webpage");
-		b.AddButton("→ Folder", _ => run.it(_FolderPath())).Margin("B20").Tooltip("Open the folder");
+		b.AddButton("→ NuGet", _ => run.itSafe("https://www.nuget.org/packages/" + _Selected.Name)).Tooltip("Open the package's NuGet webpage");
+		b.AddButton("→ Folder", _ => run.itSafe(_FolderPath())).Margin("B20").Tooltip("Open the folder");
 		b.AddButton("Update", _ => _Update()).Tooltip("Uninstall this version and install the newest version");
 		b.AddButton("Move to ▾", _ => _Move()).Tooltip("Uninstall from this folder and install in another folder");
 		b.AddButton("Uninstall", async _ => await _Uninstall(uninstalling: true)).Tooltip("Remove the package and its files from the folder");
@@ -525,7 +525,7 @@ A script can use packages from multiple folders if they are compatible.");
 	void _More() {
 		var m = new popupMenu();
 		m[".NET info"] = async o => { await _RunDotnet("--info"); };
-		m["Download .NET SDK"] = o => { run.it("https://dotnet.microsoft.com/en-us/download"); };
+		m["Download .NET SDK"] = o => { run.itSafe("https://dotnet.microsoft.com/en-us/download"); };
 		m["About missing files"] = o => print.it(
 			@"Some NuGet packages don't install all required files, for example used native dlls.
 	Often other files are in other NuGet packages. Then simply install them, and that's all.
@@ -536,8 +536,8 @@ A script can use packages from multiple folders if they are compatible.");
 		m.Separator();
 		m.Submenu("NuGet cache", m => {
 			m["Open packages folder"] = o => {
-				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list", encoding: Console.OutputEncoding) && !s.NE())
-					if (s.RxMatch(@"(?m)^global-packages: (.+)$", 1, out s)) run.it(s);
+				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list") && !s.NE())
+					if (s.RxMatch(@"(?m)^global-packages: (.+)$", 1, out s)) run.itSafe(s);
 					else print.it(s);
 			};
 			m["Clear all caches"] = async o => { await _RunDotnet("nuget locals all --clear"); };
@@ -559,7 +559,7 @@ A script can use packages from multiple folders if they are compatible.");
 					print.it(s);
 				};
 			}
-			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl, encoding: Console.OutputEncoding)); //FUTURE: it seems dotnet of .NET 8 supports UTF-8. Maybe need Environment.SetEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE", "utf-8"); or similar.
+			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl));
 		}
 		catch (Exception e1) { dialog.showError("Failed to run dotnet.exe", e1.ToStringWithoutStack(), owner: this); }
 		return false;

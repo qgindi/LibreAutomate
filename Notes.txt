@@ -27,7 +27,7 @@ May need to undefine TRACE in some C++ projects.
 	Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
 	Don't use TRACE in C# projects; it's defined by default in Debug and Release config.
 
-May need to delete test code. Or use #if TRACE, like in Tests.cs.
+May need to delete test code. Or use #if DEBUG, like in Tests.cs.
 	Review perf and print.
 
 May need to add new OS version to class osVersion. Usually once/year.

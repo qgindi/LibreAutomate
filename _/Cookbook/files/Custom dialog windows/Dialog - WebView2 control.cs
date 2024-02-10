@@ -1,4 +1,4 @@
-/// <google>WebView2</google> is a web browser control based on Microsoft Edge (Chromium). NuGet: <+nuget>Microsoft.Web.WebView2<>.
+/// <google>WebView2<> is a web browser control based on Microsoft Edge (Chromium). NuGet: <+nuget>Microsoft.Web.WebView2<>.
 
 /*/ nuget -\Microsoft.Web.WebView2; /*/
 

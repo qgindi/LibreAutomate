@@ -870,9 +870,9 @@ public static class script {
 	
 	#region aux thread
 	
-	internal static unsafe void Starting_(string name, int pidEditor) {
+	internal static unsafe void Starting_(string name, int pidEditor, bool preloaded = false) {
 		s_name = name;
-		s_auxThread = new(() => _AuxThread(pidEditor));
+		s_auxThread = new(() => _AuxThread(pidEditor, preloaded));
 		//using CreateThread because need thread handle ASAP
 	}
 	static NativeThread_ s_auxThread;
@@ -885,7 +885,7 @@ public static class script {
 		if (s_auxThread != null) return s_auxThread;
 		Debug.Assert(role != SRole.MiniProgram);
 		lock ("s_auxThread") {
-			return s_auxThread ??= new(() => _AuxThread(0));
+			return s_auxThread ??= new(() => _AuxThread(0, false));
 		}
 	}
 	
@@ -897,22 +897,22 @@ public static class script {
 	//	Cpp_InactiveWindowWorkaround for miniProgram.
 	//	Can be used for various triggers.
 	//	Etc.
-	static unsafe void _AuxThread(int pidEditor) {
+	static unsafe void _AuxThread(int pidEditor, bool preloaded) {
 		Thread.CurrentThread.Name = "Au.Aux";
 		WndUtil.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE, c_msg_IconImageCache_ClearAll);
 		WndUtil.RegisterWindowClass(c_auxWndClassName, _AuxWndProc);
 		s_auxWnd = WndUtil.CreateMessageOnlyWindow(c_auxWndClassName, Api.GetCurrentProcessId().ToS());
 		
-		_MessageLoop(pidEditor);
+		_MessageLoop(pidEditor, preloaded);
 		
 		[MethodImpl(MethodImplOptions.NoInlining)] //need fast JIT of the main func, to make s_auxWnd available ASAP
-		static void _MessageLoop(int pidEditor) {
+		static void _MessageLoop(int pidEditor, bool preloaded) {
 			//pidEditor 0 if exeProgram started not from editor
 			var hp = pidEditor == 0 ? default : (IntPtr)Handle_.OpenProcess(pidEditor, Api.SYNCHRONIZE);
 			
 			//Cpp.Cpp_UEF(true); //moved to AppModuleInit_
 			
-			if (role == SRole.MiniProgram) Cpp.Cpp_InactiveWindowWorkaround(true);
+			if (preloaded) Cpp.Cpp_InactiveWindowWorkaround(true);
 			
 			s_auxThread.ThreadInited();
 			
@@ -936,7 +936,7 @@ public static class script {
 	/// </summary>
 	internal const string c_auxWndClassName = "Au.Task.m3gVxcTJN02pDrHiQ00aSQ";
 	
-	static nint _AuxWndProc(wnd w, int message, nint wp, nint lp) {
+	static unsafe nint _AuxWndProc(wnd w, int message, nint wp, nint lp) {
 		switch (message) {
 		//case Api.WM_COPYDATA:
 		//	return 0;
@@ -955,6 +955,16 @@ public static class script {
 		case c_msg_IconImageCache_ClearAll:
 			IconImageCache.ClearAll_();
 			break;
+		case Api.WM_SETTEXT when wp != 0:
+			try {
+				string s = new((char*)lp);
+				if (wp == c_msg_wmsettext_UpdateEnvVar) { //sent from LA by EnvVarUpdater on WM_SETTINGCHANGE
+					var csv = csvTable.parse(s);
+					foreach (var a in csv.Rows) Environment.SetEnvironmentVariable(a[0], a[1]);
+				}
+			}
+			catch (Exception e1) { Debug_.Print(e1); }
+			return 0;
 		}
 		
 		var R = Api.DefWindowProc(w, message, wp, lp);
@@ -965,6 +975,7 @@ public static class script {
 	}
 	
 	internal const int c_msg_IconImageCache_ClearAll = Api.WM_USER + 5;
+	internal const int c_msg_wmsettext_UpdateEnvVar = -100;
 	
 	static void _AuxExit() {
 		Environment.Exit(1);

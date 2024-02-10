@@ -1,4 +1,4 @@
-/// Use NuGet package <+nuget>System.Management<>. See also <google>System.Management namespace</google>.
+/// Use NuGet package <+nuget>System.Management<>. See also <google>System.Management namespace<>.
 
 /*/ nuget -\System.Management; /*/
 using System.Management;

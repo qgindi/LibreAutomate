@@ -1,10 +1,10 @@
-/// The script Properties dialog contains only settings for compiling and launching the script. Run-time settings can be set in script code.
+/// The <b>Properties<> dialog contains only settings for compiling and launching the script. Run-time settings can be set in script code.
 ///
 /// Function <see cref="script.setup"/> can add <+recipe>tray icon<>, several ways to terminate the script process, and more.
 
 script.setup(trayIcon: true, sleepExit: true);
 
-/// The <c green>ifRunning<> option isn't applied if the .exe script is launched not from the editor. Then function <see cref="script.single"/> can be used to ensure single process instance.
+/// The <b>ifRunning<> option isn't applied if the <_>.exe</_> script is launched not from the editor. Then function <see cref="script.single"/> can be used to ensure single process instance.
 
 script.single("mutex7654329");
 

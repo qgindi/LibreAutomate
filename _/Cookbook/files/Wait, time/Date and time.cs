@@ -1,4 +1,4 @@
-/// For date-time use <google C# struct DateTime>DateTime</google>. For time interval use <google C# struct TimeSpan>TimeSpan<>.
+/// For date-time use <see cref="DateTime"/>. For time interval use <see cref="TimeSpan"/>.
 
 /// Get current date and time-of-day.
 
@@ -39,7 +39,7 @@ process.thisProcessCultureIsInvariant = false;
 print.it(d.ToString("yyyy-MM-dd HH:mm"));
 print.it($"Today is {d:yyyy-MM-dd}. Time {d:HH:mm}.");
 
-/// Convert string to DateTime.
+/// Convert string to <b>DateTime<>.
 
 var d3 = DateTime.Parse("2022-01-29");
 var d4 = DateTime.Parse("29.01.2022", new CultureInfo("de-DE"));

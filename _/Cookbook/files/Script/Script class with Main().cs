@@ -1,4 +1,4 @@
-/// The default script syntax is known as <google>C# top-level statements</google>. You can instead use the classic C# syntax with class Program and function Main. To insert code can be used menu Edit -> Document -> Add class Program.
+/// The default script syntax is known as <google>C# top-level statements<>. You can instead use the classic C# syntax with class <b>Program<> and function <b>Main<>. To insert code can be used menu <b>Edit > Document > Add class Program<>.
 
 class Program {
 	static void Main(string[] a) => new Program(a);
@@ -18,8 +18,8 @@ class Program {
 
 /// Why to use such code? Because the default syntax has some limitations. The classic syntax allows to:
 /// - Add fields (class-level variables) and class-level functions to the main class.
-/// - Add class/method-level modifiers and attributes, for example <.k>partial<>, <.k>unsafe<>, [MTAThread].
+/// - Add class/method-level modifiers and attributes, for example <.k>partial<>, <.k>unsafe<>, <.c>[MTAThread]<>.
 /// - Split the main class into partial files. See recipe <+recipe>Multi-file scripts<>.
-/// - Avoid <google>intellisense</google> failures that sometimes happen when typing code not in a { } block.
+/// - Avoid <google>intellisense<> failures that sometimes happen when typing code not in a { } block.
 
-/// You can remove code <mono>=> new Program(a); Program(string[] args)<>. It just makes writing code a bit easier, because then don't need to use static functions and static fields. It creates a class instance, and the script code is executed in the constructor.
+/// You can remove code <.c>=> new Program(a); Program(string[] args)<>. It just makes writing code a bit easier, because then don't need to use static functions and static fields. It creates a class instance, and the script code is executed in the constructor.

@@ -1,4 +1,4 @@
-/// The WPF <b>WebBrowser</b> control is based on Internet Explorer (IE).
+/// The WPF <b>WebBrowser<> control is based on Internet Explorer (IE).
 /// Note: Many websites don't support IE. Use the control to display web files that are tested and work well with IE.
 /// See also recipe <+recipe>WebView2<>.
 

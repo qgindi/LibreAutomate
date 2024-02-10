@@ -17,7 +17,7 @@ partial class PanelDebug {
 	bool _restart;
 	_Session _s;
 	static IntPtr s_event;
-	
+
 	record class _Session(int processId, bool attachMode) {
 		public FileNode file;
 		public int threadId;
@@ -33,13 +33,13 @@ partial class PanelDebug {
 		public List<int> startedThreads;
 		public Dictionary<string, string> modules = new();
 	}
-	
+
 	public PanelDebug() {
 		P.UiaSetName("Debug panel");
-		
+
 		var b = new wpfBuilder(P).Columns(-1).Brush(SystemColors.ControlBrush);
 		b.Options(margin: new());
-		
+
 		var tb = b.xAddToolBar(hideOverflow: true);
 		tb.UiaSetName("Debug_toolbar");
 		const string c_color = Menus.blue, c_color2 = Menus.green2, c_color3 = Menus.black;
@@ -72,34 +72,34 @@ partial class PanelDebug {
 #if DEBUG
 		_TbButton("*WeatherIcons.SnowWind #FF3300", _ => { _Test(); }, "Test");
 #endif
-		
+
 		Button _TbButton(string icon, Action<Button> click, string tooltip/*, bool overflow = false*/) {
 			var v = tb.AddButton(icon, click, tooltip);
 			//if (overflow) ToolBar.SetOverflowMode(v, OverflowMode.Always);
 			return v;
 		}
-		
+
 		b.Options(margin: new());
-		
+
 		using (_Header("Variables", false)) {
-			
+
 		}
 		_VariablesViewInit();
 		b.Row((-Math.Max(1, App.Settings.debug.hVar), 1..)).xAddInBorder(_tvVariables, thickness: new(0, 0, 0, 1));
-		
+
 		using (_Header("Call stack", true, 0, 16, -1)) {
 			b.Skip().Add(out _cbThreads).Tooltip("Threads.\nThe text is thread id and name (Thread.Name).");
 			_cbThreads.SelectionChanged += (_, _) => { if (_cbThreads.SelectedItem is ComboBoxItem k && k.Tag is _THREAD t) _SelectedThread(t); };
 		}
 		_StackViewInit();
 		b.Row((-Math.Max(1, App.Settings.debug.hStack), 1..)).Add(_tvStack);
-		
+
 		b.End();
 		_UpdateUI(_UU.Init);
-		
+
 		_ipanel = Panels.PanelManager["Debug"];
 		_ipanel.DontActivateFloating = e => true;
-		
+
 		UsingEndAction _Header(string text, bool splitter, params WBGridLength[] cols) {
 			b.Row(0);
 			if (splitter) {
@@ -112,17 +112,17 @@ partial class PanelDebug {
 			return new UsingEndAction(() => b.End());
 		}
 	}
-	
+
 	public UserControl P { get; } = new();
-	
+
 	public bool IsDebugging { get; private set; }
-	
+
 	public bool IsStopped { get; private set; }
-	
+
 	void _Start(FileNode restart = null, _RthData runToHere = null) {
 		var file = restart ?? App.Model.CurrentFile;
 		if (file == null || file.IsAlien) return;
-		
+
 		if (IsDebugging) {
 			_restart = true;
 			_s.file = file;
@@ -130,43 +130,45 @@ partial class PanelDebug {
 			_End();
 			return;
 		}
-		
+
 		if (s_event == 0) s_event = Api.CreateEvent2(0, false, false, "Au.event.Debugger");
 		else Api.ResetEvent(s_event);
-		
+
 		int processId = CompileRun.CompileAndRun(true, file, noDefer: true, runFromEditor: true, debugAttach: processId => _Attach(processId, false, file, runToHere));
 		if (processId <= 0) {
 			if (restart != null) _UpdateUI(_UU.Ended);
 		}
 	}
-	
+
 	void _Restart(_RthData runToHere = null) {
 		if (_s?.file is { } f) _Start(f, runToHere);
 	}
-	
+
 	bool _Attach(int processId, bool attachMode, FileNode file, _RthData runToHere = null) {
 		//#if DEBUG
 		//		print.clear(); print.qm2.clear();
 		//#endif
-		
+
 		_restart = false;
 		_s = new(processId, attachMode) { file = file };
 		_d = new _Debugger(_Events);
 		if (!_d.Init()) return _Failed();
 		IsDebugging = true;
-		
+
 		_SetOptions();
 		_SetExceptions(0);
 		_SetBreakpoints();
 		if (runToHere != null) _RunToHere(runToHere.file, runToHere.line, runToHere.nonstop);
-		
+
+		if (!attachMode) _TempDisableAuDebugging(true);
+
 		if (_d.SendSync(1, $"-target-attach {processId}") != "^done") {
 			_Print("Failed to attach debugger."); //never mind: fails to attach to 32-bit process, error "parameter incorrect"
 			IsDebugging = false;
 			_d.Send($"-gdb-exit");
 			return _Failed();
 		}
-		
+
 		_s.attached = true;
 		_UpdateUI(_UU.Started);
 		_PrintThread(null, true);
@@ -175,7 +177,7 @@ partial class PanelDebug {
 		print.it("<><lc #C0C0FF>Debugging started<>");
 		Api.SetEvent(s_event); //let the process run
 		return true;
-		
+
 		bool _Failed() {
 			_d.Dispose();
 			_d = null;
@@ -184,24 +186,24 @@ partial class PanelDebug {
 			return false;
 		}
 	}
-	
+
 	public void Start() {
 		_Start();
 	}
-	
+
 	public bool Attach(int processId) {
 		if (IsDebugging) return false;
 		var f = App.Tasks.FileFromProcessId(processId);
 		if (f == null) return false;
 		return _Attach(processId, true, f);
 	}
-	
+
 	public bool EndIfDebugging(int processId) {
 		if (!IsDebugging || processId != _s.processId) return false;
 		_End();
 		return true;
 	}
-	
+
 	internal void WmHotkey_(RegHotkeys.Id id) {
 		if (!IsDebugging) return;
 		switch (id) {
@@ -214,9 +216,9 @@ partial class PanelDebug {
 			//case RegHotkeys.Id.DebugRestart: _Restart(); break;
 		}
 	}
-	
+
 	#region options, exceptions, breakpoints
-	
+
 	void _OptionsMenu(popupMenu m) {
 		m[(App.Settings.debug.breakT & 9) switch { 1 => "Exceptions...  (break when thrown)", 9 => "Exceptions...  (break when caught)", _ => "Exceptions..." }] = _DExceptionTypes;
 		m.AddCheck("Step into properties and operators", App.Settings.debug.stepIntoAll, o => {
@@ -230,12 +232,12 @@ partial class PanelDebug {
 		m.AddCheck("Print 'thread started/ended'", (App.Settings.debug.printEvents & 2) != 0, o => { App.Settings.debug.printEvents ^= 2; });
 		m.Separator();
 		m.AddCheck("Activate LA when stepping", App.Settings.debug.activateLA, o => { App.Settings.debug.activateLA ^= true; });
-		
+
 		void _DExceptionTypes(PMItem mi) {
 			var w = new KDialogWindow();
 			w.InitWinProp("Exception settings", App.Wmain);
 			var b = new wpfBuilder(w).WinSize(450, 400).Columns(-1);
-			
+
 			b.StartStack();
 			b.Add(out KCheckBox cThrown, "Break when exception thrown").Checked((App.Settings.debug.breakT & 1) != 0)
 				.Add(out KCheckBox cCaught, "when caught in user code").Checked((App.Settings.debug.breakT & 8) != 0).xBindCheckedEnabled(cThrown);
@@ -253,7 +255,7 @@ System.DivideByZeroException
 System.IO.FileNotFoundException
 //comment
 """);
-			
+
 			b.Add(out KCheckBox cUU, "Break when exception unhandled in user code is caught elsewhere").Checked((App.Settings.debug.breakU & 1) != 0);
 			b.Add<Label>("If exception is not").Margin("TBL16");
 			b.Row(-1).Add(out TextBox eListU, App.Settings.debug.breakListU).LabeledBy().Multiline(wrap: TextWrapping.NoWrap)
@@ -264,10 +266,10 @@ System.OperationCanceledException
 System.Threading.Tasks.TaskCanceledException
 //comment
 """);
-			
+
 			b.R.AddOkCancel();
 			if (!w.ShowAndWait()) return;
-			
+
 			App.Settings.debug.breakListT = eListT.TextOrNull();
 			App.Settings.debug.breakListU = eListU.TextOrNull();
 			App.Settings.debug.breakT.SetFlag_(1, cThrown.IsChecked);
@@ -276,22 +278,22 @@ System.Threading.Tasks.TaskCanceledException
 			App.Settings.debug.breakT.SetFlag_(8, cCaught.IsChecked);
 			App.Settings.debug.breakU.SetFlag_(1, cUU.IsChecked);
 			_SetExceptions(3);
-			
+
 			//CONSIDER: allow to specify stack patterns where 'thrown' exceptions are ignored
 		}
 	}
-	
+
 	void _SetOptions() {
 		if (App.Settings.debug.stepIntoAll) _d.Send("-gdb-set enable-step-filtering 0");
 		if (App.Settings.debug.noJMC) _d.Send("-gdb-set just-my-code 0");
 	}
-	
+
 	/// <param name="action">0 init, 1 change 'throw', 2 change 'user-unhandled', 3 change both.</param>
 	void _SetExceptions(int action) {
 		if (!IsDebugging) return;
 		if (action is 0 or 1 or 3) _Apply("throw", App.Settings.debug.breakT, App.Settings.debug.breakListT, ref _s.exceptionsT);
 		if (action is 0 or 2 or 3) _Apply("user-unhandled", App.Settings.debug.breakU | 6, App.Settings.debug.breakListU, ref _s.exceptionsU);
-		
+
 		void _Apply(string tuu, int flags, string types, ref string[] ids) {
 			if (action != 0 && ids != null) _d.SendSync(3, $"-break-exception-delete {string.Join(' ', ids)}");
 			ids = null;
@@ -318,31 +320,31 @@ System.Threading.Tasks.TaskCanceledException
 				}
 			}
 		}
-		
+
 		//With -break-exception-insert can be specified unhandled|user-unhandled|throw|throw+user-unhandled.
 		//	It seems 'unhandled' is always on and cannot be changed.
 		//	'user-unhandled' means "Break when handled exception was unhandled in user code". Eg in Task.Run action when not awaited.
 	}
-	
+
 	void _SetBreakpoints() {
 		foreach (var b in Panels.Breakpoints.GetBreakpoints()) {
 			_SetBreakpoint(b);
 		}
 	}
-	
+
 	void _SetBreakpoint(IBreakpoint b) {
 		b.Id = _SetBreakpoint(b.File, b.Line);
 		if (_s.runToHere.nonstop && b.Id != _s.runToHere.breakpointId) _d.Send($"-break-activate false {b.Id}");
 		if (b.HasProperties) _SetBreakpointCondition(b);
 	}
-	
+
 	int _SetBreakpoint(FileNode f, int line) {
 		var s = _d.SendSync(4, $"-break-insert \"{f.FilePath.Replace(@"\", @"\\")}:{line + 1}\"");
 		var r = new _MiRecord(s);
 		var d = r.Data<_DONE_BKPT>().bkpt;
 		return d.number;
 	}
-	
+
 	internal void BreakpointAddedDeleted_(IBreakpoint b, bool added) {
 		if (!IsDebugging) return;
 		if (added) {
@@ -354,11 +356,11 @@ System.Threading.Tasks.TaskCanceledException
 			if (n != 0 && n != _s.runToHere.breakpointId) _d.Send($"-break-delete {n}");
 		}
 	}
-	
+
 	internal void BreakpointPropertiesChanged_(IBreakpoint b) {
 		if (IsDebugging) _SetBreakpointCondition(b);
 	}
-	
+
 	void _SetBreakpointCondition(IBreakpoint b) {
 		string s;
 		if (b.HasProperties) {
@@ -376,16 +378,16 @@ System.Threading.Tasks.TaskCanceledException
 		_d.Send($"-break-condition {b.Id} {s}");
 		//note: without ""
 	}
-	
+
 	#endregion
-	
+
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line) {
 		m["Run to here", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, false);
 		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, true);
 		if (IsDebugging) m["Restart and run to here non-stop", "*Codicons.DebugRestart @14" + Menus.green2] = o => _RunToHere(doc.EFile, line, true, true);
 		if (IsStopped) m["Jump to here", "*Codicons.DebugStackframe @14" + Menus.green2] = o => _JumpToHere(doc.EFile, line);
 	}
-	
+
 	void _Step(string s) {
 		if (!IsStopped) return;
 		bool step = s[0] != 'c';
@@ -400,15 +402,15 @@ System.Threading.Tasks.TaskCanceledException
 			_Print("Can't step here. Try 'Continue' or 'Run to here'.");
 		}
 	}
-	
+
 	void _Next() => _Step("next");
-	
+
 	void _Step() => _Step("step");
-	
+
 	void _StepOut() => _Step("finish");
-	
+
 	void _Continue() => _Step("continue");
-	
+
 	bool _ExecStepL(string s) {
 		//return _d.SendSync(6, s) == "^running";
 		return _d.SendSync(6, s, o => {
@@ -418,7 +420,7 @@ System.Threading.Tasks.TaskCanceledException
 			return false;
 		}) == "^running";
 	}
-	
+
 	void _RunToHere(FileNode f, int line, bool nonstop, bool restart = false) {
 		if (!IsDebugging) {
 			_Start(runToHere: new(f, line, nonstop));
@@ -432,13 +434,13 @@ System.Threading.Tasks.TaskCanceledException
 			if (IsStopped) _Continue();
 		}
 	}
-	
+
 	void _RthEnd() {
 		if (!_IsEnabledBreakpoint(_s.runToHere.breakpointId)) _d.Send($"-break-delete {_s.runToHere.breakpointId}");
 		_s.runToHere.breakpointId = 0;
 		if (_s.runToHere.nonstop) { _s.runToHere.nonstop = false; _d.Send("-break-activate true"); }
 	}
-	
+
 	void _JumpToHere(FileNode f, int line) {
 		_s.stoppedOnException = false;
 		var s = _d.SendSync(7, $"-jump \"{f.FilePath.Replace(@"\", @"\\")}:{line + 1}\"");
@@ -458,11 +460,11 @@ System.Threading.Tasks.TaskCanceledException
 			else _Print("Cannot jump to here. " + s);
 		}
 	}
-	
+
 	bool _IsEnabledBreakpoint(int id) => Panels.Breakpoints.GetBreakpoints().Any(o => o.Id == id);
-	
+
 	record class _RthData(FileNode file, int line, bool nonstop);
-	
+
 	void _Pause() {
 		if (!IsDebugging || IsStopped) return;
 		int tid = _s.threadId;
@@ -475,28 +477,28 @@ System.Threading.Tasks.TaskCanceledException
 		}
 		_d.Send($"-exec-interrupt --thread {tid}"); //note: netcoredbg code is modified, added --thread parameter. If --thread 0, works like without --thread.
 	}
-	
+
 	void _End() {
 		if (IsDebugging) _d.Send($"-exec-abort");
 	}
-	
+
 	void _Disconnect() {
 		if (IsDebugging) _d.Send($"-gdb-exit"); //detach and exit debugger
 	}
-	
+
 	void _Events(string s) {
 		if (_s == null) {
 			Debug_.Print("_s==null");
 			return;
 		}
-		
+
 		if (s.ToInt(out int token, 0, out int endToken)) s = s[endToken..]; //info: currently not using tokens
-		
+
 #if DEBUG
 		if (s.Starts("^error")) print.it($"<><c red>{s}<>");
 		//else if (0 == s.Starts(true, "^done", "=message,", "=library-", "=thread-")) print.it("EVENT", s);
 #endif
-		
+
 		if (s == "^exit") {
 			_d.Dispose();
 			_d = null;
@@ -504,14 +506,14 @@ System.Threading.Tasks.TaskCanceledException
 			_UpdateUI(_UU.Ended);
 			RegHotkeys.UnregisterDebug();
 			_AutoShowHidePanel(false);
-			
+
 			if (_restart) {
 				_restart = false;
 				var file = _s.file;
 				var rth = _s.restartToHere;
 				timer.after(100, _ => _Start(file, rth));
 			}
-			
+
 			_s = null;
 			print.it("<><lc #C0C0FF><>");
 		} else if (s.Starts("*stopped")) {
@@ -522,11 +524,11 @@ System.Threading.Tasks.TaskCanceledException
 				if (s.RxMatch(@"\bexit-code=""(.+?)""", 1, out string ec)) _Print($"The process has exited with code {ec} (0x{ec.ToInt():X}).");
 			} else {
 				IsStopped = true;
-				
+
 				_s.inStoppedEvent = true;
 				try { if (!_Stopped(s)) return; }
 				finally { _s.inStoppedEvent = false; }
-				
+
 				_UpdateUI(_UU.Paused);
 			}
 		} else if (s.Starts("^done,stack=")) {
@@ -536,7 +538,7 @@ System.Threading.Tasks.TaskCanceledException
 			_StackViewSetItems(a);
 			_s.frame = a[0];
 			_ListVariables();
-			
+
 			if (!_marker.Exists && !_marker2.Exists) {
 				for (int i = 0; i < a.Length; i++) { //if not in user code, try to go to user code and add _marker2
 					if (_GoToLine(a[i])) break;
@@ -570,14 +572,14 @@ System.Threading.Tasks.TaskCanceledException
 			}
 		}
 	}
-	
+
 	//returns false to continue
 	bool _Stopped(string s) {
 		var x = new _MiRecord(s).Data<_STOPPED>();
 		_s.threadId = x.thread_id;
 		_s.stoppedOnException = false;
 		var thrownException = _s.thrownException; _s.thrownException = null;
-		
+
 		switch (x.reason) {
 		case "breakpoint-hit":
 			if (_s.runToHere.breakpointId != 0 && x.bkptno == _s.runToHere.breakpointId) {
@@ -595,10 +597,10 @@ System.Threading.Tasks.TaskCanceledException
 			if (thrownException != null) if (!_DetectCatch(x, thrownException)) return false;
 			break;
 			//case "signal-received": //Pause or Debugger.Break
-			
+
 			//	break;
 		}
-		
+
 		if (_GetThreads() is _THREAD[] a) { //fast
 			a = a.Where(t => t.id == _s.threadId || !_IsHiddenThreadName(t.name)).ToArray();
 			bool same = a.Length == _cbThreads.Items.Count;
@@ -607,18 +609,18 @@ System.Threading.Tasks.TaskCanceledException
 				_cbThreads.Items.Clear();
 				foreach (var t in a) _cbThreads.Items.Add(new ComboBoxItem { Content = $"{t.id}  {t.name}", Tag = t });
 			}
-			
+
 			_GoToLine(x.frame);
-			
+
 			int iSel = Array.FindIndex(a, t => t.id == _s.threadId);
 			if (iSel >= 0) {
 				if (iSel != _cbThreads.SelectedIndex) _cbThreads.SelectedIndex = iSel; //_cbThreads.SelectionChanged -> _SelectedThread
 				else _SelectedThread(a[iSel]);
 			}
 		}
-		
+
 		return true;
-		
+
 		_THREAD[] _GetThreads() {
 			if (_d.SendSync(5, "-thread-info") is string s && s.Starts("^done,threads=")) {
 				_THREAD[] a = new _MiRecord(s).Data<_DONE_THREADS>().threads;
@@ -633,15 +635,15 @@ System.Threading.Tasks.TaskCanceledException
 			}
 			return null;
 		}
-		
+
 		bool _StoppedOnException(_STOPPED x) {
 			if (_s.runToHere.nonstop && x.exception_stage != "unhandled") {
 				_Continue();
 				return true;
 			}
-			
+
 			var stage = x.exception_stage switch { "throw" => "thrown", "user-unhandled" => "unhandled in user code", _ => x.exception_stage };
-			
+
 			if ((App.Settings.debug.breakT & 9) == 9 && x.exception_stage == "throw") {
 				_s.thrownException = x;
 				_s.tePath = null;
@@ -649,11 +651,11 @@ System.Threading.Tasks.TaskCanceledException
 				Debug_.Print("-exec-x failed on thrown exception");
 				_s.thrownException = null;
 			}
-			
+
 			_PrintException(x, stage, false);
 			return false;
 		}
-		
+
 		//Returns: true - stop, false - continue.
 		bool _DetectCatch(_STOPPED x, _STOPPED thrownException) {
 			var f = x.frame;
@@ -693,7 +695,7 @@ System.Threading.Tasks.TaskCanceledException
 			} else Debug_.Print("non-user code");
 			return true;
 		}
-		
+
 		void _PrintException(_STOPPED x, string stage, bool caught) {
 			if (_VarCreateL("$exception.ToString()") is { } v) {
 				string s = v.value.Trim('"').Unescape(), color = caught ? "#CC00FF" : "red", append = null;
@@ -704,7 +706,7 @@ System.Threading.Tasks.TaskCanceledException
 			}
 		}
 	}
-	
+
 	void _SelectedThread(_THREAD t) {
 		if (!IsStopped) return;
 		//if (!_s.inStoppedEvent) _VariablesViewChangedFrameOrThread();
@@ -714,7 +716,7 @@ System.Threading.Tasks.TaskCanceledException
 		}
 		_d.Send($"-stack-list-frames --thread {_s.threadId}");
 	}
-	
+
 	bool _GoToLine(_FRAME f, bool keepMarkers = false) {
 		if (f != null) {
 			int line = f.line - 1, col = f.col - 1, line2 = f.end_line - 1, col2 = f.end_col - 1;
@@ -735,7 +737,7 @@ System.Threading.Tasks.TaskCanceledException
 		return false;
 	}
 	_Marker _marker = new(SciCode.c_markerDebugLine, SciCode.c_indicDebug), _marker2 = new(SciCode.c_markerDebugLine2, SciCode.c_indicDebug2);
-	
+
 	void _UpdateUI(_UU u) {
 		if (u == _UU.Resumed) {
 			_timerResumeUU ??= new(_ => _UpdateUI(_UU.Resumed2));
@@ -760,20 +762,22 @@ System.Threading.Tasks.TaskCanceledException
 				_cbThreads.Items.Clear();
 				_ClearTreeviewsAndMarkers();
 			}
+
+			if (u == _UU.Ended) _TempDisableAuDebugging(false);
 		}
 	}
-	
+
 	enum _UU { Init, Started, Ended, Paused, Resumed, Resumed2 }
-	
+
 	timer _timerResumeUU;
-	
+
 	void _ClearTreeviewsAndMarkers() {
 		_StackViewSetItems(null);
 		_VariablesViewSetItems(null);
 		_marker.Delete();
 		_marker2.Delete();
 	}
-	
+
 	void _AutoShowHidePanel(bool starting) {
 		if (starting) {
 			if (_hidePanelWhenEnds) _timerHidePanel?.Stop();
@@ -794,13 +798,13 @@ System.Threading.Tasks.TaskCanceledException
 	}
 	bool _hidePanelWhenEnds;
 	timer _timerHidePanel;
-	
+
 	#region util
-	
+
 	static void _Print(string s) {
 		print.it($"<><lc #f8f8d0>{s}<>");
 	}
-	
+
 	static unsafe bool _GetThreadNameAndTime(int id, out string name, out long time) {
 		name = null;
 		using var th = Api.OpenThread(Api.THREAD_QUERY_LIMITED_INFORMATION, false, id);
@@ -816,21 +820,21 @@ System.Threading.Tasks.TaskCanceledException
 		}
 		return true;
 	}
-	
+
 	static bool _IsHiddenThreadName(string s) => s is "Au.Aux" or ".NET TP Gate" or ".NET Tiered Compilation Worker" or ".NET Counter Poller" or ".NET Finalizer" or "Stylus Input" or "Au.JSettings";
-	
+
 	string _GetModuleName(_FRAME f) {
 		if (f.clr_addr.module_id.NE()) return ""; //f.func "[Native Frames]"
 		if (_s.modules.TryGetValue(f.clr_addr.module_id, out var r)) r = pathname.getName(r);
 		return r;
 	}
-	
+
 	string _FormatFrameString(_FRAME f/*, bool forPrint = false*/) {
 		if (f.file.NE()) return $"{_GetModuleName(f)}!{f.func}";
 		//if (forPrint) return $"<open {f.file}|{f.line}><\a>{f.func}  ::  {f.file} {f.line}</\a><>";
 		return $"{f.func}  ::  {f.file} {f.line}";
 	}
-	
+
 	void _PrintThread(string s, bool started) {
 		if ((App.Settings.debug.printEvents & 2) == 0) return;
 		if (s == null) { //called when attached. Detects the main thread and prints threads ordered by the start time.
@@ -854,35 +858,46 @@ System.Threading.Tasks.TaskCanceledException
 			}
 		}
 	}
-	
+
+	[Conditional("DEBUG")]
+	static void _TempDisableAuDebugging(bool disable) {
+		if (disable == _tempDisableAuDebugging) return;
+		if (disable) if (!App.IsAuAtHome || Debugger.IsAttached) return;
+		string from = folders.ThisAppBS + (disable ? "Au.pdb" : "Au-.pdb"), to = disable ? "Au-.pdb" : "Au.pdb";
+		try { filesystem.rename(from, to); }
+		catch (Exception e1) { Debug_.Print(e1); return; }
+		_tempDisableAuDebugging = disable;
+	}
+	static bool _tempDisableAuDebugging;
+
 	#endregion
-	
+
 	class _Marker {
 		readonly int _marker, _indic;
 		SciCode _doc;
-		int _line, _column, _handle;
-		
+		int _line, _handle;
+
 		public _Marker(int marker, int indic) {
 			_marker = marker;
 			_indic = indic;
 		}
-		
+
 		public void Add(int line, int column, int line2, int column2) {
-			_column = column;
+			//Column = column;
 			var doc = Panels.Editor.ActiveDoc;
-			
+
 			if (line != _line || doc != _doc) {
 				Delete();
 				_doc = doc;
 				_line = line;
 				_handle = _doc.aaaMarkerAdd(_marker, line);
 			} else _doc.aaaIndicatorClear(_indic);
-			
+
 			int start = doc.aaaLineStart(false, line) + column;
 			int end = doc.aaaLineStart(false, line2) + column2;
 			doc.aaaIndicatorAdd(_indic, false, start..end);
 		}
-		
+
 		public void Delete() {
 			if (_doc == null) return;
 			if (!_doc.AaWnd.Is0) {
@@ -893,35 +908,35 @@ System.Threading.Tasks.TaskCanceledException
 			_line = 0;
 			_handle = 0;
 		}
-		
+
 		public bool Exists => _doc != null;
-		
+
 		public SciCode Doc => _doc;
 		//public int Line => _line;
-		//public int Column => _column;
+		//public int Column { get; private set; }
 	}
-	
+
 	#region MI output record types. Generated by _MiRecord._PrintType.
-	
+
 	record _BKPT(int number, string type, string disp, string enabled, string func, string file, string fullname, int line, string warning);
 	record _DONE_BKPT(_BKPT bkpt);
-	
+
 	record _THREAD(int id, string state) { public string name; public long time; }
 	record _DONE_THREADS(_THREAD[] threads);
-	
+
 	record struct _CLR_ADDR(string module_id, string method_token, int method_version, int il_offset, int native_offset);
 	record _FRAME(int level, string file, string fullname, int line, int col, int end_line, int end_col, _CLR_ADDR clr_addr, string func, string addr, string active_statement_flags);
 	record _STOPPED(string reason, int thread_id, string stopped_threads, int bkptno, int times, _FRAME frame, string exception_name, string exception, string exception_stage, string exception_category, string signal_name);
-	
+
 	record _DONE_STACK(_FRAME[] stack);
-	
+
 	record _VARIABLE(string name, string value);
 	record _DONE_VARIABLES(_VARIABLE[] variables);
-	
+
 	record _VAR(string name, string value, string attributes, string exp, int numchild, string type, int thread_id);
-	
+
 	record _DONE_CHILDREN(int numchild, _VAR[] children, int has_more);
-	
+
 	#endregion
 }
 

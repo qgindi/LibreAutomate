@@ -1,11 +1,11 @@
-/// Scripts with role editorExtension can modify the UI of the script editor. This script contains examples of:
-/// - show/hide panels and toolbars.
-/// - add buttons to toolbars.
-/// - add menus to the menubar.
-/// - add controls to panels.
-/// - add panels and toolbars.
-/// To run at startup, add the script name in Options -> Workspace -> Run scripts...
-/// These menus and toolbars cannot be customized in menu Tools -> Customize.
+/// Scripts with role <b>editorExtension<> can modify the UI of the script editor. This script contains examples of:
+/// - Show/hide panels and toolbars.
+/// - Add buttons to toolbars.
+/// - Add menus to the menubar.
+/// - Add controls to panels.
+/// - Add panels and toolbars.
+/// To run at startup, add the script name in <b>Options > Workspace > Run scripts when workspace loaded<>.
+/// These menus and toolbars cannot be customized in menu <b>Tools > Customize<>.
 
 /*/
 role editorExtension;
@@ -17,7 +17,7 @@ using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
-if (App.Wmain.IsLoaded) _Load(); else App.Wmain.Loaded += (_, _) => _Load();
+EditorExtension.WindowLoaded += () => _Load();
 
 static void _Load() {
 	

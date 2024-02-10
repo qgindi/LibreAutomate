@@ -23,7 +23,7 @@ Can start with `"**options "`:
 | :- | :- | :- |
 | t | *? in text are not wildcard characters. | `"**t text"` |
 | r | Text is PCRE regular expression ([regexp]()).<br/>Syntax: [full](https://www.pcre.org/current/doc/html/pcre2pattern.html), [short](https://www.pcre.org/current/doc/html/pcre2syntax.html). | `"**r regex"` |
-| R | Text is .NET regular expression (**Regex**).<br/>Cannot be used with [elm]() class functions. | `"**R regex"` |
+| R | Text is .NET regular expression (**Regex**).<br/>Cannot be used with [elm]() and [elmFinder](). | `"**R regex"` |
 | c | Must match case. | `"**tc text"`, `"**rc regex"` |
 | m | Multi-part, separated by \|\|. | `"**m findAAA||orBBB||**r orCCC"` |
 | m(sep) | Multi-part, separated by sep. | `"**m(^^^) findAAA^^^orBBB"` |

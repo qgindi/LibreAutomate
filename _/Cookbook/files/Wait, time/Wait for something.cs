@@ -1,6 +1,6 @@
-/// Most "wait for" functions are in separate classes. For example "wait for window" is in <b>wnd</b>, "wait for key" is in <b>keys</b>. To wait for other events can be used class <see cref="wait"/>.
+/// Most "wait for" functions are in separate classes. For example "wait for window" is in <b>wnd<>, "wait for key" is in <b>keys<>. To wait for other events can be used class <see cref="wait"/>.
 
-/// Wait for toggled CapsLock.
+/// Wait for toggled <mono>CapsLock<>.
 
 wait.forCondition(0, () => keys.isCapsLock);
 print.it("continue");

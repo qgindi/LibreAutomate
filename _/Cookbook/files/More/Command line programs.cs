@@ -1,10 +1,10 @@
-/// There are sevaral useful <+ms>Windows command line<> programs and commands.
+/// There are several useful <+ms>Windows command line<> programs and commands.
 /// 
 /// To run programs, use <see cref="run.console"/>.
 
 run.console("ipconfig.exe", "/flushdns");
 
-/// To run other commands, use a .bat file or <+ms>cmd.exe<>.
+/// To run other commands, use a <_>.bat</_> file or <+ms>cmd.exe<>.
 
 var commands = """
 cd /d C:\Test\Folder

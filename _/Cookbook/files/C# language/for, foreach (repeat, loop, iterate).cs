@@ -7,9 +7,9 @@ for (int i = 0; i < 3; i++) { //increment i: 0, 1, 2
 /// The above code declares variable i = 0. Then, while i is less than 3, executes statements in the { } block and increments i (i++).
 /// 
 /// Several ways to insert <.k>for<> code quickly:
-/// - Type text like 3t (it means "repeat 3 times").
-/// - Type forr and select forRepeatLoopSnippet.
-/// - Click or select code, and use menu Edit -> Surround.
+/// - Type text like <.c>3t<> (it means "repeat 3 times").
+/// - Type <.c>forr<> and select <b>forRepeatLoopSnippet<>.
+/// - Click or select code, and use menu <b>Edit > Surround<>.
 
 for (int i = 3; --i >= 0; ) { //decrement i: 2, 1, 0
 	print.it(i);

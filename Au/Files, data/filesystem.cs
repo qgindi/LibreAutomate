@@ -250,19 +250,24 @@ public static partial class filesystem {
 		s = folders.ThisApp + path;
 		if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
 		
-		if (Api.SearchPath(null, path) is string s1) return s1;
+		if ((s = Api.SearchPath(null, path)) != null) return s;
 		
 		if (path.Ends(".exe", true) && path.FindAny(@"\/") < 0) {
 			try {
-				path = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string
+				s = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string
 					?? Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string;
-				if (path != null) {
-					path = _PreparePath(path.Trim('"'));
-					if (exists(path, true)) return path;
+				if (s != null) {
+					s = _PreparePath(s.Trim('"'));
+					if (exists(s, true)) return s;
 				}
 			}
-			catch (Exception ex) { Debug_.Print(path + "    " + ex); }
+			catch (Exception ex) { Debug_.Print(ex); }
 		}
+		
+		//maybe PATH env var changed since this or parent process started
+		//rejected. LA updates at startup an on WM_SETTINGCHANGE, and that's enough.
+		//if (more.UpdatePathEnvVar_())
+		//	if ((s = Api.SearchPath(null, path)) != null) return s;
 		
 		return null;
 	}

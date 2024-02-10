@@ -49,7 +49,7 @@ print.it(body);
 
 run.it("https://www.example.com/");
 
-/// There is no function "wait until the web page is fully loaded". Instead let the script search for an element that should be in the new page; make the timeout longer if need (by default the tool creates code with 1 s timeout). Also use function <b>WebInvoke</b> when appropriate.
+/// There is no function "wait until the web page is fully loaded". Instead let the script search for an element that should be in the new page; make the timeout longer if need (by default the tool creates code with 1 s timeout). Also use function <b>WebInvoke<> when appropriate.
 
 var w1 = wnd.find(10, "*- Google Chrome", "Chrome_WidgetWin_1"); //find web browser window; wait max 10 s
 var e1 = w1.Elm["web:LINK", "Search"].Find(10); //find a link; wait max 10 s

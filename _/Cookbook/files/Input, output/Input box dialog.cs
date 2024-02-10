@@ -1,4 +1,4 @@
-/// To quickly insert <see cref="dialog.showInput"/> code, use snippet dsDialogShowSnippet: type ds and select from the list.
+/// To quickly insert <see cref="dialog.showInput"/> code, use snippet <b>dsDialogShowSnippet<>: type <.c>ds<> and select from the list.
 
 if (!dialog.showInput(out string s, "Text input")) return;
 print.it(s);

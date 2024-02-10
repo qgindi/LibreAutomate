@@ -13,21 +13,21 @@ if (!dialog.showInput(out string s3, s)) return; //declare with the out keyword.
 /// Names are case-sensitive and can contain letters, digits (except at the start) and _.
 
 /// Frequently used <+lang built-in types>C# built-in types<>:
-/// <.k>int<> - integer (whole) number like 10 or -10. Max about +- 2 billions.
-/// <.k>double<> - can hold non-integer numbers like 3.14 and large numbers like 1e15.
+/// <.k>int<> - integer (whole) number like <.c>10<> or <.c>-10<>. Max about +- 2 billions.
+/// <.k>double<> - can hold non-integer numbers like <.c>3.14<> and large numbers like <.c>1e15<>.
 /// <.k>string<> - text. Strings are Unicode UTF-16.
-/// <.k>char<> - single character like 'A'. Unicode UTF-16.
-/// <.k>bool<> - true or false.
+/// <.k>char<> - single character like <.c>'A'<>. Unicode UTF-16.
+/// <.k>bool<> - <.k>true<> or <.k>false<>.
 /// <.k>byte<> - small integer, 0-255. Usually used in binary data arrays.
 /// <.k>long<> - 64-bit integer, about 4 billion times larger than int.
 /// <.k>object<> - can hold values of almost any type.
 
-/// A variable can hold values only of its type (unless it's <.k>object<> or <.k>dynamic<>). Its type can't be changed.
+/// A variable can hold values only of its type (unless it's <.k>object<> or <.k>dynamic<>).
 
 string s4 = "4";
 //s4 = 5; //error, 5 is not string
 
-/// To assign a value of another type, neet to convert it to the variable's type if possible.
+/// To assign a value of another type, need to convert it to the variable's type if possible.
 
 double d4 = i; //i is int, but it is implicitly converted to double
 //int i1 = d4; //error, can't convert implicitly
@@ -35,8 +35,8 @@ int i1 = (int)d4; //sometimes can convert explicitly, with the type cast operato
 string s5 = i1.ToString(); //or with a function
 i1 = s5.ToInt();
 
-/// Variables declared in functions or directly in script are <i>local variables</i>. Function <i>parameters</i> too.
-/// Variables declared directly in a class are known as <i>fields</i>. <google C# fields>More info<>.
+/// Variables declared in functions or directly in script are <i>local variables<>. Function <i>parameters<> too.
+/// Variables declared directly in a class are known as <i>fields<>. <google C# fields>More info<>.
 
 Example v1 = new Example(); //create new instance of class Example and assign to variable v1
 //var v1 = new Example(); //the same, but shorter code
@@ -78,7 +78,7 @@ class Example {
 	}
 }
 
-/// Local variables live until the function exits. If declared in inner { } code blocks - until leaving the block. New variables are created each time the function or { } block is executed.
+/// Local variables live until the function exits. If declared in inner <.c>{ }<> code blocks - until leaving the block. New variables are created each time the function or <.c>{ }<> block is executed.
 /// Non-static fields live while the class instance variable lives. Each class instance variable has its own fields.
 /// Static fields live until the script process exits. All class instance variables share them.
 /// Thread-static fields live until the thread exits. Each thread has its own variables. All class instance variables share them.

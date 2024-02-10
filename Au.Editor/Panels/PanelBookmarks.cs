@@ -99,9 +99,9 @@ class PanelBookmarks {
 				}
 			};
 			
-			_tv.EditLabelStarted += (item, tb) => {
-				tb.Text = (item as _Item).name; //edit without line number
-				tb.SelectAll();
+			_tv.EditLabelStarted += e => {
+				e.Text = (e.item as _Item).name; //edit without line number
+				e.SelectText();
 			};
 			
 			_tv.RightClickInEmptySpace += () => _ContextMenu(null);

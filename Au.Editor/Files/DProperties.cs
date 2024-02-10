@@ -570,12 +570,12 @@ Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edite
 """;
 		
 		info.AaAddElem(role, """
-<b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.
+<b>role</b> - the purpose of this C# code file. What type of assembly to create and how to execute.
  • <i>miniProgram</i> - execute in a separate host process started from editor.
- • <i>exeProgram</i> - create/execute .exe file. It can run on any computer, without editor installed.
+ • <i>exeProgram</i> - create/execute .exe file, which can run on any computer, without editor installed.
  • <i>editorExtension</i> - execute in the editor's UI thread. Rarely used. Incorrect code can kill editor.
- • <i>classLibrary</i> - create .dll file. It can be used in C# scripts and other .NET-based programs.
- • <i>classFile</i> - don't create/execute. Compile together with other C# code files in the project or using meta comment c. Inherits meta comments of the main file of the compilation.
+ • <i>classLibrary</i> - create .dll file, which can be used in C# scripts and other .NET-based programs.
+ • <i>classFile</i> - don't create/execute. The C# code file can be compiled together with other C# code files in the project or using meta comment c. Inherits meta comments of the main file of the compilation.
 
 Default role for scripts is miniProgram; cannot be the last two. Default for class files is classFile.
 

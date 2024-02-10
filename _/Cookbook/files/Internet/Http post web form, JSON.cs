@@ -47,7 +47,7 @@ record R1(string origin, string url);
 if (!internet.http.TryPost(out var r, "https://httpbin.org/anything", null)) return;
 print.it(r.Json());
 
-/// You can use <b>HttpClient</b> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
+/// You can use <b>HttpClient<> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
 
 using var http = new HttpClient();
 var post = new KeyValuePair<string, string>[] {
@@ -59,4 +59,4 @@ r1.EnsureSuccessStatusCode();
 string s4 = r1.Content.ReadAsStringAsync().Result;
 print.it(s4);
 
-/// Also you can use libraries, for example <google>RestSharp</google>.
+/// Also you can use libraries, for example <google>RestSharp<>.

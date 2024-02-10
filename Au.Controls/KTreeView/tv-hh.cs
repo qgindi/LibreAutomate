@@ -137,7 +137,7 @@ public unsafe partial class KTreeView : HwndHost {
 	
 	protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 		//print.it(e.Property);
-		if (_lePopup != null && e.Property.Name == "IsVisible" && e.NewValue is bool y && !y) EndEditLabel(true);
+		if (!_leEdit.Is0 && e.Property.Name == "IsVisible" && e.NewValue is bool y && !y) EndEditLabel(true);
 		base.OnPropertyChanged(e);
 	}
 	

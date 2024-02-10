@@ -211,7 +211,8 @@ public unsafe partial class KTreeView {
 				colorInfo.isFocusedControl = this.IsKeyboardFocused;
 				
 				int yyImages = (_itemLineHeight + 1 - _imageSize) / 2;
-				int yyText = _itemLineHeight <= 22 ? 1 : _itemLineHeight <= 28 ? 0 : -1;
+				//int yyText = _itemLineHeight <= 22 ? 1 : _itemLineHeight <= 28 ? 0 : -1; //when high DPI, text used to be too low, but now on Win11 it seems good, don't need this correction
+				int yyText = 1;
 				
 				graphics ??= Graphics.FromHdc(dc);
 				var tr = new GdiTextRenderer(dc, _dpi);

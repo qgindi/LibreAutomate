@@ -25,6 +25,6 @@ catch (Exception e1) { print.it(e1); }
 
 /// The try-catch is important. After an unhandled exception Excel process would not exit when its window closed (you can see it in Task Manager).
 
-/// On the internet you can find <google Microsoft.Office.Interop.Excel namespace>Excel API documentation</google>, many code examples and other info.
+/// On the internet you can find <google Microsoft.Office.Interop.Excel namespace>Excel API documentation<>, many code examples and other info.
 
-/// The API is old, not convenient to use, not type-safe. You can instead use libraries that read-write Excel files directly without opening in Excel. See cookbook recipes in "Excel files" folder.
+/// The API is old, not convenient to use, not type-safe. You can instead use libraries that read-write Excel files directly without opening in Excel. See cookbook recipes in folder <.c>Excel files<>.

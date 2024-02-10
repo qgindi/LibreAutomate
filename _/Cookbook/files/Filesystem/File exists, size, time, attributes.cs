@@ -1,4 +1,4 @@
-/// Use <see cref="filesystem"/> functions <help filesystem.exists>exists<>, <help filesystem.getAttributes>getAttributes<>, <help filesystem.getProperties>getProperties<> or <help filesystem.enumerate>enumerate<>.
+/// Use <see cref="filesystem"/> functions <see cref="filesystem.exists"/>, <see cref="filesystem.getAttributes"/>, <see cref="filesystem.getProperties"/> or <see cref="filesystem.enumerate"/>.
 
 var filePath = @"C:\Test\test.txt";
 var dirPath = @"C:\Test";

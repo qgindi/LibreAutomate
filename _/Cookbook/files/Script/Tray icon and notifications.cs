@@ -27,4 +27,4 @@ timer.after(2000, _ => { ti.ShowNotification("notification", "text", TINFlags.In
 dialog.show("tray icon"); //trayIcon works only in threads that process Windows messages; this function does it.
 //wait.doEvents(30000); //another way to process messages
 
-/// The above code could use an icon file or resource, but for simplicity it uses the script's icon, which can be changed in the Icons dialog.
+/// The above code could use an icon file or resource, but for simplicity it uses the script's icon, which can be changed in the <b>Icons<> dialog.

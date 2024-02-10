@@ -291,6 +291,8 @@ partial class Compiler {
 		
 		if (_meta.PostBuild.f != null && !_RunPrePostBuildScript(true, outFile)) return false;
 		
+		if (_meta.StartFaster) r.flags |= MiniProgram_.MPFlags.Preloaded;
+		
 		if (needOutputFiles && reason != CCReason.WpfPreview && !addMetaFlags.Has(MCFlags.Publish)) {
 			cache.AddCompiled(f, outFile, _meta, r.flags);
 			

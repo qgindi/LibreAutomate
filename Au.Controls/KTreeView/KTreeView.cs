@@ -1,8 +1,3 @@
-//CONSIDER: option to expand/collapse folders when clicked once in text etc area, not only in icon area. Use with Files and Cookbook.
-//	Bad: conflicts with selecting etc.
-//	Tested several apps with this type of tree view. All exapand/collapse on single click. Eg Firefox bookmarks, VSCode.
-//	For me the current behavior is the best. But users wanted it.
-
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -426,8 +421,16 @@ public unsafe partial class KTreeView {
 	///
 	protected override void OnKeyDown(KeyEventArgs e) {
 		//print.it(e.Key, _focusedIndex);
-		base.OnKeyDown(e);
-		if (!e.Handled) e.Handled = ProcessKey(e.Key);
+		if (EditingLabel) {
+			var k = e.Key;
+			switch (k) {
+			case Key.Enter: EndEditLabel(); e.Handled = true; break;
+			case Key.Escape: EndEditLabel(true); e.Handled = true; break;
+			}
+		} else {
+			base.OnKeyDown(e);
+			if (!e.Handled) e.Handled = ProcessKey(e.Key);
+		}
 	}
 	
 	/// <summary>
@@ -822,65 +825,69 @@ public unsafe partial class KTreeView {
 		EnsureVisible(index);
 		if (!IsFocused) Focus();
 		
+		var r = GetRectPhysical(index, TVParts.Text | TVParts.MarginRight | TVParts.Right);
+		r.left -= _imageMarginX;
+		r.Intersect(_w.ClientRect);
+		if (r.Width < 8 || r.Height < 8) return;
+		
 		_leItem = item;
 		_leEnded = ended;
-		var r = GetRectPhysical(index, TVParts.Text, inScreen: true);
-		r.left -= _imageMarginX;
-		double f = 96d / _dpi;
-		_leTB = new TextBox {
-			//Height = r.Height * f,
-			MinWidth = r.Width * f + 12,
-			Text = _leItem.DisplayText,
-			Padding = osVersion.minWin8 ? new Thickness(1, -1, 0, 0) : new Thickness(0, -2, 0, 0)
-		};
-		if (!SystemParameters.HighContrast) _leTB.Height = r.Height * f;
-		_leTB.SelectAll();
-		_leTB.KeyDown += (_, e) => {
-			switch (e.Key) {
-			case Key.Enter: EndEditLabel(); break;
-			case Key.Escape: EndEditLabel(true); break;
-			}
-		};
-		_lePopup = new(WS.POPUP) { Content = _leTB, ClickClose = KPopup.CC.Outside, WpfSizeToContent = true };
-		_lePopup.Hidden += (_, _) => EndEditLabel();
-		_lePopup.ShowByRect(this, null, r);
-		Debug_.PrintIf(_leTB == null); if (_leTB == null) return; //once was NullReferenceException in `_leTB.Focus();`. Could not reproduce.
-		_leTB.Focus();
 		
-		EditLabelStarted?.Invoke(_leItem, _leTB);
+		//add border. Cannot add WS_BORDER to _leEdit because it also adds padding and therefore must be taller than we need, else there is no top border.
+		_leBorder = WndUtil.CreateWindow((w, msg, wp, lp) => {
+			if (msg == Api.WM_COMMAND && Math2.HiWord(wp) == /*EN_KILLFOCUS*/ 0x0200) EndEditLabel();
+			return Api.DefWindowProc(w, msg, wp, lp);
+		}, true, "Static", null, WS.CHILD | WS.VISIBLE | WS.BORDER | (WS)6 /*SS_WHITERECT*/, 0, r.left, r.top, r.Width, r.Height, _w);
 		
-		//		timer.after(1000,_=>Visibility=Visibility.Collapsed);
-		//		timer.after(1000,_=>Window.GetWindow(this).Hide());
-		//		timer.after(2000,_=>Window.GetWindow(this).Show());
-		//		timer.after(1000,_=>Window.GetWindow(this).Width=500);
-		//		timer.after(1000,_=>Expand(0, false));
-		//		timer.after(1000,_=>ItemsRoot=null);
+		_leEdit = WndUtil.CreateWindow("Edit", item.DisplayText, WS.CHILD | WS.VISIBLE | Api.ES_AUTOHSCROLL, 0, 0, 0, r.Width - 2, r.Height - 2, _leBorder);
+		WndUtil.SetFont(_leEdit);
+		EditLabelStartedEventArgs e = new(this, item);
+		e.SelectText();
+		
+		Api.SetFocus(_leEdit);
+		
+		EditLabelStarted?.Invoke(e);
 	}
 	
-	KPopup _lePopup;
-	TextBox _leTB;
+	wnd _leEdit, _leBorder;
 	ITreeViewItem _leItem;
 	Action<bool> _leEnded;
 	
 	/// <summary>
 	/// When item text editing started.
 	/// </summary>
-	public event Action<ITreeViewItem, TextBox> EditLabelStarted;
+	public event Action<EditLabelStartedEventArgs> EditLabelStarted;
+	
+	public record class EditLabelStartedEventArgs(KTreeView tv, ITreeViewItem item) {
+		public string Text {
+			get => item.DisplayText;
+			set { tv._leEdit.SetText(value); }
+		}
+		
+		/// <summary>
+		/// Selects text. To select all, use 0 -1.
+		/// </summary>
+		public void SelectText(int start = 0, int end = -1) {
+			tv._leEdit.Send(/*EM_SETSEL*/ 0x00B1, start, end);
+		}
+	}
+	
+	public bool EditingLabel => !_leEdit.Is0;
 	
 	/// <summary>
 	/// Ends item text editing.
 	/// </summary>
 	public void EndEditLabel(bool cancel = false) {
-		if (_lePopup == null) return;
+		if (!EditingLabel) return;
 		int index = cancel ? -1 : IndexOf(_leItem);
 		if (!cancel) cancel = index < 0 || !IsVisible;
 		//print.it("EndEditLabel, cancel=", cancel);
-		bool focus = Keyboard.FocusedElement == _leTB;
-		var text = cancel ? null : _leTB.Text; _leTB = null;
+		bool focus = Api.GetFocus() == _leEdit;
+		var text = cancel ? null : _leEdit.ControlText;
 		var item = _leItem; _leItem = null;
-		var p = _lePopup; _lePopup = null;
 		var ended = _leEnded; _leEnded = null;
-		p.Close();
+		_leEdit = default;
+		Api.DestroyWindow(_leBorder); _leBorder = default;
 		if (focus) Focus();
 		if (!cancel && text != item.DisplayText) {
 			int meas = _avi[index].measured;

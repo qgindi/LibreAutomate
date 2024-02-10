@@ -16,6 +16,7 @@ static partial class App {
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
+	static EnvVarUpdater _envVarUpdater;
 	
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
@@ -69,7 +70,9 @@ static partial class App {
 #if DEBUG
 		print.qm2.use = !true;
 		//timer.after(1, _ => perf.nw());
+		_RemindToBuild32bit();
 #endif
+		_envVarUpdater = new();
 		
 		//perf.next('o');
 		Settings = AppSettings.Load();
@@ -281,6 +284,17 @@ static partial class App {
 			Environment.Exit(1);
 		}
 	}
+
+#if DEBUG
+	static void _RemindToBuild32bit() {
+		if (IsAuAtHome)
+			if (filesystem.getProperties(folders.ThisAppBS + @"..\Cpp", out var p64)
+				&& filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32)) {
+				var v = p64.LastWriteTimeUtc - p32.LastWriteTimeUtc;
+				if (v > default(TimeSpan)) print.it("Note: may need to build 32-bit AuCpp.dll.");
+			}
+	}
+#endif
 	
 	internal static void OnMainWindowLoaded_() {
 		if (IsPortable) {
@@ -319,7 +333,7 @@ static partial class App {
 				print.it(s);
 				Panels.Output.Scintilla.AaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
 			} else if (CommandLine.Raa) { //restarted because clicked link "Restart as administrator: now and always"
-				var name = IsAuHomePC ? "_Au.Editor" : "Au.Editor";
+				var name = IsAuAtHome ? "_Au.Editor" : "Au.Editor";
 				bool ok = WinTaskScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
 				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
 				
@@ -332,9 +346,9 @@ static partial class App {
 	
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
-		bool home = IsAuHomePC;
+		bool home = IsAuAtHome;
 		string sesId = process.thisProcessSessionId.ToS();
-		args = args.Length == 0 ? new[] { sesId } : args.InsertAt(0, sesId);
+		args = args.Length == 0 ? [sesId] : args.InsertAt(0, sesId);
 		(int pid, _raaResult) = WinTaskScheduler.RunTask("Au",
 			home ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
 			process.thisExePath, true, args);
@@ -414,7 +428,7 @@ static partial class App {
 		}
 	}
 	
-	public static bool IsAuHomePC { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
+	public static bool IsAuAtHome { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
 	
 	public static bool IsPortable { get; private set; }
 	

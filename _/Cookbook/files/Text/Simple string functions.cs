@@ -2,18 +2,18 @@
 
 string s = "Text example";
 
-/// Most string functions are called (executed) like <mono>variable.Function(arguments)<>.
+/// Most string functions are called (executed) like <.c>variable.Function(arguments)<>.
 
 string uppercase = s.Upper();
 string lowercase = s.Lower();
 print.it(uppercase, lowercase);
 
-/// Other functions are called like <mono>type.Function(arguments)<>.
+/// Other functions are called like <.c>type.Function(arguments)<>.
 
 string joined = string.Join(" + ", "one", "two", "three");
 print.it(joined);
 
-/// You can find all functions in the popup list that appears when you type dot (.) after a variable name or type name. Just several examples.
+/// You can find all functions in the popup list that appears when you type <.c>.<> (dot) after a variable name or type name. Just several examples.
 
 /// Get string length (number of characters).
 
@@ -24,7 +24,7 @@ int lenSafe = s.Lenn(); //if s is null, returns 0; s.Lenght would throw exceptio
 
 if (s.NE()) print.it("s is null or \"\"");
 
-/// Remove white-space charactars (spaces, tabs, newlines) from the start and/or end.
+/// Remove white-space characters (spaces, tabs, newlines) from the start and/or end.
 
 string ss = " text ";
 print.it($"'{ss.Trim()}', '{ss.TrimStart()}', '{ss.TrimEnd()}'");

@@ -348,11 +348,13 @@ public sealed class IconImageCache : IDisposable {
 	/// </summary>
 	public event Action Cleared;
 	
-	void _ClearFiles() {
-		if (_dir == null || !filesystem.exists(_dir, true)) return;
+	void _ClearFiles() => _ClearFiles(_dir);
+	
+	static void _ClearFiles(string dir) {
+		if (dir == null || !filesystem.exists(dir, true).Directory) return;
 		try {
-			foreach (var v in Directory.GetFiles(_dir, "*.dpi")) filesystem.delete(v);
-			foreach (var v in Directory.GetFiles(_dir, "*.png")) Api.DeleteFile(v);
+			foreach (var v in Directory.GetFiles(dir, "*.dpi")) filesystem.delete(v);
+			foreach (var v in Directory.GetFiles(dir, "*.png")) Api.DeleteFile(v);
 		}
 		catch (Exception e1) { Debug_.Print(e1); }
 	}
@@ -368,9 +370,17 @@ public sealed class IconImageCache : IDisposable {
 	/// <param name="allProcesses">Clear in all processes of this user session.</param>
 	public static void ClearAll(bool allProcesses = true) {
 		ClearAll_();
-		if (allProcesses)
+		if (allProcesses) {
+			//if called in LA process (eg menu Tools -> Update icons), clear the cache dir of the common cache of scripts.
+			//	Without it would clear only if some script processes already used the cache.
+			if (script.role == SRole.EditorExtension && Common._dir is string s1) {
+				Debug.Assert(s1.Ends(@"\iconCache"));
+				_ClearFiles(s1.Insert(^10, @"\_script"));
+			}
+			
 			for (var w = wnd.findFast(null, script.c_auxWndClassName, true); !w.Is0; w = wnd.findFast(null, script.c_auxWndClassName, true, w))
 				if (!w.IsOfThisProcess) w.SendNotify(script.c_msg_IconImageCache_ClearAll);
+		}
 	}
 	
 	internal static void ClearAll_() {

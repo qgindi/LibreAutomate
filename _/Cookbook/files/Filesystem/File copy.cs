@@ -12,7 +12,7 @@ filesystem.copyTo(fc1, @"C:\Test2"); //copy to the specified folder
 
 filesystem.copy(@"C:\Test", @"C:\Test2", FIfExists.MergeDirectory);
 
-/// Copy all .png files to the specified folder. Don't include subfolders.
+/// Copy all <_>.png</_> files to the specified folder. Don't include subfolders.
 
 foreach (var f in filesystem.enumFiles(@"C:\Test", "*.png"))
 	filesystem.copyTo(f.FullPath, @"C:\Test2");
@@ -20,7 +20,7 @@ foreach (var f in filesystem.enumFiles(@"C:\Test", "*.png"))
 //or can do the same with filter functions
 filesystem.copy(@"C:\Test", @"C:\Test2", fileFilter: f => f.Name.Ends(".png", true), dirFilter: _ => 0);
 
-/// Copy all .png files to the specified folder. From subfolders too.
+/// Copy all <_>.png</_> files to the specified folder. From subfolders too.
 
 //create subfolders like in the source folder
 filesystem.copy(@"C:\Test", @"C:\Test2", 0, FCFlags.NoEmptyDirectories, f => f.Name.Ends(".png", true));
@@ -42,7 +42,7 @@ foreach (var f in filesystem.enumFiles(@"C:\Test").Where(o => o.LastWriteTimeUtc
 
 /// The functions automatically create missing destination folders.
 
-/// Or use <google>robocopy</google>.
+/// Or use <google>robocopy<>.
 
 print.clear();
 int rc = run.console(out string rs, "robocopy.exe", """

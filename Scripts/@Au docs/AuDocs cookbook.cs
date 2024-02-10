@@ -88,9 +88,9 @@ This is an online copy of the LibreAutomate C# Cookbook.
 				switch (tag) {
 				case "_":
 					return _MarkdownEscape(s);
-				case "mono": //inline code
+				case "mono" or ".c": //key/hotkey or inline code
 					//print.it(s);
-					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </mono>
+					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </mono> or </.c>
 					Debug_.PrintIf(s.Contains('\n'), s);
 					return $"`{s}`";
 				}
@@ -103,7 +103,7 @@ This is an online copy of the LibreAutomate C# Cookbook.
 					return $"<{tag}>{s}</{tag}>";
 				case "bi":
 					return $"<b><i>{s}</i></b>";
-				case ".k":
+				case ".k": //C# keyword
 					return $"<span style='color:#00f;font-weight:bold'>{s}</span>";
 				case "c":
 					var color = m[2].Value;
@@ -111,7 +111,7 @@ This is an online copy of the LibreAutomate C# Cookbook.
 					print.it(tag, color);
 					return s;
 				case "+nuget":
-					return $"<u title='Paste the underlined text in menu -> Tools -> NuGet'>{s}</u>";
+					return $"<u title='Paste the underlined text in menu > Tools > NuGet'>{s}</u>";
 				case "open":
 					return s;
 				}
@@ -126,13 +126,13 @@ This is an online copy of the LibreAutomate C# Cookbook.
 				//links
 				switch (tag) {
 				case "help":
-					if (HelpUtil.AuHelpUrl(attr) is string url1 && url1.Starts(website)) return $"<a href='{url1[website.Length..]}'>{s}</a>";
+					if (HelpUtil.AuHelpUrl(attr) is string url1 && url1.Starts(website)) return $"<a href=\"{url1[website.Length..]}\">{s}</a>";
 					break;
 				case "link":
 					if (!attr.Starts("http")) return s; //eg %folders.Workspace%
-					return $"<a href='{attr}'>{s}</a>";
+					return $"<a href=\"{attr}\">{s}</a>";
 				case "google":
-					return $"<a href='https://www.google.com/search?q={System.Net.WebUtility.UrlEncode(attr)}'>{s}</a>";
+					return $"<a href=\"https://www.google.com/search?q={System.Net.WebUtility.UrlEncode(attr)}\">{s}</a>";
 				case "+lang":
 					attr += ", C# reference";
 					goto case "google";
@@ -141,12 +141,12 @@ This is an online copy of the LibreAutomate C# Cookbook.
 					goto case "google";
 				case "+recipe":
 					//if(_FindRecipe(attr) is string rec) return $"[{s}]({rec})"; //why DocFX ignores it?
-					if (_FindRecipe(attr) is string rec) return $"<a href='{rec}'>{s}</a>"; //DocFX replaces .md with .html
+					if (_FindRecipe(attr) is string rec) return $"<a href=\"{rec}\">{s}</a>"; //DocFX replaces .md with .html
 					break;
 				case "+see": //was <see cref="attr"/>, now <+see 'attr'>attr<>
 					if (PanelRecipe.GetSeeUrl(attr, usings) is string url2) {
 						if (url2.Starts(website)) url2 = url2[website.Length..];
-						return $"<a href='{url2}'>{_MarkdownEscape(s)}</a>";
+						return $"<a href=\"{url2}\">{_MarkdownEscape(s)}</a>";
 					}
 					break;
 				}

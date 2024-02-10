@@ -1,4 +1,4 @@
-/// This example uses library <google>HandyControl</google>. NuGet: <+nuget>HandyControl<>. Applies its theme to all controls and adds several its controls to the dialog.
+/// This example uses library <google>HandyControl<>. NuGet: <+nuget>HandyControl<>. Applies its theme to all controls and adds several its controls to the dialog.
 
 /*/ nuget -\HandyControl; /*/
 

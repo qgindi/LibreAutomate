@@ -1,4 +1,4 @@
-/// To create code to find a UI element, use tool "Find UI element"; it's in the Code menu, hotkey Ctrl+Shift+E. It also can create action code, for example to click the element.
+/// To create code to find a UI element, use this tool: menu <b>Code > Find UI element<> (hotkey <mono>Ctrl+Shift+E<>). It also can create action code, for example to click the element.
 
 //click button "Properties" in a folder window; then wait 1 s
 var w1 = wnd.find(1, cn: "CabinetWClass").Activate();
@@ -36,7 +36,7 @@ var w5 = wnd.find(1, "Font", "#32770").Activate();
 var e5 = w5.Elm["COMBOBOX", "Script:"].Find(1);
 e5.ComboSelect("Baltic");
 
-/// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hotkeys and Alt+keys.
+/// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hotkeys and <mono>Alt<>+keys.
 
 //hotkey and Alt+keys
 wnd.find(0, "*- Notepad", "Notepad").Activate();
@@ -51,7 +51,7 @@ var wMenu = wnd.find(1, "", "#32768", wNotepad);
 var ePaste = wMenu.Elm["MENUITEM", "Paste\tCtrl+V"].Find(1);
 ePaste.Invoke();
 
-/// Use <b>elm</b> functions to get menu item state (checked, disabled). This code checks menu Format -> Word Wrap. 
+/// Use <b>elm<> functions to get menu item state (checked, disabled). This code checks menu <b>Format > Word Wrap<>. 
 
 var wNotepad2 = wnd.find(0, "*- Notepad", "Notepad").Activate();
 keys.send("Alt+O"); //Format
@@ -59,7 +59,7 @@ var wMenu2 = wnd.find(3, "", "#32768", wNotepad2);
 var eWW = wMenu2.Elm["MENUITEM", "Word Wrap"].Find(1);
 keys.send(eWW.IsChecked ? "Esc*2" : "W");
 
-/// Wait until button "Apply" isn't disabled.
+/// Wait until button <b>Apply<> isn't disabled.
 
 var wProp = wnd.find(1, "* Properties", "#32770");
 var eApply = wProp.Elm["BUTTON", "Apply"].Find(1);
@@ -79,14 +79,14 @@ print.it("---");
 var aAll = eList.Elm.FindAll();
 print.it(aAll);
 
-/// You can find more <b>elm</b> functions in the popup list that appears when you type . (dot) after a variable name or <mono>elm<>.
+/// You can find more <b>elm<> functions in the popup list that appears when you type <.c>.<> (dot) after a variable name or <.c>elm<>.
 
 var em = elm.fromMouse(); //popup list when typed "elm."
 string role = em.Role; //popup list when typed "em."
 
 /// In some cases to find UI elements it's better to use <see cref="elmFinder"/>. A single instance can be used to find elements in multiple windows etc.
 
-/// Find window that contains button "Apply" (UI element), and get the UI element too.
+/// Find window that contains button <b>Apply<> (UI element), and get the UI element too.
 
 var f1 = new elmFinder("BUTTON", "Apply"); //or var f1 = elm.path["BUTTON", "Apply"];
 var w10 = wnd.find(cn: "#32770", also: t => f1.In(t).Exists()); //or t => t.HasElm(f1)

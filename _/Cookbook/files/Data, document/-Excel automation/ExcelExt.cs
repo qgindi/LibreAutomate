@@ -1,4 +1,4 @@
-/// Open the Properties window of class file "ExcelExt", click COM, select Microsoft Excel, OK. It creates Excel COM interop assemblies for current Excel version and replaces the /*/ ... /*/ line.
+/// Open the <b>Properties<> dialog of class file <.c>ExcelExt<>, click <b>COM<>, select <b>Microsoft Excel<>, click <b>OK<>. It creates Excel COM interop assemblies for current Excel version and replaces the /*/ ... /*/ line.
 
 /*/ com Excel 1.9 #9fdf46bf.dll; /*/
 using Excel = Microsoft.Office.Interop.Excel;

@@ -290,6 +290,12 @@ class MetaComments {
 	public MCUac Uac { get; private set; }
 	
 	/// <summary>
+	/// Meta option 'startFaster'.
+	/// Default: false.
+	/// </summary>
+	public bool StartFaster { get; private set; }
+	
+	/// <summary>
 	/// Meta option 'bit32'.
 	/// Default: false.
 	/// </summary>
@@ -498,6 +504,7 @@ class MetaComments {
 				this.IfRunning = MCIfRunning.run;
 				_defines.Add("WPF_PREVIEW");
 				this.Uac = default;
+				//this.StartFaster = true;
 				this.Bit32 = false;
 				this.Console = false;
 				this.Optimize = false;
@@ -680,6 +687,10 @@ class MetaComments {
 		case "uac":
 			_Specified(MCSpecified.uac);
 			if (_Enum(out MCUac uac, value)) Uac = uac;
+			break;
+		case "startFaster": //undocumented. Likely will be removed in the future.
+			_Specified(MCSpecified.startFaster);
+			if (_TrueFalse(out bool startFaster, value)) StartFaster = startFaster;
 			break;
 		case "bit32":
 			_Specified(MCSpecified.bit32);
@@ -907,6 +918,8 @@ class MetaComments {
 	}
 	
 	bool _FinalCheckOptions() {
+		//const MCSpecified c_spec1 = MCSpecified.ifRunning | MCSpecified.uac | MCSpecified.bit32 | MCSpecified.manifest | MCSpecified.icon | MCSpecified.console | MCSpecified.startFaster;
+		//const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, bit32, startFaster";
 		const MCSpecified c_spec1 = MCSpecified.ifRunning | MCSpecified.uac | MCSpecified.bit32 | MCSpecified.manifest | MCSpecified.icon | MCSpecified.console;
 		const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, bit32";
 		
@@ -914,13 +927,16 @@ class MetaComments {
 		var role = UnchangedRole;
 		switch (role) {
 		case MCRole.miniProgram:
-			if (Specified.HasAny(MCSpecified.outputPath | MCSpecified.manifest | MCSpecified.bit32 | MCSpecified.xmlDoc)) return _ErrorM("with role miniProgram cannot use: outputPath, manifest, bit32, xmlDoc");
+			if (Specified.HasAny(MCSpecified.outputPath | MCSpecified.manifest | MCSpecified.bit32 | MCSpecified.xmlDoc))
+				return _ErrorM("with role miniProgram cannot use: outputPath, manifest, bit32, xmlDoc");
 			break;
 		case MCRole.exeProgram:
+			//if (Specified.Has(MCSpecified.startFaster)) return _ErrorM("with role exeProgram cannot use: startFaster");
 			needOP = true;
 			break;
 		case MCRole.editorExtension:
-			if (Specified.HasAny(c_spec1 | MCSpecified.outputPath | MCSpecified.xmlDoc)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath, xmlDoc");
+			if (Specified.HasAny(c_spec1 | MCSpecified.outputPath | MCSpecified.xmlDoc))
+				return _ErrorM($"with role editorExtension {c_spec1S}, outputPath, xmlDoc");
 			break;
 		case MCRole.classLibrary:
 			if (Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);
@@ -1140,4 +1156,5 @@ enum MCSpecified {
 	xmlDoc = 1 << 15,
 	console = 1 << 16,
 	nullable = 1 << 17,
+	startFaster = 1 << 18,
 }

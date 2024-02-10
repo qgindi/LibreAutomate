@@ -48,7 +48,7 @@ internet.http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
 var s1 = internet.http.Get("https://httpbin.org/anything", headers: new[] { "Accept: application/json, text/json", "Cookie: mmm=nnn; xxx=yyy;" }).Text();
 print.it(s1);
 
-/// You can use <b>HttpClient</b> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
+/// You can use <b>HttpClient<> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
 
 using var http = new HttpClient();
 string html2 = http.GetStringAsync("https://www.example.com").Result;
@@ -91,4 +91,4 @@ var q = internet.http.Get("https://httpbin.org/anything").Json<R1>();
 print.it(q);
 record R1(string origin, string url);
 
-/// Also you can use libraries, for example <google>RestSharp</google>. See also recipe <+recipe>Parse HTML<>.
+/// Also you can use libraries, for example <google>RestSharp<>. See also recipe <+recipe>Parse HTML<>.
