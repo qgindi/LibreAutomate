@@ -41,10 +41,10 @@ foreach (var v in a2) {
 	print.it(v);
 }
 
-/// A window can contain child windows, also known as <i>controls<>. This code finds child window named <.c>"User Promoted Notification Area"<>, classnamed <.c>"ToolbarWindow32"<>. Exception if not found. When found, moves the mouse cursor to its center.
+/// A window can contain child windows, also known as <i>controls<>. This code finds a child window. Exception if not found. When found, moves the mouse cursor to its center.
 
-var w6 = wnd.find(0, "", "Shell_TrayWnd", "explorer.exe");
-var c1 = w6.Child(0, "User Promoted Notification Area", "ToolbarWindow32");
+var w6 = wnd.find(0, "*- WordPad", "WordPadClass");
+var c1 = w6.Child(0, cn: "msctls_trackbar32", id: 53254); // "Zoom Slider"
 mouse.move(c1);
 
 /// To create <see cref="wnd.Child"/> code can be used the same tools as for <b>wnd.find<>.

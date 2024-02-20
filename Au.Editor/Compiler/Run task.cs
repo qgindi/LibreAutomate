@@ -184,7 +184,7 @@ class RunningTask : ITreeViewItem {
 			
 			int pid = process.processIdFromHandle(h);
 			if (pid != 0) {
-				if (Panels.Debug.EndIfDebugging(pid)) return true;
+				if (Panels.Debug?.EndIfDebugging(pid) == true) return true;
 				
 				//let it call Environment.Exit. It removes tray icons etc.
 				var w1 = wnd.findFast(pid.ToS(), script.c_auxWndClassName, messageOnly: true);
@@ -299,7 +299,7 @@ class RunningTasks {
 	}
 	
 	/// <summary>
-	/// When task ended, this message is posted to MainForm, with wParam=taskId.
+	/// When task ended, this message is posted to CommandLine.MsgWnd, with wParam=taskId.
 	/// </summary>
 	public const int WM_TASK_ENDED = Api.WM_USER + 900;
 	

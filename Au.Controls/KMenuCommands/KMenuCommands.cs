@@ -146,6 +146,7 @@ public partial class KMenuCommands {
 			if (autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
 			if (ca.checkable) c.MenuItem.IsCheckable = true;
 			if (ca.noIndirectDisable) c.NoIndirectDisable = true;
+			if (parentMenu is Menu m1) c.MenuItem.MinHeight = 22;
 			
 			if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
 			if (mi is TypeInfo ti) _CreateMenu(ti, c.MenuItem, autoUnderline, itemFactory, added, namePrefix, ca.target);
