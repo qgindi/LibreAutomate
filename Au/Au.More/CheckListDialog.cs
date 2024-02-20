@@ -45,7 +45,9 @@ public class CheckListDialog {
 	public CheckBox Add(string text, bool check = false, string tooltip = null) {
 		if (_lb == null) _b.R.Add(out _lb).Height(..550);
 		
-		CheckBox c = new() { Content = text, IsChecked = check, ToolTip = tooltip };
+		//var content = UseAccessKey ? text : text?.Replace("_", "__");
+		var content = text?.Replace("_", "__");
+		CheckBox c = new() { Content = content, Tag = text, IsChecked = check, ToolTip = tooltip };
 		_ac.Add(c);
 		_lb.Items.Add(c);
 		return c;
@@ -59,6 +61,11 @@ public class CheckListDialog {
 	public void Add(IEnumerable<string> items, bool check = false) {
 		foreach (var v in items) Add(v, check);
 	}
+	
+	///// <summary>
+	///// Character <c>'_'</c> in checkbox text isn't displayed. Instead the next character toggles the checkbox when pressed with <c>Alt</c>. For literal <c>"_"</c> use <c>"__"</c>.
+	///// </summary>
+	//public bool UseAccessKey { get; set; }
 	
 	/// <summary>
 	/// Sets formatted text, like <see cref="wpfBuilder.FormatText(wpfBuilder.InterpolatedString)"/>.
@@ -119,7 +126,7 @@ public class CheckListDialog {
 		ResultIndices = new int[n];
 		for (int i = 0, j = 0; i < ba.Length; i++) if (ba[i]) ResultIndices[j++] = i;
 		ResultItems = new string[n];
-		for (int i = 0, j = 0; i < ba.Length; i++) if (ba[i]) ResultItems[j++] = _ac[i].Content as string;
+		for (int i = 0, j = 0; i < ba.Length; i++) if (ba[i]) ResultItems[j++] = _ac[i].Tag as string;
 		ResultBits = ba;
 		
 		return true;

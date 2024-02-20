@@ -40,33 +40,34 @@ static class CommandLine {
 		bool restarting = false;
 		if (args.Length > 0) {
 			//print.it(args);
-			
-			for (int i = 0; i < args.Length; i++) {
-				if (args[i].Starts('-')) args[i] = args[i].ReplaceAt(0, 1, "/");
-				//if (args[i].Starts('/')) args[i] = args[i].Lower();
-			}
-			
 			s = args[0];
-			if (s.Starts('/')) {
+			if (s is ['/' or '-', ..]) {
 				for (int i = 0; i < args.Length; i++) {
 					s = args[i];
-					switch (s) {
-					case "/v":
-						StartVisible = true;
-						break;
-					case "/reload":
-						cmd = -5;
-						break;
-					case "/restart":
-						restarting = true;
-						break;
-					case "/raa":
-						Raa = true;
-						break;
-					case "/test":
-						if (++i < args.Length) TestArg = args[i];
-						break;
-					default:
+					bool good = s is ['/' or '-', ..];
+					if (good) {
+						switch (s.AsSpan(1)) {
+						case "v":
+							StartVisible = true;
+							break;
+						case "reload":
+							cmd = -5;
+							break;
+						case "restart":
+							restarting = true;
+							break;
+						case "raa":
+							Raa = true;
+							break;
+						case "test":
+							if (++i < args.Length) TestArg = args[i];
+							break;
+						default:
+							good = false;
+							break;
+						}
+					}
+					if (!good) {
 						dialog.showError("Unknown command line parameter", s);
 						return true;
 					}
@@ -174,47 +175,53 @@ static class CommandLine {
 	public static wnd MsgWnd => _msgWnd;
 	
 	static nint _WndProc(wnd w, int message, nint wparam, nint lparam) {
-		switch (message) {
-		case Api.WM_COPYDATA:
-			if (App.Loaded >= AppState.Unloading) return default;
-			try { return _WmCopyData(wparam, lparam); }
-			catch (Exception ex) { print.warning(ex); }
-			return default;
-		case Api.WM_USER:
-			if (App.Loaded >= AppState.Unloading) return default;
-			switch (wparam) {
-			case 0: //ScriptEditor.MainWindow, etc
-				if (lparam == 1) App.ShowWindow(); //else returns default(wnd) if never was visible
-				return App.Hmain.Handle;
-			case 1: //ScriptEditor.ShowMainWindow
-				if (lparam == 0) lparam = App.Wmain.IsVisible ? 2 : 1; //toggle
-				if (lparam == 1) App.ShowWindow();
-				else App.Wmain.Hide_();
+		try {
+			switch (message) {
+			case Api.WM_USER:
+				if (App.Loaded >= AppState.Unloading) return 0;
+				return _WmUser(wparam, lparam);
+			case Api.WM_COPYDATA:
+				if (App.Loaded >= AppState.Unloading) return 0;
+				return _WmCopyData(wparam, lparam);
+			case RunningTasks.WM_TASK_ENDED: //WM_USER+900
+				App.Tasks.TaskEnded2(wparam, lparam);
 				return 0;
-			case 3: //get wpf preview window saved xy
-				return App.Settings.wpfpreview_xy;
-			case 4: //save wpf preview window xy
-				App.Settings.wpfpreview_xy = (int)lparam;
-				break;
-			case 5:
-				Menus.File.Workspace.Reload_this_workspace();
-				break;
-			case 10:
-				UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
-				break;
-			case 20: //Triggers.DisabledEverywhere
-				TriggersAndToolbars.OnDisableTriggers();
-				break;
-			case 30: //script.debug()
-				return Panels.Debug.Attach((int)lparam) ? 1 : 0;
 			}
-			return 0;
-		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
-			App.Tasks.TaskEnded2(wparam, lparam);
-			return 0;
 		}
+		catch (Exception ex) { print.warning(ex); return 0; }
 		
 		return Api.DefWindowProc(w, message, wparam, lparam);
+	}
+	
+	static nint _WmUser(nint wparam, nint lparam) {
+		switch (wparam) {
+		case 0: //ScriptEditor.MainWindow, etc
+			if (lparam == 1) App.ShowWindow(); //else returns default(wnd) if never was visible
+			return App.Hmain.Handle;
+		case 1: //ScriptEditor.ShowMainWindow
+			if (lparam == 0) lparam = App.Wmain.IsVisible ? 2 : 1; //toggle
+			if (lparam == 1) App.ShowWindow();
+			else App.Wmain.Hide_();
+			return 0;
+		case 3: //get wpf preview window saved xy
+			return App.Settings.wpfpreview_xy;
+		case 4: //save wpf preview window xy
+			App.Settings.wpfpreview_xy = (int)lparam;
+			break;
+		case 5:
+			Menus.File.Workspace.Reload_this_workspace();
+			break;
+		case 10:
+			UacDragDrop.AdminProcess.OnTransparentWindowCreated((wnd)lparam);
+			break;
+		case 20: //Triggers.DisabledEverywhere
+			TriggersAndToolbars.OnDisableTriggers();
+			break;
+		case 30: //script.debug()
+			if (!App.Wmain.IsVisible) App.ShowWindow(); else if (!App.Hmain.IsActive) { App.Hmain.TaskbarButton.Flash(3); /*timer.after(10000, _ => App.Hmain.TaskbarButton.Flash(0));*/ }
+			return Panels.Debug.Attach((int)lparam) ? 1 : 0;
+		}
+		return 0;
 	}
 	
 	static nint _WmCopyData(nint wparam, nint lparam) {
@@ -224,13 +231,13 @@ static class CommandLine {
 		string s = isString ? c.GetString() : null;
 		byte[] b = isString ? null : c.GetBytes();
 		switch (action) {
-		case 1:
+		case 1: //command line (ProgramStarted2)
 			FilesModel.LoadWorkspace(s);
 			break;
-		case 2:
+		case 2: //command line (ProgramStarted2)
 			App.Model.ImportWorkspace(s);
 			break;
-		case 3:
+		case 3: //command line (ProgramStarted2)
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show dialog
 			App.Model.ImportFiles(s.Split('\0'));
 			break;
@@ -243,9 +250,9 @@ static class CommandLine {
 		case 10: //ScriptEditor.GetIcon
 			s = DIcons.GetIconString(s, (EGetIcon)action2);
 			return s == null ? 0 : WndCopyData.Return<char>(s, wparam);
-		case 11: //ScriptEditor.InvokeMenuCommand
+		case 11: //ScriptEditor.InvokeCommand
 			return Menus.Invoke(s, false, (int)wparam);
-		case 12: //ScriptEditor.GetMenuCommandState
+		case 12: //ScriptEditor.GetCommandState
 			return Menus.Invoke(s, true, (int)wparam);
 		//case 13: //ScriptEditor.Folders (rejected)
 		//	s = string.Join('|', (string)folders.ThisAppDocuments, (string)folders.ThisAppDataLocal, (string)folders.ThisAppTemp);
@@ -417,7 +424,7 @@ static class CommandLine {
 		return false;
 	}
 	
-	//Initially for this was used native exe. Rejected because of AV false positives, including WD.
+	//Initially for this was used native exe. Rejected because of AV false positives.
 	//	Speed with native exe 50 ms, now 85 ms. Never mind.
 	static unsafe int _LetEditorRunScript(string[] args, int iArg) {
 		if (!_EnsureEditorRunningAndGetMsgWindow(out wnd w, iArg > 0 ? args[0] : null)) return (int)script.RunResult_.noEditor;

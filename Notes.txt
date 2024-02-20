@@ -70,8 +70,6 @@ Download and test the setup file.
 Test the setup file at virustotal.com. And separately other files (even data files).
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
 
-Announce in forum.
-
 Release NuGet package:
 	In Au project edit version and maybe year.
 		Can edit directly in .csproj.
@@ -82,6 +80,8 @@ Release NuGet package:
 	Upload to NuGet. The script prints links.
 
 Edit version in _\version.txt. Upload to public_html.
+
+Announce in forum.
 
 If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
 
