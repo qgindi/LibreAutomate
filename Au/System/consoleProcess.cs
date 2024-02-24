@@ -197,7 +197,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 			if (nr > 0) {
 				var b = _b.AsSpan(0, nr);
 				
-				if (_encoding == null && b.Contains((byte)0)) { Encoding = Encoding.Unicode; Debug_.Print("auto-detected UTF-16"); } //autodetect UTF-16
+				if (_encoding == null && _IsUtf16Encoded(b)) { Encoding = Encoding.Unicode; Debug_.Print("auto-detected UTF-16"); } //autodetect UTF-16
 				Debug_.PrintIf(b[0] is 0xfe or 0xef or 0xff); //BOM? Never noticed.
 				
 				if (_skipN && _b[0] == 10) {
@@ -211,8 +211,28 @@ public sealed unsafe class consoleProcess : IDisposable {
 			}
 		}
 	}
-	
-	bool _Read(out string text, bool needLine, Func<string, bool> prompt = null) {
+
+    bool _IsUtf16Encoded(Span<byte> data)
+    {
+        if (data.Length < 2)
+        {
+            return false;
+        }
+
+        if (data[0] == 0xFF && data[1] == 0xFE)
+        {
+            return true;
+        }
+
+        if (data[0] == 0xFE && data[1] == 0xFF)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool _Read(out string text, bool needLine, Func<string, bool> prompt = null) {
 		text = null;
 		if (Ended) return _R(false);
 		
