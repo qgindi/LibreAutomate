@@ -120,10 +120,10 @@ public sealed unsafe class consoleProcess : IDisposable {
 	
 	/// <summary>
 	/// Console's text encoding.
-	/// Default is <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/> (auto-detects when the first data received from console if this property wasn't used).
+	/// Default is <see cref="Encoding.UTF8"/>.
 	/// </summary>
 	/// <remarks>
-	/// If wrong encoding, the received text may contain garbage. Try <b>Encoding.X</b>, <b>Console.OutputEncoding</b>.
+	/// If wrong encoding, the received text may contain garbage. Try <see cref="Console.OutputEncoding"/> or <see cref="Encoding.Unicode"/>.
 	/// </remarks>
 	public Encoding Encoding {
 		get => _encoding ??= Encoding.UTF8;
@@ -197,7 +197,6 @@ public sealed unsafe class consoleProcess : IDisposable {
 			if (nr > 0) {
 				var b = _b.AsSpan(0, nr);
 				
-				if (_encoding == null && b.Contains((byte)0)) { Encoding = Encoding.Unicode; Debug_.Print("auto-detected UTF-16"); } //autodetect UTF-16
 				Debug_.PrintIf(b[0] is 0xfe or 0xef or 0xff); //BOM? Never noticed.
 				
 				if (_skipN && _b[0] == 10) {

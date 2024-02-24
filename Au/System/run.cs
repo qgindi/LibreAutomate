@@ -270,7 +270,7 @@ namespace Au {
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
-		/// If null (default), uses <see cref="Encoding.UTF8"/> or <see cref="Encoding.Unicode"/> (auto-detects when the first data received from console). If you get garbage text, try <see cref="Console.OutputEncoding"/> or an <b>Encoding.X</b>.
+		/// If null (default), uses <see cref="Encoding.UTF8"/>. If you get garbage text, try <see cref="Console.OutputEncoding"/> or <see cref="Encoding.Unicode"/>.
 		/// </param>
 		/// <returns>The process exit code. Usually a non-0 value means error.</returns>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>

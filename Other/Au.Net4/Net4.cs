@@ -1,39 +1,36 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using _TYPELIBATTR = System.Runtime.InteropServices.ComTypes.TYPELIBATTR;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
-unsafe class Net4
-{
+unsafe class Net4 {
 	[STAThread]
-	static int Main(string[] args)
-	{
-		switch(args[0]) {
+	static int Main(string[] args) {
+		Console.InputEncoding = Encoding.Default;
+		Console.OutputEncoding = Encoding.Default;
+
+		switch (args[0]) {
 		case "/typelib":
 			return ConvertTypelib(args[1]);
 		}
 		return 1;
 	}
 
-	static int ConvertTypelib(string param)
-	{
+	static int ConvertTypelib(string param) {
 		var a = param.Split('|');
 		string asmDir = a[0], comDll = a[1];
 
 		int hr = LoadTypeLibEx(comDll, 2, out var tl);
-		if(hr != 0) {
+		if (hr != 0) {
 			Print($"Failed to load type library '{comDll}'.\r\n\t{new Win32Exception(hr).Message}");
 			return -1;
 		}
@@ -42,21 +39,19 @@ unsafe class Net4
 			var c = new _TypelibConverter { saveDir = asmDir };
 			c.Convert(tl);
 		}
-		catch(Exception ex) { Print($"Failed to convert type library '{comDll}'.\r\n\t{ex.Message}"); return -2; }
+		catch (Exception ex) { Print($"Failed to convert type library '{comDll}'.\r\n\t{ex.Message}"); return -2; }
 		return 0;
 	}
 
 	[DllImport("oleaut32.dll", EntryPoint = "#183", PreserveSig = true)]
 	static extern int LoadTypeLibEx(string szFile, int regkind, out ITypeLib pptlib);
 
-	class _TypelibConverter : ITypeLibImporterNotifySink
-	{
+	class _TypelibConverter : ITypeLibImporterNotifySink {
 		static Dictionary<string, AssemblyBuilder> s_converted = new Dictionary<string, AssemblyBuilder>();
 
 		public string saveDir;
 
-		public Assembly Convert(ITypeLib tl)
-		{
+		public Assembly Convert(ITypeLib tl) {
 			tl.GetLibAttr(out IntPtr ipta);
 			var ta = *(_TYPELIBATTR*)ipta;
 			tl.ReleaseTLibAttr(ipta);
@@ -66,7 +61,7 @@ unsafe class Net4
 			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} #{hash}.dll";
 			var netPath = saveDir + fileName;
 
-			if(!s_converted.TryGetValue(fileName, out var asm) || !File.Exists(netPath)) {
+			if (!s_converted.TryGetValue(fileName, out var asm) || !File.Exists(netPath)) {
 				Print($"Converted: {tlName} ({tlDescription}) to \"{fileName}\".");
 
 				var converter = new TypeLibConverter();
@@ -79,9 +74,8 @@ unsafe class Net4
 			return asm;
 		}
 
-		void ITypeLibImporterNotifySink.ReportEvent(ImporterEventKind eventKind, int eventCode, string eventMsg)
-		{
-			if(eventKind != ImporterEventKind.NOTIF_TYPECONVERTED) Print("Warning: " + eventMsg);
+		void ITypeLibImporterNotifySink.ReportEvent(ImporterEventKind eventKind, int eventCode, string eventMsg) {
+			if (eventKind != ImporterEventKind.NOTIF_TYPECONVERTED) Print("Warning: " + eventMsg);
 		}
 
 		Assembly ITypeLibImporterNotifySink.ResolveRef(object typeLib) => Convert(typeLib as ITypeLib);
@@ -90,11 +84,10 @@ unsafe class Net4
 	static void Print(object o) => Console.WriteLine(o?.ToString());
 
 	//code copied from Hash
-	static int Fnv1(byte* data, int lengthBytes)
-	{
+	static int Fnv1(byte* data, int lengthBytes) {
 		uint hash = 2166136261;
 
-		for(int i = 0; i < lengthBytes; i++)
+		for (int i = 0; i < lengthBytes; i++)
 			hash = (hash * 16777619) ^ data[i];
 
 		return (int)hash;
