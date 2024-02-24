@@ -413,10 +413,10 @@ class CiAutocorrect {
 		if (!anywhere) {
 			if (!isSelection) {
 				char ch = code[pos];
-				canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
+				canCorrect = ch is ')' or ']' && code[pos - 1] != ',';
 				if (!(canCorrect | canAutoindent)) return false;
 				//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
-				//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timer.after(1, _=>{print.it(1)); (user cannot ype ';' after "print.it(1)".
+				//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: timer.after(1, _=>{print.it(1)); (user cannot type ';' after "print.it(1)".
 			} else if (onSemicolon) return false;
 		}
 		
@@ -428,8 +428,7 @@ class CiAutocorrect {
 		//CiUtil.PrintNode(tok1, printErrors: true);
 		if (!anywhere) {
 			if (canCorrect && !isSelection) {
-				var tokKind = tok1.Kind();
-				canCorrect = (tokKind == SyntaxKind.CloseParenToken || tokKind == SyntaxKind.CloseBracketToken) && tok1.SpanStart == pos;
+				canCorrect = tok1.Kind() is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken && tok1.SpanStart == pos;
 				if (!(canCorrect | canAutoindent)) return false;
 			}
 			
@@ -441,6 +440,9 @@ class CiAutocorrect {
 				anywhere = canCorrect = true;
 				canAutoindent = onEnterWithoutMod = false;
 			}
+		} else {
+			//if `{ ...;| }`, on Ctrl+Enter etc should work like when `{ ...; |}`
+			if (tok1.IsKind(SyntaxKind.SemicolonToken) && pos >= tok1.Span.End && tok1.GetNextToken() is var tok2 && tok2.IsKind(SyntaxKind.CloseBraceToken)) tok1 = tok2;
 		}
 		
 		SyntaxNode nodeFromPos = tok1.Parent;

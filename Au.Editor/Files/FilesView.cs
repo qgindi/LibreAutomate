@@ -34,10 +34,13 @@ partial class FilesModel {
 
 		private void _ItemActivated(TVItemEventArgs e) {
 			var f = e.Item as FileNode;
-			if (f.IsFolder) return;
-			var m = App.Model;
-			if (e.ClickCount == 0 && f == m.CurrentFile) Panels.Editor.ActiveDoc?.Focus(); //let Enter set focus = active doc
-			else m._SetCurrentFile(f, focusEditor: e.ClickCount switch { 1 => null, 2 => true, _ => false });
+			if (f.IsFolder) {
+				if (e.ClickCount == 0) TreeControl.Expand(f, true);
+			} else {
+				var m = App.Model;
+				if (e.ClickCount == 0 && f == m.CurrentFile) Panels.Editor.ActiveDoc?.Focus(); //let Enter set focus = active doc
+				else m._SetCurrentFile(f, focusEditor: e.ClickCount switch { 1 => null, 2 => true, _ => false });
+			}
 		}
 
 		private void _ItemClick(TVItemEventArgs e) {
@@ -55,9 +58,9 @@ partial class FilesModel {
 
 		protected override void OnKeyDown(KeyEventArgs e) {
 			base.OnKeyDown(e);
+			if (e.Handled || base.EditingLabel) return;
 			var m = App.Model;
 			switch ((e.KeyboardDevice.Modifiers, e.Key)) {
-			case (0, Key.Enter): m.OpenSelected(1); break;
 			case (0, Key.Delete): m.DeleteSelected(); break;
 			case (ModifierKeys.Control, Key.X): m.CutCopySelected(true); break;
 			case (ModifierKeys.Control, Key.C): m.CutCopySelected(false); break;
