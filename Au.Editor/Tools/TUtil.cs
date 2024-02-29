@@ -372,7 +372,7 @@ static class TUtil {
 		} else {
 			run.thread(() => {
 				_Show(true);
-				wait.doEvents();
+				//wait.doEvents(); //no, randomly app crashes. Noticed 2024-02-29, never before, don't know why. Some WPF wndproc hook calls Thread.CurrentThread and it throws NullReferenceException. Less often in Debug config.
 			}).Name = "Au.Tool";
 		}
 		
@@ -395,7 +395,7 @@ static class TUtil {
 			run.thread(() => {
 				var (wr, type) = _Show(true); if (wr == null) return;
 				//GC-collect and wait if need, else it seems the Window is never GC-collected
-				wait.doEvents();
+				//wait.doEvents();
 				for (int i = 500; i < 2000; i+=100) {
 					GC.Collect();
 					GC.WaitForPendingFinalizers(); //usually finalizer runs the first time
