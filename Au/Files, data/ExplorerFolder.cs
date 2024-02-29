@@ -72,8 +72,8 @@ public class ExplorerFolder {
 		var s = _b.LocationURL;
 		if (!s.NE()) {
 			if (!s.Starts("file:///")) return null;
-			s = s[8..].Replace('/', '\\');
-			return System.Net.WebUtility.UrlDecode(s);
+			if (0 != Api.PathCreateFromUrlAlloc(s, out var r)) return null; //note: .NET urldecoding functions produce invalid string if there are urlencoded non-ASCII characters
+			return r;
 		} else { //non-filesystem?
 			if (Api.QueryService(_b, _Api.SID_STopLevelBrowser, out _Api.IShellBrowser sb)) {
 				if (0 == sb.QueryActiveShellView(out var v1) && v1 is _Api.IFolderView f) {

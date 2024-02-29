@@ -865,6 +865,9 @@ static unsafe partial class Api {
 	[DllImport("shlwapi.dll")]
 	internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
 	
+	[DllImport("shlwapi.dll", PreserveSig = true)]
+	internal static extern int PathCreateFromUrlAlloc(string pszIn, out string ppszOut, uint dwFlags = 0);
+	
 	//internal enum ASSOCSTR
 	//{
 	//	ASSOCSTR_COMMAND = 1,

@@ -372,7 +372,7 @@ static class TUtil {
 		} else {
 			run.thread(() => {
 				_Show(true);
-				//wait.doEvents(); //no, randomly app crashes. Noticed 2024-02-29, never before, don't know why. Some WPF wndproc hook calls Thread.CurrentThread and it throws NullReferenceException. Less often in Debug config.
+				//wait.doEvents(); //no, randomly app crashes. Noticed 2024-02-29, never before, don't know why, maybe because recently updated .NET 8.0.0 -> 8.0.2 and .NET SDK 8.0.100 -> 8.0.200. Some WPF wndproc hook calls Thread.CurrentThread and it throws NullReferenceException. Less often in Debug config.
 			}).Name = "Au.Tool";
 		}
 		
