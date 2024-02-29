@@ -155,16 +155,16 @@ namespace Au.More {
 
 namespace Au.Types {
 	/// <summary>
-	/// Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
+	/// Contains several string constants that can be used with some "split string" functions of this library to specify separators.
 	/// </summary>
 	public static class SegSep {
 		/// <summary>
-		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
+		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns <c>true</c>.
 		/// </summary>
 		public const string Whitespace = "SSlkGrJUMUutrbSK3s6Crw";
 
 		/// <summary>
-		/// Specifies that separators are all characters for which <see cref="char.IsLetterOrDigit(char)"/> returns false.
+		/// Specifies that separators are all characters for which <see cref="char.IsLetterOrDigit(char)"/> returns <c>false</c>.
 		/// </summary>
 		public const string Word = "WWVL0EtrK0ShqYWb4n1CmA";
 

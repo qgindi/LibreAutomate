@@ -44,7 +44,7 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	/// <summary>
 	/// Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException">(the 'set' function) value less than Count. Instead use ReAlloc or Free.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">(the <c>set</c> function) value less than Count. Instead use ReAlloc or Free.</exception>
 	public int Capacity {
 		get => _cap;
 		set {
@@ -62,8 +62,8 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	/// Returns memory address (address of element 0).
 	/// </summary>
 	/// <param name="count">Element count.</param>
-	/// <param name="zeroInit">Set all bytes = 0. If false, the memory is uninitialized, ie random byte values. Default true. Slower when true.</param>
-	/// <param name="noExtra">Set Capacity = count. If false, allocates more if count is less thah the minimal capacity for this type.</param>
+	/// <param name="zeroInit">Set all bytes = 0. If <c>false</c>, the memory is uninitialized, ie random byte values. Default <c>true</c>. Slower when <c>true</c>.</param>
+	/// <param name="noExtra">Set Capacity = count. If <c>false</c>, allocates more if count is less thah the minimal capacity for this type.</param>
 	public T* Alloc(int count, bool zeroInit = true, bool noExtra = false) {
 		if (_cap != 0) Free();
 		int cap = count; if (cap < s_minCap && !noExtra) cap = s_minCap;
@@ -78,8 +78,8 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	/// Returns memory address (address of element 0).
 	/// </summary>
 	/// <param name="count">New element count.</param>
-	/// <param name="zeroInit">Set all added bytes = 0. If false, the added memory is uninitialized, ie random byte values. Default true. Slower when true.</param>
-	/// <param name="noExtra">Set Capacity = count. If false, allocates more if count is less thah the minimal capacity for this type.</param>
+	/// <param name="zeroInit">Set all added bytes = 0. If <c>false</c>, the added memory is uninitialized, ie random byte values. Default <c>true</c>. Slower when <c>true</c>.</param>
+	/// <param name="noExtra">Set Capacity = count. If <c>false</c>, allocates more if count is less thah the minimal capacity for this type.</param>
 	/// <remarks>
 	/// The new memory usually is at a new location. The preserved elements are copied there.
 	/// Sets Count=count. To allocate more memory without changing Count, change Capacity instead.
@@ -103,7 +103,7 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	
 	/// <summary>
 	/// Adds one element.
-	/// The same as Add, but uses 'in'. Use to avoid copying values of big types.
+	/// The same as Add, but uses <c>in</c>. Use to avoid copying values of big types.
 	/// </summary>
 	public void AddR(in T value) {
 		if (_len == _cap) _EnsureCapacity();

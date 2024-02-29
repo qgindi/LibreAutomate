@@ -145,17 +145,17 @@ namespace Au.More {
 		/// This function can be used when T is char.
 		/// </summary>
 		/// <param name="r">The return value of the called Windows API function, if it returns string length or required buffer length. Or you can call <see cref="FindStringLength"/>.</param>
-		/// <param name="s">Receives the result string if succeeded, else <i>sDefault</i> (default null).</param>
+		/// <param name="s">Receives the result string if succeeded, else <i>sDefault</i> (default <c>null</c>).</param>
 		/// <param name="flags">
 		/// Use if the API function isn't like this:
-		/// <br/>• If succeeds, returns string length without terminating null character.
+		/// <br/>• If succeeds, returns string length without the terminating <c>'\0'</c> character.
 		/// <br/>• If buffer too small, returns required buffer length.
 		/// <br/>• If fails, returns 0.
 		/// </param>
 		/// <param name="sDefault">Set <i>s</i> = this string if buffer too small or <i>r</i> &lt; 1 or if the retrieved string == this string (avoid creating new string).</param>
 		/// <returns>
-		/// If <i>r</i> &gt; <b>n</b>, calls <c>More(r);</c> and returns false.
-		/// Else creates new string of <i>r</i> length and returns true.
+		/// If <i>r</i> &gt; <b>n</b>, calls <c>More(r);</c> and returns <c>false</c>.
+		/// Else creates new string of <i>r</i> length and returns <c>true</c>.
 		/// </returns>
 		public bool GetString(int r, out string s, BSFlags flags = 0, string sDefault = null) {
 			if (sizeof(T) != 2) throw new InvalidOperationException(); //cannot use extension method that would be added only to FastBuffer<char>. See GetString2 comments below.
@@ -233,7 +233,7 @@ namespace Au.Types {
 		Truncates = 1,
 
 		/// <summary>
-		/// The API returns string length including the terminating null character.
+		/// The API returns string length including the terminating <c>'\0'</c> character.
 		/// </summary>
 		ReturnsLengthWith0 = 2,
 	}

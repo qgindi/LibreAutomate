@@ -52,7 +52,7 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// If o is not null, calls <see cref="Marshal.ReleaseComObject"/>.
+	/// If o is not <c>null</c>, calls <see cref="Marshal.ReleaseComObject"/>.
 	/// </summary>
 	internal static void ReleaseComObject<T>(T o) where T : class {
 		if (o != null) Marshal.ReleaseComObject(o);
@@ -195,12 +195,12 @@ static unsafe partial class Api {
 		public fixed uint bmiColors[3]; //info: GetDIBits(DIB_RGB_COLORS) sets 0xFF0000, 0xFF00, 0xFF. Note: with 8-bit colors bitmaps need 256, but this library does not use it.
 		
 		/// <summary>
-		/// Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
+		/// Sets <c>biSize=sizeof(BITMAPINFOHEADER)</c>. Note: it is less than <c>sizeof(BITMAPINFO)</c>.
 		/// </summary>
 		public BITMAPINFO() { biSize = sizeof(BITMAPINFOHEADER); }
 		
 		/// <summary>
-		/// Sets width/height/bitcount/planes fields. Sets biSize=sizeof(BITMAPINFOHEADER). Note: it is less than sizeof(BITMAPINFO).
+		/// Sets width/height/bitcount/planes fields. Sets <c>biSize=sizeof(BITMAPINFOHEADER)</c>. Note: it is less than <c>sizeof(BITMAPINFO)</c>.
 		/// </summary>
 		public BITMAPINFO(int width, int height, int bitCount = 32) {
 			biSize = sizeof(BITMAPINFOHEADER);
@@ -212,7 +212,7 @@ static unsafe partial class Api {
 		
 		//little tested
 		///// <summary>
-		///// Gets DIB bits of compatible bitmap. Uses API <msdn>GetDIBits</msdn>. Returns null if failed.
+		///// Gets DIB bits of compatible bitmap. Uses API <msdn>GetDIBits</msdn>. Returns <c>null</c> if failed.
 		///// </summary>
 		///// <param name="hb">Bitmap handle.</param>
 		///// <param name="topDown">Create top-down DIB.</param>
@@ -447,7 +447,7 @@ static unsafe partial class Api {
 		
 		/// <summary>
 		/// Creates SECURITY_ATTRIBUTES from string security descriptor.
-		/// securityDescriptor can be null; then lpSecurityDescriptor will be null;
+		/// securityDescriptor can be <c>null</c>; then lpSecurityDescriptor will be <c>null</c>.
 		/// </summary>
 		public SECURITY_ATTRIBUTES(string securityDescriptor) {
 			nLength = IntPtr.Size * 3;
@@ -944,7 +944,7 @@ static unsafe partial class Api {
 	/// Calls <b>TrackMouseEvent</b> with <b>TME_LEAVE</b>.
 	/// </summary>
 	/// <param name="w"></param>
-	/// <param name="track">true to start, false to cancel.</param>
+	/// <param name="track"><c>true</c> to start, <c>false</c> to cancel.</param>
 	internal static bool TrackMouseLeave(wnd w, bool track) {
 		var t = new TRACKMOUSEEVENT(w, track ? TME_LEAVE : TME_LEAVE | TME_CANCEL);
 		return TrackMouseEvent(ref t);
@@ -1139,7 +1139,7 @@ static unsafe partial class Api {
 		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value.
-		/// Returns 0 if the string is null, "" or does not begin with a number; then numberEndIndex will be = startIndex.
+		/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
 		/// </summary>
 		/// <param name="s">String.</param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
@@ -1163,7 +1163,7 @@ static unsafe partial class Api {
 		/// <summary>
 		/// Converts part of string to long.
 		/// Returns the long value.
-		/// Returns 0 if the string is null, "" or does not begin with a number; then numberEndIndex will be = startIndex.
+		/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
 		/// </summary>
 		/// <param name="s">String.</param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>

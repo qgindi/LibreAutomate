@@ -3,9 +3,9 @@ namespace Au.More {
 	/// Helps with UI element event hooks. See API <msdn>SetWinEventHook</msdn>.
 	/// </summary>
 	/// <remarks>
-	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
+	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a "wait-for" function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
 	/// 
-	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with 'using' pattern. Can do it in hook procedure.</note>
+	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with <c>using</c>. Can do it in hook procedure.</note>
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

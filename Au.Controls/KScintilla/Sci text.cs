@@ -385,11 +385,11 @@ public unsafe partial class KScintilla {
 	
 	/// <summary>
 	/// Gets or sets text.
-	/// Uses caching, therefore the 'get' function is fast and garbage-free when calling multiple times.
+	/// Uses caching, therefore the <c>get</c> function is fast and garbage-free when calling multiple times.
 	/// </summary>
 	/// <remarks>
-	/// The 'get' function gets cached text if called not the first time after setting or modifying control text.
-	/// The 'set' function calls <see cref="aaaSetText"/> when need. Uses default parameters (with undo and notifications, unless <b>AaInitReadOnlyAlways</b>).
+	/// The <c>get</c> function gets cached text if called not the first time after setting or modifying control text.
+	/// The <c>set</c> function calls <see cref="aaaSetText"/> when need. Uses default parameters (with undo and notifications, unless <b>AaInitReadOnlyAlways</b>).
 	/// Unlike the above methods, this property can be used before creating handle.
 	/// </remarks>
 	public string aaaText {
@@ -685,13 +685,13 @@ public unsafe partial class KScintilla {
 	
 	/// <summary>
 	/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
-	/// The 'set' function makes empty selection; does not scroll and does not make visible like aaaGoToPos.
+	/// The <c>set</c> function makes empty selection; does not scroll and does not make visible like aaaGoToPos.
 	/// </summary>
 	public int aaaCurrentPos8 { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
 	
 	/// <summary>
 	/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
-	/// The 'set' function makes empty selection; does not scroll and does not make visible like aaaGoToPos.
+	/// The <c>set</c> function makes empty selection; does not scroll and does not make visible like aaaGoToPos.
 	/// </summary>
 	public int aaaCurrentPos16 { get => aaaPos16(aaaCurrentPos8); set => Call(SCI_SETEMPTYSELECTION, aaaPos8(value)); }
 	

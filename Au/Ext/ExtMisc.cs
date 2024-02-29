@@ -116,8 +116,8 @@ public static unsafe partial class ExtMisc {
 	
 	//rare
 	///// <summary>
-	///// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
-	///// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
+	///// Returns <c>true</c> if t.Width &lt;= 0 || t.Height &lt;= 0.
+	///// Note: <b>Rectangle.IsEmpty</b> returns <c>true</c> only when all fields are 0.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	//public static bool NoArea(this Rectangle t) {
@@ -137,7 +137,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// If this is null, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.
+	/// If this is <c>null</c>, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="length"></param>
@@ -147,7 +147,7 @@ public static unsafe partial class ExtMisc {
 		=> t?.GetStartEnd(length) ?? (0, length);
 	
 	/// <summary>
-	/// If this is null, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/>.
+	/// If this is <c>null</c>, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="length"></param>
@@ -196,7 +196,7 @@ public static unsafe partial class ExtMisc {
 	//}
 	
 	/// <summary>
-	/// Returns true if this enum variable has all flag bits specified in <i>flag</i>.
+	/// Returns <c>true</c> if this enum variable has all flag bits specified in <i>flag</i>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="flag">One or more flags.</param>
@@ -243,7 +243,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Returns true if this enum variable has one or more flag bits specified in <i>flags</i>.
+	/// Returns <c>true</c> if this enum variable has one or more flag bits specified in <i>flags</i>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="flags">One or more flags.</param>
@@ -267,7 +267,7 @@ public static unsafe partial class ExtMisc {
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="flag">One or more flags to add or remove.</param>
-	/// <param name="add">If true, adds flag, else removes flag.</param>
+	/// <param name="add">If <c>true</c>, adds flag, else removes flag.</param>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static void SetFlag<T>(ref this T t, T flag, bool add) where T : unmanaged, Enum {
 		long a = _ToLong(t), b = _ToLong(flag);
@@ -279,7 +279,7 @@ public static unsafe partial class ExtMisc {
 	/// Adds or removes a flag or flags.
 	/// </summary>
 	/// <param name="flag">Flag(s) to add or remove.</param>
-	/// <param name="add">If true, adds the flag(s) (<c>t |= flag</c>), else removes (<c>t &amp;= ~flag</c>).</param>
+	/// <param name="add">If <c>true</c>, adds the flag(s) (<c>t |= flag</c>), else removes (<c>t &amp;= ~flag</c>).</param>
 	internal static void SetFlag_(this ref int t, int flag, bool add) {
 		if (add) t |= flag; else t &= ~flag;
 	}
@@ -305,33 +305,33 @@ public static unsafe partial class ExtMisc {
 
 #if NET8_0_OR_GREATER
 	/// <summary>
-	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
+	/// Returns <c>true</c> if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiDigit(this char c) => char.IsAsciiDigit(c);
 	
 	/// <summary>
-	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
+	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
 	/// </summary>
 	//public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	public static bool IsAsciiAlpha(this char c) => char.IsAsciiLetter(c);
 	
 	/// <summary>
-	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
+	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => char.IsAsciiLetterOrDigit(c);
 #else
 	/// <summary>
-	/// Returns true if character is ASCII <c>'0'</c> to <c>'9'</c>.
+	/// Returns <c>true</c> if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
 	
 	/// <summary>
-	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
+	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
 	/// </summary>
 	public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 	
 	/// <summary>
-	/// Returns true if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
+	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
 #endif
@@ -442,10 +442,10 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Gets a reference to a <b>TValue</b> in this dictionary. If the key does not exist, sets <i>exists</i> = false and returns a reference null.
+	/// Gets a reference to a <b>TValue</b> in this dictionary. If the key does not exist, sets <i>exists</i> = <c>false</c> and returns a reference <c>null</c>.
 	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrNullRef"/> and <see cref="Unsafe.IsNullRef"/>.
 	/// </summary>
-	/// <param name="exists">Receives true if the key exists.</param>
+	/// <param name="exists">Receives <c>true</c> if the key exists.</param>
 	/// <inheritdoc cref="CollectionsMarshal.GetValueRefOrNullRef"/>
 	internal static ref TValue GetValueRefOrNullRef_<TKey, TValue>(this Dictionary<TKey, TValue> t, TKey key, out bool exists) {
 		ref TValue r = ref CollectionsMarshal.GetValueRefOrNullRef(t, key);
@@ -467,7 +467,7 @@ public static unsafe partial class ExtMisc {
 		=> ref CollectionsMarshal.AsSpan(t)[i];
 	
 	/// <summary>
-	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns null.
+	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns <c>null</c>.
 	/// </summary>
 	/// <exception cref="ArgumentException">key/value already exists.</exception>
 	internal static List<TValue> MultiAdd_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, TValue v) where TValue : class {
@@ -484,7 +484,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <b>List</b>), removes the value (and key if it was single value) and returns true.
+	/// If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <b>List</b>), removes the value (and key if it was single value) and returns <c>true</c>.
 	/// </summary>
 	internal static bool MultiRemove_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, TValue v) where TValue : class {
 		if (!t.TryGetValue(k, out var o)) return false;
@@ -501,12 +501,12 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// If dictionary contains key <i>k</i>, gets its value (<i>v</i>) or list of values (<i>a</i>) and returns true.
+	/// If dictionary contains key <i>k</i>, gets its value (<i>v</i>) or list of values (<i>a</i>) and returns <c>true</c>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="k"></param>
-	/// <param name="v">Receives single value, or null if the key has multiple values.</param>
-	/// <param name="a">Receives multiple values, or null if the key has single value.</param>
+	/// <param name="v">Receives single value, or <c>null</c> if the key has multiple values.</param>
+	/// <param name="a">Receives multiple values, or <c>null</c> if the key has single value.</param>
 	internal static bool MultiGet_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, out TValue v, out List<TValue> a) where TValue : class {
 		bool r = t.TryGetValue(k, out var o);
 		v = o as TValue;
@@ -516,23 +516,23 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Returns <b>Length</b>, or 0 if null.
+	/// Returns <b>Length</b>, or 0 if <c>null</c>.
 	/// </summary>
 	internal static int Lenn_<T>(this T[] t) => t?.Length ?? 0;
 	//internal static int Lenn_(this System.Collections.ICollection t) => t?.Count ?? 0; //slower, as well as Array
 	
 	/// <summary>
-	/// Returns <b>Count</b>, or 0 if null.
+	/// Returns <b>Count</b>, or 0 if <c>null</c>.
 	/// </summary>
 	internal static int Lenn_<T>(this List<T> t) => t?.Count ?? 0;
 	
 	/// <summary>
-	/// Returns true if null or <b>Length</b> == 0.
+	/// Returns <c>true</c> if <c>null</c> or <b>Length</b> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this T[] t) => (t?.Length ?? 0) == 0;
 	
 	/// <summary>
-	/// Returns true if null or <b>Count</b> == 0.
+	/// Returns <c>true</c> if <c>null</c> or <b>Count</b> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
 	
@@ -617,7 +617,7 @@ public static unsafe partial class ExtMisc {
 	/// <param name="s"></param>
 	/// <param name="noUcase">Don't make the first character uppercase.</param>
 	/// <remarks>
-	/// If <i>s</i> is null or <c>""</c>, does nothing.
+	/// If <i>s</i> is <c>null</c> or <c>""</c>, does nothing.
 	/// If this is not empty, appends space.
 	/// If <i>s</i> starts with a lowercase character, makes it uppercase, unless this ends with a character other than <c>'.'</c>.
 	/// Appends <c>'.'</c> if <i>s</i> does not end with <c>'.'</c>, <c>';'</c>, <c>':'</c>, <c>','</c>, <c>'!'</c> or <c>'?'</c>.
@@ -645,9 +645,9 @@ public static unsafe partial class ExtMisc {
 	/// <summary>
 	/// Gets window handle as <see cref="wnd"/>.
 	/// </summary>
-	/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
+	/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be <c>null</c>.</param>
 	/// <param name="create">
-	/// Create handle if still not created. Default false (return <c>default(wnd)</c>).
+	/// Create handle if still not created. Default <c>false</c> (return <c>default(wnd)</c>).
 	/// Unlike <see cref="System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
 	/// </param>
 	/// <remarks>
@@ -738,14 +738,14 @@ public static unsafe partial class ExtMisc {
 	/// <summary>
 	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
 	/// </summary>
-	/// <param name="pf">If null, uses b.PixelFormat.</param>
+	/// <param name="pf">If <c>null</c>, uses b.PixelFormat.</param>
 	internal static BitmapData_ Data(this Bitmap b, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, mode, pf);
 	
 	/// <summary>
 	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
 	/// </summary>
-	/// <param name="pf">If null, uses b.PixelFormat.</param>
+	/// <param name="pf">If <c>null</c>, uses b.PixelFormat.</param>
 	internal static BitmapData_ Data(this Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, r, mode, pf);
 	

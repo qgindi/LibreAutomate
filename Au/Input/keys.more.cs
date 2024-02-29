@@ -60,12 +60,12 @@ partial class keys
 		/// Converts string to <see cref="KKey"/> and <see cref="KMod"/>.
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = KMod.Ctrl</c>, <c>key = KKey.Left</c>.
 		/// </summary>
-		/// <returns>false if the string is invalid.</returns>
+		/// <returns><c>false</c> if the string is invalid.</returns>
 		/// <remarks>
 		/// Key names are like with <see cref="keys.send"/>.
 		/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
 		/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
-		/// Invalid hotkey examples: null, <c>""</c>, <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
+		/// Invalid hotkey examples: <c>null</c>, <c>""</c>, <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
 		/// </remarks>
 		public static bool parseHotkeyString(string s, out KMod mod, out KKey key) {
 			key = 0; mod = 0;
@@ -90,7 +90,7 @@ partial class keys
 		/// Converts string to winforms <see cref="System.Windows.Forms.Keys"/>.
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>hotkey = Keys.Control | Keys.Left</c>.
 		/// </summary>
-		/// <returns>false if the string is invalid or contains <c>"Win"</c>.</returns>
+		/// <returns><c>false</c> if the string is invalid or contains <c>"Win"</c>.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Forms.Keys hotkey) {
 			if (!parseHotkeyString(s, out var m, out var k)) { hotkey = 0; return false; }
 			hotkey = KModToWinforms(m) | (System.Windows.Forms.Keys)k;
@@ -105,7 +105,7 @@ partial class keys
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = ModifierKeys.Control</c> and <c>key = Key.Left</c>.
 		/// Supported mouse button strings: <c>"Click"</c>, <c>"D-click"</c>, <c>"R-click"</c>, <c>"M-click"</c>, <c>"Wheel"</c>. Example: <c>"Ctrl+R-click"</c>. The first character of a mouse word is case-insensitive.
 		/// </summary>
-		/// <returns>false if the string is invalid or contains incorrectly specified mouse buttons.</returns>
+		/// <returns><c>false</c> if the string is invalid or contains incorrectly specified mouse buttons.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Input.ModifierKeys mod, out System.Windows.Input.Key key, out System.Windows.Input.MouseAction mouse) {
 			mod = 0; key = 0; mouse = 0;
 			if (s.Ends("lick") || s.Ends("heel")) {
@@ -129,13 +129,13 @@ partial class keys
 
 		/// <summary>
 		/// Parses hotkey trigger string or mouse trigger modifiers string.
-		/// Like <see cref="parseHotkeyString"/>, but supports 'any mod' (like <c>"Shift?+K"</c> or <c>"?+K"</c>) and <i>noKey</i>.
+		/// Like <see cref="parseHotkeyString"/>, but supports "any mod" (like <c>"Shift?+K"</c> or <c>"?+K"</c>) and <i>noKey</i>.
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="mod"></param>
 		/// <param name="modAny"></param>
 		/// <param name="key"></param>
-		/// <param name="noKey">Modifiers only. If true, s must be "modifiers" or null/<c>""</c>. If false, <i>s</i> must be "key" or "modifiers+key".</param>
+		/// <param name="noKey">Modifiers only. If <c>true</c>, s must be "modifiers" or <c>null</c>/<c>""</c>. If <c>false</c>, <i>s</i> must be "key" or "modifiers+key".</param>
 		public static bool parseTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey) {
 			key = 0; mod = 0; modAny = 0;
 			if (s.NE()) return noKey;
@@ -534,13 +534,13 @@ print.it(b.ToString());
 		/// Sends single key.
 		/// </summary>
 		/// <param name="k">Virtual-key code.</param>
-		/// <param name="down">true down, false up, null down and up.</param>
+		/// <param name="down"><c>true</c> down, <c>false</c> up, <c>null</c> down and up.</param>
 		/// <param name="hkl">
 		/// Keyboard layout handle for scan code. See API <msdn>GetKeyboardLayout</msdn>.
 		/// If 0 (default), uses keyboard layout of this thread; don't use 0 for keys whose scancode depends on keyboard layout.
 		/// If -1, uses keyboard layout of the focused or active window.
 		/// </param>
-		/// <param name="extra">An "extra info" value that can be used for example by keyboard hooks to recognize the key sender. If null (default), uses the same value as other functions of this library.</param>
+		/// <param name="extra">An "extra info" value that can be used for example by keyboard hooks to recognize the key sender. If <c>null</c> (default), uses the same value as other functions of this library.</param>
 		/// <remarks>
 		/// This is a low-level function. Does nothing more (sleep, block input, etc). Does not use <b>opt</b> options. Just gets missing info (scan code etc) and calls API <msdn>SendInput</msdn>.
 		/// </remarks>

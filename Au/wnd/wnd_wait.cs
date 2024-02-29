@@ -196,7 +196,7 @@ public partial struct wnd {
 	/// String format: [wildcard expression](xref:wildcard_expression).
 	/// </param>
 	/// <param name="not">Wait until this window does not have the specified name.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 	/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
@@ -210,11 +210,11 @@ public partial struct wnd {
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
-	/// <exception cref="AuException">Failed to open process handle when <i>waitUntilProcessEnds</i> is true.</exception>
+	/// <exception cref="AuException">Failed to open process handle when <i>waitUntilProcessEnds</i> is <c>true</c>.</exception>
 	/// <remarks>
-	/// If the window is already closed, immediately returns true.
+	/// If the window is already closed, immediately returns <c>true</c>.
 	/// </remarks>
 	public bool WaitForClosed(Seconds timeout, bool waitUntilProcessEnds = false) {
 		if (!waitUntilProcessEnds) return WaitFor(timeout, t => !t.IsAlive, true);

@@ -42,20 +42,20 @@ public partial class toolbar : MTBase {
 	/// <param name="name">
 	/// Toolbar name. Must be valid filename.
 	/// Used for: toolbar window name, settings file name, <see cref="find"/>, some other functions.
-	/// If null, uses the caller function's name if available, else exception.
+	/// If <c>null</c>, uses the caller function's name if available, else exception.
 	/// </param>
 	/// <param name="flags"></param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="m_">[](xref:caller_info)</param>
-	/// <param name="settingsFile">null or full path of the settings file of this toolbar.</param>
+	/// <param name="settingsFile"><c>null</c> or full path of the settings file of this toolbar.</param>
 	/// <exception cref="ArgumentException">Invalid <i>name</i>.</exception>
 	/// <remarks>
 	/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="getSettingsFilePath"/>. If fails, prints a warning and uses default settings.
 	/// 
 	/// Sets properties:
-	/// - <see cref="MTBase.ActionThread"/> = true.
-	/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
+	/// - <see cref="MTBase.ActionThread"/> = <c>true</c>.
+	/// - <see cref="MTBase.ExtractIconPathFromCode"/> = <c>true</c>.
 	/// </remarks>
 	public toolbar(string name = null, TBCtor flags = 0,
 		[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null, string settingsFile = null)
@@ -78,7 +78,7 @@ public partial class toolbar : MTBase {
 	public wnd Hwnd => _w;
 	
 	/// <summary>
-	/// Returns true if the toolbar is open. False if closed or <see cref="Show"/> still not called.
+	/// Returns <c>true</c> if the toolbar is open. False if closed or <see cref="Show"/> still not called.
 	/// </summary>
 	public bool IsOpen => _created && !_closed;
 	
@@ -104,7 +104,7 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="toolbarName">Toolbar name. If this string is a full path, returns this string.</param>
 	/// <remarks>
-	/// Path: <c>folders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="folders.Workspace"/> is null, uses <see cref="folders.ThisAppDocuments"/>.
+	/// Path: <c>folders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="folders.Workspace"/> is <c>null</c>, uses <see cref="folders.ThisAppDocuments"/>.
 	/// </remarks>
 	public static string getSettingsFilePath(string toolbarName) {
 		if (toolbarName.NE()) throw new ArgumentException("Empty name");
@@ -116,7 +116,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Finds an open toolbar by <see cref="Name"/>.
 	/// </summary>
-	/// <returns>null if not found or closed or never shown (<see cref="Show"/> not called).</returns>
+	/// <returns><c>null</c> if not found or closed or never shown (<see cref="Show"/> not called).</returns>
 	/// <remarks>
 	/// Finds only toolbars created in the same script and thread.
 	/// 
@@ -261,7 +261,7 @@ public partial class toolbar : MTBase {
 	/// Gets added buttons.
 	/// </summary>
 	/// <remarks>
-	/// Allows to set properties of multiple buttons in single place instead of after each 'add button' code line.
+	/// Allows to set properties of multiple buttons in single place instead of after each "add button" code line.
 	/// Skips separators and groups.
 	/// </remarks>
 	public IEnumerable<TBItem> Items {
@@ -325,7 +325,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Shows the toolbar.
 	/// If <i>ta</i> is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
-	/// Else if <i>ta</i> != null, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(toolbar)"/>.
+	/// Else if <i>ta</i> != <c>null</c>, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(toolbar)"/>.
 	/// </summary>
 	public void Show(TriggerArgs ta) {
 		if (ta is WindowTriggerArgs wta) {
@@ -403,7 +403,7 @@ public partial class toolbar : MTBase {
 	/// <summary>
 	/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <see cref="Close"/>.
 	/// </summary>
-	/// <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
+	/// <param name="hide"><c>true</c> to hide (add <i>reason</i>), <c>false</c> to show (remove <i>reason</i>).</param>
 	/// <param name="reason">A user-defined reason to hide/unhide. Can be <see cref="TBHide.User"/> or a bigger value, eg <c>(TBHide)0x20000</c>, <c>(TBHide)0x40000</c>.</param>
 	/// <exception cref="InvalidOperationException">
 	/// - The toolbar was never shown (<see cref="Show"/> not called).
@@ -447,7 +447,7 @@ public partial class toolbar : MTBase {
 	void _SetVisibleL(bool show) => _w.ShowL(show);
 	
 	/// <summary>
-	/// Returns true if the toolbar is attached to a window or an object in a window.
+	/// Returns <c>true</c> if the toolbar is attached to a window or an object in a window.
 	/// </summary>
 	public bool IsOwned => _ow != null;
 	
@@ -870,7 +870,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	public TBScaling DpiScaling { get; set; }
 	
 	/// <summary>
-	/// Toolbar width and height without non-client area when <see cref="AutoSize"/> false.
+	/// Toolbar width and height without non-client area when <see cref="AutoSize"/> <c>false</c>.
 	/// </summary>
 	/// <remarks>
 	/// Non-client area is border and caption when <see cref="Border"/> is <b>ThreeD</b>, <b>Thick</b>, <b>Caption</b> or <b>CaptionX</b>.
@@ -899,7 +899,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	
 	/// <summary>
 	/// Whether the border can be used to resize the toolbar.
-	/// Default true.
+	/// Default <c>true</c>.
 	/// </summary>
 	/// <remarks>
 	/// This property is in the context menu and is saved.
@@ -911,7 +911,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	
 	/// <summary>
 	/// Automatically resize the toolbar to make all buttons visible.
-	/// Default true.
+	/// Default <c>true</c>.
 	/// </summary>
 	/// <remarks>
 	/// This property is in the context menu and is saved.
@@ -928,12 +928,12 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	}
 	
 	/// <summary>
-	/// When <see cref="AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
+	/// When <see cref="AutoSize"/> is <c>true</c>, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
 	/// </summary>
 	/// <remarks>
 	/// The unit of measurement depends on <see cref="DpiScaling"/>.
 	/// 
-	/// This property is updated when the user resizes the toolbar while <see cref="AutoSize"/> is true. It is saved.
+	/// This property is updated when the user resizes the toolbar while <see cref="AutoSize"/> is <c>true</c>. It is saved.
 	/// 
 	/// If layout of this toolbar is vertical, just sets max width.
 	/// </remarks>

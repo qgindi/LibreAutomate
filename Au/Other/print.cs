@@ -6,20 +6,20 @@ namespace Au;
 [DebuggerStepThrough]
 public static partial class print {
 	/// <summary>
-	/// Returns true if this process is attached to a console.
+	/// Returns <c>true</c> if this process is attached to a console.
 	/// </summary>
 	public static bool isConsoleProcess => Api.GetConsoleOutputCP() != 0; //fast
 	
 	//public static bool isConsoleProcess => Api.GetStdHandle(Api.STD_INPUT_HANDLE) is not (0 or -1); //no, may be true even if not attached to a console, eg if this non-console program started from cmd/bat on Win7
 	
 	/// <summary>
-	/// Returns true if is writing to console, false if to the output window etc.
+	/// Returns <c>true</c> if is writing to console, <c>false</c> if to the output window etc.
 	/// </summary>
 	/// <remarks>
 	/// Does not write to console in these cases:
-	/// - <see cref="isConsoleProcess"/> is false.
-	/// - <see cref="ignoreConsole"/> is true.
-	/// - <see cref="logFile"/> is not null.
+	/// - <see cref="isConsoleProcess"/> is <c>false</c>.
+	/// - <see cref="ignoreConsole"/> is <c>true</c>.
+	/// - <see cref="logFile"/> is not <c>null</c>.
 	/// - The startup info of this process tells to not show console window and to not redirect the standard output.
 	/// </remarks>
 	public static bool isWritingToConsole {
@@ -35,14 +35,14 @@ public static partial class print {
 	static bool? _isVisibleConsole;
 	
 	/// <summary>
-	/// If true, in console process will not use the console window. Then everything is like in non-console process.
+	/// If <c>true</c>, in console process will not use the console window. Then everything is like in non-console process.
 	/// </summary>
 	/// <seealso cref="redirectConsoleOutput"/>
 	/// <seealso cref="redirectDebugOutput"/>
 	public static bool ignoreConsole { get; set; }
 	
 	/// <summary>
-	/// Clears the output window or console text (if <see cref="isWritingToConsole"/>) or log file (if <see cref="logFile"/> not null).
+	/// Clears the output window or console text (if <see cref="isWritingToConsole"/>) or log file (if <see cref="logFile"/> not <c>null</c>).
 	/// </summary>
 	public static void clear() {
 		if (logFile != null) {
@@ -96,8 +96,8 @@ public static partial class print {
 	/// 
 	/// Where the text goes:
 	/// - If redirected, to wherever it is redirected. See <see cref="writer"/>.
-	/// - Else if using log file (<see cref="logFile"/> not null), writes to the file.
-	/// - Else if using console (<see cref="isWritingToConsole"/> returns true), writes to console.
+	/// - Else if using log file (<see cref="logFile"/> not <c>null</c>), writes to the file.
+	/// - Else if using console (<see cref="isWritingToConsole"/> returns <c>true</c>), writes to console.
 	/// - Else if using local <see cref="PrintServer"/> (in this process), writes to it.
 	/// - Else if exists global <see cref="PrintServer"/> (in any process), writes to it.
 	/// - Else nowhere.
@@ -109,9 +109,9 @@ public static partial class print {
 	/// <summary>
 	/// Writes value of any type to the output.
 	/// </summary>
-	/// <param name="value">Value of any type. If null, writes <c>"null"</c>.</param>
+	/// <param name="value">Value of any type. If <c>null</c>, writes <c>"null"</c>.</param>
 	/// <remarks>
-	/// If the type is unsigned integer (uint, ulong, ushort, byte, nuint), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> true.
+	/// If the type is unsigned integer (uint, ulong, ushort, byte, nuint), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> <c>true</c>.
 	/// 
 	/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
 	/// For <b>Span</b> and other ref struct types use <c>print.it(x.ToString());</c>.
@@ -140,10 +140,10 @@ public static partial class print {
 	/// </summary>
 	/// <param name="value">
 	/// Array or generic collection of any type.
-	/// If null, writes <c>"null"</c>.
+	/// If <c>null</c>, writes <c>"null"</c>.
 	/// The format depends on type:
 	/// <br/>• char[] - like string.
-	/// <br/>• byte[] - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> true.
+	/// <br/>• byte[] - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> <c>true</c>.
 	/// <br/>• Other - multiple lines.
 	/// </param>
 	public static void it<T>(IEnumerable<T> value) {
@@ -154,7 +154,7 @@ public static partial class print {
 	/// <summary>
 	/// Writes an array or generic collection to the output, as a list of items separated by <i>separator</i>.
 	/// </summary>
-	/// <param name="value">Array or generic collection of any type. If null, writes <c>"null"</c>.</param>
+	/// <param name="value">Array or generic collection of any type. If <c>null</c>, writes <c>"null"</c>.</param>
 	public static void list<T>(string separator, IEnumerable<T> value) {
 		string s = "null";
 		if (value != null)
@@ -172,7 +172,7 @@ public static partial class print {
 	/// Writes multiple arguments of any type to the output, using separator <c>", "</c>.
 	/// </summary>
 	/// <remarks>
-	/// If a value is null, writes <c>"null"</c>.
+	/// If a value is <c>null</c>, writes <c>"null"</c>.
 	/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
 	/// </remarks>
 	public static void it(object value1, object value2, params object[] more) {
@@ -249,7 +249,7 @@ public static partial class print {
 	/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 	/// <remarks>
 	/// Calls <see cref="print.it"/>.
-	/// Does not show more than 1 warning/second, unless <b>opt.warnings.Verbose</b> == true (see <see cref="OWarnings.Verbose"/>).
+	/// Does not show more than 1 warning/second, unless <b>opt.warnings.Verbose</b> == <c>true</c> (see <see cref="OWarnings.Verbose"/>).
 	/// To disable some warnings, use code <c>opt.warnings.Disable("warning text wildcard");</c> (see <see cref="OWarnings.Disable"/>).
 	/// </remarks>
 	/// <seealso cref="OWarnings"/>
@@ -287,7 +287,7 @@ public static partial class print {
 	/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
-	/// The default value is true in non-console scripts with role miniProgram (default) that use <see cref="Console"/> functions.
+	/// The default value is <c>true</c> in non-console scripts with role miniProgram (default) that use <see cref="Console"/> functions.
 	/// 
 	/// If <b>Console.Write</b> text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Console.WriteLine</b>.
 	/// 
@@ -337,15 +337,15 @@ public static partial class print {
 	
 	/// <summary>
 	/// Sets log file path.
-	/// When set (not null), text passed to <see cref="it"/> will be written to the file.
-	/// If value is null - restores default behavior.
+	/// When set (not <c>null</c>), text passed to <see cref="it"/> will be written to the file.
+	/// If value is <c>null</c> - restores default behavior.
 	/// </summary>
 	/// <remarks>
 	/// The first <see cref="it"/> etc call (in this process) creates or opens the file and deletes old content if the file already exists.
 	/// 
 	/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple processes can use the same mailslot.
 	/// </remarks>
-	/// <exception cref="ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
+	/// <exception cref="ArgumentException">The <c>set</c> function throws this exception if the value is not full path and not <c>null</c>.</exception>
 	public static string logFile {
 		get => _logFile;
 		set {
@@ -366,7 +366,7 @@ public static partial class print {
 	static readonly object _lockObj1 = new();
 	
 	/// <summary>
-	/// If true, will add current local time when using log file (see <see cref="logFile"/>).
+	/// If <c>true</c>, will add current local time when using log file (see <see cref="logFile"/>).
 	/// </summary>
 	public static bool logFileTimestamp { get; set; }
 	
@@ -425,7 +425,7 @@ public static partial class print {
 		/// Writes <c>s + "\r\n"</c> and optionally timestamp.
 		/// </summary>
 		/// <remarks>
-		/// If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
+		/// If fails to write to file: Sets <b>LogFile</b>=<c>null</c>, which closes file handle. Writes a warning and <i>s</i> to the output window or console.
 		/// </remarks>
 		[SkipLocalsInit]
 		public bool WriteLine(string s) {
@@ -478,7 +478,7 @@ public static partial class print {
 	/// Calls Api.CreateFile to open file or mailslot.
 	/// </summary>
 	/// <param name="name">File path or mailslot name.</param>
-	/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
+	/// <param name="openExisting">Use OPEN_EXISTING. If <c>false</c>, uses CREATE_ALWAYS.</param>
 	internal static Handle_ CreateFile_(string name, bool openExisting) {
 		return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 		
@@ -509,14 +509,14 @@ public static partial class print {
 		/// Writes multiple arguments of any type to the output, using separator ", ".
 		/// </summary>
 		/// <remarks>
-		/// If a value is null, writes <c>"null"</c>.
+		/// If a value is <c>null</c>, writes <c>"null"</c>.
 		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
 		/// </remarks>
 		public static void write(object value1, object value2, params object[] more) {
 			write(util.toList(", ", value1, value2, more));
 		}
 		
-		/// <param name="s">If null, clears output.</param>
+		/// <param name="s">If <c>null</c>, clears output.</param>
 		static void _WriteToQM2(string s) {
 			if (!_hwndQM2.IsAlive) {
 				_hwndQM2 = Api.FindWindowEx(cn: "QM_Editor");
@@ -539,7 +539,7 @@ public static partial class print {
 		/// <summary>
 		/// Converts value of any type to string. Formats it like <see cref="it(object)"/>.
 		/// </summary>
-		/// <param name="value">Value of any type. If null, returns <c>"null"</c>.</param>
+		/// <param name="value">Value of any type. If <c>null</c>, returns <c>"null"</c>.</param>
 		/// <param name="compact">If <i>value</i> is <b>IEnumerable</b>, format it like <c>"{ item1, item2 }"</c>.</param>
 		public static string toString(object value, bool compact = false) {
 			switch (value) {

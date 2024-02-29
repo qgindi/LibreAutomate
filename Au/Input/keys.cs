@@ -19,7 +19,7 @@ namespace Au;
 /// ]]></code>
 /// </example>
 public partial class keys {
-	/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If null, uses default options.</param>
+	/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If <c>null</c>, uses default options.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var k = new keys(opt.init.key);
@@ -136,7 +136,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="keys_">
-	/// Key names and operators, like with <see cref="send"/>. Can be null or <c>""</c>.
+	/// Key names and operators, like with <see cref="send"/>. Can be <c>null</c> or <c>""</c>.
 	/// Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5"</c>.
 	/// If has prefix <c>"!"</c> or <c>"%"</c>, calls <see cref="AddText(string, string)"/>; use <c>"!"</c> for text, <c>"%"</c> for HTML.
 	/// </param>
@@ -249,7 +249,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
-	/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
+	/// <param name="down"><c>true</c> - key down; <c>false</c> - key up; <c>null</c> (default) - key down-up.</param>
 	/// <exception cref="ArgumentException">Invalid <i>key</i> (0).</exception>
 	public keys AddKey(KKey key, bool? down = null) {
 		_ThrowIfSending();
@@ -268,8 +268,8 @@ public partial class keys {
 	/// <returns>This.</returns>
 	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
 	/// <param name="scanCode">Scan code of the physical key. Scan code values are 1-127, but this function allows 1-0xffff. Can be 0.</param>
-	/// <param name="extendedKey">true if the key is an extended key.</param>
-	/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
+	/// <param name="extendedKey"><c>true</c> if the key is an extended key.</param>
+	/// <param name="down"><c>true</c> - key down; <c>false</c> - key up; <c>null</c> (default) - key down-up.</param>
 	/// <exception cref="ArgumentException">Invalid scan code.</exception>
 	public keys AddKey(KKey key, ushort scanCode, bool extendedKey, bool? down = null) {
 		_ThrowIfSending();
@@ -311,7 +311,7 @@ public partial class keys {
 	/// Simply calls Api.SendInput. No options, no sleep, etc.
 	/// If new events added while sending, sends them too, until there are no new events added.
 	/// </summary>
-	/// <param name="onlyUp">Send only 'up' events.</param>
+	/// <param name="onlyUp">Send only "up" events.</param>
 	internal unsafe void SendBlocked_(bool onlyUp) {
 		for (int ii = 0; ii < 5; ii++) {
 			int n = 0;
@@ -339,7 +339,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <remarks>
-	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.
+	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not <c>null</c>, uses clipboard.
 	/// </remarks>
 	/// <inheritdoc cref="sendt" path="/param"/>
 	public keys AddText(string text, string html = null) {
@@ -359,7 +359,7 @@ public partial class keys {
 	/// Adds text with explicitly specified sending method (keys, characters or paste).
 	/// </summary>
 	/// <returns>This.</returns>
-	/// <param name="text">Text. Can be null.</param>
+	/// <param name="text">Text. Can be <c>null</c>.</param>
 	/// <param name="how">Overrides <see cref="OKey.TextHow"/>.</param>
 	public keys AddText(string text, OKeyText how) {
 		_ThrowIfSending();
@@ -492,8 +492,8 @@ public partial class keys {
 	/// <summary>
 	/// Sends keys, text and executes other events added with the <b>AddX</b> functions.
 	/// </summary>
-	/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
-	/// <exception cref="ArgumentException"><i>canSendAgain</i> is true and <i>keys_</i> end with + or (.</exception>
+	/// <param name="canSendAgain">Don't clear the internal collection. If <c>true</c>, this function then can be called again (eg in loop) to send/execute the same keys etc. If <c>false</c> (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
+	/// <exception cref="ArgumentException"><i>canSendAgain</i> is <c>true</c> and <i>keys_</i> end with + or (.</exception>
 	/// <exception cref="AuException">Failed. For example there is no focused window when sending text.</exception>
 	/// <exception cref="InputDesktopException"></exception>
 	public void SendNow(bool canSendAgain = false) {
@@ -831,7 +831,7 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns true if Shift is set to turn off CapsLock (system setting).
+	/// Returns <c>true</c> if Shift is set to turn off CapsLock (system setting).
 	/// </summary>
 	internal static bool IsCapsLockShiftOff_() => s_isCapsLockShiftOff ??= Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Keyboard Layout", "Attributes", 0) is int r1 && 0 != (r1 & 0x10000);
 	static bool? s_isCapsLockShiftOff;

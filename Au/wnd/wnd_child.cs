@@ -7,7 +7,7 @@ namespace Au {
 		/// <param name="name">
 		/// Control name.
 		/// String format: [wildcard expression](xref:wildcard_expression).
-		/// null means 'can be any'. <c>""</c> means 'no name'.
+		/// <c>null</c> means "can be any". <c>""</c> means "no name".
 		/// 
 		/// By default to get control names this function uses <see cref="Name"/>.
 		/// Can start with these prefix strings:
@@ -18,13 +18,13 @@ namespace Au {
 		/// <param name="cn">
 		/// Control class name.
 		/// String format: [wildcard expression](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be <c>""</c>.
+		/// <c>null</c> means "can be any". Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <param name="id">Control id. See <see cref="ControlId"/>. Not used if null (default).</param>
+		/// <param name="id">Control id. See <see cref="ControlId"/>. Not used if <c>null</c> (default).</param>
 		/// <param name="also">
 		/// Callback function. Called for each matching control.
-		/// It can evaluate more properties of the control and return true when they match.
+		/// It can evaluate more properties of the control and return <c>true</c> when they match.
 		/// Example: <c>also: t =&gt; t.IsEnabled</c>
 		/// </param>
 		/// <param name="skip">
@@ -34,7 +34,7 @@ namespace Au {
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
 		/// - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
-		/// - <i>cn</i> is <c>""</c>. To match any, use null.
+		/// - <i>cn</i> is <c>""</c>. To match any, use <c>null</c>.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
@@ -82,7 +82,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if this window contains the specified control.
+		/// Returns <c>true</c> if this window contains the specified control.
 		/// Calls <see cref="wndChildFinder.Exists"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
@@ -106,7 +106,7 @@ namespace Au {
 
 		//rejected. Rare. Can use w.HasChild(new("Apply", "Button")) or !w.Child(...).Is0 etc. Or would also need HasElm(string...).
 		///// <summary>
-		///// Returns true if this window contains the specified control.
+		///// Returns <c>true</c> if this window contains the specified control.
 		///// Calls <see cref="Child"/>.
 		///// <para>NOTE: Calling this function many times with same arguments is inefficient. Instead create new <see cref="wndChildFinder"/> and call <see cref="wndChildFinder.Exists"/> or <see cref="HasChild(wndChildFinder)"/>. See example.</para>
 		///// </summary>
@@ -121,7 +121,7 @@ namespace Au {
 		//}
 
 		/// <summary>
-		/// Returns true if this window contains the specified UI element.
+		/// Returns <c>true</c> if this window contains the specified UI element.
 		/// Calls <see cref="elmFinder.Exists"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
@@ -209,13 +209,13 @@ namespace Au {
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. <c>""</c> means 'no name'.
+		/// <c>null</c> means "can be any". <c>""</c> means "no name".
 		/// Must include the invisible <c>'&amp;'</c> characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. Cannot be <c>""</c>.
+		/// <c>null</c> means "can be any". Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
@@ -271,7 +271,7 @@ namespace Au {
 			///// <summary>
 			///// Gets child controls, including all descendants.
 			///// </summary>
-			///// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <param name="a">Receives results. If <c>null</c>, this function creates new <b>List</b>, else clears before adding items.</param>
 			///// <param name="onlyVisible">Need only visible controls.</param>
 			///// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			///// <param name="directChild">Need only direct children, not all descendants.</param>
@@ -329,18 +329,18 @@ namespace Au {
 		/// </summary>
 		/// <param name="name">Button name. String format: [wildcard expression](xref:wildcard_expression).</param>
 		/// <param name="asControl">
-		/// If true, finds/clicks as child control: <c>mouse.postClick(this.Child(1, name, roleCN ?? "*Button*"));</c>.
-		/// If false, finds/clicks as UI element: <c>this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();</c>.
-		/// Default is false; it's slower but works with more windows.
+		/// If <c>true</c>, finds/clicks as child control: <c>mouse.postClick(this.Child(1, name, roleCN ?? "*Button*"));</c>.
+		/// If <c>false</c>, finds/clicks as UI element: <c>this.Elm[roleCN ?? "BUTTON", name].Find(1).Invoke();</c>.
+		/// Default is <c>false</c>; it's slower but works with more windows.
 		/// </param>
-		/// <param name="roleCN">UI element role or control class name (if <i>asControl</i> true). String format: [wildcard expression](xref:wildcard_expression). Default role is <c>"BUTTON"</c>, class name <c>"*Button*"</c>.</param>
+		/// <param name="roleCN">UI element role or control class name (if <i>asControl</i> <c>true</c>). String format: [wildcard expression](xref:wildcard_expression). Default role is <c>"BUTTON"</c>, class name <c>"*Button*"</c>.</param>
 		/// <remarks>
-		/// This function is just a shorter way to call other functions that have more options but require more code to call. If <i>asControl</i> true, it calls <see cref="Child"/> and <see cref="mouse.postClick"/>. Else <see cref="Elm"/>, <see cref="elmFinder.this"/>, <see cref="elmFinder.Find"/> and <see cref="elm.Invoke"/>.
+		/// This function is just a shorter way to call other functions that have more options but require more code to call. If <i>asControl</i> <c>true</c>, it calls <see cref="Child"/> and <see cref="mouse.postClick"/>. Else <see cref="Elm"/>, <see cref="elmFinder.this"/>, <see cref="elmFinder.Find"/> and <see cref="elm.Invoke"/>.
 		/// </remarks>
 		/// <exception cref="ArgumentException">Invalid <i>name</i> (when starts with <c>"***"</c>). See <see cref="elmFinder.this"/>, <see cref="Child"/>.</exception>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="AuException">Failed to click. For example need to activate the window. No exception if <i>asControl</i> true.</exception>
+		/// <exception cref="AuException">Failed to click. For example need to activate the window. No exception if <i>asControl</i> <c>true</c>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// wnd.find("Options").ButtonClick("Cancel");
@@ -445,7 +445,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Posts a "click" message to this button control. Does not use the mouse.
 		/// </summary>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -481,7 +481,7 @@ namespace Au.Types {
 		/// Checks or unchecks this check box. Does not use the mouse.
 		/// Calls <see cref="SetCheckState"/> with state 0 or 1.
 		/// </summary>
-		/// <param name="on">Checks if true, unchecks if false.</param>
+		/// <param name="on">Checks if <c>true</c>, unchecks if <c>false</c>.</param>
 		/// <param name="useElm"></param>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -497,7 +497,7 @@ namespace Au.Types {
 		/// Sets checkbox state. Does not use the mouse.
 		/// </summary>
 		/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -544,7 +544,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Gets check state of this check box or radio button.
-		/// Calls <see cref="GetCheckState"/> and returns true if it returns 1.
+		/// Calls <see cref="GetCheckState"/> and returns <c>true</c> if it returns 1.
 		/// </summary>
 		public bool IsChecked(bool useElm = false) {
 			return 1 == GetCheckState(useElm);
@@ -554,7 +554,7 @@ namespace Au.Types {
 		/// Gets check state of this check box or radio button.
 		/// Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
 		/// </summary>
-		/// <param name="useElm">Use <see cref="elm.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
+		/// <param name="useElm">Use <see cref="elm.State"/>. If <c>false</c> (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
 		public int GetCheckState(bool useElm = false) {
 			if (useElm || !_IsCheckbox()) {
 				//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.

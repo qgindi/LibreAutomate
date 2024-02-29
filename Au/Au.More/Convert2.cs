@@ -106,7 +106,7 @@ public static unsafe class Convert2 {
 	/// <summary>
 	/// Converts hex-encoded string to a struct variable.
 	/// </summary>
-	/// <returns>false if decoded size != <c>sizeof(T)</c>.</returns>
+	/// <returns><c>false</c> if decoded size != <c>sizeof(T)</c>.</returns>
 	/// <param name="decoded">The result variable.</param>
 	/// <inheritdoc cref="HexDecode(ReadOnlySpan{char})"/>
 	public static bool HexDecode<T>(RStr encoded, out T decoded) where T : unmanaged {
@@ -313,7 +313,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <param name="data">Encryped data as byte[] or Base64 string.</param>
 	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
-	/// <param name="IV">If used <b>AesEncryptX</b> that returns an initialization vector, pass it here. Else null.</param>
+	/// <param name="IV">If used <b>AesEncryptX</b> that returns an initialization vector, pass it here.</param>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="CryptographicException"></exception>
 	public static byte[] AesDecryptB(object data, object key, byte[] IV = null) {
@@ -355,7 +355,7 @@ public static unsafe class Convert2 {
 	/// Converts string to UTF-8 byte[]. Can append <c>"\0"</c> (default) or some other string.
 	/// </summary>
 	/// <param name="chars">String or char[] or span of string/array/memory.</param>
-	/// <param name="append">A string to append, or null. For example <c>"\0"</c> (default) or <c>"\r\n"</c>. Must contain only ASCII characters.</param>
+	/// <param name="append">A string to append, or <c>null</c>. For example <c>"\0"</c> (default) or <c>"\r\n"</c>. Must contain only ASCII characters.</param>
 	/// <exception cref="ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
 	public static byte[] Utf8Encode(RStr chars, string append = "\0") {
 		int n = Encoding.UTF8.GetByteCount(chars);
@@ -377,7 +377,7 @@ public static unsafe class Convert2 {
 	/// <summary>
 	/// Converts <c>'\0'</c>-terminated UTF8 string to C# string (UTF16).
 	/// </summary>
-	/// <param name="utf8">UTF8 string. If null, returns null.</param>
+	/// <param name="utf8">UTF8 string. If <c>null</c>, returns <c>null</c>.</param>
 	/// <remarks>
 	/// Finds <c>'\0'</c> and calls <see cref="Encoding.GetString"/>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
 	/// </remarks>
@@ -388,8 +388,8 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <returns>
 	/// Tuple:
-	/// <br/>• text - <c>Encoding.UTF8.GetBytes(s)</c>.
-	/// <br/>• offsets - null if <i>s</i> is ASCII. Else UTF-8 character offsets for each <i>s</i> character plus at <c>s.Length</c>.
+	/// <br/>• <b>text</b> - <c>Encoding.UTF8.GetBytes(s)</c>.
+	/// <br/>• <b>offsets</b> - <c>null</c> if <i>s</i> is ASCII. Else UTF-8 character offsets for each <i>s</i> character plus at <c>s.Length</c>.
 	/// </returns>
 	internal static (byte[] text, int[] offsets) Utf8EncodeAndGetOffsets_(string s, bool append0 = false) {
 		var s2 = append0 ? Utf8Encode(s) : Encoding.UTF8.GetBytes(s); //always creates valid UTF-8. Replaces invalid UTF-16 chars.
@@ -445,7 +445,7 @@ public static unsafe class Convert2 {
 	///// </summary>
 	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="result"></param>
-	///// <returns>false if failed.</returns>
+	///// <returns><c>false</c> if failed.</returns>
 	///// <remarks>
 	///// Uses <see cref="Convert.TryFromBase64Chars"/>.
 	///// </remarks>
@@ -531,7 +531,7 @@ public static unsafe class Convert2 {
 
 	///// <summary>
 	///// Converts string containing Base64 encoded data to bytes and stores in memory of a Span variable. Supports standard encoding and URL-safe encoding.
-	///// Returns false if the encoded string is invalid or the buffer is too small.
+	///// Returns <c>false</c> if the encoded string is invalid or the buffer is too small.
 	///// </summary>
 	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">Memory buffer for the result.</param>
@@ -548,7 +548,7 @@ public static unsafe class Convert2 {
 
 	///// <summary>
 	///// Converts string containing Base64 encoded data to bytes and stores in any memory. Supports standard encoding and URL-safe encoding.
-	///// Returns false if the encoded string is invalid or the buffer is too small.
+	///// Returns <c>false</c> if the encoded string is invalid or the buffer is too small.
 	///// </summary>
 	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">Memory buffer for the result.</param>
@@ -561,7 +561,7 @@ public static unsafe class Convert2 {
 
 	///// <summary>
 	///// Converts string containing Base64 encoded data to a struct variable. Supports standard encoding and URL-safe encoding.
-	///// Returns false if the encoded string is invalid or decoded size != <c>sizeof(T)</c>.
+	///// Returns <c>false</c> if the encoded string is invalid or decoded size != <c>sizeof(T)</c>.
 	///// </summary>
 	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">The result variable.</param>

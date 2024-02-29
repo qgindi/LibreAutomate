@@ -34,7 +34,7 @@ public enum TKFlags
 	/// Don't release modifier keys.
 	/// Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
 	/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
-	/// <para>NOTE: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is true and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</para>
+	/// <para>NOTE: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is <c>true</c>. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is <c>true</c> and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</para>
 	/// </summary>
 	NoModOff = 16,
 

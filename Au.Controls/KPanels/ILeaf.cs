@@ -15,7 +15,7 @@ public partial class KPanels {
 		
 		/// <summary>
 		/// true if visible, either floating or docked.
-		/// The 'get' function returns true even if inactive tab item. The 'set' function makes tab item active.
+		/// The <c>get</c> function returns true even if inactive tab item. The <c>set</c> function makes tab item active.
 		/// </summary>
 		bool Visible { get; set; }
 		

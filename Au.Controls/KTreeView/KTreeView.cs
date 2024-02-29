@@ -196,7 +196,7 @@ public unsafe partial class KTreeView {
 	
 	/// <summary>
 	/// Gets or sets index of the first item in the scroll view; it is the value of the vertical scrollbar.
-	/// The 'set' function scrolls if need. Clamps if invalid index.
+	/// The <c>set</c> function scrolls if need. Clamps if invalid index.
 	/// </summary>
 	public int TopIndex {
 		get => _vscroll.Pos;

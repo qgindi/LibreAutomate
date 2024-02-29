@@ -16,7 +16,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </summary>
 	/// <param name="m"></param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new popupMenu();
@@ -70,7 +70,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// With <b>wpfBuilder</b>.
 	/// <code><![CDATA[
@@ -105,7 +105,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// b.R.Add("Dock", out ComboBox cb1);

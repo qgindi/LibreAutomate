@@ -51,8 +51,8 @@ namespace Au.Types {
 		/// <summary>
 		/// Loads a JSON file and deserializes to an object of type T, or creates a new object of type T.
 		/// </summary>
-		/// <returns>An object of type T. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, prints error info in the output.</returns>
-		/// <param name="file">Full path of .json file. If null, does not load and will not save.</param>
+		/// <returns>An object of type T. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> <c>true</c>. If failed, prints error info in the output.</returns>
+		/// <param name="file">Full path of .json file. If <c>null</c>, does not load and will not save.</param>
 		/// <param name="useDefault">Use default settings, don't load from <i>file</i>. Delete <i>file</i> if exists.</param>
 		protected static T Load<T>(string file, bool useDefault = false) where T : JSettings
 			=> (T)_Load(file, typeof(T), useDefault);
@@ -157,13 +157,13 @@ $@"Failed to load settings from {file}. Will use default settings.
 		
 		/// <summary>
 		/// Don't automatically call <see cref="SaveIfNeed"/>.
-		/// If false (default), calls every 2 s (unless <see cref="NoAutoSaveTimer"/> true), when disposing, and when process exits.
+		/// If <c>false</c> (default), calls every 2 s (unless <see cref="NoAutoSaveTimer"/> <c>true</c>), when disposing, and when process exits.
 		/// </summary>
 		protected bool NoAutoSave { get; set; }
 		
 		/// <summary>
 		/// Don't call <see cref="SaveIfNeed"/> every 2 s.
-		/// Default false.
+		/// Default <c>false</c>.
 		/// </summary>
 		protected bool NoAutoSaveTimer { get; set; }
 		
@@ -191,10 +191,10 @@ $@"Failed to load settings from {file}. Will use default settings.
 		}
 		
 		/// <summary>
-		/// true if settings were loaded from file.
+		/// <c>true</c> if settings were loaded from file.
 		/// </summary>
 		/// <remarks>
-		/// Returns false if <b>Load</b> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = true or parameter <i>file</i> = null.
+		/// Returns <c>false</c> if <b>Load</b> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = <c>true</c> or parameter <i>file</i> = <c>null</c>.
 		/// </remarks>
 		[JsonIgnore]
 		public bool LoadedFile => _loadedFile;

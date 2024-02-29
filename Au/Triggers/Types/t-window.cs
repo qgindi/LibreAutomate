@@ -12,7 +12,7 @@ public enum TWFlags : byte {
 
 	/// <summary>
 	/// When using the <i>later</i> parameter, call the currently active <b>Triggers.FuncOf</b> functions on "later" events too.
-	/// If the function returns false, the action will not run.
+	/// If the function returns <c>false</c>, the action will not run.
 	/// The function runs synchronously in the same thread that called <see cref="ActionTriggers.Run"/>. The action runs asynchronously in another thread, which is slower to start.
 	/// As always, <b>Triggers.FuncOf</b> functions must not contain slow code; should take less than 10 ms.
 	/// </summary>
@@ -816,8 +816,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// <summary>
 	/// Starts or stops to log (write in output) window events that can help to create or debug window triggers.
 	/// </summary>
-	/// <param name="on">Start (true) or stop.</param>
-	/// <param name="skip">An optional callback function that can be used to reduce noise, eg skip tooltip windows. Return true to skip that window.</param>
+	/// <param name="on">Start (<c>true</c>) or stop.</param>
+	/// <param name="skip">An optional callback function that can be used to reduce noise, eg skip tooltip windows. Return <c>true</c> to skip that window.</param>
 	/// <remarks>
 	/// For primary trigger events is logged this info:
 	/// <ol>
@@ -992,7 +992,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// Use in window trigger action, like in examples.
 	/// </summary>
 	/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
-	/// <param name="windowName">Callback function that returns true if the toolbar should be visible.</param>
+	/// <param name="windowName">Callback function that returns <c>true</c> if the toolbar should be visible.</param>
 	/// <example>
 	/// Show toolbar Toolbar_Chrome2 on a Chrome window when web page URL starts with <c>"https://www.youtube.com/"</c>.
 	/// <code><![CDATA[

@@ -25,7 +25,7 @@ namespace Au.Types {
 	/// 		m[2].Value //"45"
 	/// 		);
 	/// ]]></code>
-	/// A group in the subject string may not exist even if whole match found. Then its <b>Exists</b> property is false, <b>Index</b> -1, <b>Length</b> 0, <b>Value</b> null.
+	/// A group in the subject string may not exist even if whole match found. Then its <b>Exists</b> property is <c>false</c>, <b>Index</b> -1, <b>Length</b> 0, <b>Value</b> <c>null</c>.
 	/// <code><![CDATA[
 	/// var s = "ab cd--ef gh";
 	/// if(s.RxMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
@@ -127,7 +127,7 @@ namespace Au.Types {
 		public int StartNoK { get; private set; }
 		
 		/// <summary>
-		/// Gets the name of a found mark, or null.
+		/// Gets the name of a found mark, or <c>null</c>.
 		/// </summary>
 		/// <remarks>
 		/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
@@ -139,13 +139,13 @@ namespace Au.Types {
 		/// Gets the return value of the <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/> call.
 		/// </summary>
 		/// <remarks>
-		/// Can be false only when the function returned false but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns false, it returns null instead of a <b>RXMatch</b> object.
-		/// When false, all properties except <b>Exists</b> and <b>Mark</b> have undefined values or throw exception.
+		/// Can be <c>false</c> only when the function returned <c>false</c> but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns <c>false</c>, it returns <c>null</c> instead of a <b>RXMatch</b> object.
+		/// When <c>false</c>, all properties except <b>Exists</b> and <b>Mark</b> have undefined values or throw exception.
 		/// </remarks>
 		public bool Exists { get; private set; }
 		
 		/// <summary>
-		/// Returns true if this match is partial.
+		/// Returns <c>true</c> if this match is partial.
 		/// Partial match is possible if used a <b>PARTIAL_</b> flag.
 		/// </summary>
 		public bool IsPartial { get; private set; }
@@ -166,7 +166,7 @@ namespace Au.Types {
 		/// </param>
 		/// <exception cref="ArgumentException">Unknown group name.</exception>
 		/// <remarks>
-		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is true).
+		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is <c>true</c>).
 		/// </remarks>
 		public ref RXGroup this[string groupName] {
 			get {
@@ -185,7 +185,7 @@ namespace Au.Types {
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <remarks>
-		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is true).
+		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is <c>true</c>).
 		/// </remarks>
 		/// <seealso cref="regexp.GetGroupNumberOf"/>
 		public int GroupNumberFromName(string groupName) {
@@ -200,10 +200,10 @@ namespace Au.Types {
 		/// Group name.
 		/// In regular expression, to set name of group <c>(text)</c>, use <c>(?&lt;NAME&gt;text)</c>.
 		/// </param>
-		/// <param name="notUnique">Receives true if multiple groups have this name.</param>
+		/// <param name="notUnique">Receives <c>true</c> if multiple groups have this name.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <remarks>
-		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is true).
+		/// If multiple groups have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is <c>true</c>).
 		/// </remarks>
 		/// <seealso cref="regexp.GetGroupNumberOf"/>
 		public int GroupNumberFromName(string groupName, out bool notUnique) {
@@ -267,7 +267,7 @@ namespace Au.Types {
 	/// <remarks>
 	/// Groups are regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. A <b>RXGroup</b> variable contains info about a group found in the subject string: index, length, substring.
 	/// 
-	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression <c>"A(\d+)?B"</c> matches string <c>"AB"</c>, but group <c>(\d+)</c> does not exist. Then <see cref="Exists"/> is false, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> null.
+	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression <c>"A(\d+)?B"</c> matches string <c>"AB"</c>, but group <c>(\d+)</c> does not exist. Then <see cref="Exists"/> is <c>false</c>, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> <c>null</c>.
 	/// 
 	/// When a group matches multiple times, the <b>RXGroup</b> variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="Regex"/> and <see cref="Group.Captures"/>. Also you can get all instances with <see cref="regexp.Callout"/>.
 	/// 
@@ -308,11 +308,11 @@ namespace Au.Types {
 		public int End => _index + _len;
 		
 		/// <summary>
-		/// Returns true if the group exists in the subject string, false if does not exist.
+		/// Returns <c>true</c> if the group exists in the subject string, <c>false</c> if does not exist.
 		/// More info in <see cref="RXGroup"/> topic. Example in <see cref="RXMatch"/> topic.
 		/// </summary>
 		/// <remarks>
-		/// Other ways to detect it: if a group does not exist, its <b>Index</b> is -1 and <b>Value</b> is null.
+		/// Other ways to detect it: if a group does not exist, its <b>Index</b> is -1 and <b>Value</b> is <c>null</c>.
 		/// </remarks>
 		public bool Exists => _index >= 0;
 		
@@ -331,7 +331,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
 		/// </summary>
-		/// <returns>null if the group does not exist in the subject string (see <see cref="Exists"/>).</returns>
+		/// <returns><c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).</returns>
 		/// <remarks>
 		/// Creates new string each time. See also <see cref="Span"/>.
 		/// </remarks>
@@ -348,7 +348,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
-		/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
+		/// Returns <c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
 		/// <remarks>
 		/// Use this function instead of <see cref="Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
@@ -358,7 +358,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
-		/// Returns null if the group does not exist in the subject string (see <see cref="Exists"/>).
+		/// Returns <c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
 		/// <remarks>
 		/// Use this function instead of <see cref="Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
@@ -580,7 +580,7 @@ namespace Au.Types {
 		/// Sets the return value of the callout function, as documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// Default 0.
 		/// If 1, matching fails at the current point, but the testing of other matching possibilities goes ahead, just as if a lookahead assertion had failed.
-		/// If -1 (<b>PCRE2_ERROR_NOMATCH</b>), the match function returns false (no match). Values less tan -2 are PCRE error codes and cause exception.
+		/// If -1 (<b>PCRE2_ERROR_NOMATCH</b>), the match function returns <c>false</c> (no match). Values less tan -2 are PCRE error codes and cause exception.
 		/// </summary>
 		public int Result { set => _p->version = value; internal get => _p->version; }
 		
@@ -649,7 +649,7 @@ namespace Au.Types {
 		public string callout_string => _p->callout_string == null ? null : new string(_p->callout_string, 0, (int)_p->callout_string_length);
 		
 		/// <summary>
-		/// The most recently passed <c>(*MARK)</c>, <c>(*PRUNE)</c>, or <c>(*THEN)</c> item in the match, or null if no such items have been passed.
+		/// The most recently passed <c>(*MARK)</c>, <c>(*PRUNE)</c>, or <c>(*THEN)</c> item in the match, or <c>null</c> if no such items have been passed.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public string mark => _p->mark == null ? null : new string(_p->mark);

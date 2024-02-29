@@ -11,7 +11,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Gets XML attribute value.
-		/// If the attribute does not exist, returns null.
+		/// If the attribute does not exist, returns <c>null</c>.
 		/// If the attribute value is empty, returns <c>""</c>.
 		/// </summary>
 		public static string Attr(this XElement t, XName name) {
@@ -30,7 +30,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets XML attribute value.
-		/// If the attribute does not exist, sets <i>value</i> = null and returns false.
+		/// If the attribute does not exist, sets <i>value</i> = <c>null</c> and returns <c>false</c>.
 		/// </summary>
 		public static bool Attr(this XElement t, out string value, XName name) {
 			value = t.Attribute(name)?.Value;
@@ -49,8 +49,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets attribute value converted to int number.
-		/// If the attribute does not exist, sets <i>value</i> = 0 and returns false.
-		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns true.
+		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
+		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
 		public static bool Attr(this XElement t, out int value, XName name) {
 			var x = t.Attribute(name);
@@ -61,8 +61,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets attribute value converted to long number.
-		/// If the attribute does not exist, sets <i>value</i> = 0 and returns false.
-		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns true.
+		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
+		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
 		public static bool Attr(this XElement t, out long value, XName name) {
 			var x = t.Attribute(name);
@@ -73,8 +73,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets attribute value converted to double number.
-		/// If the attribute does not exist, sets <i>value</i> = 0 and returns false.
-		/// If the attribute value is empty or is not a valid number, sets <i>value</i> = 0 and returns true.
+		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
+		/// If the attribute value is empty or is not a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
 		public static bool Attr(this XElement t, out double value, XName name) {
 			var x = t.Attribute(name);
@@ -85,8 +85,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets attribute value converted to float number.
-		/// If the attribute does not exist, sets <i>value</i> = 0 and returns false.
-		/// If the attribute value is empty or is not a valid number, sets <i>value</i> = 0 and returns true.
+		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
+		/// If the attribute value is empty or is not a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
 		public static bool Attr(this XElement t, out float value, XName name) {
 			var x = t.Attribute(name);
@@ -97,8 +97,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets attribute value as enum type T.
-		/// If the attribute does not exist, sets <i>value</i> = <c>default</c> and returns false.
-		/// If the attribute value is not a valid enum member name, sets <i>value</i> = <i>default</i> and returns true.
+		/// If the attribute does not exist, sets <i>value</i> = <c>default</c> and returns <c>false</c>.
+		/// If the attribute value is not a valid enum member name, sets <i>value</i> = <i>default</i> and returns <c>true</c>.
 		/// </summary>
 		public static bool Attr<T>(this XElement t, out T value, XName name) where T : unmanaged, Enum {
 			var x = t.Attribute(name);
@@ -108,7 +108,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Returns true if this element has the specified attribute.
+		/// Returns <c>true</c> if this element has the specified attribute.
 		/// </summary>
 		public static bool HasAttr(this XElement t, XName name) {
 			return t.Attribute(name) != null;
@@ -117,7 +117,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the first found descendant element.
 		/// </summary>
-		/// <returns>null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		public static XElement Desc(this XElement t, XName name) {
 			return t.Descendants(name).FirstOrDefault();
 		}
@@ -125,11 +125,11 @@ namespace Au.Types
 		/// <summary>
 		/// Finds the first descendant element that has the specified attribute or value.
 		/// </summary>
-		/// <returns>null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
-		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If null, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If null, can be any value.</param>
+		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static XElement Desc(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
@@ -143,11 +143,11 @@ namespace Au.Types
 		/// <summary>
 		/// Finds all descendant elements that have the specified attribute or value.
 		/// </summary>
-		/// <returns>null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
-		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If null, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If null, can be any value.</param>
+		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static IEnumerable<XElement> Descs(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
@@ -158,11 +158,11 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute or value.
 		/// </summary>
-		/// <returns>null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
-		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If null, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If null, can be any value.</param>
+		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static XElement Elem(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Elements(name) : t.Elements()) {
@@ -174,11 +174,11 @@ namespace Au.Types
 		/// <summary>
 		/// Gets all direct child elements that have the specified attribute or value.
 		/// </summary>
-		/// <returns>null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
-		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If null, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If null, can be any value.</param>
+		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static IEnumerable<XElement> Elems(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Elements(name) : t.Elements()) {
@@ -218,7 +218,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Returns previous sibling element or null.
+		/// Returns previous sibling element or <c>null</c>.
 		/// </summary>
 		public static XElement PrevElem(this XElement t) {
 			for (XNode n = t.PreviousNode; n != null; n = n.PreviousNode) {
@@ -228,7 +228,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Returns next sibling element or null.
+		/// Returns next sibling element or <c>null</c>.
 		/// </summary>
 		public static XElement NextElem(this XElement t) {
 			for (XNode n = t.NextNode; n != null; n = n.NextNode) {
@@ -286,10 +286,10 @@ namespace Au.More
 			=> _Load(file, options, false) as XElement;
 
 		/// <summary>
-		/// If XML file exists, loads it (calls <see cref="LoadElem"/>), else creates new element or returns null.
+		/// If XML file exists, loads it (calls <see cref="LoadElem"/>), else creates new element or returns <c>null</c>.
 		/// </summary>
 		/// <param name="file"></param>
-		/// <param name="elemName">Element name to use if <i>file</i> does not exist. If null, returns null if <i>file</i> does not exist.</param>
+		/// <param name="elemName">Element name to use if <i>file</i> does not exist. If <c>null</c>, returns <c>null</c> if <i>file</i> does not exist.</param>
 		/// <param name="options"></param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Load"/>.</exception>

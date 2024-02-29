@@ -7,12 +7,12 @@ namespace Au {
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [wildcard expression](xref:wildcard_expression).
-		/// null means 'can be any'. <c>""</c> means 'no name'.
+		/// <c>null</c> means "can be any". <c>""</c> means "no name".
 		/// </param>
 		/// <param name="cn">
 		/// Window class name.
 		/// String format: [wildcard expression](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be <c>""</c>.
+		/// <c>null</c> means "can be any". Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="of">
 		/// Owner window, program or thread. Depends on argument type:
@@ -27,7 +27,7 @@ namespace Au {
 		/// <param name="flags"></param>
 		/// <param name="also">
 		/// Callback function. Called for each matching window.
-		/// It can evaluate more properties of the window and return true when they match.
+		/// It can evaluate more properties of the window and return <c>true</c> when they match.
 		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
 		/// Called after evaluating all other parameters except <i>contains</i>.
 		/// </param>
@@ -39,8 +39,8 @@ namespace Au {
 		/// <br/>• OCR text: <see cref="ocrFinder"/> or string <c>"ocr:..."</c> (uses an <b>ocrFinder</b> with flag <see cref="OcrFlags.WindowDC"/>).
 		/// </param>
 		/// <exception cref="ArgumentException">
-		/// - <i>cn</i> is <c>""</c>. To match any, use null.
-		/// - <i>of</i> is <c>""</c> or 0 or contains character \ or /. To match any, use null.
+		/// - <i>cn</i> is <c>""</c>. To match any, use <c>null</c>.
+		/// - <i>of</i> is <c>""</c> or 0 or contains character \ or /. To match any, use <c>null</c>.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
@@ -48,7 +48,7 @@ namespace Au {
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
-		/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have disableWindowFiltering true in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
+		/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have <c>disableWindowFiltering</c> <c>true</c> in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
 		/// 
 		/// To find message-only windows use <see cref="findFast"/> instead.
 		/// </remarks>
@@ -149,12 +149,12 @@ namespace Au {
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. <c>""</c> means 'no name'.
+		/// <c>null</c> means "can be any". <c>""</c> means "no name".
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
 		/// Full, case-insensitive. Wildcard etc not supported.
-		/// null means 'can be any'. Cannot be <c>""</c>.
+		/// <c>null</c> means "can be any". Cannot be <c>""</c>.
 		/// </param>
 		/// <param name="messageOnly">Search only message-only windows.</param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
@@ -212,7 +212,7 @@ namespace Au {
 		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>wait</i> &lt; 0 (else exception).</returns>
 		/// <param name="run">Callback function. See example.</param>
 		/// <param name="wait">How long to wait for the window after calling the callback function. Seconds. Default 60.</param>
-		/// <param name="activate">Activate the window. Default: true.</param>
+		/// <param name="activate">Activate the window. Default: <c>true</c>.</param>
 		/// <exception cref="NotFoundException"><i>wait</i> time has expired (if &gt;= 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <example>
@@ -266,7 +266,7 @@ namespace Au {
 		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> &lt; 0 (else exception).</returns>
 		/// <param name="timeout">How long to wait for the window. Seconds. Can be 0 (infinite), &gt;0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="run">Callback function. Should open the window. See example.</param>
-		/// <param name="activate">Activate the window. Default: true.</param>
+		/// <param name="activate">Activate the window. Default: <c>true</c>.</param>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <remarks>
@@ -304,7 +304,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Compares window name and other properties like <see cref="find"/> does. Returns true if all specified (non-null/default) properties match.
+		/// Compares window name and other properties like <see cref="find"/> does. Returns <c>true</c> if all specified (non-<c>null</c>/default) properties match.
 		/// </summary>
 		/// <remarks>
 		/// Creates new <see cref="wndFinder"/> and calls <see cref="wndFinder.IsMatch"/>.
@@ -339,13 +339,13 @@ namespace Au {
 			/// </param>
 			/// <param name="sortFirstVisible">
 			/// Place hidden windows at the end of the array.
-			/// Not used when <i>onlyVisible</i> is true.</param>
+			/// Not used when <i>onlyVisible</i> is <c>true</c>.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// Although undocumented, the API retrieves most windows as in the Z order, however places IME windows (hidden) at the end. See also: <see cref="allWindowsZorder"/>;
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="mainWindows"/>.</note>
 			/// Skips message-only windows; use <see cref="findFast"/> if need.
-			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have disableWindowFiltering true in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
+			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have <c>disableWindowFiltering</c> <c>true</c> in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
 			/// Tip: To get top-level and child windows in single array: <c>var a = wnd.getwnd.root.Get.Children();</c>.
 			/// </remarks>
 			/// <seealso cref="Children"/>
@@ -427,7 +427,7 @@ namespace Au {
 			}
 
 			//rejected
-			///// <param name="a">Receives results. If null, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <param name="a">Receives results. If <c>null</c>, this function creates new <b>List</b>, else clears before adding items.</param>
 			///// <remarks>This overload can be used to avoid much garbage when calling frequently.</remarks>
 			///// <inheritdoc cref="threadWindows(int, bool, bool)"/>
 			//public static void threadWindows(ref List<wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false) {
@@ -466,8 +466,8 @@ namespace Au {
 
 			/// <summary>
 			/// This version creates much less garbage.
-			/// The caller must dispose the returned ArrayBuilder_, unless list is not null.
-			/// If list is not null, adds windows there (clears at first) and returns <c>default(ArrayBuilder_)</c>.
+			/// The caller must dispose the returned ArrayBuilder_, unless list is not <c>null</c>.
+			/// If list is not <c>null</c>, adds windows there (clears at first) and returns <c>default(ArrayBuilder_)</c>.
 			/// </summary>
 			internal static ArrayBuilder_<wnd> EnumWindows2(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible = false, wnd wParent = default, bool directChild = false, int threadId = 0,
@@ -616,7 +616,7 @@ namespace Au.Types {
 
 		WOwner(int i, byte what) { _i = i; _what = what; }
 
-		/// <summary>Program name like <c>"notepad.exe"</c>, or null. See <see cref="wnd.ProgramName"/>.</summary>
+		/// <summary>Program name like <c>"notepad.exe"</c>, or <c>null</c>. See <see cref="wnd.ProgramName"/>.</summary>
 		public static implicit operator WOwner([ParamString(PSFormat.Wildex)] string program) => new(program);
 
 		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
@@ -636,7 +636,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Gets program name or process id or thread id or owner window.
-		/// Other variables will be null/0.
+		/// Other variables will be <c>null</c>/0.
 		/// </summary>
 		/// <exception cref="ArgumentException">The value is <c>""</c> or 0 or contains characters \ or / or is invalid wildcard expression.</exception>
 		public void GetValue(out wildex program, out int pid, out int tid, out wnd owner) {
@@ -664,7 +664,7 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Returns true if nothing was assigned to this variable.
+		/// Returns <c>true</c> if nothing was assigned to this variable.
 		/// </summary>
 		public bool IsEmpty => _what == 0 && _s == null;
 	}
@@ -716,7 +716,7 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Gets object stored in this variable. Can be null, <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
+		/// Gets object stored in this variable. Can be <c>null</c>, <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
 		/// </summary>
 		public object Value => _o;
 	}
@@ -732,7 +732,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Cache window name.
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		/// <remarks>
 		/// Window name is not cached by default because can be changed. Window class name and program name are always cached because cannot be changed.

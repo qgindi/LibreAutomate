@@ -35,7 +35,7 @@ public partial class keys {
 		public static short getKeyState(KKey key) => Api.GetKeyState((int)key);
 
 		/// <summary>
-		/// Returns true if the specified key or mouse button is pressed.
+		/// Returns <c>true</c> if the specified key or mouse button is pressed.
 		/// </summary>
 		/// <remarks>
 		/// Can be used for mouse buttons too. Example: <c>keys.gui.isPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
@@ -43,7 +43,7 @@ public partial class keys {
 		public static bool isPressed(KKey key) => getKeyState(key) < 0;
 
 		/// <summary>
-		/// Returns true if the specified key or mouse button is toggled.
+		/// Returns <c>true</c> if the specified key or mouse button is toggled.
 		/// </summary>
 		/// <remarks>
 		/// Works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
@@ -51,29 +51,29 @@ public partial class keys {
 		public static bool isToggled(KKey key) => 0 != (getKeyState(key) & 1);
 
 		/// <summary>
-		/// Returns true if the Alt key is pressed.
+		/// Returns <c>true</c> if the Alt key is pressed.
 		/// </summary>
 		public static bool isAlt => isPressed(KKey.Alt);
 
 		/// <summary>
-		/// Returns true if the Ctrl key is pressed.
+		/// Returns <c>true</c> if the Ctrl key is pressed.
 		/// </summary>
 		public static bool isCtrl => isPressed(KKey.Ctrl);
 
 		/// <summary>
-		/// Returns true if the Shift key is pressed.
+		/// Returns <c>true</c> if the Shift key is pressed.
 		/// </summary>
 		public static bool isShift => isPressed(KKey.Shift);
 
 		/// <summary>
-		/// Returns true if the Win key is pressed.
+		/// Returns <c>true</c> if the Win key is pressed.
 		/// </summary>
 		public static bool isWin => isPressed(KKey.Win) || isPressed(KKey.RWin);
 
 		/// <summary>
-		/// Returns true if some modifier keys are pressed.
+		/// Returns <c>true</c> if some modifier keys are pressed.
 		/// </summary>
-		/// <param name="mod">Return true if some of these keys are pressed. Default: Ctrl, Shift or Alt.</param>
+		/// <param name="mod">Return <c>true</c> if some of these keys are pressed. Default: Ctrl, Shift or Alt.</param>
 		/// <remarks>
 		/// By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
 		/// </remarks>
@@ -102,7 +102,7 @@ public partial class keys {
 		}
 
 		/// <summary>
-		/// Returns true if the Caps Lock key is toggled.
+		/// Returns <c>true</c> if the Caps Lock key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// The same as <see cref="keys.isCapsLock"/>.
@@ -110,7 +110,7 @@ public partial class keys {
 		public static bool isCapsLock => isToggled(KKey.CapsLock);
 
 		/// <summary>
-		/// Returns true if the Num Lock key is toggled.
+		/// Returns <c>true</c> if the Num Lock key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// The same as <see cref="keys.isNumLock"/>.
@@ -118,7 +118,7 @@ public partial class keys {
 		public static bool isNumLock => isToggled(KKey.NumLock);
 
 		/// <summary>
-		/// Returns true if the Scroll Lock key is toggled.
+		/// Returns <c>true</c> if the Scroll Lock key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// The same as <see cref="keys.isScrollLock"/>.
@@ -127,7 +127,7 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns true if the specified key or mouse button is pressed.
+	/// Returns <c>true</c> if the specified key or mouse button is pressed.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	/// <remarks>
@@ -139,34 +139,34 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns true if the Alt key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the Alt key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isAlt => isPressed(KKey.Alt);
 
 	/// <summary>
-	/// Returns true if the Ctrl key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the Ctrl key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isCtrl => isPressed(KKey.Ctrl);
 
 	/// <summary>
-	/// Returns true if the Shift key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the Shift key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isShift => isPressed(KKey.Shift);
 
 	/// <summary>
-	/// Returns true if the Win key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the Win key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isWin => isPressed(KKey.Win) || isPressed(KKey.RWin);
 
 	/// <summary>
-	/// Returns true if some modifier keys are pressed: Ctrl, Shift, Alt, Win. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if some modifier keys are pressed: Ctrl, Shift, Alt, Win. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
-	/// <param name="mod">Return true if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
+	/// <param name="mod">Return <c>true</c> if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
 	/// <seealso cref="waitForNoModifierKeys"/>
 	public static bool isMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win) {
 		if (0 != (mod & KMod.Ctrl) && isCtrl) return true;
@@ -191,17 +191,17 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns true if the Caps Lock key is toggled.
+	/// Returns <c>true</c> if the Caps Lock key is toggled.
 	/// </summary>
 	public static bool isCapsLock => gui.isCapsLock;
 
 	/// <summary>
-	/// Returns true if the Num Lock key is toggled.
+	/// Returns <c>true</c> if the Num Lock key is toggled.
 	/// </summary>
 	public static bool isNumLock => gui.isNumLock;
 
 	/// <summary>
-	/// Returns true if the Scroll Lock key is toggled.
+	/// Returns <c>true</c> if the Scroll Lock key is toggled.
 	/// </summary>
 	public static bool isScrollLock => gui.isScrollLock;
 
@@ -214,7 +214,7 @@ public partial class keys {
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="mod">Check only these keys. Default: all.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	public static bool waitForNoModifierKeys(Seconds timeout = default, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win) {
 		return waitForNoModifierKeysAndMouseButtons(timeout, mod, 0);
@@ -226,7 +226,7 @@ public partial class keys {
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
 	/// <param name="mod">Check only these keys. Default: all.</param>
 	/// <param name="buttons">Check only these buttons. Default: all.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <seealso cref="isMod"/>
 	/// <seealso cref="mouse.isPressed"/>
@@ -244,7 +244,7 @@ public partial class keys {
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="keys_">One or more keys or/and mouse buttons. Waits until all are released.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	public static bool waitForReleased(Seconds timeout, params KKey[] keys_) {
 		return wait.until(timeout, () => {
@@ -258,7 +258,7 @@ public partial class keys {
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="keys_">One or more keys. Waits until all are released. String like with <see cref="send"/>, without operators.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in <i>keys_</i> string.</exception>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	public static bool waitForReleased(Seconds timeout, string keys_) {
@@ -271,7 +271,7 @@ public partial class keys {
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="AuException">Failed to register hotkey.</exception>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
@@ -305,11 +305,11 @@ public partial class keys {
 	/// <summary>
 	/// Waits for key-down or key-up event of the specified key.
 	/// </summary>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="key">Wait for this key.</param>
 	/// <param name="up">Wait for key-up event.</param>
-	/// <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+	/// <param name="block">Make the event invisible for other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
 	/// <exception cref="ArgumentException"><i>key</i> is 0.</exception>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <remarks>
@@ -388,8 +388,8 @@ public partial class keys {
 	/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 	/// </returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <param name="f">Callback function that receives key down and up events. Let it return true to stop waiting.</param>
-	/// <param name="block">Make the key down event invisible for other apps (when the callback function returns true).</param>
+	/// <param name="f">Callback function that receives key down and up events. Let it return <c>true</c> to stop waiting.</param>
+	/// <param name="block">Make the key down event invisible for other apps (when the callback function returns <c>true</c>).</param>
 	/// <remarks>
 	/// Waits for key event, not for key state.
 	/// Uses low-level keyboard hook.
@@ -436,7 +436,7 @@ public partial class keys {
 	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.\
 	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>\
 	/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
-	/// <br/>• char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator ^.
+	/// <br/>• char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <b>^</b>.
 	/// </param>
 	/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 	/// <exception cref="AuException">Failed. When sending text, fails if there is no focused window.</exception>
@@ -575,26 +575,26 @@ public partial class keys {
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.NoBlockInput"/></td>
-	/// <td>false.
+	/// <td><c>false</c>.
 	/// Blocks user-pressed keys. Sends them afterwards.
-	/// <br/>If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</td>
-	/// <td>true.
+	/// <br/>If the last argument is "sleep", stops blocking before executing it; else stops blocking after executing all arguments.</td>
+	/// <td><c>true</c>.
 	/// Does not block user-pressed keys.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.NoCapsOff"/></td>
-	/// <td>false.
+	/// <td><c>false</c>.
 	/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
-	/// <td>true.
+	/// <td><c>true</c>.
 	/// Does not touch the CapsLock key.
 	/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.NoModOff"/></td>
-	/// <td>false.
+	/// <td><c>false</c>.
 	/// Releases modifier keys (Alt, Ctrl, Shift, Win).
-	/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="OKey.NoBlockInput"/> is true.</td>
-	/// <td>true.
+	/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="OKey.NoBlockInput"/> is <c>true</c>.</td>
+	/// <td><c>true</c>.
 	/// Does not touch modifier keys.</td>
 	/// </tr>
 	/// <tr>
@@ -634,27 +634,27 @@ public partial class keys {
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.PasteWorkaround"/></td>
-	/// <td>false.
+	/// <td><c>false</c>.
 	/// <br/>This option is used for "text" arguments when using clipboard.
 	/// </td>
-	/// <td>true.</td>
+	/// <td><c>true</c>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.RestoreClipboard"/></td>
-	/// <td>true.
+	/// <td><c>true</c>.
 	/// Restore clipboard data (by default only text).
 	/// <br/>This option is used for "text" and "HTML" arguments when using clipboard.</td>
-	/// <td>false.
+	/// <td><c>false</c>.
 	/// Don't restore clipboard data.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.Hook"/></td>
-	/// <td>null.</td>
+	/// <td><c>null</c>.</td>
 	/// <td>Callback function that can modify options depending on active window etc.</td>
 	/// </tr>
 	/// </table>
 	/// 
-	/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+	/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OKey.SleepFinally"/> etc). If need, change options or add "sleep" arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 	/// 
 	/// Don't use this function to automate windows of own thread. Call it from another thread. See example with async/await.
 	/// 
@@ -747,9 +747,9 @@ public partial class keys {
 	/// Ignores <b>opt.key</b> and instead uses default options with these changes:
 	/// - <b>SleepFinally</b> = 0.
 	/// - <b>KeySpeed</b> = 0.
-	/// - <b>NoBlockInput</b> = true.
-	/// - <b>NoCapsOff</b> = true.
-	/// - <b>NoModOff</b> = true.
+	/// - <b>NoBlockInput</b> = <c>true</c>.
+	/// - <b>NoCapsOff</b> = <c>true</c>.
+	/// - <b>NoModOff</b> = <c>true</c>.
 	/// </remarks>
 	/// <seealso cref="more.sendKey"/>
 	/// <inheritdoc cref="keys.send" path="//param|//exception"/>
@@ -761,7 +761,7 @@ public partial class keys {
 	/// <summary>
 	/// Sends text to the active window, using virtual keystrokes or clipboard.
 	/// </summary>
-	/// <param name="text">Text. Can be null.</param>
+	/// <param name="text">Text. Can be <c>null</c>.</param>
 	/// <param name="html">
 	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
@@ -770,7 +770,7 @@ public partial class keys {
 	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
 	/// Calls <see cref="AddText(string, string)"/> and <see cref="SendNow"/>.
-	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not null, uses clipboard.
+	/// To send text can use keys, characters or clipboard, depending on <see cref="opt.key"/> and text. If <i>html</i> not <c>null</c>, uses clipboard.
 	/// </remarks>
 	/// <seealso cref="clipboard.paste"/>
 	/// <example>

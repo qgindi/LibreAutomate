@@ -35,18 +35,18 @@ namespace Au.Types {
 			=> new(round ? p.X.ToInt() : checked((int)p.X), round ? p.Y.ToInt() : checked((int)p.Y));
 		
 		//rejected
-		///// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
+		///// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> <c>true</c>.</summary>
 		//public static implicit operator POINT((Coord x, Coord y, bool workArea) t) => _Coord(t.x, t.y, t.workArea, default);
-		///// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
+		///// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> <c>true</c>.</summary>
 		//public static implicit operator POINT((Coord x, Coord y, screen screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
-		///// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/> with <i>centerIfEmpty</i> true.</summary>
+		///// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/> with <i>centerIfEmpty</i> <c>true</c>.</summary>
 		//public static implicit operator POINT((RECT r, Coord x, Coord y) t) => Coord.NormalizeInRect(t.x, t.y, t.r, centerIfEmpty: true);
 		//static POINT _Coord(Coord x, Coord y, bool workArea, screen screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
 		
 		//maybe in the future
 		///// <summary>
 		///// Converts <see cref="Coord"/> coordinates into real coodinates.
-		///// Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.
+		///// Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> <c>true</c>.
 		///// </summary>
 		//public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default)
 		//	=> Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
@@ -178,12 +178,12 @@ namespace Au.Types {
 		//}
 		
 		/// <summary>
-		/// Returns true if all fields == 0.
+		/// Returns <c>true</c> if all fields == 0.
 		/// </summary>
 		public bool Is0 => left == 0 && top == 0 && right == 0 && bottom == 0;
 		
 		/// <summary>
-		/// Returns true if the rectangle area is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
+		/// Returns <c>true</c> if the rectangle area is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
 		/// </summary>
 		public bool NoArea => right <= left || bottom <= top;
 		
@@ -220,17 +220,17 @@ namespace Au.Types {
 		//public int CenterY => (int)(((long)top + bottom) / 2);
 		
 		/// <summary>
-		/// Returns true if this rectangle contains the specified point.
+		/// Returns <c>true</c> if this rectangle contains the specified point.
 		/// </summary>
 		public bool Contains(int x, int y) => x >= left && x < right && y >= top && y < bottom;
 		
 		/// <summary>
-		/// Returns true if this rectangle contains the specified point.
+		/// Returns <c>true</c> if this rectangle contains the specified point.
 		/// </summary>
 		public bool Contains(POINT p) => Contains(p.x, p.y);
 		
 		/// <summary>
-		/// Returns true if this rectangle contains entire specified rectangle.
+		/// Returns <c>true</c> if this rectangle contains entire specified rectangle.
 		/// </summary>
 		public bool Contains(RECT r2) => r2.left >= left && r2.top >= top && r2.right <= right && r2.bottom <= bottom;
 		
@@ -244,7 +244,7 @@ namespace Au.Types {
 		/// Replaces this rectangle with the intersection of itself and the specified rectangle.
 		/// If the rectangles don't intersect, makes this variable empty.
 		/// </summary>
-		/// <returns>true if the rectangles intersect.</returns>
+		/// <returns><c>true</c> if the rectangles intersect.</returns>
 		public bool Intersect(RECT r2) => Api.IntersectRect(out this, this, r2);
 		
 		/// <summary>
@@ -254,7 +254,7 @@ namespace Au.Types {
 		public static RECT Intersect(RECT r1, RECT r2) { Api.IntersectRect(out RECT r, r1, r2); return r; }
 		
 		/// <summary>
-		/// Returns true if this rectangle and another rectangle intersect.
+		/// Returns <c>true</c> if this rectangle and another rectangle intersect.
 		/// </summary>
 		public bool IntersectsWith(RECT r2) => Api.IntersectRect(out _, this, r2);
 		
@@ -274,7 +274,7 @@ namespace Au.Types {
 		/// Union is the smallest rectangle that contains two full rectangles.
 		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
-		/// <returns>true if finally this rectangle is not empty.</returns>
+		/// <returns><c>true</c> if finally this rectangle is not empty.</returns>
 		public bool Union(RECT r2) => Api.UnionRect(out this, this, r2);
 		
 		/// <summary>
@@ -287,7 +287,7 @@ namespace Au.Types {
 		/// <summary>
 		/// If <b>width</b> or <b>height</b> are negative, modifies this rectangle so that they would not be negative.
 		/// </summary>
-		/// <param name="swap">true - swap <b>right</b>/<b>left</b>, <b>bottom</b>/<b>top</b>; false - set <b>right</b> = <b>left</b>, <b>bottom</b> = <b>top</b>.</param>
+		/// <param name="swap"><c>true</c> - swap <b>right</b>/<b>left</b>, <b>bottom</b>/<b>top</b>; <c>false</c> - set <b>right</b> = <b>left</b>, <b>bottom</b> = <b>top</b>.</param>
 		public void Normalize(bool swap) {
 			if (right < left) { if (swap) Math2.Swap(ref left, ref right); else right = left; }
 			if (bottom < top) { if (swap) Math2.Swap(ref top, ref bottom); else bottom = top; }
@@ -300,8 +300,8 @@ namespace Au.Types {
 		/// <param name="x">X coordinate in the specified screen. If <c>default</c> - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the specified screen. If <c>default</c> - center.</param>
 		/// <param name="screen">Use this screen. If <c>default</c>, uses the primary screen. Example: <c>screen.index(1)</c>.</param>
-		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
-		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
+		/// <param name="workArea">Use the work area, not whole screen. Default <c>true</c>.</param>
+		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default <c>true</c>.</param>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.MoveInScreen"/>.
 		/// </remarks>
@@ -325,7 +325,7 @@ namespace Au.Types {
 		/// Initial and final rectangle coordinates are relative to the primary screen.
 		/// </summary>
 		/// <param name="screen">Use this screen (see <see cref="screen"/>). If <c>default</c>, uses screen of the rectangle (or nearest).</param>
-		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
+		/// <param name="workArea">Use the work area, not whole screen. Default <c>true</c>.</param>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="wnd.EnsureInScreen"/>.
 		/// </remarks>
@@ -334,7 +334,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Returns true if all fields of <i>r1</i> and <i>r2</i> are equal or almost equal with max difference +- <i>maxDiff</i>.
+		/// Returns <c>true</c> if all fields of <i>r1</i> and <i>r2</i> are equal or almost equal with max difference +- <i>maxDiff</i>.
 		/// </summary>
 		internal static bool EqualFuzzy_(RECT r1, RECT r2, int maxDiff) {
 			if (Math.Abs(r1.left - r2.left) > maxDiff) return false;
@@ -381,7 +381,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Converts string to <b>RECT</b>.
 		/// </summary>
-		/// <returns>false if invalid string format.</returns>
+		/// <returns><c>false</c> if invalid string format.</returns>
 		/// <param name="s">String in format <c>"{L=left T=top W=width H=height}"</c> (<see cref="ToString"/>) or <c>"left top width height"</c> (<see cref="ToStringSimple"/>).</param>
 		/// <param name="r"></param>
 		public static bool TryParse(string s, out RECT r) {
@@ -483,7 +483,7 @@ namespace Au.Types {
 		public char* Ptr => _p;
 		
 		/// <summary>
-		/// Returns true if the string is null.
+		/// Returns <c>true</c> if the string is <c>null</c>.
 		/// </summary>
 		public bool Is0 => _p == null;
 		

@@ -6,7 +6,7 @@ namespace Au {
 	/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's <b>DllImport</b> attribute has <c>SetLastError = true</c>.
 	/// 
 	/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most <see cref="wnd"/> property-get functions.
-	/// When failed, they return false/0/null/empty. Then you can use <see cref="code"/> to get the error code or <see cref="message"/> to get error text.
+	/// When failed, they return <c>false</c>/0/<c>null</c>/empty. Then you can use <see cref="code"/> to get the error code or <see cref="message"/> to get error text.
 	/// 
 	/// Most of functions set error code only when failed, and don't clear the old error code when succeeded. Therefore may need to call <see cref="clear"/> before.
 	/// 
@@ -42,7 +42,7 @@ namespace Au {
 		/// <summary>
 		/// Gets the text message of the Windows API last error code of this thread.
 		/// </summary>
-		/// <returns>null if the code is 0.</returns>
+		/// <returns><c>null</c> if the code is 0.</returns>
 		/// <remarks>
 		/// The string always ends with <c>"."</c>.
 		/// </remarks>
@@ -51,7 +51,7 @@ namespace Au {
 		/// <summary>
 		/// Gets the text message of a Windows API error code.
 		/// </summary>
-		/// <returns>null if <i>errorCode</i> is 0.</returns>
+		/// <returns><c>null</c> if <i>errorCode</i> is 0.</returns>
 		/// <remarks>
 		/// The string always ends with <c>"."</c>.
 		/// </remarks>

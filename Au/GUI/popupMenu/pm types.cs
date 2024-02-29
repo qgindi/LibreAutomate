@@ -27,10 +27,10 @@ public class PMItem : MTItem {
 	/// <summary>Gets or sets menu item id.</summary>
 	public int Id { get; set; }
 	
-	/// <summary>true if is a submenu-item.</summary>
+	/// <summary><c>true</c> if is a submenu-item.</summary>
 	public bool IsSubmenu { get; init; }
 	
-	/// <summary>true if is a separator.</summary>
+	/// <summary><c>true</c> if is a separator.</summary>
 	public bool IsSeparator { get; init; }
 	
 	/// <summary>
@@ -50,7 +50,7 @@ public class PMItem : MTItem {
 	/// <summary>
 	/// Gets or sets checked state.
 	/// </summary>
-	/// <exception cref="InvalidOperationException">The 'set' function throws this exception if the item isn't checkable. Use <see cref="popupMenu.AddCheck"/> or <see cref="popupMenu.AddRadio"/>.</exception>
+	/// <exception cref="InvalidOperationException">The <c>set</c> function throws this exception if the item isn't checkable. Use <see cref="popupMenu.AddCheck"/> or <see cref="popupMenu.AddRadio"/>.</exception>
 	public bool IsChecked {
 		get => _isChecked;
 		set {
@@ -75,7 +75,7 @@ public class PMItem : MTItem {
 	public string Hotkey { get; set; }
 	
 	/// <summary>
-	/// Invokes <see cref="Clicked"/> if not null.
+	/// Invokes <see cref="Clicked"/> if not <c>null</c>.
 	/// Handles exceptions if need. Invokes in new thread if need.
 	/// </summary>
 	internal void InvokeAction_() {

@@ -176,7 +176,7 @@ namespace Au
 		/// Returns <c>default(wnd)</c> if failed (unlikely).
 		/// </summary>
 		/// <param name="p">Point in screen.</param>
-		/// <param name="isChild">Receives true if control, false if top-level or failed.</param>
+		/// <param name="isChild">Receives <c>true</c> if control, false if top-level or failed.</param>
 		static wnd _FromXY(POINT p, out bool isChild) {
 			wnd w = Api.WindowFromPoint(p);
 			if (w.Is0) { isChild = false; return default; }
@@ -246,7 +246,7 @@ namespace Au
 		/// If <i>direction</i> is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
 		/// If <i>direction</i> is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
 		/// </param>
-		/// <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default false.</param>
+		/// <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default <c>false</c>.</param>
 		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too.

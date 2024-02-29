@@ -14,7 +14,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="size">Byte count.</param>
 		/// <param name="zeroInit">Set all bytes = 0.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		/// <exception cref="OutOfMemoryException">Failed. Probably <i>size</i> is too big.</exception>
 		/// <remarks>
 		/// Calls API <msdn>HeapAlloc</msdn>.
 		/// The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done. Call <see cref="ReAlloc"/> or <see cref="FreeAlloc"/> if need to resize.
@@ -54,10 +54,10 @@ namespace Au.More {
 		/// <summary>
 		/// Reallocates a memory block to make it bigger or smaller.
 		/// </summary>
-		/// <param name="mem">Input: old memory address; if null, allocates new memory like <see cref="Alloc{T}"/>. Output: new memory address. Unchanged if exception.</param>
+		/// <param name="mem">Input: old memory address; if <c>null</c>, allocates new memory like <see cref="Alloc{T}"/>. Output: new memory address. Unchanged if exception.</param>
 		/// <param name="count">New count of elements of type T.</param>
 		/// <param name="zeroInit">When size is growing, set all added bytes = 0.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably count is too big.</exception>
+		/// <exception cref="OutOfMemoryException">Failed. Probably <i>count</i> is too big.</exception>
 		/// <remarks>
 		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
 		/// Preserves data in <c>Math.Min(oldCount, newCount)</c> elements of old memory (copies from old memory if need).
@@ -68,7 +68,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Frees a memory block.
-		/// Does nothing if <i>mem</i> is null.
+		/// Does nothing if <i>mem</i> is <c>null</c>.
 		/// </summary>
 		/// <remarks>
 		/// Calls API <msdn>HeapFree</msdn>.
@@ -78,14 +78,14 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Frees a memory block (if not null) and allocates new.
+		/// Frees a memory block (if not <c>null</c>) and allocates new.
 		/// </summary>
-		/// <param name="mem">Input: old memory address or null. Output: new memory address; null if exception (it prevents freeing twice).</param>
+		/// <param name="mem">Input: old memory address or <c>null</c>. Output: new memory address; <c>null</c> if exception (it prevents freeing twice).</param>
 		/// <param name="count">New count of elements of type T.</param>
 		/// <param name="zeroInit">Set all bytes = 0.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably count is too big.</exception>
+		/// <exception cref="OutOfMemoryException">Failed. Probably <i>count</i> is too big.</exception>
 		/// <remarks>
-		/// At first sets <i>mem</i> = null, to avoid double <b>Free</b> if this function throws exception. Then calls <b>Free</b> and <b>Alloc</b>.
+		/// At first sets <i>mem</i> = <c>null</c>, to avoid double <b>Free</b> if this function throws exception. Then calls <b>Free</b> and <b>Alloc</b>.
 		/// </remarks>
 		public static void FreeAlloc<T>(ref T* mem, nint count, bool zeroInit = false) where T : unmanaged {
 			var m = mem; mem = null;
@@ -97,7 +97,7 @@ namespace Au.More {
 		/// Allocates new virtual memory block with API <msdn>VirtualAlloc</msdn> and returns its address: <c>VirtualAlloc(default, size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE)</c>.
 		/// </summary>
 		/// <param name="size">Byte count.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		/// <exception cref="OutOfMemoryException">Failed. Probably <i>size</i> is too big.</exception>
 		/// <remarks>
 		/// Faster than managed and <see cref="Alloc"/> when memory size is large, more than 1 MB; else slower.
 		/// The memory is initialized to zero (all bytes 0).
@@ -121,7 +121,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Frees a memory block allocated with <see cref="VirtualAlloc"/>.
-		/// Does nothing if <i>mem</i> is null.
+		/// Does nothing if <i>mem</i> is <c>null</c>.
 		/// </summary>
 		public static void VirtualFree(void* mem) {
 			if (mem != null) Api.VirtualFree(mem);

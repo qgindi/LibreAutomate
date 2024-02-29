@@ -127,14 +127,14 @@ namespace Au.More {
 		bool _isLocalTimer;
 		
 		/// <param name="isGlobal">
-		/// If true, will receive output from all processes that don't have local server.
+		/// If <c>true</c>, will receive output from all processes that don't have local server.
 		/// </param>
 		public PrintServer(bool isGlobal) => _isGlobal = isGlobal;
 		
 		/// <summary>
 		/// Starts server.
 		/// </summary>
-		/// <returns>false if server already exists (if global - in any process).</returns>
+		/// <returns><c>false</c> if server already exists (if global - in any process).</returns>
 		/// <exception cref="AuException">Failed.</exception>
 		public bool Start() {
 			lock (this) {
@@ -198,7 +198,7 @@ namespace Au.More {
 		/// <summary>
 		/// Sets window/message to be notified about server events.
 		/// </summary>
-		/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns false. See example in class help.</param>
+		/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns <c>false</c>. See example in class help.</param>
 		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example <b>WM_USER</b> or <b>WM_APP</b>.</param>
 		public void SetNotifications(wnd w, int message) {
 			_notifMsg = message;
@@ -290,7 +290,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Adds s directly to _messages and sets timer.
-		/// If s is null, it is 'Clear' command.
+		/// If s is <c>null</c>, it is "Clear" command.
 		/// Else if !NoNewline, appends "\r\n".
 		/// Used with local server; also with global server when writes the server's process.
 		/// </summary>
@@ -322,7 +322,7 @@ namespace Au.More {
 		/// <summary>
 		/// Gets next message and removes from the queue.
 		/// </summary>
-		/// <returns>false if there are no messages.</returns>
+		/// <returns><c>false</c> if there are no messages.</returns>
 		/// <remarks>
 		/// Messages are added to an internal queue when clients call <see cref="print.it"/> etc. They contain the text, time, etc. This function gets the oldest message and removes it from the queue.
 		/// </remarks>
@@ -575,7 +575,7 @@ namespace Au {
 
 		/// <summary>
 		/// Introduces a class that contain methods designed to write to the output.
-		/// Purpose - when server's <see cref="PrintServer.NeedCallerMethod"/> is true, skip methods of this class when searching for the caller method in the call stack.
+		/// Purpose - when server's <see cref="PrintServer.NeedCallerMethod"/> is <c>true</c>, skip methods of this class when searching for the caller method in the call stack.
 		/// For example, if you created class PrintColored that contains methods PrintRed, PrintGreen and PrintBlue, you should execute this code in its static constructor: <c>print.introduceWriterClass(typeof(PrintColored));</c>.
 		/// Also use this if you redirect output using a writer class that calls directly().
 		/// Not used when writing to console or log file.
@@ -647,7 +647,7 @@ namespace Au.Types {
 		/// <summary>
 		/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
-		/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
+		/// If <see cref="NeedCallerMethod"/> is <c>true</c>, also includes the caller method. Format: "scriptname:type.method".
 		/// </summary>
 		public string Caller { get; }
 

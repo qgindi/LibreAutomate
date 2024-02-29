@@ -14,10 +14,10 @@ namespace Au.Types;
 /// </remarks>
 public static unsafe partial class ExtString {
 	/// <summary>
-	/// Compares this and other string. Returns true if equal.
+	/// Compares this and other string. Returns <c>true</c> if equal.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="s">Other string. Can be null.</param>
+	/// <param name="t">This string. Can be <c>null</c>.</param>
+	/// <param name="s">Other string. Can be <c>null</c>.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
@@ -34,9 +34,9 @@ public static unsafe partial class ExtString {
 	/// Compares this strings with multiple strings.
 	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
+	/// <param name="t">This string. Can be <c>null</c>.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <param name="strings">Other strings. Strings can be null.</param>
+	/// <param name="strings">Other strings. Strings can be <c>null</c>.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -46,13 +46,13 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Compares part of this string with other string. Returns true if equal.
+	/// Compares part of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="startIndex">Offset in this string. If invalid, returns false.</param>
+	/// <param name="startIndex">Offset in this string. If invalid, returns <c>false</c>.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -74,10 +74,10 @@ public static unsafe partial class ExtString {
 	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="startIndex">Offset in this string. If invalid, returns false.</param>
+	/// <param name="startIndex">Offset in this string. If invalid, returns <c>false</c>.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <param name="strings">Other strings.</param>
-	/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
+	/// <exception cref="ArgumentNullException">A string in <i>strings</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -87,13 +87,13 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Compares part of this string with other string. Returns true if equal.
+	/// Compares part of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="range">Range of this string. Can return true only if its length <c>== s.Length</c>. If invalid, returns false.</param>
+	/// <param name="range">Range of this string. Can return <c>true</c> only if its length <c>== s.Length</c>. If invalid, returns <c>false</c>.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -108,10 +108,10 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if the specified character is at the specified position in this string.
+	/// Returns <c>true</c> if the specified character is at the specified position in this string.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="index">Offset in this string. If invalid, returns false.</param>
+	/// <param name="index">Offset in this string. If invalid, returns <c>false</c>.</param>
 	/// <param name="c">Character.</param>
 	public static bool Eq(this string t, int index, char c) {
 		if ((uint)index >= t.Length) return false;
@@ -119,10 +119,10 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Compares this and other string ignoring case (case-insensitive). Returns true if equal.
+	/// Compares this and other string ignoring case (case-insensitive). Returns <c>true</c> if equal.
 	/// </summary>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="s">Other string. Can be null.</param>
+	/// <param name="t">This string. Can be <c>null</c>.</param>
+	/// <param name="s">Other string. Can be <c>null</c>.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -132,12 +132,12 @@ public static unsafe partial class ExtString {
 	//public static bool Eqi(this string t, int startIndex, string s) => Eq(t, startIndex, s, true);
 	
 	/// <summary>
-	/// Compares end of this string with other string. Returns true if equal.
+	/// Compares end of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -157,7 +157,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <param name="strings">Other strings.</param>
-	/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
+	/// <exception cref="ArgumentNullException">A string in <i>strings</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -167,7 +167,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if this string ends with the specified character.
+	/// Returns <c>true</c> if this string ends with the specified character.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="c">Character.</param>
@@ -177,12 +177,12 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Compares beginning of this string with other string. Returns true if equal.
+	/// Compares beginning of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -202,7 +202,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <param name="strings">Other strings.</param>
-	/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
+	/// <exception cref="ArgumentNullException">A string in <i>strings</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -212,7 +212,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if this string starts with the specified character.
+	/// Returns <c>true</c> if this string starts with the specified character.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="c">Character.</param>
@@ -263,7 +263,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="s">Subtring to find.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -278,7 +278,7 @@ public static unsafe partial class ExtString {
 	/// <param name="s">Subtring to find.</param>
 	/// <param name="startIndex">The search start index.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
@@ -294,7 +294,7 @@ public static unsafe partial class ExtString {
 	/// <param name="s">Subtring to find.</param>
 	/// <param name="range">The search range.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
@@ -308,7 +308,7 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Like <see cref="Find(string, string, bool)"/>, but with a predicate.
 	/// </summary>
-	/// <param name="also">Called for each found substring until returns true. Receives this string and start and end offsets of the substring.</param>
+	/// <param name="also">Called for each found substring until returns <c>true</c>. Receives this string and start and end offsets of the substring.</param>
 	internal static int Find_(this string t, string s, Func<string, int, int, bool> also, bool ignoreCase = false) {
 		for (int i = 0; ; i++) {
 			i = t.Find(s, i, ignoreCase);
@@ -324,7 +324,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <param name="range">The search range.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)] //functions with Range parameter are very slow until fully optimized
 	public static int FindAny(this string t, string chars, Range? range = null) {
@@ -339,7 +339,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <param name="range">The search range.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static int FindNot(this string t, string chars, Range? range = null) {
@@ -353,7 +353,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	public static int IndexOfNot(this RStr t, string chars) {
 		Not_.Null(chars);
 		for (int i = 0; i < t.Length; i++) {
@@ -370,7 +370,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	public static int LastIndexOfNot(this RStr t, string chars) {
 		Not_.Null(chars);
 		for (int i = t.Length; --i >= 0;) {
@@ -388,7 +388,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <param name="range">The search range.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static int FindLastAny(this string t, string chars, Range? range = null) {
@@ -403,7 +403,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <param name="range">The search range.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static int FindLastNot(this string t, string chars, Range? range = null) {
@@ -418,7 +418,7 @@ public static unsafe partial class ExtString {
 	/// <returns>The result string.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters to remove.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static string Trim(this string t, string chars) {
 		var span = t.AsSpan().Trim(chars);
@@ -431,7 +431,7 @@ public static unsafe partial class ExtString {
 	/// <returns>The result string.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters to remove.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static string TrimStart(this string t, string chars) {
 		var span = t.AsSpan().TrimStart(chars);
@@ -444,7 +444,7 @@ public static unsafe partial class ExtString {
 	/// <returns>The result string.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters to remove.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static string TrimEnd(this string t, string chars) {
 		var span = t.AsSpan().TrimEnd(chars);
@@ -459,13 +459,13 @@ public static unsafe partial class ExtString {
 	/// <param name="range">The search range.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <param name="otherWordChars">Additional word characters. For example <c>"_"</c>.</param>
-	/// <param name="isWordChar">Function that returns true for word characters. If null, uses <see cref="char.IsLetterOrDigit"/>.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <param name="isWordChar">Function that returns <c>true</c> for word characters. If <c>null</c>, uses <see cref="char.IsLetterOrDigit"/>.</param>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <remarks>
 	/// If <i>s</i> starts with a word character, finds substring that is not preceded by a word character.
 	/// If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
-	/// Word characters are those for which <i>isWordChar</i> or <see cref="char.IsLetterOrDigit"/> returns true plus those specified in <i>otherWordChars</i>.
+	/// Word characters are those for which <i>isWordChar</i> or <see cref="char.IsLetterOrDigit"/> returns <c>true</c> plus those specified in <i>otherWordChars</i>.
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// For Unicode surrogates (2-char characters) calls <see cref="char.IsLetterOrDigit(string, int)"/> and ignores <i>isWordChar</i> and <i>otherWordChars</i>.
 	/// </remarks>
@@ -505,21 +505,21 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns <see cref="string.Length"/>. Returns 0 if this string is null.
+	/// Returns <see cref="string.Length"/>. Returns 0 if this string is <c>null</c>.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	[DebuggerStepThrough]
 	public static int Lenn(this string t) => t?.Length ?? 0;
 	
 	/// <summary>
-	/// Returns true if this string is null or empty (<c>""</c>).
+	/// Returns <c>true</c> if this string is <c>null</c> or empty (<c>""</c>).
 	/// </summary>
 	/// <param name="t">This string.</param>
 	[DebuggerStepThrough]
 	public static bool NE(this string t) => t == null || t.Length == 0;
 	
 	/// <summary>
-	/// Returns this string, or null if it is "" or null.
+	/// Returns this string, or <c>null</c> if it is <c>""</c> or <c>null</c>.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	[DebuggerStepThrough]
@@ -670,7 +670,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
-	/// <param name="range">Part of this string or null (default).</param>
+	/// <param name="range">Part of this string or <c>null</c> (default).</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <seealso cref="StringUtil.LineAndColumn"/>
 	public static int LineCount(this string t, bool preferMore = false, Range? range = null) {
@@ -715,7 +715,7 @@ public static unsafe partial class ExtString {
 	/// <returns>The result string.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="how"></param>
-	/// <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If null (default) uses invariant culture.</param>
+	/// <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If <c>null</c> (default) uses invariant culture.</param>
 	public static unsafe string Upper(this string t, SUpper how, CultureInfo culture = null) {
 		if (how == SUpper.FirstChar) {
 			if (t.Length == 0 || !char.IsLower(t, 0)) return t;
@@ -826,13 +826,13 @@ public static unsafe partial class ExtString {
 	/// Converts part of this string to int number and gets the number end index.
 	/// </summary>
 	/// <returns>The number, or 0 if failed to convert.</returns>
-	/// <param name="t">This string. Can be null.</param>
+	/// <param name="t">This string. Can be <c>null</c>.</param>
 	/// <param name="startIndex">Offset in this string where to start parsing.</param>
 	/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
 	/// <remarks>
-	/// Fails to convert when string is null, <c>""</c>, does not start with a number or the number is too big.
+	/// Fails to convert when string is <c>null</c>, <c>""</c>, does not start with a number or the number is too big.
 	/// 
 	/// Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
 	/// - The number in string can be followed by more text, like <c>"123text"</c>.
@@ -862,7 +862,7 @@ public static unsafe partial class ExtString {
 		return (int)_ToInt(t, startIndex, out _, false, flags);
 	}
 	
-	/// <returns>false if failed.</returns>
+	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="result">Receives the result, or 0 if failed.</param>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, int, out int, STIFlags)"/>
@@ -871,7 +871,7 @@ public static unsafe partial class ExtString {
 		return numberEndIndex != 0;
 	}
 	
-	/// <returns>false if failed.</returns>
+	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="result">Receives the result, or 0 if failed.</param>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, int, STIFlags)"/>
@@ -945,14 +945,14 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to double number.
 	/// </summary>
 	/// <returns>The number, or 0 if failed to convert.</returns>
-	/// <param name="t">This string. Can be null.</param>
-	/// <param name="range">Part of this string or null (default).</param>
+	/// <param name="t">This string. Can be <c>null</c>.</param>
+	/// <param name="range">Part of this string or <c>null</c> (default).</param>
 	/// <param name="style">The permitted number format in the string.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
 	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
-	/// Fails if the string is null or <c>""</c> or isn't a valid floating-point number.
+	/// Fails if the string is <c>null</c> or <c>""</c> or isn't a valid floating-point number.
 	/// Examples of valid numbers: <c>"12"</c>, <c>" -12.3 "</c>, <c>".12"</c>, <c>"12."</c>, <c>"12E3"</c>, <c>"12.3e-45"</c>, <c>"1,234.5"</c> (with <i>style</i> <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like <c>"2text"</c> is invalid, unless <i>range</i> is <c>0..1</c>.
 	/// </remarks>
 	public static double ToNumber(this string t, Range? range = null, NumberStyles style = NumberStyles.Float) {
@@ -960,7 +960,7 @@ public static unsafe partial class ExtString {
 		return r;
 	}
 	
-	/// <returns>false if failed.</returns>
+	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="result">Receives the result, or 0 if failed.</param>
 	/// <inheritdoc cref="ToNumber(string, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out double result, Range? range = null, NumberStyles style = NumberStyles.Float) {
@@ -1112,7 +1112,7 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="suffix">Substring to remove.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>suffix</i> is <c>null</c>.</exception>
 	public static string RemoveSuffix(this string t, string suffix, bool ignoreCase = false) {
 		if (!t.Ends(suffix, ignoreCase)) return t;
 		return t[..^suffix.Length];
@@ -1124,7 +1124,7 @@ public static unsafe partial class ExtString {
 	/// <returns>The result string. Returns this string if does not end with <i>suffix</i>.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="suffix">Character to remove.</param>
-	/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>suffix</i> is <c>null</c>.</exception>
 	public static string RemoveSuffix(this string t, char suffix) {
 		if (!t.Ends(suffix)) return t;
 		return t[..^1];
@@ -1234,7 +1234,7 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Replaces C# escape sequences to characters in this string.
 	/// </summary>
-	/// <returns>false if the string contains an invalid or unsupported escape sequence.</returns>
+	/// <returns><c>false</c> if the string contains an invalid or unsupported escape sequence.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="result">Receives the result string. It is this string if there are no escape sequences or if failed.</param>
 	/// <remarks>
@@ -1354,13 +1354,13 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if does not contain non-ASCII characters.
+	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
 	/// <seealso cref="IsAscii(RStr)"/>
 	public static bool IsAscii(this string t) => t.AsSpan().IsAscii();
 	
 	/// <summary>
-	/// Returns true if does not contain non-ASCII characters.
+	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
 	public static bool IsAscii(this RStr t) {
 		foreach (char c in t) if (c > 0x7f) return false;
@@ -1368,7 +1368,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	///// <summary>
-	///// Returns true if does not contain non-ASCII characters.
+	///// Returns <c>true</c> if does not contain non-ASCII characters.
 	///// </summary>
 	//public static bool IsAscii(this RByte t) {
 	//	foreach (char c in t) if (c > 0x7f) return false;
@@ -1383,33 +1383,33 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if equals to string <i>s</i>, case-sensitive.
+	/// Returns <c>true</c> if equals to string <i>s</i>, case-sensitive.
 	/// </summary>
 	/// <param name="t">This span.</param>
-	/// <param name="s">Other string. Can be null.</param>
+	/// <param name="s">Other string. Can be <c>null</c>.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Eq(this RStr t, RStr s) => t.Equals(s, StringComparison.Ordinal);
 	
 	/// <summary>
-	/// Returns true if equals to string <i>s</i>, case-insensitive.
+	/// Returns <c>true</c> if equals to string <i>s</i>, case-insensitive.
 	/// </summary>
 	/// <param name="t">This span.</param>
-	/// <param name="s">Other string. Can be null.</param>
+	/// <param name="s">Other string. Can be <c>null</c>.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Eqi(this RStr t, RStr s) => t.Equals(s, StringComparison.OrdinalIgnoreCase);
 	
 	/// <summary>
-	/// Compares part of this span with string <i>s</i>. Returns true if equal.
+	/// Compares part of this span with string <i>s</i>. Returns <c>true</c> if equal.
 	/// </summary>
 	/// <param name="t">This span.</param>
-	/// <param name="startIndex">Offset in this span. If invalid, returns false.</param>
+	/// <param name="startIndex">Offset in this span. If invalid, returns <c>false</c>.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -1423,10 +1423,10 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if the specified character is at the specified position in this span.
+	/// Returns <c>true</c> if the specified character is at the specified position in this span.
 	/// </summary>
 	/// <param name="t">This span.</param>
-	/// <param name="index">Offset in this span. If invalid, returns false.</param>
+	/// <param name="index">Offset in this span. If invalid, returns <c>false</c>.</param>
 	/// <param name="c">Character.</param>
 	public static bool Eq(this RStr t, int index, char c) {
 		if ((uint)index >= t.Length) return false;
@@ -1434,7 +1434,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Returns true if starts with string <i>s</i>.
+	/// Returns <c>true</c> if starts with string <i>s</i>.
 	/// </summary>
 	/// <param name="t">This span.</param>
 	/// <param name="s">Other string.</param>
@@ -1445,7 +1445,7 @@ public static unsafe partial class ExtString {
 	public static bool Starts(this RStr t, RStr s, bool ignoreCase = false) => t.StartsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	
 	/// <summary>
-	/// Returns true if starts with string <i>s</i>.
+	/// Returns <c>true</c> if starts with string <i>s</i>.
 	/// </summary>
 	/// <param name="t">This span.</param>
 	/// <param name="s">Other string.</param>
@@ -1481,7 +1481,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	public static int IndexOf(this RStr t, int index, RStr s, bool ignoreCase = false) {
 		if (s == default) throw new ArgumentNullException();
 		int i = t[index..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -1493,7 +1493,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	public static int IndexOf(this RStr t, Range range, RStr s, bool ignoreCase = false) {
 		if (s == default) throw new ArgumentNullException();
 		int i = t[range].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -1580,9 +1580,9 @@ public static unsafe partial class ExtString {
 	/// <param name="s2">String at the right.</param>
 	/// <param name="minLen1">Minimal <i>s1</i> length.</param>
 	/// <param name="minLen2">Minimal <i>s2</i> length.</param>
-	/// <returns>Returns false if character <i>c</i> not found or if strings are too short.</returns>
+	/// <returns>Returns <c>false</c> if character <i>c</i> not found or if strings are too short.</returns>
 	/// <remarks>
-	///	Can be used to split strings like "name=value" or "name: value" or "s1 s2" etc. Trims spaces.
+	///	Can be used to split strings like <c>"name=value"</c> or <c>"name: value"</c> or <c>"s1 s2"</c> etc. Trims spaces.
 	/// </remarks>
 	internal static bool Split_(this string t, char c, out string s1, out string s2, int minLen1, int minLen2) {
 		if (!Split_(t, c, out RStr k1, out RStr k2, minLen1, minLen2)) {

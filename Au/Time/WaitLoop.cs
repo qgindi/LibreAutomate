@@ -1,10 +1,10 @@
 namespace Au.More {
 	/// <summary>
-	/// Can be used to easily implement 'wait for' functions with a timeout.
+	/// Can be used to easily implement "wait for" functions with a timeout.
 	/// </summary>
 	/// <remarks>
-	/// See examples. The code works like most 'wait for' functions of this library: throws exception when timed out, unless the timeout value is negative.
-	/// Similar code is used by <see cref="wait.until"/> and many other 'wait for' functions of this library.
+	/// See examples. The code works like most "wait for" functions of this library: throws exception when timed out, unless the timeout value is negative.
+	/// Similar code is used by <see cref="wait.until"/> and many other "wait for" functions of this library.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -31,7 +31,7 @@ namespace Au.More {
 		/// <summary>
 		/// Sets timeout and possibly more wait parameters.
 		/// </summary>
-		/// <param name="timeout">Timeout in seconds, like <c>3</c> or <c>0.5</c>. Or a <b>Seconds</b> variable containing timeout etc, like <c>new(3, period: 5)</c>. If timeout is 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns false instead.</param>
+		/// <param name="timeout">Timeout in seconds, like <c>3</c> or <c>0.5</c>. Or a <b>Seconds</b> variable containing timeout etc, like <c>new(3, period: 5)</c>. If timeout is 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
 		public WaitLoop(Seconds timeout) {
 			Period = timeout.Period ?? 10;
 			_step = Period / 10f;
@@ -47,20 +47,20 @@ namespace Au.More {
 			}
 		}
 		
-		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns false instead.</param>
-		/// <param name="options">Options. If null, uses <b>opt.wait</b>.</param>
+		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
+		/// <param name="options">Options. If <c>null</c>, uses <b>opt.wait</b>.</param>
 		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
 		public WaitLoop(double secondsTimeout, OWait options) : this(new(secondsTimeout) { Period = (options ?? opt.wait).Period, DoEvents = (options ?? opt.wait).DoEvents }) { }
 		
 		/// <summary>
 		/// Current period (<see cref="Sleep"/> sleep time). Milliseconds.
-		/// Initially it is <see cref="Seconds.Period"/>, or 10 ms if it was null. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
+		/// Initially it is <see cref="Seconds.Period"/>, or 10 ms if it was <c>null</c>. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
 		/// </summary>
 		public float Period { get; set; }
 		
 		/// <summary>
 		/// Maximal period (<see cref="Sleep"/> sleep time). Milliseconds.
-		/// Initially it is <see cref="Seconds.MaxPeriod"/>, or <see cref="Period"/>*50 if it is null (eg 10*50=500).
+		/// Initially it is <see cref="Seconds.MaxPeriod"/>, or <see cref="Period"/>*50 if it is <c>null</c> (eg 10*50=500).
 		/// </summary>
 		public float MaxPeriod { get; set; }
 		
@@ -70,8 +70,8 @@ namespace Au.More {
 		public long TimeRemaining { get => _timeRemaining; set => _timeRemaining = value; }
 		
 		/// <summary>
-		/// Calls <see cref="IsTimeout"/>. If it returns true, returns false.
-		/// Else sleeps <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns true.
+		/// Calls <see cref="IsTimeout"/>. If it returns <c>true</c>, returns <c>false</c>.
+		/// Else sleeps <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns <c>true</c>.
 		/// </summary>
 		/// <exception cref="TimeoutException">The timeout time has expired (if &gt; 0).</exception>
 		public unsafe bool Sleep() {
@@ -103,8 +103,8 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// If the timeout time is not expired, returns false.
-		/// Else if the timeout was negative, returns true.
+		/// If the timeout time is not expired, returns <c>false</c>.
+		/// Else if the timeout was negative, returns <c>true</c>.
 		/// Else throws <see cref="TimeoutException"/>.
 		/// </summary>
 		/// <exception cref="TimeoutException"></exception>
@@ -132,7 +132,7 @@ namespace Au.Types {
 	/// <remarks>
 	/// Many wait functions of this library internally use <see cref="WaitLoop"/>. They have a timeout parameter of <b>Seconds</b> type which allows to pass timeout and more options to <b>WaitLoop</b> in single parameter. You can pass a <b>Seconds</b> variable, like <c>new(3, period: 5)</c>. If don't need options etc, you can pass just timeout, like <c>3</c> or <c>0.5</c>.
 	///
-	/// Other wait functions have a timeout parameter of <b>Seconds</b> type but instead of <b>WaitLoop</b> use various hooks, events, Windows wait API, etc. They support only these <b>Seconds</b> properties: <b>Time</b>, <b>Cancel</b>, maybe <b>DoEvents</b>. Some always work like with <b>DoEvents</b> true.
+	/// Other wait functions have a timeout parameter of <b>Seconds</b> type but instead of <b>WaitLoop</b> use various hooks, events, Windows wait API, etc. They support only these <b>Seconds</b> properties: <b>Time</b>, <b>Cancel</b>, maybe <b>DoEvents</b>. Some always work like with <b>DoEvents</b> <c>true</c>.
 	///
 	/// More info: [](xref:wait_timeout).
 	/// </remarks>
@@ -186,7 +186,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// The sleep time between checking the wait condition periodically. Milliseconds.
-		/// If null, will be used a value that usually is best for that wait function, in most cases 10.
+		/// If <c>null</c>, will be used a value that usually is best for that wait function, in most cases 10.
 		/// </summary>
 		/// <remarks>
 		/// Most wait functions of this library use <see cref="WaitLoop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time (<see cref="WaitLoop.Period"/>), which then is incremented by <c>Period/10</c> ms in each loop until reaches <see cref="WaitLoop.MaxPeriod"/>, which is <c>Period*50</c> by default.
@@ -199,7 +199,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Sets <see cref="WaitLoop.MaxPeriod"/>.
-		/// If null (default), it will use <c>Period*50</c>.
+		/// If <c>null</c> (default), it will use <c>Period*50</c>.
 		/// </summary>
 		public int? MaxPeriod {
 			get => _maxPeriod != 0 ? _maxPeriod : null;
@@ -208,7 +208,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Use <see cref="wait.doEvents(int)"/> instead of <see cref="wait.ms"/>.
-		/// If null, will be used false.
+		/// If <c>null</c>, will be used <c>false</c>.
 		/// </summary>
 		public bool? DoEvents {
 			get => _doEvents != 0 ? _doEvents == 1 : null;
@@ -221,7 +221,7 @@ namespace Au.Types {
 		public CancellationToken Cancel { get; set; }
 		
 		///// <summary>
-		///// Returns true if ctor wasn't called.
+		///// Returns <c>true</c> if ctor wasn't called.
 		///// </summary>
 		//internal bool IsNull_ => !_inited;
 		
@@ -234,7 +234,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// If <c>Time &lt; 0</c>, returns false, else throws <b>NotFoundException</b>.
+		/// If <c>Time &lt; 0</c>, returns <c>false</c>, else throws <b>NotFoundException</b>.
 		/// </summary>
 		internal bool ReturnFalseOrThrowNotFound_() => Time < 0 ? false : throw new NotFoundException();
 		//internal T ReturnOrThrowNotFound_<T>(T def) => Time < 0 ? def : throw new NotFoundException();

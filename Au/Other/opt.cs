@@ -148,7 +148,7 @@ namespace Au {
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.mouse"/> options. See example.
 			/// </summary>
-			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.mouse.ClickSpeed);
@@ -174,7 +174,7 @@ namespace Au {
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.key"/> options. See example.
 			/// </summary>
-			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.key.KeySpeed);
@@ -213,7 +213,7 @@ namespace Au {
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.warnings"/> options. See example.
 			/// </summary>
-			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// opt.warnings.Verbose = false;
@@ -241,7 +241,7 @@ namespace Au {
 			/// <summary>
 			/// Creates temporary scope for all options. See example.
 			/// </summary>
-			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
@@ -259,7 +259,7 @@ namespace Au {
 				var o3 = _Wait(inherit);
 				var o4 = _Warnings(inherit);
 				//rejected
-				///// <param name="speed">If not null, sets <c>opt.mouse.MoveSpeed = speed; opt.key.KeySpeed = speed; opt.key.TextSpeed = speed;</c>. See <see cref="OMouse.MoveSpeed"/>, <see cref="OKey.KeySpeed"/>, <see cref="OKey.TextSpeed"/>.</param>
+				///// <param name="speed">If not <c>null</c>, sets <c>opt.mouse.MoveSpeed = speed; opt.key.KeySpeed = speed; opt.key.TextSpeed = speed;</c>. See <see cref="OMouse.MoveSpeed"/>, <see cref="OKey.KeySpeed"/>, <see cref="OKey.TextSpeed"/>.</param>
 				//if (speed != null) {
 				//	int i = speed.Value;
 				//	opt.mouse.MoveSpeed = i;
@@ -296,7 +296,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
-		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
+		/// <param name="cloneOptions">If not <c>null</c>, copies its options into this variable.</param>
 		internal OWarnings(OWarnings cloneOptions = null) {
 			if (cloneOptions != null) {
 				_Copy(cloneOptions);
@@ -315,8 +315,8 @@ namespace Au.Types {
 		//public void Reset() => _Copy(opt.init.warnings);
 		
 		/// <summary>
-		/// If true, some library functions may display more warnings and other info.
-		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="AssemblyUtil_.IsDebug"/>.
+		/// If <c>true</c>, some library functions may display more warnings and other info.
+		/// If not explicitly set, the default value depends on the build configuration of the main assembly: <c>true</c> if Debug, <c>false</c> if Release (<c>optimize true</c>). See <see cref="AssemblyUtil_.IsDebug"/>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -334,7 +334,7 @@ namespace Au.Types {
 		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
 		/// <remarks>
 		/// Adds the strings to an internal list. When <see cref="print.warning"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
-		/// It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
+		/// It's easy to auto-restore warnings with <c>using</c>, like in the second example. Restoring is optional.
 		/// </remarks>
 		/// <example>
 		/// This code at the start of script disables two warnings in all threads.
@@ -360,7 +360,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Returns true if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
+		/// Returns <c>true</c> if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
 		/// </summary>
 		/// <param name="text">Warning text. Case-insensitive.</param>
 		public bool IsDisabled(string text) {
@@ -395,7 +395,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
-		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
+		/// <param name="cloneOptions">If not <c>null</c>, copies its options into this variable.</param>
 		internal OMouse(OMouse cloneOptions = null) //don't need public like OKey
 		{
 			if (cloneOptions != null) {
@@ -461,13 +461,13 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
+		/// How long to wait (milliseconds) before a "mouse click" or "mouse wheel" function returns.
 		/// Default: 10.
 		/// </summary>
 		/// <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="opt.init.mouse"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// The 'click' functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
+		/// The "click" functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -480,7 +480,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
+		/// How long to wait (milliseconds) after moving the mouse cursor. Used in "move+click" functions too.
 		/// Default: 10.
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="opt.init.mouse"/>: 0 - 100.</value>
@@ -500,19 +500,19 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Make some functions less strict (throw less exceptions etc).
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		/// <remarks>
 		/// This option is used by these functions:
 		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):\
-		///   false - throw exception if cannot move the cursor to the specified x y. For example if the x y is not in screen.\
-		///   true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
+		///   <c>false</c> - throw exception if cannot move the cursor to the specified x y. For example if the x y is not in screen.\
+		///   <c>true</c> - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
 		/// - <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that move the cursor (mouse pointer):\
-		///   false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.\
-		///   true - do not wait.
+		///   <c>false</c> - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.\
+		///   <c>true</c> - do not wait.
 		/// - <see cref="mouse.click"/> and other functions that click or press a mouse button using window coordinates:\
-		///   false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.\
-		///   true - allow to click in another window. Don't activate the window and don't throw exception.
+		///   <c>false</c> - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.\
+		///   <c>true</c> - allow to click in another window. Don't activate the window and don't throw exception.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -537,13 +537,13 @@ namespace Au.Types {
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
-		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
+		/// <param name="cloneOptions">If not <c>null</c>, copies its options into this variable.</param>
 		public OKey(OKey cloneOptions = null) {
 			CopyOrDefault_(cloneOptions);
 		}
 		
 		/// <summary>
-		/// Copies options from o, or sets default if o==null. Like ctor does.
+		/// Copies options from o, or sets default if o==<c>null</c>. Like ctor does.
 		/// </summary>
 		internal void CopyOrDefault_(OKey o) {
 			if (o != null) {
@@ -609,7 +609,7 @@ namespace Au.Types {
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Used only for 'text' arguments, not for 'keys' arguments. See <see cref="KeySpeed"/>.
+		/// Used only for "text" arguments, not for "keys" arguments. See <see cref="KeySpeed"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -629,7 +629,7 @@ namespace Au.Types {
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Used only for 'keys' arguments, not for 'text' arguments. See <see cref="TextSpeed"/>.
+		/// Used only for "keys" arguments, not for "text" arguments. See <see cref="TextSpeed"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -663,7 +663,7 @@ namespace Au.Types {
 		int _clipboardKeySpeed;
 		
 		/// <summary>
-		/// How long to wait (milliseconds) before a 'send keys or text' function returns.
+		/// How long to wait (milliseconds) before a "send keys or text" function returns.
 		/// Default: 10.
 		/// </summary>
 		/// <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
@@ -725,7 +725,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// When pasting text that ends with space, tab or/and newline characters, remove them and after pasting send them as keys.
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		/// <remarks>
 		/// Some apps trim these characters when pasting.
@@ -748,7 +748,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Whether to restore clipboard data when copying or pasting text.
-		/// Default: true.
+		/// Default: <c>true</c>.
 		/// By default restores only text. See also <see cref="RestoreClipboardAllFormats"/>, <see cref="RestoreClipboardExceptFormats"/>.
 		/// </summary>
 		/// <example>
@@ -767,7 +767,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// When copying or pasting text, restore clipboard data of all formats that are possible to restore.
-		/// Default: false - restore only text.
+		/// Default: <c>false</c> - restore only text.
 		/// </summary>
 		/// <remarks>
 		/// Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="RestoreClipboardExceptFormats"/>.
@@ -784,8 +784,8 @@ namespace Au.Types {
 		public static bool RestoreClipboardAllFormats { get; set; }
 		
 		/// <summary>
-		/// When copying or pasting text, and <see cref="RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
-		/// Default: null.
+		/// When copying or pasting text, and <see cref="RestoreClipboardAllFormats"/> is <c>true</c>, do not restore clipboard data of these formats.
+		/// Default: <c>null</c>.
 		/// </summary>
 		/// <remarks>
 		/// To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
@@ -826,7 +826,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// When starting to send keys or text, don't release modifier keys.
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -837,7 +837,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// When starting to send keys or text, don't turn off CapsLock.
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -848,10 +848,10 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// While sending or pasting keys or text, don't block user-pressed keys.
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		/// <remarks>
-		/// If false (default), user-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
+		/// If <c>false</c> (default), user-pressed keys are sent afterwards. If <c>true</c>, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -861,8 +861,8 @@ namespace Au.Types {
 		public bool NoBlockInput { get; set; }
 		
 		/// <summary>
-		/// Callback function that can modify options of 'send keys or text' functions depending on active window etc.
-		/// Default: null.
+		/// Callback function that can modify options of "send keys or text" functions depending on active window etc.
+		/// Default: <c>null</c>.
 		/// </summary>
 		/// <remarks>
 		/// The callback function is called by <see cref="keys.send"/>, <see cref="keys.sendt"/>, <see cref="keys.SendNow"/>, <see cref="clipboard.paste"/> and similar functions. Not called by <see cref="clipboard.copy"/>.
@@ -896,7 +896,7 @@ namespace Au.Types {
 		internal OKeyHookData(OKey optk, wnd w) { this.optk = optk; this.w = w; }
 		
 		/// <summary>
-		/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
+		/// Options used by the "send keys or text" function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
 		/// </summary>
 		public readonly OKey optk;
 		

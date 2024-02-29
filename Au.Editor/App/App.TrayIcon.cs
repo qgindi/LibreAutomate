@@ -68,9 +68,9 @@ static partial class App {
 			case Api.WM_RBUTTONUP:
 				_ContextMenu();
 				break;
-			case Api.WM_MBUTTONDOWN:
-				TriggersAndToolbars.DisableTriggers(null);
-				break;
+			//case Api.WM_MBUTTONDOWN: //does not work on Win11
+			//	TriggersAndToolbars.DisableTriggers(null);
+			//	break;
 			}
 		}
 		
@@ -96,7 +96,7 @@ static partial class App {
 		
 		static void _ContextMenu() {
 			var m = new popupMenu();
-			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
+			m.AddCheck("Disable triggers", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
 			m.Separator();
 			m.Add("Exit", _ => _Exit());
 			m.Show(PMFlags.AlignBottom | PMFlags.AlignCenterH);

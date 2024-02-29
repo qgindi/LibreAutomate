@@ -35,9 +35,9 @@ internal static class Debug_ {
 		=> _Print(text, f_, l_, m_);
 	
 	/// <summary>
-	/// If condition is true, calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
+	/// If condition is <c>true</c>, calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
 	/// Works only if DEBUG is defined. Read more in class help.
-	/// If <i>text</i> null, uses [CallerArgumentExpression("condition")]. Other optional parameters are not used explicitly.
+	/// If <i>text</i> <c>null</c>, uses [CallerArgumentExpression("condition")]. Other optional parameters are not used explicitly.
 	/// If text starts with "&lt;&gt;", it can contain output tags.
 	/// </summary>
 	[Conditional("DEBUG")]
@@ -55,7 +55,7 @@ internal static class Debug_ {
 		=> _Print2(m_);
 	
 	/// <summary>
-	/// In DEBUG config prints lastError.message. Only if condition true (default).
+	/// In DEBUG config prints lastError.message. Only if condition <c>true</c> (default).
 	/// </summary>
 	[Conditional("DEBUG")]
 	public static void PrintNativeError(bool condition = true, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
@@ -82,7 +82,7 @@ internal static class Debug_ {
 	
 	//rejected: use if(opt.warnings.Verbose) dialog.showWarning(...). It adds stack trace.
 	///// <summary>
-	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="dialog.show"/> with text and stack trace.
+	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == <c>true</c>, calls <see cref="dialog.show"/> with text and stack trace.
 	///// Read more in class help.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -95,7 +95,7 @@ internal static class Debug_ {
 	
 	//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use print.warning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 	///// <summary>
-	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="print.it(string)"/>.
+	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == <c>true</c>, calls <see cref="print.it(string)"/>.
 	///// Read more in class help.
 	///// </summary>
 	//public static void PrintOpt(string text)
@@ -105,7 +105,7 @@ internal static class Debug_ {
 	
 	//rejected: Don't need multiple warning functions. Now print.warning does not show more than 1 warning/second if opt.warnings.Verbose is false.
 	///// <summary>
-	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == true, calls <see cref="print.warning"/>.
+	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == <c>true</c>, calls <see cref="print.warning"/>.
 	///// Read more in class help.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -121,7 +121,7 @@ internal static class Debug_ {
 	/// <param name="goodFlags">Valid flags.</param>
 	/// <remarks>
 	/// Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-	/// Does nothing if opt.warnings.<see cref="OWarnings.Verbose"/> == false.
+	/// Does nothing if opt.warnings.<see cref="OWarnings.Verbose"/> == <c>false</c>.
 	/// When flags are valid, this function is fast.
 	/// </remarks>
 	public static unsafe void CheckFlagsOpt<T>(T flags, T goodFlags) where T : unmanaged, Enum {
@@ -149,7 +149,7 @@ internal static class Debug_ {
 	}
 	
 	/// <summary>
-	/// Returns true if using Debug configuration of Au.dll.
+	/// Returns <c>true</c> if using Debug configuration of Au.dll.
 	/// </summary>
 	public static bool IsAuDebugConfiguration {
 		get {
@@ -190,7 +190,7 @@ internal static class Debug_ {
 	public static void MemoryPrint(bool fromAnchor = true) => _Print2(MemoryGet(fromAnchor));
 	
 	/// <summary>
-	/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
+	/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=<c>true</c> (default) will get memory size difference from current memory size.
 	/// </summary>
 	public static void MemorySetAnchor() { s_mem0 = GC.GetTotalMemory(false); }
 	

@@ -4,7 +4,7 @@ for (int i = 0; i < 3; i++) { //increment i: 0, 1, 2
 	print.it(i);
 }
 
-/// The above code declares variable i = 0. Then, while i is less than 3, executes statements in the { } block and increments i (i++).
+/// The above code declares variable <i>i<> = 0. Then, while <i>i<> is less than 3, executes statements in the <.c>{ }<> block and increments <i>i<> (<.c>i++<>).
 /// 
 /// Several ways to insert <.k>for<> code quickly:
 /// - Type text like <.c>3t<> (it means "repeat 3 times").

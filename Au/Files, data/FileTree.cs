@@ -45,10 +45,10 @@ public class FileTree : TreeBase<FileTree> {
 	/// <param name="path">Folder path.</param>
 	/// <param name="onlyDirectories">Don't include files.</param>
 	/// <param name="minSize">Don't include smaller files and directories. The unit is bytes.</param>
-	/// <param name="ignoreInaccessible">If cannot access some descendant directories, ignore them and don't throw exception. Default true.</param>
+	/// <param name="ignoreInaccessible">If cannot access some descendant directories, ignore them and don't throw exception. Default <c>true</c>.</param>
 	/// <param name="recurseNtfsLinks">Enumerate target directories of NTFS links, such as symbolic links and mount points.</param>
-	/// <param name="dirFilter">Called for each descendant directory. If returns false, that directory with descendants is not included. But its size contributes to ancestor sizes anyway.</param>
-	/// <param name="fileFilter">Called for each descendant file. If returns false, that file is not included. But its size contributes to ancestor sizes anyway.</param>
+	/// <param name="dirFilter">Called for each descendant directory. If returns <c>false</c>, that directory with descendants is not included. But its size contributes to ancestor sizes anyway.</param>
+	/// <param name="fileFilter">Called for each descendant file. If returns <c>false</c>, that file is not included. But its size contributes to ancestor sizes anyway.</param>
 	/// <returns>The root of the tree. You can use its descendants and <see cref="Size"/>. Don't use <b>Info</b>, <b>Name</b>, <b>Path</b> and <b>IsDirectory</b>.</returns>
 	/// <exception cref="Exception">Exceptions of <see cref="filesystem.enumerate"/>.</exception>
 	public static FileTree Create(string path, bool onlyDirectories = false, long minSize = 0, bool ignoreInaccessible = true, bool recurseNtfsLinks = false, Func<FEFile, bool> dirFilter = null, Func<FEFile, bool> fileFilter = null) {

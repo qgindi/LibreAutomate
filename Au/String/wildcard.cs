@@ -5,8 +5,8 @@ namespace Au {
 	/// Parses and compares [wildcard expression](xref:wildcard_expression).
 	/// </summary>
 	/// <remarks>
-	/// Used in 'find' functions. For example in <see cref="wnd.find"/> to compare window name, class name and program.
-	/// The 'find' function creates a <b>wildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
+	/// Used in "find" functions. For example in <see cref="wnd.find"/> to compare window name, class name and program.
+	/// The "find" function creates a <b>wildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -37,11 +37,11 @@ namespace Au {
 
 		/// <param name="wildcardExpression">
 		/// [Wildcard expression](xref:wildcard_expression).
-		/// Cannot be null (throws exception).
+		/// Cannot be <c>null</c> (throws exception).
 		/// <c>""</c> will match <c>""</c>.
 		/// </param>
 		/// <param name="matchCase">Case-sensitive even if there is no **c.</param>
-		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return false.</param>
+		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return <c>false</c>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
 		public wildex([ParamString(PSFormat.Wildex)] string wildcardExpression, bool matchCase = false, bool noException = false) {
@@ -101,7 +101,7 @@ namespace Au {
 
 		/// <summary>
 		/// Creates new <b>wildex</b> from wildcard expression string.
-		/// If the string is null, returns null.
+		/// If the string is <c>null</c>, returns <c>null</c>.
 		/// </summary>
 		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
@@ -113,9 +113,9 @@ namespace Au {
 		//rejected: ReadOnlySpan<char>. Then cannot use eg .NET Regex.
 
 		/// <summary>
-		/// Compares a string with the [wildcard expression](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns true if they match.
+		/// Compares a string with the [wildcard expression](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns <c>true</c> if they match.
 		/// </summary>
-		/// <param name="s">String. If null, returns false. If <c>""</c>, returns true if it was <c>""</c> or <c>"*"</c> or a regular expression that matches <c>""</c>.</param>
+		/// <param name="s">String. If <c>null</c>, returns <c>false</c>. If <c>""</c>, returns <c>true</c> if it was <c>""</c> or <c>"*"</c> or a regular expression that matches <c>""</c>.</param>
 		public bool Match(string s) {
 			if (s == null) return false;
 
@@ -160,25 +160,25 @@ namespace Au {
 
 		/// <summary>
 		/// Returns the text or wildcard string.
-		/// null if <b>TextType</b> is not <b>Text</b> or <b>Wildcard</b>.
+		/// <c>null</c> if <b>TextType</b> is not <b>Text</b> or <b>Wildcard</b>.
 		/// </summary>
 		public string Text => _o as string;
 
 		/// <summary>
 		/// Returns the <b>regexp</b> object created from regular expression string.
-		/// null if <b>TextType</b> is not <b>RegexPcre</b> (no option r).
+		/// <c>null</c> if <b>TextType</b> is not <b>RegexPcre</b> (no option r).
 		/// </summary>
 		public regexp RegexPcre => _o as regexp;
 
 		/// <summary>
 		/// Gets the <b>Regex</b> object created from regular expression string.
-		/// null if <b>TextType</b> is not <b>RegexNet</b> (no option R).
+		/// <c>null</c> if <b>TextType</b> is not <b>RegexNet</b> (no option R).
 		/// </summary>
 		public Regex RegexNet => _o as Regex;
 
 		/// <summary>
 		/// Array of <b>wildex</b> variables, one for each part in multi-part text.
-		/// null if <b>TextType</b> is not <b>Multi</b> (no option m).
+		/// <c>null</c> if <b>TextType</b> is not <b>Multi</b> (no option m).
 		/// </summary>
 		public wildex[] MultiArray => _o as wildex[];
 
@@ -203,9 +203,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if string contains wildcard characters: <c>'*'</c>, <c>'?'</c>.
+		/// Returns <c>true</c> if string contains wildcard characters: <c>'*'</c>, <c>'?'</c>.
 		/// </summary>
-		/// <param name="s">Can be null.</param>
+		/// <param name="s">Can be <c>null</c>.</param>
 		public static bool hasWildcardChars(RStr s) {
 			foreach (var c in s) if (c is '*' or '?') return true;
 			return false;
@@ -219,12 +219,12 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Compares this string with a string that possibly contains wildcard characters.
-		/// Returns true if the strings match.
+		/// Returns <c>true</c> if the strings match.
 		/// </summary>
-		/// <param name="t">This string. If null, returns false. If <c>""</c>, returns true if <i>pattern</i> is <c>""</c> or <c>"*"</c>.</param>
-		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If <c>""</c>, returns true if this string is <c>""</c>. If <c>"*"</c>, always returns true except when this string is null.</param>
+		/// <param name="t">This string. If <c>null</c>, returns <c>false</c>. If <c>""</c>, returns <c>true</c> if <i>pattern</i> is <c>""</c> or <c>"*"</c>.</param>
+		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be <c>null</c>. If <c>""</c>, returns <c>true</c> if this string is <c>""</c>. If <c>"*"</c>, always returns <c>true</c> except when this string is <c>null</c>.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <exception cref="ArgumentNullException"><i>pattern</i> is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>pattern</i> is <c>null</c>.</exception>
 		/// <remarks>
 		/// Wildcard characters:
 		/// 
@@ -355,13 +355,13 @@ namespace Au.Types {
 #endif
 
 		/// <summary>
-		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
+		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns <c>true</c>.
 		/// Returns 1-based index of the matching pattern, or 0 if none.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
-		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is null.</exception>
+		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be <c>null</c>.</param>
+		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is <c>null</c>.</exception>
 		public static int Like(this string t, bool ignoreCase = false, params string[] patterns) {
 			for (int i = 0; i < patterns.Length; i++) if (t.Like(patterns[i], ignoreCase)) return i + 1;
 			return 0;
@@ -402,13 +402,13 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Multiple parts (option m).
-		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="wildex.MultiArray"/>) and returns <c>true</c> if all negative (option n) parts return <c>true</c> (or there are no such parts) and some positive (no option n) part returns <c>true</c> (or there are no such parts).
 		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
 		/// </summary>
 		Multi,
 
 		/// <summary>
-		/// The regular expression was invalid, and parameter <i>noException</i> true.
+		/// The regular expression was invalid, and parameter <i>noException</i> <c>true</c>.
 		/// </summary>
 		Error,
 	}

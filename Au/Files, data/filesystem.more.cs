@@ -6,11 +6,11 @@ partial class filesystem {
 	/// </summary>
 	public static partial class more {
 		/// <summary>
-		/// Returns true if two paths are of the same existing file, regardless of path format etc.
+		/// Returns <c>true</c> if two paths are of the same existing file, regardless of path format etc.
 		/// </summary>
 		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
-		/// <param name="useSymlink">If a path is of a symbolic link, use the link. If false, uses its target; for example, returns false if the target doesn't exist.</param>
+		/// <param name="useSymlink">If a path is of a symbolic link, use the link. If <c>false</c>, uses its target; for example, returns <c>false</c> if the target doesn't exist.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <seealso cref="comparePaths(string, string, bool, bool)"/>
 		public static bool isSameFile(string path1, string path2, bool useSymlink = false) {
@@ -24,7 +24,7 @@ partial class filesystem {
 		/// <summary>
 		/// Gets <see cref="FileId"/> of a file or directory.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="path">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="fileId"></param>
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <b>FileId</b> of the link, not of its target.</param>
@@ -52,9 +52,9 @@ partial class filesystem {
 		/// <summary>
 		/// Gets full normalized path of an existing file or directory or symbolic link target.
 		/// </summary>
-		/// <returns>false if failed. For example if the path does not point to an existing file or directory. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. For example if the path does not point to an existing file or directory. Supports <see cref="lastError"/>.</returns>
 		/// <param name="path">Full or relative path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
-		/// <param name="result">Receives full path, or null if failed.</param>
+		/// <param name="result">Receives full path, or <c>null</c> if failed.</param>
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
 		/// <param name="format">Result format.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
@@ -128,8 +128,8 @@ partial class filesystem {
 		/// <summary>
 		/// Empties the Recycle Bin.
 		/// </summary>
-		/// <param name="drive">If not null, empties the Recycle Bin on this drive only. Example: <c>"D:"</c>.</param>
-		/// <param name="progressUI">Show progress dialog if slow. Default true.</param>
+		/// <param name="drive">If not <c>null</c>, empties the Recycle Bin on this drive only. Example: <c>"D:"</c>.</param>
+		/// <param name="progressUI">Show progress dialog if slow. Default <c>true</c>.</param>
 		public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
 			Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
 		}
@@ -241,16 +241,16 @@ partial class filesystem {
 		/// The key usually contains subkeys "shell", "DefaultIcon", sometimes "shellex" and more.
 		/// For example, for ".txt" can return "txtfile", for ".cs" - "VisualStudio.cs.14.0".
 		/// Looks in "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts" and in HKEY_CLASSES_ROOT.
-		/// Returns null if the type/protocol is not registered.
-		/// Returns null if fileType does not end with ".extension" and does not start with "protocol:"; also if starts with "shell:".
+		/// Returns <c>null</c> if the type/protocol is not registered.
+		/// Returns <c>null</c> if <i>fileType</i> does not end with ".extension" and does not start with "protocol:"; also if starts with "shell:".
 		/// </summary>
 		/// <param name="fileType">
 		/// File type extension like ".txt" or protocol like "http:".
 		/// Can be full path or URL; the function gets extension or protocol from the string.
 		/// Can start with %environment variable%.
 		/// </param>
-		/// <param name="isFileType">Don't parse fileType, it does not contain full path or URL or environment variables. It is ".ext" or "protocol:".</param>
-		/// <param name="isURL">fileType is URL or protocol like "http:". Used only if isFileType == true, ie it is protocol.</param>
+		/// <param name="isFileType">Don't parse <i>fileType</i>, it does not contain full path or URL or environment variables. It is ".ext" or "protocol:".</param>
+		/// <param name="isURL">fileType is URL or protocol like "http:". Used only if <c>isFileType == true</c>, ie it is protocol.</param>
 		internal static string getFileTypeOrProtocolRegistryKey(string fileType, bool isFileType, bool isURL)
 		{
 			if(!isFileType) fileType = GetExtensionOrProtocol(fileType, out isURL);
@@ -268,10 +268,10 @@ partial class filesystem {
 
 		/// <summary>
 		/// Gets file path extension like ".txt" or URL protocol like "http".
-		/// Returns null if path does not end with ".extension" and does not start with "protocol:"; also if starts with "shell:".
+		/// Returns <c>null</c> if path does not end with ".extension" and does not start with "protocol:"; also if starts with "shell:".
 		/// </summary>
 		/// <param name="path">File path or URL. Can be just extension like ".txt" or protocol like "http:".</param>
-		/// <param name="isProtocol">Receives true if URL or protocol.</param>
+		/// <param name="isProtocol">Receives <c>true</c> if URL or protocol.</param>
 		internal static string GetExtensionOrProtocol(string path, out bool isProtocol)
 		{
 			isProtocol = false;
@@ -434,13 +434,13 @@ partial class filesystem {
 		//	Use System.Web.MimeMapping.GetMimeMapping. It uses a hardcoded list, although too small.
 		///// <summary>
 		///// Gets file's MIME content type, like "text/html" or "image/png".
-		///// Returns false if cannot detect it.
+		///// Returns <c>false</c> if cannot detect it.
 		///// </summary>
-		///// <param name="file">File name or path or URL or just extension like ".txt". If <i>canAnalyseData</i> is true, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
+		///// <param name="file">File name or path or URL or just extension like ".txt". If <i>canAnalyseData</i> is <c>true</c>, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
 		///// <param name="contentType">Result.</param>
 		///// <param name="canAnalyseData">If cannot detect from file extension, try to detect from file data.</param>
-		///// <exception cref="ArgumentException">Not full path. Only if <i>canAnalyseData</i> is true.</exception>
-		///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if <i>canAnalyseData</i> is true.</exception>
+		///// <exception cref="ArgumentException">Not full path. Only if <i>canAnalyseData</i> is <c>true</c>.</exception>
+		///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if <i>canAnalyseData</i> is <c>true</c>.</exception>
 		///// <remarks>
 		///// Uses API <msdn>FindMimeFromData</msdn>.
 		///// </remarks>

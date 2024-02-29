@@ -121,7 +121,7 @@ static partial class Git {
 	}
 	
 	public static void Commit(bool autoBackup = false, int autoBackupWorkspaceSN = 0) {
-		if (_NotThread) { _Thread(() => Commit(autoBackup)); return; }
+		if (_NotThread) { _Thread(() => Commit(autoBackup, autoBackupWorkspaceSN)); return; }
 		
 		if (autoBackup && App.Model.WorkspaceSN != autoBackupWorkspaceSN) return; //this code runs async with a delay and in new thread. During that time can be loaded another workspace.
 		t_autoBackup = autoBackup;

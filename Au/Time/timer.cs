@@ -43,7 +43,7 @@ namespace Au
 		public object Tag { get; set; }
 
 		/// <summary>
-		/// true if the timer is started and not stopped.
+		/// <c>true</c> if the timer is started and not stopped.
 		/// Note: single-period timer is automatically stopped before calling the callback function.
 		/// </summary>
 		public bool IsRunning => _id != default;

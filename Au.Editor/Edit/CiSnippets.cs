@@ -1,6 +1,11 @@
 //CONSIDER: move snippets from XML to a workspace, like now Cookbook and Templates.
 //	Maybe only code of some snippets, eg dialogs (big code).
 
+//FUTURE: in snippets implement standard tabbing etc, like in VS or VSCode.
+//	In the intellisense info popup add link "Edit".
+//	CONSIDER (probably reject): Add "meta", like now "using". Eg to add meta r or nuget if missing. Problem: may need to add it in another file.
+//	These are suggestions: https://www.libreautomate.com/forum/showthread.php?tid=7599
+
 extern alias CAW;
 
 using System.Xml.Linq;
@@ -128,7 +133,7 @@ static class CiSnippets {
 			
 			void _LoadFile(string file, bool custom) {
 				try {
-					var hidden = DSnippets.GetHiddenSnippets(pathname.getName(file));
+					var hidden = DSnippets.GetHiddenSnippets(custom ? pathname.getName(file) : "default");
 					if (hidden != null && hidden.Contains("")) return;
 					
 					var xroot = XmlUtil.LoadElem(file);

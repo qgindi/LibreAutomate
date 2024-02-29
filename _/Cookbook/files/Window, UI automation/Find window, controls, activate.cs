@@ -3,7 +3,7 @@
 /// - Hotkey <mono>Ctrl+Shift+Q<>.
 /// - Snippets <b>winFindSnippet<>, <b>actWinSnippet<>. You can see window properties in panel <b>Mouse<>.
 
-/// Find window and create variable <.c>w1<> that contains window handle. Window name must end with <.c>"- Notepad"<>; class name must be <.c>"Notepad"<>. Can wait/retry max 1 s; exception if not found. Activate when found.
+/// Find window and create variable <i>w1<> that contains window handle. Window name must end with <.c>"- Notepad"<>; class name must be <.c>"Notepad"<>. Can wait/retry max 1 s; exception if not found. Activate when found.
 
 var w1 = wnd.find(1, "*- Notepad", "Notepad");
 w1.Activate();

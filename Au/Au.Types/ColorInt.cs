@@ -17,14 +17,14 @@ public record struct ColorInt {
 	public int argb;
 	
 	/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-	/// <param name="makeOpaque">Set alpha = 0xFF. If null (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+	/// <param name="makeOpaque">Set alpha = 0xFF. If <c>null</c> (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 	public ColorInt(int colorARGB, bool? makeOpaque = null) {
 		if (makeOpaque == true || (makeOpaque == null && (colorARGB & ~0xFFFFFF) == 0)) colorARGB |= 0xFF << 24;
 		argb = colorARGB;
 	}
 	
 	/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
-	/// <param name="makeOpaque">Set alpha = 0xFF. If null (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+	/// <param name="makeOpaque">Set alpha = 0xFF. If <c>null</c> (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 	public ColorInt(uint colorARGB, bool? makeOpaque) : this((int)colorARGB, makeOpaque) { }
 	
 	/// <summary>
@@ -57,7 +57,7 @@ public record struct ColorInt {
 	/// </summary>
 	/// <remarks>
 	/// If <i>s</i> is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
-	/// If <i>s</i> is null or invalid, sets <c>c.argb = 0</c> and returns false.
+	/// If <i>s</i> is <c>null</c> or invalid, sets <c>c.argb = 0</c> and returns <c>false</c>.
 	/// </remarks>
 	public static bool FromString(string s, out ColorInt c) {
 		c.argb = 0;
@@ -81,7 +81,7 @@ public record struct ColorInt {
 	/// Converts from Windows native <b>COLORREF</b> (0xBBGGRR to 0xAARRGGBB).
 	/// </summary>
 	/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
-	/// <param name="makeOpaque">Set alpha = 0xFF. If null (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+	/// <param name="makeOpaque">Set alpha = 0xFF. If <c>null</c> (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 	public static ColorInt FromBGR(int colorBGR, bool? makeOpaque = null) => new(SwapRB(colorBGR), makeOpaque);
 	
 	/// <summary>
@@ -141,7 +141,7 @@ public record struct ColorInt {
 	///// Returns new color. Does not modify this variable.
 	///// </summary>
 	///// <param name="n">The luminance in units of 0.1 percent of the range (which depends on <i>totalRange</i>). Can be from -1000 to 1000.</param>
-	///// <param name="totalRange">If true, <i>n</i> is in whole luminance range (from minimal to maximal possible). If false, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
+	///// <param name="totalRange">If <c>true</c>, <i>n</i> is in whole luminance range (from minimal to maximal possible). If <c>false</c>, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
 	///// <remarks>
 	///// Calls API <msdn>ColorAdjustLuma</msdn>.
 	///// Does not change hue and saturation. Does not use alpha.
@@ -159,7 +159,7 @@ public record struct ColorInt {
 	/// <param name="H">Hue, 0 to 240.</param>
 	/// <param name="L">Luminance, 0 to 240.</param>
 	/// <param name="S">Saturation, 0 to 240.</param>
-	/// <param name="bgr">Return color in 0xBBGGRR format. If false, 0xRRGGBB.</param>
+	/// <param name="bgr">Return color in 0xBBGGRR format. If <c>false</c>, 0xRRGGBB.</param>
 	/// <returns>Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Alpha 0.</returns>
 	public static int FromHLS(int H, int L, int S, bool bgr) {
 		if (S == 0) { //ColorHLSToRGB bug: returns 0 if S 0
@@ -175,7 +175,7 @@ public record struct ColorInt {
 	/// Converts to hue-luminance-saturation (HLS).
 	/// </summary>
 	/// <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
-	/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If false, 0xRRGGBB.</param>
+	/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If <c>false</c>, 0xRRGGBB.</param>
 	/// <returns>Hue, luminance and saturation. All 0 to 240.</returns>
 	public static (int H, int L, int S) ToHLS(int color, bool bgr) {
 		if (!bgr) color = SwapRB(color);
@@ -188,7 +188,7 @@ public record struct ColorInt {
 	/// </summary>
 	/// <returns>0 to 1.</returns>
 	/// <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
-	/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If false, 0xRRGGBB.</param>
+	/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If <c>false</c>, 0xRRGGBB.</param>
 	/// <remarks>
 	/// Unlike <see cref="ToHLS"/> and <see cref="Color.GetBrightness"/>, this function uses different weights for red, green and blue components.
 	/// Ignores alpha.

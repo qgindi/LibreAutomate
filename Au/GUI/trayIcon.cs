@@ -308,6 +308,7 @@ namespace Au {
 		/// <summary>
 		/// When the tray icon clicked with the middle button.
 		/// </summary>
+		[Obsolete("Does not work on Windows 11.")]
 		public event Action<TIEventArgs> MiddleClick;
 		
 		/// <summary>
@@ -344,7 +345,7 @@ namespace Au {
 		/// <summary>
 		/// Gets tray icon rectangle in screen.
 		/// </summary>
-		/// <returns>false if failed, for example if the icon is in hidden overflow area. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed, for example if the icon is in hidden overflow area. Supports <see cref="lastError"/>.</returns>
 		public unsafe bool GetRect(out RECT r) {
 			var x = new Api.NOTIFYICONIDENTIFIER { cbSize = sizeof(Api.NOTIFYICONIDENTIFIER), hWnd = _w, uID = _id };
 			//if (_guid!=default) x.guidItem=_guid;

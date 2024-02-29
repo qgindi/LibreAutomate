@@ -92,7 +92,7 @@ public interface IOcrEngine {
 /// See <see cref="ocr.Words"/>.
 /// </summary>
 public record class OcrWord {
-	/// <param name="separator">Separator before the word (space, new line, etc). Also can be "" or null.</param>
+	/// <param name="separator">Separator before the word (space, new line, etc). Also can be <c>""</c> or <c>null</c>.</param>
 	/// <param name="text">Word text.</param>
 	/// <param name="rect">Word rectangle in <i>area</i>, possibly scaled.</param>
 	/// <param name="scale">The <i>scale</i> parameter of the OCR function. This function unscales <i>rect</i> if need.</param>
@@ -104,7 +104,7 @@ public record class OcrWord {
 		int i(int x) => (x / scale).ToInt();
 	}
 
-	/// <summary>Separator before the word (space, new line, etc). Also can be "" or null.</summary>
+	/// <summary>Separator before the word (space, new line, etc). Also can be <c>""</c> or <c>null</c>.</summary>
 	public string Separator { get; }
 
 	/// <summary>Word text.</summary>

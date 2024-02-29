@@ -90,7 +90,7 @@ public sealed class IconImageCache : IDisposable {
 	static List<WeakReference<IconImageCache>> s_caches = new();
 	
 	/// <param name="imageSize">Width and height of images. Min 16, max 256.</param>
-	/// <param name="directory">Path of cache directory. If null, will be used only memory cache.</param>
+	/// <param name="directory">Path of cache directory. If <c>null</c>, will be used only memory cache.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	public IconImageCache(int imageSize = 16, string directory = null) {
 		if (imageSize < 16 || imageSize > 256) throw new ArgumentOutOfRangeException(nameof(imageSize));
@@ -123,12 +123,12 @@ public sealed class IconImageCache : IDisposable {
 	/// <param name="imageSource">File path, or resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>, or icon name like <c>"*Pack.Icon color"</c>, etc. See <i>isImage</i> parameter.</param>
 	/// <param name="dpi">DPI of window that will display the image. See <see cref="Dpi"/>.</param>
 	/// <param name="isImage">
-	/// false - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns null if no custom icon or if editor isn't running.
-	/// true - load image from xaml/png/etc file, database, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu Tools -> Icons).
+	/// <c>false</c> - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a .cs file, gets its custom icon as image; returns <c>null</c> if no custom icon or if editor isn't running.
+	/// <c>true</c> - load image from xaml/png/etc file, database, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu Tools -> Icons).
 	/// 
-	/// To detect whether a string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns true, it is image.
+	/// To detect whether a string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns <c>true</c>, it is image.
 	/// </param>
-	/// <param name="onException">Action to call when fails to load image. If null, then silently returns null. Parameters are image source string and exception.</param>
+	/// <param name="onException">Action to call when fails to load image. If <c>null</c>, then silently returns <c>null</c>. Parameters are image source string and exception.</param>
 	public unsafe Bitmap Get(string imageSource, int dpi, bool isImage, Action<string, Exception> onException = null) {
 		//print.it(imageSource, isImage);
 		if (_disposed) throw new ObjectDisposedException(nameof(IconImageCache));

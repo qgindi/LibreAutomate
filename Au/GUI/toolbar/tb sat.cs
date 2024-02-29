@@ -12,9 +12,9 @@ public partial class toolbar {
 	screen _screenAHSE;
 
 	/// <summary>
-	/// A toolbar attached to this toolbar. Can be null.
+	/// A toolbar attached to this toolbar. Can be <c>null</c>.
 	/// </summary>
-	/// <exception cref="InvalidOperationException">The 'set' function throws this exception if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+	/// <exception cref="InvalidOperationException">The <c>set</c> function throws this exception if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
 	/// <remarks>
 	/// The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
 	/// A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
@@ -39,7 +39,7 @@ public partial class toolbar {
 	}
 
 	/// <summary>
-	/// If this is a satellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else null.
+	/// If this is a satellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else <c>null</c>.
 	/// </summary>
 	public toolbar SatelliteOwner => _satPlanet;
 

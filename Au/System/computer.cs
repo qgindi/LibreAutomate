@@ -30,12 +30,12 @@ namespace Au {
 		/// <summary>
 		/// Initiates computer shutdown or restart operation.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="restart">Reboot.</param>
 		/// <param name="force">Don't allow to cancel. Applications with unsaved changes will be forcibly closed.</param>
 		/// <param name="timeoutS">The length of time to display the shutdown dialog box, in seconds.</param>
 		/// <param name="message">Display this text in the shutdown dialog box and write to the event log.</param>
-		/// <param name="computer">The network name of the computer to be shut down. If null (default), shuts down this computer. If used, this process must be admin.</param>
+		/// <param name="computer">The network name of the computer to be shut down. If <c>null</c> (default), shuts down this computer. If used, this process must be admin.</param>
 		/// <remarks>
 		/// Calls API <msdn>InitiateSystemShutdown</msdn>.
 		/// </remarks>
@@ -48,7 +48,7 @@ namespace Au {
 		/// <summary>
 		/// Initiates computer shutdown or restart operation.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="flags"><b>ExitWindowsEx</b> parameter <i>uFlags</i>.</param>
 		/// <param name="reason"><b>ExitWindowsEx</b> parameter <i>dwReason</i>.</param>
 		/// <remarks>
@@ -62,7 +62,7 @@ namespace Au {
 		/// <summary>
 		/// Initiates computer logoff (sign out) operation.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="force">Don't allow to cancel. Applications with unsaved changes will be forcibly closed.</param>
 		public static bool logoff(bool force = false) {
 			SecurityUtil.SetPrivilege("SeShutdownPrivilege", true);
@@ -72,7 +72,7 @@ namespace Au {
 		/// <summary>
 		/// Computer sleep, hibernate or monitor off.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="how"></param>
 		/// <remarks>
 		/// To sleep or hibernate uses API <msdn>SetSuspendState</msdn>. To turn off display uses <msdn>WM_SYSCOMMAND</msdn>.
@@ -95,7 +95,7 @@ namespace Au {
 		/// <summary>
 		/// Initiates computer lock operation.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Uses API <msdn>LockWorkStation</msdn>.
 		/// </remarks>
@@ -105,7 +105,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if the computer is using battery power.
+		/// Returns <c>true</c> if the computer is using battery power.
 		/// </summary>
 		/// <seealso cref="SystemInformation.PowerStatus"/>
 		public static bool isOnBattery => SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline; //first time 4 ms

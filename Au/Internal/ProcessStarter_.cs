@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32.SafeHandles;
+using Microsoft.Win32.SafeHandles;
 
 namespace Au.More;
 
@@ -15,17 +15,17 @@ unsafe struct ProcessStarter_ {
 	/// </summary>
 	/// <param name="exe">
 	/// Full path of program file. If not full path, uses <see cref="folders.ThisApp"/>. Uses <see cref="pathname.normalize"/>.
-	/// If <i>rawExe</i> true, does not use <b>Normalize</b>/<b>ThisApp</b>.
+	/// If <i>rawExe</i> <c>true</c>, does not use <b>Normalize</b>/<b>ThisApp</b>.
 	/// </param>
-	/// <param name="args">null or command line arguments.</param>
+	/// <param name="args"><c>null</c> or command line arguments.</param>
 	/// <param name="curDir">
 	/// Initial current directory of the new process.
-	/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-	/// - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
-	/// - Else if "", calls <c>pathname.getDirectory(exe)</c>.
+	/// - If <c>null</c>, uses <c>Directory.GetCurrentDirectory()</c>.
+	/// - Else if <i>rawCurDir</i>==<c>true</c>, uses raw <i>curDir</i> value.
+	/// - Else if <c>""</c>, calls <c>pathname.getDirectory(exe)</c>.
 	/// - Else calls <see cref="pathname.expand"/>.
 	/// </param>
-	/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
+	/// <param name="envVar"><c>null</c> or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
 	/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
 	/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
 	public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) {
@@ -55,9 +55,9 @@ unsafe struct ProcessStarter_ {
 	}
 	
 	/// <summary>
-	/// Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
+	/// Starts process using API <b>CreateProcess</b> or <b>CreateProcessAsUser</b>, without the feedback hourglass cursor.
 	/// </summary>
-	/// <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
+	/// <param name="pi">Receives <b>CreateProcessX</b> results. Will need to close handles in <i>pi</i>, eg <c>pi.Dispose</c>.</param>
 	/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 	/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
 	public bool StartL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false) {
@@ -69,7 +69,7 @@ unsafe struct ProcessStarter_ {
 	}
 	
 	/// <summary>
-	/// Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
+	/// Starts process using API <b>CreateProcess</b> or <b>CreateProcessAsUser</b>, without the feedback hourglass cursor.
 	/// </summary>
 	/// <param name="need">Which field to set in <b>Result</b>.</param>
 	/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
@@ -197,7 +197,7 @@ unsafe struct ProcessStarter_ {
 	static class _NetProcessObject //FUTURE: remove if unused
 	{
 		/// <summary>
-		/// Returns true if can create such object in a fast/reliable way. Else <see cref="Create"/> will use Process.GetProcessById.
+		/// Returns <c>true</c> if can create such object in a fast/reliable way. Else <see cref="Create"/> will use Process.GetProcessById.
 		/// It depends on .NET framework version, because uses private methods of Process class through reflection.
 		/// </summary>
 		public static bool IsFast { get; } = _CanSetHandleId();

@@ -27,7 +27,7 @@ internal struct AttachThreadInput_ : IDisposable {
 	}
 	
 	/// <summary>
-	/// Returns true if AttachThreadInput succeeded and this variable is not disposed.
+	/// Returns <c>true</c> if AttachThreadInput succeeded and this variable is not disposed.
 	/// </summary>
 	public bool IsAttached => _tidAttach != 0;
 }

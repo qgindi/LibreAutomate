@@ -33,7 +33,7 @@ namespace Au.More {
 		/// Creates image from a rectangle of window client area pixels.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If null, uses <c>w.ClientRect</c>.</param>
+		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If <c>null</c>, uses <c>w.ClientRect</c>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException">The rectangle is empty or does not intercect with the window's client area.</exception>
 		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
@@ -110,7 +110,7 @@ namespace Au.More {
 		/// <summary>
 		/// UI for capturing an image, color or rectangle on screen.
 		/// </summary>
-		/// <returns>false if canceled.</returns>
+		/// <returns><c>false</c> if canceled.</returns>
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">A window to minimize temporarily.</param>
@@ -510,7 +510,7 @@ namespace Au.More {
 		/// <summary>
 		/// UI for capturing a rectangle, point or/and window on screen with Shift key.
 		/// </summary>
-		/// <returns>true if captured, false if pressed Esc.</returns>
+		/// <returns><c>true</c> if captured, <c>false</c> if pressed Esc.</returns>
 		/// <param name="result"></param>
 		/// <param name="type"></param>
 		/// <param name="rectInClient">Get rectangle in window client area.</param>
@@ -645,7 +645,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Let <b>Capture</b> don't set alpha = 0xff. Slightly faster. Then pixelformat will be Rgb instead of Argb.
-		/// Default false.
+		/// Default <c>false</c>.
 		/// </summary>
 		internal bool DontSetAlpha_ { get; set; }
 
@@ -653,15 +653,15 @@ namespace Au.More {
 		/// Captures image from window client area into memory stored in this variable.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If null, uses <c>w.ClientRect</c>.</param>
-		/// <returns>false if <i>r</i> empty or not in the client area and used flag <b>Relaxed</b> (else exception).</returns>
+		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If <c>null</c>, uses <c>w.ClientRect</c>.</param>
+		/// <returns><c>false</c> if <i>r</i> empty or not in the client area and used flag <b>Relaxed</b> (else exception).</returns>
 		public bool Capture(wnd w, RECT? r = null, CIFlags flags = CIFlags.WindowDC) => _Capture(w.ThrowIf0(), r, flags);
 
 		/// <summary>
 		/// Captures image from screen into memory stored in this variable.
 		/// </summary>
-		/// <param name="relaxed">If <i>r</i> empty, return false instead of exception.</param>
-		/// <returns>false if <i>r</i> empty and <i>relaxed</i> true (else exception).</returns>
+		/// <param name="relaxed">If <i>r</i> empty, return <c>false</c> instead of exception.</param>
+		/// <returns><c>false</c> if <i>r</i> empty and <i>relaxed</i> <c>true</c> (else exception).</returns>
 		public bool Capture(RECT r, bool relaxed = false) => _Capture(default, r, flags: relaxed ? CIFlags.Relaxed : 0);
 
 		bool _Capture(wnd w, RECT? rect, CIFlags flags) {
@@ -842,7 +842,7 @@ namespace Au.Types {
 		//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
 		/// <summary>
-		/// Flag: don't throw exception when the specified rectangle or point does not intersect with the window client area or when the rectangle is empty. Instead return null or 0.
+		/// Flag: don't throw exception when the specified rectangle or point does not intersect with the window client area or when the rectangle is empty. Instead return <c>null</c> or 0.
 		/// </summary>
 		Relaxed = 0x100,
 
@@ -909,7 +909,7 @@ namespace Au.Types {
 	public class CIUResult {
 		/// <summary>
 		/// Captured image.
-		/// null if captured single pixel color or used flag <see cref="CIUFlags.Rectangle"/>.
+		/// <c>null</c> if captured single pixel color or used flag <see cref="CIUFlags.Rectangle"/>.
 		/// </summary>
 		public Bitmap image;
 
@@ -935,8 +935,8 @@ namespace Au.Types {
 		public double dpiScale;
 
 		/// <summary>
-		/// If true, most likely <b>w</b> is incorrect window, because the window that was there before capturing disappeared while capturing, for example it was a popup menu.
-		/// If captured from screen (without flags like <b>WindowDC</b>), <b>w</b> may be correct even if this is true (can't detect reliably), else certainly incorrect.
+		/// If <c>true</c>, most likely <b>w</b> is incorrect window, because the window that was there before capturing disappeared while capturing, for example it was a popup menu.
+		/// If captured from screen (without flags like <b>WindowDC</b>), <b>w</b> may be correct even if this is <c>true</c> (can't detect reliably), else certainly incorrect.
 		/// </summary>
 		public bool possiblyWrongWindow;
 	}

@@ -199,7 +199,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Calls <see cref="it"/> and handles exceptions.
-		/// If <b>it</b> throws exception, writes it to the output as warning and returns null.
+		/// If <b>it</b> throws exception, writes it to the output as warning and returns <c>null</c>.
 		/// </summary>
 		/// <remarks>
 		/// This function is useful when you don't care whether <b>it</b> succeeded and don't want to use try/catch.
@@ -261,16 +261,16 @@ namespace Au {
 		/// 
 		/// <br/>Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="pathname.expand"/>.
 		/// </param>
-		/// <param name="args">null or command line arguments.</param>
+		/// <param name="args"><c>null</c> or command line arguments.</param>
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
-		/// <br/>• If null, uses <c>Directory.GetCurrentDirectory()</c>.
+		/// <br/>• If <c>null</c>, uses <c>Directory.GetCurrentDirectory()</c>.
 		/// <br/>• Else if <c>""</c>, calls <c>pathname.getDirectory(exe)</c>.
 		/// <br/>• Else calls <see cref="pathname.expand"/>.
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
-		/// If null (default), uses <see cref="Encoding.UTF8"/>. If you get garbage text, try <see cref="Console.OutputEncoding"/> or <see cref="Encoding.Unicode"/>.
+		/// If <c>null</c> (default), uses <see cref="Encoding.UTF8"/>. If you get garbage text, try <see cref="Console.OutputEncoding"/> or <see cref="Encoding.Unicode"/>.
 		/// </param>
 		/// <returns>The process exit code. Usually a non-0 value means error.</returns>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
@@ -311,7 +311,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="output">
 		/// Callback function that receives the output text.
-		/// Unless <i>rawText</i> true:
+		/// Unless <i>rawText</i> <c>true</c>:
 		/// <br/>• it isn't called until is retrieved full line with line break characters;
 		/// <br/>• it receives single full line at a time, without line break characters.
 		/// </param>
@@ -345,7 +345,7 @@ namespace Au {
 		/// <summary>
 		/// Opens parent folder in File Explorer (folder window) and selects the file.
 		/// </summary>
-		/// <returns>false if failed, for example if the file does not exist.</returns>
+		/// <returns><c>false</c> if failed, for example if the file does not exist.</returns>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
 		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="pathname.expand"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
@@ -362,10 +362,10 @@ namespace Au {
 		/// <returns>The <b>Thread</b> variable.</returns>
 		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
 		/// <param name="background">
-		/// If true (default), sets <see cref="Thread.IsBackground"/> = true.
+		/// If <c>true</c> (default), sets <see cref="Thread.IsBackground"/> = <c>true</c>.
 		/// The process ends when the main thread and all foreground threads end; background threads then are terminated.
 		/// </param>
-		/// <param name="sta">If true (default), sets <see cref="ApartmentState.STA"/>.</param>
+		/// <param name="sta">If <c>true</c> (default), sets <see cref="ApartmentState.STA"/>.</param>
 		/// <exception cref="OutOfMemoryException"></exception>
 		public static Thread thread(Action threadProc, bool background = true, bool sta = true) {
 			var t = new Thread(threadProc.Invoke);
@@ -466,8 +466,8 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Initial current directory for the new process.
-		/// If null (default), the new process will inherit the current directory of this process.
-		/// If <c>""</c>, the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
+		/// If <c>null</c> (default), the new process will inherit the current directory of this process.
+		/// If <c>""</c>, the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as <c>null</c>.
 		/// <para>NOTE: Some programs look for their files in current directory and fail to start if it is not the program's directory.</para>
 		/// </summary>
 		public string CurrentDirectory;
@@ -529,7 +529,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="WaitHandle"/> variable must be disposed.
-		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
+		/// <c>null</c> if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		/// <example>
 		/// This code does the same as <c>run.it(@"notepad.exe", flags: SRFlags.WaitForExit);</c>

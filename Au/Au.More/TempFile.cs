@@ -21,8 +21,8 @@ public sealed class TempFile : IDisposable {
 	/// <summary>
 	/// Creates full path string with a unique filename (GUID) for a temporary file.
 	/// </summary>
-	/// <param name="ext">Filename extension with dot. Default: ".tmp". Can be null.</param>
-	/// <param name="directory">Parent directory. If null (default), uses <see cref="folders.ThisAppTemp"/>. The function creates the directory if does not exist.</param>
+	/// <param name="ext">Filename extension with dot. Default: ".tmp". Can be <c>null</c>.</param>
+	/// <param name="directory">Parent directory. If <c>null</c> (default), uses <see cref="folders.ThisAppTemp"/>. The function creates the directory if does not exist.</param>
 	/// <exception cref="ArgumentException"><i>directory</i> not full path.</exception>
 	/// <exception cref="AuException">Failed to create directory.</exception>
 	public TempFile(string ext = ".tmp", string directory = null) {

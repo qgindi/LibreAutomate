@@ -22,7 +22,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. The calling period depends on <i>options</i>.</param>
-		/// <param name="options">Options. If null, uses <b>opt.wait</b>.</param>
+		/// <param name="options">Options. If <c>null</c>, uses <b>opt.wait</b>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 #if DEBUG
 		[Obsolete]
@@ -60,15 +60,15 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning true, or/and <i>stopVar</i> becoming true.
+		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning <c>true</c>, or/and <i>stopVar</i> becoming <c>true</c>.
 		/// Calls <see cref="Wait_"/>.
 		/// </summary>
 		/// <returns>
 		/// <br/>• 0 if timeout (if <i>timeout</i> &lt; 0),
 		/// <br/>• 1-handles.Length if signaled,
 		/// <br/>• -(1-handles.Length) if abandoned mutex,
-		/// <br/>• 1+handles.Length if msgCallback returned true,
-		/// <br/>• 2+handles.Length if stop became true.
+		/// <br/>• 1+handles.Length if msgCallback returned <c>true</c>,
+		/// <br/>• 2+handles.Length if stop became <c>true</c>.
 		/// </returns>
 		internal static int WaitS_(Seconds timeout, WHFlags flags, IntPtr[] handles = null, Delegate msgCallback = null, WaitVariable_ stopVar = null) {
 			if (timeout.Period != null || timeout.MaxPeriod != null) print.warning("This wait function does not use Seconds.Period/MaxPeriod.");
@@ -97,16 +97,16 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning true, or/and <i>stopVar</i> becoming true. Or just sleeps, if <i>handles</i> etc are null/empty.
+		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning <c>true</c>, or/and <i>stopVar</i> becoming <c>true</c>. Or just sleeps, if <i>handles</i> etc are <c>null</c>/empty.
 		/// If flag <b>DoEvents</b>, dispatches received messages etc.
 		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
 		/// </summary>
 		/// <param name="msgCallback">
-		/// Called when dispatching messages. If returns true, stops waiting and returns <c>handles.Length</c>.
+		/// Called when dispatching messages. If returns <c>true</c>, stops waiting and returns <c>handles.Length</c>.
 		/// 	If it is WPMCallback, calls it before dispatching a posted message.
 		/// 	If it is Func{bool}, calls it after dispatching one or more messages.
 		/// </param>
-		/// <param name="stopVar">When becomes true, stops waiting and returns <c>handles.Length + 1</c>.</param>
+		/// <param name="stopVar">When becomes <c>true</c>, stops waiting and returns <c>handles.Length + 1</c>.</param>
 		/// <returns>
 		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
@@ -160,11 +160,11 @@ namespace Au {
 		/// Waits for a posted message received by this thread.
 		/// </summary>
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
-		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <param name="callback">Callback function that returns <c>true</c> to stop waiting. More info in Remarks.</param>
+		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
+		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns <c>true</c>. Does not dispatch the message if the function sets the message field = 0.
 		/// Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod/DoEvents</b>.
 		/// </remarks>
 		/// <example>
@@ -182,11 +182,11 @@ namespace Au {
 		/// Waits for a condition to be changed while processing messages or other events received by this thread.
 		/// </summary>
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
-		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <param name="condition">Callback function that returns <c>true</c> to stop waiting. More info in Remarks.</param>
+		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, COM, APC, etc), calls the callback function. Stops waiting when it returns true.
+		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, COM, APC, etc), calls the callback function. Stops waiting when it returns <c>true</c>.
 		/// Similar to <see cref="until"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc. 3. Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod/DoEvents</b>.
 		/// </remarks>
 		/// <example>

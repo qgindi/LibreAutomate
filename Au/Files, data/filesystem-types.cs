@@ -34,7 +34,7 @@ public struct FAttr {
 	readonly bool _exists, _unknown, _ntfsLink;
 
 	/// <param name="attributes">Attributes, or 0 if does not exist or can't get attributes.</param>
-	/// <param name="exists">True if exists and can get attributes. False if does not exist. null if exists but can't get attributes.</param>
+	/// <param name="exists">True if exists and can get attributes. False if does not exist. <c>null</c> if exists but can't get attributes.</param>
 	/// <param name="ntfsLink">Is a NTFS link, such as symbolic link or mount point.</param>
 	internal FAttr(FileAttributes attributes, bool? exists, bool ntfsLink) {
 		_a = attributes;
@@ -44,7 +44,7 @@ public struct FAttr {
 	}
 
 	/// <summary>
-	/// Returns file or directory attributes. Returns 0 if <see cref="Exists"/> false.
+	/// Returns file or directory attributes. Returns 0 if <see cref="Exists"/> <c>false</c>.
 	/// </summary>
 	public FileAttributes Attributes => _a;
 
@@ -59,29 +59,29 @@ public struct FAttr {
 	public static implicit operator int(FAttr fa) => !fa.Exists ? 0 : (fa.Directory ? 2 : 1);
 
 	/// <summary>
-	/// Exists and is accessible (<see cref="Unknown"/> false).
+	/// Exists and is accessible (<see cref="Unknown"/> <c>false</c>).
 	/// See also <see cref="File"/>, <see cref="Directory"/>.
 	/// </summary>
 	public bool Exists => _exists;
 
 	/// <summary>
-	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other bool properties return false.
+	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other bool properties return <c>false</c>.
 	/// </summary>
 	public bool Unknown => _unknown;
 
 	/// <summary>
-	/// Is file (not directory), or NTFS link to a file (if <see cref="IsNtfsLink"/> true).
+	/// Is file (not directory), or NTFS link to a file (if <see cref="IsNtfsLink"/> <c>true</c>).
 	/// </summary>
 	public bool File => 0 == (_a & FileAttributes.Directory) && _exists;
 
 	/// <summary>
-	/// Is directory, or NTFS link to a directory (if <see cref="IsNtfsLink"/> true).
+	/// Is directory, or NTFS link to a directory (if <see cref="IsNtfsLink"/> <c>true</c>).
 	/// </summary>
 	public bool Directory => 0 != (_a & FileAttributes.Directory);
 
 	/// <summary>
 	/// It is a NTFS link, such as symbolic link, junction or mount point. Don't confuse with shell links (shortcuts).
-	/// If <see cref="File"/> true, the target is a file. If <see cref="Directory"/> true, the target is a directory.
+	/// If <see cref="File"/> <c>true</c>, the target is a file. If <see cref="Directory"/> <c>true</c>, the target is a directory.
 	/// </summary>
 	public bool IsNtfsLink => _ntfsLink;
 
@@ -115,7 +115,7 @@ public enum FAFlags {
 	UseRawPath = 1,
 
 	///<summary>
-	///If failed, return false and don't throw exception.
+	///If failed, return <c>false</c> and don't throw exception.
 	///Then, if you need error info, you can use <see cref="lastError"/>. If the file/directory does not exist, it will return <b>ERROR_FILE_NOT_FOUND</b> or <b>ERROR_PATH_NOT_FOUND</b> or <b>ERROR_NOT_READY</b>.
 	///If failed and the native error code is <b>ERROR_ACCESS_DENIED</b> or <b>ERROR_SHARING_VIOLATION</b>, the returned attributes will be <c>(FileAttributes)(-1)</c>. The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
 	///</summary>
@@ -283,7 +283,7 @@ public class FEFile {
 	public string FullPath { get; }
 
 	/// <summary>
-	/// Gets filename extension. Returns "" if directory.
+	/// Gets filename extension. Returns <c>""</c> if directory.
 	/// </summary>
 	public string Extension => IsDirectory ? "" : pathname.getExtension(Name); //note: if null for directory, then OrderBy throws exception
 

@@ -60,14 +60,14 @@ public class ocrFinder {
 	/// <inheritdoc cref="ocr.find(Seconds, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	public ocr Find(IFArea area, Seconds wait) => Exists(area, wait) ? Result : null;
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	/// <inheritdoc cref="Find(IFArea)"/>
 	public bool Exists(IFArea area) {
 		_Before(area, Action_.Find);
 		return _Find(false);
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(IFArea, Seconds)"/>
 	public bool Exists(IFArea area, Seconds wait) {
 		bool r = wait.Exists_() ? Exists(area) : Wait_(Action_.Wait, wait, area);
@@ -101,7 +101,7 @@ public class ocrFinder {
 	}
 
 	/// <summary>
-	/// If <b>testing</b> true, the finder after OCR sets <b>result</b>. Then you can access it when text not found (or found).
+	/// If <b>testing</b> <c>true</c>, the finder after OCR sets <b>result</b>. Then you can access it when text not found (or found).
 	/// </summary>
 	[ThreadStatic] internal static (bool testing, ocr result) testing_;
 

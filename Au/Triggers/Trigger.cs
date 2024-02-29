@@ -154,7 +154,7 @@ public abstract class ActionTrigger
 	public bool Disabled { get; set; }
 
 	/// <summary>
-	/// Returns true if <see cref="Disabled"/>; also if <see cref="ActionTriggers.Disabled"/> or <see cref="ActionTriggers.DisabledEverywhere"/>, unless <see cref="EnabledAlways"/>.
+	/// Returns <c>true</c> if <see cref="Disabled"/>; also if <see cref="ActionTriggers.Disabled"/> or <see cref="ActionTriggers.DisabledEverywhere"/>, unless <see cref="EnabledAlways"/>.
 	/// </summary>
 	public bool DisabledThisOrAll => Disabled || (!EnabledAlways && (triggers.Disabled | ActionTriggers.DisabledEverywhere));
 
@@ -353,7 +353,7 @@ public class TriggerScope
 	}
 
 	/// <summary>
-	/// Returns true if window matches.
+	/// Returns <c>true</c> if window matches.
 	/// </summary>
 	/// <param name="thc">This func uses the window handle (gets on demand) and WFCache.</param>
 	internal bool Match(TriggerHookContext thc) {
@@ -381,14 +381,14 @@ public class TriggerScope
 /// <remarks>
 /// Similar to <see cref="TriggerScopes"/> (code like <c>Triggers.Of.Window(...);</c>), but allows to define any scope/condition/etc, not just the active window.
 /// 
-/// To define a scope, you create a callback function (CF) that checks some conditions and returns true to allow the trigger action to run or false to not allow. Assign the CF to some property of this class and then add the trigger, like in the examples below. The CF will be assigned to the trigger and called when need.
+/// To define a scope, you create a callback function (CF) that checks some conditions and returns <c>true</c> to allow the trigger action to run or <c>false</c> to not allow. Assign the CF to some property of this class and then add the trigger, like in the examples below. The CF will be assigned to the trigger and called when need.
 /// 
 /// You may ask: why to use CF when the trigger action (TA) can do the same?
-/// 1. CF runs synchronously; if it returns false, the trigger key or mouse button message is passed to other triggers, hooks and apps. TA cannot do it reliably; it runs asynchronously, and the message is already stealed from other apps/triggers/hooks.
+/// 1. CF runs synchronously; if it returns <c>false</c>, the trigger key or mouse button message is passed to other triggers, hooks and apps. TA cannot do it reliably; it runs asynchronously, and the message is already stealed from other apps/triggers/hooks.
 /// 2. CF is faster to call. It is simply called in the same thread that processes trigger messages. TA usually runs in another thread.
 /// 3. A CF can be assigned to multiple triggers with a single line of code. Don't need to add the same code in all trigger actions.
 /// 
-/// A trigger can have up to 4 CF delegates and a window scope (<c>Triggers.Of...</c>). They are called in this order: CF assigned through <see cref="FollowingTriggersBeforeWindow"/>, <see cref="NextTriggerBeforeWindow"/>, window scope, <see cref="NextTrigger"/>, <see cref="FollowingTriggers"/>. The <b>NextX</b> properties assign the CF to the next single trigger. The <b>FollowingX</b> properties assign the CF to all following triggers until you assign another CF or null. If several are assigned, the trigger action runs only if all CF return true and the window scope matches. The <b>XBeforeWindow</b> properties are used only with hotkey, autotext and mouse triggers.
+/// A trigger can have up to 4 CF delegates and a window scope (<c>Triggers.Of...</c>). They are called in this order: CF assigned through <see cref="FollowingTriggersBeforeWindow"/>, <see cref="NextTriggerBeforeWindow"/>, window scope, <see cref="NextTrigger"/>, <see cref="FollowingTriggers"/>. The <b>NextX</b> properties assign the CF to the next single trigger. The <b>FollowingX</b> properties assign the CF to all following triggers until you assign another CF or <c>null</c>. If several are assigned, the trigger action runs only if all CF return <c>true</c> and the window scope matches. The <b>XBeforeWindow</b> properties are used only with hotkey, autotext and mouse triggers.
 /// 
 /// All CF must be as fast as possible. Slow CF can make triggers slower (or even all keyboard/mouse input); also may cause warnings and trigger failures. A big problem is the low-level hooks timeout that Windows applies to trigger hooks; see <see cref="More.WindowsHook.LowLevelHooksTimeout"/>. A related problem - slow JIT and loading of assemblies, which can make the CF too slow the first time; in some rare cases may even need to preload assemblies or pre-JIT functions to avoid the timeout warning.
 ///
@@ -450,7 +450,7 @@ public class TriggerFuncs
 	/// Sets callback function for multiple triggers added afterwards.
 	/// If the trigger has a window scope, the callback function is called after evaluating the window.
 	/// This function is used with triggers of all types.
-	/// The value can be null.
+	/// The value can be <c>null</c>.
 	/// </summary>
 	public TFunc FollowingTriggers {
 		get => commonAfter;
@@ -461,7 +461,7 @@ public class TriggerFuncs
 	/// Sets callback function for multiple triggers added afterwards.
 	/// If the trigger has a window scope, the callback function is called before evaluating the window.
 	/// This function is used with triggers of these types: hotkey, autotext, mouse.
-	/// The value can be null.
+	/// The value can be <c>null</c>.
 	/// </summary>
 	public TFunc FollowingTriggersBeforeWindow {
 		get => commonBefore;
@@ -474,7 +474,7 @@ public class TriggerFuncs
 	}
 
 	/// <summary>
-	/// Clears all properties (sets = null).
+	/// Clears all properties (sets = <c>null</c>).
 	/// </summary>
 	public void Reset() {
 		nextAfter = null;
@@ -494,5 +494,5 @@ class TriggerFunc
 /// Type of functions used with class <see cref="TriggerFuncs"/> to define custom scope for triggers.
 /// </summary>
 /// <param name="args">Trigger action arguments. Example: <see cref="TriggerFuncs"/>.</param>
-/// <returns>Return true to run the trigger action, or false to not run.</returns>
+/// <returns>Return <c>true</c> to run the trigger action, or <c>false</c> to not run.</returns>
 public delegate bool TFunc(TriggerArgs args);

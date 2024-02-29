@@ -11,7 +11,7 @@ public class ExplorerFolder {
 	/// <summary>
 	/// Creates <b>ExplorerFolder</b> for a folder window.
 	/// </summary>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="w">A folder window.</param>
 	public static ExplorerFolder Of(wnd w) {
 		var b = _GetIWebBrowserApp(w);
@@ -67,7 +67,7 @@ public class ExplorerFolder {
 	/// Gets folder path.
 	/// For non-filesystem folder gets string like <c>":: ITEMIDLIST"</c>; see <see cref="Pidl"/>.
 	/// </summary>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	public string GetFolderPath() {
 		var s = _b.LocationURL;
 		if (!s.NE()) {

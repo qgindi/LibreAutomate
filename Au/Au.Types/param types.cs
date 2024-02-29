@@ -83,7 +83,7 @@ public record struct Coord {
 	public unsafe float FractionValue => BitConverter.Int32BitsToSingle((int)_v);
 	
 	/// <summary>
-	/// Returns true if <c>Type == CoordType.None</c> (no value assigned).
+	/// Returns <c>true</c> if <c>Type == CoordType.None</c> (no value assigned).
 	/// </summary>
 	public bool IsEmpty => Type == CoordType.None;
 	
@@ -179,7 +179,7 @@ public record struct Coord {
 	/// <param name="x">X coordinate relative to <i>r</i>.</param>
 	/// <param name="y">Y coordinate relative to <i>r</i>.</param>
 	/// <param name="r">The rectangle.</param>
-	/// <param name="widthHeight">Use only width and height of <i>r</i>. If false (default), the function adds <i>r</i> offset (left and top).</param>
+	/// <param name="widthHeight">Use only width and height of <i>r</i>. If <c>false</c> (default), the function adds <i>r</i> offset (left and top).</param>
 	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>. Not used with <i>widthHeight</i>.</param>
 	public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false) {
 		if (widthHeight) r.Move(0, 0);
@@ -226,7 +226,7 @@ public record struct Coord {
 	/// <param name="y">Y coordinate relative to the specified screen (<c>default</c> - primary).</param>
 	/// <param name="workArea"><i>x</i> <i>y</i> are relative to the work area.</param>
 	/// <param name="screen">If used, <i>x</i> <i>y</i> are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
-	/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
+	/// <param name="widthHeight">Use only width and height of the screen rectangle. If <c>false</c>, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>.</param>
 	public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default, bool widthHeight = false, bool centerIfEmpty = false) {
 		if (centerIfEmpty) {
@@ -389,7 +389,7 @@ public struct AnyWnd {
 	public wnd Hwnd => wnd.Internal_.FromObject(_o);
 	
 	/// <summary>
-	/// true if this is <c>default(AnyWnd)</c>.
+	/// <c>true</c> if this is <c>default(AnyWnd)</c>.
 	/// </summary>
 	public bool IsEmpty => _o == null;
 }

@@ -2,7 +2,7 @@
 
 /// 1. Click the <b>End task<> toolbar button or menu command.
 
-/// 2. Right-click or middle-click the <+recipe>tray icon<> of the script.
+/// 2. If the script adds a <+recipe>tray icon<>, right-click it and select <b>End task<>.
 
 /// 3. If the script calls <see cref="script.setup"/> like this at the start, press the exit key. If UAC blocks it, try with <mono>Alt<>, <mono>Ctrl<> or <mono>Win<>.
 

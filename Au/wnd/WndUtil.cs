@@ -18,21 +18,21 @@ namespace Au.More {
 		/// <param name="wndProc">
 		/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
 		/// 
-		/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string, string)"/>.
-		/// If not null, it must be a static named method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+		/// Use <c>null</c> when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string, string)"/>.
+		/// If not <c>null</c>, it must be a static named method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 		/// </param>
 		/// <param name="etc">
 		/// Can be used to specify API <msdn>WNDCLASSEX</msdn> fields.
 		/// To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
-		/// If null, this function sets arrow cursor and style <c>CS_VREDRAW | CS_HREDRAW</c>.
+		/// If <c>null</c>, this function sets arrow cursor and style <c>CS_VREDRAW | CS_HREDRAW</c>.
 		/// </param>
-		/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="CreateWindow"/>.</exception>
+		/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or <c>null</c>. If need instance method, use <c>null</c> here and pass <i>wndProc</i> to <see cref="CreateWindow"/>.</exception>
 		/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
 		/// <exception cref="Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
 		/// <remarks>
 		/// Calls API <msdn>RegisterClassEx</msdn>.
 		/// The window class is registered until this process ends. Don't need to unregister.
-		/// If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>etc</i>. Throws exception if different.
+		/// If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both <c>null</c>). Then ignores <i>etc</i>. Throws exception if different.
 		/// Thread-safe.
 		/// Protects the <i>wndProc</i> delegate from GC.
 		/// </remarks>
@@ -116,11 +116,11 @@ namespace Au.More {
 		/// <param name="wndProc">Window procedure.</param>
 		/// <param name="keepAlive">
 		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> recived or thread ended).
-		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <b>HwndHost</b>-ed controls. Then let <i>keepAlive</i>=false and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
+		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <b>HwndHost</b>-ed controls. Then let <i>keepAlive</i>=<c>false</c> and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
 		/// </param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// If the class was registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (<b>WM_CREATE</b> etc).
+		/// If the class was registered with <see cref="RegisterWindowClass"/> with <c>null</c> <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (<b>WM_CREATE</b> etc).
 		/// 
 		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
 		/// </remarks>
@@ -171,7 +171,7 @@ namespace Au.More {
 		/// Creates native/unmanaged <msdn>message-only window</msdn>.
 		/// </summary>
 		/// <param name="className">Window class name. Can be any existing class.</param>
-		/// <param name="name">Window name or null.</param>
+		/// <param name="name">Window name or <c>null</c>.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
 		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
@@ -187,11 +187,11 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="wndProc"></param>
 		/// <param name="className">Window class name.</param>
-		/// <param name="name">Window name or null.</param>
+		/// <param name="name">Window name or <c>null</c>.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
 		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
-		/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> with <i>keepAlive</i>=true.
+		/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> with <i>keepAlive</i>=<c>true</c>.
 		/// </remarks>
 		public static wnd CreateMessageOnlyWindow(WNDPROC wndProc, string className, string name = null) {
 			return CreateWindow(wndProc, true, className, name, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
@@ -202,7 +202,7 @@ namespace Au.More {
 		/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and creates hidden window.
 		/// </summary>
 		/// <param name="messageOnly"></param>
-		/// <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
+		/// <param name="wndProcUnsafe">If not <c>null</c>, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		internal static wnd CreateWindowDWP_(bool messageOnly, WNDPROC wndProcUnsafe = null) {
 			var cn = WindowClassDWP_;
@@ -242,7 +242,7 @@ namespace Au.More {
 		/// Destroys a native window of this thread.
 		/// Calls API <msdn>DestroyWindow</msdn>.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <seealso cref="wnd.Close"/>
 		public static bool DestroyWindow(wnd w) {
 			return Api.DestroyWindow(w);
@@ -278,7 +278,7 @@ namespace Au.More {
 		/// <summary>
 		/// Gets window Windows Store app user model id, like <c>"Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
 		/// </summary>
-		/// <returns>null if failed. On Windows 7 returns null unless <i>getExePathIfNotWinStoreApp</i> true.</returns>
+		/// <returns><c>null</c> if failed. On Windows 7 returns <c>null</c> unless <i>getExePathIfNotWinStoreApp</i> <c>true</c>.</returns>
 		/// <param name="w">A top-level window.</param>
 		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
@@ -344,7 +344,7 @@ namespace Au.More {
 		/// <summary>
 		/// Changes the owner window.
 		/// </summary>
-		/// <returns>If fails, returns false; supports <see cref="lastError"/>.</returns>
+		/// <returns>If fails, returns <c>false</c>; supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// A window that has an owner window is always on top of it.
 		/// Don't call this for controls, they don't have an owner window.
@@ -412,7 +412,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Writes a Windows message to a string.
-		/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
+		/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns <c>false</c>.
 		/// </summary>
 		public static bool PrintMsg(out string s, wnd w, int msg, nint wParam, nint lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 			//Could instead use System.Windows.Forms.Message.ToString, but its list is incomplete, eg no dpichange messages.
@@ -757,7 +757,7 @@ print.it(s2);
 
 		/// <summary>
 		/// Writes a Windows message to a string.
-		/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
+		/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns <c>false</c>.
 		/// </summary>
 		/// <remarks>
 		/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
@@ -781,7 +781,7 @@ print.it(s2);
 		/// <summary>
 		/// Simple non-OLE drag operation.
 		/// </summary>
-		/// <returns>true if dropped, false if canceled.</returns>
+		/// <returns><c>true</c> if dropped, <c>false</c> if canceled.</returns>
 		/// <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
@@ -838,7 +838,7 @@ print.it(s2);
 		/// <remarks>
 		/// When there is no active window, functions <see cref="wnd.active"/> and API <msdn>GetForegroundWindow</msdn> return 0.
 		/// It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
-		/// This function waits max 500 ms, then returns false if there is no active window.
+		/// This function waits max 500 ms, then returns <c>false</c> if there is no active window.
 		/// Don't need to call this after calling functions of this library.
 		/// </remarks>
 		public static bool WaitForAnActiveWindow(bool doEvents = false) {
@@ -857,7 +857,7 @@ print.it(s2);
 		/// <summary>
 		/// Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
 		/// </summary>
-		/// <returns>false if failed.</returns>
+		/// <returns><c>false</c> if failed.</returns>
 		/// <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
 		/// <remarks>
 		/// In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
@@ -872,7 +872,7 @@ print.it(s2);
 		/// <summary>
 		/// Calls API <msdn>PostThreadMessage</msdn>. 
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		public static bool PostThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
 			return Api.PostThreadMessage(threadId, message, wParam, lParam);
 		}
@@ -882,7 +882,7 @@ print.it(s2);
 		/// </summary>
 		/// <param name="w">A window or control of this thread.</param>
 		/// <param name="proc">The new window procedure. It is called on every message received by the window (unless blocked by another subclass added later). Let it call <see cref="DefSubclassProc"/>, except when you want to block the message.</param>
-		/// <returns>A cookie for <see cref="Unsubclass"/>. Returns null if failed.</returns>
+		/// <returns>A cookie for <see cref="Unsubclass"/>. Returns <c>null</c> if failed.</returns>
 		/// <remarks>
 		/// Uses API <msdn>SetWindowSubclass</msdn>.
 		/// Implicitly unsubclasses when the window is destroyed.
@@ -936,13 +936,13 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Prepend counter 1, 2, 3...
-		/// Default true.
+		/// Default <c>true</c>.
 		/// </summary>
 		public bool Number { get; set; } = true;
 
 		/// <summary>
 		/// Prepend one or more tabs if the caller function (usually a window procedure) is called recursively.
-		/// Default true.
+		/// Default <c>true</c>.
 		/// </summary>
 		public bool Indent { get; set; } = true;
 

@@ -8,7 +8,7 @@ namespace Au;
 /// 
 /// An <b>elm</b> variable contains a COM interface pointer (<msdn>IAccessible</msdn> or other) and uses methods of that interface or/and related API.
 /// 
-/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return <c>""</c> (string properties), 0, false, null or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means an error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return <c>""</c> (string properties), 0, <c>false</c>, <c>null</c> or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means an error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 /// 
 /// You can dispose <b>elm</b> variables to release the COM object, but it is not necessary (GC will do it later).
 /// 
@@ -244,7 +244,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <remarks>
 	/// Most UI elements are not simple elements. Then this property is 0.
 	/// Often (but not always) this property is the 1-based item index in parent. For example LISTITEM in LIST.
-	/// The 'set' function sometimes can be used as a fast alternative to <see cref="Navigate"/>. It modifies only this variable. It does not check whether the value is valid.
+	/// The <c>set</c> function sometimes can be used as a fast alternative to <see cref="Navigate"/>. It modifies only this variable. It does not check whether the value is valid.
 	/// Simple elements cannot have child elements.
 	/// </remarks>
 	public int Item { get => _elem; set { _misc.roleByte = 0; _elem = value; } }
@@ -264,7 +264,7 @@ public unsafe sealed partial class elm : IDisposable {
 	public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 	
 	/// <summary>
-	/// Returns true if this variable is disposed.
+	/// Returns <c>true</c> if this variable is disposed.
 	/// </summary>
 	bool _Disposed => _iacc == default;
 	
@@ -330,7 +330,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <summary>
 	/// Gets UI element from point.
 	/// </summary>
-	/// <returns>Returns null if failed. Usually fails if the window is of a higher [](xref:uac) integrity level process. With some windows can fail occasionally.</returns>
+	/// <returns>Returns <c>null</c> if failed. Usually fails if the window is of a higher [](xref:uac) integrity level process. With some windows can fail occasionally.</returns>
 	/// <param name="p">
 	/// Coordinates.
 	/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
@@ -383,7 +383,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <summary>
 	/// Gets the keyboard-focused UI element.
 	/// </summary>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	public static elm focused(EFocusedFlags flags = 0) {
 		WarnInSendMessage_();
 		
@@ -402,7 +402,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <summary>
 	/// Gets the UI element that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="WinEventHook"/>.
 	/// </summary>
-	/// <returns>null if failed. Supports <see cref="lastError"/>.</returns>
+	/// <returns><c>null</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="w"></param>
 	/// <param name="idObject"></param>
 	/// <param name="idChild"></param>
@@ -410,7 +410,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// The parameters are of the callback function.
 	/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
 	/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <b>OBJECT_DESTROY</b>, <b>OBJECT_HIDE</b>, <b>SYSTEM_*END</b>.
-	/// Returns null if failed. Always check the return value, to avoid <b>NullReferenceException</b>. An exception in the callback function kills this process.
+	/// Returns <c>null</c> if failed. Always check the return value, to avoid <b>NullReferenceException</b>. An exception in the callback function kills this process.
 	/// </remarks>
 	public static elm fromEvent(wnd w, EObjid idObject, int idChild) {
 		int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);
@@ -424,11 +424,11 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <summary>
 	/// Gets UI element from a COM object of any type that supports it.
 	/// </summary>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="x">Unmanaged COM object.</param>
 	/// <remarks>
 	/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
-	/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
+	/// For IHTMLElement and ISimpleDOMNode returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(IntPtr x)
 	{
@@ -441,12 +441,12 @@ public unsafe sealed partial class elm : IDisposable {
 
 	/// <summary>
 	/// Gets UI element from a COM object of any type that supports it.
-	/// Returns null if failed.
+	/// Returns <c>null</c> if failed.
 	/// </summary>
 	/// <param name="x">Managed COM object.</param>
 	/// <remarks>
 	/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
-	/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
+	/// For IHTMLElement and ISimpleDOMNode returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(object x)
 	{

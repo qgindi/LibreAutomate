@@ -42,7 +42,7 @@ public class wndChildFinder {
 	/// </summary>
 	/// <exception cref="ArgumentException">
 	/// - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
-	/// - <i>cn</i> is <c>""</c>. To match any, use null.
+	/// - <i>cn</i> is <c>""</c>. To match any, use <c>null</c>.
 	/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 	/// </exception>
 	/// <inheritdoc cref="wnd.Child(string, string, WCFlags, int?, Func{wnd, bool}, int)" path="/param"/>
@@ -100,14 +100,14 @@ public class wndChildFinder {
 	/// </remarks>
 	public wnd Find(wnd wParent, Seconds wait) => Exists(wParent, wait) ? Result : default;
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	/// <inheritdoc cref="Find(wnd)"/>
 	public bool Exists(wnd wParent) {
 		using var k = new WndList_(_AllChildren(wParent));
 		return _FindInList(wParent, k) >= 0;
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(wnd, Seconds)"/>
 	public bool Exists(wnd wParent, Seconds wait) {
 		var r = wait.Exists_() ? Exists(wParent) : Au.wait.until(wait, () => Exists(wParent));
@@ -166,9 +166,9 @@ public class wndChildFinder {
 	/// <summary>
 	/// Returns index of matching element or -1.
 	/// </summary>
-	/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if inList is true and no DirectChild flag and not using winforms name.</param>
+	/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if inList is <c>true</c> and no DirectChild flag and not using winforms name.</param>
 	/// <param name="a">List of wnd. Does not dispose it.</param>
-	/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
+	/// <param name="getAll">If not <c>null</c>, calls it for all matching and returns -1.</param>
 	int _FindInList(wnd wParent, WndList_ a, Action<wnd> getAll = null) {
 		Result = default;
 		if (a.Type == WndList_.ListType.None) return -1;
@@ -253,10 +253,10 @@ public class wndChildFinder {
 	}
 
 	/// <summary>
-	/// Returns true if control <c>c</c> properties match the specified properties.
+	/// Returns <c>true</c> if control <c>c</c> properties match the specified properties.
 	/// </summary>
-	/// <param name="c">A control. Can be 0/invalid, then returns false.</param>
-	/// <param name="wParent">Direct or indirect parent window. If used, returns false if it isn't parent (also depends on flag <b>DirectChild</b>).</param>
+	/// <param name="c">A control. Can be 0/invalid, then returns <c>false</c>.</param>
+	/// <param name="wParent">Direct or indirect parent window. If used, returns <c>false</c> if it isn't parent (also depends on flag <b>DirectChild</b>).</param>
 	public bool IsMatch(wnd c, wnd wParent = default) {
 		if (!wParent.Is0 && !c.IsChildOf(wParent)) {
 			Result = default;

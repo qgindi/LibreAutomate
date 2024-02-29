@@ -112,7 +112,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Compiles regular expression string.
 	/// </summary>
-	/// <param name="rx">Regular expression. Cannot be null.</param>
+	/// <param name="rx">Regular expression. Cannot be <c>null</c>.</param>
 	/// <param name="flags">
 	/// Options.
 	/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
@@ -145,7 +145,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Sets callout callback function.
 	/// </summary>
-	/// <value>Callback delegate (eg lambda) or null.</value>
+	/// <value>Callback delegate (eg lambda) or <c>null</c>.</value>
 	/// <remarks>
 	/// Callouts can be used to:
 	/// <br/>• Track the matching progress.
@@ -289,15 +289,15 @@ public unsafe class regexp
 	}
 
 	/// <summary>
-	/// Returns true if string <i>s</i> matches this regular expression.
+	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// </summary>
-	/// <returns>true if full or partial match. Partial match is possible if used a <b>PARTIAL_</b> flag.</returns>
+	/// <returns><c>true</c> if full or partial match. Partial match is possible if used a <b>PARTIAL_</b> flag.</returns>
 	/// <param name="s">
 	/// Subject string.
-	/// If null, returns false, even if the regular expression matches empty string.
+	/// If <c>null</c>, returns <c>false</c>, even if the regular expression matches empty string.
 	/// </param>
 	/// <param name="range">
-	/// Start and end offsets in the subject string. If null (default), uses whole string.
+	/// Start and end offsets in the subject string. If <c>null</c> (default), uses whole string.
 	/// Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end), <c>..j</c> (from 0 to j).
 	/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c> or flag <b>RXFlags.ANCHORED</b>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
 	/// The subject part after the end index is always ignored.
@@ -330,13 +330,13 @@ public unsafe class regexp
 	//Note: cannot use subject type ReadOnlySpan<char> with most functions, because need to store subject in RXGroup or RXMatch, which is not ref struct. And cannot use ReadOnlyMemory<char>.
 
 	/// <summary>
-	/// Returns true if string <i>s</i> matches this regular expression.
+	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// Gets match info as <see cref="RXMatch"/>.
 	/// </summary>
 	/// <returns>
-	/// <br/>• If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
-	/// <br/>• If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a <b>PARTIAL_</b> flag.
-	/// <br/>• If no match, returns false, and <i>result</i> normally is null. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="RXMatch.Exists"/> (false) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
+	/// <br/>• If full match, returns <c>true</c>, and <i>result</i> contains the match and all groups that exist in the regular expressions.
+	/// <br/>• If partial match, returns <c>true</c>, and <i>result</i> contains the match without groups. Partial match is possible if used a <b>PARTIAL_</b> flag.
+	/// <br/>• If no match, returns <c>false</c>, and <i>result</i> normally is <c>null</c>. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="RXMatch.Exists"/> (<c>false</c>) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
 	/// </returns>
 	/// <param name="result">Receives match info.</param>
 	/// <remarks>
@@ -361,17 +361,17 @@ public unsafe class regexp
 	}
 
 	/// <summary>
-	/// Returns true if string <i>s</i> matches this regular expression.
+	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// Gets whole match or some group, as <see cref="RXGroup"/> (index, length, value).
 	/// </summary>
 	/// <returns>
-	/// <br/>• If full match, returns true, and <i>result</i> contains the match or the specified group.
-	/// <br/>• If partial match, returns true. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
-	/// <br/>• If no match, returns false, and <i>result</i> is empty.
+	/// <br/>• If full match, returns <c>true</c>, and <i>result</i> contains the match or the specified group.
+	/// <br/>• If partial match, returns <c>true</c>. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
+	/// <br/>• If no match, returns <c>false</c>, and <i>result</i> is empty.
 	/// </returns>
 	/// <param name="s">
 	/// Subject string.
-	/// If null, returns false, even if the regular expression matches empty string.
+	/// If <c>null</c>, returns <c>false</c>, even if the regular expression matches empty string.
 	/// </param>
 	/// <param name="group">
 	/// Group number (1-based index) of result. If 0 - whole match.
@@ -402,17 +402,17 @@ public unsafe class regexp
 	}
 
 	/// <summary>
-	/// Returns true if string <i>s</i> matches this regular expression.
+	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// Gets whole match or some group, as string.
 	/// </summary>
 	/// <returns>
-	/// <br/>• If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
-	/// <br/>• If partial match, returns true. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
-	/// <br/>• If no match, returns false, and <i>result</i> is null.
+	/// <br/>• If full match, returns <c>true</c>, and <i>result</i> contains the value of the match or of the specifed group.
+	/// <br/>• If partial match, returns <c>true</c>. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
+	/// <br/>• If no match, returns <c>false</c>, and <i>result</i> is <c>null</c>.
 	/// </returns>
 	/// <param name="s">
 	/// Subject string.
-	/// If null, returns false, even if the regular expression matches empty string.
+	/// If <c>null</c>, returns <c>false</c>, even if the regular expression matches empty string.
 	/// </param>
 	/// <param name="result">Receives the match value.</param>
 	/// <remarks>
@@ -512,8 +512,8 @@ public unsafe class regexp
 	/// Finds all match instances of the regular expression.
 	/// </summary>
 	/// <returns>A lazy <b>IEnumerable&lt;RXMatch&gt;</b> that can be used with foreach.</returns>
-	/// <param name="s">Subject string. Cannot be null.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <param name="s">Subject string. Cannot be <c>null</c>.</param>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
 	/// <br/>• Used a <b>PARTIAL_</b> flag.
@@ -541,7 +541,7 @@ public unsafe class regexp
 	/// Group number (1-based index) of results. If 0 - whole match.
 	/// See also <see cref="GetGroupNumberOf"/>.
 	/// </param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
 	/// <br/>• Used a <b>PARTIAL_</b> flag.
@@ -578,7 +578,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Finds all match instances of the regular expression. Gets array of <see cref="RXMatch"/>.
 	/// </summary>
-	/// <returns>true if found 1 or more matches.</returns>
+	/// <returns><c>true</c> if found 1 or more matches.</returns>
 	/// <param name="result">Receives all found matches.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -597,7 +597,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Finds all match instances of the regular expression. Gets array of strings.
 	/// </summary>
-	/// <returns>true if found 1 or more matches.</returns>
+	/// <returns><c>true</c> if found 1 or more matches.</returns>
 	/// <param name="result">Receives all found matches.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -616,7 +616,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Finds all match instances of the regular expression. Gets array of <see cref="RXGroup"/> (index, length, value).
 	/// </summary>
-	/// <returns>true if found 1 or more matches.</returns>
+	/// <returns><c>true</c> if found 1 or more matches.</returns>
 	/// <param name="result">Receives all found matches.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -675,14 +675,14 @@ public unsafe class regexp
 	/// Finds and replaces all match instances of the regular expression.
 	/// </summary>
 	/// <returns>The result string.</returns>
-	/// <param name="s">Subject string. Cannot be null.</param>
+	/// <param name="s">Subject string. Cannot be <c>null</c>.</param>
 	/// <param name="repl">
 	/// Replacement pattern.
 	/// Can consist of any combination of literal text and substitutions like <c>$1</c>.
 	/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces <c>$*</c> with the name of the last encountered mark; replaces <c>${+func}</c> etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
 	/// </param>
 	/// <param name="maxCount">Maximal count of replacements to make. If -1 (default), replaces all.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
 	/// - Invalid <c>$replacement</c>.
@@ -884,7 +884,7 @@ public unsafe class regexp
 	/// Parameters:
 	/// <br/>• current match.
 	/// <br/>• group number <i>g</i>, if replacement is like <c>${+name(g)}</c> or <c>${+name(g, v)}</c>; else 0.
-	/// <br/>• string <i>v</i>, if replacement is like <c>${+name(g, v)}</c>; else null.
+	/// <br/>• string <i>v</i>, if replacement is like <c>${+name(g, v)}</c>; else <c>null</c>.
 	/// 
 	/// <para>
 	/// In the callback function you can use <see cref="RXMatch.ExpandReplacement"/>.
@@ -914,9 +914,9 @@ public unsafe class regexp
 	/// <summary>
 	/// Returns an array of substrings that in the subject string are delimited by regular expression matches.
 	/// </summary>
-	/// <param name="s">Subject string. Cannot be null.</param>
+	/// <param name="s">Subject string. Cannot be <c>null</c>.</param>
 	/// <param name="maxCount">Maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
-	/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
 	/// <br/>• Used a <b>PARTIAL_</b> flag.
@@ -1018,10 +1018,10 @@ public unsafe class regexp
 	}
 
 	/// <summary>
-	/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == true.
+	/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == <c>true</c>.
 	/// </summary>
-	/// <param name="s">Can be null.</param>
-	/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be true if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
+	/// <param name="s">Can be <c>null</c>.</param>
+	/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be <c>true</c> if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
 	/// <remarks>
 	/// Such enclosed substring in a regular expression is interpreted as a literal string.
 	/// This function also escapes \E, so that it does not end the literal string.

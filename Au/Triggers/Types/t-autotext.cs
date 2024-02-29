@@ -43,7 +43,7 @@ public enum TAFlags : byte {
 	RemovePostfix = 8,
 
 	/// <summary>
-	/// Let <see cref="AutotextTriggerArgs.Replace"/> call <see cref="AutotextTriggerArgs.Confirm"/> and do nothing if it returns false.
+	/// Let <see cref="AutotextTriggerArgs.Replace"/> call <see cref="AutotextTriggerArgs.Confirm"/> and do nothing if it returns <c>false</c>.
 	/// </summary>
 	Confirm = 16,
 
@@ -142,9 +142,9 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	/// Adds an autotext trigger.
 	/// </summary>
 	/// <param name="text">The action runs when the user types this text and a postfix character or key. By default case-insensitive.</param>
-	/// <param name="flags">Options. If omitted or null, uses <see cref="DefaultFlags"/>. Some flags are used by <see cref="AutotextTriggerArgs.Replace"/>.</param>
-	/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or null, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
-	/// <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or null, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
+	/// <param name="flags">Options. If omitted or <c>null</c>, uses <see cref="DefaultFlags"/>. Some flags are used by <see cref="AutotextTriggerArgs.Replace"/>.</param>
+	/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or <c>null</c>, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
+	/// <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or <c>null</c>, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <exception cref="ArgumentException">
@@ -205,10 +205,10 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 
 	/// <summary>
 	/// Default value for the <i>postfixChars</i> parameter used for triggers added afterwards.
-	/// Default: null.
+	/// Default: <c>null</c>.
 	/// </summary>
 	/// <remarks>
-	/// If null (default), postfix characters are all except alpha-numeric (see <see cref="char.IsLetterOrDigit"/>).
+	/// If <c>null</c> (default), postfix characters are all except alpha-numeric (see <see cref="char.IsLetterOrDigit"/>).
 	/// The value cannot contain alpha-numeric characters (exception) and <see cref="WordCharsPlus"/> characters (triggers will not work).
 	/// For Enter use \r.
 	/// </remarks>
@@ -256,10 +256,10 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 
 	/// <summary>
 	/// Additional word characters (non-delimiters).
-	/// Default: null.
+	/// Default: <c>null</c>.
 	/// </summary>
 	/// <remarks>
-	/// By default, only alpha-numeric characters (<see cref="char.IsLetterOrDigit"/> returns true) are considered word characters. You can use this property to add more word characters, for example <c>"_#"</c>.
+	/// By default, only alpha-numeric characters (<see cref="char.IsLetterOrDigit"/> returns <c>true</c>) are considered word characters. You can use this property to add more word characters, for example <c>"_#"</c>.
 	/// This is used to avoid activating triggers when a trigger text found inside a word.
 	/// This property is applied to all triggers, not just to those added afterwards.
 	/// </remarks>
@@ -620,18 +620,18 @@ public class AutotextTriggerArgs : TriggerArgs {
 	public wnd Window { get; }
 
 	/// <summary>
-	/// The user-typed text. If <see cref="HasPostfixChar"/>==true, the last character is the postfix delimiter character.
+	/// The user-typed text. If <see cref="HasPostfixChar"/>==<c>true</c>, the last character is the postfix delimiter character.
 	/// </summary>
 	public string Text { get; }
 
 	/// <summary>
-	/// true if the autotext activated when the user typed a postfix delimiter character. Then it is the last character in <see cref="Text"/>.
+	/// <c>true</c> if the autotext activated when the user typed a postfix delimiter character. Then it is the last character in <see cref="Text"/>.
 	/// </summary>
 	public bool HasPostfixChar { get; }
 
 	/// <summary>
-	/// If true, <see cref="Replace"/> will select text with Shift+Left instead of erasing with Backspace. Except in console windows.
-	/// Initially true if flag <see cref="TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use Shift+Left only with some windows.
+	/// If <c>true</c>, <see cref="Replace"/> will select text with Shift+Left instead of erasing with Backspace. Except in console windows.
+	/// Initially <c>true</c> if flag <see cref="TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use Shift+Left only with some windows.
 	/// </summary>
 	public bool ShiftLeft { get; set; }
 
@@ -652,7 +652,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <summary>
 	/// Replaces the user-typed text with the specified text or/and HTML.
 	/// </summary>
-	/// <param name="text">The replacement text. Can be null.</param>
+	/// <param name="text">The replacement text. Can be <c>null</c>.</param>
 	/// <param name="html">
 	/// The replacement HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
@@ -799,7 +799,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	}
 
 	/// <summary>
-	/// If <see cref="HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="Text"/>) to the active window.
+	/// If <see cref="HasPostfixChar"/>==<c>true</c>, sends the postfix character (last character of <see cref="Text"/>) to the active window.
 	/// </summary>
 	public void SendPostfix() {
 		if (this.HasPostfixChar) {
@@ -813,7 +813,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <summary>
 	/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
 	/// </summary>
-	/// <returns>Returns true if the user clicked the item or pressed Enter or Tab.</returns>
+	/// <returns>Returns <c>true</c> if the user clicked the item or pressed Enter or Tab.</returns>
 	/// <param name="text">Text to display. This function limits it to 300 characters. Default: <c>"Replace"</c>.</param>
 	/// <remarks>
 	/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
@@ -853,7 +853,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// Menu items. Any number of arguments of types:
 	/// <br/>• string - the replacement text and menu item label. Can contain tooltip like <c>"Text\0 Tooltip"</c>.
 	/// <br/>• <see cref="TAMenuItem"/> - allows to set custom label and the replacement text and/or HTML.
-	/// <br/>• null - separator.
+	/// <br/>• <c>null</c> - separator.
 	/// </param>
 	/// <remarks>
 	/// Keyboard:
@@ -972,9 +972,9 @@ public class TAMenuItem {
 	/// <summary>
 	/// Sets menu item label and replacement text.
 	/// </summary>
-	/// <param name="label">Menu item label. If null, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
-	/// <param name="text">The replacement text. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
-	/// <param name="html">The replacement HTML. Can be null. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	/// <param name="label">Menu item label. If <c>null</c>, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
+	/// <param name="text">The replacement text. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	/// <param name="html">The replacement HTML. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	public TAMenuItem(string label, string text, string html = null, [CallerLineNumber] int l_ = 0) {
 		Label = label;

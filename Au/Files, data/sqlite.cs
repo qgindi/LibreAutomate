@@ -191,7 +191,7 @@ namespace Au {
 		/// <summary>
 		/// Executes single SQL statement and gets single value.
 		/// </summary>
-		/// <returns>false if the statement returned no data.</returns>
+		/// <returns><c>false</c> if the statement returned no data.</returns>
 		/// <param name="value">Receives data.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException"><i>sql</i> contains more than single SQL statement.</exception>
@@ -286,7 +286,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Executes single SQL statement and returns true if it returns at least one row of data.
+		/// Executes single SQL statement and returns <c>true</c> if it returns at least one row of data.
 		/// </summary>
 		/// <remarks>This function is similar to the <b>GetX</b> functions, but it does not retrieve the data.</remarks>
 		/// <inheritdoc cref="Get(out int, string, object[])" path="//param|//exception"/>
@@ -321,7 +321,7 @@ namespace Au {
 			=> new SLTransaction(this, sql, sqlOfDispose);
 
 		/// <summary>
-		/// Returns true if the table exists.
+		/// Returns <c>true</c> if the table exists.
 		/// </summary>
 		/// <param name="table">Table name.</param>
 		/// <remarks>
@@ -334,7 +334,7 @@ namespace Au {
 		#region util
 
 		/// <summary>
-		/// Returns true if default database text encoding is not UTF-8.
+		/// Returns <c>true</c> if default database text encoding is not UTF-8.
 		/// </summary>
 		internal bool IsUtf16 {
 			get {
@@ -427,7 +427,7 @@ namespace Au {
 		public sqlite DB => _db;
 
 		/// <summary>
-		/// Calls <sqlite>sqlite3_step</sqlite>, and returns true if results data available (<sqlite>sqlite3_step</sqlite> returned <b>SQLITE_ROW</b>).
+		/// Calls <sqlite>sqlite3_step</sqlite>, and returns <c>true</c> if results data available (<sqlite>sqlite3_step</sqlite> returned <b>SQLITE_ROW</b>).
 		/// </summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public bool Step() {
@@ -441,8 +441,8 @@ namespace Au {
 		/// Calls <sqlite>sqlite3_reset</sqlite> and/or <sqlite>sqlite3_clear_bindings</sqlite>.
 		/// </summary>
 		/// <returns>this.</returns>
-		/// <param name="resetStatement">Call <sqlite>sqlite3_reset</sqlite>. Default true.</param>
-		/// <param name="clearBindings">Call <sqlite>sqlite3_clear_bindings</sqlite>. Default true.</param>
+		/// <param name="resetStatement">Call <sqlite>sqlite3_reset</sqlite>. Default <c>true</c>.</param>
+		/// <param name="clearBindings">Call <sqlite>sqlite3_clear_bindings</sqlite>. Default <c>true</c>.</param>
 		public sqliteStatement Reset(bool resetStatement = true, bool clearBindings = true) {
 			//note: don't throw, because sqlite3_reset can return error of previous sqlite3_step
 			if (resetStatement) SLApi.sqlite3_reset(_st);
@@ -712,7 +712,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls <google>sqlite3_column_int64</google> and returns true if the value is not 0.
+		/// Calls <google>sqlite3_column_int64</google> and returns <c>true</c> if the value is not 0.
 		/// </summary>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>
@@ -764,7 +764,7 @@ namespace Au {
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google>.
 		/// </summary>
-		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards. For zero-length BLOB returns null.</returns>
+		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards. For zero-length BLOB returns <c>null</c>.</returns>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <param name="nBytes">Blob size.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>
@@ -891,7 +891,7 @@ namespace Au {
 		//}
 
 		/// <summary>
-		/// Called by <b>GetX</b> functions when <b>sqlite3_column_x</b> returns null/0.
+		/// Called by <b>GetX</b> functions when <b>sqlite3_column_x</b> returns <c>null</c>/0.
 		/// Shows warning if <sqlite>sqlite3_errcode</sqlite> is not 0 or Row.
 		/// Does not throw exception because it is not thread-safe.
 		/// </summary>

@@ -168,7 +168,7 @@ namespace Au {
 
 			/// <summary>
 			/// If there is no owner window, let the dialog be always on top of most other windows.
-			/// Default true.
+			/// Default <c>true</c>.
 			/// </summary>
 			/// <seealso cref="Topmost"/>
 			public static bool topmostIfNoOwnerWindow { get; set; } = true;
@@ -259,7 +259,7 @@ namespace Au {
 
 		/// <summary>
 		/// Changes title bar text.
-		/// If <i>title</i> is null or <c>""</c> or this function not called, will use <see cref="options.defaultTitle"/>.
+		/// If <i>title</i> is <c>null</c> or <c>""</c> or this function not called, will use <see cref="options.defaultTitle"/>.
 		/// </summary>
 		public void SetTitleBarText(string title) {
 			_c.pszWindowTitle = title.NE() ? options.defaultTitle : title;
@@ -442,7 +442,7 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Frees memory allocated by MarshalButtons and sets the c members to null/0.
+			/// Frees memory allocated by MarshalButtons and sets the c members to <c>null</c>/0.
 			/// </summary>
 			public unsafe void MarshalFreeButtons(ref _Api.TASKDIALOGCONFIG c) {
 				MemoryUtil.Free(c.pButtons);
@@ -478,7 +478,7 @@ namespace Au {
 		/// Common and/or custom buttons, like with <see cref="show"/>.
 		/// These ids should be negative if you use <i>customButtons</i> too, because ids of <i>customButtons</i> are 1, 2, ... .
 		/// </param>
-		/// <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
+		/// <param name="asCommandLinks">Custom buttons style. If <c>false</c> - row of classic buttons. If <c>true</c> - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">
 		/// Additional custom buttons. All will be custom, even if named <c>"OK"</c> etc.
 		/// List of labels without ids. Can be string like <c>"One|Two|..."</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>.
@@ -516,7 +516,7 @@ namespace Au {
 		#endregion buttons
 
 		/// <summary>
-		/// Adds check box (if <i>text</i> is not null/empty).
+		/// Adds check box (if <i>text</i> is not <c>null</c>/empty).
 		/// </summary>
 		/// <remarks>
 		/// To get check box state after closing the dialog, use <see cref="Controls"/>.
@@ -621,9 +621,9 @@ namespace Au {
 		/// <summary>
 		/// Sets owner window.
 		/// </summary>
-		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be <b>wnd</b>, WPF window or element, winforms window or control. Can be null.</param>
+		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be <b>wnd</b>, WPF window or element, winforms window or control. Can be <c>null</c>.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
-		/// <param name="dontDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
+		/// <param name="dontDisable">Don't disable the owner window. If <c>false</c>, disables if it belongs to this thread.</param>
 		/// <remarks>
 		/// The owner window will be disabled, and this dialog will be on top of it.
 		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="dialog.options.defaultScreen"/> is ignored.
@@ -675,7 +675,7 @@ namespace Au {
 		public bool RtlLayout { set; get; }
 
 		/// <summary>
-		/// Add 'Minimize' button to the title bar.
+		/// Add "Minimize" button to the title bar.
 		/// </summary>
 		public bool CanBeMinimized { set; get; }
 
@@ -691,8 +691,8 @@ namespace Au {
 
 		/// <summary>
 		/// Makes the dialog window topmost or non-topmost.
-		/// If true, will set topmost style when creating the dialog. If false, will not set.
-		/// If null (default), the dialog will be topmost if both these are true: no owner window, <see cref="dialog.options.topmostIfNoOwnerWindow"/> is true (default).
+		/// If <c>true</c>, will set topmost style when creating the dialog. If <c>false</c>, will not set.
+		/// If <c>null</c> (default), the dialog will be topmost if both these are true: no owner window, <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>true</c> (default).
 		/// </summary>
 		public bool? Topmost { set; get; }
 
@@ -1065,7 +1065,7 @@ namespace Au {
 
 		/// <summary>
 		/// After closing the dialog contains values of checkbox, radio buttons and/or text edit control.
-		/// null if no controls.
+		/// <c>null</c> if no controls.
 		/// </summary>
 		public DControls Controls => _controls;
 		DControls _controls;
@@ -1082,8 +1082,8 @@ namespace Au {
 		/// Can be used by other threads to wait until the dialog is open.
 		/// </summary>
 		/// <returns>
-		/// <br/>• true - the dialog is open and you can send messages to it.
-		/// <br/>• false - the dialog is already closed or failed to show.
+		/// <br/>• <c>true</c> - the dialog is open and you can send messages to it.
+		/// <br/>• <c>false</c> - the dialog is already closed or failed to show.
 		/// </returns>
 		public bool ThreadWaitForOpen() {
 			_AssertIsOtherThread();
@@ -1111,7 +1111,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns true if the dialog is open and your code can send messages to it.
+		/// Returns <c>true</c> if the dialog is open and your code can send messages to it.
 		/// </summary>
 		public bool IsOpen => !_dlg.Is0;
 
@@ -1141,7 +1141,7 @@ namespace Au {
 		/// Example: <c>d.Send.ChangeText2("new text", false);</c> .
 		/// Example: <c>d.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// 
-		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
+		/// Can be used only while the dialog is open. Before showing the dialog returns <c>null</c>. After closing the dialog the returned variable is deactivated; its method calls are ignored.
 		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="showNoWait"/> and <see cref="showProgress"/>.
 		/// </remarks>
 		public DSend Send { get; private set; }
@@ -1357,7 +1357,7 @@ namespace Au {
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
 		/// Button ids and labels. Examples: <c>"OK|Cancel"</c>, <c>"1 &amp;Save|2 Do&amp;n't Save|0 Cancel"</c>.
-		/// If omitted, null or <c>""</c>, the dialog will have OK button, id 1.
+		/// If omitted, <c>null</c> or <c>""</c>, the dialog will have OK button, id 1.
 		/// Common buttons: OK, Yes, No, Retry, Cancel, Close.
 		/// More info in Remarks.
 		/// </param>
@@ -1366,7 +1366,7 @@ namespace Au {
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
+		/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -1475,7 +1475,7 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with OK and Cancel buttons.
 		/// </summary>
-		/// <returns>true if selected OK.</returns>
+		/// <returns><c>true</c> if selected OK.</returns>
 		/// <remarks>Calls <see cref="show"/>.</remarks>
 		/// <example></example>
 		/// <inheritdoc cref="show"/>
@@ -1486,7 +1486,7 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with Yes and No buttons.
 		/// </summary>
-		/// <returns>true if selected Yes.</returns>
+		/// <returns><c>true</c> if selected Yes.</returns>
 		/// <remarks>Calls <see cref="show"/>.</remarks>
 		/// <example></example>
 		/// <inheritdoc cref="show"/>
@@ -1502,7 +1502,7 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with a text edit field and gets that text.
 		/// </summary>
-		/// <returns>true if selected OK (or a custom button with id 1).</returns>
+		/// <returns><c>true</c> if selected OK (or a custom button with id 1).</returns>
 		/// <param name="s">Variable that receives the text.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
@@ -1513,7 +1513,7 @@ namespace Au {
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
+		/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
@@ -1522,7 +1522,7 @@ namespace Au {
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <param name="buttons">
 		/// Buttons. A list of strings <c>"id text"</c> separated by |, like <c>"1 OK|2 Cancel|10 Browse..."</c>. See <see cref="show"/>.
-		/// Note: this function returns true only when clicked button with id 1.
+		/// Note: this function returns <c>true</c> only when clicked button with id 1.
 		/// Usually custom buttons are used with <i>onButtonClick</i> function, which for example can get button id or disable closing the dialog.
 		/// </param>
 		/// <param name="onButtonClick">A button-clicked event handler function. See examples.</param>
@@ -1592,7 +1592,7 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with a number edit field and gets that number.
 		/// </summary>
-		/// <returns>true if selected OK.</returns>
+		/// <returns><c>true</c> if selected OK.</returns>
 		/// <param name="i">Variable that receives the number.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
@@ -1635,7 +1635,7 @@ namespace Au {
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
+		/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -1874,12 +1874,12 @@ namespace Au.Types {
 	/// </summary>
 	public class DControls {
 		/// <summary>
-		/// If not null, adds checkbox with this text.
+		/// If not <c>null</c>, adds checkbox with this text.
 		/// </summary>
 		public string Checkbox { get; set; }
 
 		/// <summary>
-		/// Sets initial and gets final checkbox value (true if checked).
+		/// Sets initial and gets final checkbox value (<c>true</c> if checked).
 		/// </summary>
 		public bool IsChecked { get; set; }
 

@@ -118,7 +118,7 @@ public class TriggerOptions {
 	/// <summary>
 	/// Run trigger actions in new threads.
 	/// </summary>
-	/// <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
+	/// <param name="single">Don't run if this action is already running. If <c>false</c>, multiple action instances can run paralelly in multiple threads.</param>
 	/// <remarks>
 	/// The action can run simultaneously with other actions. The thread is STA.
 	/// </remarks>
@@ -134,7 +134,7 @@ public class TriggerOptions {
 	/// <summary>
 	/// Run trigger actions in thread pool threads.
 	/// </summary>
-	/// <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
+	/// <param name="single">Don't run if this action is already running. If <c>false</c>, multiple action instances can run paralelly in multiple threads.</param>
 	/// <remarks>
 	/// The action can run simultaneously with other actions. May start later if the pool is busy.
 	/// You should know how to use thread pool correctly. The action runs in the .NET thread pool through <see cref="Task.Run"/>.
@@ -177,7 +177,7 @@ public class TriggerOptions {
 	static TOptions s_empty;
 	
 	/// <summary>
-	/// If true, triggers added afterwards don't depend on <see cref="ActionTriggers.Disabled"/> and <see cref="ActionTriggers.DisabledEverywhere"/>.
+	/// If <c>true</c>, triggers added afterwards don't depend on <see cref="ActionTriggers.Disabled"/> and <see cref="ActionTriggers.DisabledEverywhere"/>.
 	/// This property sets the <see cref="ActionTrigger.EnabledAlways"/> property of triggers added afterwards.
 	/// </summary>
 	public bool EnabledAlways { get; set; }
@@ -207,7 +207,7 @@ public struct TOBAArgs {
 	public TriggerArgs ActionArgs { get; }
 	
 	/// <summary>
-	/// If action ended with an exception, the exception. Else null.
+	/// If action ended with an exception, the exception. Else <c>null</c>.
 	/// </summary>
 	public Exception Exception { get; internal set; }
 }
@@ -344,7 +344,7 @@ class TriggerActionThreads {
 		
 		/// <summary>
 		/// Adds the action to the queue and notifies the thread to execute it.
-		/// If the thread is busy, returns false; if ifRunning!=0, the action possibly will run later.
+		/// If the thread is busy, returns <c>false</c>; if ifRunning!=0, the action possibly will run later.
 		/// </summary>
 		public bool RunAction(Action actionWrapper, ActionTrigger trigger) {
 			if (_disposed) return false;

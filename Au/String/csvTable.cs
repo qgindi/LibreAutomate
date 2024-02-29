@@ -10,7 +10,7 @@ namespace Au;
 /// There is no strictly defined CSV standard. <b>csvTable</b> uses these rules:
 /// <br/>• Fields containing separator characters (default <c>','</c>), quote characters (default <c>'"'</c>) and multiple lines are enclosed in quote characters. Example: <c>"ab, cd"</c>.
 /// <br/>• Each quote character in such fields is escaped (replaced) with two quote characters. Example: <c>"ab ""cd"" ef"</c>.
-/// <br/>• If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: <c>" ab "</c>. Or use parameter <i>trimSpaces</i> false when parsing.
+/// <br/>• If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: <c>" ab "</c>. Or use parameter <i>trimSpaces</i> <c>false</c> when parsing.
 /// <br/>• Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
 /// </remarks>
 /// <example>
@@ -70,11 +70,11 @@ public class csvTable {
 	/// </summary>
 	/// <param name="csv">
 	/// CSV text.
-	/// If rows in CSV text have different field count, the longest row sets the <see cref="ColumnCount"/> property and lengths of all row arrays; array elements of missing CSV fields will be null.
+	/// If rows in CSV text have different field count, the longest row sets the <see cref="ColumnCount"/> property and lengths of all row arrays; array elements of missing CSV fields will be <c>null</c>.
 	/// </param>
 	/// <param name="separator">Field separator character used in CSV text. Default <c>','</c>.</param>
 	/// <param name="quote">Character used in CSV text to enclose some fields. Default <c>'"'</c>.</param>
-	/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
+	/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default <c>true</c>.</param>
 	/// <exception cref="FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static unsafe csvTable parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true) {
@@ -184,8 +184,8 @@ public class csvTable {
 	
 	/// <summary>
 	/// Gets or sets row count.
-	/// The 'get' function returns the <b>Count</b> property of the internal <b>List</b> of string arrays.
-	/// The 'set' function can add new rows or remove rows at the end.
+	/// The <c>get</c> function returns the <b>Count</b> property of the internal <b>List</b> of string arrays.
+	/// The <c>set</c> function can add new rows or remove rows at the end.
 	/// </summary>
 	public int RowCount {
 		get => _a.Count;
@@ -201,8 +201,8 @@ public class csvTable {
 	
 	/// <summary>
 	/// Gets or sets column count.
-	/// The 'get' function returns the length of all string arrays in the internal <b>List</b>.
-	/// The 'set' function can add new columns or remove columns at the right.
+	/// The <c>get</c> function returns the length of all string arrays in the internal <b>List</b>.
+	/// The <c>set</c> function can add new columns or remove columns at the right.
 	/// </summary>
 	public int ColumnCount {
 		get => _columnCount;
@@ -230,8 +230,8 @@ public class csvTable {
 	/// <summary>
 	/// Gets or sets a field.
 	/// </summary>
-	/// <param name="row">0-based row index. The 'set' function adds new row if negative or equal to <see cref="RowCount"/>.</param>
-	/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
+	/// <param name="row">0-based row index. The <c>set</c> function adds new row if negative or equal to <see cref="RowCount"/>.</param>
+	/// <param name="column">0-based column index. With the <c>set</c> function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <example>
 	/// <code><![CDATA[
@@ -273,8 +273,8 @@ public class csvTable {
 	/// <summary>
 	/// Gets or sets a field.
 	/// </summary>
-	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The 'set' function adds new row if <c>^0</c>.</param>
-	/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
+	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The <c>set</c> function adds new row if <c>^0</c>.</param>
+	/// <param name="column">0-based column index. With the <c>set</c> function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public string this[Index row, int column] {
 		get => this[row.GetOffset(_a.Count), column];
@@ -284,11 +284,11 @@ public class csvTable {
 	/// <summary>
 	/// Gets or sets fields in a row.
 	/// </summary>
-	/// <param name="row">0-based row index. The 'set' function adds new row if negative or equal to <see cref="RowCount"/>.</param>
+	/// <param name="row">0-based row index. The <c>set</c> function adds new row if negative or equal to <see cref="RowCount"/>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
-	/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
-	/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+	/// The <c>get</c> function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
+	/// The <c>set</c> function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -332,11 +332,11 @@ public class csvTable {
 	/// <summary>
 	/// Gets or sets fields in a row.
 	/// </summary>
-	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The 'set' function adds new row if <c>^0</c>.</param>
+	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The <c>set</c> function adds new row if <c>^0</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
-	/// The 'get' function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
-	/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+	/// The <c>get</c> function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
+	/// The <c>set</c> function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
 	/// </remarks>
 	public string[] this[Index row] {
 		get => this[row.GetOffset(_a.Count)];
@@ -405,7 +405,7 @@ public class csvTable {
 	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
 	/// <param name="separator">Field separator character used in CSV text. Default <c>','</c>.</param>
 	/// <param name="quote">Character used in CSV text to enclose some fields. Default <c>'"'</c>.</param>
-	/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
+	/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default <c>true</c>.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
 	/// <exception cref="FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
@@ -644,7 +644,7 @@ public class csvTable {
 	public bool Get(Index row, int column, out float value) => this[row, column].ToNumber(out value);
 	
 	/// <summary>
-	/// Gets a field value like "true" or "false" converted to bool. Case-insensitive.
+	/// Gets a field value like <c>"true"</c> or <c>"false"</c> converted to <c>bool</c>. Case-insensitive.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out bool value) => Boolean.TryParse(this[row, column], out value);

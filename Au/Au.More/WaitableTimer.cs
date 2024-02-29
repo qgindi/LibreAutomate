@@ -13,7 +13,7 @@ public class WaitableTimer : WaitHandle {
 	/// Calls API <msdn>CreateWaitableTimer</msdn> and creates a <b>WaitableTimer</b> object that wraps the timer handle.
 	/// </summary>
 	/// <param name="manualReset"></param>
-	/// <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If null, creates unnamed timer.</param>
+	/// <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If <c>null</c>, creates unnamed timer.</param>
 	/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 	public static WaitableTimer Create(bool manualReset = false, string timerName = null) {
 		var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.ForLowIL, manualReset, timerName);
@@ -27,7 +27,7 @@ public class WaitableTimer : WaitHandle {
 	/// <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="Create"/>.</param>
 	/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value <c>TIMER_MODIFY_STATE|SYNCHRONIZE</c> allows to set and wait.</param>
 	/// <param name="inheritHandle"></param>
-	/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="lastError"/>.</param>
+	/// <param name="noException">If fails, return <c>null</c>, don't throw exception. Supports <see cref="lastError"/>.</param>
 	/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>
 	public static WaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false) {
 		var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
@@ -45,7 +45,7 @@ public class WaitableTimer : WaitHandle {
 	/// <summary>
 	/// Calls API <msdn>SetWaitableTimer</msdn>.
 	/// </summary>
-	/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="dueTime">
 	/// The time after which the state of the timer is to be set to signaled. It is relative time (from now).
 	/// If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds*10), see <msdn>FILETIME</msdn>.
@@ -60,7 +60,7 @@ public class WaitableTimer : WaitHandle {
 	/// <summary>
 	/// Calls API <msdn>SetWaitableTimer</msdn>.
 	/// </summary>
-	/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
 	/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
 	public bool SetAbsolute(DateTime dueTime, int period = 0) {

@@ -1,7 +1,7 @@
 namespace Au.More;
 
 /// <summary>
-/// Helps to get and release screen DC with the 'using(...){...}' pattern.
+/// Helps to get and release screen DC with <c>using</c>.
 /// Uses API GetDC and ReleaseDC.
 /// </summary>
 struct ScreenDC_ : IDisposable {
@@ -20,7 +20,7 @@ struct ScreenDC_ : IDisposable {
 }
 
 /// <summary>
-/// Helps to get and release window DC with the 'using(...){...}' pattern.
+/// Helps to get and release window DC with <c>using</c>.
 /// Uses API GetDC and ReleaseDC.
 /// </summary>
 struct WindowDC_ : IDisposable {
@@ -44,7 +44,7 @@ struct WindowDC_ : IDisposable {
 }
 
 /// <summary>
-/// Helps to create and delete compatible DC (memory DC) with the 'using(...){...}' pattern.
+/// Helps to create and delete compatible DC (memory DC) with <c>using</c>.
 /// Uses API CreateCompatibleDC and DeleteDC.
 /// </summary>
 class MemoryDC_ : IDisposable {

@@ -73,7 +73,7 @@ namespace Au {
 		/// <summary>
 		/// Gets icon that can be displayed for a file, folder, shell object, URL or file type.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="file">
 		/// Can be:
 		/// <br/>• Path of any file or folder. Supports environment variables. If not full path, uses <see cref="folders.ThisAppImages"/> and <see cref="filesystem.searchPath"/>.
@@ -101,7 +101,7 @@ namespace Au {
 		/// <summary>
 		/// Gets icon of a file or other shell object specified as <b>ITEMIDLIST</b>.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="pidl"><b>ITEMIDLIST</b>.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static icon ofPidl(Pidl pidl, int size = 16) {
@@ -372,7 +372,7 @@ namespace Au {
 		/// <summary>
 		/// Extracts icon directly from file.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
@@ -398,7 +398,7 @@ namespace Au {
 		/// <summary>
 		/// Gets a shell stock icon.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="id">Shell stock icon id.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static unsafe icon stock(StockIcon id, int size = 16) {
@@ -425,7 +425,7 @@ namespace Au {
 		/// <summary>
 		/// Gets icon from unmanaged resources of this program.
 		/// </summary>
-		/// <returns>Returns null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
 		/// <remarks>
@@ -478,7 +478,7 @@ namespace Au {
 		/// <summary>
 		/// Loads icon of tray icon size from .ico file.
 		/// </summary>
-		/// <returns>Returns null if not found.</returns>
+		/// <returns><c>null</c> if not found.</returns>
 		/// <remarks>
 		/// Calls API <msdn>LoadIconMetric</msdn>.
 		/// </remarks>
@@ -504,7 +504,7 @@ namespace Au {
 		/// <summary>
 		/// Gets icon that is displayed in window title bar and in taskbar button.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="w">A top-level window of any process.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static icon ofWindow(wnd w, int size = 16) {
@@ -544,7 +544,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="width"></param>
 		/// <param name="height"></param>
-		/// <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
+		/// <param name="drawCallback">Called to draw icon. If <c>null</c>, the icon will be completely transparent.</param>
 		public static icon create(int width, int height, Action<Graphics> drawCallback = null) {
 			IntPtr hi;
 			if (drawCallback != null) {
@@ -567,7 +567,7 @@ namespace Au {
 		/// <summary>
 		/// Creates <see cref="System.Drawing.Icon"/> object that shares native icon handle with this object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
+		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
 		public Icon ToGdipIcon() {
 			if (_handle == default) return null;
 			var R = Icon.FromHandle(_handle);
@@ -579,10 +579,10 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to GDI+ bitmap object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
+		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
-		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
-		/// If false, later will need to dispose this variable.
+		/// If <c>true</c> (default), destroys the native icon object; also clears this variable and don't need to dispose it.
+		/// If <c>false</c>, later will need to dispose this variable.
 		/// </param>
 		public Bitmap ToGdipBitmap(bool destroyIcon = true) {
 			if (_handle != default) {
@@ -599,10 +599,10 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to WPF image object.
 		/// </summary>
-		/// <returns>null if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
+		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
-		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
-		/// If false, later will need to dispose this variable.
+		/// If <c>true</c> (default), destroys the native icon object; also clears this variable and don't need to dispose it.
+		/// If <c>false</c>, later will need to dispose this variable.
 		/// </param>
 		/// <remarks>
 		/// The image is not suitable for WPF window icon. Instead use <see cref="SetWindowIcon"/> or WPF image loading functions.
@@ -641,7 +641,7 @@ namespace Au {
 		/// <summary>
 		/// Parses icon location string.
 		/// </summary>
-		/// <returns>true if it includes icon index or resource id.</returns>
+		/// <returns><c>true</c> if it includes icon index or resource id.</returns>
 		/// <param name="s">
 		/// Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path.
 		/// Supports path enclosed in <c>""</c> like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.
@@ -723,7 +723,7 @@ namespace Au {
 		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell.
 		/// Also supports code patterns like <c>folders.System + "notepad.exe"</c> or <c>folders.shell.RecycleBin</c>.
 		/// </summary>
-		/// <returns>null if no such string/pattern.</returns>
+		/// <returns><c>null</c> if no such string/pattern.</returns>
 		/// <param name="mi"></param>
 		/// <param name="cs">The string is .cs filename or relative path, but not full path.</param>
 		internal static string ExtractIconPathFromCode_(MethodInfo mi, out bool cs) {
@@ -794,7 +794,7 @@ namespace Au {
 		/// <summary>
 		/// Gets image of a Windows Store App.
 		/// </summary>
-		/// <returns><b>Bitmap</b> object, or null if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
+		/// <returns><b>Bitmap</b> object, or <c>null</c> if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
 		/// <param name="shellString">String like <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.</param>
 		/// <param name="size">Desired width and height.</param>
 		public static Bitmap winStoreAppImage(string shellString, int size = 16) {
@@ -805,7 +805,7 @@ namespace Au {
 		/// <summary>
 		/// Gets image of a Windows Store App. This overload accepts a <b>Pidl</b> instead of a shell string.
 		/// </summary>
-		/// <returns><b>Bitmap</b> object, or null if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
+		/// <returns><b>Bitmap</b> object, or <c>null</c> if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
 		public static Bitmap winStoreAppImage(Pidl pidl, int size = 16) {
 			var path = _GetWinStoreAppImagePath(pidl, size); if (path == null) return null;
 			//var r = Image.FromFile(path) as Bitmap; //no, locks file

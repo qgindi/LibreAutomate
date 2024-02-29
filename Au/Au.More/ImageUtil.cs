@@ -12,12 +12,12 @@ namespace Au.More;
 /// <seealso cref="ResourceUtil"/>
 public static partial class ImageUtil {
 	/// <summary>
-	/// Returns true if string starts with <c>"image:"</c>.
+	/// Returns <c>true</c> if string starts with <c>"image:"</c>.
 	/// </summary>
 	public static bool HasImageStringPrefix(string s) => s.Starts("image:");
 
 	/// <summary>
-	/// Returns true if string starts with <c>"resource:"</c>, <c>"resources/"</c>, <c>"image:"</c> (Base64 encoded image), <c>"imagefile:"</c> (file path), <c>"*"</c> (XAML icon name) or <c>"&lt;"</c> (possibly XAML image).
+	/// Returns <c>true</c> if string starts with <c>"resource:"</c>, <c>"resources/"</c>, <c>"image:"</c> (Base64 encoded image), <c>"imagefile:"</c> (file path), <c>"*"</c> (XAML icon name) or <c>"&lt;"</c> (possibly XAML image).
 	/// </summary>
 	public static bool HasImageOrResourcePrefix(string s) => s.Starts('*') || s.Starts('<') || s.Starts("image:") || s.Starts("imagefile:") || ResourceUtil.HasResourcePrefix(s);
 
@@ -57,7 +57,7 @@ public static partial class ImageUtil {
 
 	//not used in library
 	///// <summary>
-	///// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns null and optionally prints a warning.
+	///// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns <c>null</c> and optionally prints a warning.
 	///// </summary>
 	//public static System.Drawing.Bitmap TryLoadGdipBitmapFromString(string s, bool warning) {
 	//	try { return LoadGdipBitmapFromString(s); }
@@ -66,7 +66,7 @@ public static partial class ImageUtil {
 	//}
 
 	///// <summary>
-	///// Calls <see cref="LoadWpfImageFromString"/> and handles exceptions. On exception returns null and optionally prints warning.
+	///// Calls <see cref="LoadWpfImageFromString"/> and handles exceptions. On exception returns <c>null</c> and optionally prints warning.
 	///// </summary>
 	//public static BitmapFrame TryLoadWpfImageFromString(string s, bool warning) {
 	//	try { return LoadWpfImageFromString(s); }
@@ -83,7 +83,7 @@ public static partial class ImageUtil {
 	/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> (<see cref="ResourceUtil.GetGdipBitmap"/>)
 	/// <br/>• Base64 encoded image string with prefix <c>"image:"</c>.
 	/// </param>
-	/// <param name="xaml">If not null, supports XAML images. See <see cref="LoadGdipBitmapFromXaml"/>.</param>
+	/// <param name="xaml">If not <c>null</c>, supports XAML images. See <see cref="LoadGdipBitmapFromXaml"/>.</param>
 	/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="File.OpenRead(string)"/>, <see cref="System.Drawing.Bitmap(Stream)"/>, etc.</exception>
 	public static System.Drawing.Bitmap LoadGdipBitmap(string image, (int dpi, SIZE? size)? xaml = null) {
 		if (HasImageStringPrefix(image))
@@ -159,7 +159,7 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <param name="image">XAML file, resource or string. See <see cref="LoadWpfImageElement"/>.</param>
 	/// <param name="dpi">DPI of window that will display the image.</param>
-	/// <param name="size">Final image size in logical pixels (not DPI-scaled). If null, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
+	/// <param name="size">Final image size in logical pixels (not DPI-scaled). If <c>null</c>, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
 	/// <returns>New <b>Bitmap</b>. Note: its pixel format is <b>Format32bppPArgb</b> (premultiplied ARGB).</returns>
 	/// <exception cref="Exception"></exception>
 	/// <remarks>
@@ -249,8 +249,8 @@ public static partial class ImageUtil {
 	/// <param name="dpi">DPI of window that will display the image.</param>
 	/// <param name="size">
 	/// Final image size in logical pixels (not DPI-scaled).
-	/// If null, uses element's <b>DesiredSize</b> property, max 1024x1024.
-	/// If not null, sets element's <b>Width</b> and <b>Height</b>; the element should not be used in UI.
+	/// If <c>null</c>, uses element's <b>DesiredSize</b> property, max 1024x1024.
+	/// If not <c>null</c>, sets element's <b>Width</b> and <b>Height</b>; the element should not be used in UI.
 	/// </param>
 	/// <returns>New <b>Bitmap</b>. Note: its pixel format is <b>Format32bppPArgb</b> (premultiplied ARGB).</returns>
 	public static unsafe System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(FrameworkElement e, int dpi, SIZE? size = null) {

@@ -439,7 +439,7 @@ public partial class keys {
 	/// - optk - <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 	/// - wFocus - the focused or active window.
 	/// </summary>
-	/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be <c>default(wnd)</c> if Hook is null.</param>
+	/// <param name="getWndAlways">if <c>false</c>, the caller does not need wFocus. Then wFocus will be <c>default(wnd)</c> if Hook is <c>null</c>.</param>
 	/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 	/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
 	/// <exception cref="InputDesktopException"></exception>

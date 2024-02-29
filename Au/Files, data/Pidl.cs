@@ -31,7 +31,7 @@ namespace Au.Types {
 		public HandleRef HandleRef => new HandleRef(this, _pidl);
 
 		/// <summary>
-		/// Returns true if the <b>ITEMIDLIST*</b> is null.
+		/// Returns <c>true</c> if the <b>ITEMIDLIST*</b> is <c>null</c>.
 		/// </summary>
 		public bool IsNull => _pidl == default;
 
@@ -85,10 +85,10 @@ namespace Au.Types {
 		/// <summary>
 		/// Converts string to <b>ITEMIDLIST</b> and creates new <b>Pidl</b> variable that holds it.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="throwIfFailed">Throw exception if failed.</param>
-		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is true. Probably invalid s.</exception>
+		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>. Probably invalid s.</exception>
 		/// <remarks>
 		/// Calls <msdn>SHParseDisplayName</msdn>, except when string is <c>":: ITEMIDLIST"</c>.
 		/// If <c>":: ITEMIDLIST"</c>, does not check whether the shell object exists.
@@ -103,7 +103,7 @@ namespace Au.Types {
 		/// Later need to free it with Marshal.FreeCoTaskMem.
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="throwIfFailed">If failed: true - throw AuException; false - return 0.</param>
+		/// <param name="throwIfFailed">If failed: <c>true</c> - throw AuException; <c>false</c> - return 0.</param>
 		internal static IntPtr FromString_(string s, bool throwIfFailed = false) {
 			IntPtr R;
 			s = _Normalize(s);
@@ -137,17 +137,17 @@ namespace Au.Types {
 		/// <summary>
 		/// Converts the <b>ITEMIDLIST</b> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
 		/// </summary>
-		/// <returns>Returns null if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached). If failed, returns null or throws exception.</returns>
+		/// <returns>Returns <c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached). If failed, returns <c>null</c> or throws exception.</returns>
 		/// <param name="stringType">
 		/// String format. API <msdn>SIGDN</msdn>.
 		/// Often used:
 		/// <br/>• <b>SIGDN.NORMALDISPLAY</b> - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
-		/// <br/>• <b>SIGDN.FILESYSPATH</b> - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns null.
-		/// <br/>• <b>SIGDN.URL</b> - if URL, returns URL. If file system object, returns its path like <c>"file:///C:/a/b.txt"</c>. Else returns null.
+		/// <br/>• <b>SIGDN.FILESYSPATH</b> - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns <c>null</c>.
+		/// <br/>• <b>SIGDN.URL</b> - if URL, returns URL. If file system object, returns its path like <c>"file:///C:/a/b.txt"</c>. Else returns <c>null</c>.
 		/// <br/>• <b>SIGDN.DESKTOPABSOLUTEPARSING</b> - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <b>ITEMIDLIST</b> again, therefore usually it's better to use <see cref="ToString"/> instead.
 		/// </param>
 		/// <param name="throwIfFailed">If failed, throw <b>AuException</b>.</param>
-		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is true.</exception>
+		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>.</exception>
 		/// <remarks>
 		/// Calls <msdn>SHGetNameFromIDList</msdn>.
 		/// </remarks>
@@ -160,7 +160,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Converts an <b>ITEMIDLIST</b> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
 		/// </summary>
-		/// <returns>Returns null if <i>pidl</i> is <c>default(IntPtr)</c>. If failed, returns null or throws exception.</returns>
+		/// <returns>Returns <c>null</c> if <i>pidl</i> is <c>default(IntPtr)</c>. If failed, returns <c>null</c> or throws exception.</returns>
 		/// <inheritdoc cref="ToShellString(SIGDN, bool)"/>
 		public static string ToShellString(IntPtr pidl, SIGDN stringType, bool throwIfFailed = false) {
 			if (pidl == default) return null;
@@ -174,7 +174,7 @@ namespace Au.Types {
 		/// Converts the <b>ITEMIDLIST</b> to string.
 		/// If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>).
 		/// </summary>
-		/// <returns>null if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).</returns>
+		/// <returns><c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).</returns>
 		public override string ToString() {
 			var R = ToString(_pidl);
 			GC.KeepAlive(this);
@@ -237,7 +237,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Returns string <c>":: ITEMIDLIST"</c>.
-		/// Returns null if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).
+		/// Returns <c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).
 		/// </summary>
 		/// <remarks>
 		/// The string can be used with some functions of this library, mostly of classes <b>filesystem</b>, <b>Pidl</b> and <b>icon</b>. Cannot be used with native and .NET functions.
@@ -273,7 +273,7 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Returns true if <b>ITEMIDLIST</b> values are equal.
+		/// Returns <c>true</c> if <b>ITEMIDLIST</b> values are equal.
 		/// </summary>
 		public bool ValueEquals(IntPtr pidl) => Api.ILIsEqual(_pidl, pidl);
 	}

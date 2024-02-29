@@ -10,7 +10,7 @@ internal static unsafe class CharPtr_ {
 	/// <summary>
 	/// Gets the number of characters in p until '\0'.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be null.</param>
+	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
 	public static int Length(char* p) {
 		if (p == null) return 0;
 		for (int i = 0; ; i++) if (p[i] == '\0') return i;
@@ -19,7 +19,7 @@ internal static unsafe class CharPtr_ {
 	/// <summary>
 	/// Gets the number of characters in p until '\0' or <i>max</i>.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be null.</param>
+	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
 	/// <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
 	public static int Length(char* p, int max) {
 		if (p == null) return 0;
@@ -29,10 +29,10 @@ internal static unsafe class CharPtr_ {
 
 	//not used. Now could be replaced with RStr.Equals.
 	///// <summary>
-	///// Case-sensitive compares string with managed string and returns true if they are equal.
+	///// Case-sensitive compares string with managed string and returns <c>true</c> if they are equal.
 	///// </summary>
 	///// <param name="p">Unmanaged string.</param>
-	///// <param name="len">p length. Returns false if it is != s.Length.</param>
+	///// <param name="len">p length. Returns <c>false</c> if it is != s.Length.</param>
 	///// <param name="s">Managed string.</param>
 	//public static bool Eq(char* p, int len, string s)
 	//{
@@ -52,7 +52,7 @@ static unsafe class BytePtr_ {
 	/// <summary>
 	/// Gets the number of bytes in p until '\0'.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be null.</param>
+	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
 	public static int Length(byte* p) {
 		if (p == null) return 0;
 		for (int i = 0; ; i++) if (p[i] == 0) return i;
@@ -61,7 +61,7 @@ static unsafe class BytePtr_ {
 	/// <summary>
 	/// Gets the number of bytes in p until '\0' or <i>max</i>.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be null.</param>
+	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
 	/// <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
 	public static int Length(byte* p, int max) {
 		if (p == null) return 0;
@@ -70,7 +70,7 @@ static unsafe class BytePtr_ {
 	}
 
 	/// <summary>
-	/// Returns true if unmanaged string p starts with string s. Case-sensitive.
+	/// Returns <c>true</c> if unmanaged string p starts with string s. Case-sensitive.
 	/// </summary>
 	/// <param name="p">'\0'-terminated string.</param>
 	/// <param name="s">Must contain only ASCII characters.</param>
@@ -84,7 +84,7 @@ static unsafe class BytePtr_ {
 	}
 
 	/// <summary>
-	/// Returns true if unmanaged string p starts with string s. Case-insensitive.
+	/// Returns <c>true</c> if unmanaged string p starts with string s. Case-insensitive.
 	/// </summary>
 	/// <param name="p">'\0'-terminated string.</param>
 	/// <param name="s">Must contain only ASCII characters.</param>
@@ -100,7 +100,7 @@ static unsafe class BytePtr_ {
 
 	//rejected. Use span.StartsWith("string"u8), it's much faster.
 	///// <summary>
-	///// Returns true if <i>span</i> starts with ASCII string <i>s</i>.
+	///// Returns <c>true</c> if <i>span</i> starts with ASCII string <i>s</i>.
 	///// </summary>
 	//public static bool AsciiStarts(RByte span, string s) {
 	//	if (s.Length > span.Length) return false;
@@ -111,21 +111,21 @@ static unsafe class BytePtr_ {
 	//}
 
 	/// <summary>
-	/// Returns true if unmanaged string p and string s are equal. Case-sensitive.
+	/// Returns <c>true</c> if unmanaged string p and string s are equal. Case-sensitive.
 	/// </summary>
 	/// <param name="p">'\0'-terminated string.</param>
 	/// <param name="s">Managed string. Must contain only ASCII characters.</param>
 	public static bool AsciiEq(byte* p, string s) => AsciiStarts(p, s) && p[s.Length] == 0;
 
 	/// <summary>
-	/// Returns true if unmanaged string p and string s are equal. Case-insensitive.
+	/// Returns <c>true</c> if unmanaged string p and string s are equal. Case-insensitive.
 	/// </summary>
 	/// <param name="p">'\0'-terminated string.</param>
 	/// <param name="s">Must contain only ASCII characters.</param>
 	public static bool AsciiEqi(byte* p, string s) => AsciiStartsi(p, s) && p[s.Length] == 0;
 
 	/// <summary>
-	/// Case-sensitive compares unmanaged string p with byte[] s and returns true if they are equal.
+	/// Case-sensitive compares unmanaged string p with byte[] s and returns <c>true</c> if they are equal.
 	/// </summary>
 	/// <param name="p">'\0'-terminated string.</param>
 	/// <param name="s">Managed string. Must contain only ASCII characters.</param>

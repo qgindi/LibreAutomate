@@ -104,7 +104,7 @@ namespace Au.More
 		/// </summary>
 		/// <param name="whole"></param>
 		/// <param name="part"></param>
-		/// <param name="canRoundUp">Round down or up. If false (default), can only round down.</param>
+		/// <param name="canRoundUp">Round down or up. If <c>false</c> (default), can only round down.</param>
 		/// <exception cref="OverflowException"></exception>
 		public static int PercentFromValue(int whole, int part, bool canRoundUp = false)
 			=> whole == default ? default : (canRoundUp ? MulDiv(100, part, whole) : checked((int)(100L * part / whole)));
@@ -120,7 +120,7 @@ namespace Au.More
 		/// </summary>
 		/// <param name="whole"></param>
 		/// <param name="percent"></param>
-		/// <param name="canRoundUp">Use <see cref="MulDiv"/>, which can round down or up. If false (default), can only round down.</param>
+		/// <param name="canRoundUp">Use <see cref="MulDiv"/>, which can round down or up. If <c>false</c> (default), can only round down.</param>
 		/// <exception cref="OverflowException"></exception>
 		public static int PercentToValue(int whole, int percent, bool canRoundUp = false)
 			=> canRoundUp ? MulDiv(whole, percent, 100) : checked((int)((long)whole * percent / 100L));

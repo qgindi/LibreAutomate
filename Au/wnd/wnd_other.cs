@@ -5,9 +5,9 @@ namespace Au
 		/// <summary>
 		/// Sets window transparency attributes (opacity and/or transparent color).
 		/// </summary>
-		/// <param name="allowTransparency">Set or remove <b>WS_EX_LAYERED</b> style that is required for transparency. If false, other parameters are not used.</param>
-		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
-		/// <param name="colorKey">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
+		/// <param name="allowTransparency">Set or remove <b>WS_EX_LAYERED</b> style that is required for transparency. If <c>false</c>, other parameters are not used.</param>
+		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if <c>null</c>. If less than 0 or greater than 255, makes 0 or 255.</param>
+		/// <param name="colorKey">Make pixels of this color completely transparent. Does not change if <c>null</c>. The alpha byte is not used.</param>
 		/// <param name="noException">Don't throw exception when fails.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
@@ -35,8 +35,8 @@ namespace Au
 		/// <summary>
 		/// Gets window transparency attributes (opacity and transparency color).
 		/// </summary>
-		/// <param name="opacity">If this function returns true and the window has an opacity attribute, receives the opacity value 0-255, else null.</param>
-		/// <param name="colorKey">If this function returns true and the window has a transparency color attribute, receives the color, else null.</param>
+		/// <param name="opacity">If this function returns <c>true</c> and the window has an opacity attribute, receives the opacity value 0-255, else <c>null</c>.</param>
+		/// <param name="colorKey">If this function returns <c>true</c> and the window has a transparency color attribute, receives the color, else <c>null</c>.</param>
 		/// <returns>True if the window has transparency attributes set with <see cref="SetTransparency"/> or API <msdn>SetLayeredWindowAttributes</msdn>. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Uses API <msdn>GetLayeredWindowAttributes</msdn>.
@@ -52,7 +52,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if this is a full-screen window and not desktop.
+		/// Returns <c>true</c> if this is a full-screen window and not desktop.
 		/// </summary>
 		public bool IsFullScreen => IsFullScreen_(out _);
 
@@ -90,14 +90,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if this belongs to GetShellWindow's thread (usually it is the desktop window).
+		/// Returns <c>true</c> if this belongs to GetShellWindow's thread (usually it is the desktop window).
 		/// </summary>
 		internal bool IsOfShellThread_ {
 			get => 1 == s_isShellWindow.IsShellWindow(this);
 		}
 
 		/// <summary>
-		/// Returns true if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
+		/// Returns <c>true</c> if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
 		/// </summary>
 		internal bool IsOfShellProcess_ {
 			get => 0 != s_isShellWindow.IsShellWindow(this);
@@ -125,7 +125,7 @@ namespace Au
 		static _ISSHELLWINDOW s_isShellWindow;
 
 		/// <summary>
-		/// Returns true if this window has Metro style, ie is not a classic desktop window.
+		/// Returns <c>true</c> if this window has Metro style, ie is not a classic desktop window.
 		/// On Windows 8/8.1 most Windows Store app windows and many shell windows have Metro style.
 		/// On Windows 10 few windows have Metro style.
 		/// On Windows 7 there are no Metro style windows.
@@ -157,7 +157,7 @@ namespace Au
 
 		//This is too litle tested to be public. Tested only with WinUI 3 Controls Gallery. Also WinUI3 is still kinda experimental and rare (2021).
 		/// <summary>
-		/// On Windows 10 and later returns true if this top-level window is a WinUI app window (class name "WinUIDesktopWin32WindowClass").
+		/// On Windows 10 and later returns <c>true</c> if this top-level window is a WinUI app window (class name "WinUIDesktopWin32WindowClass").
 		/// </summary>
 		internal bool IsWinUI_ {
 			get {

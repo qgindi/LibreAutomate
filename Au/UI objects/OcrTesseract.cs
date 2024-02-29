@@ -14,7 +14,7 @@ namespace Au.More;
 /// <see href="https://github.com/UB-Mannheim/tesseract/wiki">Download Tesseract</see>
 /// </remarks>
 public class OcrTesseract : IOcrEngine {
-	/// <param name="tesseractPath">Full path of Tesseract folder. If null, uses path written in the registry by the installer.</param>
+	/// <param name="tesseractPath">Full path of Tesseract folder. If <c>null</c>, uses path written in the registry by the installer.</param>
 	/// <exception cref="FileNotFoundException"></exception>
 	public OcrTesseract(string tesseractPath = null) {
 		_tesseractPath = tesseractPath ?? Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Tesseract-OCR", "Path", null) as string;
@@ -25,7 +25,7 @@ public class OcrTesseract : IOcrEngine {
 	readonly string _tesseractPath, _tesseractExe;
 
 	/// <summary>
-	/// One or more of installed languages, like "deu" or "eng+deu". If null (default), uses "eng".
+	/// One or more of installed languages, like "deu" or "eng+deu". If <c>null</c> (default), uses "eng".
 	/// </summary>
 	public string Language { get; set; }
 

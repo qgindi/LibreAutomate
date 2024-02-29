@@ -15,7 +15,7 @@ namespace Au.More
 		/// <summary>
 		/// Gets info of a menu item from point.
 		/// </summary>
-		/// <returns>null if failed, eg the point is not in the menu or the window is hung.</returns>
+		/// <returns><c>null</c> if failed, eg the point is not in the menu or the window is hung.</returns>
 		/// <param name="pScreen">Point in screen coordinates.</param>
 		/// <param name="w">Popup menu window, class name "#32768".</param>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
@@ -29,7 +29,7 @@ namespace Au.More
 		/// <summary>
 		/// Gets info of a menu item from mouse.
 		/// </summary>
-		/// <returns>null if failed, eg the point is not in a menu or the window is hung.</returns>
+		/// <returns><c>null</c> if failed, eg the point is not in a menu or the window is hung.</returns>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
 		public static MenuItemInfo FromXY(int msTimeout = 5000) {
 			var p = mouse.xy;
@@ -54,7 +54,7 @@ namespace Au.More
 		public wnd OwnerWindow => _OwnerSystem().ow;
 
 		/// <summary>
-		/// true if it is a system menu, eg when right-clicked the title bar of a window.
+		/// <c>true</c> if it is a system menu, eg when right-clicked the title bar of a window.
 		/// </summary>
 		public bool IsSystem => _OwnerSystem().sys;
 
@@ -69,7 +69,7 @@ namespace Au.More
 		/// <summary>
 		/// Gets menu item text.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="removeHotkey">If contains <c>'\t'</c> character, get substring before it.</param>
 		/// <param name="removeAmp">Call <see cref="StringUtil.RemoveUnderlineChar"/>.</param>
 		public string GetText(bool removeHotkey, bool removeAmp) => GetText(_hm, _id, false, removeHotkey, removeAmp);
@@ -77,7 +77,7 @@ namespace Au.More
 		/// <summary>
 		/// Gets menu item text.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="menuHandle"></param>
 		/// <param name="id"></param>
 		/// <param name="byIndex">id is 0-based index. For example you can use it to get text of a submenu-item, because such items usually don't have id.</param>

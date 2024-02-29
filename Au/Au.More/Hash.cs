@@ -131,7 +131,7 @@ public static unsafe class Hash {
 	/// <summary>
 	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
 	/// </summary>
-	/// <param name="s">The string to hash. Can be null.</param>
+	/// <param name="s">String. Can be <c>null</c>.</param>
 	public static int Fast(RStr s) {
 		fixed (char* p = s) return Fast(p, s.Length);
 	}
@@ -151,13 +151,13 @@ public static unsafe class Hash {
 		[FieldOffset(104)] long _state; //1 inited/added, 2 finalled
 		
 		/// <summary>
-		/// true if no data was added.
+		/// <c>true</c> if no data was added.
 		/// </summary>
 		public bool IsEmpty => _state == 0;
 		
 		/// <summary>Adds data.</summary>
 		/// <exception cref="ArgumentOutOfRangeException"><i>size</i> &lt; 0.</exception>
-		/// <exception cref="ArgumentNullException"><i>data</i> is null and <i>size</i> &gt; 0.</exception>
+		/// <exception cref="ArgumentNullException"><i>data</i> is <c>null</c> and <i>size</i> &gt; 0.</exception>
 		public void Add(void* data, int size) {
 			if (size < 0) throw new ArgumentOutOfRangeException();
 			if (size > 0) Not_.Null(data); //allow null if size 0. Eg 'fixed' gets null pointer if the span or array is empty.
@@ -176,7 +176,7 @@ public static unsafe class Hash {
 		}
 		
 		/// <summary>Adds string converted to UTF8.</summary>
-		/// <exception cref="ArgumentNullException"><i>data</i> is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>data</i> is <c>null</c>.</exception>
 		public void Add(string data) => Add(Encoding.UTF8.GetBytes(data));
 		
 		//CONSIDER: alloc on stack to avoid garbage. This func works, but not faster.
@@ -253,7 +253,7 @@ public static unsafe class Hash {
 		/// <summary>
 		/// Creates <b>MD5Result</b> from hex string returned by <see cref="ToString"/>.
 		/// </summary>
-		/// <returns>false if <i>encoded</i> is invalid.</returns>
+		/// <returns><c>false</c> if <i>encoded</i> is invalid.</returns>
 		public static bool FromString(RStr encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);
 	}
 	

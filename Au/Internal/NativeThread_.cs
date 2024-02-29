@@ -60,7 +60,7 @@ unsafe class NativeThread_ {
 
 	/// <summary>
 	/// The thread procedure must call this when finished thread initialization and going to run an alertable message loop.
-	/// If constructor was called with <i>waitInited</i> true, it will return (stop waiting).
+	/// If constructor was called with <i>waitInited</i> <c>true</c>, it will return (stop waiting).
 	/// If actions were queued, executes them now.
 	/// Example: <c>NativeThread2_.OfThisThread.ThreadInited();</c>
 	/// </summary>

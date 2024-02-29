@@ -22,7 +22,7 @@ public class OcrGoogleCloud : IOcrEngine {
 	
 	/// <summary>
 	/// Feature type, like <c>"TEXT_DETECTION"</c>. Or JSON of <b>features</b> array content, like <c>"""{ "type": "TEXT_DETECTION", "model": "builtin/latest" }"""</c>.
-	/// If null, uses <c>"DOCUMENT_TEXT_DETECTION"</c>.
+	/// If <c>null</c>, uses <c>"DOCUMENT_TEXT_DETECTION"</c>.
 	/// </summary>
 	public string Features { get; set; }
 	

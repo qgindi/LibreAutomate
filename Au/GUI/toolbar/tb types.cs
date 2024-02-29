@@ -302,13 +302,13 @@ public struct TBScaling {
 
 	/// <summary>
 	/// Scale toolbar size and related properties.
-	/// If default (null), scales size, except of empty toolbars created by <see cref="toolbar.AutoHideScreenEdge"/>.
+	/// If default (<c>null</c>), scales size, except of empty toolbars created by <see cref="toolbar.AutoHideScreenEdge"/>.
 	/// </summary>
 	public bool? size;
 
 	/// <summary>
 	/// Scale toolbar offsets. See <see cref="toolbar.Offsets"/>.
-	/// If default (null), scales offsets, except when anchor is screen (not window etc).
+	/// If default (<c>null</c>), scales offsets, except when anchor is screen (not window etc).
 	/// </summary>
 	public bool? offsets;
 }
@@ -333,30 +333,30 @@ public record class TBMetrics(int ButtonPaddingX = 0, int ButtonPaddingY = 0);
 /// </remarks>
 public interface ITBOwnerObject {
 	/// <summary>
-	/// Returns false to close the toolbar.
+	/// Returns <c>false</c> to close the toolbar.
 	/// </summary>
 	/// <remarks>
 	/// Not called if the owner window is invisible or cloaked or minimized.
-	/// The default implementation returns true.
+	/// The default implementation returns <c>true</c>.
 	/// </remarks>
 	bool IsAlive => true;
 
 	/// <summary>
-	/// Returns false to hide the toolbar temporarily.
+	/// Returns <c>false</c> to hide the toolbar temporarily.
 	/// </summary>
 	/// <remarks>
 	/// Not called if the owner window is invisible or cloaked or minimized.
-	/// The default implementation returns true.
+	/// The default implementation returns <c>true</c>.
 	/// </remarks>
 	bool IsVisible => true;
 
 	/// <summary>
 	/// Gets object rectangle.
 	/// </summary>
-	/// <returns>false if failed.</returns>
+	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="r">Rectangle in screen coordinates.</param>
 	/// <remarks>
-	/// Not called if the owner window is invisible or cloaked or minimized or if <see cref="IsVisible"/> returned false.
+	/// Not called if the owner window is invisible or cloaked or minimized or if <see cref="IsVisible"/> returned <c>false</c>.
 	/// </remarks>
 	bool GetRect(out RECT r);
 }

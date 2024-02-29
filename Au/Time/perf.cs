@@ -146,7 +146,7 @@ namespace Au {
 			/// Calls <see cref="NW"/>, which calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
 			/// <remarks>
-			/// Don't need to dispose variables of this type. This function just allows to use the 'using' pattern instead of <b>NW</b>. See example.
+			/// Don't need to dispose variables of this type. This function just allows to use <c>using</c> instead of <b>NW</b>. See example.
 			/// 
 			/// If <see cref="Incremental"/>, calls just <see cref="Write"/>.
 			/// </remarks>
@@ -263,7 +263,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
+		/// If <c>true</c>, times of each new First/Next/Next... measurement are added to previous measurement times.
 		/// Finally you can call <see cref="write"/> or <see cref="toString"/> to get the sums.
 		/// Usually used to measure code in loops. See example.
 		/// </summary>

@@ -28,7 +28,7 @@ namespace Au.Types {
 		/// <summary>Gets error message.</summary>
 		public override string Message => FormattedMessage ?? FormatMessage();
 
-		/// <summary>String created by <b>FormatMessage</b>, which should be called by the <b>Message</b> override if null. Initially null.</summary>
+		/// <summary>String created by <b>FormatMessage</b>, which should be called by the <b>Message</b> override if <c>null</c>. Initially <c>null</c>.</summary>
 		protected string FormattedMessage;
 
 		/// <summary>
@@ -39,9 +39,9 @@ namespace Au.Types {
 		/// If it starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>.
 		/// If it ends with <c>"*"</c>, replaces the <c>"*"</c> with <i>commonPostfix</i> if it is not empty.
 		/// If then the message does not end with <c>"."</c>, appends <c>"."</c>.
-		/// If <i>appendMessage</i> is null, uses <c>lastError.messageFor(NativeErrorCode)</c> if <b>NativeErrorCode</b> not 0.
+		/// If <i>appendMessage</i> is <c>null</c>, uses <c>lastError.messageFor(NativeErrorCode)</c> if <b>NativeErrorCode</b> not 0.
 		/// If then <i>appendMessage</i> is not empty, appends <c>" " + appendMessage</c>.
-		/// Also appends <b>InnerException.Message</b> in new tab-indented line if <b>InnerException</b> is not null.
+		/// Also appends <b>InnerException.Message</b> in new tab-indented line if <b>InnerException</b> is not <c>null</c>.
 		/// </remarks>
 		protected string FormatMessage(string appendMessage = null, string commonPostfix = null) {
 			var m = base.Message;
@@ -175,7 +175,7 @@ namespace Au.Types {
 		const string c_message = "Other input desktop is active.";
 
 		/// <summary>
-		/// Calls <see cref="miscInfo.isInputDesktop"/>. If it returns false, throws <b>InputDesktopException</b>.
+		/// Calls <see cref="miscInfo.isInputDesktop"/>. If it returns <c>false</c>, throws <b>InputDesktopException</b>.
 		/// </summary>
 		/// <param name="message">Message text before the standard message text of this exception.</param>
 		/// <exception cref="InputDesktopException"></exception>

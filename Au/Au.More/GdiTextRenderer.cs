@@ -83,7 +83,7 @@ public unsafe class GdiTextRenderer : IDisposable {
 	/// Draws text at the current drawing position of the DC, and updates it.
 	/// </summary>
 	/// <param name="color">Text color 0xBBGGRR.</param>
-	/// <param name="backColor">Background color 0xBBGGRR. Transparent if null.</param>
+	/// <param name="backColor">Background color 0xBBGGRR. Transparent if <c>null</c>.</param>
 	public void DrawText(string s, int color = 0, Range? range = null, int? backColor = null) {
 		var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return;
 		if (_oldAlign == 0xffffffff) _oldAlign = Api.SetTextAlign(_dc, 1); //TA_UPDATECP
@@ -94,7 +94,7 @@ public unsafe class GdiTextRenderer : IDisposable {
 	/// Draws text at specified position. Does not use/update the current drawing position of the DC.
 	/// </summary>
 	/// <param name="color">Text color 0xBBGGRR.</param>
-	/// <param name="backColor">Background color 0xBBGGRR. Transparent if null.</param>
+	/// <param name="backColor">Background color 0xBBGGRR. Transparent if <c>null</c>.</param>
 	public void DrawText(string s, POINT p, int color = 0, Range? range = null, int? backColor = null) {
 		var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return;
 		if (_oldAlign != 0xffffffff) { Api.SetTextAlign(_dc, _oldAlign); _oldAlign = 0xffffffff; }
@@ -105,7 +105,7 @@ public unsafe class GdiTextRenderer : IDisposable {
 	/// Draws text clipped in specified rectangle. Does not use/update the current drawing position of the DC.
 	/// </summary>
 	/// <param name="color">Text color 0xBBGGRR.</param>
-	/// <param name="backColor">Background color 0xBBGGRR. Transparent if null.</param>
+	/// <param name="backColor">Background color 0xBBGGRR. Transparent if <c>null</c>.</param>
 	public void DrawText(string s, in RECT r, int color = 0, Range? range = null, int? backColor = null) {
 		var (from, len) = range.GetOffsetAndLength(s.Lenn()); if (len == 0) return;
 		if (_oldAlign != 0xffffffff) { Api.SetTextAlign(_dc, _oldAlign); _oldAlign = 0xffffffff; }

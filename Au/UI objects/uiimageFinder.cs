@@ -69,7 +69,7 @@ public unsafe class uiimageFinder {
 	/// <summary>
 	/// Stores image/color data and search settings in this object. Loads images if need. See <see cref="uiimage.find"/>.
 	/// </summary>
-	/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
+	/// <exception cref="ArgumentException">An argument is/contains a <c>null</c>/invalid value.</exception>
 	/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmap"/>.</exception>
 	/// <inheritdoc cref="uiimage.find(IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})" path="/param"/>
@@ -103,7 +103,7 @@ public unsafe class uiimageFinder {
 	/// Finds the first image displayed in the specified window or other area.
 	/// See <see cref="uiimage.find"/>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>, else null.</returns>
+	/// <returns>If found, returns <see cref="Result"/>, else <c>null</c>.</returns>
 	/// <exception cref="AuWndException">Invalid window handle.</exception>
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
@@ -116,7 +116,7 @@ public unsafe class uiimageFinder {
 	/// <summary>
 	/// Finds the first image displayed in the specified window or other area. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>wait</i> negative).</returns>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>null</c> (if <i>wait</i> negative).</returns>
 	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw <b>NotFoundException</b>.</param>
 	/// <exception cref="AuWndException">Invalid window handle.</exception>
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
@@ -128,14 +128,14 @@ public unsafe class uiimageFinder {
 	/// <inheritdoc cref="uiimage.find" path="/param"/>
 	public uiimage Find(IFArea area, Seconds wait) => Exists(area, wait) ? Result : null;
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else false.</returns>
 	/// <inheritdoc cref="Find(IFArea)"/>
 	public bool Exists(IFArea area) {
 		_Before(area, Action_.Find);
 		return _Find();
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(IFArea, Seconds)"/>
 	public bool Exists(IFArea area, Seconds wait) {
 		bool r = wait.Exists_() ? Exists(area) : Wait_(Action_.Wait, wait, area);

@@ -26,7 +26,7 @@ namespace Au.Types {
 		public wnd Hwnd => _w;
 		
 		/// <summary>
-		/// Returns true if the OSD window is created.
+		/// Returns <c>true</c> if the OSD window is created.
 		/// </summary>
 		protected bool IsHandleCreated => !_w.Is0;
 		
@@ -109,7 +109,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Gets or sets whether the OSD window is visible.
-		/// The 'set' function calls <see cref="Show"/> (it creates OSD window if need) or <see cref="Hide"/> (it does not destroy the OSD window).
+		/// The <c>set</c> function calls <see cref="Show"/> (it creates OSD window if need) or <see cref="Hide"/> (it does not destroy the OSD window).
 		/// </summary>
 		public bool Visible {
 			get => _w.IsVisible;
@@ -206,7 +206,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// If true, the OSD window will have shadow.
+		/// If <c>true</c>, the OSD window will have shadow.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -214,7 +214,7 @@ namespace Au.Types {
 		protected bool Shadow { get; set; }
 		
 		/// <summary>
-		/// If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
+		/// If <c>true</c>, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -222,7 +222,7 @@ namespace Au.Types {
 		protected bool ClickToClose { get; set; }
 		
 		/// <summary>
-		/// OSD window name. Optional, default null.
+		/// OSD window name. Optional, default <c>null</c>.
 		/// </summary>
 		/// <remarks>
 		/// This text is invisible. Can be used to find OSD window. The class name is "Au.OSD"; if with shadow - "Au.OSD2".
@@ -233,7 +233,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Closes all OSD windows of this process.
 		/// </summary>
-		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [wildcard expression](xref:wildcard_expression).</param>
+		/// <param name="name">If not <c>null</c>, closes only OSD windows whose <see cref="Name"/> matches this [wildcard expression](xref:wildcard_expression).</param>
 		public static void closeAll([ParamString(PSFormat.Wildex)] string name = null) {
 			foreach (var w in wnd.findAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(Api.GetCurrentProcessId()))) w.Post(Api.WM_CLOSE);
 		}
@@ -427,7 +427,7 @@ namespace Au {
 		/// <param name="indexLabels">Draw labels. The label text is the rectangle index in <i>rects</i>.</param>
 		/// <param name="labelOptions">Label options. If char - label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
 		/// <remarks>
-		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is null). <b>Opacity</b> should be 0 (default).
+		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is <c>null</c>). <b>Opacity</b> should be 0 (default).
 		/// </remarks>
 		public void SetRects(IEnumerable<RECT> rects, bool indexLabels = false, ORLabelOptions labelOptions = null) {
 			SetRects(indexLabels ? rects?.Select((r, i) => (r, i.ToS())) : rects?.Select(r => (r, (string)null)), labelOptions);
@@ -474,7 +474,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Coordinates.
-		/// Default: null (screen center).
+		/// Default: <c>null</c> (screen center).
 		/// </summary>
 		/// <remarks>
 		/// Not used if <see cref="Rect"/> is set.
@@ -518,7 +518,7 @@ namespace Au {
 		
 		/// <summary>
 		/// When changing text, resize/move the OSD window if need.
-		/// Default: false.
+		/// Default: <c>false</c>.
 		/// </summary>
 		public bool ResizeWhenContentChanged { get; set; }
 		
@@ -526,7 +526,7 @@ namespace Au {
 		/// Text in OSD window.
 		/// </summary>
 		/// <remarks>
-		/// This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="ResizeWhenContentChanged"/> is true.
+		/// This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="ResizeWhenContentChanged"/> is <c>true</c>.
 		/// </remarks>
 		public string Text {
 			get => _text;
@@ -632,7 +632,7 @@ namespace Au {
 		SIZE _iconSize;
 		
 		/// <summary>
-		/// If true, the OSD window will have shadow.
+		/// If <c>true</c>, the OSD window will have shadow.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -641,7 +641,7 @@ namespace Au {
 		public new bool Shadow { get => base.Shadow; set => base.Shadow = value; }
 		
 		/// <summary>
-		/// If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
+		/// If <c>true</c>, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -872,7 +872,7 @@ namespace Au {
 		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
 		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
-		/// Also sets these properties: <see cref="ClickToClose"/>=true, <see cref="Shadow"/>=true.
+		/// Also sets these properties: <see cref="ClickToClose"/>=<c>true</c>, <see cref="Shadow"/>=<c>true</c>.
 		/// </remarks>
 		public static osdText showText(string text,
 			int secondsTimeout = 0, PopupXY xy = null,
@@ -929,7 +929,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="image">Sets <see cref="BackgroundImage"/>.</param>
 		/// <remarks>
-		/// Also sets these properties: <see cref="IsOfImageSize"/>=true, <see cref="OsdWindow.Opacity"/>=0, <see cref="ClickToClose"/>=true.
+		/// Also sets these properties: <see cref="IsOfImageSize"/>=<c>true</c>, <see cref="OsdWindow.Opacity"/>=0, <see cref="ClickToClose"/>=<c>true</c>.
 		/// </remarks>
 		/// <inheritdoc cref="showText(string, int, PopupXY, object, ColorInt?, ColorInt?, FontNSS, string, OsdMode, bool)"/>
 		public static osdText showImage(Image image,
@@ -1001,7 +1001,7 @@ namespace Au.Types {
 	/// If this thread has windows, any value can be used, but usually <b>Auto</b> (default) or <b>ThisThread</b> is the best.
 	/// </remarks>
 	public enum OsdMode {
-		/// <summary>Depends on <see cref="process.thisThreadHasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
+		/// <summary>Depends on <see cref="process.thisThreadHasMessageLoop"/>. If it is <c>true</c>, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
 		Auto,
 		
 		/// <summary>
@@ -1010,10 +1010,10 @@ namespace Au.Types {
 		/// </summary>
 		ThisThread,
 		
-		/// <summary>Show the OSD window in new thread and don't wait. Set <see cref="Thread.IsBackground"/>=true, so that the OSD is closed when other threads of this app end.</summary>
+		/// <summary>Show the OSD window in new thread and don't wait. Set <see cref="Thread.IsBackground"/>=<c>true</c>, so that the OSD is closed when other threads of this app end.</summary>
 		WeakThread,
 		
-		/// <summary>Show the OSD window in new thread and don't wait. Set <see cref="Thread.IsBackground"/>=false, so that the OSD is not closed when other threads of this app end.</summary>
+		/// <summary>Show the OSD window in new thread and don't wait. Set <see cref="Thread.IsBackground"/>=<c>false</c>, so that the OSD is not closed when other threads of this app end.</summary>
 		StrongThread,
 		
 		/// <summary>

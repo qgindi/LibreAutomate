@@ -8,7 +8,7 @@ uid: program_settings
 
 Most program settings are saved in files in folder `Documents\LibreAutomate\.settings`. They are user-specific.
 
-Workspace settings are saved in the workspace folder. Default workspace: `Documents\LibreAutomate\Main`. A workspace is a collection of scripts and other files; you manage them in the Files panel.
+Workspace settings are saved in the workspace folder. Default workspace: `Documents\LibreAutomate\Main`. A workspace is a collection of scripts and other files; you manage them in the **Files** panel.
 
 If you want to copy settings and workspaces to another computer, copy folder `Documents\LibreAutomate`.
 
@@ -25,7 +25,7 @@ Don't show the window when the program started. To show the window, you can clic
 If unchecked, shows the window at startup. The program exits when you close the window.
 
 #### Check for updates
-Every day connect to libreautomate.com to get program version info. If a new version available, print this info in the output panel.
+Every day connect to `libreautomate.com` to get program version info. If a new version available, print this info in the output panel.
 
 ### Workspace
 These settings are workspace-specific. Security: the scripts will not run on other computers, unless the user settings file copied there too.
@@ -44,13 +44,13 @@ Another script with delay.cs, 300ms
 ```
 
 #### Auto backup (Git commit)
-Silently run [Git](xref:git) commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup. It creates a local backup of workspace files (scripts etc). To upload etc, you can use menu File -> Git.
+Silently run [Git](xref:git) commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup. It creates a local backup of workspace files (scripts etc). To upload etc, you can use menu **File > Git**.
 
 ### Code
 Code formatting and intellisense options.
 
-#### Completion list -> Append ()
-When you select a function in the completion list, whether/when to append `()`. Can append always, never or only when selected with the Spacebar key (but not Tab, doubleclick, etc).
+#### Completion list > Append ()
+When you select a function in the completion list, whether/when to append `()`. Can append always, never or only when selected with the `Spacebar` key (but not `Tab`, doubleclick, etc).
 
 ### Templates
 Initial code of new scripts and class files. Can be empty.
@@ -65,4 +65,4 @@ Max time in milliseconds given for hook procedures. If this time exceeded, the h
 The Windows "lock active window" feature, also known as "foreground window timeout", does not allow apps to activate windows after keyboard/mouse input etc. If scripts sometimes fail to activate windows, try to check this.
 
 #### Underline menu/dialog item access keys
-Always underline keyboard shortcut characters in text of menu items and dialog controls. It makes easier to create scripts that use the keyboard to select menu items or dialog controls. If unchecked, underlines only when used the Alt key.
+Always underline keyboard shortcut characters in text of menu items and dialog controls. It makes easier to create scripts that use the keyboard to select menu items or dialog controls. If unchecked, underlines only when used the `Alt` key.

@@ -14,12 +14,12 @@ public class KeyToTextConverter
 	/// <summary>
 	/// Converts a virtual-key code to text.
 	/// </summary>
-	/// <param name="text">Receives text. Can be 1 character <i>c</i>, or string <i>s</i> with 2 or more characters. Receives default if this function returns false or if the key is a dead key.</param>
+	/// <param name="text">Receives text. Can be 1 character <i>c</i>, or string <i>s</i> with 2 or more characters. Receives default if this function returns <c>false</c> or if the key is a dead key.</param>
 	/// <param name="vk">Virtual-key code.</param>
 	/// <param name="sc">Scan code.</param>
 	/// <param name="mod">Modifier keys (Shift etc). See <see cref="keys.getMod(KMod)"/>.</param>
 	/// <param name="threadId">Thread id of the focused or active window. Need for keyboard layout. If 0, uses this thread.</param>
-	/// <returns>true if it's a text key or dead key.</returns>
+	/// <returns><c>true</c> if it's a text key or dead key.</returns>
 	public unsafe bool Convert(out (char c, string s) text, KKey vk, uint sc, KMod mod, int threadId) {
 		text = default;
 		if (vk == KKey.Packet) {
@@ -78,7 +78,7 @@ public class KeyToTextConverter
 	}
 
 	/// <summary>
-	/// Returns true if the key + modifiers could generate a character, including Enter and Tab but not other control characters.
+	/// Returns <c>true</c> if the key + modifiers could generate a character, including Enter and Tab but not other control characters.
 	/// </summary>
 	internal static bool IsPossiblyChar_(KMod m, KKey k) {
 		if (m.Has(KMod.Win) || (m & ~KMod.Shift) == KMod.Ctrl || m == (KMod.Alt | KMod.Shift)) return false;

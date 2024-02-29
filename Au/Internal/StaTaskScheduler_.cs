@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
 //
@@ -62,7 +62,7 @@ namespace Au.More
 		/// <summary>Determines whether a Task may be inlined.</summary>
 		/// <param name="task">The task to be executed.</param>
 		/// <param name="taskWasPreviouslyQueued">Whether the task was previously queued.</param>
-		/// <returns>true if the task was successfully inlined; otherwise, false.</returns>
+		/// <returns><c>true</c> if the task was successfully inlined; otherwise, <c>false</c>.</returns>
 		protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued) =>
 			// Try to inline if the current thread is STA
 			//Thread.CurrentThread.GetApartmentState() == ApartmentState.STA &&

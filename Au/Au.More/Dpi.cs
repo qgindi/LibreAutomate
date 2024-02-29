@@ -31,8 +31,8 @@ namespace Au.More {
 		/// <returns>If failed, returns the system DPI (<see cref="System"/>).</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <param name="supportWin81">
-		/// If true, works on Windows 8.1 and later; however on Windows 8.1 slower and less reliable.
-		/// If false (default), works on Windows 10 1607 and later.
+		/// If <c>true</c>, works on Windows 8.1 and later; however on Windows 8.1 slower and less reliable.
+		/// If <c>false</c> (default), works on Windows 10 1607 and later.
 		/// </param>
 		/// <remarks>
 		/// The result depends on the DPI awareness of the window:
@@ -42,7 +42,7 @@ namespace Au.More {
 		/// 
 		/// The result also depends on the Windows version:
 		/// - Works best on Windows 10 1607 and later. Uses API <msdn>GetDpiForWindow</msdn>.
-		/// - On Windows 8.1 works if <i>supportWin81</i> true. If false (default), returns <see cref="System"/>.
+		/// - On Windows 8.1 works if <i>supportWin81</i> <c>true</c>. If <c>false</c> (default), returns <see cref="System"/>.
 		/// - On Windows 7 and 8.0 always returns <see cref="System"/>, because there are no Windows API. Most apps are system-DPI-aware and the result is correct; for unaware apps the result is incorrect. These Windows versions don't support per-monitor DPI.
 		/// </remarks>
 		public static int OfWindow(wnd w, bool supportWin81 = false) {
@@ -78,7 +78,7 @@ namespace Au.More {
 		/// </summary>
 		/// <returns><see cref="System"/> if fails or if not supported on this Windows version.</returns>
 		/// <param name="hMonitor">Native screen handle (<b>HMONITOR</b>).</param>
-		/// <param name="supportWin81">Support Windows 8.1 and later. If false (default), supports Windows 10 1607 and later.</param>
+		/// <param name="supportWin81">Support Windows 8.1 and later. If <c>false</c> (default), supports Windows 10 1607 and later.</param>
 		/// <remarks>
 		/// Uses API <msdn>GetDpiForMonitor</msdn>.
 		/// </remarks>
@@ -211,7 +211,7 @@ namespace Au.More {
 		/// <summary>
 		/// Gets DPI awareness of a window.
 		/// </summary>
-		/// <returns>Returns <b>Awareness.Invalid</b> if failed.</returns>
+		/// <returns><b>Awareness.Invalid</b> if failed.</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <remarks>
 		/// Works best on Windows 10 1607 and later; uses API <msdn>GetWindowDpiAwarenessContext</msdn>.
@@ -234,7 +234,7 @@ namespace Au.More {
 		/// <summary>
 		/// Detects whether the window is DPI-scaled/virtualized.
 		/// </summary>
-		/// <returns>Returns false if not DPI-scaled/virtualized or if fails to detect or if invalid window handle.</returns>
+		/// <returns><c>false</c> if not DPI-scaled/virtualized or if fails to detect or if invalid window handle.</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <remarks>
 		/// Such windows are a little blurry (entire client area).
@@ -260,13 +260,13 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// On Win10+ returns <see cref="IsWindowVirtualized"/>. Else false.
+		/// On Win10+ returns <see cref="IsWindowVirtualized"/>. Else <c>false</c>.
 		/// </summary>
 		internal static bool IsWindowVirtualizedWin10_(wnd w) => osVersion.minWin10_1607 && IsWindowVirtualized(w);
 
 		/// <summary>
 		/// If possible, gets whether the window is DPI-scaled/virtualized, and gets physical and logical rects if scaled.
-		/// Returns false if !osVersion.minWin10_1607 or if cannot get that info.
+		/// Returns <c>false</c> if !osVersion.minWin10_1607 or if cannot get that info.
 		/// Gets that info in a fast and reliable way.
 		/// </summary>
 		internal static bool GetScalingInfo_(wnd w, out bool scaled, out RECT rPhysical, out RECT rLogical) {
@@ -399,7 +399,7 @@ namespace Au.More {
 			internal nint Previous_ => _dac;
 
 			/// <summary>
-			/// Returns true if thread DPI awareness contexts are available on this Windows version (Windows 10 1607 and later).
+			/// Returns <c>true</c> if thread DPI awareness contexts are available on this Windows version (Windows 10 1607 and later).
 			/// </summary>
 			public static bool Available => osVersion.minWin10_1607;
 

@@ -91,7 +91,7 @@ public class ocr {
 	/// Gets or sets the default OCR engine.
 	/// </summary>
 	/// <remarks>
-	/// If not set, the 'get' function returns a static <see cref="OcrWin10"/> object. To use another OCR engine, create and assign an object of type <see cref="OcrWin10"/>, <see cref="OcrTesseract"/>, <see cref="OcrGoogleCloud"/>, <see cref="OcrMicrosoftAzure"/> or other class that implements <see cref="IOcrEngine"/>.
+	/// If not set, the <c>get</c> function returns a static <see cref="OcrWin10"/> object. To use another OCR engine, create and assign an object of type <see cref="OcrWin10"/>, <see cref="OcrTesseract"/>, <see cref="OcrGoogleCloud"/>, <see cref="OcrMicrosoftAzure"/> or other class that implements <see cref="IOcrEngine"/>.
 	/// </remarks>
 	public static IOcrEngine engine {
 		get => s_engine ??= new OcrWin10();
@@ -104,7 +104,7 @@ public class ocr {
 	/// </summary>
 	/// <returns>
 	/// Returns an <see cref="ocr"/> object that contains recognized words etc.
-	/// Returns null if the area is empty.
+	/// Returns <c>null</c> if the area is empty.
 	/// </returns>
 	/// <inheritdoc cref="find(IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	/// <remarks>
@@ -128,7 +128,7 @@ public class ocr {
 	/// </summary>
 	/// <returns>
 	/// Returns an <see cref="ocr"/> object that contains the word index and can click it etc.
-	/// Returns null if not found.
+	/// Returns <c>null</c> if not found.
 	/// </returns>
 	/// <param name="area">
 	/// On-screen area or image:
@@ -154,7 +154,7 @@ public class ocr {
 	/// <param name="engine">OCR engine. Default: <see cref="engine"/> (<see cref="OcrWin10"/> if not specified).</param>
 	/// <param name="skip">Skip this count of found text instances.</param>
 	/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
-	/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
+	/// <exception cref="ArgumentException">An argument is/contains a <c>null</c>/invalid value.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
 	/// <remarks>
 	/// The function captures image from screen or window (unless area is <b>Bitmap</b>) and passes it to the OCR engine (calls <see cref="IOcrEngine.Recognize"/>). Then finds the specified text in results. If found, creates and returns an <b>ocr</b> object that contains results.
@@ -169,7 +169,7 @@ public class ocr {
 	/// </summary>
 	/// <returns>
 	/// Returns an <see cref="ocr"/> object that contains the word index and can click it etc.
-	/// If not found, throws exception or returns null (if <i>wait</i> negative).
+	/// If not found, throws exception or returns <c>null</c> (if <i>wait</i> negative).
 	/// </returns>
 	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
@@ -181,7 +181,7 @@ public class ocr {
 	/// <summary>
 	/// Performs OCR (text recognition) and finds text in results. Waits until found.
 	/// </summary>
-	/// <returns>Returns an <see cref="ocr"/> object that contains the word index and can click it etc. On timeout returns null if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns an <see cref="ocr"/> object that contains the word index and can click it etc. On timeout returns <c>null</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
@@ -192,7 +192,7 @@ public class ocr {
 	/// <summary>
 	/// Performs OCR (text recognition) and waits until the specified text does not exist in results.
 	/// </summary>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <inheritdoc cref="wait(Seconds, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	public static bool waitNot(Seconds timeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
@@ -201,7 +201,7 @@ public class ocr {
 	/// <summary>
 	/// Gets the rectangle of the found word.
 	/// </summary>
-	/// <param name="inScreen">Convert to screen coordinates. If false, it's in <i>area</i> cooordinates (window client area, etc) without rectangle offset.</param>
+	/// <param name="inScreen">Convert to screen coordinates. If <c>false</c>, it's in <i>area</i> cooordinates (window client area, etc) without rectangle offset.</param>
 	/// <param name="word">Word index offset from <see cref="FoundWordIndex"/>.</param>
 	public RECT GetRect(bool inScreen, int word = 0) {
 		int i = FoundWordIndex + word; if ((uint)i >= Words.Length) throw new ArgumentOutOfRangeException("word");

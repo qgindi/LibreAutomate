@@ -7,11 +7,11 @@ namespace Au {
 	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
 	/// <remarks>
-	/// Most functions return <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example:
+	/// Most functions return <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator <b>+</b> appends a filename or relative path string, with <c>\</c> separator if need. Example:
 	/// 
 	/// <code><![CDATA[string s = folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt]]></code>
 	/// 
-	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw <b>ArgumentException</b>.
+	/// If a function cannot get folder path, the return value contains <c>null</c> string. Then the <b>+</b> operator would throw <b>ArgumentException</b>.
 	///
 	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registered, may be still not created.
@@ -260,7 +260,7 @@ namespace Au {
 		/// Don't auto-create folders when accessing <see cref="ThisAppDocuments"/>, <see cref="ThisAppTemp"/>, <see cref="ThisAppDataLocal"/> or <see cref="ThisAppDataRoaming"/> in this thread.
 		/// </summary>
 		/// <remarks>
-		/// Normally this is used temporarily, then restored (set = false).
+		/// Normally this is used temporarily, then restored (set = <c>false</c>).
 		/// </remarks>
 		public static bool noAutoCreate {
 			get => _noAutoCreate;
@@ -305,7 +305,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets path of folder "temporary files of this application".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
 		/// - miniProgram and exeProgram - <c>folders.Temp + @"LibreAutomate\_script"</c>. Or <c>folders.Temp + "Au"</c>, if exists (for backward compatibility).
@@ -313,8 +313,8 @@ namespace Au {
 		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\temp\_script"</c>. Note: exeProgram launched not from editor isn't portable.
 		/// - Portable editorExtension - <c>folders.ThisApp + @"data\temp"</c>. Cannot be changed.
 		/// 
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
+		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
 		/// </remarks>
 		public static FolderPath ThisAppTemp {
 			get => new(__thisAppTemp ?? _SetAuto(ref __thisAppTemp, _DefThisApp(Temp, "temp"), create: true));
@@ -325,7 +325,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets path of folder "user document files of this application".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/>) and portable mode (<see cref="ScriptEditor.IsPortable"/>):
 		/// - miniProgram and exeProgram - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
@@ -333,8 +333,8 @@ namespace Au {
 		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: exeProgram launched not from editor isn't portable.
 		/// - Portable editorExtension - <c>folders.ThisApp + @"data\doc"</c>. Cannot be changed.
 		/// 
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
+		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
 		/// </remarks>
 		public static FolderPath ThisAppDocuments {
 			get => new(__thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, _DefThisApp(Documents, "doc", warning: true), create: true));
@@ -345,7 +345,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets path of folder "local (non-roaming) private files of this application of this user account".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
 		/// - miniProgram and exeProgram - <c>folders.LocalAppData + @"LibreAutomate\_script"</c>. Or <c>folders.LocalAppData + "Au"</c>, if exists (for backward compatibility).
@@ -353,8 +353,8 @@ namespace Au {
 		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appLocal\_script"</c>. Note: exeProgram launched not from editor isn't portable.
 		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appLocal"</c>. Cannot be changed.
 		/// 
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
+		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
 		/// </remarks>
 		public static FolderPath ThisAppDataLocal {
 			get => new(__thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, _DefThisApp(LocalAppData, "appLocal", warning: true), create: true));
@@ -365,7 +365,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets path of folder "roaming private files of this application of this user account".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
 		/// - miniProgram and exeProgram - <c>folders.RoamingAppData + @"LibreAutomate\_script"</c>. Or <c>folders.RoamingAppData + "Au"</c>, if exists (for backward compatibility).
@@ -373,8 +373,8 @@ namespace Au {
 		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appRoaming\_script"</c>. Note: exeProgram launched not from editor isn't portable.
 		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appRoaming"</c>. Cannot be changed.
 		/// 
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process, unless <see cref="noAutoCreate"/> true.
+		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
+		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
 		/// </remarks>
 		public static FolderPath ThisAppDataRoaming {
 			get => new(__thisAppDataRoaming ?? _SetAuto(ref __thisAppDataRoaming, _DefThisApp(RoamingAppData, "appRoaming"), create: true));
@@ -391,7 +391,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets path of folder "common (all users) private files of this application".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
 		/// - miniProgram and exeProgram - <c>folders.ProgramData + @"LibreAutomate\_script"</c>. Or <c>folders.ProgramData + "Au"</c>, if exists (for backward compatibility).
@@ -399,7 +399,7 @@ namespace Au {
 		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appCommon\_script"</c>. Note: exeProgram launched not from editor isn't portable.
 		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appCommon"</c>. Cannot be changed.
 		/// 
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// This function does not auto-create the folder; usually it is created when installing the application; the script editor does not use and does not install it.
 		/// Note: the ProgramData folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
 		/// </remarks>
@@ -412,7 +412,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets path of folder "images of this application".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default is <c>ThisAppBS + "Images"</c>.
 		/// 
@@ -437,13 +437,13 @@ namespace Au {
 
 		/// <summary>
 		/// Gets folder of the script editor.
-		/// Available in the script editor process and in scripts launched from it. Elsewhere null.
+		/// Available in the script editor process and in scripts launched from it. Elsewhere <c>null</c>.
 		/// </summary>
 		public static FolderPath Editor { get; internal set; }
 
 		/// <summary>
 		/// Gets folder of current workspace.
-		/// Available in the script editor process and in scripts launched from it. Elsewhere null.
+		/// Available in the script editor process and in scripts launched from it. Elsewhere <c>null</c>.
 		/// </summary>
 		public static FolderPath Workspace {
 			get => __workspace;
@@ -490,7 +490,7 @@ namespace Au {
 		/// <summary>
 		/// Gets folder path of the main source code file of this program or of a library.
 		/// </summary>
-		/// <param name="asm">An assembly compiled by LibreAutomate. If null, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
 		/// <seealso cref="script.sourcePath(bool, Assembly)"/>
 		public static FolderPath sourceCodeMain(Assembly asm = null) => new(pathname.getDirectory(script.sourcePath(false, asm)));
 		#else
@@ -505,7 +505,7 @@ namespace Au {
 		/// <summary>
 		/// Gets folder path of the main source code file of this program or of a library.
 		/// </summary>
-		/// <param name="asm">An assembly compiled by LibreAutomate. If null, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
 		/// <seealso cref="script.sourcePath(Assembly, bool, bool)"/>
 		public static FolderPath sourceCodeMain(Assembly asm = null) => new(script.sourcePath(asm, folder: true));
 		#endif
@@ -567,7 +567,7 @@ namespace Au {
 		/// <summary>
 		/// Gets CD/DVD drive path, like <c>@"D:\"</c>.
 		/// </summary>
-		/// <returns>null if unavailable.</returns>
+		/// <returns><c>null</c> if unavailable.</returns>
 		public static FolderPath CdDvdDrive {
 			get {
 				foreach (var di in DriveInfo.GetDrives()) {
@@ -589,7 +589,7 @@ namespace Au {
 		/// <summary>
 		/// Gets removable/external/USB drive path, like <c>@"F:\"</c>.
 		/// </summary>
-		/// <returns>null if unavailable.</returns>
+		/// <returns><c>null</c> if unavailable.</returns>
 		/// <param name="driveIndex">0-based removable drive index.</param>
 		/// <remarks>
 		/// Calls <see cref="DriveInfo.GetDrives"/> and counts drives of type <see cref="DriveType.Removable"/>.
@@ -604,7 +604,7 @@ namespace Au {
 		/// <summary>
 		/// Gets removable/external/USB drive name (like <c>@"F:\"</c>) by its volume label.
 		/// </summary>
-		/// <returns>null if unavailable.</returns>
+		/// <returns><c>null</c> if unavailable.</returns>
 		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
 		public static FolderPath removableDrive(string volumeLabel) {
 			foreach (DriveInfo di in DriveInfo.GetDrives()) {
@@ -620,7 +620,7 @@ namespace Au {
 		/// <summary>
 		/// Gets the value of an environment variable in current process.
 		/// </summary>
-		/// <returns>null if variable not found.</returns>
+		/// <returns><c>null</c> if variable not found.</returns>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
 		/// <seealso cref="pathname.expand"/>
@@ -816,7 +816,7 @@ namespace Au {
 		/// <summary>
 		/// Gets path of a known folder by its name as string.
 		/// </summary>
-		/// <returns>null if unavailable.</returns>
+		/// <returns><c>null</c> if unavailable.</returns>
 		/// <param name="folderName">
 		/// Can be:
 		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b> or string.
@@ -876,10 +876,10 @@ namespace Au {
 		//CONSIDER: operator / instead of +. Then could do things like 'folders.x / "subfolder" / "file"' and 'f /= "append"'.
 
 		/// <summary>
-		/// If string starts with a known/special folder path, gets folder name + relative path and returns true.
+		/// If string starts with a known/special folder path, gets folder name + relative path and returns <c>true</c>.
 		/// For example if string is <c>"C:\Windows\System32\notepad.exe"</c>, gets <c>"folders.System"</c> and <c>"notepad.exe"</c>.
 		/// </summary>
-		/// <param name="path">Any string. Can be null. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
+		/// <param name="path">Any string. Can be <c>null</c>. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
 		/// <param name="folder">Receives special folder string like <c>"folders.System"</c>.</param>
 		/// <param name="name">Receives filename or relative path in the folder.</param>
 		/// <remarks>
@@ -925,7 +925,7 @@ namespace Au {
 		/// If string starts with a known/special folder path, replaces that part with <c>%folders.FolderName%</c>. Else returns unchanged string.
 		/// For example if string is <c>"C:\Windows\System32\notepad.exe"</c>, returns <c>"%folders.System%\notepad.exe"</c>.
 		/// </summary>
-		/// <param name="path">Any string. Can be null. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
+		/// <param name="path">Any string. Can be <c>null</c>. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
 		public static string unexpandPath(string path) {
 			if (unexpandPath(path, out var s1, out var s2)) path = s2.NE() ? $@"%{s1}%" : $@"%{s1}%\{s2}";
 			return path;
@@ -972,7 +972,7 @@ namespace Au {
 		/// <summary>
 		/// If <i>path</i> starts with one of specified folder paths, replaces that part with the replacements string. Else returns unchanged string.
 		/// </summary>
-		/// <param name="path">Any string. Can be null. Case-insensitive.</param>
+		/// <param name="path">Any string. Can be <c>null</c>. Case-insensitive.</param>
 		/// <param name="list">Folder paths and replacement strings.</param>
 		/// <example>
 		/// <code><![CDATA[
@@ -1001,7 +1001,7 @@ namespace Au {
 namespace Au.Types {
 	/// <summary>
 	/// Most functions of <see cref="folders"/> class return a value of this type.
-	/// Contains folder path (string) and has operator + to append a string with backslash if need. Has implicit conversions from/to string.
+	/// Contains folder path (string) and has operator <b>+</b> to append a string with backslash if need. Has implicit conversions from/to string.
 	/// </summary>
 	public struct FolderPath {
 		readonly string _path;
@@ -1016,18 +1016,18 @@ namespace Au.Types {
 		public override string ToString() => _path;
 
 		/// <summary>
-		/// Returns the path string. For some folders it can be null.
+		/// Returns the path string. For some folders it can be <c>null</c>.
 		/// </summary>
 		public string Path => _path;
 
 		/// <summary>
-		/// Returns the path string. If it is null, throws <b>InvalidOperationException</b>.
+		/// Returns the path string. If it is <c>null</c>, throws <b>InvalidOperationException</b>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"></exception>
 		public string PathOrThrow => _path ?? throw new InvalidOperationException("the special folder path is null");
 
 		/// <summary>
-		/// Returns true if the path is null.
+		/// Returns <c>true</c> if the path is <c>null</c>.
 		/// </summary>
 		public bool IsNull => _path == null;
 

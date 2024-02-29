@@ -98,7 +98,7 @@ namespace Au {
 			/// <exception cref="ArgumentNullException"></exception>
 			/// <exception cref="ArgumentException">Invalid format.</exception>
 			/// <remarks>
-			/// The same handle cannot be added to the clipboard twice. To avoid it, 'set clipboard' functions remove handles from the variable.
+			/// The same handle cannot be added to the clipboard twice. To avoid it, "set clipboard" functions remove handles from the variable.
 			/// </remarks>
 			public Data AddHandle(IntPtr handle, int format)
 			{
@@ -114,9 +114,9 @@ namespace Au {
 		/// <param name="image">Image. Must be <see cref="Bitmap"/>, else exception.</param>
 		/// <param name="png">
 		/// Use PNG format (it supports transparency):
-		/// <br/>• false - no, only CF_BITMAP.
-		/// <br/>• true - yes, only PNG.
-		/// <br/>• null (defaut) - add PNG and CF_BITMAP.
+		/// <br/>• <c>false</c> - no, only CF_BITMAP.
+		/// <br/>• <c>true</c> - yes, only PNG.
+		/// <br/>• <c>null</c> (default) - add PNG and CF_BITMAP.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		public clipboardData AddImage(Image image, bool? png = null) {
@@ -399,7 +399,7 @@ EndFragment:0000000000
 		/// <summary>
 		/// Gets text from the clipboard.
 		/// </summary>
-		/// <returns>null if there is no text.</returns>
+		/// <returns><c>null</c> if there is no text.</returns>
 		/// <param name="format">
 		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
@@ -415,7 +415,7 @@ EndFragment:0000000000
 		/// <summary>
 		/// Gets clipboard data of any format as byte[].
 		/// </summary>
-		/// <returns>null if there is no data of this format.</returns>
+		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static byte[] getBinary(int format) {
@@ -468,12 +468,12 @@ EndFragment:0000000000
 		/// Gets image from the clipboard.
 		/// Uses clipboard format <see cref="ClipFormats.Png"/> or <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
 		/// </summary>
-		/// <returns>null if there is no data of this format.</returns>
+		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <param name="png">
 		/// Use PNG format (it supports transparency):
-		/// <br/>• false - no, only CF_BITMAP.
-		/// <br/>• true - yes, only PNG.
-		/// <br/>• null (defaut) - yes, but get CF_BITMAP if there is no PNG.
+		/// <br/>• <c>false</c> - no, only CF_BITMAP.
+		/// <br/>• <c>true</c> - yes, only PNG.
+		/// <br/>• <c>null</c> (default) - yes, but get CF_BITMAP if there is no PNG.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/> or <see cref="Image.FromStream"/>.</exception>
@@ -498,13 +498,13 @@ EndFragment:0000000000
 		/// <summary>
 		/// Gets HTML text from the clipboard. Uses clipboard format <see cref="ClipFormats.Html"/> (<c>"HTML Format"</c>).
 		/// </summary>
-		/// <returns>null if there is no data of this format or if failed to parse it.</returns>
+		/// <returns><c>null</c> if there is no data of this format or if failed to parse it.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string getHtml() => getHtml(out _, out _, out _);
 
 		/// <param name="fragmentStart">Fragment start index in the returned string.</param>
 		/// <param name="fragmentLength">Fragment length.</param>
-		/// <param name="sourceURL">Source URL, or null if unavailable.</param>
+		/// <param name="sourceURL">Source URL, or <c>null</c> if unavailable.</param>
 		/// <inheritdoc cref="getHtml()"/>
 		public static string getHtml(out int fragmentStart, out int fragmentLength, out string sourceURL) {
 			return ParseHtmlFormatData_(getBinary(ClipFormats.Html), out fragmentStart, out fragmentLength, out sourceURL);
@@ -549,7 +549,7 @@ EndFragment:0000000000
 		/// <summary>
 		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (<b>CF_HDROP</b>).
 		/// </summary>
-		/// <returns>null if there is no data of this format.</returns>
+		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string[] getFiles() {
 			using (new clipboard.OpenClipboard_(false)) {
@@ -561,7 +561,7 @@ EndFragment:0000000000
 		/// <summary>
 		/// Gets file paths from HDROP.
 		/// </summary>
-		/// <returns>Array of zero or more non-null elements.</returns>
+		/// <returns>Array of zero or more non-<c>null</c> elements.</returns>
 		internal static unsafe string[] HdropToFiles_(IntPtr hdrop) {
 			int n = Api.DragQueryFile(hdrop, -1, null, 0);
 			var a = new string[n];
@@ -578,7 +578,7 @@ EndFragment:0000000000
 		#region contains
 
 		/// <summary>
-		/// Returns true if the clipboard contains data of the specified format.
+		/// Returns <c>true</c> if the clipboard contains data of the specified format.
 		/// </summary>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats"/>.</param>
 		/// <remarks>Calls API <msdn>IsClipboardFormatAvailable</msdn>.</remarks>
@@ -642,7 +642,7 @@ namespace Au.Types {
 		/// Registers a clipboard format and returns its id. If already registered, just returns id.
 		/// </summary>
 		/// <param name="name">Format name.</param>
-		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
+		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If <c>null</c>, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
 		/// <remarks>Calls API <msdn>RegisterClipboardFormat</msdn>.</remarks>
 		public static int Register(string name, Encoding textEncoding = null) {
 			var R = Api.RegisterClipboardFormat(name);
@@ -654,7 +654,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Gets text encoding for format.
-		/// Returns null if UTF-16 or if the format is unknown and not in s_textEncoding.
+		/// Returns <c>null</c> if UTF-16 or if the format is unknown and not in s_textEncoding.
 		/// </summary>
 		internal static Encoding GetTextEncoding_(int format, out bool unknown) {
 			unknown = false;
@@ -670,7 +670,7 @@ namespace Au.Types {
 		/// Gets clipboard format name.
 		/// </summary>
 		/// <param name="format">A registered or standard clipboard format. If standard, returns string like <c>"CF_BITMAP"</c>.</param>
-		/// <param name="orNull">Return null if <i>format</i> is unknown. If false, returns <i>format</i> as string.</param>
+		/// <param name="orNull">Return <c>null</c> if <i>format</i> is unknown. If <c>false</c>, returns <i>format</i> as string.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetClipboardFormatName</msdn>. Although undocumented, it also can get other strings from the same system atom table, for example registered Windows message names and window class names.
 		/// </remarks>

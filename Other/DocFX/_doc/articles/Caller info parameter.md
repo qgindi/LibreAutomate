@@ -4,11 +4,11 @@ uid: caller_info
 
 # Caller info parameter
 
-Some functions have optional parameters f_ and/or l_ with attribute [CallerFilePath] or [CallerLineNumber]. They automatically pass source file/line info to the function. Usually caller should not use them.
+Some functions have optional parameters *f_* and/or *l_* with attribute `[CallerFilePath]` or `[CallerLineNumber]`. They automatically pass source file/line info to the function. Usually the caller should not use them.
 
-For example, menus (class popupMenu) and toolbars (class toolbar) use it for the "Edit" command of their context menu. Triggers use it for menu Run -> Recent -> trigger.
+For example, menus (class **popupMenu**) and toolbars (class **toolbar**) use it for the **Edit** command (context menu). Triggers use it for menu **Run > Recent > trigger**.
 
-If to add menu/toolbar items or triggers you create an intermediate function, the function should have f_ and/or l_ parameters and pass them to the menu/toolbar/trigger function. Example script:
+If to add menu/toolbar items or triggers you create an intermediate function, the function should have *f_* and/or *l_* parameters and pass them to the menu/toolbar/trigger function. Example script:
 
 ```csharp
 var m = new popupMenu("431beeab-e190-495a-be8f-05732ef6a74f");

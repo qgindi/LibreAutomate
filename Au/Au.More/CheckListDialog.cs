@@ -28,8 +28,8 @@ public class CheckListDialog {
 	/// <summary>
 	/// Creates <see cref="Builder"/>, sets some window properties, optionally sets static text.
 	/// </summary>
-	/// <param name="text">Text above the list. Can be null. See also <see cref="FormatText"/>.</param>
-	/// <param name="title">Window name. If null, uses <see cref="dialog.options.defaultTitle"/>.</param>
+	/// <param name="text">Text above the list. Can be <c>null</c>. See also <see cref="FormatText"/>.</param>
+	/// <param name="title">Window name. If <c>null</c>, uses <see cref="dialog.options.defaultTitle"/>.</param>
 	public CheckListDialog(string text = null, string title = null) {
 		_b = new wpfBuilder(title ?? dialog.options.defaultTitle)
 			.WinProperties(resizeMode: ResizeMode.NoResize)
@@ -107,9 +107,9 @@ public class CheckListDialog {
 	/// </summary>
 	/// <param name="owner">
 	/// Owner window, or an element in it.
-	/// If used, sets <b>ShowInTaskbar</b> = false. Else sets <b>Topmost</b> = true, unless <see cref="dialog.options.topmostIfNoOwnerWindow"/> is false or the active window belongs to this process.
+	/// If used, sets <b>ShowInTaskbar</b> = <c>false</c>. Else sets <b>Topmost</b> = <c>true</c>, unless <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>false</c> or the active window belongs to this process.
 	/// </param>
-	/// <returns>true if pressed OK.</returns>
+	/// <returns><c>true</c> if pressed OK.</returns>
 	public bool ShowDialog(DependencyObject owner = null) {
 		_b.R.AddOkCancel(_ok ?? "OK", _cancel ?? "Cancel");
 		_b.End();
@@ -133,7 +133,7 @@ public class CheckListDialog {
 	}
 	
 	/// <summary>
-	/// Gets a bit array where elements represent checkbox states (true if checked).
+	/// Gets a bit array where elements represent checkbox states (<c>true</c> if checked).
 	/// This property is set by <b>ShowDialog</b>.
 	/// </summary>
 	public BitArray ResultBits { get; private set; }

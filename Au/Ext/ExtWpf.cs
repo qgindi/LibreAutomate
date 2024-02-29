@@ -21,7 +21,7 @@ public static class ExtWpf {
 	/// <returns><c>default(wnd)</c> if:
 	/// <br/>• called before creating or after closing real window;
 	/// <br/>• failed;
-	/// <br/>• <i>t</i> is null.</returns>
+	/// <br/>• <i>t</i> is <c>null</c>.</returns>
 	/// <param name="t"></param>
 	public static wnd Hwnd(this DependencyObject t) {
 		bool isPopup = false;
@@ -37,7 +37,7 @@ public static class ExtWpf {
 	//rejected: notPopup. Not useful.
 	///// <summary>
 	///// Gets window handle of this <b>Window</b>, <b>Popup</b> or container window handle of this child object.
-	///// Returns <c>default(wnd)</c> if: called before creating real window; failed; <i>t</i> is null.
+	///// Returns <c>default(wnd)</c> if: called before creating real window; failed; <i>t</i> is <c>null</c>.
 	///// </summary>
 	///// <param name="t"></param>
 	///// <param name="notPopup">If this is <b>Popup</b> or in a <b>Popup</b>, get handle of popup's owner <b>Window</b>.</param>
@@ -67,7 +67,7 @@ public static class ExtWpf {
 	
 	/// <summary>
 	/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
-	/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+	/// When <i>f</i> returns <c>true</c>, stops and returns that object. Returns <c>null</c> if <i>f</i> does not return <c>true</c>.
 	/// </summary>
 	public static DependencyObject FindVisualDescendant(this DependencyObject t, Func<DependencyObject, bool> f, bool orSelf = false) {
 		if (orSelf && f(t)) return t;
@@ -121,14 +121,14 @@ public static class ExtWpf {
 	}
 	
 	/// <summary>
-	/// Calls callback function <i>f</i> for each visual ancestor (<see cref="VisualTreeHelper.GetParent"/>), and returns the ancestor for which <i>f</i> returns true.
-	/// Also can return <i>last</i> or null.
+	/// Calls callback function <i>f</i> for each visual ancestor (<see cref="VisualTreeHelper.GetParent"/>), and returns the ancestor for which <i>f</i> returns <c>true</c>.
+	/// Also can return <i>last</i> or <c>null</c>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="andThis">Include this object.</param>
 	/// <param name="f"></param>
-	/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> true or null if false.</param>
-	/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of null.</param>
+	/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> <c>true</c> or <c>null</c> if <c>false</c>.</param>
+	/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of <c>null</c>.</param>
 	public static DependencyObject FindVisualAncestor(this DependencyObject t, bool andThis, Func<DependencyObject, bool> f, object last, bool andLast) {
 		for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
 			if (!andThis) { andThis = true; continue; }
@@ -140,12 +140,12 @@ public static class ExtWpf {
 	
 	/// <summary>
 	/// Returns the nearest visual ancestor (<see cref="VisualTreeHelper.GetParent"/>) of type <i>T</i>.
-	/// Also can return <i>last</i> or null.
+	/// Also can return <i>last</i> or <c>null</c>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="andThis">Include this object.</param>
-	/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> true or null if false.</param>
-	/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of null.</param>
+	/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> <c>true</c> or <c>null</c> if <c>false</c>.</param>
+	/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of <c>null</c>.</param>
 	public static DependencyObject FindVisualAncestor<T>(this DependencyObject t, bool andThis, object last, bool andLast) where T : DependencyObject {
 		for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
 			if (!andThis) { andThis = true; continue; }
@@ -180,7 +180,7 @@ public static class ExtWpf {
 	
 	//rejected, FBC. Looks not good. Better .IsChecked == true.
 	/// <summary>
-	/// Returns true if <c>IsChecked == true</c>.
+	/// Returns <c>true</c> if <c>IsChecked == true</c>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	//[Obsolete("use code IsChecked == true")]
@@ -507,7 +507,7 @@ public static class ExtWpf {
 	}
 	
 	/// <summary>
-	/// Gets the <b>Text</b> property. Returns null if it is "".
+	/// Gets the <b>Text</b> property. Returns <c>null</c> if it is <c>""</c>.
 	/// </summary>
 	public static string TextOrNull(this TextBox t) => t.Text.NullIfEmpty_();
 	
@@ -531,7 +531,7 @@ public static class ExtWpf {
 		}
 	}
 	
-	/// <returns>true if in ShowDialog, false if not, null if failed (uses reflection).</returns>
+	/// <returns><c>true</c> if in <b>ShowDialog</b>, <c>false</c> if not, <c>null</c> if failed (uses reflection).</returns>
 	internal static bool? IsModal_(this Window t) {
 		try {
 			var f = typeof(Window).GetField("_showingAsDialog", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic);
@@ -548,7 +548,7 @@ public static class ExtWpf {
 	/// Call before the toolbar is loaded.
 	/// </summary>
 	/// <param name="t"></param>
-	/// <param name="hideGrip">Hide grip. Sets <b>SetIsLocked</b> true.</param>
+	/// <param name="hideGrip">Hide grip. Sets <b>SetIsLocked</b> <c>true</c>.</param>
 	/// <param name="hideOverflow">Hides the overflow button while it is disabled.</param>
 	/// <exception cref="InvalidOperationException">Loaded.</exception>
 	public static void HideGripAndOverflow(this ToolBar t, bool hideGrip = true, bool hideOverflow = true) {

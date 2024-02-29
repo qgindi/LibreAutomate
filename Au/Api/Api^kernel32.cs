@@ -1,7 +1,7 @@
 namespace Au.Types;
 
 static unsafe partial class Api {
-	[DllImport("kernel32.dll", SetLastError = true)] //note: without 'SetLastError = true' Marshal.GetLastWin32Error is unaware that we set the code to 0 etc and returns old captured error code
+	[DllImport("kernel32.dll", SetLastError = true)] //note: without `SetLastError = true` Marshal.GetLastWin32Error is unaware that we set the code to 0 etc and returns old captured error code
 	internal static extern void SetLastError(int errCode);
 
 	internal const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
@@ -200,7 +200,7 @@ static unsafe partial class Api {
 
 	/// <summary>
 	/// Calls API GetFullPathName.
-	/// Returns false if failed or result is same; then r is s.
+	/// Returns <c>false</c> if failed or result is same; then r is s.
 	/// r can be same variable as s.
 	/// </summary>
 	[SkipLocalsInit]
@@ -214,7 +214,7 @@ static unsafe partial class Api {
 
 	/// <summary>
 	/// Calls API GetFullPathName.
-	/// Returns false if failed or result is same; then r is s.
+	/// Returns <c>false</c> if failed or result is same; then r is s.
 	/// r can be same variable as s.
 	/// </summary>
 	[SkipLocalsInit]
@@ -300,11 +300,11 @@ static unsafe partial class Api {
 	static extern int _SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, char* lpBuffer, char** lpFilePart);
 
 	/// <summary>
-	/// Calls API SearchPath. Returns full path, or null if not found.
+	/// Calls API SearchPath. Returns full path, or <c>null</c> if not found.
 	/// </summary>
-	/// <param name="lpPath">Parent directory or null.</param>
+	/// <param name="lpPath">Parent directory or <c>null</c>.</param>
 	/// <param name="lpFileName"></param>
-	/// <param name="lpExtension">null or extension like ".ext" to add if lpFileName is without extension.</param>
+	/// <param name="lpExtension"><c>null</c> or extension like ".ext" to add if lpFileName is without extension.</param>
 	[SkipLocalsInit]
 	internal static string SearchPath(string lpPath, string lpFileName, string lpExtension = null) {
 		using FastBuffer<char> b = new();
@@ -575,7 +575,7 @@ static unsafe partial class Api {
 
 	/// <summary>
 	/// Calls API GetEnvironmentVariable.
-	/// Returns null if variable not found.
+	/// Returns <c>null</c> if variable not found.
 	/// Does not support folders.X.
 	/// </summary>
 	/// <param name="name">Case-insensitive name. Without %.</param>
@@ -586,7 +586,7 @@ static unsafe partial class Api {
 	}
 
 	/// <summary>
-	/// Returns true if environment variable exists.
+	/// Returns <c>true</c> if environment variable exists.
 	/// </summary>
 	internal static bool EnvironmentVariableExists(string name) => 0 != _GetEnvironmentVariable(name, null, 0);
 
@@ -598,7 +598,7 @@ static unsafe partial class Api {
 
 	/// <summary>
 	/// Calls API ExpandEnvironmentStrings.
-	/// Returns false if failed or result is same; then r is s.
+	/// Returns <c>false</c> if failed or result is same; then r is s.
 	/// r can be same variable as s.
 	/// </summary>
 	[SkipLocalsInit]

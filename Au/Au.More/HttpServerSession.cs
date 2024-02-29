@@ -14,7 +14,7 @@ namespace Au.More {
 		/// Simple HTTP 1.1 server.
 		/// </summary>
 		/// <param name="port">TCP port.</param>
-		/// <param name="ip">A local IPv4 or IPv6 address. If null (default), uses <see cref="IPAddress.IPv6Any"/> and dual mode (supports IPv6 and IPv4 connections).</param>
+		/// <param name="ip">A local IPv4 or IPv6 address. If <c>null</c> (default), uses <see cref="IPAddress.IPv6Any"/> and dual mode (supports IPv6 and IPv4 connections).</param>
 		/// <exception cref="Exception">Exceptions of <see cref="TcpListener"/> functions. Unlikely.</exception>
 		/// <remarks>
 		/// Runs all the time and listens for new TCP client connections. For each connected client starts new thread, creates new object of your <b>HttpServerSession</b>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports keep-alive. Multiple sessions can run simultaneously.
@@ -23,7 +23,7 @@ namespace Au.More {
 		///
 		/// The HTTP server is accessible from local network computers. Usually not accessible from the internet. To make accessible from the internet, you can use ngrok or similar software. This server does not support https (secure connections), but ngrok makes internet connections secure.
 		/// 
-		/// If <i>ip</i> is null or an IPv6 address, supports IPv6 and IPv4 connections.
+		/// If <i>ip</i> is <c>null</c> or an IPv6 address, supports IPv6 and IPv4 connections.
 		/// </remarks>
 		/// <example>
 		/// HTTP server.
@@ -115,14 +115,14 @@ namespace Au.More {
 		/// <remarks>
 		///	Not called if failed to read the message.
 		/// 
-		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> true. On unhandled exception sends error 500 (InternalServerError) and closes the connection.
+		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> <c>true</c>. On unhandled exception sends error 500 (InternalServerError) and closes the connection.
 		/// </remarks>
 		protected abstract void MessageReceived(HSMessage m, HSResponse r);
 		
 		/// <summary>
-		/// Performs basic authentication. If fails (either the client did not use basic authentication or <i>auth</i> returned false), throws exception. The client will receive error 401 (Unauthorized) and can retry.
+		/// Performs basic authentication. If fails (either the client did not use basic authentication or <i>auth</i> returned <c>false</c>), throws exception. The client will receive error 401 (Unauthorized) and can retry.
 		/// </summary>
-		/// <param name="auth">Callback function. Receives the user name and password. Returns true to continue or false to fail.</param>
+		/// <param name="auth">Callback function. Receives the user name and password. Returns <c>true</c> to continue or <c>false</c> to fail.</param>
 		/// <remarks>
 		/// After successful authentication does not repeat it again when the client sends more messages in this session.
 		/// </remarks>
@@ -154,7 +154,7 @@ namespace Au.More {
 		/// Executes the session: reads requests, calls your <see cref="MessageReceived"/>, writes responses, implements keep-alive.
 		/// </summary>
 		/// <remarks>
-		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> true. On unhandled exception closes the connection.
+		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> <c>true</c>. On unhandled exception closes the connection.
 		/// </remarks>
 		[SkipLocalsInit]
 		protected virtual void Run() {
@@ -409,7 +409,7 @@ namespace Au.More {
 		/// Reads content and trailing headers.
 		/// </summary>
 		/// <param name="headers">The function gets content length etc from here. Also reads trailing headers here.</param>
-		/// <returns>null if <i>headers</i> don't contain content-length or transfer-encoding.</returns>
+		/// <returns><c>null</c> if <i>headers</i> don't contain content-length or transfer-encoding.</returns>
 		public byte[] ReadContent(Dictionary<string, string> headers) {
 			byte[] content = null;
 			
@@ -489,7 +489,7 @@ namespace Au.Types {
 		/// <summary>
 		/// URL parameters (query string). Not URL-encoded.
 		/// </summary>
-		/// <value>null if there are no URL parameters.</value>
+		/// <value><c>null</c> if there are no URL parameters.</value>
 		public Dictionary<string, string> UrlParameters { get; internal set; }
 		
 		/// <summary>
@@ -500,20 +500,20 @@ namespace Au.Types {
 		/// <summary>
 		/// Raw content. For example POST data as UTF-8 text or binary.
 		/// </summary>
-		/// <value>null if the message is without content.</value>
+		/// <value><c>null</c> if the message is without content.</value>
 		public byte[] Content { get; internal set; }
 		
 		/// <summary>
 		/// <c>Content-Type</c> header info.
 		/// </summary>
-		/// <value>null if <c>Content-Type</c> header is missing or invalid.</value>
+		/// <value><c>null</c> if <c>Content-Type</c> header is missing or invalid.</value>
 		public HSContentType ContentType => _contentType ??= HSContentType.Create(Headers);
 		HSContentType _contentType;
 		
 		/// <summary>
 		/// <see cref="Content"/> converted to text.
 		/// </summary>
-		/// <value>null if there is no content.</value>
+		/// <value><c>null</c> if there is no content.</value>
 		/// <remarks>If text encoding unspecified, uses UTF-8; if specified invalid, uses ASCII.</remarks>
 		public string Text => _contentText ??= Content == null ? null : (ContentType?.Encoding ?? Encoding.UTF8).GetString(Content);
 		string _contentText;
@@ -528,14 +528,14 @@ namespace Au.Types {
 		/// <summary>
 		/// JSON-deserializes <see cref="Content"/> to object of specified type.
 		/// </summary>
-		/// <returns>null if the request does not have body data.</returns>
+		/// <returns><c>null</c> if the request does not have body data.</returns>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.Deserialize(Stream, Type, JsonSerializerOptions?)"/>.</exception>
 		public object Json(Type type) => Content == null ? default : JsonSerializer.Deserialize(Content, type, InternetUtil_.JsonSerializerOptions);
 		
 		/// <summary>
 		/// Keys/values from POST content with <c>Content-Type: application/x-www-form-urlencoded</c>.
 		/// </summary>
-		/// <value>null if the message has no content of this type.</value>
+		/// <value><c>null</c> if the message has no content of this type.</value>
 		public Dictionary<string, string> Urlencoded {
 			get {
 				if (_contentUrlParameters == null && Content != null && Headers.TryGetValue("Content-Type", out var v) && v.Starts("application/x-www-form-urlencoded", true)) {
@@ -559,7 +559,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Parts of multipart content. For example of POST content with <c>Content-Type: multipart/form-data</c>.
 		/// </summary>
-		/// <value>null if the message has no multipart content.</value>
+		/// <value><c>null</c> if the message has no multipart content.</value>
 		public Dictionary<string, HSContentPart> Multipart {
 			get {
 				if (_contentParts == null && Content != null && Headers.TryGetValue("Content-Type", out var v) && v.Starts("multipart/", true)) {
@@ -631,7 +631,7 @@ namespace Au.Types {
 		/// <summary>
 		/// <see cref="Content"/> converted to text.
 		/// </summary>
-		/// <value>null if there is no content.</value>
+		/// <value><c>null</c> if there is no content.</value>
 		/// <remarks>If text encoding unspecified, uses UTF-8; if specified invalid, uses ASCII.</remarks>
 		public string Text => _contentText ??= Content == null ? null : (ContentType?.Encoding ?? Encoding.UTF8).GetString(Content);
 		string _contentText;
@@ -655,7 +655,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Gets filename from <c>Content-Disposition</c> header.
 		/// </summary>
-		/// <value>null if <c>Content-Disposition</c> header or filename is missing.</value>
+		/// <value><c>null</c> if <c>Content-Disposition</c> header or filename is missing.</value>
 		/// <remarks>
 		///	Decodes "utf-8''urlencoded" or "=?utf-8?B?base64?=".
 		/// </remarks>
@@ -688,7 +688,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Creates from <c>Content-Type</c> header.
 		/// </summary>
-		/// <value>null if <c>Content-Type</c> header is missing or invalid.</value>
+		/// <value><c>null</c> if <c>Content-Type</c> header is missing or invalid.</value>
 		public static HSContentType Create(Dictionary<string, string> headers) {
 			if (headers.TryGetValue("Content-Type", out var s)) {
 				try { return new(new(s)); }
@@ -708,12 +708,12 @@ namespace Au.Types {
 		public string MediaType { get; }
 		
 		/// <summary>
-		/// Returns the boundary parameter without double quotes, or null if not specified.
+		/// Returns the boundary parameter without double quotes, or <c>null</c> if not specified.
 		/// </summary>
 		public string Boundary { get; }
 		
 		/// <summary>
-		/// Returns the charset parameter, or null if not specified.
+		/// Returns the charset parameter, or <c>null</c> if not specified.
 		/// </summary>
 		public string Charset { get; }
 		
@@ -721,7 +721,7 @@ namespace Au.Types {
 		/// Gets text encoding.
 		/// </summary>
 		/// <value>Returns:
-		/// <br/>• null if multipart content (<b>Boundary</b> not null).
+		/// <br/>• <c>null</c> if multipart content (<b>Boundary</b> not <c>null</c>).
 		/// <br/>• UTF8 if charset is utf-8 or not specified.
 		/// <br/>• <b>Encoding</b> that matches charset.
 		/// <br/>• ASCII if charset is invalid.
@@ -748,7 +748,7 @@ namespace Au.Types {
 		public HttpStatusCode Status { get; set; }
 		
 		/// <summary>
-		/// Response reason phrase. Initially null.
+		/// Response reason phrase. Initially <c>null</c>.
 		/// </summary>
 		public string Reason { get; set; }
 		
@@ -775,7 +775,7 @@ namespace Au.Types {
 		/// Sets response content text.
 		/// </summary>
 		/// <param name="content">Sets <see cref="Content"/>: <c>Content = content.ToUTF8();</c>.</param>
-		/// <param name="contentType">If not null, sets <c>Content-Type</c> header.</param>
+		/// <param name="contentType">If not <c>null</c>, sets <c>Content-Type</c> header.</param>
 		public void SetContentText(string content, string contentType = "text/plain; charset=utf-8") {
 			Content = content?.ToUTF8();
 			if (contentType != null) Headers["Content-Type"] = contentType;

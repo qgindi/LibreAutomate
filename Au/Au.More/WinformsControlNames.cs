@@ -34,7 +34,7 @@ namespace Au.More
 		/// <summary>
 		/// Gets control name.
 		/// </summary>
-		/// <returns>null if failed or the name is empty.</returns>
+		/// <returns><c>null</c> if failed or the name is empty.</returns>
 		/// <param name="c">The control. Can be a top-level window too. Must be of the same process as the window specified in the constructor.</param>
 		public string GetControlName(wnd c) {
 			if (_pm == null) return null;
@@ -46,7 +46,7 @@ namespace Au.More
 		}
 
 		/// <summary>
-		/// Returns true if window class name starts with <c>"WindowsForms"</c>.
+		/// Returns <c>true</c> if window class name starts with <c>"WindowsForms"</c>.
 		/// Usually it means that we can get Windows Forms control name of <i>w</i> and its child controls.
 		/// </summary>
 		/// <param name="w">The window. Can be top-level or control.</param>
@@ -57,7 +57,7 @@ namespace Au.More
 		/// <summary>
 		/// Gets the programming name of a Windows Forms control.
 		/// </summary>
-		/// <returns>null if it is not a Windows Forms control or if failed.</returns>
+		/// <returns><c>null</c> if it is not a Windows Forms control or if failed.</returns>
 		/// <param name="c">The control. Can be top-level window too.</param>
 		/// <remarks>
 		/// This function is easy to use and does not throw exceptions. However, when you need names of multiple controls of a single window, better create a <b>WinformsControlNames</b> instance (once) and for each control call its <b>GetControlName</b> method, it will be faster.</remarks>
@@ -73,7 +73,7 @@ namespace Au.More
 		//Don't use this cached version, it does not make significantly faster. Also, keeping process handle in such a way is not good, would need to use other thread to close it after some time.
 		///// <summary>
 		///// Gets programming name of a Windows Forms control.
-		///// Returns null if it is not a Windows Forms control or if failed.
+		///// Returns <c>null</c> if it is not a Windows Forms control or if failed.
 		///// </summary>
 		///// <param name="c">The control. Can be top-level window too.</param>
 		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WinformsControlNames instance each time and calling its <b>GetControlName</b> method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>

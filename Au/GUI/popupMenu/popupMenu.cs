@@ -67,13 +67,13 @@ public unsafe partial class popupMenu : MTBase {
 	/// <summary>
 	/// Use this constructor in scripts.
 	/// </summary>
-	/// <param name="name">Menu name. Must be a unique valid filename. Currently not used. Can be null.</param>
+	/// <param name="name">Menu name. Must be a unique valid filename. Currently not used. Can be <c>null</c>.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// This overload sets <see cref="MTBase.ExtractIconPathFromCode"/> = true.
+	/// This overload sets <see cref="MTBase.ExtractIconPathFromCode"/> = <c>true</c>.
 	/// 
-	/// Users can right-click an item to open/select it in editor, unless <i>f_</i> is explicitly set = null.
+	/// Users can right-click an item to open/select it in editor, unless <i>f_</i> is explicitly set = <c>null</c>.
 	/// </remarks>
 	public popupMenu(string name, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
 		ExtractIconPathFromCode = true;
@@ -140,7 +140,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="f_">[](xref:caller_info)</param>
-	/// <value>Action executed on click. Can be null.</value>
+	/// <value>Action executed on click. Can be <c>null</c>.</value>
 	/// <remarks>
 	/// This function is the same as <see cref="Add(string, Action{PMItem}, MTImage, bool, int, string)"/>. The difference is, <b>Add</b> returns <b>PMItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 	/// </remarks>
@@ -175,7 +175,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// When clicked an unchecked radio item, its <see cref="PMItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
+	/// When clicked an unchecked radio item, its <see cref="PMItem.IsChecked"/> state becomes <c>true</c>; <b>IsChecked</b> of other group items become <c>false</c>.
 	/// </remarks>
 	public PMItem AddRadio(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable, check) { checkType = 2 }, text, image, l_, f_, click);
@@ -226,7 +226,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// Adds menu item that opens a reusable submenu.
 	/// </summary>
 	/// <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="popupMenu"/>.</param>
-	/// <param name="opening">Func called whenever opening the submenu and should return the submenu object. Can return null.</param>
+	/// <param name="opening">Func called whenever opening the submenu and should return the submenu object. Can return <c>null</c>.</param>
 	/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 	/// <param name="disable">Disabled state.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -259,7 +259,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// Gets added items, except separators and items in submenus.
 	/// </summary>
 	/// <remarks>
-	/// Allows to set properties of multiple items in single place instead of after each 'add item' code line.
+	/// Allows to set properties of multiple items in single place instead of after each "add item" code line.
 	/// 
 	/// Does not get items in submenus. Submenus are separate <b>popupMenu</b> objects and you can use their <b>Items</b> property.
 	/// </remarks>
@@ -293,7 +293,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </summary>
 	/// <returns>Object for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</returns>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new popupMenu();
@@ -319,7 +319,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </summary>
 	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="flags"></param>
-	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on <i>flags</i>.</param>
+	/// <param name="xy">Menu position in screen. If <c>null</c> (default), uses mouse position by default. It depends on <i>flags</i>.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
 	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
 	/// <exception cref="InvalidOperationException">The menu is open or is submenu.</exception>
@@ -483,12 +483,12 @@ public unsafe partial class popupMenu : MTBase {
 	}
 
 	/// <summary>
-	/// Returns true if the menu window is open.
+	/// Returns <c>true</c> if the menu window is open.
 	/// </summary>
 	public bool IsOpen => !_w.Is0;
 
 	/// <summary>
-	/// After closing the menu gets the selected item, or null if canceled.
+	/// After closing the menu gets the selected item, or <c>null</c> if canceled.
 	/// </summary>
 	public PMItem Result => _result;
 
@@ -986,10 +986,10 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="items">
 	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>.
 	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> //1|2|100|101.
-	/// For separators use null or empty strings: <c>"One|Two||Three|Four"</c>.
+	/// For separators use <c>null</c> or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>
 	/// <param name="flags"></param>
-	/// <param name="xy">Menu position in screen. If null (default), uses mouse position by default. It depends on <i>flags</i>.</param>
+	/// <param name="xy">Menu position in screen. If <c>null</c> (default), uses mouse position by default. It depends on <i>flags</i>.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
 	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
 	/// <remarks>

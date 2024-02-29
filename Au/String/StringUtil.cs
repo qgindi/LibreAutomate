@@ -10,8 +10,8 @@ public static class StringUtil {
 	/// Parses a function parameter that can optionally have a <c>"***name "</c> prefix, like <c>"***value xyz"</c>.
 	/// Returns: 0 - s does not start with <c>"***"</c>; i+1 - s starts with <c>"***names[i] "</c>; -1 - s is invalid.
 	/// </summary>
-	/// <param name="s">Parameter. If starts with <c>"***"</c> and is valid, receives the 'value' part; else unchanged. Can be null.</param>
-	/// <param name="names">List of supported 'name'.</param>
+	/// <param name="s">Parameter. If starts with <c>"***"</c> and is valid, receives the "value" part; else unchanged. Can be <c>null</c>.</param>
+	/// <param name="names">List of supported "name".</param>
 	/// <remarks>
 	/// Used to parse parameters like <i>name</i> of <see cref="wnd.Child"/>.
 	/// </remarks>
@@ -31,7 +31,7 @@ public static class StringUtil {
 	/// <summary>
 	/// Removes characters used to underline next character when the text is displayed in UI. Replaces two such characters with single.
 	/// </summary>
-	/// <param name="s">Can be null.</param>
+	/// <param name="s">Can be <c>null</c>.</param>
 	/// <param name="underlineChar"></param>
 	/// <remarks>
 	/// Character <c>'&amp;'</c> (in WPF <c>'_'</c>) is used to underline next character in displayed text of dialog controls and menu items. Two such characters are used to display single.
@@ -58,7 +58,7 @@ public static class StringUtil {
 	/// Finds character used to underline next character when the text is displayed in UI.
 	/// </summary>
 	/// <returns>Character index, or -1 if not found.</returns>
-	/// <param name="s">Can be null.</param>
+	/// <param name="s">Can be <c>null</c>.</param>
 	/// <param name="underlineChar"></param>
 	public static int FindUnderlineChar(string s, char underlineChar = '&') {
 		if (s != null) {
@@ -74,7 +74,7 @@ public static class StringUtil {
 	/// <summary>
 	/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="run.it"/>, <see cref="Process.Start"/>.
 	/// </summary>
-	/// <returns>null if <i>a</i> is null or empty.</returns>
+	/// <returns><c>null</c> if <i>a</i> is <c>null</c> or empty.</returns>
 	/// <param name="a"></param>
 	public static string CommandLineFromArray(string[] a) {
 		if (a == null || a.Length == 0) return null;
@@ -103,7 +103,7 @@ public static class StringUtil {
 	/// Parses command line arguments.
 	/// Calls API <msdn>CommandLineToArgvW</msdn>.
 	/// </summary>
-	/// <returns>Empty array if <i>s</i> is null or <c>""</c>.</returns>
+	/// <returns>Empty array if <i>s</i> is <c>null</c> or <c>""</c>.</returns>
 	public static unsafe string[] CommandLineToArray(string s) {
 		if (s.NE()) return Array.Empty<string>();
 		char** p = Api.CommandLineToArgvW(s, out int n);
@@ -114,13 +114,13 @@ public static class StringUtil {
 	}
 	
 	/// <summary>
-	/// If string contains a number at <i>startIndex</i>, gets that number as int, also gets the string part that follows it, and returns true.
+	/// If string contains a number at <i>startIndex</i>, gets that number as int, also gets the string part that follows it, and returns <c>true</c>.
 	/// For example, for string <c>"25text"</c> or <c>"25 text"</c> gets <i>num</i> = <c>25</c>, <i>tail</i> = <c>"text"</c>.
 	/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
 	/// </summary>
 	/// <param name="s"></param>
 	/// <param name="num">Receives the number. Receives 0 if no number.</param>
-	/// <param name="tail">Receives the string part that follows the number, or <c>""</c>. Receives null if no number. Can be this variable.</param>
+	/// <param name="tail">Receives the string part that follows the number, or <c>""</c>. Receives <c>null</c> if no number. Can be this variable.</param>
 	/// <param name="startIndex">Offset in this string where to start parsing.</param>
 	/// <param name="flags"></param>
 	public static bool ParseIntAndString(string s, out int num, out string tail, int startIndex = 0, STIFlags flags = 0) {
@@ -137,7 +137,7 @@ public static class StringUtil {
 	/// <summary>
 	/// Creates int[] from string containing space-separated numbers, like <c>"4 100 -8 0x10"</c>.
 	/// </summary>
-	/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If null or <c>""</c>, returns empty array.</param>
+	/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If <c>null</c> or <c>""</c>, returns empty array.</param>
 	/// <remarks>
 	/// For vice versa use <c>string.Join(" ", array)</c>.
 	/// </remarks>
@@ -263,11 +263,11 @@ public static class StringUtil {
 	internal static JsonSerializerOptions JsonOptions => s_jsOptions.Value;
 	
 	/// <summary>Calls <see cref="Encoding.GetEncoding(string)"/>, and <b>Encoding.RegisterProvider</b> if need.</summary>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	public static Encoding GetEncoding(string name) => _GetEncoding(name ?? throw new ArgumentNullException());
 	
 	/// <summary>Calls <see cref="Encoding.GetEncoding(int)"/>, and <b>Encoding.RegisterProvider</b> if need.</summary>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	public static Encoding GetEncoding(int codepage) => _GetEncoding(null, codepage);
 	
 	static Encoding _GetEncoding(string name = null, int codepage = 0) {

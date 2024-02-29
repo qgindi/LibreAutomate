@@ -44,7 +44,7 @@ namespace Au {
 		/// <summary>
 		/// Plays a system event sound.
 		/// </summary>
-		/// <param name="name">Sound event name. If null, displays all available names.</param>
+		/// <param name="name">Sound event name. If <c>null</c>, displays all available names.</param>
 		/// <param name="async">Don't wait until the sound ends. Note: the sound ends when this process exits.</param>
 		/// <param name="system">Use the sound volume channel "System Sounds". Then <see cref="volume"/> isn't used.</param>
 		/// <param name="orDefault">Play default sound if the specified sound not found or does not have a .wav file assigned.</param>
@@ -111,11 +111,11 @@ namespace Au {
 		/// <summary>
 		/// Speaks text.
 		/// </summary>
-		/// <param name="text">Text to speak. If null, stops speaking.</param>
+		/// <param name="text">Text to speak. If <c>null</c>, stops speaking.</param>
 		/// <param name="async">Don't wait. Note: the sound ends when this process exits.</param>
 		/// <param name="voice">
 		/// A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>.
-		/// If null, uses default voice.
+		/// If <c>null</c>, uses default voice.
 		/// Voice attributes can be specified using string format <c>"voice|reqAttr"</c> or <c>"voice|reqAttr|optAttr"</c>. Here <i>reqAttr</i> and <i>optAttr</i> are arguments for <google>ISpObjectTokenCategory.EnumTokens</google>. Each part can be empty. Example: <c>"|Gender=Female"</c>.
 		/// </param>
 		/// <param name="rate">Speed adjustment, +- 10.</param>
@@ -174,7 +174,7 @@ namespace Au.More {
 		/// <summary>
 		/// Creates a text-to-speech (speech synthesis) voice instance.
 		/// </summary>
-		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If null, uses default voice.</param>
+		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If <c>null</c>, uses default voice.</param>
 		public SpeakVoice(string voice = null) {
 			_v = new SAPI.SpVoice() as SAPI.ISpVoice;
 			GC.AddMemoryPressure(250_000);
@@ -267,12 +267,12 @@ namespace Au.More {
 		public void Stop() => SkipSentence(int.MaxValue);
 		
 		/// <summary>
-		/// Returns true if currently is speaking. Returns false if finished or not started.
+		/// Returns <c>true</c> if currently is speaking. Returns <c>false</c> if finished or not started.
 		/// </summary>
 		public bool IsSpeaking => _RunningState() == SAPI.SpeechRunState.SRSEIsSpeaking;
 		
 		/// <summary>
-		/// Returns true if finished speaking.
+		/// Returns <c>true</c> if finished speaking.
 		/// </summary>
 		public bool IsDone => _RunningState() == SAPI.SpeechRunState.SRSEDone;
 		

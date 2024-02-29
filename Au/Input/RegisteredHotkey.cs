@@ -6,7 +6,7 @@ namespace Au.More;
 /// <remarks>
 /// Can be used as a lightweight alternative to hotkey triggers.
 /// 
-/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unregister</b>) or with the 'using' pattern.
+/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unregister</b>) or with <c>using</c>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -59,7 +59,7 @@ public struct RegisteredHotkey : IDisposable {
 	/// <summary>
 	/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
 	/// </summary>
-	/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
 	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>

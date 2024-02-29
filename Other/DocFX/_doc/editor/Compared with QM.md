@@ -13,7 +13,7 @@ LibreAutomate is free and open-source. Its open-source automation library can be
 
 LibreAutomate can run on Windows 7-11 with .NET runtime. More info [here](xref:index).
 
-QM (Quick Macros 2) will not have more features in the future. Only bug fixes. But it will be available and supported for long time.
+QM (Quick Macros) will not have more features in the future. Only bug fixes. But it will be available and supported for long time.
 
 Let's compare QM and LibreAutomate code.
 
@@ -49,7 +49,7 @@ LibreAutomate has triggers to execute parts of a running script. Trigger types: 
 
 LibreAutomate does not have item types like "menu", "toolbar" and "autotext". Instead use classes **popupMenu**, **toolbar** and **AutotextTriggers**.
 
-To create dialogs now can be used class **wpfBuilder** and snippet wpfSnippet.
+To create dialogs now can be used class **wpfBuilder** and snippet **wpfSnippet**.
 
 Currently LibreAutomate has only the most important tools for creating code.
 

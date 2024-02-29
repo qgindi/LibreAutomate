@@ -67,7 +67,7 @@ static unsafe partial class WinRT {
 		}
 		
 		/// <summary>
-		/// Calls <b>QueryInterface</b>. Returns false if failed.
+		/// Calls <b>QueryInterface</b>. Returns <c>false</c> if failed.
 		/// </summary>
 		public bool QI<T>(out T r) where T : unmanaged {
 			bool ok = 0 == _QI(typeof(T), out var v);

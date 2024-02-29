@@ -80,7 +80,7 @@ internal class WaitHandle_ : WaitHandle {
 
 	/// <summary>
 	/// Opens process handle.
-	/// Returns null if failed.
+	/// Returns <c>null</c> if failed.
 	/// </summary>
 	/// <param name="pid"></param>
 	/// <param name="desiredAccess"></param>

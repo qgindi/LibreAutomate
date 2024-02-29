@@ -64,7 +64,7 @@ unsafe struct SharedMemory_ {
 		public void* Mem => _mem;
 
 		/// <summary>
-		/// Created new memory. If false - opened existing.
+		/// Created new memory. If <c>false</c> - opened existing.
 		/// </summary>
 		public bool Created { get; }
 

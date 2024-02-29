@@ -54,7 +54,7 @@ public partial class toolbar {
 	}
 	
 	/// <summary>
-	/// Display button text. Default true. If false, displays text in tooltips, and only displays first 2 characters for buttons without image.
+	/// Display button text. Default <c>true</c>. If <c>false</c>, displays text in tooltips, and only displays first 2 characters for buttons without image.
 	/// </summary>
 	/// <remarks>
 	/// A button can override this property:
@@ -101,7 +101,7 @@ public partial class toolbar {
 	/// <summary>
 	/// Background color or brush.
 	/// </summary>
-	/// <value>Can be <see cref="Color"/>, <see cref="ColorInt"/>, int (color 0xRRGGBB) or <see cref="Brush"/>. If null (default), uses system color.</value>
+	/// <value>Can be <see cref="Color"/>, <see cref="ColorInt"/>, int (color 0xRRGGBB) or <see cref="Brush"/>. If <c>null</c> (default), uses system color.</value>
 	public object Background {
 		get => _background;
 		set {

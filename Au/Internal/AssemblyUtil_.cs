@@ -22,10 +22,10 @@ internal static class AssemblyUtil_ {
 	}
 
 	/// <summary>
-	/// Returns true if the build configuration of the assembly is Debug. Returns false if Release (optimized).
+	/// Returns <c>true</c> if the build configuration of the assembly is Debug. Returns <c>false</c> if Release (optimized).
 	/// </summary>
 	/// <remarks>
-	/// Returns true if the assembly has <see cref="DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is true.
+	/// Returns <c>true</c> if the assembly has <see cref="DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is <c>true</c>.
 	/// </remarks>
 	public static bool IsDebug(Assembly a) => a?.GetCustomAttribute<DebuggableAttribute>()?.IsJITTrackingEnabled ?? false;
 	//IsJITTrackingEnabled depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe IsJITOptimizerDisabled too).

@@ -235,12 +235,12 @@ namespace Au {
 		/// Coordinates.
 		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">The position is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The position is not in screen. No exception if option <b>Relaxed</b> is <c>true</c> (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">
 		/// Failed to move the cursor to that position. Some reasons:
 		/// - The active window belongs to a process of higher [](xref:uac) integrity level.
 		/// - Another thread blocks or modifies mouse input (API <b>BlockInput</b>, mouse hooks, frequent API <b>SendInput</b> etc).
-		/// - Some application called API <b>ClipCursor</b>. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).
+		/// - Some application called API <b>ClipCursor</b>. No exception if option <b>Relaxed</b> is <c>true</c> (then final cursor position is undefined).
 		/// </exception>
 		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
@@ -272,7 +272,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Moves the mouse cursor where it was at the time of the last <see cref="save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse click' function call in this thread. Does nothing if these functions were not called.
+		/// Moves the mouse cursor where it was at the time of the last <see cref="save"/> call in this thread. If it was not called - of the first "mouse move" or "mouse click" function call in this thread. Does nothing if these functions were not called.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
@@ -292,7 +292,7 @@ namespace Au {
 		[ThreadStatic] static _PrevMousePos t_prevMousePos;
 
 		/// <summary>
-		/// Mouse cursor position of the most recent successful 'mouse move' or 'mouse click' function call in this thread.
+		/// Mouse cursor position of the most recent successful "mouse move" or "mouse click" function call in this thread.
 		/// If such functions are still not called in this thread, returns <see cref="xy"/>.
 		/// </summary>
 		public static POINT lastXY => t_prevMousePos?.last ?? xy;
@@ -311,7 +311,7 @@ namespace Au {
 		/// <returns>Final cursor position in screen.</returns>
 		/// <param name="dx">X offset from <b>lastXY.x</b> or <b>xy.x</b>.</param>
 		/// <param name="dy">Y offset from <b>lastXY.y</b> or <b>xy.y</b>.</param>
-		/// <param name="useLastXY">If true (default), moves relative to <see cref="lastXY"/>, else relative to <see cref="xy"/>.</param>
+		/// <param name="useLastXY">If <c>true</c> (default), moves relative to <see cref="lastXY"/>, else relative to <see cref="xy"/>.</param>
 		/// <inheritdoc cref="move(POINT)" path="//exception|//remarks"/>
 		public static POINT moveBy(int dx, int dy, bool useLastXY = true) {
 			WaitForNoButtonsPressed_();
@@ -646,12 +646,12 @@ namespace Au {
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action. Default: left click.</param>
 		/// <param name="useLastXY">
-		/// Use <see cref="lastXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse click' function called in this thread. Use this option for reliability.
+		/// Use <see cref="lastXY"/>. It is the mouse cursor position set by the most recent "mouse move" or "mouse click" function called in this thread. Use this option for reliability.
 		/// Example: <c>mouse.move(100, 100); mouse.clickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>mouse.move</c> sets it and <c>mouse.clickEx</c> uses it. In such case this option atomically moves the cursor to <b>lastXY</b>. This movement is instant and does not use <see cref="opt"/>.
-		/// If false (default), clicks at the current cursor position (does not move it).
+		/// If <c>false</c> (default), clicks at the current cursor position (does not move it).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid <i>button</i> flags (multiple buttons or actions specified).</exception>
-		/// <exception cref="Exception">If <i>lastXY</i> true and need to move the cursor - exceptions of <see cref="move(POINT)"/>.</exception>
+		/// <exception cref="Exception">If <i>lastXY</i> <c>true</c> and need to move the cursor - exceptions of <see cref="move(POINT)"/>.</exception>
 		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/> and maybe those used by <see cref="move(POINT)"/>.
@@ -684,7 +684,7 @@ namespace Au {
 		/// <inheritdoc cref="move(POINT)" path="/exception"/>
 		/// <remarks>
 		/// To move the mouse cursor, calls <see cref="move(wnd, Coord, Coord, bool)"/>.
-		/// If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then <i>x y</i> is still not in the window. Skips all this when just releasing button or if option <b>Relaxed</b> is true. If <i>w</i> is a control, <i>x y</i> can be somewhere else in its top-level parent window.
+		/// If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then <i>x y</i> is still not in the window. Skips all this when just releasing button or if option <b>Relaxed</b> is <c>true</c>. If <i>w</i> is a control, <i>x y</i> can be somewhere else in its top-level parent window.
 		/// 
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
 		/// </remarks>
@@ -711,7 +711,7 @@ namespace Au {
 		/// Left button click.
 		/// </summary>
 		/// <param name="useLastXY">Use <see cref="lastXY"/>, not current cursor position. More info: <see cref="clickEx(MButton, bool)"/>.</param>
-		/// <exception cref="Exception">If <i>lastXY</i> true and need to move the cursor - exceptions of <see cref="move(POINT)"/>.</exception>
+		/// <exception cref="Exception">If <i>lastXY</i> <c>true</c> and need to move the cursor - exceptions of <see cref="move(POINT)"/>.</exception>
 		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/> and maybe those used by <see cref="move(POINT)"/>.
@@ -1001,7 +1001,7 @@ namespace Au {
 		///// <summary>
 		///// Releases mouse buttons pressed by this thread (t_pressedButtons).
 		///// </summary>
-		///// <param name="p">If not null, and XY is different, moves to this point. Used for reliability.</param>
+		///// <param name="p">If not <c>null</c>, and XY is different, moves to this point. Used for reliability.</param>
 		//static void _ReleaseButtons(POINT? p = null)
 		//{
 		//	var b = t_pressedButtons;
@@ -1014,9 +1014,9 @@ namespace Au {
 		//rejected: finally release script-pressed buttons, especially on exception. Instead let use code: using(mouse.leftDown(...)), it auto-releases pressed button.
 
 		/// <summary>
-		/// Returns true if some mouse buttons are pressed.
+		/// Returns <c>true</c> if some mouse buttons are pressed.
 		/// </summary>
-		/// <param name="buttons">Return true if some of these buttons are down. Default: any (Left, Right, Middle, X1 or X2).</param>
+		/// <param name="buttons">Return <c>true</c> if some of these buttons are down. Default: any (Left, Right, Middle, X1 or X2).</param>
 		/// <remarks>
 		/// Uses API <msdn>GetAsyncKeyState</msdn>.
 		/// When processing user input in UI code (forms, WPF), instead use class <see cref="keys.gui"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
@@ -1051,13 +1051,13 @@ namespace Au {
 
 		//rejected: rarely used. Can use IsPressed.
 		///// <summary>
-		///// Returns true if the left mouse button is pressed.
+		///// Returns <c>true</c> if the left mouse button is pressed.
 		///// </summary>
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static bool isLeft => keys.isPressed(KKey.MouseLeft);
 
 		///// <summary>
-		///// Returns true if the right mouse button is pressed.
+		///// Returns <c>true</c> if the right mouse button is pressed.
 		///// </summary>
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static bool isRight => keys.isPressed(KKey.MouseRight);
@@ -1067,7 +1067,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <seealso cref="keys.waitForNoModifierKeysAndMouseButtons"/>
 		public static bool waitForNoButtonsPressed(Seconds timeout = default, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
@@ -1076,7 +1076,7 @@ namespace Au {
 
 		/// <summary>
 		/// Waits while some buttons are pressed, except those pressed by a <see cref="mouse"/> class function in this thread.
-		/// Does nothing if option <b>Relaxed</b> is true.
+		/// Does nothing if option <b>Relaxed</b> is <c>true</c>.
 		/// </summary>
 		internal static void WaitForNoButtonsPressed_() {
 			//not public, because we have WaitForNoButtonsPressed, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
@@ -1092,11 +1092,11 @@ namespace Au {
 		/// <summary>
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
-		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
-		/// <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+		/// <param name="block">Make the event invisible for other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <exception cref="ArgumentException"><i>button</i> is 0.</exception>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
@@ -1170,7 +1170,7 @@ namespace Au {
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		public static bool waitForCursor(Seconds timeout, MCursor cursor, bool not = false) {
 			IntPtr hcur = Api.LoadCursor(default, cursor);
@@ -1185,7 +1185,7 @@ namespace Au {
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="MouseCursor.Hash"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		public static bool waitForCursor(Seconds timeout, long cursorHash, bool not = false) {
 			if (cursorHash == 0) throw new ArgumentException();
@@ -1199,7 +1199,7 @@ namespace Au {
 		/// <param name="x">X coordinate in <b>w</b> client area or <b>rect</b>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in <b>w</b> client area or <b>rect</b>. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
-		/// <param name="rect">A rectangle in <b>w</b> client area. If null (default), <i>x y</i> are relative to the client area.</param>
+		/// <param name="rect">A rectangle in <b>w</b> client area. If <c>null</c> (default), <i>x y</i> are relative to the client area.</param>
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
 		/// <remarks>

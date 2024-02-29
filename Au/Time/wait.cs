@@ -4,9 +4,9 @@ namespace Au;
 /// Contains functions to wait for a custom condition, handle, etc, or simply sleep.
 /// </summary>
 /// <remarks>
-/// Specialized 'wait for' functions are in other classes, for example <see cref="wnd.wait"/>.
+/// Specialized "wait for" functions are in other classes, for example <see cref="wnd.wait"/>.
 /// 
-/// All 'wait for' functions have a timeout parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If > 0, throws <see cref="TimeoutException"/> when timed out. If &lt; 0, then stops waiting and returns default value of that type (false, etc).
+/// All "wait for" functions have a timeout parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If > 0, throws <see cref="TimeoutException"/> when timed out. If &lt; 0, then stops waiting and returns default value of that type (<c>false</c>, etc).
 /// 
 /// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a <b>Window</b>/<b>Form</b>/<b>Control</b> event handler, the window would stop responding. Use another thread, for example async/await/<b>Task</b>, like in the example. Or <see cref="Seconds.DoEvents"/>.
 /// </remarks>
@@ -161,7 +161,7 @@ public static partial class wait {
 		/// <summary>
 		/// Calls PeekMessage/TranslateMessage/DispatchMessage while there are messages.
 		/// </summary>
-		/// <returns>false if received WM_QUIT.</returns>
+		/// <returns><c>false</c> if received WM_QUIT.</returns>
 		public bool Pump() {
 			while (Api.PeekMessage(out var m)) {
 				if (m.message == Api.WM_QUIT) { _quit = (int)m.wParam; return false; }
@@ -175,11 +175,11 @@ public static partial class wait {
 		/// Like <b>Pump</b>, but can call a callback function. Used by <see cref="Wait_"/>.
 		/// </summary>
 		/// <param name="msgCallback">
-		/// null or callback function of type:
-		/// <br/>• WPMCallback - called before dispatching a message. If returns true, not called for other messages. Can modify the MSG. Can set MSG.message = 0 to prevent dispatching it.
+		/// <c>null</c> or callback function of type:
+		/// <br/>• WPMCallback - called before dispatching a message. If returns <c>true</c>, not called for other messages. Can modify the MSG. Can set MSG.message = 0 to prevent dispatching it.
 		/// <br/>• Func&lt;bool&gt; - called after dispatching all messages.
 		/// </param>
-		/// <returns>true if <i>msgCallback</i> returned true.</returns>
+		/// <returns><c>true</c> if <i>msgCallback</i> returned <c>true</c>.</returns>
 		public bool PumpWithCallback(Delegate msgCallback) {
 			bool R = false;
 			while (Api.PeekMessage(out var m)) {
@@ -206,7 +206,7 @@ public static partial class wait {
 	/// <summary>
 	/// Retrieves and dispatches events and Windows messages from the message queue of this thread.
 	/// </summary>
-	/// <returns>false if received <b>WM_QUIT</b> message.</returns>
+	/// <returns><c>false</c> if received <b>WM_QUIT</b> message.</returns>
 	/// <remarks>
 	/// Similar to <see cref="System.Windows.Forms.Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
 	/// </remarks>
@@ -358,7 +358,7 @@ public static partial class wait {
 		/// <summary>
 		/// Calls TempSet1 if sleepTimeMS is 1-89.
 		/// </summary>
-		/// <param name="sleepTimeMS">milliseconds of the caller 'sleep' function.</param>
+		/// <param name="sleepTimeMS">milliseconds of the caller "sleep" function.</param>
 		internal static void TempSet1_(int sleepTimeMS) {
 			if (sleepTimeMS is < 90 and > 0) TempSet1(1111);
 		}

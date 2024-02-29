@@ -124,7 +124,7 @@ namespace Au {
 			//}
 
 			/// <summary>
-			/// Returns true if w contains a non-zero special handle value (<see cref="SpecHWND"/>).
+			/// Returns <c>true</c> if w contains a non-zero special handle value (<see cref="SpecHWND"/>).
 			/// Note: <b>SpecHWND.TOP</b> is 0.
 			/// </summary>
 			public static bool IsSpecHwnd(wnd w) {
@@ -134,7 +134,7 @@ namespace Au {
 
 			/// <summary>
 			/// Converts object to wnd.
-			/// Object can contain null, wnd, Control, or System.Windows.DependencyObject (must be in element 0 of object[]).
+			/// Object can contain <c>null</c>, wnd, Control, or System.Windows.DependencyObject (must be in element 0 of object[]).
 			/// Avoids loading Forms and WPF dlls when not used.
 			/// </summary>
 			public static wnd FromObject(object o) => o switch {
@@ -151,7 +151,7 @@ namespace Au {
 			static wnd _Wpf(object o) => (o as System.Windows.DependencyObject).Hwnd();
 
 			/// <summary>
-			/// If w is handle of a WPF element (Window, Popup, HwndHost-ed control, HwndSource.RootVisual), returns that element, else null.
+			/// If w is handle of a WPF element (Window, Popup, HwndHost-ed control, HwndSource.RootVisual), returns that element, else <c>null</c>.
 			/// Slow if HwndHost-ed control.
 			/// w can be default.
 			/// </summary>

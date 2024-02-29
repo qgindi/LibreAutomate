@@ -31,7 +31,7 @@ public static partial class ExtMisc {
 	/// <param name="dispose">When resized, call <b>Dispose</b> for this object.</param>
 	/// <param name="premultiplied">
 	/// Let the resized bitmap have <b>PixelFormat</b> = <b>Format32bppPArgb</b>. It prevents distortions at transparent-opaque boundaries.
-	/// If false: if this bitmap has <b>Format32bppArgb</b> or <b>Format32bppPArgb</b>, does not change, else <b>PixelFormat.Format32bppArgb</b>.
+	/// If <c>false</c>: if this bitmap has <b>Format32bppArgb</b> or <b>Format32bppPArgb</b>, does not change, else <b>PixelFormat.Format32bppArgb</b>.
 	/// </param>
 	/// <exception cref="ArgumentException">Unsupported <b>PixelFormat</b>.</exception>
 	public static unsafe Bitmap Resize(this Bitmap b, int width, int height, BRFilter filter, bool dispose, bool premultiplied = false) {

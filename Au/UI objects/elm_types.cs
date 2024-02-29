@@ -78,7 +78,7 @@ namespace Au.Types {
 	/// </summary>
 	[Flags]
 	public enum EWFlags {
-		/// <summary>Don't throw exception when fails. Then returns null.</summary>
+		/// <summary>Don't throw exception when fails. Then returns <c>null</c>.</summary>
 		NoThrow = 1,
 
 		/// <summary>
@@ -124,14 +124,14 @@ namespace Au.Types {
 		/// 2. In some cases can be slow.
 		/// 3. In some apps some elements have bugs and the process can crash. Rare.
 		/// 
-		/// The "Find UI element" tool uses this flag when checked 'Smaller'.
+		/// The "Find UI element" tool uses this flag when checked <b>Smaller</b>.
 		/// This flag is ignored when not in-process, because could be too slow. Also ignored in some windows, eg web browsers and Java apps.
 		/// </summary>
 		TrySmaller = 8,
 
 		/// <summary>
 		/// Use UI Automation API if the default API fails and in some other cases.
-		/// The "Find UI element" tool uses this flag when 'UIA' is in indeterminate state.
+		/// The "Find UI element" tool uses this flag when <b>UIA</b> is in indeterminate state.
 		/// </summary>
 		OrUIA = 16,
 

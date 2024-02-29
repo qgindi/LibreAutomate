@@ -90,10 +90,10 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets shortcut target path.
 		/// </summary>
-		/// <value>null if target isn't a file system object, eg Control Panel or URL.</value>
-		/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where <b>IShellLink.GetPath</b> lies.</remarks>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
-		/// <exception cref="ArgumentException">The 'set' function allows max length 259.</exception>
+		/// <value><c>null</c> if target isn't a file system object, eg Control Panel or URL.</value>
+		/// <remarks>The <c>get</c> function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where <b>IShellLink.GetPath</b> lies.</remarks>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
+		/// <exception cref="ArgumentException">The <c>set</c> function allows max length 259.</exception>
 		public string TargetPath {
 			get => _CorrectPath(_GetString(_WhatString.Path), true);
 			set { AuException.ThrowIfHresultNot0(_isl.SetPath(_Max259(value))); }
@@ -111,9 +111,9 @@ namespace Au {
 		/// </summary>
 		/// <remarks>
 		/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
-		/// Most but not all shortcuts have this property; the 'get' function returns null if the shortcut does not have it.
+		/// Most but not all shortcuts have this property; the <c>get</c> function returns <c>null</c> if the shortcut does not have it.
 		/// </remarks>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public Pidl TargetPidl {
 			get => (0 == _isl.GetIDList(out var pidl)) ? new Pidl(pidl) : null;
 			set { AuException.ThrowIfHresultNot0(_isl.SetIDList(value?.UnsafePtr ?? default)); GC.KeepAlive(value); }
@@ -123,8 +123,8 @@ namespace Au {
 		/// Gets or sets a URL target.
 		/// Note: it is a .lnk shortcut, not a .url shortcut.
 		/// </summary>
-		/// <value>The 'get' function returns string <c>"file:///..."</c> if target is a file.</value>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
+		/// <value>The <c>get</c> function returns string <c>"file:///..."</c> if target is a file.</value>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public string TargetURL {
 			get {
 				if (0 != _isl.GetIDList(out var pidl)) return null;
@@ -140,7 +140,7 @@ namespace Au {
 		/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="Pidl"/>).
 		/// The string can be used with <see cref="run.it"/>.
 		/// </summary>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public string TargetAnyType {
 			get {
 				var R = TargetPath; if (R != null) return R; //support MSI etc
@@ -156,7 +156,7 @@ namespace Au {
 		/// <summary>
 		/// Gets custom icon file path and icon index.
 		/// </summary>
-		/// <returns>null if the shortcut does not have a custom icon (then you see its target icon).</returns>
+		/// <returns><c>null</c> if the shortcut does not have a custom icon (then you see its target icon).</returns>
 		/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
 		[SkipLocalsInit]
 		public string GetIconLocation(out int iconIndex) {
@@ -179,8 +179,8 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets the working directory path (Start in).
 		/// </summary>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
-		/// <exception cref="ArgumentException">The 'set' function allows max length 259.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
+		/// <exception cref="ArgumentException">The <c>set</c> function allows max length 259.</exception>
 		public string WorkingDirectory {
 			get => _CorrectPath(_GetString(_WhatString.WorkingDirectory));
 			set { AuException.ThrowIfHresultNot0(_isl.SetWorkingDirectory(_Max259(value))); } //see Description comments
@@ -195,7 +195,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets the command-line arguments.
 		/// </summary>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public string Arguments {
 			get => _GetString(_WhatString.Arguments);
 			set { AuException.ThrowIfHresultNot0(_isl.SetArguments(value)); }
@@ -204,8 +204,8 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets the description text (Comment).
 		/// </summary>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
-		/// <exception cref="ArgumentException">The 'set' function allows max length 259.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
+		/// <exception cref="ArgumentException">The <c>set</c> function allows max length 259.</exception>
 		public string Description {
 			get => _GetString(_WhatString.Description);
 			set { AuException.ThrowIfHresultNot0(_isl.SetDescription(_Max259(value))); }
@@ -214,8 +214,8 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets hotkey.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value for the 'set' function includes Win.</exception>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
+		/// <exception cref="ArgumentException">The value for the <c>set</c> function includes Win.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public (KMod, KKey) Hotkey {
 			get {
 				if (0 != _isl.GetHotkey(out ushort k2)) return default;
@@ -235,7 +235,7 @@ namespace Au {
 		/// Most programs ignore it.
 		/// </summary>
 		/// <value>1 (normal, default), 2 (minimized) or 3 (maximized).</value>
-		/// <exception cref="AuException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public int ShowState {
 			get => (0 == _isl.GetShowCmd(out var R)) ? R : Api.SW_SHOWNORMAL;
 			set { AuException.ThrowIfHresultNot0(_isl.SetShowCmd(value)); }

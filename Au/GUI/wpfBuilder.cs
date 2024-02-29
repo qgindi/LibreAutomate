@@ -323,15 +323,15 @@ public class wpfBuilder {
 	/// This constructor creates panel of specified type (default is <see cref="Grid"/>) and optionally adds to a container.
 	/// </summary>
 	/// <param name="container">
-	/// Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be null.
-	/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="System.Windows.Window"/>, <see cref="TabItem"/>, <see cref="ToolTip"/>, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>container.Child = b.Panel;</c> or <c>container.Children.Add(b.Panel);</c> or <c>b.Tooltip(btt.Panel);</c> or <c>hwndSource.RootVisual = btt.Panel;</c> (the code depends on <i>container</i> type).
+	/// Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be <c>null</c>.
+	/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="System.Windows.Window"/>, <see cref="TabItem"/>, <see cref="ToolTip"/>, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is <c>null</c> or an element of some other type, need to explicitly add the panel to it, like <c>container.Child = b.Panel;</c> or <c>container.Children.Add(b.Panel);</c> or <c>b.Tooltip(btt.Panel);</c> or <c>hwndSource.RootVisual = btt.Panel;</c> (the code depends on <i>container</i> type).
 	/// </param>
 	/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
 	/// <param name="setProperties">
-	/// Set some container's properties like other overload does. Default true. Currently sets these properties, and only if <i>container</i> is of type <b>Window</b>:
+	/// Set some container's properties like other overload does. Default <c>true</c>. Currently sets these properties, and only if <i>container</i> is of type <b>Window</b>:
 	/// <br/>• <see cref="Window.SizeToContent"/>, except when <i>container</i> is <b>Canvas</b> or has properties <b>Width</b> and/or <b>Height</b> set.
-	/// <br/>• <b>SnapsToDevicePixels</b> = true.
-	/// <br/>• <b>WindowStartupLocation</b> = Center.
+	/// <br/>• <b>SnapsToDevicePixels</b> = <c>true</c>.
+	/// <br/>• <b>WindowStartupLocation</b> = <b>Center</b>.
 	/// <br/>• <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="winTopmost"/> and <see cref="winWhite"/>.
 	/// </param>
 	public wpfBuilder(FrameworkElement container = null, WBPanelType panelType = WBPanelType.Grid, bool setProperties = true) {
@@ -491,7 +491,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Saves window xy/size/state when closing and restores when opening.
 	/// </summary>
-	/// <param name="saved">String that the <i>save</i> action received previously. Can be null or <c>""</c>, usually first time (still not saved).</param>
+	/// <param name="saved">String that the <i>save</i> action received previously. Can be <c>null</c> or <c>""</c>, usually first time (still not saved).</param>
 	/// <param name="save">Called when closing the window. Receives string containing window xy/size/state. Can save it in registry, file, anywhere.</param>
 	/// <exception cref="InvalidOperationException">
 	/// - Container is not of type <b>Window</b>.
@@ -531,13 +531,13 @@ public class wpfBuilder {
 	/// <param name="state">Sets <see cref="Window.WindowState"/>.</param>
 	/// <param name="style">Sets <see cref="Window.WindowStyle"/>.</param>
 	/// <param name="icon">Sets <see cref="Window.Icon"/>. Example: <c>.WinProperties(icon: BitmapFrame.Create(new Uri(@"d:\icons\file.ico")))</c>.</param>
-	/// <param name="whiteBackground">Set background color = <b>SystemColors.WindowBrush</b> (normally white) if true or <b>SystemColors.ControlBrush</b> (dialog color) if false. See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
+	/// <param name="whiteBackground">Set background color = <b>SystemColors.WindowBrush</b> (normally white) if <c>true</c> or <b>SystemColors.ControlBrush</b> (dialog color) if <c>false</c>. See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
 	/// <exception cref="InvalidOperationException">
 	/// - Container is not of type <b>Window</b>.
 	/// - <i>startLocation</i> or <i>state</i> used after <b>WinXY</b>, <b>WinRect</b> or <b>WinSaved</b>.
 	/// </exception>
 	/// <remarks>
-	/// The function uses only non-null parameters.
+	/// The function uses only non-<c>null</c> parameters.
 	/// Or you can change <see cref="Window"/> properties directly, for example <c>b.Window.Topmost = true;</c>.
 	/// </remarks>
 	public wpfBuilder WinProperties(WindowStartupLocation? startLocation = null, ResizeMode? resizeMode = null, bool? showActivated = null, bool? showInTaskbar = null, bool? topmost = null, WindowState? state = null, WindowStyle? style = null, ImageSource icon = null, bool? whiteBackground = null) {
@@ -561,7 +561,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Gets the top-level window.
 	/// </summary>
-	/// <returns>null if container is not of type <b>Window</b>.</returns>
+	/// <returns><c>null</c> if container is not of type <b>Window</b>.</returns>
 	public Window Window => _window;
 	
 	/// <summary>
@@ -578,7 +578,7 @@ public class wpfBuilder {
 	public FrameworkElement Last => _p.LastAdded;
 	
 	/// <summary>
-	/// Gets the child or descendant element added in current panel before adding <see cref="Last"/>. Can be null.
+	/// Gets the child or descendant element added in current panel before adding <see cref="Last"/>. Can be <c>null</c>.
 	/// </summary>
 	/// <remarks>
 	/// For example, after calling the <b>Add</b> overload that adds 2 elements (the first is <b>Label</b>), this property returns the <b>Label</b>.
@@ -632,7 +632,7 @@ public class wpfBuilder {
 	/// When clicked OK or Apply button.
 	/// </summary>
 	/// <remarks>
-	/// <see cref="Button.IsDefault"/> is true if it is OK button.
+	/// <see cref="Button.IsDefault"/> is <c>true</c> if it is OK button.
 	/// The parameter's property <b>Cancel</b> can be used to prevent closing the window.
 	/// </remarks>
 	public event Action<WBButtonClickArgs> OkApply;
@@ -654,9 +654,9 @@ public class wpfBuilder {
 	public static bool winTopmost { get; set; }
 	
 	/// <summary>
-	/// If true, constructor does not change color of windows created afterwards; then color normally is white.
-	/// If false constructor sets standard color of dialogs, usually light gray.
-	/// Default value depends on application's theme and usually is true if using custom theme.
+	/// If <c>true</c>, constructor does not change color of windows created afterwards; then color normally is white.
+	/// If <c>false</c> constructor sets standard color of dialogs, usually light gray.
+	/// Default value depends on application's theme and usually is <c>true</c> if using custom theme.
 	/// </summary>
 	//	public static bool winWhite { get; set; } = _IsCustomTheme(); //no, called too early
 	public static bool winWhite { get => s_winWhite ??= _IsCustomTheme(); set { s_winWhite = value; } }
@@ -677,7 +677,7 @@ public class wpfBuilder {
 	/// <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align content better when using default theme. Default value of this option depends on application's theme.</param>
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default margin is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
-	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If true, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
+	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If <c>true</c>, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
 	/// <param name="bindLabelVisibility">Let <see cref="LabeledBy"/> and the <b>Add</b> overload that adds 2 elements (the first is <b>Label</b>) bind the <b>Visibility</b> property of the label to that of the last added element, to automatically hide/show the label together with the element.</param>
 	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null, bool? bindLabelVisibility = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
@@ -829,7 +829,7 @@ public class wpfBuilder {
 	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
 	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
+	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
 		if (text is WBAdd f1 && flags == 0) { flags = f1; text = null; } //it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
 		_p.BeforeAdd(flags);
@@ -843,7 +843,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
+	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
 	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
 	
 	/// <summary>
@@ -852,8 +852,8 @@ public class wpfBuilder {
 	/// <param name="label">Label text. Usually string or <see cref="TextBlock"/>. Example: <c>new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "long text" }</c>.</param>
 	/// <param name="variable">Variable of second element. More info - see other overload.</param>
 	/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
-	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
-	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for this element type.</exception>
+	/// <param name="row2">If not <c>null</c>, after adding first element calls <see cref="Row"/> with this argument.</param>
+	/// <exception cref="NotSupportedException">If the function does not support non-<c>null</c> <i>text</i> for this element type.</exception>
 	/// <remarks>
 	/// Sets <see cref="Label.Target"/> if the first element is <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
 	/// </remarks>
@@ -875,8 +875,8 @@ public class wpfBuilder {
 	/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
 	/// <param name="var2">Variable of second element. More info - see other overload.</param>
 	/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
-	/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
-	/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for element type <i>T1</i> or <i>T2</i>.</exception>
+	/// <param name="row2">If not <c>null</c>, after adding first element calls <see cref="Row"/> with this argument.</param>
+	/// <exception cref="NotSupportedException">If the function does not support non-<c>null</c> <i>text</i> for element type <i>T1</i> or <i>T2</i>.</exception>
 	/// <remarks>
 	/// If <b>T1</b> is <b>Label</b>, sets <see cref="Label.Target"/>. If <b>T1</b> is <b>Label</b> or <b>TextBlock</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
 	/// </remarks>
@@ -949,7 +949,7 @@ public class wpfBuilder {
 	/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
 	/// <param name="result"><see cref="ResultButton"/> value when clicked this button.</param>
 	/// <remarks>
-	/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns true.
+	/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns <c>true</c>.
 	/// </remarks>
 	public wpfBuilder AddButton(object text, int result/*, Action<WBButtonClickArgs> clickSplit = null*/) {
 		Add(out Button c, text);
@@ -972,12 +972,12 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds OK and/or Cancel and/or Apply buttons.
 	/// </summary>
-	/// <param name="ok">Text of OK button. If null, does not add the button.</param>
-	/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
-	/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
-	/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If null (default), adds if not already in a stack panel, except when there is 1 button.</param>
+	/// <param name="ok">Text of OK button. If <c>null</c>, does not add the button.</param>
+	/// <param name="cancel">Text of Cancel button. If <c>null</c>, does not add the button.</param>
+	/// <param name="apply">Text of Apply button. If <c>null</c>, does not add the button.</param>
+	/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If <c>null</c> (default), adds if not already in a stack panel, except when there is 1 button.</param>
 	/// <remarks>
-	/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
+	/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns <c>true</c> on <b>OK</b>, <c>false</c> on <b>Cancel</b>.
 	/// See also event <see cref="OkApply"/>.
 	/// </remarks>
 	public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
@@ -1002,7 +1002,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds <see cref="Separator"/> control.
 	/// </summary>
-	/// <param name="vertical">If true, adds vertical separator. If false, horizontal. If null (default), adds vertical if in horizontal stack panel, else adds horizontal.</param>
+	/// <param name="vertical">If <c>true</c>, adds vertical separator. If <c>false</c>, horizontal. If <c>null</c> (default), adds vertical if in horizontal stack panel, else adds horizontal.</param>
 	/// <remarks>
 	/// In <b>Canvas</b> panel separator's default size is 1x1. Need to set size, like <c>.AddSeparator().XY(0, 50, 100, 1)</c>.
 	/// </remarks>
@@ -1021,9 +1021,9 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="e">Variable for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</param>
 	/// <param name="init">Initial value.</param>
-	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: null, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
-	/// <param name="label">If not null, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a [Flags] enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
-	/// <param name="vertical">Vertical stack. Default true.</param>
+	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
+	/// <param name="label">If not <c>null</c>, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a [Flags] enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
+	/// <param name="vertical">Vertical stack. Default <c>true</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// var b = new wpfBuilder("Window").WinSize(250);
@@ -1127,7 +1127,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets callback function to be called by <b>AddX</b> functions for each element added afterwards. Not called by <b>StartX</b> functions for panels.
 	/// </summary>
-	/// <param name="action">Callback function or null.</param>
+	/// <param name="action">Callback function or <c>null</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// b.AlsoAll((b, e) => {
@@ -1147,7 +1147,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="width">Width or/and min/max width.</param>
 	/// <param name="height">Height or/and min/max height.</param>
-	/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
+	/// <param name="alignX">Horizontal alignment. If not <c>null</c>, calls <see cref="Align(string, string)"/>.</param>
 	/// <param name="alignY">Vertical alignment.</param>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 	public wpfBuilder Size(WBLength width, WBLength height, string alignX = null, string alignY = null) {
@@ -1162,7 +1162,7 @@ public class wpfBuilder {
 	/// Sets width of the last added element. Optionally sets alignment.
 	/// </summary>
 	/// <param name="width">Width or/and min/max width.</param>
-	/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
+	/// <param name="alignX">Horizontal alignment. If not <c>null</c>, calls <see cref="Align(string, string)"/>.</param>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 	public wpfBuilder Width(WBLength width, string alignX = null) {
 		width.ApplyTo(Last, false);
@@ -1174,7 +1174,7 @@ public class wpfBuilder {
 	/// Sets height of the last added element. Optionally sets alignment.
 	/// </summary>
 	/// <param name="height">Height or/and min/max height.</param>
-	/// <param name="alignY">Vertical alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
+	/// <param name="alignY">Vertical alignment. If not <c>null</c>, calls <see cref="Align(string, string)"/>.</param>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 	public wpfBuilder Height(WBLength height, string alignY = null) {
 		height.ApplyTo(Last, true);
@@ -1366,7 +1366,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets <see cref="UIElement.IsEnabled"/> of the last added element.
 	/// </summary>
-	/// <param name="disabled">If true (default), sets <b>IsEnabled</b> = false, else sets <b>IsEnabled</b> = true.</param>
+	/// <param name="disabled">If <c>true</c> (default), sets <b>IsEnabled</b> = <c>false</c>, else sets <b>IsEnabled</b> = true.</param>
 	public wpfBuilder Disabled(bool disabled = true) {
 		Last.IsEnabled = !disabled;
 		return this;
@@ -1375,7 +1375,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets <see cref="UIElement.Visibility"/> of the last added element.
 	/// </summary>
-	/// <param name="hidden">If true (default), sets <see cref="Visibility"/> <b>Hiden</b>; if false - <b>Visible</b>; if null - <b>Collapsed</b>.</param>
+	/// <param name="hidden">If <c>true</c> (default), sets <see cref="Visibility"/> <b>Hiden</b>; if <c>false</c> - <b>Visible</b>; if <c>null</c> - <b>Collapsed</b>.</param>
 	public wpfBuilder Hidden(bool? hidden = true) {
 		Last.Visibility = hidden switch { true => Visibility.Hidden, false => Visibility.Visible, _ => Visibility.Collapsed };
 		return this;
@@ -1455,8 +1455,8 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets border properties of the last added element, which can be <b>Border</b> or a <b>Control</b>-derived class.
 	/// </summary>
-	/// <param name="color">Border color brush. If null, uses <b>SystemColors.ActiveBorderBrush</b>.</param>
-	/// <param name="thickness">Border thickness. Ignored if <i>thickness2</i> not null.</param>
+	/// <param name="color">Border color brush. If <c>null</c>, uses <b>SystemColors.ActiveBorderBrush</b>.</param>
+	/// <param name="thickness">Border thickness. Ignored if <i>thickness2</i> not <c>null</c>.</param>
 	/// <param name="padding">Sets the <b>Padding</b> property.</param>
 	/// <param name="cornerRadius">Sets <see cref="Border.CornerRadius"/>. If used, the last added element must be <b>Border</b>.</param>
 	/// <param name="thickness2">Border thickness to use instead of <i>thickness</i>. Allows to set non-uniform thickness.</param>
@@ -1496,10 +1496,10 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets font properties of the last added element and its descendants.
 	/// </summary>
-	/// <param name="name">If not null, sets font name.</param>
-	/// <param name="size">If not null, sets font size.</param>
-	/// <param name="bold">If not null, sets font bold or not.</param>
-	/// <param name="italic">If not null, sets font italic or not.</param>
+	/// <param name="name">If not <c>null</c>, sets font name.</param>
+	/// <param name="size">If not <c>null</c>, sets font size.</param>
+	/// <param name="bold">If not <c>null</c>, sets font bold or not.</param>
+	/// <param name="italic">If not <c>null</c>, sets font italic or not.</param>
 	public wpfBuilder Font(string name = null, double? size = null, bool? bold = null, bool? italic = null) {
 		var c = Last;
 		if (name != null) TextElement.SetFontFamily(c, new FontFamily(name));
@@ -1527,7 +1527,7 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
-	/// Sets <b>TextWrapping</b> property of the last added element = <b>TextWrapping.Wrap</b> if true (default), else or <b>TextWrapping.NoWrap</b>.
+	/// Sets <b>TextWrapping</b> property of the last added element = <b>TextWrapping.Wrap</b> if <c>true</c> (default), else or <b>TextWrapping.NoWrap</b>.
 	/// Supports <b>TextBlock</b>, <b>TextBox</b> and <b>AccessText</b>.
 	/// </summary>
 	public wpfBuilder Wrap(bool wrap = true) => Wrap(wrap ? TextWrapping.Wrap : TextWrapping.NoWrap);
@@ -1604,10 +1604,10 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets a validation callback function for the last added element.
 	/// </summary>
-	/// <param name="func">Function that returns an error string if element's value is invalid, else returns null.</param>
+	/// <param name="func">Function that returns an error string if element's value is invalid, else returns <c>null</c>.</param>
 	/// <remarks>
 	/// The callback function will be called when clicked button OK or Apply or a button added with flag <see cref="WBBFlags.Validate"/>.
-	/// If it returns a non-null string, the window stays open and button's <i>click</i> callback not called. The string is displayed in a tooltip.
+	/// If it returns a non-<c>null</c> string, the window stays open and button's <i>click</i> callback not called. The string is displayed in a tooltip.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -1814,7 +1814,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Makes the last added <see cref="TextBox"/> multiline.
 	/// </summary>
-	/// <param name="height">If not null, sets height or/and min/max height.</param>
+	/// <param name="height">If not <c>null</c>, sets height or/and min/max height.</param>
 	/// <param name="wrap">Sets <see cref="TextBox.TextWrapping"/>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>TextBox</b>.</exception>
 	public wpfBuilder Multiline(WBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
@@ -1878,14 +1878,14 @@ public class wpfBuilder {
 	/// <param name="lazy">Retrieve items when (if) showing the dropdown part of the <b>ComboBox</b> first time.</param>
 	/// <exception cref="NotSupportedException">
 	/// - The last added element is not <b>ItemsControl</b>.
-	/// - <i>lazy</i> is true and the last added element is not <b>ComboBox</b>.
+	/// - <i>lazy</i> is <c>true</c> and the last added element is not <b>ComboBox</b>.
 	/// </exception>
 	public wpfBuilder Items(IEnumerable items, bool lazy = false) => lazy ? Items(true, o => o.ItemsSource = items) : _Items(null, items);
 	
 	/// <summary>
 	/// Sets callback function that should add items to the last added <see cref="ComboBox"/> later.
 	/// </summary>
-	/// <param name="once">Call the function once. If false, calls on each drop down.</param>
+	/// <param name="once">Call the function once. If <c>false</c>, calls on each drop down.</param>
 	/// <param name="onDropDown">Callback function that should add items. Called before showing the dropdown part of the <b>ComboBox</b>. Don't need to clear old items.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>ComboBox</b>.</exception>
 	public wpfBuilder Items(bool once, Action<ComboBox> onDropDown) {
@@ -2016,10 +2016,10 @@ public class wpfBuilder {
 	/// </para>
 	/// <para>
 	/// Tags can have these attributes, like <c>&lt;s c='red' FontSize = '20'>text&lt;/s></c>:
-	/// <br/>• <c>c</c> or <c>Foreground</c> - text color, like 'red' or '#AARRGGBB' or '#RRGGBB' or '#ARGB' or '#RGB'.
+	/// <br/>• <c>c</c> or <c>Foreground</c> - text color, like <c>'red'</c> or <c>'#AARRGGBB'</c> or <c>'#RRGGBB'</c> or <c>'#ARGB'</c> or <c>'#RGB'</c>.
 	/// <br/>• <c>b</c> or <c>Background</c> - background color.
-	/// <br/>• <c>FontFamily</c> - font name, like 'Consolas'.
-	/// <br/>• <c>FontSize</c> - font size, like '20'.
+	/// <br/>• <c>FontFamily</c> - font name, like <c>'Consolas'</c>.
+	/// <br/>• <c>FontSize</c> - font size, like <c>'20'</c>.
 	/// </para>
 	/// <para>
 	/// WPF elements of these types can be inserted without tags:
@@ -2044,7 +2044,7 @@ public class wpfBuilder {
 	/// <remarks>
 	/// The last added element can be of type:
 	/// <br/>• <see cref="TextBlock"/> - the function adds inlines to its <b>Inlines</b> collection.
-	/// <br/>• <b>ContentControl</b> (eg <b>Label</b> or <b>Button</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Content</b> property if it is null. If <b>HeaderedContentControl</b> (eg <b>GroupBox</b>) and its <b>Header</b> property is null, sets <b>Header</b> instead.
+	/// <br/>• <b>ContentControl</b> (eg <b>Label</b> or <b>Button</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Content</b> property if it is <c>null</c>. If <b>HeaderedContentControl</b> (eg <b>GroupBox</b>) and its <b>Header</b> property is <c>null</c>, sets <b>Header</b> instead.
 	/// <br/>• <b>Panel</b> whose <b>Parent</b> is <b>HeaderedContentControl</b> (eg <c>b.StartGrid&lt;GroupBox>(null).FormatText($"...")</c>) - uses the <b>HeaderedContentControl</b> like the above.
 	///
 	/// For elements other than the last added use <see cref="FormatText(object, InterpolatedString)"/> or <see cref="FormattedText(InterpolatedString)"/>.
@@ -2374,7 +2374,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets vertical or horizontal splitter properties of the last added <see cref="GridSplitter"/>.
 	/// </summary>
-	/// <param name="vertical">If true, resizes columns, else rows.</param>
+	/// <param name="vertical">If <c>true</c>, resizes columns, else rows.</param>
 	/// <param name="span">How many rows spans vertical splitter, or how many columns spans horizontall splitter. Can be more than row/column count.</param>
 	/// <param name="thickness">Width of vertical splitter or height of horizontal. If <b>double.NaN</b>, sets alignment "stretch", else "center".</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>GridSplitter</b>.</exception>
@@ -2459,7 +2459,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
 	/// <remarks>
-	/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> false, else its parent. The same with all <b>StartX</b> functions.
+	/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> <c>false</c>, else its parent. The same with all <b>StartX</b> functions.
 	/// </remarks>
 	public wpfBuilder StartGrid(bool childOfLast = false) => _Start(new _Grid(this), childOfLast);
 	
@@ -2617,7 +2617,7 @@ public class wpfBuilder {
 		/// <summary>
 		/// Like ctor but does not throw.
 		/// </summary>
-		/// <returns>false if failed.</returns>
+		/// <returns><c>false</c> if failed.</returns>
 		public static bool TryCreate(FrameworkElement e, string prop, out _PropGetSet<T> r) {
 			var p = e.GetType().GetProperty(prop, typeof(T));
 			if (p == null) { r = default; return false; }

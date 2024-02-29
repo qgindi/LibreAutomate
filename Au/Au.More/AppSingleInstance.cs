@@ -36,7 +36,7 @@ public static class AppSingleInstance {
 	/// </summary>
 	/// <param name="mutex">A unique string to use for mutex name (see <see cref="Mutex(bool, string, out bool)"/>). If prefix <c>@"Global\"</c> used, detects processes in all user sessions.</param>
 	/// <param name="notifyArgs">
-	/// If not null:
+	/// If not <c>null</c>:
 	/// <br/>• If already running, sends it to that process, which receives it in <see cref="Notified"/> event.
 	/// <br/>• Else enables <b>Notified</b> event in this process.
 	/// </param>
@@ -82,7 +82,7 @@ public static class AppSingleInstance {
 	/// Receives <i>notifyArgs</i> passed to it.
 	/// </summary>
 	/// <remarks>
-	/// To enable this event, call <see cref="AlreadyRunning"/> with non-null <i>notifyArgs</i>. The event handler runs in the same thread. The thread must dispatch Windows messages (for example show a window or dialog, or call <see cref="wait.doEvents(int)"/>).
+	/// To enable this event, call <see cref="AlreadyRunning"/> with non-<c>null</c> <i>notifyArgs</i>. The event handler runs in the same thread. The thread must dispatch Windows messages (for example show a window or dialog, or call <see cref="wait.doEvents(int)"/>).
 	/// </remarks>
 	public static event Action<string[]> Notified;
 }

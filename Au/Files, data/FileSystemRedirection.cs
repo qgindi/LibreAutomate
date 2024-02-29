@@ -34,7 +34,7 @@ public struct FileSystemRedirection : IDisposable {
 	}
 
 	/// <summary>
-	/// Returns true if <see cref="osVersion.is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="folders.System"/>.
+	/// Returns <c>true</c> if <see cref="osVersion.is32BitProcessAnd64BitOS"/> is <c>true</c> and path starts with <see cref="folders.System"/>.
 	/// Most such paths are redirected, therefore you may want to disable redirection with this class.
 	/// </summary>
 	/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
@@ -52,7 +52,7 @@ public struct FileSystemRedirection : IDisposable {
 	}
 
 	/// <summary>
-	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/> is true and <i>path</i> starts with <see cref="folders.System"/>, replaces that path part with <see cref="folders.SystemX64"/>.
+	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/> is <c>true</c> and <i>path</i> starts with <see cref="folders.System"/>, replaces that path part with <see cref="folders.SystemX64"/>.
 	/// It disables redirection to <see cref="folders.SystemX86"/> for that path.
 	/// </summary>
 	/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>

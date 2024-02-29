@@ -38,7 +38,7 @@ public struct WndSavedRect {
 	public bool Maximize { get; set; }
 
 	/// <summary>
-	/// <see cref="wnd.IsToolWindow"/>. If false, <see cref="RawRect"/> may have an offset that depends on work area.
+	/// <see cref="wnd.IsToolWindow"/>. If <c>false</c>, <see cref="RawRect"/> may have an offset that depends on work area.
 	/// </summary>
 	public bool IsToolWindow { get; set; }
 
@@ -53,7 +53,7 @@ public struct WndSavedRect {
 	/// <summary>
 	/// Creates <b>WndSavedRect</b> from string created by <see cref="ToString"/>.
 	/// </summary>
-	/// <returns>false if the string is null or invalid.</returns>
+	/// <returns><c>false</c> if the string is <c>null</c> or invalid.</returns>
 	/// <param name="saved">String created by <see cref="ToString"/>.</param>
 	/// <param name="x">Result.</param>
 	public static bool FromString(string saved, out WndSavedRect x) {
@@ -123,12 +123,12 @@ public struct WndSavedRect {
 	}
 
 	/// <summary>
-	/// Calls <see cref="FromString"/>. If it returns true, calls <see cref="NormalizeRect"/>, <see cref="ExtWpf.SetRect"/>, maximizes if need and returns true.
+	/// Calls <see cref="FromString"/>. If it returns <c>true</c>, calls <see cref="NormalizeRect"/>, <see cref="ExtWpf.SetRect"/>, maximizes if need and returns <c>true</c>.
 	/// Call this function before showing window.
 	/// </summary>
 	/// <param name="w"></param>
 	/// <param name="saved">String created by <see cref="ToString"/>.</param>
-	/// <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+	/// <param name="save">If not <c>null</c>, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
 	/// <exception cref="InvalidOperationException">Window is loaded.</exception>
 	public static bool Restore(System.Windows.Window w, string saved, Action<string> save = null) {
 		if (w.IsLoaded) throw new InvalidOperationException("Window is loaded.");
@@ -147,12 +147,12 @@ public struct WndSavedRect {
 	}
 
 	/// <summary>
-	/// Calls <see cref="FromString"/>. If it returns true, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, sets <b>StartPosition</b> = <b>Manual</b>, and returns true.
+	/// Calls <see cref="FromString"/>. If it returns <c>true</c>, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, sets <b>StartPosition</b> = <b>Manual</b>, and returns <c>true</c>.
 	/// Call this function before showing window.
 	/// </summary>
 	/// <param name="form"></param>
 	/// <param name="saved">String created by <see cref="ToString"/>.</param>
-	/// <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+	/// <param name="save">If not <c>null</c>, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
 	public static bool Restore(System.Windows.Forms.Form form, string saved, Action<string> save = null) {
 		bool ret = FromString(saved, out var v);
 		if (ret) {
@@ -170,7 +170,7 @@ public struct WndSavedRect {
 
 	//probably not useful. Unfinished. Or move to wnd.
 	///// <summary>
-	///// Calls <see cref="FromString"/>. If it returns true, sets <i>w</i> rectangle = <see cref="NormalizeRect"/>, maximizes if need, and returns true.
+	///// Calls <see cref="FromString"/>. If it returns <c>true</c>, sets <i>w</i> rectangle = <see cref="NormalizeRect"/>, maximizes if need, and returns <c>true</c>.
 	///// </summary>
 	///// <param name="w"></param>
 	///// <param name="saved">String created by <see cref="ToString"/>.</param>

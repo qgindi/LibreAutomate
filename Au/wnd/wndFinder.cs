@@ -95,7 +95,7 @@ public class wndFinder {
 	///// Examples: <c>"name,cn,program"</c>, <c>"name"</c>, <c>",cn"</c>, <c>"*,,program"</c>, <c>"name,cn"</c>, <c>"name,,program"</c>, <c>",cn,program"</c>, <c>"name,,,object"</c>.
 	///// </summary>
 	///// <param name="s">
-	///// One or more comma-separated window properties: name, class, program and/or a <i>contains</i> object. Empty name means "" (for any use *); other empty parts mean null.
+	///// One or more comma-separated window properties: name, class, program and/or a <i>contains</i> object. Empty name means <c>""</c> (for any use *); other empty parts mean <c>null</c>.
 	///// The same as parameters of <see cref="wnd.find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>of</i>. The last part is <i>contains</i> as string; can specify a UI element, control or image.
 	///// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
 	///// </param>
@@ -141,14 +141,14 @@ public class wndFinder {
 	/// </remarks>
 	public wnd Find(Seconds wait) => Exists(wait) ? Result : default;
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	/// <inheritdoc cref="Find()"/>
 	public bool Exists() {
 		using var k = new WndList_(_AllWindows());
 		return _FindOrMatch(k) >= 0;
 	}
 
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(Seconds)"/>
 	public bool Exists(Seconds wait) {
 		var r = wait.Exists_() ? Exists() : !Wait(wait, false).Is0;
@@ -230,7 +230,7 @@ public class wndFinder {
 	/// Returns -1 if using getAll.
 	/// </summary>
 	/// <param name="a">List of wnd. Does not dispose it.</param>
-	/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
+	/// <param name="getAll">If not <c>null</c>, calls it for all matching and returns -1.</param>
 	/// <param name="cache"></param>
 	int _FindOrMatch(WndList_ a, Action<wnd> getAll = null, WFCache cache = null) {
 		Result = default;
@@ -390,9 +390,9 @@ public class wndFinder {
 	}
 
 	/// <summary>
-	/// Returns true if window <i>w</i> properties match the specified properties.
+	/// Returns <c>true</c> if window <i>w</i> properties match the specified properties.
 	/// </summary>
-	/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
+	/// <param name="w">A top-level window. If 0 or invalid, returns <c>false</c>.</param>
 	/// <param name="cache">Can be used to make faster when multiple <b>wndFinder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
 	/// <seealso cref="wnd.IsMatch"/>
 	public bool IsMatch(wnd w, WFCache cache = null) {

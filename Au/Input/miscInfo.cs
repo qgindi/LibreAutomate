@@ -28,7 +28,7 @@ public static class miscInfo {
 	/// <summary>
 	/// Gets caret rectangle.
 	/// </summary>
-	/// <returns>false if failed.</returns>
+	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="r">Receives the rectangle, in screen coordinates.</param>
 	/// <param name="w">Receives the caret owner control or the focused control.</param>
 	/// <param name="orMouse">If fails, get mouse pointer coordinates.</param>
@@ -84,9 +84,9 @@ public static class miscInfo {
 	}
 	
 	/// <summary>
-	/// Returns true if current thread is on the input desktop and therefore can use mouse, keyboard, clipboard and window functions.
+	/// Returns <c>true</c> if current thread is on the input desktop and therefore can use mouse, keyboard, clipboard and window functions.
 	/// </summary>
-	/// <param name="detectLocked">Return false if the active window is a full-screen window of LockApp.exe on Windows 10+. For example when computer has been locked but still not displaying the password field. Slower.</param>
+	/// <param name="detectLocked">Return <c>false</c> if the active window is a full-screen window of LockApp.exe on Windows 10+. For example when computer has been locked but still not displaying the password field. Slower.</param>
 	/// <remarks>
 	/// Usually this app is running on default desktop. Examples of other desktops: the Ctrl+Alt+Delete screen, the PC locked screen, screen saver, UAC consent, custom desktops. If one of these is active, this process cannot use many mouse, keyboard, clipboard and window functions. They either throw exception or do nothing.
 	/// </remarks>

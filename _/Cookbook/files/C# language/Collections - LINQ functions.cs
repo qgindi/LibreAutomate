@@ -8,9 +8,9 @@ var a = new string[] { "One", "Two", "Three", "Four", "Five" };
 string s1 = a.FirstOrDefault(o => o.Starts("F"));
 print.it(s1);
 
-/// How it works: function <b>FirstOrDefault<> calls the callback function (lambda) for each item until it returns true. Then <b>FirstOrDefault<> returns that item.
+/// How it works: function <b>FirstOrDefault<> calls the callback function (lambda) for each item until it returns <.c>true<>. Then <b>FirstOrDefault<> returns that item.
 
-/// Function <b>FirstOrDefault<> returns null if not found. Function <b>First<> throws exception instead. Function <b>Any<> returns true/false. Function <b>Count<> tells how many.
+/// Function <b>FirstOrDefault<> returns <.c>null<> if not found. Function <b>First<> throws exception instead. Function <b>Any<> returns <.c>true<>/<.c>false<>. Function <b>Count<> tells how many.
 
 if (a.Any(o => o.Eqi("three"))) print.it("found"); else print.it("not found");
 if (!a.Any()) print.it("the collection is empty");

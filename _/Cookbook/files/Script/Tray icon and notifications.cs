@@ -1,14 +1,14 @@
 /// Function <see cref="script.setup"/> can add standard tray icon.
 
 script.setup(trayIcon: true);
-2.s();
+3.s();
 
 /// Function <see cref="script.trayIcon"/> adds standard tray icon with more options.
 
 script.trayIcon(
 	init: t => {
 		t.Icon = icon.stock(StockIcon.HELP);
-		t.Tooltip = "Middle-click to end the script";
+		t.Tooltip = "Tooltip";
 	},
 	menu: (t, m) => {
 		m["Example"] = o => { dialog.show("Example"); };

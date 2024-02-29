@@ -30,7 +30,7 @@ namespace Au.Types {
 		/// <summary>Sets action to be invoked when disposing this variable.</summary>
 		public UsingEndAction(Action a) => _a = a;
 		
-		/// <summary>Invokes the action if not null.</summary>
+		/// <summary>Invokes the action if not <c>null</c>.</summary>
 		public void Dispose() => _a?.Invoke();
 	}
 	

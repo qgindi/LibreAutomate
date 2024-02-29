@@ -79,7 +79,7 @@ public class MemoryBitmap : IDisposable {
 	/// <summary>
 	/// Creates new memory DC and bitmap of specified size and selects it into the DC.
 	/// </summary>
-	/// <returns>false if failed. In any case deletes previous bitmap and DC.</returns>
+	/// <returns><c>false</c> if failed. In any case deletes previous bitmap and DC.</returns>
 	/// <param name="width">Width, pixels. Must be &gt; 0.</param>
 	/// <param name="height">Height, pixels. Must be &gt; 0.</param>
 	public bool Create(int width, int height) {

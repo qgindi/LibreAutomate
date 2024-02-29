@@ -589,7 +589,7 @@ enum TriggerType {
 
 interface ITriggers {
 	/// <summary>
-	/// Return true if added triggers of this type.
+	/// Return <c>true</c> if added triggers of this type.
 	/// </summary>
 	bool HasTriggers { get; }
 

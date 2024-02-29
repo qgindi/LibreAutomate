@@ -10,7 +10,7 @@
 /// 
 /// When trigger action code is big, you can place it in a separate script. See examples. Then it runs in separate process and therefore starts slower. You can edit and test the script without restarting the main script process (triggers and toolbars). And it cannot crash the main process. The script can be anywhere (in the folder or outside).
 /// 
-/// To disable a trigger, comment out the trigger code line. Then click <b>Run<> to restart. To disable/enable all triggers, use the tray icon (menu or middle-click) or menu <b>TT<>. Also you can comment out the <.c>[Triggers]<> attribute to disable all triggers defined there. See also class <help Au.Triggers.ActionTriggers>ActionTriggers<> examples.
+/// To disable a trigger, comment out the trigger code line. Then click <b>Run<> to restart. To disable/enable all triggers, use the tray icon menu or menu <b>TT<>. Also you can comment out the <.c>[Triggers]<> attribute to disable all triggers defined there. See also class <help Au.Triggers.ActionTriggers>ActionTriggers<> examples.
 /// 
 /// Avoid multiple scripts with triggers running all the time. Each script uses some CPU, which makes the computer slightly slower. Particularly input events (key, mouse) and window events. That is why triggers should be in folder <.c>@Triggers and toolbars<>.
 /// 

@@ -153,7 +153,7 @@ public class IFArea {
 	/// <summary>
 	/// Calls GetRect_, and CaptureScreen.Image if need.
 	/// </summary>
-	/// <returns>false if GetRect_ returns false (empty rect).</returns>
+	/// <returns><c>false</c> if GetRect_ returns <c>false</c> (empty rect).</returns>
 	internal bool GetOcrData_(OcrFlags flags, out Bitmap b, out POINT resultOffset) {
 		if (Type == AreaType.Bitmap) { b = B; resultOffset = default; return true; }
 		if (!GetRect_(out RECT r, out resultOffset, (IFFlags)flags)) { b = null; return false; }
@@ -209,7 +209,7 @@ public struct IFImage {
 	//public static implicit operator IFImage(List<IFImage> list) => new(list); //rare, can use ToArray()
 
 	/// <summary>
-	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Bitmap</b>, <b>ColorInt</b>, <b>IFImage[]</b>, null.
+	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Bitmap</b>, <b>ColorInt</b>, <b>IFImage[]</b>, <c>null</c>.
 	/// </summary>
 	public object Value => _o;
 }
@@ -299,25 +299,25 @@ public enum IFAlso {
 
 	/// <summary>
 	/// Stop searching.
-	/// Let the main function return null or throw exception or continue waiting. But if a <b>OkFindX</b> value used previously, return that result.
+	/// Let the main function return <c>null</c> or throw exception or continue waiting. But if a <b>OkFindX</b> value used previously, return that result.
 	/// </summary>
 	NotFound,
 
 	/// <summary>
 	/// Find more instances of current image. If used list of images, also search for other images.
-	/// If not found, let the main function return null or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
+	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
 	/// </summary>
 	FindOther,
 
 	/// <summary>
 	/// Find more instances of current image. When used list of images, don't search for other images.
-	/// If not found, let the main function return null or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
+	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
 	/// </summary>
 	FindOtherOfThis,
 
 	/// <summary>
 	/// If used list of images, search for other images. Don't search for more instances of current image.
-	/// If not found, let the main function return null or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
+	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
 	/// </summary>
 	FindOtherOfList,
 }

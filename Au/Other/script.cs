@@ -34,10 +34,10 @@ public static class script {
 	/// Gets path of the main source code file of this program or of a library.
 	/// </summary>
 	/// <param name="inWorkspace">Get path in the workspace, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.</param>
-	/// <param name="asm">An assembly compiled by LibreAutomate. If null, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
-	/// <returns>null if failed.</returns>
+	/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+	/// <returns><c>null</c> if failed.</returns>
 	/// <remarks>
-	/// When compiling, LibreAutomate adds <see cref="PathInWorkspaceAttribute"/> to the assembly. Then at run time this function gets its value. Returns null if compiled by some other compiler.
+	/// When compiling, LibreAutomate adds <see cref="PathInWorkspaceAttribute"/> to the assembly. Then at run time this function gets its value. Returns <c>null</c> if compiled by some other compiler.
 	/// </remarks>
 	/// <seealso cref="folders.sourceCodeMain(Assembly)"/>
 	public static string sourcePath(bool inWorkspace, Assembly asm = null) {
@@ -67,12 +67,12 @@ public static class script {
 	/// <summary>
 	/// Gets path of the main source code file of this program or of a library.
 	/// </summary>
-	/// <param name="asm">An assembly compiled by LibreAutomate. If null, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+	/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
 	/// <param name="folder">Get path of the parent folder.</param>
 	/// <param name="inWorkspace">Get path in the workspace, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.</param>
-	/// <returns>null if failed.</returns>
+	/// <returns><c>null</c> if failed.</returns>
 	/// <remarks>
-	/// When compiling, LibreAutomate adds <see cref="PathInWorkspaceAttribute"/> to the assembly. Then at run time this function gets its value. Returns null if compiled by some other compiler.
+	/// When compiling, LibreAutomate adds <see cref="PathInWorkspaceAttribute"/> to the assembly. Then at run time this function gets its value. Returns <c>null</c> if compiled by some other compiler.
 	/// </remarks>
 	/// <seealso cref="folders.sourceCodeMain(Assembly)"/>
 	public static string sourcePath(Assembly asm, bool folder = false, bool inWorkspace = false) {
@@ -91,20 +91,20 @@ public static class script {
 #endif
 	
 	/// <summary>
-	/// Returns true if this script task was started from editor with the Run button or menu command.
-	/// Always false if role editorExtension.
+	/// Returns <c>true</c> if this script task was started from editor with the Run button or menu command.
+	/// Always <c>false</c> if role <b>editorExtension</b>.
 	/// </summary>
 	public static bool testing { get; internal set; }
 	
 	/// <summary>
-	/// Returns true if the build configuration of the main assembly is Debug (default). Returns false if Release (optimize true).
+	/// Returns <c>true</c> if the build configuration of the main assembly is Debug (default). Returns <c>false</c> if Release (<c>optimize true</c>).
 	/// </summary>
 	public static bool isDebug => s_debug ??= AssemblyUtil_.IsDebug(AssemblyUtil_.GetEntryAssembly());
 	static bool? s_debug;
 	//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
 	
 	/// <summary>
-	/// Returns true if running in WPF preview mode.
+	/// Returns <c>true</c> if running in WPF preview mode.
 	/// </summary>
 	public static bool isWpfPreview {
 		get {
@@ -327,7 +327,7 @@ public static class script {
 	/// <summary>
 	/// Writes a string result for the task that called <see cref="runWait(out string, string, string[])"/> or <see cref="runWait(Action{string}, string, string[])"/> to run this task, or for the program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c>.
 	/// </summary>
-	/// <returns>false if this task was not started in such a way. Or if failed to write, except when <i>s</i> is null/<c>""</c>.</returns>
+	/// <returns><c>false</c> if this task was not started in such a way. Or if failed to write, except when <i>s</i> is <c>null</c>/<c>""</c>.</returns>
 	/// <param name="s">A string. This function does not append newline characters.</param>
 	/// <remarks>
 	/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
@@ -422,14 +422,14 @@ public static class script {
 	/// Ends another script process.
 	/// </summary>
 	/// <param name="processId">Script process id, for example returned by <see cref="script.run"/>.</param>
-	/// <returns>true if ended, false if failed, null if wasn't running.</returns>
+	/// <returns><c>true</c> if ended, <c>false</c> if failed, <c>null</c> if wasn't running.</returns>
 	/// <exception cref="ArgumentException"><i>processId</i> is 0 or id of this process.</exception>
 	/// <remarks>
 	/// The script process can be started from editor or not.
 	/// 
 	/// The process executes process exit event handlers. Does not execute <c>finally</c> code blocks and GC.
 	/// 
-	/// Returns null if <i>processId</i> is invalid (probably because the script is already ended). Returns false if <i>processId</i> is valid but not of a script process (probably the script ended long time ago and the id is reused for another process).
+	/// Returns <c>null</c> if <i>processId</i> is invalid (probably because the script is already ended). Returns <c>false</c> if <i>processId</i> is valid but not of a script process (probably the script ended long time ago and the id is reused for another process).
 	/// </remarks>
 	public static bool? end(int processId) {
 		if (processId == 0 || processId == Api.GetCurrentProcessId()) throw new ArgumentException();
@@ -456,7 +456,7 @@ public static class script {
 	/// Ends all task processes of a script.
 	/// </summary>
 	/// <param name="name">Script file name (like <c>"Script43.cs"</c>) or path in workspace (like <c>@"\Folder\Script43.cs"</c>), or full file path.</param>
-	/// <returns>true if ended, false if failed (probably file not found), null if wasn't running.</returns>
+	/// <returns><c>true</c> if ended, <c>false</c> if failed (probably file not found), <c>null</c> if wasn't running.</returns>
 	/// <exception cref="AuException">Editor process not found.</exception>
 	/// <remarks>
 	/// Can end only script processes started from the editor.
@@ -470,7 +470,7 @@ public static class script {
 	}
 	
 	/// <summary>
-	/// Returns true if the specified script task is running.
+	/// Returns <c>true</c> if the specified script task is running.
 	/// </summary>
 	/// <param name="name">Script file name (like <c>"Script43.cs"</c>) or path in workspace (like <c>@"\Folder\Script43.cs"</c>), or full file path.</param>
 	public static bool isRunning([ParamString(PSFormat.CodeFile)] string name) {
@@ -479,7 +479,7 @@ public static class script {
 	}
 	
 	/// <summary>
-	/// Returns true if the specified script task is running.
+	/// Returns <c>true</c> if the specified script task is running.
 	/// </summary>
 	/// <param name="processId">Script process id, for example returned by <see cref="script.run"/>.</param>
 	/// <exception cref="ArgumentException"><i>processId</i> is 0 or id of this process.</exception>
@@ -499,9 +499,9 @@ public static class script {
 	#endregion
 	
 	/// <summary>
-	/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this with <i>auCompiler</i> true.
-	/// When compiling single-file exe with dotnet publish, adds module initializer that calls this with <i>auCompiler</i> false.
-	/// If using other compiler, called from <b>script.setup</b> with <i>auCompiler</i> false.
+	/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
+	/// When compiling single-file exe with dotnet publish, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
+	/// If using other compiler, called from <b>script.setup</b> with <i>auCompiler</i> <c>false</c>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe void AppModuleInit_(bool auCompiler) {
@@ -651,7 +651,7 @@ public static class script {
 	/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 	/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
 	/// </param>
-	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> true. It makes <see cref="Debug.Assert"/> etc useful when not debugging.</param>
+	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> <c>true</c>. It makes <see cref="Debug.Assert"/> etc useful when not debugging.</param>
 	/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
 	/// <param name="exitKey">
 	/// If not 0, the script task will end when this key pressed. Will call <see cref="Environment.Exit"/>.
@@ -734,7 +734,7 @@ public static class script {
 			});
 		}
 		
-		if (trayIcon) TrayIcon_(f_: f_);
+		if (trayIcon) _TrayIcon(f_: f_);
 	}
 	static bool s_setupOnce, s_sleepExit, s_lockExit;
 	static KKey s_exitKey;
@@ -774,7 +774,7 @@ public static class script {
 	/// <param name="delay">Delay, milliseconds.</param>
 	/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
 	/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="script.run"/>).</param>
-	/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing via the tray icon.</param>
+	/// <param name="f_">[](xref:caller_info). Don't use. Or set = <c>null</c> to disable script editing via the tray icon.</param>
 	/// <remarks>
 	/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 	/// 
@@ -797,10 +797,10 @@ public static class script {
 	public static void trayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
 		if (role == SRole.EditorExtension) return;
 		if (!s_appModuleInit) AppModuleInit_(auCompiler: false);
-		TrayIcon_(delay, init, menu, f_);
+		_TrayIcon(delay, init, menu, f_);
 	}
 	
-	internal static void TrayIcon_(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
+	static void _TrayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
 		s_auxThread.QueueAPC(() => timer.after(delay, _Delayed));
 		
 		void _Delayed(timer t_) {
@@ -809,15 +809,14 @@ public static class script {
 			ti.Icon ??= icon.trayIcon();
 			bool canEdit = f_ != null && ScriptEditor.Available;
 			if (canEdit) ti.Click += _ => ScriptEditor.Open(f_);
-			ti.MiddleClick += _ => Environment.Exit(2);
 			ti.RightClick += e => {
 				var m = new popupMenu();
 				if (menu != null) {
 					menu(ti, m);
 					if (m.Last != null && !m.Last.IsSeparator) m.Separator();
 				}
-				if (canEdit) m["Open script\tClick"] = _ => ScriptEditor.Open(f_);
-				m["End task\tM-click" + (s_sleepExit ? ", Sleep" : null) + (s_lockExit ? ", Win+L, Ctrl+Alt+Delete" : null)] = _ => Environment.Exit(2);
+				if (canEdit) m["Open script"] = _ => ScriptEditor.Open(f_);
+				m["End task"] = _ => Environment.Exit(2);
 				if (canEdit) m["End and open"] = _ => { ScriptEditor.Open(f_); Environment.Exit(2); };
 				m.Show(PMFlags.AlignCenterH | PMFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
 			};
@@ -829,7 +828,7 @@ public static class script {
 	/// Attaches the LibreAutomate's debugger to this process, or waits for a debugger attached to this process.
 	/// Does nothing if a debugger is already attached.
 	/// </summary>
-	/// <param name="showDialog">Show dialog with process name and id. If false, attaches the LA debugger.</param>
+	/// <param name="showDialog">Show dialog with process name and id. If <c>false</c>, attaches the LA debugger.</param>
 	/// <remarks>
 	/// When debugger is attached, this function returns and the script continues to run. The step mode begins when the script encounters one of:
 	/// - breakpoint (set in the debugger's IDE).
@@ -837,7 +836,7 @@ public static class script {
 	/// - clicked Pause button in IDE.
 	/// - <see cref="Debugger.Break"/>, <see cref="Debug.Assert(bool)"/> etc.
 	/// 
-	/// If <i>showDialog</i> is false and LibreAutomate is running, attaches the LA debugger. Cannot attach if it's busy (debugging).
+	/// If <i>showDialog</i> is <c>false</c> and LibreAutomate is running, attaches the LA debugger. Cannot attach if it's busy (debugging).
 	/// 
 	/// Some other programs that have a .NET debugger:
 	/// - Visual Studio. It's the best, but huge (~10 GB). The community edition is free. Use menu Debug -> Attach to process.
@@ -1010,7 +1009,7 @@ public static class script {
 	/// <summary>
 	/// If was pressed the pause key, waits until the user presses it again.
 	/// </summary>
-	/// <param name="text">Text to display in the 'Paused script' UI.</param>
+	/// <param name="text">Text to display in the "Paused script" UI.</param>
 	/// <param name="doEvents">Process Windows messages and other events while waiting. For example, windows of this thread can respond, and timers of this thread can run.</param>
 	/// <remarks>
 	/// The default pause key is ScrollLock (Fn+S, Fn+K or similar). To change, use <see cref="setup"/> parameter <i>pauseKey</i>. If <b>script.setup</b> not called, this function uses ScrollLock but does not pause when called the first time.
@@ -1053,7 +1052,7 @@ public static class script {
 	//CONSIDER: auto call pause in key/mouse/etc functions if there are no pressed modifier keys and mouse buttons.
 	
 	/// <summary>
-	/// If true, next call to <see cref="pause"/> will wait until false, or already is waiting.
+	/// If <c>true</c>, next call to <see cref="pause"/> will wait until <c>false</c>, or already is waiting.
 	/// </summary>
 	public static bool paused {
 		get => s_paused || (_PauseIsLockKey && keys.gui.isToggled(s_pauseKey) != s_pauseWhenUntoggled);

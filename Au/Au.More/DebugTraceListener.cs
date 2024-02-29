@@ -7,7 +7,7 @@ public class DebugTraceListener : DefaultTraceListener {
 	/// <summary>
 	/// Replaces default trace listener.
 	/// </summary>
-	/// <param name="usePrint">Also set <see cref="print.redirectDebugOutput"/> = true.</param>
+	/// <param name="usePrint">Also set <see cref="print.redirectDebugOutput"/> = <c>true</c>.</param>
 	//[Conditional("DEBUG"), Conditional("TRACE")] //no, in most cases this is called by this library, not directly by the app
 	public static void Setup(bool usePrint) {
 		if (!s_setup) {

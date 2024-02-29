@@ -13,7 +13,7 @@ namespace Au {
 	/// </summary>
 	public static class internet {
 		/// <summary>
-		/// Sends an ICMP echo message to the specified website and returns true if successful. Can be used to check Internet connectivity.
+		/// Sends an ICMP echo message to the specified website and returns <c>true</c> if successful. Can be used to check Internet connectivity.
 		/// </summary>
 		/// <param name="hostNameOrAddress">Domain name like <c>"google.com"</c> or IP like <c>"123.45.67.89"</c>.</param>
 		/// <param name="timeout">Timeout in milliseconds.</param>
@@ -32,7 +32,7 @@ namespace Au {
 		} //also tested http, but slow etc.
 		
 		/// <summary>
-		/// Sends an ICMP echo message to the specified website and returns true if successful. Gets the roundtrip time.
+		/// Sends an ICMP echo message to the specified website and returns <c>true</c> if successful. Gets the roundtrip time.
 		/// </summary>
 		/// <param name="roundtripTime"><see cref="PingReply.RoundtripTime"/>.</param>
 		/// <inheritdoc cref="ping(string, int)"/>
@@ -205,10 +205,10 @@ namespace Au.Types {
 		/// <param name="name">Field name.</param>
 		/// <param name="file">File path.</param>
 		/// <param name="contentType">Content-Type header, for example <c>"image/png"</c>.</param>
-		/// <param name="fileName">Filename. If null, gets from <i>file</i>.</param>
+		/// <param name="fileName">Filename. If <c>null</c>, gets from <i>file</i>.</param>
 		/// <returns>This.</returns>
 		/// <remarks>
-		/// Opens the file and stores the stream in this <b>MultipartFormDataContent</b> object. Won't auto-close it after uploading. To close files, dispose this <b>MultipartFormDataContent</b> object, for example with the 'using' like in the example. Else the file will remain opened/locked until this process exits or until next garbage collection.
+		/// Opens the file and stores the stream in this <b>MultipartFormDataContent</b> object. Won't auto-close it after uploading. To close files, dispose this <b>MultipartFormDataContent</b> object, for example with <c>using</c> like in the example. Else the file will remain opened/locked until this process exits or until next garbage collection.
 		/// </remarks>
 		/// <exception cref="ArgumentException">See <see cref="MultipartFormDataContent.Add(HttpContent, string, string)"/>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="filesystem.loadStream"/>.</exception>
@@ -255,7 +255,7 @@ namespace Au.Types {
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <param name="headers">
-		/// null or request headers like <c>["name1: value1", "name2: value2"]</c>.
+		/// <c>null</c> or request headers like <c>["name1: value1", "name2: value2"]</c>.
 		/// Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.
 		/// </param>
 		/// <param name="auth">String like "username:password" for basic authentication. Adds Authorization header.</param>
@@ -298,12 +298,12 @@ namespace Au.Types {
 		/// Sends a GET request to the specified URL, and gets the response. Handles HTTP errors and exceptions.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="r">Receives <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be null if failed because of an exception.</param>
+		/// <param name="r">Receives <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be <c>null</c> if failed because of an exception.</param>
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
-		/// <returns>false if failed.</returns>
+		/// <returns><c>false</c> if failed.</returns>
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
 		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
 		/// <example>
@@ -350,7 +350,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="url">URL.</param>
-		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
+		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be <c>null</c>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
@@ -360,7 +360,7 @@ namespace Au.Types {
 		/// </exception>
 		/// <example>
 		/// Post form data.
-		/// Note: the 'using' will close the file stream. Don't need it when content does not contain files.
+		/// Note: the <c>using</c> will close the file stream. Don't need it when content does not contain files.
 		/// <code><![CDATA[
 		/// using var content = internet.formContent(("name1", "value1"), ("name2", "value2")).AddFile("name3", @"C:\Test\file.png");
 		/// string s = internet.http.Post("https://httpbin.org/anything", content).Text();
@@ -384,13 +384,13 @@ namespace Au.Types {
 		/// Sends a POST request to the specified URL, and gets the response. Handles HTTP errors and exceptions.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="r">Receives <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be null if failed because of an exception.</param>
+		/// <param name="r">Receives <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be <c>null</c> if failed because of an exception.</param>
 		/// <param name="url">URL.</param>
-		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be null.</param>
+		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be <c>null</c>.</param>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
-		/// <returns>false if failed.</returns>
+		/// <returns><c>false</c> if failed.</returns>
 		/// <exception cref="UriFormatException">Invalid URL format.</exception>
 		/// <exception cref="Exception">If <i>headers</i> used, exceptions of <see cref="AddMany"/>.</exception>
 		/// <example>
@@ -430,7 +430,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreError">Don't call <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>.</param>
-		/// <exception cref="HttpRequestException">Failed HTTP request. No exception if <i>ignoreError</i> true.</exception>
+		/// <exception cref="HttpRequestException">Failed HTTP request. No exception if <i>ignoreError</i> <c>true</c>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsStringAsync()"/>.</exception>
 		public static string Text(this HttpResponseMessage t, bool ignoreError = false) {
 			if (!ignoreError) t.EnsureSuccessStatusCode();
@@ -442,7 +442,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreError">Don't call <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>.</param>
-		/// <exception cref="HttpRequestException">Failed HTTP request. No exception if <i>ignoreError</i> true.</exception>
+		/// <exception cref="HttpRequestException">Failed HTTP request. No exception if <i>ignoreError</i> <c>true</c>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsByteArrayAsync()"/>.</exception>
 		public static byte[] Bytes(this HttpResponseMessage t, bool ignoreError = false) {
 			if (!ignoreError) t.EnsureSuccessStatusCode();
@@ -455,7 +455,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreError">Don't call <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>.</param>
-		/// <exception cref="HttpRequestException">Failed HTTP request. No exception if <i>ignoreError</i> true.</exception>
+		/// <exception cref="HttpRequestException">Failed HTTP request. No exception if <i>ignoreError</i> <c>true</c>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsByteArrayAsync()"/>.</exception>
 		/// <exception cref="JsonException">Failed to parse JSON.</exception>
 		public static JsonNode Json(this HttpResponseMessage t, bool ignoreError = false)
@@ -481,7 +481,7 @@ namespace Au.Types {
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsStream()"/>, <see cref="File.Create(string)"/> and other used functions.</exception>
 		/// <remarks>
-		/// By default <b>HttpClient</b> and similar functions download content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> true. Then call this function (it will download the file), and finally dispose the <b>HttpResponseMessage</b>.
+		/// By default <b>HttpClient</b> and similar functions download content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> <c>true</c>. Then call this function (it will download the file), and finally dispose the <b>HttpResponseMessage</b>.
 		/// </remarks>
 		/// <seealso cref="Get(HttpClient, string, string, IEnumerable{string}, string, Action{HttpRequestMessage})"/>
 		public static HttpResponseMessage Save(this HttpResponseMessage t, string file) {
@@ -511,14 +511,14 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="stream">Writes to this stream.</param>
-		/// <param name="progress">Calls this callback function to report the progress. If null, shows standard progress dialog.</param>
+		/// <param name="progress">Calls this callback function to report the progress. If <c>null</c>, shows standard progress dialog.</param>
 		/// <param name="cancel">Can be used to cancel.</param>
 		/// <param name="disposeStream">Call <c>stream.Dispose();</c>.</param>
-		/// <returns>false if canceled.</returns>
+		/// <returns><c>false</c> if canceled.</returns>
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
 		/// <exception cref="Exception">Other exceptions.</exception>
 		/// <remarks>
-		/// By default <b>HttpClient</b> and similar functions download content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> true. Then call this function (it will download the file), and finally dispose the <b>HttpResponseMessage</b>.
+		/// By default <b>HttpClient</b> and similar functions download content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> <c>true</c>. Then call this function (it will download the file), and finally dispose the <b>HttpResponseMessage</b>.
 		/// 
 		/// Cannot provide the progress percentage if the content length is unknown. Top reasons:
 		/// - The HTTP server uses chunked transfer encoding.

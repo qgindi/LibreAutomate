@@ -11,7 +11,7 @@
 }]]>
 		</snippet>
 
-		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="There are 4 parts: for (part1; part2; part3) { part4 }. Each can be empty. Part1 sets variable(s), like i=0 or int i=0 or int i=0, j=-1. Part2 is an expression evaluated before each loop; repeats while it is true. Part3 increments or decrements variable(s) after each loop, like i++ or i+=10 or i++, j--. Part4 can be any code; it is executed repeatedly; if single statement, the { } are optional.&#10;&#10;The first snippet in human language: set variable i = 0; while i &lt; count, repeat code in { }; incremet i after each loop.&#10;&#10;Tip: the script editor replaces code like 5t with for (int i = 0; i &lt; 5; i++) {  } when typing.">
+		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">
 			<list item="Increment variable i">
 				<![CDATA[for (int i = 0; i < $end$count$end$; i++) {
 	
@@ -96,7 +96,7 @@ string s = i switch {
 			</list>
 		</snippet>
 
-		<snippet name="tryCatchFinallySnippet" info="Exception handling." more="The catch code is executed on exception in the try code, and allows to continue. The finally code is executed always, even on exception/return/etc.">
+		<snippet name="tryCatchFinallySnippet" info="Exception handling." more="See also: Cookbook recipe &quot;Errors, exceptions&quot;.">
 			<list item="try catch">
 				<![CDATA[try {
 	$end$
@@ -173,7 +173,7 @@ default: return;
 			<list item="Try cut">if (!clipboard.tryCopy(out var s, cut: true)) return;</list>
 		</snippet>
 
-		<snippet name="clickSnippet" info="Mouse click or move in window." more="The + operator throws exception if not found.">
+		<snippet name="clickSnippet" info="Mouse click or move in window.">
 			<list item="Left click">
 				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
 mouse.click(w, );]]>
@@ -283,7 +283,7 @@ var s = b.ToString();
 print.it(s);]]>
 		</snippet>
 
-		<snippet name="actWinSnippet" info="Activate window; check if window is active." more="The + operator throws exception if not found.">
+		<snippet name="actWinSnippet" info="Activate window; check if window is active.">
 			<list item="Find window and activate">
 				<![CDATA[var w = wnd.find(0, "$end$*Name$end$").Activate();]]>
 			</list>
@@ -405,7 +405,7 @@ default: return;
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create dialog window." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Dialogs.">
+		<snippet name="wpfSnippet" info="Create dialog window." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media" more="See also: dialogSnippet, menu File > New > Dialogs.">
 			<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
 b.R.Add("Combo", out ComboBox combo1).Items("Zero|One|Two");
@@ -476,7 +476,7 @@ script.setup(trayIcon: true, sleepExit: true);
 			<![CDATA[run.it($end$folders.System + @"notepad.exe"$end$);]]>
 		</snippet>
 
-		<snippet name="srScriptRunSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">
+		<snippet name="srScriptRunSnippet" info="Start to execute a script." more="Tip: drag and drop.">
 			<![CDATA[script.run(@"$end$\Folder\Script$end$.cs");]]>
 		</snippet>
 
@@ -484,7 +484,7 @@ script.setup(trayIcon: true, sleepExit: true);
 			<![CDATA[throw new AuException($end$);]]>
 		</snippet>
 
-		<snippet name="pauseSnippet" info="Pause the script if the pause key was pressed.">
+		<snippet name="pauseSnippet" info="Pause the script if the pause key was pressed." more="See also: ssScriptSetupSnippet.">
 			<![CDATA[script.pause();]]>
 		</snippet>
 
@@ -642,7 +642,7 @@ internal record class MySettings : JSettings {
 #pragma warning restore]]>
 		</snippet>
 
-		<snippet name="ifDirectiveSnippet" info="Enables or disables code depending on a preprocessor expression." more="If expression is true, compiles code before #else, else after. Expression can be literal true, false or a preprocessor symbol (true if exists). Can be expression with operators !, ||, &amp;&amp;. To define symbols use #define or the Properties dialog. For 'else if' use #elif otherExpression.">
+		<snippet name="ifDirectiveSnippet" info="Enables or disables code depending on a preprocessor expression.">
 			<![CDATA[#if $end$true$end$
 #else
 #endif]]>

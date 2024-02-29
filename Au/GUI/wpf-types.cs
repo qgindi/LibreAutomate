@@ -71,7 +71,7 @@ namespace Au.Types {
 		public static implicit operator WBLength((double length, Range minMax) v) => new WBLength(v.length, v.minMax);
 		
 		/// <summary>
-		/// Gets the width or height value. Returns false if not set.
+		/// Gets the width or height value. Returns <c>false</c> if not set.
 		/// </summary>
 		public bool GetLength(out double value) {
 			value = _v;
@@ -79,7 +79,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets the minimal value. Returns false if not set.
+		/// Gets the minimal value. Returns <c>false</c> if not set.
 		/// </summary>
 		public bool GetMin(out int value) {
 			value = _r.Start.Value;
@@ -87,7 +87,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets the maximal value. Returns false if not set.
+		/// Gets the maximal value. Returns <c>false</c> if not set.
 		/// </summary>
 		public bool GetMax(out int value) {
 			value = _r.End.Value;
@@ -98,7 +98,7 @@ namespace Au.Types {
 		/// Sets <b>Width</b> or <b>Height</b> or/and <b>MinWidth</b>/<b>MinHeight</b> or/and <b>MaxWidth</b>/<b>MaxHeight</b> of the element.
 		/// </summary>
 		/// <param name="e">Element.</param>
-		/// <param name="height">Set <b>Height</b>. If false, sets <b>Width</b>.</param>
+		/// <param name="height">Set <b>Height</b>. If <c>false</c>, sets <b>Width</b>.</param>
 		public void ApplyTo(FrameworkElement e, bool height) {
 			if (GetLength(out double d)) { if (height) e.Height = d; else e.Width = d; }
 			if (GetMin(out int i)) { if (height) e.MinHeight = i; else e.MinWidth = i; }
@@ -251,7 +251,7 @@ namespace Au.Types {
 		/// On click will call <see cref="run.itSafe"/>.
 		/// </summary>
 		/// <param name="text">Link text.</param>
-		/// <param name="urlOrPath">URL or path for <see cref="run.itSafe"/>. If null, uses <i>text</i>.</param>
+		/// <param name="urlOrPath">URL or path for <see cref="run.itSafe"/>. If <c>null</c>, uses <i>text</i>.</param>
 		/// <param name="args"><i>args</i> for <b>run.itSafe</b>.</param>
 		/// <param name="bold">Bold font.</param>
 		public WBLink(string text, string urlOrPath = null, string args = null, bool bold = false) : this(text, _ => run.itSafe(urlOrPath ?? text, args)) { }
@@ -450,7 +450,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Always resize only the nearest resizable row/column at each side.
-		/// If false (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
+		/// If <c>false</c> (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
 		/// </summary>
 		public bool ResizeNearest { get; set; }
 		

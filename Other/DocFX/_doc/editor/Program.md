@@ -14,9 +14,9 @@ In the main window: code editor, several panels, toolbars and menu bar. Also the
 Here you edit automation scripts and other text files.
 [Features](xref:code_editor).
 
-Multiple files can be open, but only one is visible. The list of open files is in the Open panel.
+Multiple files can be open, but only one is visible. The list of open files is in the **Open** panel.
 
-All changes are saved automatically on these events: app deactivated, main window closed, timer. The Save button saves all changes immediately.
+All changes are saved automatically on these events: app deactivated, main window closed, timer. The **Save** button saves all changes immediately.
 
 ## Panels
 Panels and toolbars can be docked, floating or hidden.
@@ -30,9 +30,9 @@ All changes are saved automatically.
 
 C# code files have .cs extension, but it is hidden. Yellow background if the file is open in the code editor.
 
-Deleted files and folders are moved to the Recycle Bin if possible. To restore a file or folder, find it there and restore; then find in File Explorer and drag and drop to the Files panel.
+Deleted files and folders are moved to the Recycle Bin if possible. To restore a file or folder, find it there and restore; then find in File Explorer and drag and drop to the **Files** panel.
 
-File properties are documented in the Properties dialog.
+File properties are documented in the **Properties** dialog.
 
 Files are of these types:
 - Script - C# code file that can be executed directly, like a program.
@@ -42,14 +42,15 @@ Files are of these types:
 
 Folders are of these types:
 - simple folders.
-- folders named like <i>@Project</i> are [project](xref:class_project) folders.
+- folders named like `@Project` are [project](xref:class_project) folders.
 
 The collection of files and folders is a *workspace*. It is a folder on disk. In the folder:
-- the **files** folder contains files and folders of the workspace.
-- the **files.xml** file is the list of files and folders of the workspace.
-- the **settings.json** file contains workspace settings.
-- the **state.db** file contains code editor states for files, such as folding, markers and current position.
-- the **.xxx** folders are created and used by the program for various purposes.
+- Folder `files` contains files and folders of the workspace.
+- File `files.xml` is the list of files and folders of the workspace.
+- File `settings.json` - workspace settings.
+- File `bookmarks.csv` - saved bookmarks.
+- Folder `.state` contains code editor states for files, such as folding, markers and current position.
+- The `.xxx` folders are created and used by the program for various purposes.
 
 ### Open
 List of files open in the code editor.
@@ -67,7 +68,7 @@ Find and replace text in the code editor or in multiple files.
 Right-click an edit field - context menu. Middle-click - clear text; if empty - show recent.
 
 ### Found
-Results of "Find in files", "Find file", "Find references" etc.
+Results of **Find in files**, **Find file**, **Find references** and some other commands.
 
 ### Output
 The program writes various info here. For example script compilation errors. Scripts use [print.it]() for it.
@@ -87,6 +88,9 @@ Automation code examples and info.
 List of bookmarks.
 
 Right-click - context menu.
+
+### Debug, Breakpoints
+[Debugger](Debugger.md).
 
 ## Menus
 
@@ -112,6 +116,6 @@ Tool windows.
 Program help and library reference.
 
 ## Tray icon
-Click - show and activate editor window. Right-click - show context menu. Middle-click - disable/enable triggers.
+Click - show and activate editor window. Right-click - show context menu.
 
 No color when triggers are disabled.

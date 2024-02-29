@@ -15,8 +15,8 @@ namespace Au.Types;
 /// - <see cref="Image"/> - image.
 /// - <see cref="icon"/> - icon. The "add item" function disposes it.
 /// - <see cref="StockIcon"/> - the "show" function calls <see cref="icon.stock"/>.
-/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="icon.of"/>. Else no image.
-/// - string <c>""</c> - no image, even if <b>ExtractIconPathFromCode</b> true.
+/// - <c>null</c> - if <see cref="ExtractIconPathFromCode"/> <c>true</c>, the "show" function tries to extract a file path from action code; then calls <see cref="icon.of"/>. Else no image.
+/// - string <c>""</c> - no image, even if <b>ExtractIconPathFromCode</b> <c>true</c>.
 /// 
 /// Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
 /// 
@@ -65,7 +65,7 @@ public abstract partial class MTBase {
 	/// Extract file path or script path from item action code (for example <see cref="run.it"/> or <see cref="script.run"/> argument) and use icon of that file or script.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> true, <b>popupMenu</b> with <i>name</i> true, <b>popupMenu</b> without <i>name</i> false.</value>
+	/// <value>Default: <b>toolbar</b> <c>true</c>, <b>popupMenu</b> with <i>name</i> <c>true</c>, <b>popupMenu</b> without <i>name</i> <c>false</c>.</value>
 	/// <remarks>
 	/// Gets path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell or <c>@"\folder\script.cs"</c>.
 	/// Also supports code patterns like <c>folders.System + "notepad.exe"</c>, <c>folders.shell.RecycleBin</c>.
@@ -78,24 +78,24 @@ public abstract partial class MTBase {
 	/// Execute item actions asynchronously in new threads.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> true<b>, popupMenu</b> false.</value>
+	/// <value>Default: <b>toolbar</b> <c>true</c><b>, popupMenu</b> <c>false</c>.</value>
 	/// <remarks>
-	/// If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = true to avoid it.
+	/// If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = <c>true</c> to avoid it.
 	/// </remarks>
 	public bool ActionThread { get; set; }
 
 	/// <summary>
-	/// Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="print.warning"/>.
+	/// Whether to handle exceptions in item action code. If <c>false</c> (default), handles exceptions and on exception calls <see cref="print.warning"/>.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> false<b>, popupMenu</b> false.</value>
+	/// <value>Default: <b>toolbar</b> <c>false</c><b>, popupMenu</b> <c>false</c>.</value>
 	public bool ActionException { get; set; }
 
 	/// <summary>
 	/// If an item has file path, show it in tooltip.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> false<b>, popupMenu</b> false.</value>
+	/// <value>Default: <b>toolbar</b> <c>false</c><b>, popupMenu</b> <c>false</c>.</value>
 	public bool PathInTooltip { get; set; }
 
 	private protected void _CopyProps(MTBase m) {
@@ -115,7 +115,7 @@ public abstract partial class MTBase {
 	}
 
 	/// <summary>
-	/// Converts x.image (object containing string, Image, etc or null) to Image. Extracts icon path from code if need. Returns default if will extract async.
+	/// Converts x.image (object containing string, Image, etc or <c>null</c>) to Image. Extracts icon path from code if need. Returns default if will extract async.
 	/// </summary>
 	private protected (Image image, bool dispose) _GetImage(MTItem x) {
 		Image im = null; bool dontDispose = false;
@@ -366,7 +366,7 @@ public struct MTImage {
 	public static implicit operator MTImage(FolderPath path) => new((string)path);
 
 	/// <summary>
-	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Image</b>, <b>icon</b>, <b>StockIcon</b> or null.
+	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Image</b>, <b>icon</b>, <b>StockIcon</b> or <c>null</c>.
 	/// </summary>
 	public object Value => _o;
 }

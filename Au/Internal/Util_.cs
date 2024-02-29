@@ -54,7 +54,7 @@ static class WpfUtil_ {
 	/// <summary>
 	/// Parses icon string like "[*&lt;library&gt;]*pack.name[ etc]".
 	/// </summary>
-	/// <returns>true if starts with "*pack.name" (possibly with library).</returns>
+	/// <returns><c>true</c> if starts with "*pack.name" (possibly with library).</returns>
 	public static bool DetectIconString(RStr s, out (int pack, int endPack, int name, int endName) r) {
 		r = default;
 		if (s.Length < 8 || s[0] != '*') return false;
@@ -74,7 +74,7 @@ static class WpfUtil_ {
 	/// <summary>
 	/// Parses icon string like "[*&lt;library&gt;]*pack.name[ color][ @size]".
 	/// </summary>
-	/// <returns>true if starts with "*pack.name" (possibly with library).</returns>
+	/// <returns><c>true</c> if starts with "*pack.name" (possibly with library).</returns>
 	public static bool ParseIconString(string s, out (string pack, string name, string color, int size) r) {
 		r = default;
 		if (!DetectIconString(s, out var d)) return false;
@@ -106,7 +106,7 @@ static class WpfUtil_ {
 	/// Does nothing if s does not contain '|'.
 	/// </summary>
 	/// <param name="s"></param>
-	/// <param name="onlyColor">true - s is like "color|color2". false - s is like "*name color|color2".</param>
+	/// <param name="onlyColor"><c>true</c> - s is like "color|color2". <c>false</c> - s is like "*name color|color2".</param>
 	public static string NormalizeIconStringColor(string s, bool onlyColor) {
 		int i = s.IndexOf('|');
 		if (i >= 0) {
@@ -137,7 +137,7 @@ static class WpfUtil_ {
 	static regexp s_rxColor;
 	
 	/// <summary>
-	/// true if SystemParameters.HighContrast and ColorInt.GetPerceivedBrightness(SystemColors.ControlColor)&lt;=0.5.
+	/// <c>true</c> if SystemParameters.HighContrast and ColorInt.GetPerceivedBrightness(SystemColors.ControlColor)&lt;=0.5.
 	/// </summary>
 	public static bool IsHighContrastDark {
 		get {

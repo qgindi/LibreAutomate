@@ -9,11 +9,11 @@ See Cookbook recipe [Script testing and debugging](https://www.libreautomate.com
 ## Debugger
 Debugger in LibreAutomate is similar to that of [Visual Studio](https://www.google.com/search?q=Visual+Studio+debugger), [VSCode](https://www.google.com/search?q=VSCode+debugger), [Rider](https://www.google.com/search?q=Rider+debugger) etc.
 
-Two panels are dedicated to debugging: Debug and Breakpoints. If the Debug panel was hidden when debugging starts, it becomes visible temporarily while debugging. Both panels initially are hidden; to show always, right-click any panel caption.
+Two panels are dedicated to debugging: **Debug** and **Breakpoints**. If the **Debug** panel was hidden when debugging starts, it becomes visible temporarily while debugging. Both panels initially are hidden; to show always, right-click any panel caption.
 
-To run current script with the debugger, click the "Debug run" button or menu item, or use the toolbar in the Debug panel. Usually at first you add one or more breakpoints in code (click the white margin). The script stops at a breakpoint line, or on exception, or in **Debugger.Break**, **Debug.Assert**, or when clicked Pause. Then you can use the Debug toolbar or hotkeys to execute the script in steps. Also you can click the white margin and select "Run to here".
+To run current script with the debugger, click the **Debug run** button or menu item, or use the toolbar in the **Debug** panel. Usually at first you add one or more breakpoints in code (click the white margin). The script stops at a breakpoint line, or on exception, or in **Debugger.Break**, **Debug.Assert**, or when clicked **Pause**. Then you can use the **Debug** toolbar or hotkeys to execute the script in steps. Also you can click the white margin and select **Run to here**.
 
-To attach the debugger to an already running script, use the Tasks panel or [script.debug](). Or **Debug.Assert**, if the script starts with code like `script.setup(debug: true);`.
+To attach the debugger to an already running script, use the **Tasks** panel or [script.debug](). Or **Debug.Assert**, if the script starts with code like `script.setup(debug: true);`.
 
 ### Features
 - Standard stepping features.
@@ -36,9 +36,9 @@ To attach the debugger to an already running script, use the Tasks panel or [scr
 ### Notes
 Thanks to [Samsung/netcoredbg](https://github.com/Samsung/netcoredbg).
 
-Antivirus software may quarantine **netcoredbg.exe** (debugger). Add it to the exclusions list of the antivirus.
+Antivirus software may quarantine `netcoredbg.exe` (debugger). Add it to the exclusions list of the antivirus.
 
-To debug optimized code (`/*/ optimize true; /*/`), temporarily check "Debug optimized code" in the options menu. Normally you don't debug optimized code, it may not work well.
+To debug optimized code (`/*/ optimize true; /*/`), temporarily check **Debug optimized code** in the options menu. Normally you don't debug optimized code, it may not work well.
 
 Cannot debug 32-bit processes.
 
@@ -51,7 +51,7 @@ You may have Visual Studio or other IDE with a better .NET debugger. You can att
 Triggers.Window[TWEvent.ActiveNew, "Attach debugger", "#32770"] = o => script.run("Attach debugger.cs", o.Window.ProcessId.ToS());
 ```
 
-Script "Attach debugger.cs":
+Script `Attach debugger.cs`:
 ```csharp
 // Attaches the Visual Studio debugger to the process id = args[0].
 // If run from editor (args empty), attaches to this process for testing this script.

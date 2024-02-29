@@ -27,8 +27,8 @@ namespace Au {
 		public IntPtr UnsafeTokenHandle => _htoken;
 
 		/// <summary>
-		/// Returns true if the last called property function failed.
-		/// Normally it should never fail. Only <see cref="ofProcess"/> can fail (then it returns null).
+		/// Returns <c>true</c> if the last called property function failed.
+		/// Normally it should never fail. Only <see cref="ofProcess"/> can fail (then it returns <c>null</c>).
 		/// </summary>
 		public bool Failed { get; private set; }
 
@@ -54,7 +54,7 @@ namespace Au {
 		UacElevation _Elevation; byte _haveElevation;
 
 		/// <summary>
-		/// Returns true if the process has [](xref:uac) uiAccess property.
+		/// Returns <c>true</c> if the process has [](xref:uac) uiAccess property.
 		/// A uiAccess process can access/automate all windows of processes running in the same user session.
 		/// </summary>
 		/// <remarks>
@@ -82,7 +82,7 @@ namespace Au {
 
 		//not very useful. Returns false for ApplicationFrameWindow. Can use wnd.IsWindows10StoreApp.
 		///// <summary>
-		///// Returns true if the process is a Windows Store app.
+		///// Returns <c>true</c> if the process is a Windows Store app.
 		///// </summary>
 		//public unsafe bool IsAppContainer
 		//{
@@ -154,7 +154,7 @@ namespace Au {
 		/// <summary>
 		/// Opens process access token and creates/returns new <see cref="uacInfo"/> variable that holds it. Then you can use its properties.
 		/// </summary>
-		/// <returns>null if failed. For example fails for services and some other processes if current process is not administrator.</returns>
+		/// <returns><c>null</c> if failed. For example fails for services and some other processes if current process is not administrator.</returns>
 		/// <param name="processId">Process id. If you have a window, use <see cref="wnd.ProcessId"/>.</param>
 		/// <remarks>
 		/// To get <b>uacInfo</b> of this process, use <see cref="ofThisProcess"/>.
@@ -181,7 +181,7 @@ namespace Au {
 		static uacInfo s_thisProcess;
 
 		/// <summary>
-		/// Returns true if this process is running as administrator.
+		/// Returns <c>true</c> if this process is running as administrator.
 		/// </summary>
 #if true
 		public static bool isAdmin => s_isAdmin ??= Api.IsUserAnAdmin();
@@ -246,7 +246,7 @@ namespace Au {
 		*/
 
 		/// <summary>
-		/// Returns true if [](xref:uac) is disabled (turned off) completely (not just disabled UAC consent screen/dialog).
+		/// Returns <c>true</c> if [](xref:uac) is disabled (turned off) completely (not just disabled UAC consent screen/dialog).
 		/// </summary>
 		public static bool isUacDisabled {
 			get {

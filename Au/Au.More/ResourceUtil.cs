@@ -173,7 +173,7 @@ namespace Au.More {
 		//}
 		
 		/// <summary>
-		/// Returns true if string starts with <c>"resource:"</c> or <c>"resources/"</c>.
+		/// Returns <c>true</c> if string starts with <c>"resource:"</c> or <c>"resources/"</c>.
 		/// </summary>
 		public static bool HasResourcePrefix(string s) {
 			return s.Starts("resource:") || s.Starts("resources/")/* || s.Starts("pack:")*/;

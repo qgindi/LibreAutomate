@@ -48,7 +48,7 @@ namespace Au
 		/// <summary>
 		/// Stops the timer, and by default disposes.
 		/// </summary>
-		/// <param name="canReuse">Just stop but don't dispose. If false (default), can't use the timer again.</param>
+		/// <param name="canReuse">Just stop but don't dispose. If <c>false</c> (default), can't use the timer again.</param>
 		public void Stop(bool canReuse = false) {
 			if (canReuse) _tim.Change(-1, -1);
 			else _tim.Dispose();
@@ -71,7 +71,7 @@ namespace Au
 		/// Starts periodic timer or changes timeout/period.
 		/// </summary>
 		/// <param name="milliseconds">Time interval (period) of calling the callback function. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
-		/// <param name="firstAfter">null (default) or time interval after which to call the callback function first time. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
+		/// <param name="firstAfter"><c>null</c> (default) or time interval after which to call the callback function first time. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <exception cref="ObjectDisposedException">Called <see cref="Stop"/> (unless <i>canReuse</i> true).</exception>
 		/// <remarks>
@@ -108,7 +108,7 @@ namespace Au
 		/// <param name="milliseconds">Time interval (period) of calling the callback function. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
-		/// <param name="firstAfter">null (default) or time interval after which to call the callback function first time. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
+		/// <param name="firstAfter"><c>null</c> (default) or time interval after which to call the callback function first time. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Calls <see cref="Timer.Change(long, long)"/>.

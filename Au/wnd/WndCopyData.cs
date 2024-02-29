@@ -104,7 +104,7 @@ namespace Au.More {
 		/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
 		/// <param name="send">Data to send. For example string or byte[]. String can contain <c>'\0'</c> characters.</param>
 		/// <param name="receive">Callback function that can convert the received data to desired format.</param>
-		/// <returns>false if failed.</returns>
+		/// <returns><c>false</c> if failed.</returns>
 		public static unsafe bool SendReceive<TSend, TReceive>(wnd w, int dataId, ReadOnlySpan<TSend> send, ResultReader<TReceive> receive) where TSend : unmanaged where TReceive : unmanaged {
 			var mutex = s_mutex.Value;
 			if (Api.WaitForSingleObject(mutex, -1) is not (0 or Api.WAIT_ABANDONED_0)) return false;

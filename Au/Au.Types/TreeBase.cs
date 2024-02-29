@@ -102,13 +102,13 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	#region properties
 
 	/// <summary>
-	/// Returns the parent node. Can be null.
+	/// Returns the parent node. Can be <c>null</c>.
 	/// </summary>
 	public T Parent => _parent;
 
 	/// <summary>
-	/// Returns the root ancestor node. Its <see cref="Parent"/> is null.
-	/// Returns this node if its <b>Parent</b> is null.
+	/// Returns the root ancestor node. Its <see cref="Parent"/> is <c>null</c>.
+	/// Returns this node if its <b>Parent</b> is <c>null</c>.
 	/// </summary>
 	public T RootAncestor {
 		get {
@@ -130,16 +130,16 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	}
 
 	/// <summary>
-	/// Returns true if this node is a descendant of node <i>n</i>.
+	/// Returns <c>true</c> if this node is a descendant of node <i>n</i>.
 	/// </summary>
-	/// <param name="n">Can be null.</param>
+	/// <param name="n">Can be <c>null</c>.</param>
 	public bool IsDescendantOf(T n) {
 		for (var p = _parent; p != null; p = p._parent) if (p == n) return true;
 		return false;
 	}
 
 	/// <summary>
-	/// Returns true if this node is a descendant of nearest ancestor node for which <i>predicate</i> returns true.
+	/// Returns <c>true</c> if this node is a descendant of nearest ancestor node for which <i>predicate</i> returns <c>true</c>.
 	/// </summary>
 	public bool IsDescendantOf(Func<T, bool> predicate) {
 		for (var p = _parent; p != null; p = p._parent) if (predicate(p)) return true;
@@ -147,41 +147,41 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	}
 
 	/// <summary>
-	/// Returns true if this node is an ancestor of node <i>n</i>.
+	/// Returns <c>true</c> if this node is an ancestor of node <i>n</i>.
 	/// </summary>
-	/// <param name="n">Can be null.</param>
+	/// <param name="n">Can be <c>null</c>.</param>
 	public bool IsAncestorOf(T n) => n?.IsDescendantOf(this as T) ?? false;
 
 	/// <summary>
-	/// Returns true if <see cref="Parent"/> is not null.
+	/// Returns <c>true</c> if <see cref="Parent"/> is not <c>null</c>.
 	/// </summary>
 	public bool HasParent => _parent != null;
 
 	/// <summary>
-	/// Returns true if this node has child nodes.
+	/// Returns <c>true</c> if this node has child nodes.
 	/// </summary>
 	public bool HasChildren => _lastChild != null;
 
 	/// <summary>
-	/// Gets the last child node, or null if none.
+	/// Gets the last child node, or <c>null</c> if none.
 	/// </summary>
 	public T LastChild => _lastChild;
 
 	/// <summary>
-	/// Gets the first child node, or null if none.
+	/// Gets the first child node, or <c>null</c> if none.
 	/// </summary>
 	public T FirstChild => _lastChild?._next;
 
 	/// <summary>
-	/// Gets next sibling node, or null if none.
+	/// Gets next sibling node, or <c>null</c> if none.
 	/// </summary>
 	public T Next => _parent == null || this == _parent._lastChild ? null : _next;
 
 	/// <summary>
-	/// Gets previous sibling node, or null if none.
+	/// Gets previous sibling node, or <c>null</c> if none.
 	/// </summary>
 	/// <remarks>
-	/// Can be slow if there are many siblings. This class does not have a 'previous' field and therefore has to walk the linked list of siblings.
+	/// Can be slow if there are many siblings. This class does not have a "previous" field and therefore has to walk the linked list of siblings.
 	/// </remarks>
 	public T Previous {
 		get {
@@ -202,7 +202,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Returns -1 if no parent.
 	/// </summary>
 	/// <remarks>
-	/// Can be slow if there are many siblings. This class does not have an 'index' field and therefore has to walk the linked list of siblings.
+	/// Can be slow if there are many siblings. This class does not have an "index" field and therefore has to walk the linked list of siblings.
 	/// </remarks>
 	public int Index {
 		get {
@@ -231,8 +231,8 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Adds node <i>n</i> to this node as a child.
 	/// </summary>
 	/// <param name="n"></param>
-	/// <param name="first">Insert <i>n</i> as the first child node. If false (default), appends to the end.</param>
-	/// <exception cref="ArgumentException"><i>n</i> is null, or has parent (need to <see cref="Remove"/> at first), or is this node, or an ancestor of this node.</exception>
+	/// <param name="first">Insert <i>n</i> as the first child node. If <c>false</c> (default), appends to the end.</param>
+	/// <exception cref="ArgumentException"><i>n</i> is <c>null</c>, or has parent (need to <see cref="Remove"/> at first), or is this node, or an ancestor of this node.</exception>
 	public void AddChild(T n, bool first = false) {
 		_AddCommon(n);
 		if (_lastChild == null) { //our first child!
@@ -249,9 +249,9 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Inserts node <i>n</i> before or after this node as a sibling.
 	/// </summary>
 	/// <param name="n"></param>
-	/// <param name="after">Insert <i>n</i> after this node. If false (default), inserts before this node.</param>
+	/// <param name="after">Insert <i>n</i> after this node. If <c>false</c> (default), inserts before this node.</param>
 	/// <exception cref="ArgumentException">See <see cref="AddChild"/>.</exception>
-	/// <exception cref="InvalidOperationException">This node does not have parent (<see cref="Parent"/> is null).</exception>
+	/// <exception cref="InvalidOperationException">This node does not have parent (<see cref="Parent"/> is <c>null</c>).</exception>
 	public void AddSibling(T n, bool after) {
 		if (_parent == null) throw new InvalidOperationException("no parent");
 		_parent._Insert(n, this as T, after);
@@ -275,8 +275,8 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Removes this node from its parent.
 	/// </summary>
 	/// <remarks>
-	/// After removing, the <see cref="Parent"/> property is null.
-	/// Does nothing if <b>Parent</b> is null.
+	/// After removing, the <see cref="Parent"/> property is <c>null</c>.
+	/// Does nothing if <b>Parent</b> is <c>null</c>.
 	/// </remarks>
 	public void Remove() => _parent?._Remove(this as T);
 
@@ -312,7 +312,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <summary>
 	/// Gets ancestor nodes. The order is from the root node towards this node.
 	/// </summary>
-	/// <param name="andSelf">Include this node. Default false.</param>
+	/// <param name="andSelf">Include this node. Default <c>false</c>.</param>
 	/// <param name="noRoot">Don't include <see cref="RootAncestor"/>.</param>
 	public T[] AncestorsFromRoot(bool andSelf = false, bool noRoot = false) {
 		T nFrom = andSelf ? this as T : _parent;
@@ -334,7 +334,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <summary>
 	/// Gets all direct child nodes.
 	/// </summary>
-	/// <param name="andSelf">Include this node. Default false.</param>
+	/// <param name="andSelf">Include this node. Default <c>false</c>.</param>
 	public IEnumerable<T> Children(bool andSelf = false) {
 		if (andSelf) yield return this as T;
 		if (_lastChild != null) {
@@ -363,7 +363,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <summary>
 	/// Gets all descendant nodes (direct children, their children and so on).
 	/// </summary>
-	/// <param name="andSelf">Include this node. Default false.</param>
+	/// <param name="andSelf">Include this node. Default <c>false</c>.</param>
 	public IEnumerable<T> Descendants(bool andSelf = false) {
 		var n = this as T;
 		if (andSelf) yield return n;
@@ -445,7 +445,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
 	/// <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="XmlWriter.WriteStartElement(string)"/>) and attributes (see <see cref="XmlWriter.WriteAttributeString(string, string)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
 	/// <param name="sett">XML formatting settings. Optional.</param>
-	/// <param name="children">If not null, writes these nodes as if they were children of this node.</param>
+	/// <param name="children">If not <c>null</c>, writes these nodes as if they were children of this node.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="XmlWriter.Create(string)"/> and other <b>XmlWriter</b> methods.</exception>
 	/// <remarks>

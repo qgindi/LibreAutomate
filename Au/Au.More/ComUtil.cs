@@ -8,7 +8,7 @@ public static class ComUtil {
 	/// Gets a COM object existing in other process and registered in ROT.
 	/// </summary>
 	/// <param name="progID">ProgID of the COM class. Example: <c>"Excel.Application"</c>.</param>
-	/// <param name="dontThrow">If fails, don't throw exception but return null.</param>
+	/// <param name="dontThrow">If fails, don't throw exception but return <c>null</c>.</param>
 	/// <exception cref="COMException">
 	/// <br/>• <i>progID</i> not found in the registry. Probably it is incorrect, or the program isn't installed.
 	/// <br/>• An object of this type currently is unavailable. Probably the program is not running, or running with a different UAC integrity level.
@@ -44,8 +44,8 @@ public static class ComUtil {
 	/// Gets COM object from a window using API <msdn>AccessibleObjectFromWindow</msdn>(OBJID_NATIVEOM, IID_IDispatch).
 	/// </summary>
 	/// <param name="w">Window or control.</param>
-	/// <param name="cnChild">Child window class name. Format: [wildcard expression](xref:wildcard_expression). If used, gets COM object from the first found child or descendant window where it succeeds. If null, gets COM object from <i>w</i>.</param>
-	/// <param name="dontThrow">If fails to get COM object, don't throw exception but return null.</param>
+	/// <param name="cnChild">Child window class name. Format: [wildcard expression](xref:wildcard_expression). If used, gets COM object from the first found child or descendant window where it succeeds. If <c>null</c>, gets COM object from <i>w</i>.</param>
+	/// <param name="dontThrow">If fails to get COM object, don't throw exception but return <c>null</c>.</param>
 	/// <exception cref="AuWndException"><i>w</i> 0 or invalid.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <example>

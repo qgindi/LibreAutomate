@@ -32,12 +32,12 @@ namespace Au {
 		public IntPtr Handle => _h;
 
 		/// <summary>
-		/// Gets the callback function that returns <b>screen</b> when need. Returns null if it wasn't set.
+		/// Gets the callback function that returns <b>screen</b> when need. Returns <c>null</c> if it wasn't set.
 		/// </summary>
 		public Func<screen> LazyFunc => _func;
 
 		/// <summary>
-		/// Returns true if this variable has no screen handle and no callback function.
+		/// Returns <c>true</c> if this variable has no screen handle and no callback function.
 		/// </summary>
 		public bool IsEmpty => _h == default && _func == null;
 
@@ -106,7 +106,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="f">Window finder. If window not found, gets the primary screen.</param>
 		/// <param name="defaultScreen"></param>
-		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will find window and get screen handle. Default true.</param>
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will find window and get screen handle. Default <c>true</c>.</param>
 		public static screen of(wndFinder f, SODefault defaultScreen = SODefault.Nearest, bool lazy = true)
 			=> lazy
 			? new screen(() => of(f, defaultScreen, false))
@@ -115,7 +115,7 @@ namespace Au {
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified winforms window or control or nearest to it.
 		/// </summary>
-		/// <param name="c">Window or control. If handle not created, gets the primary screen. Cannot be null.</param>
+		/// <param name="c">Window or control. If handle not created, gets the primary screen. Cannot be <c>null</c>.</param>
 		/// <param name="defaultScreen"></param>
 		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 		public static screen of(System.Windows.Forms.Control c, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
@@ -126,7 +126,7 @@ namespace Au {
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified WPF window or nearest to it.
 		/// </summary>
-		/// <param name="w">WPF window. If handle not created, gets the primary screen. Cannot be null.</param>
+		/// <param name="w">WPF window. If handle not created, gets the primary screen. Cannot be <c>null</c>.</param>
 		/// <param name="defaultScreen"></param>
 		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 		public static screen of(System.Windows.Window w, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
@@ -137,7 +137,7 @@ namespace Au {
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified WPF element (of its rectangle) or nearest to it.
 		/// </summary>
-		/// <param name="elem">WPF element. If not loaded, gets the primary screen. Cannot be null.</param>
+		/// <param name="elem">WPF element. If not loaded, gets the primary screen. Cannot be <c>null</c>.</param>
 		/// <param name="defaultScreen"></param>
 		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 		public static screen of(System.Windows.FrameworkElement elem, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
@@ -307,8 +307,8 @@ namespace Au {
 		/// Tuple containing:
 		/// <br/>• <b>rect</b> - screen rectangle.
 		/// <br/>• <b>workArea</b> - work area rectangle.
-		/// <br/>• <b>isPrimary</b> - true if it is the primary screen.
-		/// <br/>• <b>isAlive</b> - false if the screen handle is invalid; then the function gets info of the primary screen.
+		/// <br/>• <b>isPrimary</b> - <c>true</c> if it is the primary screen.
+		/// <br/>• <b>isAlive</b> - <c>false</c> if the screen handle is invalid; then the function gets info of the primary screen.
 		/// </returns>
 		/// <remarks>
 		/// If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="Now"/>.
@@ -354,7 +354,7 @@ namespace Au {
 		/// True if the screen handle is valid.
 		/// </summary>
 		/// <remarks>
-		/// Don't use with variables that hold a callback function. This function does not call it and returns false.
+		/// Don't use with variables that hold a callback function. This function does not call it and returns <c>false</c>.
 		/// </remarks>
 		public unsafe bool IsAlive => _h != default && Api.GetMonitorInfo(_h, out _);
 
@@ -379,21 +379,21 @@ namespace Au {
 		///// <summary>Converts from <see cref="Screen"/>.</summary>
 		//public static implicit operator screen(Screen scrn) => new screen((IntPtr)scrn.GetHashCode());
 
-		///// <summary>Converts to <see cref="Screen"/>. Returns null if failed.</summary>
+		///// <summary>Converts to <see cref="Screen"/>. Returns <c>null</c> if failed.</summary>
 		//public static implicit operator Screen(screen scrn) { int h=(int)scrn._Handle(); return Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == h);
 
 		/// <summary>
-		/// Returns true if point <i>p</i> is in some screen.
+		/// Returns <c>true</c> if point <i>p</i> is in some screen.
 		/// </summary>
 		public static bool isInAnyScreen(POINT p) => Api.MonitorFromPoint(p, SODefault.Zero) != default;
 
 		/// <summary>
-		/// Returns true if rectangle <i>r</i> intersects with some screen.
+		/// Returns <c>true</c> if rectangle <i>r</i> intersects with some screen.
 		/// </summary>
 		public static bool isInAnyScreen(RECT r) => Api.MonitorFromRect(r, SODefault.Zero) != default;
 
 		/// <summary>
-		/// Returns true if rectangle of window <i>w</i> intersects with some screen.
+		/// Returns <c>true</c> if rectangle of window <i>w</i> intersects with some screen.
 		/// </summary>
 		public static bool isInAnyScreen(wnd w) => Api.MonitorFromWindow(w, SODefault.Zero) != default;
 

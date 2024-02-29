@@ -5,13 +5,13 @@ namespace Au.More {
 	/// <remarks>
 	/// Hooks are used to receive notifications about various system events. Keyboard and mouse input, window messages, various window events.
 	/// 
-	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
+	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a "wait-for" function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
 	/// 
-	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with 'using' pattern. Can do it in hook procedure.</note>
+	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with <c>using</c>. Can do it in hook procedure.</note>
 	/// 
 	/// <note type="warning">Avoid many hooks. Each low-level keyboard or mouse hook makes the computer slower, even if the hook procedure is fast. On each input event (key down, key up, mouse move, click, wheel) Windows sends a message to your thread.</note>
 	/// 
-	/// To receive hook events is used a callback function, aka hook procedure. Hook procedures of some hook types can block some events (call <b>BlockEvent</b> or return true). Blocked events are not sent to apps and older hooks.
+	/// To receive hook events is used a callback function, aka hook procedure. Hook procedures of some hook types can block some events (call <b>BlockEvent</b> or return <c>true</c>). Blocked events are not sent to apps and older hooks.
 	/// 
 	/// Delegates of hook procedures are protected from GC until called <b>Dispose</b> or until the thread ends, even of unreferenced <b>WindowsHook</b> variables.
 	/// 
@@ -33,16 +33,16 @@ namespace Au.More {
 		/// Sets a low-level keyboard hook (<b>WH_KEYBOARD_LL</b>).
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
-		/// If calls <see cref="HookData.Keyboard.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
+		/// If calls <see cref="HookData.Keyboard.BlockEvent"/> or <see cref="HookData.ReplyMessage"/><c>(true)</c>, the event is not sent to apps and other hooks.
 		/// Event data cannot be modified.
 		/// <para>NOTE: When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</para>
 		/// </param>
-		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default <c>true</c>.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -64,16 +64,16 @@ namespace Au.More {
 		/// Sets a low-level mouse hook (<b>WH_MOUSE_LL</b>).
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
-		/// If calls <see cref="HookData.Mouse.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
+		/// If calls <see cref="HookData.Mouse.BlockEvent"/> or <see cref="HookData.ReplyMessage"/><c>(true)</c>, the event is not sent to apps and other hooks.
 		/// Event data cannot be modified.
 		/// <para>NOTE: When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</para>
 		/// </param>
-		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default <c>true</c>.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -98,15 +98,15 @@ namespace Au.More {
 		/// Sets a <b>WH_CBT</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// Hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// If returns true, the event is canceled. For some events you can modify some fields of event data.
+		/// If returns <c>true</c>, the event is canceled. For some events you can modify some fields of event data.
 		/// <para>NOTE: When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not the variable.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -135,7 +135,7 @@ namespace Au.More {
 		/// Sets a <b>WH_GETMESSAGE</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
@@ -143,7 +143,7 @@ namespace Au.More {
 		/// <para>NOTE: When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -160,14 +160,14 @@ namespace Au.More {
 		/// Sets a <b>WH_GETMESSAGE</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// If returns true, the event is canceled.
+		/// If returns <c>true</c>, the event is canceled.
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -185,15 +185,15 @@ namespace Au.More {
 		/// Sets a <b>WH_MOUSE</b> hook for a thread of this process.
 		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
-		/// <returns>Returns a new <see cref="WindowsHook"/> object that manages the hook.</returns>
+		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
-		/// If returns true, the event is canceled.
+		/// If returns <c>true</c>, the event is canceled.
 		/// <para>NOTE: When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -219,7 +219,7 @@ namespace Au.More {
 		/// <para>NOTE: When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</para>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
-		/// <param name="setNow">Set hook now. Default true.</param>
+		/// <param name="setNow">Set hook now. Default <c>true</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -348,7 +348,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Returns true if the hook is set.
+		/// Returns <c>true</c> if the hook is set.
 		/// </summary>
 		public bool IsSet => _hh != default;
 
@@ -556,9 +556,9 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Let other hooks (in all processes) don't block modifier key up events for timeMS milliseconds. If 0 - restore.
+		/// Let other hooks (in all processes) don't block modifier key up events for <i>timeMS</i> milliseconds. If 0 - restore.
 		/// Used by mouse triggers waiting for mod keys released, to prevent inputblockers blocking mod up events, eg when sending keys/text.
-		/// Returns the timeout time (Environment.TickCount64 + timeMS) or 0.
+		/// Returns the timeout time (<c>Environment.TickCount64 + timeMS</c>) or 0.
 		/// </summary>
 		internal unsafe long DontBlockModInOtherHooks_(long timeMS) {
 			_ignoreModExceptThisHook = timeMS > 0;
@@ -571,8 +571,8 @@ namespace Au.More {
 		bool _ignoreModExceptThisHook;
 
 		/// <summary>
-		/// Let all hooks (in all processes) ignore LShift and CapsLock for timeMS milliseconds. If 0 - restore.
-		/// Returns the timeout time (Environment.TickCount64 + timeMS) or 0.
+		/// Let all hooks (in all processes) ignore LShift and CapsLock for <i>timeMS</i> milliseconds. If 0 - restore.
+		/// Returns the timeout time (<c>Environment.TickCount64 + timeMS</c>) or 0.
 		/// Used when turning off CapsLock with Shift.
 		/// </summary>
 		internal static unsafe long IgnoreLShiftCaps_(long timeMS) {
@@ -616,13 +616,13 @@ namespace Au.Types {
 			public bool IsExtended => 0 != (_x->flags & Api.LLKHF_EXTENDED);
 
 			/// <summary>
-			/// true if the event was generated by API such as <msdn>SendInput</msdn>.
-			/// false if the event was generated by the keyboard.
+			/// <c>true</c> if the event was generated by API such as <msdn>SendInput</msdn>.
+			/// <c>false</c> if the event was generated by the keyboard.
 			/// </summary>
 			public bool IsInjected => 0 != (_x->flags & Api.LLKHF_INJECTED);
 
 			/// <summary>
-			/// true if the event was generated by functions of this library.
+			/// <c>true</c> if the event was generated by functions of this library.
 			/// </summary>
 			public bool IsInjectedByAu => 0 != (_x->flags & Api.LLKHF_INJECTED) && _x->dwExtraInfo == Api.AuExtraInfo;
 
@@ -658,7 +658,7 @@ namespace Au.Types {
 			}
 
 			/// <summary>
-			/// Returns true if <i>key</i> == <b>vkCode</b> or <i>key</i> is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
+			/// Returns <c>true</c> if <i>key</i> == <b>vkCode</b> or <i>key</i> is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
 			/// </summary>
 			public bool IsKey(KKey key) {
 				var vk = (KKey)_x->vkCode;
@@ -798,13 +798,13 @@ namespace Au.Types {
 			public bool IsWheel { get; }
 
 			/// <summary>
-			/// true if the event was generated by API such as <msdn>SendInput</msdn>.
-			/// false if the event was generated by the mouse.
+			/// <c>true</c> if the event was generated by API such as <msdn>SendInput</msdn>.
+			/// <c>false</c> if the event was generated by the mouse.
 			/// </summary>
 			public bool IsInjected => 0 != (flags & Api.LLMHF_INJECTED);
 
 			/// <summary>
-			/// true if the event was generated by functions of this library.
+			/// <c>true</c> if the event was generated by functions of this library.
 			/// </summary>
 			public bool IsInjectedByAu => IsInjected && dwExtraInfo == Api.AuExtraInfo;
 

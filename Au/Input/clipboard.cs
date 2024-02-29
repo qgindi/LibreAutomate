@@ -26,11 +26,11 @@ public static class clipboard {
 	/// <summary>
 	/// Gets or sets clipboard text.
 	/// </summary>
-	/// <value>null if there is no text.</value>
+	/// <value><c>null</c> if there is no text.</value>
 	/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
-	/// <exception cref="OutOfMemoryException">The 'set' function failed to allocate memory.</exception>
+	/// <exception cref="OutOfMemoryException">The <c>set</c> function failed to allocate memory.</exception>
 	/// <remarks>
-	/// The 'get' function calls <see cref="clipboardData.getText"/>.
+	/// The <c>get</c> function calls <see cref="clipboardData.getText"/>.
 	/// 
 	/// Gets/sets only data of text format. For other formats (files, HTML, image, etc) use <see cref="clipboardData"/> class.
 	/// </remarks>
@@ -72,7 +72,7 @@ public static class clipboard {
 	/// </summary>
 	/// <param name="cut">Use Ctrl+X.</param>
 	/// <param name="options">
-	/// Options. If null (default), uses <see cref="opt.key"/>.
+	/// Options. If <c>null</c> (default), uses <see cref="opt.key"/>.
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.KeySpeedClipboard"/>. Does not use <see cref="OKey.Hook"/>.
 	/// </param>
 	/// <param name="hotkey">Keys to use instead of Ctrl+C or Ctrl+X. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
@@ -95,10 +95,10 @@ public static class clipboard {
 	/// <summary>
 	/// Calls <see cref="copy"/> and handles exceptions.
 	/// </summary>
-	/// <returns>Returns false if failed.</returns>
+	/// <returns>Returns <c>false</c> if failed.</returns>
 	/// <param name="text">Receives the copied text.</param>
-	/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
-	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to copy text". Default true.</param>
+	/// <param name="warning">Call <see cref="print.warning"/>. Default <c>true</c>.</param>
+	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to copy text". Default <c>true</c>.</param>
 	/// <inheritdoc cref="copy" path="//param|//remarks"/>
 	public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		try {
@@ -212,13 +212,13 @@ public static class clipboard {
 	/// <summary>
 	/// Pastes text or HTML into the focused app using the clipboard.
 	/// </summary>
-	/// <param name="text">Text. Can be null if <i>html</i> used.</param>
+	/// <param name="text">Text. Can be <c>null</c> if <i>html</i> used.</param>
 	/// <param name="html">
-	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>. Can be null.
+	/// HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>. Can be <c>null</c>.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
 	/// </param>
 	/// <param name="options">
-	/// Options. If null (default), uses <see cref="opt.key"/>.
+	/// Options. If <c>null</c> (default), uses <see cref="opt.key"/>.
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.SleepFinally"/>, <see cref="OKey.Hook"/>, <see cref="OKey.KeySpeedClipboard"/>.
 	/// </param>
 	/// <param name="hotkey">Keys to use instead of Ctrl+V. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
@@ -250,9 +250,9 @@ public static class clipboard {
 	/// <summary>
 	/// Calls <see cref="paste"/> and handles exceptions.
 	/// </summary>
-	/// <returns>Returns false if failed.</returns>
-	/// <param name="warning">Call <see cref="print.warning"/>. Default true.</param>
-	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to paste text". Default true.</param>
+	/// <returns>Returns <c>false</c> if failed.</returns>
+	/// <param name="warning">Call <see cref="print.warning"/>. Default <c>true</c>.</param>
+	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to paste text". Default <c>true</c>.</param>
 	/// <inheritdoc cref="paste" path="//param|//remarks"/>
 	public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		try {
@@ -418,7 +418,7 @@ public static class clipboard {
 		public bool Success => waitVar;
 
 		/// <summary>
-		/// On Paste, true if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
+		/// On Paste, <c>true</c> if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
 		/// Not used on Copy.
 		/// </summary>
 		public bool IsBadWindow;
@@ -431,7 +431,7 @@ public static class clipboard {
 		/// <summary>
 		/// Subclasses clipOwner.
 		/// </summary>
-		/// <param name="paste">true if used for paste, false if for copy.</param>
+		/// <param name="paste"><c>true</c> if used for paste, <c>false</c> if for copy.</param>
 		/// <param name="data">If used for paste, can be string containing Unicode text or int/string dictionary containing clipboard format/data.</param>
 		/// <param name="clipOwner">Our clipboard owner window.</param>
 		/// <param name="wFocus">The target control or window.</param>
@@ -537,8 +537,8 @@ public static class clipboard {
 	/// <summary>
 	/// Opens and closes clipboard using API OpenClipboard and CloseClipboard.
 	/// Constructor tries to open for 10 s, then throws AuException.
-	/// If the 'createOwner' parameter is true, creates temporary message-only clipboard owner window.
-	/// If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
+	/// If the <i>createOwner</i> parameter is <c>true</c>, creates temporary message-only clipboard owner window.
+	/// If the <i>noOpenNow</i> parameter is <c>true</c>, does not open, only creates owner if need.
 	/// Dispose() closes clipboard and destroys the owner window.
 	/// </summary>
 	internal struct OpenClipboard_ : IDisposable {
@@ -562,7 +562,7 @@ public static class clipboard {
 		/// Must be closed.
 		/// Owner window should be not destroyed; does not create again.
 		/// </summary>
-		/// <param name="noThrow">If fails, return false, no exception. Also then waits 1 s instead of 10 s.</param>
+		/// <param name="noThrow">If fails, return <c>false</c>, no exception. Also then waits 1 s instead of 10 s.</param>
 		/// <exception cref="AuException">Failed to open.</exception>
 		public bool Reopen(bool noThrow = false) {
 			Debug.Assert(!_isOpen);

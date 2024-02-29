@@ -119,16 +119,16 @@ namespace Au.Types {
 
 namespace Au.More {
 	/// <summary>
-	/// Contains compilation info passed to current preBuild/postBuild script.
+	/// Contains compilation info passed to current <b>preBuild</b>/<b>postBuild</b> script.
 	/// </summary>
 	/// <param name="outputFile">Full path of the output exe or dll file.</param>
-	/// <param name="outputPath">Meta comment 'outputPath'.</param>
+	/// <param name="outputPath">Meta comment <b>outputPath</b>.</param>
 	/// <param name="source">Path of this C# code file in the workspace.</param>
-	/// <param name="role">Meta comment 'role'.</param>
-	/// <param name="optimize">Meta comment 'optimize'.</param>
-	/// <param name="bit32">Meta comment 'bit32'.</param>
-	/// <param name="preBuild">true if the script used with meta 'preBuild', false if with 'postBuild'.</param>
-	/// <param name="publish">true when publishing.</param>
+	/// <param name="role">Meta comment <b>role</b>.</param>
+	/// <param name="optimize">Meta comment <b>optimize</b>.</param>
+	/// <param name="bit32">Meta comment <b>bit32</b>.</param>
+	/// <param name="preBuild"><c>true</c> if the script used with meta <b>preBuild</b>, <c>false</c> if with <b>postBuild</b>.</param>
+	/// <param name="publish"><c>true</c> when publishing.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// /*/ role editorExtension; /*/

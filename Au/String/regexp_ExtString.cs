@@ -3,9 +3,9 @@ namespace Au.Types;
 public static partial class ExtString
 {
 	/// <summary>
-	/// Returns true if this string matches PCRE regular expression <i>rx</i>.
+	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// </summary>
-	/// <param name="t">This string. If null, returns false.</param>
+	/// <param name="t">This string. If <c>null</c>, returns <c>false</c>.</param>
 	/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -21,10 +21,10 @@ public static partial class ExtString
 	}
 
 	/// <summary>
-	/// Returns true if this string matches PCRE regular expression <i>rx</i>.
+	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// Gets match info as <see cref="RXMatch"/>.
 	/// </summary>
-	/// <param name="t">This string. If null, returns false.</param>
+	/// <param name="t">This string. If <c>null</c>, returns <c>false</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -40,10 +40,10 @@ public static partial class ExtString
 	}
 
 	/// <summary>
-	/// Returns true if this string matches PCRE regular expression <i>rx</i>.
+	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// Gets whole match or some group, as string.
 	/// </summary>
-	/// <param name="t">This string. If null, returns false.</param>
+	/// <param name="t">This string. If <c>null</c>, returns <c>false</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -59,10 +59,10 @@ public static partial class ExtString
 	}
 
 	/// <summary>
-	/// Returns true if this string matches PCRE regular expression <i>rx</i>.
+	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// Gets whole match or some group, as index and length.
 	/// </summary>
-	/// <param name="t">This string. If null, returns false.</param>
+	/// <param name="t">This string. If <c>null</c>, returns <c>false</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>

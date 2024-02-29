@@ -30,13 +30,13 @@ public unsafe class elmFinder {
 	
 	/// <summary>
 	/// The found UI element.
-	/// null if not found or if used <see cref="ResultGetProperty"/>.
+	/// <c>null</c> if not found or if used <see cref="ResultGetProperty"/>.
 	/// </summary>
 	public elm Result { get; private set; }
 	
 	/// <summary>
 	/// The requested property of the found UI element, depending on <see cref="ResultGetProperty"/>.
-	/// null if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is <c>'-'</c>. 3. Failed to get the property.
+	/// <c>null</c> if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is <c>'-'</c>. 3. Failed to get the property.
 	/// </summary>
 	/// <remarks>
 	/// The type depends on the property. Most properties are <b>String</b>. Others: <see cref="elm.Rect"/>, <see cref="elm.State"/>, <see cref="elm.WndContainer"/>, <see cref="elm.HtmlAttributes"/>.
@@ -95,13 +95,13 @@ public unsafe class elmFinder {
 	/// <param name="role">
 	/// UI element role (<see cref="elm.Role"/>), like <c>"LINK"</c>.
 	/// Can have prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c> which means "search only in web page" and enables Chrome UI elements.
-	/// Case-sensitive. Not wildcard. null means 'can be any'. Cannot be <c>""</c>.
+	/// Case-sensitive. Not wildcard. <c>null</c> means "can be any". Cannot be <c>""</c>.
 	/// More info in Remarks.
 	/// </param>
 	/// <param name="name">
 	/// UI element name (<see cref="elm.Name"/>).
 	/// String format: [wildcard expression](xref:wildcard_expression).
-	/// null means 'any'. <c>""</c> means 'empty or unavailable'.
+	/// <c>null</c> means "any". <c>""</c> means "empty or unavailable".
 	/// </param>
 	/// <param name="prop">
 	/// Other UI element properties and search settings.
@@ -110,7 +110,7 @@ public unsafe class elmFinder {
 	/// </param>
 	/// <param name="flags"></param>
 	/// <param name="also">
-	/// Callback function. Called for each matching UI element. Let it return true if this is the wanted UI element.
+	/// Callback function. Called for each matching UI element. Let it return <c>true</c> if this is the wanted UI element.
 	/// Example: the UI element must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
 	/// </param>
 	/// <param name="skip">
@@ -118,7 +118,7 @@ public unsafe class elmFinder {
 	/// Value -1 means "any", and can be useful when this finder is intermediate (ie not the last) in a path or when it has <i>navig</i>. If intermediate, will search for next element in all matching intermediate elements. If has <i>navig</i>, will retry with other matching elements if fails to navigate in the first found. It is slower and not so often useful, therefore the default value of this parameter is 0, not -1.
 	/// Cannot be used with <see cref="FindAll"/>, unless it is not in the last part of path.
 	/// </param>
-	/// <param name="navig">If not null, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
+	/// <param name="navig">If not <c>null</c>, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
 	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b> when appending (only the first finder can have these flags).</exception>
 	/// <remarks>
 	/// To create code for this function, use dialog "Find UI element".
@@ -161,7 +161,7 @@ public unsafe class elmFinder {
 	///   Example: <c>"state=CHECKED, FOCUSABLE, !DISABLED"</c>.\
 	///   Example: <c>"state=0x100010, !0x1"</c>.\
 	///   Will find UI element that has all states without <c>"!"</c> prefix and does not have any of states with <c>"!"</c> prefix.
-	/// - <c>"rect"</c> - <see cref="elm.GetRect(out RECT, bool)"/> with <i>raw</i> true. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.\
+	/// - <c>"rect"</c> - <see cref="elm.GetRect(out RECT, bool)"/> with <i>raw</i> <c>true</c>. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.\
 	///   Example: <c>"rect={L=1155 T=1182 W=132 H=13}"</c>.
 	///   Example: <c>"rect={W=132 T=1182}"</c>.
 	///   The L T coordinates are relative to the primary screen.
@@ -249,7 +249,7 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>, else null.</returns>
+	/// <returns>If found, returns <see cref="Result"/>, else <c>null</c>.</returns>
 	/// <exception cref="ArgumentException">
 	/// - <i>role</i> is <c>""</c> or invalid.
 	/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
@@ -286,7 +286,7 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns null (if <i>wait</i> negative).</returns>
+	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>null</c> (if <i>wait</i> negative).</returns>
 	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
 	/// <inheritdoc cref="Find()" path="/exception"/>
@@ -295,14 +295,14 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Like <see cref="Find"/>, just different return type.
 	/// </summary>
-	/// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 	
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>. Like <see cref="Find(Seconds)"/>, just different return type.
 	/// </summary>
-	/// <returns>If found, sets <see cref="Result"/> and returns true. Else throws exception or returns false (if <i>wait</i> negative).</returns>
+	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(Seconds)" path="//param|//exception"/>
 	public bool Exists(Seconds wait) {
 		if (Find_(_elm != null, _wnd, _elm, wait.Exists_() ? null : wait)) return true;
@@ -312,7 +312,7 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Waits for a matching descendant UI element to appear in the window or UI element.
 	/// </summary>
-	/// <returns>If found, returns <see cref="Result"/>. On timeout returns null if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>If found, returns <see cref="Result"/>. On timeout returns <c>null</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="TimeoutException" />
 	/// <remarks>
@@ -534,7 +534,7 @@ public unsafe class elmFinder {
 	///// <summary>
 	///// Finds UI element in the specified control of window <i>w</i>.
 	///// </summary>
-	///// <returns>If found, returns <see cref="Result"/>, else null.</returns>
+	///// <returns>If found, returns <see cref="Result"/>, else <c>null</c>.</returns>
 	///// <param name="w">Window that contains the control.</param>
 	///// <param name="controls">Control properties. This functions searches in all matching controls.</param>
 	///// <exception cref="Exception">Exceptions of <see cref="Find(wnd)"/>.</exception>
@@ -545,7 +545,7 @@ public unsafe class elmFinder {
 	///// </remarks>
 	//public elm Find(wnd w, wndChildFinder controls) => Exists(w, controls) ? Result : null;
 	
-	///// <returns>If found, sets <see cref="Result"/> and returns true, else false.</returns>
+	///// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	///// <inheritdoc cref="Find(wnd, wndChildFinder)"/>
 	//public bool Exists(wnd w, wndChildFinder controls) {
 	//	w.ThrowIfInvalid();

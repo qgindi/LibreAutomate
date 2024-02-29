@@ -13,13 +13,13 @@ namespace Au {
 		/// <summary>
 		/// Gets process executable file name (like <c>"notepad.exe"</c>) or full path.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <param name="fullPath">
 		/// Get full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
-		/// <param name="noSlowAPI">When the fast API <msdn>QueryFullProcessImageName</msdn> fails, don't try to use another much slower API <msdn>WTSEnumerateProcesses</msdn>. Not used if <i>fullPath</i> is true.</param>
+		/// <param name="noSlowAPI">When the fast API <msdn>QueryFullProcessImageName</msdn> fails, don't try to use another much slower API <msdn>WTSEnumerateProcesses</msdn>. Not used if <i>fullPath</i> is <c>true</c>.</param>
 		/// <remarks>
 		/// This function is much slower than getting window name or class name.
 		/// </remarks>
@@ -245,12 +245,12 @@ namespace Au {
 		/// </param>
 		/// <param name="fullPath">
 		/// <i>processName</i> is full path.
-		/// If null, calls <see cref="pathname.isFullPathExpand"/>.
+		/// If <c>null</c>, calls <see cref="pathname.isFullPathExpand"/>.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
 		/// <param name="ofThisSession">Get processes only of this user session.</param>
 		/// <exception cref="ArgumentException">
-		/// - <i>processName</i> is <c>""</c> or null.
+		/// - <i>processName</i> is <c>""</c> or <c>null</c>.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		public static int[] getProcessIds([ParamString(PSFormat.Wildex)] string processName, bool? fullPath = false, bool ofThisSession = false) {
@@ -281,7 +281,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Returns true if a process of the specified program is running.
+		/// Returns <c>true</c> if a process of the specified program is running.
 		/// </summary>
 		/// <inheritdoc cref="getProcessIds"/>
 		public static bool exists([ParamString(PSFormat.Wildex)] string processName, bool? fullPath = false, bool ofThisSession = false)
@@ -317,7 +317,7 @@ namespace Au {
 		/// <summary>
 		/// Gets version info of process executable file.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		public static FileVersionInfo getVersionInfo(int processId) {
 			var s = getName(processId, true);
@@ -330,7 +330,7 @@ namespace Au {
 		/// <summary>
 		/// Gets description of process executable file.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <remarks>
 		/// Calls <see cref="getVersionInfo"/> and <see cref="FileVersionInfo.FileDescription"/>.
@@ -364,7 +364,7 @@ namespace Au {
 		/// <summary>
 		/// Gets process creation and execution times (API <msdn>GetProcessTimes</msdn>).
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <param name="created">Creation time. As absolute <msdn>FILETIME</msdn>, UTC. If you need <b>DateTime</b>, use <see cref="DateTime.FromFileTimeUtc"/>.</param>
 		/// <param name="executed">Amount of time spent executing code (using CPU). As <msdn>FILETIME</msdn>. If you need <b>TimeSpan</b>, use <see cref="TimeSpan.FromTicks"/>.</param>
@@ -377,8 +377,8 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Returns true if the process is 32-bit, false if 64-bit.
-		/// Also returns false if failed. Supports <see cref="lastError"/>.
+		/// Returns <c>true</c> if the process is 32-bit, <c>false</c> if 64-bit.
+		/// Also returns <c>false</c> if failed. Supports <see cref="lastError"/>.
 		/// </summary>
 		/// <remarks>
 		/// <note>If you know it is current process, instead use <see cref="osVersion"/> functions or <c>IntPtr.Size==4</c>. This function is much slower.</note>
@@ -396,8 +396,8 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Returns true if the process is 32-bit, false if 64-bit.
-		/// Also returns false if failed. Supports <see cref="lastError"/>.
+		/// Returns <c>true</c> if the process is 32-bit, <c>false</c> if 64-bit.
+		/// Also returns <c>false</c> if failed. Supports <see cref="lastError"/>.
 		/// </summary>
 		public static bool is32Bit(IntPtr processHandle) {
 			bool is32bit = osVersion.is32BitOS;
@@ -411,7 +411,7 @@ namespace Au {
 		/// <summary>
 		/// Gets the command line string used to start the specified process.
 		/// </summary>
-		/// <returns>null if failed.</returns>
+		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <param name="removeProgram">Remove program path. Return only arguments, or empty string if there is no arguments.</param>
 		/// <remarks>
@@ -442,7 +442,7 @@ namespace Au {
 		/// <summary>
 		/// Terminates (ends) the specified process.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
 		/// <param name="exitCode">Process exit code.</param>
 		/// <remarks>
@@ -482,10 +482,10 @@ namespace Au {
 		/// Process executable file name (like <c>"notepad.exe"</c>) or full path.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
-		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
+		/// <param name="allSessions">Processes of any user session. If <c>false</c> (default), only processes of this user session.</param>
 		/// <param name="exitCode">Process exit code.</param>
 		/// <exception cref="ArgumentException">
-		/// - <i>processName</i> is <c>""</c> or null.
+		/// - <i>processName</i> is <c>""</c> or <c>null</c>.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		public static int terminate(string processName, bool allSessions = false, int exitCode = 0) {
@@ -499,8 +499,8 @@ namespace Au {
 		/// <summary>
 		/// Suspends or resumes the specified process.
 		/// </summary>
-		/// <returns>false if failed. Supports <see cref="lastError"/>.</returns>
-		/// <param name="suspend">true suspend, false resume.</param>
+		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
+		/// <param name="suspend"><c>true</c> suspend, <c>false</c> resume.</param>
 		/// <param name="processId">Process id.</param>
 		/// <remarks>
 		/// If suspended multiple times, must be resumed the same number of times.
@@ -519,14 +519,14 @@ namespace Au {
 		/// Suspends or resumes all processes of the specified program or programs.
 		/// </summary>
 		/// <returns>The number of successfully suspended/resumed processes.</returns>
-		/// <param name="suspend">true suspend, false resume.</param>
+		/// <param name="suspend"><c>true</c> suspend, <c>false</c> resume.</param>
 		/// <param name="processName">
 		/// Process executable file name (like <c>"notepad.exe"</c>) or full path.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
-		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
+		/// <param name="allSessions">Processes of any user session. If <c>false</c> (default), only processes of this user session.</param>
 		/// <exception cref="ArgumentException">
-		/// - <i>processName</i> is <c>""</c> or null.
+		/// - <i>processName</i> is <c>""</c> or <c>null</c>.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
@@ -543,9 +543,9 @@ namespace Au {
 		/// <summary>
 		/// Waits until the process ends.
 		/// </summary>
-		/// <returns>true when the process ended. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+		/// <returns><c>true</c> when the process ended. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="processId">Process id. If invalid but not 0, the function returns true and sets <c>exitCode = int.MinValue</c>; probably the process is already ended.</param>
+		/// <param name="processId">Process id. If invalid but not 0, the function returns <c>true</c> and sets <c>exitCode = int.MinValue</c>; probably the process is already ended.</param>
 		/// <param name="exitCode">Receives the exit code.</param>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -571,11 +571,11 @@ namespace Au {
 		/// An object that retrieves process trigger info (started/ended, name, id, session id) when used with foreach.
 		/// If need more process properties, your code can call <see cref="process"/> class functions with the process id.
 		/// </returns>
-		/// <param name="started">Trigger events: true - started, false - ended, null (default) - both.</param>
+		/// <param name="started">Trigger events: <c>true</c> - started, <c>false</c> - ended, <c>null</c> (default) - both.</param>
 		/// <param name="processName">
 		/// Process executable file name, like <c>"notepad.exe"</c>.
 		/// String format: [wildcard expression](xref:wildcard_expression).
-		/// null matches all.
+		/// <c>null</c> matches all.
 		/// </param>
 		/// <param name="ofThisSession">Watch processes only of this user session.</param>
 		/// <param name="period">
@@ -591,7 +591,7 @@ namespace Au {
 		/// }
 		/// 
 		/// //started notepad processes in current user session
-		/// foreach (var v in process.triggers(started: true, "notepad.exe", ofThisSession: true)) {
+		/// foreach (var v in process.triggers(started: <c>true</c>, "notepad.exe", ofThisSession: true)) {
 		/// 	print.it(v);
 		/// }
 		/// ]]></code>
@@ -686,10 +686,10 @@ namespace Au {
 		/// Gets or sets whether <see cref="CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="CultureInfo.InvariantCulture"/>.
 		/// </summary>
 		/// <remarks>
-		/// If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
-		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
-		/// Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASCII <c>'-'</c> which is specified in Control Panel.
-		/// The default compiler sets this property = true; as well as <see cref="script.setup"/>.
+		/// If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = <c>true</c>.
+		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and "number to/from string" functions.
+		/// Also, there is a bug in "number to/from string" functions in some .NET versions with some cultures: they use wrong minus sign, not ASCII <c>'-'</c> which is specified in Control Panel.
+		/// The default compiler sets this property = <c>true</c>; as well as <see cref="script.setup"/>.
 		/// </remarks>
 		public static bool thisProcessCultureIsInvariant {
 			get {
@@ -709,7 +709,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
+		/// After <i>afterMS</i> milliseconds invokes GC and calls API <b>SetProcessWorkingSetSize</b>.
 		/// </summary>
 		internal static void ThisProcessMinimizePhysicalMemory_(int afterMS) {
 			Task.Delay(afterMS).ContinueWith(_ => {
@@ -730,7 +730,7 @@ namespace Au {
 		/// Before this process exits, either normally or on unhandled exception.
 		/// </summary>
 		/// <remarks>
-		/// The event handler is called on <see cref="AppDomain.ProcessExit"/> (then the parameter is null) and <see cref="AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
+		/// The event handler is called on <see cref="AppDomain.ProcessExit"/> (then the parameter is <c>null</c>) and <see cref="AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
 		/// </remarks>
 		public static event Action<Exception> thisProcessExit {
 			add {
@@ -796,7 +796,7 @@ namespace Au {
 		public static IntPtr thisThreadHandle => Api.GetCurrentThread();
 		
 		/// <summary>
-		/// Returns true if this thread has a .NET message loop (winforms or WPF).
+		/// Returns <c>true</c> if this thread has a .NET message loop (winforms or WPF).
 		/// </summary>
 		/// <param name="isWPF">Has WPF message loop and no winforms message loop.</param>
 		/// <seealso cref="wnd.getwnd.threadWindows"/>

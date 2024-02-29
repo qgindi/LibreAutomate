@@ -72,6 +72,9 @@ class DSnippets : KDialogWindow {
 		b.End();
 		b.Row(-1).xAddInBorder(out _code);
 		_code.AaTextChanged += (_, _) => { if (!_ignoreEvents) _ti.code = _code.aaaText; };
+		_code.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
+			if(n.code == Sci.NOTIF.SCN_MODIFYATTEMPTRO && _readonly) dialog.showInfo(null, "Default snippets are read-only, but you can clone a default snippet (right click, copy, paste) and edit the clone. Uncheck the default snippet.", owner: c);
+		};
 		b.End();
 		
 		//context

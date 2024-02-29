@@ -195,7 +195,7 @@ public class uiimage {
 	/// </summary>
 	/// <returns>
 	/// Returns a <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.
-	/// Returns null if not found.
+	/// Returns <c>null</c> if not found.
 	/// </returns>
 	/// <param name="area">
 	/// Where to search:
@@ -212,12 +212,12 @@ public class uiimage {
 	/// Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="IFAlso"/> values.
 	/// <br/>Examples:
 	/// <br/>• Skip 2 matching images: <c>also: o => o.Skip(2)</c>
-	/// <br/>• Skip some matching images if some condition is false: <c>also: o => condition ? IFAlso.OkReturn : IFAlso.FindOther</c>
+	/// <br/>• Skip some matching images if some condition is <c>false</c>: <c>also: o => condition ? IFAlso.OkReturn : IFAlso.FindOther</c>
 	/// <br/>• Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return IFAlso.OkFindMore; }</c>
 	/// <br/>• Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); uiimage.find(w, images, also: o => { found[o.ListIndex] = true; return IFAlso.OkFindMoreOfList; }); if(found[0]) print.it(0); if(found[1]) print.it(1);</c>
 	/// </param>
 	/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
-	/// <exception cref="ArgumentException">An argument is/contains a null/invalid value.</exception>
+	/// <exception cref="ArgumentException">An argument is/contains a <c>null</c>/invalid value.</exception>
 	/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmap"/>.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
@@ -257,7 +257,7 @@ public class uiimage {
 	/// </summary>
 	/// <returns>
 	/// Returns a <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.
-	/// If not found, throws exception or returns null (if <i>wait</i> negative).
+	/// If not found, throws exception or returns <c>null</c> (if <i>wait</i> negative).
 	/// </returns>
 	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
@@ -270,7 +270,7 @@ public class uiimage {
 	/// Finds image(s) or color(s) displayed in a window or other area. Waits until found.
 	/// More info: <see cref="find"/>.
 	/// </summary>
-	/// <returns>Returns <see cref="uiimage"/> object containing the rectangle of the found image. On timeout returns null if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <see cref="uiimage"/> object containing the rectangle of the found image. On timeout returns <c>null</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument), or the window closed while waiting.</exception>
@@ -282,7 +282,7 @@ public class uiimage {
 	/// Waits until image(s) or color(s) is not displayed in a window or other area.
 	/// More info: <see cref="find"/>.
 	/// </summary>
-	/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <inheritdoc cref="wait(Seconds, IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 	public static bool waitNot(Seconds timeout, IFArea area, IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null)
 		=> new uiimageFinder(image, flags, diff, also).WaitNot(timeout, area);

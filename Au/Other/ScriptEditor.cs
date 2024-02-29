@@ -4,7 +4,7 @@ namespace Au.More;
 /// Contains functions to interact with the script editor, if available.
 /// </summary>
 /// <remarks>
-/// Functions of this class work when editor process is running, even if current process wasn't started from it. To detect whether current process was started from editor, use <see cref="folders.Editor"/> (it is null if not).
+/// Functions of this class work when editor process is running, even if current process wasn't started from it. To detect whether current process was started from editor, use <see cref="folders.Editor"/> (it is <c>null</c> if not).
 /// </remarks>
 public static class ScriptEditor {
 	/// <summary>
@@ -30,7 +30,7 @@ public static class ScriptEditor {
 	}
 	
 	/// <summary>
-	/// Returns true if editor is running.
+	/// Returns <c>true</c> if editor is running.
 	/// </summary>
 	public static bool Available => !WndMsg_.Is0;
 	
@@ -45,9 +45,9 @@ public static class ScriptEditor {
 	/// Shows or hides the main editor window.
 	/// </summary>
 	/// <param name="show">
-	/// <br/>• true - show, activate, restore if minimized.
-	/// <br/>• false - hide. It does not hide the tray icon.
-	/// <br/>• null - toggle.
+	/// <br/>• <c>true</c> - show, activate, restore if minimized.
+	/// <br/>• <c>false</c> - hide. It does not hide the tray icon.
+	/// <br/>• <c>null</c> - toggle.
 	/// </param>
 	public static void ShowMainWindow(bool? show) {
 		var w = WndMsg_;
@@ -57,10 +57,10 @@ public static class ScriptEditor {
 	/// <summary>
 	/// Invokes an editor's menu command.
 	/// </summary>
-	/// <param name="command">Command name. If "" or invalid, prints all names.</param>
-	/// <param name="check">If it's a checkbox-item, true checks it, false unchecks, null toggles. Else must be null (default).</param>
+	/// <param name="command">Command name. If <c>""</c> or invalid, prints all names.</param>
+	/// <param name="check">If it's a checkbox-item, <c>true</c> checks it, <c>false</c> unchecks, <c>null</c> toggles. Else must be <c>null</c> (default).</param>
 	/// <param name="dontWait">Don't wait until the command finishes executing. For example, if it shows a modal dialog, don't wait until it is closed.</param>
-	/// <param name="activateWindow">Activate the main window. Default true. Some commands may not work correctly if the window isn't active.</param>
+	/// <param name="activateWindow">Activate the main window. Default <c>true</c>. Some commands may not work correctly if the window isn't active.</param>
 	/// <remarks>
 	/// Shows the main window, regardless of <i>activateWindow</i>. Waits while it is disabled or not finished loading, unless script role is editorExtension and it runs in the editor's main thread (then not invoke the command).
 	/// Does not invoke the command if the menu item is disabled or if it's a submenu-item.
@@ -82,7 +82,7 @@ public static class ScriptEditor {
 	/// <summary>
 	/// Gets the state of an editor's menu command (checked, disabled).
 	/// </summary>
-	/// <param name="command">Command name. If "" or invalid, prints all names.</param>
+	/// <param name="command">Command name. If <c>""</c> or invalid, prints all names.</param>
 	/// <remarks>
 	/// Shows the main window. Waits while it is disabled or not finished loading, unless script role is editorExtension and it runs in the editor's main thread (then returns <b>Disabled</b>).
 	/// </remarks>
@@ -99,8 +99,8 @@ public static class ScriptEditor {
 	/// Does nothing if editor isn't running.
 	/// </summary>
 	/// <param name="file">A file in current workspace. Can be full path, or relative path in workspace, or file name with extension (<c>".cs"</c> etc). If folder, selects it.</param>
-	/// <param name="line">If not null, goes to this 1-based line index.</param>
-	/// <param name="offset">If not null, goes to this 0-based column index in line (if <i>line</i> not null) or to this 0-based position in text (if <i>line</i> null).</param>
+	/// <param name="line">If not <c>null</c>, goes to this 1-based line index.</param>
+	/// <param name="offset">If not <c>null</c>, goes to this 0-based column index in line (if <i>line</i> not <c>null</c>) or to this 0-based position in text (if <i>line</i> <c>null</c>).</param>
 	public static void Open([ParamString(PSFormat.FileInWorkspace)] string file, int? line = null, int? offset = null) {
 		var w = WndMsg_; if (w.Is0) return;
 		Api.AllowSetForegroundWindow(w.ProcessId);
@@ -114,7 +114,7 @@ public static class ScriptEditor {
 	/// <summary>
 	/// Gets icon string in specified format.
 	/// </summary>
-	/// <returns>Returns null if editor isn't running or if the file does not exist. Read more in Remarks.</returns>
+	/// <returns>Returns <c>null</c> if editor isn't running or if the file does not exist. Read more in Remarks.</returns>
 	/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>, <see cref="ImageUtil.LoadWpfImageElement"/>.</param>
 	/// <param name="what">The format of input and output strings.</param>
 	/// <remarks>
@@ -149,10 +149,10 @@ public static class ScriptEditor {
 	internal static Func<string, EGetIcon, string> IconNameToXaml_;
 	
 	/// <summary>
-	/// Returns true if the editor program is installed as [portable](xref:portable).
+	/// Returns <c>true</c> if the editor program is installed as [portable](xref:portable).
 	/// </summary>
 	/// <remarks>
-	/// Available in the script editor process and in scripts launched from it. Elsewhere false.
+	/// Available in the script editor process and in scripts launched from it. Elsewhere <c>false</c>.
 	/// 
 	/// If portable, these paths are different:
 	/// - <see cref="folders.ThisAppDocuments"/>
