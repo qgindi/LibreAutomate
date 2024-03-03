@@ -157,6 +157,11 @@ namespace Au {
 		public static StringContent jsonContent(string json) => new(json, null, "application/json");
 		
 		/// <summary>
+		/// Creates an <b>HttpContent</b> for posting JSON. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
+		/// </summary>
+		public static StringContent jsonContent(JsonNode json) => jsonContent(json.ToJsonString());
+		
+		/// <summary>
 		/// Joins a URL address and parameters. Urlencodes parameters.
 		/// </summary>
 		/// <param name="address">URL part without parameters or with some parameters. The function does not modify it.</param>
@@ -438,7 +443,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets content data as byte[]. Downloads it if need. If content is text, the array contains that text, usually UTF-8.
+		/// Gets content data as <b>byte[]</b>. Downloads it if need. If content is text, the array contains that text, usually UTF-8.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreError">Don't call <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>.</param>

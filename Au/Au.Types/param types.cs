@@ -423,7 +423,7 @@ public struct Strings : IEnumerable<string> {
 	public object Value => _o;
 	
 	/// <summary>
-	/// Converts the value to string[].
+	/// Converts the value to <b>string[]</b>.
 	/// Note: don't modify array elements. If the caller passed an array, this function returns it, not a copy.
 	/// </summary>
 	public string[] ToArray() {

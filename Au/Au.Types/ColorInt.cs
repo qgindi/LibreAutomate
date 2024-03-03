@@ -6,8 +6,8 @@ namespace Au.Types;
 //rejected: /// <completionlist cref="Color"/>
 
 /// <summary>
-/// Color, as int in 0xAARRGGBB format.
-/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows <b>COLORREF</b> (0xBBGGRR), string.
+/// Color, as <b>int</b> in 0xAARRGGBB format.
+/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, <b>int</b> (0xAARRGGBB), Windows <b>COLORREF</b> (0xBBGGRR), string.
 /// </summary>
 public record struct ColorInt {
 	/// <summary>
@@ -28,14 +28,14 @@ public record struct ColorInt {
 	public ColorInt(uint colorARGB, bool? makeOpaque) : this((int)colorARGB, makeOpaque) { }
 	
 	/// <summary>
-	/// Converts from an int color value in 0xRRGGBB or 0xAARRGGBB format.
+	/// Converts from an <b>int</b> color value in 0xRRGGBB or 0xAARRGGBB format.
 	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
 	//[Obsolete] //to find all references
 	public static implicit operator ColorInt(int color) => new(color);
 	
 	/// <summary>
-	/// Converts from an uint color value in 0xRRGGBB or 0xAARRGGBB format.
+	/// Converts from an <b>uint</b> color value in 0xRRGGBB or 0xAARRGGBB format.
 	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
 	//[Obsolete] //to find all references

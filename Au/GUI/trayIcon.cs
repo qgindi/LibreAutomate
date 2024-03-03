@@ -85,7 +85,7 @@ namespace Au {
 		/// Gets or sets icon.
 		/// </summary>
 		/// <remarks>
-		/// To display nice icon at any DPI, the icon should be loaded with <see cref="icon.trayIcon"/> or API <msdn>LoadIconMetric</msdn>, either from a native resource in your app or from an .ico file, which should contain icons of sizes 16, 32 and also recommended 20, 24.
+		/// To display nice icon at any DPI, the icon should be loaded with <see cref="icon.trayIcon"/> or API <msdn>LoadIconMetric</msdn>, either from a native resource in your app or from an <c>.ico</c> file, which should contain icons of sizes 16, 32 and also recommended 20, 24.
 		/// </remarks>
 		public icon Icon {
 			get => _icon;

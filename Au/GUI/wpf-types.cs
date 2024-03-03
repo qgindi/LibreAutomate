@@ -582,7 +582,7 @@ namespace Au.More {
 		protected override void OnRender(DrawingContext dc) {
 			if (_text.NE()) return;
 			var tf = new Typeface(_c.FontFamily, _c.FontStyle, _c.FontWeight, _c.FontStretch);
-			var ft = new FormattedText(_text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, tf, _c.FontSize, Brushes.Gray, 96);
+			var ft = new FormattedText(_text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, tf, _c.FontSize, Brushes.DarkGray, 96);
 			Thickness bt = _c.BorderThickness, pad = _c.Padding;
 			Point p = new(bt.Left + pad.Left + 2, bt.Top + pad.Top);
 			var z = _c.RenderSize;

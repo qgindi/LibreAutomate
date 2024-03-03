@@ -29,7 +29,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// A <b>FastBuffer</b> variable contains a field of this size. It is a memory buffer on stack.
-		/// It is byte count and does not depend on T. To get count of T elements on stack: <c>StackSize/sizeof(T)</c>.
+		/// It is a byte count and does not depend on T. To get count of T elements on stack: <c>StackSize/sizeof(T)</c>.
 		/// </summary>
 		public const int StackSize = 2048;
 		//const int StackSize = 16; //test More() and GetString()
@@ -142,7 +142,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Gets API result as string, or allocates bigger buffer if old buffer was too small.
-		/// This function can be used when T is char.
+		/// This function can be used when T is <b>char</b>.
 		/// </summary>
 		/// <param name="r">The return value of the called Windows API function, if it returns string length or required buffer length. Or you can call <see cref="FindStringLength"/>.</param>
 		/// <param name="s">Receives the result string if succeeded, else <i>sDefault</i> (default <c>null</c>).</param>
@@ -183,7 +183,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Finds length of <c>'\0'</c>-terminated UTF-16 string in buffer and converts to C# string.
-		/// This function can be used when T is char. Use when length is unknown.
+		/// This function can be used when T is <b>char</b>. Use when length is unknown.
 		/// </summary>
 		/// <remarks>
 		/// If there is no <c>'\0'</c> character, gets whole buffer, and the string probably is truncated.
@@ -193,7 +193,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Finds length of <c>'\0'</c>-terminated char string in buffer.
+		/// Finds length of <c>'\0'</c>-terminated <b>char</b> string in buffer.
 		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
 		/// </summary>
 		public int FindStringLength() {
@@ -202,7 +202,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Finds length of <c>'\0'</c>-terminated byte string in buffer.
+		/// Finds length of <c>'\0'</c>-terminated <b>byte</b> string in buffer.
 		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
 		/// </summary>
 		public int FindByteStringLength() {

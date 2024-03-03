@@ -10,7 +10,7 @@ namespace Au {
 		/// </summary>
 		/// <exception cref="ArgumentException"></exception>
 		/// <remarks>
-		/// Used for speech and .wav files, but not for system sounds.
+		/// Used for speech and <c>.wav</c> files, but not for system sounds.
 		/// Sets volume for each program seperately. The program remembers it after restarting. Note: all scripts with role miniProgram (default) run in the same program (Au.Task.exe).
 		/// </remarks>
 		public static int volume {
@@ -30,7 +30,7 @@ namespace Au {
 		/// <summary>
 		/// Plays a custom sound (.wav file).
 		/// </summary>
-		/// <param name="wavFile">.wav file.</param>
+		/// <param name="wavFile"><c>.wav</c> file.</param>
 		/// <param name="async">Don't wait until the sound ends. Note: the sound ends when this process exits.</param>
 		/// <param name="system">Use the sound volume channel "System Sounds". Then <see cref="volume"/> isn't used.</param>
 		public static bool playWav(string wavFile, bool async = false, bool system = false) {
@@ -47,7 +47,7 @@ namespace Au {
 		/// <param name="name">Sound event name. If <c>null</c>, displays all available names.</param>
 		/// <param name="async">Don't wait until the sound ends. Note: the sound ends when this process exits.</param>
 		/// <param name="system">Use the sound volume channel "System Sounds". Then <see cref="volume"/> isn't used.</param>
-		/// <param name="orDefault">Play default sound if the specified sound not found or does not have a .wav file assigned.</param>
+		/// <param name="orDefault">Play default sound if the specified sound not found or does not have a <c>.wav</c> file assigned.</param>
 		/// <remarks>
 		/// Sounds can be changed in the Control Panel's Sound dialog.
 		/// </remarks>

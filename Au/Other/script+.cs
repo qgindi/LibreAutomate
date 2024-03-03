@@ -6,7 +6,7 @@ namespace Au.Types {
 	/// </summary>
 	public enum SRole {
 		/// <summary>
-		/// The task runs as normal .exe program.
+		/// The task runs as normal <c>.exe</c> program.
 		/// It can be started from editor or not. It can run on computers where editor not installed.
 		/// </summary>
 		ExeProgram,

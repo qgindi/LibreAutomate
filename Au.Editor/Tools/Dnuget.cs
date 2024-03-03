@@ -39,12 +39,12 @@ class DNuget : KDialogWindow {
 	
 	DNuget() {
 		InitWinProp("NuGet packages", App.Wmain);
-		var b = new wpfBuilder(this).WinSize(550, 500).Columns(-1, 0);
+		var b = new wpfBuilder(this).WinSize(550, 600).Columns(-1);
 		
 		b.R.StartGrid<KGroupBox>("Install").Columns(0, 76, 0, -1, 0);
 		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package name or PM text:");
-		b.R.Add<AdornerDecorator>().Add(out _tPackage, flags: WBAdd.ChildOfLast)
-			.Watermark("Package").Tooltip(@"Can be just name, or name with version, or PM string, or dotnet string.
+		b.R.Add(out _tPackage)
+			.Tooltip(@"Can be just name, or name with version, or PM string, or dotnet string.
 You can copy the string from the NuGet website.
 If just name, installs the latest compatible version.
 To specify source: PackageName --source URL or folder path")
@@ -77,8 +77,6 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.Add(out _cPrerelease, "Prerelease").Margin("L20").Tooltip("Install prerelease version, if available.\nNot used if package version is specified in the Package field.");
 		
-		b.R.xAddInfoBlockT("To add a NuGet package reference to a script, click [Add /*/] or Properties -> NuGet.");
-		
 		b.End();
 		
 		b.Row(-1).StartGrid<KGroupBox>("Installed").Columns(-1, 76);
@@ -100,9 +98,20 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.End();
 		
-		b.R.xAddInfoBlockF($"<b>Need to install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 8.0 or later.</b>").Hidden();
+		b.R.AddButton("...", _ => _MoreMenu()).Width(20, "L");
+		
+		b.R.StartDock<Expander>("Info");
+		b.xAddInfoBlockF($"""
+To add a NuGet package reference to a script, click <b>Add /*/</b> or <b>Properties > NuGet</b>.
+
+If an installed package does not work, possibly some files are missing. <a {_InfoMissingFiles}>Print more info</a>.
+
+<a {_InfoDotNet}>Print .NET info</a>.
+""");
+		b.End();
+		
+		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 8.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
 		var infoSDK = b.Last as TextBlock;
-		b.AddButton("...", _ => _More()).Align(HorizontalAlignment.Right);
 		
 		Loaded += async (_, _) => {
 			App.Model.UnloadingThisWorkspace += Close;
@@ -522,17 +531,24 @@ A script can use packages from multiple folders if they are compatible.");
 		return a;
 	}
 	
-	void _More() {
+	async void _InfoDotNet() {
+		await _RunDotnet("--info");
+	}
+	
+	static void _InfoMissingFiles() {
+		print.it("""
+<>Some NuGet packages don't install all required files, for example used native dlls.
+	Often the missing files are in other NuGet packages. Install these packages.
+	Else you may have to download the missing files. In some cases they are in the .nupkg file (it is a zip file) in the packages cache folder.
+		Then click the <b>Folder</b> button and put these files there. Set read-only attribute to prevent deleting them when managing packages.
+		If missing are managed assemblies, in scripts that use them will need <mono>/*/ r Dll; /*/<> (use <b>Properties > Library<>).
+		If used in scripts with role <b>exeProgram<>, copy these files to the output folder.
+""");
+	}
+	
+	void _MoreMenu() {
 		var m = new popupMenu();
-		m[".NET info"] = async o => { await _RunDotnet("--info"); };
-		m["Download .NET SDK"] = o => { run.itSafe("https://dotnet.microsoft.com/en-us/download"); };
-		m["About missing files"] = o => print.it(
-			@"Some NuGet packages don't install all required files, for example used native dlls.
-	Often other files are in other NuGet packages. Then simply install them, and that's all.
-	Else you may have to download them. In some cases they are in the .nupkg file (it is a zip file) in the packages cache folder.
-		Then click the [Folder] button and put these files there. Set read-only attribute to prevent deleting them when managing packages.
-		If missing are managed assemblies, in scripts that use them will need /*/ r Dll; /*/ (use Properties -> Library).
-		If used in scripts with role exeProgram, copy these files to the output folder.");
+		m["Download .NET SDK..."] = o => { run.itSafe("https://dotnet.microsoft.com/en-us/download"); };
 		m.Separator();
 		m.Submenu("NuGet cache", m => {
 			m["Open packages folder"] = o => {

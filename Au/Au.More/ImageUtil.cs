@@ -26,7 +26,7 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <param name="s">Base64 encoded image string with prefix <c>"image:"</c>.</param>
 	/// <exception cref="ArgumentException">String does not start with <c>"image:"</c> or is invalid Base64.</exception>
-	/// <exception cref="Exception"><see cref="Convert2.BrotliDecompress"/> exceptions (when compressed .bmp).</exception>
+	/// <exception cref="Exception"><see cref="Convert2.BrotliDecompress"/> exceptions (when compressed <c>.bmp</c>).</exception>
 	public static MemoryStream LoadImageStreamFromString(string s) {
 		if (!HasImageStringPrefix(s)) throw new ArgumentException("String must start with \"image:\".");
 		int start = 6; while (start < s.Length && s[start] <= ' ') start++; //can be eg "image:\r\n..."
@@ -123,7 +123,7 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <param name="image">
 	/// Can be:
-	/// <br/>• file path. Can be .xaml, .png etc. Supports environment variables etc, see <see cref="pathname.expand"/>. Can have prefix <c>"imagefile:"</c>.
+	/// <br/>• file path. Can be <c>.xaml</c>, <c>.png</c> etc. Supports environment variables etc, see <see cref="pathname.expand"/>. Can have prefix <c>"imagefile:"</c>.
 	/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>. This function calls <see cref="ResourceUtil.GetXamlObject"/> if ends with <c>".xaml"</c>, else <see cref="ResourceUtil.GetWpfImage"/>.
 	/// <br/>• Base64 encoded image with prefix <c>"image:"</c>. See <see cref="LoadImageStreamFromString"/>.
 	/// <br/>• XAML string that starts with <c>"&lt;"</c>. For example from the Icons dialog of LibreAutomate.

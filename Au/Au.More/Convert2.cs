@@ -10,7 +10,7 @@ public static unsafe class Convert2 {
 	#region hex
 
 	/// <summary>
-	/// Converts data in byte[] or other memory to hex-encoded string.
+	/// Converts data in <b>byte[]</b> or other memory to hex-encoded string.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
@@ -60,7 +60,7 @@ public static unsafe class Convert2 {
 	/// <summary>
 	/// Converts hex-encoded string to binary data.
 	/// </summary>
-	/// <param name="encoded">String or char[] or span of string/array/memory containing hex encoded data.</param>
+	/// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing hex encoded data.</param>
 	/// <remarks>
 	/// Skips spaces and other non-hex-digit characters. Example: <c>"01 23 46 67"</c> is the same as <c>"01234667"</c>.
 	/// The number of hex digit characters should be divisible by 2, else the last character is ignored.
@@ -245,10 +245,10 @@ public static unsafe class Convert2 {
 	#region encrypt
 
 	/// <summary>
-	/// AES-encrypts a byte[] or string. Returns byte[].
+	/// AES-encrypts a <b>byte[]</b> or string. Returns <b>byte[]</b>.
 	/// </summary>
-	/// <param name="data">Data to encrypt. Can be byte[] or string.</param>
-	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
+	/// <param name="data">Data to encrypt. Can be <b>byte[]</b> or string.</param>
+	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or <b>byte[]</b> of length 16 (eg a password hash).</param>
 	/// <returns>Encrypted data. The first 16 bytes is initialization vector (not secret).</returns>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="CryptographicException"></exception>
@@ -262,10 +262,10 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// AES-encrypts a byte[] or string. Returns byte[].
+	/// AES-encrypts a <b>byte[]</b> or string. Returns <b>byte[]</b>.
 	/// </summary>
-	/// <param name="data">Data to encrypt. Can be byte[] or string.</param>
-	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
+	/// <param name="data">Data to encrypt. Can be <b>byte[]</b> or string.</param>
+	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or <b>byte[]</b> of length 16 (eg a password hash).</param>
 	/// <param name="IV">Receives an initialization vector. The function generates a random value. Use it with decrypt functions. Don't need to keep it in secret.</param>
 	/// <returns>Encrypted data.</returns>
 	/// <exception cref="ArgumentException"></exception>
@@ -279,8 +279,8 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// AES-encrypts a byte[] or string.
-	/// Calls <see cref="AesEncryptB(object, object)"/> and converts the returned byte[] to Base64 string.
+	/// AES-encrypts a <b>byte[]</b> or string.
+	/// Calls <see cref="AesEncryptB(object, object)"/> and converts the returned <b>byte[]</b> to Base64 string.
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
@@ -299,8 +299,8 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// AES-encrypts a byte[] or string.
-	/// Calls <see cref="AesEncryptB(object, object, out byte[])"/> and converts the returned byte[] to Base64 string.
+	/// AES-encrypts a <b>byte[]</b> or string.
+	/// Calls <see cref="AesEncryptB(object, object, out byte[])"/> and converts the returned <b>byte[]</b> to Base64 string.
 	/// </summary>
 	/// <inheritdoc cref="AesEncryptB(object, object, out byte[])"/>
 	public static string AesEncryptS(object data, object key, out byte[] IV) {
@@ -309,10 +309,10 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// AES-decrypts data. Returns byte[].
+	/// AES-decrypts data. Returns <b>byte[]</b>.
 	/// </summary>
-	/// <param name="data">Encryped data as byte[] or Base64 string.</param>
-	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or byte[] of length 16 (eg a password hash).</param>
+	/// <param name="data">Encryped data as <b>byte[]</b> or Base64 string.</param>
+	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or <b>byte[]</b> of length 16 (eg a password hash).</param>
 	/// <param name="IV">If used <b>AesEncryptX</b> that returns an initialization vector, pass it here.</param>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="CryptographicException"></exception>
@@ -327,7 +327,7 @@ public static unsafe class Convert2 {
 
 	/// <summary>
 	/// AES-decrypts data.
-	/// Calls <see cref="AesDecryptB(object, object, byte[])"/> and converts the returned byte[] to string.
+	/// Calls <see cref="AesDecryptB(object, object, byte[])"/> and converts the returned <b>byte[]</b> to string.
 	/// </summary>
 	/// <inheritdoc cref="AesDecryptB(object, object, byte[])"/>
 	public static string AesDecryptS(object data, object key, byte[] IV = null) {
@@ -352,9 +352,9 @@ public static unsafe class Convert2 {
 	#region utf8
 
 	/// <summary>
-	/// Converts string to UTF-8 byte[]. Can append <c>"\0"</c> (default) or some other string.
+	/// Converts string to UTF-8 <b>byte[]</b>. Can append <c>"\0"</c> (default) or some other string.
 	/// </summary>
-	/// <param name="chars">String or char[] or span of string/array/memory.</param>
+	/// <param name="chars">String or <b>char[]</b> or span of string/array/memory.</param>
 	/// <param name="append">A string to append, or <c>null</c>. For example <c>"\0"</c> (default) or <c>"\r\n"</c>. Must contain only ASCII characters.</param>
 	/// <exception cref="ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
 	public static byte[] Utf8Encode(RStr chars, string append = "\0") {
@@ -441,9 +441,9 @@ public static unsafe class Convert2 {
 
 	//currently not used in this lib. Not tested speed.
 	///// <summary>
-	///// Converts string span containing Base64 encoded data to byte[].
+	///// Converts string span containing Base64 encoded data to <b>byte[]</b>.
 	///// </summary>
-	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="result"></param>
 	///// <returns><c>false</c> if failed.</returns>
 	///// <remarks>
@@ -469,10 +469,10 @@ public static unsafe class Convert2 {
 	//	If somebody wants URL-safe Base64, it's easy/fast to replace unsafe characters. Nobody would find and use these functions.
 
 	///// <summary>
-	///// Converts byte[] or other memory to Base64 encoded string that can be used in URL.
+	///// Converts <b>byte[]</b> or other memory to Base64 encoded string that can be used in URL.
 	///// </summary>
 	///// <param name="data">Data to encode.</param>
-	///// <remarks>Like <see cref="Convert.ToBase64String(byte[])"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
+	///// <remarks>Like <see cref="Convert.ToBase64String(<b>byte[]</b>)"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
 	//public static string Base64UrlEncode(RByte data) {
 	//	fixed (byte* p = data) return Base64UrlEncode(p, data.Length);
 
@@ -512,9 +512,9 @@ public static unsafe class Convert2 {
 	//}
 
 	///// <summary>
-	///// Converts string containing Base64 encoded data to byte[]. Supports standard encoding and URL-safe encoding.
+	///// Converts string containing Base64 encoded data to <b>byte[]</b>. Supports standard encoding and URL-safe encoding.
 	///// </summary>
-	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <remarks>Like <see cref="Convert.FromBase64String(string)"/>, but the string can contain '_' and '-' instead of '/' and '+'.</remarks>
 	///// <exception cref="Exception">Exceptions of <see cref="Convert.FromBase64CharArray"/>.</exception>
 	//public static byte[] Base64UrlDecode(RStr encoded) {
@@ -533,7 +533,7 @@ public static unsafe class Convert2 {
 	///// Converts string containing Base64 encoded data to bytes and stores in memory of a Span variable. Supports standard encoding and URL-safe encoding.
 	///// Returns <c>false</c> if the encoded string is invalid or the buffer is too small.
 	///// </summary>
-	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">Memory buffer for the result.</param>
 	///// <param name="decodedLength"></param>
 	///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
@@ -550,7 +550,7 @@ public static unsafe class Convert2 {
 	///// Converts string containing Base64 encoded data to bytes and stores in any memory. Supports standard encoding and URL-safe encoding.
 	///// Returns <c>false</c> if the encoded string is invalid or the buffer is too small.
 	///// </summary>
-	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">Memory buffer for the result.</param>
 	///// <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
 	///// <param name="decodedLength">Receives the number of bytes written to the <i>decoded</i> memory buffer.</param>
@@ -563,7 +563,7 @@ public static unsafe class Convert2 {
 	///// Converts string containing Base64 encoded data to a struct variable. Supports standard encoding and URL-safe encoding.
 	///// Returns <c>false</c> if the encoded string is invalid or decoded size != <c>sizeof(T)</c>.
 	///// </summary>
-	///// <param name="encoded">String or char[] or span of string/array/memory containing Base64 encoded data.</param>
+	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">The result variable.</param>
 	///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
 	//public static bool Base64UrlDecode<T>(RStr encoded, out T decoded) where T : unmanaged {

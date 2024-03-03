@@ -432,7 +432,7 @@ public static class clipboard {
 		/// Subclasses clipOwner.
 		/// </summary>
 		/// <param name="paste"><c>true</c> if used for paste, <c>false</c> if for copy.</param>
-		/// <param name="data">If used for paste, can be string containing Unicode text or int/string dictionary containing clipboard format/data.</param>
+		/// <param name="data">If used for paste, can be string containing Unicode text or <b>int</b>/<b>string</b> dictionary containing clipboard format/data.</param>
 		/// <param name="clipOwner">Our clipboard owner window.</param>
 		/// <param name="wFocus">The target control or window.</param>
 		public _ClipboardListener(bool paste, object data, wnd clipOwner, wnd wFocus) {

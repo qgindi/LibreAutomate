@@ -436,7 +436,7 @@ partial class filesystem {
 		///// Gets file's MIME content type, like "text/html" or "image/png".
 		///// Returns <c>false</c> if cannot detect it.
 		///// </summary>
-		///// <param name="file">File name or path or URL or just extension like ".txt". If <i>canAnalyseData</i> is <c>true</c>, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
+		///// <param name="file">File name or path or URL or just extension like ".txt". If <i>canAnalyseData</i> is <c>true</c>, must be full path of a file, and the file must exist and can be opened to read; else the function uses just <c>.extension</c>, and the file may exist or not.</param>
 		///// <param name="contentType">Result.</param>
 		///// <param name="canAnalyseData">If cannot detect from file extension, try to detect from file data.</param>
 		///// <exception cref="ArgumentException">Not full path. Only if <i>canAnalyseData</i> is <c>true</c>.</exception>

@@ -101,7 +101,7 @@ public partial class toolbar {
 	/// <summary>
 	/// Background color or brush.
 	/// </summary>
-	/// <value>Can be <see cref="Color"/>, <see cref="ColorInt"/>, int (color 0xRRGGBB) or <see cref="Brush"/>. If <c>null</c> (default), uses system color.</value>
+	/// <value>Can be <see cref="Color"/>, <see cref="ColorInt"/>, <b>int</b> (color 0xRRGGBB) or <see cref="Brush"/>. If <c>null</c> (default), uses system color.</value>
 	public object Background {
 		get => _background;
 		set {

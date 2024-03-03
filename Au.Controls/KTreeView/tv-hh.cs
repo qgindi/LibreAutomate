@@ -30,6 +30,7 @@ public unsafe partial class KTreeView : HwndHost {
 	}
 	
 	protected override void DestroyWindowCore(HandleRef hwnd) {
+		//print.it("DestroyWindowCore", (wnd)hwnd.Handle);
 		Api.DestroyWindow(_w);
 	}
 	

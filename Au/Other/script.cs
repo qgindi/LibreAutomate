@@ -332,7 +332,7 @@ public static class script {
 	/// <remarks>
 	/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
 	/// <see cref="runWait(out string, string, string[])"/> gets all strings joined when the task ends.
-	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a .bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a <c>.bat</c> file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
 	/// 
 	/// Does not work if script role is editorExtension.
 	/// </remarks>

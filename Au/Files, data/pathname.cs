@@ -768,7 +768,7 @@ namespace Au {
 		/// If the specified path is of an existing file or directory, returns path where the filename part is modified like <c>"file 2.txt"</c>, <c>"file 3.txt"</c> etc. Else returns unchanged <i>path</i>.
 		/// </summary>
 		/// <param name="path">Suggested full path.</param>
-		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
+		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before <c>.extension</c>.</param>
 		public static string makeUnique(string path, bool isDirectory) {
 			if (!filesystem.exists(path)) return path;
 			string ext = isDirectory ? null : getExtension(path, out path);

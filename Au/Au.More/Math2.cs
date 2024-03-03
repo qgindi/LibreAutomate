@@ -40,7 +40,7 @@ namespace Au.More
 		/// Like C macro <b>LOWORD</b>.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as <b>uint</b>. The parameter type <b>nint</b> allows to avoid explicit cast from int and <b>IntPtr</b>.
+		/// The parameter is interpreted as <b>uint</b>. The parameter type <b>nint</b> allows to avoid explicit cast from <b>int</b> and <b>IntPtr</b>.
 		/// </remarks>
 		public static ushort LoWord(nint x) => (ushort)((uint)x & 0xFFFF);
 

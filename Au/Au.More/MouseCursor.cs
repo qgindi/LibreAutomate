@@ -43,7 +43,7 @@ namespace Au.More
 		/// Loads cursor from file.
 		/// </summary>
 		/// <returns><c>default(MouseCursor)</c> if failed.</returns>
-		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="folders.ThisAppImages"/>.</param>
+		/// <param name="file"><c>.cur</c> or <c>.ani</c> file. If not full path, uses <see cref="folders.ThisAppImages"/>.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
 		public static MouseCursor Load(string file, int size = 0) {
 			file = pathname.normalize(file, folders.ThisAppImages);
@@ -56,7 +56,7 @@ namespace Au.More
 		/// Creates cursor from cursor file data in memory, for example from a managed resource.
 		/// </summary>
 		/// <returns><c>default(MouseCursor)</c> if failed.</returns>
-		/// <param name="cursorData">Data of .cur or .ani file.</param>
+		/// <param name="cursorData">Data of <c>.cur</c> or <c>.ani</c> file.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
 		/// <remarks>
 		/// This function creates/deletes a temporary file, because there is no good API to load cursor from memory.

@@ -18,7 +18,7 @@ partial class keys
 		}
 
 		/// <summary>
-		/// Calls <see cref="parseKeyName"/> and throws ArgumentException if invalid key string.
+		/// Calls <see cref="parseKeyName"/> and throws <b>ArgumentException</b> if invalid key string.
 		/// </summary>
 		/// <param name="keyName"></param>
 		internal static KKey ParseKeyNameThrow_(string keyName) {

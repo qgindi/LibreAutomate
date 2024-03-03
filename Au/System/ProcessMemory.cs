@@ -100,7 +100,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
-		/// In that process writes the string as <c>'\0'</c>-terminated char string (UTF-16).
+		/// In that process writes the string as <c>'\0'</c>-terminated <b>char</b> string (UTF-16).
 		/// </summary>
 		/// <returns><c>false</c> if failed.</returns>
 		/// <param name="s">A string in this process.</param>
@@ -118,12 +118,12 @@ namespace Au.More {
 
 		/// <summary>
 		/// Copies a string from this process to that process (memory address <see cref="Mem"/>).
-		/// In that process writes the string as <c>'\0'</c>-terminated byte string.
+		/// In that process writes the string as <c>'\0'</c>-terminated <b>byte</b> string.
 		/// </summary>
 		/// <returns><c>false</c> if failed.</returns>
 		/// <param name="s">A string in this process. Normal C# string (UTF-16).</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
-		/// <param name="enc">Encoding for converting char string to byte string. If <c>null</c>, uses <see cref="Encoding.Default"/> (UTF-8).</param>
+		/// <param name="enc">Encoding for converting <b>char</b> string to <b>byte</b> string. If <c>null</c>, uses <see cref="Encoding.Default"/> (UTF-8).</param>
 		public bool WriteByteString(string s, int offsetBytes = 0, Encoding enc = null) {
 			if (Mem == default) return false;
 			if (s.NE()) return true;
@@ -146,7 +146,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Copies a char string from that process (memory address <see cref="Mem"/>) to this process.
+		/// Copies a <b>char</b> string from that process (memory address <see cref="Mem"/>) to this process.
 		/// In that process the string must be in Unicode UTF-16 format.
 		/// </summary>
 		/// <returns>The copied string, or <c>null</c> if failed.</returns>
@@ -158,14 +158,14 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Copies a byte string from that process (memory address <see cref="Mem"/>) to this process.
+		/// Copies a <b>byte</b> string from that process (memory address <see cref="Mem"/>) to this process.
 		/// In that process the string must be array of bytes (not Unicode UTF-16).
 		/// </summary>
 		/// <returns>The copied string, or <c>null</c> if failed.</returns>
 		/// <param name="length">Number bytes to copy, not including the terminating <c>'\0'</c>. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <param name="findLength">Find string length by searching for <c>'\0'</c> character in <i>length</i> range.</param>
-		/// <param name="enc">Encoding for converting byte string to char string. If <c>null</c>, uses <see cref="Encoding.Default"/> (UTF-8).</param>
+		/// <param name="enc">Encoding for converting <b>byte</b> string to <b>char</b> string. If <c>null</c>, uses <see cref="Encoding.Default"/> (UTF-8).</param>
 		public string ReadByteString(int length, int offsetBytes = 0, bool findLength = false, Encoding enc = null) {
 			return _ReadString(true, length, offsetBytes, findLength, enc);
 		}

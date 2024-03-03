@@ -1851,7 +1851,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds items of any type to the last added <see cref="ItemsControl"/> (<see cref="ComboBox"/>, etc).
 	/// </summary>
-	/// <param name="items">Items of any type (string, WPF element).</param>
+	/// <param name="items">Items of any type (<b>string</b>, WPF element).</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>ItemsControl</b>.</exception>
 	/// <remarks>
 	/// If it is a non-editable <b>ComboBox</b>, selects the first item. See also <see cref="Select"/>.
@@ -2301,7 +2301,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="source">File or URL to load. Supported element types and sources:
 	/// <see cref="WebBrowser"/>, <see cref="Frame"/> - URL or file path.
-	/// <see cref="RichTextBox"/> - path of a local .rtf file.
+	/// <see cref="RichTextBox"/> - path of a local <c>.rtf</c> file.
 	/// </param>
 	/// <exception cref="NotSupportedException">
 	/// - Unsupported element type.

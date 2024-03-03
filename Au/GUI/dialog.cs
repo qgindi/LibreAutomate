@@ -1600,7 +1600,7 @@ namespace Au {
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <remarks>
-		/// Calls <see cref="showInput"/> and converts string to int.
+		/// Calls <see cref="showInput"/> and converts string to <b>int</b>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

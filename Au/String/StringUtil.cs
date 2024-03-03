@@ -114,7 +114,7 @@ public static class StringUtil {
 	}
 	
 	/// <summary>
-	/// If string contains a number at <i>startIndex</i>, gets that number as int, also gets the string part that follows it, and returns <c>true</c>.
+	/// If string contains a number at <i>startIndex</i>, gets that number as <b>int</b>, also gets the string part that follows it, and returns <c>true</c>.
 	/// For example, for string <c>"25text"</c> or <c>"25 text"</c> gets <i>num</i> = <c>25</c>, <i>tail</i> = <c>"text"</c>.
 	/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
 	/// </summary>
@@ -135,7 +135,7 @@ public static class StringUtil {
 	}
 	
 	/// <summary>
-	/// Creates int[] from string containing space-separated numbers, like <c>"4 100 -8 0x10"</c>.
+	/// Creates <b>int[]</b> from string containing space-separated numbers, like <c>"4 100 -8 0x10"</c>.
 	/// </summary>
 	/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If <c>null</c> or <c>""</c>, returns empty array.</param>
 	/// <remarks>

@@ -128,7 +128,7 @@ namespace Au {
 		/// <returns><c>""</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox.
-		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the int value like <c>"0"</c> or <c>"500"</c>.
+		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the <b>int</b> value like <c>"0"</c> or <c>"500"</c>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// </remarks>
 		public string Role {

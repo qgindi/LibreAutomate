@@ -1140,8 +1140,8 @@ static unsafe partial class Api {
 	
 #if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 		/// <summary>
-		/// Converts part of string to int.
-		/// Returns the int value.
+		/// Converts part of string to <b>int</b>.
+		/// Returns the <b>int</b> value.
 		/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
 		/// </summary>
 		/// <param name="s">String.</param>
@@ -1164,8 +1164,8 @@ static unsafe partial class Api {
 		}
 
 		/// <summary>
-		/// Converts part of string to long.
-		/// Returns the long value.
+		/// Converts part of string to <b>long</b>.
+		/// Returns the <b>long</b> value.
 		/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
 		/// </summary>
 		/// <param name="s">String.</param>

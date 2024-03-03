@@ -401,7 +401,7 @@ namespace Au.Types {
 		///// <summary>The user can enter a path that does not exist, like C:\does not exist\file.txt.</summary>
 		//NoValidatePath = 0x800, //does not work. Always validates.
 
-		/// <summary>Shortcuts should not be treated as their target items, allowing an application to open a .lnk file.</summary>
+		/// <summary>Shortcuts should not be treated as their target items, allowing an application to open a <c>.lnk</c> file.</summary>
 		NoDereferenceLinks = 0x100000,
 
 		/// <summary>Show hidden and system items.</summary>

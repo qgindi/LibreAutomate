@@ -305,6 +305,7 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding, and calls <see cref="wpfBuilder.FormatText"/>.
 	/// </summary>
+	/// <inheritdoc cref="wpfBuilder.FormatText(wpfBuilder.InterpolatedString)" path="/param"/>
 	public static wpfBuilder xAddInfoBlockF(this wpfBuilder t, wpfBuilder.InterpolatedString text) {
 		var r = t.xAddInfoBlockT(null);
 		t.FormatText(text);

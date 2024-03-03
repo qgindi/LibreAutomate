@@ -433,7 +433,7 @@ public class csvTable {
 	}
 	
 	/// <summary>
-	/// Creates 2-column CSV table from dictionary keys and values of type string.
+	/// Creates 2-column CSV table from dictionary keys and values of type <b>string</b>.
 	/// </summary>
 	/// <param name="d"></param>
 	/// <exception cref="ArgumentNullException"></exception>
@@ -445,10 +445,10 @@ public class csvTable {
 	}
 	
 	/// <summary>
-	/// Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to string.
+	/// Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to <b>string</b>.
 	/// </summary>
 	/// <param name="d"></param>
-	/// <param name="valueToString">Callback function that converts value of type T to string.</param>
+	/// <param name="valueToString">Callback function that converts value of type T to <b>string</b>.</param>
 	/// <exception cref="ArgumentNullException"></exception>
 	public static csvTable fromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString) {
 		Not_.Null(d, valueToString);
@@ -598,7 +598,7 @@ public class csvTable {
 	public void Set(Index row, int column, float value) { this[row, column] = value.ToS(); }
 	
 	/// <summary>
-	/// Converts a bool to string <c>"true"</c> or <c>"false"</c> and sets a field.
+	/// Converts a <b>bool</b> to string <c>"true"</c> or <c>"false"</c> and sets a field.
 	/// </summary>
 	/// <inheritdoc cref="Set(Index, int, int)"/>
 	public void Set(Index row, int column, bool value) { this[row, column] = value ? "true" : "false"; }
@@ -620,13 +620,13 @@ public class csvTable {
 	public bool Get(Index row, int column, out uint value) => this[row, column].ToInt(out value);
 	
 	/// <summary>
-	/// Gets a field value converted to long. See <see cref="ExtString.ToInt(string, out long, int, STIFlags)"/>.
+	/// Gets a field value converted to <b>long</b>. See <see cref="ExtString.ToInt(string, out long, int, STIFlags)"/>.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out long value) => this[row, column].ToInt(out value);
 	
 	/// <summary>
-	/// Gets a field value converted to ulong. See <see cref="ExtString.ToInt(string, out ulong, int, STIFlags)"/>.
+	/// Gets a field value converted to <b>ulong</b>. See <see cref="ExtString.ToInt(string, out ulong, int, STIFlags)"/>.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out ulong value) => this[row, column].ToInt(out value);
@@ -644,7 +644,7 @@ public class csvTable {
 	public bool Get(Index row, int column, out float value) => this[row, column].ToNumber(out value);
 	
 	/// <summary>
-	/// Gets a field value like <c>"true"</c> or <c>"false"</c> converted to <c>bool</c>. Case-insensitive.
+	/// Gets a field value like <c>"true"</c> or <c>"false"</c> converted to <b>bool</b>. Case-insensitive.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out bool value) => Boolean.TryParse(this[row, column], out value);

@@ -254,7 +254,7 @@ namespace Au {
 		/// Writes text lines to the output in real time.
 		/// </summary>
 		/// <param name="exe">
-		/// Path or name of an .exe or .bat file. Can be:
+		/// Path or name of an <c>.exe</c> or <c>.bat</c> file. Can be:
 		/// <br/>• Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>folders.System + "x.exe"</c>, <c>@"%folders.System%\x.exe"</c>.
 		/// <br/>• Filename, like <c>"x.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
 		/// <br/>• Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.

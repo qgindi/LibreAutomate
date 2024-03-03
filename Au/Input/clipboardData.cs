@@ -76,10 +76,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Adds data of any format as byte[].
+		/// Adds data of any format as <b>byte[]</b>.
 		/// </summary>
 		/// <returns>this.</returns>
-		/// <param name="data">byte[] containing data.</param>
+		/// <param name="data"><b>byte[]</b> containing data.</param>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats.Register"/>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
@@ -255,7 +255,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Converts HTML string to byte[] containing data in clipboard format "HTML Format".
+		/// Converts HTML string to <b>byte[]</b> containing data in clipboard format "HTML Format".
 		/// </summary>
 		/// <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
 		/// <exception cref="ArgumentNullException"></exception>
@@ -413,7 +413,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets clipboard data of any format as byte[].
+		/// Gets clipboard data of any format as <b>byte[]</b>.
 		/// </summary>
 		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>

@@ -91,7 +91,7 @@ static class InsertCodeUtil {
 		var args = als.Arguments;
 		var index = args.Count == 0 ? 0 : als.Arguments.IndexOf(o => pos <= o.FullSpan.End); //print.it(index);
 		if (index < 0) return default;
-		if (!GetFunctionSymbolInfoFromArgumentList(als, semo, out var si)) return default;
+		if (!CiUtil.GetFunctionSymbolInfoFromArgumentList(als, semo, out var si)) return default;
 		string name = null;
 		if (args.Count > 0) {
 			arg = args[index];
@@ -126,20 +126,6 @@ static class InsertCodeUtil {
 			}
 			return null;
 		}
-	}
-	
-	/// <summary>
-	/// Gets SymbolInfo of invoked method, ctor or indexer from its argument list.
-	/// </summary>
-	public static bool GetFunctionSymbolInfoFromArgumentList(BaseArgumentListSyntax als, SemanticModel semo, out SymbolInfo si) {
-		si = default;
-		var pa = als.Parent;
-		if (als is ArgumentListSyntax && pa is InvocationExpressionSyntax or ObjectCreationExpressionSyntax) {
-			si = semo.GetSymbolInfo(pa);
-		} else if (als is BracketedArgumentListSyntax && pa is ElementAccessExpressionSyntax eacc) {
-			si = semo.GetSymbolInfo(eacc);
-		} else return false;
-		return !si.IsEmpty;
 	}
 	
 	/// <summary>

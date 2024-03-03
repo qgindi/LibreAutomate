@@ -425,7 +425,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="rects">Rectangles.</param>
 		/// <param name="indexLabels">Draw labels. The label text is the rectangle index in <i>rects</i>.</param>
-		/// <param name="labelOptions">Label options. If char - label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
+		/// <param name="labelOptions">Label options. If <b>char</b> - label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
 		/// <remarks>
 		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is <c>null</c>). <b>Opacity</b> should be 0 (default).
 		/// </remarks>

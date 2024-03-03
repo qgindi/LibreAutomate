@@ -171,6 +171,8 @@ class DOptions : KDialogWindow {
 	}
 	
 	void _FontAndColors() {
+		//TODO: make easier to set dark theme for code.
+		
 		var b = _Page("Font, colors", WBPanelType.Dock);
 		b.Options(bindLabelVisibility: true);
 		
@@ -187,6 +189,7 @@ class DOptions : KDialogWindow {
 		}
 		var font = _AddFontControls("Editor");
 		var fontOutput = _AddFontControls("Output");
+		var fontFind = _AddFontControls("Find");
 		b.End();
 		b.R.StartGrid();
 		var pColor = b.Panel as Grid;
@@ -240,6 +243,7 @@ class DOptions : KDialogWindow {
 			
 			font.Init(fonts, styles.FontName, styles.FontSize);
 			fontOutput.Init(fonts, App.Settings.font_output);
+			fontFind.Init(fonts, App.Settings.font_find);
 			
 			//styles
 			
@@ -389,6 +393,7 @@ class DOptions : KDialogWindow {
 				}
 				
 				if (fontOutput.Apply(ref App.Settings.font_output)) Panels.Output.Scintilla.AaSetStyles();
+				if (fontFind.Apply(ref App.Settings.font_find)) Panels.Find.SetFont_(true);
 			};
 			
 			//[?] button
@@ -604,7 +609,7 @@ Example:
 				Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
 		};
 	}
-
+	
 	protected override void OnPreviewKeyDown(KeyEventArgs e) {
 		if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
 			HelpUtil.AuHelp("editor/Program settings");
@@ -613,7 +618,7 @@ Example:
 		}
 		base.OnPreviewKeyDown(e);
 	}
-
+	
 	static class _Api {
 		[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
 		internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, nint lParam, uint dwFlags);

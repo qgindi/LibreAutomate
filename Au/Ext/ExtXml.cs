@@ -38,7 +38,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int number.
+		/// Gets attribute value converted to <b>int</b> number.
 		/// If the attribute does not exist, returns <i>defaultValue</i>.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
@@ -48,7 +48,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int number.
+		/// Gets attribute value converted to <b>int</b> number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
 		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
@@ -60,7 +60,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to long number.
+		/// Gets attribute value converted to <b>long</b> number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
 		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>

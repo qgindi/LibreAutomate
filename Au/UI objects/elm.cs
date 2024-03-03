@@ -475,7 +475,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// Calls SetLastError and returns hr.
 	/// In Debug config also outputs error in red.
 	/// If hr looks like not an error but just the property or action is unavailable, changes it to S_FALSE and does not show error. These are: S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL.
-	/// _FuncId also can be char, like (_FuncId)'n' for name.
+	/// _FuncId also can be <b>char</b>, like (_FuncId)'n' for name.
 	/// </summary>
 	int _Hresult(_FuncId funcId, int hr) {
 		if (hr != 0) {

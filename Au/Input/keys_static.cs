@@ -429,14 +429,14 @@ public partial class keys {
 	/// <br/>• <see cref="clipboardData"/> - clipboard data to paste.
 	/// <br/>• <see cref="KKey"/> - a single key.\
 	/// Example: <c>keys.send("Shift+", KKey.Left, "*3");</c> is the same as <c>keys.send("Shift+Left*3");</c>
-	/// <br/>• int - sleep milliseconds. Max 10000.\
+	/// <br/>• <b>int</b> - sleep milliseconds. Max 10000.\
 	/// Example: <c>keys.send("Left", 500, "Right");</c>
 	/// <br/>• <see cref="Action"/> - callback function.\
 	/// Example: <c>Action click = () => mouse.click(); keys.send("Shift+", click);</c>
 	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.\
 	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>\
 	/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
-	/// <br/>• char - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <b>^</b>.
+	/// <br/>• <b>char</b> - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <b>^</b>.
 	/// </param>
 	/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 	/// <exception cref="AuException">Failed. When sending text, fails if there is no focused window.</exception>

@@ -14,21 +14,21 @@ public static unsafe partial class ExtMisc {
 	#region value types
 	
 	/// <summary>
-	/// Converts to int with rounding.
+	/// Converts to <b>int</b> with rounding.
 	/// Calls <see cref="Convert.ToInt32(double)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this double t) => Convert.ToInt32(t);
 	
 	/// <summary>
-	/// Converts to int with rounding.
+	/// Converts to <b>int</b> with rounding.
 	/// Calls <see cref="Convert.ToInt32(float)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this float t) => Convert.ToInt32(t);
 	
 	/// <summary>
-	/// Converts to int with rounding.
+	/// Converts to <b>int</b> with rounding.
 	/// Calls <see cref="Convert.ToInt32(decimal)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
@@ -36,13 +36,13 @@ public static unsafe partial class ExtMisc {
 	
 	//rejected. Too simple, and nobody would find and use.
 	///// <summary>
-	///// Converts to int.
+	///// Converts to <b>int</b>.
 	///// Can be used like <c>0xff123456.ToInt()</c> instead of <c>unchecked((int)0xff123456)</c>.
 	///// </summary>
 	//public static int ToInt(this uint t) => unchecked((int)t);
 	
 	///// <summary>
-	///// Converts to Color.
+	///// Converts to <b>Color</b>.
 	///// Can be used like <c>0xff123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	///// </summary>
 	///// <param name="t"></param>
@@ -51,7 +51,7 @@ public static unsafe partial class ExtMisc {
 	//	=> Color.FromArgb(unchecked((int)(t | (makeOpaque ? 0xff000000 : 0))));
 	
 	/// <summary>
-	/// Converts to Color. Makes opaque (alpha 0xff).
+	/// Converts to <b>Color</b>. Makes opaque (alpha 0xff).
 	/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	/// </summary>
 	internal static Color ToColor_(this int t, bool bgr = false) {
@@ -60,7 +60,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts double to string.
+	/// Converts <b>double</b> to <b>string</b>.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -69,7 +69,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts float to string.
+	/// Converts <b>float</b> to <b>string</b>.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -78,7 +78,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts decimal to string.
+	/// Converts <b>decimal</b> to <b>string</b>.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -87,7 +87,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts int to string.
+	/// Converts <b>int</b> to <b>string</b>.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-',</c> not <c>'−'</c> etc.
 	/// Calls <see cref="int.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -96,7 +96,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts long to string.
+	/// Converts <b>long</b> to <b>string</b>.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
 	/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -105,7 +105,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts nint to string.
+	/// Converts <b>nint</b> to <b>string</b>.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
 	/// Calls <see cref="IntPtr.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -164,7 +164,7 @@ public static unsafe partial class ExtMisc {
 	
 	//rejected: too simple. We have print.it(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 	///// <summary>
-	///// Converts int to hexadecimal string like "0x3A".
+	///// Converts <b>int</b> to hexadecimal string like "0x3A".
 	///// </summary>
 	//public static string ToHex(this int t)
 	//{

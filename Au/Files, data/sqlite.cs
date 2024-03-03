@@ -494,7 +494,7 @@ namespace Au {
 		public sqliteStatement Bind(SLIndexOrName sqlParam, bool value)
 			=> Bind(sqlParam, value ? 1 : 0);
 
-		/// <summary>Binds an enum value as int or long. Calls <sqlite>sqlite3_bind_int</sqlite> or <sqlite>sqlite3_bind_int64</sqlite>.</summary>
+		/// <summary>Binds an enum value as <b>int</b> or <b>long</b>. Calls <sqlite>sqlite3_bind_int</sqlite> or <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
@@ -981,7 +981,7 @@ namespace Au.Types {
 
 	/// <summary>
 	/// Used for parameter types of some <see cref="sqliteStatement"/> functions.
-	/// Has implicit conversions from int and string. If int, the value is interpreted as index. If string - as name.
+	/// Has implicit conversions from <b>int</b> and <b>string</b>. If <b>int</b>, the value is interpreted as index. If <b>string</b> - as name.
 	/// </summary>
 	public struct SLIndexOrName {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

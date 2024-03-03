@@ -373,9 +373,9 @@ namespace Au {
 		/// Extracts icon directly from file.
 		/// </summary>
 		/// <returns><c>null</c> if failed.</returns>
-		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="file"><c>.ico</c>, <c>.exe</c>, <c>.dll</c> or other file that contains one or more icons. Also supports cursor files - <c>.cur</c>, <c>.ani</c>. Must be full path, without icon index. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
-		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
+		/// <param name="index">Icon index or negative icon resource id in the <c>.exe</c>/.dll file.</param>
 		public static icon load(string file, int size = 16, int index = 0) {
 			using var ds = new _DebugSpeed(file);
 			return _Load(file, _NormalizeIconSizeArgument(size), index);
@@ -429,7 +429,7 @@ namespace Au {
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
 		/// <remarks>
-		/// If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in .exe file. Else only in .exe file.
+		/// If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in <c>.exe</c> file. Else only in <c>.exe</c> file.
 		/// 
 		/// The icon is cached and protected from destroying. Don't need to destroy it, and not error to do it.
 		/// </remarks>
@@ -476,7 +476,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Loads icon of tray icon size from .ico file.
+		/// Loads icon of tray icon size from <c>.ico</c> file.
 		/// </summary>
 		/// <returns><c>null</c> if not found.</returns>
 		/// <remarks>
@@ -689,7 +689,7 @@ namespace Au {
 		/// If not 0, "get icon" functions of this class will print (in editor's output) their execution time in milliseconds when it &gt;= this value.
 		/// </summary>
 		/// <remarks>
-		/// Icons are mostly used in toolbars and menus. Getting icons of some files can be slow. For example if antivirus program scans the file. Toolbars and menus that use slow icons may start with a noticeable delay. Use this property to find too slow icons. Then you can replace them with fast icons, for example .ico files.
+		/// Icons are mostly used in toolbars and menus. Getting icons of some files can be slow. For example if antivirus program scans the file. Toolbars and menus that use slow icons may start with a noticeable delay. Use this property to find too slow icons. Then you can replace them with fast icons, for example <c>.ico</c> files.
 		/// </remarks>
 		public static int debugSpeed { get; set; }
 		
@@ -725,7 +725,7 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>null</c> if no such string/pattern.</returns>
 		/// <param name="mi"></param>
-		/// <param name="cs">The string is .cs filename or relative path, but not full path.</param>
+		/// <param name="cs">The string is <c>.cs</c> filename or relative path, but not full path.</param>
 		internal static string ExtractIconPathFromCode_(MethodInfo mi, out bool cs) {
 			//support code pattern like 'folders.System + "notepad.exe"'.
 			//	Opcodes: call(folders.System), ldstr("notepad.exe"), FolderPath.op_Addition.

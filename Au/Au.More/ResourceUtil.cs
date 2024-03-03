@@ -11,7 +11,7 @@ namespace Au.More {
 	/// <remarks>
 	/// Internally uses <see cref="ResourceManager"/>. Uses <see cref="CultureInfo.InvariantCulture"/>.
 	///
-	/// Loads resources from managed resource "AssemblyName.g.resources". To add such resource files in Visual Studio, set file build action = Resource. Don't use .resx files and the Resources page in Project Properties.
+	/// Loads resources from managed resource "AssemblyName.g.resources". To add such resource files in Visual Studio, set file build action = Resource. Don't use <c>.resx</c> files and the Resources page in Project Properties.
 	///
 	/// By default loads resources from the app entry assembly. In script with role miniProgram - from the script's assembly. To specify another loaded assembly, use prefix like <c>"&lt;AssemblyName&gt;"</c> or <c>"*&lt;AssemblyName&gt;"</c>.
 	///
@@ -56,7 +56,7 @@ namespace Au.More {
 		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		/// <remarks>
-		/// Supports resources of type string, byte[] (UTF-8), stream (UTF-8).
+		/// Supports resources of type <b>string</b>, <b>byte[]</b> (UTF-8), stream (UTF-8).
 		/// </remarks>
 		public static string GetString(string name) {
 			var o = _GetObject(ref name);
@@ -71,14 +71,14 @@ namespace Au.More {
 		internal static string TryGetString_(string name) => _TryGetObject(ref name) as string;
 		
 		/// <summary>
-		/// Gets byte[].
+		/// Gets <b>byte[]</b>.
 		/// </summary>
 		/// <param name="name">Resource name, like <c>"file.txt"</c> or <c>"sub/file.txt"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		/// <remarks>
-		/// Supports resources of type byte[], string (gets UTF-8 bytes), stream.
+		/// Supports resources of type <b>byte[]</b>, <b>string</b> (gets UTF-8 bytes), stream.
 		/// </remarks>
 		public static byte[] GetBytes(string name) {
 			var o = _GetObject(ref name);

@@ -366,13 +366,28 @@ static class TUtil {
 	//Tool dialogs such as Delm normally run in new thread. If started from another such dialog - in its thread.
 	//	Else main thread would hang when something is slow or hangs when working with UI elements or executing 'also' code.
 	public static void ShowDialogInNonmainThread(Func<KDialogWindow> newDialog) {
-#if true
 		if (Environment.CurrentManagedThreadId != 1) {
 			_Show(false);
 		} else {
 			run.thread(() => {
 				_Show(true);
-				//wait.doEvents(); //no, randomly app crashes. Noticed 2024-02-29, never before, don't know why, maybe because recently updated .NET 8.0.0 -> 8.0.2 and .NET SDK 8.0.100 -> 8.0.200. Some WPF wndproc hook calls Thread.CurrentThread and it throws NullReferenceException. Less often in Debug config.
+				
+				//WPF bug: randomly app crashes when this thread is ending now.
+				//	Can reproduce it when using the Windows "Text cursor indicator" feature, especially if here is `wait.doEvents();`.
+				//	It happens when a HwndHost'ed control receives WM_GETOBJECT (that indicator feature sends many WM_GETOBJECT).
+				//	When closing the dialog, WPF does not unhook/destroy the control. It reparents the control to some hidden window. Even then it receives WM_GETOBJECT. Later GC destroys it.
+				//	The control is hooked. The hook proc calls Thread.CurrentThread, which throws NullReferenceException, probably because the runtime already cleared its thread data.
+				//	Workaround: here add `wait.doEvents(100);`. Also GC.Collect to call DestroyWindowCore etc.
+				try {
+					var a = wnd.getwnd.threadWindows(process.thisThreadId).Where(o => o.Name == "SystemResourceNotifyWindow").SelectMany(o => o.ChildAll(flags: WCFlags.HiddenToo)).ToArray();
+					for (int i = 0; i < 10; i++) {
+						wait.doEvents(100);
+						if (i > 0 && !a.Any(o => o.IsAlive)) break;
+						GC.Collect();
+						GC.WaitForPendingFinalizers();
+					}
+				}
+				catch (Exception e1) { Debug_.Print(e1); }
 			}).Name = "Au.Tool";
 		}
 		
@@ -385,42 +400,6 @@ static class TUtil {
 			catch (Exception e1) { print.it(e1); }
 			return false;
 		}
-#else
-		//this was used to detect when it seems the Window is never GC-collected.
-		//	However usually it gives false positives. WPF allows to GC-collect later, when another WPF window shown.
-		//	SHOULDDO: detect true leaks, when the Window is never GC-collected because of our code, eg subscribing to static events and not unsubscribing when closed.
-		if (Environment.CurrentManagedThreadId != 1) {
-			_Show(false);
-		} else {
-			run.thread(() => {
-				var (wr, type) = _Show(true); if (wr == null) return;
-				//GC-collect and wait if need, else it seems the Window is never GC-collected
-				//wait.doEvents();
-				for (int i = 500; i < 2000; i+=100) {
-					GC.Collect();
-					GC.WaitForPendingFinalizers(); //usually finalizer runs the first time
-					if (!_IsAlive(wr)) return;
-					Debug_.Print(i);
-					wait.doEvents(i);
-				}
-				static bool _IsAlive(WeakReference<Window> wr) => wr.TryGetTarget(out _); //in Debug config the _ would keep alive
-				Debug_.Print(type + " not finalized");
-			}).Name = "tool"; //info: thread name used for debugging
-		}
-
-		(WeakReference<Window> wr, string type) _Show(bool dialog) {
-			try { //unhandled exception kills process if in nonmain thread
-				var d = newDialog();
-				if (dialog) {
-					d.ShowDialog();
-					return (new(d), d.GetType().Name);
-				}
-				d.Show();
-			}
-			catch (Exception e1) { print.it(e1); }
-			return default;
-		}
-#endif
 	}
 	
 	public static void CloseDialogsInNonmainThreads() {

@@ -142,7 +142,7 @@ public unsafe struct CREATESTRUCT
 	//public string Name => lpszName == default ? null : new string(lpszName);
 
 	/// <summary>
-	/// If <b>lpszClass</b> is atom, returns string with # prefix and atom value, like <c>"#32770"</c>.
+	/// If <b>lpszClass</b> is atom, returns string with <c>#</c> prefix and atom value, like <c>"#32770"</c>.
 	/// </summary>
 	public RStr ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS()
 		: new RStr(lpszClass, CharPtr_.Length(lpszClass));

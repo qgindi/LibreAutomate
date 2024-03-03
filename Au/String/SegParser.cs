@@ -108,7 +108,7 @@ namespace Au.More {
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 		/// <summary>
-		/// Returns segment values as string[].
+		/// Returns segment values as <b>string[]</b>.
 		/// </summary>
 		/// <param name="maxCount">The maximal number of substrings to get. If negative (default), gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
 		public unsafe string[] ToStringArray(int maxCount = -1) {
@@ -201,7 +201,7 @@ namespace Au.Types {
 	}
 
 	/// <summary>
-	/// Struct with fields <b>int start</b> and <b>int end</b>.
+	/// Struct with fields <c>int start</c> and <c>int end</c>.
 	/// </summary>
 	public record struct StartEnd {
 		///

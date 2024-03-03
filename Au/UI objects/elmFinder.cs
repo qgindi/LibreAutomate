@@ -323,8 +323,10 @@ public unsafe class elmFinder {
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Wait(Seconds timeout) => Find_(_elm != null, _wnd, _elm, timeout) ? Result : null;
 	
-	internal bool Find_(bool inElm, wnd w, elm eParent, Seconds? waitS = null, bool isNext = false) {
-		if (_flags.Has(_EFFlags_Empty)) throw new InvalidOperationException();
+	//TODO: public bool WaitNot(Seconds timeout) => wait.until(timeout, () => !Exists());
+	
+	internal bool Find_(bool inElm, wnd w, elm eParent, Seconds? waitS = null, bool isNext = false, bool fromFindAll = false) {
+		if (_flags.Has(_EFFlags_Empty) && !fromFindAll) throw new InvalidOperationException();
 		if (_flags.Has(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Don't use flags UIA and ClientArea together.");
 		if (_role != null) {
 			if (_role == "") throw new ArgumentException("role cannot be \"\".");
@@ -490,7 +492,7 @@ public unsafe class elmFinder {
 		var last = _Last();
 		if (last._skip != 0) throw new ArgumentException("FindAll does not support *skip* in the last part of path");
 		(t_findAll ??= new()).Add(last, a);
-		try { Find_(_elm != null, _wnd, _elm); }
+		try { Find_(_elm != null, _wnd, _elm, fromFindAll: true); }
 		finally { t_findAll.Remove(last); }
 		return a.ToArray();
 	}

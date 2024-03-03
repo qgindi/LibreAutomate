@@ -22,7 +22,7 @@ public enum KMod : byte
 /// </summary>
 /// <remarks>
 /// The values are the same as the native <b>VK_</b> constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
-/// Most rare and obsolete keys are not included. You can use <b>Keys</b> or <b>VK_</b> (int) like <c>(KKey)Keys.Attn</c>.
+/// Rare and obsolete keys are not included. You can use <b>Keys</b> like <c>(KKey)Keys.Attn</c> or <b>VK_</b> constant values like <c>(KKey)200</c>.
 /// </remarks>
 /// <seealso cref="KMod"/>
 public enum KKey : byte

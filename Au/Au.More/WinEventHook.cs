@@ -97,7 +97,7 @@ namespace Au.More {
 		/// <summary>
 		/// Adds a hook for an event or a range of events.
 		/// </summary>
-		/// <returns>an int value greater than 0 that can be used with <see cref="Remove"/>.</returns>
+		/// <returns>An <b>int</b> value greater than 0 that can be used with <see cref="Remove"/>.</returns>
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// 

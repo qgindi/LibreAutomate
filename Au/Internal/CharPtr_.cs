@@ -3,8 +3,8 @@ namespace Au.More;
 //TEST: MemoryMarshal.CreateReadOnlySpanFromNullTerminated
 
 /// <summary>
-/// String functions that work with unmanaged char* strings.
-/// See also <see cref="BytePtr_"/>, it works with byte* strings.
+/// String functions that work with unmanaged <b>char*</b> strings.
+/// See also <see cref="BytePtr_"/>, it works with <b>byte*</b> strings.
 /// </summary>
 internal static unsafe class CharPtr_ {
 	/// <summary>
@@ -45,8 +45,8 @@ internal static unsafe class CharPtr_ {
 }
 
 /// <summary>
-/// String functions that work with unmanaged byte* strings.
-/// See also <see cref="CharPtr_"/>, it works with char* strings.
+/// String functions that work with unmanaged <b>byte*</b> strings.
+/// See also <see cref="CharPtr_"/>, it works with <b>char*</b> strings.
 /// </summary>
 static unsafe class BytePtr_ {
 	/// <summary>
@@ -125,7 +125,7 @@ static unsafe class BytePtr_ {
 	public static bool AsciiEqi(byte* p, string s) => AsciiStartsi(p, s) && p[s.Length] == 0;
 
 	/// <summary>
-	/// Case-sensitive compares unmanaged string p with byte[] s and returns <c>true</c> if they are equal.
+	/// Case-sensitive compares unmanaged string p with <b>byte[]</b> s and returns <c>true</c> if they are equal.
 	/// </summary>
 	/// <param name="p">'\0'-terminated string.</param>
 	/// <param name="s">Managed string. Must contain only ASCII characters.</param>

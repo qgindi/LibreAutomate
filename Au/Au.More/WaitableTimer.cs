@@ -25,7 +25,7 @@ public class WaitableTimer : WaitHandle {
 	/// Calls API <msdn>OpenWaitableTimer</msdn> and creates a <b>WaitableTimer</b> object that wraps the timer handle.
 	/// </summary>
 	/// <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="Create"/>.</param>
-	/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value <c>TIMER_MODIFY_STATE|SYNCHRONIZE</c> allows to set and wait.</param>
+	/// <param name="access">See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value <c>TIMER_MODIFY_STATE|SYNCHRONIZE</c> allows to set and wait.</param>
 	/// <param name="inheritHandle"></param>
 	/// <param name="noException">If fails, return <c>null</c>, don't throw exception. Supports <see cref="lastError"/>.</param>
 	/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>

@@ -3,7 +3,7 @@ namespace Au {
 	/// Gets, sets or clears the last error code of Windows API. Gets error text.
 	/// </summary>
 	/// <remarks>
-	/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's <b>DllImport</b> attribute has <c>SetLastError = true</c>.
+	/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific <b>int</b> variable. But only if the API declaration's <b>DllImport</b> attribute has <c>SetLastError = true</c>.
 	/// 
 	/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most <see cref="wnd"/> property-get functions.
 	/// When failed, they return <c>false</c>/0/<c>null</c>/empty. Then you can use <see cref="code"/> to get the error code or <see cref="message"/> to get error text.

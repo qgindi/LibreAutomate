@@ -39,7 +39,7 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.1.6, 2024-02-29, 28 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.1.7, 2024-03-03, 28 MB
 
 The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 

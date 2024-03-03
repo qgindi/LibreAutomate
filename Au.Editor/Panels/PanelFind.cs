@@ -22,11 +22,19 @@ class PanelFind {
 		var b = new wpfBuilder(P).Columns(-1).Brush(SystemColors.ControlBrush);
 		b.Options(modifyPadding: false, margin: new Thickness(2));
 		b.AlsoAll((b, _) => { if (b.Last is Button k) k.Padding = new(1, 0, 1, 1); });
-		b.Row((-1, 22..)).Add<AdornerDecorator>()
-			.Add(out _tFind, flags: WBAdd.ChildOfLast).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Name("Find_text", true).Watermark(out _adorner1, "Find");
-		b.Row((-1, 22..)).Add<AdornerDecorator>()
-			.Add(out _tReplace, flags: WBAdd.ChildOfLast).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Name("Replace_text", true).Watermark("Replace");
-		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0);
+		
+		wpfBuilder _AddTextbox(out TextBox tb) =>
+			b.Row((-1, 19..)).Add<AdornerDecorator>()
+				.Add(out tb, flags: WBAdd.ChildOfLast)
+				.Margin(-1, -1, -1, -1)
+				.Multiline(wrap: TextWrapping.Wrap);
+		
+		_AddTextbox(out _tFind).Name("Find_text", true).Watermark(out _adorner1, "Find");
+		b.xAddSplitterH();
+		_AddTextbox(out _tReplace).Name("Replace_text", true).Watermark("Replace");
+		SetFont_(false);
+		
+		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0).Margin(top: 3);
 		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next in editor");
 		b.AddButton(out var bReplace, "Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
 		bReplace.MouseRightButtonUp += (_, _) => _bFind_Click(null);
@@ -85,6 +93,17 @@ class PanelFind {
 	}
 
 	public UserControl P { get; } = new();
+	
+	internal void SetFont_(bool changed) {
+		System.Windows.Media.FontFamily ff = new (App.Settings.font_find.name);
+		double fs = App.Settings.font_find.size * 4 / 3;
+		for (int i = 0; i < 2; i++) {
+			var c = i == 0 ? _tFind : _tReplace;
+			c.FontFamily = ff;
+			c.FontSize = fs;
+			if (changed && c.Parent is AdornerDecorator p) p.AdornerLayer.Update();
+		}
+	}
 
 	#region control events
 

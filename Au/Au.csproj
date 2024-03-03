@@ -21,7 +21,7 @@
 
 	<!-- NuGet package. -->
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<Version>1.1.0</Version>
+		<Version>1.1.6</Version>
 		<!--
 		For the NuGet package need multiple target frameworks (currently 6 and 8). But it makes compilation slow.
 		Workaround - temporarily use different TargetFrameworks when creating NuGet package.

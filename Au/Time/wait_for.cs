@@ -242,7 +242,7 @@ namespace Au.Types {
 	public delegate bool WPMCallback(ref MSG m);
 	
 	/// <summary>
-	/// Used with <b>Wait_</b> etc instead of ref bool.
+	/// Used with <b>Wait_</b> etc instead of <c>ref bool</c>.
 	/// </summary>
 	internal class WaitVariable_ {
 		public bool waitVar;

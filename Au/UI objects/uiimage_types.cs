@@ -183,9 +183,9 @@ public class IFArea {
 /// </summary>
 /// <remarks>
 /// Has implicit conversions from:
-/// - string - path of .png or .bmp file. If not full path, uses <see cref="folders.ThisAppImages"/>.
+/// - string - path of <c>.png</c> or <c>.bmp</c> file. If not full path, uses <see cref="folders.ThisAppImages"/>.
 /// - string that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
-/// - string with prefix <c>"image:"</c> - Base64 encoded .png image.\
+/// - string with prefix <c>"image:"</c> - Base64 encoded <c>.png</c> image.\
 ///   Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in Au.Controls.dll).
 /// - <see cref="ColorInt"/>, <b>int</b> or <b>uint</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
 /// - <see cref="Bitmap"/> - image object.

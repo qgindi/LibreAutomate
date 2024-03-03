@@ -31,7 +31,7 @@ k1.Clear(); //remove all elements
 print.it(k2.Contains(5), k2.IndexOf(5));
 int[] a10 = k2.ToArray(); //create new array and copy elements
 
-/// List elements are accessed (get, set) like array elements.
+/// <b>List<> elements are accessed (get, set) like array elements.
 
 for (int i = 0; i < k1.Count; i++) print.it(k1[i]); //get values
 

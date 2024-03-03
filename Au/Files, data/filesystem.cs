@@ -462,7 +462,7 @@ public static partial class filesystem {
 	/// <br/>• <c>"*.png"</c> (only png files),
 	/// <br/>• <c>"**m *.png||*.bmp"</c> (only png and bmp files),
 	/// <br/>• <c>"**nm *.png||*.bmp"</c> (all files except png and bmp),
-	/// <br/>• <c>@"**r \.html?$"</c> (regular expression that matches .htm and .html files).
+	/// <br/>• <c>@"**r \.html?$"</c> (regular expression that matches <c>.htm</c> and <c>.html</c> files).
 	/// </param>
 	/// <param name="flags">Flags. The function also adds flag <b>OnlyFiles</b>.</param>
 	/// <exception cref="ArgumentException">

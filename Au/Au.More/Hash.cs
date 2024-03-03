@@ -221,7 +221,7 @@ public static unsafe class Hash {
 	/// <summary>
 	/// Result of <see cref="MD5Context.Hash"/>.
 	/// It is 16 bytes stored in 2 long fields r1 and r2.
-	/// If need, can be converted to byte[] with <see cref="MD5Result.ToArray"/> or to hex string with <see cref="MD5Result.ToString"/>.
+	/// If need, can be converted to <b>byte[]</b> with <see cref="MD5Result.ToArray"/> or to hex string with <see cref="MD5Result.ToString"/>.
 	/// </summary>
 	public record struct MD5Result {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -239,7 +239,7 @@ public static unsafe class Hash {
 		//public string ToBase64() => Convert.ToBase64String(ToArray());
 		
 		/// <summary>
-		/// Converts this to byte[16].
+		/// Converts this to <b>byte[16]</b>.
 		/// </summary>
 		public byte[] ToArray() {
 			var r = new byte[16];

@@ -111,7 +111,7 @@ public static partial class print {
 	/// </summary>
 	/// <param name="value">Value of any type. If <c>null</c>, writes <c>"null"</c>.</param>
 	/// <remarks>
-	/// If the type is unsigned integer (uint, ulong, ushort, byte, nuint), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> <c>true</c>.
+	/// If the type is unsigned integer (<b>uint</b>, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> <c>true</c>.
 	/// 
 	/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
 	/// For <b>Span</b> and other ref struct types use <c>print.it(x.ToString());</c>.
@@ -142,8 +142,8 @@ public static partial class print {
 	/// Array or generic collection of any type.
 	/// If <c>null</c>, writes <c>"null"</c>.
 	/// The format depends on type:
-	/// <br/>• char[] - like string.
-	/// <br/>• byte[] - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> <c>true</c>.
+	/// <br/>• <b>char[]</b> - like string.
+	/// <br/>• <b>byte[]</b> - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> <c>true</c>.
 	/// <br/>• Other - multiple lines.
 	/// </param>
 	public static void it<T>(IEnumerable<T> value) {
@@ -173,7 +173,7 @@ public static partial class print {
 	/// </summary>
 	/// <remarks>
 	/// If a value is <c>null</c>, writes <c>"null"</c>.
-	/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
+	/// If a value is unsigned integer (uint, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>.
 	/// </remarks>
 	public static void it(object value1, object value2, params object[] more) {
 		it(util.toList(", ", value1, value2, more));
@@ -510,7 +510,7 @@ public static partial class print {
 		/// </summary>
 		/// <remarks>
 		/// If a value is <c>null</c>, writes <c>"null"</c>.
-		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix <c>"0x"</c>.
+		/// If a value is unsigned integer (<b>uint</b>, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>.
 		/// </remarks>
 		public static void write(object value1, object value2, params object[] more) {
 			write(util.toList(", ", value1, value2, more));
@@ -537,7 +537,7 @@ public static partial class print {
 	/// </summary>
 	public static class util {
 		/// <summary>
-		/// Converts value of any type to string. Formats it like <see cref="it(object)"/>.
+		/// Converts value of any type to <b>string</b>. Formats it like <see cref="it(object)"/>.
 		/// </summary>
 		/// <param name="value">Value of any type. If <c>null</c>, returns <c>"null"</c>.</param>
 		/// <param name="compact">If <i>value</i> is <b>IEnumerable</b>, format it like <c>"{ item1, item2 }"</c>.</param>
@@ -596,7 +596,7 @@ public static partial class print {
 		}
 		
 		/// <summary>
-		/// Converts multiple values of any type to string like <see cref="list(string, object, object, object[])"/>.
+		/// Converts multiple values of any type to <b>string</b> like <see cref="list(string, object, object, object[])"/>.
 		/// </summary>
 		public static string toList(string sep, object value1, object value2, params object[] more) {
 			if (more == null) more = s_oaNull; //workaround for: if the third argument is null, we receive null and not object[] { null }

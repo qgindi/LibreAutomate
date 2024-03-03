@@ -40,7 +40,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="AuException">Failed to open .lnk file.</exception>
+		/// <exception cref="AuException">Failed to open <c>.lnk</c> file.</exception>
 		public static shortcutFile open(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_READ);
 		}
@@ -63,7 +63,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="AuException">Failed to open existing .lnk file.</exception>
+		/// <exception cref="AuException">Failed to open existing <c>.lnk</c> file.</exception>
 		/// <remarks>
 		/// Exception if file exists but cannot open it for read-write access.
 		/// You can get and set properties and finally call <see cref="Save"/>.
@@ -121,7 +121,7 @@ namespace Au {
 
 		/// <summary>
 		/// Gets or sets a URL target.
-		/// Note: it is a .lnk shortcut, not a .url shortcut.
+		/// Note: it is a <c>.lnk</c> shortcut, not a <c>.url</c> shortcut.
 		/// </summary>
 		/// <value>The <c>get</c> function returns string <c>"file:///..."</c> if target is a file.</value>
 		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
@@ -188,7 +188,7 @@ namespace Au {
 
 		/// <summary>
 		/// Throws if s longer than 259.
-		/// SetPath then would throw without error description. SetIconLocation would limit to 260. SetWorkingDirectory and SetDescription succeed but corrupt the .lnk file. SetArguments OK. Others not tested, rare, never mind.
+		/// SetPath then would throw without error description. SetIconLocation would limit to 260. SetWorkingDirectory and SetDescription succeed but corrupt the <c>.lnk</c> file. SetArguments OK. Others not tested, rare, never mind.
 		/// </summary>
 		static string _Max259(string s) => s.Lenn() <= 259 ? s : throw new ArgumentException("max length 259");
 
@@ -260,7 +260,7 @@ namespace Au {
 		/// <summary>
 		/// If shortcut file exists, unregisters its hotkey and deletes it.
 		/// </summary>
-		/// <param name="lnkPath">.lnk file path.</param>
+		/// <param name="lnkPath"><c>.lnk</c> file path.</param>
 		/// <exception cref="AuException">Failed to unregister hotkey.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="filesystem.delete(string, FDFlags)"/>.</exception>
 		public static void delete(string lnkPath) {

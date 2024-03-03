@@ -67,7 +67,7 @@ public interface IOcrEngine {
 	}
 
 	/// <summary>
-	/// Gets image data in .png file format.
+	/// Gets image data in <c>.png</c> file format.
 	/// </summary>
 	protected static unsafe byte[] GetBitmapPngFileData(Bitmap b) {
 		using var ms = new MemoryStream();

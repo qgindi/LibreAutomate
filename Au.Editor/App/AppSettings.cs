@@ -15,6 +15,7 @@ record AppSettings : JSettings {
 		_NE(ref user) ??= Guid.NewGuid().ToString();
 		hotkeys ??= new();
 		(font_output ??= new()).Loaded();
+		(font_find ??= new()).Loaded();
 		debug ??= new();
 		delm ??= new();
 		recorder ??= new();
@@ -75,7 +76,7 @@ record AppSettings : JSettings {
 			size = Math.Clamp(size, 6, 30);
 		}
 	}
-	public font_t font_output;
+	public font_t font_output, font_find;
 	
 	//Options -> Templates
 	public int templ_use;

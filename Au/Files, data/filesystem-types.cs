@@ -65,7 +65,7 @@ public struct FAttr {
 	public bool Exists => _exists;
 
 	/// <summary>
-	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other bool properties return <c>false</c>.
+	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other <b>bool</b> properties return <c>false</c>.
 	/// </summary>
 	public bool Unknown => _unknown;
 
@@ -322,7 +322,7 @@ public class FEFile {
 	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
 
 	/// <summary>
-	/// <msdn>WIN32_FIND_DATA</msdn>.dwReserved0.
+	/// <msdn>WIN32_FIND_DATA</msdn><c>.dwReserved0</c>.
 	/// </summary>
 	public uint ReparseTag { get; }
 

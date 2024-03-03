@@ -467,7 +467,7 @@ public static unsafe partial class ExtString {
 	/// If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
 	/// Word characters are those for which <i>isWordChar</i> or <see cref="char.IsLetterOrDigit"/> returns <c>true</c> plus those specified in <i>otherWordChars</i>.
 	/// Uses ordinal comparison (does not depend on current culture/locale).
-	/// For Unicode surrogates (2-char characters) calls <see cref="char.IsLetterOrDigit(string, int)"/> and ignores <i>isWordChar</i> and <i>otherWordChars</i>.
+	/// For Unicode surrogates (2-<b>char</b> characters) calls <see cref="char.IsLetterOrDigit(string, int)"/> and ignores <i>isWordChar</i> and <i>otherWordChars</i>.
 	/// </remarks>
 	public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null, Func<char, bool> isWordChar = null) {
 		Not_.Null(s);
@@ -823,7 +823,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts part of this string to int number and gets the number end index.
+	/// Converts part of this string to <b>int</b> number and gets the number end index.
 	/// </summary>
 	/// <returns>The number, or 0 if failed to convert.</returns>
 	/// <param name="t">This string. Can be <c>null</c>.</param>
@@ -854,7 +854,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts part of this string to int number.
+	/// Converts part of this string to <b>int</b> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, int, out int, STIFlags)"/>
@@ -879,7 +879,7 @@ public static unsafe partial class ExtString {
 		=> ToInt(t, out result, startIndex, out _, flags);
 	
 	/// <summary>
-	/// Converts part of this string to uint number and gets the number end index.
+	/// Converts part of this string to <b>uint</b> number and gets the number end index.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
@@ -889,7 +889,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts part of this string to uint number.
+	/// Converts part of this string to <b>uint</b> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
@@ -897,7 +897,7 @@ public static unsafe partial class ExtString {
 		=> ToInt(t, out result, startIndex, out _, flags);
 	
 	/// <summary>
-	/// Converts part of this string to long number and gets the number end index.
+	/// Converts part of this string to <b>long</b> number and gets the number end index.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
@@ -907,7 +907,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts part of this string to long number.
+	/// Converts part of this string to <b>long</b> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
@@ -915,7 +915,7 @@ public static unsafe partial class ExtString {
 		=> ToInt(t, out result, startIndex, out _, flags);
 	
 	/// <summary>
-	/// Converts part of this string to ulong number and gets the number end index.
+	/// Converts part of this string to <b>ulong</b> number and gets the number end index.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
@@ -925,7 +925,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts part of this string to ulong number.
+	/// Converts part of this string to <b>ulong</b> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
@@ -979,7 +979,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts this string or its part to int number.
+	/// Converts this string or its part to <b>int</b> number.
 	/// </summary>
 	/// <remarks>
 	/// Calls <see cref="int.TryParse(RStr, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
@@ -994,7 +994,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts this string or its part to uint number.
+	/// Converts this string or its part to <b>uint</b> number.
 	/// </summary>
 	/// <remarks>
 	/// Calls <see cref="uint.TryParse(RStr, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
@@ -1005,7 +1005,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts this string or its part to long number.
+	/// Converts this string or its part to <b>long</b> number.
 	/// </summary>
 	/// <remarks>
 	/// Calls <see cref="long.TryParse(RStr, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
@@ -1016,7 +1016,7 @@ public static unsafe partial class ExtString {
 	}
 	
 	/// <summary>
-	/// Converts this string or its part to ulong number.
+	/// Converts this string or its part to <b>ulong</b> number.
 	/// </summary>
 	/// <remarks>
 	/// Calls <see cref="ulong.TryParse(RStr, NumberStyles, IFormatProvider, out ulong)"/>. Uses <see cref="CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
@@ -1306,7 +1306,7 @@ public static unsafe partial class ExtString {
 	
 	//rejected. Rarely used.
 	///// <summary>
-	///// Converts this string to '\0'-terminated char[].
+	///// Converts this string to '\0'-terminated <b>char[]</b>.
 	///// </summary>
 	//public static char[] ToArrayAnd0(this string t)
 	//{
@@ -1317,7 +1317,7 @@ public static unsafe partial class ExtString {
 	
 	//rejected. Better call Convert2.Utf8FromString directly.
 	///// <summary>
-	///// Converts this string to '\0'-terminated UTF8 string as byte[].
+	///// Converts this string to '\0'-terminated UTF8 string as <b>byte[]</b>.
 	///// </summary>
 	///// <remarks>
 	///// Calls <see cref="Convert2.Utf8FromString"/>.
@@ -1332,7 +1332,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <returns>The result string.</returns>
 	/// <param name="t"></param>
-	/// <param name="raw">Ignore char sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
+	/// <param name="raw">Ignore <b>char</b> sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
 	public static unsafe string ReverseString(this string t, bool raw) {
 		if (t.Length < 2) return t;
 		var r = new string('\0', t.Length);

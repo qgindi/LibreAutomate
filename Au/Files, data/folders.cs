@@ -7,7 +7,7 @@ namespace Au {
 	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
 	/// <remarks>
-	/// Most functions return <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator <b>+</b> appends a filename or relative path string, with <c>\</c> separator if need. Example:
+	/// Most functions return <see cref="FolderPath"/>, not <b>string</b>. It is implicitly convertible to <b>string</b>. Its operator <b>+</b> appends a filename or relative path string, with <c>\</c> separator if need. Example:
 	/// 
 	/// <code><![CDATA[string s = folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt]]></code>
 	/// 
@@ -814,12 +814,12 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets path of a known folder by its name as string.
+		/// Gets path of a known folder by its name.
 		/// </summary>
 		/// <returns><c>null</c> if unavailable.</returns>
 		/// <param name="folderName">
 		/// Can be:
-		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b> or string.
+		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b> or <b>string</b>.
 		/// <br/>• name of a property of the nested class <see cref="shell"/>, like <c>"shell.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
 		/// <br/>• known folder canonical name. See <see cref="getKnownFolders"/>. If has prefix <c>"shell."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>

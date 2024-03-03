@@ -654,7 +654,7 @@ partial class CiStyling {
 			sci.aaaSetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK, SelNofocusColor);
 		}
 		
-		//rejected
+		//rejected. Bad colors. Should use some quite intelligent algorithm.
 		//public void InvertAllColors() {
 		//	None.color ^= 0xffffff;
 		//	Comment.color ^= 0xffffff;

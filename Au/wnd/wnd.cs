@@ -35,7 +35,7 @@ namespace Au {
 #if false
 		/// Why wnd is struct, not class:
 		/// 	Advantages:
-		/// 	- Lightweight. Same as nint (8 or 4 bytes).
+		/// 	- Lightweight. Same as <b>nint</b> (8 or 4 bytes).
 		/// 	- Easier to create overloaded functions that have a window parameter. If it was a class, then a <c>null</c> argument could be ambiguous if eg could also be a string etc.
 		/// 	- When a find-window function does not find the window, calling next function (without checking the return value) does not throw <c>null</c>-reference exception. Instead the function can throw a more specific exception or just return <c>false</c> etc.
 		/// 	- The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.

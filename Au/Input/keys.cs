@@ -248,7 +248,7 @@ public partial class keys {
 	/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
-	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
+	/// <param name="key">Virtual-key code, like <c>KKey.Tab</c> or <c>(KKey)200</c>. Valid values are 1-255.</param>
 	/// <param name="down"><c>true</c> - key down; <c>false</c> - key up; <c>null</c> (default) - key down-up.</param>
 	/// <exception cref="ArgumentException">Invalid <i>key</i> (0).</exception>
 	public keys AddKey(KKey key, bool? down = null) {
@@ -266,7 +266,7 @@ public partial class keys {
 	/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="SendNow"/>.
 	/// </summary>
 	/// <returns>This.</returns>
-	/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
+	/// <param name="key">Virtual-key code, like <c>KKey.Tab</c> or <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
 	/// <param name="scanCode">Scan code of the physical key. Scan code values are 1-127, but this function allows 1-0xffff. Can be 0.</param>
 	/// <param name="extendedKey"><c>true</c> if the key is an extended key.</param>
 	/// <param name="down"><c>true</c> - key down; <c>false</c> - key up; <c>null</c> (default) - key down-up.</param>

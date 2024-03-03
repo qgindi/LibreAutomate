@@ -9,7 +9,7 @@ namespace Au.Types;
 /// <i>image</i> argument of "add item" functions can be:
 /// - icon name, like <c>"*Pack.Icon color"</c> (you can get it from the Icons dialog). See <see cref="ImageUtil.LoadWpfImageElement"/>.
 /// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like <c>".txt"</c>, etc.
-/// - file path with prefix <c>"imagefile:"</c> or resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - the "show" function loads .png or .xaml image file or resource.
+/// - file path with prefix <c>"imagefile:"</c> or resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - the "show" function loads <c>.png</c> or <c>.xaml</c> image file or resource.
 /// - string with prefix <c>"image:"</c> - Base64 encoded image file. Can be created with the "Find image..." dialog.
 /// - <see cref="FolderPath"/> - same as folder path string.
 /// - <see cref="Image"/> - image.

@@ -60,7 +60,7 @@ static class CiUtil {
 		if (cd.code.Eq(cd.pos, '[')) { //indexer?
 			var t = cd.syntaxRoot.FindToken(cd.pos, true);
 			if (t.IsKind(SyntaxKind.OpenBracketToken) && t.Parent is BracketedArgumentListSyntax b && b.Parent is ElementAccessExpressionSyntax es) {
-				return cd.semanticModel.GetSymbolInfo(es).Symbol;
+				return cd.semanticModel.GetSymbolInfo(es).GetAnySymbol();
 			}
 		}
 		//rejected: in the same way get cast operator if pos is before '('. Not very useful.
@@ -110,6 +110,10 @@ static class CiUtil {
 				if (token.GetPreviousToken().IsKind(SyntaxKind.HashToken)) word = "#" + word;
 				return (null, word, HelpKind.PreprocKeyword, token);
 			}
+			if (token.Parent is BaseArgumentListSyntax bals) {
+				if (!GetFunctionSymbolInfoFromArgumentList(bals, cd.semanticModel, out var si)) return default;
+				return (si.GetAnySymbol(), null, default, token);
+			}
 			switch (token.IsInString(cd.pos, cd.code, out _)) {
 			case true: return (null, null, HelpKind.String, token);
 			case null: return default;
@@ -119,6 +123,20 @@ static class CiUtil {
 		//	It may get info for something other, eg 'new' -> ctor or type, or 'int' -> type 'Int32'.
 		
 		return (GetSymbolFromPos(cd), null, default, token);
+	}
+	
+	/// <summary>
+	/// Gets SymbolInfo of invoked method, ctor or indexer from its argument list.
+	/// </summary>
+	public static bool GetFunctionSymbolInfoFromArgumentList(BaseArgumentListSyntax als, SemanticModel semo, out SymbolInfo si) {
+		si = default;
+		var pa = als.Parent;
+		if (als is ArgumentListSyntax && pa is InvocationExpressionSyntax or ObjectCreationExpressionSyntax) {
+			si = semo.GetSymbolInfo(pa);
+		} else if (als is BracketedArgumentListSyntax && pa is ElementAccessExpressionSyntax eacc) {
+			si = semo.GetSymbolInfo(eacc);
+		} else return false;
+		return !si.IsEmpty;
 	}
 	
 	public enum HelpKind {
